@@ -1,0 +1,75 @@
+[
+  {
+    "label": "accepted-gate-cold",
+    "argv": [
+      "sh",
+      "guest/gate.sh",
+      "--force"
+    ],
+    "seconds": 246.62156472400238,
+    "exit_code": 0,
+    "stdout_bytes": 546,
+    "report_bytes": 2343773,
+    "report_sha256": "99e232e5876bc14eda7a5491e42e7cd0c495f9800dee0a253eb9302ad87a55a3",
+    "summary": {
+      "version": "pcb-workbench-gate-v1",
+      "native_report_version": "native-tests-v1",
+      "snapshot": "734cb427fa13f36fb4b6a5f3e88b4a3f8c0672dd119a4bd6471788218a642090",
+      "passed": 400,
+      "cached": 0,
+      "failed": 0,
+      "skipped": 0,
+      "executed": 400,
+      "report": "/home/epentland/ai/canopy/pcb-workbench/.workbench/results/test-734cb427fa13f36fb4b6a5f3e88b4a3f8c0672dd119a4bd6471788218a642090.4aLbdz/result.jsonl",
+      "diagnostics": "/home/epentland/ai/canopy/pcb-workbench/.workbench/results/test-734cb427fa13f36fb4b6a5f3e88b4a3f8c0672dd119a4bd6471788218a642090.4aLbdz/diagnostics.log"
+    }
+  },
+  {
+    "label": "accepted-gate-warm",
+    "argv": [
+      "sh",
+      "guest/gate.sh"
+    ],
+    "seconds": 10.356211471007555,
+    "exit_code": 0,
+    "stdout_bytes": 544,
+    "report_bytes": 2342216,
+    "report_sha256": "5d5468fadf3e869ee449da5fa9831a022a644dcc0e8d6feffd4866858842ed61",
+    "summary": {
+      "version": "pcb-workbench-gate-v1",
+      "native_report_version": "native-tests-v1",
+      "snapshot": "734cb427fa13f36fb4b6a5f3e88b4a3f8c0672dd119a4bd6471788218a642090",
+      "passed": 0,
+      "cached": 400,
+      "failed": 0,
+      "skipped": 0,
+      "executed": 0,
+      "report": "/home/epentland/ai/canopy/pcb-workbench/.workbench/results/test-734cb427fa13f36fb4b6a5f3e88b4a3f8c0672dd119a4bd6471788218a642090.39LwDx/result.jsonl",
+      "diagnostics": "/home/epentland/ai/canopy/pcb-workbench/.workbench/results/test-734cb427fa13f36fb4b6a5f3e88b4a3f8c0672dd119a4bd6471788218a642090.39LwDx/diagnostics.log"
+    }
+  },
+  {
+    "label": "accepted-gate-warm-repeat",
+    "argv": [
+      "sh",
+      "guest/gate.sh"
+    ],
+    "seconds": 5.389978113991674,
+    "exit_code": 0,
+    "stdout_bytes": 544,
+    "report_bytes": 2342216,
+    "report_sha256": "5d5468fadf3e869ee449da5fa9831a022a644dcc0e8d6feffd4866858842ed61",
+    "summary": {
+      "version": "pcb-workbench-gate-v1",
+      "native_report_version": "native-tests-v1",
+      "snapshot": "734cb427fa13f36fb4b6a5f3e88b4a3f8c0672dd119a4bd6471788218a642090",
+      "passed": 0,
+      "cached": 400,
+      "failed": 0,
+      "skipped": 0,
+      "executed": 0,
+      "report": "/home/epentland/ai/canopy/pcb-workbench/.workbench/results/test-734cb427fa13f36fb4b6a5f3e88b4a3f8c0672dd119a4bd6471788218a642090.f7DLL0/result.jsonl",
+      "diagnostics": "/home/epentland/ai/canopy/pcb-workbench/.workbench/results/test-734cb427fa13f36fb4b6a5f3e88b4a3f8c0672dd119a4bd6471788218a642090.f7DLL0/diagnostics.log"
+    }
+  }
+]

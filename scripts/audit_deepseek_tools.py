@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Audit local DSH tool latency without executing logged commands or calling a model.
 
-Reads JSONL and concatenated Zstandard JSONL (requires the zstd executable).
+Reads legacy/versioned JSONL and concatenated Zstandard JSONL (requires zstd).
 Each source is copied to a fixed-size temporary snapshot before decoding. Reports
 contain timings, hashes and source coordinates; command text is opt-in.
 """
@@ -24,6 +24,7 @@ SLEEP = re.compile(r"\bsleep\s+(\d+(?:\.\d+)?)([smh]?)\b")
 BUILD = re.compile(r"\bzig\s+build\b")
 SCRIPT_COMMAND = re.compile(r"(?:^|[;&|\n])\s*(?:\w+=\S+\s+)*(?:python[23]?|(?:[^\s;'\"|]*/)?mylang)(?:\s|$)")
 TIMEOUT = re.compile(r"^Your command timed out after \d+ seconds|\[Command timed out or OOM\]", re.M)
+MANAGED_TIMEOUT = re.compile(r"^\[timed out after \d+ms\]$", re.M)
 EXCLUDED = {'coordinator_sleep', 'agent_wait', 'human_wait', 'manual_exclusion'}
 
 # Background-job lifecycle. The shell tool answers a background start with
@@ -33,7 +34,7 @@ EXCLUDED = {'coordinator_sleep', 'agent_wait', 'human_wait', 'manual_exclusion'}
 # wall time from the foreground seconds the model actually blocked.
 BACKGROUND_START = re.compile(r"^started background job (\S+)$", re.M)
 BACKGROUND_DONE = re.compile(
-    r"^background job (\S+)\b.*?\bfinished \[status: ([a-z]+)(?:, exit code: (-?\d+))?\]\. "
+    r"^background job (\S+)\b[\s\S]*?\bfinished \[status: ([a-z]+)(?:, exit code: (-?\d+))?\]\. "
     r"Read its output with job_output\.$", re.M)
 # Statuses a `job_output` read can report once the job is no longer running.
 TERMINAL_JOB_STATUSES = frozenset({'completed', 'failed', 'killed'})
@@ -242,6 +243,7 @@ def parse_events(events, source):
                 'depth': header.get('delegationDepth', 0), 'args': args, 'command': command,
                 'command_sha256': hashlib.sha256(command.encode()).hexdigest() if command else None,
                 'is_error': bool(is_error), 'persistent_timeout': bool(TIMEOUT.search(text)),
+                'managed_timeout': bool(MANAGED_TIMEOUT.search(text)),
                 'shell_reset': 'The persistent bash shell was reset' in text,
                 'truncated': '<response clipped>' in text or '[output truncated]' in text,
                 'output_bytes': len(text.encode()),
@@ -548,9 +550,9 @@ def make_report(sessions, project, include_commands=False, exclusions=()):
     short = [r for r in included if r['seconds'] < 1]
     long = [r for r in included if r['seconds'] >= 30]
     flags = {key: summarize([r for r in included if r[key]]) for key in
-             ('persistent_timeout', 'shell_reset', 'truncated', 'explicit_nonzero_exit', 'guardian_failed')}
+             ('persistent_timeout', 'managed_timeout', 'shell_reset', 'truncated', 'explicit_nonzero_exit', 'guardian_failed')}
     result = {
-        'version': 'deepseek-tool-audit-v2', 'generated_at': datetime.now(timezone.utc).isoformat(),
+        'version': 'deepseek-tool-audit-v3', 'generated_at': datetime.now(timezone.utc).isoformat(),
         'project': str(project), 'sessions': len(sessions), 'completed_calls': len(rows),
         'period_start': min((utc(r['start_ms']) for r in rows), default=None),
         'period_end': max((utc(r['end_ms']) for r in rows), default=None),
@@ -607,6 +609,8 @@ def markdown(report):
     lines += ['', '## Signals', '',
               f'- Included persistent-shell timeouts: {report["flags"]["persistent_timeout"]["calls"]}; '
               f'{report["flags"]["persistent_timeout"]["call_seconds"] / 60:.1f} minutes spent in those calls.',
+              f'- Included managed-shell timeouts: {report["flags"]["managed_timeout"]["calls"]}; '
+              f'{report["flags"]["managed_timeout"]["call_seconds"] / 60:.1f} minutes spent in those calls.',
               f'- Calls under one second: {report["under_one_second"]["calls"]:,}; '
               f'{report["under_one_second"]["call_seconds"] / 60:.1f} total minutes.',
               f'- Calls at least 30 seconds: {report["at_least_30_seconds"]["calls"]:,}; '
@@ -654,6 +658,13 @@ def markdown(report):
     return '\n'.join(lines) + '\n'
 
 
+def session_files(root):
+    """Find legacy and versioned event logs; duplicate session IDs remain errors."""
+    names = re.compile(r'^session(?:\.v\d+)?\.jsonl(?:\.zstd)?$')
+    return sorted(path for path in root.rglob('session*')
+                  if path.is_file() and names.fullmatch(path.name))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--logs', type=Path, default=Path.home() / '.dsh/sessions')
@@ -663,7 +674,7 @@ def main():
     parser.add_argument('--include-command-text', action='store_true', help='Opt in to copying shell command text into JSON; may contain private data')
     parser.add_argument('--exclude-call', action='append', default=[], metavar='SESSION:SEQ', help='Exclude an additional confirmed coordination wait')
     args = parser.parse_args()
-    files = sorted([*args.logs.rglob('session.jsonl'), *args.logs.rglob('session.jsonl.zstd')])
+    files = session_files(args.logs)
     if not files:
         parser.error(f'no session.jsonl[.zstd] logs under {args.logs}')
     if any(p.suffix == '.zstd' for p in files) and shutil.which('zstd') is None:

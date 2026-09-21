@@ -1,0 +1,3189 @@
+{
+  "period_start": "2026-09-21T17:18:07.449000+00:00",
+  "period_end": "2026-09-21T21:05:45.031000+00:00",
+  "sessions": 38,
+  "presets": {
+    "standard": 38
+  },
+  "all_calls": {
+    "calls": 4658,
+    "call_seconds": 29165.073,
+    "median_ms": 151.0,
+    "p95_ms": 29256.0,
+    "max_seconds": 600.048,
+    "tool_error_flags": 35,
+    "persistent_timeouts": 0,
+    "output_bytes": 10979062
+  },
+  "all_tool_agent_seconds": 29161.269,
+  "all_tool_elapsed_union_seconds": 12346.638,
+  "families": {
+    "Mylang test": {
+      "calls": 546,
+      "call_seconds": 8785.242,
+      "median_ms": 2656.0,
+      "p95_ms": 60394.0,
+      "max_seconds": 153.289,
+      "tool_error_flags": 0,
+      "persistent_timeouts": 0,
+      "output_bytes": 266310
+    },
+    "Full guest gate": {
+      "calls": 26,
+      "call_seconds": 6420.434,
+      "median_ms": 216083.5,
+      "p95_ms": 440744.0,
+      "max_seconds": 456.877,
+      "tool_error_flags": 0,
+      "persistent_timeouts": 0,
+      "output_bytes": 12788
+    },
+    "Mylang run/build": {
+      "calls": 477,
+      "call_seconds": 5542.442,
+      "median_ms": 710.0,
+      "p95_ms": 81137.0,
+      "max_seconds": 600.048,
+      "tool_error_flags": 0,
+      "persistent_timeouts": 0,
+      "output_bytes": 189981
+    },
+    "CLI integration scripts": {
+      "calls": 13,
+      "call_seconds": 2166.413,
+      "median_ms": 60943.0,
+      "p95_ms": 500008.0,
+      "max_seconds": 500.008,
+      "tool_error_flags": 0,
+      "persistent_timeouts": 0,
+      "output_bytes": 789
+    },
+    "Coordination or polling": {
+      "calls": 19,
+      "call_seconds": 2118.943,
+      "median_ms": 30120.0,
+      "p95_ms": 600046.0,
+      "max_seconds": 600.046,
+      "tool_error_flags": 0,
+      "persistent_timeouts": 0,
+      "output_bytes": 3792
+    },
+    "Mylang test and run mixed": {
+      "calls": 23,
+      "call_seconds": 1466.426,
+      "median_ms": 14609.0,
+      "p95_ms": 245983.0,
+      "max_seconds": 261.871,
+      "tool_error_flags": 0,
+      "persistent_timeouts": 0,
+      "output_bytes": 16405
+    },
+    "Read/search or mixed shell": {
+      "calls": 1698,
+      "call_seconds": 1119.083,
+      "median_ms": 148.0,
+      "p95_ms": 335.0,
+      "max_seconds": 60.114,
+      "tool_error_flags": 0,
+      "persistent_timeouts": 0,
+      "output_bytes": 4356062
+    },
+    "Zig build/test/run": {
+      "calls": 326,
+      "call_seconds": 644.877,
+      "median_ms": 652.0,
+      "p95_ms": 7867.0,
+      "max_seconds": 60.054,
+      "tool_error_flags": 0,
+      "persistent_timeouts": 0,
+      "output_bytes": 284106
+    },
+    "Other shell": {
+      "calls": 247,
+      "call_seconds": 465.135,
+      "median_ms": 147.0,
+      "p95_ms": 505.0,
+      "max_seconds": 172.152,
+      "tool_error_flags": 0,
+      "persistent_timeouts": 0,
+      "output_bytes": 348860
+    },
+    "Compiler readiness polling and CLI integration": {
+      "calls": 2,
+      "call_seconds": 300.061,
+      "median_ms": 150030.5,
+      "p95_ms": 300011.0,
+      "max_seconds": 300.011,
+      "tool_error_flags": 0,
+      "persistent_timeouts": 0,
+      "output_bytes": 171
+    },
+    "Mylang frontend/navigation": {
+      "calls": 32,
+      "call_seconds": 71.198,
+      "median_ms": 584.5,
+      "p95_ms": 6655.0,
+      "max_seconds": 6.688,
+      "tool_error_flags": 1,
+      "persistent_timeouts": 0,
+      "output_bytes": 20005
+    },
+    "Other tools": {
+      "calls": 1217,
+      "call_seconds": 31.002,
+      "median_ms": 15.0,
+      "p95_ms": 81.0,
+      "max_seconds": 0.951,
+      "tool_error_flags": 34,
+      "persistent_timeouts": 0,
+      "output_bytes": 5460846
+    },
+    "Human input": {
+      "calls": 1,
+      "call_seconds": 24.688,
+      "median_ms": 24688.0,
+      "p95_ms": 24688.0,
+      "max_seconds": 24.688,
+      "tool_error_flags": 0,
+      "persistent_timeouts": 0,
+      "output_bytes": 178
+    },
+    "Coordination": {
+      "calls": 31,
+      "call_seconds": 9.129,
+      "median_ms": 232.0,
+      "p95_ms": 607.0,
+      "max_seconds": 1.556,
+      "tool_error_flags": 0,
+      "persistent_timeouts": 0,
+      "output_bytes": 18769
+    }
+  },
+  "full_gate": {
+    "calls": 26,
+    "call_seconds": 6420.434,
+    "median_ms": 216083.5,
+    "p95_ms": 440744.0,
+    "max_seconds": 456.877,
+    "tool_error_flags": 0,
+    "persistent_timeouts": 0,
+    "output_bytes": 12788,
+    "coordinates": [
+      [
+        "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+        595
+      ],
+      [
+        "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+        605
+      ],
+      [
+        "8f1d33ed-3b05-4ff5-9aba-99b827fd40c0",
+        212
+      ],
+      [
+        "f47a879d-958c-4865-b1b0-858639bead26",
+        547
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1661
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1696
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1717
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1762
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1781
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1800
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1824
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1863
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1925
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1944
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1967
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1986
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        2017
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        2061
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        2085
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        2095
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        2109
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        2119
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        2153
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        2172
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        2186
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        2226
+      ]
+    ]
+  },
+  "managed_timeouts": {
+    "calls": 25,
+    "call_seconds": 2581.695,
+    "median_ms": 60067.0,
+    "p95_ms": 600046.0,
+    "max_seconds": 600.048,
+    "tool_error_flags": 0,
+    "persistent_timeouts": 0,
+    "output_bytes": 6512,
+    "coordinates": [
+      [
+        "0024192e-a4fe-44c6-8bdb-9be32a714b43",
+        146
+      ],
+      [
+        "1513f008-a05b-471e-9447-3ce16a021886",
+        17
+      ],
+      [
+        "3a587871-0c5d-4a6b-a7a9-2afe736266f4",
+        218
+      ],
+      [
+        "3af68ba7-4342-42ef-a021-1f5fa4ce751e",
+        227
+      ],
+      [
+        "3af68ba7-4342-42ef-a021-1f5fa4ce751e",
+        282
+      ],
+      [
+        "47349784-b00a-4daa-819d-db790d318532",
+        550
+      ],
+      [
+        "47349784-b00a-4daa-819d-db790d318532",
+        580
+      ],
+      [
+        "4f49c112-c787-41b1-b49d-b652a2ba021e",
+        337
+      ],
+      [
+        "4f49c112-c787-41b1-b49d-b652a2ba021e",
+        377
+      ],
+      [
+        "53b7ca1d-8118-46a4-ab0c-25d49e1fdefd",
+        418
+      ],
+      [
+        "53b7ca1d-8118-46a4-ab0c-25d49e1fdefd",
+        428
+      ],
+      [
+        "53b7ca1d-8118-46a4-ab0c-25d49e1fdefd",
+        709
+      ],
+      [
+        "586bfb96-6d30-4e21-be60-6cfe1ff079c8",
+        422
+      ],
+      [
+        "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+        247
+      ],
+      [
+        "8f1d33ed-3b05-4ff5-9aba-99b827fd40c0",
+        297
+      ],
+      [
+        "b343c515-8a99-439e-a330-16b7ec6820c8",
+        374
+      ],
+      [
+        "c3d569f6-4333-43d2-b321-e5a0dcc220f0",
+        156
+      ],
+      [
+        "cbeed272-108a-4616-bdbb-30c6c7fbb893",
+        196
+      ],
+      [
+        "cc85ee4e-07ae-417c-a666-9d34e6066ed9",
+        321
+      ],
+      [
+        "dede3063-a87e-4069-a7a4-2bbf2ee5d4cb",
+        100
+      ],
+      [
+        "f47a879d-958c-4865-b1b0-858639bead26",
+        547
+      ],
+      [
+        "f47a879d-958c-4865-b1b0-858639bead26",
+        552
+      ],
+      [
+        "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+        277
+      ],
+      [
+        "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+        722
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1274
+      ]
+    ]
+  },
+  "source_changed_test_commands": {
+    "calls": 31,
+    "call_seconds": 696.584,
+    "median_ms": 12456.0,
+    "p95_ms": 60050.0,
+    "max_seconds": 103.664,
+    "tool_error_flags": 0,
+    "persistent_timeouts": 0,
+    "output_bytes": 9312,
+    "coordinates": [
+      [
+        "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+        715
+      ],
+      [
+        "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+        745
+      ],
+      [
+        "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+        750
+      ],
+      [
+        "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+        795
+      ],
+      [
+        "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+        810
+      ],
+      [
+        "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+        885
+      ],
+      [
+        "47349784-b00a-4daa-819d-db790d318532",
+        356
+      ],
+      [
+        "47349784-b00a-4daa-819d-db790d318532",
+        550
+      ],
+      [
+        "47349784-b00a-4daa-819d-db790d318532",
+        555
+      ],
+      [
+        "47349784-b00a-4daa-819d-db790d318532",
+        560
+      ],
+      [
+        "47349784-b00a-4daa-819d-db790d318532",
+        575
+      ],
+      [
+        "4f49c112-c787-41b1-b49d-b652a2ba021e",
+        187
+      ],
+      [
+        "4f49c112-c787-41b1-b49d-b652a2ba021e",
+        192
+      ],
+      [
+        "586bfb96-6d30-4e21-be60-6cfe1ff079c8",
+        315
+      ],
+      [
+        "586bfb96-6d30-4e21-be60-6cfe1ff079c8",
+        320
+      ],
+      [
+        "586bfb96-6d30-4e21-be60-6cfe1ff079c8",
+        365
+      ],
+      [
+        "586bfb96-6d30-4e21-be60-6cfe1ff079c8",
+        585
+      ],
+      [
+        "586bfb96-6d30-4e21-be60-6cfe1ff079c8",
+        680
+      ],
+      [
+        "586bfb96-6d30-4e21-be60-6cfe1ff079c8",
+        685
+      ],
+      [
+        "586bfb96-6d30-4e21-be60-6cfe1ff079c8",
+        690
+      ],
+      [
+        "586bfb96-6d30-4e21-be60-6cfe1ff079c8",
+        715
+      ],
+      [
+        "586bfb96-6d30-4e21-be60-6cfe1ff079c8",
+        720
+      ],
+      [
+        "586bfb96-6d30-4e21-be60-6cfe1ff079c8",
+        725
+      ],
+      [
+        "586bfb96-6d30-4e21-be60-6cfe1ff079c8",
+        735
+      ],
+      [
+        "586bfb96-6d30-4e21-be60-6cfe1ff079c8",
+        740
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1284
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1303
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1567
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1643
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1722
+      ],
+      [
+        "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+        1737
+      ]
+    ]
+  },
+  "test_command_flags": {
+    "--force": {
+      "calls": 84,
+      "call_seconds": 1437.541,
+      "median_ms": 2377.5,
+      "p95_ms": 96982.0,
+      "max_seconds": 261.871,
+      "tool_error_flags": 0,
+      "persistent_timeouts": 0,
+      "output_bytes": 36269,
+      "coordinates": [
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          755
+        ],
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          815
+        ],
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          830
+        ],
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          860
+        ],
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          885
+        ],
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          905
+        ],
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          910
+        ],
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          925
+        ],
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          950
+        ],
+        [
+          "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+          503
+        ],
+        [
+          "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+          533
+        ],
+        [
+          "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+          588
+        ],
+        [
+          "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+          600
+        ],
+        [
+          "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+          630
+        ],
+        [
+          "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+          645
+        ],
+        [
+          "3af68ba7-4342-42ef-a021-1f5fa4ce751e",
+          713
+        ],
+        [
+          "3af68ba7-4342-42ef-a021-1f5fa4ce751e",
+          733
+        ],
+        [
+          "3af68ba7-4342-42ef-a021-1f5fa4ce751e",
+          743
+        ],
+        [
+          "3af68ba7-4342-42ef-a021-1f5fa4ce751e",
+          753
+        ],
+        [
+          "3af68ba7-4342-42ef-a021-1f5fa4ce751e",
+          763
+        ],
+        [
+          "3af68ba7-4342-42ef-a021-1f5fa4ce751e",
+          773
+        ],
+        [
+          "3af68ba7-4342-42ef-a021-1f5fa4ce751e",
+          783
+        ],
+        [
+          "3af68ba7-4342-42ef-a021-1f5fa4ce751e",
+          793
+        ],
+        [
+          "3af68ba7-4342-42ef-a021-1f5fa4ce751e",
+          818
+        ],
+        [
+          "3af68ba7-4342-42ef-a021-1f5fa4ce751e",
+          848
+        ],
+        [
+          "3af68ba7-4342-42ef-a021-1f5fa4ce751e",
+          858
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          316
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          336
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          356
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          366
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          391
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          396
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          406
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          490
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          510
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          550
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          575
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          580
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          585
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          635
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          705
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          710
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          735
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          773
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          788
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1327
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1342
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1357
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1367
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1392
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1407
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1567
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1577
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1582
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1587
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1597
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1602
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1612
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1632
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1637
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1662
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1672
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1687
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1692
+        ],
+        [
+          "7b96ab79-2694-4717-87d0-ef232ed3010e",
+          70
+        ],
+        [
+          "7b96ab79-2694-4717-87d0-ef232ed3010e",
+          157
+        ],
+        [
+          "7b96ab79-2694-4717-87d0-ef232ed3010e",
+          202
+        ],
+        [
+          "7b96ab79-2694-4717-87d0-ef232ed3010e",
+          227
+        ],
+        [
+          "7b96ab79-2694-4717-87d0-ef232ed3010e",
+          282
+        ],
+        [
+          "7b96ab79-2694-4717-87d0-ef232ed3010e",
+          352
+        ],
+        [
+          "7b96ab79-2694-4717-87d0-ef232ed3010e",
+          364
+        ],
+        [
+          "7b96ab79-2694-4717-87d0-ef232ed3010e",
+          394
+        ],
+        [
+          "7b96ab79-2694-4717-87d0-ef232ed3010e",
+          419
+        ],
+        [
+          "f47a879d-958c-4865-b1b0-858639bead26",
+          507
+        ],
+        [
+          "f47a879d-958c-4865-b1b0-858639bead26",
+          517
+        ],
+        [
+          "f47a879d-958c-4865-b1b0-858639bead26",
+          552
+        ],
+        [
+          "f47a879d-958c-4865-b1b0-858639bead26",
+          582
+        ],
+        [
+          "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+          677
+        ],
+        [
+          "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+          707
+        ],
+        [
+          "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+          1537
+        ],
+        [
+          "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+          1542
+        ],
+        [
+          "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+          1567
+        ],
+        [
+          "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+          1572
+        ],
+        [
+          "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+          2075
+        ]
+      ]
+    },
+    "--filter": {
+      "calls": 65,
+      "call_seconds": 1204.752,
+      "median_ms": 12575.0,
+      "p95_ms": 55921.0,
+      "max_seconds": 92.421,
+      "tool_error_flags": 0,
+      "persistent_timeouts": 0,
+      "output_bytes": 35839,
+      "coordinates": [
+        [
+          "16fc4079-e68c-4bc5-acd1-b288a3764aae",
+          270
+        ],
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          408
+        ],
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          433
+        ],
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          460
+        ],
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          480
+        ],
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          490
+        ],
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          520
+        ],
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          645
+        ],
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          865
+        ],
+        [
+          "17ee527e-bf2b-4c41-9e7c-a797efd55237",
+          895
+        ],
+        [
+          "3a587871-0c5d-4a6b-a7a9-2afe736266f4",
+          159
+        ],
+        [
+          "3a587871-0c5d-4a6b-a7a9-2afe736266f4",
+          164
+        ],
+        [
+          "3af68ba7-4342-42ef-a021-1f5fa4ce751e",
+          272
+        ],
+        [
+          "3af68ba7-4342-42ef-a021-1f5fa4ce751e",
+          277
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          316
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          396
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          575
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          635
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          705
+        ],
+        [
+          "47349784-b00a-4daa-819d-db790d318532",
+          710
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          208
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          374
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          379
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          389
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          394
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          399
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          404
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          496
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          501
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          506
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          511
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          516
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          521
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          526
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          531
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          536
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          541
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          546
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          551
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          556
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          561
+        ],
+        [
+          "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+          626
+        ],
+        [
+          "586bfb96-6d30-4e21-be60-6cfe1ff079c8",
+          360
+        ],
+        [
+          "586bfb96-6d30-4e21-be60-6cfe1ff079c8",
+          365
+        ],
+        [
+          "586bfb96-6d30-4e21-be60-6cfe1ff079c8",
+          372
+        ],
+        [
+          "714e1d47-2174-4143-8ccb-ac7f6aaf9e30",
+          1342
+        ],
+        [
+          "8f1d33ed-3b05-4ff5-9aba-99b827fd40c0",
+          302
+        ],
+        [
+          "8f1d33ed-3b05-4ff5-9aba-99b827fd40c0",
+          492
+        ],
+        [
+          "f47a879d-958c-4865-b1b0-858639bead26",
+          377
+        ],
+        [
+          "f47a879d-958c-4865-b1b0-858639bead26",
+          392
+        ],
+        [
+          "f47a879d-958c-4865-b1b0-858639bead26",
+          397
+        ],
+        [
+          "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+          392
+        ],
+        [
+          "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+          457
+        ],
+        [
+          "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+          462
+        ],
+        [
+          "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+          467
+        ],
+        [
+          "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+          482
+        ],
+        [
+          "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+          492
+        ],
+        [
+          "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+          502
+        ],
+        [
+          "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+          582
+        ],
+        [
+          "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+          587
+        ],
+        [
+          "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+          597
+        ],
+        [
+          "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+          667
+        ],
+        [
+          "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+          672
+        ],
+        [
+          "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+          677
+        ],
+        [
+          "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+          707
+        ]
+      ]
+    },
+    "--report": {
+      "calls": 0,
+      "call_seconds": 0,
+      "median_ms": 0,
+      "p95_ms": 0,
+      "max_seconds": 0,
+      "tool_error_flags": 0,
+      "persistent_timeouts": 0,
+      "output_bytes": 0,
+      "coordinates": []
+    },
+    "--no-cache": {
+      "calls": 0,
+      "call_seconds": 0,
+      "median_ms": 0,
+      "p95_ms": 0,
+      "max_seconds": 0,
+      "tool_error_flags": 0,
+      "persistent_timeouts": 0,
+      "output_bytes": 0,
+      "coordinates": []
+    }
+  },
+  "top_calls": [
+    {
+      "session": "3a587871-0c5d-4a6b-a7a9-2afe736266f4",
+      "seq": 218,
+      "result_seq": 219,
+      "call_id": "call_00_kZHCgTSBUfypTt6Fnf569930",
+      "start_ms": 1790011274546,
+      "end_ms": 1790011874594,
+      "seconds": 600.048,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "883223d6b16be2e78fe5b8ec6e45be50152830e1574dd96dfa3d4d51ba4cc2dd",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": true,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 218,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 38,
+      "category": "coordinator_sleep",
+      "family": "Mylang run/build",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 1274,
+      "result_seq": 1277,
+      "call_id": "call_00_2fr4SgyHoJC2zPkygTOv8923",
+      "start_ms": 1790013754386,
+      "end_ms": 1790014354432,
+      "seconds": 600.046,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "fcfa276b0aba21e23b6b1842386b896b5324e36f84ad4d948469de08a85f4ca2",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": true,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 269,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 4,
+      "step": 6,
+      "category": "coordinator_sleep",
+      "family": "Coordination or polling",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 1289,
+      "result_seq": 1294,
+      "call_id": "call_00_idz3nTkPXo1WJYGwQoXC5816",
+      "start_ms": 1790014384505,
+      "end_ms": 1790014924731,
+      "seconds": 540.226,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "63f5b4790beba70ad63b90fbc3954bc8f50897f50dab913afc3be60ae11e5b69",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 117,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 4,
+      "step": 8,
+      "category": "coordinator_sleep",
+      "family": "Coordination or polling",
+      "collection": false
+    },
+    {
+      "session": "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+      "seq": 752,
+      "result_seq": 754,
+      "call_id": "call_00_v78AbIbxngLbjTZMGcF18542",
+      "start_ms": 1790023574433,
+      "end_ms": 1790024074441,
+      "seconds": 500.008,
+      "name": "job_output",
+      "depth": 1,
+      "command_sha256": null,
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 111,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": "running",
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 148,
+      "category": "job_collection",
+      "family": "CLI integration scripts",
+      "collection": true
+    },
+    {
+      "session": "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+      "seq": 595,
+      "result_seq": 596,
+      "call_id": "call_01_NXtEGUnupum75pjelrhh2793",
+      "start_ms": 1790020610443,
+      "end_ms": 1790021067320,
+      "seconds": 456.877,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "bd3378df7fd060a9ab89ab285aff19b96356a0ec587e2914e5f98962279e0bad",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 1202,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 106,
+      "category": "scripts_compiler_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 2226,
+      "result_seq": 2227,
+      "call_id": "call_00_ET_Uk3b9mcoDnF6yTfHDbcF6700",
+      "start_ms": 1790022650728,
+      "end_ms": 1790023091472,
+      "seconds": 440.744,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "6e037888a46c0f8c876131411cc7b20f4a6c2c393c2f4ecbda23febdce498242",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 57,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 27,
+      "step": 8,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+      "seq": 605,
+      "result_seq": 606,
+      "call_id": "call_00_mR8a3R9EjkxHpART3VDf0423",
+      "start_ms": 1790021100692,
+      "end_ms": 1790021539990,
+      "seconds": 439.298,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "6fd4c245fad66053a5558760135837e8f0b1fa11db3a87fb7c9e8f931d5120e6",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 421,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 108,
+      "category": "scripts_compiler_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 2153,
+      "result_seq": 2156,
+      "call_id": "call_00_ET_aCLkvhpy7m9kVCZgBr2m2220",
+      "start_ms": 1790020722404,
+      "end_ms": 1790021126037,
+      "seconds": 403.633,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "a6b5275a89ff1ff5cc1708fae1d01c8501c7bb871299938122cd717914223b4a",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 236,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 25,
+      "step": 1,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 1264,
+      "result_seq": 1265,
+      "call_id": "call_00_ET_cu8PPQRfF2hRSB8CTHMw8673",
+      "start_ms": 1790013342831,
+      "end_ms": 1790013743121,
+      "seconds": 400.29,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "936694b748e0a5c9417e7e8a5440e030896f3c0174ff0cdd383b020dd8bfeb91",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 131,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 4,
+      "step": 4,
+      "category": "coordinator_sleep",
+      "family": "Coordination or polling",
+      "collection": false
+    },
+    {
+      "session": "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+      "seq": 617,
+      "result_seq": 618,
+      "call_id": "call_00_aXvu3UT1yZsr4QCI1j156479",
+      "start_ms": 1790022399943,
+      "end_ms": 1790022799952,
+      "seconds": 400.009,
+      "name": "job_output",
+      "depth": 1,
+      "command_sha256": null,
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 111,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": "running",
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 121,
+      "category": "job_collection",
+      "family": "CLI integration scripts",
+      "collection": true
+    },
+    {
+      "session": "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+      "seq": 622,
+      "result_seq": 623,
+      "call_id": "call_00_ET_QPPOzc2yKOOv97BzIqtW8657",
+      "start_ms": 1790022801804,
+      "end_ms": 1790023201809,
+      "seconds": 400.005,
+      "name": "job_output",
+      "depth": 1,
+      "command_sha256": null,
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 111,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": "running",
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 122,
+      "category": "job_collection",
+      "family": "CLI integration scripts",
+      "collection": true
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 2186,
+      "result_seq": 2187,
+      "call_id": "call_00_ET_zbR2TbbnetOHSXKDB86w8944",
+      "start_ms": 1790021501970,
+      "end_ms": 1790021900109,
+      "seconds": 398.139,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "56b3309efeed4e2bdc3e0ace65baaa124882671d1ea82e7f1155144280ec0869",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 123,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 27,
+      "step": 1,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 2172,
+      "result_seq": 2173,
+      "call_id": "call_00_ET_zT0dcEUgUT2ysrs1IdNt0064",
+      "start_ms": 1790021135785,
+      "end_ms": 1790021494196,
+      "seconds": 358.411,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "a6b5275a89ff1ff5cc1708fae1d01c8501c7bb871299938122cd717914223b4a",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 131,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 26,
+      "step": 1,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 2085,
+      "result_seq": 2088,
+      "call_id": "call_00_ET_JwaMLIjw3Og5clQK3dXh2203",
+      "start_ms": 1790019411519,
+      "end_ms": 1790019755677,
+      "seconds": 344.158,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "6e037888a46c0f8c876131411cc7b20f4a6c2c393c2f4ecbda23febdce498242",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 119,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 22,
+      "step": 3,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 2191,
+      "result_seq": 2194,
+      "call_id": "call_00_DvyUbj3zs7GWBS846b3r1280",
+      "start_ms": 1790021903478,
+      "end_ms": 1790022225022,
+      "seconds": 321.544,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "ab22971aed8b518ec57b9de2f16090bf6b47c8a0aa2475226aa28db5beb76b45",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 252,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 27,
+      "step": 2,
+      "category": "read_search_or_mixed",
+      "family": "Mylang run/build",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 2095,
+      "result_seq": 2096,
+      "call_id": "call_00_KRqEzbo5ovCoXUvkpNLZ8310",
+      "start_ms": 1790019762110,
+      "end_ms": 1790020076176,
+      "seconds": 314.066,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "a7880bc756dbb1dc3c6def28d31b811ade60a4ce60366e8eed8b55bb871292a1",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 126,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 22,
+      "step": 4,
+      "category": "scripts_compiler_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 2119,
+      "result_seq": 2120,
+      "call_id": "call_00_nh6khBu0YC66CVMWiPPW0935",
+      "start_ms": 1790020385707,
+      "end_ms": 1790020693206,
+      "seconds": 307.499,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "6e037888a46c0f8c876131411cc7b20f4a6c2c393c2f4ecbda23febdce498242",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 57,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 23,
+      "step": 2,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+      "seq": 760,
+      "result_seq": 761,
+      "call_id": "call_00_qwwHB8ZH5AO9ZUTKim3m8296",
+      "start_ms": 1790024076969,
+      "end_ms": 1790024381073,
+      "seconds": 304.104,
+      "name": "job_output",
+      "depth": 1,
+      "command_sha256": null,
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 47,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": "completed",
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 149,
+      "category": "job_collection",
+      "family": "CLI integration scripts",
+      "collection": true
+    },
+    {
+      "session": "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+      "seq": 512,
+      "result_seq": 513,
+      "call_id": "call_00_lpApRF8J0Lzdovmjlvwb1350",
+      "start_ms": 1790021767390,
+      "end_ms": 1790022067403,
+      "seconds": 300.013,
+      "name": "job_output",
+      "depth": 1,
+      "command_sha256": null,
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 111,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": "running",
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 100,
+      "category": "job_collection",
+      "family": "CLI integration scripts",
+      "collection": true
+    },
+    {
+      "session": "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+      "seq": 815,
+      "result_seq": 816,
+      "call_id": "call_00_NO8eJ1woPIHlVSt8wyG64650",
+      "start_ms": 1790024445020,
+      "end_ms": 1790024745031,
+      "seconds": 300.011,
+      "name": "job_output",
+      "depth": 1,
+      "command_sha256": null,
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 140,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": "running",
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 160,
+      "category": "job_collection",
+      "family": "Compiler readiness polling and CLI integration",
+      "collection": true
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 2109,
+      "result_seq": 2112,
+      "call_id": "call_00_aKoEtO2CeyStmm5KiTm42700",
+      "start_ms": 1790020085625,
+      "end_ms": 1790020381493,
+      "seconds": 295.868,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "6e037888a46c0f8c876131411cc7b20f4a6c2c393c2f4ecbda23febdce498242",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 118,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 23,
+      "step": 1,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 2061,
+      "result_seq": 2062,
+      "call_id": "call_00_yAjYo53vdw5xcwVSSK1z0659",
+      "start_ms": 1790019006338,
+      "end_ms": 1790019268942,
+      "seconds": 262.604,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "e0669e49ef2de3c022a259259aea5590d96e6a7fe8b024eab8698f2751f183dc",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 225,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 21,
+      "step": 1,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+      "seq": 630,
+      "result_seq": 631,
+      "call_id": "call_00_ET_Tl9YWU8nlxcUguAsIPJg5967",
+      "start_ms": 1790021556454,
+      "end_ms": 1790021818325,
+      "seconds": 261.871,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "00a0229d8b63dd60191f2971e62b633f80761d055f9950b258863851f03f4915",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 520,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 113,
+      "category": "scripts_compiler_or_mixed",
+      "family": "Mylang test and run mixed",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 2017,
+      "result_seq": 2020,
+      "call_id": "call_00_7K7tmJZ1WuaV7qQsfNPd9107",
+      "start_ms": 1790018709393,
+      "end_ms": 1790018968112,
+      "seconds": 258.719,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "fe1cfe3cc9e91cb3410aa6ddc668b8a67c3f1231305a05e367e5cee673921cdc",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 172,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 19,
+      "step": 1,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+      "seq": 645,
+      "result_seq": 646,
+      "call_id": "call_00_ET_WhecXcD8xP7gkTITIQBK6257",
+      "start_ms": 1790021828655,
+      "end_ms": 1790022074638,
+      "seconds": 245.983,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "4e185e99f1ea1a92dcb2a1cd65fd643d939e069e8d691eeb9f4518b809a832dc",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 1674,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 116,
+      "category": "scripts_compiler_or_mixed",
+      "family": "Mylang test and run mixed",
+      "collection": false
+    },
+    {
+      "session": "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+      "seq": 631,
+      "result_seq": 632,
+      "call_id": "call_00_KG7sKp60VExGiFaea4GE9830",
+      "start_ms": 1790020749230,
+      "end_ms": 1790020984665,
+      "seconds": 235.435,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "115353ffac46319cabb3103af12cf026c89c784760fb1ebbab401efa606399f9",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 108,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 114,
+      "category": "scripts_compiler_or_mixed",
+      "family": "Mylang test and run mixed",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 1781,
+      "result_seq": 1782,
+      "call_id": "call_00_FVrV5QQsoExCMkHeKbVZ4941",
+      "start_ms": 1790016763996,
+      "end_ms": 1790016981473,
+      "seconds": 217.477,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "058f626164d13ac07abcf95980527420822b29292a1f7dada762bd9d427cb84e",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 1186,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 11,
+      "step": 1,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 1986,
+      "result_seq": 1989,
+      "call_id": "call_00_HBvvifTr50q6OrBf4puP8121",
+      "start_ms": 1790018472897,
+      "end_ms": 1790018687587,
+      "seconds": 214.69,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "a5c41ad5982916fcb9218a31d957ecb1ffb1364e7c98876e11b3de6578f03868",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 121,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 18,
+      "step": 1,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 1925,
+      "result_seq": 1928,
+      "call_id": "call_00_q9H4F5hC1nNoKpdnyhzH4539",
+      "start_ms": 1790017830226,
+      "end_ms": 1790018042749,
+      "seconds": 212.523,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "175138080b2959ad07ca80809f39ebc8089c370225e3604323abd5d9f1cb4c26",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 1081,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 15,
+      "step": 5,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "8f1d33ed-3b05-4ff5-9aba-99b827fd40c0",
+      "seq": 212,
+      "result_seq": 213,
+      "call_id": "call_00_w3v8Akfz1iSgrLZC7EDH8288",
+      "start_ms": 1790016744455,
+      "end_ms": 1790016954978,
+      "seconds": 210.523,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "a2cb9da7d52613050c1cb7f0d2b1975987cfd23679abfed303b7d47bb7d52aef",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 952,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 38,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+      "seq": 517,
+      "result_seq": 518,
+      "call_id": "call_00_ET_98pO5t7PKOIdaVPcsdTy7103",
+      "start_ms": 1790022069536,
+      "end_ms": 1790022269709,
+      "seconds": 200.173,
+      "name": "job_output",
+      "depth": 1,
+      "command_sha256": null,
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 47,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": "completed",
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 101,
+      "category": "job_collection",
+      "family": "CLI integration scripts",
+      "collection": true
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 1967,
+      "result_seq": 1968,
+      "call_id": "call_00_fKrBZCVELd69rGBfEUkw2511",
+      "start_ms": 1790018265112,
+      "end_ms": 1790018460170,
+      "seconds": 195.058,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "6e037888a46c0f8c876131411cc7b20f4a6c2c393c2f4ecbda23febdce498242",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 118,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 17,
+      "step": 1,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "dede3063-a87e-4069-a7a4-2bbf2ee5d4cb",
+      "seq": 493,
+      "result_seq": 494,
+      "call_id": "call_00_jRgIPKfqbn4UDod9wCT89124",
+      "start_ms": 1790017048164,
+      "end_ms": 1790017234494,
+      "seconds": 186.33,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "06b7c2943156d73eb95c2ebd5481afa96495ee0f9776570b57fb456c41242581",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 1115,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 89,
+      "category": "scripts_compiler_or_mixed",
+      "family": "Mylang test and run mixed",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 1944,
+      "result_seq": 1945,
+      "call_id": "call_00_89dqiydhi5L7Fey8UZY20244",
+      "start_ms": 1790018053216,
+      "end_ms": 1790018238007,
+      "seconds": 184.791,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "6e037888a46c0f8c876131411cc7b20f4a6c2c393c2f4ecbda23febdce498242",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 118,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 16,
+      "step": 1,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 537,
+      "result_seq": 538,
+      "call_id": "call_00_czuo11ZhF9r6kFtrgmOA2988",
+      "start_ms": 1790011761405,
+      "end_ms": 1790011941715,
+      "seconds": 180.31,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "2b3ba0c38cdfec55499b4258be7289398c3e9fea2c5db3b9bd6d2834e6f496d2",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 145,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 91,
+      "category": "coordinator_sleep",
+      "family": "Coordination or polling",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 1800,
+      "result_seq": 1801,
+      "call_id": "call_00_ET_n3TjFhbWbbcFv4chA8Uq5354",
+      "start_ms": 1790016993072,
+      "end_ms": 1790017171186,
+      "seconds": 178.114,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "058f626164d13ac07abcf95980527420822b29292a1f7dada762bd9d427cb84e",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 1186,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 12,
+      "step": 1,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 2201,
+      "result_seq": 2202,
+      "call_id": "call_00_yqUxg7RnoZsYw3EXJYf02454",
+      "start_ms": 1790022230185,
+      "end_ms": 1790022408096,
+      "seconds": 177.911,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "bdc5f906e0309038f70655c3fb0d902c8e2b578ddf50b00bff4eb4b407bc3e5c",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 309,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 27,
+      "step": 3,
+      "category": "scripts_compiler_or_mixed",
+      "family": "Mylang run/build",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 1824,
+      "result_seq": 1825,
+      "call_id": "call_00_2K5GBPYzjmyQRjbm4WDZ0257",
+      "start_ms": 1790017190850,
+      "end_ms": 1790017365342,
+      "seconds": 174.492,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "d181b0a39873fd1342b21e2c5a4c1a10dd5545096ebedc6f8734144f14ee9d14",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 528,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 13,
+      "step": 1,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+      "seq": 157,
+      "result_seq": 158,
+      "call_id": "call_00_F25IyiaxA7uVcuh3AdyS8930",
+      "start_ms": 1790018072419,
+      "end_ms": 1790018244571,
+      "seconds": 172.152,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "97283d683928dc1e1ebe0049554043e3df9b024b24ecfe08c620ef194531abd7",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 197,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 25,
+      "category": "other_shell",
+      "family": "Other shell",
+      "collection": false
+    },
+    {
+      "session": "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+      "seq": 423,
+      "result_seq": 425,
+      "call_id": "call_00_a0j2WW8csRKszjnuyyLP1441",
+      "start_ms": 1790019346221,
+      "end_ms": 1790019514105,
+      "seconds": 167.884,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "8c8590e2ac8ec7e4e5043400d10d3ed5a8ca15da4a1438469171c77c7132711e",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 233,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 73,
+      "category": "scripts_compiler_or_mixed",
+      "family": "Mylang run/build",
+      "collection": false
+    },
+    {
+      "session": "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+      "seq": 448,
+      "result_seq": 449,
+      "call_id": "call_00_cUD6xlxVmN6zQCf3moOG5825",
+      "start_ms": 1790019554583,
+      "end_ms": 1790019721430,
+      "seconds": 166.847,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "a7831d4061d0efd1ffe28a6c814c05995c68d34cf038532360f9f5699b2a3d7c",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 3135,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 77,
+      "category": "scripts_compiler_or_mixed",
+      "family": "Mylang run/build",
+      "collection": false
+    },
+    {
+      "session": "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+      "seq": 312,
+      "result_seq": 313,
+      "call_id": "call_00_jPzbUoL7WLRcJn7hGzok2583",
+      "start_ms": 1790021197750,
+      "end_ms": 1790021356295,
+      "seconds": 158.545,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "63b8fadc132f2b68e28e665eb01177e4da6f1a50641f8e836986368dd4126e15",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 6277,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 60,
+      "category": "other_shell",
+      "family": "Mylang run/build",
+      "collection": false
+    },
+    {
+      "session": "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+      "seq": 411,
+      "result_seq": 412,
+      "call_id": "call_00_wZ7WjG2JgTY8IqfIARih1016",
+      "start_ms": 1790019174488,
+      "end_ms": 1790019328364,
+      "seconds": 153.876,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "ad54d2b84be9cbe50d353de1c96cabe5a70276022f9161b2084ea101b9a97549",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 2349,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 71,
+      "category": "scripts_compiler_or_mixed",
+      "family": "Mylang run/build",
+      "collection": false
+    },
+    {
+      "session": "4ff42c78-1d4d-45eb-a522-cbcedf817363",
+      "seq": 606,
+      "result_seq": 607,
+      "call_id": "call_00_R7JIgSzkXrQMmInDBQ4M2250",
+      "start_ms": 1790020519422,
+      "end_ms": 1790020672711,
+      "seconds": 153.289,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "9e85534fbddfcc1cecd9c46bc6a69bb824c635e7bb82aacc50fe7dbe03ec67be",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 163,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 109,
+      "category": "scripts_compiler_or_mixed",
+      "family": "Mylang test",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 1762,
+      "result_seq": 1765,
+      "call_id": "call_00_9VYE9BFey6Dj8bxmBoFT7394",
+      "start_ms": 1790016602684,
+      "end_ms": 1790016755283,
+      "seconds": 152.599,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "9c0ab5ba53af38e8b327831fb0da848b63b15e48bce1201e6ee0623b66f39fea",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 898,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 10,
+      "step": 5,
+      "category": "read_search_or_mixed",
+      "family": "Full guest gate",
+      "collection": false
+    },
+    {
+      "session": "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+      "seq": 518,
+      "result_seq": 519,
+      "call_id": "call_00_ET_7qcn4qnEVpix6a9H0yzY8064",
+      "start_ms": 1790019883766,
+      "end_ms": 1790020034814,
+      "seconds": 151.048,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "dd1ebbbe87eabdd0dee72b5f419d9aed5b07c6726129501e9bc859678a2ae2a3",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 127,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 91,
+      "category": "scripts_compiler_or_mixed",
+      "family": "Mylang run/build",
+      "collection": false
+    },
+    {
+      "session": "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+      "seq": 308,
+      "result_seq": 309,
+      "call_id": "call_00_KadiIe09ADNa4yTOQA0I0620",
+      "start_ms": 1790018681829,
+      "end_ms": 1790018829749,
+      "seconds": 147.92,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "09a8b509edf0b8b484bcd1739a7864fd0ac3085d130a508aeceec4539024e88f",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 3709,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 52,
+      "category": "scripts_compiler_or_mixed",
+      "family": "Mylang run/build",
+      "collection": false
+    },
+    {
+      "session": "25e883c0-3c57-4e0e-840b-8c2131b86bf9",
+      "seq": 162,
+      "result_seq": 163,
+      "call_id": "call_00_VvZAgGavQg2K8vQGeyRr7012",
+      "start_ms": 1790018247072,
+      "end_ms": 1790018394498,
+      "seconds": 147.426,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "5e1269ec747f60c147d8aca2d591f4eacc622f58bfdee7d84ac851b437f19388",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 326,
+      "explicit_nonzero_exit": true,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 26,
+      "category": "other_shell",
+      "family": "Other shell",
+      "collection": false
+    },
+    {
+      "session": "session-9c7c9729-213b-4415-b689-d5a35a06fedd",
+      "seq": 746,
+      "result_seq": 752,
+      "call_id": "call_00_K5ewA4Zg9sYhW0VSJqfQ8831",
+      "start_ms": 1790012169069,
+      "end_ms": 1790012309308,
+      "seconds": 140.239,
+      "name": "bash",
+      "depth": 0,
+      "command_sha256": "e9f1470595759af30b7577f722b61e855d03783ec0514d282ecc48ccd1a0c2b9",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 232,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 128,
+      "category": "coordinator_sleep",
+      "family": "Coordination or polling",
+      "collection": false
+    },
+    {
+      "session": "ff0433af-19c8-46b4-8dcd-bd073e3c1a76",
+      "seq": 282,
+      "result_seq": 283,
+      "call_id": "call_00_c9DEiMVGednkuO3NARC20190",
+      "start_ms": 1790020990851,
+      "end_ms": 1790021128803,
+      "seconds": 137.952,
+      "name": "bash",
+      "depth": 1,
+      "command_sha256": "30acaa9d70ef1ff881f92d1d0d10bd6f23181ae404bf65faf6694d249a5c47e1",
+      "is_error": false,
+      "persistent_timeout": false,
+      "managed_timeout": false,
+      "shell_reset": false,
+      "truncated": false,
+      "output_bytes": 1354,
+      "explicit_nonzero_exit": false,
+      "guardian_failed": false,
+      "background_started": false,
+      "background_job_id": null,
+      "job_status": null,
+      "schema": {
+        "bash_parameters": [
+          "command",
+          "description",
+          "justification",
+          "run_in_background",
+          "sandbox_permissions",
+          "timeoutMs",
+          "workdir"
+        ],
+        "background_supported": true
+      },
+      "turn": 1,
+      "step": 54,
+      "category": "read_search_or_mixed",
+      "family": "Mylang test",
+      "collection": false
+    }
+  ],
+  "shell_latency": {
+    "calls": 3334,
+    "call_seconds": 24939.033,
+    "median_ms": 184.0,
+    "p95_ms": 39253.0,
+    "max_seconds": 600.048,
+    "tool_error_flags": 1,
+    "persistent_timeouts": 0,
+    "output_bytes": 5464881
+  },
+  "notes": [
+    "All completed calls included; shell coordination is a separate family, not silently excluded.",
+    "Job collection time is attributed to its launch command; job lifetime is never added to tool time.",
+    "Command families are heuristic whole-call labels, not per-process timings. Mixed edits and commands remain mixed.",
+    "SourceChanged count includes direct test-containing bash results with the exact host-failure text; excludes messages, documentation reads and job_output.",
+    "This companion reads fixed snapshots twice. Do not use live mutable logs as its input; snapshot first."
+  ]
+}

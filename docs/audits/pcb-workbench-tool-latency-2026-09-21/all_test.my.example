@@ -1,0 +1,26 @@
+module all_test
+
+import contract
+import draft
+import edits
+import env
+import extract
+import font
+import geom
+import hash
+import journal
+import kit
+import layers
+import main as pcb_cli
+import model
+import png
+import raster
+import referee
+import render
+import revision
+import sexp
+import shape
+import units
+
+def main() -> int:
+    return 0

@@ -1,0 +1,4102 @@
+[
+  {
+    "label": "geom-cold",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "test",
+      "/tmp/pcb-latency-fixes-20260921/accepted-probes/guest/geom.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/accepted-probes/test-cache",
+      "--max-steps=4294967295",
+      "--report",
+      "--json"
+    ],
+    "seconds": 3.109479681996163,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 1,
+        "syntax_stored": 1,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 175161,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 1,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 1,
+        "syntax_stored": 1,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 175161,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "native-test-compile",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 69,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 812992,
+          "ordinary_bytes": 812992,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [
+          {
+            "reason": "interned-record",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 1,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 69,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 53,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 53,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 69,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "miss",
+          "performed": 15,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 2,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 69,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 53,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 53,
+            "reused": 0
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 15,
+            "reused": 0
+          }
+        }
+      }
+    ],
+    "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"geom::test_circle_predicates_use_exact_squares\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ed49c93dcdaa51a9034f7eb04a2c0646a305fd60a3a12577f6169481a72ed0ce\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_1f0bcb8390f6f5a3f6ae9dc844def2bd9fdea86d7cce23e89eefe1722a87b274\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_4294212545c57c3af3441dc633071cff39954d4dec157e0c1f2776f7a866401f\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_815c20cec3a4a799b9521bbe1cd392668f99eee23f4f3e984cc8d8319f7067d5\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":2090,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_closest_point_clamps_to_the_segment_ends\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"4105a4f1e24005115fc6be58a640b6f0c50888688e126c07d2c0fc4ac82f3117\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fb6d64daf0f90f2f7ed83a7ce9ca6d20b93b5fdb6bf4a9ee0f3a6d82c7ccb80b\"],\"cacheable\":true,\"reasons\":[],\"steps\":1543,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_distance_to_boundary_is_zero_on_the_outline\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"02aeff72563a382e1a90dc000943acd5832607c57df46fb8ca68177ca9ac2148\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_d77de07a9399d8186268208a50e4216598719e69b79fba9a1aa03bd03c213130\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":9865,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_orientation_is_exact_at_the_coordinate_extremes\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"f5c99edd9d5ddadc2182984a6a00cfa867d49a92f1052f6e24f34e29f3ab6b78\",\"dependencies\":[\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_a1edd9cb1fb4917f71ce85e4f45117b08b4de2afd9be858c2b813457279b8779\",\"myl_f_a64b46a7056b6f5e0d7e9d99db8551c37feba8d183587dfa42141488eba05d42\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\"],\"cacheable\":true,\"reasons\":[],\"steps\":1361,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_polygon_area_counts_twice_the_signed_region\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"46bc2ec25c44df18a7cfb9f549e34530b837f86477eadc3b8c2c7459630d456e\",\"dependencies\":[\"myl_f_387dbb58d061a96cb0503f67782b705c12e02f15cbb7d5441799637eb3945b14\",\"myl_f_4d3d18a16438e54cbf74e659d607167665b1385646f32b1ad6106ae2ff49cc9a\",\"myl_f_5f7b58927a900fcd4804e9087e9d7650efb606af261270379e1351ea1c7ae7c1\",\"myl_f_8d44e3a7a2eea534d6208df1a0fe1642f52b1339ab63e5086154f700cef33ab0\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_cc0b0c90cc48350f9510ca16bb682cd6e7e98d9b9be4adde33eb1be17e4ad626\"],\"cacheable\":true,\"reasons\":[],\"steps\":3470,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_polygon_containment_is_exact_on_edges_and_corners\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"fa45136f4cfca2ab0faf423e6172bd45899a02afd362085de02c9cb707be577a\",\"dependencies\":[\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_5fccb854565e38d32799376a0bfdb2d0e402b94a7a59a90d321b247b09ed8460\",\"myl_f_63e1f183648c24155bab2f94260a93079265808290d49740f05864a608a7c61c\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_7baeca96f65b0a7c82cc6d399f5c0ddeae9a8ebe66922d275d20e246350810d3\",\"myl_f_9817214fe7e7505198531ab7b3f0718f411a15efc722b2f3f2aba61e828ca240\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":6765,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_rect_intersection_and_clearance_regions\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ad75562db3261ee813d71e45804405c6fd6ddc3060ec64a89d08164e669b3caa\",\"dependencies\":[\"myl_f_103bf41be6f08738f8ef665ad13936cc4523b78dbd49714ccbde02431f2e4aac\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_5d2f6af555987798dce798b53aab9b4b1cf5d3922e0cfad1584e83e8c878eafb\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_c77a22f05a431a5b66d318684f24159f14a38c38e587adf6d5e50064c9d29e88\",\"myl_f_daef4bd21ead228d4ee0bcd150e5949b39dfba3904dfcee2a9fba1ca10215112\",\"myl_f_fa71b2560dbadf3ac7ccefd2bc0827a0a1cdbd11bda4e56ec9cb0bb3773cd2c3\"],\"cacheable\":true,\"reasons\":[],\"steps\":550,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_segment_distance_is_exact_and_symmetric\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ff124f9c5f34e0f8b737797a02a18c7d78c39cb700f38c454b086ae5f325bacc\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_18d8101e2640a09c5c354c9ef95591741159a68cc6eb53fd91c410471615c808\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":4732,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_closest_point_is_exact_at_board_scale\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"b19c993293f5846539dd79325d516f56f947f16e1f764fb2fe134f7ff6e3e5a9\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_40aaf2ffbfab89b563f3c798fd6050862bd07cdd177675e3933ff904626c4a1a\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":12994,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_distance_to_a_point_is_exact_at_board_scale\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"fb3666a785cbea7a71141f06ad1b4dabacf07d6a9274e521a869c1b7c33bdca7\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_23123f4de3a8635738a0d3c2e776d63188f13e81c6523f4a723a0b53134ceb17\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_43cb881472d0ba40ede53606812d67525afd7452f7cbc602945765081a5d6b98\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":5856,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_dependents_are_exact_at_board_scale\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"0cdb2af2199a4511d375648de0a5d8dad2ef5eb6060227cef9ddd182fe8be1c5\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_94c9a491d1651f11a3f63413ae580a46da72c8e6d29ea8709d9ca785996834c3\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_dccc8c1661b277d0a1f0df77ada0569aa0adf7dc8682ad166769f61098c9db15\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":23096,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_is_exact_at_the_coordinate_bound\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"5af7e240ae488724607e4a7fbca0cf1dfb6e90b3c2c4ce0c5c34ce59b2f5e030\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_346fc8ae4edd2364b7d82cd4cf15436a26ec81b1d22e8faeeb13c42e0e4878db\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":12723,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_is_exact_on_a_diagonal_at_board_scale\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"3a634c1c59adb3178e5cd50e2682e050d1d2d86a013c5320d9316399d8f1a639\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_ec7c198e2871d9bfebf199cd6555d2c1306a2d396b945b6a6be05e751751ee1d\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":8148,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_rounds_the_nearest_nanometre_either_direction\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d2c88ae8a6468d98b3684495db11a330d930a7553e63271e6fbbdc6f44d34d0e\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_c03fa9f12d57f71deff7fa7b1d71c68b2fbe5dc172847f622ef48b6ea650d928\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":3688,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_two_word_products_are_exact\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d5272561986861a3f2ed1d9ebcd9eb5a4922e1c2b0d517a587b6b6e69aace3ce\",\"dependencies\":[\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c38165bd9be529d327ec7273eee2836325e3b1f1cd0fdd94bf0fedc5c97bb3f5\"],\"cacheable\":true,\"reasons\":[],\"steps\":1539,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"}],\"passed\":15,\"failed\":0,\"skipped\":0,\"cached\":0,\"executed\":15}\n"
+  },
+  {
+    "label": "geom-warm",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "test",
+      "/tmp/pcb-latency-fixes-20260921/accepted-probes/guest/geom.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/accepted-probes/test-cache",
+      "--max-steps=4294967295",
+      "--report",
+      "--json"
+    ],
+    "seconds": 0.5163528129924089,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 1,
+        "verdict_stored": 1,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 175221,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 68
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 934100,
+          "ordinary_bytes": 934100,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [
+          {
+            "reason": "no-retained-body",
+            "count": 1
+          },
+          {
+            "reason": "interned-record",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 68
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 2
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 68
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 15
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 2
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 68
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 15
+          }
+        }
+      }
+    ],
+    "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"geom::test_circle_predicates_use_exact_squares\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ed49c93dcdaa51a9034f7eb04a2c0646a305fd60a3a12577f6169481a72ed0ce\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_1f0bcb8390f6f5a3f6ae9dc844def2bd9fdea86d7cce23e89eefe1722a87b274\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_4294212545c57c3af3441dc633071cff39954d4dec157e0c1f2776f7a866401f\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_815c20cec3a4a799b9521bbe1cd392668f99eee23f4f3e984cc8d8319f7067d5\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_closest_point_clamps_to_the_segment_ends\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"4105a4f1e24005115fc6be58a640b6f0c50888688e126c07d2c0fc4ac82f3117\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fb6d64daf0f90f2f7ed83a7ce9ca6d20b93b5fdb6bf4a9ee0f3a6d82c7ccb80b\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_distance_to_boundary_is_zero_on_the_outline\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"02aeff72563a382e1a90dc000943acd5832607c57df46fb8ca68177ca9ac2148\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_d77de07a9399d8186268208a50e4216598719e69b79fba9a1aa03bd03c213130\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_orientation_is_exact_at_the_coordinate_extremes\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"f5c99edd9d5ddadc2182984a6a00cfa867d49a92f1052f6e24f34e29f3ab6b78\",\"dependencies\":[\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_a1edd9cb1fb4917f71ce85e4f45117b08b4de2afd9be858c2b813457279b8779\",\"myl_f_a64b46a7056b6f5e0d7e9d99db8551c37feba8d183587dfa42141488eba05d42\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_polygon_area_counts_twice_the_signed_region\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"46bc2ec25c44df18a7cfb9f549e34530b837f86477eadc3b8c2c7459630d456e\",\"dependencies\":[\"myl_f_387dbb58d061a96cb0503f67782b705c12e02f15cbb7d5441799637eb3945b14\",\"myl_f_4d3d18a16438e54cbf74e659d607167665b1385646f32b1ad6106ae2ff49cc9a\",\"myl_f_5f7b58927a900fcd4804e9087e9d7650efb606af261270379e1351ea1c7ae7c1\",\"myl_f_8d44e3a7a2eea534d6208df1a0fe1642f52b1339ab63e5086154f700cef33ab0\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_cc0b0c90cc48350f9510ca16bb682cd6e7e98d9b9be4adde33eb1be17e4ad626\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_polygon_containment_is_exact_on_edges_and_corners\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"fa45136f4cfca2ab0faf423e6172bd45899a02afd362085de02c9cb707be577a\",\"dependencies\":[\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_5fccb854565e38d32799376a0bfdb2d0e402b94a7a59a90d321b247b09ed8460\",\"myl_f_63e1f183648c24155bab2f94260a93079265808290d49740f05864a608a7c61c\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_7baeca96f65b0a7c82cc6d399f5c0ddeae9a8ebe66922d275d20e246350810d3\",\"myl_f_9817214fe7e7505198531ab7b3f0718f411a15efc722b2f3f2aba61e828ca240\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_rect_intersection_and_clearance_regions\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ad75562db3261ee813d71e45804405c6fd6ddc3060ec64a89d08164e669b3caa\",\"dependencies\":[\"myl_f_103bf41be6f08738f8ef665ad13936cc4523b78dbd49714ccbde02431f2e4aac\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_5d2f6af555987798dce798b53aab9b4b1cf5d3922e0cfad1584e83e8c878eafb\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_c77a22f05a431a5b66d318684f24159f14a38c38e587adf6d5e50064c9d29e88\",\"myl_f_daef4bd21ead228d4ee0bcd150e5949b39dfba3904dfcee2a9fba1ca10215112\",\"myl_f_fa71b2560dbadf3ac7ccefd2bc0827a0a1cdbd11bda4e56ec9cb0bb3773cd2c3\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_segment_distance_is_exact_and_symmetric\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ff124f9c5f34e0f8b737797a02a18c7d78c39cb700f38c454b086ae5f325bacc\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_18d8101e2640a09c5c354c9ef95591741159a68cc6eb53fd91c410471615c808\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_closest_point_is_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"b19c993293f5846539dd79325d516f56f947f16e1f764fb2fe134f7ff6e3e5a9\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_40aaf2ffbfab89b563f3c798fd6050862bd07cdd177675e3933ff904626c4a1a\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_distance_to_a_point_is_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"fb3666a785cbea7a71141f06ad1b4dabacf07d6a9274e521a869c1b7c33bdca7\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_23123f4de3a8635738a0d3c2e776d63188f13e81c6523f4a723a0b53134ceb17\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_43cb881472d0ba40ede53606812d67525afd7452f7cbc602945765081a5d6b98\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_dependents_are_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"0cdb2af2199a4511d375648de0a5d8dad2ef5eb6060227cef9ddd182fe8be1c5\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_94c9a491d1651f11a3f63413ae580a46da72c8e6d29ea8709d9ca785996834c3\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_dccc8c1661b277d0a1f0df77ada0569aa0adf7dc8682ad166769f61098c9db15\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_is_exact_at_the_coordinate_bound\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"5af7e240ae488724607e4a7fbca0cf1dfb6e90b3c2c4ce0c5c34ce59b2f5e030\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_346fc8ae4edd2364b7d82cd4cf15436a26ec81b1d22e8faeeb13c42e0e4878db\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_is_exact_on_a_diagonal_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"3a634c1c59adb3178e5cd50e2682e050d1d2d86a013c5320d9316399d8f1a639\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_ec7c198e2871d9bfebf199cd6555d2c1306a2d396b945b6a6be05e751751ee1d\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_rounds_the_nearest_nanometre_either_direction\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d2c88ae8a6468d98b3684495db11a330d930a7553e63271e6fbbdc6f44d34d0e\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_c03fa9f12d57f71deff7fa7b1d71c68b2fbe5dc172847f622ef48b6ea650d928\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_two_word_products_are_exact\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d5272561986861a3f2ed1d9ebcd9eb5a4922e1c2b0d517a587b6b6e69aace3ce\",\"dependencies\":[\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c38165bd9be529d327ec7273eee2836325e3b1f1cd0fdd94bf0fedc5c97bb3f5\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"}],\"passed\":0,\"failed\":0,\"skipped\":0,\"cached\":15,\"executed\":0}\n"
+  },
+  {
+    "label": "geom-warm-repeat",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "test",
+      "/tmp/pcb-latency-fixes-20260921/accepted-probes/guest/geom.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/accepted-probes/test-cache",
+      "--max-steps=4294967295",
+      "--report",
+      "--json"
+    ],
+    "seconds": 0.46710279799299315,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 1,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": true,
+        "parsed_modules": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 1,
+        "session_reused_results": 1,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 15
+        },
+        "reused_results": 1,
+        "session_reused_results": 1,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 15
+          }
+        }
+      }
+    ],
+    "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"geom::test_circle_predicates_use_exact_squares\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ed49c93dcdaa51a9034f7eb04a2c0646a305fd60a3a12577f6169481a72ed0ce\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_1f0bcb8390f6f5a3f6ae9dc844def2bd9fdea86d7cce23e89eefe1722a87b274\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_4294212545c57c3af3441dc633071cff39954d4dec157e0c1f2776f7a866401f\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_815c20cec3a4a799b9521bbe1cd392668f99eee23f4f3e984cc8d8319f7067d5\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_closest_point_clamps_to_the_segment_ends\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"4105a4f1e24005115fc6be58a640b6f0c50888688e126c07d2c0fc4ac82f3117\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fb6d64daf0f90f2f7ed83a7ce9ca6d20b93b5fdb6bf4a9ee0f3a6d82c7ccb80b\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_distance_to_boundary_is_zero_on_the_outline\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"02aeff72563a382e1a90dc000943acd5832607c57df46fb8ca68177ca9ac2148\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_d77de07a9399d8186268208a50e4216598719e69b79fba9a1aa03bd03c213130\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_orientation_is_exact_at_the_coordinate_extremes\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"f5c99edd9d5ddadc2182984a6a00cfa867d49a92f1052f6e24f34e29f3ab6b78\",\"dependencies\":[\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_a1edd9cb1fb4917f71ce85e4f45117b08b4de2afd9be858c2b813457279b8779\",\"myl_f_a64b46a7056b6f5e0d7e9d99db8551c37feba8d183587dfa42141488eba05d42\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_polygon_area_counts_twice_the_signed_region\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"46bc2ec25c44df18a7cfb9f549e34530b837f86477eadc3b8c2c7459630d456e\",\"dependencies\":[\"myl_f_387dbb58d061a96cb0503f67782b705c12e02f15cbb7d5441799637eb3945b14\",\"myl_f_4d3d18a16438e54cbf74e659d607167665b1385646f32b1ad6106ae2ff49cc9a\",\"myl_f_5f7b58927a900fcd4804e9087e9d7650efb606af261270379e1351ea1c7ae7c1\",\"myl_f_8d44e3a7a2eea534d6208df1a0fe1642f52b1339ab63e5086154f700cef33ab0\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_cc0b0c90cc48350f9510ca16bb682cd6e7e98d9b9be4adde33eb1be17e4ad626\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_polygon_containment_is_exact_on_edges_and_corners\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"fa45136f4cfca2ab0faf423e6172bd45899a02afd362085de02c9cb707be577a\",\"dependencies\":[\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_5fccb854565e38d32799376a0bfdb2d0e402b94a7a59a90d321b247b09ed8460\",\"myl_f_63e1f183648c24155bab2f94260a93079265808290d49740f05864a608a7c61c\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_7baeca96f65b0a7c82cc6d399f5c0ddeae9a8ebe66922d275d20e246350810d3\",\"myl_f_9817214fe7e7505198531ab7b3f0718f411a15efc722b2f3f2aba61e828ca240\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_rect_intersection_and_clearance_regions\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ad75562db3261ee813d71e45804405c6fd6ddc3060ec64a89d08164e669b3caa\",\"dependencies\":[\"myl_f_103bf41be6f08738f8ef665ad13936cc4523b78dbd49714ccbde02431f2e4aac\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_5d2f6af555987798dce798b53aab9b4b1cf5d3922e0cfad1584e83e8c878eafb\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_c77a22f05a431a5b66d318684f24159f14a38c38e587adf6d5e50064c9d29e88\",\"myl_f_daef4bd21ead228d4ee0bcd150e5949b39dfba3904dfcee2a9fba1ca10215112\",\"myl_f_fa71b2560dbadf3ac7ccefd2bc0827a0a1cdbd11bda4e56ec9cb0bb3773cd2c3\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_segment_distance_is_exact_and_symmetric\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ff124f9c5f34e0f8b737797a02a18c7d78c39cb700f38c454b086ae5f325bacc\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_18d8101e2640a09c5c354c9ef95591741159a68cc6eb53fd91c410471615c808\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_closest_point_is_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"b19c993293f5846539dd79325d516f56f947f16e1f764fb2fe134f7ff6e3e5a9\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_40aaf2ffbfab89b563f3c798fd6050862bd07cdd177675e3933ff904626c4a1a\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_distance_to_a_point_is_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"fb3666a785cbea7a71141f06ad1b4dabacf07d6a9274e521a869c1b7c33bdca7\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_23123f4de3a8635738a0d3c2e776d63188f13e81c6523f4a723a0b53134ceb17\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_43cb881472d0ba40ede53606812d67525afd7452f7cbc602945765081a5d6b98\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_dependents_are_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"0cdb2af2199a4511d375648de0a5d8dad2ef5eb6060227cef9ddd182fe8be1c5\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_94c9a491d1651f11a3f63413ae580a46da72c8e6d29ea8709d9ca785996834c3\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_dccc8c1661b277d0a1f0df77ada0569aa0adf7dc8682ad166769f61098c9db15\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_is_exact_at_the_coordinate_bound\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"5af7e240ae488724607e4a7fbca0cf1dfb6e90b3c2c4ce0c5c34ce59b2f5e030\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_346fc8ae4edd2364b7d82cd4cf15436a26ec81b1d22e8faeeb13c42e0e4878db\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_is_exact_on_a_diagonal_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"3a634c1c59adb3178e5cd50e2682e050d1d2d86a013c5320d9316399d8f1a639\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_ec7c198e2871d9bfebf199cd6555d2c1306a2d396b945b6a6be05e751751ee1d\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_rounds_the_nearest_nanometre_either_direction\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d2c88ae8a6468d98b3684495db11a330d930a7553e63271e6fbbdc6f44d34d0e\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_c03fa9f12d57f71deff7fa7b1d71c68b2fbe5dc172847f622ef48b6ea650d928\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_two_word_products_are_exact\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d5272561986861a3f2ed1d9ebcd9eb5a4922e1c2b0d517a587b6b6e69aace3ce\",\"dependencies\":[\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c38165bd9be529d327ec7273eee2836325e3b1f1cd0fdd94bf0fedc5c97bb3f5\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"}],\"passed\":0,\"failed\":0,\"skipped\":0,\"cached\":15,\"executed\":0}\n"
+  },
+  {
+    "label": "geom-unused-env",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "test",
+      "/tmp/pcb-latency-fixes-20260921/accepted-probes/guest/geom.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/accepted-probes/test-cache",
+      "--max-steps=4294967295",
+      "--report",
+      "--json"
+    ],
+    "seconds": 0.47272225900087506,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 1,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": true,
+        "parsed_modules": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 1,
+        "session_reused_results": 1,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 15
+        },
+        "reused_results": 1,
+        "session_reused_results": 1,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 15
+          }
+        }
+      }
+    ],
+    "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"geom::test_circle_predicates_use_exact_squares\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ed49c93dcdaa51a9034f7eb04a2c0646a305fd60a3a12577f6169481a72ed0ce\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_1f0bcb8390f6f5a3f6ae9dc844def2bd9fdea86d7cce23e89eefe1722a87b274\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_4294212545c57c3af3441dc633071cff39954d4dec157e0c1f2776f7a866401f\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_815c20cec3a4a799b9521bbe1cd392668f99eee23f4f3e984cc8d8319f7067d5\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_closest_point_clamps_to_the_segment_ends\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"4105a4f1e24005115fc6be58a640b6f0c50888688e126c07d2c0fc4ac82f3117\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fb6d64daf0f90f2f7ed83a7ce9ca6d20b93b5fdb6bf4a9ee0f3a6d82c7ccb80b\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_distance_to_boundary_is_zero_on_the_outline\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"02aeff72563a382e1a90dc000943acd5832607c57df46fb8ca68177ca9ac2148\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_d77de07a9399d8186268208a50e4216598719e69b79fba9a1aa03bd03c213130\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_orientation_is_exact_at_the_coordinate_extremes\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"f5c99edd9d5ddadc2182984a6a00cfa867d49a92f1052f6e24f34e29f3ab6b78\",\"dependencies\":[\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_a1edd9cb1fb4917f71ce85e4f45117b08b4de2afd9be858c2b813457279b8779\",\"myl_f_a64b46a7056b6f5e0d7e9d99db8551c37feba8d183587dfa42141488eba05d42\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_polygon_area_counts_twice_the_signed_region\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"46bc2ec25c44df18a7cfb9f549e34530b837f86477eadc3b8c2c7459630d456e\",\"dependencies\":[\"myl_f_387dbb58d061a96cb0503f67782b705c12e02f15cbb7d5441799637eb3945b14\",\"myl_f_4d3d18a16438e54cbf74e659d607167665b1385646f32b1ad6106ae2ff49cc9a\",\"myl_f_5f7b58927a900fcd4804e9087e9d7650efb606af261270379e1351ea1c7ae7c1\",\"myl_f_8d44e3a7a2eea534d6208df1a0fe1642f52b1339ab63e5086154f700cef33ab0\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_cc0b0c90cc48350f9510ca16bb682cd6e7e98d9b9be4adde33eb1be17e4ad626\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_polygon_containment_is_exact_on_edges_and_corners\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"fa45136f4cfca2ab0faf423e6172bd45899a02afd362085de02c9cb707be577a\",\"dependencies\":[\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_5fccb854565e38d32799376a0bfdb2d0e402b94a7a59a90d321b247b09ed8460\",\"myl_f_63e1f183648c24155bab2f94260a93079265808290d49740f05864a608a7c61c\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_7baeca96f65b0a7c82cc6d399f5c0ddeae9a8ebe66922d275d20e246350810d3\",\"myl_f_9817214fe7e7505198531ab7b3f0718f411a15efc722b2f3f2aba61e828ca240\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_rect_intersection_and_clearance_regions\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ad75562db3261ee813d71e45804405c6fd6ddc3060ec64a89d08164e669b3caa\",\"dependencies\":[\"myl_f_103bf41be6f08738f8ef665ad13936cc4523b78dbd49714ccbde02431f2e4aac\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_5d2f6af555987798dce798b53aab9b4b1cf5d3922e0cfad1584e83e8c878eafb\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_c77a22f05a431a5b66d318684f24159f14a38c38e587adf6d5e50064c9d29e88\",\"myl_f_daef4bd21ead228d4ee0bcd150e5949b39dfba3904dfcee2a9fba1ca10215112\",\"myl_f_fa71b2560dbadf3ac7ccefd2bc0827a0a1cdbd11bda4e56ec9cb0bb3773cd2c3\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_segment_distance_is_exact_and_symmetric\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ff124f9c5f34e0f8b737797a02a18c7d78c39cb700f38c454b086ae5f325bacc\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_18d8101e2640a09c5c354c9ef95591741159a68cc6eb53fd91c410471615c808\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_closest_point_is_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"b19c993293f5846539dd79325d516f56f947f16e1f764fb2fe134f7ff6e3e5a9\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_40aaf2ffbfab89b563f3c798fd6050862bd07cdd177675e3933ff904626c4a1a\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_distance_to_a_point_is_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"fb3666a785cbea7a71141f06ad1b4dabacf07d6a9274e521a869c1b7c33bdca7\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_23123f4de3a8635738a0d3c2e776d63188f13e81c6523f4a723a0b53134ceb17\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_43cb881472d0ba40ede53606812d67525afd7452f7cbc602945765081a5d6b98\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_dependents_are_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"0cdb2af2199a4511d375648de0a5d8dad2ef5eb6060227cef9ddd182fe8be1c5\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_94c9a491d1651f11a3f63413ae580a46da72c8e6d29ea8709d9ca785996834c3\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_dccc8c1661b277d0a1f0df77ada0569aa0adf7dc8682ad166769f61098c9db15\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_is_exact_at_the_coordinate_bound\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"5af7e240ae488724607e4a7fbca0cf1dfb6e90b3c2c4ce0c5c34ce59b2f5e030\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_346fc8ae4edd2364b7d82cd4cf15436a26ec81b1d22e8faeeb13c42e0e4878db\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_is_exact_on_a_diagonal_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"3a634c1c59adb3178e5cd50e2682e050d1d2d86a013c5320d9316399d8f1a639\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_ec7c198e2871d9bfebf199cd6555d2c1306a2d396b945b6a6be05e751751ee1d\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_rounds_the_nearest_nanometre_either_direction\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d2c88ae8a6468d98b3684495db11a330d930a7553e63271e6fbbdc6f44d34d0e\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_c03fa9f12d57f71deff7fa7b1d71c68b2fbe5dc172847f622ef48b6ea650d928\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_two_word_products_are_exact\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d5272561986861a3f2ed1d9ebcd9eb5a4922e1c2b0d517a587b6b6e69aace3ce\",\"dependencies\":[\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c38165bd9be529d327ec7273eee2836325e3b1f1cd0fdd94bf0fedc5c97bb3f5\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"}],\"passed\":0,\"failed\":0,\"skipped\":0,\"cached\":15,\"executed\":0}\n"
+  },
+  {
+    "label": "geom-unrelated-source",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "test",
+      "/tmp/pcb-latency-fixes-20260921/accepted-probes/guest/geom.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/accepted-probes/test-cache",
+      "--max-steps=4294967295",
+      "--report",
+      "--json"
+    ],
+    "seconds": 0.45817250201071147,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 1,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": true,
+        "parsed_modules": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 1,
+        "session_reused_results": 1,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 15
+        },
+        "reused_results": 1,
+        "session_reused_results": 1,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 15
+          }
+        }
+      }
+    ],
+    "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"geom::test_circle_predicates_use_exact_squares\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ed49c93dcdaa51a9034f7eb04a2c0646a305fd60a3a12577f6169481a72ed0ce\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_1f0bcb8390f6f5a3f6ae9dc844def2bd9fdea86d7cce23e89eefe1722a87b274\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_4294212545c57c3af3441dc633071cff39954d4dec157e0c1f2776f7a866401f\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_815c20cec3a4a799b9521bbe1cd392668f99eee23f4f3e984cc8d8319f7067d5\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_closest_point_clamps_to_the_segment_ends\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"4105a4f1e24005115fc6be58a640b6f0c50888688e126c07d2c0fc4ac82f3117\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fb6d64daf0f90f2f7ed83a7ce9ca6d20b93b5fdb6bf4a9ee0f3a6d82c7ccb80b\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_distance_to_boundary_is_zero_on_the_outline\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"02aeff72563a382e1a90dc000943acd5832607c57df46fb8ca68177ca9ac2148\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_d77de07a9399d8186268208a50e4216598719e69b79fba9a1aa03bd03c213130\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_orientation_is_exact_at_the_coordinate_extremes\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"f5c99edd9d5ddadc2182984a6a00cfa867d49a92f1052f6e24f34e29f3ab6b78\",\"dependencies\":[\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_a1edd9cb1fb4917f71ce85e4f45117b08b4de2afd9be858c2b813457279b8779\",\"myl_f_a64b46a7056b6f5e0d7e9d99db8551c37feba8d183587dfa42141488eba05d42\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_polygon_area_counts_twice_the_signed_region\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"46bc2ec25c44df18a7cfb9f549e34530b837f86477eadc3b8c2c7459630d456e\",\"dependencies\":[\"myl_f_387dbb58d061a96cb0503f67782b705c12e02f15cbb7d5441799637eb3945b14\",\"myl_f_4d3d18a16438e54cbf74e659d607167665b1385646f32b1ad6106ae2ff49cc9a\",\"myl_f_5f7b58927a900fcd4804e9087e9d7650efb606af261270379e1351ea1c7ae7c1\",\"myl_f_8d44e3a7a2eea534d6208df1a0fe1642f52b1339ab63e5086154f700cef33ab0\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_cc0b0c90cc48350f9510ca16bb682cd6e7e98d9b9be4adde33eb1be17e4ad626\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_polygon_containment_is_exact_on_edges_and_corners\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"fa45136f4cfca2ab0faf423e6172bd45899a02afd362085de02c9cb707be577a\",\"dependencies\":[\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_5fccb854565e38d32799376a0bfdb2d0e402b94a7a59a90d321b247b09ed8460\",\"myl_f_63e1f183648c24155bab2f94260a93079265808290d49740f05864a608a7c61c\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_7baeca96f65b0a7c82cc6d399f5c0ddeae9a8ebe66922d275d20e246350810d3\",\"myl_f_9817214fe7e7505198531ab7b3f0718f411a15efc722b2f3f2aba61e828ca240\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_rect_intersection_and_clearance_regions\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ad75562db3261ee813d71e45804405c6fd6ddc3060ec64a89d08164e669b3caa\",\"dependencies\":[\"myl_f_103bf41be6f08738f8ef665ad13936cc4523b78dbd49714ccbde02431f2e4aac\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_5d2f6af555987798dce798b53aab9b4b1cf5d3922e0cfad1584e83e8c878eafb\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_c77a22f05a431a5b66d318684f24159f14a38c38e587adf6d5e50064c9d29e88\",\"myl_f_daef4bd21ead228d4ee0bcd150e5949b39dfba3904dfcee2a9fba1ca10215112\",\"myl_f_fa71b2560dbadf3ac7ccefd2bc0827a0a1cdbd11bda4e56ec9cb0bb3773cd2c3\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_segment_distance_is_exact_and_symmetric\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ff124f9c5f34e0f8b737797a02a18c7d78c39cb700f38c454b086ae5f325bacc\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_18d8101e2640a09c5c354c9ef95591741159a68cc6eb53fd91c410471615c808\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_closest_point_is_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"b19c993293f5846539dd79325d516f56f947f16e1f764fb2fe134f7ff6e3e5a9\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_40aaf2ffbfab89b563f3c798fd6050862bd07cdd177675e3933ff904626c4a1a\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_distance_to_a_point_is_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"fb3666a785cbea7a71141f06ad1b4dabacf07d6a9274e521a869c1b7c33bdca7\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_23123f4de3a8635738a0d3c2e776d63188f13e81c6523f4a723a0b53134ceb17\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_43cb881472d0ba40ede53606812d67525afd7452f7cbc602945765081a5d6b98\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_dependents_are_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"0cdb2af2199a4511d375648de0a5d8dad2ef5eb6060227cef9ddd182fe8be1c5\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_94c9a491d1651f11a3f63413ae580a46da72c8e6d29ea8709d9ca785996834c3\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_dccc8c1661b277d0a1f0df77ada0569aa0adf7dc8682ad166769f61098c9db15\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_is_exact_at_the_coordinate_bound\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"5af7e240ae488724607e4a7fbca0cf1dfb6e90b3c2c4ce0c5c34ce59b2f5e030\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_346fc8ae4edd2364b7d82cd4cf15436a26ec81b1d22e8faeeb13c42e0e4878db\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_is_exact_on_a_diagonal_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"3a634c1c59adb3178e5cd50e2682e050d1d2d86a013c5320d9316399d8f1a639\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_ec7c198e2871d9bfebf199cd6555d2c1306a2d396b945b6a6be05e751751ee1d\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_the_projection_rounds_the_nearest_nanometre_either_direction\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d2c88ae8a6468d98b3684495db11a330d930a7553e63271e6fbbdc6f44d34d0e\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_c03fa9f12d57f71deff7fa7b1d71c68b2fbe5dc172847f622ef48b6ea650d928\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"},{\"name\":\"geom::test_two_word_products_are_exact\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d5272561986861a3f2ed1d9ebcd9eb5a4922e1c2b0d517a587b6b6e69aace3ce\",\"dependencies\":[\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c38165bd9be529d327ec7273eee2836325e3b1f1cd0fdd94bf0fedc5c97bb3f5\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"60fd7e26f35c233d149c737401e4ab02c10eb100a1ef2c06a5f36afe780c2a77\"}],\"passed\":0,\"failed\":0,\"skipped\":0,\"cached\":15,\"executed\":0}\n"
+  },
+  {
+    "label": "fixture-test-cold",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "test",
+      "/tmp/pcb-latency-fixes-20260921/accepted-probes/fixture/main.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/accepted-probes/fixture-test-cache",
+      "--report",
+      "--json"
+    ],
+    "seconds": 0.4130496740108356,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 2,
+        "syntax_stored": 2,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 176439,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 2,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 2,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 2,
+        "syntax_stored": 2,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 1278,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 2,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "native-test-compile",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 3,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 8488,
+          "ordinary_bytes": 8488,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 2,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 3,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 2,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 2,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 4,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 3,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 4,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 3,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 2,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 2,
+            "reused": 0
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 1,
+            "reused": 0
+          }
+        }
+      }
+    ],
+    "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"main::test_value\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"5f0da69c36611e8feb69d0a074b706d4708418fc19f9f16d64e68943e094e098\",\"dependencies\":[\"myl_f_22f8c5eb1551f663ad0ded00d28cd38f84b987034f53108db7635bc6a7602f66\",\"myl_f_ed05a57b3f38968c55033c9f2f2d197544e18eef44096c11eafa57dbf3772550\"],\"cacheable\":true,\"reasons\":[],\"steps\":5,\"contract\":\"da8a7543c931f834e6392ec48c055036f81c1947942936578f03611e3a154eeb\",\"provider\":\"\",\"source\":\"b0a310e90a8383b40873203456271887ab8368125f985bd23d29bd7a4d249afb\"}],\"passed\":1,\"failed\":0,\"skipped\":0,\"cached\":0,\"executed\":1}\n"
+  },
+  {
+    "label": "fixture-run-cold",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "run",
+      "/tmp/pcb-latency-fixes-20260921/accepted-probes/fixture/main.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/accepted-probes/fixture-run-cache",
+      "--qbe=/home/epentland/ai/canopy/mylang/zig-out/bin/qbe",
+      "--timings=json"
+    ],
+    "seconds": 0.20970903898705728,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 2,
+        "syntax_stored": 2,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 1278,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 2,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "link": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "run",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 3,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 3,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 3,
+          "reused": 0
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 5658,
+          "ordinary_bytes": 5658,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 2,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 3,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 3,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 3,
+            "reused": 0
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_load",
+        "duration_ns": 52625,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_load_parse",
+        "duration_ns": 355880,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "syntax_parse",
+        "duration_ns": 866324,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "declarations_interfaces",
+        "duration_ns": 29969,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_merge",
+        "duration_ns": 38303,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "dependency_key_preparation",
+        "duration_ns": 271519,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "retention_store_io",
+        "duration_ns": 1107839,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "symbolic_templates",
+        "duration_ns": 1699,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "ordinary_body_replay",
+        "duration_ns": 1623,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "fresh_body_check",
+        "duration_ns": 236360,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "entry_adaptation",
+        "duration_ns": 1227,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "effect_origin_passes",
+        "duration_ns": 32090,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "domain_codec_validation",
+        "duration_ns": 315,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "warning_derivation",
+        "duration_ns": 203168,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "bytecode_lowering",
+        "duration_ns": 37121,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "native_emission",
+        "duration_ns": 4177091,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "native_execution",
+        "duration_ns": 182579778,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "total",
+        "duration_ns": 191297750,
+        "inclusive": true,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      }
+    ],
+    "stdout": "3\n"
+  },
+  {
+    "label": "fixture-run-warm",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "run",
+      "/tmp/pcb-latency-fixes-20260921/accepted-probes/fixture/main.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/accepted-probes/fixture-run-cache",
+      "--qbe=/home/epentland/ai/canopy/mylang/zig-out/bin/qbe",
+      "--timings=json"
+    ],
+    "seconds": 0.0275348400027724,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 2,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 2,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "link": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "run",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 2
+        },
+        "checked_bodies": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 3
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 3
+        },
+        "emitted_fragments": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 3
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 6262,
+          "ordinary_bytes": 6262,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 2
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 3
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 3
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 3
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_load",
+        "duration_ns": 52761,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_load_parse",
+        "duration_ns": 373843,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "syntax_replay",
+        "duration_ns": 318348,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "declarations_interfaces",
+        "duration_ns": 13887,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_merge",
+        "duration_ns": 48336,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "dependency_key_preparation",
+        "duration_ns": 259335,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "retention_store_io",
+        "duration_ns": 658420,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "symbolic_templates",
+        "duration_ns": 1487,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "ordinary_body_replay",
+        "duration_ns": 66827,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "entry_adaptation",
+        "duration_ns": 1500,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "effect_origin_passes",
+        "duration_ns": 31645,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "domain_codec_validation",
+        "duration_ns": 240,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "warning_derivation",
+        "duration_ns": 221895,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "native_execution",
+        "duration_ns": 3221090,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "total",
+        "duration_ns": 6752090,
+        "inclusive": true,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      }
+    ],
+    "stdout": "3\n"
+  },
+  {
+    "label": "fixture-test-changed",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "test",
+      "/tmp/pcb-latency-fixes-20260921/accepted-probes/fixture/main.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/accepted-probes/fixture-test-cache",
+      "--report",
+      "--json"
+    ],
+    "seconds": 0.2877411650115391,
+    "exit_code": 1,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 1,
+        "syntax_stored": 1,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 176809,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 1,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": true,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 1,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 1,
+        "syntax_stored": 1,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 1648,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 1,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "native-test-compile",
+        "reused": true,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 2
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 6432,
+          "ordinary_bytes": 6432,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [
+          {
+            "reason": "declaration-region-changed",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 1,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 2
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 2,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 2,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": true,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 2
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 2
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 2,
+            "reused": 2
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 2
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 2,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 2,
+            "reused": 0
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 1,
+            "reused": 0
+          }
+        }
+      }
+    ],
+    "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"main::test_value\",\"status\":\"failed\",\"actual\":false,\"expected\":true,\"reason\":\"expected true, got false\",\"key\":\"0ce3b8593ee1d527e75d5689373664c7afdccee5bf83d72f2f2f3dd1fba27fb4\",\"dependencies\":[\"myl_f_22f8c5eb1551f663ad0ded00d28cd38f84b987034f53108db7635bc6a7602f66\",\"myl_f_ed05a57b3f38968c55033c9f2f2d197544e18eef44096c11eafa57dbf3772550\"],\"cacheable\":true,\"reasons\":[],\"steps\":5,\"contract\":\"da8a7543c931f834e6392ec48c055036f81c1947942936578f03611e3a154eeb\",\"provider\":\"\",\"source\":\"d711da20c7873a1b5fb77ff17f78aeafe949962de96705a18114ddd376fe90d6\"}],\"passed\":0,\"failed\":1,\"skipped\":0,\"cached\":0,\"executed\":1}\n"
+  },
+  {
+    "label": "fixture-run-changed",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "run",
+      "/tmp/pcb-latency-fixes-20260921/accepted-probes/fixture/main.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/accepted-probes/fixture-run-cache",
+      "--qbe=/home/epentland/ai/canopy/mylang/zig-out/bin/qbe",
+      "--timings=json"
+    ],
+    "seconds": 0.1131790049985284,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 1,
+        "syntax_stored": 1,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 1648,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 1,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "link": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "run",
+        "reused": true,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 2
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 3,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 3,
+          "reused": 0
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 6448,
+          "ordinary_bytes": 6448,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [
+          {
+            "reason": "declaration-region-changed",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 1,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 2
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 3,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 3,
+            "reused": 0
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_load",
+        "duration_ns": 55659,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_load_parse",
+        "duration_ns": 415910,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "syntax_parse",
+        "duration_ns": 463511,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "syntax_replay",
+        "duration_ns": 211338,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "declarations_interfaces",
+        "duration_ns": 29719,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_merge",
+        "duration_ns": 28699,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "dependency_key_preparation",
+        "duration_ns": 268476,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "retention_store_io",
+        "duration_ns": 1120065,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "symbolic_templates",
+        "duration_ns": 1907,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "ordinary_body_replay",
+        "duration_ns": 92882,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "fresh_body_check",
+        "duration_ns": 30671,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "entry_adaptation",
+        "duration_ns": 1224,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "effect_origin_passes",
+        "duration_ns": 31393,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "domain_codec_validation",
+        "duration_ns": 236,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "warning_derivation",
+        "duration_ns": 220673,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "bytecode_lowering",
+        "duration_ns": 37547,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "native_emission",
+        "duration_ns": 4168798,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "native_execution",
+        "duration_ns": 87869844,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "total",
+        "duration_ns": 96278395,
+        "inclusive": true,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      }
+    ],
+    "stdout": "4\n"
+  }
+]

@@ -1,0 +1,23 @@
+  ok    contract   112 passed, 0 cached, 0 failed, 0 skipped
+  ok    draft      151 passed, 0 cached, 0 failed, 0 skipped
+  ok    edits      15 passed, 0 cached, 0 failed, 0 skipped
+  ok    env        252 passed, 0 cached, 0 failed, 0 skipped
+  ok    extract    190 passed, 0 cached, 0 failed, 0 skipped
+  ok    font       15 passed, 0 cached, 0 failed, 0 skipped
+  ok    geom       15 passed, 0 cached, 0 failed, 0 skipped
+  ok    hash       16 passed, 0 cached, 0 failed, 0 skipped
+  ok    journal    24 passed, 0 cached, 0 failed, 0 skipped
+  ok    kit        126 passed, 0 cached, 0 failed, 0 skipped
+  ok    layers     6 passed, 0 cached, 0 failed, 0 skipped
+  ok    main       385 passed, 0 cached, 0 failed, 0 skipped
+  ok    model      85 passed, 0 cached, 0 failed, 0 skipped
+  ok    png        17 passed, 0 cached, 0 failed, 0 skipped
+  ok    raster     78 passed, 0 cached, 0 failed, 0 skipped
+  ok    referee    172 passed, 0 cached, 0 failed, 0 skipped
+  ok    render     218 passed, 0 cached, 0 failed, 0 skipped
+  ok    revision   120 passed, 0 cached, 0 failed, 0 skipped
+  ok    sexp       31 passed, 0 cached, 0 failed, 0 skipped
+  ok    shape      47 passed, 0 cached, 0 failed, 0 skipped
+  ok    units      10 passed, 0 cached, 0 failed, 0 skipped
+
+  2085 tests passed across the port; 0 module(s) failing

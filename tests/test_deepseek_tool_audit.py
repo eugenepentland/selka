@@ -48,6 +48,29 @@ def delivered(seq, when, job_id, status='completed', exit_code=0, command='zig b
 
 
 class AuditTests(unittest.TestCase):
+    def test_versioned_logs_are_discovered_without_lock_or_backup_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            valid = ['session.jsonl', 'session.jsonl.zstd', 'session.v3.jsonl.zstd']
+            for name in valid + ['session.lock', 'session.v3.jsonl.zstd.bak']:
+                (root / name).touch()
+            self.assertEqual({p.name for p in audit.session_files(root)}, set(valid))
+
+    def test_managed_timeout_is_distinct_from_persistent_shell_reset(self):
+        session = audit.parse_events([header(version=3), call(1, 0),
+                                      result(2, 60000, text='[timed out after 60000ms]\n[killed by signal: SIGTERM]')], 'root')
+        report = audit.make_report([session], Path('/project'))
+        self.assertEqual(report['flags']['managed_timeout']['calls'], 1)
+        self.assertEqual(report['flags']['persistent_timeout']['calls'], 0)
+
+    def test_multiline_job_command_preserves_completion_notice(self):
+        events = [header(version=3), call(1, 0, run_in_background=True),
+                  result(2, 100, text='started background job bash-7'),
+                  inbox(3, 5000, 'bash-7', command='cat > /tmp/probe.sh <<\'EOF\'\ntrue\nEOF\nsh /tmp/probe.sh')]
+        report = audit.make_report([audit.parse_events(events, 'root')], Path('/project'))
+        self.assertEqual(report['background_jobs'][0]['execution_seconds'], 5)
+        self.assertEqual(report['background_jobs'][0]['completion_source'], 'settlement-notice')
+
     def test_overlaps_do_not_count_twice(self):
         self.assertEqual(audit.seconds([(0, 2000), (500, 1000), (1500, 3000), (4000, 5000)]), 4)
         with self.assertRaises(ValueError):

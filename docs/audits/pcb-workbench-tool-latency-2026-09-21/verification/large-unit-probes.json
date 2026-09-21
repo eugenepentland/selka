@@ -1,0 +1,28 @@
+{
+  "function": "extract::report_real",
+  "input": "/tmp/pcb-latency-audit-20260921/native-run-cache/.pending/ec505681492d2c1eae998e581a478d66/.pending/a6ceddc5679ec13a14afd156d679d9d3/unit.ssa",
+  "bytes": 10636907,
+  "sha256": "6a0e7a043d334cb1e618cdc236ae5af1d9c108850f81e2c25c8cb4a76c7f462f",
+  "address_space_limit_KiB": 4194304,
+  "timeout_seconds": 60,
+  "results": [
+    {
+      "backend": "QBE",
+      "seconds": 5.54,
+      "max_rss_KiB": 4150652,
+      "status": 134
+    },
+    {
+      "backend": "LLVM O0",
+      "seconds": 8.55,
+      "max_rss_KiB": 938244,
+      "status": 0
+    },
+    {
+      "backend": "LLVM O3 LTO",
+      "seconds": 11.29,
+      "max_rss_KiB": 749460,
+      "status": 0
+    }
+  ]
+}

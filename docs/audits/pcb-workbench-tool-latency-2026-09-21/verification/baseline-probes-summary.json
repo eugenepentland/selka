@@ -1,0 +1,13 @@
+{
+  "passed": false,
+  "failures": [
+    "geom-unused-env: checked_bodies performed=69, expected 0",
+    "geom-unused-env: lowered_functions performed=53, expected 0",
+    "geom-unused-env: emitted_fragments performed=53, expected 0",
+    "geom-unused-env: executed_tests performed=15, expected 0",
+    "geom-unrelated-source: checked_bodies performed=1, expected 0",
+    "fixture-run-warm: lowered_functions performed=3, expected 0",
+    "fixture-run-warm: emitted_fragments performed=3, expected 0"
+  ],
+  "observations": 10
+}

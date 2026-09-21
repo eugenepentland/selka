@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "invalidates": [
+    "OBJC_INCLUDE_PATH",
+    "PYTHONHASHSEED",
+    "PYTHONOPTIMIZE",
+    "ZIG_LIBC",
+    "MYLANG_SEMANTIC_BUDGET"
+  ],
+  "ignores": [
+    "MYLANG_C4_CHANGED"
+  ]
+}

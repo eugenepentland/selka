@@ -1,0 +1,515 @@
+[
+  {
+    "label": "main-run-cold",
+    "argv": [
+      "/tmp/pcb-latency-audit-20260921/install/bin/mylang",
+      "run",
+      "/tmp/pcb-latency-audit-20260921/guest-snapshot/main.my",
+      "--cache-dir=/tmp/pcb-latency-audit-20260921/native-run-cache",
+      "--timings=json",
+      "--",
+      "help"
+    ],
+    "elapsed_seconds": 100.91445887299778,
+    "exit_code": 2,
+    "stdout_bytes": 0,
+    "stderr_bytes": 15071,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 27,
+        "syntax_stored": 27,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 5457182,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 27,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "link": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "run",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 27,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1899,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 5,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 1899,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 1899,
+          "reused": 0
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "miss",
+          "performed": 4,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "miss",
+          "performed": 5,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 27,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 1899,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 5,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 1899,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 1899,
+            "reused": 0
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_load",
+        "duration_ns": 168742,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_load_parse",
+        "duration_ns": 503090758,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "syntax_parse",
+        "duration_ns": 889348307,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "declarations_interfaces",
+        "duration_ns": 8759531,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_merge",
+        "duration_ns": 69276041,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "dependency_key_preparation",
+        "duration_ns": 545130354,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "retention_store_io",
+        "duration_ns": 539496465,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "symbolic_templates",
+        "duration_ns": 6389810,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "ordinary_body_replay",
+        "duration_ns": 356095,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "fresh_body_check",
+        "duration_ns": 1718123953,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "specialization_body_replay",
+        "duration_ns": 657780,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "entry_adaptation",
+        "duration_ns": 889528,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "effect_origin_passes",
+        "duration_ns": 293272505,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "domain_codec_validation",
+        "duration_ns": 842,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "warning_derivation",
+        "duration_ns": 288419170,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "bytecode_lowering",
+        "duration_ns": 184692554,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "bytecode_lowering",
+        "duration_ns": 1653,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "bytecode_lowering",
+        "duration_ns": 198,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "native_emission",
+        "duration_ns": 80582211588,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "native_execution",
+        "duration_ns": 11832246572,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "total",
+        "duration_ns": 100883318951,
+        "inclusive": true,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926,
+          "ast_nodes": 111264,
+          "typed_nodes": 243979
+        },
+        "exit_code": 2
+      }
+    ],
+    "note": "Completed native emission, then failed because the copied installation initially lacked its LLVM adapter. Not a completed run baseline."
+  },
+  {
+    "label": "main-run-warm",
+    "argv": [
+      "/tmp/pcb-latency-audit-20260921/install/bin/mylang",
+      "run",
+      "/tmp/pcb-latency-audit-20260921/guest-snapshot/main.my",
+      "--cache-dir=/tmp/pcb-latency-audit-20260921/native-run-cache",
+      "--timings=json",
+      "--",
+      "help"
+    ],
+    "elapsed_seconds": 180.2151240910025,
+    "exit_code": "timeout",
+    "stdout_bytes": 0,
+    "stderr_bytes": 8414,
+    "reports": [],
+    "note": "Frontend cache had been populated, but no successful cached executable existed. Private installation now included LLVM adapter. Stopped at 180-second audit budget; not a measured warm executable hit."
+  },
+  {
+    "label": "main-run-warm-repeat",
+    "argv": [
+      "/tmp/pcb-latency-audit-20260921/install/bin/mylang",
+      "run",
+      "/tmp/pcb-latency-audit-20260921/guest-snapshot/main.my",
+      "--cache-dir=/tmp/pcb-latency-audit-20260921/native-run-cache",
+      "--timings=json",
+      "--",
+      "help"
+    ],
+    "elapsed_seconds": 180.17945775399858,
+    "exit_code": "timeout",
+    "stdout_bytes": 0,
+    "stderr_bytes": 8414,
+    "reports": [],
+    "note": "Frontend cache had been populated, but no successful cached executable existed. Private installation now included LLVM adapter. Stopped at 180-second audit budget; not a measured warm executable hit."
+  }
+]

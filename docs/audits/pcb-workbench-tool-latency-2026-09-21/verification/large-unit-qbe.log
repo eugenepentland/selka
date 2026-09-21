@@ -1,0 +1,25 @@
+vendor/qbe/util.c: dying: emalloc, out of memory
+Command terminated by signal 6
+	Command being timed: "/home/epentland/ai/canopy/pcb-workbench/.mylang/current/bin/qbe -t amd64_sysv -o /tmp/pcb-qbe-unit.SkFLlm.s /tmp/pcb-latency-audit-20260921/native-run-cache/.pending/ec505681492d2c1eae998e581a478d66/.pending/a6ceddc5679ec13a14afd156d679d9d3/unit.ssa"
+	User time (seconds): 3.26
+	System time (seconds): 1.20
+	Percent of CPU this job got: 80%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.54
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4150652
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1040444
+	Voluntary context switches: 3
+	Involuntary context switches: 155
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

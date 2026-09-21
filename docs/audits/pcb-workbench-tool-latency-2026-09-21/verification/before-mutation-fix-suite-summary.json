@@ -1,0 +1,24 @@
+[
+  {
+    "phase": "cold",
+    "version": "native-tests-v1",
+    "passed": 400,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0,
+    "executed": 400,
+    "unique_names": 400,
+    "cacheable": 133
+  },
+  {
+    "phase": "warm",
+    "version": "native-tests-v1",
+    "passed": 267,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 133,
+    "executed": 267,
+    "unique_names": 400,
+    "cacheable": 133
+  }
+]

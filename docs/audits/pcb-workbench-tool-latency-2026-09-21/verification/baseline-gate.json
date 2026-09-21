@@ -1,0 +1,8 @@
+{
+  "label": "baseline-serial-forced-gate",
+  "seconds": 472.4939062839985,
+  "exit_code": 0,
+  "compiler": "/tmp/pcb-latency-fixes-20260921/baseline-install/bin/mylang",
+  "cache": "/tmp/pcb-latency-fixes-20260921/baseline-gate-cache",
+  "MYLANG_JOBS": "2"
+}

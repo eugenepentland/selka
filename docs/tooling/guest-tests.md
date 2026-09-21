@@ -115,6 +115,22 @@ cached prog040::test_scale40
 
 ## Reusing unaffected results
 
+Allocation and process-local mutation are deterministic for keyed test inputs,
+so they do not prevent successful-result reuse. Actual external effects,
+including output, clock, randomness and environment access, still prevent it.
+The stricter `--pure-skip` signature rule still excludes declared mutation.
+
+The source identity covers the resolved import closure and required configuration
+and policy files. An edit to an unimported neighboring module neither discards
+checked facts nor aborts an ordinary run with `SourceChanged`. Provider replacement
+still verifies the full captured inventory because a fixture can introduce imports.
+The environment fingerprint includes compiler/build controls rather than every
+inherited variable, so shell/session metadata does not discard warm caches.
+This includes native C search/link paths, Python adapter controls, Zig installation
+overrides and reproducible-build settings as well as Mylang compiler controls.
+Dynamic-loader overrides disable durable result reuse, and tests with environmental
+effects remain non-cacheable. Resolved native tool stamps remain part of identity.
+
 A warm unchanged deterministic run still checks project validity through the shared
 query cache, but admits valid result receipts without lowering, emitting or linking
 any code, so it executes zero tests. Receipt reuse is bound to the selected

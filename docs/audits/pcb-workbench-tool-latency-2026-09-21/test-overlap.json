@@ -1,0 +1,86 @@
+{
+  "shape": {
+    "own": 22,
+    "with_imports": 47
+  },
+  "referee": {
+    "own": 25,
+    "with_imports": 172
+  },
+  "sexp": {
+    "own": 31,
+    "with_imports": 31
+  },
+  "extract": {
+    "own": 17,
+    "with_imports": 190
+  },
+  "hash": {
+    "own": 16,
+    "with_imports": 16
+  },
+  "model": {
+    "own": 32,
+    "with_imports": 85
+  },
+  "contract": {
+    "own": 27,
+    "with_imports": 112
+  },
+  "revision": {
+    "own": 19,
+    "with_imports": 120
+  },
+  "render": {
+    "own": 18,
+    "with_imports": 218
+  },
+  "geom": {
+    "own": 15,
+    "with_imports": 15
+  },
+  "raster": {
+    "own": 21,
+    "with_imports": 78
+  },
+  "layers": {
+    "own": 6,
+    "with_imports": 6
+  },
+  "draft": {
+    "own": 31,
+    "with_imports": 151
+  },
+  "main": {
+    "own": 14,
+    "with_imports": 385
+  },
+  "font": {
+    "own": 15,
+    "with_imports": 15
+  },
+  "env": {
+    "own": 11,
+    "with_imports": 252
+  },
+  "png": {
+    "own": 17,
+    "with_imports": 17
+  },
+  "units": {
+    "own": 10,
+    "with_imports": 10
+  },
+  "kit": {
+    "own": 14,
+    "with_imports": 126
+  },
+  "edits": {
+    "own": 15,
+    "with_imports": 15
+  },
+  "journal": {
+    "own": 24,
+    "with_imports": 24
+  }
+}

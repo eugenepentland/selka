@@ -1,0 +1,11 @@
+{
+  "source_hashes_checked": 38,
+  "source_hashes_matching": 38,
+  "independent_completed_calls": 4658,
+  "independent_sum_call_seconds": 29165.073,
+  "independent_unfinished_calls": 1,
+  "independent_orphan_results": 0,
+  "focused_analyzer_tests_passed": 22,
+  "guardian_exercised": false,
+  "suite_discovered_public_tests": 400
+}

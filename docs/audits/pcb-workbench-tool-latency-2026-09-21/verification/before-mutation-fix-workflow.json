@@ -1,0 +1,21 @@
+[
+  {
+    "label": "fixed-gate-cold",
+    "argv": [
+      "sh",
+      "guest/gate.sh",
+      "--force"
+    ],
+    "seconds": 218.55297340299876,
+    "exit_code": 0
+  },
+  {
+    "label": "fixed-gate-warm",
+    "argv": [
+      "sh",
+      "guest/gate.sh"
+    ],
+    "seconds": 86.07799048398738,
+    "exit_code": 0
+  }
+]

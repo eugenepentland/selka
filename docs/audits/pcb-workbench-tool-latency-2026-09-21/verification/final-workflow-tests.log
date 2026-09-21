@@ -1,0 +1,4 @@
+build-app: built diagnostics=/tmp/tmp.X33Pt4ofYI/fixture/.workbench/builds/426222890cc77194da28b2ac0bdb3954d87dd35a07cc2bbdf9c3d97ac10e1006/report.poU2aA/diagnostics.log stdout=/tmp/tmp.X33Pt4ofYI/fixture/.workbench/builds/426222890cc77194da28b2ac0bdb3954d87dd35a07cc2bbdf9c3d97ac10e1006/report.poU2aA/stdout.log
+build-app: built diagnostics=/tmp/tmp.X33Pt4ofYI/fixture/.workbench/builds/1966eed658a6f0096195c7c8b1a1fd09ab8ccbb118f49ce495d5352d3c7c10f3/report.ZtBRs4/diagnostics.log stdout=/tmp/tmp.X33Pt4ofYI/fixture/.workbench/builds/1966eed658a6f0096195c7c8b1a1fd09ab8ccbb118f49ce495d5352d3c7c10f3/report.ZtBRs4/stdout.log
+build-app: built diagnostics=/tmp/tmp.X33Pt4ofYI/fixture/.workbench/builds/a50e2438cd549f7800649666200ecfc1cdb2b139dfa45a48e2d5593297627525/report.QfEBPo/diagnostics.log stdout=/tmp/tmp.X33Pt4ofYI/fixture/.workbench/builds/a50e2438cd549f7800649666200ecfc1cdb2b139dfa45a48e2d5593297627525/report.QfEBPo/stdout.log
+workflow tests: PASS

@@ -1,0 +1,726 @@
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,22 @@
++# Agent workflow
++
++- Use `guest/gate.sh --focus MODULE --filter 'module::*'` while editing. The
++  default full gate is cached; use `guest/gate.sh --force` once for final fresh
++  acceptance. Preserve the command exit status; never infer success from a log.
++- Keep source inputs stable while a compiler job runs. The gate snapshots them
++  by content and rejects a changing copy. Do not share mutable `/tmp/v` trees.
++- Use the pinned `.mylang/current` installation. Change it only with
++  `tools/update-toolchain.sh PATH`, which validates and records a complete
++  compiler, QBE, LLVM adapter, and runtime installation.
++- Leave `MYLANG` unset for normal work so a paused shell cannot retain an old
++  mutable compiler path. Set it only for a deliberate toolchain experiment.
++- Use `guest/pcb.sh ...` or call the path printed by `guest/build-app.sh` for a
++  command matrix. It builds once per source/compiler identity. Preserve every
++  application argument. For probes, pass a private `--journal` directory.
++- Application builds use LLVM O3+LTO and at most two allowed CPUs by default.
++  Use `PCB_BUILD_MODE=debug` for LLVM O0 or a positive `PCB_BUILD_JOBS` to alter
++  the affinity bound. Do not route this workbench through QBE: its generated
++  extraction unit exceeds QBE's practical memory limit.
++- Start long gate/build calls with `run_in_background`. Rely on the completion
++  notice; use `job_output` with `wait: true` only when dependent work remains.
++  Do not sleep-poll jobs, output, or source arrival.
+--- a/README.md
++++ b/README.md
+@@ -20,17 +19,0 @@
+-## Status
+-
+-This is the **scaffold**: the module boundaries, the data model, the rule
+-contract, the referee, the renderer, the journal and the CLI surface. It builds
+-and 191 unit tests pass, plus 15 tests in the mylang solver surface.
+-
+-**One gap blocks an end-to-end run.** The problem-kit schema and codec
+-(`src/kit.zig`, 50 tests) are complete, but the extractor that reads the Black
+-Canyon `.sexp` sources and populates a kit (`src/extract.zig`) does not compile
+-yet. With no kit JSON there is nothing for the session commands to load, so they
+-refuse rather than fabricate a problem specification. The exact remaining errors
+-are listed in
+-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#seams-a-later-slice-must-fill).
+-
+-Everything else is real and tested. Where the workbench meets the outside world
+-it **reports itself as unverified** rather than quietly passing.
+-
+@@ -42,4 +25,5 @@
+-MYLANG=/home/epentland/ai/canopy/mylang/zig-out/bin/mylang
+-
+-sh guest/gate.sh                      # every module, from a snapshot
+-$MYLANG run guest/main.my -- status   # one command
++tools/update-toolchain.sh /path/to/tested/mylang-install # explicit upgrade
++guest/gate.sh --focus geom --filter 'geom::*'            # edit loop
++guest/gate.sh                                           # cached full suite
++guest/gate.sh --force                                   # fresh final gate
++guest/pcb.sh status --kit kit/black-canyon.kit.json
+@@ -48,3 +32,9 @@
+-`gate.sh` exists because `mylang test <dir>` runs only ONE program and reports
+-"0 dropped" while silently skipping the rest. `--max-steps=4294967295` lifts the
+-default 1,000,000-step per-test ceiling, which several modules genuinely need.
++The explicit `all_test.my` entry imports all 21 modules and discovers the 400
++public tests once. `check-test-inventory.sh` fails when a module or reviewed test
++count changes, preventing silent omissions. The gate runs from a content-addressed
++snapshot, keeps structured output, and propagates the compiler's real status.
++It prints one compact summary; the complete native JSON report and diagnostics
++remain at the paths named in that summary. Application builds likewise retain
++their full compiler report while printing only the executable path on stdout.
++Leave `MYLANG` unset in normal work; an override is reserved for a deliberate
++toolchain experiment and bypasses the active pin.
+@@ -55,5 +45,5 @@
+-$MYLANG run guest/main.my -- kit      --design-dir <design> --out kit/black-canyon.kit.json
+-$MYLANG run guest/main.my -- status   --kit kit/black-canyon.kit.json
+-$MYLANG run guest/main.my -- observe  --kit kit/black-canyon.kit.json
+-$MYLANG run guest/main.my -- evaluate --kit kit/black-canyon.kit.json
+-$MYLANG run guest/main.my -- render   --kit kit/black-canyon.kit.json --view whole --out top.png
++guest/pcb.sh kit      --design-dir <design> --out kit/black-canyon.kit.json
++guest/pcb.sh status   --kit kit/black-canyon.kit.json
++guest/pcb.sh observe  --kit kit/black-canyon.kit.json
++guest/pcb.sh evaluate --kit kit/black-canyon.kit.json
++guest/pcb.sh render   --kit kit/black-canyon.kit.json --view whole --out top.png
+@@ -63,0 +54,8 @@
++`build-app.sh` builds an LLVM O3+LTO executable once for each immutable source,
++compiler, recipe and build-environment identity; every `pcb.sh` invocation
++reuses it. Use `PCB_BUILD_MODE=debug guest/pcb.sh ...` for LLVM O0. Builds use
++two CPUs from the process's allowed affinity set by default; set a positive
++`PCB_BUILD_JOBS` to change that bound. Pass
++`--journal "$(mktemp -d)"` during probes.
++The wrapper applies the workbench's generous instruction budget before `--` and
++passes every following value to the application unchanged.
+@@ -67 +65 @@
+-The port is complete: 1,944 tests across 20 modules, all green, and the CLI runs
++The port is complete: 400 unique public tests across 21 modules, and the CLI runs
+--- a/guest/PORTING.md
++++ b/guest/PORTING.md
+@@ -15,4 +15,4 @@
+-cd /home/epentland/ai/canopy/pcb-workbench
+-MYLANG=/home/epentland/ai/canopy/mylang/zig-out/bin/mylang
+-$MYLANG test guest/<file>.my --cache-dir=/tmp/mlcache      # one module
+-$MYLANG run guest/main.my --cache-dir=/tmp/mlcache         # the CLI
++guest/gate.sh --focus <module> --filter '<module>::*'
++guest/gate.sh                 # cached explicit 21-module suite
++guest/gate.sh --force         # final fresh verification
++guest/pcb.sh <command> ...    # build once per snapshot, then reuse
+@@ -19,0 +20,4 @@
++
++The application build uses LLVM O3+LTO by default. `PCB_BUILD_MODE=debug`
++selects LLVM O0. QBE cannot compile the extraction unit within its practical
++memory bound. `PCB_BUILD_JOBS` controls the CPU-affinity bound (default 2).
+@@ -26,10 +30,2 @@
+-directly. The gate is a loop over modules:
+-
+-```sh
+-for m in units geom layers shape hash sexp model contract revision kit \
+-         extract draft png font raster referee render journal env; do
+-  [ -f guest/$m.my ] || continue
+-  printf '%-10s ' "$m"
+-  $MYLANG test /tmp/v/$m.my --cache-dir=/tmp/mlc-quiet 2>&1 | tail -1
+-done
+-```
++directly. The gate uses `all_test.my`, whose reviewed inventory imports all 21
++modules and exposes all 400 unique public tests in one run.
+--- /dev/null
++++ b/guest/all_test.my
+@@ -0,0 +1,26 @@
++module all_test
++
++import contract
++import draft
++import edits
++import env
++import extract
++import font
++import geom
++import hash
++import journal
++import kit
++import layers
++import main as pcb_cli
++import model
++import png
++import raster
++import referee
++import render
++import revision
++import sexp
++import shape
++import units
++
++def main() -> int:
++    return 0
+--- /dev/null
++++ b/guest/build-app.sh
+@@ -0,0 +1,82 @@
++#!/bin/sh
++set -eu
++HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
++ROOT=$(CDPATH= cd -- "$HERE/.." && pwd)
++requested=${MYLANG:-"$ROOT/.mylang/current/bin/mylang"}
++MYLANG=$(realpath "$requested")
++CACHE=${CACHE:-"$ROOT/.workbench/cache/build"}
++JOBS=${PCB_BUILD_JOBS:-2}
++case "$JOBS" in ''|*[!0-9]*|0) printf '%s\n' 'build-app: PCB_BUILD_JOBS must be a positive integer' >&2; exit 2;; esac
++mode=release
++case "${1:-}" in
++    --release) shift ;;
++    --debug) mode=debug; shift ;;
++esac
++[ "$#" -eq 0 ] || { printf '%s\n' 'usage: guest/build-app.sh [--release|--debug]' >&2; exit 2; }
++[ -x "$MYLANG" ] || { printf 'build-app: compiler missing: %s\n' "$requested" >&2; exit 2; }
++ZIG=${MYLANG_ZIG:-"$(command -v zig || true)"}
++[ -n "$ZIG" ] && [ -x "$ZIG" ] || { printf 'build-app: Zig missing; set MYLANG_ZIG\n' >&2; exit 2; }
++ZIG=$(realpath "$ZIG")
++install_root=$(dirname "$(dirname "$MYLANG")")
++if [ -f "$install_root/IDENTITY" ]; then
++    identity=$(cat "$install_root/IDENTITY")
++else
++    identity=$(sha256sum "$MYLANG" | awk '{ print $1 }')
++fi
++zig_identity=$(stat --printf '%n\n%s\n%y\n' "$ZIG")
++identity=$(printf '%s\n%s\n' "$identity" "$zig_identity" | sha256sum | awk '{ print $1 }')
++adapter="$install_root/lib/mylang-llvm/qbe_llvm.py"
++[ -f "$adapter" ] || { printf 'build-app: LLVM adapter missing from compiler install: %s\n' "$adapter" >&2; exit 2; }
++if [ ! -f "$install_root/IDENTITY" ]; then
++    adapter_identity=$(find "$install_root/lib/mylang-llvm" -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum)
++    identity=$(printf '%s\n%s\n' "$identity" "$adapter_identity" | sha256sum | awk '{ print $1 }')
++fi
++environment_identity=$("$ROOT/tools/build-environment-identity.py")
++build_cache="$CACHE/$environment_identity"
++recipe_version=pcb-native-build-v2-llvm-affinity
++sources=$(mktemp)
++copied=
++trap 'rm -f "$sources"; [ -z "$copied" ] || rm -rf "$copied"' EXIT HUP INT TERM
++(cd "$HERE" && sha256sum ./*.my) >"$sources"
++source_digest=$(sha256sum "$sources" | awk '{ print $1 }')
++snapshot="$ROOT/.workbench/snapshots/$source_digest"
++mkdir -p "$ROOT/.workbench/snapshots" "$ROOT/.workbench/builds" "$CACHE"
++mkdir -p "$build_cache"
++if [ ! -d "$snapshot" ]; then
++    copied=$(mktemp -d "$ROOT/.workbench/snapshots/.build-copy.XXXXXX")
++    cp "$HERE"/*.my "$copied"/
++    (cd "$HERE" && sha256sum -c "$sources" >/dev/null) || { printf '%s\n' 'build-app: sources changed while snapshotting' >&2; exit 1; }
++    (cd "$copied" && sha256sum -c "$sources" >/dev/null) || { printf '%s\n' 'build-app: copied snapshot failed verification' >&2; exit 1; }
++    if ! mv -T "$copied" "$snapshot" 2>/dev/null; then rm -rf "$copied"; fi
++    copied=
++fi
++digest=$(printf '%s\n%s\n%s\n%s\n%s\n%s\n' "$identity" "$source_digest" "$mode" "$JOBS" "$environment_identity" "$recipe_version" | sha256sum | awk '{ print $1 }')
++build="$ROOT/.workbench/builds/$digest"
++mkdir -p "$build"
++exec 9>"$build/.lock"
++flock 9
++if [ ! -x "$build/pcb-workbench" ]; then
++    output="$build/pcb-workbench.tmp.$$"
++    trap 'rm -f "$sources" "$output"; [ -z "$copied" ] || rm -rf "$copied"' EXIT HUP INT TERM
++    report_dir=$(mktemp -d "$build/report.XXXXXX")
++    command_out="$report_dir/stdout.log"
++    command_log="$report_dir/diagnostics.log"
++    set +e
++    if [ "$mode" = release ]; then
++        "$ROOT/tools/run-with-affinity.py" "$JOBS" -- env -u MYLANG_HOST_COMPILER -u MYLANG_LLVM_ADAPTER "$MYLANG" build "$snapshot/main.my" --project -o "$output" --cache-dir "$build_cache" --zig "$ZIG" --backend llvm --llvm-adapter "$adapter" --llvm-opt 3 --lto --mode ReleaseFast --step-accounting --report >"$command_out" 2>"$command_log"
++    else
++        "$ROOT/tools/run-with-affinity.py" "$JOBS" -- env -u MYLANG_HOST_COMPILER -u MYLANG_LLVM_ADAPTER "$MYLANG" build "$snapshot/main.my" --project -o "$output" --cache-dir "$build_cache" --zig "$ZIG" --backend llvm --llvm-adapter "$adapter" --llvm-opt 0 --mode Debug --step-accounting --report >"$command_out" 2>"$command_log"
++    fi
++    status=$?
++    set -e
++    if [ "$status" -ne 0 ]; then
++        tail -n 40 "$command_log" | LC_ALL=C cut -c1-500 >&2 || true
++        printf 'build-app: failed status=%s stdout=%s diagnostics=%s\n' "$status" "$command_out" "$command_log" >&2
++        exit "$status"
++    fi
++    mv "$output" "$build/pcb-workbench"
++    printf 'build-app: built diagnostics=%s stdout=%s\n' "$command_log" "$command_out" >&2
++else
++    printf 'build-app: reused %s\n' "$build/pcb-workbench" >&2
++fi
++printf '%s\n' "$build/pcb-workbench"
+--- /dev/null
++++ b/guest/check-test-inventory.sh
+@@ -0,0 +1,31 @@
++#!/bin/sh
++set -eu
++HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
++inventory=${INVENTORY:-"$HERE/test-inventory.txt"}
++suite=${SUITE:-"$HERE/all_test.my"}
++actual=$(mktemp); expected=$(mktemp); expected_modules=$(mktemp); imports=$(mktemp)
++trap 'rm -f "$actual" "$expected" "$expected_modules" "$imports"' EXIT HUP INT TERM
++awk '!/^#/ && NF { print $1, $2 }' "$inventory" | LC_ALL=C sort >"$expected"
++for source in "$HERE"/*.my; do
++    module=$(basename "$source" .my)
++    [ "$module" = all_test ] && continue
++    count=$(awk '/^public def test_/ { count++ } END { print count + 0 }' "$source")
++    printf '%s %s\n' "$module" "$count"
++done | LC_ALL=C sort >"$actual"
++awk '{ print $1 }' "$expected" >"$expected_modules"
++awk '/^import / { print $2 }' "$suite" | LC_ALL=C sort >"$imports"
++cmp -s "$expected_modules" "$imports" || {
++    printf '%s\n' 'test inventory: all_test.my imports differ from test-inventory.txt' >&2
++    diff -u "$expected_modules" "$imports" >&2 || true
++    exit 1
++}
++cmp -s "$expected" "$actual" || {
++    printf '%s\n' 'test inventory: module set or public test count changed; review suite and inventory' >&2
++    diff -u "$expected" "$actual" >&2 || true
++    exit 1
++}
++expected_total=$(awk '{ sum += $2 } END { print sum + 0 }' "$expected")
++actual_total=$(awk '{ sum += $2 } END { print sum + 0 }' "$actual")
++modules=$(wc -l <"$actual" | tr -d ' ')
++[ "$actual_total" -eq "$expected_total" ] || { printf 'test inventory: expected reviewed total %s, found %s\n' "$expected_total" "$actual_total" >&2; exit 1; }
++printf 'test inventory: %s modules, %s public tests\n' "$modules" "$actual_total"
+--- a/guest/gate.sh
++++ b/guest/gate.sh
+@@ -2,8 +2 @@
+-# The mylang port gate.
+-#
+-# `mylang test <dir>` runs only ONE program and silently skips the rest, so the
+-# gate is an explicit loop. `--max-steps` lifts the 1,000,000-step per-test
+-# ceiling, which several modules genuinely need (SHA-256 over a megabyte, a
+-# 70 KB checksum, a full-size image).
+-set -u
+-MYLANG=${MYLANG:-/home/epentland/ai/canopy/mylang/zig-out/bin/mylang}
++set -eu
+@@ -11,23 +4,13 @@
+-STEPS=4294967295
+-CACHE=${CACHE:-/tmp/mlc-gate}
+-
+-# Verify from a snapshot so a concurrent writer cannot abort the run with
+-# SourceChanged.
+-SNAP=$(mktemp -d)
+-cp "$HERE"/*.my "$SNAP"/ 2>/dev/null
+-
+-failed=0
+-total=0
+-for path in "$SNAP"/*.my; do
+-    module=$(basename "$path" .my)
+-    line=$("$MYLANG" test "$path" --cache-dir="$CACHE" --max-steps=$STEPS --force 2>&1 | tail -1)
+-    case "$line" in
+-        *"0 failed"*)
+-            count=$(printf '%s' "$line" | sed -n 's/^\([0-9]*\) passed.*/\1/p')
+-            total=$((total + ${count:-0}))
+-            printf '  ok    %-10s %s\n' "$module" "$line"
+-            ;;
+-        *)
+-            failed=$((failed + 1))
+-            printf '  FAIL  %-10s %s\n' "$module" "$line"
+-            ;;
++ROOT=$(CDPATH= cd -- "$HERE/.." && pwd)
++MYLANG=${MYLANG:-"$ROOT/.mylang/current/bin/mylang"}
++CACHE=${CACHE:-"$ROOT/.workbench/cache/tests"}
++STEPS=${STEPS:-4294967295}
++force= focus= filter=
++usage() { printf '%s\n' 'usage: guest/gate.sh [--force] [--focus MODULE [--filter GLOB]]'; }
++while [ "$#" -gt 0 ]; do
++    case "$1" in
++        --force) force=--force ;;
++        --focus) shift; [ "$#" -gt 0 ] || { usage >&2; exit 2; }; focus=$1 ;;
++        --filter) shift; [ "$#" -gt 0 ] || { usage >&2; exit 2; }; filter=$1 ;;
++        -h|--help) usage; exit 0 ;;
++        *) usage >&2; exit 2 ;;
+@@ -34,0 +18 @@
++    shift
+@@ -36,3 +20,71 @@
+-rm -rf "$SNAP"
+-printf '\n  %d tests passed across the port; %d module(s) failing\n' "$total" "$failed"
+-[ "$failed" -eq 0 ]
++[ -x "$MYLANG" ] || { printf 'gate: pinned compiler missing: %s\n' "$MYLANG" >&2; exit 2; }
++MYLANG=$(realpath "$MYLANG")
++QBE=${MYLANG_QBE:-"$(dirname "$MYLANG")/qbe"}
++ZIG=${MYLANG_ZIG:-"$(command -v zig || true)"}
++[ -x "$QBE" ] || { printf 'gate: pinned QBE missing: %s\n' "$QBE" >&2; exit 2; }
++[ -n "$ZIG" ] && [ -x "$ZIG" ] || { printf 'gate: Zig missing; set MYLANG_ZIG\n' >&2; exit 2; }
++QBE=$(realpath "$QBE"); ZIG=$(realpath "$ZIG")
++mkdir -p "$CACHE" "$ROOT/.workbench/snapshots" "$ROOT/.workbench/results"
++if [ -n "$focus" ]; then
++    case "$focus" in *[!A-Za-z0-9_]*) printf 'gate: invalid module: %s\n' "$focus" >&2; exit 2;; esac
++    entry="$HERE/$focus.my"
++    [ -f "$entry" ] || { printf 'gate: unknown module: %s\n' "$focus" >&2; exit 2; }
++else
++    "$HERE/check-test-inventory.sh" >&2
++    entry="$HERE/all_test.my"
++fi
++manifest=$(mktemp)
++copied=$(mktemp -d "$ROOT/.workbench/snapshots/.copy.XXXXXX")
++trap 'rm -f "$manifest"; rm -rf "$copied"' EXIT HUP INT TERM
++(cd "$HERE" && sha256sum ./*.my test-inventory.txt) >"$manifest"
++digest=$(sha256sum "$manifest" | awk '{ print $1 }')
++snapshot="$ROOT/.workbench/snapshots/$digest"
++if [ ! -d "$snapshot" ]; then
++    cp "$HERE"/*.my "$copied"/
++    cp "$HERE/test-inventory.txt" "$copied"/
++    (cd "$HERE" && sha256sum -c "$manifest" >/dev/null) || {
++        printf '%s\n' 'gate: sources changed while snapshotting; retry on a stable tree' >&2
++        exit 1
++    }
++    (cd "$copied" && sha256sum -c "$manifest" >/dev/null) || {
++        printf '%s\n' 'gate: copied snapshot failed verification' >&2
++        exit 1
++    }
++    if ! mv -T "$copied" "$snapshot" 2>/dev/null; then rm -rf "$copied"; fi
++fi
++rm -rf "$copied"
++entry="$snapshot/$(basename "$entry")"
++run_dir=$(mktemp -d "$ROOT/.workbench/results/test-$digest.XXXXXX")
++result="$run_dir/result.jsonl"
++log="$run_dir/diagnostics.log"
++set -- env -u MYLANG_HOST_COMPILER "$MYLANG" test "$entry" --cache-dir "$CACHE" --max-steps "$STEPS" --report --json --qbe "$QBE" --zig "$ZIG"
++[ -z "$filter" ] || set -- "$@" --filter "$filter"
++[ -z "$force" ] || set -- "$@" "$force"
++printf 'gate: snapshot=%s compiler=%s\n' "$digest" "$MYLANG" >&2
++set +e
++"$@" >"$result" 2>"$log"
++status=$?
++set -e
++if [ "$status" -ne 0 ]; then
++    tail -n 40 "$log" | LC_ALL=C cut -c1-500 >&2 || true
++    python3 - "$status" "$result" "$log" <<'PY'
++import json
++import sys
++print(json.dumps({
++    "version": "pcb-workbench-gate-v1",
++    "status": int(sys.argv[1]),
++    "report": sys.argv[2],
++    "diagnostics": sys.argv[3],
++}, separators=(",", ":")))
++PY
++    exit "$status"
++fi
++set +e
++"$ROOT/tools/summarize-test-report.py" "$result" "$log" "$digest"
++summary_status=$?
++set -e
++if [ "$summary_status" -ne 0 ]; then
++    tail -n 40 "$log" | LC_ALL=C cut -c1-500 >&2 || true
++    printf 'gate: full report=%s diagnostics=%s\n' "$result" "$log" >&2
++    exit 2
++fi
+--- /dev/null
++++ b/guest/pcb.sh
+@@ -0,0 +1,9 @@
++#!/bin/sh
++set -eu
++HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
++case "${PCB_BUILD_MODE:-release}" in
++    release) app=$("$HERE/build-app.sh") ;;
++    debug) app=$("$HERE/build-app.sh" --debug) ;;
++    *) printf '%s\n' 'pcb: PCB_BUILD_MODE must be release or debug' >&2; exit 2 ;;
++esac
++exec "$app" --max-steps=4294967295 -- "$@"
+--- /dev/null
++++ b/guest/test-inventory.txt
+@@ -0,0 +1,22 @@
++# module public-test-count
++contract 27
++draft 31
++edits 15
++env 11
++extract 17
++font 15
++geom 15
++hash 16
++journal 24
++kit 14
++layers 6
++main 14
++model 32
++png 17
++raster 21
++referee 25
++render 18
++revision 19
++sexp 31
++shape 22
++units 10
+--- /dev/null
++++ b/tests/workflow.sh
+@@ -0,0 +1,153 @@
++#!/bin/sh
++set -eu
++ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
++tmp=$(mktemp -d)
++trap 'rm -rf "$tmp"' EXIT HUP INT TERM
++
++mkdir -p "$tmp/fixture/guest" "$tmp/fixture/tools"
++cp "$ROOT/guest"/*.my "$ROOT/guest"/*.sh "$ROOT/guest/test-inventory.txt" "$tmp/fixture/guest"/
++cp "$ROOT/tools"/*.py "$tmp/fixture/tools/"
++chmod +x "$tmp/fixture/guest"/*.sh
++chmod +x "$tmp/fixture/tools"/*.py
++
++"$ROOT/guest/check-test-inventory.sh" | grep -q '21 modules, 400 public tests'
++
++if "$ROOT/tools/run-with-affinity.py" 0 -- /bin/true >/dev/null 2>&1; then
++    printf '%s\n' 'workflow test: zero affinity jobs was accepted' >&2
++    exit 1
++fi
++if "$ROOT/tools/run-with-affinity.py" nope -- /bin/true >/dev/null 2>&1; then
++    printf '%s\n' 'workflow test: nonnumeric affinity jobs was accepted' >&2
++    exit 1
++fi
++if PCB_BUILD_MODE=nope "$tmp/fixture/guest/pcb.sh" status >/dev/null 2>&1; then
++    printf '%s\n' 'workflow test: unknown PCB_BUILD_MODE was accepted' >&2
++    exit 1
++fi
++
++# A new source module must be rejected until it is deliberately inventoried.
++cp "$ROOT/guest/check-test-inventory.sh" "$tmp/check-test-inventory.sh"
++cp "$ROOT/guest/all_test.my" "$ROOT/guest/test-inventory.txt" "$tmp"/
++cp "$ROOT/guest"/*.my "$tmp"/
++printf 'module surprise\n' >"$tmp/surprise.my"
++if HERE="$tmp" "$tmp/check-test-inventory.sh" >/dev/null 2>&1; then
++    printf '%s\n' 'workflow test: uninventoried module was accepted' >&2
++    exit 1
++fi
++
++# The gate must return the compiler status even when output looks successful.
++mkdir -p "$tmp/fake/bin"
++mkdir -p "$tmp/fake/lib/mylang-llvm"
++printf '# fake adapter\n' >"$tmp/fake/lib/mylang-llvm/qbe_llvm.py"
++printf '%s\n' '#!/bin/sh' 'head -c 2000 /dev/zero | tr '\''\0'\'' x >&2; echo >&2' 'printf '\''{"summary":"looks green"}\n'\''' 'exit 7' >"$tmp/fake/bin/mylang"
++chmod +x "$tmp/fake/bin/mylang"
++printf '#!/bin/sh\n' >"$tmp/fake/bin/qbe"
++chmod +x "$tmp/fake/bin/qbe"
++set +e
++MYLANG="$tmp/fake/bin/mylang" CACHE="$tmp/cache" "$tmp/fixture/guest/gate.sh" --focus geom >"$tmp/gate-failure.json" 2>"$tmp/gate-failure.err"
++status=$?
++set -e
++[ "$status" -eq 7 ] || { printf 'workflow test: gate returned %s instead of 7\n' "$status" >&2; exit 1; }
++[ "$(awk '{ if (length > max) max=length } END { print max + 0 }' "$tmp/gate-failure.err")" -le 500 ] || { printf '%s\n' 'workflow test: gate failure line was not byte bounded' >&2; exit 1; }
++python3 -c 'import json,sys; value=json.load(open(sys.argv[1])); assert value["version"] == "pcb-workbench-gate-v1" and value["status"] == 7' "$tmp/gate-failure.json"
++
++# Successful gates print a bounded summary while retaining the complete report.
++printf '%s\n' '#!/bin/sh' 'python3 - <<'\''PY'\''' 'import json' 'tests=[{"name":"pass","status":"passed","reason":"x"*20000},{"name":"cached-a","status":"cached"},{"name":"cached-b","status":"cached"},{"name":"skip-a","status":"skipped"},{"name":"skip-b","status":"skipped"},{"name":"skip-c","status":"skipped"}]' 'print(json.dumps({"version":"native-tests-v1","tests":tests,"passed":1,"cached":2,"failed":0,"skipped":3,"executed":1}))' 'PY' >"$tmp/fake/bin/mylang"
++chmod +x "$tmp/fake/bin/mylang"
++summary=$(MYLANG="$tmp/fake/bin/mylang" CACHE="$tmp/cache" "$tmp/fixture/guest/gate.sh" --focus geom 2>/dev/null)
++[ "${#summary}" -lt 1000 ] || { printf '%s\n' 'workflow test: gate summary was not bounded' >&2; exit 1; }
++[ "$(printf '%s\n' "$summary" | wc -l)" -eq 1 ] || { printf '%s\n' 'workflow test: gate stdout was not exactly one summary line' >&2; exit 1; }
++printf '%s\n' "$summary" | grep -q '"version":"pcb-workbench-gate-v1"'
++printf '%s\n' "$summary" | grep -q '"native_report_version":"native-tests-v1"'
++report_path=$(printf '%s\n' "$summary" | python3 -c 'import json,sys; print(json.load(sys.stdin)["report"])')
++[ -s "$report_path" ] || { printf '%s\n' 'workflow test: full gate report was not retained' >&2; exit 1; }
++
++# Native summaries must agree with nonempty, uniquely named test records.
++printf '%s\n' '{"version":"native-tests-v1","tests":[{"name":"same","status":"passed"},{"name":"same","status":"cached"}],"passed":1,"cached":1,"failed":0,"skipped":0,"executed":1}' >"$tmp/bad-report.json"
++if "$ROOT/tools/summarize-test-report.py" "$tmp/bad-report.json" "$tmp/diagnostics" snapshot >/dev/null 2>&1; then
++    printf '%s\n' 'workflow test: duplicate test names were accepted' >&2
++    exit 1
++fi
++printf '%s\n' '{"version":"native-tests-v1","tests":[{"name":"only","status":"cached"}],"passed":1,"cached":0,"failed":0,"skipped":0,"executed":1}' >"$tmp/bad-report.json"
++if "$ROOT/tools/summarize-test-report.py" "$tmp/bad-report.json" "$tmp/diagnostics" snapshot >/dev/null 2>&1; then
++    printf '%s\n' 'workflow test: inconsistent status counts were accepted' >&2
++    exit 1
++fi
++
++# A zero compiler status with malformed JSON is a harness error, not success.
++printf '%s\n' '#!/bin/sh' 'printf '\''not-json\n'\''' >"$tmp/fake/bin/mylang"
++chmod +x "$tmp/fake/bin/mylang"
++set +e
++MYLANG="$tmp/fake/bin/mylang" CACHE="$tmp/cache" "$tmp/fixture/guest/gate.sh" --focus geom >/dev/null 2>&1
++status=$?
++set -e
++[ "$status" -eq 2 ] || { printf 'workflow test: malformed successful report returned %s instead of 2\n' "$status" >&2; exit 1; }
++
++# Toolchain identity depends on contents, not the source directory, and an
++# incomplete installation cannot replace the active pin.
++mkdir -p "$tmp/project/tools" "$tmp/install-a/bin" "$tmp/install-a/lib/mylang-llvm" "$tmp/install-a/lib/mylang-runtime"
++cp "$ROOT/tools/update-toolchain.sh" "$tmp/project/tools/"
++printf '#!/bin/sh\n' >"$tmp/install-a/bin/mylang"
++printf '#!/bin/sh\n' >"$tmp/install-a/bin/qbe"
++printf '# adapter\n' >"$tmp/install-a/lib/mylang-llvm/llvm_emit.py"
++printf '# adapter entry\n' >"$tmp/install-a/lib/mylang-llvm/qbe_llvm.py"
++printf '# target\n' >"$tmp/install-a/lib/mylang-llvm/amd64_sysv.py"
++printf '# signatures\n' >"$tmp/install-a/lib/mylang-llvm/runtime_signatures.py"
++printf runtime >"$tmp/install-a/lib/mylang-runtime/runtime.a"
++chmod +x "$tmp/install-a/bin/mylang" "$tmp/install-a/bin/qbe"
++cp -a "$tmp/install-a" "$tmp/install-b"
++first=$("$tmp/project/tools/update-toolchain.sh" "$tmp/install-a" | awk '{ print $4 }')
++second=$("$tmp/project/tools/update-toolchain.sh" "$tmp/install-b" | awk '{ print $4 }')
++[ "$first" = "$second" ] || { printf '%s\n' 'workflow test: identical installs got different identities' >&2; exit 1; }
++before=$(readlink "$tmp/project/.mylang/current")
++mkdir -p "$tmp/incomplete/bin"
++if "$tmp/project/tools/update-toolchain.sh" "$tmp/incomplete" >/dev/null 2>&1; then
++    printf '%s\n' 'workflow test: incomplete install was accepted' >&2
++    exit 1
++fi
++[ "$(readlink "$tmp/project/.mylang/current")" = "$before" ] || { printf '%s\n' 'workflow test: failed update changed pin' >&2; exit 1; }
++
++# An MYLANG override is part of the application identity, so replacing that
++# compiler cannot reuse the previous executable.
++printf '%s\n' '#!/bin/sh' 'printf "%s\n" "$@" >"$BUILD_COMMAND_LOG"' 'out=' 'while [ "$#" -gt 0 ]; do [ "$1" = -o ] && { shift; out=$1; }; shift; done' 'printf "#!/bin/sh\\nexit 0\\n" >"$out"' 'chmod +x "$out"' >"$tmp/fake/bin/mylang"
++chmod +x "$tmp/fake/bin/mylang"
++printf '#!/bin/sh\n' >"$tmp/fake/bin/qbe"; chmod +x "$tmp/fake/bin/qbe"
++first_app=$(BUILD_COMMAND_LOG="$tmp/release-args" MYLANG="$tmp/fake/bin/mylang" CACHE="$tmp/build-cache" "$tmp/fixture/guest/build-app.sh")
++grep -qx llvm "$tmp/release-args"
++grep -qx 3 "$tmp/release-args"
++grep -qx -- --lto "$tmp/release-args"
++grep -qx ReleaseFast "$tmp/release-args"
++if grep -qx qbe "$tmp/release-args"; then printf '%s\n' 'workflow test: default build selected QBE' >&2; exit 1; fi
++debug_app=$(BUILD_COMMAND_LOG="$tmp/debug-args" MYLANG="$tmp/fake/bin/mylang" CACHE="$tmp/build-cache" "$tmp/fixture/guest/build-app.sh" --debug)
++grep -qx llvm "$tmp/debug-args"
++grep -qx 0 "$tmp/debug-args"
++grep -qx Debug "$tmp/debug-args"
++[ "$first_app" != "$debug_app" ] || { printf '%s\n' 'workflow test: debug and release reused one executable' >&2; exit 1; }
++CFLAGS=one env_app_one=$(BUILD_COMMAND_LOG="$tmp/env-one-args" CFLAGS=one MYLANG="$tmp/fake/bin/mylang" CACHE="$tmp/build-cache" "$tmp/fixture/guest/build-app.sh")
++CFLAGS=two env_app_two=$(BUILD_COMMAND_LOG="$tmp/env-two-args" CFLAGS=two MYLANG="$tmp/fake/bin/mylang" CACHE="$tmp/build-cache" "$tmp/fixture/guest/build-app.sh")
++[ "$env_app_one" != "$env_app_two" ] || { printf '%s\n' 'workflow test: build environment change reused one executable' >&2; exit 1; }
++printf '# compiler identity two\n' >>"$tmp/fake/bin/mylang"
++second_app=$(BUILD_COMMAND_LOG="$tmp/second-args" MYLANG="$tmp/fake/bin/mylang" CACHE="$tmp/build-cache" "$tmp/fixture/guest/build-app.sh")
++[ "$first_app" != "$second_app" ] || { printf '%s\n' 'workflow test: compiler override change reused stale executable' >&2; exit 1; }
++
++# Build failures keep their real status and full captured diagnostics.
++printf '%s\n' '#!/bin/sh' 'i=0; while [ "$i" -lt 100 ]; do printf "failure detail %s " "$i" >&2; head -c 2000 /dev/zero | tr "\\0" x >&2; echo >&2; i=$((i + 1)); done' 'exit 9' >"$tmp/fake/bin/mylang"
++chmod +x "$tmp/fake/bin/mylang"
++set +e
++MYLANG="$tmp/fake/bin/mylang" CACHE="$tmp/build-cache" "$tmp/fixture/guest/build-app.sh" >"$tmp/build-failure.out" 2>"$tmp/build-failure.err"
++status=$?
++set -e
++[ "$status" -eq 9 ] || { printf 'workflow test: build returned %s instead of 9\n' "$status" >&2; exit 1; }
++[ "$(wc -l <"$tmp/build-failure.err")" -lt 50 ] || { printf '%s\n' 'workflow test: build failure excerpt was not bounded' >&2; exit 1; }
++[ "$(awk '{ if (length > max) max=length } END { print max + 0 }' "$tmp/build-failure.err")" -le 500 ] || { printf '%s\n' 'workflow test: build failure line was not byte bounded' >&2; exit 1; }
++grep -q 'diagnostics=' "$tmp/build-failure.err"
++
++# pcb.sh adds runtime policy before `--` and preserves every guest argument.
++arg_log="$tmp/application-arguments"
++printf '%s\n' '#!/bin/sh' 'out=' 'while [ "$#" -gt 0 ]; do [ "$1" = -o ] && { shift; out=$1; }; shift; done' 'printf "%s\n" "#!/bin/sh" "printf '\''%s\\n'\'' \"\$@\" >\"\$APP_ARG_LOG\"" >"$out"' 'chmod +x "$out"' >"$tmp/fake/bin/mylang"
++chmod +x "$tmp/fake/bin/mylang"
++rm -rf "$tmp/fixture/.workbench/builds"
++APP_ARG_LOG="$arg_log" MYLANG="$tmp/fake/bin/mylang" CACHE="$tmp/build-cache" "$tmp/fixture/guest/pcb.sh" observe --journal "$tmp/journal path" --label '--literal' >/dev/null
++printf '%s\n' '--max-steps=4294967295' '--' 'observe' '--journal' "$tmp/journal path" '--label' '--literal' >"$tmp/expected-arguments"
++cmp -s "$tmp/expected-arguments" "$arg_log" || { printf '%s\n' 'workflow test: pcb.sh changed application arguments' >&2; diff -u "$tmp/expected-arguments" "$arg_log" >&2 || true; exit 1; }
++printf '%s\n' 'workflow tests: PASS'
+--- /dev/null
++++ b/tools/build-environment-identity.py
+@@ -0,0 +1,24 @@
++#!/usr/bin/env python3
++import hashlib
++import json
++import os
++
++exact = {
++    "AR", "CCC_OVERRIDE_OPTIONS", "CC", "CFLAGS", "COMPILER_PATH", "CPP",
++    "CPPFLAGS", "CPATH", "CPLUS_INCLUDE_PATH", "CXX", "CXXFLAGS",
++    "C_INCLUDE_PATH", "GCC_EXEC_PREFIX", "LDFLAGS", "LD", "LIBRARY_PATH",
++    "MACOSX_DEPLOYMENT_TARGET", "MYLANG_HOST_COMPILER", "MYLANG_LLVM_ADAPTER",
++    "MYLANG_SEMANTIC_BUDGET", "MYLANG_QBE_LLVM_EMIT_LTO_OBJECT",
++    "MYLANG_QBE_LLVM_KEEP_IR", "MYLANG_QBE_LLVM_OPT",
++    "MYLANG_QBE_LLVM_RUNTIME_SOURCES", "MYLANG_QBE_LLVM_SIGNATURES",
++    "MYLANG_QBE_LLVM_UNIT", "MYLANG_QBE_LLVM_ZIG", "MYLANG_ZIG",
++    "OBJC_INCLUDE_PATH", "PYTHONHASHSEED", "PYTHONHOME", "PYTHONOPTIMIZE",
++    "PYTHONPATH", "RANLIB", "SDKROOT", "SOURCE_DATE_EPOCH",
++    "ZIG_GLOBAL_CACHE_DIR", "ZIG_LIBC", "ZIG_LIB_DIR", "ZIG_LOCAL_CACHE_DIR",
++}
++selected = {
++    key: value for key, value in os.environ.items()
++    if key in exact or key.startswith("LD_")
++}
++payload = json.dumps(selected, sort_keys=True, separators=(",", ":")).encode()
++print(hashlib.sha256(payload).hexdigest())
+--- /dev/null
++++ b/tools/run-with-affinity.py
+@@ -0,0 +1,20 @@
++#!/usr/bin/env python3
++import os
++import sys
++
++if len(sys.argv) < 4 or sys.argv[2] != "--":
++    print("usage: run-with-affinity.py JOBS -- COMMAND [ARG ...]", file=sys.stderr)
++    raise SystemExit(2)
++try:
++    jobs = int(sys.argv[1])
++except ValueError:
++    jobs = 0
++if jobs <= 0:
++    print("run-with-affinity: JOBS must be a positive integer", file=sys.stderr)
++    raise SystemExit(2)
++allowed = sorted(os.sched_getaffinity(0))
++if not allowed:
++    print("run-with-affinity: process has no allowed CPUs", file=sys.stderr)
++    raise SystemExit(2)
++os.sched_setaffinity(0, allowed[: min(jobs, len(allowed))])
++os.execvpe(sys.argv[3], sys.argv[3:], os.environ)
+--- /dev/null
++++ b/tools/summarize-test-report.py
+@@ -0,0 +1,54 @@
++#!/usr/bin/env python3
++import json
++import sys
++
++if len(sys.argv) != 4:
++    raise SystemExit(2)
++report, diagnostics, snapshot = sys.argv[1:]
++try:
++    with open(report, "r", encoding="utf-8") as handle:
++        value = json.load(handle)
++    if not isinstance(value, dict):
++        raise ValueError("report root is not an object")
++    if value.get("version") != "native-tests-v1":
++        raise ValueError("unexpected report version")
++    tests = value.get("tests")
++    if not isinstance(tests, list) or not tests:
++        raise ValueError("successful report has no tests")
++    counts = {name: value[name] for name in ("passed", "cached", "failed", "skipped", "executed")}
++    if any(type(number) is not int or number < 0 for number in counts.values()):
++        raise ValueError("invalid test counts")
++    statuses = {name: 0 for name in ("passed", "cached", "failed", "skipped")}
++    names = set()
++    for index, test in enumerate(tests):
++        if not isinstance(test, dict):
++            raise ValueError(f"test {index} is not an object")
++        name = test.get("name")
++        status = test.get("status")
++        if not isinstance(name, str) or not name:
++            raise ValueError(f"test {index} has no name")
++        if name in names:
++            raise ValueError(f"duplicate test name: {name}")
++        names.add(name)
++        if status not in statuses:
++            raise ValueError(f"test {name} has invalid status")
++        statuses[status] += 1
++    if any(counts[name] != statuses[name] for name in statuses):
++        raise ValueError("summary counts do not match test statuses")
++    if counts["executed"] != counts["passed"] + counts["failed"]:
++        raise ValueError("executed count is inconsistent")
++    if counts["failed"] != 0:
++        raise ValueError("successful process reported failed tests")
++    if counts["passed"] + counts["cached"] == 0:
++        raise ValueError("successful report has no passing tests")
++except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as error:
++    print(f"gate: invalid native test report: {error}", file=sys.stderr)
++    raise SystemExit(2)
++print(json.dumps({
++    "version": "pcb-workbench-gate-v1",
++    "native_report_version": "native-tests-v1",
++    "snapshot": snapshot,
++    **counts,
++    "report": report,
++    "diagnostics": diagnostics,
++}, separators=(",", ":")))
+--- /dev/null
++++ b/tools/update-toolchain.sh
+@@ -0,0 +1,29 @@
++#!/bin/sh
++set -eu
++ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
++[ "$#" -eq 1 ] || { printf '%s\n' 'usage: tools/update-toolchain.sh /path/to/complete/mylang-install' >&2; exit 2; }
++source=$1
++for asset in bin/mylang bin/qbe lib/mylang-llvm/qbe_llvm.py lib/mylang-llvm/llvm_emit.py lib/mylang-llvm/amd64_sysv.py lib/mylang-llvm/runtime_signatures.py lib/mylang-runtime; do
++    [ -e "$source/$asset" ] || { printf 'update-toolchain: incomplete install, missing %s\n' "$asset" >&2; exit 1; }
++done
++identity=$(cd "$source" && find bin lib/mylang-llvm lib/mylang-runtime -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | awk '{ print $1 }')
++destination="$ROOT/.mylang/installs/$identity"
++mkdir -p "$ROOT/.mylang/installs"
++if [ ! -d "$destination" ]; then
++    staging="$destination.tmp.$$"
++    trap 'rm -rf "$staging"' EXIT HUP INT TERM
++    mkdir -p "$staging"
++    cp -a "$source/bin" "$source/lib" "$staging"/
++    copied_identity=$(cd "$staging" && find bin lib/mylang-llvm lib/mylang-runtime -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | awk '{ print $1 }')
++    [ "$copied_identity" = "$identity" ] || { printf '%s\n' 'update-toolchain: copied install failed identity verification' >&2; exit 1; }
++    printf '%s\n' "$identity" >"$staging/IDENTITY"
++    if ! mv -T "$staging" "$destination" 2>/dev/null; then
++        rm -rf "$staging"
++    fi
++fi
++installed_identity=$(cd "$destination" && find bin lib/mylang-llvm lib/mylang-runtime -type f ! -name IDENTITY -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | awk '{ print $1 }')
++[ "$installed_identity" = "$identity" ] || { printf '%s\n' 'update-toolchain: existing pinned install is corrupt' >&2; exit 1; }
++current_new="$ROOT/.mylang/current.new.$$"
++ln -s "installs/$identity" "$current_new"
++mv -Tf "$current_new" "$ROOT/.mylang/current"
++printf 'pinned mylang install %s\n' "$identity"

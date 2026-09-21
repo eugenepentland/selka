@@ -1,0 +1,28 @@
+{
+  "compiler": "/home/epentland/ai/canopy/pcb-workbench/.mylang/installs/4bbbce22f660a58c0f7a024d5a31138cc6a8bb32b1040f8b8d59295761cf72ce/bin/mylang",
+  "compiler_sha256": "f9a7ba227e46861e3f76af9f5b10a3944c22c4215176ad1aee7243cb5d1a3fa4",
+  "source_hashes": {
+    "shape.my": "6bb69cd88390f5d3ee98e603b0899996c1c55cd5210b08bdd3c9e6b410b60829",
+    "referee.my": "c57e89958ed7436162fc0719ee90877208e9c7389e874d075375244415cdb21f",
+    "sexp.my": "4e78a322aef873f9701dc8df1ba2eed986f4e3ae3ad9458a112ade936e72890c",
+    "extract.my": "e7f671458d057a4e37b0de3800af5022da57304d19b2a4e966544a38ec79fa30",
+    "all_test.my": "93782f35361fc434d1fe19920f8ee922a2d875f26223459b2bef6cdb06b988ba",
+    "hash.my": "89a188948895f5f5e518d999fdd04bb0abf5e06c9f4c9fcdfb7bf62f56b04779",
+    "model.my": "71a3f3e97f7d46b602f7a985e6e3a97c851baf7b1fdb908df194b8784cfd1210",
+    "contract.my": "8762a91baccd47eaf0767c1eee8d5ad5a3b51bd6e743d759ea813a5704851705",
+    "revision.my": "2db835854c1c653791a44313bec3e9e3c3d08a941a08a6bc71bc13453f3c1b7a",
+    "render.my": "6afaf5289e5c0728a7ba57460e74f79d8d0dc764f173a6e15d766a497dd7c659",
+    "geom.my": "94fdbd7c364a06b2cfd979bcbc9054e82c4a0fab046834dc300f586a8af2b246",
+    "raster.my": "afbf9f44a940fdd24b50dfb9c22dbb329c6cdaae47a2eef7936b74bdc8f3de95",
+    "layers.my": "faa31a1be2bdcc8d6121e02e876c1d31649e9ecf9fb053e1c533cf2dae2ddebe",
+    "draft.my": "a5473d0653a054a9db6633a585be80ea1c0ce081a52e1596c551f567952fa7e9",
+    "main.my": "bfb8963f500f221fd8e4018273d51714047e91e635f528ca619c7c455a6d4108",
+    "font.my": "daa72d57f0d87df17d45b5ec07531fc4dddf6257f86d4fe25fc61ec091827f38",
+    "env.my": "1690b3fb490aea55eb4c523e1377f2631889359ac6419f40d9cb7d0f8f62095f",
+    "png.my": "be9a09ca0cf4a506bdebafa892484cc6bb9860070151511fd881dc8389913145",
+    "units.my": "546281edea8bf2ae9ed5a66caa2f2e57f43c4c7c85d835cbc76c68683cd52d68",
+    "kit.my": "abe52ae821941831c1a8d0fba147145e9efd350c70d4c142143901c729aa501e",
+    "edits.my": "e769693a70a9fe464f9d5a930383bae26482becbf842644f96a03f859cccf74c",
+    "journal.my": "4300413ac9ecc540a6dab5d0767e4a92ff691a3c6a5b1fe3a61e985d00b8f6f6"
+  }
+}

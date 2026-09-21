@@ -1,0 +1,690 @@
+[
+  {
+    "phase": "cold",
+    "summary": {
+      "version": "native-tests-v1",
+      "passed": 400,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "executed": 400
+    },
+    "unique_names": 400,
+    "cacheable": 400,
+    "work": [
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 29,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 29,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "native-test-compile",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 29,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1936,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 5,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 1608,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 1608,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "miss",
+          "performed": 4,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "miss",
+          "performed": 5,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 16776228,
+          "ordinary_bytes": 16739178,
+          "symbolic_bytes": 4130,
+          "specialization_bytes": 32920,
+          "evicted": 0
+        },
+        "bypassed": [
+          {
+            "reason": "interned-record",
+            "count": 11
+          },
+          {
+            "reason": "symbolic-no-retained-template",
+            "count": 4
+          },
+          {
+            "reason": "specialization-no-retained-body",
+            "count": 5
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 29,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 1936,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 5,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 1608,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 1608,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 58,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1936,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 5,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 1608,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 1608,
+          "reused": 0
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "miss",
+          "performed": 400,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 58,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 1936,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 5,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 1608,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 1608,
+            "reused": 0
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 400,
+            "reused": 0
+          }
+        }
+      }
+    ]
+  },
+  {
+    "phase": "warm",
+    "summary": {
+      "version": "native-tests-v1",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 400,
+      "executed": 0
+    },
+    "unique_names": 400,
+    "cacheable": 400,
+    "work": [
+      {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 29
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1251,
+          "reused": 685
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 5,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 4
+        },
+        "specialization_bodies": {
+          "status": "miss",
+          "performed": 5,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 16735228,
+          "ordinary_bytes": 16726924,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 8304,
+          "evicted": 7
+        },
+        "bypassed": [
+          {
+            "reason": "not-ordinary-body",
+            "count": 5
+          },
+          {
+            "reason": "no-retained-body",
+            "count": 1070
+          },
+          {
+            "reason": "relocation-failed",
+            "count": 176
+          },
+          {
+            "reason": "interned-record",
+            "count": 11
+          },
+          {
+            "reason": "specialization-relocation-failed",
+            "count": 5
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 29
+          },
+          "checked_bodies": {
+            "performed": 1251,
+            "reused": 685
+          },
+          "instantiated_specializations": {
+            "performed": 5,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 58
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1251,
+          "reused": 685
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 5,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 400
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 58
+          },
+          "checked_bodies": {
+            "performed": 1251,
+            "reused": 685
+          },
+          "instantiated_specializations": {
+            "performed": 5,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 400
+          }
+        }
+      }
+    ]
+  },
+  {
+    "phase": "warm-repeat",
+    "summary": {
+      "version": "native-tests-v1",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 400,
+      "executed": 0
+    },
+    "unique_names": 400,
+    "cacheable": 400,
+    "work": [
+      {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": true,
+        "parsed_modules": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 1,
+        "session_reused_results": 1,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 29
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 400
+        },
+        "reused_results": 1,
+        "session_reused_results": 1,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 29
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 400
+          }
+        }
+      }
+    ]
+  }
+]

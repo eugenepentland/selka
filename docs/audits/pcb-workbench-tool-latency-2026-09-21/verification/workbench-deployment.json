@@ -1,0 +1,20 @@
+{
+  "project": "/home/epentland/ai/canopy/pcb-workbench",
+  "backup": "/tmp/pcb-latency-fixes-20260921/baseline-pcb",
+  "files": {
+    "AGENTS.md": "6ebe58771947507acfb1baa05be041e0c2960c8fcc2374a3048dcbd830ca762c",
+    "README.md": "a4a28fc2f391d914e7925b4a641dd16043317112ef40846cb96f1364a0057aa2",
+    "guest/PORTING.md": "e47479d7e095c744299196d44d34b8f4939148fce5498d1c92193f6dc1f980c3",
+    "guest/all_test.my": "93782f35361fc434d1fe19920f8ee922a2d875f26223459b2bef6cdb06b988ba",
+    "guest/build-app.sh": "1a2c476c88585521cf7f8e19e63760053330a48a2374784e79a79b24c3e3560a",
+    "guest/check-test-inventory.sh": "ca9346239f3a0a052ad239bf21688fd8d2c074b0ec17bf07338eb82ef1a7b23f",
+    "guest/gate.sh": "5f47a187de98d79f228eb4be0674b0b950298ca5b12111a93c92a79b2abda2dc",
+    "guest/pcb.sh": "a6b8858dff63369db730333af7e4cc5257a6421ab7590319527d45790afb60a6",
+    "guest/test-inventory.txt": "ada4e2f7bb368a4da8a85038cc90afb38b82fc5024f02c674692f176afe7cfdd",
+    "tests/workflow.sh": "c551b1fd047f6916ca01c2d315e2814ae608279e16bc6dc80fe1ead939ccde5f",
+    "tools/update-toolchain.sh": "1a0c090c6f979a7007b1f18571001d829e128d0cc6fd01c7c9279662f85c01e8",
+    "tools/summarize-test-report.py": "c8caf7ad89caffe43ac9bdc260f572d9b36e62d06ee77e51371b3ec2d34476cf",
+    "tools/build-environment-identity.py": "dc3d8e9795a0851c05e3de113ed741b84515d2011d199decacafa3b45c43cae2",
+    "tools/run-with-affinity.py": "01fedb80d2dbaa7266ad0a71dd993b34fb3ed795edbc8eeb4f61dffde11b669c"
+  }
+}

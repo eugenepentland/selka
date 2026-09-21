@@ -1,0 +1,78 @@
+[
+  {
+    "target": "test",
+    "argv": [
+      "zig",
+      "build",
+      "test",
+      "-j6",
+      "--maxrss",
+      "12884901888",
+      "--summary",
+      "all"
+    ],
+    "seconds": 143.23961925299955,
+    "exit_code": 0,
+    "build_summary": [
+      "Build Summary: 73/73 steps succeeded; 1590/17728 tests passed (16138 skipped)"
+    ],
+    "log": "/tmp/pcb-latency-fixes-20260921/evidence/accepted-compiler-test.log"
+  },
+  {
+    "target": "test-qbe",
+    "argv": [
+      "zig",
+      "build",
+      "test-qbe",
+      "-j6",
+      "--maxrss",
+      "12884901888",
+      "--summary",
+      "all"
+    ],
+    "seconds": 44.83281607599929,
+    "exit_code": 0,
+    "build_summary": [
+      "Build Summary: 48/48 steps succeeded; 221/221 tests passed"
+    ],
+    "log": "/tmp/pcb-latency-fixes-20260921/evidence/accepted-compiler-test-qbe.log"
+  },
+  {
+    "target": "test-qbe-build",
+    "argv": [
+      "zig",
+      "build",
+      "test-qbe-build",
+      "-j6",
+      "--maxrss",
+      "12884901888",
+      "--summary",
+      "all"
+    ],
+    "seconds": 1.2573090019868687,
+    "exit_code": 0,
+    "build_summary": [
+      "Build Summary: 30/30 steps succeeded"
+    ],
+    "log": "/tmp/pcb-latency-fixes-20260921/evidence/accepted-compiler-test-qbe-build.log"
+  },
+  {
+    "target": "fmt-check",
+    "argv": [
+      "zig",
+      "build",
+      "fmt-check",
+      "-j6",
+      "--maxrss",
+      "12884901888",
+      "--summary",
+      "all"
+    ],
+    "seconds": 0.12047818700375501,
+    "exit_code": 0,
+    "build_summary": [
+      "Build Summary: 2/2 steps succeeded"
+    ],
+    "log": "/tmp/pcb-latency-fixes-20260921/evidence/accepted-compiler-fmt-check.log"
+  }
+]

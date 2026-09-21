@@ -1,0 +1,4236 @@
+[
+  {
+    "label": "geom-cold",
+    "argv": [
+      "/tmp/pcb-latency-fixes-20260921/baseline-install/bin/mylang",
+      "test",
+      "/tmp/pcb-latency-fixes-20260921/baseline-probes/guest/geom.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/baseline-probes/test-cache",
+      "--max-steps=4294967295",
+      "--report",
+      "--json"
+    ],
+    "seconds": 3.3852445230004378,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 1,
+        "syntax_stored": 1,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 175161,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 1,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 1,
+        "syntax_stored": 1,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 175161,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "native-test-compile",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 69,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 812992,
+          "ordinary_bytes": 812992,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [
+          {
+            "reason": "interned-record",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 1,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 69,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 53,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 53,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 69,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "miss",
+          "performed": 15,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 2,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 69,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 53,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 53,
+            "reused": 0
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 15,
+            "reused": 0
+          }
+        }
+      }
+    ],
+    "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"geom::test_circle_predicates_use_exact_squares\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"3f2f8b92e497669a0e7a775ba3bbec95da306574bf6327f808abbe255c583952\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_1f0bcb8390f6f5a3f6ae9dc844def2bd9fdea86d7cce23e89eefe1722a87b274\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_4294212545c57c3af3441dc633071cff39954d4dec157e0c1f2776f7a866401f\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_815c20cec3a4a799b9521bbe1cd392668f99eee23f4f3e984cc8d8319f7067d5\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":2090,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_closest_point_clamps_to_the_segment_ends\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"7acb854fddf7153d0149afb6c7ee4d3498553d585e50e4e12d9c0ba903f94a5b\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fb6d64daf0f90f2f7ed83a7ce9ca6d20b93b5fdb6bf4a9ee0f3a6d82c7ccb80b\"],\"cacheable\":true,\"reasons\":[],\"steps\":1543,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_distance_to_boundary_is_zero_on_the_outline\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"09c12169b3c1899017a05df94cea5f1b141d7d91b1312aae28e00ea7257c28ae\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_d77de07a9399d8186268208a50e4216598719e69b79fba9a1aa03bd03c213130\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":9865,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_orientation_is_exact_at_the_coordinate_extremes\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"3e461b1c2767aa38f091d804463f80375731e3d37f11c9012bf78cb7b324f54e\",\"dependencies\":[\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_a1edd9cb1fb4917f71ce85e4f45117b08b4de2afd9be858c2b813457279b8779\",\"myl_f_a64b46a7056b6f5e0d7e9d99db8551c37feba8d183587dfa42141488eba05d42\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\"],\"cacheable\":true,\"reasons\":[],\"steps\":1361,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_polygon_area_counts_twice_the_signed_region\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"74063cc7ef85125ebc9a78d1f4c7eda40f0a2e5e029f15af41070047de9fe462\",\"dependencies\":[\"myl_f_387dbb58d061a96cb0503f67782b705c12e02f15cbb7d5441799637eb3945b14\",\"myl_f_4d3d18a16438e54cbf74e659d607167665b1385646f32b1ad6106ae2ff49cc9a\",\"myl_f_5f7b58927a900fcd4804e9087e9d7650efb606af261270379e1351ea1c7ae7c1\",\"myl_f_8d44e3a7a2eea534d6208df1a0fe1642f52b1339ab63e5086154f700cef33ab0\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_cc0b0c90cc48350f9510ca16bb682cd6e7e98d9b9be4adde33eb1be17e4ad626\"],\"cacheable\":true,\"reasons\":[],\"steps\":3470,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_polygon_containment_is_exact_on_edges_and_corners\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"2e81eefbc5dbf4de6e9847fc0e66b589da75bcc6e79678e32c3bb636f7f0e093\",\"dependencies\":[\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_5fccb854565e38d32799376a0bfdb2d0e402b94a7a59a90d321b247b09ed8460\",\"myl_f_63e1f183648c24155bab2f94260a93079265808290d49740f05864a608a7c61c\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_7baeca96f65b0a7c82cc6d399f5c0ddeae9a8ebe66922d275d20e246350810d3\",\"myl_f_9817214fe7e7505198531ab7b3f0718f411a15efc722b2f3f2aba61e828ca240\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":6765,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_rect_intersection_and_clearance_regions\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ba10a6f2f4ed1c693774151311df03f89744bf717bd8c256be87caf4c638598f\",\"dependencies\":[\"myl_f_103bf41be6f08738f8ef665ad13936cc4523b78dbd49714ccbde02431f2e4aac\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_5d2f6af555987798dce798b53aab9b4b1cf5d3922e0cfad1584e83e8c878eafb\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_c77a22f05a431a5b66d318684f24159f14a38c38e587adf6d5e50064c9d29e88\",\"myl_f_daef4bd21ead228d4ee0bcd150e5949b39dfba3904dfcee2a9fba1ca10215112\",\"myl_f_fa71b2560dbadf3ac7ccefd2bc0827a0a1cdbd11bda4e56ec9cb0bb3773cd2c3\"],\"cacheable\":true,\"reasons\":[],\"steps\":550,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_segment_distance_is_exact_and_symmetric\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"f7eddd19defcabd5e6f12d2a7b6af12c7cccf2f758214de932076841b228cfef\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_18d8101e2640a09c5c354c9ef95591741159a68cc6eb53fd91c410471615c808\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":4732,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_closest_point_is_exact_at_board_scale\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"1afea2c1f559b19c03a33cd7b126be8b16b74dd524c5e205aab30ef7111082a6\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_40aaf2ffbfab89b563f3c798fd6050862bd07cdd177675e3933ff904626c4a1a\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":12994,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_distance_to_a_point_is_exact_at_board_scale\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d06b9d9c122b19b9873815d044c012fe9582b353d416368e05066e6d6bb629bd\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_23123f4de3a8635738a0d3c2e776d63188f13e81c6523f4a723a0b53134ceb17\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_43cb881472d0ba40ede53606812d67525afd7452f7cbc602945765081a5d6b98\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":5856,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_projection_dependents_are_exact_at_board_scale\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"81cd84927bb0ca77a65be3b228aefa84331063cef7d0fe325356de369141a6c2\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_94c9a491d1651f11a3f63413ae580a46da72c8e6d29ea8709d9ca785996834c3\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_dccc8c1661b277d0a1f0df77ada0569aa0adf7dc8682ad166769f61098c9db15\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":23096,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_projection_is_exact_at_the_coordinate_bound\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"172af735cc671731fcb3628c50dd613e81ed85622727e6fdb7513399cdb46601\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_346fc8ae4edd2364b7d82cd4cf15436a26ec81b1d22e8faeeb13c42e0e4878db\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":12723,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_projection_is_exact_on_a_diagonal_at_board_scale\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"c2d64771ffcabb2663fb9f796340e200b437d8b0197a7eac9838ec9f8263d087\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_ec7c198e2871d9bfebf199cd6555d2c1306a2d396b945b6a6be05e751751ee1d\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":8148,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_projection_rounds_the_nearest_nanometre_either_direction\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d138eee1574ed4f0c92735344d84dbaec337f666a5511bcc820429676db67220\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_c03fa9f12d57f71deff7fa7b1d71c68b2fbe5dc172847f622ef48b6ea650d928\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":3688,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_two_word_products_are_exact\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"498ba8cb395a78fbc271dd2a42635f68fd68a1f31f483cad85605875bdeab481\",\"dependencies\":[\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c38165bd9be529d327ec7273eee2836325e3b1f1cd0fdd94bf0fedc5c97bb3f5\"],\"cacheable\":true,\"reasons\":[],\"steps\":1539,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"}],\"passed\":15,\"failed\":0,\"skipped\":0,\"cached\":0,\"executed\":15}\n"
+  },
+  {
+    "label": "geom-warm",
+    "argv": [
+      "/tmp/pcb-latency-fixes-20260921/baseline-install/bin/mylang",
+      "test",
+      "/tmp/pcb-latency-fixes-20260921/baseline-probes/guest/geom.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/baseline-probes/test-cache",
+      "--max-steps=4294967295",
+      "--report",
+      "--json"
+    ],
+    "seconds": 0.4365924229932716,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 1,
+        "verdict_stored": 1,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 175221,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 68
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 934100,
+          "ordinary_bytes": 934100,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [
+          {
+            "reason": "no-retained-body",
+            "count": 1
+          },
+          {
+            "reason": "interned-record",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 68
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 2
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 68
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 15
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 2
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 68
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 15
+          }
+        }
+      }
+    ],
+    "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"geom::test_circle_predicates_use_exact_squares\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"3f2f8b92e497669a0e7a775ba3bbec95da306574bf6327f808abbe255c583952\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_1f0bcb8390f6f5a3f6ae9dc844def2bd9fdea86d7cce23e89eefe1722a87b274\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_4294212545c57c3af3441dc633071cff39954d4dec157e0c1f2776f7a866401f\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_815c20cec3a4a799b9521bbe1cd392668f99eee23f4f3e984cc8d8319f7067d5\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_closest_point_clamps_to_the_segment_ends\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"7acb854fddf7153d0149afb6c7ee4d3498553d585e50e4e12d9c0ba903f94a5b\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fb6d64daf0f90f2f7ed83a7ce9ca6d20b93b5fdb6bf4a9ee0f3a6d82c7ccb80b\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_distance_to_boundary_is_zero_on_the_outline\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"09c12169b3c1899017a05df94cea5f1b141d7d91b1312aae28e00ea7257c28ae\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_d77de07a9399d8186268208a50e4216598719e69b79fba9a1aa03bd03c213130\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_orientation_is_exact_at_the_coordinate_extremes\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"3e461b1c2767aa38f091d804463f80375731e3d37f11c9012bf78cb7b324f54e\",\"dependencies\":[\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_a1edd9cb1fb4917f71ce85e4f45117b08b4de2afd9be858c2b813457279b8779\",\"myl_f_a64b46a7056b6f5e0d7e9d99db8551c37feba8d183587dfa42141488eba05d42\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_polygon_area_counts_twice_the_signed_region\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"74063cc7ef85125ebc9a78d1f4c7eda40f0a2e5e029f15af41070047de9fe462\",\"dependencies\":[\"myl_f_387dbb58d061a96cb0503f67782b705c12e02f15cbb7d5441799637eb3945b14\",\"myl_f_4d3d18a16438e54cbf74e659d607167665b1385646f32b1ad6106ae2ff49cc9a\",\"myl_f_5f7b58927a900fcd4804e9087e9d7650efb606af261270379e1351ea1c7ae7c1\",\"myl_f_8d44e3a7a2eea534d6208df1a0fe1642f52b1339ab63e5086154f700cef33ab0\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_cc0b0c90cc48350f9510ca16bb682cd6e7e98d9b9be4adde33eb1be17e4ad626\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_polygon_containment_is_exact_on_edges_and_corners\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"2e81eefbc5dbf4de6e9847fc0e66b589da75bcc6e79678e32c3bb636f7f0e093\",\"dependencies\":[\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_5fccb854565e38d32799376a0bfdb2d0e402b94a7a59a90d321b247b09ed8460\",\"myl_f_63e1f183648c24155bab2f94260a93079265808290d49740f05864a608a7c61c\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_7baeca96f65b0a7c82cc6d399f5c0ddeae9a8ebe66922d275d20e246350810d3\",\"myl_f_9817214fe7e7505198531ab7b3f0718f411a15efc722b2f3f2aba61e828ca240\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_rect_intersection_and_clearance_regions\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ba10a6f2f4ed1c693774151311df03f89744bf717bd8c256be87caf4c638598f\",\"dependencies\":[\"myl_f_103bf41be6f08738f8ef665ad13936cc4523b78dbd49714ccbde02431f2e4aac\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_5d2f6af555987798dce798b53aab9b4b1cf5d3922e0cfad1584e83e8c878eafb\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_c77a22f05a431a5b66d318684f24159f14a38c38e587adf6d5e50064c9d29e88\",\"myl_f_daef4bd21ead228d4ee0bcd150e5949b39dfba3904dfcee2a9fba1ca10215112\",\"myl_f_fa71b2560dbadf3ac7ccefd2bc0827a0a1cdbd11bda4e56ec9cb0bb3773cd2c3\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_segment_distance_is_exact_and_symmetric\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"f7eddd19defcabd5e6f12d2a7b6af12c7cccf2f758214de932076841b228cfef\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_18d8101e2640a09c5c354c9ef95591741159a68cc6eb53fd91c410471615c808\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_closest_point_is_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"1afea2c1f559b19c03a33cd7b126be8b16b74dd524c5e205aab30ef7111082a6\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_40aaf2ffbfab89b563f3c798fd6050862bd07cdd177675e3933ff904626c4a1a\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_distance_to_a_point_is_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d06b9d9c122b19b9873815d044c012fe9582b353d416368e05066e6d6bb629bd\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_23123f4de3a8635738a0d3c2e776d63188f13e81c6523f4a723a0b53134ceb17\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_43cb881472d0ba40ede53606812d67525afd7452f7cbc602945765081a5d6b98\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_projection_dependents_are_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"81cd84927bb0ca77a65be3b228aefa84331063cef7d0fe325356de369141a6c2\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_94c9a491d1651f11a3f63413ae580a46da72c8e6d29ea8709d9ca785996834c3\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_dccc8c1661b277d0a1f0df77ada0569aa0adf7dc8682ad166769f61098c9db15\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_projection_is_exact_at_the_coordinate_bound\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"172af735cc671731fcb3628c50dd613e81ed85622727e6fdb7513399cdb46601\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_346fc8ae4edd2364b7d82cd4cf15436a26ec81b1d22e8faeeb13c42e0e4878db\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_projection_is_exact_on_a_diagonal_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"c2d64771ffcabb2663fb9f796340e200b437d8b0197a7eac9838ec9f8263d087\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_ec7c198e2871d9bfebf199cd6555d2c1306a2d396b945b6a6be05e751751ee1d\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_projection_rounds_the_nearest_nanometre_either_direction\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d138eee1574ed4f0c92735344d84dbaec337f666a5511bcc820429676db67220\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_c03fa9f12d57f71deff7fa7b1d71c68b2fbe5dc172847f622ef48b6ea650d928\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_two_word_products_are_exact\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"498ba8cb395a78fbc271dd2a42635f68fd68a1f31f483cad85605875bdeab481\",\"dependencies\":[\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c38165bd9be529d327ec7273eee2836325e3b1f1cd0fdd94bf0fedc5c97bb3f5\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"}],\"passed\":0,\"failed\":0,\"skipped\":0,\"cached\":15,\"executed\":0}\n"
+  },
+  {
+    "label": "geom-warm-repeat",
+    "argv": [
+      "/tmp/pcb-latency-fixes-20260921/baseline-install/bin/mylang",
+      "test",
+      "/tmp/pcb-latency-fixes-20260921/baseline-probes/guest/geom.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/baseline-probes/test-cache",
+      "--max-steps=4294967295",
+      "--report",
+      "--json"
+    ],
+    "seconds": 0.3924510229990119,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 1,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": true,
+        "parsed_modules": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 1,
+        "session_reused_results": 1,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 15
+        },
+        "reused_results": 1,
+        "session_reused_results": 1,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 15
+          }
+        }
+      }
+    ],
+    "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"geom::test_circle_predicates_use_exact_squares\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"3f2f8b92e497669a0e7a775ba3bbec95da306574bf6327f808abbe255c583952\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_1f0bcb8390f6f5a3f6ae9dc844def2bd9fdea86d7cce23e89eefe1722a87b274\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_4294212545c57c3af3441dc633071cff39954d4dec157e0c1f2776f7a866401f\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_815c20cec3a4a799b9521bbe1cd392668f99eee23f4f3e984cc8d8319f7067d5\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_closest_point_clamps_to_the_segment_ends\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"7acb854fddf7153d0149afb6c7ee4d3498553d585e50e4e12d9c0ba903f94a5b\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fb6d64daf0f90f2f7ed83a7ce9ca6d20b93b5fdb6bf4a9ee0f3a6d82c7ccb80b\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_distance_to_boundary_is_zero_on_the_outline\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"09c12169b3c1899017a05df94cea5f1b141d7d91b1312aae28e00ea7257c28ae\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_d77de07a9399d8186268208a50e4216598719e69b79fba9a1aa03bd03c213130\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_orientation_is_exact_at_the_coordinate_extremes\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"3e461b1c2767aa38f091d804463f80375731e3d37f11c9012bf78cb7b324f54e\",\"dependencies\":[\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_a1edd9cb1fb4917f71ce85e4f45117b08b4de2afd9be858c2b813457279b8779\",\"myl_f_a64b46a7056b6f5e0d7e9d99db8551c37feba8d183587dfa42141488eba05d42\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_polygon_area_counts_twice_the_signed_region\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"74063cc7ef85125ebc9a78d1f4c7eda40f0a2e5e029f15af41070047de9fe462\",\"dependencies\":[\"myl_f_387dbb58d061a96cb0503f67782b705c12e02f15cbb7d5441799637eb3945b14\",\"myl_f_4d3d18a16438e54cbf74e659d607167665b1385646f32b1ad6106ae2ff49cc9a\",\"myl_f_5f7b58927a900fcd4804e9087e9d7650efb606af261270379e1351ea1c7ae7c1\",\"myl_f_8d44e3a7a2eea534d6208df1a0fe1642f52b1339ab63e5086154f700cef33ab0\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_cc0b0c90cc48350f9510ca16bb682cd6e7e98d9b9be4adde33eb1be17e4ad626\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_polygon_containment_is_exact_on_edges_and_corners\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"2e81eefbc5dbf4de6e9847fc0e66b589da75bcc6e79678e32c3bb636f7f0e093\",\"dependencies\":[\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_5fccb854565e38d32799376a0bfdb2d0e402b94a7a59a90d321b247b09ed8460\",\"myl_f_63e1f183648c24155bab2f94260a93079265808290d49740f05864a608a7c61c\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_7baeca96f65b0a7c82cc6d399f5c0ddeae9a8ebe66922d275d20e246350810d3\",\"myl_f_9817214fe7e7505198531ab7b3f0718f411a15efc722b2f3f2aba61e828ca240\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_rect_intersection_and_clearance_regions\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ba10a6f2f4ed1c693774151311df03f89744bf717bd8c256be87caf4c638598f\",\"dependencies\":[\"myl_f_103bf41be6f08738f8ef665ad13936cc4523b78dbd49714ccbde02431f2e4aac\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_5d2f6af555987798dce798b53aab9b4b1cf5d3922e0cfad1584e83e8c878eafb\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_c77a22f05a431a5b66d318684f24159f14a38c38e587adf6d5e50064c9d29e88\",\"myl_f_daef4bd21ead228d4ee0bcd150e5949b39dfba3904dfcee2a9fba1ca10215112\",\"myl_f_fa71b2560dbadf3ac7ccefd2bc0827a0a1cdbd11bda4e56ec9cb0bb3773cd2c3\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_segment_distance_is_exact_and_symmetric\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"f7eddd19defcabd5e6f12d2a7b6af12c7cccf2f758214de932076841b228cfef\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_18d8101e2640a09c5c354c9ef95591741159a68cc6eb53fd91c410471615c808\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_closest_point_is_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"1afea2c1f559b19c03a33cd7b126be8b16b74dd524c5e205aab30ef7111082a6\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_40aaf2ffbfab89b563f3c798fd6050862bd07cdd177675e3933ff904626c4a1a\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_distance_to_a_point_is_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d06b9d9c122b19b9873815d044c012fe9582b353d416368e05066e6d6bb629bd\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_23123f4de3a8635738a0d3c2e776d63188f13e81c6523f4a723a0b53134ceb17\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_43cb881472d0ba40ede53606812d67525afd7452f7cbc602945765081a5d6b98\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_projection_dependents_are_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"81cd84927bb0ca77a65be3b228aefa84331063cef7d0fe325356de369141a6c2\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_94c9a491d1651f11a3f63413ae580a46da72c8e6d29ea8709d9ca785996834c3\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_dccc8c1661b277d0a1f0df77ada0569aa0adf7dc8682ad166769f61098c9db15\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_projection_is_exact_at_the_coordinate_bound\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"172af735cc671731fcb3628c50dd613e81ed85622727e6fdb7513399cdb46601\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_346fc8ae4edd2364b7d82cd4cf15436a26ec81b1d22e8faeeb13c42e0e4878db\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_projection_is_exact_on_a_diagonal_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"c2d64771ffcabb2663fb9f796340e200b437d8b0197a7eac9838ec9f8263d087\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_ec7c198e2871d9bfebf199cd6555d2c1306a2d396b945b6a6be05e751751ee1d\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_projection_rounds_the_nearest_nanometre_either_direction\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d138eee1574ed4f0c92735344d84dbaec337f666a5511bcc820429676db67220\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_c03fa9f12d57f71deff7fa7b1d71c68b2fbe5dc172847f622ef48b6ea650d928\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_two_word_products_are_exact\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"498ba8cb395a78fbc271dd2a42635f68fd68a1f31f483cad85605875bdeab481\",\"dependencies\":[\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c38165bd9be529d327ec7273eee2836325e3b1f1cd0fdd94bf0fedc5c97bb3f5\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"}],\"passed\":0,\"failed\":0,\"skipped\":0,\"cached\":15,\"executed\":0}\n"
+  },
+  {
+    "label": "geom-unused-env",
+    "argv": [
+      "/tmp/pcb-latency-fixes-20260921/baseline-install/bin/mylang",
+      "test",
+      "/tmp/pcb-latency-fixes-20260921/baseline-probes/guest/geom.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/baseline-probes/test-cache",
+      "--max-steps=4294967295",
+      "--report",
+      "--json"
+    ],
+    "seconds": 3.258984906002297,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 1,
+        "syntax_stored": 1,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 175161,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "native-test-compile",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 69,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 812992,
+          "ordinary_bytes": 812992,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [
+          {
+            "reason": "interned-record",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 1,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 69,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 53,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 53,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": true,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 69,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "miss",
+          "performed": 15,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 1,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 69,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 53,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 53,
+            "reused": 0
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 15,
+            "reused": 0
+          }
+        }
+      }
+    ],
+    "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"geom::test_circle_predicates_use_exact_squares\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"082cb461f87ba2946118c1c10323cdde37831006939aa27e8ba6dc5b7adfa73c\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_1f0bcb8390f6f5a3f6ae9dc844def2bd9fdea86d7cce23e89eefe1722a87b274\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_4294212545c57c3af3441dc633071cff39954d4dec157e0c1f2776f7a866401f\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_815c20cec3a4a799b9521bbe1cd392668f99eee23f4f3e984cc8d8319f7067d5\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":2090,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_closest_point_clamps_to_the_segment_ends\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"e725fa1191e15aafbbc80095d86459e7db9eed8b6541cd2e08a656f22bb369d9\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fb6d64daf0f90f2f7ed83a7ce9ca6d20b93b5fdb6bf4a9ee0f3a6d82c7ccb80b\"],\"cacheable\":true,\"reasons\":[],\"steps\":1543,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_distance_to_boundary_is_zero_on_the_outline\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"6b7e63296dc367d89bd5f270fa80cf10e566d445e33c75628b0595fbcb1f6fef\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_d77de07a9399d8186268208a50e4216598719e69b79fba9a1aa03bd03c213130\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":9865,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_orientation_is_exact_at_the_coordinate_extremes\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"94d407c7bd2245bb325dacb79db4ab3c4b54207be568c5b21b6b24bf55d106ce\",\"dependencies\":[\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_a1edd9cb1fb4917f71ce85e4f45117b08b4de2afd9be858c2b813457279b8779\",\"myl_f_a64b46a7056b6f5e0d7e9d99db8551c37feba8d183587dfa42141488eba05d42\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\"],\"cacheable\":true,\"reasons\":[],\"steps\":1361,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_polygon_area_counts_twice_the_signed_region\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"91a278f91435e7e77c2b1ba0c513dc015d737fbed543dc395a61b3f2427168e4\",\"dependencies\":[\"myl_f_387dbb58d061a96cb0503f67782b705c12e02f15cbb7d5441799637eb3945b14\",\"myl_f_4d3d18a16438e54cbf74e659d607167665b1385646f32b1ad6106ae2ff49cc9a\",\"myl_f_5f7b58927a900fcd4804e9087e9d7650efb606af261270379e1351ea1c7ae7c1\",\"myl_f_8d44e3a7a2eea534d6208df1a0fe1642f52b1339ab63e5086154f700cef33ab0\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_cc0b0c90cc48350f9510ca16bb682cd6e7e98d9b9be4adde33eb1be17e4ad626\"],\"cacheable\":true,\"reasons\":[],\"steps\":3470,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_polygon_containment_is_exact_on_edges_and_corners\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"8e06965c3b412c796b9c4680b7f47e53ceab3dae062a153fba0297ad06cdf6a9\",\"dependencies\":[\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_5fccb854565e38d32799376a0bfdb2d0e402b94a7a59a90d321b247b09ed8460\",\"myl_f_63e1f183648c24155bab2f94260a93079265808290d49740f05864a608a7c61c\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_7baeca96f65b0a7c82cc6d399f5c0ddeae9a8ebe66922d275d20e246350810d3\",\"myl_f_9817214fe7e7505198531ab7b3f0718f411a15efc722b2f3f2aba61e828ca240\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":6765,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_rect_intersection_and_clearance_regions\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d821ed6400e0b2b4f20ecaa3a2f5206d229d40c7cffd013a4d8a0b81e4efc7b5\",\"dependencies\":[\"myl_f_103bf41be6f08738f8ef665ad13936cc4523b78dbd49714ccbde02431f2e4aac\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_5d2f6af555987798dce798b53aab9b4b1cf5d3922e0cfad1584e83e8c878eafb\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_c77a22f05a431a5b66d318684f24159f14a38c38e587adf6d5e50064c9d29e88\",\"myl_f_daef4bd21ead228d4ee0bcd150e5949b39dfba3904dfcee2a9fba1ca10215112\",\"myl_f_fa71b2560dbadf3ac7ccefd2bc0827a0a1cdbd11bda4e56ec9cb0bb3773cd2c3\"],\"cacheable\":true,\"reasons\":[],\"steps\":550,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_segment_distance_is_exact_and_symmetric\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"cbcf1fecc2bde051c8b0fee56c9af26ca76af4ab5e5bad3fc4358d2bd0bade36\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_18d8101e2640a09c5c354c9ef95591741159a68cc6eb53fd91c410471615c808\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":4732,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_closest_point_is_exact_at_board_scale\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"20d6123308ed2f227a5cc8ec58585942874f7a2135f269cd9d75bc93a62b0068\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_40aaf2ffbfab89b563f3c798fd6050862bd07cdd177675e3933ff904626c4a1a\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":12994,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_distance_to_a_point_is_exact_at_board_scale\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"752ea962500acd2132af7cf0d3b3c36a73d3bf8c2d8d8a158515e3702831bca4\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_23123f4de3a8635738a0d3c2e776d63188f13e81c6523f4a723a0b53134ceb17\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_43cb881472d0ba40ede53606812d67525afd7452f7cbc602945765081a5d6b98\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":5856,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_projection_dependents_are_exact_at_board_scale\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"c4a1669b91a5449f7c89c05e5ddd7c1f01a917810652d6d44190abb0535d0ff1\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_94c9a491d1651f11a3f63413ae580a46da72c8e6d29ea8709d9ca785996834c3\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_dccc8c1661b277d0a1f0df77ada0569aa0adf7dc8682ad166769f61098c9db15\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":23096,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_projection_is_exact_at_the_coordinate_bound\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"0625bdb2bc1c6ffedbe8a0689d4a87ced4fea7ea891dea7d291a863f4bd3230a\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_346fc8ae4edd2364b7d82cd4cf15436a26ec81b1d22e8faeeb13c42e0e4878db\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":12723,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_projection_is_exact_on_a_diagonal_at_board_scale\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"f3444618b8f4b1989f9cf1bf0c0b69fefb292172f9184b23a80b69530dffe576\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_ec7c198e2871d9bfebf199cd6555d2c1306a2d396b945b6a6be05e751751ee1d\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":8148,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_the_projection_rounds_the_nearest_nanometre_either_direction\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"9dc35e248cc9e13c73d1d987003185300690c1340b46a0237ce63b51a0a6fcf0\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_c03fa9f12d57f71deff7fa7b1d71c68b2fbe5dc172847f622ef48b6ea650d928\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":3688,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"},{\"name\":\"geom::test_two_word_products_are_exact\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"6ab0b3437ca4ffac9d0b1d2872add9aa2a2c6d96514578b10067838cde37d145\",\"dependencies\":[\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c38165bd9be529d327ec7273eee2836325e3b1f1cd0fdd94bf0fedc5c97bb3f5\"],\"cacheable\":true,\"reasons\":[],\"steps\":1539,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"84ba59449536d810b1cfb85bfa6e1396d0a8ae04eebbb84eecdee7172be04991\"}],\"passed\":15,\"failed\":0,\"skipped\":0,\"cached\":0,\"executed\":15}\n"
+  },
+  {
+    "label": "geom-unrelated-source",
+    "argv": [
+      "/tmp/pcb-latency-fixes-20260921/baseline-install/bin/mylang",
+      "test",
+      "/tmp/pcb-latency-fixes-20260921/baseline-probes/guest/geom.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/baseline-probes/test-cache",
+      "--max-steps=4294967295",
+      "--report",
+      "--json"
+    ],
+    "seconds": 0.4678054029936902,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "native-test-compile",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 68
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 934100,
+          "ordinary_bytes": 934100,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [
+          {
+            "reason": "no-retained-body",
+            "count": 1
+          },
+          {
+            "reason": "interned-record",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 68
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 2
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 68
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 15
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 2
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 68
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 15
+          }
+        }
+      }
+    ],
+    "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"geom::test_circle_predicates_use_exact_squares\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"3f2f8b92e497669a0e7a775ba3bbec95da306574bf6327f808abbe255c583952\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_1f0bcb8390f6f5a3f6ae9dc844def2bd9fdea86d7cce23e89eefe1722a87b274\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_4294212545c57c3af3441dc633071cff39954d4dec157e0c1f2776f7a866401f\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_815c20cec3a4a799b9521bbe1cd392668f99eee23f4f3e984cc8d8319f7067d5\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"c52fd40d40ecd85ba9f3cae655eff9f24022082fffa2af0931f66d5ea35842a6\"},{\"name\":\"geom::test_closest_point_clamps_to_the_segment_ends\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"7acb854fddf7153d0149afb6c7ee4d3498553d585e50e4e12d9c0ba903f94a5b\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fb6d64daf0f90f2f7ed83a7ce9ca6d20b93b5fdb6bf4a9ee0f3a6d82c7ccb80b\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"c52fd40d40ecd85ba9f3cae655eff9f24022082fffa2af0931f66d5ea35842a6\"},{\"name\":\"geom::test_distance_to_boundary_is_zero_on_the_outline\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"09c12169b3c1899017a05df94cea5f1b141d7d91b1312aae28e00ea7257c28ae\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_d77de07a9399d8186268208a50e4216598719e69b79fba9a1aa03bd03c213130\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"c52fd40d40ecd85ba9f3cae655eff9f24022082fffa2af0931f66d5ea35842a6\"},{\"name\":\"geom::test_orientation_is_exact_at_the_coordinate_extremes\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"3e461b1c2767aa38f091d804463f80375731e3d37f11c9012bf78cb7b324f54e\",\"dependencies\":[\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_a1edd9cb1fb4917f71ce85e4f45117b08b4de2afd9be858c2b813457279b8779\",\"myl_f_a64b46a7056b6f5e0d7e9d99db8551c37feba8d183587dfa42141488eba05d42\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"c52fd40d40ecd85ba9f3cae655eff9f24022082fffa2af0931f66d5ea35842a6\"},{\"name\":\"geom::test_polygon_area_counts_twice_the_signed_region\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"74063cc7ef85125ebc9a78d1f4c7eda40f0a2e5e029f15af41070047de9fe462\",\"dependencies\":[\"myl_f_387dbb58d061a96cb0503f67782b705c12e02f15cbb7d5441799637eb3945b14\",\"myl_f_4d3d18a16438e54cbf74e659d607167665b1385646f32b1ad6106ae2ff49cc9a\",\"myl_f_5f7b58927a900fcd4804e9087e9d7650efb606af261270379e1351ea1c7ae7c1\",\"myl_f_8d44e3a7a2eea534d6208df1a0fe1642f52b1339ab63e5086154f700cef33ab0\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_cc0b0c90cc48350f9510ca16bb682cd6e7e98d9b9be4adde33eb1be17e4ad626\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"c52fd40d40ecd85ba9f3cae655eff9f24022082fffa2af0931f66d5ea35842a6\"},{\"name\":\"geom::test_polygon_containment_is_exact_on_edges_and_corners\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"2e81eefbc5dbf4de6e9847fc0e66b589da75bcc6e79678e32c3bb636f7f0e093\",\"dependencies\":[\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_37fa41e5b29b57b2d44acee98a44db0b66e961c815cd1ed911feb0564dfbbfa6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_5fccb854565e38d32799376a0bfdb2d0e402b94a7a59a90d321b247b09ed8460\",\"myl_f_63e1f183648c24155bab2f94260a93079265808290d49740f05864a608a7c61c\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_7baeca96f65b0a7c82cc6d399f5c0ddeae9a8ebe66922d275d20e246350810d3\",\"myl_f_9817214fe7e7505198531ab7b3f0718f411a15efc722b2f3f2aba61e828ca240\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"c52fd40d40ecd85ba9f3cae655eff9f24022082fffa2af0931f66d5ea35842a6\"},{\"name\":\"geom::test_rect_intersection_and_clearance_regions\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"ba10a6f2f4ed1c693774151311df03f89744bf717bd8c256be87caf4c638598f\",\"dependencies\":[\"myl_f_103bf41be6f08738f8ef665ad13936cc4523b78dbd49714ccbde02431f2e4aac\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_2afa8c4dc3f3bba68c790d002205b5cc38924c7bc0a7285998254a82ef10c78e\",\"myl_f_5d2f6af555987798dce798b53aab9b4b1cf5d3922e0cfad1584e83e8c878eafb\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_c6ecb4e4d49cb07e49b24807b06a4d67bc38d3a936e654d0d58f331f12bdb7d2\",\"myl_f_c77a22f05a431a5b66d318684f24159f14a38c38e587adf6d5e50064c9d29e88\",\"myl_f_daef4bd21ead228d4ee0bcd150e5949b39dfba3904dfcee2a9fba1ca10215112\",\"myl_f_fa71b2560dbadf3ac7ccefd2bc0827a0a1cdbd11bda4e56ec9cb0bb3773cd2c3\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"c52fd40d40ecd85ba9f3cae655eff9f24022082fffa2af0931f66d5ea35842a6\"},{\"name\":\"geom::test_segment_distance_is_exact_and_symmetric\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"f7eddd19defcabd5e6f12d2a7b6af12c7cccf2f758214de932076841b228cfef\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_18d8101e2640a09c5c354c9ef95591741159a68cc6eb53fd91c410471615c808\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"c52fd40d40ecd85ba9f3cae655eff9f24022082fffa2af0931f66d5ea35842a6\"},{\"name\":\"geom::test_the_closest_point_is_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"1afea2c1f559b19c03a33cd7b126be8b16b74dd524c5e205aab30ef7111082a6\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_40aaf2ffbfab89b563f3c798fd6050862bd07cdd177675e3933ff904626c4a1a\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"c52fd40d40ecd85ba9f3cae655eff9f24022082fffa2af0931f66d5ea35842a6\"},{\"name\":\"geom::test_the_distance_to_a_point_is_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d06b9d9c122b19b9873815d044c012fe9582b353d416368e05066e6d6bb629bd\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_23123f4de3a8635738a0d3c2e776d63188f13e81c6523f4a723a0b53134ceb17\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_43cb881472d0ba40ede53606812d67525afd7452f7cbc602945765081a5d6b98\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"c52fd40d40ecd85ba9f3cae655eff9f24022082fffa2af0931f66d5ea35842a6\"},{\"name\":\"geom::test_the_projection_dependents_are_exact_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"81cd84927bb0ca77a65be3b228aefa84331063cef7d0fe325356de369141a6c2\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_215b53d5f648ba317988ba6a45c84c4c7b630a23fe86e4edc791c2948c8e6da5\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_7435d4159851f8f086a196af01982f053371c5a20f329d401fb87ad7e425912e\",\"myl_f_801a3d8fd14f04bb8065b95fbeb74bb757447681109100805ad07a1e727b0123\",\"myl_f_94c9a491d1651f11a3f63413ae580a46da72c8e6d29ea8709d9ca785996834c3\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9a9cfdbc6daab295e3d8d5b960b2b4096cfb10d4352d807a198e03dd4ab752c6\",\"myl_f_a6f8fca26cc118c23fd9e6218647d2e9cdc259242908b921f43a5cde039442f6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_d88483926fb970eb8184abc419d537e8073392c9658fa3723b60d830c235c3f5\",\"myl_f_dccc8c1661b277d0a1f0df77ada0569aa0adf7dc8682ad166769f61098c9db15\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\",\"myl_f_fdfcde6e65e4f4bc7d0ab66420676416d4ef4045b8a1ef7718c95bce9192d2cc\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"c52fd40d40ecd85ba9f3cae655eff9f24022082fffa2af0931f66d5ea35842a6\"},{\"name\":\"geom::test_the_projection_is_exact_at_the_coordinate_bound\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"172af735cc671731fcb3628c50dd613e81ed85622727e6fdb7513399cdb46601\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_346fc8ae4edd2364b7d82cd4cf15436a26ec81b1d22e8faeeb13c42e0e4878db\",\"myl_f_55332580f269e09d53aefa98f1d297ad2578f06e79337d84794a6fca9bf483d3\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"c52fd40d40ecd85ba9f3cae655eff9f24022082fffa2af0931f66d5ea35842a6\"},{\"name\":\"geom::test_the_projection_is_exact_on_a_diagonal_at_board_scale\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"c2d64771ffcabb2663fb9f796340e200b437d8b0197a7eac9838ec9f8263d087\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_ec7c198e2871d9bfebf199cd6555d2c1306a2d396b945b6a6be05e751751ee1d\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"c52fd40d40ecd85ba9f3cae655eff9f24022082fffa2af0931f66d5ea35842a6\"},{\"name\":\"geom::test_the_projection_rounds_the_nearest_nanometre_either_direction\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"d138eee1574ed4f0c92735344d84dbaec337f666a5511bcc820429676db67220\",\"dependencies\":[\"myl_f_05c026d82e6abe30e17fa5a5195e4d583384d2608c359851835b3dc943c82360\",\"myl_f_10e51f257997eee417f4893a68270d21dfdd3cf4fd4609aa03d980df35abd07d\",\"myl_f_1555f181595c31bc22b634f4e8ded10e4490b59026790e4fed61ca82f735c40d\",\"myl_f_3285247d1b5f3ef26ccb75dbdb4892b1bbeb3bae981f6541942db92a93a41cd6\",\"myl_f_b9b149c591df3b6169ac40a0bc3d8c0cf2da1edaafdc27c861147aa52f720b3a\",\"myl_f_c03fa9f12d57f71deff7fa7b1d71c68b2fbe5dc172847f622ef48b6ea650d928\",\"myl_f_f601b87614347e3157c1493158f33d2860aad2708013ac76311942c4b9dc2f10\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"c52fd40d40ecd85ba9f3cae655eff9f24022082fffa2af0931f66d5ea35842a6\"},{\"name\":\"geom::test_two_word_products_are_exact\",\"status\":\"cached\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"498ba8cb395a78fbc271dd2a42635f68fd68a1f31f483cad85605875bdeab481\",\"dependencies\":[\"myl_f_5d07aa35aba1f4da1eddf0d0f645df690cc422059d7e9cba787bf3cb763ab71d\",\"myl_f_99c75389c1ff117445e781184bfe58f4748f93c6c03465654e40e8c2502b58d2\",\"myl_f_9c298e39c1303846c7f91c71244bc24d9cbadaba92d98afd2a96524befaf5f2e\",\"myl_f_a9b64a66ff912cba55bb802204ced47691ccf23a049695efd003af76d44886d2\",\"myl_f_bdc9bb721fe20e21d9cfb073ba67d2d5cf220a9644da84adf64de3f79f938229\",\"myl_f_c38165bd9be529d327ec7273eee2836325e3b1f1cd0fdd94bf0fedc5c97bb3f5\"],\"cacheable\":true,\"reasons\":[],\"steps\":0,\"contract\":\"8bae93460aadf8a181042496f7347def6383d5377c46b8e2844683bb9fe2e21e\",\"provider\":\"\",\"source\":\"c52fd40d40ecd85ba9f3cae655eff9f24022082fffa2af0931f66d5ea35842a6\"}],\"passed\":0,\"failed\":0,\"skipped\":0,\"cached\":15,\"executed\":0}\n"
+  },
+  {
+    "label": "fixture-test-cold",
+    "argv": [
+      "/tmp/pcb-latency-fixes-20260921/baseline-install/bin/mylang",
+      "test",
+      "/tmp/pcb-latency-fixes-20260921/baseline-probes/fixture/main.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/baseline-probes/fixture-test-cache",
+      "--report",
+      "--json"
+    ],
+    "seconds": 0.4211134859942831,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 2,
+        "syntax_stored": 2,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 176439,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 2,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 2,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 2,
+        "syntax_stored": 2,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 1278,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 2,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "native-test-compile",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 3,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 8488,
+          "ordinary_bytes": 8488,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 2,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 3,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 2,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 2,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 4,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 3,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 4,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 3,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 2,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 2,
+            "reused": 0
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 1,
+            "reused": 0
+          }
+        }
+      }
+    ],
+    "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"main::test_value\",\"status\":\"passed\",\"actual\":true,\"expected\":true,\"reason\":\"\",\"key\":\"dbd96a2ff4383a5a21ed3b695de473546935d0620ca081b4488a137f68010c55\",\"dependencies\":[\"myl_f_22f8c5eb1551f663ad0ded00d28cd38f84b987034f53108db7635bc6a7602f66\",\"myl_f_ed05a57b3f38968c55033c9f2f2d197544e18eef44096c11eafa57dbf3772550\"],\"cacheable\":true,\"reasons\":[],\"steps\":5,\"contract\":\"da8a7543c931f834e6392ec48c055036f81c1947942936578f03611e3a154eeb\",\"provider\":\"\",\"source\":\"64ddcfa96268f1aa0befb2625a7e8a994ff72cd916edd343b0e656adb4f63604\"}],\"passed\":1,\"failed\":0,\"skipped\":0,\"cached\":0,\"executed\":1}\n"
+  },
+  {
+    "label": "fixture-run-cold",
+    "argv": [
+      "/tmp/pcb-latency-fixes-20260921/baseline-install/bin/mylang",
+      "run",
+      "/tmp/pcb-latency-fixes-20260921/baseline-probes/fixture/main.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/baseline-probes/fixture-run-cache",
+      "--qbe=/tmp/pcb-latency-fixes-20260921/baseline-install/bin/qbe",
+      "--timings=json"
+    ],
+    "seconds": 0.23679031200299505,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 2,
+        "syntax_stored": 2,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 1278,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 2,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "link": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "run",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 3,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 3,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 3,
+          "reused": 0
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 5658,
+          "ordinary_bytes": 5658,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 2,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 3,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 3,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 3,
+            "reused": 0
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_load",
+        "duration_ns": 55853,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_load_parse",
+        "duration_ns": 388419,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "syntax_parse",
+        "duration_ns": 857588,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "declarations_interfaces",
+        "duration_ns": 37731,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_merge",
+        "duration_ns": 74096,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "dependency_key_preparation",
+        "duration_ns": 251373,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "retention_store_io",
+        "duration_ns": 987045,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "symbolic_templates",
+        "duration_ns": 3349,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "ordinary_body_replay",
+        "duration_ns": 903,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "fresh_body_check",
+        "duration_ns": 295374,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "entry_adaptation",
+        "duration_ns": 4380,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "effect_origin_passes",
+        "duration_ns": 38762,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "domain_codec_validation",
+        "duration_ns": 346,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "warning_derivation",
+        "duration_ns": 192908,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "bytecode_lowering",
+        "duration_ns": 47395,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "bytecode_lowering",
+        "duration_ns": 190,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "bytecode_lowering",
+        "duration_ns": 125,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "native_emission",
+        "duration_ns": 3887975,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "native_execution",
+        "duration_ns": 213700856,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "total",
+        "duration_ns": 221991216,
+        "inclusive": true,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      }
+    ],
+    "stdout": "3\n"
+  },
+  {
+    "label": "fixture-run-warm",
+    "argv": [
+      "/tmp/pcb-latency-fixes-20260921/baseline-install/bin/mylang",
+      "run",
+      "/tmp/pcb-latency-fixes-20260921/baseline-probes/fixture/main.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/baseline-probes/fixture-run-cache",
+      "--qbe=/tmp/pcb-latency-fixes-20260921/baseline-install/bin/qbe",
+      "--timings=json"
+    ],
+    "seconds": 0.02322225998796057,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 2,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 2,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "link": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "run",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 2
+        },
+        "checked_bodies": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 3
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 3,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 3,
+          "reused": 0
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 6262,
+          "ordinary_bytes": 6262,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 2
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 3
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 3,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 3,
+            "reused": 0
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_load",
+        "duration_ns": 57341,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_load_parse",
+        "duration_ns": 428756,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "syntax_replay",
+        "duration_ns": 305601,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "declarations_interfaces",
+        "duration_ns": 18608,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_merge",
+        "duration_ns": 43806,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "dependency_key_preparation",
+        "duration_ns": 307299,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "retention_store_io",
+        "duration_ns": 618113,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "symbolic_templates",
+        "duration_ns": 2183,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "ordinary_body_replay",
+        "duration_ns": 65115,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "entry_adaptation",
+        "duration_ns": 2892,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "effect_origin_passes",
+        "duration_ns": 34642,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "domain_codec_validation",
+        "duration_ns": 280,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "warning_derivation",
+        "duration_ns": 260280,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "bytecode_lowering",
+        "duration_ns": 37792,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "bytecode_lowering",
+        "duration_ns": 174,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "bytecode_lowering",
+        "duration_ns": 128,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "native_emission",
+        "duration_ns": 3887803,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "native_execution",
+        "duration_ns": 2957706,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "total",
+        "duration_ns": 9734248,
+        "inclusive": true,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      }
+    ],
+    "stdout": "3\n"
+  },
+  {
+    "label": "fixture-test-changed",
+    "argv": [
+      "/tmp/pcb-latency-fixes-20260921/baseline-install/bin/mylang",
+      "test",
+      "/tmp/pcb-latency-fixes-20260921/baseline-probes/fixture/main.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/baseline-probes/fixture-test-cache",
+      "--report",
+      "--json"
+    ],
+    "seconds": 0.34150577399122994,
+    "exit_code": 1,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 1,
+        "syntax_stored": 1,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 176809,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 1,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": true,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 1,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 1,
+        "syntax_stored": 1,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 1648,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 1,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "native-test-compile",
+        "reused": true,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 2
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 6432,
+          "ordinary_bytes": 6432,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [
+          {
+            "reason": "declaration-region-changed",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 1,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 2
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 2,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 2,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": true,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 2
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 2
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 2,
+            "reused": 2
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 2
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 2,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 2,
+            "reused": 0
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 1,
+            "reused": 0
+          }
+        }
+      }
+    ],
+    "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"main::test_value\",\"status\":\"failed\",\"actual\":false,\"expected\":true,\"reason\":\"expected true, got false\",\"key\":\"5ca452bdd7384e3c7fbc1bdeee0ec7a164487154b51dc46542bf13d04a7f9db4\",\"dependencies\":[\"myl_f_22f8c5eb1551f663ad0ded00d28cd38f84b987034f53108db7635bc6a7602f66\",\"myl_f_ed05a57b3f38968c55033c9f2f2d197544e18eef44096c11eafa57dbf3772550\"],\"cacheable\":true,\"reasons\":[],\"steps\":5,\"contract\":\"da8a7543c931f834e6392ec48c055036f81c1947942936578f03611e3a154eeb\",\"provider\":\"\",\"source\":\"43f246f5fc88651ad8824b5a762a33158e8069d6aa0cf16a7bf3222bb62575f1\"}],\"passed\":0,\"failed\":1,\"skipped\":0,\"cached\":0,\"executed\":1}\n"
+  },
+  {
+    "label": "fixture-run-changed",
+    "argv": [
+      "/tmp/pcb-latency-fixes-20260921/baseline-install/bin/mylang",
+      "run",
+      "/tmp/pcb-latency-fixes-20260921/baseline-probes/fixture/main.my",
+      "--cache-dir=/tmp/pcb-latency-fixes-20260921/baseline-probes/fixture-run-cache",
+      "--qbe=/tmp/pcb-latency-fixes-20260921/baseline-install/bin/qbe",
+      "--timings=json"
+    ],
+    "seconds": 0.11960195199935697,
+    "exit_code": 0,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 1,
+        "syntax_stored": 1,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 1648,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 1,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "link": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "run",
+        "reused": true,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 2
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 3,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 3,
+          "reused": 0
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 6448,
+          "ordinary_bytes": 6448,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [
+          {
+            "reason": "declaration-region-changed",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 1,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 2
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 3,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 3,
+            "reused": 0
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_load",
+        "duration_ns": 55452,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_load_parse",
+        "duration_ns": 443984,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "syntax_parse",
+        "duration_ns": 457387,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "syntax_replay",
+        "duration_ns": 171059,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "declarations_interfaces",
+        "duration_ns": 37908,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_merge",
+        "duration_ns": 31205,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "dependency_key_preparation",
+        "duration_ns": 255786,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "retention_store_io",
+        "duration_ns": 987187,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "symbolic_templates",
+        "duration_ns": 3587,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "ordinary_body_replay",
+        "duration_ns": 100029,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "fresh_body_check",
+        "duration_ns": 57872,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "entry_adaptation",
+        "duration_ns": 4491,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "effect_origin_passes",
+        "duration_ns": 32440,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "domain_codec_validation",
+        "duration_ns": 222,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "warning_derivation",
+        "duration_ns": 202870,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "bytecode_lowering",
+        "duration_ns": 74793,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "bytecode_lowering",
+        "duration_ns": 266,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "bytecode_lowering",
+        "duration_ns": 161,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "native_emission",
+        "duration_ns": 3869734,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "native_execution",
+        "duration_ns": 98621809,
+        "inclusive": false,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "total",
+        "duration_ns": 106459845,
+        "inclusive": true,
+        "counts": {
+          "modules": 2,
+          "source_bytes": 210,
+          "ast_nodes": 14,
+          "typed_nodes": 15
+        },
+        "exit_code": 0
+      }
+    ],
+    "stdout": "4\n"
+  }
+]

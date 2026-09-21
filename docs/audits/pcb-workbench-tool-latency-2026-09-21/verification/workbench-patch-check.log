@@ -1,0 +1,14 @@
+checking file AGENTS.md
+checking file README.md
+checking file guest/PORTING.md
+checking file guest/all_test.my
+checking file guest/build-app.sh
+checking file guest/check-test-inventory.sh
+checking file guest/gate.sh
+checking file guest/pcb.sh
+checking file guest/test-inventory.txt
+checking file tests/workflow.sh
+checking file tools/build-environment-identity.py
+checking file tools/run-with-affinity.py
+checking file tools/summarize-test-report.py
+checking file tools/update-toolchain.sh

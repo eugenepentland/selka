@@ -101,6 +101,16 @@ enforced by the runtime and are unaffected.
 
 ## Object cache and link
 
+For project entries, `mylang run` also caches the emitted manifest after validating
+the current source graph and policy. An unchanged run reuses it before lowering or
+QBE emission; the native executable cache then verifies its own runtime, backend,
+toolchain and build settings. Source changes, emission controls and compiler identity
+invalidate the manifest, damaged entries are misses, and `--no-cache` bypasses it.
+`--timings=json` reports the actual lowering and emission work, including zero work
+on a warm hit. Runtime arguments and capability grants are still applied each run.
+An explicit `--explain-invalidation` still lowers to construct its detailed
+fragment receipt; that diagnostic work is reported rather than hidden.
+
 Everything a build compiles is content addressed under `--cache-dir`
 (`.mylang-cache/qbe` by default): one object per guest function, one for the
 generated typed-metadata unit, and one for the generated entry adapter. Their

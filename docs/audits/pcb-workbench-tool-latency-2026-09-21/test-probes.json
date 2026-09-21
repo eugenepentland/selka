@@ -1,0 +1,2825 @@
+[
+  {
+    "label": "geom-cold",
+    "argv": [
+      "/tmp/pcb-latency-audit-20260921/mylang",
+      "test",
+      "/tmp/pcb-latency-audit-20260921/guest-snapshot/geom.my",
+      "--cache-dir=/tmp/pcb-latency-audit-20260921/probe-cache",
+      "--max-steps=4294967295",
+      "--report"
+    ],
+    "elapsed_seconds": 4.000499995003338,
+    "exit_code": 0,
+    "stdout_bytes": 985,
+    "stderr_bytes": 4734,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 1,
+        "syntax_stored": 1,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 175161,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 1,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 1,
+        "syntax_stored": 1,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 175161,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "native-test-compile",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 69,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 812992,
+          "ordinary_bytes": 812992,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [
+          {
+            "reason": "interned-record",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 1,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 69,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 53,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 53,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 2,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 69,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "miss",
+          "performed": 15,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 2,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 69,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 53,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 53,
+            "reused": 0
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 15,
+            "reused": 0
+          }
+        }
+      }
+    ]
+  },
+  {
+    "label": "geom-warm",
+    "argv": [
+      "/tmp/pcb-latency-audit-20260921/mylang",
+      "test",
+      "/tmp/pcb-latency-audit-20260921/guest-snapshot/geom.my",
+      "--cache-dir=/tmp/pcb-latency-audit-20260921/probe-cache",
+      "--max-steps=4294967295",
+      "--report"
+    ],
+    "elapsed_seconds": 0.5653344449965516,
+    "exit_code": 0,
+    "stdout_bytes": 985,
+    "stderr_bytes": 4763,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 1,
+        "verdict_stored": 1,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 175221,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 68
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 947598,
+          "ordinary_bytes": 947598,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [
+          {
+            "reason": "no-retained-body",
+            "count": 1
+          },
+          {
+            "reason": "interned-record",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 68
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 2
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 68
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 15
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 2
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 68
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 15
+          }
+        }
+      }
+    ]
+  },
+  {
+    "label": "geom-warm-repeat",
+    "argv": [
+      "/tmp/pcb-latency-audit-20260921/mylang",
+      "test",
+      "/tmp/pcb-latency-audit-20260921/guest-snapshot/geom.my",
+      "--cache-dir=/tmp/pcb-latency-audit-20260921/probe-cache",
+      "--max-steps=4294967295",
+      "--report"
+    ],
+    "elapsed_seconds": 0.34046100100385956,
+    "exit_code": 0,
+    "stdout_bytes": 985,
+    "stderr_bytes": 4682,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 1,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": true,
+        "parsed_modules": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 1,
+        "session_reused_results": 1,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 15
+        },
+        "reused_results": 1,
+        "session_reused_results": 1,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 15
+          }
+        }
+      }
+    ]
+  },
+  {
+    "label": "geom-force",
+    "argv": [
+      "/tmp/pcb-latency-audit-20260921/mylang",
+      "test",
+      "/tmp/pcb-latency-audit-20260921/guest-snapshot/geom.my",
+      "--cache-dir=/tmp/pcb-latency-audit-20260921/probe-cache",
+      "--max-steps=4294967295",
+      "--report",
+      "--force"
+    ],
+    "elapsed_seconds": 1.9368044509901665,
+    "exit_code": 0,
+    "stdout_bytes": 985,
+    "stderr_bytes": 4758,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "native-test-compile",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 68
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 947598,
+          "ordinary_bytes": 947598,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [
+          {
+            "reason": "no-retained-body",
+            "count": 1
+          },
+          {
+            "reason": "interned-record",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 68
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 53,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 53,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 2
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 68
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "miss",
+          "performed": 15,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 2
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 68
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 53,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 53,
+            "reused": 0
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 15,
+            "reused": 0
+          }
+        }
+      }
+    ]
+  },
+  {
+    "label": "geom-env-change",
+    "argv": [
+      "/tmp/pcb-latency-audit-20260921/mylang",
+      "test",
+      "/tmp/pcb-latency-audit-20260921/guest-snapshot/geom.my",
+      "--cache-dir=/tmp/pcb-latency-audit-20260921/probe-cache",
+      "--max-steps=4294967295",
+      "--report"
+    ],
+    "elapsed_seconds": 4.143467771995347,
+    "exit_code": 0,
+    "stdout_bytes": 985,
+    "stderr_bytes": 4726,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 1,
+        "syntax_stored": 1,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 175161,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "native-test-compile",
+        "reused": false,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 69,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 812992,
+          "ordinary_bytes": 812992,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [
+          {
+            "reason": "interned-record",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 1,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 69,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 53,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 53,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": true,
+        "parsed_modules": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 69,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "miss",
+          "performed": 53,
+          "reused": 0
+        },
+        "links": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "miss",
+          "performed": 15,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 1,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 69,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 53,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 53,
+            "reused": 0
+          },
+          "links": {
+            "performed": 1,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 15,
+            "reused": 0
+          }
+        }
+      }
+    ]
+  },
+  {
+    "label": "geom-unrelated-edit",
+    "argv": [
+      "/tmp/pcb-latency-audit-20260921/mylang",
+      "test",
+      "/tmp/pcb-latency-audit-20260921/guest-snapshot/geom.my",
+      "--cache-dir=/tmp/pcb-latency-audit-20260921/probe-cache",
+      "--max-steps=4294967295",
+      "--report"
+    ],
+    "elapsed_seconds": 0.6635815669869771,
+    "exit_code": 0,
+    "stdout_bytes": 985,
+    "stderr_bytes": 4764,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "list-interfaces",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 1,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 0,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 1,
+            "misses": 0,
+            "skipped": 0
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 0
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "native-test-compile",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 1
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 68
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 947598,
+          "ordinary_bytes": 947598,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [
+          {
+            "reason": "no-retained-body",
+            "count": 1
+          },
+          {
+            "reason": "interned-record",
+            "count": 1
+          }
+        ],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 1
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 68
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "test",
+        "reused": true,
+        "parsed_modules": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 2
+        },
+        "checked_bodies": {
+          "status": "miss",
+          "performed": 1,
+          "reused": 68
+        },
+        "instantiated_specializations": {
+          "status": "miss",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "hit",
+          "performed": 0,
+          "reused": 15
+        },
+        "reused_results": 0,
+        "session_reused_results": 0,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 2
+          },
+          "checked_bodies": {
+            "performed": 1,
+            "reused": 68
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 15
+          }
+        }
+      }
+    ]
+  },
+  {
+    "label": "main-check-prewarmed",
+    "argv": [
+      "/tmp/pcb-latency-audit-20260921/mylang",
+      "check-project",
+      "/tmp/pcb-latency-audit-20260921/guest-snapshot/main.my",
+      "--cache-dir=/tmp/pcb-latency-audit-20260921/run-cache",
+      "--timings=json"
+    ],
+    "elapsed_seconds": 0.7250132460030727,
+    "exit_code": 0,
+    "stdout_bytes": 0,
+    "stderr_bytes": 10616,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 1,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": true,
+        "parsed_modules": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 1,
+        "session_reused_results": 1,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_load_parse",
+        "duration_ns": 488003646,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "total",
+        "duration_ns": 693619717,
+        "inclusive": true,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926
+        },
+        "exit_code": 0
+      }
+    ],
+    "note": "Cache was populated by an earlier setup probe; this is not a cold observation."
+  },
+  {
+    "label": "main-check-warm",
+    "argv": [
+      "/tmp/pcb-latency-audit-20260921/mylang",
+      "check-project",
+      "/tmp/pcb-latency-audit-20260921/guest-snapshot/main.my",
+      "--cache-dir=/tmp/pcb-latency-audit-20260921/run-cache",
+      "--timings=json"
+    ],
+    "elapsed_seconds": 0.733380068995757,
+    "exit_code": 0,
+    "stdout_bytes": 0,
+    "stderr_bytes": 10616,
+    "reports": [
+      {
+        "version": "frontend-cache-v1",
+        "syntax_hits": 0,
+        "syntax_misses": 0,
+        "syntax_stored": 0,
+        "verdict_hits": 1,
+        "verdict_misses": 0,
+        "verdict_stored": 0,
+        "damaged": 0,
+        "bypassed": 0,
+        "evicted": 0,
+        "retained_bytes": 0,
+        "stages": {
+          "load_source": {
+            "hits": 0,
+            "misses": 1,
+            "skipped": 0
+          },
+          "lex_parse": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "collect_declarations": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "resolve_interface": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "check_body": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "instantiate_specialization": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "lower_function": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "emit_fragment": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          },
+          "link": {
+            "hits": 0,
+            "misses": 0,
+            "skipped": 1
+          }
+        }
+      },
+      {
+        "version": "work-report-v1",
+        "command": "check-project",
+        "reused": true,
+        "parsed_modules": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "checked_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "instantiated_specializations": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "lowered_functions": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "emitted_fragments": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "links": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "executed_tests": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "reused_results": 1,
+        "session_reused_results": 1,
+        "symbolic_templates": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "specialization_bodies": {
+          "status": "skipped",
+          "performed": 0,
+          "reused": 0
+        },
+        "semantic_cache": {
+          "retained_bytes": 0,
+          "ordinary_bytes": 0,
+          "symbolic_bytes": 0,
+          "specialization_bytes": 0,
+          "evicted": 0
+        },
+        "bypassed": [],
+        "session": {
+          "parsed_modules": {
+            "performed": 0,
+            "reused": 0
+          },
+          "checked_bodies": {
+            "performed": 0,
+            "reused": 0
+          },
+          "instantiated_specializations": {
+            "performed": 0,
+            "reused": 0
+          },
+          "lowered_functions": {
+            "performed": 0,
+            "reused": 0
+          },
+          "emitted_fragments": {
+            "performed": 0,
+            "reused": 0
+          },
+          "links": {
+            "performed": 0,
+            "reused": 0
+          },
+          "executed_tests": {
+            "performed": 0,
+            "reused": 0
+          }
+        }
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "source_load_parse",
+        "duration_ns": 510827902,
+        "inclusive": false,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926
+        },
+        "exit_code": 0
+      },
+      {
+        "version": "phase-timings-v1",
+        "kind": "timing",
+        "tool": "compiler",
+        "name": "total",
+        "duration_ns": 717071881,
+        "inclusive": true,
+        "counts": {
+          "modules": 27,
+          "source_bytes": 1716926
+        },
+        "exit_code": 0
+      }
+    ]
+  }
+]
