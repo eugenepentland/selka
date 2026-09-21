@@ -20,6 +20,12 @@ pub const GenerateError = error{ InternalError, OutOfMemory, SourceError, WriteF
 const drop_local = " call $myl_native_owned_drop(l %heap, l extern ${s}, l %l{d})\n";
 /// Headroom `qbe_stack.c` keeps between the frame floor and the guard page.
 const frame_headroom: u64 = 65536;
+/// The largest frame the native stack carries; a bigger one is heap-backed.
+const native_frame_limit: u64 = 32768;
+/// Where one function's frame lives: on the native stack, bounded by
+/// `native_frame_limit`, or in a heap block of this many bytes that the
+/// prologue allocates and every return path releases.
+const Frame = union(enum) { native, heap: u64 };
 const store_scalar = " storel {d}, %s{d}\n";
 const Location = struct { path: []const u8, line: usize, column: usize };
 /// One contiguous splice of an inlined callee body into a caller: the callee's
@@ -1237,10 +1243,25 @@ const Emitter = struct {
         self.by_reference = try self.addressLocals();
         try self.findRoots();
         const capacity = ir.stack_capacity;
-        const frame_bytes = try self.frameBytes(capacity);
-        self.heap_frame = frame_bytes > 32768;
-        const stack_bytes = if (self.heap_frame) try self.abiStackBytes() else frame_bytes;
-        if (stack_bytes > 32768) return self.sink.fail("E_QBE_UNSUPPORTED", f.scope.instructions[0].span, "native ABI arguments or results exceed the 32 KiB stack safety limit");
+        // QBE-FRAMEFIT-1: before the body exists, the only bound on the per-pc
+        // aggregate scratch counts every buffer the lowering might declare, and
+        // forwarding and the borrow rule leave most of them undeclared. A frame
+        // that bound puts over the limit is lowered onto the native stack first
+        // and measured from the scratch that survived; only a frame that is
+        // still too big is lowered again, heap-backed, at the bound.
+        const possible = try self.frameBytes(capacity, try self.possibleTemporaryBytes());
+        const serial = self.serial;
+        const text = try self.lower(name, capacity, .native);
+        if (possible <= native_frame_limit) return text;
+        if (try self.frameBytes(capacity, try declaredTemporaryBytes(text)) <= native_frame_limit) return text;
+        self.restart(serial);
+        return self.lower(name, capacity, .{ .heap = possible });
+    }
+    /// Lower the analysed function with its frame placed as `frame` says.
+    fn lower(self: *Emitter, name: []const u8, capacity: usize, frame: Frame) GenerateError![]const u8 {
+        const f = self.function;
+        self.heap_frame = frame == .heap;
+        if (self.heap_frame and try self.abiStackBytes() > native_frame_limit) return self.sink.fail("E_QBE_UNSUPPORTED", f.scope.instructions[0].span, "native ABI arguments or results exceed the 32 KiB stack safety limit");
         try self.typeDefinitions();
         try self.print("export function {s} ${s}(l %ctx", .{ try self.returnType(f), name });
         if (try self.largeResult(f)) try self.print(", l %out", .{});
@@ -1259,14 +1280,19 @@ const Emitter = struct {
         // entry block, so a native-stack frame declares its slots before the
         // frame protocol introduces any label.
         try self.allocateNativeStorage(capacity);
-        self.small_leaf = self.frameLeaf() and frame_bytes + 32 < frame_headroom;
+        // A native frame never exceeds `native_frame_limit`, which sits well
+        // inside the headroom; a heap frame is held to the size of its block.
+        self.small_leaf = self.frameLeaf() and switch (frame) {
+            .native => true,
+            .heap => |bytes| bytes + 32 < frame_headroom,
+        };
         try self.enterFrame(name);
         // A build without instruction-budget accounting cannot honor a runtime
         // step ceiling; refuse it once, before any guest instruction runs.
         if (self.entry) try self.requireAccounting();
         try arena_lower.Lower(Emitter).mark(self);
         if (self.heap_frame) {
-            try self.print(" %frame_memory =l call $myl_qbe_frame_allocate(l %ctx, l {d})\n", .{frame_bytes});
+            try self.print(" %frame_memory =l call $myl_qbe_frame_allocate(l %ctx, l {d})\n", .{frame.heap});
             try self.checkFailure("allocation_failure");
             try self.allocateStorage(capacity);
             try self.allocateTemporaries(.all);
@@ -1298,6 +1324,18 @@ const Emitter = struct {
         text = try dropUnusedSlots(self.allocator, text);
         return stripUnreferencedLabels(self.allocator, text);
     }
+    /// Forget a lowering whose frame turned out too big for the native stack so
+    /// the same analysis can be lowered again heap-backed: the temporary
+    /// numbering and every mark one lowering leaves go back to where the
+    /// discarded pass started, while the analysis results stay.
+    fn restart(self: *Emitter, serial: usize) void {
+        self.serial = serial;
+        self.pc = 0;
+        self.frame_offset = 0;
+        self.linked = false;
+        self.small_leaf = false;
+        self.fused = null;
+    }
     fn findRoots(self: *Emitter) GenerateError!void {
         const f = self.function;
         for (f.scope.locals) |local| self.has_roots = self.has_roots or (try self.layout(local.ty)).trace;
@@ -1317,7 +1355,7 @@ const Emitter = struct {
         const f = self.function;
         try self.allocateSlot("scratch", 16);
         try self.allocateSlot("arguments", try self.argumentVectorBytes());
-        for (f.scope.locals, 0..) |local, i| try self.allocateIndex("l", i, @max(8, (try self.layout(local.ty)).size));
+        for (f.scope.locals, 0..) |local, i| try self.allocateIndex("l", i, try self.localSlotBytes(i, local.ty));
         for (0..capacity) |i| try self.allocateIndex("s", i, 8);
         if (self.has_roots) for (0..f.scope.locals.len + capacity) |i| try self.allocateIndex("root", i, 32);
     }
@@ -1991,16 +2029,71 @@ const Emitter = struct {
         };
         return size;
     }
-    fn frameBytes(self: *Emitter, capacity: usize) GenerateError!u64 {
-        var size: u64 = (try self.argumentVectorBytes()) + 64 + @as(u64, capacity) * 8;
-        for (self.function.scope.locals) |local| size = try addFrame(size, @max(8, (try self.layout(local.ty)).size));
+    /// The bytes local `index` occupies in the frame: one word when the slot
+    /// holds an address (QBE-AGGREF-1, QBE-MATCHPROJ-1), the value's own size
+    /// when it holds the value.
+    fn localSlotBytes(self: *Emitter, index: usize, ty: typed.Type) GenerateError!u64 {
+        if (self.byReference(index)) return 8;
+        return @max(8, (try self.layout(ty)).size);
+    }
+    /// The stack bytes one outgoing argument of this type can occupy: one word
+    /// for a value that crosses as a scalar or as an address (`argumentType`),
+    /// the value's own size only for a move-only aggregate that crosses by value.
+    fn argumentBytes(self: *Emitter, ty: typed.Type) GenerateError!u64 {
+        const value = try self.layout(ty);
+        if (self.isScalar(ty) or value.copy != .prohibited) return 8;
+        return @max(8, value.size);
+    }
+    /// Every per-pc aggregate scratch pair the lowering might declare, each at
+    /// the widest operand its instruction can see: the bound `frameBytes` has
+    /// to use before the body exists, and the size a heap frame is given.
+    fn possibleTemporaryBytes(self: *Emitter) GenerateError!u64 {
+        var size: u64 = 0;
         for (self.states, 0..) |state, pc| if (state != null and self.usesTemporary(pc)) {
             const temporary = try self.temporarySize(pc);
             size = try addFrame(size, temporary);
             size = try addFrame(size, temporary);
         };
+        return size;
+    }
+    /// The per-pc aggregate scratch a lowered body still declares, summed from
+    /// the `%agg{pc}` and `%aux{pc}` declarations that survived forwarding, the
+    /// borrow rule and `dropUnusedSlots`: what the frame really carries.
+    fn declaredTemporaryBytes(text: []const u8) GenerateError!u64 {
+        var size: u64 = 0;
+        var scan = std.mem.splitScalar(u8, text, '\n');
+        while (scan.next()) |line| {
+            const name = slotDefinition(line) orelse continue;
+            if (!isTemporarySlot(name)) continue;
+            const marker = " =l alloc8 ";
+            const at = std.mem.indexOf(u8, line, marker) orelse continue;
+            const bytes = std.fmt.parseInt(u64, line[at + marker.len ..], 10) catch return error.InternalError;
+            size = try addFrame(size, bytes);
+        }
+        return size;
+    }
+    /// Whether a slot name is one pc's aggregate scratch: `agg` or `aux`
+    /// followed by the pc.
+    fn isTemporarySlot(name: []const u8) bool {
+        if (name.len < 4) return false;
+        if (!std.mem.eql(u8, name[0..3], "agg") and !std.mem.eql(u8, name[0..3], "aux")) return false;
+        for (name[3..]) |byte| if (!std.ascii.isDigit(byte)) return false;
+        return true;
+    }
+    /// The frame this function needs with `temporaries` bytes of per-pc
+    /// aggregate scratch: every local, operand and root slot, the return and
+    /// argument storage and the widest outgoing argument list, doubled to
+    /// cover the spills QBE adds. On the native stack it must stay within
+    /// `native_frame_limit`; a heap frame is allocated at exactly this size.
+    fn frameBytes(self: *Emitter, capacity: usize, temporaries: u64) GenerateError!u64 {
+        var size: u64 = (try self.argumentVectorBytes()) + 64 + @as(u64, capacity) * 8;
+        for (self.function.scope.locals, 0..) |local, i| size = try addFrame(size, try self.localSlotBytes(i, local.ty));
+        size = try addFrame(size, temporaries);
         if (self.has_roots) size = try addFrame(size, @as(u64, self.function.scope.locals.len + capacity) * 32);
-        size = try addFrame(size, @max(16, (try self.layout(self.function.signature.return_type)).size));
+        // A result that crosses through the caller's storage occupies nothing
+        // here; any other aggregate result has its zeroed copy and, in a heap
+        // frame, the copy the return path hands back.
+        size = try addFrame(size, @max(16, (try self.returnStorageBytes()) * 2));
         var outgoing: u64 = 0;
         for (self.function.scope.instructions) |instruction| {
             const target: ?typed.FunctionId = switch (instruction.op) {
@@ -2010,13 +2103,13 @@ const Emitter = struct {
             if (instruction.op == .invoke) {
                 const signature = self.program.records[instruction.op.invoke.recordIndex()].contract.callback.?;
                 var arguments: u64 = 0;
-                for (signature.parameters) |ty| arguments = try addFrame(arguments, @max(8, (try self.layout(ty)).size));
+                for (signature.parameters) |ty| arguments = try addFrame(arguments, try self.argumentBytes(ty));
                 outgoing = @max(outgoing, arguments);
             }
             if (target) |id| {
                 const callee = self.program.functions[@backingInt(id)];
                 var arguments: u64 = 0;
-                for (callee.scope.locals[0..callee.signature.parameter_count]) |local| arguments = try addFrame(arguments, @max(8, (try self.layout(local.ty)).size));
+                for (callee.scope.locals[0..callee.signature.parameter_count]) |local| arguments = try addFrame(arguments, try self.argumentBytes(local.ty));
                 outgoing = @max(outgoing, arguments);
             }
         }

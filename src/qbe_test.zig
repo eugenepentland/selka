@@ -1376,3 +1376,138 @@ test "QBE-ARRAYWRITE-1 a replace stored into another local keeps the whole-array
     try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, body, "blit "));
     try std.testing.expect(std.mem.indexOf(u8, body, "%agg") != null);
 }
+/// `count` array-literal elements of `1`, each followed by its separator.
+fn ones(comptime count: usize) []const u8 {
+    comptime {
+        @setEvalBranchQuota(100_000);
+        var text: []const u8 = "";
+        for (0..count) |_| text = text ++ "1, ";
+        return text;
+    }
+}
+/// The program `docs/performance.md` times: `kernel` reads one element of a
+/// `[n]int` parameter that `main` hands it on every call.
+fn peekProgram(comptime n: usize) []const u8 {
+    @setEvalBranchQuota(100_000);
+    return comptime std.fmt.comptimePrint(
+        \\def kernel(values: [{d}]int) -> int:
+        \\    return values[0]
+        \\
+        \\
+        \\def main() -> int:
+        \\    data: [{d}]int = [{s}1]
+        \\    total = 0
+        \\    call = 0
+        \\    while call < 100000:
+        \\        total += kernel(data)
+        \\        call += 1
+        \\    return total
+    , .{ n, n, ones(n - 1) });
+}
+// spec: QBE-FRAMEFIT-1
+test "a callee that only reads a large array parameter keeps a native frame" {
+    var parsed = try emitted(std.testing.allocator, peekProgram(1024));
+    defer parsed.deinit();
+    const body = named(parsed.value, "kernel").?.il;
+    // The parameter crosses by address and the element read is one load
+    // through it, so no scratch survives and the frame stays on the stack.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_qbe_frame_allocate"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_qbe_frame_release"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%agg"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit"));
+    try std.testing.expect(std.mem.indexOf(u8, body, "loadl") != null);
+}
+// spec-case: QBE-FRAMEFIT-1
+test "a [4096]int parameter keeps the native frame while the local that holds the array is heap-backed" {
+    var parsed = try emitted(std.testing.allocator, peekProgram(4096));
+    defer parsed.deinit();
+    const kernel = named(parsed.value, "kernel").?.il;
+    const main = named(parsed.value, "main").?.il;
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, kernel, "myl_qbe_frame_allocate"));
+    // `main` owns the 32 KiB array itself, so its measured frame is still over
+    // the limit and the second, heap-backed lowering is the one it keeps.
+    try std.testing.expect(std.mem.indexOf(u8, main, "myl_qbe_frame_allocate") != null);
+    try std.testing.expect(std.mem.indexOf(u8, main, "myl_qbe_frame_release") != null);
+}
+/// `rot` copies a `[4096]int` parameter into scratch to replace one element
+/// and returns the copy, so that scratch survives; `keep` does the same over a
+/// `[1024]int`, whose scratch fits the native frame.
+const rot_program = rotProgram();
+fn rotProgram() []const u8 {
+    @setEvalBranchQuota(100_000);
+    return comptime std.fmt.comptimePrint(
+        \\def rot(values: [4096]int) -> [4096]int:
+        \\    return replace(values, 0, 1)
+        \\
+        \\
+        \\def keep(values: [1024]int) -> [1024]int:
+        \\    return replace(values, 0, 1)
+        \\
+        \\
+        \\def main() -> int:
+        \\    wide: [4096]int = [{s}1]
+        \\    narrow: [1024]int = [{s}1]
+        \\    turned: [4096]int = rot(wide)
+        \\    kept: [1024]int = keep(narrow)
+        \\    return turned[0] + kept[0]
+    , .{ ones(4095), ones(1023) });
+}
+// spec-case: QBE-FRAMEFIT-1
+test "a frame whose surviving scratch alone exceeds the limit is still heap-backed" {
+    var parsed = try emitted(std.testing.allocator, rot_program);
+    defer parsed.deinit();
+    const rot = named(parsed.value, "rot").?.il;
+    const keep = named(parsed.value, "keep").?.il;
+    // The copy `replace` makes of a parameter it cannot write in place is real
+    // scratch, and 32 KiB of it is over the limit on its own.
+    try std.testing.expect(std.mem.indexOf(u8, rot, "%agg") != null);
+    try std.testing.expect(std.mem.indexOf(u8, rot, "myl_qbe_frame_allocate") != null);
+    try std.testing.expect(std.mem.indexOf(u8, rot, "myl_qbe_frame_release") != null);
+    try std.testing.expect(std.mem.indexOf(u8, keep, "%agg") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, keep, "myl_qbe_frame_allocate"));
+}
+// spec: QBE-AGGREF-3
+test "a parameter that crosses by address occupies one word of its callee's frame" {
+    var parsed = try emitted(std.testing.allocator, peekProgram(1024));
+    defer parsed.deinit();
+    const body = named(parsed.value, "kernel").?.il;
+    // The slot holds the caller's address, so it is declared as one word and
+    // the value's 8 KiB is reserved nowhere in the callee.
+    try std.testing.expect(std.mem.indexOf(u8, body, " %l0 =l alloc8 8\n") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "alloc8 8192"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%frame_memory"));
+    try std.testing.expect(std.mem.indexOf(u8, body, " storel %a0, %l0\n") != null);
+}
+/// `outer` hands the `[4096]int` parameter it was given straight on to
+/// `kernel`, which recurses so the inliner leaves both calls in place.
+const relay_program = relayProgram();
+fn relayProgram() []const u8 {
+    @setEvalBranchQuota(100_000);
+    return comptime std.fmt.comptimePrint(
+        \\def kernel(values: [4096]int, depth: int) -> int:
+        \\    if depth == 0:
+        \\        return values[0]
+        \\    return kernel(values, depth - 1)
+        \\
+        \\
+        \\def outer(values: [4096]int) -> int:
+        \\    return kernel(values, 1) + kernel(values, 2)
+        \\
+        \\
+        \\def main() -> int:
+        \\    data: [4096]int = [{s}1]
+        \\    return outer(data)
+    , .{ones(4095)});
+}
+// spec-case: QBE-AGGREF-3
+test "a caller charges one word of outgoing space for an argument that crosses by address" {
+    var parsed = try emitted(std.testing.allocator, relay_program);
+    defer parsed.deinit();
+    const outer = named(parsed.value, "outer").?.il;
+    // `outer` neither holds the array nor copies it: the address it was handed
+    // is the address it passes on, so its frame is a few words.
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, outer, " call $myl_f_"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, outer, "myl_qbe_frame_allocate"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, outer, "blit"));
+    try std.testing.expect(std.mem.indexOf(u8, outer, " %l0 =l alloc8 8\n") != null);
+}

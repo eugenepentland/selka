@@ -228,22 +228,30 @@ Reads were already O(1) and did not move: 4,096,000 reads out of a `[4096]int`
 local take 30.0 ms on QBE and 17.8 ms on LLVM, against 25.6 ms and 13.0 ms for the
 same reads out of a `list[int]`.
 
-What is still expensive is **passing** a large `[N]T` to a function called in a
-loop. The argument itself crosses by address, but the callee's frame still reserves
-the parameter's full size plus per-pc aggregate scratch for every instruction that
-might need one, and a frame over 32 KiB is heap-allocated on every call:
+**Passing** a large `[N]T` to a function called in a loop is cheap too, since
+2026-09-21 (`QBE-FRAMEFIT-1`, `QBE-AGGREF-3`). The argument crosses by address, the
+callee's slot for it is one word, and the callee's frame is sized from the scratch
+its lowered body really declares rather than from every buffer the lowering might
+have declared, so a callee that only reads the array keeps its frame on the native
+stack instead of allocating, zeroing and freeing one on the heap per call. Until
+that change the frame was estimated before the body existed, and the estimate for
+`kernel(values: [1024]int)` came to 82 KB of heap per call:
 
-| Work | Time |
-| --- | ---: |
-| 100,000 calls of `peek(values: [8]int)` returning `values[0]` | 4.4 ms (the empty-program floor is 3.7 ms) |
-| 100,000 calls of the same function over `[1024]int` | 0.44 s |
-| 100,000 calls of the same function over `[4096]int` | 1.42 s |
-| 1,000 calls scanning every element of a `[4096]int` parameter | 41 ms (QBE), 34 ms (LLVM) |
-| 1,000 calls scanning every element of a `list[int]` of the same length | 16 ms (QBE), 9.0 ms (LLVM) |
+| Work | before | after |
+| --- | ---: | ---: |
+| 100,000 calls of `kernel(values: [8]int)` returning `values[0]` | 1.34 ms | 1.24 ms |
+| 100,000 calls of the same function over `[1024]int` | 115.0 ms | **1.59 ms** |
+| 100,000 calls of the same function over `[4096]int` | 440.8 ms | **1.45 ms** |
+| 1,000 calls scanning every element of a `[4096]int` parameter | 14.7 ms | **3.60 ms** |
+| 1,000 calls scanning every element of a `list[int]` of the same length | 4.63 ms | 4.53 ms |
 
-The last two rows are the same scan over the same data; what is left of the gap is
-that per-call frame, not the element reads. Every row above comes from these
-programs:
+The `[8]int` row is the process floor, and the last row is the same scan over a
+`list[int]`, whose binary the change leaves byte-identical: the fixed array is now
+the faster of the two to hand to a function. Prebuilt `--mode ReleaseFast` QBE
+binaries from the compiler before and after the change, `taskset` to one CPU, 15
+interleaved rounds, medians, machine load average 1.7; the details are in
+[frame-fit-2026-09-21](audits/frame-fit-2026-09-21.md). Every row above comes from
+these programs:
 
 ```bash
 python3 - <<'PY'
@@ -302,10 +310,10 @@ both answer `4096000`. Only the storage differs.
 
 So: reach for `[N]T` whenever the length is part of the type — wire records,
 tables, staging buffers a host call takes — and write its elements freely. Reach
-for `list[T]` when the length is not known up front or the value is passed by name
-into functions a hot loop calls, because a `list` argument is a pointer and an
-`[N]T` argument still drags a frame the size of the array behind it. A `bytes`
-value remains the immutable byte-shaped alternative.
+for `list[T]` when the length is not known up front. Handing either to a function a
+hot loop calls costs the same: a `list` argument is a pointer, and an `[N]T`
+argument is the address of the caller's array, held in one word of the callee's
+frame. A `bytes` value remains the immutable byte-shaped alternative.
 
 ## Call C when you need a library
 
