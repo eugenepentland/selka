@@ -488,3 +488,30 @@ test "GC-OBJECT-1 a two-word header fits thousands of live lists under one budge
     try t.expectEqual(@as(i64, 4002), result.value);
     try t.expectEqualStrings("", result.trap.code);
 }
+
+// spec: GC-SEGMENT-1
+test "GC-SEGMENT-1 a churn loop reuses reclaimed slots without stale fields" {
+    // Every allocation collects under gc-stress, so each iteration's scratch list
+    // is swept and its slots come back through the size-class free list. A slot
+    // handed out with a stale `length` or `capacity` would corrupt the retained
+    // copies, and a slot whose payload was not zeroed would publish the previous
+    // owner's storage pointer.
+    var compilation = try language.Compilation.init(t.allocator, "segments.my",
+        \\def main() -> i64:
+        \\    keep: list[list[i64]] = []
+        \\    n = 0
+        \\    while n < 20000:
+        \\        scratch = [n, n + 1, n + 2, n + 3]
+        \\        if n % 1000 == 0:
+        \\            keep.append(scratch)
+        \\        n += 1
+        \\    total = 0
+        \\    for item in keep:
+        \\        total = total + item[3]
+        \\    return total
+    );
+    defer compilation.deinit();
+    const result = try native.runWithOptions(&compilation, .{ .gc_stress = true });
+    try t.expectEqual(@as(i64, 190060), result.value);
+    try t.expectEqualStrings("", result.trap.code);
+}

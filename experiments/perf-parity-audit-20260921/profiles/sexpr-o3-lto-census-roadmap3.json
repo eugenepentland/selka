@@ -1,0 +1,521 @@
+{
+  "binary": ".tmp/perf-audit-20260921/sexpr-o3-lto",
+  "binary_sha256": "7b16ffe1cef19de8045e3b6a964e74fa43bbddba1ac07bf77dee52fb37dcc475",
+  "note": "LLVM -O3 + LTO, --keep-symbols; census of input8.sexp",
+  "argv_tail": [],
+  "runs": 400,
+  "samples": 11978,
+  "outside_main_executable": 4383,
+  "percent_outside_main_executable": 36.59208549006512,
+  "unmapped_inside": 71,
+  "percent_unmapped_inside": 0.5927533811988646,
+  "located_samples": 7524,
+  "class_totals": {
+    "guest": {
+      "samples": 5213,
+      "percent_all_samples": 43.52145600267156
+    },
+    "runtime-c": {
+      "samples": 2311,
+      "percent_all_samples": 19.293705126064452
+    }
+  },
+  "functions": [
+    {
+      "name": "sexpr.tokenizer::next_raw",
+      "class": "guest",
+      "samples": 1318,
+      "percent_all_samples": 11.003506428452162
+    },
+    {
+      "name": "trace [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 1263,
+      "percent_all_samples": 10.544331274002337
+    },
+    {
+      "name": "sexpr.parser::parse_node",
+      "class": "guest",
+      "samples": 925,
+      "percent_all_samples": 7.72249123392887
+    },
+    {
+      "name": "sexpr.parser::parse_list",
+      "class": "guest",
+      "samples": 521,
+      "percent_all_samples": 4.349641008515612
+    },
+    {
+      "name": "sexpr.tokenizer::read_string",
+      "class": "guest",
+      "samples": 518,
+      "percent_all_samples": 4.324595091000167
+    },
+    {
+      "name": "sexpr.parser::advance",
+      "class": "guest",
+      "samples": 512,
+      "percent_all_samples": 4.274503255969277
+    },
+    {
+      "name": "sexpr.tokenizer::read_atom",
+      "class": "guest",
+      "samples": 471,
+      "percent_all_samples": 3.9322090499248623
+    },
+    {
+      "name": "main::tally",
+      "class": "guest",
+      "samples": 452,
+      "percent_all_samples": 3.7735849056603774
+    },
+    {
+      "name": "myl_native_heap_alloc_at [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 440,
+      "percent_all_samples": 3.673401235598597
+    },
+    {
+      "name": "sexpr.parser::parse_leaf",
+      "class": "guest",
+      "samples": 280,
+      "percent_all_samples": 2.3376189681081985
+    },
+    {
+      "name": "myl_native_heap_collect [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 211,
+      "percent_all_samples": 1.7615628652529638
+    },
+    {
+      "name": "myl_native_bytes_find_any [native_bytes.c]",
+      "class": "runtime-c",
+      "samples": 162,
+      "percent_all_samples": 1.352479545834029
+    },
+    {
+      "name": "myl_native_list_append [native_collections.c]",
+      "class": "runtime-c",
+      "samples": 150,
+      "percent_all_samples": 1.252295875772249
+    },
+    {
+      "name": "sexpr.tokenizer::raw",
+      "class": "guest",
+      "samples": 123,
+      "percent_all_samples": 1.0268826181332442
+    },
+    {
+      "name": "sexpr.tokenizer::read_number",
+      "class": "guest",
+      "samples": 83,
+      "percent_all_samples": 0.6929370512606445
+    },
+    {
+      "name": "slot_take [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 44,
+      "percent_all_samples": 0.36734012355985973
+    },
+    {
+      "name": "myl_native_bytes_number_parse",
+      "class": "runtime-c",
+      "samples": 40,
+      "percent_all_samples": 0.33394556687259974
+    },
+    {
+      "name": "sexpr.tokenizer::si_suffix_len",
+      "class": "guest",
+      "samples": 5,
+      "percent_all_samples": 0.04174319585907497
+    },
+    {
+      "name": "sexpr.parser::parse",
+      "class": "guest",
+      "samples": 2,
+      "percent_all_samples": 0.01669727834362999
+    },
+    {
+      "name": "sexpr.tokenizer::read_operator",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.008348639171814994
+    },
+    {
+      "name": "main::summarise",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.008348639171814994
+    },
+    {
+      "name": "myl_native_text_from_utf8_checked [native_text.c]",
+      "class": "runtime-c",
+      "samples": 1,
+      "percent_all_samples": 0.008348639171814994
+    },
+    {
+      "name": "main::main",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.008348639171814994
+    }
+  ],
+  "top_pcs": [
+    {
+      "address": "0x104e1c8",
+      "samples": 339,
+      "percent_all_samples": 2.830188679245283,
+      "function": "trace [native_heap.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0x108",
+      "function_bytes": 504,
+      "disassembly": [
+        {
+          "address": "0x104e1b8",
+          "text": "jae    104e1a0 <trace+0xe0>",
+          "sampled": false
+        },
+        {
+          "address": "0x104e1ba",
+          "text": "cmpl   $0x0,0x20(%rax)",
+          "sampled": false
+        },
+        {
+          "address": "0x104e1be",
+          "text": "jne    104e2a9 <trace+0x1e9>",
+          "sampled": false
+        },
+        {
+          "address": "0x104e1c4",
+          "text": "mov    -0x10(%r14),%rcx",
+          "sampled": false
+        },
+        {
+          "address": "0x104e1c8",
+          "text": "test   $0x3,%cl",
+          "sampled": true
+        },
+        {
+          "address": "0x104e1cb",
+          "text": "jne    104e2a9 <trace+0x1e9>",
+          "sampled": false
+        },
+        {
+          "address": "0x104e1d1",
+          "text": "add    $0xfffffffffffffff0,%r14",
+          "sampled": false
+        },
+        {
+          "address": "0x104e1d5",
+          "text": "mov    0x4e8(%rdi),%rdx",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x104e756",
+      "samples": 272,
+      "percent_all_samples": 2.2708298547336785,
+      "function": "myl_native_heap_alloc_at [native_heap.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0x496",
+      "function_bytes": 1365,
+      "disassembly": [
+        {
+          "address": "0x104e744",
+          "text": "call   104e820 <slot_take>",
+          "sampled": false
+        },
+        {
+          "address": "0x104e749",
+          "text": "test   %rax,%rax",
+          "sampled": false
+        },
+        {
+          "address": "0x104e74c",
+          "text": "je     104e7db <myl_native_heap_alloc_at+0x51b>",
+          "sampled": false
+        },
+        {
+          "address": "0x104e752",
+          "text": "shl    $0x2,%r15",
+          "sampled": false
+        },
+        {
+          "address": "0x104e756",
+          "text": "mov    %r15,(%rax)",
+          "sampled": true
+        },
+        {
+          "address": "0x104e759",
+          "text": "mov    %r12,0x8(%rax)",
+          "sampled": false
+        },
+        {
+          "address": "0x104e75d",
+          "text": "add    %rbx,0x18(%r13)",
+          "sampled": false
+        },
+        {
+          "address": "0x104e761",
+          "text": "vmovdqu 0x40(%r13),%xmm0",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x1036b10",
+      "samples": 270,
+      "percent_all_samples": 2.2541325763900484,
+      "function": "sexpr.parser::advance",
+      "class": "guest",
+      "offset_in_function": "0x180",
+      "function_bytes": 650,
+      "disassembly": [
+        {
+          "address": "0x1036afd",
+          "text": "je     1036b49 <myl_f_59c4bbc7071b8e5740b45acc273a5dd464bfcfe4b67081aa51105d0e1634c116+0x1b9>",
+          "sampled": false
+        },
+        {
+          "address": "0x1036aff",
+          "text": "test   %eax,%eax",
+          "sampled": false
+        },
+        {
+          "address": "0x1036b01",
+          "text": "jne    1036bc1 <myl_f_59c4bbc7071b8e5740b45acc273a5dd464bfcfe4b67081aa51105d0e1634c116+0x231>",
+          "sampled": false
+        },
+        {
+          "address": "0x1036b07",
+          "text": "vmovups 0xb8(%rsp),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x1036b10",
+          "text": "vmovups 0xd8(%rsp),%xmm1",
+          "sampled": true
+        },
+        {
+          "address": "0x1036b19",
+          "text": "mov    0xe8(%rsp),%rax",
+          "sampled": false
+        },
+        {
+          "address": "0x1036b21",
+          "text": "mov    %rax,0x40(%r15)",
+          "sampled": false
+        },
+        {
+          "address": "0x1036b25",
+          "text": "vmovups %xmm1,0x30(%r15)",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x10404fc",
+      "samples": 214,
+      "percent_all_samples": 1.7866087827684087,
+      "function": "sexpr.parser::parse_node",
+      "class": "guest",
+      "offset_in_function": "0x33c",
+      "function_bytes": 3784,
+      "disassembly": [
+        {
+          "address": "0x10404e8",
+          "text": "mov    %eax,0x24(%rbx)",
+          "sampled": false
+        },
+        {
+          "address": "0x10404eb",
+          "text": "jmp    10403ef <myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959+0x22f>",
+          "sampled": false
+        },
+        {
+          "address": "0x10404f0",
+          "text": "mov    (%rdx),%rax",
+          "sampled": false
+        },
+        {
+          "address": "0x10404f3",
+          "text": "vmovups 0x108(%rsp),%xmm0",
+          "sampled": false
+        },
+        {
+          "address": "0x10404fc",
+          "text": "mov    0xf8(%rsp),%rcx",
+          "sampled": true
+        },
+        {
+          "address": "0x1040504",
+          "text": "mov    %rcx,0x128(%rsp)",
+          "sampled": false
+        },
+        {
+          "address": "0x104050c",
+          "text": "mov    0x100(%rsp),%esi",
+          "sampled": false
+        },
+        {
+          "address": "0x1040513",
+          "text": "mov    %esi,0x130(%rsp)",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x10411a1",
+      "samples": 211,
+      "percent_all_samples": 1.7615628652529638,
+      "function": "sexpr.parser::parse_leaf",
+      "class": "guest",
+      "offset_in_function": "0x111",
+      "function_bytes": 2664,
+      "disassembly": [
+        {
+          "address": "0x1041190",
+          "text": "cmp    $0x5,%eax",
+          "sampled": false
+        },
+        {
+          "address": "0x1041193",
+          "text": "ja     10411f4 <myl_f_998beee1bca4ed98df5239fd3360e93dc7435bf13adf117793e129355f5cd155+0x164>",
+          "sampled": false
+        },
+        {
+          "address": "0x1041195",
+          "text": "jmp    *0x1009388(,%rax,8)",
+          "sampled": false
+        },
+        {
+          "address": "0x104119c",
+          "text": "vmovupd 0x28(%rcx),%xmm0",
+          "sampled": false
+        },
+        {
+          "address": "0x10411a1",
+          "text": "movq   $0xe,-0x48(%rbp)",
+          "sampled": true
+        },
+        {
+          "address": "0x10411a9",
+          "text": "mov    -0x38(%rbp),%rax",
+          "sampled": false
+        },
+        {
+          "address": "0x10411ad",
+          "text": "mov    %rax,-0xc8(%rbp)",
+          "sampled": false
+        },
+        {
+          "address": "0x10411b4",
+          "text": "mov    -0x30(%rbp),%eax",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x104a122",
+      "samples": 184,
+      "percent_all_samples": 1.536149607613959,
+      "function": "sexpr.tokenizer::read_atom",
+      "class": "guest",
+      "offset_in_function": "0x392",
+      "function_bytes": 1076
+    },
+    {
+      "address": "0x10347ad",
+      "samples": 168,
+      "percent_all_samples": 1.402571380864919,
+      "function": "main::tally",
+      "class": "guest",
+      "offset_in_function": "0x2ed",
+      "function_bytes": 989
+    },
+    {
+      "address": "0x10366e2",
+      "samples": 161,
+      "percent_all_samples": 1.344130906662214,
+      "function": "sexpr.tokenizer::next_raw",
+      "class": "guest",
+      "offset_in_function": "0xc12",
+      "function_bytes": 3761
+    },
+    {
+      "address": "0x1036639",
+      "samples": 140,
+      "percent_all_samples": 1.1688094840540992,
+      "function": "sexpr.tokenizer::next_raw",
+      "class": "guest",
+      "offset_in_function": "0xb69",
+      "function_bytes": 3761
+    },
+    {
+      "address": "0x1033829",
+      "samples": 136,
+      "percent_all_samples": 1.1354149273668392,
+      "function": "sexpr.parser::parse_list",
+      "class": "guest",
+      "offset_in_function": "0x2f9",
+      "function_bytes": 2010
+    },
+    {
+      "address": "0x1033824",
+      "samples": 131,
+      "percent_all_samples": 1.0936717315077642,
+      "function": "sexpr.parser::parse_list",
+      "class": "guest",
+      "offset_in_function": "0x2f4",
+      "function_bytes": 2010
+    },
+    {
+      "address": "0x10332f3",
+      "samples": 125,
+      "percent_all_samples": 1.0435798964768743,
+      "function": "sexpr.tokenizer::read_string",
+      "class": "guest",
+      "offset_in_function": "0x8c3",
+      "function_bytes": 2377
+    },
+    {
+      "address": "0x104e135",
+      "samples": 96,
+      "percent_all_samples": 0.8014693604942394,
+      "function": "trace [native_heap.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0x75",
+      "function_bytes": 504
+    },
+    {
+      "address": "0x10347b4",
+      "samples": 92,
+      "percent_all_samples": 0.7680748038069795,
+      "function": "main::tally",
+      "class": "guest",
+      "offset_in_function": "0x2f4",
+      "function_bytes": 989
+    },
+    {
+      "address": "0x103332b",
+      "samples": 92,
+      "percent_all_samples": 0.7680748038069795,
+      "function": "sexpr.tokenizer::read_string",
+      "class": "guest",
+      "offset_in_function": "0x8fb",
+      "function_bytes": 2377
+    }
+  ],
+  "method": "LD_PRELOAD SIGPROF (ITIMER_PROF) userspace self-PC sampling of unmodified binaries; 500us requested, kernel tick (CONFIG_HZ=1000) limited; no stack attribution, no hardware counters (perf_event_paranoid=4). The `dense` sampler is the repository sampler with the first expiration moved inside the first tick, so no prefix of a short run goes unsampled. A sample inside a shared library counts in `samples` and is reported only as `outside_main_executable`, so libc memcpy/malloc in the LLVM builds is inside that share. LTO inlines many guest functions into their callers, so a sample is attributed to the surviving outer symbol. Every run is pinned to CPU 6 and its output hash is verified; no wall-time claim is made from profiled runs.",
+  "sampler": "dense",
+  "sampler_source": "experiments/perf-parity-audit-20260921/profiles/sample_dense.c",
+  "sampler_source_sha256": "f494bbd1caa925d9ee02616d09f65dd2ff31a8b8f8d81cfd231b2c5b3ef54061",
+  "sampler_sha256": "312212283319eeec021923ce05881f6636e34a5ed6f9dbdcecedf4edcb354a4c",
+  "cpu": 6,
+  "seed": 20260921,
+  "output_digest": "aa9d2fdaca105bfb6c19d7b427b4da7d",
+  "interleaved_with": [
+    "sexpr-o3-lto-census"
+  ]
+}

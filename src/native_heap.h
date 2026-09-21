@@ -47,14 +47,14 @@ typedef struct myl_native_root {
  * Word 0 is the mark word: bit 0 is the collector's mark, bit 1 marks storage
  * that lives outside the heap (a frozen `str`/`bytes` literal), which the
  * collector never queues, re-traces, frees or bulk-releases, and every higher
- * bit holds the element count. The count lives here rather than in a side table
- * because precise tracing needs it for any payload address, including one first
- * reached through a root. Word 1 is the element descriptor. The collector's
- * sweep list, worklist and per-object byte charge are heap-side arrays instead
- * of per-object links and size fields, so a two-word header is all an object
- * pays. Two words keep the payload aligned to `max_align_t` because a host
- * allocation is. Arena payloads carry no header: use the heap-aware metadata
- * functions below for a payload of unknown origin. */
+ * bit holds the element count. A reclaimed slot reuses the whole word as its
+ * free-list link with `MYL_NATIVE_OBJECT_FREE` set above the link, because a
+ * free slot carries no count. The count lives in the header rather than in the
+ * segment because precise tracing needs it for any payload address, including
+ * one first reached through a root. Word 1 is the element descriptor. Two words
+ * keep the payload aligned to `max_align_t` because a segment slot is. Arena
+ * payloads carry no header: use the heap-aware metadata functions below for a
+ * payload of unknown origin. */
 struct myl_native_object {
     uintptr_t mark;
     const myl_native_type *element;
@@ -62,22 +62,29 @@ struct myl_native_object {
 typedef struct myl_native_object myl_native_object;
 enum { MYL_NATIVE_OBJECT_MARKED = 1, MYL_NATIVE_OBJECT_IMMORTAL = 2,
        MYL_NATIVE_OBJECT_COUNT_SHIFT = 2 };
+/* The mark word's sign bit, above any canonical address and above the element
+ * count. A free slot's word is `link | MYL_NATIVE_OBJECT_FREE`. */
+#define MYL_NATIVE_OBJECT_FREE (((uintptr_t)1) << (sizeof(uintptr_t) * 8 - 1))
 /* The mark word a generated frozen literal block in the image initializes. Such
  * a block is never queued, so its element count is unreachable and only the
  * immortal flag is spelled. */
 #define MYL_NATIVE_OBJECT_LITERAL_MARK ((uintptr_t)MYL_NATIVE_OBJECT_IMMORTAL)
-/* One live heap object's collect-time row: the object and the byte charge it
- * was allocated with. The charge cannot be derived at sweep time from
- * `element->size`: a descriptor may be embedded in another heap object (a
- * dictionary's entries list carries the dictionary's own entry descriptor), so
- * a garbage object's descriptor can already be freed when its row is swept.
- * Keeping the charge beside the pointer also lets the collector free an object
- * without touching its descriptor at all. The two-word header cannot hold it:
- * its one free word already holds the element count precise tracing needs. */
-typedef struct myl_native_object_slot {
-    myl_native_object *object;
-    size_t bytes;
-} myl_native_object_slot;
+/* Number of size classes the tracing heap slabs objects into, and the largest
+ * object they cover. A bigger object gets a one-slot segment of its own. The
+ * strides themselves live with the allocator in native_heap.c, which asserts
+ * this count matches its table. */
+#define MYL_NATIVE_CLASS_COUNT 52
+#define MYL_NATIVE_CLASS_LIMIT ((size_t)262144)
+/* One size-classed slab of tracing-heap storage: `slots` fixed-stride object
+ * slots at `data`, zero-filled by the host on first use. `used` counts the
+ * slots handed out by the bump pointer, and `class_index` names the stride's
+ * class (`MYL_NATIVE_CLASS_COUNT` for a one-slot oversized segment). */
+typedef struct myl_native_segment {
+    struct myl_native_segment *next;
+    size_t stride, slots, used, class_index;
+    max_align_t payload_alignment;
+    unsigned char data[];
+} myl_native_segment;
 typedef struct myl_native_drop_link {
     struct myl_native_drop_link *next;
     void *owner;
@@ -105,9 +112,9 @@ typedef struct {
 } myl_native_arena_statistics;
 typedef struct myl_native_arena_chunk myl_native_arena_chunk;
 typedef struct {
-    /* Every live heap object's row, unswept order; the sweep walks this array
-     * and compacts it in place instead of walking a per-object link. */
-    myl_native_object_slot *objects;
+    /* Every size-classed slab the heap ever reserved; the sweep walks this list
+     * of segments, so no object carries a link to its neighbour. */
+    myl_native_segment *segments;
     /* Collector worklist: objects marked but whose children are not yet
      * traced. Grown on demand and empty outside a collection. */
     myl_native_object **pending;
@@ -146,13 +153,17 @@ typedef struct {
      * `arena_chunks`, and freed by `myl_native_heap_destroy`. */
     myl_native_arena_chunk *arena_cache;
     /* Appended fields preserve generated code's fixed root-chain offset. The
-     * collector's sweep array and worklist are heap-side, so no object pays for
-     * a link. `scratch_failed` records a worklist reservation the host refused:
-     * the collection is abandoned unmarked and the allocation that ran it is
+     * collector's worklist is heap-side, so no object pays for a link.
+     * `scratch_failed` records a worklist reservation the host refused: the
+     * collection is abandoned unmarked and the allocation that ran it is
      * refused, so a partial mark can never be swept. */
-    size_t objects_len, objects_capacity;
     size_t pending_len, pending_capacity;
     int scratch_failed;
+    /* Bump segment and reclaimed-slot list per size class. A class's free list
+     * is threaded through reclaimed headers; `current` is the segment the bump
+     * pointer still has room in. */
+    myl_native_segment *current[MYL_NATIVE_CLASS_COUNT];
+    myl_native_object *free_lists[MYL_NATIVE_CLASS_COUNT];
 } myl_native_heap;
 /* Address space granted to a guest process on top of its managed byte budget:
  * program text, the C library's own arenas and the test harness that loads it.

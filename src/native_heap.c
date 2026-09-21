@@ -73,21 +73,100 @@ int myl_native_object_immortal(const myl_native_heap *heap, const void *payload)
     if (!payload || myl_native_arena_region(heap, payload)) return 0;
     return (((const myl_native_object *)payload - 1)->mark & MYL_NATIVE_OBJECT_IMMORTAL) != 0;
 }
-/* Element count recovered from the mark word's high bits. */
+/* Element count recovered from the mark word's high bits. Never called for a
+ * reclaimed slot, whose word is a free-list link instead. */
 static size_t object_count(const myl_native_object *object) {
     return (size_t)(object->mark >> MYL_NATIVE_OBJECT_COUNT_SHIFT);
 }
-/* Reserve room for one more row in the collector's sweep array. */
-static int reserve_object(myl_native_heap *heap) {
-    if (heap->objects_len < heap->objects_capacity) return 1;
-    size_t capacity = heap->objects_capacity ? heap->objects_capacity * 2 : 64;
-    if (capacity <= heap->objects_capacity) return 0;
-    if (capacity > SIZE_MAX / sizeof *heap->objects) return 0;
-    myl_native_object_slot *grown = realloc(heap->objects, capacity * sizeof *grown);
-    if (!grown) return 0;
-    heap->objects = grown;
-    heap->objects_capacity = capacity;
-    return 1;
+/* The size classes every tracing-heap object is rounded up into. The sequence is
+ * dense at the small sizes objects actually take and doubles past 256, so a
+ * header (72 bytes of list, 8 of alignment) does not pay a power-of-two step.
+ * `heap_strides` is asserted against MYL_NATIVE_CLASS_COUNT. */
+static const size_t class_strides[MYL_NATIVE_CLASS_COUNT] = {
+    16, 32, 48, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 448, 512,
+    640, 768, 896, 1024, 1280, 1536, 1792, 2048, 2560, 3072, 3584, 4096,
+    5120, 6144, 7168, 8192, 10240, 12288, 14336, 16384, 20480, 24576, 28672,
+    32768, 40960, 49152, 57344, 65536, 81920, 98304, 114688, 131072, 163840,
+    196608, 229376, 262144,
+};
+_Static_assert(sizeof class_strides / sizeof class_strides[0] == MYL_NATIVE_CLASS_COUNT,
+               "size-class table matches MYL_NATIVE_CLASS_COUNT");
+/* Round one object's charge to a segment stride. Zero means the size overflowed. */
+static size_t round_stride(size_t bytes) {
+    if (bytes > SIZE_MAX - (sizeof(max_align_t) - 1)) return 0;
+    return (bytes + sizeof(max_align_t) - 1) & ~(sizeof(max_align_t) - 1);
+}
+/* Index of the smallest class whose stride holds `stride`, or
+ * MYL_NATIVE_CLASS_COUNT for a bigger object that needs its own segment. */
+static size_t class_for(size_t stride) {
+    size_t low = 0, high = MYL_NATIVE_CLASS_COUNT;
+    while (low < high) {
+        size_t middle = low + (high - low) / 2;
+        if (class_strides[middle] < stride) low = middle + 1;
+        else high = middle;
+    }
+    return low;
+}
+/* Slots a fresh segment of one class reserves. A 64 KiB slab amortizes the host
+ * reservation without leaving a mostly-empty tail per class, a slot count is
+ * clamped so a tiny stride does not reserve a huge table, and an oversized
+ * object gets exactly one slot. */
+static size_t segment_slots(size_t stride) {
+    if (stride > MYL_NATIVE_CLASS_LIMIT) return 1;
+    size_t slots = (((size_t)64) << 10) / stride;
+    if (slots < 1) slots = 1;
+    if (slots > 4096) slots = 4096;
+    return slots;
+}
+/* Reserve one zero-filled segment and link it into the heap. The host zeroes it,
+ * which is what lets the bump path hand out object payload without a memset. */
+static myl_native_segment *segment_new(myl_native_heap *heap, size_t stride, size_t class_index) {
+    size_t slots = segment_slots(stride);
+    if (slots > (SIZE_MAX - sizeof(myl_native_segment)) / stride) return NULL;
+    size_t bytes = sizeof(myl_native_segment) + slots * stride;
+    myl_native_segment *segment = calloc(1, bytes);
+    if (!segment) return NULL;
+    segment->stride = stride;
+    segment->slots = slots;
+    segment->class_index = class_index;
+    segment->next = heap->segments;
+    heap->segments = segment;
+    return segment;
+}
+/* Pop one reclaimed slot of `class_index`, or NULL when the class has none. The
+ * slot's payload is zeroed because the previous owner wrote it; a fresh bump
+ * slot is already zero. */
+static myl_native_object *free_list_pop(myl_native_heap *heap, size_t class_index) {
+    myl_native_object *object = heap->free_lists[class_index];
+    if (!object) return NULL;
+    heap->free_lists[class_index] = (myl_native_object *)(object->mark & ~MYL_NATIVE_OBJECT_FREE);
+    memset(object + 1, 0, class_strides[class_index] - sizeof(myl_native_object));
+    object->mark = 0;
+    return object;
+}
+/* Thread one reclaimed slot onto its class's free list. */
+static void free_list_push(myl_native_heap *heap, size_t class_index, myl_native_object *object) {
+    object->mark = (uintptr_t)heap->free_lists[class_index] | MYL_NATIVE_OBJECT_FREE;
+    heap->free_lists[class_index] = object;
+}
+/* Take one slot of `stride`, preferring a reclaimed slot, then the class's bump
+ * segment, then a fresh segment. Returns NULL when the host refuses. */
+static myl_native_object *slot_take(myl_native_heap *heap, size_t stride, size_t class_index) {
+    if (class_index >= MYL_NATIVE_CLASS_COUNT) {
+        myl_native_segment *segment = segment_new(heap, stride, class_index);
+        if (!segment) return NULL;
+        segment->used = 1;
+        return (myl_native_object *)segment->data;
+    }
+    myl_native_object *object = free_list_pop(heap, class_index);
+    if (object) return object;
+    myl_native_segment *segment = heap->current[class_index];
+    if (!segment || segment->used == segment->slots) {
+        segment = segment_new(heap, class_strides[class_index], class_index);
+        if (!segment) return NULL;
+        heap->current[class_index] = segment;
+    }
+    return (myl_native_object *)(segment->data + segment->used++ * segment->stride);
 }
 /* Append one marked object to the collector's worklist, growing it on demand.
  * A refused reservation is reported so the collection can abandon unmarked. */
@@ -179,13 +258,16 @@ void myl_native_heap_collect(myl_native_heap *heap) {
      * generated frames restore that stack to a per-frame mark, which would drop a
      * lazily pushed entry. */
     for (size_t i = 0; i < 128; i++) if (heap->text_scalars[i]) mark(heap, heap->text_scalars[i]);
-    if (heap->objects_len) myl_native_arena_trace(heap, trace);
+    if (heap->segments) myl_native_arena_trace(heap, trace);
     /* A refused worklist reservation leaves the graph partly marked. Clearing
      * the marks and returning unwinds to an allocator that refuses the request,
      * so a partial mark is never swept and the heap stays consistent. */
     if (heap->scratch_failed) {
-        for (size_t i = 0; i < heap->objects_len; ++i)
-            heap->objects[i].object->mark &= ~(uintptr_t)MYL_NATIVE_OBJECT_MARKED;
+        for (myl_native_segment *segment = heap->segments; segment; segment = segment->next)
+            for (size_t i = 0; i < segment->used; ++i) {
+                myl_native_object *object = (myl_native_object *)(segment->data + i * segment->stride);
+                if (object->mark & MYL_NATIVE_OBJECT_MARKED) object->mark &= ~(uintptr_t)MYL_NATIVE_OBJECT_MARKED;
+            }
         heap->pending_len = 0;
         return;
     }
@@ -199,23 +281,41 @@ void myl_native_heap_collect(myl_native_heap *heap) {
                 trace(heap, object->element, payload + i * object->element->size);
         }
     }
-    /* One in-place compaction both sweeps the dead and resets the survivors'
-     * mark bit, so the array stays dense and carries no per-object link. The
-     * charge comes from the row, never from the object's descriptor, which may
-     * already be freed with an earlier garbage owner. */
-    size_t live = 0;
-    for (size_t i = 0; i < heap->objects_len; ++i) {
-        myl_native_object_slot slot = heap->objects[i];
-        if (slot.object->mark & MYL_NATIVE_OBJECT_MARKED) {
-            slot.object->mark &= ~(uintptr_t)MYL_NATIVE_OBJECT_MARKED;
-            heap->objects[live++] = slot;
-        } else {
-            heap->bytes -= slot.bytes;
-            heap->objects_live--;
-            free(slot.object);
+    /* The sweep walks segments, not a link chain: each slot's mark bit decides
+     * whether it stays or joins its class's free list, and an oversized segment
+     * whose one object died returns to the host whole. A slot already on a free
+     * list is recognized by its free tag and left alone, so no freed slot is
+     * charged twice. */
+    myl_native_segment **link = &heap->segments;
+    while (*link) {
+        myl_native_segment *segment = *link;
+        if (segment->class_index >= MYL_NATIVE_CLASS_COUNT) {
+            myl_native_object *object = (myl_native_object *)segment->data;
+            if (object->mark & MYL_NATIVE_OBJECT_MARKED) {
+                object->mark &= ~(uintptr_t)MYL_NATIVE_OBJECT_MARKED;
+                link = &segment->next;
+            } else {
+                heap->bytes -= segment->stride;
+                heap->objects_live--;
+                *link = segment->next;
+                free(segment);
+            }
+            continue;
         }
+        for (size_t i = 0; i < segment->used; ++i) {
+            myl_native_object *object = (myl_native_object *)(segment->data + i * segment->stride);
+            uintptr_t word = object->mark;
+            if (word & MYL_NATIVE_OBJECT_FREE) continue;
+            if (word & MYL_NATIVE_OBJECT_MARKED) {
+                object->mark = word & ~(uintptr_t)MYL_NATIVE_OBJECT_MARKED;
+            } else {
+                heap->bytes -= segment->stride;
+                heap->objects_live--;
+                free_list_push(heap, segment->class_index, object);
+            }
+        }
+        link = &segment->next;
     }
-    heap->objects_len = live;
     /* Marking cost is paid once per collection over the whole live set, so the
      * pause interval grows faster than the live set and keeps a fixed floor:
      * a steady workload then re-marks a few times instead of every time it
@@ -245,10 +345,13 @@ void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *ele
     if (count > (SIZE_MAX >> MYL_NATIVE_OBJECT_COUNT_SHIFT)) return NULL;
     if (element->size && count > (SIZE_MAX - sizeof(myl_native_object)) / element->size) return NULL;
     if (region) return myl_native_arena_alloc(heap, element, count, region);
-    size_t bytes = sizeof(myl_native_object) + count * element->size;
+    size_t stride = round_stride(sizeof(myl_native_object) + count * element->size);
+    if (!stride) return NULL;
+    size_t class_index = class_for(stride);
+    if (class_index < MYL_NATIVE_CLASS_COUNT) stride = class_strides[class_index];
     size_t gc_bytes = heap->bytes - heap->arena.reserved_bytes;
-    int due = heap->stress || heap->bytes > heap->limit || bytes > heap->limit - heap->bytes;
-    due = due || gc_bytes >= heap->next_collection || bytes > heap->next_collection - gc_bytes;
+    int due = heap->stress || heap->bytes > heap->limit || stride > heap->limit - heap->bytes;
+    due = due || gc_bytes >= heap->next_collection || stride > heap->next_collection - gc_bytes;
     /* An escape copy suspends collection because its clones are not yet rooted. */
     if (due && !heap->suspended) myl_native_heap_collect(heap);
     /* A collection the host could not finish (an unallocatable worklist) refuses
@@ -256,20 +359,18 @@ void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *ele
     if (heap->scratch_failed) { heap->exhausted = 1; return NULL; }
     /* Refused after a collection, so the budget really is exhausted rather than
      * merely reached; the caller's trap names the budget, not the host. */
-    if (heap->bytes > heap->limit || bytes > heap->limit - heap->bytes) {
+    if (heap->bytes > heap->limit || stride > heap->limit - heap->bytes) {
         heap->exhausted = 1;
         return NULL;
     }
-    if (!reserve_object(heap)) return NULL;
-    myl_native_object *object = calloc(1, bytes);
+    myl_native_object *object = slot_take(heap, stride, class_index);
     /* Chunks the arena retained for reuse are host bytes no live allocation
      * needs, so a refused reservation spends them before reporting failure. */
-    if (!object && heap->arena.cached) { myl_native_arena_reclaim(heap); object = calloc(1, bytes); }
+    if (!object && heap->arena.cached) { myl_native_arena_reclaim(heap); object = slot_take(heap, stride, class_index); }
     if (!object) return NULL;
     object->mark = (uintptr_t)count << MYL_NATIVE_OBJECT_COUNT_SHIFT;
     object->element = element;
-    heap->objects[heap->objects_len++] = (myl_native_object_slot){ .object = object, .bytes = bytes };
-    heap->bytes += bytes;
+    heap->bytes += stride;
     heap->objects_live++;
     heap->allocations++;
     return object + 1;
@@ -277,11 +378,11 @@ void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *ele
 void myl_native_heap_destroy(myl_native_heap *heap) {
     myl_native_arena_release(heap, 0);
     myl_native_arena_reclaim(heap);
-    for (size_t i = 0; i < heap->objects_len; ++i) {
-        myl_native_object *object = heap->objects[i].object;
-        if (!(object->mark & MYL_NATIVE_OBJECT_IMMORTAL)) free(object);
+    while (heap->segments) {
+        myl_native_segment *segment = heap->segments;
+        heap->segments = segment->next;
+        free(segment);
     }
-    free(heap->objects);
     free(heap->pending);
     memset(heap, 0, sizeof(*heap));
 }
@@ -291,15 +392,27 @@ void myl_native_heap_release(myl_native_heap *heap, void *payload) {
     if (myl_native_arena_region(heap, payload)) return;
     myl_native_object *object = (myl_native_object *)payload - 1;
     if (object->mark & MYL_NATIVE_OBJECT_IMMORTAL) return;
-    for (size_t i = 0; i < heap->objects_len; ++i) {
-        if (heap->objects[i].object != object) continue;
-        /* The sweep walks the array in order and never depends on it, so the
-         * last row fills the hole instead of shifting the tail. */
-        heap->bytes -= heap->objects[i].bytes;
-        heap->objects[i] = heap->objects[--heap->objects_len];
-        heap->objects_live--;
-        free(object);
-        return;
+    /* Release is rare (owned storage, not the tracing path), so the containing
+     * segment is found by walking the list rather than by an address map. */
+    myl_native_segment **link = &heap->segments;
+    while (*link) {
+        myl_native_segment *segment = *link;
+        uintptr_t start = (uintptr_t)segment->data, address = (uintptr_t)object;
+        if (address >= start && address - start < segment->used * segment->stride) {
+            heap->bytes -= segment->stride;
+            heap->objects_live--;
+            if (segment->class_index >= MYL_NATIVE_CLASS_COUNT) {
+                /* A one-slot segment: releasing its object returns the whole
+                 * reservation to the host. */
+                *link = segment->next;
+                free(segment);
+            } else {
+                object->element = NULL;
+                free_list_push(heap, segment->class_index, object);
+            }
+            return;
+        }
+        link = &segment->next;
     }
 }
 
