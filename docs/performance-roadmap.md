@@ -11,7 +11,7 @@ with those harnesses; do not add an item's projected gain to another's.
 
 ## Where we are (2026-09-21, `perf/lever-search` at `59bbce0a`)
 
-| workload | mylang, LLVM O3 + LTO | mylang, QBE (the default) | target |
+| workload | mylang, LLVM O3 + LTO (the ReleaseFast default since item 1) | mylang, QBE (Debug and explicit `--backend qbe`) | target |
 |---|---:|---:|---:|
 | integer loop, records, checked multiply | 0.9–1.0× Zig | 2.2–2.4× Zig | ≤ 1.2× |
 | schematic SVG render | 2.06× Zig, 1.84× Rust | not measured | ≤ 1.2× |
@@ -23,6 +23,12 @@ Done and merged: hash-indexed dictionaries (`PY-DICT-2`), in-place fixed-array
 writes (`QBE-ARRAYWRITE-1`), arena chunk reuse (`ARENA-MANAGED-10`). Nothing in
 the measured set has an asymptotic cliff any more; everything left is a
 constant factor with a known cause.
+
+Since this snapshot, **item 1 has landed** and **item 2 has landed in part**.
+Each section below now records what shipped and the measurement that came with
+it. The headline table stays as the 21 September audit measured it, so its two
+columns name the ReleaseFast default and the Debug/explicit arm rather than
+"the default".
 
 Zig ReleaseSafe, the like-for-like comparator (checks on), runs at about 1.1×
 ReleaseFast on these workloads, so "≤ 1.2× ReleaseFast" is "≈ parity with
@@ -63,6 +69,27 @@ only backend.
 `mylang build`; cold build within 2× of QBE's; incremental rebuild within
 0.2 s of QBE's; every arm of the micro suite byte-identical to QBE's output.
 
+**Landed 2026-09-21** (`BUILD-BACKEND-1` … `BUILD-BACKEND-5`). A plain
+`mylang build`/`run` now resolves to `--backend llvm --llvm-opt 3 --lto`; a
+`Debug` build or an explicit `--qbe PATH` stays on QBE and is never upgraded.
+The installed adapter, four prebuilt runtime archives keyed by backend and LTO,
+an overlapped per-unit codegen wave with a `--signatures-only` prepass, and
+link reuse for an unchanged output are in. Measured on the 101-function parser
+(independent re-run by the integrator): cold 4.33 s against QBE's 3.88 s
+(**1.12×**, was 12.7 s), unchanged rebuild 1.05 s against 1.00 s (**0.05 s**
+delta), all 11 micro kernels byte-identical between a plain build and
+`--backend qbe`, and `float_loop` recovered (`-O3` without LTO 122.7 ms →
+`-O3 --lto` 101.8 ms, QBE 101.2 ms). Two acceptance caveats, stated plainly:
+the audit's exact parser and schematic ratios were *not* reproduced because its
+inputs and Zig comparator are gitignored `.tmp` trees absent from this
+checkout; and a real one-function edit still pays the ~0.85 s LTO relink, so
+only the unchanged case meets the 0.2 s delta. Landing this also restored
+adapter behavior the integration base had reverted (LTO-object emission,
+installed-runtime source resolution, `llvm_emit` runtime and target
+attributes) and fixed three latent adapter gaps the QBE arm never hit:
+callbacks declared as globals, and the `split`/`ord`/`chr` and dir-resource
+runtime helpers absent from the signature table.
+
 ### 2. Take the frame protocol off the call path
 
 *Compiler and runtime. Size: medium to large.*
@@ -89,6 +116,30 @@ instruction already stores its position.
 **Acceptance.** `fib` ≤ 1.9× Zig ReleaseFast (≈ 1.0× ReleaseSafe); every trap
 in the trap corpus renders the same code, message and `in f at file:line`
 trace as today; `--max-frames=N` trips at the same depth.
+
+**Landed in part, 2026-09-21.** Trap delivery is now a non-local exit
+(`setjmp` in the guest-stack trampoline, `longjmp` from the first failing
+`myl_qbe_fail_*` after the trace is built), so a fast build emits no
+`loadl %trap` after a call; accounting builds and the direct C entry points
+keep the sticky path, and `requireAccounting` still refuses a runtime ceiling a
+build cannot honor. The record itself was **not** removed: the depth-indexed
+replacement this item suggested was implemented, measured, and reverted —
+`alloc8 32` is only a compile-time stack adjustment, so the record's roughly
+one load and four stores per call beat a `ctx`-relative load, `imul $16`,
+index add, store and matching return decrement, with the floor guard still
+present (built binaries 0.22–0.25 s against 0.10–0.12 s; the harness put the
+LLVM arm near 5.9×). Trap parity is intact: 504 built-binary comparisons
+across 21 fixtures and 6 accounting modes, each with and without
+`--gc-stress`, **0 mismatches**; `--max-frames` still trips at the same depth.
+The performance acceptance is **not met**: `fib` is 3.11× Zig ReleaseFast, not
+≤ 1.9×. Reaching it needs the record, the floor guard and the position store
+all gone, which needs an exact return-address→source-position map consulted
+only at trap time. QBE emits `push %rbp; movq %rsp, %rbp` for every non-leaf
+function, so a native walk can recover the return addresses; the position half
+needs interior-label addresses that QBE cannot place in a `data` section, so
+the smallest credible next step is a driver-side pass annotating each call site
+with a distinct symbol (or an IL extension giving each call site a label
+reference), after which the map is built and read only on a trap.
 
 ### 3. Shrink what an allocation touches, and replace the collector's allocator and sweep
 
@@ -227,3 +278,9 @@ program; items 4 and 6 are priced by kernel and profile share, not by a
 composed build. A production build that lands 1 through 6 should put the
 parser and the schematic inside the 1.2× target; that is a projection from
 those measurements, not a result.
+
+Item 1 is now production rather than experimental, so the composed 1.25× / 1.37×
+reference is one landed item closer; item 2's price did not fall, because the
+record replacement that would have delivered it regressed and was reverted.
+The projection is otherwise unchanged, and it still depends on items 3 through
+6.
