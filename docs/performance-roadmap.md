@@ -217,11 +217,12 @@ emitted IL — a length/capacity compare, one element store and a
 `length`/`generation` bump, with the grow helper and the frame's root protocol
 reached only when the element does not fit — and `bytes.find_any` answers one-
 and two-octet sets with libc `memchr`. Measured on the default `o3-lto` arm,
-interleaved, arm outputs byte-identical: `list_append_sum` **3.00× → 2.15×**
-(target ≤ 2×, **7% short**; the residual is the memory-resident list header's
+interleaved, arm outputs byte-identical: `list_append_sum` **3.00× → 2.2–2.5×**
+(2.15× at 15 interleaved rounds, 2.44× on the full 11-kernel harness; target
+≤ 2×, **not met**; the residual is the memory-resident list header's
 read-modify-write per append and the checked-add sum loop, neither of which is
 an item-5 lever), and `find_any` falls from **8.85% to 1.15%** of parser census
-samples (target ≤ 3%, **met**). `bytes_scan` measures 1.23–1.39× across runs and
+samples (target ≤ 3%, **met**). `bytes_scan` measures 1.23–1.49× across runs and
 is untouched by this change; its hot loop is already hoisted by LTO and Zig wins
 by unrolling the byte compare, so no item-5 lever remains there and the
 acceptance is **not claimed**. The already-landed LTO runtime archive means part
