@@ -779,6 +779,12 @@ const State = struct {
     }
     fn link(self: *State, parsed: options.Options, output: []const u8) !bool {
         const a = self.context.allocator;
+        // An unchanged build whose published executable still matches every input
+        // keeps it as it is: relinking the LTO object set costs about a second,
+        // and the per-function cache has already made codegen a hit. A provider
+        // or any explicit native link input disables reuse, because those can
+        // change without changing a guest object.
+        if (!parsed.run and parsed.provider == null and try self.reusable(parsed, output)) return false;
         const temporary = try self.context.temporary(std.fs.path.dirname(output).?);
         defer self.context.remove(temporary);
         const candidate = try std.fs.path.join(a, &.{ temporary, "program" });
@@ -794,6 +800,7 @@ const State = struct {
             .lto = self.cache.codegen.lto,
             .functions = self.records.items,
             .runtime_object = self.runtime.path,
+            .link_identity = try self.linkIdentity(parsed),
         }, .{});
         const sidecar = try std.fmt.allocPrint(a, "{s}.qbe-manifest.json", .{output});
         const staged = try std.fs.path.join(a, &.{ temporary, "manifest.json" });
@@ -802,6 +809,35 @@ const State = struct {
         // The sidecar is descriptive, not an atomic transaction with the executable.
         try self.context.rename(staged, sidecar);
         return changed;
+    }
+    /// Report whether the published executable is still exactly what this build
+    /// would produce, so unchanged work keeps it instead of relinking. It is
+    /// conservative in both directions: an explicit native link input disables
+    /// it, and the executable, every cached object and the runtime archive must
+    /// all still be on disk.
+    fn reusable(self: *State, parsed: options.Options, output: []const u8) !bool {
+        if (!self.context.runnable(output)) return false;
+        if (!self.inputsPresent()) return false;
+        if (@import("native_link.zig").hasInputs(parsed.link_arguments)) return false;
+        const sidecar = try std.fmt.allocPrint(self.context.allocator, "{s}.qbe-manifest.json", .{output});
+        const bytes = self.context.read(sidecar) catch return false;
+        const published = (try std.json.parseFromSlice(std.json.Value, self.context.allocator, bytes, .{ .allocate = .alloc_always })).value;
+        return std.mem.eql(u8, v.text(v.get(published, "link_identity")), try self.linkIdentity(parsed));
+    }
+    /// Hash everything a link's output depends on besides its link-input files:
+    /// the object set, the runtime archive, the artifact kind, the mode, the
+    /// target and the symbol policy. A build with external link inputs refuses
+    /// reuse before this is consulted.
+    fn linkIdentity(self: *State, parsed: options.Options) ![]const u8 {
+        const encoded = try std.json.Stringify.valueAlloc(self.context.allocator, .{
+            .objects = self.objects.items,
+            .runtime = self.runtime.path,
+            .library = parsed.library,
+            .mode = parsed.mode,
+            .target = parsed.target,
+            .symbols = options.keepSymbols(parsed.link_arguments),
+        }, .{});
+        return fs.hash(self.context.allocator, encoded);
     }
     fn provider(self: *State, source: []const u8) !void {
         const a = self.context.allocator;
@@ -1111,4 +1147,38 @@ test "a concurrent wave reports a tool that will not start and one that fails" {
     const failing: Unit = .{ .value = .null, .staged = .{ .miss = .{ .key = "k", .path = "p", .candidate = "c", .work = "w", .argv = &.{ "/bin/sh", "-c", "exit 3" }, .environment = null } } };
     var failing_wave = [_]Unit{failing};
     try std.testing.expectError(error.NativeToolFailed, state.spawnWave(&failing_wave, &.{0}));
+}
+// spec: BUILD-BACKEND-4
+test "an unchanged executable is reused only while its link identity holds" {
+    const native_link = @import("native_link.zig");
+    try std.testing.expect(native_link.hasInputs(&.{ "main.my", "--link", "a.c" }));
+    try std.testing.expect(native_link.hasInputs(&.{ "main.my", "--link=a.c" }));
+    try std.testing.expect(native_link.hasInputs(&.{ "main.my", "--library-path", "lib" }));
+    try std.testing.expect(native_link.hasInputs(&.{ "main.my", "--link-library", "m" }));
+    try std.testing.expect(!native_link.hasInputs(&.{ "main.my", "-o", "out", "--qbe", "/qbe" }));
+    try std.testing.expect(!native_link.hasInputs(&.{ "main.my", "--project", "--mode", "ReleaseFast" }));
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const cache: cache_api.Cache = .{
+        .context = context,
+        .directory = "objects",
+        .temporary = "work",
+        .assets = "/assets",
+        .environment = "env",
+        .zig = "/bin/true",
+        .mode = "ReleaseFast",
+        .codegen = .{ .tool = "/adapter.py", .llvm = true, .optimization = "3", .lto = true },
+    };
+    var state = State{ .context = context, .cache = cache, .manifest = .null };
+    state.runtime = .{ .key = "runtime", .path = "/installed/runtime.a", .reused = true };
+    try state.objects.append(context.allocator, "/objects/a.o");
+    const first = try state.linkIdentity(.{ .mode = "ReleaseFast" });
+    try std.testing.expectEqualStrings(first, try state.linkIdentity(.{ .mode = "ReleaseFast" }));
+    // A different mode, symbol policy or object set is a different link.
+    try std.testing.expect(!std.mem.eql(u8, first, try state.linkIdentity(.{ .mode = "Debug" })));
+    try std.testing.expect(!std.mem.eql(u8, first, try state.linkIdentity(.{ .mode = "ReleaseFast", .link_arguments = &.{"--keep-symbols"} })));
+    try state.objects.append(context.allocator, "/objects/b.o");
+    try std.testing.expect(!std.mem.eql(u8, first, try state.linkIdentity(.{ .mode = "ReleaseFast" })));
 }

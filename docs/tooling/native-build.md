@@ -168,6 +168,17 @@ and the published executable are compared by length and then by bytes, and an
 identical result keeps its inode and modification time, which `--report` shows as
 `"output_changed": false`.
 
+An unchanged build goes one step further and **skips the link itself**. The
+sidecar beside the executable records a link identity over the object set, the
+runtime archive, the artifact kind, the mode, the target and the symbol policy;
+when the executable is still present and executable, every cached object and the
+runtime archive are still on disk, and the identity matches, the build reuses
+the published file without running the linker. The check is deliberately
+conservative: a `--provider` or any explicit native link input (`--link`,
+`--link-library`, `--library-path`) disables reuse, because such an input can
+change without changing a guest object. This is what keeps an unchanged
+ReleaseFast rebuild from paying the LTO link again.
+
 A cached object or archive is accepted only when a fingerprint over its length
 and contents matches the one stored beside it in a `.digest` file. Damaged bytes
 and a damaged fingerprint are both misses, so a corrupt cache repairs the one
@@ -238,9 +249,11 @@ behind.
 Measured on the [S-expression parser](../../experiments/sexpr-port/main.my)
 (101 functions, 1 MiB input), cold wall clock before this work was 12.7 s for
 LLVM against 3.2 s for QBE; it is now about equal: roughly 4.1 s each, with
-QBE's time unchanged. An unchanged rebuild is about 1.0 s for QBE against
-1.9 s for LLVM, and the difference is the LTO link itself — the per-function
-object cache still makes the codegen phase a cache hit on both arms.
+QBE's time unchanged. An unchanged rebuild is about 1.0 s on either arm: the
+per-function object cache makes codegen a hit, and an unchanged build whose
+published executable still matches every input **reuses it without relinking**
+(see *Object cache and link*). Relinking after a one-function edit costs the
+LTO link, about a second on the LLVM arm and milliseconds on QBE.
 
 ## Runtime source tree and shared caches
 

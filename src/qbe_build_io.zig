@@ -132,7 +132,10 @@ pub const Context = struct {
         std.Io.Dir.cwd().access(self.io, path, .{}) catch return false;
         return true;
     }
-    fn runnable(self: Context, path: []const u8) bool {
+    /// Report whether `path` is an executable regular file, the publication
+    /// check that distinguishes a real output from a directory or a file whose
+    /// execute bit was stripped.
+    pub fn runnable(self: Context, path: []const u8) bool {
         const stat = std.Io.Dir.cwd().statFile(self.io, path, .{}) catch return false;
         if (stat.kind != .file) return false;
         std.Io.Dir.cwd().access(self.io, path, .{ .execute = true }) catch return false;
