@@ -58,7 +58,7 @@ pub const Options = struct {
     library: bool = false,
     provider: ?[]const u8 = null,
     zig: []const u8 = "zig",
-    codegen: Codegen = .{ .qbe = "qbe" },
+    codegen: Codegen = .auto,
     mode: []const u8 = default_mode,
     target: []const u8 = "amd64_sysv",
     cache: []const u8 = default_cache,
@@ -67,8 +67,12 @@ pub const Options = struct {
     max_memory: ?u64 = null,
     arguments: []const []const u8 = &.{},
 };
-/// Native code generator selected for this build.
+/// Native code generator selected for this build. `.auto` means the caller named
+/// none, so `qbe_build_backend.resolve` picks the release path by optimize mode:
+/// QBE for Debug, LLVM O3 with full LTO for ReleaseFast. An explicit `.qbe` or
+/// `.llvm` is never upgraded behind the caller's back.
 pub const Codegen = union(enum) {
+    auto,
     qbe: []const u8,
     llvm: Llvm,
 };
@@ -79,6 +83,8 @@ pub const usage = "usage: mylang build <file.my> (-o <output> | --run) [--projec
     "  --link FILE --link-library NAME --library-path DIR (repeatable)\n" ++
     "  --provider FILE  trusted native provider (executables only)\n" ++
     "  --backend qbe|llvm  --llvm-adapter PATH  --llvm-opt 0|1|2|3|s|z  --lto\n" ++
+    "  a ReleaseFast build defaults to --backend llvm --llvm-opt 3 --lto;\n" ++
+    "  a Debug build defaults to --backend qbe\n" ++
     "  --qbe PATH --zig PATH --mode Debug|ReleaseFast (default ReleaseFast) --target amd64_sysv\n" ++
     "  " ++ cache_dir_flag ++ "DIR  --no-cache  --report  --mutation-markers\n" ++
     "  --timings=json  phase-timings-v1 JSON Lines on stderr (frontend/codegen/link/native)\n" ++
@@ -134,7 +140,7 @@ pub fn parse(args: []const []const u8) Error!Options {
         if (std.mem.eql(u8, argument, "--lto")) {
             switch (result.codegen) {
                 .llvm => |*llvm| llvm.lto = true,
-                .qbe => return error.InvalidBuildArguments,
+                .auto, .qbe => return error.InvalidBuildArguments,
             }
             continue;
         }
@@ -168,7 +174,7 @@ fn validate(result: Options) Error!void {
     if (!std.mem.eql(u8, result.target, "amd64_sysv")) return error.InvalidBuildArguments;
     if (!std.mem.eql(u8, result.mode, "Debug") and !std.mem.eql(u8, result.mode, "ReleaseFast")) return error.InvalidBuildArguments;
     switch (result.codegen) {
-        .qbe => {},
+        .auto, .qbe => {},
         .llvm => |llvm| {
             if (llvm.optimization) |opt| if (!validLlvmOpt(opt)) return error.InvalidBuildArguments;
         },
@@ -224,11 +230,11 @@ fn assign(result: *Options, flag: Flag, value: []const u8) Error!void {
         },
         .@"--llvm-adapter" => switch (result.codegen) {
             .llvm => |*llvm| llvm.adapter = value,
-            .qbe => return error.InvalidBuildArguments,
+            .auto, .qbe => return error.InvalidBuildArguments,
         },
         .@"--llvm-opt" => switch (result.codegen) {
             .llvm => |*llvm| llvm.optimization = value,
-            .qbe => return error.InvalidBuildArguments,
+            .auto, .qbe => return error.InvalidBuildArguments,
         },
         .@"--mode" => result.mode = value,
         .@"--target" => result.target = value,
@@ -261,6 +267,21 @@ test "LLVM backend has explicit optimization and full LTO controls" {
     try std.testing.expectEqualStrings("/adapter.py", parsed.codegen.llvm.adapter);
     try std.testing.expectEqualStrings("3", parsed.codegen.llvm.optimization.?);
     try std.testing.expect(parsed.codegen.llvm.lto);
+}
+// spec: BUILD-BACKEND-1
+test "a build that names no backend defers the choice to the optimize mode" {
+    const plain = try parse(&.{ "main.my", "-o", "out" });
+    try std.testing.expectEqual(std.meta.activeTag(plain.codegen), .auto);
+    try std.testing.expectEqual(std.meta.activeTag((try parse(&.{ "main.my", "--run" })).codegen), .auto);
+    try std.testing.expectEqual(std.meta.activeTag((try parse(&.{ "main.my", "-o", "out", "--mode", "Debug" })).codegen), .auto);
+    // An explicit backend is never upgraded, whichever spelling selects it.
+    try std.testing.expectEqualStrings("qbe", (try parse(&.{ "main.my", "-o", "out", "--backend", "qbe" })).codegen.qbe);
+    try std.testing.expectEqualStrings("/opt/qbe", (try parse(&.{ "main.my", "-o", "out", "--qbe", "/opt/qbe" })).codegen.qbe);
+    try std.testing.expectEqual(std.meta.activeTag((try parse(&.{ "main.my", "-o", "out", "--backend", "llvm" })).codegen), .llvm);
+    try std.testing.expect(std.mem.indexOf(u8, usage, "defaults to --backend llvm") != null);
+    // An LLVM-only control still needs the explicit LLVM backend.
+    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--llvm-opt", "3" }));
+    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--lto" }));
 }
 // spec: BUILD-MODE-1
 test "a build that names no optimize mode uses the fast one and Debug stays explicit" {

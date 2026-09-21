@@ -16,19 +16,39 @@ pub const Resolved = struct {
 
 /// Resolve tools and effective optimization before opening an object cache.
 pub fn resolve(context: fs.Context, parsed: options.Options, zig: []const u8) fs.Error!Resolved {
-    if (parsed.codegen == .qbe) {
-        const qbe = try context.executable(parsed.codegen.qbe);
-        if (std.mem.eql(u8, std.fs.path.basename(qbe), "qbe_llvm.py")) {
-            const target = try llvmTarget(context, zig, parsed.target);
-            const legacy = context.environ.get("MYLANG_QBE_LLVM_OPT") orelse "-O2";
-            const optimization = if (std.mem.startsWith(u8, legacy, "-O")) legacy[2..] else legacy;
-            if (!validOptimization(optimization)) return error.NativeToolFailed;
-            return .{ .name = "llvm", .tool = qbe, .tool_identity = try adapterIdentity(context, qbe, zig), .optimization = optimization, .lto = false, .target_cpu = target.cpu, .target_features = target.features };
-        }
-        return .{ .name = "qbe", .tool = qbe, .tool_identity = try context.stamp(qbe), .optimization = "default", .lto = false, .target_cpu = "", .target_features = "" };
+    switch (parsed.codegen) {
+        .auto => {
+            // No backend was named, so the optimize mode decides: the release
+            // path is LLVM O3 with full LTO, while Debug keeps QBE because
+            // unoptimized LLVM buys nothing over it.
+            if (std.mem.eql(u8, parsed.mode, "Debug")) return resolveQbe(context, parsed, zig, "qbe");
+            return resolveLlvm(context, parsed, zig, .{ .optimization = defaultOpt(parsed.mode), .lto = true });
+        },
+        .qbe => |path| return resolveQbe(context, parsed, zig, path),
+        .llvm => |llvm| return resolveLlvm(context, parsed, zig, llvm),
     }
-    const adapter = if (parsed.codegen.llvm.adapter.len != 0)
-        try context.executable(parsed.codegen.llvm.adapter)
+}
+
+/// Resolve the QBE tool, honouring the legacy `--qbe qbe_llvm.py` spelling that
+/// names the Python adapter as the assembler-stage replacement.
+fn resolveQbe(context: fs.Context, parsed: options.Options, zig: []const u8, path: []const u8) fs.Error!Resolved {
+    const qbe = try context.executable(path);
+    if (std.mem.eql(u8, std.fs.path.basename(qbe), "qbe_llvm.py")) {
+        const target = try llvmTarget(context, zig, parsed.target);
+        const legacy = context.environ.get("MYLANG_QBE_LLVM_OPT") orelse "-O2";
+        const optimization = if (std.mem.startsWith(u8, legacy, "-O")) legacy[2..] else legacy;
+        if (!validOptimization(optimization)) return error.NativeToolFailed;
+        return .{ .name = "llvm", .tool = qbe, .tool_identity = try adapterIdentity(context, qbe, zig), .optimization = optimization, .lto = false, .target_cpu = target.cpu, .target_features = target.features };
+    }
+    return .{ .name = "qbe", .tool = qbe, .tool_identity = try context.stamp(qbe), .optimization = "default", .lto = false, .target_cpu = "", .target_features = "" };
+}
+
+/// Resolve the qualified LLVM adapter, defaulting to the copy installed beside
+/// this compiler. A missing adapter is a loud `ToolNotFound`, never a fallback to
+/// another backend.
+fn resolveLlvm(context: fs.Context, parsed: options.Options, zig: []const u8, llvm: options.Llvm) fs.Error!Resolved {
+    const adapter = if (llvm.adapter.len != 0)
+        try context.executable(llvm.adapter)
     else installed: {
         if (context.self_directory.len == 0) return error.ToolNotFound;
         const candidate = try std.fs.path.resolve(context.allocator, &.{ context.self_directory, "../lib/mylang-llvm/qbe_llvm.py" });
@@ -39,11 +59,22 @@ pub fn resolve(context: fs.Context, parsed: options.Options, zig: []const u8) fs
         .name = "llvm",
         .tool = adapter,
         .tool_identity = try adapterIdentity(context, adapter, zig),
-        .optimization = effectiveOpt(parsed),
-        .lto = parsed.codegen.llvm.lto,
+        .optimization = llvm.optimization orelse defaultOpt(parsed.mode),
+        .lto = llvm.lto,
         .target_cpu = target.cpu,
         .target_features = target.features,
     };
+}
+
+/// The content identity of the adapter installed beside this compiler, or null
+/// when no copy is there. It hashes the small Python package and never runs a
+/// tool, so callers that cache by identity can afford it on a warm path.
+pub fn installedAdapterIdentity(context: fs.Context, zig: []const u8) fs.Error!?[]const u8 {
+    if (context.self_directory.len == 0) return null;
+    const candidate = try std.fs.path.resolve(context.allocator, &.{ context.self_directory, "../lib/mylang-llvm/qbe_llvm.py" });
+    if (!context.exists(candidate)) return null;
+    const identity = try adapterIdentity(context, candidate, zig);
+    return identity;
 }
 
 const LlvmTarget = struct { cpu: []const u8, features: []const u8 };
@@ -147,6 +178,27 @@ test "LLVM defaults to O3 for ReleaseFast and O0 for Debug" {
     try std.testing.expectEqualStrings("2", effectiveOpt(.{ .codegen = .{ .llvm = .{ .adapter = "adapter", .optimization = "2" } } }));
 }
 
+// spec: BUILD-BACKEND-2
+test "an unnamed backend takes the release path from ReleaseFast and keeps QBE for Debug" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const directory = try temporary.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const qbe = try std.fs.path.join(context.allocator, &.{ directory, "qbe" });
+    try context.write(qbe, "#!/bin/sh\nexit 0\n");
+    try std.Io.Dir.cwd().setFilePermissions(std.testing.io, qbe, .executable_file, .{});
+    try environment.put("PATH", directory);
+    context.self_directory = "";
+    // Debug uses the QBE arm, and QBE is never upgraded.
+    try std.testing.expectEqualStrings("qbe", (try resolve(context, .{ .mode = "Debug" }, "/bin/sh")).name);
+    // ReleaseFast wants the installed LLVM adapter; with none beside the compiler
+    // the build refuses loudly rather than silently falling back to QBE.
+    try std.testing.expectError(error.ToolNotFound, resolve(context, .{ .mode = "ReleaseFast" }, "/bin/sh"));
+}
+
 test "LLVM target probe retains CPU and positive and negative features" {
     const parsed = try parseTarget(std.testing.allocator, "clang \"-triple\" \"x86_64-unknown-linux-gnu\" \"-target-cpu\" \"x86-64-v3\" \"-target-feature\" \"+avx2\" \"-target-feature\" \"-avx512f\"\n");
     defer std.testing.allocator.free(parsed.cpu);
@@ -180,5 +232,12 @@ test "LLVM adapter identity changes when an imported sibling changes" {
 }
 /// Return the explicit or mode-derived LLVM optimization level.
 pub fn effectiveOpt(parsed: options.Options) []const u8 {
-    return parsed.codegen.llvm.optimization orelse if (std.mem.eql(u8, parsed.mode, "Debug")) "0" else "3";
+    return switch (parsed.codegen) {
+        .llvm => |llvm| llvm.optimization orelse defaultOpt(parsed.mode),
+        .auto, .qbe => defaultOpt(parsed.mode),
+    };
+}
+/// The optimization level a mode implies: unoptimized Debug, otherwise O3.
+fn defaultOpt(mode: []const u8) []const u8 {
+    return if (std.mem.eql(u8, mode, "Debug")) "0" else "3";
 }

@@ -67,7 +67,10 @@ pub const Session = struct {
         var session = try initFrontend(context, opts);
         errdefer context.remove(session.temporary);
         const zig = try context.executable(opts.toolchain.zig);
-        const qbe = try context.executable(opts.toolchain.qbe);
+        // A test run that names no `--qbe` leaves the backend to the child build's
+        // mode default; it still resolves the QBE tool for identity and for the
+        // Debug arm that default selects.
+        const qbe = try context.executable(if (opts.toolchain.qbe.len != 0) opts.toolchain.qbe else "qbe");
         session.tools = .{ .zig = zig, .qbe = qbe };
         session.hashes[1] = try context.stamp(zig);
         session.hashes[2] = try context.stamp(qbe);
@@ -279,9 +282,15 @@ pub const Session = struct {
         }
         var arguments: std.ArrayList([]const u8) = .empty;
         try arguments.appendSlice(self.context.allocator, &.{
-            self.compiler, "build",        project.source, "--project",    "--library", "-o",              library,
-            "--zig",       self.tools.zig, "--qbe",        self.tools.qbe, "--mode",    self.options.mode,
+            self.compiler, "build", project.source, "--project", "--library", "-o", library, "--zig", self.tools.zig,
         });
+        // Only name a backend when it is not the mode-derived default: a
+        // ReleaseFast test selects the LLVM release path, while an explicit
+        // `--qbe` (or any Debug run, whose default is QBE) names the tool.
+        if (self.options.toolchain.qbe.len != 0 or !std.mem.eql(u8, self.options.mode, "ReleaseFast")) {
+            try arguments.appendSlice(self.context.allocator, &.{ "--qbe", self.tools.qbe });
+        }
+        try arguments.appendSlice(self.context.allocator, &.{ "--mode", self.options.mode });
         // `--no-cache` and an explicit object directory are contradictory in the
         // build frontend; the sentinel disables durable query reuse instead.
         if (!self.options.flags.no_cache) {

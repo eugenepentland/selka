@@ -128,7 +128,10 @@ fn argv(context: fs.Context, shared: Fanout, source: []const u8) Error![]const [
     var list: std.ArrayList([]const u8) = .empty;
     try list.appendSlice(a, &.{ shared.compiler, "test", source, "--json" });
     try list.appendSlice(a, &.{ "--filter", opts.filter, "--cache-dir", opts.cache });
-    try list.appendSlice(a, &.{ "--qbe", opts.toolchain.qbe, "--zig", opts.toolchain.zig, "--mode", opts.mode });
+    // A nameless backend is the child's mode-derived default, so it is forwarded
+    // only when the caller named one.
+    if (opts.toolchain.qbe.len != 0) try list.appendSlice(a, &.{ "--qbe", opts.toolchain.qbe });
+    try list.appendSlice(a, &.{ "--zig", opts.toolchain.zig, "--mode", opts.mode });
     try list.appendSlice(a, &.{ "--max-steps", try decimal(a, opts.limits.max_steps) });
     try list.appendSlice(a, &.{ "--max-frames", try decimal(a, opts.limits.max_frames) });
     try list.appendSlice(a, &.{ "--max-calls", try decimal(a, opts.limits.max_calls) });

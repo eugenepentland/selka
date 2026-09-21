@@ -9,6 +9,7 @@
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const builder = @import("qbe_build.zig");
+const backend = @import("qbe_build_backend.zig");
 const options = @import("qbe_build_options.zig");
 const bundled = @import("qbe_build_assets");
 const trap_detail = @import("native_trap_detail.zig");
@@ -186,10 +187,24 @@ fn buildEnvironment(context: fs.Context, settings: options.Options) Error![]cons
         .driver = bundled.driver_identity,
         .runtime = bundled.content_hash,
         .zig = try context.stamp(try context.executable(settings.zig)),
-        .qbe = try context.stamp(try context.executable(settings.codegen.qbe)),
+        .codegen = try codegenIdentity(context, settings),
         .mode = settings.mode,
         .target = settings.target,
     }, .{});
+}
+
+/// The run cache's view of the selected code generator. An explicit tool names
+/// its own stamp, so a rebuilt one invalidates the program; the mode-derived
+/// default hashes the installed adapter instead, which is the identity the
+/// object cache keys on and costs only a read of the small Python package.
+fn codegenIdentity(context: fs.Context, settings: options.Options) Error![]const u8 {
+    switch (settings.codegen) {
+        .qbe => |path| return context.stamp(try context.executable(path)),
+        .llvm => |llvm| if (llvm.adapter.len != 0) return context.stamp(try context.executable(llvm.adapter)),
+        .auto => if (std.mem.eql(u8, settings.mode, "Debug")) return "auto-qbe",
+    }
+    const zig = try context.executable(settings.zig);
+    return (try backend.installedAdapterIdentity(context, zig)) orelse "auto-llvm-uninstalled";
 }
 
 /// Name an executable by its build environment and the units it was made from.

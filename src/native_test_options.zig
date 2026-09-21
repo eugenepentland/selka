@@ -71,7 +71,7 @@ pub const Options = struct {
 /// The executables one native session drives, grouped so the option record
 /// stays a bag of independent choices rather than a list of tool paths.
 pub const Toolchain = struct {
-    qbe: []const u8 = "qbe",
+    qbe: []const u8 = "",
     zig: []const u8 = "zig",
     /// The mylang executable this session spawns for its compiler children.
     /// Null means this process (`/proc/self/exe`), which is what the CLI wants
@@ -87,6 +87,7 @@ pub const usage = "usage: mylang test <entry.my|directory> [--filter SUBSTRING|G
     "  --affected --against REF  run only tests reaching a declaration changed since REF\n" ++
     "  --link FILE --link-library NAME --library-path DIR (repeatable)\n" ++
     "  --cache-dir DIR --force --no-cache --report --json --pure-skip --mutation-markers --qbe PATH --zig PATH\n" ++
+    "  a ReleaseFast test build uses the LLVM release path; --qbe PATH forces QBE\n" ++
     "  --gc-stress  run every collected test under the runtime's stress collector\n" ++
     "  --mode Debug|ReleaseFast\n" ++
     "  --max-steps N --max-frames N --max-calls N --timeout-ms N\n" ++
