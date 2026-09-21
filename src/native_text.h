@@ -1,25 +1,35 @@
 #ifndef MYLANG_NATIVE_TEXT_H
 #define MYLANG_NATIVE_TEXT_H
 #include "native_collections.h"
+#include <string.h>
 /* One immutable `str` value: a four-word header followed, in the same managed
  * block, by the value's UTF-8 payload. `length` counts Unicode scalars and stays
  * at offset 0 because generated code loads that word directly as `len(text)`;
  * `bytes` counts the payload's octets, so every boundary that already holds
  * UTF-8 copies octets instead of decoding and re-encoding scalars. Bit 0 of
  * `flags` records that every scalar is below 0x80, which makes a scalar offset a
- * byte offset and every text operation a bulk byte operation. The payload holds
- * no pointer, so the collector treats a text as a leaf and never walks it. */
+ * byte offset and every text operation a bulk byte operation. `hash` caches the
+ * payload's hash once a dictionary has computed it — it is the fourth word's
+ * whole purpose, so the header stays 24 bytes and a text is never rehashed. The
+ * payload holds no pointer, so the collector treats a text as a leaf and never
+ * walks it. */
 typedef struct myl_native_text {
     size_t length;
     size_t bytes;
     uint32_t flags;
-    uint32_t reserved;
+    uint32_t hash;
 } myl_native_text;
 /* `flags` bit 0: every scalar of the payload is below 0x80. */
 #define MYL_TEXT_ASCII 1u
+/* `flags` bit 1: `hash` holds this text's payload hash. */
+#define MYL_TEXT_HASHED 2u
 /* Byte offset of `bytes` inside one text header, which the number grammar reads
  * without a second call. */
 #define MYL_TEXT_BYTES_OFFSET ((size_t)sizeof(size_t))
+/* The payload's hash, computed on first use and cached in the header. Equal
+ * texts hash equally; the value is internal to one process and never persisted,
+ * so the function it comes from may change. */
+uint32_t myl_native_text_hash(const myl_native_text *);
 /* The element descriptor a text object carries in its managed header. A text is
  * a leaf whose payload holds no traced pointer, so this descriptor only names
  * the object for the allocator and the budget. */

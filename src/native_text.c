@@ -63,12 +63,34 @@ myl_native_text *myl_native_text_build(myl_native_heap *heap, size_t bytes) {
     text->length=0;
     text->bytes=bytes;
     text->flags=0;
-    text->reserved=0;
+    text->hash=0;
     return text;
 }
 void myl_native_text_publish(myl_native_text *text, size_t scalars, int plain) {
     text->length=scalars;
-    if (plain) text->flags=MYL_TEXT_ASCII;
+    /* Publishing replaces the flag word, so a hash cached before the payload was
+     * written can never survive into the published value. */
+    text->flags=plain ? MYL_TEXT_ASCII : 0;
+}
+/* FNV-1a over the payload octets, then one avalanche so the low bits a
+ * dictionary's table mask depends on come from the whole value. Fixed
+ * constants, no seed: the runtime has no sanctioned randomness and a dictionary
+ * must behave identically on every run. The answer is cached in the header,
+ * because a dictionary hashes the same key text once per lookup and a text can
+ * never change under it. */
+uint32_t myl_native_text_hash(const myl_native_text *input) {
+    myl_native_text *text=(myl_native_text *)input;
+    if (text->flags&MYL_TEXT_HASHED) return text->hash;
+    uint64_t hash=0xcbf29ce484222325ULL;
+    const unsigned char *bytes=myl_native_text_storage(text);
+    for (size_t i=0;i<text->bytes;i++) { hash^=bytes[i]; hash*=0x100000001b3ULL; }
+    hash^=text->bytes;
+    hash^=hash>>33; hash*=0xff51afd7ed558ccdULL;
+    hash^=hash>>33; hash*=0xc4ceb9fe1a85ec53ULL;
+    hash^=hash>>32;
+    text->hash=(uint32_t)hash;
+    text->flags|=MYL_TEXT_HASHED;
+    return text->hash;
 }
 /* Scalars in `bytes` and whether all of them are below 0x80, or -1 for a
  * malformed payload. Octets of a continuation byte never begin a scalar, so the

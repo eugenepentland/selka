@@ -140,7 +140,7 @@ fn emitLiteral(w: *std.Io.Writer, literal: Literal) Error!void {
         try w.print("typedef struct {{ myl_native_object header; myl_native_text value; unsigned char storage[{d}]; }} {s}_block;\n", .{ storage, symbol });
         try w.print("static {s}_block {s}_instance = {{\n", .{ symbol, symbol });
         try w.print(" .header = {{.mark = MYL_NATIVE_OBJECT_LITERAL_MARK, .element = &{s}}},\n", .{literal.element});
-        try w.print(" .value = {{.length = {d}, .bytes = {d}, .flags = {d}, .reserved = 0}},\n", .{ literal.scalars, literal.count, @as(u32, if (literal.ascii) 1 else 0) });
+        try w.print(" .value = {{.length = {d}, .bytes = {d}, .flags = {d}, .hash = 0}},\n", .{ literal.scalars, literal.count, @as(u32, if (literal.ascii) 1 else 0) });
     } else {
         try w.print("typedef struct {{ myl_native_object header; myl_native_list value; myl_native_object storage_header; unsigned char storage[{d}]; }} {s}_block;\n", .{ storage, symbol });
         try w.print("static {s}_block {s}_instance = {{\n", .{ symbol, symbol });

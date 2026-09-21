@@ -42,25 +42,20 @@ static int same_key(const myl_native_dictionary *dict, const void *entry, const 
     return myl_native_text_equal(a,b);
 }
 /* FNV-1a over precisely the units `same_key` compares, then one avalanche so the
- * low bits the table masks depend on the whole key. A text key hashes its UTF-8
- * payload — the same octets `myl_native_text_equal` compares — so a key costs one
- * pass over its own bytes instead of one per scalar, and the octet count is mixed
- * in so that no two payloads of different lengths can alias. Fixed constants, no
- * seed: the runtime has no sanctioned randomness and a dictionary must behave
+ * low bits the table masks depend on the whole key. A text key asks the text for
+ * its own cached payload hash, so a dictionary that looks the same key text up
+ * twice — every read-modify-write does — hashes its octets once. Fixed constants,
+ * no seed: the runtime has no sanctioned randomness and a dictionary must behave
  * identically on every run. */
 static uint64_t hash_key(const myl_native_dictionary *dict, const void *key) {
-    uint64_t hash=0xcbf29ce484222325ULL;
     if (dict->string_keys) {
         myl_native_text *text;
         memcpy(&text,key,sizeof(text));
-        size_t count=text?text->bytes:0;
-        const unsigned char *bytes=text?myl_native_text_storage(text):NULL;
-        for (size_t i=0;i<count;i++) { hash^=bytes[i]; hash*=0x100000001b3ULL; }
-        hash^=count;
-    } else {
-        const unsigned char *bytes=key;
-        for (size_t i=0;i<dict->key->size;i++) { hash^=bytes[i]; hash*=0x100000001b3ULL; }
+        return text?myl_native_text_hash(text):0xcbf29ce484222325ULL;
     }
+    uint64_t hash=0xcbf29ce484222325ULL;
+    const unsigned char *bytes=key;
+    for (size_t i=0;i<dict->key->size;i++) { hash^=bytes[i]; hash*=0x100000001b3ULL; }
     hash^=hash>>33; hash*=0xff51afd7ed558ccdULL;
     hash^=hash>>33; hash*=0xc4ceb9fe1a85ec53ULL;
     return hash^(hash>>33);

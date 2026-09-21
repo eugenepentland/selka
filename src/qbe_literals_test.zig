@@ -51,6 +51,7 @@ test "repeated literal text emits exactly one immortal image object" {
     try std.testing.expect(std.mem.indexOf(u8, generated, ".mark = MYL_NATIVE_OBJECT_LITERAL_MARK") != null);
     try std.testing.expect(std.mem.indexOf(u8, generated, "#include \"native_text.h\"") != null);
     try std.testing.expect(std.mem.indexOf(u8, generated, ".length = 3, .bytes = 3, .flags = 1") != null);
+    try std.testing.expect(std.mem.indexOf(u8, generated, ".hash = 0") != null);
     try std.testing.expect(std.mem.indexOf(u8, generated, ".storage = {0x61,0x62,0x63,}") != null);
 }
 // spec-case: QBE-LITERAL-1
