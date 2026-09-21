@@ -3,6 +3,7 @@ const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
 const project_config = @import("project_config.zig");
+const project = @import("native_test_root").snapshot_project;
 /// Source races and invalid provider contracts discard test results.
 pub const Error = fs.Error || std.Io.Dir.OpenError || std.Io.Dir.SelectiveWalker.Error ||
     std.Io.File.StatError || std.Io.File.ReadPositionalError ||
@@ -154,17 +155,77 @@ fn read(context: fs.Context, directory: std.Io.Dir, path: []const u8, limit: usi
     if (count != stat.size) return error.SourceChanged;
     return buffer[0..count];
 }
+/// Hash the compiler-resolved import closure while retaining the broad source
+/// inventory separately for immutable materialization and provider fixtures.
 fn identity(allocator: std.mem.Allocator, entry: []const u8, files: []const File, support: []const File) Error![]const u8 {
+    var loaded = project.Project.init(allocator);
+    defer loaded.deinit();
+    var provider: MemoryProvider = .{ .files = files };
+    const module_name = try entryModule(allocator, entry);
+    loaded.load(.{ .context = &provider, .read = MemoryProvider.read }, module_name, .{}) catch return broadIdentity(allocator, entry, files, support);
+    const pairs = try allocator.alloc([2][]const u8, loaded.modules.items.len + support.len);
+    var count: usize = 0;
+    for (loaded.modules.items) |module| {
+        const path = project.modulePath(allocator, module.name) catch |err| switch (err) {
+            error.InvalidModuleName => return error.InvalidTestSnapshot,
+            error.OutOfMemory => return error.OutOfMemory,
+        };
+        const index = find(files, path) orelse continue;
+        pairs[count] = .{ files[index].path, files[index].hash };
+        count += 1;
+    }
+    for (support) |file| {
+        pairs[count] = .{ file.path, file.hash };
+        count += 1;
+    }
+    std.mem.sort([2][]const u8, pairs[0..count], {}, pairLess);
+    const encoded = try std.json.Stringify.valueAlloc(allocator, .{ .version = "resolved-source-v2", .entry = entry, .files = pairs[0..count] }, .{});
+    return fs.hash(allocator, encoded);
+}
+
+const MemoryProvider = struct {
+    files: []const File,
+    fn read(raw: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) project.ReadError![]u8 {
+        const self: *MemoryProvider = @ptrCast(@alignCast(raw.?));
+        const index = find(self.files, path) orelse return error.NotFound;
+        if (self.files[index].data.len > limit) return error.TooLarge;
+        return allocator.dupe(u8, self.files[index].data);
+    }
+};
+
+fn entryModule(allocator: std.mem.Allocator, entry: []const u8) Error![]const u8 {
+    if (!std.mem.endsWith(u8, entry, ".my")) return error.InvalidTestSnapshot;
+    const name = try allocator.dupe(u8, entry[0 .. entry.len - 3]);
+    for (name) |*byte| {
+        if (byte.* == std.fs.path.sep) byte.* = '.';
+    }
+    return name;
+}
+
+fn broadIdentity(allocator: std.mem.Allocator, entry: []const u8, files: []const File, support: []const File) Error![]const u8 {
     const pairs = try allocator.alloc([2][]const u8, files.len + support.len);
     for (files, pairs[0..files.len]) |file, *pair| pair.* = .{ file.path, file.hash };
     for (support, pairs[files.len..]) |file, *pair| pair.* = .{ file.path, file.hash };
-    const encoded = try std.json.Stringify.valueAlloc(allocator, .{ .version = "worker-source-v1", .entry = entry, .files = pairs }, .{});
+    const encoded = try std.json.Stringify.valueAlloc(allocator, .{ .version = "broad-source-v1", .entry = entry, .files = pairs }, .{});
     return fs.hash(allocator, encoded);
+}
+
+fn pairLess(_: void, left: [2][]const u8, right: [2][]const u8) bool {
+    return std.mem.lessThan(u8, left[0], right[0]);
 }
 /// Reject edits, additions, deletions, or dependency changes since initial capture.
 pub fn verify(context: fs.Context, snapshot: Snapshot) Error!void {
     const current = try captureExcluding(context, snapshot.entry_path, snapshot.excluded);
     if (!std.mem.eql(u8, current.identity, snapshot.identity)) return error.SourceChanged;
+}
+
+/// Provider substitutions may introduce imports to any captured neighbor, so
+/// require their broad fixture inventory to remain byte-for-byte current.
+fn verifyProviderInventory(context: fs.Context, snapshot: Snapshot) Error!void {
+    const current = try captureExcluding(context, snapshot.entry_path, snapshot.excluded);
+    const before = try broadIdentity(context.allocator, snapshot.entry, snapshot.files, snapshot.support.files);
+    const after = try broadIdentity(context.allocator, current.entry, current.files, current.support.files);
+    if (!std.mem.eql(u8, before, after)) return error.SourceChanged;
 }
 /// Materialize captured bytes for checking and code generation without rereading
 /// live sources. Absolute paths are mirrored beneath the temp root so a
@@ -260,7 +321,7 @@ pub fn replace(context: fs.Context, snapshot: Snapshot, replacements: std.json.V
         if (std.mem.eql(u8, entry.key_ptr.*, snapshot.entry) or find(snapshot.files, entry.key_ptr.*) == null) return error.InvalidTestProviders;
         if (entry.value_ptr.* != .string) return error.InvalidTestProviders;
     }
-    try verify(context, snapshot);
+    try verifyProviderInventory(context, snapshot);
     var total: usize = 0;
     const temp_root = try context.absolute(directory);
     const root = try mirrorPath(context.allocator, temp_root, snapshot.root);
@@ -333,8 +394,8 @@ test "provider snapshots preserve originals and detect changed dependencies" {
     const dependency = try std.fs.path.join(context.allocator, &.{ root, "project/dependency.my" });
     try context.mkdir(std.fs.path.dirname(entry).?);
     try std.testing.expectError(error.InvalidTestSnapshot, capture(context, entry));
-    try context.write(entry, "module main;");
-    try context.write(dependency, "module dependency;");
+    try context.write(entry, "module main\nimport dependency\n");
+    try context.write(dependency, "module dependency\n");
     const snapshot = try capture(context, entry);
     const invalid = try std.json.parseFromSlice(std.json.Value, context.allocator, "{\"main.my\":\"replacement\"}", .{});
     const injected = try std.json.parseFromSlice(std.json.Value, context.allocator, "{\"dependency.my\":\"module dependency; // fixture\"}", .{});
@@ -342,14 +403,52 @@ test "provider snapshots preserve originals and detect changed dependencies" {
     try std.testing.expectError(error.InvalidTestProviders, replace(context, snapshot, invalid.value, destination));
     const replaced = try replace(context, snapshot, injected.value, destination);
     try std.testing.expect(!std.mem.eql(u8, snapshot.identity, replaced.identity));
-    try std.testing.expectEqualStrings("module dependency;", try context.read(dependency));
+    try std.testing.expectEqualStrings("module dependency\n", try context.read(dependency));
     try verify(context, snapshot);
     try context.write(dependency, "changed");
     const immutable = try materialize(context, snapshot, try std.fs.path.join(context.allocator, &.{ root, "immutable" }));
     const copied_dependency = try std.fs.path.join(context.allocator, &.{ immutable.root, "dependency.my" });
-    try std.testing.expectEqualStrings("module dependency;", try context.read(copied_dependency));
+    try std.testing.expectEqualStrings("module dependency\n", try context.read(copied_dependency));
     try verify(context, immutable);
     try std.testing.expectError(error.SourceChanged, verify(context, snapshot));
+}
+
+// spec-case: NATIVE-TEST-12
+test "resolved snapshot identity ignores unreachable edits and retains transitive configuration and resolution inputs" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary_dir = std.testing.tmpDir(.{});
+    defer temporary_dir.cleanup();
+    const root = try temporary_dir.dir.realPathFileAlloc(context.io, ".", context.allocator);
+    const entry = try std.fs.path.join(context.allocator, &.{ root, "main.my" });
+    const middle = try std.fs.path.join(context.allocator, &.{ root, "middle.my" });
+    const leaf = try std.fs.path.join(context.allocator, &.{ root, "leaf.my" });
+    const unrelated = try std.fs.path.join(context.allocator, &.{ root, "unrelated.my" });
+    const config = try std.fs.path.join(context.allocator, &.{ root, "mylang.json" });
+    try context.write(entry, "module main\nimport middle\nimport math\n");
+    try context.write(middle, "module middle\nimport leaf\n");
+    try context.write(leaf, "module leaf\n");
+    try context.write(unrelated, "module unrelated\n");
+    try context.write(config, "{\"version\":1,\"budgets\":{\"max_modules\":20}}");
+    const initial = try capture(context, entry);
+    try context.write(unrelated, "module unrelated\n# harmless edit\n");
+    try verify(context, initial);
+    try std.testing.expectEqualStrings(initial.identity, (try capture(context, entry)).identity);
+    const providers = try std.json.parseFromSlice(std.json.Value, context.allocator, "{\"middle.my\":\"module middle\\nimport unrelated\\n\"}", .{});
+    const provider_root = try std.fs.path.join(context.allocator, &.{ root, "provider" });
+    try std.testing.expectError(error.SourceChanged, replace(context, initial, providers.value, provider_root));
+    try context.write(leaf, "module leaf\n# transitive edit\n");
+    try std.testing.expectError(error.SourceChanged, verify(context, initial));
+    try context.write(leaf, "module leaf\n");
+    const shadow = try std.fs.path.join(context.allocator, &.{ root, "math.my" });
+    try context.write(shadow, "module math\n");
+    try std.testing.expectError(error.SourceChanged, verify(context, initial));
+    try std.Io.Dir.cwd().deleteFile(context.io, shadow);
+    try verify(context, initial);
+    try context.write(config, "{\"version\":1,\"budgets\":{\"max_modules\":21}}");
+    try std.testing.expectError(error.SourceChanged, verify(context, initial));
 }
 test "provider signatures and typed values compare structurally" {
     const parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,

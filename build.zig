@@ -232,6 +232,9 @@ pub fn build(b: *std.Build) void {
             .imports = &.{ .{ .name = "mylang", .module = core }, .{ .name = "memory_budget", .module = budget } },
         }),
     });
+    // Snapshot identity needs the actual application/test root rather than the
+    // generated Zig or Guardian test-runner root exposed by `@import("root")`.
+    exe.root_module.addImport("native_test_root", exe.root_module);
     const build_assets = @import("build_qbe_assets.zig").module(b, target, optimize);
     exe.root_module.addImport("qbe_build_assets", build_assets);
     const install_exe = b.addInstallArtifact(exe, .{});
@@ -330,6 +333,7 @@ pub fn build(b: *std.Build) void {
             .link_libc = true,
         }),
     });
+    unit.root_module.addImport("native_test_root", unit.root_module);
     unit.root_module.addImport("qbe_build_assets", build_assets);
     unit.root_module.addImport("memory_budget", budget);
     // Unit tests execute guest programs natively, so they need the same tools and
@@ -546,6 +550,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     }) });
+    native_test_unit.root_module.addImport("native_test_root", native_test_unit.root_module);
     native_test_unit.root_module.addImport("qbe_build_assets", build_assets);
     native_test_unit.root_module.addImport("memory_budget", budget);
     guardian.enableTestDiagnostics(native_test_unit.root_module);

@@ -6,12 +6,12 @@ const same = @import("native_test_snapshot.zig").equivalent;
 /// Filesystem and serialization failures while recording a successful result.
 pub const Error = fs.Error || std.Io.Writer.Error || std.Io.Dir.DeleteFileError;
 /// The contract and selected-provider identities a receipt now uses, plus the
-/// whole-snapshot source identity retained for diagnostics. Reuse is decided by
+/// resolved-source identity retained for diagnostics. Reuse is decided by
 /// the semantic dependency-closure key in `hit`, not by `source`.
 pub const Identity = struct {
     contract: []const u8 = "",
     provider: []const u8 = "",
-    /// Diagnostic whole-snapshot identity; intentionally not an acceptance term.
+    /// Diagnostic resolved-source identity; intentionally not an acceptance term.
     source: []const u8 = "",
 };
 /// Planner reasons and the replacement's identity evidence, grouped so the
@@ -51,7 +51,7 @@ pub const Result = struct {
     }
 };
 /// A receipt is valid when its semantic dependency-closure key, selected
-/// contract and selected-provider identities still match. The whole-snapshot
+/// contract and selected-provider identities still match. The resolved-source
 /// `source` identity is diagnostic only: unrelated edits intentionally keep a
 /// valid closure's result reusable.
 pub fn hit(context: fs.Context, filename: []const u8, key: []const u8, name: []const u8, expected: std.json.Value, identity: Identity) bool {

@@ -35,6 +35,8 @@ const frontend_label = "frontend";
 const config_error_format = "{s}:{d}:{d}: error[E_PROJECT_CONFIG]: {s}\n";
 const std = @import("std");
 const language = @import("mylang");
+/// Canonical project loader exposed to native-test snapshot identity.
+pub const snapshot_project = language.project;
 const invalidation = @import("invalidation.zig");
 const diagnostic_output = language.diagnostic_output;
 const Reporting = struct {

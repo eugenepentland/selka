@@ -212,3 +212,23 @@ test "a stored reduced graph is bound to its requested input key" {
     try context.write(try pathFor(context, root, "key-b"), copied);
     try std.testing.expect(load(context, root, "key-b") == null);
 }
+
+// spec-case: NATIVE-TEST-6
+test "resolved tool content stamps remain graph identity inputs" {
+    const base: KeyInputs = .{
+        .compiler_identity = "compiler",
+        .zig_stamp = "zig-a",
+        .qbe_stamp = "qbe-a",
+        .mode = "Debug",
+        .environment_hash = "compiler-env",
+        .source_identity = "source",
+        .provider_identity = "provider",
+    };
+    const first = try key(std.testing.allocator, base);
+    defer std.testing.allocator.free(first);
+    var changed = base;
+    changed.qbe_stamp = "qbe-b";
+    const second = try key(std.testing.allocator, changed);
+    defer std.testing.allocator.free(second);
+    try std.testing.expect(!std.mem.eql(u8, first, second));
+}

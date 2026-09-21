@@ -554,9 +554,8 @@ fn decideSelfCompiler(self_exe: []const u8, ancestry: usize) Error![]const u8 {
 }
 
 /// How many ancestors of this process run the same executable. The parent chain
-/// is read from `/proc` rather than from an inherited variable, because the
-/// session fingerprints its whole environment to key cached results and a
-/// counter threaded through it would invalidate every warm pass. A `/proc`
+/// is read from `/proc` rather than from an inherited variable, so ancestry
+/// state is not exposed to child processes or their diagnostic hooks. A `/proc`
 /// entry that cannot be read ends the walk, which can only undercount and so
 /// never refuses a legitimate session.
 fn selfAncestry(context: fs.Context, self_exe: []const u8) usize {

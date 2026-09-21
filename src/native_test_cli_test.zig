@@ -1,4 +1,6 @@
 //! Focused native guest test driver acceptance without the interpreter corpus.
+/// Canonical project loader exposed to native-test snapshot identity.
+pub const snapshot_project = @import("project.zig");
 test {
     _ = @import("native_test_environment.zig");
     _ = @import("native_test_cases.zig");
