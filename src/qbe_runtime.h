@@ -33,12 +33,6 @@ typedef struct MylQbeActiveFrame {
     uint64_t position;
     uint64_t native_bytes;
 } MylQbeActiveFrame;
-/* One fast-protocol activation, stored at its own logical depth rather than
- * linked through the native stack. Generated code writes `function` once per
- * call and `position` before each observable instruction; a trap walks the used
- * prefix innermost first, which renders exactly the chain the linked record
- * rendered. */
-typedef struct { const MylQbeFunction *function; uint64_t position; } MylQbeFrameSlot;
 typedef struct { const char *function, *path; uint64_t line, column; } MylQbeTrace;
 /* Bounded typed values captured at the first failing operation. `present` is a
  * bitmask over the MYL_QBE_TRAP_PRESENT_* bits; an absent field is zero and is
@@ -71,10 +65,6 @@ typedef struct {
 #define MYL_QBE_UNBOUNDED UINT64_MAX
 /* Frame slots and trace storage the runtime reserves when frames are unbounded. */
 #define MYL_QBE_FRAME_CAPACITY 1024
-/* Guest-stack headroom the trampoline adds beyond the per-frame budget. The
- * fast-protocol slot array sizes itself from the same total, so the floor guard
- * trips before any depth can outgrow it. */
-#define MYL_QBE_STACK_SLACK (UINT64_C(8) * 1024 * 1024)
 /* Environment authority. The root grant is `UINT64_MAX - 2`; `env.only(...)`
  * narrows it to a scope whose index is encoded as `UINT64_MAX - 3 - index`.
  * Each scope borrows a NUL-separated name blob emitted by the backend. */
@@ -94,11 +84,6 @@ typedef struct {
        test them without a runtime call. */
     uint64_t frame_limit;
     uintptr_t frame_floor;
-    /* Fast-protocol activation at the current logical depth; generated code
-       reads it at frozen offset 72 and indexes `frame_slots[ctx->frames]`.
-       Allocated lazily by the entry point when both accounting modes are off,
-       and NULL for the record-based builds and the direct C entry points. */
-    MylQbeFrameSlot *frame_slots;
     MylQbeTrace trace[16];
     uint64_t trace_count, omitted_frames;
     myl_native_heap heap;
@@ -156,11 +141,6 @@ void myl_qbe_step_at(void *context, uint64_t position);
 void myl_qbe_require_step_accounting(void *context);
 /// Refuse a runtime frame ceiling this build omitted accounting for.
 void myl_qbe_require_frame_accounting(void *context);
-/* Allocate the fast-protocol depth-indexed activation array if it is not
- * allocated yet. The generated entry point calls this once before its first
- * activation, so the array is sized from the same guest-stack total the floor
- * guard reads and can never be outgrown before the guard trips. */
-void myl_qbe_frame_slots(void *context);
 void *myl_qbe_root_mark(void *context);
 void myl_qbe_root_restore(void *context, void *mark);
 /* Build a managed list[str] from the guest arguments the runtime filtered.

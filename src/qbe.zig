@@ -1585,10 +1585,8 @@ const Emitter = struct {
     /// depth ceiling and the execution-stack floor without a runtime call. The
     /// record is `{prev, function, position, native_bytes}`; generated code owns
     /// the first three words and reads `ctx->frames`/`ctx->frame_limit`/
-    /// `ctx->frame_floor` at their frozen offsets. A build with neither
-    /// accounting mode takes the depth-indexed slot path instead.
+    /// `ctx->frame_floor` at their frozen offsets.
     fn enterFrame(self: *Emitter, name: []const u8) GenerateError!void {
-        if (self.fastProtocol()) return self.enterFastFrame(name);
         const admit = self.temp();
         const stack = self.temp();
         const limit_fail = self.temp();
@@ -1643,58 +1641,6 @@ const Emitter = struct {
         try self.print(" %position =l add %v{d}, 16\n", .{self.record});
         self.linked = true;
     }
-    /// Whether this build dropped both accounting modes, so the fast frame
-    /// protocol replaces the linked record.
-    fn fastProtocol(self: *Emitter) bool {
-        return !self.frame_checks and !self.step_checks;
-    }
-    /// Register this function's activation in the depth-indexed slot array
-    /// instead of linking a record through `ctx->active_frame`: one store for
-    /// the metadata, one for the depth and one for the initial position, with
-    /// nothing escaping through the context. The execution-stack floor guard is
-    /// unchanged, so a runaway recursion still raises `R_FRAME_LIMIT` before the
-    /// array, sized from the same guest-stack total, can be outgrown.
-    fn enterFastFrame(self: *Emitter, name: []const u8) GenerateError!void {
-        if (self.entry) try self.print(" call $myl_qbe_frame_slots(l %ctx)\n", .{});
-        const admit = self.temp();
-        const stack = self.temp();
-        const floor_fail = self.temp();
-        const probe = self.temp();
-        const floor_slot = self.temp();
-        const floor = self.temp();
-        const below = self.temp();
-        const frames_slot = self.temp();
-        const depth = self.temp();
-        const slots_slot = self.temp();
-        const slots = self.temp();
-        const index = self.temp();
-        const slot = self.temp();
-        const zero = self.temp();
-        const next = self.temp();
-        if (!self.small_leaf) {
-            // End the entry block before the probe, so QBE lowers the probe to a
-            // stack adjustment after the static frame and its register saves: the
-            // later address is the conservative physical position the floor guard
-            // reads, exactly as the linked record's address was.
-            try self.print(" jmp @frameadmit{d}\n@frameadmit{d}\n", .{ admit, admit });
-            try self.print(
-                " %v{d} =l alloc8 8\n %v{d} =l add %ctx, 64\n %v{d} =l loadl %v{d}\n %v{d} =l cultl %v{d}, %v{d}\n" ++
-                    " jnz %v{d}, @floorfail{d}, @stackadmit{d}\n@floorfail{d}\n call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@stackadmit{d}\n",
-                .{ probe, floor_slot, floor, floor_slot, below, probe, floor, below, floor_fail, stack, floor_fail, stack },
-            );
-        }
-        try self.print(" %v{d} =l add %ctx, 8\n %v{d} =l loadl %v{d}\n", .{ frames_slot, depth, frames_slot });
-        try self.print(" %v{d} =l add %ctx, 72\n %v{d} =l loadl %v{d}\n", .{ slots_slot, slots, slots_slot });
-        try self.print(" %v{d} =l mul %v{d}, 16\n %v{d} =l add %v{d}, %v{d}\n", .{ index, depth, slot, slots, index });
-        try self.print(" storel extern ${s}_meta, %v{d}\n", .{ name, slot });
-        // The initial position must not look like a `%position` store, or the
-        // observability pass would treat it as one instruction's marker and drop
-        // it, leaving a stale slot visible to a trap in the prologue.
-        try self.print(" %v{d} =l add %v{d}, 8\n storel 0, %v{d}\n", .{ zero, slot, zero });
-        try self.print(" %position =l add %v{d}, 8\n", .{slot});
-        try self.print(" %v{d} =l add %v{d}, 1\n storel %v{d}, %v{d}\n", .{ next, depth, next, frames_slot });
-        self.linked = true;
-    }
     /// Unlink this function's frame record and drop the frame count.
     /// Refuse, once at the entry point, any runtime ceiling this build omitted
     /// accounting for, so a mismatch is reported instead of silently ignored.
@@ -1714,18 +1660,6 @@ const Emitter = struct {
     }
     fn leaveFrame(self: *Emitter) GenerateError!void {
         if (!self.linked) return;
-        if (self.fastProtocol()) {
-            // The slot stays where it is: a return only drops the depth, and the
-            // next activation at this depth overwrites both of its words.
-            const frames_slot = self.temp();
-            const depth = self.temp();
-            const next = self.temp();
-            try self.print(
-                " %v{d} =l add %ctx, 8\n %v{d} =l loadl %v{d}\n %v{d} =l sub %v{d}, 1\n storel %v{d}, %v{d}\n",
-                .{ frames_slot, depth, frames_slot, next, depth, next, frames_slot },
-            );
-            return;
-        }
         const previous = self.temp();
         const frames = self.temp();
         const next = self.temp();
