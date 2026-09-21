@@ -6622,7 +6622,8 @@ test "C4 invalid selected project fails before any green result" {
 }
 
 // spec-case: NATIVE-TEST-5
-test "C4 expectation argument budget environment and force invalidate the right receipts" {
+// spec-case: NATIVE-TEST-12
+test "C4 expectation argument budget and force invalidate while irrelevant environment preserves receipts" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     const project = try c4Project(&temp);
@@ -6665,7 +6666,8 @@ test "C4 expectation argument budget environment and force invalidate the right 
     defer testing.allocator.free(budget.stderr);
     try testing.expectEqual(@as(usize, 2), (try c4Counts(budget.stdout)).executed);
 
-    // A changed environment fingerprint invalidates every receipt.
+    // An unrelated inherited variable preserves valid receipts. `test_b` still
+    // executes because its changed expectation failed and published no pass.
     var environment: std.process.Environ.Map = .init(testing.allocator);
     defer environment.deinit();
     try environment.put("MYLANG_TEST_TRACE", project.trace);
@@ -6681,7 +6683,9 @@ test "C4 expectation argument budget environment and force invalidate the right 
     const changed_env = try spawnWithEnv(env_args.items, &environment);
     defer testing.allocator.free(changed_env.stdout);
     defer testing.allocator.free(changed_env.stderr);
-    try testing.expectEqual(@as(usize, 2), (try c4Counts(changed_env.stdout)).executed);
+    const environment_counts = try c4Counts(changed_env.stdout);
+    try testing.expectEqual(@as(usize, 1), environment_counts.executed);
+    try testing.expectEqual(@as(usize, 1), environment_counts.cached);
 
     // Force re-executes every selected test even with a valid warm receipt.
     const forced = try c4Invoke(project.entry, project.cases_path, project.cache, project.trace, &.{"--force"});
