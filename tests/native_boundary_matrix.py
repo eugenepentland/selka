@@ -52,6 +52,14 @@ INVOKE_CASES = (
     ("tests/invoke/tool.my", "tool::grow", "tests/invoke/requests/grow.json", None),
     ("tests/invoke/tool.my", "tool::ratio", "tests/invoke/requests/ratio.json", None),
     ("tests/invoke/tool.my", "tool::ratio", "tests/invoke/requests/ratio-error.json", None),
+    # An export whose body calls another function: the build lowers the target's
+    # transitive call closure, so a tool composed of helpers builds like any
+    # other. `shifted` reaches `twice` only through `quad`.
+    ("tests/invoke/calls.my", "calls::twice", "tests/invoke/requests/call-value.json", "6"),
+    ("tests/invoke/calls.my", "calls::quad", "tests/invoke/requests/call-value.json", "12"),
+    ("tests/invoke/calls.my", "calls::shifted", "tests/invoke/requests/call-value.json", "13"),
+    ("tests/invoke/composed.my", "composed::labels_of", "tests/invoke/requests/buckets-two.json", ["x", "y"]),
+    ("tests/invoke/composed.my", "composed::grand_total", "tests/invoke/requests/buckets-two.json", "6"),
     # Lists composed with records, `Option` and `Result`: the shapes a tool
     # actually returns once text and lists cross.
     ("tests/invoke/composed.my", "composed::bucket_total", "tests/invoke/requests/bucket-one.json", "3"),

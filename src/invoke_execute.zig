@@ -137,8 +137,45 @@ pub fn declaration(prepared: *Prepared, qualified: []const u8) Declaration {
 pub fn build(prepared: *Prepared, qualified: []const u8) Error!void {
     const a = prepared.session.context.allocator;
     const path = try std.fs.path.join(a, &.{ prepared.project.directory, "native-invocation-select.txt" });
-    try prepared.session.context.write(path, try std.fmt.allocPrint(a, "{s}\n", .{qualified}));
+    try prepared.session.context.write(path, try selection(a, prepared.project.manifest, qualified));
     _ = try prepared.session.executor(&prepared.project, path);
+}
+
+/// The names one selective build must lower for `qualified`: the target and every
+/// function it transitively reaches, resolved through the same dependency
+/// closure the native-test planner uses for a test. Writing only the target left
+/// its callees unlowered, so an export whose body called another function could
+/// not be built at all — the emitter referenced a function that was never
+/// emitted, and the failure surfaced as a bare `InternalError`. A name that the
+/// manifest does not carry is refused rather than written, because the selection
+/// is what the emitter trusts.
+fn selection(a: std.mem.Allocator, manifest: Value, qualified: []const u8) Error![]const u8 {
+    const functions = v.array(v.get(manifest, "functions"));
+    var symbol: ?[]const u8 = null;
+    for (functions) |function| {
+        if (!std.mem.eql(u8, v.text(v.get(function, "name")), qualified)) continue;
+        symbol = v.text(v.get(function, "symbol"));
+    }
+    const target = symbol orelse return error.ProjectConfigurationFailed;
+    if (target.len == 0) return error.ProjectConfigurationFailed;
+    // The context key only feeds the planner's result-cache digest, which this
+    // caller never reads: it wants the closure, and a closure does not depend on
+    // the key.
+    const planned = @import("native_test_plan.zig").plan(a, manifest, target, qualified) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return error.ProjectConfigurationFailed,
+    };
+    defer planned.deinit(a);
+    var text: std.ArrayList(u8) = .empty;
+    errdefer text.deinit(a);
+    for (planned.dependencies) |wanted| {
+        for (functions) |function| {
+            if (!std.mem.eql(u8, v.text(v.get(function, "symbol")), wanted)) continue;
+            try text.appendSlice(a, v.text(v.get(function, "name")));
+            try text.append(a, '\n');
+        }
+    }
+    return text.toOwnedSlice(a);
 }
 
 /// Execute exactly one requested call in a fresh bounded child process. Every

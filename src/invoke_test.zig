@@ -628,6 +628,41 @@ test "a type that names itself through a list is refused rather than walked fore
     try testing.expect(std.mem.startsWith(u8, verdict.refusal.?.path, "result"));
 }
 
+// spec: INVOKE-11
+test "an export that calls another function is lowered with its call closure" {
+    const a = testing.allocator;
+    const resolved = try tools(a);
+    defer a.free(resolved.compiler);
+    defer a.free(resolved.root);
+    defer a.free(resolved.zig);
+    defer a.free(resolved.qbe);
+    const entry = "calls.my";
+    // `twice` needs no closure and is the control: if it ever fails the fixture
+    // itself is broken rather than the selection.
+    const once = try invocation(a, resolved, entry, "calls::twice", "call-value");
+    defer a.free(once);
+    try testing.expect(std.mem.indexOf(u8, once, "\"status\":\"completed\"") != null);
+    try testing.expect(std.mem.indexOf(u8, once, "\"value\":\"6\"") != null);
+    // `quad` calls it twice from one expression, so a one-level closure that
+    // happened to include the callee would still not be enough.
+    const twice = try invocation(a, resolved, entry, "calls::quad", "call-value");
+    defer a.free(twice);
+    try testing.expect(std.mem.indexOf(u8, twice, "\"value\":\"12\"") != null);
+    // `shifted` reaches `twice` only through `quad`, which is what makes the
+    // closure transitive rather than a single step.
+    const chained = try invocation(a, resolved, entry, "calls::shifted", "call-value");
+    defer a.free(chained);
+    try testing.expect(std.mem.indexOf(u8, chained, "\"value\":\"13\"") != null);
+    // A helper reached from a comprehension, and one whose result feeds a
+    // builtin, are the same rule on a tool-shaped body.
+    const labels = try invocation(a, resolved, "composed.my", "composed::labels_of", "buckets-two");
+    defer a.free(labels);
+    try testing.expect(std.mem.indexOf(u8, labels, "\"value\":[\"x\",\"y\"]") != null);
+    const grand = try invocation(a, resolved, "composed.my", "composed::grand_total", "buckets-two");
+    defer a.free(grand);
+    try testing.expect(std.mem.indexOf(u8, grand, "\"value\":\"6\"") != null);
+}
+
 // Drives the composed boundary tagged QBE-LIST-2 end to end through the CLI.
 test "a record holding a text or a list composes with Option and Result" {
     const a = testing.allocator;

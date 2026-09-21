@@ -1,9 +1,10 @@
-# `mylang invoke` cannot execute an export that calls another function
+# `mylang invoke` skipped the target's call closure
 
-Found while building the I2 composition fixture. Reproduced at `a29e52e8`, before
-any of this round's changes, and independent of lists, text or the codec.
+Found while building the I2 composition fixture and fixed in the round that added
+`INVOKE-11`. Kept as a record of the mechanism, because the failure was reported
+as a bare `InternalError` and gave no hint of where to look.
 
-## Reproduction
+## Symptom
 
 ```python
 module call
@@ -31,55 +32,52 @@ mylang: host failure: InternalError
  "reason":"the selected export could not be built into a native library",
  "diagnostics":"ProjectConfigurationFailed"}}
 
-$ mylang run --print-result call.my    # the program itself is fine
+$ mylang run --print-result call.my
 0
 ```
 
-`--describe` reports `quad` as `eligible: true, wire_supported: true` with an
-`i64 -> i64` contract, because the checked schema is correct. The failure is
-entirely in the native build.
+`--describe` reported `quad` as `eligible: true, wire_supported: true` with an
+`i64 -> i64` contract, because the checked schema was correct all along.
 
-## Where it fails
+## Mechanism
 
-The build lowers only the selected functions. `expandSelection`
-(`src/native_test_facts.zig:88`) widens the selection for exactly two reasons:
+`invoke_execute.build` wrote a selection file naming **only the target**, then ran
+the selective emitter. A selective build lowers exactly the functions the file
+names, so `twice` was never lowered and the emission of `quad` referenced a
+function that did not exist.
 
-- an `invoke` expression appears anywhere in a selected body, in which case
-  every address-taken function is added; and
-- the program declares domain codecs, in which case their methods are added.
+The native-test path never had this problem: its planner computes a transitive
+closure over the manifest's `test_dependencies` edges and writes every symbol in
+it. `mylang invoke` reused the same executor but not the closure, so only the
+invoke route was affected — which is why guest tests calling helpers passed
+throughout while `invoke` could not build one.
 
-It never follows a **direct call**. So for the program above the selection holds
-`quad` alone, `twice` is never lowered or emitted, and the emission of `quad`
-references a function that is not there.
+Diagnosis took four probes because the failure is reported twice-removed:
 
-Traced by instrumenting `lower.zig`'s caller (`validateSelected` at
-`src/bytecode.zig:44`) and the four `else => return error.InternalError` sites in
-`ProjectCompilation.emitQbeSelected` (`src/project_compile.zig:111`):
+- `emitQbeSelected` maps every non-`OutOfMemory` error from four separate stages
+  to `error.InternalError`, so the underlying cause is discarded;
+- `native_test_session` maps the child's exit code 2 to
+  `ProjectConfigurationFailed`, so the response names a stage rather than a cause.
 
-- `validateSelected` runs and reports `fn 'call::quad' idx=1 host=false c_abi=false`,
-  validates its four instructions and its flow, and returns success;
-- the selected loop never prints an entry for `twice`, which is the observable
-  form of the missing expansion;
-- `emitQbeSelected` fails, and each of its four stages maps every non-`OutOfMemory`
-  error to `InternalError`, which is why the report says `InternalError` and
-  `ProjectConfigurationFailed` rather than naming the real cause.
+Instrumenting `validateSelected` (`src/bytecode.zig`) first showed validation
+succeeding, with a selected-function loop that printed `call::quad` and never
+printed `twice` — which is the observable form of the missing expansion.
 
-## Why it matters
+## Fix
 
-An ordinary exported function that calls a helper is the normal shape of a tool,
-so this is not an edge case: it means every composed tool is currently
-un-invocable, whatever its types are. It also bounds the two worked examples and
-the composition fixture, both of which were written without helper calls as a
-result. `tests/invoke/composed.my` says so in its header rather than hiding it.
+`invoke_execute.selection` now resolves the target's symbol from the manifest and
+runs the same `native_test_plan.plan` closure the test path uses, then writes
+every name in it. A target the manifest does not carry is refused rather than
+written, because the selection is what the emitter trusts.
 
-## Why it was not fixed here
+Guarded by `tests/invoke/calls.my`, which is deliberately minimal — one helper
+called twice from one expression, and a third function that reaches it only
+through the second, so a one-level closure fails the fixture as surely as no
+closure at all.
 
-The selection machinery is shared with `mylang test`, whose own suites depend on
-it. Following direct callees means walking each selected body's call edges to a
-fixpoint, which is a change to a core path that deserves its own round, its own
-regression fixture (the program above is the obvious one) and a check that
-`mylang test` still selects exactly what it selected before.
+## Still worth a look
 
-The four `else => return error.InternalError` sites are worth a separate look on
-their own: they discard the underlying error, so this class of failure can only
-ever be reported as `InternalError`.
+The four `else => return error.InternalError` sites in `emitQbeSelected`
+(`src/project_compile.zig`) discard the underlying error, so this whole class of
+failure can only ever be reported as `InternalError`. Nothing here depends on
+that being fixed, but it cost most of the time this took.

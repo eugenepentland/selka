@@ -5,11 +5,10 @@ module composed
 # are records, and an optional element. Every export here is callable through
 # `mylang invoke` with no handwritten JSON plumbing.
 #
-# None of these functions calls another: `mylang invoke` currently cannot build an
-# export whose body calls one, because the native selection follows indirect
-# calls and codecs but not direct callees, so the callee is never lowered. That
-# is a separate defect from the shapes here and is recorded rather than worked
-# around silently.
+# `labels_of`, `totals` and `grand_total` also pin that an export may call
+# another function: a selective build lowers the target's transitive call
+# closure, so a tool composed of helpers is built the same way a single function
+# is.
 
 
 public record Bucket:
@@ -33,6 +32,10 @@ public def bucket_labels(buckets: list[Bucket]) -> list[str] effects(managed_all
     return [bucket.label for bucket in buckets]
 
 
+public def labels_of(buckets: list[Bucket]) -> list[str] effects(managed_allocation):
+    return bucket_labels(buckets)
+
+
 public def make_buckets(count: i64) -> list[Bucket] effects(managed_allocation):
     buckets: list[Bucket] = []
     for index in range(count):
@@ -41,7 +44,11 @@ public def make_buckets(count: i64) -> list[Bucket] effects(managed_allocation):
 
 
 public def totals(buckets: list[Bucket]) -> list[i64] effects(managed_allocation):
-    return [sum(bucket.values) for bucket in buckets]
+    return [bucket_total(bucket) for bucket in buckets]
+
+
+public def grand_total(buckets: list[Bucket]) -> i64 effects(managed_allocation):
+    return sum(totals(buckets))
 
 
 public def first_or_none(values: list[i64]) -> Option[i64] effects():
