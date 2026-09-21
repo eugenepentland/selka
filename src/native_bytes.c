@@ -318,15 +318,17 @@ myl_native_bytes *myl_native_bytes_from_list(myl_native_heap *heap, myl_native_l
 myl_native_text *myl_native_bytes_hex(myl_native_heap *heap, myl_native_bytes *input) {
     static const char digits[]="0123456789abcdef";
     if (input->length>SIZE_MAX/2) return NULL;
-    unsigned char *text=malloc(input->length ? input->length*2 : 1);
-    if (!text) return NULL;
+    /* Two lowercase hexadecimal digits per octet, written straight into the
+       text's own payload: every digit is ASCII, so no encoding pass follows. */
+    myl_native_text *result=myl_native_text_build(heap,input->length*2);
+    if (!result) return NULL;
+    unsigned char *text=(unsigned char *)myl_native_text_storage(result);
     const unsigned char *bytes=input->storage;
     for (size_t i=0;i<input->length;i++) {
         text[i*2]=(unsigned char)digits[bytes[i]>>4];
         text[i*2+1]=(unsigned char)digits[bytes[i]&15];
     }
-    myl_native_text *result=myl_native_text_from_utf8(heap,text,input->length*2);
-    free(text);
+    myl_native_text_publish(result,input->length*2,1);
     return result;
 }
 /* Hexadecimal parsing reads the UTF-8 encoding so a non-ASCII digit is rejected
@@ -339,16 +341,21 @@ static int hex_digit(unsigned char value) {
 }
 myl_native_bytes *myl_native_bytes_from_hex(myl_native_heap *heap, myl_native_text *input, int *status) {
     *status=MYL_BYTES_MEMORY;
-    size_t required=myl_native_text_utf8(input,NULL,0);
-    if (required==SIZE_MAX) return NULL;
-    unsigned char *raw=malloc(required?required:1);
-    if (!raw) return NULL;
-    myl_native_text_utf8(input,raw,required);
-    if (required%2) { free(raw);*status=MYL_BYTES_INVALID;return NULL; }
-    for (size_t i=0;i<required;i++) if (hex_digit(raw[i])<0) { free(raw);*status=MYL_BYTES_INVALID;return NULL; }
-    for (size_t i=0;i<required;i+=2) raw[i/2]=(unsigned char)(hex_digit(raw[i])*16+hex_digit(raw[i+1]));
-    myl_native_bytes *result=myl_native_bytes_new(heap,raw,required/2);
-    free(raw);
+    /* The digits are the text's own payload, so the parse reads them in place
+       and only the decoded octets are copied. A non-ASCII octet is one no
+       `hex_digit` accepts, which is exactly where the VM rejects it. */
+    size_t required=input?input->bytes:0;
+    const unsigned char *raw=input?myl_native_text_payload(input):NULL;
+    if (required%2) { *status=MYL_BYTES_INVALID;return NULL; }
+    for (size_t i=0;i<required;i++) if (hex_digit(raw[i])<0) { *status=MYL_BYTES_INVALID;return NULL; }
+    unsigned char *decoded=malloc(required?required/2:1);
+    if (!decoded) return NULL;
+    for (size_t i=0;i<required;i+=2) decoded[i/2]=(unsigned char)(hex_digit(raw[i])*16+hex_digit(raw[i+1]));
+    myl_native_root root;
+    myl_native_root_push(heap,&root,&input,&pointer_type);
+    myl_native_bytes *result=myl_native_bytes_new(heap,decoded,required/2);
+    myl_native_root_pop(heap,&root);
+    free(decoded);
     if (result) *status=MYL_BYTES_OK;
     return result;
 }
@@ -463,11 +470,15 @@ int myl_native_bytes_buffer_append_range(myl_native_heap *heap, myl_native_bytes
 }
 int myl_native_bytes_buffer_append_utf8(myl_native_heap *heap, myl_native_bytes *buffer, myl_native_text *text) {
     if (buffer_frozen(heap,buffer)) return MYL_BYTES_REFUSED;
-    size_t required=myl_native_text_utf8(text,NULL,0);
-    if (required==SIZE_MAX || required>SIZE_MAX-buffer->length) return MYL_BYTES_FAILED;
+    /* A text's payload is already the UTF-8 the buffer wants, so appending one
+       copies octets straight out of it: the text is rooted across the buffer's
+       growth and its payload address is stable, because a managed object never
+       moves. */
+    size_t required=text?text->bytes:0;
+    if (required>SIZE_MAX-buffer->length) return MYL_BYTES_FAILED;
     if (!required) return MYL_BYTES_WROTE;
     if (!buffer_grow_rooted(heap,buffer,&text,buffer->length+required)) return MYL_BYTES_FAILED;
-    myl_native_text_utf8(text,(unsigned char *)buffer->storage+buffer->length,buffer->capacity-buffer->length);
+    memcpy((unsigned char *)buffer->storage+buffer->length,myl_native_text_payload(text),required);
     buffer->length+=required;
     return MYL_BYTES_WROTE;
 }
