@@ -119,7 +119,7 @@ The 42.5% is one line of guest code, `payload = replace(payload, i, u8(...))` in
 [`src/schematic/guest/io.my:130`](../../src/schematic/guest/io.my#L130), staging
 each byte of the SVG into the 256-byte value array the packed host call takes.
 The emitted IL carries two `blit … 256` per byte, exactly the O(N)-per-element
-cost [`docs/performance.md`](../performance.md#fixed-arrays-are-wire-data-not-buffers)
+cost [`docs/performance.md`](../performance.md#fixed-arrays-are-values-you-can-write-in-place)
 documents for `[N]T`. Isolated, the same loop over 49,617 bytes costs **0.55–
 0.60 ms** on either backend (probe `replace_loop.my`), against a total
 render of 3.5 ms and a Zig-to-mylang gap of 2.0 ms.

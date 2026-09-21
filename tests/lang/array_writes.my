@@ -1,0 +1,113 @@
+module array_writes
+
+# `replace` on a fixed array yields a new value, and the backend writes the
+# element straight into the local when the result lands back in the array it
+# read (QBE-ARRAYWRITE-1). These cases pin the value semantics that write must
+# not move: a copy taken before it, an array inside a record, an array a callee
+# was handed, a nested array, a traced element type and an enum-keyed table.
+
+
+enum Status:
+    ok,
+    missing,
+    failed
+
+
+record Grid:
+    cells: [4]i64
+    label: str
+
+
+def bump(values: [4]i64) -> i64:
+    values = replace(values, 0, 100)
+    return values[0] + values[3]
+
+
+def sum4(values: [4]i64) -> i64:
+    return values[0] + values[1] + values[2] + values[3]
+
+
+# spec-case: QBE-ARRAYWRITE-1
+public def test_an_element_written_back_into_its_own_array_reads_back_changed() -> bool:
+    values: [4]i64 = [1, 2, 3, 4]
+    values = replace(values, 2, 30)
+    return values[0] == 1 and values[1] == 2 and values[2] == 30 and values[3] == 4
+
+
+# spec-case: QBE-ARRAYWRITE-1
+public def test_a_copy_taken_before_the_write_keeps_the_old_value() -> bool:
+    values: [4]i64 = [1, 2, 3, 4]
+    before: [4]i64 = values
+    values = replace(values, 0, 99)
+    return before[0] == 1 and before[3] == 4 and values[0] == 99 and sum4(before) == 10
+
+
+# spec-case: QBE-ARRAYWRITE-1
+public def test_a_loop_of_element_writes_leaves_an_earlier_copy_alone() -> bool:
+    values: [4]i64 = [1, 2, 3, 4]
+    before: [4]i64 = values
+    index = 0
+    while index < 4:
+        values = replace(values, index, values[index] * 10)
+        index += 1
+    return sum4(before) == 10 and sum4(values) == 100 and values[3] == 40
+
+
+# spec-case: QBE-ARRAYWRITE-1
+public def test_a_byte_array_staged_one_element_at_a_time_holds_every_byte() -> bool:
+    payload: [8]u8 = [0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8]
+    index = 0
+    while index < 8:
+        payload = replace(payload, index, u8(index * 2))
+        index += 1
+    total = 0
+    index = 0
+    while index < 8:
+        total += int(payload[index])
+        index += 1
+    return total == 56 and int(payload[7]) == 14
+
+
+# spec-case: QBE-ARRAYWRITE-1
+public def test_an_array_pulled_out_of_a_record_is_written_without_touching_the_record() -> bool:
+    grid = Grid(cells=[1, 2, 3, 4], label="grid")
+    cells: [4]i64 = grid.cells
+    cells = replace(cells, 0, 50)
+    return grid.cells[0] == 1 and cells[0] == 50 and grid.label == "grid"
+
+
+# spec-case: QBE-ARRAYWRITE-1
+public def test_an_array_parameter_the_callee_writes_leaves_the_callers_value_alone() -> bool:
+    base: [4]i64 = [1, 2, 3, 4]
+    inside = bump(base)
+    return inside == 104 and base[0] == 1 and sum4(base) == 10
+
+
+# spec-case: QBE-ARRAYWRITE-1
+public def test_a_nested_array_replaces_one_row_and_keeps_the_others() -> bool:
+    grid: [2][2]i64 = [[1, 2], [3, 4]]
+    row: [2]i64 = [7, 8]
+    grid = replace(grid, 0, row)
+    return grid[0][0] == 7 and grid[0][1] == 8 and grid[1][0] == 3 and grid[1][1] == 4
+
+
+# spec-case: QBE-ARRAYWRITE-1
+public def test_a_row_copied_from_the_same_nested_array_lands_intact() -> bool:
+    grid: [2][2]i64 = [[1, 2], [3, 4]]
+    grid = replace(grid, 0, grid[1])
+    return grid[0][0] == 3 and grid[0][1] == 4 and grid[1][0] == 3 and grid[1][1] == 4
+
+
+# spec-case: QBE-ARRAYWRITE-1
+public def test_a_traced_element_type_survives_an_element_write() -> bool:
+    names: [3]str = ["alpha", "beta", "gamma"]
+    before: [3]str = names
+    names = replace(names, 1, "delta")
+    return names[0] == "alpha" and names[1] == "delta" and names[2] == "gamma" and before[1] == "beta"
+
+
+# spec-case: QBE-ARRAYWRITE-1
+public def test_an_enum_keyed_table_replaces_the_entry_its_key_names() -> bool:
+    codes: [Status]i64 = {Status.failed: 500, Status.ok: 200, Status.missing: 404}
+    codes = replace(codes, Status.ok, 201)
+    return codes[Status.ok] == 201 and codes[Status.missing] == 404 and codes[Status.failed] == 500
