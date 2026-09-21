@@ -31,27 +31,65 @@ LLVM_QBE = ROOT / "experiments" / "llvm-backend" / "qbe_llvm.py"
 CASES = "tests/native/list_boundary.cases.json"
 AGGREF_CASES = "tests/native/aggref_arguments.cases.json"
 
-# entry, function, request fixture, expected `invocation.value` (None asserts
-# agreement only, for a case whose value is a structure this file does not want
-# to restate).
+# entry, function, request fixture path, expected `invocation.value` (None
+# asserts agreement only, for a case whose value is a structure this file does
+# not want to restate).
 INVOKE_CASES = (
-    ("tests/invoke/lists.my", "lists::sum_numbers", "list-numbers", "9"),
-    ("tests/invoke/lists.my", "lists::sum_numbers", "list-empty", "0"),
-    ("tests/invoke/lists.my", "lists::make_numbers", "list-count", ["0", "1", "2", "3"]),
-    ("tests/invoke/lists.my", "lists::join_text", "list-pieces", "abc"),
-    ("tests/invoke/lists.my", "lists::lengths", "list-lengths", ["1", "2", "3"]),
-    ("tests/invoke/lists.my", "lists::bracket_all", "list-text", ["[hi]", "hi"]),
-    ("tests/invoke/lists.my", "lists::row_totals", "list-rows", ["3", "3"]),
-    ("tests/invoke/lists.my", "lists::scale_rows", "list-scale-rows", [["10", "20"], ["30"]]),
-    ("tests/invoke/tool.my", "tool::bracket", "text-unicode", "[a\u00e9\U0001f600e\u0301]"),
-    ("tests/invoke/tool.my", "tool::bracket", "text-nul", "[a\u0000b]"),
-    ("tests/invoke/tool.my", "tool::bracket", "text-empty", "[]"),
-    ("tests/invoke/tool.my", "tool::scale", "scale", "42"),
-    ("tests/invoke/tool.my", "tool::answer", None, "42"),
-    ("tests/invoke/tool.my", "tool::sample_label", "sample", "7"),
-    ("tests/invoke/tool.my", "tool::grow", "grow", None),
-    ("tests/invoke/tool.my", "tool::ratio", "ratio", None),
-    ("tests/invoke/tool.my", "tool::ratio", "ratio-error", None),
+    ("tests/invoke/lists.my", "lists::sum_numbers", "tests/invoke/requests/list-numbers.json", "9"),
+    ("tests/invoke/lists.my", "lists::sum_numbers", "tests/invoke/requests/list-empty.json", "0"),
+    ("tests/invoke/lists.my", "lists::make_numbers", "tests/invoke/requests/list-count.json", ["0", "1", "2", "3"]),
+    ("tests/invoke/lists.my", "lists::join_text", "tests/invoke/requests/list-pieces.json", "abc"),
+    ("tests/invoke/lists.my", "lists::lengths", "tests/invoke/requests/list-lengths.json", ["1", "2", "3"]),
+    ("tests/invoke/lists.my", "lists::bracket_all", "tests/invoke/requests/list-text.json", ["[hi]", "hi"]),
+    ("tests/invoke/lists.my", "lists::row_totals", "tests/invoke/requests/list-rows.json", ["3", "3"]),
+    ("tests/invoke/lists.my", "lists::scale_rows", "tests/invoke/requests/list-scale-rows.json", [["10", "20"], ["30"]]),
+    ("tests/invoke/tool.my", "tool::bracket", "tests/invoke/requests/text-unicode.json", "[a\u00e9\U0001f600e\u0301]"),
+    ("tests/invoke/tool.my", "tool::bracket", "tests/invoke/requests/text-nul.json", "[a\u0000b]"),
+    ("tests/invoke/tool.my", "tool::bracket", "tests/invoke/requests/text-empty.json", "[]"),
+    ("tests/invoke/tool.my", "tool::scale", "tests/invoke/requests/scale.json", "42"),
+    ("tests/invoke/tool.my", "tool::answer", "tests/invoke/requests/empty.json", "42"),
+    ("tests/invoke/tool.my", "tool::sample_label", "tests/invoke/requests/sample.json", "7"),
+    ("tests/invoke/tool.my", "tool::grow", "tests/invoke/requests/grow.json", None),
+    ("tests/invoke/tool.my", "tool::ratio", "tests/invoke/requests/ratio.json", None),
+    ("tests/invoke/tool.my", "tool::ratio", "tests/invoke/requests/ratio-error.json", None),
+    # The two worked examples, whose contracts a caller is meant to discover
+    # through `--describe` rather than by reading the wire form.
+    (
+        "examples/invoke/reading_validator.my",
+        "reading_validator::validate",
+        "examples/invoke/requests/reading-ok.json",
+        {"case": "ok", "value": {"site": "7", "mean": "15", "spread": "10"}},
+    ),
+    (
+        "examples/invoke/reading_validator.my",
+        "reading_validator::validate",
+        "examples/invoke/requests/reading-cold.json",
+        {"case": "err", "value": {"site": "3", "rule": "too_cold", "observed": "-40"}},
+    ),
+    (
+        "examples/invoke/reading_validator.my",
+        "reading_validator::validate",
+        "examples/invoke/requests/reading-unsteady.json",
+        {"case": "err", "value": {"site": "5", "rule": "unsteady", "observed": "90"}},
+    ),
+    (
+        "examples/invoke/text_report.my",
+        "text_report::summarize",
+        "examples/invoke/requests/text-report.json",
+        {"scalars": "5", "pieces": "3", "longest": "2", "empty": "1"},
+    ),
+    (
+        "examples/invoke/text_report.my",
+        "text_report::widths",
+        "examples/invoke/requests/pieces.json",
+        ["1", "2", "0"],
+    ),
+    (
+        "examples/invoke/text_report.my",
+        "text_report::join",
+        "examples/invoke/requests/join.json",
+        "a|bb|",
+    ),
 )
 
 # Descriptions must agree too: an argument both backends refuse identically is
@@ -66,6 +104,11 @@ DESCRIBE_CASES = (
     ("tests/invoke/tool.my", "tool::grow"),
     ("tests/invoke/tool.my", "tool::identity"),
     ("tests/invoke/tool.my", "tool::probe_filesystem"),
+    ("examples/invoke/reading_validator.my", "reading_validator::validate"),
+    ("examples/invoke/text_report.my", "text_report::summarize"),
+    ("examples/invoke/text_report.my", "text_report::join"),
+    ("examples/invoke/text_report.my", "text_report::widths"),
+    ("examples/invoke/text_report.my", "text_report::bracket_all"),
 )
 
 # Guest `.my` cases driven through `mylang test --cases`, whose codec is the same
@@ -114,14 +157,9 @@ def comparable(report: dict) -> dict:
     return keep
 
 
-def invoke_argv(entry: str, function: str, request: str | None) -> list[str]:
+def invoke_argv(entry: str, function: str, request: str) -> list[str]:
     """The argv for one `mylang invoke` call, with no backend selected yet."""
-    argv = ["invoke", entry, "--function", function]
-    if request is not None:
-        argv.append(f"--input=tests/invoke/requests/{request}.json")
-    else:
-        argv.append("--input=tests/invoke/requests/empty.json")
-    return argv
+    return ["invoke", entry, "--function", function, f"--input={request}"]
 
 
 def with_backend(argv: list[str], qbe: Path | None) -> list[str]:
@@ -133,7 +171,7 @@ def check_invoke(compiler: Path, caches: dict, timeout: float) -> list[str]:
     """Compare every invoke case across backends, returning one line each."""
     lines = []
     for entry, function, request, expected in INVOKE_CASES:
-        label = f"invoke {function} {request or ''}".strip()
+        label = f"invoke {function} {Path(request).name}"
         reports = {}
         for name, qbe in caches.items():
             argv = with_backend(invoke_argv(entry, function, request), qbe["qbe"])

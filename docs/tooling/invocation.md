@@ -268,6 +268,57 @@ $ mylang invoke tests/invoke/tool.my --function 'tool::scale' --describe --forma
 }
 ```
 
+## Worked examples
+
+Two small libraries under `examples/invoke/` show the route end to end with no
+handwritten JSON plumbing. Each is an ordinary program — `mylang run` executes
+its `main` — and each is also callable as a library, because `invoke` checks a
+private copy under the same stub entry the guest-test runner uses.
+
+An agent discovers a contract by asking for it rather than by reading the wire
+form:
+
+```console
+$ mylang invoke examples/invoke/reading_validator.my \
+    --function 'reading_validator::validate' --describe --format=json \
+    | python3 -c 'import json,sys; d=json.load(sys.stdin)["description"]; print(d["eligible"], [a["type"] for a in d["contract"]["arguments"]], d["contract"]["result"]["type"])'
+True ['reading_validator::Reading'] reading_validator::Verdict
+```
+
+`reading_validator` is a structured-record validator. A `Reading` goes in as a
+record of scalars and a `Verdict` comes back as a result whose `err` arm names
+the rule that failed, so a caller can tell a cold sensor from an unsteady one
+without parsing prose:
+
+```console
+$ mylang invoke examples/invoke/reading_validator.my \
+    --function 'reading_validator::validate' \
+    --input=examples/invoke/requests/reading-cold.json --format=json \
+    | python3 -c 'import json,sys; print(json.load(sys.stdin)["invocation"]["value"])'
+{'case': 'err', 'value': {'site': '3', 'rule': 'too_cold', 'observed': '-40'}}
+```
+
+`text_report` is a text/list transformation. `summarize` takes Unicode text
+plus a `list[str]` and returns a record of counts; `join`, `widths` and
+`bracket_all` move the same list across the boundary in the other direction:
+
+```console
+$ mylang invoke examples/invoke/text_report.my \
+    --function 'text_report::summarize' \
+    --input=examples/invoke/requests/text-report.json --format=json \
+    | python3 -c 'import json,sys; print(json.load(sys.stdin)["invocation"]["value"])'
+{'scalars': '5', 'pieces': '3', 'longest': '2', 'empty': '1'}
+```
+
+`scalars` counts Unicode scalars and not bytes, so `héllo` is five. The request
+fixtures sit beside the examples in `examples/invoke/requests/`.
+
+Every one of these calls is run twice, once through the vendored QBE and once
+through the LLVM backend, by `tests/native_boundary_matrix.py`
+(`zig build test-native-boundary`). That driver requires the two backends to
+produce the same answer *and* the answer the contract declares, because a matrix
+that only compared them to each other would pass if both were wrong the same way.
+
 ## Quotas and toolchain
 
 `--max-steps`, `--max-frames`, `--max-calls` and `--timeout=SECONDS` bound the

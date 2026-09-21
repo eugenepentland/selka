@@ -1,0 +1,60 @@
+module text_report
+
+# A text/list transformation that returns a typed report, callable through
+# `mylang invoke` with no handwritten JSON plumbing:
+#
+#   mylang invoke examples/invoke/text_report.my \
+#     --function 'text_report::summarize' \
+#     --input=examples/invoke/requests/text-report.json
+#
+# `summarize` takes Unicode text plus a `list[str]` and returns a record of
+# counts. `join`, `widths` and `bracket_all` move the same list across the
+# boundary in the other direction, so the example covers text and lists as both
+# an argument and a result.
+
+
+public record Summary:
+    scalars: i64
+    pieces: i64
+    longest: i64
+    empty: i64
+
+
+public def summarize(text: str, pieces: list[str]) -> Summary effects():
+    longest = 0
+    empty = 0
+    for piece in pieces:
+        width = len(piece)
+        if width > longest:
+            longest = width
+        if width == 0:
+            empty += 1
+    return Summary(scalars=len(text), pieces=len(pieces), longest=longest, empty=empty)
+
+
+public def join(pieces: list[str], separator: str) -> str effects(managed_allocation):
+    total = ""
+    index = 0
+    for piece in pieces:
+        if index != 0:
+            total = total + separator
+        total = total + piece
+        index += 1
+    return total
+
+
+public def widths(pieces: list[str]) -> list[i64] effects(managed_allocation):
+    return [len(piece) for piece in pieces]
+
+
+public def bracket_all(text: str) -> list[str] effects(managed_allocation):
+    return ["[" + text + "]", text]
+
+
+def main() -> int:
+    report = summarize(text="hello", pieces=["a", "bb", ""])
+    if report.empty != 1:
+        return 1
+    if report.longest != 2:
+        return 2
+    return 0
