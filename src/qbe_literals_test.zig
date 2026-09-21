@@ -48,7 +48,7 @@ test "repeated literal text emits exactly one immortal image object" {
     const generated = try outputs.metadata(a, parsed.value);
     defer a.free(generated);
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, generated, "const void *const myl_lit_"));
-    try std.testing.expect(std.mem.indexOf(u8, generated, ".immortal = 1") != null);
+    try std.testing.expect(std.mem.indexOf(u8, generated, ".mark = MYL_NATIVE_OBJECT_LITERAL_MARK") != null);
     try std.testing.expect(std.mem.indexOf(u8, generated, "#include \"native_collections.h\"") != null);
     try std.testing.expect(std.mem.indexOf(u8, generated, "0x61,0x00,0x00,0x00,0x62,0x00,0x00,0x00,0x63,0x00,0x00,0x00,") != null);
 }

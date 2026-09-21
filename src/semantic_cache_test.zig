@@ -366,7 +366,7 @@ test "semantic cache contract fingerprint forces a fresh check and identical con
     const contract_a = try cache_key.Contract.default.fingerprint(t.allocator);
     defer t.allocator.free(contract_a);
     var runtime = cache_key.Contract.default;
-    runtime.runtime_abi = "runtime-abi-v2";
+    runtime.runtime_abi = "runtime-abi-v3";
     const contract_b = try runtime.fingerprint(t.allocator);
     defer t.allocator.free(contract_b);
     var cache = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, contract_a);
@@ -848,7 +848,7 @@ test "durable entries isolate every contract dimension and the mutation version"
     const variants = [_]cache_key.Contract{
         .{ .bootstrap_language = "bootstrap-v2", .target = base.target, .runtime_abi = base.runtime_abi, .effects = base.effects, .flags = base.flags, .compiler_identity = base.compiler_identity },
         .{ .bootstrap_language = base.bootstrap_language, .target = "wasm32", .runtime_abi = base.runtime_abi, .effects = base.effects, .flags = base.flags, .compiler_identity = base.compiler_identity },
-        .{ .bootstrap_language = base.bootstrap_language, .target = base.target, .runtime_abi = "runtime-abi-v2", .effects = base.effects, .flags = base.flags, .compiler_identity = base.compiler_identity },
+        .{ .bootstrap_language = base.bootstrap_language, .target = base.target, .runtime_abi = "runtime-abi-v3", .effects = base.effects, .flags = base.flags, .compiler_identity = base.compiler_identity },
         .{ .bootstrap_language = base.bootstrap_language, .target = base.target, .runtime_abi = base.runtime_abi, .effects = "effects-v2", .flags = base.flags, .compiler_identity = base.compiler_identity },
         .{ .bootstrap_language = base.bootstrap_language, .target = base.target, .runtime_abi = base.runtime_abi, .effects = base.effects, .flags = "--release", .compiler_identity = base.compiler_identity },
         .{ .bootstrap_language = base.bootstrap_language, .target = base.target, .runtime_abi = base.runtime_abi, .effects = base.effects, .flags = base.flags, .compiler_identity = "sha256:other" },

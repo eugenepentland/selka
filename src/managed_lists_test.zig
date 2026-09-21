@@ -466,3 +466,25 @@ test "QBE-TEXT-BLOCK-1 run-time text shares one allocation with its header" {
     try t.expectEqual(@as(i64, 64 * 7), result.value);
     try t.expectEqualStrings("", result.trap.code);
 }
+
+// spec: GC-OBJECT-1
+test "GC-OBJECT-1 a two-word header fits thousands of live lists under one budget" {
+    // Each live four-element `list[i64]` costs one 72-byte list header object
+    // plus a 32-byte backing; the two-word header is what lets four thousand of
+    // them stay inside one mebibyte. The retired 96-byte header charged roughly
+    // twice that and trapped here, so the budget is the observable half of the
+    // representation change.
+    var compilation = try language.Compilation.init(t.allocator, "header.my",
+        \\def main() -> i64:
+        \\    values: list[list[i64]] = []
+        \\    n = 0
+        \\    while n < 4000:
+        \\        values.append([n, n + 1, n + 2, n + 3])
+        \\        n += 1
+        \\    return values[3999][3]
+    );
+    defer compilation.deinit();
+    const result = try native.runWithOptions(&compilation, .{ .max_memory = 1 << 20 });
+    try t.expectEqual(@as(i64, 4002), result.value);
+    try t.expectEqualStrings("", result.trap.code);
+}

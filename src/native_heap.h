@@ -42,23 +42,42 @@ typedef struct myl_native_root {
      * live slot leaves this word unused. */
     void *value;
 } myl_native_root;
-/* One tracing-heap allocation's header, laid out immediately before its payload so
- * the collector reaches it as `(myl_native_object *)payload - 1`. `marked` is a
- * collector write. `immortal` marks storage that lives outside the heap, such as
- * a frozen `str`/`bytes` literal: the collector never frees it and never
- * re-traces it. `region` is the arena depth that owns the payload; a literal
- * keeps 0 so arena ownership checks treat it as ordinary heap-owned storage that
- * any scope may reference. `payload_alignment` forces the header's size to a
- * multiple of `max_align_t` so the payload stays suitably aligned. Arena payloads
- * have no such header: use the heap-aware metadata functions below. */
+/* One tracing-heap allocation's two-word header, laid out immediately before its
+ * payload so the collector reaches it as `(myl_native_object *)payload - 1`.
+ * Word 0 is the mark word: bit 0 is the collector's mark, bit 1 marks storage
+ * that lives outside the heap (a frozen `str`/`bytes` literal), which the
+ * collector never queues, re-traces, frees or bulk-releases, and every higher
+ * bit holds the element count. The count lives here rather than in a side table
+ * because precise tracing needs it for any payload address, including one first
+ * reached through a root. Word 1 is the element descriptor. The collector's
+ * sweep list, worklist and per-object byte charge are heap-side arrays instead
+ * of per-object links and size fields, so a two-word header is all an object
+ * pays. Two words keep the payload aligned to `max_align_t` because a host
+ * allocation is. Arena payloads carry no header: use the heap-aware metadata
+ * functions below for a payload of unknown origin. */
 struct myl_native_object {
-    struct myl_native_object *next, *pending;
+    uintptr_t mark;
     const myl_native_type *element;
-    size_t count, bytes;
-    unsigned marked, immortal, region;
-    max_align_t payload_alignment;
 };
 typedef struct myl_native_object myl_native_object;
+enum { MYL_NATIVE_OBJECT_MARKED = 1, MYL_NATIVE_OBJECT_IMMORTAL = 2,
+       MYL_NATIVE_OBJECT_COUNT_SHIFT = 2 };
+/* The mark word a generated frozen literal block in the image initializes. Such
+ * a block is never queued, so its element count is unreachable and only the
+ * immortal flag is spelled. */
+#define MYL_NATIVE_OBJECT_LITERAL_MARK ((uintptr_t)MYL_NATIVE_OBJECT_IMMORTAL)
+/* One live heap object's collect-time row: the object and the byte charge it
+ * was allocated with. The charge cannot be derived at sweep time from
+ * `element->size`: a descriptor may be embedded in another heap object (a
+ * dictionary's entries list carries the dictionary's own entry descriptor), so
+ * a garbage object's descriptor can already be freed when its row is swept.
+ * Keeping the charge beside the pointer also lets the collector free an object
+ * without touching its descriptor at all. The two-word header cannot hold it:
+ * its one free word already holds the element count precise tracing needs. */
+typedef struct myl_native_object_slot {
+    myl_native_object *object;
+    size_t bytes;
+} myl_native_object_slot;
 typedef struct myl_native_drop_link {
     struct myl_native_drop_link *next;
     void *owner;
@@ -86,8 +105,12 @@ typedef struct {
 } myl_native_arena_statistics;
 typedef struct myl_native_arena_chunk myl_native_arena_chunk;
 typedef struct {
-    myl_native_object *objects;
-    myl_native_object *pending;
+    /* Every live heap object's row, unswept order; the sweep walks this array
+     * and compacts it in place instead of walking a per-object link. */
+    myl_native_object_slot *objects;
+    /* Collector worklist: objects marked but whose children are not yet
+     * traced. Grown on demand and empty outside a collection. */
+    myl_native_object **pending;
     myl_native_root *roots;
     size_t bytes;
     size_t owned_capacity, pool_owners, pool_slots;
@@ -122,6 +145,14 @@ typedef struct {
      * chunk per iteration. Bounded in count and bytes, never reachable from
      * `arena_chunks`, and freed by `myl_native_heap_destroy`. */
     myl_native_arena_chunk *arena_cache;
+    /* Appended fields preserve generated code's fixed root-chain offset. The
+     * collector's sweep array and worklist are heap-side, so no object pays for
+     * a link. `scratch_failed` records a worklist reservation the host refused:
+     * the collection is abandoned unmarked and the allocation that ran it is
+     * refused, so a partial mark can never be swept. */
+    size_t objects_len, objects_capacity;
+    size_t pending_len, pending_capacity;
+    int scratch_failed;
 } myl_native_heap;
 /* Address space granted to a guest process on top of its managed byte budget:
  * program text, the C library's own arenas and the test harness that loads it.
@@ -157,7 +188,7 @@ void *myl_native_heap_alloc(myl_native_heap *heap,
                             const myl_native_type *element, size_t count);
 /* Allocate one block holding `prefix` bytes of caller-owned header followed
  * immediately by `extra` bytes of data the caller owns inline. The whole block
- * is charged, linked and freed as one object whose payload holds no traced
+ * is charged, tracked and freed as one object whose payload holds no traced
  * pointer, so the collector never walks it; a reference the caller stores into
  * the data must point at another heap object. Returns NULL on overflow or
  * budget exhaustion. */

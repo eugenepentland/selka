@@ -15,9 +15,9 @@ typedef struct {
     unsigned char storage[4];
 } frozen_block;
 static frozen_block frozen={
-    .header={.immortal=1},
+    .header={.mark=MYL_NATIVE_OBJECT_LITERAL_MARK},
     .value={.length=4,.capacity=4,.element=&octet,.storage=frozen.storage},
-    .storage_header={.immortal=1},
+    .storage_header={.mark=MYL_NATIVE_OBJECT_LITERAL_MARK},
     .storage={'f','r','o','z'},
 };
 static void chunked_objects(void) {

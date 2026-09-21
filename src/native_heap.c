@@ -16,6 +16,11 @@
 #ifndef MYL_NATIVE_SANITIZED
 #define MYL_NATIVE_SANITIZED 0
 #endif
+/* The two-word header is a memory-layout contract: the payload behind it must
+ * stay aligned to `max_align_t`, and the collector adds its size back to
+ * recover an object's byte charge. */
+_Static_assert(sizeof(myl_native_object) == 2 * sizeof(uintptr_t), "managed object header is two words");
+_Static_assert(sizeof(myl_native_object) % _Alignof(max_align_t) == 0, "managed object header preserves payload alignment");
 int myl_native_budget_parse(const char *text, size_t *out) {
     size_t value = 0, scale = 1;
     const char *cursor = text;
@@ -66,7 +71,37 @@ const myl_native_type *myl_native_object_element(const myl_native_heap *heap, co
 }
 int myl_native_object_immortal(const myl_native_heap *heap, const void *payload) {
     if (!payload || myl_native_arena_region(heap, payload)) return 0;
-    return ((const myl_native_object *)payload - 1)->immortal != 0;
+    return (((const myl_native_object *)payload - 1)->mark & MYL_NATIVE_OBJECT_IMMORTAL) != 0;
+}
+/* Element count recovered from the mark word's high bits. */
+static size_t object_count(const myl_native_object *object) {
+    return (size_t)(object->mark >> MYL_NATIVE_OBJECT_COUNT_SHIFT);
+}
+/* Reserve room for one more row in the collector's sweep array. */
+static int reserve_object(myl_native_heap *heap) {
+    if (heap->objects_len < heap->objects_capacity) return 1;
+    size_t capacity = heap->objects_capacity ? heap->objects_capacity * 2 : 64;
+    if (capacity <= heap->objects_capacity) return 0;
+    if (capacity > SIZE_MAX / sizeof *heap->objects) return 0;
+    myl_native_object_slot *grown = realloc(heap->objects, capacity * sizeof *grown);
+    if (!grown) return 0;
+    heap->objects = grown;
+    heap->objects_capacity = capacity;
+    return 1;
+}
+/* Append one marked object to the collector's worklist, growing it on demand.
+ * A refused reservation is reported so the collection can abandon unmarked. */
+static int worklist_push(myl_native_heap *heap, myl_native_object *object) {
+    if (heap->pending_len == heap->pending_capacity) {
+        size_t capacity = heap->pending_capacity ? heap->pending_capacity * 2 : 1024;
+        if (capacity <= heap->pending_capacity) return 0;
+        myl_native_object **grown = realloc(heap->pending, capacity * sizeof *grown);
+        if (!grown) return 0;
+        heap->pending = grown;
+        heap->pending_capacity = capacity;
+    }
+    heap->pending[heap->pending_len++] = object;
+    return 1;
 }
 int myl_native_region_begin(myl_native_heap *heap) {
     if (heap->region_depth == UINT_MAX) return 0;
@@ -88,11 +123,9 @@ static void mark(myl_native_heap *heap, void *payload) {
     myl_native_object *object = (myl_native_object *)payload - 1;
     /* Immortal payloads live in the image, not the heap: they can never be
      * collected, so re-tracing one would only queue static storage. */
-    if (object->immortal) return;
-    if (object->marked) return;
-    object->marked = 1;
-    object->pending = heap->pending;
-    heap->pending = object;
+    if (object->mark & (MYL_NATIVE_OBJECT_MARKED | MYL_NATIVE_OBJECT_IMMORTAL)) return;
+    if (!worklist_push(heap, object)) { heap->scratch_failed = 1; return; }
+    object->mark |= MYL_NATIVE_OBJECT_MARKED;
 }
 static void trace(myl_native_heap *heap, const myl_native_type *type, const void *address) {
     const unsigned char *bytes = address;
@@ -138,39 +171,51 @@ int myl_native_root_pop(myl_native_heap *heap, myl_native_root *root) {
 void myl_native_heap_collect(myl_native_heap *heap) {
     if (heap->suspended) return;
     heap->collections++;
+    heap->pending_len = 0;
+    heap->scratch_failed = 0;
     for (myl_native_root *root = heap->roots; root; root = root->previous)
         trace(heap, root->type, root->address);
     /* The immortal one-scalar ASCII table is rooted here, not on the root stack:
      * generated frames restore that stack to a per-frame mark, which would drop a
      * lazily pushed entry. */
     for (size_t i = 0; i < 128; i++) if (heap->text_scalars[i]) mark(heap, heap->text_scalars[i]);
-    if (heap->objects) myl_native_arena_trace(heap, trace);
-    while (heap->pending) {
-        myl_native_object *object = heap->pending;
-        heap->pending = object->pending;
+    if (heap->objects_len) myl_native_arena_trace(heap, trace);
+    /* A refused worklist reservation leaves the graph partly marked. Clearing
+     * the marks and returning unwinds to an allocator that refuses the request,
+     * so a partial mark is never swept and the heap stays consistent. */
+    if (heap->scratch_failed) {
+        for (size_t i = 0; i < heap->objects_len; ++i)
+            heap->objects[i].object->mark &= ~(uintptr_t)MYL_NATIVE_OBJECT_MARKED;
+        heap->pending_len = 0;
+        return;
+    }
+    while (heap->pending_len) {
+        myl_native_object *object = heap->pending[--heap->pending_len];
         const unsigned char *payload = (const unsigned char *)(object + 1);
         if (object->element->kind != MYL_NATIVE_PLAIN &&
-            object->element->trace_mode != MYL_NATIVE_TRACE_NONE)
-            for (size_t i = 0; i < object->count; ++i)
+            object->element->trace_mode != MYL_NATIVE_TRACE_NONE) {
+            size_t count = object_count(object);
+            for (size_t i = 0; i < count; ++i)
                 trace(heap, object->element, payload + i * object->element->size);
-    }
-    myl_native_object **link = &heap->objects;
-    while (*link) {
-        myl_native_object *object = *link;
-        /* Static literals are never allocated by the heap and must never be
-         * swept, even if one is reachable and therefore queued. */
-        if (object->immortal) {
-            link = &object->next;
-        } else if (object->marked) {
-            object->marked = 0;
-            link = &object->next;
-        } else {
-            *link = object->next;
-            heap->bytes -= object->bytes;
-            heap->objects_live--;
-            free(object);
         }
     }
+    /* One in-place compaction both sweeps the dead and resets the survivors'
+     * mark bit, so the array stays dense and carries no per-object link. The
+     * charge comes from the row, never from the object's descriptor, which may
+     * already be freed with an earlier garbage owner. */
+    size_t live = 0;
+    for (size_t i = 0; i < heap->objects_len; ++i) {
+        myl_native_object_slot slot = heap->objects[i];
+        if (slot.object->mark & MYL_NATIVE_OBJECT_MARKED) {
+            slot.object->mark &= ~(uintptr_t)MYL_NATIVE_OBJECT_MARKED;
+            heap->objects[live++] = slot;
+        } else {
+            heap->bytes -= slot.bytes;
+            heap->objects_live--;
+            free(slot.object);
+        }
+    }
+    heap->objects_len = live;
     /* Marking cost is paid once per collection over the whole live set, so the
      * pause interval grows faster than the live set and keeps a fixed floor:
      * a steady workload then re-marks a few times instead of every time it
@@ -195,6 +240,9 @@ void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *ele
     if (!element || !element->alignment || element->alignment > alignof(max_align_t)) return NULL;
     if ((element->alignment & (element->alignment - 1)) || element->size % element->alignment) return NULL;
     if (region > heap->region_depth) return NULL;
+    /* The mark word stores the count above two flag bits, so a count that cannot
+     * shift is refused rather than truncated. */
+    if (count > (SIZE_MAX >> MYL_NATIVE_OBJECT_COUNT_SHIFT)) return NULL;
     if (element->size && count > (SIZE_MAX - sizeof(myl_native_object)) / element->size) return NULL;
     if (region) return myl_native_arena_alloc(heap, element, count, region);
     size_t bytes = sizeof(myl_native_object) + count * element->size;
@@ -203,23 +251,24 @@ void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *ele
     due = due || gc_bytes >= heap->next_collection || bytes > heap->next_collection - gc_bytes;
     /* An escape copy suspends collection because its clones are not yet rooted. */
     if (due && !heap->suspended) myl_native_heap_collect(heap);
+    /* A collection the host could not finish (an unallocatable worklist) refuses
+     * the request rather than allocating over a partly marked graph. */
+    if (heap->scratch_failed) { heap->exhausted = 1; return NULL; }
     /* Refused after a collection, so the budget really is exhausted rather than
      * merely reached; the caller's trap names the budget, not the host. */
     if (heap->bytes > heap->limit || bytes > heap->limit - heap->bytes) {
         heap->exhausted = 1;
         return NULL;
     }
+    if (!reserve_object(heap)) return NULL;
     myl_native_object *object = calloc(1, bytes);
     /* Chunks the arena retained for reuse are host bytes no live allocation
      * needs, so a refused reservation spends them before reporting failure. */
     if (!object && heap->arena.cached) { myl_native_arena_reclaim(heap); object = calloc(1, bytes); }
     if (!object) return NULL;
-    object->next = heap->objects;
+    object->mark = (uintptr_t)count << MYL_NATIVE_OBJECT_COUNT_SHIFT;
     object->element = element;
-    object->region = region;
-    object->count = count;
-    object->bytes = bytes;
-    heap->objects = object;
+    heap->objects[heap->objects_len++] = (myl_native_object_slot){ .object = object, .bytes = bytes };
     heap->bytes += bytes;
     heap->objects_live++;
     heap->allocations++;
@@ -228,12 +277,12 @@ void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *ele
 void myl_native_heap_destroy(myl_native_heap *heap) {
     myl_native_arena_release(heap, 0);
     myl_native_arena_reclaim(heap);
-    myl_native_object *object = heap->objects;
-    while (object) {
-        myl_native_object *next = object->next;
-        if (!object->immortal) free(object);
-        object = next;
+    for (size_t i = 0; i < heap->objects_len; ++i) {
+        myl_native_object *object = heap->objects[i].object;
+        if (!(object->mark & MYL_NATIVE_OBJECT_IMMORTAL)) free(object);
     }
+    free(heap->objects);
+    free(heap->pending);
     memset(heap, 0, sizeof(*heap));
 }
 
@@ -241,14 +290,17 @@ void myl_native_heap_release(myl_native_heap *heap, void *payload) {
     if (!payload) return;
     if (myl_native_arena_region(heap, payload)) return;
     myl_native_object *object = (myl_native_object *)payload - 1;
-    if (object->immortal) return;
-    myl_native_object **link = &heap->objects;
-    while (*link && *link != object) link = &(*link)->next;
-    if (!*link) return;
-    *link = object->next;
-    heap->bytes -= object->bytes;
-    heap->objects_live--;
-    free(object);
+    if (object->mark & MYL_NATIVE_OBJECT_IMMORTAL) return;
+    for (size_t i = 0; i < heap->objects_len; ++i) {
+        if (heap->objects[i].object != object) continue;
+        /* The sweep walks the array in order and never depends on it, so the
+         * last row fills the hole instead of shifting the tail. */
+        heap->bytes -= heap->objects[i].bytes;
+        heap->objects[i] = heap->objects[--heap->objects_len];
+        heap->objects_live--;
+        free(object);
+        return;
+    }
 }
 
 /* Release every external resource reachable from a value, nesting through

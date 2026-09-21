@@ -598,7 +598,7 @@ test "invalidation matrix runtime abi and compiler identity are required cache k
     try t.expectEqual(@as(usize, 3), cache.statistics.checked);
 
     var abi_changed = cache_key.Contract.default;
-    abi_changed.runtime_abi = "runtime-abi-v2";
+    abi_changed.runtime_abi = "runtime-abi-v3";
     const changed_abi_fp = try abi_changed.fingerprint(t.allocator);
     defer t.allocator.free(changed_abi_fp);
     cache.context.contract = changed_abi_fp;

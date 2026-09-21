@@ -111,11 +111,11 @@ fn emitLiteral(w: *std.Io.Writer, symbol: []const u8, element: []const u8, width
     const storage = if (bytes == 0) 1 else bytes;
     try w.print("typedef struct {{ myl_native_object header; myl_native_list value; myl_native_object storage_header; unsigned char storage[{d}]; }} {s}_block;\n", .{ storage, symbol });
     try w.print("static {s}_block {s}_instance = {{\n", .{ symbol, symbol });
-    try w.print(" .header = {{.element = &{s}, .count = 1, .bytes = sizeof({s}_block), .immortal = 1, .region = 0}},\n", .{ element, symbol });
+    try w.print(" .header = {{.mark = MYL_NATIVE_OBJECT_LITERAL_MARK, .element = &{s}}},\n", .{element});
     try w.print(" .value = {{.length = {d}, .capacity = {d}, .generation = 0, .element = &{s}", .{ count, count, element });
     if (bytes == 0) try w.writeAll(", .storage = 0") else try w.print(", .storage = {s}_instance.storage", .{symbol});
     try w.writeAll(", .region = 0},\n");
-    try w.print(" .storage_header = {{.element = &{s}, .count = {d}, .bytes = sizeof(myl_native_object) + {d}, .immortal = 1, .region = 0}},\n", .{ element, count, bytes });
+    try w.print(" .storage_header = {{.mark = MYL_NATIVE_OBJECT_LITERAL_MARK, .element = &{s}}},\n", .{element});
     if (bytes == 0) {
         try w.writeAll(" .storage = {0},\n");
     } else {

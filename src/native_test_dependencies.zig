@@ -8,11 +8,12 @@ const Sha = std.crypto.hash.sha2.Sha256;
 /// Native ABI identity carried by every checked-facts manifest. This is the one
 /// definition: the QBE units manifest, the durable checked-facts graph and the
 /// native build driver's generation identity all reference it, so the meaning
-/// of a manifest can only ever be spelled once. Version 6 is version 5 with
-/// `wire_types[].by_address` mandatory: a copyable aggregate has always crossed
-/// the guest ABI by address, but a manifest may omit the recorded fact, and its
-/// reader must refuse that manifest rather than default to the pre-fix answer.
-pub const abi = "mylang-qbe-native-v6";
+/// of a manifest can only ever be spelled once. Version 7 is version 6 with the
+/// two-word managed-object header: the runtime's tracing-heap image layout and
+/// the mark word its generated frozen-literal blocks initialize changed, so a v6
+/// manifest's image data cannot be linked against a v7 runtime and its reader
+/// must refuse it rather than reuse the object.
+pub const abi = "mylang-qbe-native-v7";
 /// The semantic reason another implementation can affect a function's behavior.
 pub const Kind = enum { call, function_value, indirect, codec };
 /// A dependency names a persistent linker symbol rather than a function-table index.
