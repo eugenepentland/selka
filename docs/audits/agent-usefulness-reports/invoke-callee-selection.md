@@ -6,7 +6,7 @@ as a bare `InternalError` and gave no hint of where to look.
 
 ## Symptom
 
-```python
+```mylang
 module call
 
 
