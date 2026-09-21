@@ -211,6 +211,22 @@ landed, ship the runtime as bitcode so the rest inlines by itself.
 **Acceptance.** `bytes_scan` ≤ 1.3×, `list_append_sum` ≤ 2× Zig; `find_any` ≤
 3% of parser census samples.
 
+**Landed in part, 2026-09-21** (`QBE-APPEND-FAST-1`, `PY-BYTES-21`). A list
+`append` in a root-keeping frame now lowers its capacity-sufficient case in the
+emitted IL — a length/capacity compare, one element store and a
+`length`/`generation` bump, with the grow helper and the frame's root protocol
+reached only when the element does not fit — and `bytes.find_any` answers one-
+and two-octet sets with libc `memchr`. Measured on the default `o3-lto` arm,
+interleaved, arm outputs byte-identical: `list_append_sum` **3.00× → 2.15×**
+(target ≤ 2×, **7% short**; the residual is the memory-resident list header's
+read-modify-write per append and the checked-add sum loop, neither of which is
+an item-5 lever), and `find_any` falls from **8.85% to 1.15%** of parser census
+samples (target ≤ 3%, **met**). `bytes_scan` measures 1.23–1.39× across runs and
+is untouched by this change; its hot loop is already hoisted by LTO and Zig wins
+by unrolling the byte compare, so no item-5 lever remains there and the
+acceptance is **not claimed**. The already-landed LTO runtime archive means part
+of item 5's projected gain was present before these changes.
+
 ### 6. Stop materializing records the caller only reads
 
 *Compiler. Size: medium.*
