@@ -552,6 +552,19 @@ pub fn build(b: *std.Build) void {
     harvest_run.setCwd(b.path("."));
     usefulness_step.dependOn(&harvest_run.step);
     test_step.dependOn(usefulness_step);
+    // The boundary matrix runs every carried shape through both native backends
+    // and requires one answer, so a shape that satisfies its contract on QBE and
+    // not on LLVM fails here instead of on whichever backend nobody ran.
+    const boundary_step = b.step("test-native-boundary", "Verify every carried boundary shape agrees across the QBE and LLVM backends");
+    const boundary_self = bounded(b.addSystemCommand(&.{ "python3", "tests/native_boundary_matrix.py", "--self-test" }), rss.driver);
+    boundary_self.setCwd(b.path("."));
+    boundary_step.dependOn(&boundary_self.step);
+    const boundary_run = bounded(b.addSystemCommand(&.{ "python3", "tests/native_boundary_matrix.py", "--compiler" }), rss.parity);
+    boundary_run.addArtifactArg(exe);
+    boundary_run.setCwd(b.path("."));
+    boundary_run.has_side_effects = true;
+    boundary_step.dependOn(&boundary_run.step);
+    test_step.dependOn(boundary_step);
     const doc_coverage = bounded(b.addRunArtifact(exe), rss.driver);
     doc_coverage.addArgs(&.{ "doc-coverage", "." });
     doc_coverage.setCwd(b.path("."));

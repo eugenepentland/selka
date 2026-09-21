@@ -333,10 +333,24 @@ test "text crosses as one node per scalar and a user list is not text" {
     try std.testing.expectEqual(@as(usize, 3), codec.nodes.items[0].children);
     try std.testing.expectEqualStrings("a\x00b", (try codec.decode(text_name, 0)).string);
     // A user `List<u32>` has the identical checked shape and is still not text:
-    // the name decides, exactly as it does on the compiler's side.
+    // the name decides, exactly as it does on the compiler's side. It is carried
+    // as a list now, so a JSON string is the wrong value for it while a JSON
+    // array flattens to one node per element and comes back as an array again.
     try std.testing.expect(isText(text_name));
     try std.testing.expect(!isText("List<u32>"));
-    try std.testing.expectError(error.UnsupportedTestType, codec.encode("List<u32>", .{ .string = "x" }, 0));
+    try std.testing.expectError(error.InvalidTestValue, codec.encode("List<u32>", .{ .string = "x" }, 0));
+    var items: std.json.Array = .init(a);
+    try items.append(.{ .string = "7" });
+    try items.append(.{ .string = "9" });
+    codec.nodes.clearRetainingCapacity();
+    codec.cursor = 0;
+    try codec.encode("List<u32>", .{ .array = items }, 0);
+    try std.testing.expectEqual(@as(usize, 3), codec.nodes.items.len);
+    try std.testing.expectEqual(@as(usize, 2), codec.nodes.items[0].children);
+    try std.testing.expectEqual(@as(u64, 7), codec.nodes.items[1].bits);
+    const listed = try codec.decode("List<u32>", 0);
+    try std.testing.expectEqual(@as(usize, 2), listed.array.items.len);
+    try std.testing.expectEqualStrings("9", listed.array.items[1].string);
     try std.testing.expectError(error.InvalidTestValue, codec.encode(text_name, .{ .integer = 1 }, 0));
     try std.testing.expectError(error.InvalidTestValue, codec.encode(text_name, .{ .string = "\xff" }, 0));
     // A text over the node budget is refused, never truncated.

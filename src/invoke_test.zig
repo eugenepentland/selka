@@ -597,3 +597,33 @@ test "an undersized codec result buffer reports OutputTooSmall, not WireLimit" {
     try testing.expectEqual(@as(usize, 4), roomy[0].children);
     try testing.expectEqual(@as(u64, ']'), roomy[4].bits);
 }
+
+/// A checked schema whose record names itself through a list. `record Node:
+/// children: list[Node]` is a legal program, so the schema is a graph and not a
+/// tree; walking it without a bound is what INVOKE-10 exists to stop.
+const recursive =
+    \\{"functions":[
+    \\{"name":"cycle::cyclic","parameters":[],"result":"List<cycle::Node>","effects":["managed_allocation"],"mutates":[],"return_origin":"unknown"}],
+    \\"types":[
+    \\{"name":"List<cycle::Node>","kind":"list","move_only":false,"opaque":true,"element":"cycle::Node"},
+    \\{"name":"cycle::Node","kind":"record","move_only":false,"opaque":false,"fields":[{"name":"children","type":"List<cycle::Node>"}]}]}
+;
+
+// spec: INVOKE-10
+test "a type that names itself through a list is refused rather than walked forever" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const parsed = try std.json.parseFromSlice(Value, a, recursive, .{ .allocate = .alloc_always });
+    const schema = parsed.value;
+    const verdict = try invoke.eligibility(a, schema, fixtureFunction(schema, "cycle::cyclic"));
+    // The walk terminates because it counts its own depth, and it reports the
+    // cycle as an unsupported path instead of exhausting the stack.
+    try testing.expect(!verdict.eligible);
+    try testing.expect(!verdict.wire_supported);
+    try testing.expectEqualStrings("unsupported-type", verdict.refusal.?.kind);
+    try testing.expect(std.mem.indexOf(u8, verdict.refusal.?.reason, "nests past 64 levels") != null);
+    // The path names the hop that crossed the bound, so the refusal points at a
+    // place in the type rather than at the signature as a whole.
+    try testing.expect(std.mem.startsWith(u8, verdict.refusal.?.path, "result"));
+}

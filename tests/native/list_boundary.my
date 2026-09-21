@@ -1,0 +1,41 @@
+module list_boundary
+
+# I2's list boundary through the guest-test `--cases` channel, which shares the
+# checked-schema codec with `mylang invoke`. Each case is the list counterpart of
+# a shape `aggref_arguments` already pins: an argument, a result, an element that
+# is itself a managed value, and a list whose elements are lists. A regression in
+# either direction changes the case's value rather than passing quietly.
+
+
+public def test_list_argument(values: list[i64]) -> i64 effects():
+    total = 0
+    for value in values:
+        total += value
+    return total
+
+
+public def test_list_result(count: i64) -> list[i64] effects(managed_allocation):
+    return [index for index in range(count)]
+
+
+public def test_text_list_argument(pieces: list[str]) -> str effects(managed_allocation):
+    total = ""
+    for piece in pieces:
+        total = total + piece
+    return total
+
+
+public def test_text_list_result(text: str) -> list[str] effects(managed_allocation):
+    return ["[" + text + "]", text]
+
+
+public def test_nested_list_argument(rows: list[list[i64]]) -> i64 effects():
+    total = 0
+    for row in rows:
+        for value in row:
+            total += value
+    return total
+
+
+public def test_nested_list_result(rows: list[list[i64]]) -> list[list[i64]] effects(managed_allocation):
+    return [[value + 1 for value in row] for row in rows]

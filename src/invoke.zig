@@ -320,17 +320,28 @@ pub const Verdict = struct {
 };
 
 /// One copied-value tree walk that reports the first unsupported type path.
+/// The walk carries its own depth because the checked schema is a graph and a
+/// declared type may name itself: `record Node: children: list[Node]` is a legal
+/// program whose element is again `Node`, so following the element without a
+/// bound recurses until the stack ends. The bound is the same one the codec
+/// enforces on a value tree, and exceeding it is a refusal rather than a crash.
 const Walk = struct {
     allocator: std.mem.Allocator,
     definitions: []const Value,
 
-    fn child(self: Walk, name: []const u8, path: []const u8, suffix: []const u8) Error!?Refusal {
+    fn child(self: Walk, name: []const u8, path: []const u8, suffix: []const u8, depth: usize) Error!?Refusal {
         const joined = if (suffix.len == 0) path else try std.fmt.allocPrint(self.allocator, "{s} -> {s}", .{ path, suffix });
-        return self.check(name, joined, false);
+        return self.check(name, joined, false, depth);
     }
 
     /// Walk one checked type at one path; null means the boundary can carry it.
-    fn check(self: Walk, name: []const u8, path: []const u8, is_argument: bool) Error!?Refusal {
+    fn check(self: Walk, name: []const u8, path: []const u8, is_argument: bool, depth: usize) Error!?Refusal {
+        if (depth > type_depth_limit) return .{
+            .kind = unsupported_type_kind,
+            .path = path,
+            .reason = try std.fmt.allocPrint(self.allocator, "the declared type nests past {d} levels, so it cannot be a copied value tree; " ++
+                "a type that names itself through a list is refused here rather than walked forever", .{type_depth_limit}),
+        };
         const item = definition(self.definitions, name) orelse return .{
             .kind = unsupported_type_kind,
             .path = path,
@@ -355,7 +366,7 @@ const Walk = struct {
                 .path = path,
                 .reason = "the list's element type is not published in the checked schema",
             };
-            return self.child(element.string, path, "element");
+            return self.child(element.string, path, "element", depth + 1);
         }
         if (v.boolean(v.get(item, "move_only"))) return .{
             .kind = unsupported_type_kind,
@@ -368,11 +379,11 @@ const Walk = struct {
             if (std.mem.eql(u8, name, stream_cap_name)) return null;
             if (try argumentRefusal(name, kind, path)) |refusal| return refusal;
         }
-        if (std.mem.eql(u8, kind, "domain")) return domainRefusal(self, item, path);
-        if (std.mem.eql(u8, kind, "record")) return self.fields(item, path);
-        if (std.mem.eql(u8, kind, "table")) return self.table(item, path);
-        if (std.mem.eql(u8, kind, "array")) return self.child(v.text(v.get(item, "element")), path, "element");
-        if (isVariant(kind)) return self.cases(item, path);
+        if (std.mem.eql(u8, kind, "domain")) return domainRefusal(self, item, path, depth);
+        if (std.mem.eql(u8, kind, "record")) return self.fields(item, path, depth);
+        if (std.mem.eql(u8, kind, "table")) return self.table(item, path, depth);
+        if (std.mem.eql(u8, kind, "array")) return self.child(v.text(v.get(item, "element")), path, "element", depth + 1);
+        if (isVariant(kind)) return self.cases(item, path, depth);
         return .{
             .kind = unsupported_type_kind,
             .path = path,
@@ -380,15 +391,15 @@ const Walk = struct {
         };
     }
 
-    fn fields(self: Walk, item: Value, path: []const u8) Error!?Refusal {
+    fn fields(self: Walk, item: Value, path: []const u8, depth: usize) Error!?Refusal {
         for (v.array(v.get(item, "fields"))) |field| {
             const suffix = try std.fmt.allocPrint(self.allocator, "field '{s}'", .{v.text(v.get(field, "name"))});
-            if (try self.child(v.text(v.get(field, "type")), path, suffix)) |refusal| return refusal;
+            if (try self.child(v.text(v.get(field, "type")), path, suffix, depth + 1)) |refusal| return refusal;
         }
         return null;
     }
 
-    fn table(self: Walk, item: Value, path: []const u8) Error!?Refusal {
+    fn table(self: Walk, item: Value, path: []const u8, depth: usize) Error!?Refusal {
         const key = definition(self.definitions, v.text(v.get(item, "key"))) orelse return .{
             .kind = unsupported_type_kind,
             .path = path,
@@ -396,29 +407,29 @@ const Walk = struct {
         };
         for (v.array(v.get(key, "cases"))) |case| {
             const suffix = try std.fmt.allocPrint(self.allocator, "key '{s}'", .{v.text(v.get(case, "name"))});
-            if (try self.child(v.text(v.get(item, "element")), path, suffix)) |refusal| return refusal;
+            if (try self.child(v.text(v.get(item, "element")), path, suffix, depth + 1)) |refusal| return refusal;
         }
         return null;
     }
 
-    fn cases(self: Walk, item: Value, path: []const u8) Error!?Refusal {
+    fn cases(self: Walk, item: Value, path: []const u8, depth: usize) Error!?Refusal {
         for (v.array(v.get(item, "cases"))) |case| {
             const payload = v.get(case, "payload");
             if (payload != .string) continue;
             const suffix = try std.fmt.allocPrint(self.allocator, "case '{s}' payload", .{v.text(v.get(case, "name"))});
-            if (try self.child(v.text(payload), path, suffix)) |refusal| return refusal;
+            if (try self.child(v.text(payload), path, suffix, depth + 1)) |refusal| return refusal;
         }
         return null;
     }
 
-    fn domainRefusal(self: Walk, item: Value, path: []const u8) Error!?Refusal {
+    fn domainRefusal(self: Walk, item: Value, path: []const u8, depth: usize) Error!?Refusal {
         const encoded = v.get(v.get(item, "codec"), "wire");
         if (encoded != .string) return .{
             .kind = unsupported_type_kind,
             .path = path,
             .reason = "this domain declares no codec, so it has no wire representation",
         };
-        return self.child(encoded.string, path, "");
+        return self.child(encoded.string, path, "", depth + 1);
     }
 };
 
@@ -435,6 +446,9 @@ const stream_cap_name = "stream_cap";
 /// The checked schema kind of a user list: a variable-length element run. Text
 /// carries the same kind, so the name `str` is what separates them.
 const list_kind = "list";
+/// The nesting bound one copied value tree may reach. The checked schema is a
+/// graph, so the walk needs a bound of its own before it can trust the shape.
+const type_depth_limit = 64;
 
 /// The exact-integer names the copied-value codec accepts; a user alias of an
 /// integer is a distinct nominal spelling and is not reconstructed.
@@ -511,7 +525,7 @@ pub fn eligibility(allocator: std.mem.Allocator, schema: Value, function: Value)
         if (item != null and std.mem.eql(u8, v.text(v.get(item.?, "kind")), "capability") and !std.mem.eql(u8, type_name, stream_cap_name)) {
             verdict.capabilities = try append(allocator, verdict.capabilities, type_name);
         }
-        const refusal = try walk.check(type_name, path, true);
+        const refusal = try walk.check(type_name, path, true, 0);
         if (refusal != null) verdict.wire_supported = false;
         if (refusal) |item_refusal| return .{
             .eligible = false,
@@ -531,7 +545,7 @@ pub fn eligibility(allocator: std.mem.Allocator, schema: Value, function: Value)
         };
     }
     const result = try std.fmt.allocPrint(allocator, "result of '{s}'", .{v.text(v.get(function, "name"))});
-    const refusal = try walk.check(v.text(v.get(function, "result")), result, false);
+    const refusal = try walk.check(v.text(v.get(function, "result")), result, false, 0);
     if (refusal != null) verdict.wire_supported = false;
     if (refusal) |item_refusal| return .{
         .eligible = false,
