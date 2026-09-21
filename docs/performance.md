@@ -362,17 +362,29 @@ while the managed heap grows, so `noalloc` already proves a hot function never
 reaches it, and a second spelling for the same proof would be a synonym rather than
 a bound.
 
-`with arena()` is a lifetime tool, not a speed tool — it buys predictable bulk
-release, never faster allocation. Measured on 200,000 rounds of building a
-ten-element list: **135 ms** without a region and **116 ms** inside
-`with arena() as scratch:`, a difference well inside the noise of a shared machine.
-Read [managed arenas](arenas.md) for what a region does guarantee.
+`with arena()` is a lifetime tool first — it buys predictable bulk release — and
+since 2026-09-21 it is also the faster way to allocate a batch you then drop
+whole. A closed scope hands its chunk to the next scope instead of returning it
+to the host, so a loop of short scopes no longer reserves and zero-fills 64 KiB
+per iteration. Measured on one million batches that each build and fold a
+sixteen-element `list[int]` (the `alloc_churn` kernel, interleaved arms on one
+CPU of a shared machine, so read the ratios and not the absolute times):
+
+| arm | before | after | against the same body on the collecting heap |
+|---|---:|---:|---|
+| QBE | 17.7× Zig | **4.1× Zig** | 3.2× slower → **1.35× faster** |
+| LLVM O3 + LTO | 15.7× Zig | **2.2× Zig** | 4.3× slower → **1.64× faster** |
+
+"Zig" is `std.heap.ArenaAllocator` reset once per batch. Peak resident memory is
+unchanged at 2.4 MB, because the retained chunk is one the scope had already
+reserved. Read [managed arenas](arenas.md) for what a region guarantees and what
+the retention bound is.
 
 ## See also
 
 - [Native builds](tooling/native-build.md) — the driver, its cache, and `--report`.
 - [Runtime budgets](tooling/runtime-budgets.md) — instruction, frame and byte ceilings.
-- [Managed arenas](arenas.md) — when bulk release, not speed, is the goal.
+- [Managed arenas](arenas.md) — bulk release, chunk retention, and what a region guarantees.
 - [C interop](c-ffi.md) — the exact `extern def` surface.
 - [Standard library](standard-library.md) and [floating point](floating-point.md) —
   what the shipped modules cost, and why `math.sqrt` calls the hardware instruction.

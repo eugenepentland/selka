@@ -10,4 +10,8 @@ const myl_native_type *myl_native_arena_element(const myl_native_heap *, const v
  * edges need no traversal because every allocation survives until scope exit. */
 void myl_native_arena_trace(myl_native_heap *, void (*)(myl_native_heap *, const myl_native_type *, const void *));
 void myl_native_arena_release(myl_native_heap *, unsigned);
+/* Return every retained chunk to the host. Called when the heap is destroyed
+ * and when a host reservation fails, since retained chunks are the only bytes
+ * the runtime can give back without losing a live allocation. */
+void myl_native_arena_reclaim(myl_native_heap *);
 #endif

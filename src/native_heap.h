@@ -73,10 +73,16 @@ typedef struct myl_native_region {
     struct myl_native_region *parent;
     size_t users, children;
 } myl_native_region;
-/* Bulk arena counters, reported separately from tracing reclamation. */
+/* Bulk arena counters, reported separately from tracing reclamation. `chunks`
+ * counts host reservations, so a chunk taken from the retention cache instead
+ * of the host advances `reused` and not `chunks`. `chunks_live`,
+ * `reserved_bytes` and `peak_reserved_bytes` count only chunks currently
+ * serving allocations: a retained chunk has already been discharged from them
+ * and from the memory budget, and is counted by `cached`/`cached_bytes`. */
 typedef struct {
-    uint64_t scopes, released, escaped, allocations, chunks;
+    uint64_t scopes, released, escaped, allocations, chunks, reused;
     size_t chunks_live, reserved_bytes, peak_reserved_bytes;
+    size_t cached, cached_bytes;
 } myl_native_arena_statistics;
 typedef struct myl_native_arena_chunk myl_native_arena_chunk;
 typedef struct {
@@ -111,6 +117,11 @@ typedef struct {
     /* Region payloads and their compact side descriptors share bulk chunks.
      * Appended fields preserve generated code's fixed root-chain offset. */
     myl_native_arena_chunk *arena_chunks;
+    /* Chunks a closed scope released, kept for the next scope's first
+     * allocation so a loop of short scopes does not reserve and zero a fresh
+     * chunk per iteration. Bounded in count and bytes, never reachable from
+     * `arena_chunks`, and freed by `myl_native_heap_destroy`. */
+    myl_native_arena_chunk *arena_cache;
 } myl_native_heap;
 /* Address space granted to a guest process on top of its managed byte budget:
  * program text, the C library's own arenas and the test harness that loads it.

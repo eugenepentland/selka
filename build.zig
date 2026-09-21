@@ -486,6 +486,7 @@ pub fn build(b: *std.Build) void {
             "src/native_dictionary.c",
             "src/native_equal.c",
             "src/native_bytes.c",
+            "src/native_regions.c",
         },
         .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG" },
     });

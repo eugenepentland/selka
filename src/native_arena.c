@@ -1,6 +1,16 @@
 #include "native_arena.h"
 #include <stdalign.h>
 #include <stdlib.h>
+#include <string.h>
+
+/* Retention bound for released chunks. A loop of short scopes needs one chunk
+ * at a time, so a handful covers nesting without letting a program that opened
+ * one wide scope hold its whole reservation for the rest of the process. An
+ * oversized one-off chunk is returned to the host rather than retained, and the
+ * retained total never exceeds the memory budget itself. */
+enum { MYL_ARENA_CACHE_CHUNKS = 4 };
+#define MYL_ARENA_CACHE_BYTES (((size_t)2) << 20)
+#define MYL_ARENA_CACHE_CHUNK_BYTES (((size_t)1) << 20)
 
 typedef struct {
     const myl_native_type *element;
@@ -60,6 +70,55 @@ static int fits(const myl_native_arena_chunk *chunk, size_t payload, size_t *off
         payload <= end - *offset - sizeof(Allocation);
 }
 
+/* Take a retained chunk back into service. A chunk qualifies only when it holds
+ * at least the request's minimum and no more than `ceiling`, the size the
+ * sizing policy would have reserved from the host, so reuse never charges the
+ * budget more than a fresh reservation would have; the largest qualifying chunk
+ * wins because its spare capacity is free. Only the bytes the previous scope
+ * wrote can be stale — its payload prefix, which `used` bounds, and its side
+ * records at the top — so zeroing exactly those restores a chunk that is
+ * byte-identical to a freshly zero-filled one, which precise tracing needs. */
+static myl_native_arena_chunk *uncache(myl_native_heap *heap, size_t minimum, size_t ceiling) {
+    myl_native_arena_chunk **link = &heap->arena_cache, **best = NULL;
+    for (; *link; link = &(*link)->next)
+        if ((*link)->bytes >= minimum && (*link)->bytes <= ceiling &&
+            (!best || (*link)->bytes > (*best)->bytes)) best = link;
+    if (!best) return NULL;
+    myl_native_arena_chunk *chunk = *best;
+    *best = chunk->next;
+    heap->arena.cached--;
+    heap->arena.cached_bytes -= chunk->bytes;
+    memset(chunk->data, 0, chunk->used);
+    memset(records(chunk), 0, chunk->count * sizeof(Allocation));
+    chunk->used = 0;
+    chunk->count = 0;
+    return chunk;
+}
+/* Retain a chunk the closing scope released instead of returning it to the
+ * host. The caller has already discharged it from `heap->bytes` and from every
+ * arena reservation counter, so a retained chunk is charged to nothing and can
+ * never refuse a later allocation; the bounds below cap the host bytes held
+ * that way. Returns zero when the chunk must be freed. */
+static int cache(myl_native_heap *heap, myl_native_arena_chunk *chunk) {
+    size_t ceiling = MYL_ARENA_CACHE_BYTES < heap->limit ? MYL_ARENA_CACHE_BYTES : heap->limit;
+    if (chunk->bytes > MYL_ARENA_CACHE_CHUNK_BYTES) return 0;
+    if (heap->arena.cached >= (size_t)MYL_ARENA_CACHE_CHUNKS) return 0;
+    if (heap->arena.cached_bytes >= ceiling || chunk->bytes > ceiling - heap->arena.cached_bytes) return 0;
+    chunk->next = heap->arena_cache;
+    heap->arena_cache = chunk;
+    heap->arena.cached++;
+    heap->arena.cached_bytes += chunk->bytes;
+    return 1;
+}
+void myl_native_arena_reclaim(myl_native_heap *heap) {
+    while (heap->arena_cache) {
+        myl_native_arena_chunk *chunk = heap->arena_cache;
+        heap->arena_cache = chunk->next;
+        free(chunk);
+    }
+    heap->arena.cached = 0;
+    heap->arena.cached_bytes = 0;
+}
 static myl_native_arena_chunk *new_chunk(myl_native_heap *heap, size_t payload, unsigned region, size_t previous) {
     const size_t mask = alignof(max_align_t) - 1;
     size_t overhead = sizeof(myl_native_arena_chunk) + sizeof(Allocation);
@@ -77,16 +136,23 @@ static myl_native_arena_chunk *new_chunk(myl_native_heap *heap, size_t payload, 
     size_t available = heap->bytes > heap->limit ? 0 : heap->limit - heap->bytes;
     if (minimum > available) { heap->exhausted = 1; return NULL; }
     size_t bytes = preferred < available ? preferred : available & ~mask;
-    myl_native_arena_chunk *chunk = calloc(1, bytes);
-    if (!chunk) return NULL;
+    myl_native_arena_chunk *chunk = uncache(heap, minimum, bytes);
+    if (chunk) heap->arena.reused++;
+    else {
+        chunk = calloc(1, bytes);
+        /* Retained chunks are the one host reservation the runtime can give
+         * back, so a refused request spends them before it fails. */
+        if (!chunk && heap->arena.cached) { myl_native_arena_reclaim(heap); chunk = calloc(1, bytes); }
+        if (!chunk) return NULL;
+        chunk->bytes = bytes;
+        heap->arena.chunks++;
+    }
     chunk->next = heap->arena_chunks;
-    chunk->bytes = bytes;
     chunk->region = region;
     heap->arena_chunks = chunk;
-    heap->bytes += bytes;
-    heap->arena.chunks++;
+    heap->bytes += chunk->bytes;
     heap->arena.chunks_live++;
-    heap->arena.reserved_bytes += bytes;
+    heap->arena.reserved_bytes += chunk->bytes;
     if (heap->arena.reserved_bytes > heap->arena.peak_reserved_bytes)
         heap->arena.peak_reserved_bytes = heap->arena.reserved_bytes;
     return chunk;
@@ -136,6 +202,6 @@ void myl_native_arena_release(myl_native_heap *heap, unsigned region) {
         heap->arena.released += chunk->count;
         heap->arena.reserved_bytes -= chunk->bytes;
         heap->arena.chunks_live--;
-        free(chunk);
+        if (!cache(heap, chunk)) free(chunk);
     }
 }

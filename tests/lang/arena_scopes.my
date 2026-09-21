@@ -1,0 +1,90 @@
+module arena_scopes
+
+
+def fold(seed: int, width: int) -> int:
+    values: list[int] = []
+    for index in range(width):
+        values.append(seed + index)
+    total = 0
+    for item in values:
+        total += item
+    return total
+
+
+def squares(width: int) -> list[int]:
+    items: list[int] = []
+    for index in range(width):
+        items.append(index * index)
+    return items
+
+
+# A closed scope hands its chunk to the next one, so a loop of scopes has to
+# fold exactly what the same body folds once, and folding four batches in four
+# scopes has to equal folding them with no scope at all.
+# spec: ARENA-MANAGED-10
+public def test_a_loop_of_arena_scopes_folds_every_batch_correctly() -> bool:
+    matched = 0
+    for round in range(500):
+        with arena():
+            if fold(round, 16) == 16 * round + 120:
+                matched += 1
+    if matched != 500:
+        return False
+    staged = 0
+    for batch in range(4):
+        with arena():
+            staged += fold(batch, 4)
+    return staged == fold(0, 4) + fold(1, 4) + fold(2, 4) + fold(3, 4)
+
+
+# An inner scope's chunk is reused by the next inner scope while the outer
+# scope keeps its own chunk and every value it allocated there.
+# spec-case: ARENA-MANAGED-10
+public def test_nested_arena_scopes_reuse_chunks_without_disturbing_the_outer_one() -> bool:
+    checked = 0
+    for round in range(200):
+        with arena():
+            outer = fold(round, 8)
+            inner = 0
+            for step in range(3):
+                with arena():
+                    inner += fold(step, 4)
+            if outer == 8 * round + 28 and inner == 30:
+                checked += 1
+    return checked == 200
+
+
+# The copy `escape` made lives in the enclosing region, so the two hundred
+# scopes that reuse the chunk it released must not disturb a single element.
+# spec-case: ARENA-MANAGED-10
+public def test_an_escaped_list_survives_the_scopes_that_reuse_its_chunk() -> bool:
+    kept: list[int] = []
+    with arena() as scratch:
+        built = squares(6)
+        kept = scratch.escape(built)
+    churn = 0
+    for round in range(200):
+        with arena():
+            churn += fold(round, 8)
+    if len(kept) != 6 or churn != 164800:
+        return False
+    return kept[0] == 0 and kept[3] == 9 and kept[5] == 25
+
+
+# Every byte of a reused chunk reads back as zero: a scope that writes a wide
+# list and drops it cannot leave its values visible to the next scope's list.
+# spec-case: ARENA-MANAGED-10
+public def test_a_reused_chunk_hands_out_no_bytes_of_the_previous_scope() -> bool:
+    clean = 0
+    for round in range(100):
+        with arena():
+            loud: list[int] = []
+            for index in range(256):
+                loud.append(-1)
+            if len(loud) == 256:
+                clean += 1
+        with arena():
+            quiet = squares(4)
+            if quiet[0] == 0 and quiet[1] == 1 and quiet[2] == 4 and quiet[3] == 9:
+                clean += 1
+    return clean == 200
