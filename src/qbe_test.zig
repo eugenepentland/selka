@@ -1575,3 +1575,31 @@ test "a caller charges one word of outgoing space for an argument that crosses b
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, outer, "blit"));
     try std.testing.expect(std.mem.indexOf(u8, outer, " %l0 =l alloc8 8\n") != null);
 }
+
+// spec-case: QBE-AGGREF-1
+test "a list element the loop variable copies is read through its own address" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def total(rows: list[Row]) -> i64:
+        \\    sum = 0
+        \\    for row in rows:
+        \\        sum += row.b
+        \\    return sum
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return total([Row(a=1, b=2)])
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "total").?.il;
+    // The checked element address reaches the store of the loop variable
+    // directly, so the per-pc aggregate scratch copy is gone and the one copy
+    // left is the loop variable's own.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_list_get"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "blit "));
+    try std.testing.expect(std.mem.indexOf(u8, body, "myl_qbe_fail_normalized_index_bounds") != null);
+}
