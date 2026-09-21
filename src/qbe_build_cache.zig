@@ -80,14 +80,123 @@ pub const Cache = struct {
     contract: Contract = .default,
     /// Cache hits are accepted only when their independent checksum matches.
     pub fn object(self: Cache, kind: []const u8, input: []const u8, flavor: Flavor) Error!Object {
+        return switch (try self.stage(kind, input, flavor, null)) {
+            .hit => |hit| hit,
+            .miss => |job| try self.finish(job),
+        };
+    }
+    /// Stage one object: report a cache hit, or prepare the tool invocation that
+    /// produces it without running the tool. A caller that stages many objects
+    /// can then start their tools together and finish each one.
+    pub fn stage(self: Cache, kind: []const u8, input: []const u8, flavor: Flavor, environment: ?*const std.process.Environ.Map) Error!Staged {
         const key = try self.identity(kind, input);
         const path = try self.entry(key, ".o");
-        if (self.valid(path, try self.entry(key, ".digest"))) return .{ .key = key, .path = path, .reused = true };
+        if (self.valid(path, try self.entry(key, ".digest"))) return .{ .hit = .{ .key = key, .path = path, .reused = true } };
+        const work = try self.context.temporary(self.temporary);
+        const candidate = try std.fs.path.join(self.context.allocator, &.{ work, "object.o" });
+        const scratch: Scratch = .{ .key = key, .path = path, .candidate = candidate, .work = work };
+        return .{ .miss = try self.prepare(scratch, input, flavor, environment) };
+    }
+    /// Run a staged job's primary tool and its optional assembler, then publish
+    /// its object. This is the sequential path a single `object` takes.
+    pub fn finish(self: Cache, job: Job) Error!Object {
+        try self.context.command(job.argv, job.environment);
+        return self.complete(job);
+    }
+    /// Publish a staged job whose primary tool a concurrent wave already started,
+    /// running only its optional assembler and reclaiming its scratch.
+    pub fn publish(self: Cache, job: Job) Error!Object {
+        return self.complete(job);
+    }
+    /// Run the assembler a flavor defers to, then store the object and reclaim
+    /// the job's private scratch whether or not the tool succeeded.
+    fn complete(self: Cache, job: Job) Error!Object {
+        defer self.context.remove(job.work);
+        if (job.assemble) |argv| try self.context.command(argv, null);
+        return self.store(job.key, job.path, job.candidate);
+    }
+    /// Reclaim a staged job that a failed wave will not finish.
+    pub fn discard(self: Cache, job: Job) void {
+        self.context.remove(job.work);
+    }
+    /// Build the tool invocation for one staged object. The QBE flavor names a
+    /// per-unit `.ssa` and, unless full LTO emits the object directly, a second
+    /// assembler call; the C and Zig flavors write their source and run one tool.
+    fn prepare(self: Cache, scratch: Scratch, input: []const u8, flavor: Flavor, environment: ?*const std.process.Environ.Map) Error!Job {
+        const a = self.context.allocator;
+        const key = scratch.key;
+        const path = scratch.path;
+        const work = scratch.work;
+        const candidate = scratch.candidate;
+        switch (flavor) {
+            .qbe => {
+                const source = try std.fs.path.join(a, &.{ work, "unit.ssa" });
+                const assembly = try std.fs.path.join(a, &.{ work, "unit.s" });
+                try self.context.write(source, input);
+                const env = environment orelse try self.adapterEnvironment();
+                const adapter_output = if (self.codegen.lto and self.codegen.llvm) candidate else assembly;
+                const argv = try a.dupe([]const u8, &.{ self.codegen.tool, "-t", "amd64_sysv", "-o", adapter_output, source });
+                const assemble: ?[]const []const u8 = if (!self.codegen.lto or !self.codegen.llvm)
+                    try a.dupe([]const u8, &.{ self.zig, "cc", "-g0", "-c", assembly, "-o", candidate })
+                else
+                    null;
+                return .{ .key = key, .path = path, .candidate = candidate, .work = work, .argv = argv, .environment = env, .assemble = assemble };
+            },
+            .c_text => {
+                const source = try std.fs.path.join(a, &.{ work, "unit.c" });
+                try self.context.write(source, input);
+                var argv: std.ArrayList([]const u8) = .empty;
+                try argv.appendSlice(a, try self.flags());
+                try argv.appendSlice(a, &.{ "-c", source, "-o", candidate });
+                return .{ .key = key, .path = path, .candidate = candidate, .work = work, .argv = argv.items, .environment = null, .assemble = null };
+            },
+            .zig_file => {
+                const source = try std.fs.path.join(a, &.{ self.assets, input });
+                const emit = try std.fmt.allocPrint(a, "-femit-bin={s}", .{candidate});
+                const argv = try a.dupe([]const u8, &.{ self.zig, "build-obj", source, "-lc", "-fPIC", "-fstrip", "-O", self.mode, emit });
+                return .{ .key = key, .path = path, .candidate = candidate, .work = work, .argv = argv, .environment = null, .assemble = null };
+            },
+        }
+    }
+    /// The environment every LLVM adapter invocation of one build shares: the
+    /// optimization level, Zig driver, runtime sources, signature sidecar and the
+    /// exact target CPU policy the final link will use.
+    pub fn adapterEnvironment(self: Cache) Error!*const std.process.Environ.Map {
+        const a = self.context.allocator;
+        const environment = try a.create(std.process.Environ.Map);
+        environment.* = try self.context.environ.clone(a);
+        if (!self.codegen.llvm) return environment;
+        try environment.put("MYLANG_QBE_LLVM_OPT", try std.fmt.allocPrint(a, "-O{s}", .{self.codegen.optimization}));
+        try environment.put("MYLANG_QBE_LLVM_ZIG", self.zig);
+        try environment.put("MYLANG_QBE_LLVM_RUNTIME_SOURCES", self.assets);
+        try environment.put("MYLANG_QBE_LLVM_SIGNATURES", try self.signatureSidecar());
+        try environment.put("MYLANG_QBE_LLVM_TARGET_CPU", self.codegen.target_cpu);
+        try environment.put("MYLANG_QBE_LLVM_TARGET_FEATURES", self.codegen.target_features);
+        if (self.codegen.lto) try environment.put("MYLANG_QBE_LLVM_EMIT_LTO_OBJECT", "1");
+        return environment;
+    }
+    /// The per-build JSON sidecar the adapter reads and writes for call-site
+    /// signatures; it lives in this build's private temporary directory.
+    pub fn signatureSidecar(self: Cache) Error![]const u8 {
+        return std.fs.path.join(self.context.allocator, &.{ self.temporary, "llvm-signatures.json" });
+    }
+    /// Publish every unit's signature into the adapter's sidecar before any unit
+    /// is translated. A concurrent build cannot rely on unit order, so this makes
+    /// the table complete first and every call site declares its callee exactly
+    /// as a sequential build would have. It is a no-op outside the LLVM arm.
+    pub fn declareSignatures(self: Cache, units: []const []const u8, environment: *const std.process.Environ.Map) Error!void {
+        if (!self.codegen.llvm) return;
+        const a = self.context.allocator;
         const work = try self.context.temporary(self.temporary);
         defer self.context.remove(work);
-        const candidate = try std.fs.path.join(self.context.allocator, &.{ work, "object.o" });
-        try self.compile(.{ .work = work, .candidate = candidate, .input = input, .flavor = flavor });
-        return self.store(key, path, candidate);
+        var argv: std.ArrayList([]const u8) = .empty;
+        try argv.appendSlice(a, &.{ self.codegen.tool, "-t", "amd64_sysv", "--signatures-only", "-o", try self.signatureSidecar() });
+        for (units, 0..) |input, index| {
+            const path = try std.fs.path.join(a, &.{ work, try std.fmt.allocPrint(a, "{d}.ssa", .{index}) });
+            try self.context.write(path, input);
+            try argv.append(a, path);
+        }
+        try self.context.command(argv.items, environment);
     }
     /// Publish the fixed runtime translation units as one archive whose single
     /// member merges every unit. `zig build-obj` compiles all C sources in one
@@ -176,41 +285,6 @@ pub const Cache = struct {
         const actual = fs.digest(self.context.allocator, bytes) catch return false;
         return std.mem.eql(u8, expected, actual);
     }
-    fn compile(self: Cache, task: Task) Error!void {
-        const a = self.context.allocator;
-        switch (task.flavor) {
-            .qbe => {
-                const source = try std.fs.path.join(a, &.{ task.work, "unit.ssa" });
-                const assembly = try std.fs.path.join(a, &.{ task.work, "unit.s" });
-                try self.context.write(source, task.input);
-                var environment = try self.context.environ.clone(a);
-                defer environment.deinit();
-                if (self.codegen.llvm) {
-                    try environment.put("MYLANG_QBE_LLVM_OPT", try std.fmt.allocPrint(a, "-O{s}", .{self.codegen.optimization}));
-                    try environment.put("MYLANG_QBE_LLVM_ZIG", self.zig);
-                    try environment.put("MYLANG_QBE_LLVM_RUNTIME_SOURCES", self.assets);
-                    try environment.put("MYLANG_QBE_LLVM_SIGNATURES", try std.fs.path.join(a, &.{ self.temporary, "llvm-signatures.json" }));
-                    try environment.put("MYLANG_QBE_LLVM_TARGET_CPU", self.codegen.target_cpu);
-                    try environment.put("MYLANG_QBE_LLVM_TARGET_FEATURES", self.codegen.target_features);
-                    if (self.codegen.lto) try environment.put("MYLANG_QBE_LLVM_EMIT_LTO_OBJECT", "1");
-                }
-                const adapter_output = if (self.codegen.lto and self.codegen.llvm) task.candidate else assembly;
-                try self.context.command(&.{ self.codegen.tool, "-t", "amd64_sysv", "-o", adapter_output, source }, &environment);
-                if (!self.codegen.lto or !self.codegen.llvm)
-                    try self.context.command(&.{ self.zig, "cc", "-g0", "-c", assembly, "-o", task.candidate }, null);
-            },
-            .c_text => {
-                const source = try std.fs.path.join(a, &.{ task.work, "unit.c" });
-                try self.context.write(source, task.input);
-                try self.compileC(source, task.candidate, null);
-            },
-            .zig_file => {
-                const source = try std.fs.path.join(a, &.{ self.assets, task.input });
-                const emit = try std.fmt.allocPrint(a, "-femit-bin={s}", .{task.candidate});
-                try self.context.command(&.{ self.zig, "build-obj", source, "-lc", "-fPIC", "-fstrip", "-O", self.mode, emit }, null);
-            },
-        }
-    }
     /// Fresh provider compilations use private Zig caches to observe external inputs.
     pub fn compileC(self: Cache, source: []const u8, output: []const u8, environment: ?*const std.process.Environ.Map) Error!void {
         var args: std.ArrayList([]const u8) = .empty;
@@ -255,7 +329,23 @@ pub const Codegen = struct {
 pub const Flavor = enum { qbe, c_text, zig_file };
 /// One validated object-cache result.
 pub const Object = struct { key: []const u8, path: []const u8, reused: bool };
-const Task = struct { work: []const u8, candidate: []const u8, input: []const u8, flavor: Flavor };
+/// The content-addressed destination and private scratch of one staged object.
+const Scratch = struct { key: []const u8, path: []const u8, candidate: []const u8, work: []const u8 };
+/// One content-addressed object whose input is staged but whose tool has not run
+/// yet, so a caller can start several tools at once and finish each afterwards.
+pub const Job = struct {
+    key: []const u8,
+    path: []const u8,
+    candidate: []const u8,
+    work: []const u8,
+    argv: []const []const u8,
+    environment: ?*const std.process.Environ.Map,
+    /// A second tool call (the assembler) for a flavor whose first tool emits
+    /// assembly rather than the final object.
+    assemble: ?[]const []const u8 = null,
+};
+/// The result of staging one object: it was already cached, or it needs a tool.
+pub const Staged = union(enum) { hit: Object, miss: Job };
 
 fn objectDigest(allocator: std.mem.Allocator, bytes: []const u8) Error![]const u8 {
     if (bytes.len == 0) return error.EmptyNativeObject;

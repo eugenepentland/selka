@@ -263,6 +263,10 @@ pub fn build(b: *std.Build) void {
     prebuild.step.max_rss = rss.parity;
     prebuild.addArgs(&.{ "emit-runtime", "--zig", b.graph.zig_exe, "--qbe" });
     prebuild.addFileArg(qbe_exe.getEmittedBin());
+    // The release path links an LLVM/bitcode runtime archive, so the prebuild
+    // needs the qualified adapter; it lives in the source tree until installed.
+    prebuild.addArg("--llvm-adapter");
+    prebuild.addArg(b.pathJoin(&.{ root, "experiments", "llvm-backend", "qbe_llvm.py" }));
     prebuild.addArg("--out");
     const runtime_out = prebuild.addOutputDirectoryArg("mylang-runtime");
     prebuild.addArg("--work");
