@@ -29,6 +29,9 @@ byte-loop workload and lays out the six-wave plan to close it.
 The [21 September 2026 parity audit](audits/performance-parity-audit-2026-09-21.md)
 re-measures the current tree against Zig and Rust, attributes the remaining gap
 per primitive with a matched kernel suite, and ranks what closes it.
+[The performance roadmap](performance-roadmap.md) turns that ranking into the
+ordered list of changes to make next, each with its measured price and its
+acceptance test.
 
 ## What is fast without trying
 
