@@ -1,5 +1,7 @@
 #include "native_collections.h"
 #include "native_equal.h"
+#include "native_text.h"
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
@@ -71,7 +73,7 @@ int myl_native_list_append(myl_native_heap *heap, myl_native_list *list, const v
     /* Grown backing joins the list's own arena, so an append performed inside
        a younger arena never leaves an older list with storage that is about
        to be bulk released. */
-    void *storage = myl_native_heap_alloc_at(heap, list->element, capacity, myl_native_object_region(list));
+    void *storage = myl_native_heap_alloc_at(heap, list->element, capacity, myl_native_object_region(heap, list));
     if (!storage) goto failure;
     if (list->length) memcpy(storage, list->storage, list->length * list->element->size);
     /* value may point into old backing; copy before unlinking that backing. */
@@ -124,7 +126,7 @@ static int reserve_for_insert(myl_native_heap *heap, myl_native_list *list, size
         if (capacity > SIZE_MAX / 2) return 0;
         capacity *= 2;
     }
-    void *storage = myl_native_heap_alloc_at(heap, list->element, capacity, myl_native_object_region(list));
+    void *storage = myl_native_heap_alloc_at(heap, list->element, capacity, myl_native_object_region(heap, list));
     if (!storage) return 0;
     if (list->length) memcpy(storage, list->storage, list->length * list->element->size);
     list->storage = storage;
@@ -259,30 +261,54 @@ static int compare_float(const void *left, const void *right) {
     double a, b;
     memcpy(&a, left, 8);
     memcpy(&b, right, 8);
+    if (isnan(a)) return isnan(b) ? 0 : 1;
+    if (isnan(b)) return -1;
     if (a < b) return -1;
     if (a > b) return 1;
     return 0;
 }
+static int compare_text(const void *left, const void *right) {
+    myl_native_text *a, *b;
+    memcpy(&a,left,sizeof a);
+    memcpy(&b,right,sizeof b);
+    return myl_native_text_compare(a,b);
+}
+static int compare_element(const void *left, const void *right, size_t size, unsigned order) {
+    if (order==0) return compare_signed(left,right,size);
+    if (order==1) return compare_unsigned(left,right,size);
+    if (order==2) return compare_float(left,right);
+    return compare_text(left,right);
+}
 int myl_native_list_sort(myl_native_list *list, unsigned order) {
-    if (order > 2) return 0;
+    if (order > 3) return 0;
     if (list->length < 2) return 1;
     size_t size = list->element->size;
-    unsigned char *storage = list->storage;
-    unsigned char *key = malloc(size);
-    if (!key) return 0;
-    for (size_t i = 1; i < list->length; i++) {
-        memcpy(key, storage + i * size, size);
-        size_t j = i;
-        while (j > 0) {
-            const unsigned char *previous = storage + (j - 1) * size;
-            int comparison = order == 2 ? compare_float(previous, key) : (order == 0 ? compare_signed(previous, key, size) : compare_unsigned(previous, key, size));
-            if (comparison <= 0) break;
-            memcpy(storage + j * size, previous, size);
-            j--;
+    if (!size || list->length>SIZE_MAX/size) return 0;
+    size_t bytes=list->length*size;
+    unsigned char *buffer=malloc(bytes);
+    if (!buffer) return 0;
+    unsigned char *storage=list->storage, *source=storage, *target=buffer;
+    size_t width=1;
+    while (width<list->length) {
+        for (size_t start=0;start<list->length;) {
+            size_t middle=list->length-start<width?list->length:start+width;
+            size_t remaining=list->length-middle;
+            size_t end=remaining<width?list->length:middle+width;
+            size_t left=start, right=middle, out=start;
+            while (left<middle && right<end) {
+                size_t take=compare_element(source+left*size,source+right*size,size,order)<=0?left++:right++;
+                copy_element(target+out*size,source+take*size,size);
+                out++;
+            }
+            while (left<middle) copy_element(target+out++*size,source+left++*size,size);
+            while (right<end) copy_element(target+out++*size,source+right++*size,size);
+            start=end;
         }
-        memcpy(storage + j * size, key, size);
+        unsigned char *swap=source; source=target; target=swap;
+        width=width>list->length/2?list->length:width*2;
     }
-    free(key);
+    if (source!=storage) memcpy(storage,source,bytes);
+    free(buffer);
     return 1;
 }
 myl_native_list *myl_native_list_copy(myl_native_heap *heap, const myl_native_list *input) {

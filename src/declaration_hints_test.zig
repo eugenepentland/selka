@@ -214,14 +214,6 @@ test "a Python statement shape names its accepted spelling where the terminator 
     try expectHint(&fixture, prefix, "a string prefix is not part of a literal", "drop the prefix and write the escape in an ordinary quoted string", 2, 10);
 }
 
-// spec: PARSER-HINT-7
-test "an Option compared with is names the comparison and the match it accepts" {
-    var fixture = Fixture.init(t.allocator);
-    defer fixture.deinit();
-    const failure = try fixture.failure("def main() -> int:\n    r = 1\n    if r is None:\n        return 0\n    return r\n");
-    try expectHint(&fixture, failure, "`is` is not an operator", "compare the value with `== None`, or match it: `case Some(value)` and `case None`", 3, 10);
-}
-
 // spec: PARSER-HINT-8
 test "a collection form Python spells differently names the loop it accepts" {
     var fixture = Fixture.init(t.allocator);

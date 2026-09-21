@@ -195,17 +195,51 @@ rewriting an existing key leaves that key in its original position. Keys are
 types the runtime compares and hashes by value. Values are any copyable storable
 type, including lists and other dictionaries. `counts[key]` traps with
 `R_MISSING_KEY` when the key is absent, so `counts.get(key, fallback)` is the
-lookup that always answers, while `counts.keys()` and `counts.values()` allocate
-fresh snapshot lists rather than live views. `counts.pop(key)` removes and returns
+lookup that always answers. `counts.keys()`, `counts.values()` and `counts.items()`
+return live typed views without allocating. Use `list(counts.keys())` or
+`list(counts.values())` when an independent snapshot is required. `counts.pop(key)` removes and returns
 the value and `counts.pop(key, fallback)` answers the fallback when absent;
 `counts.update(other)` replaces existing values in place and appends new keys;
 `counts.setdefault(key, fallback)` returns the existing value or stores the
 fallback; `counts.copy()` returns a fresh shallow dictionary; and
 `counts.clear()` empties it. `counts.pop(key)` without a fallback traps with
-`R_MISSING_KEY`. `counts.items()` allocates a snapshot list of the dictionary's
-values in insertion order, and a two-name loop `for name, value in counts.items()`
-binds each dictionary key with its value in insertion order. A dictionary is shared
-by assignment exactly as a list is.
+`R_MISSING_KEY`. `counts.items()` yields `DictItem[K, V]` value records with `key`
+and `value` fields. A two-name loop `for name, value in counts.items()` unpacks
+those fields. The same behavior applies to a view held in a variable, returned
+from a helper, or passed as a parameter. A dictionary is shared by assignment
+exactly as a list is.
+
+The view types are `DictKeys[K, V]`, `DictValues[K, V]` and `DictItems[K, V]`.
+They retain their dictionary, report its current size through `len`, and iterate
+without snapshot allocation. `list(view)` copies the current keys, values or
+items in insertion order. Views support ordinary loops, comprehensions and
+`enumerate`; snapshot lists of `DictItem` also support two-name unpacking. Views
+are not indexable: use `list(view)[index]` for positional access.
+
+These prelude record types may appear in function signatures and generic return
+types. A view is managed-bearing because it retains its dictionary, so a view of
+a dictionary allocated inside `with arena()` cannot escape that arena without an
+arena copy of the reachable dictionary. Reading and iterating the view inside the
+arena remain nonallocating.
+
+Creating a view does not freeze contents or size. Value replacement is visible
+when iteration reaches that key; changing the size during a loop traps under the
+same rule as direct dictionary iteration. Code that previously used a snapshot
+from `keys()` or `values()` must now request it with `list(...)`. Code that used
+`items()` as a values-only list should use `list(mapping.values())`.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    mapping = {"a": 10, "b": 20}
+    live = mapping.items()
+    old_values = list(mapping.values())
+    mapping["b"] = 31
+    total = 0
+    for key, value in live:
+        total += value
+    return total + old_values[1] - 19
+```
 
 ```mylang
 # doc: expect 42

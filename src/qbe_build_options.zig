@@ -57,8 +57,8 @@ pub const Options = struct {
     project: bool = false,
     library: bool = false,
     provider: ?[]const u8 = null,
-    qbe: []const u8 = "qbe",
     zig: []const u8 = "zig",
+    codegen: Codegen = .{ .qbe = "qbe" },
     mode: []const u8 = default_mode,
     target: []const u8 = "amd64_sysv",
     cache: []const u8 = default_cache,
@@ -67,10 +67,18 @@ pub const Options = struct {
     max_memory: ?u64 = null,
     arguments: []const []const u8 = &.{},
 };
+/// Native code generator selected for this build.
+pub const Codegen = union(enum) {
+    qbe: []const u8,
+    llvm: Llvm,
+};
+/// Explicit inputs to the qualified LLVM adapter.
+pub const Llvm = struct { adapter: []const u8 = "", optimization: ?[]const u8 = null, lto: bool = false };
 /// Build usage is independent of run-time guest budgets.
 pub const usage = "usage: mylang build <file.my> (-o <output> | --run) [--project] [--library]\n" ++
     "  --link FILE --link-library NAME --library-path DIR (repeatable)\n" ++
     "  --provider FILE  trusted native provider (executables only)\n" ++
+    "  --backend qbe|llvm  --llvm-adapter PATH  --llvm-opt 0|1|2|3|s|z  --lto\n" ++
     "  --qbe PATH --zig PATH --mode Debug|ReleaseFast (default ReleaseFast) --target amd64_sysv\n" ++
     "  " ++ cache_dir_flag ++ "DIR  --no-cache  --report  --mutation-markers\n" ++
     "  --timings=json  phase-timings-v1 JSON Lines on stderr (frontend/codegen/link/native)\n" ++
@@ -123,6 +131,13 @@ pub fn parse(args: []const []const u8) Error!Options {
         // scans, so the frozen Options field set does not grow for a switch that
         // changes no artifact.
         if (std.mem.eql(u8, argument, "--timings=json")) continue;
+        if (std.mem.eql(u8, argument, "--lto")) {
+            switch (result.codegen) {
+                .llvm => |*llvm| llvm.lto = true,
+                .qbe => return error.InvalidBuildArguments,
+            }
+            continue;
+        }
         const split = std.mem.indexOfScalar(u8, argument, '=') orelse argument.len;
         const name = argument[0..split];
         const option = std.meta.stringToEnum(Flag, name) orelse return error.InvalidBuildArguments;
@@ -139,6 +154,10 @@ pub fn parse(args: []const []const u8) Error!Options {
         if (@import("native_link.zig").isFlag(@tagName(option)) and !@import("native_link.zig").valid(@tagName(option), value)) return error.InvalidBuildArguments;
         try assign(&result, option, value);
     }
+    try validate(result);
+    return result;
+}
+fn validate(result: Options) Error!void {
     if (result.source.len == 0) return error.InvalidBuildArguments;
     if (result.run) {
         if (result.output.len != 0 or result.library) return error.InvalidBuildArguments;
@@ -148,7 +167,15 @@ pub fn parse(args: []const []const u8) Error!Options {
     if (result.library and result.provider != null) return error.InvalidBuildArguments;
     if (!std.mem.eql(u8, result.target, "amd64_sysv")) return error.InvalidBuildArguments;
     if (!std.mem.eql(u8, result.mode, "Debug") and !std.mem.eql(u8, result.mode, "ReleaseFast")) return error.InvalidBuildArguments;
-    return result;
+    switch (result.codegen) {
+        .qbe => {},
+        .llvm => |llvm| {
+            if (llvm.optimization) |opt| if (!validLlvmOpt(opt)) return error.InvalidBuildArguments;
+        },
+    }
+}
+fn validLlvmOpt(value: []const u8) bool {
+    return value.len == 1 and std.mem.indexOfScalar(u8, "0123sz", value[0]) != null;
 }
 const Flag = enum {
     @"--link",
@@ -161,6 +188,9 @@ const Flag = enum {
     @"--provider",
     @"--qbe",
     @"--zig",
+    @"--backend",
+    @"--llvm-adapter",
+    @"--llvm-opt",
     @"--mode",
     @"--target",
     @"--cache-dir",
@@ -187,8 +217,19 @@ fn assign(result: *Options, flag: Flag, value: []const u8) Error!void {
             result.output = value;
         },
         .@"--provider" => result.provider = value,
-        .@"--qbe" => result.qbe = value,
+        .@"--qbe" => result.codegen = .{ .qbe = value },
         .@"--zig" => result.zig = value,
+        .@"--backend" => {
+            if (std.mem.eql(u8, value, "qbe")) result.codegen = .{ .qbe = "qbe" } else if (std.mem.eql(u8, value, "llvm")) result.codegen = .{ .llvm = .{} } else return error.InvalidBuildArguments;
+        },
+        .@"--llvm-adapter" => switch (result.codegen) {
+            .llvm => |*llvm| llvm.adapter = value,
+            .qbe => return error.InvalidBuildArguments,
+        },
+        .@"--llvm-opt" => switch (result.codegen) {
+            .llvm => |*llvm| llvm.optimization = value,
+            .qbe => return error.InvalidBuildArguments,
+        },
         .@"--mode" => result.mode = value,
         .@"--target" => result.target = value,
         .@"--cache-dir" => {
@@ -210,9 +251,16 @@ fn assign(result: *Options, flag: Flag, value: []const u8) Error!void {
 
 test "build options accept equals syntax and later tool overrides" {
     const parsed = try parse(&.{ "main.my", "-o", "out", "--qbe=first", "--qbe", "second", "--mode=ReleaseFast", "--project", "--report" });
-    try std.testing.expectEqualStrings("second", parsed.qbe);
+    try std.testing.expectEqualStrings("second", parsed.codegen.qbe);
     try std.testing.expectEqualStrings("ReleaseFast", parsed.mode);
     try std.testing.expect(parsed.project and parsed.report);
+}
+
+test "LLVM backend has explicit optimization and full LTO controls" {
+    const parsed = try parse(&.{ "main.my", "-o", "out", "--backend", "llvm", "--llvm-adapter", "/adapter.py", "--llvm-opt", "3", "--lto" });
+    try std.testing.expectEqualStrings("/adapter.py", parsed.codegen.llvm.adapter);
+    try std.testing.expectEqualStrings("3", parsed.codegen.llvm.optimization.?);
+    try std.testing.expect(parsed.codegen.llvm.lto);
 }
 // spec: BUILD-MODE-1
 test "a build that names no optimize mode uses the fast one and Debug stays explicit" {

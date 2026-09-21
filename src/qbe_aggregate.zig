@@ -63,7 +63,11 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             const layout_value = try self.layout(ty);
             const replacing = op == .replace_index;
             const base = h - @as(usize, if (replacing) 3 else 2);
-            var source = try self.load("s", base);
+            // QBE-ARRAYWRITE-1: a replace whose array is a local's own storage
+            // and whose result the next instruction stores back into that local
+            // writes the element where it already lives.
+            const destination = if (replacing) try replaceDestination(@TypeOf(self), self, self.pc) else null;
+            var source = if (destination) |target| try localPointer(@TypeOf(self), self, target) else try self.load("s", base);
             var index = try self.load("s", base + 1);
             if (!self.isScalar(stack[base + 1])) {
                 const tag = self.temp();
@@ -73,7 +77,7 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             const invalid = self.temp();
             try self.print(" %v{d} =l cugel %v{d}, {d}\n jnz %v{d}, @bounds{d}, @index{d}\n", .{ invalid, index, layout_value.count, invalid, invalid, invalid });
             try self.print("@bounds{d}\n call $myl_qbe_fail_array_bounds(l %ctx, l %v{d}, l {d})\n jmp @failure\n@index{d}\n", .{ invalid, index, layout_value.count, invalid });
-            if (replacing) {
+            if (replacing and destination == null) {
                 const copy = try self.aggregatePointer();
                 try self.print(" blit %v{d}, %v{d}, {d}\n", .{ source, copy, layout_value.size });
                 source = copy;
@@ -112,12 +116,110 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
     }
 }
 
-/// Whether the constructor immediately before `pc` filled local `slot` in place,
-/// so the store at `pc` has nothing left to copy.
-pub fn constructorForwarded(comptime E: type, self: E, pc: usize, slot: usize) Error!bool {
+/// Whether the instruction immediately before `pc` already wrote local `slot`
+/// in place, so the store at `pc` has nothing left to copy: a record
+/// constructor that built the record there, or a `replace` that wrote one
+/// element of the array that already lives there.
+pub fn storeForwarded(comptime E: type, self: E, pc: usize, slot: usize) Error!bool {
     if (pc == 0) return false;
-    const destination = try constructorDestination(E, self, pc - 1);
-    return destination != null and destination.? == slot;
+    if (try constructorDestination(E, self, pc - 1)) |destination| return destination == slot;
+    if (try replaceDestination(E, self, pc - 1)) |destination| return destination == slot;
+    return false;
+}
+
+/// QBE-ARRAYWRITE-1: the local a `replace` writes one element of in place, when
+/// the very next instruction stores the replaced array back into it.
+///
+/// `replace(x, i, v)` is a whole-value expression: it copies the array, writes
+/// one element of the copy and yields the copy. When that copy's only reader is
+/// a store back into the very local the array was read from, both copies are
+/// dead — the one into the per-pc aggregate scratch and the one back out of it —
+/// so the element is written straight into the local's own storage, after the
+/// same bounds check against the same length, raising the same trap at the same
+/// source position. The destination is claimed only where nothing else can
+/// observe the change:
+///
+///  - the array operand is the local's own storage rather than a snapshot of
+///    it: the read that pushed it is a `load_local` or `move_local` of this
+///    local, reached by falling through, which is exactly the window
+///    `borrowableLocal` walks forward from, so `readLocal` named the slot;
+///  - that read ran with an empty operand stack, so the replace is a whole
+///    statement and no other live operand can still name the old value;
+///  - the local owns nothing (`drop`), holds its own value — not a scalar, not
+///    a zero-length aggregate, and not a parameter slot holding a caller's
+///    address — and its type is the array's own type;
+///  - no branch enters the store, and nothing between the read and the replace
+///    is entered by a branch or writes the local.
+///
+/// The element operand may name storage inside the same array (`x =
+/// replace(x, i, x[j])` over an array of aggregates); an element written from
+/// an element is a region of the array's own stride copied onto an
+/// element-aligned region of the same stride, so the two are the same region or
+/// disjoint, exactly as they were when the write went to the scratch copy.
+fn replaceDestination(comptime E: type, self: E, pc: usize) Error!?usize {
+    const code = self.function.scope.instructions;
+    const ty = switch (code[pc].op) {
+        .replace_index => |array| array,
+        else => return null,
+    };
+    if (self.program.records[ty.recordIndex()].managed) return null;
+    if (pc + 1 >= code.len or self.states[pc + 1] == null) return null;
+    if (branchTarget(E, self, pc + 1)) return null;
+    const slot = switch (code[pc + 1].op) {
+        .store_local => |target| @backingInt(target),
+        else => return null,
+    };
+    if (slot >= self.function.scope.locals.len) return null;
+    if (self.function.scope.locals[slot].ty != ty) return null;
+    if (self.isScalar(ty) or self.byReference(slot)) return null;
+    const value = try self.layout(ty);
+    if (value.drop or value.size == 0) return null;
+    if (!borrowsLocal(E, self, pc, slot)) return null;
+    return slot;
+}
+
+/// Whether the array operand of the `replace_index` at `pc` is local `slot`'s
+/// own storage rather than a copy of it.
+///
+/// The operand was pushed by the last instruction that ran with an empty
+/// operand stack, because the operand sits at the bottom of the stack for the
+/// whole window; that instruction must read this local. Nothing in the window
+/// is entered by a branch or writes the local, which is the same window
+/// `borrowableLocal` walks forward from the read, so that read named the slot
+/// instead of snapshotting it into scratch.
+fn borrowsLocal(comptime E: type, self: E, pc: usize, slot: usize) bool {
+    const code = self.function.scope.instructions;
+    const state = self.states[pc] orelse return false;
+    if (state.len != 3 or branchTarget(E, self, pc)) return false;
+    var producer = pc;
+    while (producer > 0) {
+        producer -= 1;
+        const before = self.states[producer] orelse return false;
+        if (before.len == 0) break;
+        if (branchTarget(E, self, producer) or writesLocal(code[producer].op, slot)) return false;
+    } else return false;
+    return switch (code[producer].op) {
+        .load_local, .move_local => |target| @backingInt(target) == slot,
+        else => false,
+    };
+}
+
+/// Whether the instruction at `pc` is entered by a branch, so control can reach
+/// it without having run the instruction before it.
+fn branchTarget(comptime E: type, self: E, pc: usize) bool {
+    return pc < self.branch_targets.len and self.branch_targets[pc];
+}
+
+/// Whether one instruction writes local `slot`: a whole-value store, a move
+/// that clears it, an explicit drop, or a match arm's payload binding.
+fn writesLocal(op: @FieldType(bytecode.Instruction, "op"), slot: usize) bool {
+    return switch (op) {
+        .store_local, .move_local, .drop_local => |target| @backingInt(target) == slot,
+        .switch_variant => |dispatch| for (dispatch.arms) |arm| {
+            if (arm.slot) |target| if (@backingInt(target) == slot) break true;
+        } else false,
+        else => false,
+    };
 }
 
 /// QBE-CTORFWD-1: the local a record constructor fills in place, when the very

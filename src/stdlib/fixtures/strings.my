@@ -120,6 +120,15 @@ def numbers() -> int:
             _ = 0
     if not expect_float("0e400", 0.0) or not expect_float("0.0e-400", 0.0):
         return 39
+    if not expect_float(" 1.5 ", 1.5) or not expect_float("1_000.5", 1000.5):
+        return 49
+    if not expect_float("inf", 1.0 / 0.0):
+        return 58
+    match strings.to_float("nan"):
+        case Some(_):
+            pass
+        case None:
+            return 59
     return 0
 
 

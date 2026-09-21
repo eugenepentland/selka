@@ -10,6 +10,8 @@ public record Part:
     family: text.Span
     value: text.Span
     kind: int
+    pin1: int
+    pin2: int
 
 
 public record Pin:
@@ -17,6 +19,12 @@ public record Pin:
     number: int
     net: text.Span
     nc: bool
+    display: text.Span
+    net_id: int
+    display_id: int
+    raw_rail: int
+    rail: int
+    decoupling: bool
 
 
 def instanceForm(host: Host, nodes: list[s.Node], index: int) -> bool:
@@ -110,7 +118,9 @@ public def collectParts(host: Host, nodes: list[s.Node]) -> Result[list[Part], i
                 ref=ref.span,
                 family=family,
                 value=value,
-                kind=kind(host, family)
+                kind=kind(host, family),
+                pin1=- 1,
+                pin2=- 1
             ))
         i = s.at(nodes, i).next
     return Ok(out)
@@ -168,7 +178,13 @@ public def collectPins(host: Host, nodes: list[s.Node], parts: list[Part], pinou
                         part=part,
                         number=number,
                         net=net,
-                        nc=nc
+                        nc=nc,
+                        display=net,
+                        net_id=- 1,
+                        display_id=- 1,
+                        raw_rail=0,
+                        rail=0,
+                        decoupling=False
                     ))
                     p = s.at(nodes, p).next
             f = s.at(nodes, f).next
@@ -195,7 +211,7 @@ public def displayNet(host: Host, net: text.Span, parts: list[Part], pins: list[
     previous = - 1
     i = net.start
     while i < net.end:
-        if io.byte(host, net.file, i) == 46u8:
+        if net.source[i] == 46:
             previous = last
             last = i
         i += 1
@@ -223,3 +239,64 @@ public def displayNet(host: Host, net: text.Span, parts: list[Part], pins: list[
     if trunk and named_host:
         return base
     return net
+
+
+def railKind(host: Host, span: text.Span) -> int:
+    if text.matches(host, span, b"GND"):
+        return 1
+    if span.end - span.start >= 2 and span.source[span.start] == 86 and span.source[span.start + 1] == 95:
+        return 2
+    return 0
+
+
+# Resolve textual identities and topology facts once. Layout and routing retain
+# the original source spans for metadata, but compare these compact identities.
+public def normalize(host: Host, parts: list[Part], pins: list[Pin]) effects(host, managed_allocation, mutation) mutates(parts, pins):
+    i = 0
+    while i < len(pins):
+        pins[i].display = displayNet(host, pins[i].net, parts, pins)
+        pins[i].raw_rail = railKind(host, pins[i].net)
+        pins[i].rail = railKind(host, pins[i].display)
+        if pins[i].number == 1:
+            parts[pins[i].part].pin1 = i
+        if pins[i].number == 2:
+            parts[pins[i].part].pin2 = i
+        raw_id = - 1
+        j = 0
+        while j < i:
+            if raw_id < 0 and text.equal(host, pins[j].net, pins[i].net):
+                raw_id = pins[j].net_id
+            j += 1
+        if raw_id < 0:
+            raw_id = i
+        pins[i].net_id = raw_id
+        i += 1
+    i = 0
+    while i < len(pins):
+        display_id = - 1
+        j = 0
+        while j < len(pins):
+            if display_id < 0 and text.equal(host, pins[j].net, pins[i].display):
+                display_id = pins[j].net_id
+            j += 1
+        j = 0
+        while j < i:
+            if display_id < 0 and text.equal(host, pins[j].display, pins[i].display):
+                display_id = pins[j].display_id
+            j += 1
+        if display_id < 0:
+            display_id = len(pins) + i
+        pins[i].display_id = display_id
+        i += 1
+    i = 0
+    while i < len(pins):
+        pin = pins[i]
+        if pin.raw_rail == 1 and parts[pin.part].kind == 1:
+            other_index = parts[pin.part].pin1
+            if other_index == i:
+                other_index = parts[pin.part].pin2
+            if other_index >= 0:
+                other = pins[other_index]
+                pins[i].decoupling = other.rail == 2 and other.raw_rail != 1 and other.display_id != other.net_id
+        i += 1
+    return

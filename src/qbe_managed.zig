@@ -115,11 +115,11 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
         .read => {
             const index_value = try self.load("s", base);
             const length = try receiverLength(E, self, list);
-            // A plain scalar element has a compile-time constant descriptor,
-            // size and stride, so the read is one bounds-checked load from the
-            // receiver's backing storage. Every other element keeps the runtime
-            // copy into the aggregate scratch and the pointer that reads it.
-            if (scalarElement(E, self, op.output)) {
+            // Concrete layouts fix the element stride. Scalars load directly;
+            // records keep their value snapshot unless only an immediate scalar
+            // field projection can observe it. Zero-sized layouts retain their
+            // existing runtime/scratch representation.
+            if ((try self.layout(op.output)).size != 0) {
                 try inlineIndexRead(E, self, .{ .input = list, .at = index_value, .raw_index = index_value, .length = length, .element = op.output, .slot = base }, normalized_index_failure);
             } else {
                 try self.print(" %v{d} =w call $myl_native_list_get(l %v{d}, l %v{d}, l %agg{d})\n", .{ output, list, index_value, self.pc });
@@ -424,18 +424,27 @@ fn emitIndex(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Ty
 /// One inline element read: the receiver, the normalized index, the caller's
 /// original index and the receiver length for the trap, and where the value goes.
 const IndexRead = struct { input: usize, at: usize, raw_index: usize, length: usize, element: typed.Type, slot: usize };
-/// Whether one element is a plain scalar the schema fixes at compile time: an
-/// integer, `bool`, or a nominal domain over one of those — which includes
-/// `float`, a nominal domain over `u64`. Its native value is one word and its
-/// descriptor's size and stride are constants of the schema, so a read is a
-/// direct load. Every other element type — a record, union, array, nested
-/// collection, string used as an element, or a capability — keeps the runtime
-/// copy and the aggregate pointer that represents its value.
-fn scalarElement(comptime E: type, self: *E, ty: typed.Type) bool {
-    if (ty.isInteger() or ty == .bool) return true;
-    if (!ty.isAggregate() or ty.recordIndex() >= self.program.records.len) return false;
-    const backing = self.program.records[ty.recordIndex()].shape.domain orelse return false;
-    return scalarElement(E, self, backing);
+/// A list element's backing may be borrowed only through an uninterrupted chain
+/// of field reads ending in a scalar value. No branch may enter that chain and
+/// no call, allocation, mutation or stored aggregate may intervene. Each field
+/// instruction still executes with its original position and step check; the
+/// interior address never survives to an instruction that can collect or mutate.
+fn immediateScalarProjection(comptime E: type, self: *E, element: typed.Type) Error!bool {
+    if ((try self.layout(element)).drop) return false;
+    var ty = element;
+    var pc = self.pc + 1;
+    const code = self.function.scope.instructions;
+    while (pc < code.len) : (pc += 1) {
+        if (self.states[pc] == null or self.branch_targets[pc]) return false;
+        const index = switch (code[pc].op) {
+            .get_field => |field| field,
+            else => return false,
+        };
+        if (!ty.isAggregate() or self.program.records[ty.recordIndex()].isManagedRecord()) return false;
+        ty = (try self.field(ty, index)).ty;
+        if (self.isScalar(ty)) return true;
+    }
+    return false;
 }
 /// Read one element of a byte string or list straight from its backing storage
 /// after an unsigned bounds check, in place of a `myl_native_list_get` call.
@@ -449,6 +458,8 @@ fn inlineIndexRead(comptime E: type, self: *E, read: IndexRead, failure: []const
     const address = try elementAddress(E, self, read.input, read.at, read.element);
     if (self.isScalar(read.element)) {
         try self.store(read.slot, try self.readValue(address, read.element));
+    } else if (try immediateScalarProjection(E, self, read.element)) {
+        try self.store(read.slot, address);
     } else {
         const pointer = try self.aggregatePointer();
         try self.print(" blit %v{d}, %v{d}, {d}\n", .{ address, pointer, (try self.layout(read.element)).size });
@@ -472,7 +483,7 @@ fn elementAddress(comptime E: type, self: *E, list: usize, index: usize, element
     }
     return address;
 }
-/// Lower string concatenation and exact Unicode equality.
+/// Lower string concatenation, equality, and direct Unicode scalar ordering.
 fn emitBinary(comptime E: type, self: *E, op: @FieldType(@FieldType(bytecode.Instruction, "op"), "binary_integer"), stack: []const typed.Type) Error!void {
     const base = stack.len - 2;
     const left = try self.load("s", base);
@@ -484,6 +495,11 @@ fn emitBinary(comptime E: type, self: *E, op: @FieldType(@FieldType(bytecode.Ins
         if (kind != .string) return self.reject(self.pc);
         try self.print(" %v{d} =l call $myl_native_text_concat(l %heap, l %v{d}, l %v{d})\n", .{ result, left, right });
         try checkedPointer(E, self, result, base);
+    } else if (op.op == .lt) {
+        if (self.program.records[op.ty.recordIndex()].collection.kind != .string) return self.reject(self.pc);
+        const comparison = self.temp();
+        try self.print(" %v{d} =w call $myl_native_text_compare(l %v{d}, l %v{d})\n %v{d} =w csltw %v{d}, 0\n", .{ comparison, left, right, result, comparison });
+        try boolean(E, self, result, base);
     } else if (op.op == .eq or op.op == .ne) {
         const left_pointer = try operandPointer(E, self, op.ty, base);
         const right_pointer = try operandPointer(E, self, op.ty, base + 1);
@@ -566,11 +582,12 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
             try self.print(" %v{d} =l call $myl_native_dictionary_snapshot(l %heap, l %v{d}, w {d})\n", .{ result, input, @intFromBool(op.kind == .keys) });
             try checkedPointer(E, self, result, base);
         },
-        .key_at => {
+        .key_at, .value_at => {
             const at = try self.load("s", base);
             const length = self.temp();
             try self.print(dictionary_length, .{ length, input });
-            try self.print(" %v{d} =w call $myl_native_dictionary_key_at(l %v{d}, l %v{d}, l %agg{d})\n", .{ result, input, at, self.pc });
+            const operation = if (op.kind == .key_at) "key_at" else "value_at";
+            try self.print(" %v{d} =w call $myl_native_dictionary_{s}(l %v{d}, l %v{d}, l %agg{d})\n", .{ result, operation, input, at, self.pc });
             try requireIndexBounds(E, self, result, at, length, index_failure);
             try self.store(base, try self.readValue(try self.aggregatePointer(), op.output));
         },

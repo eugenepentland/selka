@@ -30,7 +30,7 @@ pub const Context = struct {
                 if (!symbolic.same(previous, actual, self.catalog)) return self.sink.failRelated(
                     eInference,
                     self.site,
-                    "arguments infer conflicting generic types or lengths; supply consistent arguments",
+                    "call arguments and expected result infer conflicting generic types or lengths",
                     .{ .span = parameter.name, .message = "conflicting parameter declared here" },
                 );
             } else self.values[index] = actual;
@@ -88,13 +88,18 @@ pub const Context = struct {
     fn mismatch(self: *Context) Error {
         return self.sink.fail(eInference, self.site, "argument shape does not match the generic parameter type");
     }
-    /// Require a unique value for every parameter; return context never supplies defaults.
+    /// Whether the available argument and result constraints determine every parameter.
+    pub fn complete(self: *const Context) bool {
+        for (self.values[0..self.parameters.len]) |value| if (value == null) return false;
+        return true;
+    }
+    /// Require a unique value for every parameter without inventing defaults.
     pub fn finish(self: *Context, output: []Value) Error!void {
         for (self.parameters, output, 0..) |parameter, *value, index| {
             value.* = self.values[index] orelse return self.sink.failRelated(
                 eInference,
                 self.site,
-                "cannot infer every generic argument from call arguments; supply explicit type arguments",
+                "cannot infer every generic argument from call arguments and expected result; supply explicit type arguments",
                 .{ .span = parameter.name, .message = "undetermined parameter declared here" },
             );
         }

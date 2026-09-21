@@ -385,6 +385,7 @@ const Evaluator = struct {
                 return integers.cast(ty, integer(value)) catch |err| return self.failure(node.span, err);
             },
             .unary => |unary| {
+                if (unary.op == .is_none) return self.context.sink.fail("E_OPTION_TEST", node.span, "is None requires an Option value");
                 const operand = self.context.program.nodes.items[@backingInt(unary.operand)];
                 if (unary.op == .neg and operand.data == .integer) {
                     const literal = try @import("integer_literal.zig").parse(self.context.src, operand.data.integer, true, self.context.sink);

@@ -1,0 +1,123 @@
+module dictionary_views
+
+
+def total(values: DictValues[str, int]) -> int noalloc:
+    result = 0
+    for value in values:
+        result += value
+    return result
+
+
+def paired_total(items: DictItems[str, int]) -> int noalloc:
+    result = 0
+    for key, value in items:
+        result += len(key) + value
+    return result
+
+
+def generic_values[T: copy + storable](mapping: dict[str, T]) -> list[T]:
+    view = mapping.values()
+    return list(view)
+
+
+def generic_live_values[T: copy + storable](mapping: dict[str, T]) -> DictValues[str, T] noalloc:
+    return mapping.values()
+
+
+def generic_items[T: copy + storable](mapping: dict[str, T]) -> list[DictItem[str, T]]:
+    return list(mapping.items())
+
+
+def generic_first[T: copy + storable](mapping: dict[str, T], fallback: T) -> T noalloc:
+    items = mapping.items()
+    for key, value in items:
+        return value
+    return fallback
+
+
+# spec-case: DICT-VIEWS-1
+public def test_bound_views_are_live_and_snapshots_are_explicit() -> bool:
+    mapping = {"a": 10, "b": 20}
+    values = mapping.values()
+    keys = mapping.keys()
+    items = mapping.items()
+    snapshot = list(values)
+    mapping["b"] = 30
+    mapping["c"] = 2
+    if total(values) != 42 or paired_total(items) != 45:
+        return False
+    return len(keys) == 3 and snapshot == [10, 20] and list(keys) == ["a", "b", "c"]
+
+
+# spec-case: DICT-VIEWS-1
+public def test_items_have_key_value_fields_in_every_context() -> bool:
+    mapping = {"a": 10, "b": 20}
+    entries = list(mapping.items())
+    if entries[0].key != "a" or entries[0].value != 10:
+        return False
+    result = 0
+    for key, value in entries:
+        result += len(key) + value
+    for entry in mapping.items():
+        result += entry.value
+    for index, entry in enumerate(mapping.items()):
+        result += index + entry.value
+    return result == 93
+
+
+# spec-case: DICT-VIEWS-1
+public def test_views_support_comprehensions_and_generic_helpers() -> bool:
+    mapping = {"a": 10, "b": 20}
+    if [value + 1 for value in mapping.values()] != [11, 21]:
+        return False
+    if [item.key for item in mapping.items()] != ["a", "b"]:
+        return False
+    if generic_values(mapping) != [10, 20]:
+        return False
+    if list(generic_live_values(mapping)) != [10, 20]:
+        return False
+    if generic_items(mapping)[1].value != 20:
+        return False
+    return generic_first(mapping, 0) == 10
+
+
+# spec-case: DICT-VIEWS-1
+public def test_views_keep_mapping_alive_and_empty_views_work() -> bool:
+    items = {"alive": 42}.items()
+    for value in range(2000):
+        garbage = [value, value + 1]
+        if len(garbage) != 2:
+            return False
+    empty: dict[str, int] = {}
+    if len(empty.items()) != 0 or len(list(empty.values())) != 0:
+        return False
+    return list(items)[0].value == 42
+
+
+# spec-case: DICT-VIEWS-1
+public def test_view_reads_observe_value_replacement_and_loop_control() -> bool:
+    mapping = {"a": 10, "b": 20, "c": 30}
+    result = 0
+    for key, value in mapping.items():
+        if key == "a":
+            mapping["b"] = 2
+            continue
+        result += value
+        break
+    return result == 2 and mapping["a"] == 10
+
+
+# spec-case: DICT-VIEWS-1
+public def test_views_work_inside_arena_and_snapshots_stay_independent() -> bool:
+    result = 0
+    kept = {"old": 0}.values()
+    with arena() as scratch:
+        mapping = {"a": 20, "b": 22}
+        live = mapping.values()
+        frozen = list(live)
+        mapping["a"] = 1
+        result = total(live)
+        kept = scratch.escape(live)
+        if frozen != [20, 22]:
+            return False
+    return result == 23 and list(kept) == [1, 22]

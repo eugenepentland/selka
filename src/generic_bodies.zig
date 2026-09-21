@@ -2,6 +2,8 @@
 const call_arguments = @import("call_arguments.zig");
 const eResultDiscard = diagnostic.result_discard;
 const std = @import("std");
+const option_flow = @import("option_flow.zig");
+const dictionary_views = @import("dictionary_views.zig");
 const numeric_surface = @import("numeric_surface.zig");
 const float_syntax = @import("float_syntax.zig");
 const integer_literal = @import("integer_literal.zig");
@@ -73,6 +75,7 @@ const Checker = struct {
     requirement_aliases: []const requirements.SubjectAlias = &.{},
     result: Symbolic,
     expected_types: std.AutoHashMapUnmanaged(source.Span, Symbolic) = .empty,
+    option_facts: option_flow.State = .{},
     functions: *const FunctionMap,
     pending: *std.ArrayList(usize),
     scheduled: []bool,
@@ -343,9 +346,14 @@ const Checker = struct {
             binding.available = false;
             binding.transfer_span = span;
         }
+        if (self.option_facts.has(self.active.get(self.src.text(span)).?)) {
+            if (self.expected_types.get(span)) |expected| if (symbolic.same(expected, binding.ty, self.catalog)) return binding.ty;
+            return self.optionElement(binding.ty, span);
+        }
         return binding.ty;
     }
     fn endScope(self: *Checker, before: usize) void {
+        self.option_facts.endScope(before);
         for (self.locals.items[before..]) |item| _ = self.active.remove(self.src.text(item.name));
         self.locals.shrinkRetainingCapacity(before);
     }
@@ -497,40 +505,21 @@ const Checker = struct {
         return contract.result;
     }
     fn collectionElement(self: *Checker, owner: Symbolic, span: source.Span) Error!Symbolic {
+        if (dictionary_views.symbolicKind(self.catalog, owner)) |kind| if (kind != .item)
+            return dictionary_views.symbolicElement(self.shapes(), try dictionary_views.symbolicOwner(self.shapes(), owner, span), kind, span);
         const kind = self.shapes().collectionKind(owner) orelse return self.sink.fail(eListType, span, "operation requires a managed list, string, or dictionary");
         if (kind == .string) return owner;
         return (try self.shapes().container(owner, span)).?.element;
     }
+    /// Element bound by ordinary iteration: dictionary keys, view projections,
+    /// or the element shape used by every other managed collection.
+    fn iterationElement(self: *Checker, source_type: Symbolic, owner: Symbolic, span: source.Span) Error!Symbolic {
+        if (dictionary_views.symbolicKind(self.catalog, source_type)) |view| if (view != .item)
+            return dictionary_views.symbolicElement(self.shapes(), owner, view, span);
+        if (self.shapes().collectionKind(owner) == .dictionary) return self.shapes().collectionKey(owner, span);
+        return self.collectionElement(owner, span);
+    }
     /// The dictionary receiver of one `items()` iteration source in a template body.
-    const ItemsSource = union(enum) { node: ast.NodeId, local: source.Span };
-
-    // twin-drift-ok: mirrors the concrete checker's AST-shape probe; the concrete
-    // checker stores the program under `syntax` and this one under `program`.
-    /// Recognize `receiver.items()` as a for-each source, matching the concrete checker.
-    fn itemsSource(self: *Checker, id: ast.NodeId) ?ItemsSource {
-        const node = self.program.nodes.items[@backingInt(id)];
-        switch (node.data) {
-            .method_call => |method| if (method.arguments.len == 0 and std.mem.eql(u8, self.src.text(method.name), "items"))
-                return .{ .node = method.base },
-            .call => |invocation| {
-                const owner = invocation.owner orelse return null;
-                if (invocation.type_arguments.len != 0 or invocation.arguments.len != 0) return null;
-                if (!std.mem.eql(u8, self.src.text(invocation.name), "items")) return null;
-                if (!self.active.contains(self.src.text(owner))) return null;
-                return .{ .local = owner };
-            },
-            else => {},
-        }
-        return null;
-    }
-
-    /// Resolve an `items()` source's receiver without resolving the value snapshot.
-    fn itemsReceiverValue(self: *Checker, items: ItemsSource) Error!Symbolic {
-        switch (items) {
-            .node => |id| return self.expression(id),
-            .local => |span| return self.namedValue(span),
-        }
-    }
     fn fieldAssignment(self: *Checker, node: ast.Node) Error!Symbolic {
         const assignment = node.data.field_assignment;
         var root = assignment.target;
@@ -612,13 +601,15 @@ const Checker = struct {
     /// Every f-string piece converts to text, so the whole literal is `str`.
     fn formatValue(self: *Checker, parts: []const ast.NodeId, span: source.Span) Error!Symbolic {
         const str_type: Symbolic = .{ .concrete = self.catalog.names.get("str") orelse return error.InternalError };
+        var allocation = parts.len != 1;
         for (parts) |part| {
             const value = try self.expression(part);
             if (symbolic.same(value, str_type, self.catalog)) continue;
+            allocation = true;
             if (self.isFloat(value)) continue;
             try self.supports(value, .integer, span);
         }
-        self.seedEffect(.managed_allocation);
+        if (allocation) self.seedEffect(.managed_allocation);
         return str_type;
     }
     fn listLiteral(self: *Checker, node: ast.Node, inputs: []const ast.NodeId) Error!Symbolic {
@@ -645,11 +636,16 @@ const Checker = struct {
         const key = if (family == .dictionary) try self.shapes().collectionKey(owner, operation.span) else element;
         const kind = operation.kind;
         if (operation.inputs.len != kind.arity()) return self.sink.fail("E_ARITY", operation.span, "collection argument count differs from its signature");
+        if (family == .dictionary) if (dictionary_views.operation(kind)) |view|
+            return self.shapes().nominal(self.catalog.templates.store.?.index.names.get(view.name()).?, &.{ key, element });
         const output: Symbolic = switch (kind) {
             .strip, .lstrip, .rstrip, .upper, .lower, .replace, .zfill => owner,
+            .view, .slice => owner,
             .is_digit, .is_alpha, .is_space => .{ .concrete = .bool },
             .count => .{ .concrete = .i64 },
             .length => .{ .concrete = .i64 },
+            .parse_int, .parse_int_range => try self.optionType(.{ .concrete = .i64 }),
+            .parse_float, .parse_float_range => try self.optionType(self.floatType()),
             .read, .get => element,
             .contains => .{ .concrete = .bool },
             .append, .write => .{ .concrete = .unit },
@@ -657,11 +653,17 @@ const Checker = struct {
             .join => owner,
             else => return self.sink.fail(eUnsupported, operation.span, "unsupported collection operation in generic body"),
         };
+        const numeric_parse = kind == .parse_int or kind == .parse_float or kind == .parse_int_range or kind == .parse_float_range;
+        if (numeric_parse and family != .bytes)
+            return self.sink.fail(eListType, operation.span, "numeric byte parsing requires a bytes receiver");
+        if (kind == .view and !self.immutableBytes(owner)) return self.sink.fail(eListType, operation.span, "view requires an immutable bytes receiver");
         if (family == .string and (kind == .write or kind == .append or kind == .get)) return self.sink.fail("E_TEXT_IMMUTABLE", operation.span, "strings are immutable");
         if (family != .string and (kind == .split or kind == .join)) return self.sink.fail(eListType, operation.span, "split and join require str");
         if (family != .dictionary and (kind == .keys or kind == .values or kind == .get)) return self.sink.fail(eListType, operation.span, "mapping operation requires a dictionary");
+        const range_bound = kind == .view or kind == .slice or kind == .parse_int_range or kind == .parse_float_range;
         for (operation.inputs, 0..) |input, index| {
-            const integer = family != .dictionary and index == 0 and (kind == .read or kind == .write);
+            const indexed = index == 0 and (kind == .read or kind == .write);
+            const integer = family != .dictionary and (range_bound or indexed);
             const expected = if (family == .dictionary) (if (index == 0) key else element) else if (kind == .join) try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{owner}) else element;
             if (integer) try self.supports(try self.expression(input), .integer, operation.span) else try self.compatible(try self.expressionExpected(input, expected), expected, operation.span);
         }
@@ -683,7 +685,63 @@ const Checker = struct {
         }
         if (std.mem.eql(u8, name, "push")) return self.sink.fail("E_REMOVED_SPELLING", method.name, "`push` was removed; use `append(value)`");
         const kind = buffer_operations.method(name) orelse return self.sink.fail("E_LIST_METHOD", method.name, "unknown collection method");
+        if (method.arguments.len == 0 and (kind == .parse_int or kind == .parse_float))
+            if (try self.immediateNumericRange(method.base, kind, node.span)) |output| return output;
         return self.listOperation(node, .{ .base = method.base, .kind = kind, .arguments = method.arguments });
+    }
+    /// Whether a symbolic byte collection is the immutable `bytes` builtin and
+    /// can therefore be read through a range without observing later mutation.
+    fn immutableBytes(self: *Checker, value: Symbolic) bool {
+        if (value == .concrete) {
+            if (!value.concrete.isAggregate()) return false;
+            const schema = self.catalog.records[value.concrete.recordIndex()];
+            return schema.collection.kind == .bytes and !std.mem.eql(u8, schema.name, @import("nominal_templates.zig").byte_buffer_name);
+        }
+        if (value != .nominal) return false;
+        const declaration = self.catalog.templates.store.?.index.declarations.items[value.nominal.declaration];
+        return if (declaration.builtin_name) |name| std.mem.eql(u8, name, "bytes") else false;
+    }
+    /// Instantiate the builtin option around a symbolic numeric result.
+    fn optionType(self: *Checker, element: Symbolic) Error!Symbolic {
+        return self.shapes().nominal(self.catalog.templates.store.?.index.names.get("Option").?, &.{element});
+    }
+    const NumericRange = struct { owner: Symbolic, start: ?ast.NodeId, end: ?ast.NodeId, view: bool, kind: BufferKind, span: source.Span };
+    /// Check one immediate range's receiver and optional bounds in source order.
+    fn numericRangeResult(self: *Checker, range: NumericRange) Error!Symbolic {
+        if (self.shapes().collectionKind(range.owner) != .bytes) return self.sink.fail(eListType, range.span, "numeric byte parsing requires a bytes receiver");
+        if (range.start) |bound| try self.supports(try self.expression(bound), .integer, range.span);
+        if (range.end) |bound| try self.supports(try self.expression(bound), .integer, range.span);
+        if (!self.immutableBytes(range.owner)) {
+            if (range.view) return self.sink.fail(eListType, range.span, "view requires an immutable bytes receiver");
+            self.seedEffect(.managed_allocation);
+        }
+        return if (range.kind == .parse_int) try self.optionType(.{ .concrete = .i64 }) else try self.optionType(self.floatType());
+    }
+    /// Recognize a numeric parser consuming a slice or view directly. Concrete
+    /// specialization performs the matching range lowering; this abstract pass
+    /// mirrors its allocation effect so a generic `noalloc` contract agrees.
+    fn immediateNumericRange(self: *Checker, id: ast.NodeId, kind: BufferKind, span: source.Span) Error!?Symbolic {
+        const input = self.program.nodes.items[@backingInt(id)];
+        return switch (input.data) {
+            .slice => |slice| if (slice.step != null)
+                null
+            else
+                try self.numericRangeResult(.{ .owner = try self.expression(slice.base), .start = slice.start, .end = slice.end, .view = false, .kind = kind, .span = span }),
+            .method_call => |method| if (!std.mem.eql(u8, self.src.text(method.name), "view"))
+                null
+            else if (method.arguments.len != 2)
+                self.sink.fail("E_ARITY", input.span, "view requires two bounds")
+            else
+                try self.numericRangeResult(.{ .owner = try self.expression(method.base), .start = method.arguments[0], .end = method.arguments[1], .view = true, .kind = kind, .span = span }),
+            .call => |invocation| call_range: {
+                const owner = invocation.owner orelse break :call_range null;
+                if (!std.mem.eql(u8, self.src.text(invocation.name), "view")) break :call_range null;
+                try call_arguments.positional(invocation, self.sink);
+                if (invocation.type_arguments.len != 0 or invocation.arguments.len != 2) return self.sink.fail("E_ARITY", input.span, "view requires two bounds");
+                break :call_range try self.numericRangeResult(.{ .owner = try self.namedValue(owner), .start = invocation.arguments[0], .end = invocation.arguments[1], .view = true, .kind = kind, .span = span });
+            },
+            else => null,
+        };
     }
     /// Check `values[index] op= value` in a generic body against the element's own rules.
     fn indexAssignment(self: *Checker, node: ast.Node) Error!Symbolic {
@@ -719,10 +777,11 @@ const Checker = struct {
     }
     fn managedMethod(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
         if (input_call.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
-            if (self.shapes().managed(self.locals.items[slot].ty)) {
+            const receiver = if (self.option_facts.has(slot)) try self.optionElement(self.locals.items[slot].ty, owner) else self.locals.items[slot].ty;
+            if (self.shapes().managed(receiver)) {
                 const kind = buffer_operations.method(self.src.text(input_call.name)) orelse return self.sink.fail("E_LIST_METHOD", input_call.name, "unknown collection method");
                 if (input_call.type_arguments.len != 0) return self.sink.fail("E_ARITY", span, "collection methods do not take explicit type arguments");
-                const result = try self.collectionOperation(self.locals.items[slot].ty, .{ .kind = kind, .inputs = input_call.arguments, .span = span });
+                const result = try self.collectionOperation(receiver, .{ .kind = kind, .inputs = input_call.arguments, .span = span });
                 return result;
             }
         };
@@ -925,7 +984,21 @@ const Checker = struct {
         }
         return null;
     }
+    fn viewSnapshot(self: *Checker, call_value: Call, span: source.Span) Error!?Symbolic {
+        if (call_value.owner != null or !std.mem.eql(u8, self.src.text(call_value.name), "list")) return null;
+        if (self.active.contains("list") or self.functions.contains("list")) return null;
+        if (call_value.arguments.len != 1 or call_value.type_arguments.len != 0) return null;
+        const view = try self.expression(call_value.arguments[0]);
+        const kind = dictionary_views.symbolicKind(self.catalog, view) orelse return null;
+        if (kind == .item) return null;
+        const mapping = try dictionary_views.symbolicOwner(self.shapes(), view, span);
+        const element = try dictionary_views.symbolicElement(self.shapes(), mapping, kind, span);
+        self.seedEffect(.managed_allocation);
+        const result = try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{element});
+        return result;
+    }
     fn specialCall(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
+        if (try self.viewSnapshot(input_call, span)) |value| return value;
         if (try self.capabilityMethodCall(input_call, span)) |value| return value;
         if (try self.textConstructor(input_call, span)) |value| return value;
         if (std.mem.eql(u8, self.src.text(input_call.name), "todo") and input_call.owner == null) {
@@ -1074,7 +1147,7 @@ const Checker = struct {
         const arguments = try self.allocator.alloc(Symbolic, required.len);
         defer self.allocator.free(arguments);
         const inferred = invocation.type_arguments.len == 0 and required.len != 0;
-        const actuals = if (inferred) try self.inferCall(invocation, signature, arguments) else null;
+        const actuals = if (inferred) try self.inferCall(invocation, signature, arguments, span) else null;
         defer if (actuals) |values| self.allocator.free(values);
         for (required, arguments, 0..) |parameter, *argument, index| {
             const argument_span = if (inferred) span else invocation.type_arguments[index];
@@ -1106,8 +1179,11 @@ const Checker = struct {
             .{ .span = parameter.name, .message = "required type parameter declared here" },
         );
     }
-    fn inferCall(self: *Checker, invocation: Call, signature: @FieldType(ast.Function, "signature"), arguments: []Symbolic) Error![]Symbolic {
+    fn inferCall(self: *Checker, invocation: Call, signature: @FieldType(ast.Function, "signature"), arguments: []Symbolic, span: source.Span) Error![]Symbolic {
         var inference: @import("generic_inference.zig").Context = .{ .src = self.src, .catalog = self.catalog, .parameters = signature.type_parameters, .sink = self.sink, .site = invocation.name };
+        if (self.expected_types.get(span)) |expected| try inference.match(signature.return_type, expected);
+        const contextual = inference.complete();
+        if (contextual) try inference.finish(arguments);
         const actuals = try self.allocator.alloc(Symbolic, invocation.arguments.len);
         errdefer self.allocator.free(actuals);
         for (0..invocation.arguments.len) |source_index| {
@@ -1115,7 +1191,7 @@ const Checker = struct {
             const input = invocation.arguments[position];
             const parameter = signature.parameters[position];
             const actual = &actuals[position];
-            actual.* = try self.expression(input);
+            actual.* = if (contextual) try self.expressionExpected(input, try self.substituted(parameter.ty, signature.type_parameters, arguments)) else try self.expression(input);
             try inference.match(parameter.ty, actual.*);
         }
         try inference.finish(arguments);
@@ -1277,6 +1353,12 @@ const Checker = struct {
             .boolean => .{ .concrete = .bool },
             .integer => |span| try self.numericLiteral(span, false),
             .unary => |unary| result: {
+                if (unary.op == .is_none) {
+                    const operand = try self.rawOptionExpression(unary.operand);
+                    _ = try self.optionElement(operand, unary.op_span);
+                    if (try self.transfers(operand)) return self.sink.fail("E_OPTION_TEST", unary.op_span, "use match for an Option carrying an owned value or checked Result");
+                    break :result .{ .concrete = .bool };
+                }
                 const child = self.program.nodes.items[@backingInt(unary.operand)];
                 const operand: Symbolic = if (unary.op == .neg and child.data == .integer)
                     try self.numericLiteral(child.data.integer, true)
@@ -1317,6 +1399,7 @@ const Checker = struct {
             },
             .length => |input| result: {
                 const base = try self.expression(input);
+                if (dictionary_views.symbolicKind(self.catalog, base)) |kind| if (kind != .item) break :result .{ .concrete = .i64 };
                 if (self.shapes().managed(base)) break :result .{ .concrete = .i64 };
                 _ = try self.arrayShape(base, node.span);
                 if ((try self.requiresHandling(base))) return self.sink.fail(eResultOperation, node.span, "length would drop result-bearing elements");
@@ -1581,7 +1664,10 @@ const Checker = struct {
         return self.sink.fail("E_UNKNOWN_VARIANT", name, "case is not a variant of the matched type");
     }
     fn matchValue(self: *Checker, match: @FieldType(@FieldType(ast.Statement, "data"), "match"), span: source.Span) Error!bool {
-        const value = try self.expression(match.value);
+        for (match.arms) |arm| try self.invalidateOptions(arm.body);
+        const match_facts = try self.option_facts.snapshot(self.field_arena.allocator());
+        defer self.option_facts.restore(match_facts);
+        const value = try self.rawOptionExpression(match.value);
         const variants = try self.shapes().requireVariants(value, span);
         const seen = try self.allocator.alloc(bool, variants.fields.len);
         defer self.allocator.free(seen);
@@ -1592,6 +1678,7 @@ const Checker = struct {
         defer if (continuation) |state| self.allocator.free(state);
         var terminated = true;
         for (match.arms) |arm| {
+            self.option_facts.restore(match_facts);
             self.restorePending(incoming);
             const tag = try self.patternTag(value, variants, arm.ty, arm.name);
             if (seen[tag]) return self.sink.fail("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm");
@@ -1666,6 +1753,9 @@ const Checker = struct {
         const short_circuit = operation.op == .logical_and or operation.op == .logical_or;
         const state = if (short_circuit) try self.pendingState(self.locals.items.len) else null;
         defer if (state) |snapshot| self.allocator.free(snapshot);
+        const facts = if (short_circuit) try self.option_facts.snapshot(self.field_arena.allocator()) else null;
+        defer if (facts) |saved| self.option_facts.restore(saved);
+        if (short_circuit) try self.assumeOption(operation.left, operation.op == .logical_and);
         const right = try self.expression(operation.right);
         if (state) |snapshot| try self.samePending(snapshot, operation.op_span, eResultPath);
         if (self.isFloat(left) or self.isFloat(right) or operation.op == .python_div) {
@@ -1730,15 +1820,39 @@ const Checker = struct {
         if (!terminated and statements.len != 0) try self.requireHandled(before, self.program.statements.items[@backingInt(statements[statements.len - 1])].span);
         return terminated;
     }
+    /// Read the original optional binding for a tag test or explicit match.
+    fn rawOptionExpression(self: *Checker, id: ast.NodeId) Error!Symbolic {
+        const node = self.program.nodes.items[@backingInt(id)];
+        if (node.data == .name) if (self.active.get(self.src.text(node.data.name))) |slot| {
+            return self.expressionExpected(id, self.locals.items[slot].ty);
+        };
+        return self.expression(id);
+    }
+    /// Derive facts along one edge using the same rules as the concrete checker.
+    fn assumeOption(self: *Checker, condition: ast.NodeId, truth: bool) Error!void {
+        try self.option_facts.assume(self.field_arena.allocator(), .{ .program = self.program, .src = self.src }, .{ .symbolic = &self.active }, .{ .condition = condition, .truth = truth });
+    }
+    /// Invalidate loop-carried assignments before checking a symbolic iteration.
+    fn invalidateOptions(self: *Checker, body: ast.StatementId) Error!void {
+        try self.option_facts.invalidateWrites(self.field_arena.allocator(), .{ .program = self.program, .src = self.src }, .{ .symbolic = &self.active }, body);
+    }
     fn branchValue(self: *Checker, branch: @FieldType(@FieldType(ast.Statement, "data"), "branch"), span: source.Span) Error!bool {
         try self.compatible(try self.expression(branch.condition), .{ .concrete = .bool }, span);
         const before = try self.pendingState(self.locals.items.len);
         defer self.allocator.free(before);
+        const facts_before = try self.option_facts.snapshot(self.field_arena.allocator());
+        try self.assumeOption(branch.condition, true);
         const left = try self.statement(branch.then_body);
+        const facts_after = try self.option_facts.snapshot(self.field_arena.allocator());
         const after = try self.pendingState(before.len);
         defer self.allocator.free(after);
         self.restorePending(before);
+        self.option_facts.restore(facts_before);
+        try self.assumeOption(branch.condition, false);
         const right = if (branch.else_body) |other| try self.statement(other) else false;
+        if (!left) {
+            if (right) self.option_facts.restore(facts_after) else self.option_facts.intersect(facts_after);
+        }
         if (!left) {
             if (!right) try self.samePending(after, span, eResultPath);
             self.restorePending(after);
@@ -1782,6 +1896,7 @@ const Checker = struct {
                     target.available = true;
                     target.transfer_span = null;
                 }
+                self.option_facts.forget(self.active.get(self.src.text(assignment.name)).?);
             },
             // `_ = expr` evaluates the value and releases it, settling a result obligation.
             .discard => |value| {
@@ -1795,29 +1910,23 @@ const Checker = struct {
             },
             .branch => |branch| return self.branchValue(branch, statement_value.span),
             .for_each => |each| {
-                // `for key, value in d.items()` iterates the dictionary itself in a
-                // template body too, so both bindings agree with a concrete check.
-                var dictionary_items = false;
-                var owner: Symbolic = undefined;
-                if (each.index_name != null) if (self.itemsSource(each.iterable)) |items| {
-                    const receiver = try self.itemsReceiverValue(items);
-                    if (self.shapes().managed(receiver) and self.shapes().collectionKind(receiver) == .dictionary) {
-                        owner = receiver;
-                        dictionary_items = true;
-                    }
-                };
-                if (!dictionary_items) owner = try self.expression(each.iterable);
-                if (!self.shapes().managed(owner)) return self.sink.fail(eListType, statement_value.span, "iteration requires a list");
-                const kind = self.shapes().collectionKind(owner);
+                try self.invalidateOptions(each.body);
+                const loop_facts = try self.option_facts.snapshot(self.field_arena.allocator());
+                defer self.option_facts.restore(loop_facts);
+                const source_type = try self.expression(each.iterable);
+                const view = dictionary_views.symbolicKind(self.catalog, source_type);
+                const projected = view != null and view.? != .item;
+                const owner = if (projected) try dictionary_views.symbolicOwner(self.shapes(), source_type, statement_value.span) else source_type;
+                if (!self.shapes().managed(owner)) return self.sink.fail(eListType, statement_value.span, "iteration requires a collection or dictionary view");
+                const element = try self.iterationElement(source_type, owner, statement_value.span);
                 const first = self.locals.items.len;
-                if (dictionary_items) {
-                    const key = try self.shapes().collectionKey(owner, statement_value.span);
-                    const value = try self.collectionElement(owner, statement_value.span);
-                    try self.bind(each.index_name.?, key, false);
-                    try self.bind(each.name, value, false);
+                if (each.index_name != null and !each.enumerated) {
+                    if (dictionary_views.symbolicKind(self.catalog, element) != .item) return self.sink.fail("E_ITERATION", statement_value.span, "two iteration names require dictionary items, enumerate or zip");
+                    const shape = try self.shapes().schema(element, statement_value.span);
+                    try self.bind(each.index_name.?, shape.fields[0].ty.?, false);
+                    try self.bind(each.name, shape.fields[1].ty.?, false);
                 } else {
-                    const shape = if (kind == .dictionary) try self.shapes().collectionKey(owner, statement_value.span) else try self.collectionElement(owner, statement_value.span);
-                    try self.bind(each.name, shape, false);
+                    try self.bind(each.name, element, false);
                     if (each.index_name) |name| try self.bind(name, .{ .concrete = .i64 }, false);
                 }
                 defer self.endScope(first);
@@ -1830,6 +1939,9 @@ const Checker = struct {
                 self.restorePending(before);
             },
             .for_range => |range| {
+                try self.invalidateOptions(range.body);
+                const loop_facts = try self.option_facts.snapshot(self.field_arena.allocator());
+                defer self.option_facts.restore(loop_facts);
                 const element: Symbolic = if (self.program.nodes.items[@backingInt(range.start)].data == .unit) .{ .concrete = .i64 } else try self.expression(range.start);
                 try self.supports(element, .integer, range.name);
                 try self.compatible(try self.expression(range.end), element, range.name);
@@ -1851,6 +1963,9 @@ const Checker = struct {
                 return true;
             },
             .loop => |loop| {
+                try self.invalidateOptions(loop.body);
+                const loop_facts = try self.option_facts.snapshot(self.field_arena.allocator());
+                defer self.option_facts.restore(loop_facts);
                 const before = try self.pendingState(self.locals.items.len);
                 defer self.allocator.free(before);
                 try self.compatible(try self.expression(loop.condition), .{ .concrete = .bool }, statement_value.span);
@@ -1858,6 +1973,7 @@ const Checker = struct {
                 const previous = self.loop_pending;
                 self.loop_pending = before;
                 defer self.loop_pending = previous;
+                try self.assumeOption(loop.condition, true);
                 if (!try self.statement(loop.body)) try self.samePending(before, statement_value.span, diagnostic.result_loop);
                 self.restorePending(before);
             },

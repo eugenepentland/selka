@@ -23,6 +23,7 @@ Two properties matter for correctness:
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 
@@ -43,6 +44,14 @@ from runtime_signatures import signature as runtime_signature
 def is_temporary(value):
     """True for a parsed `%temporary` or `$global`."""
     return getattr(value, "kind", None) in ("temp", "global") and hasattr(value, "name")
+
+
+def target_attribute(name):
+    """Read one driver-resolved target attribute, rejecting malformed input."""
+    value = os.environ.get(name, "")
+    if value and not re.fullmatch(r"[A-Za-z0-9+._,-]+", value):
+        raise ParseError(f"invalid {name} value")
+    return value
 
 
 def is_constant(value):

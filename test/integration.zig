@@ -7330,3 +7330,484 @@ test "CLI list-interfaces prints a tests column from the shared reachability ind
     try testing.expect(std.mem.indexOf(u8, result.stdout, "export function parse") != null);
     try testing.expect(std.mem.indexOf(u8, result.stdout, "tests(1)") != null);
 }
+
+// `mylang invoke` calls one export of a checked project through the native
+// runtime. These cases follow the `CLI context` fixtures: a small library
+// project in a temporary directory, one JSON answer on stdout, and assertions
+// about the shape of that answer rather than about a byte-for-byte document,
+// because the envelope is still moving. Every case passes this build's QBE and
+// Zig and a cache directory under its own fixture, so no case reads the
+// repository cache, depends on PATH, or shares artifacts with another shard.
+
+/// The invoked project: one small module whose exports each answer one wire
+/// question, with a `main` so it is also an ordinary program.
+const invoke_app =
+    \\module app
+    \\
+    \\
+    \\public class Point:
+    \\    x: i64
+    \\    y: i64
+    \\
+    \\
+    \\public def add(a: i64, b: i64) -> i64:
+    \\    return a + b
+    \\
+    \\
+    \\public def identity(x: i64) -> i64:
+    \\    return x
+    \\
+    \\
+    \\public def shift(p: Point, dx: i64) -> Point effects(managed_allocation):
+    \\    return Point(x=p.x + dx, y=p.y)
+    \\
+    \\
+    \\public def origin(x: i64) -> Point effects(managed_allocation):
+    \\    return Point(x=x, y=0)
+    \\
+    \\
+    \\public def classify(x: i64) -> Result[i64, i64]:
+    \\    if x < 0:
+    \\        return Err(x)
+    \\    return Ok(x)
+    \\
+    \\
+    \\public def shout(out: Stream, x: i64) -> i64 effects(output):
+    \\    out.print(x)
+    \\    return x
+    \\
+    \\
+    \\def hidden(x: i64) -> i64:
+    \\    return x
+    \\
+    \\
+    \\public def look(fs: Filesystem, x: i64) -> i64 effects(filesystem):
+    \\    return x
+    \\
+    \\
+    \\public def text_len(text: str) -> i64 effects(managed_allocation):
+    \\    return len(text)
+    \\
+    \\
+    \\public def total(values: list[i64]) -> i64:
+    \\    return len(values)
+    \\
+    \\
+    \\public def pick[T](x: T) -> T:
+    \\    return x
+    \\
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
+/// The second fixture declares no `main` at all: the command has to supply a
+/// synthetic entry instead of asking the caller to edit the library first.
+const invoke_library =
+    \\module library
+    \\
+    \\
+    \\public def double(x: i64) -> i64:
+    \\    return x + x
+;
+
+/// The text fixture: a copied managed text crosses the invocation boundary in
+/// the return direction, so a `str` result is eligible and comes back as the
+/// exact string while the same type in an argument position stays refused for
+/// want of a root. The non-ASCII literals are written as language escapes, so
+/// this Zig file stays ASCII and the guest decodes the scalars itself.
+const invoke_text =
+    \\module app
+    \\
+    \\
+    \\public def letter(n: i64) -> str effects(managed_allocation):
+    \\    return chr(n)
+    \\
+    \\
+    \\public def greeting() -> str effects(managed_allocation):
+    \\    return "h\u00e9llo \u4e16\u754c \U0001F600"
+    \\
+    \\
+    \\public def frozen() -> str effects(managed_allocation):
+    \\    return "literal"
+    \\
+    \\
+    \\public def shout(n: i64) -> str effects(managed_allocation):
+    \\    return chr(n) + "!"
+    \\
+    \\
+    \\public def repeated(n: i64) -> str effects(managed_allocation):
+    \\    text = ""
+    \\    i = 0
+    \\    while i < n:
+    \\        text = text + "z"
+    \\        i = i + 1
+    \\    return text
+    \\
+    \\
+    \\public def count(text: str) -> i64 effects(managed_allocation):
+    \\    return len(text)
+;
+
+/// Write `source` as `name` in `temporary` and return its absolute path.
+fn writeInvokeSource(a: std.mem.Allocator, temporary: *testing.TmpDir, name: []const u8, source: []const u8) ![]u8 {
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = name, .data = source });
+    return temporary.dir.realPathFileAlloc(testing.io, name, a);
+}
+
+/// Write one request document and return its absolute path.
+fn writeInvokeRequest(a: std.mem.Allocator, temporary: *testing.TmpDir, name: []const u8, body: []const u8) ![]u8 {
+    return writeInvokeSource(a, temporary, name, body);
+}
+
+/// The `--input=FILE` option naming `path`.
+fn invokeInputOption(a: std.mem.Allocator, path: []const u8) ![]u8 {
+    return std.fmt.allocPrint(a, "--input={s}", .{path});
+}
+
+/// The `--cache-dir=DIR` option every fixture passes, under the fixture root so
+/// concurrent shards and the repository cache stay independent.
+fn invokeCacheOption(a: std.mem.Allocator, temporary: *testing.TmpDir) ![]u8 {
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    return std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{root});
+}
+
+/// Run `mylang invoke` for `entry` with `options`, the fixture's private cache
+/// and this build's QBE and Zig.
+fn runInvoke(entry: []const u8, options: []const []const u8, cache_option: []const u8) !std.process.RunResult {
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "invoke", entry });
+    try args.appendSlice(testing.allocator, options);
+    try args.append(testing.allocator, cache_option);
+    try args.appendSlice(testing.allocator, &tools);
+    return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+}
+
+/// Index of the `}` that closes the object starting at `body[0]`, so a caller
+/// can prove stdout holds exactly one object and nothing else around it.
+fn singleObjectEnd(body: []const u8) ?usize {
+    var depth: usize = 0;
+    var quoted = false;
+    var escaped = false;
+    for (body, 0..) |byte, index| {
+        if (quoted) {
+            if (escaped) {
+                escaped = false;
+            } else if (byte == '\\') {
+                escaped = true;
+            } else if (byte == '"') {
+                quoted = false;
+            }
+            continue;
+        }
+        if (byte == '"') {
+            quoted = true;
+        } else if (byte == '{') {
+            depth += 1;
+        } else if (byte == '}') {
+            if (depth == 0) return null;
+            depth -= 1;
+            if (depth == 0) return index;
+        }
+    }
+    return null;
+}
+
+/// Parse the single JSON object a `mylang invoke` answer prints, asserting that
+/// stdout holds nothing else around it.
+fn parseInvokeAnswer(printed: []const u8) !std.json.Parsed(std.json.Value) {
+    const body = std.mem.trim(u8, printed, " \t\r\n");
+    try testing.expect(body.len > 1);
+    const end = singleObjectEnd(body) orelse return error.InvokeStdoutNotOneObject;
+    try testing.expectEqual(body.len - 1, end);
+    var parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, body, .{});
+    errdefer parsed.deinit();
+    try testing.expect(parsed.value == .object);
+    return parsed;
+}
+
+/// A required top-level string field of an invoke answer.
+fn invokeString(answer: std.json.Value, key: []const u8) ![]const u8 {
+    const value = answer.object.get(key) orelse return error.MissingInvokeField;
+    if (value != .string) return error.InvokeFieldNotString;
+    return value.string;
+}
+
+/// The qualified name an answer is about, accepted either at the top level or
+/// inside the `target` record.
+fn invokeFunction(answer: std.json.Value) ![]const u8 {
+    const value = answer.object.get("function") orelse return error.MissingInvokeFunction;
+    if (value != .string) return error.MissingInvokeFunction;
+    return value.string;
+}
+
+/// One object an answer carries at the top level. The envelope is pinned to the
+/// published shape, so a second tolerated spelling would let a rename through.
+fn invokeContextObject(answer: std.json.Value, key: []const u8) !std.json.Value {
+    const value = answer.object.get(key) orelse return error.MissingInvokeContext;
+    if (value != .object) return error.MissingInvokeContext;
+    return value;
+}
+
+/// Whether an object carries at least one non-empty string value.
+fn objectHasText(value: std.json.Value) bool {
+    var entries = value.object.iterator();
+    while (entries.next()) |entry| {
+        const item = entry.value_ptr.*;
+        if (item != .string) continue;
+        if (item.string.len != 0) return true;
+    }
+    return false;
+}
+
+/// Every answer carries the version, a status, the function it is about, the
+/// identities it was produced from and the limits it was judged against.
+fn expectInvokeEnvelope(answer: std.json.Value, qualified: []const u8) !void {
+    try testing.expectEqualStrings("native-invocation-v1", try invokeString(answer, "version"));
+    try testing.expect((try invokeString(answer, "status")).len > 0);
+    try testing.expectEqualStrings(qualified, try invokeFunction(answer));
+    const limits = try invokeContextObject(answer, "limits");
+    try testing.expect(limits.object.count() > 0);
+    const identities = try invokeContextObject(answer, "identities");
+    try testing.expect(objectHasText(identities));
+}
+
+/// One effective limit the answer reports. Bounds travel as JSON numbers; only
+/// a guest value uses the decimal-string form, which is why this does not go
+/// through `valueInteger`.
+fn limitInteger(answer: std.json.Value, key: []const u8) !i64 {
+    const limits = try invokeContextObject(answer, "limits");
+    const value = limits.object.get(key) orelse return error.MissingInvokeLimit;
+    if (value != .integer) return error.MissingInvokeLimit;
+    return value.integer;
+}
+
+/// The integer a response value carries. The published wire form is a canonical
+/// decimal string, chosen so a 64-bit value survives a client whose numbers
+/// cannot represent it, so a JSON number here would be a contract regression
+/// rather than an alternative spelling.
+fn valueInteger(value: std.json.Value) !i64 {
+    if (value != .string) return error.InvokeValueNotInteger;
+    return std.fmt.parseInt(i64, value.string, 10);
+}
+
+/// The text a response value carries. A returned `str` is published as one
+/// wire node per Unicode scalar and rebuilt as a JSON string, so an integer
+/// node or a bare scalar array at the value position is a contract regression
+/// rather than another spelling of the same answer.
+fn valueText(value: std.json.Value) ![]const u8 {
+    if (value != .string) return error.InvokeValueNotText;
+    return value.string;
+}
+
+/// The description payload of a `--describe` answer.
+fn invokeDescribe(answer: std.json.Value) !std.json.Value {
+    if (answer.object.get("describe")) |value| {
+        if (value == .object) return value;
+    }
+    if (answer.object.get("description")) |value| {
+        if (value == .object) return value;
+    }
+    return error.MissingInvokeDescribe;
+}
+
+/// The argument positions a description publishes.
+fn describeParameters(payload: std.json.Value) ![]std.json.Value {
+    inline for (.{ "parameters", "arguments" }) |key| {
+        if (payload.object.get(key)) |value| {
+            if (value == .array) return value.array.items;
+        }
+    }
+    return error.MissingInvokeParameters;
+}
+
+/// The description must publish `name` as a position of the checked type.
+fn expectDescribeParameter(parameters: []std.json.Value, name: []const u8, type_name: []const u8) !void {
+    for (parameters) |parameter| {
+        if (parameter == .string) {
+            if (std.mem.eql(u8, parameter.string, name)) return;
+            continue;
+        }
+        if (parameter != .object) continue;
+        const field = parameter.object.get("name") orelse continue;
+        if (field != .string) continue;
+        if (!std.mem.eql(u8, field.string, name)) continue;
+        if (parameter.object.get("type")) |declared| {
+            if (declared == .string) try testing.expectEqualStrings(type_name, declared.string);
+        }
+        return;
+    }
+    return error.MissingInvokeParameter;
+}
+
+/// The checked result position a description publishes.
+fn describeResult(payload: std.json.Value) ![]const u8 {
+    const value = payload.object.get("result") orelse return error.MissingInvokeResult;
+    if (value == .string) return value.string;
+    if (value == .object) {
+        if (value.object.get("type")) |declared| {
+            if (declared == .string) return declared.string;
+        }
+    }
+    return error.InvokeResultNotString;
+}
+
+/// Whether a description says the target can be called as written.
+fn describeEligible(payload: std.json.Value) !bool {
+    if (payload.object.get("eligible")) |value| {
+        if (value == .bool) return value.bool;
+    }
+    inline for (.{ "invocation", "wire", "eligibility" }) |key| {
+        if (payload.object.get(key)) |scope| {
+            if (scope == .object) {
+                if (scope.object.get("eligible")) |value| {
+                    if (value == .bool) return value.bool;
+                }
+            }
+        }
+    }
+    return error.MissingInvokeEligibility;
+}
+
+/// The sentence explaining why a description is not eligible.
+fn describeReason(payload: std.json.Value) ![]const u8 {
+    if (payload.object.get("reason")) |value| {
+        if (value == .string) return value.string;
+    }
+    inline for (.{ "invocation", "wire", "eligibility" }) |key| {
+        if (payload.object.get(key)) |scope| {
+            if (scope == .object) {
+                if (scope.object.get("reason")) |value| {
+                    if (value == .string) return value.string;
+                }
+            }
+        }
+    }
+    return error.MissingInvokeReason;
+}
+
+/// The executed call an answer reports, or null when no call ran.
+fn invokeOutcome(answer: std.json.Value) ?std.json.Value {
+    inline for (.{ "outcome", "invocation", "call" }) |key| {
+        if (answer.object.get(key)) |value| {
+            if (value != .null) return value;
+        }
+    }
+    return null;
+}
+
+/// The typed value one executed call reports.
+fn outcomeValue(outcome: std.json.Value) !std.json.Value {
+    if (outcome != .object) return outcome;
+    inline for (.{ "value", "result", "actual" }) |key| {
+        if (outcome.object.get(key)) |value| return value;
+    }
+    return error.MissingInvokeOutcomeValue;
+}
+
+/// The guest output one executed call captured, when the envelope reports it.
+fn outcomeOutput(outcome: std.json.Value) ?[]const u8 {
+    if (outcome != .object) return null;
+    inline for (.{ "output", "captured_output", "guest_output" }) |key| {
+        if (outcome.object.get(key)) |value| {
+            if (value == .string) return value.string;
+        }
+    }
+    return null;
+}
+
+/// Run a request that must complete: exit 0 and one parseable answer object.
+fn expectInvokeCompleted(entry: []const u8, options: []const []const u8, cache_option: []const u8) !std.json.Parsed(std.json.Value) {
+    const outcome = try runInvoke(entry, options, cache_option);
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    return parseInvokeAnswer(outcome.stdout);
+}
+
+/// A refused request must not print a success object: stdout is either empty or
+/// one JSON object whose status is none of the completion spellings.
+fn expectNoInvokeSuccess(printed: []const u8) !void {
+    const body = std.mem.trim(u8, printed, " \t\r\n");
+    if (body.len == 0) return;
+    var parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, body, .{});
+    defer parsed.deinit();
+    try testing.expect(parsed.value == .object);
+    const status = parsed.value.object.get("status") orelse return;
+    if (status != .string) return;
+    inline for (.{ "ok", "described", "completed", "value" }) |success| {
+        try testing.expect(!std.mem.eql(u8, status.string, success));
+    }
+}
+
+/// Run an `invoke` request that must be refused with `expected_status` and must
+/// not report a completed call.
+fn expectInvokeRefused(entry: []const u8, options: []const []const u8, cache_option: []const u8, expected_status: u8) !void {
+    const outcome = try runInvoke(entry, options, cache_option);
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = expected_status }, outcome.term);
+    try expectNoInvokeSuccess(outcome.stdout);
+}
+
+/// Run a usage mistake: exit 2, the usage text on stderr, no success object.
+fn expectInvokeUsage(entry: []const u8, options: []const []const u8, cache_option: []const u8) !void {
+    const outcome = try runInvoke(entry, options, cache_option);
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, outcome.term);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "usage") != null);
+    try expectNoInvokeSuccess(outcome.stdout);
+}
+
+/// An authority refusal must name the capability in either spelling.
+fn expectMentionsFilesystem(bytes: []const u8) !void {
+    if (std.mem.indexOf(u8, bytes, "Filesystem") != null) return;
+    try testing.expect(std.mem.indexOf(u8, bytes, "filesystem") != null);
+}
+
+/// A refusal about a call position must name the native call ABI, so a caller
+/// can tell "not a copied value" from "a copied value the call ABI cannot carry".
+fn expectMentionsCallAbi(bytes: []const u8) !void {
+    try testing.expect(std.mem.indexOf(u8, bytes, "ABI") != null);
+}
+
+/// A text-argument refusal must name the root the argument direction would
+/// need, so a caller can tell it from "this type cannot cross the boundary at
+/// all".
+fn expectMentionsRoot(bytes: []const u8) !void {
+    try testing.expect(std.mem.indexOf(u8, bytes, "root") != null);
+}
+
+/// The generic wording a type with no copied-value representation gets must
+/// not be used for a text argument: the same type does cross the boundary in
+/// the return direction, so the refusal has to be the specific one.
+fn expectNoGenericTextRefusal(bytes: []const u8) !void {
+    try testing.expect(std.mem.indexOf(u8, bytes, "no copied-value representation") == null);
+}
+
+/// The worked invocation example, invoked in place from the repository root so
+/// the committed fixture is exactly the file the example publishes.
+const invoke_report_example = "examples/invoke-report/report.my";
+
+/// A list result must be one JSON array of element texts, exactly `expected`
+/// in order and with no element added or dropped. A returned `list[T]` is
+/// published as one node per element in the declared element form, so an array
+/// collapsed into a single string at the value position is a contract
+/// regression rather than another spelling of the same answer.
+fn expectValueStrings(value: std.json.Value, expected: []const []const u8) !void {
+    if (value != .array) return error.InvokeValueNotList;
+    try testing.expectEqual(expected.len, value.array.items.len);
+    for (value.array.items, 0..) |item, index| {
+        try testing.expectEqualStrings(expected[index], try valueText(item));
+    }
+}
+
+/// A call that printed nothing must publish no captured output text: the
+/// protocol channel carries the answer alone, so absent and empty are both a
+/// zero-length capture and neither is text that leaked onto the channel.
+fn expectNoCapturedOutput(outcome: std.json.Value) !void {
+    const captured: []const u8 = outcomeOutput(outcome) orelse "";
+    try testing.expectEqual(@as(usize, 0), captured.len);
+}

@@ -186,7 +186,7 @@ fn buildEnvironment(context: fs.Context, settings: options.Options) Error![]cons
         .driver = bundled.driver_identity,
         .runtime = bundled.content_hash,
         .zig = try context.stamp(try context.executable(settings.zig)),
-        .qbe = try context.stamp(try context.executable(settings.qbe)),
+        .qbe = try context.stamp(try context.executable(settings.codegen.qbe)),
         .mode = settings.mode,
         .target = settings.target,
     }, .{});
@@ -241,7 +241,7 @@ test "a run identity separates programs, toolchains and build modes" {
     try std.Io.Dir.cwd().setFilePermissions(std.testing.io, tool, .executable_file, .{});
     // Pin both modes: the default is `ReleaseFast` now, so the test must name
     // the other mode rather than relying on the default being `Debug`.
-    const settings: options.Options = .{ .source = "", .run = true, .zig = tool, .qbe = tool, .mode = "Debug" };
+    const settings: options.Options = .{ .source = "", .run = true, .zig = tool, .codegen = .{ .qbe = tool }, .mode = "Debug" };
     const first = try identity(context, settings, "{\"functions\":[]}");
     const second = try identity(context, settings, "{\"functions\":[1]}");
     var release = settings;

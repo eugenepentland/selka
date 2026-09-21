@@ -330,7 +330,7 @@ test "ARENA-MANAGED-5 break and continue out of an arena close the scope exactly
 }
 
 // spec: ARENA-MANAGED-6
-test "ARENA-MANAGED-6 stress collection inside an arena sweeps unreachable arena objects" {
+test "ARENA-MANAGED-6 stress collection inside an arena preserves its values until bulk release" {
     const source =
         \\def waste() -> int:
         \\    temp: list[int] = [1, 2, 3]
@@ -417,6 +417,37 @@ test "ARENA-MANAGED-8 an arena-free program emits neither the barrier nor depth 
     try t.expect(std.mem.indexOf(u8, manifest, "myl_qbe_region_mark") == null);
 }
 
+// spec-case: ARENA-MANAGED-8
+test "ARENA-MANAGED-8 only a function that opens an arena records and restores its depth" {
+    const Unit = struct { name: []const u8, il: []const u8 };
+    const Manifest = struct { functions: []Unit };
+    var qbe = try language.Compilation.init(t.allocator, module,
+        \\def helper(value: int) -> int:
+        \\    return value + 1
+        \\
+        \\def main() -> int:
+        \\    total = 0
+        \\    with arena():
+        \\        total = helper(6)
+        \\    return total
+    );
+    defer qbe.deinit();
+    const encoded = try qbe.emitQbe(t.allocator);
+    defer t.allocator.free(encoded);
+    var parsed = try std.json.parseFromSlice(Manifest, t.allocator, encoded, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer parsed.deinit();
+    var helper: ?[]const u8 = null;
+    var main: ?[]const u8 = null;
+    for (parsed.value.functions) |unit| {
+        if (std.mem.eql(u8, unit.name, "helper")) helper = unit.il;
+        if (std.mem.eql(u8, unit.name, "main")) main = unit.il;
+    }
+    try t.expect(std.mem.indexOf(u8, helper.?, "myl_qbe_region_mark") == null);
+    try t.expect(std.mem.indexOf(u8, helper.?, "myl_qbe_region_restore") == null);
+    try t.expect(std.mem.indexOf(u8, main.?, "myl_qbe_region_mark") != null);
+    try t.expect(std.mem.indexOf(u8, main.?, "myl_qbe_region_restore") != null);
+}
+
 test "arena source formatting preserves the with statement" {
     const source =
         \\def main() -> int:
@@ -485,4 +516,77 @@ test "ARENA-MANAGED-9 a managed binding first assigned inside an arena is confin
         \\    data = [9, 9]
         \\    return len(data)
     ));
+}
+
+// spec-case: ARENA-MANAGED-10
+test "ARENA-MANAGED-10 repeated arena scopes reuse a retained chunk inside a small budget" {
+    var looping = try language.Compilation.init(t.allocator, module,
+        \\def fold(seed: int) -> int:
+        \\    values: list[int] = []
+        \\    for index in range(16):
+        \\        values.append(seed + index)
+        \\    total = 0
+        \\    for item in values:
+        \\        total += item
+        \\    return total
+        \\
+        \\def main() -> int:
+        \\    matched = 0
+        \\    for round in range(20000):
+        \\        with arena():
+        \\            if fold(round) == 16 * round + 120:
+        \\                matched += 1
+        \\    return matched
+    );
+    defer looping.deinit();
+    // Twenty thousand scopes under a 1 MiB ceiling. A reused chunk is charged
+    // exactly as a fresh reservation would be, so the budget neither traps nor
+    // drifts however many scopes the loop opens and closes.
+    const reused = try native.runWithOptions(&looping, .{ .max_memory = 1 << 20 });
+    try t.expectEqualStrings("", reused.trap.code);
+    try t.expectEqual(@as(i64, 20000), reused.value);
+    var bounded = try language.Compilation.init(t.allocator, module,
+        \\def main() -> int:
+        \\    kept = 0
+        \\    with arena():
+        \\        values: list[int] = []
+        \\        n = 0
+        \\        while n < 400000:
+        \\            values.append(n)
+        \\            n += 1
+        \\        kept = len(values)
+        \\    return kept
+    );
+    defer bounded.deinit();
+    // A live arena that outgrows the ceiling still names the budget: retained
+    // chunks are not spendable budget, only host bytes the runtime can give back.
+    const refused = try native.runWithOptions(&bounded, .{ .max_memory = 1 << 20 });
+    try t.expectEqualStrings("R_MEMORY_BUDGET", refused.trap.code);
+}
+
+// spec-case: ARENA-MANAGED-10
+test "ARENA-MANAGED-10 a chunk reused after an escape copy keeps the escaped value" {
+    const source =
+        \\def build(width: int) -> list[int]:
+        \\    items: list[int] = []
+        \\    for index in range(width):
+        \\        items.append(index * index)
+        \\    return items
+        \\
+        \\def main() -> int:
+        \\    kept: list[int] = []
+        \\    with arena() as scratch:
+        \\        built = build(6)
+        \\        kept = scratch.escape(built)
+        \\    churn = 0
+        \\    for round in range(500):
+        \\        with arena():
+        \\            churn += len(build(8))
+        \\    return kept[5] + churn
+    ;
+    // The escaped copy lives in the enclosing region; the five hundred scopes
+    // that follow reuse the chunk the escaping scope released.
+    try t.expectEqual(@as(i64, 4025), try value(source));
+    const stressed = try run(source, true);
+    try t.expectEqual(@as(i64, 4025), stressed.value);
 }

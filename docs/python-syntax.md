@@ -135,7 +135,9 @@ def main() -> int:
 Dictionaries preserve insertion order and use `int` or `str` keys. Their values
 have a single inferred or annotated type. Updates through an alias are shared.
 Use `counts[key]`, `counts[key] = value`, `counts.get(key, fallback)`,
-`counts.keys()` and `counts.values()`. The latter two return snapshot lists.
+`counts.keys()`, `counts.values()` and `counts.items()`. These return live typed
+views; `list(view)` creates an explicit snapshot. Items yield records with `key`
+and `value` fields and also support `for key, value in view`.
 `key in counts`, `value in items`, and `substring in text` support `not in` too.
 Iterating a dictionary visits keys in insertion order; changing its size during
 iteration traps. The [word-count example](../examples/python-word-count/main.my)
@@ -144,7 +146,9 @@ puts these operations together.
 `[value for name in items if condition]` builds a list in one pass, with the filter
 optional and the binding confined to the comprehension. The source is a list, string,
 dictionary or an integer `range(...)` — `[i for i in range(10)]` works the same as it
-does in a `for` loop. It takes one generator; nested generators and generator
+does in a `for` loop. Without a filter, the result reserves the source length (or
+the exact nonnegative range length) before filling; filtered results grow with the
+values they retain. It takes one generator; nested generators and generator
 expressions are not provided, and neither are dict or set comprehensions.
 
 ```mylang
@@ -434,9 +438,13 @@ The everyday Python builtins are ordinary prelude names: no import is needed,
 and a local binding or declared function of the same name still wins. `sum`,
 `min`, `max`, `sorted`, `abs`, `round`, `any`, `all`, `reversed`, `list` and
 `zip` cover the scalar folds and list materialization. `sum`, `any`, `all`,
-`min` and `max` accept a list of the element type they name; `sorted` accepts a
+`min` and `max` accept a list of the element type they name; text extrema compare
+the stored Unicode scalars without allocating an encoding. `sorted` accepts a
 list of `int`, `float` or `str` and returns a new stable ascending list without
-changing its input. `reversed(xs)` copies a list or string from last to first
+changing its input. It and `values.sort()` use a stable merge with one reusable
+work buffer, so reverse-ordered large lists retain `O(n log n)` behavior. For
+floats, NaNs follow ordered values while equal values and signed zeros retain
+their input order. `reversed(xs)` copies a list or string from last to first
 and, like `zip(a, b)`, is also a `for` source; `zip` stops at the shorter list and the
 Boolean folds stop as soon as their answer is known.
 `list(range(end))` and `list(range(start, end))` materialize their range.

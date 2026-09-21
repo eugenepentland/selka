@@ -1,0 +1,743 @@
+{
+  "binary": ".tmp/svg-gap-fixes-20260921/gc-lto",
+  "binary_sha256": "17e8697563d750cb8418142fc6aff3744a0c2a9e9474c7d55439ef1b4beebed8",
+  "note": "guest GC policy, LLVM -O3 + LTO, emitted with --drop-step-checks --drop-frame-checks (no step accounting); the \"gc-lto\" arm of experiments/svg-gap-fixes-20260921, fixture project",
+  "argv_tail": [],
+  "runs": 8000,
+  "samples": 9656,
+  "outside_main_executable": 1660,
+  "percent_outside_main_executable": 17.191383595691796,
+  "unmapped_inside": 7,
+  "percent_unmapped_inside": 0.07249378624689312,
+  "located_samples": 7989,
+  "class_totals": {
+    "guest": {
+      "samples": 7766,
+      "percent_all_samples": 80.42667771333886
+    },
+    "runtime-c": {
+      "samples": 212,
+      "percent_all_samples": 2.195526097763049
+    },
+    "host-provider": {
+      "samples": 9,
+      "percent_all_samples": 0.0932062966031483
+    },
+    "startup": {
+      "samples": 2,
+      "percent_all_samples": 0.020712510356255178
+    }
+  },
+  "functions": [
+    {
+      "name": "io::flush",
+      "class": "guest",
+      "samples": 3953,
+      "percent_all_samples": 40.93827671913836
+    },
+    {
+      "name": "layout_routes::build",
+      "class": "guest",
+      "samples": 805,
+      "percent_all_samples": 8.33678541839271
+    },
+    {
+      "name": "layout::partPin",
+      "class": "guest",
+      "samples": 412,
+      "percent_all_samples": 4.266777133388567
+    },
+    {
+      "name": "layout::collectRows",
+      "class": "guest",
+      "samples": 308,
+      "percent_all_samples": 3.1897265948632976
+    },
+    {
+      "name": "text::write",
+      "class": "guest",
+      "samples": 262,
+      "percent_all_samples": 2.7133388566694285
+    },
+    {
+      "name": "sexpr::at",
+      "class": "guest",
+      "samples": 201,
+      "percent_all_samples": 2.0816072908036456
+    },
+    {
+      "name": "text::escaped",
+      "class": "guest",
+      "samples": 197,
+      "percent_all_samples": 2.040182270091135
+    },
+    {
+      "name": "text::decimal",
+      "class": "guest",
+      "samples": 191,
+      "percent_all_samples": 1.9780447390223694
+    },
+    {
+      "name": "sexpr::form",
+      "class": "guest",
+      "samples": 184,
+      "percent_all_samples": 1.9055509527754764
+    },
+    {
+      "name": "layout::nearest",
+      "class": "guest",
+      "samples": 179,
+      "percent_all_samples": 1.8537696768848384
+    },
+    {
+      "name": "circuit::normalize",
+      "class": "guest",
+      "samples": 135,
+      "percent_all_samples": 1.3980944490472245
+    },
+    {
+      "name": "buffer_grow_rooted [native_bytes.c]",
+      "class": "runtime-c",
+      "samples": 119,
+      "percent_all_samples": 1.232394366197183
+    },
+    {
+      "name": "layout::innerPin",
+      "class": "guest",
+      "samples": 119,
+      "percent_all_samples": 1.232394366197183
+    },
+    {
+      "name": "svg::passive",
+      "class": "guest",
+      "samples": 101,
+      "percent_all_samples": 1.0459817729908865
+    },
+    {
+      "name": "circuit::label",
+      "class": "guest",
+      "samples": 73,
+      "percent_all_samples": 0.756006628003314
+    },
+    {
+      "name": "layout_graph::build",
+      "class": "guest",
+      "samples": 71,
+      "percent_all_samples": 0.7352941176470589
+    },
+    {
+      "name": "ports::equal",
+      "class": "guest",
+      "samples": 62,
+      "percent_all_samples": 0.6420878210439105
+    },
+    {
+      "name": "layout::bridge",
+      "class": "guest",
+      "samples": 58,
+      "percent_all_samples": 0.6006628003314002
+    },
+    {
+      "name": "layout::branch",
+      "class": "guest",
+      "samples": 54,
+      "percent_all_samples": 0.5592377796188898
+    },
+    {
+      "name": "draw::line",
+      "class": "guest",
+      "samples": 42,
+      "percent_all_samples": 0.43496271748135873
+    },
+    {
+      "name": "myl_native_list_append [native_collections.c]",
+      "class": "runtime-c",
+      "samples": 41,
+      "percent_all_samples": 0.4246064623032311
+    },
+    {
+      "name": "layout::depth",
+      "class": "guest",
+      "samples": 40,
+      "percent_all_samples": 0.4142502071251036
+    },
+    {
+      "name": "svg::render",
+      "class": "guest",
+      "samples": 39,
+      "percent_all_samples": 0.40389395194697597
+    },
+    {
+      "name": "layout::groundBranch",
+      "class": "guest",
+      "samples": 33,
+      "percent_all_samples": 0.34175642087821045
+    },
+    {
+      "name": "layout::endpoint",
+      "class": "guest",
+      "samples": 29,
+      "percent_all_samples": 0.3003314001657001
+    },
+    {
+      "name": "svg::pinStart",
+      "class": "guest",
+      "samples": 25,
+      "percent_all_samples": 0.25890637945318973
+    },
+    {
+      "name": "svg::chip",
+      "class": "guest",
+      "samples": 24,
+      "percent_all_samples": 0.24855012427506215
+    },
+    {
+      "name": "qbe_host_invoke [qbe_host_runtime.c]",
+      "class": "runtime-c",
+      "samples": 23,
+      "percent_all_samples": 0.23819386909693455
+    },
+    {
+      "name": "ports::validate",
+      "class": "guest",
+      "samples": 22,
+      "percent_all_samples": 0.22783761391880697
+    },
+    {
+      "name": "layout_routes::blocked",
+      "class": "guest",
+      "samples": 22,
+      "percent_all_samples": 0.22783761391880697
+    },
+    {
+      "name": "svg::routes",
+      "class": "guest",
+      "samples": 22,
+      "percent_all_samples": 0.22783761391880697
+    },
+    {
+      "name": "layout_routes::external",
+      "class": "guest",
+      "samples": 16,
+      "percent_all_samples": 0.16570008285004142
+    },
+    {
+      "name": "svg::displayRef",
+      "class": "guest",
+      "samples": 14,
+      "percent_all_samples": 0.14498757249378624
+    },
+    {
+      "name": "svg::finishGroup",
+      "class": "guest",
+      "samples": 12,
+      "percent_all_samples": 0.12427506213753108
+    },
+    {
+      "name": "myl_native_list_set [native_collections.c]",
+      "class": "runtime-c",
+      "samples": 11,
+      "percent_all_samples": 0.11391880695940348
+    },
+    {
+      "name": "layout::pinGroup",
+      "class": "guest",
+      "samples": 10,
+      "percent_all_samples": 0.1035625517812759
+    },
+    {
+      "name": "main [native_test_runner.c]",
+      "class": "runtime-c",
+      "samples": 10,
+      "percent_all_samples": 0.1035625517812759
+    },
+    {
+      "name": "layout::placeRows",
+      "class": "guest",
+      "samples": 9,
+      "percent_all_samples": 0.0932062966031483
+    },
+    {
+      "name": "write_block_packed [native_schematic.c]",
+      "class": "host-provider",
+      "samples": 7,
+      "percent_all_samples": 0.07249378624689312
+    },
+    {
+      "name": "myl_native_heap_alloc_at [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 6,
+      "percent_all_samples": 0.06213753106876554
+    },
+    {
+      "name": "draw::labelStart",
+      "class": "guest",
+      "samples": 6,
+      "percent_all_samples": 0.06213753106876554
+    },
+    {
+      "name": "svg::instanceStart",
+      "class": "guest",
+      "samples": 5,
+      "percent_all_samples": 0.05178127589063795
+    },
+    {
+      "name": "circuit::railKind",
+      "class": "guest",
+      "samples": 4,
+      "percent_all_samples": 0.041425020712510356
+    },
+    {
+      "name": "draw::symbol",
+      "class": "guest",
+      "samples": 4,
+      "percent_all_samples": 0.041425020712510356
+    },
+    {
+      "name": "draw::labelEnd",
+      "class": "guest",
+      "samples": 3,
+      "percent_all_samples": 0.03106876553438277
+    },
+    {
+      "name": "validate::pinoutCheck",
+      "class": "guest",
+      "samples": 3,
+      "percent_all_samples": 0.03106876553438277
+    },
+    {
+      "name": "circuit::displayNet",
+      "class": "guest",
+      "samples": 3,
+      "percent_all_samples": 0.03106876553438277
+    },
+    {
+      "name": "svg::portName",
+      "class": "guest",
+      "samples": 3,
+      "percent_all_samples": 0.03106876553438277
+    },
+    {
+      "name": "svg::ports",
+      "class": "guest",
+      "samples": 2,
+      "percent_all_samples": 0.020712510356255178
+    },
+    {
+      "name": "entry_run",
+      "class": "startup",
+      "samples": 2,
+      "percent_all_samples": 0.020712510356255178
+    },
+    {
+      "name": "draw::label",
+      "class": "guest",
+      "samples": 2,
+      "percent_all_samples": 0.020712510356255178
+    },
+    {
+      "name": "ports::portForm",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.010356255178127589
+    },
+    {
+      "name": "ports::collect",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.010356255178127589
+    },
+    {
+      "name": "layout::height",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.010356255178127589
+    },
+    {
+      "name": "layout::rowHeight",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.010356255178127589
+    },
+    {
+      "name": "launch [qbe_stack.c]",
+      "class": "runtime-c",
+      "samples": 1,
+      "percent_all_samples": 0.010356255178127589
+    },
+    {
+      "name": "circuit::collectPins",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.010356255178127589
+    },
+    {
+      "name": "myl_qbe_on_stack [qbe_stack.c]",
+      "class": "runtime-c",
+      "samples": 1,
+      "percent_all_samples": 0.010356255178127589
+    },
+    {
+      "name": "ports::port_groupForm",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.010356255178127589
+    },
+    {
+      "name": "ports::signalForm",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.010356255178127589
+    },
+    {
+      "name": "finish [native_schematic.c]",
+      "class": "host-provider",
+      "samples": 1,
+      "percent_all_samples": 0.010356255178127589
+    },
+    {
+      "name": "release [native_schematic.c]",
+      "class": "host-provider",
+      "samples": 1,
+      "percent_all_samples": 0.010356255178127589
+    }
+  ],
+  "top_pcs": [
+    {
+      "address": "0x1077907",
+      "samples": 519,
+      "percent_all_samples": 5.374896437448219,
+      "function": "layout_routes::build",
+      "class": "guest",
+      "offset_in_function": "0x1177",
+      "function_bytes": 42006,
+      "disassembly": [
+        {
+          "address": "0x10778f4",
+          "text": "vmovups %ymm3,0x60(%rax)",
+          "sampled": false
+        },
+        {
+          "address": "0x10778f9",
+          "text": "vmovups %ymm2,0x40(%rax)",
+          "sampled": false
+        },
+        {
+          "address": "0x10778fe",
+          "text": "vmovups %ymm1,0x20(%rax)",
+          "sampled": false
+        },
+        {
+          "address": "0x1077903",
+          "text": "vmovups %ymm0,(%rax)",
+          "sampled": false
+        },
+        {
+          "address": "0x1077907",
+          "text": "lea    0x1b0(%r14),%rax",
+          "sampled": true
+        },
+        {
+          "address": "0x107790e",
+          "text": "vmovups %ymm3,0x60(%rax)",
+          "sampled": false
+        },
+        {
+          "address": "0x1077913",
+          "text": "vmovups %ymm2,0x40(%rax)",
+          "sampled": false
+        },
+        {
+          "address": "0x1077918",
+          "text": "vmovups %ymm1,0x20(%rax)",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x10839ea",
+      "samples": 430,
+      "percent_all_samples": 4.4531897265948635,
+      "function": "io::flush",
+      "class": "guest",
+      "offset_in_function": "0x2aa",
+      "function_bytes": 1593,
+      "disassembly": [
+        {
+          "address": "0x10839c7",
+          "text": "vmovups %ymm0,0x160(%rsp)",
+          "sampled": false
+        },
+        {
+          "address": "0x10839d0",
+          "text": "mov    %dil,0x160(%rsp,%rax,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x10839d8",
+          "text": "vmovups 0x160(%rsp),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x10839e1",
+          "text": "vmovups 0x180(%rsp),%ymm1",
+          "sampled": false
+        },
+        {
+          "address": "0x10839ea",
+          "text": "vmovups 0x1a0(%rsp),%ymm2",
+          "sampled": true
+        },
+        {
+          "address": "0x10839f3",
+          "text": "vmovups 0x1c0(%rsp),%ymm3",
+          "sampled": false
+        },
+        {
+          "address": "0x10839fc",
+          "text": "vmovups %ymm0,0x60(%rsp)",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x10839e1",
+      "samples": 400,
+      "percent_all_samples": 4.142502071251036,
+      "function": "io::flush",
+      "class": "guest",
+      "offset_in_function": "0x2a1",
+      "function_bytes": 1593,
+      "disassembly": [
+        {
+          "address": "0x10839be",
+          "text": "vmovups %ymm1,0x180(%rsp)",
+          "sampled": false
+        },
+        {
+          "address": "0x10839c7",
+          "text": "vmovups %ymm0,0x160(%rsp)",
+          "sampled": false
+        },
+        {
+          "address": "0x10839d0",
+          "text": "mov    %dil,0x160(%rsp,%rax,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x10839d8",
+          "text": "vmovups 0x160(%rsp),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x10839e1",
+          "text": "vmovups 0x180(%rsp),%ymm1",
+          "sampled": true
+        },
+        {
+          "address": "0x10839ea",
+          "text": "vmovups 0x1a0(%rsp),%ymm2",
+          "sampled": false
+        },
+        {
+          "address": "0x10839f3",
+          "text": "vmovups 0x1c0(%rsp),%ymm3",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x10839fc",
+      "samples": 369,
+      "percent_all_samples": 3.8214581607290805,
+      "function": "io::flush",
+      "class": "guest",
+      "offset_in_function": "0x2bc",
+      "function_bytes": 1593,
+      "disassembly": [
+        {
+          "address": "0x10839d8",
+          "text": "vmovups 0x160(%rsp),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x10839e1",
+          "text": "vmovups 0x180(%rsp),%ymm1",
+          "sampled": false
+        },
+        {
+          "address": "0x10839ea",
+          "text": "vmovups 0x1a0(%rsp),%ymm2",
+          "sampled": false
+        },
+        {
+          "address": "0x10839f3",
+          "text": "vmovups 0x1c0(%rsp),%ymm3",
+          "sampled": false
+        },
+        {
+          "address": "0x10839fc",
+          "text": "vmovups %ymm0,0x60(%rsp)",
+          "sampled": true
+        },
+        {
+          "address": "0x1083a02",
+          "text": "vmovups %ymm1,0x80(%rsp)",
+          "sampled": false
+        },
+        {
+          "address": "0x1083a0b",
+          "text": "vmovups %ymm2,0xa0(%rsp)",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x10839f3",
+      "samples": 358,
+      "percent_all_samples": 3.707539353769677,
+      "function": "io::flush",
+      "class": "guest",
+      "offset_in_function": "0x2b3",
+      "function_bytes": 1593,
+      "disassembly": [
+        {
+          "address": "0x10839d0",
+          "text": "mov    %dil,0x160(%rsp,%rax,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x10839d8",
+          "text": "vmovups 0x160(%rsp),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x10839e1",
+          "text": "vmovups 0x180(%rsp),%ymm1",
+          "sampled": false
+        },
+        {
+          "address": "0x10839ea",
+          "text": "vmovups 0x1a0(%rsp),%ymm2",
+          "sampled": false
+        },
+        {
+          "address": "0x10839f3",
+          "text": "vmovups 0x1c0(%rsp),%ymm3",
+          "sampled": true
+        },
+        {
+          "address": "0x10839fc",
+          "text": "vmovups %ymm0,0x60(%rsp)",
+          "sampled": false
+        },
+        {
+          "address": "0x1083a02",
+          "text": "vmovups %ymm1,0x80(%rsp)",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x1083a5c",
+      "samples": 340,
+      "percent_all_samples": 3.5211267605633805,
+      "function": "io::flush",
+      "class": "guest",
+      "offset_in_function": "0x31c",
+      "function_bytes": 1593
+    },
+    {
+      "address": "0x1083a38",
+      "samples": 340,
+      "percent_all_samples": 3.5211267605633805,
+      "function": "io::flush",
+      "class": "guest",
+      "offset_in_function": "0x2f8",
+      "function_bytes": 1593
+    },
+    {
+      "address": "0x1083a26",
+      "samples": 325,
+      "percent_all_samples": 3.3657829328914666,
+      "function": "io::flush",
+      "class": "guest",
+      "offset_in_function": "0x2e6",
+      "function_bytes": 1593
+    },
+    {
+      "address": "0x1083a4a",
+      "samples": 318,
+      "percent_all_samples": 3.2932891466445735,
+      "function": "io::flush",
+      "class": "guest",
+      "offset_in_function": "0x30a",
+      "function_bytes": 1593
+    },
+    {
+      "address": "0x10bd01a",
+      "samples": 124,
+      "percent_all_samples": 1.284175642087821,
+      "function": "sexpr::at",
+      "class": "guest",
+      "offset_in_function": "0xea",
+      "function_bytes": 593
+    },
+    {
+      "address": "0x1083a65",
+      "samples": 66,
+      "percent_all_samples": 0.6835128417564209,
+      "function": "io::flush",
+      "class": "guest",
+      "offset_in_function": "0x325",
+      "function_bytes": 1593
+    },
+    {
+      "address": "0x1083955",
+      "samples": 63,
+      "percent_all_samples": 0.6524440762220381,
+      "function": "io::flush",
+      "class": "guest",
+      "offset_in_function": "0x215",
+      "function_bytes": 1593
+    },
+    {
+      "address": "0x108cd05",
+      "samples": 61,
+      "percent_all_samples": 0.6317315658657829,
+      "function": "sexpr::form",
+      "class": "guest",
+      "offset_in_function": "0x85",
+      "function_bytes": 831
+    },
+    {
+      "address": "0x108395e",
+      "samples": 60,
+      "percent_all_samples": 0.6213753106876554,
+      "function": "io::flush",
+      "class": "guest",
+      "offset_in_function": "0x21e",
+      "function_bytes": 1593
+    },
+    {
+      "address": "0x108394c",
+      "samples": 55,
+      "percent_all_samples": 0.5695940347970174,
+      "function": "io::flush",
+      "class": "guest",
+      "offset_in_function": "0x20c",
+      "function_bytes": 1593
+    }
+  ],
+  "method": "LD_PRELOAD SIGPROF (ITIMER_PROF) userspace self-PC sampling of unmodified binaries; 500us requested, kernel tick (CONFIG_HZ=1000) limited; no stack attribution, no hardware counters (perf_event_paranoid=4). The `dense` sampler is the repository sampler with the first expiration moved inside the first tick, so no prefix of a short run goes unsampled. A sample inside a shared library counts in `samples` and is reported only as `outside_main_executable`, so libc memcpy/malloc in the LLVM builds is inside that share. LTO inlines many guest functions into their callers, so a sample is attributed to the surviving outer symbol. Every run is pinned to CPU 6 and its output hash is verified; no wall-time claim is made from profiled runs.",
+  "sampler": "repo",
+  "sampler_source": "experiments/svg-slowdown-20260921/sample.c",
+  "sampler_source_sha256": "52abe6322fd3e120d1c10067d735333d0e397bce36d3736a8c63d253606d0aa8",
+  "sampler_sha256": "f0558acb250170b5870cce28554b3a92e9d62ea8999329fa3e2065a5dba8f76c",
+  "cpu": 6,
+  "seed": 20260921,
+  "output_digest": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+  "interleaved_with": [
+    "svg-o3-lto"
+  ]
+}

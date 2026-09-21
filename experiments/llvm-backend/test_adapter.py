@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -442,6 +443,52 @@ export function l $test(l %ctx) {
 """
         with self.assertRaisesRegex(Exception, "no checked C signature"):
             translate_text(text, "bad")
+
+    def test_generated_host_boundary_uses_pointer_signature(self):
+        symbol = "myl_f_" + "a" * 64 + "_host"
+        self.assertEqual(runtime_signature(symbol), (("ptr", "ptr", "ptr"), "void"))
+        self.assertIsNone(runtime_signature("arbitrary_host"))
+        self.assertIsNone(runtime_signature("myl_f_short_host"))
+        unit = f"""export function l $test() {{
+@entry
+ %result =l alloc8 8
+ call ${symbol}(l 0, l 0, l %result)
+ %answer =l loadl %result
+ ret %answer
+}}
+"""
+        ir = translate_text(unit, "host")
+        self.assertIn(f"declare void @{symbol}(ptr, ptr, ptr)", ir)
+        self.assertEqual(self.compile_units({"host": unit},
+            '#include <stdio.h>\nextern long test(void);\n'
+            f'void {symbol}(void *ctx,void *args,long *out){{*out=42;}}\n'
+            'int main(void){printf("%ld\\n",test());}\n'), "42\n")
+
+    def test_heap_getter_has_only_proven_memory_effects(self):
+        unit = """export function l $test(l %ctx) {
+@entry
+ %heap =l call $myl_qbe_heap(l %ctx)
+ ret %heap
+}
+"""
+        ir = translate_text(unit, "heap")
+        self.assertIn("declare ptr @myl_qbe_heap(ptr) memory(none) nounwind willreturn", ir)
+        self.assertEqual(set(ATTRIBUTES), {"myl_qbe_heap"})
+        self.assertEqual(self.compile_units({"heap": unit},
+            '#include <stdio.h>\nextern long test(void *);\n'
+            'void *myl_qbe_heap(void *ctx){return ctx;}\n'
+            'int main(void){int x;printf("%d\\n",test(&x)==(long)&x);}\n'), "1\n")
+
+    def test_installed_registry_reads_materialized_runtime(self):
+        with tempfile.TemporaryDirectory() as directory:
+            Path(directory, "helper.h").write_text(
+                "int myl_native_test_materialized(void *value, int64_t start);\n")
+            environment = dict(os.environ, MYLANG_QBE_LLVM_RUNTIME_SOURCES=directory)
+            result = subprocess.run([sys.executable, "-c",
+                "from runtime_signatures import signature; "
+                "print(signature('myl_native_test_materialized'))"],
+                cwd=HERE, env=environment, check=True, capture_output=True, text=True)
+            self.assertEqual(result.stdout.strip(), "(('ptr', 'i64'), 'i32')")
 
     def test_benchmark_runtime_registry_is_complete(self):
         evidence = json.loads((HERE / "evidence" / "runtime-symbols.json").read_text())

@@ -187,8 +187,11 @@ def main() -> int:
 ## Format strings
 
 An `f"..."` literal interpolates each `{expression}` hole with the same conversion
-`str(value)` performs, then concatenates the literal pieces and the converted
-holes into one new `str`. A hole holds exactly one ordinary expression — a call,
+`str(value)` performs, then joins the literal pieces and converted holes into one
+exactly-sized result allocation. A single piece returns its rendered text directly,
+so `f"{text}"` needs no allocation when `text` is already a `str`. Each hole
+evaluates and renders once from left to right; the implementation does not
+repeatedly copy a growing prefix. A hole holds exactly one ordinary expression — a call,
 an operator, an index, a field, even a nested format string — and is checked in
 its own source position. A hole takes any value `print` can render — a list, a
 dictionary, a record, an enum case, a result, an option or a byte string as well

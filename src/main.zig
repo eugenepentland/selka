@@ -59,6 +59,7 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "       mylang doc-coverage [<repo-root>] (every implemented feature and standard export needs a documented example)\n       mylang " ++
     "doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose] (run every fenced documentation example)\n       mylang " ++
     "reference --query TERM [--format=text|json] (compiler-derived facts from this executable)\n       mylang " ++
+    "invoke <entry.my> --function='module::name' (--describe | --input=FILE) (call one exported function natively)\n       mylang " ++
     "<schema-project|input-module|check|run|dump-bytecode|di" ++
     "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
     "t-module|fmt-project|emit-qbe|emit-project-qbe|list-modules|list-interfaces|list-" ++
@@ -231,6 +232,12 @@ fn dispatch(process: std.process.Init) !u8 {
     if (args.len >= 2 and std.mem.eql(u8, args[1], "test")) return @import("native_test_command.zig").run(process, args[2..]) catch |err| switch (err) {
         // `run` already rendered the child compiler's located diagnostic; exit 1
         // rather than wrapping it in the generic "host failure" line.
+        error.SourceRejected => 1,
+        else => |problem| return problem,
+    };
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "invoke")) return @import("invoke_command.zig").run(process, args[2..]) catch |err| switch (err) {
+        // `run` already published a `native-invocation-v1` refusal when it could;
+        // a check that failed before that still rendered its own diagnostic.
         error.SourceRejected => 1,
         else => |problem| return problem,
     };
@@ -681,6 +688,9 @@ const Command = enum {
 };
 const ArgError = error{ Usage, OutOfMemory };
 
+/// Which `context` selector a space-separated flag is waiting for.
+const ContextSelectorField = enum { symbol, at };
+
 /// `mylang context` selection and budget. Grouped so `Parsed` gains one field
 /// rather than four, and shared with the parser that validates the switches.
 const ContextOptions = struct {
@@ -836,6 +846,9 @@ const ArgumentParser = struct {
     subject: ?[]const u8 = null,
     context_symbol: ?[]const u8 = null,
     context_at: ?[]const u8 = null,
+    /// The `context` selector whose value is the next argument, for the
+    /// `--symbol NAME` spelling the documented usage writes with a space.
+    context_pending: ?ContextSelectorField = null,
     context_bytes: usize = language.context.default_context_bytes,
     context_against: ?[]const u8 = null,
     api_against: ?[]const u8 = null,
@@ -997,7 +1010,7 @@ const ArgumentParser = struct {
             self.reporting.print_result = true;
             try self.forward(arg);
         } else if (std.mem.startsWith(u8, arg, "--qbe=")) {
-            self.native.qbe = try self.value(arg, "--qbe=");
+            self.native.codegen = .{ .qbe = try self.value(arg, "--qbe=") };
         } else if (std.mem.startsWith(u8, arg, "--zig=")) {
             self.native.zig = try self.value(arg, "--zig=");
         } else if (std.mem.startsWith(u8, arg, select_file_prefix)) {
@@ -1157,6 +1170,7 @@ const ArgumentParser = struct {
         if (self.command == .@"tests-for" and self.subject == null) return error.Usage;
         if (self.command == .@"api-diff" and (self.api_against == null) == (self.api_write == null)) return error.Usage;
         if (self.command == .context and (self.context_symbol == null) == (self.context_at == null)) return error.Usage;
+        if (self.context_pending != null) return error.Usage;
         return .{
             .schema_report = self.schema_report,
             .inputs = self.inputs,

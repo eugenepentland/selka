@@ -29,9 +29,9 @@ static const char *put(void *context,MylangHostCall *call) {
 }
 static const char *i64_parameter[]={"i64"}, *u8_parameter[]={"u8"};
 static MylangHostBinding bindings[]={
-    {"io::length",NULL,0,"i64",32,32,NULL,length},
-    {"io::byte",i64_parameter,1,"u8",32,32,NULL,byte},
-    {"io::put",u8_parameter,1,"i64",32,32,NULL,put},
+    {"io::length",NULL,0,"i64",32,32,NULL,length,NULL},
+    {"io::byte",i64_parameter,1,"u8",32,32,NULL,byte,NULL},
+    {"io::put",u8_parameter,1,"i64",32,32,NULL,put,NULL},
 };
 MylangNativeProviders mylang_native_providers(void) {
     const char *setting=getenv("MYLANG_HOST_MODE");mode=setting?atoi(setting):0;

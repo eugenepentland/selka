@@ -1,0 +1,171 @@
+
+===== wait for SVG build  16:16:43  load 0.31 2.38 5.53 =====
+svg build done
+
+===== parser batch (CPU 6, 21 rounds, before and after arms)  16:18:43  load 0.65 1.84 4.94 =====
+
+workload                  zig     zig-safe   qbe-before o3-lto-before          qbe           o3       o3-lto
+census                   1.98         2.14         4.46         3.49         4.63         3.71         3.57 
+render                   2.53         2.70         8.48         6.07         8.38         6.42         6.01 
+census-7.4MB            13.29        14.67        38.03        28.62        37.68        29.85        28.49 
+render-7.4MB            17.00        18.60        69.05        50.64        68.88        53.59        50.44 
+
+census           zig/zig-safe     0.926x [0.884, 0.979]
+census           zig/qbe-before   0.444x [0.419, 0.463]
+census           zig/o3-lto-before 0.567x [0.526, 0.592]
+census           zig/qbe          0.428x [0.412, 0.453]
+census           zig/o3           0.534x [0.510, 0.567]
+census           zig/o3-lto       0.555x [0.537, 0.580]
+render           zig/zig-safe     0.938x [0.913, 0.958]
+render           zig/qbe-before   0.298x [0.290, 0.303]
+render           zig/o3-lto-before 0.417x [0.401, 0.429]
+render           zig/qbe          0.302x [0.294, 0.305]
+render           zig/o3           0.394x [0.382, 0.401]
+render           zig/o3-lto       0.421x [0.399, 0.427]
+census-7.4MB     zig/zig-safe     0.906x [0.895, 0.923]
+census-7.4MB     zig/qbe-before   0.350x [0.345, 0.356]
+census-7.4MB     zig/o3-lto-before 0.464x [0.459, 0.472]
+census-7.4MB     zig/qbe          0.353x [0.349, 0.359]
+census-7.4MB     zig/o3           0.445x [0.440, 0.454]
+census-7.4MB     zig/o3-lto       0.466x [0.462, 0.476]
+render-7.4MB     zig/zig-safe     0.914x [0.898, 0.927]
+render-7.4MB     zig/qbe-before   0.246x [0.243, 0.248]
+render-7.4MB     zig/o3-lto-before 0.336x [0.329, 0.339]
+render-7.4MB     zig/qbe          0.247x [0.243, 0.249]
+render-7.4MB     zig/o3           0.317x [0.312, 0.320]
+render-7.4MB     zig/o3-lto       0.337x [0.333, 0.341]
+
+===== micro suite (build + 15 rounds, CPU 6)  16:18:59  load 0.73 1.80 4.88 =====
+built list_records: 5/5 arms
+built dict_count: 6/6 arms
+built str_build: 5/5 arms
+built alloc_churn: 9/9 arms
+built float_loop: 5/5 arms
+built bytes_scan: 5/5 arms
+qualified intloop: agrees=True
+qualified calls: agrees=True
+qualified fib: agrees=True
+qualified records: agrees=True
+qualified list_append_sum: agrees=True
+qualified list_records: agrees=True
+qualified dict_count: agrees=True
+qualified str_build: agrees=True
+qualified alloc_churn: agrees=True
+qualified float_loop: agrees=True
+qualified bytes_scan: agrees=True
+rss intloop
+rss calls
+rss fib
+rss records
+rss list_append_sum
+rss list_records
+rss dict_count
+rss str_build
+rss alloc_churn
+rss float_loop
+rss bytes_scan
+timed intloop: mylang-qbe=233.811ms, mylang-o3=94.92ms, mylang-o3-lto=95.414ms, zig-fast=97.735ms, zig-safe=98.734ms
+timed calls: mylang-qbe=228.806ms, mylang-o3=104.326ms, mylang-o3-lto=102.384ms, zig-fast=101.718ms, zig-safe=104.041ms, zig-fast-inline=109.956ms
+timed fib: mylang-qbe=112.56ms, mylang-o3=102.195ms, mylang-o3-lto=105.216ms, zig-fast=29.575ms, zig-safe=58.331ms
+timed records: mylang-qbe=152.912ms, mylang-o3=67.729ms, mylang-o3-lto=70.936ms, zig-fast=74.57ms, zig-safe=67.838ms
+timed list_append_sum: mylang-qbe=185.323ms, mylang-o3=151.8ms, mylang-o3-lto=136.816ms, zig-fast=42.995ms, zig-safe=46.094ms
+timed list_records: mylang-qbe=101.576ms, mylang-o3=84.193ms, mylang-o3-lto=87.309ms, zig-fast=45.685ms, zig-safe=50.368ms
+timed dict_count: mylang-qbe=151.374ms, mylang-o3=133.586ms, mylang-o3-lto=79.666ms, zig-fast=25.159ms, zig-safe=34.268ms, zig-fast-getorput=14.605ms
+timed str_build: mylang-qbe=230.708ms, mylang-o3=207.082ms, mylang-o3-lto=152.349ms, zig-fast=39.477ms, zig-safe=49.576ms
+timed alloc_churn: mylang-qbe=375.057ms, mylang-o3=279.921ms, mylang-o3-lto=248.07ms, mylang-qbe-arena=276.202ms, mylang-o3-arena=189.618ms, mylang-o3-lto-arena=149.086ms, zig-fast=67.886ms, zig-safe=73.82ms, zig-fast-gpa=59.426ms
+timed float_loop: mylang-qbe=89.944ms, mylang-o3=122.914ms, mylang-o3-lto=95.112ms, zig-fast=31.18ms, zig-safe=31.375ms
+timed bytes_scan: mylang-qbe=130.481ms, mylang-o3=80.421ms, mylang-o3-lto=60.046ms, zig-fast=34.587ms, zig-safe=41.105ms
+wrote experiments/perf-parity-audit-20260921/micro/results-merged.json and experiments/perf-parity-audit-20260921/micro/results-merged.md
+
+===== SVG qualify  16:23:19  load 1.70 1.73 4.09 =====
+Qualified 4 builds on 10 cases normally and under GC stress.
+
+===== SVG measure (31 rounds)  16:23:20  load 1.64 1.72 4.07 =====
+        ]
+      },
+      "arena-lto-bounded/rust-o3": {
+        "ratio": 5.436309795771139,
+        "paired_bootstrap_95": [
+          5.227903201909186,
+          5.520972999698321
+        ]
+      },
+      "arena-lto-bounded/go-fast": {
+        "ratio": 4.14328189236303,
+        "paired_bootstrap_95": [
+          4.10126310659485,
+          4.259921810976019
+        ]
+      },
+      "arena-lto-bounded/zig-o3": {
+        "ratio": 6.095722970323421,
+        "paired_bootstrap_95": [
+          5.89938198512447,
+          6.2698926304549865
+        ]
+      },
+      "arena-lto/gc-lto": {
+        "ratio": 1.045759189574165,
+        "paired_bootstrap_95": [
+          1.0222673271918916,
+          1.0639235660948616
+        ]
+      },
+      "arena-lto-bounded/gc-lto-bounded": {
+        "ratio": 1.0464277835880231,
+        "paired_bootstrap_95": [
+          1.036510612597763,
+          1.0551706651254806
+        ]
+      }
+    }
+  }
+}
+
+===== probes: build with merged compiler  16:23:27  load 1.59 1.71 4.06 =====
+c-llvm c-qbe dict100-o3-lto dict100-o3-lto.qbe-manifest.json dict100-qbe dict100-qbe.qbe-manifest.json dict1000-o3-lto dict1000-o3-lto.qbe-manifest.json dict1000-qbe dict1000-qbe.qbe-manifest.json dict10000-o3-lto dict10000-o3-lto.qbe-manifest.json dict10000-qbe dict10000-qbe.qbe-manifest.json empty-o3-lto empty-o3-lto.qbe-manifest.json empty-qbe empty-qbe.qbe-manifest.json fib-o3-lto fib-o3-lto.qbe-manifest.json fib-qbe fib-qbe.qbe-manifest.json mulloop-o3-lto mulloop-o3-lto.qbe-manifest.json mulloop-qbe mulloop-qbe.qbe-manifest.json replace_loop-o3-lto replace_loop-o3-lto.qbe-manifest.json replace_loop-qbe replace_loop-qbe.qbe-manifest.json 
+
+===== probes: dict scaling  16:23:34  load 1.55 1.69 4.04 =====
+arm                       median       min x/qbe-100-before  md5
+qbe-100-before           166.551   165.791      1.00  99dfac3a
+qbe-100                   16.857    16.286      0.10  99dfac3a
+qbe-1000-before         1484.072  1478.230      8.91  204bb9e2
+qbe-1000                  20.511    19.906      0.12  204bb9e2
+qbe-10000-before       15507.148 15189.481     93.11  b2ae56af
+qbe-10000                 30.353    29.424      0.18  b2ae56af
+o3-lto-100-before         87.946    85.015      0.53  99dfac3a
+o3-lto-100                 9.156     9.000      0.05  99dfac3a
+o3-lto-1000-before       858.432   851.874      5.15  204bb9e2
+o3-lto-1000               11.221    10.887      0.07  204bb9e2
+o3-lto-10000-before     9307.467  9108.353     55.88  b2ae56af
+o3-lto-10000              18.928    17.698      0.11  b2ae56af
+
+===== probes: replace loop  16:28:10  load 2.14 1.76 3.43 =====
+arm                       median       min   x/empty  md5
+empty                      0.924     0.808      1.00  d41d8cd9
+qbe-before                 1.531     1.459      1.66  77d74a79
+qbe                        1.089     1.027      1.18  77d74a79
+o3-lto-before              1.416     1.344      1.53  77d74a79
+o3-lto                     0.957     0.892      1.04  77d74a79
+
+===== probes: fib  16:28:11  load 2.14 1.76 3.43 =====
+arm                       median       min     x/zig  md5
+zig                        6.583     6.231      1.00  22e02a2c
+qbe-before                19.551    19.305      2.97  22e02a2c
+qbe                       20.019    19.607      3.04  22e02a2c
+o3-lto-before             20.223    19.640      3.07  22e02a2c
+o3-lto                    20.562    19.831      3.12  22e02a2c
+
+===== probes: mulloop  16:28:12  load 2.14 1.76 3.43 =====
+arm                       median       min     x/zig  md5
+zig                      111.863   101.222      1.00  5745246e
+qbe                      256.743   236.097      2.30  5745246e
+o3-lto                    99.530    89.619      0.89  5745246e
+
+===== probes: startup  16:28:19  load 2.13 1.77 3.42 =====
+arm                       median       min     x/zig  md5
+zig                        0.663     0.586      1.00  d41d8cd9
+qbe                        0.848     0.775      1.28  d41d8cd9
+o3-lto                     0.825     0.752      1.24  d41d8cd9
+
+===== done  16:28:19  load 2.13 1.77 3.42 =====

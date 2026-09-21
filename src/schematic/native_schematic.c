@@ -17,6 +17,7 @@
 #define MYLANG_SCHEMATIC_DOCUMENTS 3
 /* Unpublished rendered output never grows past the pilot's fixed capacity. */
 #define MYLANG_SCHEMATIC_OUTPUT (4u * 1024u * 1024u)
+#define MYLANG_SCHEMATIC_BLOCK 256u
 
 /* Borrowed documents, the unpublished output file and the first located issue. */
 typedef struct {
@@ -106,6 +107,76 @@ static const char *put(void *context, MylangHostCall *call) {
     call->output_nodes = 1;
     return NULL;
 }
+static size_t block_count(int64_t id, int64_t position) {
+    if (!known(id) || position < 0 || (uint64_t)position > state.length[id]) return SIZE_MAX;
+    size_t count=state.length[id]-(size_t)position;
+    return count>MYLANG_SCHEMATIC_BLOCK?MYLANG_SCHEMATIC_BLOCK:count;
+}
+static const char *read_block(void *context, MylangHostCall *call) {
+    (void)context;
+    if (call->argument_nodes!=2 || call->capacity<MYLANG_SCHEMATIC_BLOCK+1) return "HostFailure";
+    int64_t id=(int64_t)call->arguments[0].bits, position=(int64_t)call->arguments[1].bits;
+    size_t count=block_count(id,position);
+    if (count==SIZE_MAX) return "HostFailure";
+    if (!mylang_host_charge(call,1+count)) return "HostWorkLimit";
+    call->output[0]=(MylangHostNode){"[256]u8",0,MYLANG_SCHEMATIC_BLOCK};
+    for (size_t i=0;i<MYLANG_SCHEMATIC_BLOCK;i++)
+        call->output[i+1]=(MylangHostNode){"u8",i<count?state.bytes[id][(size_t)position+i]:0,0};
+    call->output_nodes=MYLANG_SCHEMATIC_BLOCK+1;
+    return NULL;
+}
+static const char *read_block_packed(void *context, MylangHostPackedCall *call) {
+    (void)context;
+    if (call->argument_count!=2 || call->arguments[0].size!=8 || call->arguments[1].size!=8 || call->output.size!=MYLANG_SCHEMATIC_BLOCK) return "HostFailure";
+    int64_t id,position; memcpy(&id,call->arguments[0].bytes,8); memcpy(&position,call->arguments[1].bytes,8);
+    size_t count=block_count(id,position);
+    if (count==SIZE_MAX) return "HostFailure";
+    if (!mylang_host_packed_charge(call,1+count)) return "HostWorkLimit";
+    memset(call->output.bytes,0,MYLANG_SCHEMATIC_BLOCK);
+    memcpy(call->output.bytes,state.bytes[id]+(size_t)position,count);
+    call->output_written=MYLANG_SCHEMATIC_BLOCK;
+    return NULL;
+}
+static const char *write_block(void *context, MylangHostCall *call) {
+    (void)context;
+    if (call->argument_nodes!=MYLANG_SCHEMATIC_BLOCK+2 || !call->capacity || call->arguments[0].children!=MYLANG_SCHEMATIC_BLOCK) return "HostFailure";
+    int64_t requested=(int64_t)call->arguments[MYLANG_SCHEMATIC_BLOCK+1].bits;
+    if (requested<0 || requested>MYLANG_SCHEMATIC_BLOCK || (size_t)requested>MYLANG_SCHEMATIC_OUTPUT-state.written) return "HostWorkLimit";
+    size_t count=(size_t)requested;
+    if (!mylang_host_charge(call,1+count)) return "HostWorkLimit";
+    unsigned char bytes[MYLANG_SCHEMATIC_BLOCK];
+    for (size_t i=0;i<count;i++) bytes[i]=(unsigned char)call->arguments[i+1].bits;
+    if (count && fwrite(bytes,1,count,state.output)!=count) return "HostFailure";
+    state.written+=count;
+    call->output[0]=(MylangHostNode){"i64",0,0}; call->output_nodes=1;
+    return NULL;
+}
+static const char *write_block_packed(void *context, MylangHostPackedCall *call) {
+    (void)context;
+    if (call->argument_count!=2 || call->arguments[0].size!=MYLANG_SCHEMATIC_BLOCK || call->arguments[1].size!=8 || call->output.size!=8) return "HostFailure";
+    int64_t requested; memcpy(&requested,call->arguments[1].bytes,8);
+    if (requested<0 || requested>MYLANG_SCHEMATIC_BLOCK || (size_t)requested>MYLANG_SCHEMATIC_OUTPUT-state.written) return "HostWorkLimit";
+    size_t count=(size_t)requested;
+    if (!mylang_host_packed_charge(call,1+count)) return "HostWorkLimit";
+    if (count && fwrite(call->arguments[0].bytes,1,count,state.output)!=count) return "HostFailure";
+    state.written+=count;
+    int64_t result=0; memcpy(call->output.bytes,&result,8); call->output_written=8;
+    return NULL;
+}
+static const char *finish(void *context, MylangHostCall *call) {
+    (void)context;
+    if (call->argument_nodes || !call->capacity) return "HostFailure";
+    if (!mylang_host_charge(call,1)) return "HostWorkLimit";
+    if (fflush(state.output)) return "HostFailure";
+    call->output[0]=(MylangHostNode){"i64",0,0}; call->output_nodes=1;
+    return NULL;
+}
+static const char *output_limit(void *context, MylangHostCall *call) {
+    (void)context;
+    if (call->argument_nodes || !call->capacity) return "HostFailure";
+    if (!mylang_host_charge(call,1)) return "HostWorkLimit";
+    return "HostWorkLimit";
+}
 /* Only the first located issue survives; later ones describe its consequences. */
 static const char *report(void *context, MylangHostCall *call) {
     (void)context;
@@ -125,14 +196,19 @@ static const char *report(void *context, MylangHostCall *call) {
 }
 static const char *one_i64[] = {"i64"}, *two_i64[] = {"i64", "i64"};
 static const char *three_i64[] = {"i64", "i64", "i64"}, *one_u8[] = {"u8"};
+static const char *block_and_count[] = {"[256]u8", "i64"};
 static const MylangHostBinding declared[] = {
-    {"io::circuit_input", NULL, 0, "i64", 32, 32, NULL, circuit_input},
-    {"io::pinout_input", NULL, 0, "i64", 32, 32, NULL, pinout_input},
-    {"io::interface_input", NULL, 0, "i64", 32, 32, NULL, interface_input},
-    {"io::length", one_i64, 1, "i64", 32, 32, NULL, length},
-    {"io::byte", two_i64, 2, "u8", 32, 32, NULL, byte},
-    {"io::put", one_u8, 1, "i64", 32, 32, NULL, put},
-    {"io::issue", three_i64, 3, "i64", 32, 32, NULL, report},
+    {"io::circuit_input", NULL, 0, "i64", 32, 32, NULL, circuit_input, NULL},
+    {"io::pinout_input", NULL, 0, "i64", 32, 32, NULL, pinout_input, NULL},
+    {"io::interface_input", NULL, 0, "i64", 32, 32, NULL, interface_input, NULL},
+    {"io::length", one_i64, 1, "i64", 32, 32, NULL, length, NULL},
+    {"io::byte", two_i64, 2, "u8", 32, 32, NULL, byte, NULL},
+    {"io::put", one_u8, 1, "i64", 32, 32, NULL, put, NULL},
+    {"io::issue", three_i64, 3, "i64", 32, 32, NULL, report, NULL},
+    {"io::read_block", two_i64, 2, "[256]u8", 32, 32, NULL, read_block, read_block_packed},
+    {"io::write_block", block_and_count, 2, "i64", 32, 32, NULL, write_block, write_block_packed},
+    {"io::finish", NULL, 0, "i64", 32, 32, NULL, finish, NULL},
+    {"io::output_limit", NULL, 0, "i64", 32, 32, NULL, output_limit, NULL},
 };
 static MylangHostBinding bindings[sizeof declared / sizeof *declared];
 /* An older guest may omit the named input providers, so the driver names the

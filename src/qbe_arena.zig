@@ -15,9 +15,14 @@ const restore_region = " call $myl_qbe_region_restore(l %ctx, l %region_mark)\n"
 /// Whether any function in the program opens an arena scope, so an arena-free
 /// program pays neither the store barrier nor the per-frame depth bookkeeping.
 pub fn present(program: bytecode.Program) bool {
-    for (program.functions) |function| {
-        for (function.scope.instructions) |instruction| if (instruction.op == .begin_arena) return true;
-    }
+    for (program.functions) |function| if (opens(function)) return true;
+    return false;
+}
+
+/// Whether this frame can change the arena depth. Callees restore their own
+/// depth, so only a function that opens a scope needs frame bookkeeping.
+fn opens(function: bytecode.Function) bool {
+    for (function.scope.instructions) |instruction| if (instruction.op == .begin_arena) return true;
     return false;
 }
 
@@ -26,12 +31,12 @@ pub fn Lower(comptime E: type) type {
     return struct {
         /// Record the frame's entry arena depth for unwinding.
         pub fn mark(self: *E) Error!void {
-            if (!self.arenas) return;
+            if (!self.arenas or !opens(self.function)) return;
             try self.print(" %region_mark =l call $myl_qbe_region_mark(l %ctx)\n", .{});
         }
         /// Close every arena this frame opened, on return or while unwinding.
         pub fn restore(self: *E) Error!void {
-            if (!self.arenas) return;
+            if (!self.arenas or !opens(self.function)) return;
             try self.print(restore_region, .{});
         }
         /// Reject a managed reference store that would outlive its arena.
@@ -44,7 +49,11 @@ pub fn Lower(comptime E: type) type {
         /// Lower one arena scope boundary or `escape` copy.
         pub fn emit(self: *E, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) Error!void {
             switch (op) {
-                .begin_arena => try self.print(" call $myl_qbe_region_begin(l %ctx)\n", .{}),
+                .begin_arena => {
+                    const opened = self.temp();
+                    try self.print(" %v{d} =w call $myl_qbe_region_begin(l %ctx)\n", .{opened});
+                    try self.checkFailure("failure");
+                },
                 .end_arena => |watermark| try emitEnd(E, self, @backingInt(watermark)),
                 .arena_escape => |ty| try emitEscape(E, self, ty, stack),
                 else => return error.InternalError,

@@ -231,7 +231,10 @@ fn inlineFrames(allocator: std.mem.Allocator, program: bytecode.Program, code: [
 fn needsTextRuntime(program: bytecode.Program, op: @FieldType(bytecode.Instruction, "op")) bool {
     switch (op) {
         .cast_integer => |target| return target.isAggregate() and program.records[target.recordIndex()].collection.kind == .string,
-        .buffer_operation => |operation| return operation.kind == .parse_int or operation.kind == .parse_float or operation.kind == .buffer_append_float,
+        .buffer_operation => |operation| return switch (operation.kind) {
+            .parse_int, .parse_float, .parse_int_range, .parse_float_range, .buffer_append_float => true,
+            else => false,
+        },
         else => return false,
     }
 }
@@ -589,7 +592,9 @@ const pure_callees = [_][]const u8{
     // in place: no allocation, so a function whose only calls are these starts no
     // collection and needs neither a root protocol nor a safepoint.
     "myl_native_number_parse",
+    "myl_native_text_compare",
     "myl_native_bytes_number_parse",
+    "myl_native_bytes_range",
     "myl_native_bytes_scalar_count",
     "myl_qbe_int_cast",
     "myl_qbe_int_neg",
@@ -2402,10 +2407,11 @@ const Emitter = struct {
             .store_local => |slot| {
                 const index = @backingInt(slot);
                 const ty = self.function.scope.locals[index].ty;
-                // QBE-CTORFWD-1: the constructor immediately before this store
-                // already wrote the record into this local, field by field, so
+                // QBE-CTORFWD-1 and QBE-ARRAYWRITE-1: the instruction before
+                // this store already wrote this local where it lives — a
+                // constructor field by field, a `replace` one element — so
                 // there is nothing left to copy.
-                if (!try @import("qbe_aggregate.zig").constructorForwarded(@TypeOf(self), self, self.pc, index)) {
+                if (!try @import("qbe_aggregate.zig").storeForwarded(@TypeOf(self), self, self.pc, index)) {
                     const v = try self.load("s", h - 1);
                     if ((try self.layout(ty)).drop) {
                         try self.print(drop_local, .{ try self.descriptor(ty), index });

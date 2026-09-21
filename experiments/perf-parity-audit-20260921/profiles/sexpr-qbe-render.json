@@ -1,0 +1,789 @@
+{
+  "binary": ".tmp/perf-audit-20260921/sexpr-qbe",
+  "binary_sha256": "65912253a679e3f0a9bd64857b425da404ccd9741ae700351384ffb949fdba80",
+  "note": "production QBE backend; parse and reprint input8.sexp",
+  "argv_tail": [
+    "--render"
+  ],
+  "runs": 600,
+  "samples": 43663,
+  "outside_main_executable": 6051,
+  "percent_outside_main_executable": 13.858415592148958,
+  "unmapped_inside": 636,
+  "percent_unmapped_inside": 1.4566108604539312,
+  "located_samples": 36976,
+  "class_totals": {
+    "guest": {
+      "samples": 19589,
+      "percent_all_samples": 44.864072555710784
+    },
+    "runtime-c": {
+      "samples": 9697,
+      "percent_all_samples": 22.208735084625427
+    },
+    "libc": {
+      "samples": 7690,
+      "percent_all_samples": 17.6121659070609
+    }
+  },
+  "functions": [
+    {
+      "name": "memcpy",
+      "class": "libc",
+      "samples": 5508,
+      "percent_all_samples": 12.614799716006688
+    },
+    {
+      "name": "sexpr.printer::push_node",
+      "class": "guest",
+      "samples": 4605,
+      "percent_all_samples": 10.546687126399927
+    },
+    {
+      "name": "sexpr.tokenizer::next_raw",
+      "class": "guest",
+      "samples": 2325,
+      "percent_all_samples": 5.324874607791494
+    },
+    {
+      "name": "sexpr.printer::estimate_width",
+      "class": "guest",
+      "samples": 2226,
+      "percent_all_samples": 5.09813801158876
+    },
+    {
+      "name": "memset",
+      "class": "libc",
+      "samples": 2166,
+      "percent_all_samples": 4.960721892678011
+    },
+    {
+      "name": "trace [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 1977,
+      "percent_all_samples": 4.527861118109154
+    },
+    {
+      "name": "myl_native_bytes_find_any [native_bytes.c]",
+      "class": "runtime-c",
+      "samples": 1654,
+      "percent_all_samples": 3.7881043446396263
+    },
+    {
+      "name": "sexpr.tokenizer::raw",
+      "class": "guest",
+      "samples": 1446,
+      "percent_all_samples": 3.3117284657490322
+    },
+    {
+      "name": "sexpr.tokenizer::is_atom_continue",
+      "class": "guest",
+      "samples": 1377,
+      "percent_all_samples": 3.153699929001672
+    },
+    {
+      "name": "sexpr.parser::parse_node",
+      "class": "guest",
+      "samples": 1126,
+      "percent_all_samples": 2.578842498225042
+    },
+    {
+      "name": "sexpr.parser::advance",
+      "class": "guest",
+      "samples": 1005,
+      "percent_all_samples": 2.301719991755033
+    },
+    {
+      "name": "myl_native_heap_collect [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 893,
+      "percent_all_samples": 2.045209903121636
+    },
+    {
+      "name": "scalar_count [native_bytes.c]",
+      "class": "runtime-c",
+      "samples": 826,
+      "percent_all_samples": 1.8917619036713007
+    },
+    {
+      "name": "sexpr.printer::is_short_list",
+      "class": "guest",
+      "samples": 779,
+      "percent_all_samples": 1.7841192771912144
+    },
+    {
+      "name": "myl_native_bytes_buffer_append_range [native_bytes.c]",
+      "class": "runtime-c",
+      "samples": 765,
+      "percent_all_samples": 1.75205551611204
+    },
+    {
+      "name": "sexpr.parser::parse_list",
+      "class": "guest",
+      "samples": 742,
+      "percent_all_samples": 1.6993793371962531
+    },
+    {
+      "name": "byte_builder::append",
+      "class": "guest",
+      "samples": 731,
+      "percent_all_samples": 1.674186382062616
+    },
+    {
+      "name": "myl_qbe_heap [qbe_runtime.c]",
+      "class": "runtime-c",
+      "samples": 721,
+      "percent_all_samples": 1.6512836955774912
+    },
+    {
+      "name": "sexpr.tokenizer::read_string",
+      "class": "guest",
+      "samples": 629,
+      "percent_all_samples": 1.440578979914344
+    },
+    {
+      "name": "sexpr.parser::parse_leaf",
+      "class": "guest",
+      "samples": 534,
+      "percent_all_samples": 1.2230034583056593
+    },
+    {
+      "name": "myl_native_list_append [native_collections.c]",
+      "class": "runtime-c",
+      "samples": 505,
+      "percent_all_samples": 1.1565856674987975
+    },
+    {
+      "name": "myl_qbe_root_mark [qbe_runtime.c]",
+      "class": "runtime-c",
+      "samples": 480,
+      "percent_all_samples": 1.0993289512859858
+    },
+    {
+      "name": "myl_native_object_immortal [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 377,
+      "percent_all_samples": 0.8634312804892014
+    },
+    {
+      "name": "sexpr.tokenizer::read_atom",
+      "class": "guest",
+      "samples": 348,
+      "percent_all_samples": 0.7970134896823398
+    },
+    {
+      "name": "sexpr.printer::scalar_len",
+      "class": "guest",
+      "samples": 341,
+      "percent_all_samples": 0.7809816091427525
+    },
+    {
+      "name": "myl_native_heap_alloc_at [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 335,
+      "percent_all_samples": 0.7672399972516776
+    },
+    {
+      "name": "byte_builder::append_range",
+      "class": "guest",
+      "samples": 305,
+      "percent_all_samples": 0.6985319377963035
+    },
+    {
+      "name": "buffer_grow_rooted [native_bytes.c]",
+      "class": "runtime-c",
+      "samples": 294,
+      "percent_all_samples": 0.6733389826626663
+    },
+    {
+      "name": "sexpr.printer::append_view",
+      "class": "guest",
+      "samples": 239,
+      "percent_all_samples": 0.5473742069944805
+    },
+    {
+      "name": "byte_builder::append_spaces",
+      "class": "guest",
+      "samples": 225,
+      "percent_all_samples": 0.5153104459153058
+    },
+    {
+      "name": "sexpr.tokenizer::read_number",
+      "class": "guest",
+      "samples": 206,
+      "percent_all_samples": 0.47179534159356895
+    },
+    {
+      "name": "sexpr.parser::view_of",
+      "class": "guest",
+      "samples": 174,
+      "percent_all_samples": 0.3985067448411699
+    },
+    {
+      "name": "myl_qbe_bytes_scalar_count_range [qbe_bytes.c]",
+      "class": "runtime-c",
+      "samples": 145,
+      "percent_all_samples": 0.3320889540343082
+    },
+    {
+      "name": "myl_native_arena_region [native_arena.c]",
+      "class": "runtime-c",
+      "samples": 140,
+      "percent_all_samples": 0.32063761079174585
+    },
+    {
+      "name": "myl_native_bytes_number_parse",
+      "class": "runtime-c",
+      "samples": 90,
+      "percent_all_samples": 0.20612417836612235
+    },
+    {
+      "name": "myl_native_list_new [native_collections.c]",
+      "class": "runtime-c",
+      "samples": 76,
+      "percent_all_samples": 0.17406041728694777
+    },
+    {
+      "name": "myl_native_bytes_scalar_count_range [native_bytes.c]",
+      "class": "runtime-c",
+      "samples": 74,
+      "percent_all_samples": 0.1694798799899228
+    },
+    {
+      "name": "myl_native_text_from_utf8_checked [native_text.c]",
+      "class": "runtime-c",
+      "samples": 64,
+      "percent_all_samples": 0.14657719350479811
+    },
+    {
+      "name": "myl_native_root_push [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 63,
+      "percent_all_samples": 0.14428692485628564
+    },
+    {
+      "name": "sexpr.printer::decimal_width",
+      "class": "guest",
+      "samples": 59,
+      "percent_all_samples": 0.13512585026223575
+    },
+    {
+      "name": "myl_native_root_pop [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 56,
+      "percent_all_samples": 0.12825504431669835
+    },
+    {
+      "name": "sexpr.tokenizer::si_suffix_len",
+      "class": "guest",
+      "samples": 51,
+      "percent_all_samples": 0.116803701074136
+    },
+    {
+      "name": "sexpr.printer::append_float",
+      "class": "guest",
+      "samples": 40,
+      "percent_all_samples": 0.09161074594049883
+    },
+    {
+      "name": "sexpr.printer::int_width",
+      "class": "guest",
+      "samples": 34,
+      "percent_all_samples": 0.077869134049424
+    },
+    {
+      "name": "myl_native_text_scalar",
+      "class": "runtime-c",
+      "samples": 24,
+      "percent_all_samples": 0.05496644756429929
+    },
+    {
+      "name": "myl_native_heap_alloc_block [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 21,
+      "percent_all_samples": 0.048095641618761883
+    },
+    {
+      "name": "myl_native_text_utf8 [native_text.c]",
+      "class": "runtime-c",
+      "samples": 20,
+      "percent_all_samples": 0.04580537297024941
+    },
+    {
+      "name": "myl_native_text_from_utf8 [native_text.c]",
+      "class": "runtime-c",
+      "samples": 18,
+      "percent_all_samples": 0.04122483567322447
+    },
+    {
+      "name": "compiler_rt.bcmp",
+      "class": "libc",
+      "samples": 16,
+      "percent_all_samples": 0.03664429837619953
+    },
+    {
+      "name": "myl_native_bytes_buffer_append_int [native_bytes.c]",
+      "class": "runtime-c",
+      "samples": 16,
+      "percent_all_samples": 0.03664429837619953
+    },
+    {
+      "name": "sexpr.printer::render_float",
+      "class": "guest",
+      "samples": 16,
+      "percent_all_samples": 0.03664429837619953
+    },
+    {
+      "name": "byte_builder::append_int",
+      "class": "guest",
+      "samples": 16,
+      "percent_all_samples": 0.03664429837619953
+    },
+    {
+      "name": "myl_native_heap_alloc [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 12,
+      "percent_all_samples": 0.027483223782149645
+    },
+    {
+      "name": "myl_native_object_region [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 10,
+      "percent_all_samples": 0.022902686485124706
+    },
+    {
+      "name": "myl_native_text_find [native_text_methods.c]",
+      "class": "runtime-c",
+      "samples": 9,
+      "percent_all_samples": 0.020612417836612235
+    },
+    {
+      "name": "myl_native_bytes_encode [native_bytes.c]",
+      "class": "runtime-c",
+      "samples": 9,
+      "percent_all_samples": 0.020612417836612235
+    },
+    {
+      "name": "myl_native_text_edge [native_text_methods.c]",
+      "class": "runtime-c",
+      "samples": 8,
+      "percent_all_samples": 0.018322149188099764
+    },
+    {
+      "name": "sexpr.printer::render_bytes",
+      "class": "guest",
+      "samples": 6,
+      "percent_all_samples": 0.013741611891074822
+    },
+    {
+      "name": "myl_native_text_slice [native_text.c]",
+      "class": "runtime-c",
+      "samples": 6,
+      "percent_all_samples": 0.013741611891074822
+    },
+    {
+      "name": "myl_qbe_resource_read [qbe_resources.c]",
+      "class": "runtime-c",
+      "samples": 4,
+      "percent_all_samples": 0.009161074594049882
+    },
+    {
+      "name": "myl_native_bytes_range [native_bytes.c]",
+      "class": "runtime-c",
+      "samples": 2,
+      "percent_all_samples": 0.004580537297024941
+    },
+    {
+      "name": "sexpr.parser::parse_with_depth_cap",
+      "class": "guest",
+      "samples": 2,
+      "percent_all_samples": 0.004580537297024941
+    },
+    {
+      "name": "myl_native_bytes_copy [native_bytes.c]",
+      "class": "runtime-c",
+      "samples": 1,
+      "percent_all_samples": 0.0022902686485124705
+    },
+    {
+      "name": "myl_qbe_failed [qbe_runtime.c]",
+      "class": "runtime-c",
+      "samples": 1,
+      "percent_all_samples": 0.0022902686485124705
+    },
+    {
+      "name": "sexpr.tokenizer::read_operator",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.0022902686485124705
+    },
+    {
+      "name": "read_handle [native_scoped.c]",
+      "class": "runtime-c",
+      "samples": 1,
+      "percent_all_samples": 0.0022902686485124705
+    },
+    {
+      "name": "main::main",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.0022902686485124705
+    }
+  ],
+  "top_pcs": [
+    {
+      "address": "0x103cb51",
+      "samples": 1010,
+      "percent_all_samples": 2.313171334997595,
+      "function": "memcpy",
+      "class": "libc",
+      "offset_in_function": "0x141",
+      "function_bytes": 470,
+      "disassembly": [
+        {
+          "address": "0x103cb32",
+          "text": "vmovups %ymm0,-0xa0(%rax,%r10,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb3c",
+          "text": "vmovaps -0x80(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb43",
+          "text": "vmovups %ymm0,-0x80(%rax,%r10,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb4a",
+          "text": "vmovaps -0x60(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb51",
+          "text": "vmovups %ymm0,-0x60(%rax,%r10,1)",
+          "sampled": true
+        },
+        {
+          "address": "0x103cb58",
+          "text": "vmovaps -0x40(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb5f",
+          "text": "vmovups %ymm0,-0x40(%rax,%r10,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb66",
+          "text": "vmovaps -0x20(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x103cb43",
+      "samples": 989,
+      "percent_all_samples": 2.2650756933788334,
+      "function": "memcpy",
+      "class": "libc",
+      "offset_in_function": "0x133",
+      "function_bytes": 470,
+      "disassembly": [
+        {
+          "address": "0x103cb1e",
+          "text": "vmovups %ymm0,-0xc0(%rax,%r10,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb28",
+          "text": "vmovaps -0xa0(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb32",
+          "text": "vmovups %ymm0,-0xa0(%rax,%r10,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb3c",
+          "text": "vmovaps -0x80(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb43",
+          "text": "vmovups %ymm0,-0x80(%rax,%r10,1)",
+          "sampled": true
+        },
+        {
+          "address": "0x103cb4a",
+          "text": "vmovaps -0x60(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb51",
+          "text": "vmovups %ymm0,-0x60(%rax,%r10,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb58",
+          "text": "vmovaps -0x40(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x103cb6d",
+      "samples": 712,
+      "percent_all_samples": 1.630671277740879,
+      "function": "memcpy",
+      "class": "libc",
+      "offset_in_function": "0x15d",
+      "function_bytes": 470,
+      "disassembly": [
+        {
+          "address": "0x103cb51",
+          "text": "vmovups %ymm0,-0x60(%rax,%r10,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb58",
+          "text": "vmovaps -0x40(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb5f",
+          "text": "vmovups %ymm0,-0x40(%rax,%r10,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb66",
+          "text": "vmovaps -0x20(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb6d",
+          "text": "vmovups %ymm0,-0x20(%rax,%r10,1)",
+          "sampled": true
+        },
+        {
+          "address": "0x103cb74",
+          "text": "vmovaps (%rsi,%r10,1),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb7a",
+          "text": "vmovups %ymm0,(%rax,%r10,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb80",
+          "text": "add    $0x8,%r9",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x103cb0a",
+      "samples": 668,
+      "percent_all_samples": 1.5298994572063302,
+      "function": "memcpy",
+      "class": "libc",
+      "offset_in_function": "0xfa",
+      "function_bytes": 470,
+      "disassembly": [
+        {
+          "address": "0x103caeb",
+          "text": "sub    %rdi,%r10",
+          "sampled": false
+        },
+        {
+          "address": "0x103caee",
+          "text": "xor    %r9d,%r9d",
+          "sampled": false
+        },
+        {
+          "address": "0x103caf1",
+          "text": "data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb00",
+          "text": "vmovaps -0xe0(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb0a",
+          "text": "vmovups %ymm0,-0xe0(%rax,%r10,1)",
+          "sampled": true
+        },
+        {
+          "address": "0x103cb14",
+          "text": "vmovaps -0xc0(%rsi,%r10,1),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x103cb1e",
+          "text": "vmovups %ymm0,-0xc0(%rax,%r10,1)",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x10389c4",
+      "samples": 649,
+      "percent_all_samples": 1.4863843528845933,
+      "function": "myl_native_bytes_find_any [native_bytes.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0xf4",
+      "function_bytes": 272,
+      "disassembly": [
+        {
+          "address": "0x10389b6",
+          "text": "shr    $0x6,%ecx",
+          "sampled": false
+        },
+        {
+          "address": "0x10389b9",
+          "text": "mov    -0x30(%rbp,%rcx,8),%rcx",
+          "sampled": false
+        },
+        {
+          "address": "0x10389be",
+          "text": "bt     %rax,%rcx",
+          "sampled": false
+        },
+        {
+          "address": "0x10389c2",
+          "text": "jb     10389d3 <myl_native_bytes_find_any+0x103>",
+          "sampled": false
+        },
+        {
+          "address": "0x10389c4",
+          "text": "inc    %rdi",
+          "sampled": true
+        },
+        {
+          "address": "0x10389c7",
+          "text": "cmp    %rdi,%r8",
+          "sampled": false
+        },
+        {
+          "address": "0x10389ca",
+          "text": "jne    10389b0 <myl_native_bytes_find_any+0xe0>",
+          "sampled": false
+        },
+        {
+          "address": "0x10389cc",
+          "text": "mov    $0xffffffffffffffff,%rdi",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x103c8a0",
+      "samples": 631,
+      "percent_all_samples": 1.445159517211369,
+      "function": "memset",
+      "class": "libc",
+      "offset_in_function": "0x0",
+      "function_bytes": 364
+    },
+    {
+      "address": "0x103557f",
+      "samples": 623,
+      "percent_all_samples": 1.426837368023269,
+      "function": "myl_native_heap_collect [native_heap.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0x14f",
+      "function_bytes": 408
+    },
+    {
+      "address": "0x10356b2",
+      "samples": 604,
+      "percent_all_samples": 1.383322263701532,
+      "function": "trace [native_heap.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0xe2",
+      "function_bytes": 352
+    },
+    {
+      "address": "0x103c915",
+      "samples": 559,
+      "percent_all_samples": 1.280260174518471,
+      "function": "memset",
+      "class": "libc",
+      "offset_in_function": "0x75",
+      "function_bytes": 364
+    },
+    {
+      "address": "0x10339ac",
+      "samples": 449,
+      "percent_all_samples": 1.0283306231820992,
+      "function": "myl_qbe_heap [qbe_runtime.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0xc",
+      "function_bytes": 13
+    },
+    {
+      "address": "0x103c92c",
+      "samples": 423,
+      "percent_all_samples": 0.9687836383207751,
+      "function": "memset",
+      "class": "libc",
+      "offset_in_function": "0x8c",
+      "function_bytes": 364
+    },
+    {
+      "address": "0x1035648",
+      "samples": 382,
+      "percent_all_samples": 0.8748826237317637,
+      "function": "trace [native_heap.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0x78",
+      "function_bytes": 352
+    },
+    {
+      "address": "0x102ca31",
+      "samples": 381,
+      "percent_all_samples": 0.8725923550832513,
+      "function": "sexpr.tokenizer::raw",
+      "class": "guest",
+      "offset_in_function": "0x131",
+      "function_bytes": 632
+    },
+    {
+      "address": "0x103cb5f",
+      "samples": 380,
+      "percent_all_samples": 0.8703020864347388,
+      "function": "memcpy",
+      "class": "libc",
+      "offset_in_function": "0x14f",
+      "function_bytes": 470
+    },
+    {
+      "address": "0x102ca57",
+      "samples": 376,
+      "percent_all_samples": 0.8611410118406889,
+      "function": "sexpr.tokenizer::raw",
+      "class": "guest",
+      "offset_in_function": "0x157",
+      "function_bytes": 632
+    }
+  ],
+  "method": "LD_PRELOAD SIGPROF (ITIMER_PROF) userspace self-PC sampling of unmodified binaries; 500us requested, kernel tick (CONFIG_HZ=1000) limited; no stack attribution, no hardware counters (perf_event_paranoid=4). The `dense` sampler is the repository sampler with the first expiration moved inside the first tick, so no prefix of a short run goes unsampled. A sample inside a shared library counts in `samples` and is reported only as `outside_main_executable`, so libc memcpy/malloc in the LLVM builds is inside that share. LTO inlines many guest functions into their callers, so a sample is attributed to the surviving outer symbol. Every run is pinned to CPU 6 and its output hash is verified; no wall-time claim is made from profiled runs.",
+  "sampler": "dense",
+  "sampler_source": "experiments/perf-parity-audit-20260921/profiles/sample_dense.c",
+  "sampler_source_sha256": "f494bbd1caa925d9ee02616d09f65dd2ff31a8b8f8d81cfd231b2c5b3ef54061",
+  "sampler_sha256": "312212283319eeec021923ce05881f6636e34a5ed6f9dbdcecedf4edcb354a4c",
+  "cpu": 6,
+  "seed": 20260921,
+  "output_digest": "f96e951ea7d9fa54c4d2ca91abd44c8a",
+  "interleaved_with": [
+    "sexpr-o3-lto-census",
+    "sexpr-o3-lto-render",
+    "sexpr-qbe-census",
+    "sexpr-qbe-render"
+  ]
+}

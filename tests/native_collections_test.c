@@ -1,5 +1,7 @@
 #include "native_collections.h"
+#include "native_text.h"
 #include <assert.h>
+#include <math.h>
 #include <stdio.h>
 static const myl_native_type number = { .size = 8, .alignment = 8, .kind = MYL_NATIVE_PLAIN };
 static const myl_native_type pointer = { .size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER };
@@ -21,6 +23,53 @@ int main(void) {
     int64_t value;
     assert(!myl_native_list_get(list, 100, &value));
     assert(myl_native_list_pop(list, &value) && value == 99);
+    myl_native_list_clear(list);
+    assert(list->length == 0);
+    /* Reverse-ordered input is large enough to catch a quadratic in-place
+       implementation, and duplicate keys retain their source order. */
+    for (int64_t i = 4095; i >= 0; --i) assert(myl_native_list_append(&heap, list, &i));
+    assert(myl_native_list_sort(list, 0));
+    for (int64_t i = 0; i < 4096; ++i) {
+        int64_t sorted;
+        assert(myl_native_list_get(list, (size_t)i, &sorted) && sorted == i);
+    }
+    myl_native_list *floats = myl_native_list_new(&heap, &number, 4);
+    assert(floats);
+    myl_native_root floats_root;
+    myl_native_root_push(&heap, &floats_root, &floats, &pointer);
+    double nan = NAN, negative_zero = -0.0, positive_zero = 0.0, low = -1.0;
+    assert(myl_native_list_append(&heap, floats, &nan));
+    assert(myl_native_list_append(&heap, floats, &negative_zero));
+    assert(myl_native_list_append(&heap, floats, &positive_zero));
+    assert(myl_native_list_append(&heap, floats, &low));
+    assert(myl_native_list_sort(floats, 2));
+    double sorted_float;
+    assert(myl_native_list_get(floats, 0, &sorted_float) && sorted_float == -1.0);
+    assert(myl_native_list_get(floats, 1, &sorted_float) && signbit(sorted_float));
+    assert(myl_native_list_get(floats, 2, &sorted_float) && !signbit(sorted_float));
+    assert(myl_native_list_get(floats, 3, &sorted_float) && isnan(sorted_float));
+    myl_native_list *texts = myl_native_list_new(&heap, &pointer, 3);
+    assert(texts);
+    myl_native_root texts_root;
+    myl_native_root_push(&heap, &texts_root, &texts, &pointer);
+    myl_native_text *accent = myl_native_text_from_utf8(&heap, (const unsigned char *)"\xc3\xa9", 2);
+    assert(accent);
+    assert(myl_native_list_append(&heap, texts, &accent));
+    myl_native_text *apple = myl_native_text_from_utf8(&heap, (const unsigned char *)"apple", 5);
+    assert(apple);
+    assert(myl_native_list_append(&heap, texts, &apple));
+    myl_native_text *capital = myl_native_text_from_utf8(&heap, (const unsigned char *)"Apple", 5);
+    assert(capital);
+    assert(myl_native_list_append(&heap, texts, &capital));
+    assert(myl_native_list_sort(texts, 3));
+    myl_native_text *sorted_text;
+    assert(myl_native_list_get(texts, 0, &sorted_text) && sorted_text == capital);
+    assert(myl_native_list_get(texts, 1, &sorted_text) && sorted_text == apple);
+    assert(myl_native_list_get(texts, 2, &sorted_text) && sorted_text == accent);
+    assert(myl_native_text_compare(capital, apple) < 0);
+    assert(myl_native_text_compare(accent, accent) == 0);
+    myl_native_root_pop(&heap, &texts_root);
+    myl_native_root_pop(&heap, &floats_root);
     myl_native_list_clear(list);
     assert(list->length == 0);
     myl_native_list *refs = myl_native_list_new(&heap, &pointer, 0);

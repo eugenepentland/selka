@@ -1,8 +1,10 @@
 #define _POSIX_C_SOURCE 200809L
 #include "native_heap.h"
+#include "native_arena.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdalign.h>
+#include <limits.h>
 #include <sys/resource.h>
 #if defined(__SANITIZE_ADDRESS__) || defined(__SANITIZE_THREAD__)
 #define MYL_NATIVE_SANITIZED 1
@@ -54,32 +56,35 @@ int myl_native_budget_guard(size_t budget) {
     ceiling.rlim_cur = wanted;
     return setrlimit(RLIMIT_AS, &ceiling) == 0;
 }
-unsigned myl_native_object_region(const void *payload) {
-    return payload ? ((const myl_native_object *)payload - 1)->region : 0;
+unsigned myl_native_object_region(const myl_native_heap *heap, const void *payload) {
+    return payload ? myl_native_arena_region(heap, payload) : 0;
 }
-void myl_native_region_begin(myl_native_heap *heap) {
+const myl_native_type *myl_native_object_element(const myl_native_heap *heap, const void *payload) {
+    if (!payload) return NULL;
+    if (myl_native_arena_region(heap, payload)) return myl_native_arena_element(heap, payload);
+    return ((const myl_native_object *)payload - 1)->element;
+}
+int myl_native_object_immortal(const myl_native_heap *heap, const void *payload) {
+    if (!payload || myl_native_arena_region(heap, payload)) return 0;
+    return ((const myl_native_object *)payload - 1)->immortal != 0;
+}
+int myl_native_region_begin(myl_native_heap *heap) {
+    if (heap->region_depth == UINT_MAX) return 0;
     heap->region_depth++;
     heap->arena.scopes++;
+    return 1;
 }
 void myl_native_region_end(myl_native_heap *heap) {
     if (!heap->region_depth) return;
-    unsigned dying = heap->region_depth;
-    myl_native_object **link = &heap->objects;
-    while (*link) {
-        myl_native_object *object = *link;
-        if (object->immortal) { link = &object->next; continue; }
-        if (object->region < dying) { link = &object->next; continue; }
-        *link = object->next;
-        heap->bytes -= object->bytes;
-        heap->objects_live--;
-        heap->arena.released++;
-        free(object);
-    }
-    heap->region_depth = dying - 1;
+    myl_native_arena_release(heap, heap->region_depth);
+    heap->region_depth--;
 }
 static void trace(myl_native_heap *, const myl_native_type *, const void *);
 static void mark(myl_native_heap *heap, void *payload) {
     if (!payload) return;
+    /* Region storage is retained wholesale. Its outgoing GC edges are scanned
+     * once separately, so arena cycles never enter the collector's work list. */
+    if (myl_native_arena_region(heap, payload)) return;
     myl_native_object *object = (myl_native_object *)payload - 1;
     /* Immortal payloads live in the image, not the heap: they can never be
      * collected, so re-tracing one would only queue static storage. */
@@ -131,6 +136,7 @@ int myl_native_root_pop(myl_native_heap *heap, myl_native_root *root) {
     return 1;
 }
 void myl_native_heap_collect(myl_native_heap *heap) {
+    if (heap->suspended) return;
     heap->collections++;
     for (myl_native_root *root = heap->roots; root; root = root->previous)
         trace(heap, root->type, root->address);
@@ -138,6 +144,7 @@ void myl_native_heap_collect(myl_native_heap *heap) {
      * generated frames restore that stack to a per-frame mark, which would drop a
      * lazily pushed entry. */
     for (size_t i = 0; i < 128; i++) if (heap->text_scalars[i]) mark(heap, heap->text_scalars[i]);
+    if (heap->objects) myl_native_arena_trace(heap, trace);
     while (heap->pending) {
         myl_native_object *object = heap->pending;
         heap->pending = object->pending;
@@ -169,7 +176,8 @@ void myl_native_heap_collect(myl_native_heap *heap) {
      * a steady workload then re-marks a few times instead of every time it
      * doubles. Collection timing is unobservable (no destructors, no counter a
      * program can read) and `--gc-stress` bypasses this trigger entirely. */
-    heap->next_collection = heap->bytes > (SIZE_MAX-(4u<<20))/3 ? SIZE_MAX : heap->bytes*3+(4u<<20);
+    size_t gc_bytes = heap->bytes - heap->arena.reserved_bytes;
+    heap->next_collection = gc_bytes > (SIZE_MAX-(4u<<20))/3 ? SIZE_MAX : gc_bytes*3+(4u<<20);
 }
 void *myl_native_heap_alloc(myl_native_heap *heap, const myl_native_type *element, size_t count) {
     return myl_native_heap_alloc_at(heap, element, count, heap->region_depth);
@@ -186,10 +194,13 @@ void *myl_native_heap_alloc_block(myl_native_heap *heap, size_t prefix, size_t e
 void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *element, size_t count, unsigned region) {
     if (!element || !element->alignment || element->alignment > alignof(max_align_t)) return NULL;
     if ((element->alignment & (element->alignment - 1)) || element->size % element->alignment) return NULL;
+    if (region > heap->region_depth) return NULL;
     if (element->size && count > (SIZE_MAX - sizeof(myl_native_object)) / element->size) return NULL;
+    if (region) return myl_native_arena_alloc(heap, element, count, region);
     size_t bytes = sizeof(myl_native_object) + count * element->size;
+    size_t gc_bytes = heap->bytes - heap->arena.reserved_bytes;
     int due = heap->stress || heap->bytes > heap->limit || bytes > heap->limit - heap->bytes;
-    due = due || heap->bytes >= heap->next_collection || bytes > heap->next_collection - heap->bytes;
+    due = due || gc_bytes >= heap->next_collection || bytes > heap->next_collection - gc_bytes;
     /* An escape copy suspends collection because its clones are not yet rooted. */
     if (due && !heap->suspended) myl_native_heap_collect(heap);
     /* Refused after a collection, so the budget really is exhausted rather than
@@ -199,6 +210,9 @@ void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *ele
         return NULL;
     }
     myl_native_object *object = calloc(1, bytes);
+    /* Chunks the arena retained for reuse are host bytes no live allocation
+     * needs, so a refused reservation spends them before reporting failure. */
+    if (!object && heap->arena.cached) { myl_native_arena_reclaim(heap); object = calloc(1, bytes); }
     if (!object) return NULL;
     object->next = heap->objects;
     object->element = element;
@@ -212,6 +226,8 @@ void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *ele
     return object + 1;
 }
 void myl_native_heap_destroy(myl_native_heap *heap) {
+    myl_native_arena_release(heap, 0);
+    myl_native_arena_reclaim(heap);
     myl_native_object *object = heap->objects;
     while (object) {
         myl_native_object *next = object->next;
@@ -223,6 +239,7 @@ void myl_native_heap_destroy(myl_native_heap *heap) {
 
 void myl_native_heap_release(myl_native_heap *heap, void *payload) {
     if (!payload) return;
+    if (myl_native_arena_region(heap, payload)) return;
     myl_native_object *object = (myl_native_object *)payload - 1;
     if (object->immortal) return;
     myl_native_object **link = &heap->objects;

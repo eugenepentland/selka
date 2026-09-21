@@ -146,10 +146,10 @@ static const char *overlap(void *context, MylangHostCall *call) {
 static const char *i64_parameter[] = {"i64"}, *u8_parameter[] = {"u8"};
 static const char *rect_parameters[] = {"model::Rect", "model::Rect"};
 static const MylangHostBinding bindings[] = {
-    {"io::length", NULL, 0, "i64", 32, 32, NULL, length},
-    {"io::byte", i64_parameter, 1, "u8", 32, 32, NULL, byte},
-    {"io::put", u8_parameter, 1, "i64", 32, 32, NULL, put},
-    {"geometry::overlap", rect_parameters, 2, "model::Overlap", 32, 32, NULL, overlap},
+    {"io::length", NULL, 0, "i64", 32, 32, NULL, length, NULL},
+    {"io::byte", i64_parameter, 1, "u8", 32, 32, NULL, byte, NULL},
+    {"io::put", u8_parameter, 1, "i64", 32, 32, NULL, put, NULL},
+    {"geometry::overlap", rect_parameters, 2, "model::Overlap", 32, 32, NULL, overlap, NULL},
 };
 MylangNativeProviders mylang_native_providers(void) {
     const char *request = getenv("MYLANG_BOARD_REQUEST");

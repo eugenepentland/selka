@@ -1,11 +1,10 @@
 # Managed arenas
 
-`with arena() as name:` opens a region over the ordinary garbage-collected objects
-described in [managed memory](managed-memory.md). Nothing about the types changes:
-lists, strings, dictionaries and records are the same values, allocated the same
-way. What changes is *when* they are freed. Every managed allocation performed
-while the block runs is tagged with that block, and the whole tag is released in
-one step when the block ends.
+`with arena() as name:` opens a region for the managed values described in
+[managed memory](managed-memory.md). Lists, strings, dictionaries and records
+keep the same types. Native allocation uses aligned, zero-filled bump storage
+inside shared chunks, without a garbage-collector header before each payload.
+The chunks are released together when the block ends.
 
 This is the language's only manual-memory control. There is no explicit storage
 tier, no allocator parameter to thread and no borrow annotation to write: an
@@ -162,7 +161,7 @@ diagnostic.
 
 The static rules are deliberately shallow: they only look at direct stores in the
 block's own text. A helper can still be handed an outer collection and an arena
-value and asked to put one in the other. Every managed object records the arena
+value and asked to put one in the other. Runtime allocation metadata records the arena
 depth that owns it, and every store of a managed reference into a heap object —
 list append, list slot write, dictionary key or value write, a record snapshot
 holding either — checks that depth. Storing a younger object into an older
@@ -192,19 +191,49 @@ traps if any of them still reaches arena storage, then frees the arena. Normal
 exit, `return`, `?` propagation, `break` and `continue` out of the block, and
 traps unwinding through it all release the arena exactly once.
 
-The QBE native backend runs arena scopes too, with the same depth header, store
-barrier, bulk release and `escape` copy. A program with no arena scope pays for
-neither the barrier nor the per-frame depth bookkeeping.
+Bulk release does not necessarily return the chunks to the host. The runtime
+keeps a bounded few of them — at most four chunks, at most 2 MiB, never more
+than the memory budget itself — and hands the next scope one of them instead of
+reserving and zero-filling a new one, which is what makes a loop that opens an
+arena per iteration cheap (measured in
+[performance](performance.md#prove-a-hot-function-does-not-allocate)).
+A retained chunk is charged to nothing: it leaves the budget, the reserved-byte
+count and the live-chunk count when the scope closes, exactly as freeing it did,
+and is charged again only when a later scope takes it back into service, and
+only when it is no larger than the chunk that scope would otherwise have
+reserved. Reuse first zeroes every byte the previous scope could have written,
+so a program can never read another scope's bytes, and a host reservation that
+fails frees the retained chunks and retries before reporting failure.
+
+Both QBE and LLVM native builds use the same arena runtime, store barrier, bulk
+release and `escape` copy. A program with no arena scope pays for neither the
+barrier nor the per-frame depth bookkeeping. In an arena-using program, only
+functions that open a scope save and restore their depth; other helpers still
+check managed stores. Growing an older collection inside
+a younger arena allocates its replacement backing in the collection's own region.
 
 ## Interaction with collection
 
-Arenas do not turn collection off. The tracing collector still runs at managed
-allocation safepoints inside a block, arena objects are traced like any other, and
-an arena object the collector proves unreachable is swept early and leaves its
-arena. `--gc-stress` works inside arenas. The heap keeps three arena counters —
-scopes entered, objects bulk released and objects copied out by `escape` —
-separately from `reclaimed`, so an embedder can tell which mechanism freed what;
-no guest module exposes them.
+Arenas do not turn collection off. Ordinary GC allocations still use the tracing
+heap, and `--gc-stress` still collects at allocation safepoints inside an arena.
+Arena allocations remain alive until scope exit, including old collection backing
+after growth. They are never individually swept or queued for graph marking.
+
+An arena may hold the last reference to an older GC object. Compact side
+descriptors let a collection scan arena contents for these references, retaining
+the GC objects safely. This scan retains references from all allocations in the
+live arena, including values the program no longer uses. A pure arena workload
+does not trigger automatic collection just because its arena grows: the normal
+collection threshold measures GC bytes. Chunk growth can request collection to
+recover GC bytes before reporting a memory-budget failure.
+
+The memory budget charges the actual reserved chunks, including alignment,
+descriptor space and unused capacity. Small budgets use smaller chunks; a failed
+reservation does not consume budget. Runtime statistics separately count scopes,
+arena allocations, objects bulk released, escape copies, host chunk
+reservations, chunks reused from the retention cache below, and current/peak
+reserved arena bytes together with what the cache currently holds. No guest
+module exposes these counters.
 
 Allocation inside an arena is still allocation: it contributes the
 `managed_allocation` effect, so `noalloc` rejects it exactly as it rejects
@@ -213,12 +242,13 @@ block itself needs no effect.
 
 ## Limits
 
-Honest list of what this first step does not do:
+Current limits:
 
-- Allocation inside an arena is not bump allocation. Each object is still an
-  individual host allocation with its own header; what the arena changes is that
-  they are freed together without tracing. The win is predictable bulk release,
-  not allocation speed.
+- Allocation metadata still occupies compact side records in each chunk. GC can
+  scan those records to preserve older references; this is not a proof that every
+  arena is isolated from the GC heap.
+- Arena backing is retained until scope exit. A long-lived arena can use more
+  memory than ordinary GC; use shorter scopes for repeated temporary work.
 - `with` supports only `with arena()`. It is not yet the general resource
   statement; `acquire_resource`/`complete_resource` keep their existing spelling.
 - Arena scopes are rejected inside generic function bodies with

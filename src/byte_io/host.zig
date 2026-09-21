@@ -22,9 +22,11 @@ pub const Session = struct {
         var program = try native.Program.build(process, .{
             .project = options.project,
             .provider = provider,
-            .cache = options.tools.cache,
-            .qbe = options.tools.qbe,
-            .zig = options.tools.zig,
+            .build = .{
+                .cache = options.tools.cache,
+                .qbe = options.tools.qbe,
+                .zig = options.tools.zig,
+            },
         });
         errdefer program.deinit();
         var session: Session = .{

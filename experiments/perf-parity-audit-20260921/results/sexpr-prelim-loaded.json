@@ -1,0 +1,2561 @@
+{
+ "work": ".tmp/perf-audit-20260921/measure",
+ "cpu": 4,
+ "rounds": 21,
+ "input_dir": ".tmp/runtime-audit-20260919",
+ "arms": {
+  "zig": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/zig-parity-20260921/install/bin/zig-bench",
+   "sha256": "8b41730e5680b4b5c6e778262932b0aa26e25b41decea66b15766ebba3a9ec48"
+  },
+  "zig-safe": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/zig-parity-20260921/install-safe/bin/zig-bench",
+   "sha256": "9d8f00cfa39fc816e18aaa780e8cd93cffb3a8fccf2748ba0e0075fa583ffac9"
+  },
+  "qbe": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260921/sexpr-qbe",
+   "sha256": "65912253a679e3f0a9bd64857b425da404ccd9741ae700351384ffb949fdba80",
+   "runtime": {
+    "path": "/home/epentland/ai/canopy/mylang/zig-out/lib/mylang-runtime/811053df16318fb018ce844f11ea256ab5d5dd173a54e8c374bf3fdf2bb935cc.a",
+    "sha256": "7c645a6b9068d80918ff3dab1761d81165b1545658880e9dd29a3e482567a6b0"
+   }
+  },
+  "o3": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260921/sexpr-o3",
+   "sha256": "7a57ff1bed4b222f43218718c229978c6857aa2ceb84d85c81d02a7b3e9d7d36",
+   "runtime": {
+    "path": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260921/cache-llvm/objects/633ec57fb64c65ab862f1004c5a7d34c7da7e4e5295c09e5a50a639c63c23184/c9af56aa185f1e477d1e975a81c1966e2581c01905769c376aa4f7cb3620600a.a",
+    "sha256": "effbb97621afc95a15a1dd236874d0c9c2a0f55454e60307dd60f8fb65e44acd"
+   }
+  },
+  "o3-lto": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260921/sexpr-o3-lto",
+   "sha256": "2a796c6c57a0705ad8178083f66f8ad46627317f1882700b71962797fb5921b3",
+   "runtime": {
+    "path": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260921/cache-llvm/objects/633ec57fb64c65ab862f1004c5a7d34c7da7e4e5295c09e5a50a639c63c23184/3d80d597f475f458108c1eb9431d25639c50cd5a54d55635f6588412776a3d19.a",
+    "sha256": "2dbabc786e3c459bff615a829b82c86cc1fd234010877792a66957b0a4a005b2"
+   }
+  }
+ },
+ "workloads": {
+  "census": {
+   "stdout_bytes": 118,
+   "stdout_sha256": "f4178a68773c1ada93ec1e9051b25a1f77a9f70d688e507783aeee897cc8b137",
+   "arms": {
+    "zig": {
+     "wall_ms_median": 2.871193,
+     "wall_ms_iqr": 0.6728705000000001,
+     "wall_ms_min": 2.14859,
+     "wall_samples": 21,
+     "wall_ms": [
+      4.275859,
+      3.643048,
+      2.939347,
+      2.323364,
+      2.284829,
+      2.310275,
+      2.260236,
+      2.16643,
+      2.14859,
+      2.962449,
+      2.548407,
+      2.845161,
+      2.819009,
+      3.267417,
+      4.173621,
+      2.875028,
+      2.964011,
+      2.966108,
+      2.871193,
+      3.013272,
+      2.75573
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "zig-safe": {
+     "wall_ms_median": 3.02747,
+     "wall_ms_iqr": 1.4508134999999998,
+     "wall_ms_min": 2.215925,
+     "wall_samples": 21,
+     "wall_ms": [
+      4.273915,
+      4.344395,
+      3.823107,
+      2.59337,
+      3.24031,
+      2.602025,
+      2.413304,
+      2.229146,
+      2.215975,
+      2.215925,
+      2.766986,
+      2.717931,
+      3.00497,
+      5.224023,
+      4.370932,
+      3.018048,
+      3.103995,
+      5.443998,
+      3.02747,
+      3.283771,
+      3.193406
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "qbe": {
+     "wall_ms_median": 6.461862,
+     "wall_ms_iqr": 0.804136999999999,
+     "wall_ms_min": 4.911044,
+     "wall_samples": 21,
+     "wall_ms": [
+      13.234351,
+      8.984667,
+      6.610404,
+      5.779067,
+      6.292715,
+      5.500147,
+      4.911044,
+      4.980702,
+      5.057482,
+      6.718922,
+      6.461862,
+      6.488464,
+      6.6392,
+      6.101758,
+      8.856421,
+      6.4017,
+      6.566028,
+      7.071632,
+      6.770177,
+      6.382465,
+      6.344512
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3": {
+     "wall_ms_median": 5.263947,
+     "wall_ms_iqr": 1.7852554999999999,
+     "wall_ms_min": 3.907423,
+     "wall_samples": 21,
+     "wall_ms": [
+      9.715977,
+      6.916308,
+      6.558939,
+      4.486725,
+      4.701768,
+      4.275645,
+      4.378922,
+      4.290216,
+      4.189474,
+      3.907423,
+      5.2868,
+      4.870843,
+      5.016164,
+      7.406458,
+      6.275596,
+      5.376092,
+      5.300493,
+      6.160562,
+      5.263947,
+      5.345083,
+      5.236385
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3-lto": {
+     "wall_ms_median": 4.983985,
+     "wall_ms_iqr": 1.2348385000000004,
+     "wall_ms_min": 4.037177,
+     "wall_samples": 21,
+     "wall_ms": [
+      9.036201,
+      7.647112,
+      5.08114,
+      4.309688,
+      5.700789,
+      4.241254,
+      4.159599,
+      4.037177,
+      4.15086,
+      4.245171,
+      4.983985,
+      5.323747,
+      4.868382,
+      7.075864,
+      7.789632,
+      4.663532,
+      4.666248,
+      5.134201,
+      5.071386,
+      5.098006,
+      4.765605
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    }
+   },
+   "ratios": {
+    "zig/zig-safe": {
+     "median": 0.948380330771238,
+     "low": 0.821008732294994,
+     "high": 1.0468113428928107,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/qbe": {
+     "median": 0.4443290494287869,
+     "low": 0.398082852992174,
+     "high": 0.4605347620394315,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3": {
+     "median": 0.5454448914474253,
+     "low": 0.48412474517695564,
+     "high": 0.5902526523642827,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3-lto": {
+     "median": 0.5760837963998688,
+     "low": 0.5113191552542795,
+     "high": 0.6216312514360716,
+     "formula": "median(zig wall) / median(arm wall)"
+    }
+   }
+  },
+  "render": {
+   "stdout_bytes": 700425,
+   "stdout_sha256": "78a74270e2ec8842471e8e1ec5f94c8a42c631f0addec5ac2ec4bb97870240a7",
+   "arms": {
+    "zig": {
+     "wall_ms_median": 3.361594,
+     "wall_ms_iqr": 0.67632,
+     "wall_ms_min": 2.465592,
+     "wall_samples": 21,
+     "wall_ms": [
+      4.981456,
+      5.945393,
+      5.417766,
+      2.810934,
+      2.639531,
+      3.001926,
+      2.927903,
+      2.888854,
+      2.465592,
+      2.734687,
+      3.226148,
+      3.103227,
+      3.568396,
+      3.361594,
+      3.351244,
+      3.535478,
+      3.572839,
+      3.707029,
+      3.596558,
+      3.516831,
+      3.501734
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "zig-safe": {
+     "wall_ms_median": 3.856287,
+     "wall_ms_iqr": 0.5592200000000007,
+     "wall_ms_min": 2.692342,
+     "wall_samples": 21,
+     "wall_ms": [
+      6.514785,
+      4.868121,
+      3.933817,
+      3.277349,
+      4.058593,
+      2.946471,
+      3.028621,
+      2.692342,
+      2.989744,
+      3.764261,
+      3.757184,
+      3.772329,
+      3.966319,
+      6.37173,
+      5.196856,
+      3.664286,
+      3.90001,
+      3.926263,
+      3.856287,
+      4.001482,
+      3.850428
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "qbe": {
+     "wall_ms_median": 11.836022,
+     "wall_ms_iqr": 2.580860500000002,
+     "wall_ms_min": 9.387409,
+     "wall_samples": 21,
+     "wall_ms": [
+      21.573186,
+      14.471912,
+      15.538235,
+      9.387409,
+      9.730113,
+      9.459885,
+      9.461322,
+      9.616332,
+      9.424303,
+      11.836022,
+      11.854502,
+      11.355503,
+      11.67721,
+      11.380861,
+      12.296271,
+      11.886895,
+      10.931815,
+      12.500792,
+      11.941233,
+      12.078255,
+      12.211895
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3": {
+     "wall_ms_median": 9.191598,
+     "wall_ms_iqr": 2.158528499999999,
+     "wall_ms_min": 6.735888,
+     "wall_samples": 21,
+     "wall_ms": [
+      17.085477,
+      11.122038,
+      9.141551,
+      7.672766,
+      9.600397,
+      8.181646,
+      7.398337,
+      7.013508,
+      6.752957,
+      6.735888,
+      9.119008,
+      8.419372,
+      9.326082,
+      10.571072,
+      17.083071,
+      9.331483,
+      8.425472,
+      17.278815,
+      9.191598,
+      9.36697,
+      9.502292
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3-lto": {
+     "wall_ms_median": 8.664089,
+     "wall_ms_iqr": 2.294429000000001,
+     "wall_ms_min": 6.774411,
+     "wall_samples": 21,
+     "wall_ms": [
+      11.937186,
+      10.875088,
+      10.830766,
+      8.664089,
+      7.238497,
+      6.838187,
+      7.006831,
+      6.93037,
+      6.774411,
+      7.113493,
+      8.438799,
+      8.916673,
+      8.302554,
+      16.222009,
+      9.245632,
+      8.920531,
+      8.658411,
+      9.695216,
+      8.734441,
+      8.915814,
+      8.659042
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    }
+   },
+   "ratios": {
+    "zig/zig-safe": {
+     "median": 0.8717177948632973,
+     "low": 0.7956971905200243,
+     "high": 0.9282684516647408,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/qbe": {
+     "median": 0.28401383505370303,
+     "low": 0.26218496383328793,
+     "high": 0.30851913025059424,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3": {
+     "median": 0.3657246541896197,
+     "low": 0.33274712789357846,
+     "high": 0.39775148502066116,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3-lto": {
+     "median": 0.38799162843317975,
+     "low": 0.3480587414676888,
+     "high": 0.4121305860855993,
+     "formula": "median(zig wall) / median(arm wall)"
+    }
+   }
+  },
+  "census-7.4MB": {
+   "stdout_bytes": 124,
+   "stdout_sha256": "969242c9729df7567a1e9d236aec504aa7bba8a9356ac8f12205da505696782f",
+   "arms": {
+    "zig": {
+     "wall_ms_median": 19.236066,
+     "wall_ms_iqr": 4.569563499999999,
+     "wall_ms_min": 15.151451,
+     "wall_samples": 21,
+     "wall_ms": [
+      31.780238,
+      32.150265,
+      19.60793,
+      17.929092,
+      15.856441,
+      15.618185,
+      15.151451,
+      15.234378,
+      15.20718,
+      15.718004,
+      18.494607,
+      19.315855,
+      19.236066,
+      30.966698,
+      20.879825,
+      19.17795,
+      18.093614,
+      21.603041,
+      19.638965,
+      19.833747,
+      19.636861
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "zig-safe": {
+     "wall_ms_median": 20.963053,
+     "wall_ms_iqr": 4.910542499999998,
+     "wall_ms_min": 16.158408,
+     "wall_samples": 21,
+     "wall_ms": [
+      35.416123,
+      26.436594,
+      21.759066,
+      17.574357,
+      20.164375,
+      16.544623,
+      16.365514,
+      16.329276,
+      16.158408,
+      16.671072,
+      20.710809,
+      20.921445,
+      21.096888,
+      25.082166,
+      22.170729,
+      20.867064,
+      20.963053,
+      21.753313,
+      21.156679,
+      21.895785,
+      22.550647
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "qbe": {
+     "wall_ms_median": 53.700275,
+     "wall_ms_iqr": 9.643331500000002,
+     "wall_ms_min": 42.721302,
+     "wall_samples": 21,
+     "wall_ms": [
+      65.691926,
+      104.012585,
+      59.11421,
+      48.332942,
+      51.359623,
+      46.455083,
+      43.789665,
+      44.660321,
+      43.134759,
+      42.721302,
+      53.338903,
+      53.700275,
+      53.622929,
+      54.954455,
+      60.420399,
+      53.286621,
+      56.194259,
+      56.99588,
+      56.448127,
+      57.078808,
+      56.507865
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3": {
+     "wall_ms_median": 43.339346,
+     "wall_ms_iqr": 5.562765000000006,
+     "wall_ms_min": 33.471724,
+     "wall_samples": 21,
+     "wall_ms": [
+      68.492195,
+      53.129676,
+      53.363078,
+      38.686643,
+      44.490052,
+      36.121682,
+      34.386313,
+      34.909851,
+      33.471724,
+      42.969568,
+      40.517015,
+      40.911006,
+      42.360667,
+      42.627761,
+      55.11666,
+      43.339346,
+      44.5868,
+      44.883555,
+      44.213832,
+      45.445633,
+      44.312843
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3-lto": {
+     "wall_ms_median": 40.687053,
+     "wall_ms_iqr": 15.105102000000002,
+     "wall_ms_min": 32.55663,
+     "wall_samples": 21,
+     "wall_ms": [
+      67.619714,
+      48.565752,
+      53.087115,
+      34.374032,
+      33.51999,
+      35.421689,
+      33.392301,
+      32.55663,
+      32.679985,
+      33.023234,
+      40.61747,
+      40.687053,
+      40.515477,
+      69.224334,
+      59.813373,
+      43.558318,
+      40.458346,
+      49.538474,
+      43.207781,
+      43.967882,
+      41.564272
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    }
+   },
+   "ratios": {
+    "zig/zig-safe": {
+     "median": 0.9176175817520474,
+     "low": 0.8631192221858143,
+     "high": 0.9282631267412054,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/qbe": {
+     "median": 0.3582116851356907,
+     "low": 0.3291191543249996,
+     "high": 0.35990178472753975,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3": {
+     "median": 0.44384762981887177,
+     "low": 0.4066889829663494,
+     "high": 0.45998029312400435,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3-lto": {
+     "median": 0.4727810097231668,
+     "low": 0.44092152127471956,
+     "high": 0.5061614086217063,
+     "formula": "median(zig wall) / median(arm wall)"
+    }
+   }
+  },
+  "render-7.4MB": {
+   "stdout_bytes": 5603400,
+   "stdout_sha256": "e8c07a29632c947f031988034b44a63effea51fb93754461f5450a5daeb223dc",
+   "arms": {
+    "zig": {
+     "wall_ms_median": 24.140373,
+     "wall_ms_iqr": 7.232646000000003,
+     "wall_ms_min": 18.692169,
+     "wall_samples": 21,
+     "wall_ms": [
+      35.477974,
+      33.548285,
+      24.031609,
+      20.044664,
+      19.309347,
+      19.636961,
+      19.371388,
+      18.692169,
+      19.159769,
+      23.474706,
+      24.041845,
+      24.140373,
+      26.936952,
+      27.209965,
+      35.621557,
+      23.916802,
+      24.53082,
+      39.515314,
+      25.242478,
+      26.603042,
+      24.935044
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "zig-safe": {
+     "wall_ms_median": 26.28729,
+     "wall_ms_iqr": 2.430641999999999,
+     "wall_ms_min": 20.554849,
+     "wall_samples": 21,
+     "wall_ms": [
+      38.212073,
+      35.223578,
+      27.177887,
+      26.149268,
+      27.544026,
+      20.738932,
+      21.103376,
+      20.906191,
+      20.554849,
+      26.28729,
+      27.145426,
+      25.559291,
+      25.577706,
+      31.189723,
+      26.283063,
+      26.061431,
+      26.311828,
+      44.41405,
+      26.188173,
+      28.454255,
+      26.931411
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "qbe": {
+     "wall_ms_median": 98.445513,
+     "wall_ms_iqr": 14.212064000000012,
+     "wall_ms_min": 77.667523,
+     "wall_samples": 21,
+     "wall_ms": [
+      182.66558,
+      124.59832,
+      120.16105,
+      96.84375,
+      94.296864,
+      83.980306,
+      79.1641,
+      78.982697,
+      77.667523,
+      91.567043,
+      100.806376,
+      97.21621,
+      96.073389,
+      108.59904,
+      105.688995,
+      115.005315,
+      100.220575,
+      96.579761,
+      98.445513,
+      98.613046,
+      99.374409
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3": {
+     "wall_ms_median": 75.012055,
+     "wall_ms_iqr": 15.70746849999999,
+     "wall_ms_min": 59.2875,
+     "wall_samples": 21,
+     "wall_ms": [
+      115.6809,
+      94.277045,
+      81.183129,
+      66.872124,
+      69.977601,
+      61.966752,
+      60.479377,
+      59.2875,
+      60.567082,
+      72.15759,
+      75.012055,
+      70.794371,
+      72.95422,
+      87.081533,
+      122.333313,
+      75.93091,
+      74.468158,
+      130.990313,
+      78.472753,
+      79.352537,
+      77.907849
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3-lto": {
+     "wall_ms_median": 72.521823,
+     "wall_ms_iqr": 19.8865665,
+     "wall_ms_min": 54.83315,
+     "wall_samples": 21,
+     "wall_ms": [
+      97.367949,
+      86.496251,
+      82.095132,
+      64.184723,
+      60.658461,
+      59.343234,
+      57.852031,
+      56.381458,
+      54.83315,
+      59.180554,
+      70.352884,
+      69.620605,
+      68.916376,
+      89.729405,
+      94.944529,
+      72.521823,
+      73.22408,
+      77.679696,
+      72.919418,
+      76.948296,
+      74.788373
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    }
+   },
+   "ratios": {
+    "zig/zig-safe": {
+     "median": 0.9183287056216142,
+     "low": 0.8842338994197747,
+     "high": 1.011067798102055,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/qbe": {
+     "median": 0.24521557422327617,
+     "low": 0.22840952362164102,
+     "high": 0.2702311277508402,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3": {
+     "median": 0.3218199128126806,
+     "low": 0.3021664759928137,
+     "high": 0.3414680592708958,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3-lto": {
+     "median": 0.33287046576311247,
+     "low": 0.31579449023590406,
+     "high": 0.3657366566807494,
+     "formula": "median(zig wall) / median(arm wall)"
+    }
+   }
+  }
+ },
+ "inputs": {
+  "input.sexp": {
+   "bytes": 927415,
+   "sha256": "0a670a08470e5b19d67272bca2186a369f8bc826a724a5d2ffe574a62932ee49"
+  },
+  "input8.sexp": {
+   "bytes": 7419320,
+   "sha256": "368ebdee5164fdba21ef4c0c08bbc6467b54b4b07709ab8d9b1799349a41d797"
+  }
+ },
+ "counters": [
+  "task-clock",
+  "instructions:u",
+  "cycles:u",
+  "branches:u",
+  "branch-misses:u"
+ ],
+ "sink": "null",
+ "reference": "zig",
+ "warmups": 3,
+ "wall_round_order": [
+  [
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "o3"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "o3"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ]
+  ],
+  [
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census",
+    "o3"
+   ]
+  ],
+  [
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ]
+  ],
+  [
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ]
+  ],
+  [
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "o3"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ]
+  ],
+  [
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "qbe"
+   ]
+  ],
+  [
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ]
+  ]
+ ],
+ "counter_round_order": [],
+ "toolchain": {
+  "compiler_sha256": "c803fcacaa852c56ff63bb3cbc94e16fd38356abf860cf1a85b49175945b8823",
+  "adapter_sources": {
+   "amd64_sysv.py": "1d0252b37ec42904808f879590b9100292720c746efc3d9c85b537c001422919",
+   "inventory.py": "fc112547232c614979eb24cbc100f42830719dc08ce0c1681c9f1b0c371888e6",
+   "llvm_emit.py": "a403525070e2d999f1dafe7c3ad47c3a2fbddbb8e5826ac3aa9daf1ee0350340",
+   "measure.py": "f804d50d5a6b9d648989886e6531bfcf2dafcd04b9db9183434b915a0c9af9cf",
+   "qbe_llvm.py": "50f9af3582ca21be9471847e8f215af27d6bb180519f0afeb374ab422e6f1773",
+   "qualify_affected.py": "eecf6f5325e9a58707815b5f056153c578fad86c86a19ac982fb84910a6fd83b",
+   "qualify_cost.py": "1771820b695f46f14356543550bee50d59034258e6ecff13b8a1b3f35955085c",
+   "qualify_equiv.py": "a1a4af6138e75f203bd4a64b0326c62422b330112c9c4b3e7cc1d35be0453407",
+   "qualify_identity.py": "112c0a1aceda46e4ad250caef492cf459123b2560f1ba6411ae1b2cdafa01d4d",
+   "qualify_sweep.py": "2a53168ab7a63d5a61eaa32c579aaf09282f9e7a08031a300693bd729f5ec3e0",
+   "qualify_traps.py": "9ddcecf97e3ac7212d0e14018cbe1149253dffd4972b555431abe069bfa19372",
+   "resolve_symbols.py": "fedcc6de37e738551604a160274e2ae666ccea49c0df623eb2364a3de2f29ae0",
+   "runtime_signatures.py": "24760d4f3de48bd5c1a0c5a49eff3b48c2dc9bb44711a1427e8f0b7fd48528c9",
+   "symbol_census.py": "720c0cc2acf5019936e202c806e6a2e147e9634700b9d6bd5349d51c4597b949",
+   "test_adapter.py": "eb28f50ff3cc506a25a7b3af69d3f65632814c898ee8666094c2f6004616185a",
+   "verify_binaries.py": "0a288dc2594f59241cc0372d52cbf3c3055a989b4011e36c8eab2f6f95b7ee00",
+   "verify_semantics.py": "52bf0bccaa5e079601a2282474020cfcc8d44042a0a6b38c2ff2a73ade74e60f",
+   "verify_traps.py": "151ff49b00eb74c0f7fc2bced067b6e3ddeadabedd3d8552f91b737424c4cc26",
+   "verify_units.py": "eb5293554e9dfad296d30e413f9ff69da7d5c6041edcab93052fd9d5ae9362c6"
+  },
+  "zig": "0.17.0-dev.1683+5ceec001b"
+ },
+ "timing_scope": "process launch through completion; timed stdout redirected to /dev/null"
+}

@@ -4,6 +4,7 @@ const builtin = @import("builtin");
 const bundled = @import("qbe_build_assets");
 const fs = @import("qbe_build_io.zig");
 const options = @import("qbe_build_options.zig");
+const backend = @import("qbe_build_backend.zig");
 const cache_api = @import("qbe_build_cache.zig");
 const outputs = @import("qbe_build_outputs.zig");
 const v = @import("qbe_build_value.zig");
@@ -25,10 +26,10 @@ pub const native_abi = "mylang-qbe-native-v6";
 const Record = struct { name: []const u8, symbol: []const u8, key: []const u8, object: []const u8, reused: bool };
 /// Fixed runtime translation units archived together once per build environment.
 const runtime_units = [_][]const u8{
-    "qbe_runtime.c",   "native_heap.c",    "native_collections.c", "native_text.c",         "native_dictionary.c",
-    "qbe_stack.c",     "qbe_providers.c",  "qbe_resources.c",      "native_equal.c",        "native_bytes.c",
-    "qbe_bytes.c",     "native_regions.c", "qbe_arena.c",          "native_print.c",        "qbe_io.c",
-    "native_scoped.c", "qbe_grants.c",     "qbe_files.c",          "native_text_methods.c",
+    "qbe_runtime.c",    "native_heap.c",         "native_arena.c",  "native_collections.c", "native_text.c",   "native_dictionary.c",
+    "qbe_stack.c",      "qbe_providers.c",       "qbe_resources.c", "native_equal.c",       "native_bytes.c",  "qbe_bytes.c",
+    "native_regions.c", "qbe_arena.c",           "native_print.c",  "qbe_io.c",             "native_scoped.c", "qbe_grants.c",
+    "qbe_files.c",      "native_text_methods.c",
 };
 /// Execute a native build using process-owned allocation and I/O policy.
 pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
@@ -87,7 +88,7 @@ pub const Prepared = struct { cache: cache_api.Cache, zig_version: []const u8, r
 pub fn prepare(context: fs.Context, parsed: options.Options) Error!Prepared {
     const a = context.allocator;
     const zig = try context.executable(parsed.zig);
-    const qbe = try context.executable(parsed.qbe);
+    const selected = try backend.resolve(context, parsed, zig);
     const version = try context.capture(&.{ zig, "version" });
     if (fs.exitCode(version.term) != 0) return error.NativeToolFailed;
     const zig_version = std.mem.trim(u8, version.stdout, "\r\n ");
@@ -98,23 +99,48 @@ pub fn prepare(context: fs.Context, parsed: options.Options) Error!Prepared {
     const temporary = try context.temporary(directory);
     const environment = try environmentJson(a, .{
         .zig = try context.stamp(zig),
-        .qbe = try context.stamp(qbe),
+        .backend = selected.name,
+        .backend_tool = selected.tool_identity,
+        .optimization = selected.optimization,
+        .lto = selected.lto,
         .zig_version = zig_version,
         .mode = parsed.mode,
         .target = parsed.target,
+        .target_cpu = selected.target_cpu,
+        .target_features = selected.target_features,
     });
     // Objects live in this driver's generation; opening it evicts every other
     // one no process still leases.
     const objects = try generation(context, directory, "objects", generation_identity);
     return .{
-        .cache = .{ .context = context, .directory = objects, .temporary = temporary, .assets = assets, .environment = environment, .zig = zig, .qbe = qbe, .mode = parsed.mode },
+        .cache = .{
+            .context = context,
+            .directory = objects,
+            .temporary = temporary,
+            .assets = assets,
+            .environment = environment,
+            .zig = zig,
+            .mode = parsed.mode,
+            .codegen = .{ .tool = selected.tool, .llvm = std.mem.eql(u8, selected.name, "llvm"), .optimization = selected.optimization, .lto = selected.lto, .target_cpu = selected.target_cpu, .target_features = selected.target_features },
+        },
         .zig_version = zig_version,
         .root = directory,
     };
 }
 /// The per-invocation half of an object's build environment: the resolved tool
 /// stamps and the requested build mode and target.
-const Environment = struct { zig: []const u8, qbe: []const u8, zig_version: []const u8, mode: []const u8, target: []const u8 };
+const Environment = struct {
+    zig: []const u8,
+    backend: []const u8,
+    backend_tool: []const u8,
+    optimization: []const u8,
+    lto: bool,
+    zig_version: []const u8,
+    mode: []const u8,
+    target: []const u8,
+    target_cpu: []const u8 = "",
+    target_features: []const u8 = "",
+};
 /// Encode everything besides a unit's own IL that decides the object bytes. It
 /// names the *native driver* identity rather than the whole compiler: objects are
 /// already content addressed by the IL the frontend emitted, the runtime sources
@@ -123,15 +149,20 @@ const Environment = struct { zig: []const u8, qbe: []const u8, zig_version: []co
 /// becomes an object must not evict every cached object and executable.
 fn environmentJson(allocator: std.mem.Allocator, per_build: Environment) Error![]const u8 {
     return std.json.Stringify.valueAlloc(allocator, .{
-        .version = "zig-qbe-build-v2",
+        .version = "zig-native-build-v3",
         .abi = native_abi,
         .driver = bundled.driver_identity,
         .runtime = bundled.content_hash,
         .zig = per_build.zig,
-        .qbe = per_build.qbe,
+        .backend = per_build.backend,
+        .backend_tool = per_build.backend_tool,
+        .optimization = per_build.optimization,
+        .lto = per_build.lto,
         .zig_version = per_build.zig_version,
         .mode = per_build.mode,
         .target = per_build.target,
+        .target_cpu = per_build.target_cpu,
+        .target_features = per_build.target_features,
     }, .{});
 }
 /// Validate one emitted manifest and link it into `output`, reporting whether the file changed.
@@ -239,6 +270,9 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
             .mode = parsed.mode,
             .zig_version = prepared.zig_version,
             .artifact_kind = if (parsed.library) "shared-library" else "executable",
+            .backend = if (cache.codegen.llvm) "llvm" else "qbe",
+            .optimization = cache.codegen.optimization,
+            .lto = cache.codegen.lto,
         }, .{});
         const stream = if (parsed.run) std.Io.File.stderr() else std.Io.File.stdout();
         try stream.writeStreamingAll(context.io, try std.fmt.allocPrint(a, "{s}\n", .{report}));
@@ -499,7 +533,7 @@ pub fn emitRuntime(process: std.process.Init, args: []const []const u8) Error!u8
     out = try context.absolute(out);
     try checkHost(builtin.os.tag, builtin.cpu.arch);
     for ([_][]const u8{ "Debug", "ReleaseFast" }) |mode| {
-        const parsed: options.Options = .{ .source = "runtime", .output = "runtime", .zig = zig_path, .qbe = qbe_path, .cache = try std.fs.path.join(a, &.{ work, mode }), .mode = mode };
+        const parsed: options.Options = .{ .source = "runtime", .output = "runtime", .zig = zig_path, .codegen = .{ .qbe = qbe_path }, .cache = try std.fs.path.join(a, &.{ work, mode }), .mode = mode };
         const prepared = prepare(context, parsed) catch |err| switch (err) {
             error.NativeToolFailed => return 2,
             else => return err,
@@ -578,9 +612,11 @@ const State = struct {
     /// matches this build's runtime, mode and target; otherwise compile the archive
     /// from source. A matching install skips the whole runtime compile on a cold build.
     fn resolveRuntime(self: *State) !cache_api.Object {
-        if (try installedRuntime(self.context, self.cache.mode, "archive", ".a")) |found| {
-            self.runtime_installed = true;
-            return found;
+        if (!self.cache.codegen.llvm) {
+            if (try installedRuntime(self.context, self.cache.mode, "archive", ".a")) |found| {
+                self.runtime_installed = true;
+                return found;
+            }
         }
         return self.cache.library("runtime", &runtime_units);
     }
@@ -645,7 +681,16 @@ const State = struct {
         if (parsed.provider) |provider_source| try self.provider(provider_source);
         try self.linkOnce(parsed, candidate);
         if (parsed.run) return self.context.publish(candidate, output);
-        const report = try std.json.Stringify.valueAlloc(a, .{ .version = "qbe-manifest-v1", .abi = native_abi, .entry = v.text(v.get(self.manifest, "entry")), .functions = self.records.items, .runtime_object = self.runtime.path }, .{});
+        const report = try std.json.Stringify.valueAlloc(a, .{
+            .version = "qbe-manifest-v1",
+            .abi = native_abi,
+            .entry = v.text(v.get(self.manifest, "entry")),
+            .backend = if (self.cache.codegen.llvm) "llvm" else "qbe",
+            .optimization = self.cache.codegen.optimization,
+            .lto = self.cache.codegen.lto,
+            .functions = self.records.items,
+            .runtime_object = self.runtime.path,
+        }, .{});
         const sidecar = try std.fmt.allocPrint(a, "{s}.qbe-manifest.json", .{output});
         const staged = try std.fs.path.join(a, &.{ temporary, "manifest.json" });
         try self.context.write(staged, report);
@@ -756,6 +801,7 @@ test "bundled build inputs carry only the native runtime, not compiler tests or 
         try std.testing.expect(!std.mem.endsWith(u8, asset.path, ".my") or std.mem.startsWith(u8, asset.path, "stdlib/"));
     }
     try std.testing.expect(bundles("qbe_runtime.c") and bundles("qbe_runtime.h") and bundles("native_heap.c"));
+    try std.testing.expect(bundles("native_arena.c") and bundles("native_arena.h"));
     try std.testing.expect(bundles("native_equal.c") and bundles("native_format.zig"));
     try std.testing.expect(!bundles("sema.zig") and !bundles("qbe_build.zig") and !bundles("json_document.zig"));
 }
@@ -823,7 +869,7 @@ test "a link failure with every input still present is reported, never retried" 
     defer environment.deinit();
     var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
     defer context.deinit();
-    const cache: cache_api.Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/bin/false", .qbe = "/bin/false", .mode = "Debug" };
+    const cache: cache_api.Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/bin/false", .mode = "Debug", .codegen = .{ .tool = "/bin/false" } };
     var state = State{ .context = context, .cache = cache, .manifest = .null };
     state.runtime = .{ .key = "runtime", .path = "/bin/sh", .reused = true };
     // No object went missing, so the linker's own refusal is the answer and the
@@ -834,7 +880,7 @@ test "a link failure with every input still present is reported, never retried" 
 // spec: QBE-DRIVER-IDENTITY-1
 test "the object environment names the native driver, never the whole compiler" {
     const a = std.testing.allocator;
-    const text = try environmentJson(a, .{ .zig = "zig-stamp", .qbe = "qbe-stamp", .zig_version = bundled.zig_version, .mode = "Debug", .target = "native" });
+    const text = try environmentJson(a, .{ .zig = "zig-stamp", .backend = "qbe", .backend_tool = "qbe-stamp", .optimization = "default", .lto = false, .zig_version = bundled.zig_version, .mode = "Debug", .target = "native" });
     defer a.free(text);
     try std.testing.expect(!std.mem.eql(u8, bundled.driver_identity, bundled.compiler_identity));
     try std.testing.expect(std.mem.indexOf(u8, text, bundled.driver_identity) != null);
@@ -843,9 +889,36 @@ test "the object environment names the native driver, never the whole compiler" 
     // `compiler_identity`, which this environment does not name, so every cached
     // object and executable whose IL is unchanged still keys the same.
     try std.testing.expect(std.mem.indexOf(u8, text, bundled.compiler_identity) == null);
-    const same = try environmentJson(a, .{ .zig = "zig-stamp", .qbe = "qbe-stamp", .zig_version = bundled.zig_version, .mode = "Debug", .target = "native" });
+    const same = try environmentJson(a, .{ .zig = "zig-stamp", .backend = "qbe", .backend_tool = "qbe-stamp", .optimization = "default", .lto = false, .zig_version = bundled.zig_version, .mode = "Debug", .target = "native" });
     defer a.free(same);
     try std.testing.expectEqualStrings(text, same);
+}
+
+test "LLVM optimization LTO and target policy change native object identity" {
+    const a = std.testing.allocator;
+    const base: Environment = .{ .zig = "zig-stamp", .backend = "llvm", .backend_tool = "adapter-hash", .optimization = "3", .lto = false, .zig_version = bundled.zig_version, .mode = "ReleaseFast", .target = "amd64_sysv" };
+    const o3 = try environmentJson(a, base);
+    defer a.free(o3);
+    var changed = base;
+    changed.optimization = "2";
+    const o2 = try environmentJson(a, changed);
+    defer a.free(o2);
+    changed = base;
+    changed.lto = true;
+    const lto = try environmentJson(a, changed);
+    defer a.free(lto);
+    changed = base;
+    changed.target_cpu = "x86-64-v3";
+    const cpu = try environmentJson(a, changed);
+    defer a.free(cpu);
+    changed = base;
+    changed.target_features = "+avx,+avx2,-avx512f";
+    const features = try environmentJson(a, changed);
+    defer a.free(features);
+    try std.testing.expect(!std.mem.eql(u8, o3, o2));
+    try std.testing.expect(!std.mem.eql(u8, o3, lto));
+    try std.testing.expect(!std.mem.eql(u8, o3, cpu));
+    try std.testing.expect(!std.mem.eql(u8, o3, features));
 }
 // spec-case: QBE-3
 test "a default build shares the runtime root while an explicit cache-dir keeps it local" {

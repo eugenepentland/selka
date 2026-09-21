@@ -475,6 +475,14 @@ fn sorted(comptime Checker: type, checker: *Checker, span: source.Span, input: t
     const b = builder(Checker, checker, span);
     const element = try listElement(Checker, checker, nodeType(Checker, checker, input), span);
     const family = if (key == null) familyOf(Checker, checker, element) orelse return checker.sink.fail(unsupported, span, "sorted requires a list of int, float or str values") else .integer;
+    if (key == null) {
+        const list = try collections.listType(&checker.catalog, element, span);
+        const result = try b.local(list);
+        return b.block(&.{
+            try b.stmt(.{ .initialize = .{ .slot = result, .value = try retain(Checker, checker, span, try b.slice(input, null, null)) } }),
+            try b.stmt(.{ .discard = try b.operation(result, .sort, &.{}) }),
+        }, try b.read(result));
+    }
     if (key) |callback| {
         const contract = @import("callables.zig").signature(nodeType(Checker, checker, callback), checker.catalog.records) orelse return checker.sink.fail(unsupported, span, "sorted key requires a callback");
         if (contract.parameters.len != 1 or contract.parameters[0] != element or contract.return_type != .i64 or contract.effects != 0)
@@ -497,7 +505,6 @@ fn sorted(comptime Checker: type, checker: *Checker, span: source.Span, input: t
     const n = try b.read(count);
     const w = try b.read(width);
     const i = try b.read(cursor);
-    const empty = try b.node(list, .{ .acquire_buffer = .{ .capacity = try b.integer(0) } });
     const fresh = try b.node(list, .{ .acquire_buffer = .{ .capacity = n } });
     const step_up = try b.binary(.add, w, w, .i64);
     // `middle` and `end` clamp one run to the end of the list.
@@ -556,7 +563,7 @@ fn sorted(comptime Checker: type, checker: *Checker, span: source.Span, input: t
         try b.stmt(.{ .assign = .{ .slot = cursor, .value = try b.read(end) } }),
     }) });
     const pass = try b.stmt(.{ .block = try keep(Checker, checker, &.{
-        try b.stmt(.{ .assign = .{ .slot = target_slot, .value = fresh } }),
+        try b.stmt(.{ .discard = try b.operation(target_slot, .clear, &.{}) }),
         try b.stmt(.{ .assign = .{ .slot = cursor, .value = try b.integer(0) } }),
         try b.stmt(.{ .loop = .{ .id = loopId(Checker, checker), .condition = try b.binary(.lt, try b.read(cursor), n, .bool), .body = run, .step = null } }),
         try b.stmt(.{ .assign = .{ .slot = swap_slot, .value = try b.read(source_slot) } }),
@@ -565,10 +572,10 @@ fn sorted(comptime Checker: type, checker: *Checker, span: source.Span, input: t
         try b.stmt(.{ .assign = .{ .slot = width, .value = step_up } }),
     }) });
     var setup: std.ArrayList(typed.StatementId) = .empty;
-    try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = target_slot, .value = empty } }));
     try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = source_slot, .value = try retain(Checker, checker, span, try b.slice(input, null, null)) } }));
     if (key_slot) |slot| try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = slot, .value = key.? } }));
     try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = count, .value = try b.length(source_slot) } }));
+    try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = target_slot, .value = fresh } }));
     try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = width, .value = try b.integer(1) } }));
     try setup.append(checker.allocator, try b.stmt(.{ .loop = .{ .id = loopId(Checker, checker), .condition = try b.binary(.lt, try b.read(width), n, .bool), .body = pass, .step = null } }));
     return b.block(setup.items, try b.read(source_slot));
@@ -633,11 +640,12 @@ fn rangeListCall(comptime Checker: type, checker: *Checker, span: source.Span, a
     }) });
     const bind = if (arguments.len == 2) arguments[0] else try b.node(element, .{ .integer = 0 });
     const loop = loopId(Checker, checker);
+    const capacity = try b.rangeCapacity(try b.read(start), try b.read(limit), element);
     return b.block(&.{
         try b.stmt(.{ .initialize = .{ .slot = start, .value = bind } }),
         try b.stmt(.{ .initialize = .{ .slot = limit, .value = arguments[arguments.len - 1] } }),
         try b.stmt(.{ .initialize = .{ .slot = index, .value = try b.read(start) } }),
-        try b.stmt(.{ .initialize = .{ .slot = output, .value = try b.node(list, .{ .acquire_buffer = .{ .capacity = try b.integer(0) } }) } }),
+        try b.stmt(.{ .initialize = .{ .slot = output, .value = try b.node(list, .{ .acquire_buffer = .{ .capacity = capacity } }) } }),
         try b.stmt(.{ .loop = .{ .id = loop, .condition = try b.binary(.lt, i, try b.read(limit), .bool), .body = body, .step = null } }),
     }, try b.read(output));
 }
@@ -646,71 +654,17 @@ fn rangeListCall(comptime Checker: type, checker: *Checker, span: source.Span, a
 fn copyListCall(comptime Checker: type, checker: *Checker, span: source.Span, input: typed.NodeId) Error!typed.Node {
     const b = builder(Checker, checker, span);
     const ty = nodeType(Checker, checker, input);
+    const views = @import("dictionary_views.zig");
+    if (views.identify(checker.catalog, ty)) |kind| if (kind != .item) return views.snapshot(Checker, checker, span, input, kind);
     const sequence = ty.isAggregate() and checker.catalog.records[ty.recordIndex()].isCollection();
     if (!sequence or checker.catalog.records[ty.recordIndex()].collection.kind != .list)
-        return checker.sink.fail(unsupported, span, "list requires a list, range or reversed source");
+        return checker.sink.fail(unsupported, span, "list requires a list, range, reversed source or dictionary view");
     return b.slice(input, null, null);
 }
 
 /// Compare two texts the way `sort.compare_strs` does, by Unicode code point order.
 fn textLess(comptime Checker: type, checker: *Checker, span: source.Span, left: typed.NodeId, right: typed.NodeId) Error!typed.NodeId {
-    const b = builder(Checker, checker, span);
-    const text = nodeType(Checker, checker, left);
-    const bytes = collections.preludeType(&checker.catalog, "bytes", span) catch |err| switch (err) {
-        error.InternalError => return checker.sink.fail(unsupported, span, "ordering str values requires the bytes prelude type"),
-        else => return err,
-    };
-    const left_text = try b.local(text);
-    const right_text = try b.local(text);
-    const left_bytes = try b.local(bytes);
-    const right_bytes = try b.local(bytes);
-    const left_count = try b.local(.i64);
-    const right_count = try b.local(.i64);
-    const index = try b.local(.i64);
-    const limit = try b.local(.i64);
-    const answer = try b.local(.bool);
-    const decided = try b.local(.bool);
-    const i = try b.read(index);
-    const condition = try b.binary(.logical_and, try b.binary(.lt, i, try b.read(limit), .bool), try b.node(.bool, .{ .unary = .{ .op = .not, .operand = try b.read(decided), .op_span = span } }), .bool);
-    const left_byte = try b.node(.i64, .{ .cast = try b.operation(left_bytes, .read, &.{i}) });
-    const right_byte = try b.node(.i64, .{ .cast = try b.operation(right_bytes, .read, &.{i}) });
-    const differ = try b.binary(.ne, left_byte, right_byte, .bool);
-    const smaller = try b.binary(.lt, left_byte, right_byte, .bool);
-    const body = try b.stmt(.{ .block = try keep(Checker, checker, &.{
-        try b.stmt(.{ .branch = .{
-            .condition = differ,
-            .then_body = try b.stmt(.{ .block = try keep(Checker, checker, &.{
-                try b.stmt(.{ .assign = .{ .slot = answer, .value = smaller } }),
-                try b.stmt(.{ .assign = .{ .slot = decided, .value = try b.node(.bool, .{ .boolean = true }) } }),
-            }) }),
-            .else_body = null,
-        } }),
-        try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.integer(1), .i64) } }),
-    }) });
-    const shorter_is_less = try b.stmt(.{ .branch = .{
-        .condition = try b.binary(.lt, try b.read(left_count), try b.read(right_count), .bool),
-        .then_body = try b.stmt(.{ .assign = .{ .slot = answer, .value = try b.node(.bool, .{ .boolean = true }) } }),
-        .else_body = null,
-    } });
-    const loop = loopId(Checker, checker);
-    return retain(Checker, checker, span, try b.block(&.{
-        try b.stmt(.{ .initialize = .{ .slot = left_text, .value = left } }),
-        try b.stmt(.{ .initialize = .{ .slot = right_text, .value = right } }),
-        try b.stmt(.{ .initialize = .{ .slot = left_bytes, .value = try b.operation(left_text, .encode, &.{}) } }),
-        try b.stmt(.{ .initialize = .{ .slot = right_bytes, .value = try b.operation(right_text, .encode, &.{}) } }),
-        try b.stmt(.{ .initialize = .{ .slot = left_count, .value = try b.length(left_bytes) } }),
-        try b.stmt(.{ .initialize = .{ .slot = right_count, .value = try b.length(right_bytes) } }),
-        try b.stmt(.{ .initialize = .{ .slot = limit, .value = try shortLength(Checker, checker, span, try b.read(left_count), try b.read(right_count)) } }),
-        try b.stmt(.{ .initialize = .{ .slot = index, .value = try b.integer(0) } }),
-        try b.stmt(.{ .initialize = .{ .slot = answer, .value = try b.node(.bool, .{ .boolean = false }) } }),
-        try b.stmt(.{ .initialize = .{ .slot = decided, .value = try b.node(.bool, .{ .boolean = false }) } }),
-        try b.stmt(.{ .loop = .{ .id = loop, .condition = condition, .body = body, .step = null } }),
-        try b.stmt(.{ .branch = .{
-            .condition = try b.node(.bool, .{ .unary = .{ .op = .not, .operand = try b.read(decided), .op_span = span } }),
-            .then_body = shorter_is_less,
-            .else_body = null,
-        } }),
-    }, try b.read(answer)));
+    return builder(Checker, checker, span).binary(.lt, left, right, .bool);
 }
 
 fn shortLength(comptime Checker: type, checker: *Checker, span: source.Span, left: typed.NodeId, right: typed.NodeId) Error!typed.NodeId {

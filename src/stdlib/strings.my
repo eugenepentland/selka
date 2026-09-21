@@ -180,79 +180,9 @@ public def to_int(text: str) -> Option[int] effects(managed_allocation):
     return int(text)
 
 
-# Largest mantissa that can still take another decimal digit without overflow.
-def mantissa_ceiling() -> int:
-    return 922337203685477580
-
-
-# A decimal mantissa and its power-of-ten scale, combined with one rounding.
-def combined(mantissa: int, scale: int) -> float:
-    if mantissa == 0:
-        return 0.0
-    magnitude = scale
-    if magnitude < 0:
-        magnitude = 0 - magnitude
-    power = math.pow(10.0, magnitude)
-    if scale < 0:
-        return float(mantissa) / power
-    return float(mantissa) * power
-
-
-# Decimal text with an optional fraction and exponent converted to a float.
+# Text converted through the pinned float grammar shared with byte parsing.
 public def to_float(text: str) -> Option[float] effects(managed_allocation):
-    if len(text) == 0:
-        return None
-    start = 0
-    negative = False
-    if text[0] == "+" or text[0] == "-":
-        negative = text[0] == "-"
-        start = 1
-    mantissa = 0
-    seen = 0
-    scale = 0
-    index = start
-    while index < len(text) and table_index(digits(), text[index]) >= 0:
-        if mantissa < mantissa_ceiling():
-            mantissa = mantissa * 10 + table_index(digits(), text[index])
-        else:
-            scale += 1
-        seen += 1
-        index += 1
-    if index < len(text) and text[index] == ".":
-        index += 1
-        while index < len(text) and table_index(digits(), text[index]) >= 0:
-            if mantissa < mantissa_ceiling():
-                mantissa = mantissa * 10 + table_index(digits(), text[index])
-                scale -= 1
-            seen += 1
-            index += 1
-    if seen == 0:
-        return None
-    if index < len(text) and (text[index] == "e" or text[index] == "E"):
-        index += 1
-        exponent_negative = False
-        if index < len(text) and (text[index] == "+" or text[index] == "-"):
-            exponent_negative = text[index] == "-"
-            index += 1
-        exponent_digits = 0
-        exponent = 0
-        while index < len(text) and table_index(digits(), text[index]) >= 0:
-            if exponent < 100000:
-                exponent = exponent * 10 + table_index(digits(), text[index])
-            exponent_digits += 1
-            index += 1
-        if exponent_digits == 0:
-            return None
-        if exponent_negative:
-            scale -= exponent
-        else:
-            scale += exponent
-    if index != len(text):
-        return None
-    value = combined(mantissa, scale)
-    if negative:
-        return Some(0.0 - value)
-    return Some(value)
+    return float(text)
 
 
 # Integer rendered in a base between 2 and 36 using lowercase digits.
@@ -360,4 +290,3 @@ public def chr(code: int) -> Result[str, Error] effects(managed_allocation):
             return Ok(text)
         case Err(_):
             return Err(Error.Invalid("chr could not encode the code point"))
-

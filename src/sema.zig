@@ -3,6 +3,7 @@ const buffer_operations = @import("buffer_operations.zig");
 const ManagedKind = @import("runtime_values.zig").ManagedKind;
 const BufferKind = buffer_operations.Kind;
 const collections = @import("collection_lower.zig");
+const option_flow = @import("option_flow.zig");
 const needs_list = "operation requires a managed list";
 const eListType = @import("collection_lower.zig").list_type_error;
 const call_arguments = @import("call_arguments.zig");
@@ -94,6 +95,7 @@ const eCellEquality = "E_CELL_EQUALITY";
 const eEnvironmentName = "E_ENVIRONMENT_NAME";
 const variantDeclaredHere = "variant declared here";
 const std = @import("std");
+const dictionary_views = @import("dictionary_views.zig");
 const bufferOperation = "buffer_operation";
 const eCollectionMethod = "E_COLLECTION_METHOD";
 /// The ordinary binary operator one augmented assignment applies to its operand pair.
@@ -206,12 +208,12 @@ fn scopedDirectoryPath(bytes: []const u8) bool {
     return true;
 }
 const Pending = struct { available: bool, transfer_span: ?source.Span };
-const Work = struct { default_value: bool = false, id: ast.NodeId, emit: bool = false, checkpoint: bool = false, sorted_key: bool = false, verify: ?[]const Pending = null };
+const Work = struct { default_value: bool = false, id: ast.NodeId, emit: bool = false, checkpoint: ?option_flow.Guard = null, sorted_key: bool = false, verify: ?struct { pending: []const Pending, facts: []const usize } = null };
 const FieldDestination = struct { owner: typed.LocalId, index: ?typed.NodeId, value: typed.NodeId, refresh: ?typed.StatementId };
 /// An already-evaluated managed receiver and the source arguments of its method.
 const ManagedAccess = struct { base: typed.NodeId, kind: BufferKind, inputs: []const ast.NodeId, receiver: ?typed.LocalId = null };
 /// One list method call whose receiver and arguments are already evaluated.
-const ListMethodCall = struct { base: typed.NodeId, base_input: ast.NodeId, kind: BufferKind, inputs: []const ast.NodeId, temporaries: []const typed.Type };
+const ListMethodCall = struct { base: typed.NodeId, receiver: ?typed.LocalId, kind: BufferKind, inputs: []const ast.NodeId, temporaries: []const typed.Type, signed_length: bool = false };
 const CheckedStatement = struct { id: typed.StatementId, terminates: bool, looping: bool = false };
 
 const StatementFlow = struct {
@@ -244,6 +246,7 @@ const Checker = struct {
     active: std.StringHashMapUnmanaged(typed.LocalId) = .empty,
     resolved: []?typed.NodeId,
     expected_types: std.AutoHashMapUnmanaged(source.Span, typed.Type) = .empty,
+    option_facts: option_flow.State = .{},
     functions: std.StringHashMapUnmanaged(instances.DeclarationId) = .empty,
     resolved_nodes: std.ArrayList(usize) = .empty,
     instance_keys: std.ArrayList(instances.Key) = .empty,
@@ -294,6 +297,7 @@ const Checker = struct {
         for (self.resolved_nodes.items) |node| self.resolved[node] = null;
         self.resolved_nodes.clearRetainingCapacity();
         self.expected_types.clearRetainingCapacity();
+        self.option_facts.clear();
         self.locals = .empty;
         self.active.clearRetainingCapacity();
         self.owner = if (function.policy.owner) |owner| try self.ty(owner) else null;
@@ -387,6 +391,7 @@ const Checker = struct {
         for (self.resolved_nodes.items) |node| self.resolved[node] = null;
         self.resolved_nodes.clearRetainingCapacity();
         self.expected_types.clearRetainingCapacity();
+        self.option_facts.clear();
         self.locals = .empty;
         self.active.clearRetainingCapacity();
         self.owner = null;
@@ -795,8 +800,10 @@ const Checker = struct {
     fn inferArguments(self: *Checker, signature: @FieldType(ast.Function, "signature"), call: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span, arguments: []typed.Type, lengths: []?usize) Error!void {
         const inference = @import("generic_inference.zig");
         var context: inference.Context = .{ .src = self.src, .catalog = self.catalog, .parameters = signature.type_parameters, .sink = self.sink, .site = span };
+        if (self.expected_types.get(span)) |expected| try context.match(signature.return_type, .{ .concrete = expected });
         for (signature.parameters, call.arguments) |parameter, input| {
-            const actual = self.nodes.items[@backingInt(self.resolved[@backingInt(input)].?)].ty;
+            const resolved = self.resolved[@backingInt(input)] orelse continue;
+            const actual = self.nodes.items[@backingInt(resolved)].ty;
             try context.match(parameter.ty, .{ .concrete = actual });
         }
         var inferred: [16]@import("symbolic_types.zig").Value = undefined;
@@ -1220,7 +1227,11 @@ const Checker = struct {
     fn obviousType(self: *Checker, id: ast.NodeId) ?typed.Type {
         const node = self.syntax.nodes.items[@backingInt(id)];
         if (self.expected_types.get(node.span)) |expected| return expected;
-        if (node.data == .name) if (self.active.get(self.src.text(node.data.name))) |slot| return self.locals.items[@backingInt(slot)].ty;
+        if (node.data == .name) if (self.active.get(self.src.text(node.data.name))) |slot| {
+            const declared = self.locals.items[@backingInt(slot)].ty;
+            if (self.option_facts.has(@backingInt(slot))) if (prelude.optionShape(declared, self.catalog.records)) |shape| return shape.element;
+            return declared;
+        };
         // A field access over an obviously typed base is itself obvious, so
         // `node.literal == ...` and `node.kind == Kind.atom("x")` can hint the
         // constructor on the other operand the way a plain binding does.
@@ -1771,7 +1782,11 @@ const Checker = struct {
         const expected = self.nodes.items[@backingInt(value)].ty;
         try self.hint(assignment.value, expected);
         value = try self.expressionWithTemporaries(assignment.value, temporaries);
-        if (dead_owner) |owner| self.noteDeadRecordWrite(owner, node.span);
+        if (dead_owner) |owner| {
+            const payload = self.narrowedOption(owner);
+            const shared = if (payload) |shape| shape.element.isAggregate() and self.catalog.records[shape.element.recordIndex()].isManagedRecord() else false;
+            if (!shared) self.noteDeadRecordWrite(owner, node.span);
+        }
         try self.require(self.nodes.items[@backingInt(value)].ty, expected, node.span);
         if (destination.index == null) try self.requireArenaStore(destination.owner, value);
         // The value needs its own slot only to survive the destination refresh: it
@@ -1794,6 +1809,9 @@ const Checker = struct {
                 .fields = try self.allocator.dupe(typed.FieldInit, &.{.{ .index = indices[i], .value = value }}),
             } });
         }
+        if (destination.index == null) if (self.narrowedOption(destination.owner)) |shape| {
+            value = try b.node(self.locals.items[@backingInt(destination.owner)].ty, .{ .variant = .{ .tag = shape.some, .value = value } });
+        };
         const write = if (destination.index) |index|
             try b.stmt(.{ .discard = try b.operation(destination.owner, .write, &.{ index, value }) })
         else
@@ -1866,6 +1884,14 @@ const Checker = struct {
             self.locals.items[@backingInt(owner)].usage.writes += 1;
             self.locals.items[@backingInt(owner)].usage.reads += 1;
             const owner_type = self.locals.items[@backingInt(owner)].ty;
+            if (self.narrowedOption(owner)) |shape| {
+                const projected = try option_flow.payloadValue(self, try b.read(owner), shape, root.span);
+                const projected_id = try b.node(projected.ty, projected.data);
+                const saved = try b.local(shape.element);
+                const refresh = try b.stmt(.{ .initialize = .{ .slot = saved, .value = projected_id } });
+                try statements.append(self.allocator, refresh);
+                return .{ .owner = owner, .index = null, .value = try b.read(saved), .refresh = refresh };
+            }
             // A managed record is a reference-identity cell, and `update_record`
             // lowers to an in-place mutation that stores the same pointer back, so
             // the binding never needs copying: the update reads the binding where it
@@ -1946,11 +1972,14 @@ const Checker = struct {
             .range => |bounds| return self.checkRangeComprehension(b, node, each, bounds),
             .iterable => |iterable| iterable,
         };
-        const iterable = try self.expressionWithTemporaries(iterable_node, temporaries);
+        const source_value = try self.expressionWithTemporaries(iterable_node, temporaries);
+        const view = dictionary_views.identify(self.catalog, self.nodes.items[@backingInt(source_value)].ty);
+        const projected = view != null and view.? != .item;
+        const iterable = if (projected) try dictionary_views.owner(Checker, self, node.span, source_value) else source_value;
         const iterable_type = self.nodes.items[@backingInt(iterable)].ty;
         if (!iterable_type.isAggregate() or !self.catalog.records[iterable_type.recordIndex()].isCollection()) return self.sink.fail(eCollectionMethod, node.span, "iteration requires a list, str, or dictionary");
         const schema = self.catalog.records[iterable_type.recordIndex()];
-        const element = switch (schema.collection.kind) {
+        const element = if (projected) try dictionary_views.element(&self.catalog, iterable_type, view.?, node.span) else switch (schema.collection.kind) {
             .list => schema.shape.buffer.?,
             .string => iterable_type,
             .bytes => typed.Type.i64,
@@ -1961,7 +1990,15 @@ const Checker = struct {
         const limit = try b.local(.i64);
         const value_slot = try b.local(element);
         const parts = try self.comprehensionBody(b, node, each, value_slot);
-        return self.comprehensionLoop(b, .{ .owner = owner, .index = index, .limit = limit, .slot = value_slot }, parts.body, .{ .iterable = iterable, .output = parts.output, .kind = schema.collection.kind });
+        const slots: ComprehensionSlots = .{ .owner = owner, .index = index, .limit = limit, .slot = value_slot };
+        const source_values: ComprehensionSource = .{
+            .iterable = iterable,
+            .output = parts.output,
+            .kind = schema.collection.kind,
+            .reserve = each.filter == null,
+            .projection = if (projected) view else null,
+        };
+        return self.comprehensionLoop(b, slots, parts.body, source_values);
     }
 
     /// Check the produced value and optional filter with `slot` bound to the element name,
@@ -2001,27 +2038,37 @@ const Checker = struct {
         const step = try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.node(element, .{ .integer = 1 }), element) } });
         const loop_id = self.loops.next;
         self.loops.next += 1;
+        const capacity = if (each.filter == null) try b.rangeCapacity(try b.read(index), try b.read(limit), element) else try b.integer(0);
         return b.block(&.{
             try b.stmt(.{ .initialize = .{ .slot = index, .value = start } }),
             try b.stmt(.{ .initialize = .{ .slot = limit, .value = end } }),
-            try b.stmt(.{ .initialize = .{ .slot = parts.output, .value = try b.node(self.locals.items[@backingInt(parts.output)].ty, .{ .acquire_buffer = .{ .capacity = try b.integer(0) } }) } }),
+            try b.stmt(.{ .initialize = .{ .slot = parts.output, .value = try b.node(self.locals.items[@backingInt(parts.output)].ty, .{ .acquire_buffer = .{ .capacity = capacity } }) } }),
             try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, i, try b.read(limit), .bool), .body = parts.body, .step = step } }),
         }, try b.read(parts.output));
     }
 
     /// Assemble the fixed-bound iteration, its mutation check, and the produced list.
+    const ComprehensionSlots = struct { owner: typed.LocalId, index: typed.LocalId, limit: typed.LocalId, slot: typed.LocalId };
+    const ComprehensionSource = struct {
+        iterable: typed.NodeId,
+        output: typed.LocalId,
+        kind: ManagedKind,
+        reserve: bool,
+        projection: ?dictionary_views.Kind = null,
+    };
     fn comprehensionLoop(
         self: *Checker,
         b: collections.Builder(Checker),
-        slots: struct { owner: typed.LocalId, index: typed.LocalId, limit: typed.LocalId, slot: typed.LocalId },
+        slots: ComprehensionSlots,
         body: typed.StatementId,
-        source_values: struct { iterable: typed.NodeId, output: typed.LocalId, kind: ManagedKind },
+        source_values: ComprehensionSource,
     ) Error!typed.Node {
         const i = try b.read(slots.index);
         const guard = try b.stmt(.{ .discard = try b.operation(slots.owner, .iteration_check, &.{try b.read(slots.limit)}) });
+        const value = try self.projectedIterationValue(b, slots.owner, i, source_values.kind, source_values.projection);
         const iteration = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
             guard,
-            try b.stmt(.{ .initialize = .{ .slot = slots.slot, .value = try self.iterationValue(b, slots.owner, source_values.kind, i) } }),
+            try b.stmt(.{ .initialize = .{ .slot = slots.slot, .value = value } }),
             body,
         }) });
         const step = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
@@ -2030,11 +2077,14 @@ const Checker = struct {
         }) });
         const loop_id = self.loops.next;
         self.loops.next += 1;
+        const output_capacity = if (source_values.reserve) try b.read(slots.limit) else try b.integer(0);
+        const output_type = self.locals.items[@backingInt(source_values.output)].ty;
+        const acquire_output = try b.node(output_type, .{ .acquire_buffer = .{ .capacity = output_capacity } });
         return b.block(&.{
             try b.stmt(.{ .initialize = .{ .slot = slots.owner, .value = source_values.iterable } }),
             try b.stmt(.{ .initialize = .{ .slot = slots.index, .value = try b.integer(0) } }),
             try b.stmt(.{ .initialize = .{ .slot = slots.limit, .value = try b.length(slots.owner) } }),
-            try b.stmt(.{ .initialize = .{ .slot = source_values.output, .value = try b.node(self.locals.items[@backingInt(source_values.output)].ty, .{ .acquire_buffer = .{ .capacity = try b.integer(0) } }) } }),
+            try b.stmt(.{ .initialize = .{ .slot = source_values.output, .value = acquire_output } }),
             try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, i, try b.read(slots.limit), .bool), .body = iteration, .step = step } }),
         }, try b.read(source_values.output));
     }
@@ -2054,19 +2104,45 @@ const Checker = struct {
         return id;
     }
 
-    /// Concatenate an f-string's literal chunks and converted interpolations.
+    /// Render an f-string's pieces once in source order, then join them into one
+    /// exactly-sized text allocation instead of repeatedly copying prefixes.
     fn checkFormat(self: *Checker, node: ast.Node, parts: []const ast.NodeId, temporaries: []const typed.Type) Error!typed.Node {
         const str_type = self.catalog.names.get("str") orelse return error.InternalError;
         const builder: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
-        var result: ?typed.NodeId = null;
-        for (parts) |part| {
+        const values = try self.allocator.alloc(typed.NodeId, parts.len);
+        for (parts, values) |part, *value| {
             const span = self.syntax.nodes.items[@backingInt(part)].span;
-            const value = try self.formatPart(try self.expressionWithTemporaries(part, temporaries), str_type, span);
-            result = if (result) |left| try builder.binary(.add, left, value, str_type) else value;
+            value.* = try self.formatPart(try self.expressionWithTemporaries(part, temporaries), str_type, span);
         }
-        return self.nodes.items[@backingInt(result orelse return error.InternalError)];
+        if (values.len == 1) return builder.block(&.{}, values[0]);
+        const empty = try builder.node(str_type, .{ .array = &.{} });
+        if (values.len == 0) return builder.block(&.{}, empty);
+        const list_type = try collections.listType(&self.catalog, str_type, node.span);
+        const list = try builder.literal(list_type, values);
+        const list_id = try builder.node(list.ty, list.data);
+        return builder.access(empty, .join, &.{list_id}, false);
     }
 
+    fn narrowedCollection(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) ?typed.LocalId {
+        const owner = call.owner orelse return null;
+        const slot = self.active.get(self.src.text(owner)) orelse return null;
+        const shape = self.narrowedOption(slot) orelse return null;
+        if (!shape.element.isAggregate() or !self.catalog.records[shape.element.recordIndex()].isCollection()) return null;
+        return slot;
+    }
+    fn checkNarrowedMethod(self: *Checker, node: ast.Node, slot: typed.LocalId, temporaries: []const typed.Type) Error!typed.Node {
+        const call = node.data.call;
+        try call_arguments.positional(call, self.sink);
+        if (call.type_arguments.len != 0) return self.sink.fail("E_ARITY", node.span, "collection methods do not take explicit type arguments");
+        const shape = self.narrowedOption(slot).?;
+        const kind = buffer_operations.methodFor(self.src.text(call.name), call.arguments.len) orelse
+            return self.sink.fail(eCollectionMethod, call.name, try self.unknownMethodMessage(self.catalog.records[shape.element.recordIndex()].collection.kind, shape.element));
+        var value: typed.Node = .{ .span = call.owner.?, .ty = .unit, .data = .unit };
+        try self.checkName(.{ .span = call.owner.?, .data = .{ .name = call.owner.? } }, call.owner.?, &value);
+        const base: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, value);
+        return self.checkCollectionAccess(node, .{ .base = base, .receiver = slot, .kind = kind, .inputs = call.arguments, .temporaries = temporaries });
+    }
     fn checkCollectionMethod(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
         const call = node.data.method_call;
         const name = self.src.text(call.name);
@@ -2083,6 +2159,15 @@ const Checker = struct {
                 return self.sink.failRelated(eCollectionMethod, call.name, message, .{ .span = call.name, .message = alternative, .role = .alternative });
             return self.sink.fail(eCollectionMethod, call.name, message);
         };
+        if (call.arguments.len == 0 and owner_type.isAggregate() and isImmutableBytes(self.catalog.records[owner_type.recordIndex()])) {
+            const range_kind: ?BufferKind = switch (kind) {
+                .parse_int => .parse_int_range,
+                .parse_float => .parse_float_range,
+                else => null,
+            };
+            if (range_kind) |ranged| if (try (collections.Builder(Checker){ .checker = self, .span = node.span }).fuseImmediateByteRange(base, ranged)) |fused|
+                return fused;
+        }
         return self.checkListAccess(node, .{ .base = call.base, .kind = kind, .inputs = call.arguments }, temporaries);
     }
     fn checkCollectionSlice(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
@@ -2106,10 +2191,14 @@ const Checker = struct {
         return if (schema.collection.kind == .list) b.slice(base, start, end) else b.textSlice(base, start, end);
     }
     fn checkListAccess(self: *Checker, node: ast.Node, operation: struct { base: ast.NodeId, kind: BufferKind, inputs: []const ast.NodeId, signed_length: bool = false }, temporaries: []const typed.Type) Error!typed.Node {
-        const base_input = operation.base;
-        var kind = operation.kind;
-        const inputs = operation.inputs;
-        const base = try self.expressionWithTemporaries(base_input, temporaries);
+        const base = try self.expressionWithTemporaries(operation.base, temporaries);
+        return self.checkCollectionAccess(node, .{ .base = base, .receiver = self.arenaReceiver(operation.base), .kind = operation.kind, .inputs = operation.inputs, .temporaries = temporaries, .signed_length = operation.signed_length });
+    }
+    fn checkCollectionAccess(self: *Checker, node: ast.Node, call: ListMethodCall) Error!typed.Node {
+        const base = call.base;
+        var kind = call.kind;
+        const inputs = call.inputs;
+        const temporaries = call.temporaries;
         const owner_type = self.nodes.items[@backingInt(base)].ty;
         const managed_owner = owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].isCollection();
         const dictionary = managed_owner and self.catalog.records[owner_type.recordIndex()].collection.kind == .dictionary;
@@ -2117,13 +2206,13 @@ const Checker = struct {
         // list-tail, list-index, dictionary-key or dictionary-default form.
         if (kind == .pop) kind = if (dictionary) (if (inputs.len == 2) .pop_default else .pop_key) else (if (inputs.len == 1) .pop_at else .pop);
         if (managed_owner and self.catalog.records[owner_type.recordIndex()].collection.kind != .list) {
-            const receiver = self.arenaReceiver(base_input);
+            const receiver = call.receiver;
             return self.checkManagedAccess(node, .{ .base = base, .kind = kind, .inputs = inputs, .receiver = receiver }, temporaries);
         }
         if (switch (kind) {
             .extend, .insert, .pop, .pop_at, .remove, .index_of, .reverse, .sort, .copy, .clear => true,
             else => false,
-        }) return self.checkListMethod(node, .{ .base = base, .base_input = base_input, .kind = kind, .inputs = inputs, .temporaries = temporaries });
+        }) return self.checkListMethod(node, .{ .base = base, .receiver = call.receiver, .kind = kind, .inputs = inputs, .temporaries = temporaries });
         const supported = switch (kind) {
             .append, .read, .write, .length, .contains => true,
             else => false,
@@ -2147,13 +2236,18 @@ const Checker = struct {
             const actual = self.nodes.items[@backingInt(argument.*)].ty;
             if (writes_element) try self.require(actual, element, node.span) else try self.requireInteger(actual, node.span);
         }
-        try self.requireArenaOperation(self.arenaReceiver(base_input), kind, arguments);
-        return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, kind, arguments, operation.signed_length);
+        try self.requireArenaOperation(call.receiver, kind, arguments);
+        return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, kind, arguments, call.signed_length);
     }
+    fn requireSortable(self: *Checker, element: typed.Type, span: source.Span) Error!void {
+        if (element.isInteger() or numeric_surface.isFloat(element, self.catalog.records)) return;
+        if (element.isAggregate() and self.catalog.records[element.recordIndex()].collection.kind == .string) return;
+        return self.sink.fail(eCollectionMethod, span, "sort requires an integer, float or str element type");
+    }
+
     /// Check a list's Python-shaped method call, which either mutates or copies its receiver.
     fn checkListMethod(self: *Checker, node: ast.Node, call: ListMethodCall) Error!typed.Node {
         const base = call.base;
-        const base_input = call.base_input;
         const kind = call.kind;
         const inputs = call.inputs;
         const temporaries = call.temporaries;
@@ -2200,7 +2294,7 @@ const Checker = struct {
             .pop, .reverse, .sort, .copy, .clear => {},
             else => return self.sink.fail(eCollectionMethod, node.span, unsupported_list),
         }
-        try self.requireArenaOperation(self.arenaReceiver(base_input), kind, arguments);
+        try self.requireArenaOperation(call.receiver, kind, arguments);
         return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, kind, arguments, false);
     }
 
@@ -2208,6 +2302,10 @@ const Checker = struct {
         const owner_type = self.nodes.items[@backingInt(operation.base)].ty;
         const schema = self.catalog.records[owner_type.recordIndex()];
         const dictionary = schema.collection.kind == .dictionary;
+        if (dictionary) if (dictionary_views.operation(operation.kind)) |kind| {
+            if (operation.inputs.len != 0) return self.sink.fail("E_ARITY", node.span, "dictionary views take no arguments");
+            return dictionary_views.construct(Checker, self, node.span, operation.base, kind);
+        };
         if (buffer_operations.byteBuffer(operation.kind) and !isMutableBytes(schema))
             return self.sink.fail(eCollectionMethod, node.span, byte_buffer_receiver);
         _ = collections.operationType(&self.catalog, owner_type, operation.kind, node.span) catch |err| switch (err) {
@@ -2228,7 +2326,8 @@ const Checker = struct {
         const names = try self.signatureNames(owner_type);
         const arguments = try self.allocator.alloc(typed.NodeId, operation.inputs.len);
         for (operation.inputs, arguments, 0..) |input, *argument, index| {
-            const integer = !dictionary and (operation.kind == .read or operation.kind == .slice or operation.kind == .view or widthArgument(operation.kind) or
+            const integer = !dictionary and (operation.kind == .read or operation.kind == .slice or operation.kind == .view or
+                operation.kind == .parse_int_range or operation.kind == .parse_float_range or operation.kind == .scalar_count_range or widthArgument(operation.kind) or
                 (operation.kind == .find_any and index == 1)) or
                 byteBufferInteger(operation.kind, index);
             const expected = if (integer) typed.Type.i64 else if (dictionary) map_argument: {
@@ -2323,7 +2422,12 @@ const Checker = struct {
     }
     fn hintCallArguments(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call"), declaration: instances.DeclarationId, target: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!void {
         const signature = self.syntax.functions[@backingInt(declaration)].signature;
-        const function = if (signature.type_parameters.len == 0) self.ordinary_ids[@backingInt(declaration)] else if (target.type_arguments.len != 0) try self.specialize(declaration, target, span) else null;
+        const function = if (signature.type_parameters.len == 0)
+            self.ordinary_ids[@backingInt(declaration)]
+        else if (target.type_arguments.len != 0 or try self.resultDeterminesArguments(signature, span))
+            try self.specialize(declaration, target, span)
+        else
+            null;
         for (call.arguments, signature.parameters) |argument, parameter| {
             if (function) |function_id| {
                 try self.hint(argument, try self.functionType(function_id, parameter.ty));
@@ -2333,6 +2437,13 @@ const Checker = struct {
                 try self.hint(argument, closed);
             }
         }
+    }
+    /// Use a complete contextual substitution to check nested constructor arguments once.
+    fn resultDeterminesArguments(self: *Checker, signature: ast.FunctionSignature, span: source.Span) Error!bool {
+        const expected = self.expected_types.get(span) orelse return false;
+        var context: @import("generic_inference.zig").Context = .{ .src = self.src, .catalog = self.catalog, .parameters = signature.type_parameters, .sink = self.sink, .site = span };
+        try context.match(signature.return_type, .{ .concrete = expected });
+        return context.complete();
     }
     /// Queue the positional values, then `sep=` and `end=`, of a print-shaped call.
     fn queuePrintArguments(self: *Checker, work: *std.ArrayList(Work), call: @FieldType(@FieldType(ast.Node, "data"), "call"), node: ast.Node) Error!void {
@@ -2623,6 +2734,7 @@ const Checker = struct {
                 return true;
             },
             .call => |call| {
+                if (self.narrowedCollection(call) != null) return false;
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 if (try self.queueCapabilityCall(work, call)) return true;
                 if (self.environmentMethod(call) != null) return true;
@@ -2665,7 +2777,9 @@ const Checker = struct {
                 return true;
             },
             .unary => |u| {
-                if (self.expected_types.get(node.span)) |expected| try self.hint(u.operand, expected);
+                if (u.op == .is_none) {
+                    try self.hintOptionOperand(u.operand);
+                } else if (self.expected_types.get(node.span)) |expected| try self.hint(u.operand, expected);
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 try work.append(self.allocator, .{ .id = u.operand });
                 return true;
@@ -2673,7 +2787,7 @@ const Checker = struct {
             .binary => |b| {
                 try self.hintBinary(node);
                 try work.append(self.allocator, .{ .id = id, .emit = true });
-                try work.append(self.allocator, .{ .id = b.right, .checkpoint = b.op == .logical_and or b.op == .logical_or });
+                try work.append(self.allocator, .{ .id = b.right, .checkpoint = if (b.op == .logical_and or b.op == .logical_or) .{ .condition = b.left, .truth = b.op == .logical_and } else null });
                 try work.append(self.allocator, .{ .id = b.left });
                 return true;
             },
@@ -2728,7 +2842,7 @@ const Checker = struct {
             },
             // A view shares the receiver's octets, `copy` materializes them and
             // `scalar_count` measures them.
-            .view, .copy, .scalar_count => if (!try self.checkByteViewMethod(operation, owner, schema, arguments, out))
+            .view, .copy, .scalar_count, .scalar_count_range, .parse_int_range, .parse_float_range => if (!try self.checkByteViewMethod(operation, owner, schema, arguments, out))
                 return self.sink.fail(eCollectionMethod, operation.owner, unsupported_collection),
             .buffer_reserve, .buffer_append_byte, .buffer_append_range, .buffer_append_utf8, .buffer_append_int, .buffer_append_float => try self.checkByteBufferMethod(operation, owner, arguments, out),
             .read, .write, .get, .contains => {
@@ -2784,8 +2898,9 @@ const Checker = struct {
                 if (!isImmutableBytes(schema)) return self.sink.fail(eCollectionMethod, operation.owner, "copy requires an immutable bytes receiver");
                 out.ty = owner_type;
             },
-            .scalar_count => {
+            .scalar_count, .scalar_count_range, .parse_int_range, .parse_float_range => {
                 if (schema.collection.kind != .bytes) return false;
+                for (arguments) |argument| try self.requireInteger(self.nodes.items[@backingInt(argument)].ty, operation.owner);
                 out.ty = collections.operationType(&self.catalog, owner_type, operation.kind, operation.owner) catch |err| switch (err) {
                     error.InternalError => return false,
                     else => return err,
@@ -2869,6 +2984,12 @@ const Checker = struct {
         const local = &self.locals.items[@backingInt(owner)];
         if (!local.ty.isAggregate() or !self.catalog.records[local.ty.recordIndex()].isCollection()) return self.sink.fail(eListType, operation.owner, needs_list);
         local.usage.reads += 1;
+        if (self.catalog.records[local.ty.recordIndex()].collection.kind == .dictionary) if (dictionary_views.operation(operation.kind)) |kind| {
+            if (operation.arguments.len != 0) return self.sink.fail("E_ARITY", operation.owner, "dictionary views take no arguments");
+            const b: collections.Builder(Checker) = .{ .checker = self, .span = out.span };
+            out.* = try dictionary_views.construct(Checker, self, out.span, try b.read(owner), kind);
+            return;
+        };
         if (operation.kind.mutates()) local.usage.writes += 1;
         const element = self.catalog.records[local.ty.recordIndex()].shape.buffer.?;
         if (self.catalog.records[local.ty.recordIndex()].collection.kind != .list) {
@@ -3050,7 +3171,7 @@ const Checker = struct {
         out.ty = contract.return_type;
         out.data = .{ .invoke = .{ .callee = callee, .arguments = try arguments.toOwnedSlice(self.allocator) } };
     }
-    fn checkName(self: *Checker, _: ast.Node, name: @FieldType(@FieldType(ast.Node, "data"), "name"), out: *typed.Node) Error!void {
+    fn checkName(self: *Checker, node: ast.Node, name: @FieldType(@FieldType(ast.Node, "data"), "name"), out: *typed.Node) Error!void {
         if (self.current_function) |id| {
             const key = self.instance_keys.items[@backingInt(id)];
             for (self.syntaxFunction(id).signature.type_parameters, 0..) |parameter, index| {
@@ -3111,6 +3232,12 @@ const Checker = struct {
         self.locals.items[@backingInt(slot)].usage.reads += 1;
         out.ty = self.locals.items[@backingInt(slot)].ty;
         out.data = .{ .local = slot };
+        if (self.option_facts.has(@backingInt(slot)) and self.expected_types.get(node.span) != out.ty) {
+            const shape = prelude.optionShape(out.ty, self.catalog.records) orelse return error.InternalError;
+            const value: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+            try self.nodes.append(self.allocator, out.*);
+            out.* = try option_flow.payloadValue(self, value, shape, node.span);
+        }
     }
     /// Python-spelled byte-string and octet-buffer constructors that are not
     /// ordinary function calls. `bytes(values)` builds from a `list[int]`,
@@ -3547,6 +3674,11 @@ const Checker = struct {
         out.span = node.span;
         const operand = self.resolved[@backingInt(u.operand)].?;
         const operand_ty = self.nodes.items[@backingInt(operand)].ty;
+        if (u.op == .is_none) {
+            const shape = prelude.optionShape(operand_ty, self.catalog.records) orelse return self.sink.fail("E_OPTION_TEST", u.op_span, "is None requires an Option value");
+            if (self.transfers(operand_ty)) return self.sink.fail("E_OPTION_TEST", u.op_span, "use match for an Option carrying an owned value or checked Result");
+            return option_flow.testValue(self, operand, shape, node.span);
+        }
         out.ty = if (u.op == .not) .bool else operand_ty;
         if (u.op == .neg and numeric_surface.isFloat(out.ty, self.catalog.records)) return self.numericBuilder(node.span).negate(operand);
         // A `float` operand is the binary64 value itself, so the float-in/float-out
@@ -3898,20 +4030,7 @@ const Checker = struct {
                 try self.require(self.nodes.items[@backingInt(value)].ty, schema.element, self.syntax.nodes.items[@backingInt(replace.value)].span);
                 out.data = .{ .replace = .{ .base = base, .index = index_value, .value = value } };
             },
-            .length => |input| {
-                const base = self.resolved[@backingInt(input)].?;
-                const receiver_type = self.nodes.items[@backingInt(base)].ty;
-                if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].collection.kind != .list) {
-                    out.ty = .i64;
-                    out.data = .{ .length = base };
-                    return out;
-                }
-                if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].isCollection()) return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, .length, &.{}, true);
-                _ = try self.catalog.array(receiver_type, node.span, self.sink);
-                if (self.requiresHandling(self.nodes.items[@backingInt(base)].ty)) return self.sink.fail(eResultOperation, node.span, "length evaluation would drop result-bearing elements");
-                out.ty = .i64;
-                out.data = .{ .length = base };
-            },
+            .length => |input| return self.checkLength(node, input),
             .membership => |membership| return self.checkMembership(node, membership, temporaries),
             .dictionary_literal => |entries| try self.checkDictionaryLiteral(node, entries, &out),
             .record => |record| {
@@ -3956,11 +4075,33 @@ const Checker = struct {
                 out.data = .{ .boolean = value };
             },
             .name => |name| try self.checkName(node, name, &out),
-            .call => |call| try self.checkCall(node, call, &out),
+            .call => |call| {
+                if (self.narrowedCollection(call)) |slot| return self.checkNarrowedMethod(node, slot, temporaries);
+                try self.checkCall(node, call, &out);
+            },
             .unary => |u| return self.checkUnary(node, u),
             .binary => |b| try self.checkValueBinary(b, &out),
         }
         return out;
+    }
+    /// Check `len(value)`, projecting a dictionary view back to its retained
+    /// mapping so the operation stays nonallocating and observes the live size.
+    fn checkLength(self: *Checker, node: ast.Node, input: ast.NodeId) Error!typed.Node {
+        const base = self.resolved[@backingInt(input)].?;
+        const receiver_type = self.nodes.items[@backingInt(base)].ty;
+        if (dictionary_views.identify(self.catalog, receiver_type)) |view| if (view != .item) {
+            const mapping = try dictionary_views.owner(Checker, self, node.span, base);
+            return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(mapping, .length, &.{}, false);
+        };
+        if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].collection.kind != .list) {
+            return .{ .span = node.span, .ty = .i64, .data = .{ .length = base } };
+        }
+        if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].isCollection()) {
+            return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, .length, &.{}, true);
+        }
+        _ = try self.catalog.array(receiver_type, node.span, self.sink);
+        if (self.requiresHandling(receiver_type)) return self.sink.fail(eResultOperation, node.span, "length evaluation would drop result-bearing elements");
+        return .{ .span = node.span, .ty = .i64, .data = .{ .length = base } };
     }
     fn lambdaIndex(self: *Checker, span: source.Span) ?usize {
         for (self.syntax.lambdas, 0..) |lambda, index| {
@@ -3993,6 +4134,7 @@ const Checker = struct {
         out.data = .{ .function_value = @fromBackingInt(self.lambda_start + index) };
     }
     fn consumedTemporaries(self: *Checker, node: ast.Node, out: typed.Node) Error!usize {
+        if (node.data == .unary and node.data.unary.op == .is_none) return 1;
         if (node.data == .index and out.data == .block_value) return 2;
         if (node.data == .length and out.data == .block_value) return 1;
         if (node.data == .bytes or node.data == .text or node.data == .integer) return 0;
@@ -4056,12 +4198,15 @@ const Checker = struct {
                 continue;
             }
             if (task.verify) |state| {
-                try self.samePending(state, self.syntax.nodes.items[@backingInt(task.id)].span, eResultPath);
+                try self.samePending(state.pending, self.syntax.nodes.items[@backingInt(task.id)].span, eResultPath);
+                self.option_facts.restore(state.facts);
                 continue;
             }
-            if (task.checkpoint) {
+            if (task.checkpoint) |guard| {
                 const state = try self.pendingState(self.locals.items.len);
-                try work.append(self.allocator, .{ .id = task.id, .verify = state });
+                const facts = try self.option_facts.snapshot(self.allocator);
+                try self.assumeOption(guard.condition, guard.truth);
+                try work.append(self.allocator, .{ .id = task.id, .verify = .{ .pending = state, .facts = facts } });
                 try work.append(self.allocator, .{ .id = task.id });
                 continue;
             }
@@ -4428,6 +4573,10 @@ const Checker = struct {
         return cleanup.toOwnedSlice(self.allocator);
     }
     fn statementMatch(self: *Checker, stmt: ast.Statement, match: @FieldType(@FieldType(ast.Statement, "data"), "match"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+        for (match.arms) |arm| try self.invalidateOptions(arm.body);
+        const match_facts = try self.option_facts.snapshot(self.allocator);
+        defer self.option_facts.restore(match_facts);
+        try self.hintOptionOperand(match.value);
         const value = try self.expression(match.value);
         const value_type = self.nodes.items[@backingInt(value)].ty;
         const variants = try self.catalog.variants(value_type, stmt.span, self.sink);
@@ -4440,6 +4589,7 @@ const Checker = struct {
         var continuation_init: ?[]bool = null;
         flow.terminates = true;
         for (match.arms, 0..) |arm, position| {
+            self.option_facts.restore(match_facts);
             self.restorePending(before);
             // Every arm starts from the same pre-match definite-assignment state.
             self.initRestore(init_before);
@@ -4501,14 +4651,22 @@ const Checker = struct {
         try self.require(self.nodes.items[@backingInt(condition)].ty, .bool, self.syntax.nodes.items[@backingInt(branch.condition)].span);
         const before = try self.pendingState(self.locals.items.len);
         const init_before = try self.initSnapshot();
+        const facts_before = try self.option_facts.snapshot(self.allocator);
+        try self.assumeOption(branch.condition, true);
         const then_body = try self.statement(branch.then_body);
+        const facts_then = try self.option_facts.snapshot(self.allocator);
         const then_state = try self.pendingState(before.len);
         const init_then = try self.initSnapshot();
         self.restorePending(before);
         self.initRestore(init_before);
+        self.option_facts.restore(facts_before);
+        try self.assumeOption(branch.condition, false);
         const else_body = if (branch.else_body) |other| try self.statement(other) else null;
         const then_terminates = then_body.terminates;
         const else_terminates = if (else_body) |other| other.terminates else false;
+        if (!then_terminates) {
+            if (else_terminates) self.option_facts.restore(facts_then) else self.option_facts.intersect(facts_then);
+        }
         // Merge definite assignment: a name is bound after the `if` only when every
         // path that continues bound it. A path that diverges contributes nothing.
         if (then_terminates and !else_terminates) {
@@ -4525,7 +4683,30 @@ const Checker = struct {
         flow.terminates = then_terminates and else_terminates;
         return .{ .branch = .{ .condition = condition, .then_body = then_body.id, .else_body = if (else_body) |other| other.id else null } };
     }
+    /// Preserve the declared Option when testing its tag, including a repeated guard.
+    fn hintOptionOperand(self: *Checker, id: ast.NodeId) Error!void {
+        const node = self.syntax.nodes.items[@backingInt(id)];
+        if (node.data == .name) if (self.active.get(self.src.text(node.data.name))) |slot| {
+            try self.hint(id, self.locals.items[@backingInt(slot)].ty);
+        };
+    }
+    /// Payload schema of a local whose original optional value is known present.
+    fn narrowedOption(self: *Checker, slot: typed.LocalId) ?prelude.OptionShape {
+        if (!self.option_facts.has(@backingInt(slot))) return null;
+        return prelude.optionShape(self.locals.items[@backingInt(slot)].ty, self.catalog.records);
+    }
+    /// Apply facts carried by one branch of an already-checked condition.
+    fn assumeOption(self: *Checker, condition: ast.NodeId, truth: bool) Error!void {
+        try self.option_facts.assume(self.allocator, .{ .program = self.syntax, .src = self.src }, .{ .concrete = &self.active }, .{ .condition = condition, .truth = truth });
+    }
+    /// Remove facts a loop body can invalidate on its next iteration.
+    fn invalidateOptions(self: *Checker, body: ast.StatementId) Error!void {
+        try self.option_facts.invalidateWrites(self.allocator, .{ .program = self.syntax, .src = self.src }, .{ .concrete = &self.active }, body);
+    }
     fn statementLoop(self: *Checker, stmt: ast.Statement, loop: @FieldType(@FieldType(ast.Statement, "data"), "loop"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+        try self.invalidateOptions(loop.body);
+        const loop_facts = try self.option_facts.snapshot(self.allocator);
+        defer self.option_facts.restore(loop_facts);
         const before = try self.pendingState(self.locals.items.len);
         const condition = try self.expression(loop.condition);
         try self.require(self.nodes.items[@backingInt(condition)].ty, .bool, self.syntax.nodes.items[@backingInt(loop.condition)].span);
@@ -4535,6 +4716,7 @@ const Checker = struct {
         try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .arenas = self.arenas.items.len });
         defer _ = self.loops.active.pop();
         const init_before = try self.initSnapshot();
+        try self.assumeOption(loop.condition, true);
         const body = try self.statement(loop.body);
         // A loop may execute zero times, so assignments made only in its body
         // cannot make a pre-existing local definitely assigned after the loop.
@@ -4549,83 +4731,35 @@ const Checker = struct {
         flow.looping = flow.terminates;
         return .{ .loop = .{ .id = loop_id, .condition = condition, .body = body.id } };
     }
-    /// The dictionary receiver of one `items()` iteration source, in either the
-    /// `d.items()` call spelling or the postfix `expr.items()` spelling.
-    const ItemsSource = union(enum) { node: ast.NodeId, local: source.Span };
-
-    // twin-drift-ok: the concrete and symbolic checkers store the program under
-    // different fields (`syntax` vs `program`), so this AST-shape probe is duplicated.
-    /// Recognize `receiver.items()` as a for-each source. Only a two-name loop
-    /// consumes this: `for key, value in d.items()` binds the dictionary key and
-    /// value in insertion order instead of the value snapshot's position.
-    fn itemsSource(self: *Checker, id: ast.NodeId) ?ItemsSource {
-        const node = self.syntax.nodes.items[@backingInt(id)];
-        switch (node.data) {
-            .method_call => |method| if (method.arguments.len == 0 and std.mem.eql(u8, self.src.text(method.name), "items"))
-                return .{ .node = method.base },
-            .call => |invocation| {
-                const owner = invocation.owner orelse return null;
-                if (invocation.type_arguments.len != 0 or invocation.arguments.len != 0) return null;
-                if (!std.mem.eql(u8, self.src.text(invocation.name), "items")) return null;
-                if (!self.active.contains(self.src.text(owner))) return null;
-                return .{ .local = owner };
-            },
-            else => {},
-        }
-        return null;
-    }
-
-    /// Resolve the receiver of an `items()` source to a checked value, reading the
-    /// local for the receiver-name spelling rather than resolving the snapshot.
-    fn itemsReceiverValue(self: *Checker, items: ItemsSource) Error!typed.NodeId {
-        switch (items) {
-            .node => |id| return self.expression(id),
-            .local => |span| {
-                const slot = try self.resolve(span);
-                try self.requireReadable(slot, span);
-                self.locals.items[@backingInt(slot)].usage.reads += 1;
-                const id: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-                try self.nodes.append(self.allocator, .{ .span = span, .ty = self.locals.items[@backingInt(slot)].ty, .data = .{ .local = slot } });
-                return id;
-            },
-        }
-    }
-
     fn statementForEach(self: *Checker, stmt: ast.Statement, each: @FieldType(@FieldType(ast.Statement, "data"), "for_each")) Error!@FieldType(typed.Statement, "data") {
+        try self.invalidateOptions(each.body);
+        const loop_facts = try self.option_facts.snapshot(self.allocator);
+        defer self.option_facts.restore(loop_facts);
         if (try self.preludeIteration(stmt, each)) |statements| return .{ .block = statements };
         const b: collections.Builder(Checker) = .{ .checker = self, .span = stmt.span };
-        // `for key, value in d.items()` iterates the dictionary itself so the first
-        // name receives the key and the second the value, in insertion order. Any
-        // other spelling still resolves the iterable as written.
-        var dictionary_items = false;
-        var iterable: typed.NodeId = undefined;
-        if (each.index_name != null) if (self.itemsSource(each.iterable)) |items| {
-            const receiver = try self.itemsReceiverValue(items);
-            const receiver_type = self.nodes.items[@backingInt(receiver)].ty;
-            if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].isCollection() and
-                self.catalog.records[receiver_type.recordIndex()].collection.kind == .dictionary)
-            {
-                iterable = receiver;
-                dictionary_items = true;
-            }
-        };
-        if (!dictionary_items) iterable = try self.expression(each.iterable);
+        const source_value = try self.expression(each.iterable);
+        const view = dictionary_views.identify(self.catalog, self.nodes.items[@backingInt(source_value)].ty);
+        const projected = view != null and view.? != .item;
+        const iterable = if (projected) try dictionary_views.owner(Checker, self, stmt.span, source_value) else source_value;
         const iterable_type = self.nodes.items[@backingInt(iterable)].ty;
-        if (!iterable_type.isAggregate() or !self.catalog.records[iterable_type.recordIndex()].isCollection()) return self.sink.fail(eCollectionMethod, stmt.span, "iteration requires a list, str, or dictionary");
+        if (!iterable_type.isAggregate() or !self.catalog.records[iterable_type.recordIndex()].isCollection()) return self.sink.fail(eCollectionMethod, stmt.span, "iteration requires a collection or dictionary view");
         const schema = self.catalog.records[iterable_type.recordIndex()];
         const kind = schema.collection.kind;
-        const first_type = if (dictionary_items) schema.collection.key.? else switch (kind) {
+        const element = if (projected) try dictionary_views.element(&self.catalog, iterable_type, view.?, stmt.span) else switch (kind) {
             .list => schema.shape.buffer.?,
             .string => iterable_type,
             .bytes => typed.Type.i64,
             .dictionary => schema.collection.key.?,
         };
+        const unpack = each.index_name != null and !each.enumerated;
+        if (unpack and dictionary_views.identify(self.catalog, element) != .item) return self.sink.fail("E_ITERATION", stmt.span, "two iteration names require dictionary items, enumerate or zip");
+        const first_type = if (unpack) self.catalog.records[element.recordIndex()].fields[0].ty else element;
         const owner = try b.local(iterable_type);
         const index = try b.local(.i64);
         const limit = try b.local(.i64);
         const first_slot = try b.local(first_type);
-        const second_slot = if (dictionary_items) try b.local(schema.shape.buffer.?) else index;
-        const names = if (dictionary_items) [_]?source.Span{ each.index_name, each.name } else [_]?source.Span{ each.name, each.index_name };
+        const second_slot = if (unpack) try b.local(self.catalog.records[element.recordIndex()].fields[1].ty) else index;
+        const names = if (unpack) [_]?source.Span{ each.index_name, each.name } else [_]?source.Span{ each.name, each.index_name };
         const slots = [_]typed.LocalId{ first_slot, second_slot };
         for (names) |maybe_name| if (maybe_name) |name| {
             if (try self.topLevel(name) or self.active.contains(self.src.text(name))) return self.sink.fail(eShadowing, name, eIterationShadow);
@@ -4655,14 +4789,16 @@ const Checker = struct {
         const iteration_check = try b.stmt(.{ .discard = try b.operation(owner, .iteration_check, &.{try b.read(limit)}) });
         var iteration_statements: std.ArrayList(typed.StatementId) = .empty;
         try iteration_statements.append(self.allocator, iteration_check);
-        if (dictionary_items) {
-            try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = try b.operation(owner, .key_at, &.{i}) } }));
-            // The value at insertion position `i` is read through the key just bound,
-            // because `.read` on a dictionary takes a key rather than a position.
-            try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = second_slot, .value = try b.operation(owner, .read, &.{try b.read(first_slot)}) } }));
-        } else {
-            try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = try self.iterationValue(b, owner, kind, i) } }));
-        }
+        const value = try self.projectedIterationValue(b, owner, i, kind, if (projected) view else null);
+        if (unpack) {
+            const pair = try b.local(element);
+            try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = pair, .value = value } }));
+            const first_value = try b.node(first_type, .{ .field = .{ .base = try b.read(pair), .index = 0 } });
+            const second_type = self.locals.items[@backingInt(second_slot)].ty;
+            const second_value = try b.node(second_type, .{ .field = .{ .base = try b.read(pair), .index = 1 } });
+            try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = first_value } }));
+            try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = second_slot, .value = second_value } }));
+        } else try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = value } }));
         try iteration_statements.append(self.allocator, body.id);
         const iteration = try b.stmt(.{ .block = try iteration_statements.toOwnedSlice(self.allocator) });
         const step = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
@@ -4731,7 +4867,24 @@ const Checker = struct {
         const read = try b.operation(owner, if (kind == .dictionary) .key_at else .read, &.{index});
         return if (kind == .bytes) b.node(.i64, .{ .cast = read }) else read;
     }
+
+    /// Read one iteration element, applying a dictionary view's projection when
+    /// the source is keys, values or items and using ordinary collection access otherwise.
+    fn projectedIterationValue(
+        self: *Checker,
+        b: collections.Builder(Checker),
+        owner: typed.LocalId,
+        index: typed.NodeId,
+        kind: ManagedKind,
+        projection: ?dictionary_views.Kind,
+    ) Error!typed.NodeId {
+        if (projection) |view| return dictionary_views.at(Checker, self, b.span, owner, index, view);
+        return self.iterationValue(b, owner, kind, index);
+    }
     fn statementForRange(self: *Checker, stmt: ast.Statement, range: @FieldType(@FieldType(ast.Statement, "data"), "for_range")) Error!@FieldType(typed.Statement, "data") {
+        try self.invalidateOptions(range.body);
+        const loop_facts = try self.option_facts.snapshot(self.allocator);
+        defer self.option_facts.restore(loop_facts);
         const name = self.src.text(range.name);
         if (try self.topLevel(range.name) or self.active.contains(name)) return self.sink.fail(eShadowing, range.name, "iteration binding shadows an active declaration");
         const zero_start = self.syntax.nodes.items[@backingInt(range.start)].data == .unit;
@@ -4901,6 +5054,7 @@ const Checker = struct {
         // of any arena it was previously confined to.
         self.locals.items[@backingInt(slot)].ownership.initialized = true;
         self.locals.items[@backingInt(slot)].ownership.arena_confined = false;
+        self.option_facts.forget(@backingInt(slot));
         return .{ .assign = .{ .slot = slot, .value = value } };
     }
     fn bindParameters(self: *Checker, function: ast.Function) Error!void {

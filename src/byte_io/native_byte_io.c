@@ -241,11 +241,11 @@ static MylangResourceWrite transmit(void *context, uint64_t handle, const uint8_
 static const char *i64_parameter[] = {"i64"}, *u8_parameter[] = {"u8"};
 static const char *block_parameter[1];
 static MylangHostBinding bindings[] = {
-    {"io::length", NULL, 0, "i64", 32, 32, NULL, length},
-    {"io::byte", i64_parameter, 1, "u8", 32, 32, NULL, byte},
-    {"io::put", u8_parameter, 1, "i64", 32, 32, NULL, put},
-    {"io::read_block", i64_parameter, 1, NULL, 32, 32, NULL, read_block},
-    {"io::write_block", block_parameter, 1, "i64", 32, 32, NULL, write_block},
+    {"io::length", NULL, 0, "i64", 32, 32, NULL, length, NULL},
+    {"io::byte", i64_parameter, 1, "u8", 32, 32, NULL, byte, NULL},
+    {"io::put", u8_parameter, 1, "i64", 32, 32, NULL, put, NULL},
+    {"io::read_block", i64_parameter, 1, NULL, 32, 32, NULL, read_block, NULL},
+    {"io::write_block", block_parameter, 1, "i64", 32, 32, NULL, write_block, NULL},
 };
 /* The driver names the copied-block types it has already validated structurally,
    so a guest that declares a differently shaped block never reaches a callback. */

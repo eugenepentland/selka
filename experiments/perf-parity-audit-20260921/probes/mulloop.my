@@ -1,0 +1,8 @@
+def main(out: Stream) -> int:
+    total = 0
+    i = 0
+    while i < 30000000:
+        total = (total + i * 7) % 1000003
+        i += 1
+    out.print(str(total))
+    return 0

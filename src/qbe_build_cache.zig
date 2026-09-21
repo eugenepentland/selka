@@ -72,8 +72,8 @@ pub const Cache = struct {
     assets: []const u8,
     environment: []const u8,
     zig: []const u8,
-    qbe: []const u8,
     mode: []const u8,
+    codegen: Codegen,
     /// Full Wave-3 contract; its fingerprint is part of every object key so a
     /// bootstrap-language, target, runtime-ABI, effects, flags or compiler change
     /// can never reuse an incompatible native object.
@@ -102,10 +102,22 @@ pub const Cache = struct {
         if (self.valid(path, try self.entry(key, ".digest"))) return .{ .key = key, .path = path, .reused = true };
         const work = try self.context.temporary(self.temporary);
         defer self.context.remove(work);
-        const merged = try std.fs.path.join(a, &.{ work, "runtime.o" });
-        try self.mergeC(sources, merged);
         const candidate = try std.fs.path.join(a, &.{ work, "runtime.a" });
-        try self.context.command(&.{ self.zig, "ar", "rcs", candidate, merged }, null);
+        if (self.codegen.lto) {
+            var archive: std.ArrayList([]const u8) = .empty;
+            try archive.appendSlice(a, &.{ self.zig, "ar", "rcs", candidate });
+            for (sources) |name| {
+                const source = try std.fs.path.join(a, &.{ self.assets, name });
+                const member = try std.fs.path.join(a, &.{ work, try std.fmt.allocPrint(a, "{s}.o", .{name}) });
+                try self.compileC(source, member, null);
+                try archive.append(a, member);
+            }
+            try self.context.command(archive.items, null);
+        } else {
+            const merged = try std.fs.path.join(a, &.{ work, "runtime.o" });
+            try self.mergeC(sources, merged);
+            try self.context.command(&.{ self.zig, "ar", "rcs", candidate, merged }, null);
+        }
         return self.store(key, path, candidate);
     }
     /// Compile every runtime C source into one relocatable object with a single
@@ -120,7 +132,10 @@ pub const Cache = struct {
     fn mergeCommand(self: Cache, sources: []const []const u8, output: []const u8) Error![]const []const u8 {
         const a = self.context.allocator;
         const zig_mode = if (std.mem.eql(u8, self.mode, "Debug")) "-ODebug" else "-OReleaseFast";
-        const optimization = if (std.mem.eql(u8, self.mode, "Debug")) "-O0" else "-O2";
+        // A Debug build stays unoptimized on every backend: `zig cc` derives its mode
+        // from this flag, and a Debug link is what pulls in the UBSan runtime the
+        // Debug-compiled C objects reference. The LLVM level applies to release builds.
+        const optimization = if (std.mem.eql(u8, self.mode, "Debug")) "-O0" else if (self.codegen.llvm) try std.fmt.allocPrint(a, "-O{s}", .{self.codegen.optimization}) else "-O2";
         const shared = try std.fmt.allocPrint(a, "-ffile-prefix-map={s}=mylang-runtime", .{self.assets});
         const shared_debug = try std.fmt.allocPrint(a, "-fdebug-prefix-map={s}=mylang-runtime", .{self.assets});
         var argv: std.ArrayList([]const u8) = .empty;
@@ -131,6 +146,7 @@ pub const Cache = struct {
             "-ffunction-sections",                    "-fdata-sections", shared,      shared_debug,
             "-fdebug-compilation-dir=mylang-runtime", "--",
         });
+        if (self.codegen.lto) try argv.append(a, "-flto");
         for (sources) |source| try argv.append(a, try std.fs.path.join(a, &.{ self.assets, source }));
         try argv.append(a, try std.fmt.allocPrint(a, "-femit-bin={s}", .{output}));
         return argv.items;
@@ -167,8 +183,21 @@ pub const Cache = struct {
                 const source = try std.fs.path.join(a, &.{ task.work, "unit.ssa" });
                 const assembly = try std.fs.path.join(a, &.{ task.work, "unit.s" });
                 try self.context.write(source, task.input);
-                try self.context.command(&.{ self.qbe, "-t", "amd64_sysv", "-o", assembly, source }, null);
-                try self.context.command(&.{ self.zig, "cc", "-g0", "-c", assembly, "-o", task.candidate }, null);
+                var environment = try self.context.environ.clone(a);
+                defer environment.deinit();
+                if (self.codegen.llvm) {
+                    try environment.put("MYLANG_QBE_LLVM_OPT", try std.fmt.allocPrint(a, "-O{s}", .{self.codegen.optimization}));
+                    try environment.put("MYLANG_QBE_LLVM_ZIG", self.zig);
+                    try environment.put("MYLANG_QBE_LLVM_RUNTIME_SOURCES", self.assets);
+                    try environment.put("MYLANG_QBE_LLVM_SIGNATURES", try std.fs.path.join(a, &.{ self.temporary, "llvm-signatures.json" }));
+                    try environment.put("MYLANG_QBE_LLVM_TARGET_CPU", self.codegen.target_cpu);
+                    try environment.put("MYLANG_QBE_LLVM_TARGET_FEATURES", self.codegen.target_features);
+                    if (self.codegen.lto) try environment.put("MYLANG_QBE_LLVM_EMIT_LTO_OBJECT", "1");
+                }
+                const adapter_output = if (self.codegen.lto and self.codegen.llvm) task.candidate else assembly;
+                try self.context.command(&.{ self.codegen.tool, "-t", "amd64_sysv", "-o", adapter_output, source }, &environment);
+                if (!self.codegen.lto or !self.codegen.llvm)
+                    try self.context.command(&.{ self.zig, "cc", "-g0", "-c", assembly, "-o", task.candidate }, null);
             },
             .c_text => {
                 const source = try std.fs.path.join(a, &.{ task.work, "unit.c" });
@@ -194,18 +223,33 @@ pub const Cache = struct {
     /// object, so the cache holds what a program runs and nothing it never reads.
     pub fn flags(self: Cache) Error![]const []const u8 {
         const a = self.context.allocator;
-        const optimization = if (std.mem.eql(u8, self.mode, "Debug")) "-O0" else "-O2";
+        // A Debug build stays unoptimized on every backend: `zig cc` derives its mode
+        // from this flag, and a Debug link is what pulls in the UBSan runtime the
+        // Debug-compiled C objects reference. The LLVM level applies to release builds.
+        const optimization = if (std.mem.eql(u8, self.mode, "Debug")) "-O0" else if (self.codegen.llvm) try std.fmt.allocPrint(a, "-O{s}", .{self.codegen.optimization}) else "-O2";
         const files = try std.fmt.allocPrint(a, "-ffile-prefix-map={s}=mylang-qbe", .{self.temporary});
         const debug = try std.fmt.allocPrint(a, "-fdebug-prefix-map={s}=mylang-qbe", .{self.temporary});
         const shared = try std.fmt.allocPrint(a, "-ffile-prefix-map={s}=mylang-runtime", .{self.assets});
         const shared_debug = try std.fmt.allocPrint(a, "-fdebug-prefix-map={s}=mylang-runtime", .{self.assets});
-        return a.dupe([]const u8, &.{
+        var result: std.ArrayList([]const u8) = .empty;
+        try result.appendSlice(a, &.{
             self.zig,                             "cc",    "-std=c11",            optimization,      "-g0",
             "-fno-ident",                         "-fPIC", "-ffunction-sections", "-fdata-sections", files,
             "-fdebug-compilation-dir=mylang-qbe", debug,   shared,                shared_debug,      "-I",
             self.assets,
         });
+        if (self.codegen.lto) try result.append(a, "-flto");
+        return result.toOwnedSlice(a);
     }
+};
+/// Resolved native code generator and optimization policy.
+pub const Codegen = struct {
+    tool: []const u8,
+    llvm: bool = false,
+    optimization: []const u8 = "default",
+    lto: bool = false,
+    target_cpu: []const u8 = "",
+    target_features: []const u8 = "",
 };
 /// Ways to lower an object without routing a guest function through C.
 pub const Flavor = enum { qbe, c_text, zig_file };
@@ -226,7 +270,7 @@ test "the runtime units merge in one build-obj invocation naming every source" {
     defer environment.deinit();
     var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
     defer context.deinit();
-    const cache: Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/zig", .qbe = "/qbe", .mode = "ReleaseFast" };
+    const cache: Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/zig", .mode = "ReleaseFast", .codegen = .{ .tool = "/qbe" } };
     const argv = try cache.mergeCommand(&.{ "qbe_runtime.c", "native_heap.c" }, "/tmp/out.o");
     const joined = try std.mem.join(context.allocator, " ", argv);
     try std.testing.expectEqualStrings("build-obj", argv[1]);
@@ -243,7 +287,7 @@ test "native compile commands emit no debug information" {
     defer environment.deinit();
     var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
     defer context.deinit();
-    const cache: Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/zig", .qbe = "/qbe", .mode = "Debug" };
+    const cache: Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/zig", .mode = "Debug", .codegen = .{ .tool = "/qbe" } };
     const loose = try std.mem.join(context.allocator, " ", try cache.flags());
     try std.testing.expect(std.mem.indexOf(u8, loose, " -g0 ") != null);
     try std.testing.expect(std.mem.indexOf(u8, loose, " -O0 ") != null);
@@ -258,7 +302,7 @@ test "qbe object cache identity folds the wave 3 contract dimensions" {
     defer environment.deinit();
     var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
     defer context.deinit();
-    const cache: Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/zig", .qbe = "/qbe", .mode = "ReleaseFast" };
+    const cache: Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/zig", .mode = "ReleaseFast", .codegen = .{ .tool = "/qbe" } };
     const base = try cache.identity("qbe", "unit");
     defer context.allocator.free(base);
     const repeat = try cache.identity("qbe", "unit");
@@ -269,6 +313,26 @@ test "qbe object cache identity folds the wave 3 contract dimensions" {
     const other = try changed.identity("qbe", "unit");
     defer context.allocator.free(other);
     try std.testing.expect(!std.mem.eql(u8, base, other));
+}
+
+test "LLVM full LTO carries O3 and flto through generated C and final link flags" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const cache: Cache = .{
+        .context = context,
+        .directory = "objects",
+        .temporary = "work",
+        .assets = "/assets",
+        .environment = "env",
+        .zig = "/zig",
+        .mode = "ReleaseFast",
+        .codegen = .{ .tool = "/adapter.py", .llvm = true, .optimization = "3", .lto = true },
+    };
+    const joined = try std.mem.join(context.allocator, " ", try cache.flags());
+    try std.testing.expect(std.mem.indexOf(u8, joined, "-O3") != null);
+    try std.testing.expect(std.mem.indexOf(u8, joined, "-flto") != null);
 }
 
 test "native object cache mirror uses the effects-v4 contract" {

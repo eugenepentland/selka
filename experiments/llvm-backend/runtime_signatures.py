@@ -12,6 +12,11 @@ I64 = "i64"
 I32 = "i32"
 V = "void"
 
+# This getter only computes the address of the context's embedded heap. It
+# neither reads nor writes the context. Keep attributes narrowly proven rather
+# than inferring memory effects from language-level `noalloc` declarations.
+ATTRIBUTES = {"myl_qbe_heap": "memory(none) nounwind willreturn"}
+
 SIGNATURES = {
     "myl_native_bytes_concat": ((P, P, P), P),
     "myl_native_bytes_encode": ((P, P), P),
@@ -79,6 +84,11 @@ def signature(name):
     # Generated renderers have one stable C signature.
     if name.startswith("myl_r_"):
         return ((P, P, I32), V)
+    # qbe_build_host.zig emits this exact C boundary for every copied host call.
+    # The hash identifies a generated guest function; arbitrary names ending in
+    # `_host` must not acquire a guessed signature.
+    if re.fullmatch(r"myl_f_[0-9a-f]{64}_host", name):
+        return ((P, P, P), V)
     return generated().get(name)
 
 

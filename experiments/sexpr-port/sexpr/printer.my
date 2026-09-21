@@ -127,7 +127,7 @@ def text_of(found: view.View) -> str:
 # boundary), so the empty count is the only reachable fallback and it keeps
 # measurement total, exactly as the empty spelling did.
 def scalar_len(found: view.View) -> int:
-    match found.source.view(found.start, found.end).scalar_count():
+    match found.source.scalar_count_range(found.start, found.end):
         case Ok(count):
             return count
         case Err(_):

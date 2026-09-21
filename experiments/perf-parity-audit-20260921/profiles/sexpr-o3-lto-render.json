@@ -1,0 +1,622 @@
+{
+  "binary": ".tmp/perf-audit-20260921/sexpr-o3-lto",
+  "binary_sha256": "2a796c6c57a0705ad8178083f66f8ad46627317f1882700b71962797fb5921b3",
+  "note": "LLVM -O3 + LTO, --keep-symbols; parse and reprint input8.sexp",
+  "argv_tail": [
+    "--render"
+  ],
+  "runs": 600,
+  "samples": 31594,
+  "outside_main_executable": 11762,
+  "percent_outside_main_executable": 37.228587706526554,
+  "unmapped_inside": 618,
+  "percent_unmapped_inside": 1.9560676077736279,
+  "located_samples": 19214,
+  "class_totals": {
+    "guest": {
+      "samples": 13640,
+      "percent_all_samples": 43.17275432044059
+    },
+    "runtime-c": {
+      "samples": 5574,
+      "percent_all_samples": 17.642590365259228
+    }
+  },
+  "functions": [
+    {
+      "name": "sexpr.printer::push_node",
+      "class": "guest",
+      "samples": 3259,
+      "percent_all_samples": 10.315249730961575
+    },
+    {
+      "name": "sexpr.tokenizer::next_raw",
+      "class": "guest",
+      "samples": 1982,
+      "percent_all_samples": 6.273343039817687
+    },
+    {
+      "name": "trace [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 1918,
+      "percent_all_samples": 6.0707729315692855
+    },
+    {
+      "name": "myl_native_bytes_find_any [native_bytes.c]",
+      "class": "runtime-c",
+      "samples": 1575,
+      "percent_all_samples": 4.985123757675508
+    },
+    {
+      "name": "sexpr.printer::estimate_width",
+      "class": "guest",
+      "samples": 1460,
+      "percent_all_samples": 4.621130594416662
+    },
+    {
+      "name": "sexpr.parser::parse_node",
+      "class": "guest",
+      "samples": 1023,
+      "percent_all_samples": 3.2379565740330443
+    },
+    {
+      "name": "sexpr.printer::scalar_len",
+      "class": "guest",
+      "samples": 968,
+      "percent_all_samples": 3.063872887257074
+    },
+    {
+      "name": "byte_builder::append",
+      "class": "guest",
+      "samples": 853,
+      "percent_all_samples": 2.6998797239982277
+    },
+    {
+      "name": "myl_native_heap_collect [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 843,
+      "percent_all_samples": 2.6682281445844147
+    },
+    {
+      "name": "sexpr.printer::is_short_list",
+      "class": "guest",
+      "samples": 752,
+      "percent_all_samples": 2.3801987719187188
+    },
+    {
+      "name": "sexpr.tokenizer::read_string",
+      "class": "guest",
+      "samples": 701,
+      "percent_all_samples": 2.2187757169082736
+    },
+    {
+      "name": "sexpr.parser::advance",
+      "class": "guest",
+      "samples": 663,
+      "percent_all_samples": 2.098499715135785
+    },
+    {
+      "name": "buffer_grow_rooted [native_bytes.c]",
+      "class": "runtime-c",
+      "samples": 481,
+      "percent_all_samples": 1.5224409698043933
+    },
+    {
+      "name": "sexpr.tokenizer::read_atom",
+      "class": "guest",
+      "samples": 436,
+      "percent_all_samples": 1.380008862442236
+    },
+    {
+      "name": "byte_builder::append_range",
+      "class": "guest",
+      "samples": 355,
+      "percent_all_samples": 1.1236310691903526
+    },
+    {
+      "name": "myl_native_list_append [native_collections.c]",
+      "class": "runtime-c",
+      "samples": 328,
+      "percent_all_samples": 1.0381718047730581
+    },
+    {
+      "name": "sexpr.parser::parse_list",
+      "class": "guest",
+      "samples": 288,
+      "percent_all_samples": 0.9115654871178072
+    },
+    {
+      "name": "myl_native_heap_alloc_at [native_heap.c]",
+      "class": "runtime-c",
+      "samples": 271,
+      "percent_all_samples": 0.8577578021143255
+    },
+    {
+      "name": "byte_builder::append_spaces",
+      "class": "guest",
+      "samples": 210,
+      "percent_all_samples": 0.6646831676900677
+    },
+    {
+      "name": "sexpr.printer::append_view",
+      "class": "guest",
+      "samples": 184,
+      "percent_all_samples": 0.5823890612141546
+    },
+    {
+      "name": "sexpr.tokenizer::raw",
+      "class": "guest",
+      "samples": 132,
+      "percent_all_samples": 0.4178008482623283
+    },
+    {
+      "name": "sexpr.tokenizer::read_number",
+      "class": "guest",
+      "samples": 125,
+      "percent_all_samples": 0.39564474267265937
+    },
+    {
+      "name": "sexpr.parser::parse_leaf",
+      "class": "guest",
+      "samples": 108,
+      "percent_all_samples": 0.3418370576691777
+    },
+    {
+      "name": "sexpr.printer::append_float",
+      "class": "guest",
+      "samples": 64,
+      "percent_all_samples": 0.2025701082484016
+    },
+    {
+      "name": "sexpr.printer::decimal_width",
+      "class": "guest",
+      "samples": 57,
+      "percent_all_samples": 0.18041400265873267
+    },
+    {
+      "name": "myl_native_text_from_utf8_checked [native_text.c]",
+      "class": "runtime-c",
+      "samples": 53,
+      "percent_all_samples": 0.16775337089320758
+    },
+    {
+      "name": "myl_native_bytes_number_parse",
+      "class": "runtime-c",
+      "samples": 53,
+      "percent_all_samples": 0.16775337089320758
+    },
+    {
+      "name": "myl_native_text_scalar",
+      "class": "runtime-c",
+      "samples": 16,
+      "percent_all_samples": 0.0506425270621004
+    },
+    {
+      "name": "myl_native_text_utf8 [native_text.c]",
+      "class": "runtime-c",
+      "samples": 15,
+      "percent_all_samples": 0.04747736912071912
+    },
+    {
+      "name": "sexpr.tokenizer::is_atom_continue",
+      "class": "guest",
+      "samples": 12,
+      "percent_all_samples": 0.0379818952965753
+    },
+    {
+      "name": "myl_native_text_find [native_text_methods.c]",
+      "class": "runtime-c",
+      "samples": 10,
+      "percent_all_samples": 0.03165157941381275
+    },
+    {
+      "name": "myl_native_text_from_utf8 [native_text.c]",
+      "class": "runtime-c",
+      "samples": 8,
+      "percent_all_samples": 0.0253212635310502
+    },
+    {
+      "name": "sexpr.tokenizer::read_operator",
+      "class": "guest",
+      "samples": 3,
+      "percent_all_samples": 0.009495473824143825
+    },
+    {
+      "name": "sexpr.parser::parse",
+      "class": "guest",
+      "samples": 2,
+      "percent_all_samples": 0.00633031588276255
+    },
+    {
+      "name": "main [native_test_runner.c]",
+      "class": "runtime-c",
+      "samples": 2,
+      "percent_all_samples": 0.00633031588276255
+    },
+    {
+      "name": "sexpr.printer::render_bytes",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.003165157941381275
+    },
+    {
+      "name": "main::render_to",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.003165157941381275
+    },
+    {
+      "name": "main::main",
+      "class": "guest",
+      "samples": 1,
+      "percent_all_samples": 0.003165157941381275
+    },
+    {
+      "name": "read_handle [native_scoped.c]",
+      "class": "runtime-c",
+      "samples": 1,
+      "percent_all_samples": 0.003165157941381275
+    }
+  ],
+  "top_pcs": [
+    {
+      "address": "0x10502f4",
+      "samples": 627,
+      "percent_all_samples": 1.9845540292460593,
+      "function": "myl_native_bytes_find_any [native_bytes.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0xf4",
+      "function_bytes": 272,
+      "disassembly": [
+        {
+          "address": "0x10502e6",
+          "text": "shr    $0x6,%ecx",
+          "sampled": false
+        },
+        {
+          "address": "0x10502e9",
+          "text": "mov    -0x30(%rbp,%rcx,8),%rcx",
+          "sampled": false
+        },
+        {
+          "address": "0x10502ee",
+          "text": "bt     %rax,%rcx",
+          "sampled": false
+        },
+        {
+          "address": "0x10502f2",
+          "text": "jb     1050303 <myl_native_bytes_find_any+0x103>",
+          "sampled": false
+        },
+        {
+          "address": "0x10502f4",
+          "text": "inc    %rdi",
+          "sampled": true
+        },
+        {
+          "address": "0x10502f7",
+          "text": "cmp    %rdi,%r8",
+          "sampled": false
+        },
+        {
+          "address": "0x10502fa",
+          "text": "jne    10502e0 <myl_native_bytes_find_any+0xe0>",
+          "sampled": false
+        },
+        {
+          "address": "0x10502fc",
+          "text": "mov    $0xffffffffffffffff,%rdi",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x104db9f",
+      "samples": 604,
+      "percent_all_samples": 1.91175539659429,
+      "function": "myl_native_heap_collect [native_heap.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0x23f",
+      "function_bytes": 654,
+      "disassembly": [
+        {
+          "address": "0x104db93",
+          "text": "mov    (%rdi),%rdi",
+          "sampled": false
+        },
+        {
+          "address": "0x104db96",
+          "text": "test   %rdi,%rdi",
+          "sampled": false
+        },
+        {
+          "address": "0x104db99",
+          "text": "je     104dbb0 <myl_native_heap_collect+0x250>",
+          "sampled": false
+        },
+        {
+          "address": "0x104db9b",
+          "text": "cmpl   $0x0,0x2c(%rdi)",
+          "sampled": false
+        },
+        {
+          "address": "0x104db9f",
+          "text": "jne    104db90 <myl_native_heap_collect+0x230>",
+          "sampled": true
+        },
+        {
+          "address": "0x104dba1",
+          "text": "cmpl   $0x0,0x28(%rdi)",
+          "sampled": false
+        },
+        {
+          "address": "0x104dba5",
+          "text": "je     104db75 <myl_native_heap_collect+0x215>",
+          "sampled": false
+        },
+        {
+          "address": "0x104dba7",
+          "text": "movl   $0x0,0x28(%rdi)",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x104dcf4",
+      "samples": 591,
+      "percent_all_samples": 1.8706083433563334,
+      "function": "trace [native_heap.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0x104",
+      "function_bytes": 384,
+      "disassembly": [
+        {
+          "address": "0x104dce8",
+          "text": "jae    104dcd0 <trace+0xe0>",
+          "sampled": false
+        },
+        {
+          "address": "0x104dcea",
+          "text": "cmpl   $0x0,0x20(%rcx)",
+          "sampled": false
+        },
+        {
+          "address": "0x104dcee",
+          "text": "jne    104dd61 <trace+0x171>",
+          "sampled": false
+        },
+        {
+          "address": "0x104dcf0",
+          "text": "cmpl   $0x0,-0x34(%rax)",
+          "sampled": false
+        },
+        {
+          "address": "0x104dcf4",
+          "text": "jne    104dd61 <trace+0x171>",
+          "sampled": true
+        },
+        {
+          "address": "0x104dcf6",
+          "text": "cmpl   $0x0,-0x38(%rax)",
+          "sampled": false
+        },
+        {
+          "address": "0x104dcfa",
+          "text": "jne    104dd61 <trace+0x171>",
+          "sampled": false
+        },
+        {
+          "address": "0x104dcfc",
+          "text": "lea    -0x60(%rax),%rcx",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x104dc68",
+      "samples": 410,
+      "percent_all_samples": 1.2977147559663227,
+      "function": "trace [native_heap.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0x78",
+      "function_bytes": 384,
+      "disassembly": [
+        {
+          "address": "0x104dc59",
+          "text": "movl   $0x0,-0x2c(%rbp)",
+          "sampled": false
+        },
+        {
+          "address": "0x104dc60",
+          "text": "cmp    $0x4,%ecx",
+          "sampled": false
+        },
+        {
+          "address": "0x104dc63",
+          "text": "jne    104dc6b <trace+0x7b>",
+          "sampled": false
+        },
+        {
+          "address": "0x104dc65",
+          "text": "mov    (%r14),%eax",
+          "sampled": false
+        },
+        {
+          "address": "0x104dc68",
+          "text": "mov    %eax,-0x2c(%rbp)",
+          "sampled": true
+        },
+        {
+          "address": "0x104dc6b",
+          "text": "test   %r12,%r12",
+          "sampled": false
+        },
+        {
+          "address": "0x104dc6e",
+          "text": "je     104dd61 <trace+0x171>",
+          "sampled": false
+        },
+        {
+          "address": "0x104dc74",
+          "text": "mov    (%rdx),%r13",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x10363f8",
+      "samples": 337,
+      "percent_all_samples": 1.0666582262454896,
+      "function": "sexpr.parser::advance",
+      "class": "guest",
+      "offset_in_function": "0x198",
+      "function_bytes": 656,
+      "disassembly": [
+        {
+          "address": "0x10363e9",
+          "text": "je     1036469 <myl_f_59c4bbc7071b8e5740b45acc273a5dd464bfcfe4b67081aa51105d0e1634c116+0x209>",
+          "sampled": false
+        },
+        {
+          "address": "0x10363eb",
+          "text": "test   %eax,%eax",
+          "sampled": false
+        },
+        {
+          "address": "0x10363ed",
+          "text": "jne    10363cd <myl_f_59c4bbc7071b8e5740b45acc273a5dd464bfcfe4b67081aa51105d0e1634c116+0x16d>",
+          "sampled": false
+        },
+        {
+          "address": "0x10363ef",
+          "text": "vmovups 0xb8(%rsp),%ymm0",
+          "sampled": false
+        },
+        {
+          "address": "0x10363f8",
+          "text": "vmovups 0xd8(%rsp),%xmm1",
+          "sampled": true
+        },
+        {
+          "address": "0x1036401",
+          "text": "mov    0xe8(%rsp),%rax",
+          "sampled": false
+        },
+        {
+          "address": "0x1036409",
+          "text": "mov    %rax,0x40(%r12)",
+          "sampled": false
+        },
+        {
+          "address": "0x103640e",
+          "text": "vmovups %xmm1,0x30(%r12)",
+          "sampled": false
+        }
+      ]
+    },
+    {
+      "address": "0x1034f3f",
+      "samples": 326,
+      "percent_all_samples": 1.0318414888902956,
+      "function": "sexpr.printer::is_short_list",
+      "class": "guest",
+      "offset_in_function": "0xff",
+      "function_bytes": 1024
+    },
+    {
+      "address": "0x1040535",
+      "samples": 253,
+      "percent_all_samples": 0.8007849591694626,
+      "function": "sexpr.parser::parse_node",
+      "class": "guest",
+      "offset_in_function": "0x8a5",
+      "function_bytes": 3991
+    },
+    {
+      "address": "0x1035e2e",
+      "samples": 231,
+      "percent_all_samples": 0.7311514844590745,
+      "function": "sexpr.tokenizer::next_raw",
+      "class": "guest",
+      "offset_in_function": "0xbee",
+      "function_bytes": 4124
+    },
+    {
+      "address": "0x10502f2",
+      "samples": 220,
+      "percent_all_samples": 0.6963347471038804,
+      "function": "myl_native_bytes_find_any [native_bytes.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0xf2",
+      "function_bytes": 272
+    },
+    {
+      "address": "0x1050467",
+      "samples": 184,
+      "percent_all_samples": 0.5823890612141546,
+      "function": "buffer_grow_rooted [native_bytes.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0x157",
+      "function_bytes": 353
+    },
+    {
+      "address": "0x103b6a1",
+      "samples": 182,
+      "percent_all_samples": 0.576058745331392,
+      "function": "sexpr.printer::scalar_len",
+      "class": "guest",
+      "offset_in_function": "0x131",
+      "function_bytes": 930
+    },
+    {
+      "address": "0x10502ee",
+      "samples": 182,
+      "percent_all_samples": 0.576058745331392,
+      "function": "myl_native_bytes_find_any [native_bytes.c]",
+      "class": "runtime-c",
+      "offset_in_function": "0xee",
+      "function_bytes": 272
+    },
+    {
+      "address": "0x1030ca0",
+      "samples": 170,
+      "percent_all_samples": 0.5380768500348168,
+      "function": "sexpr.printer::estimate_width",
+      "class": "guest",
+      "offset_in_function": "0x160",
+      "function_bytes": 7099
+    },
+    {
+      "address": "0x10361b8",
+      "samples": 150,
+      "percent_all_samples": 0.47477369120719126,
+      "function": "sexpr.tokenizer::next_raw",
+      "class": "guest",
+      "offset_in_function": "0xf78",
+      "function_bytes": 4124
+    },
+    {
+      "address": "0x1035ee2",
+      "samples": 135,
+      "percent_all_samples": 0.4272963220864721,
+      "function": "sexpr.tokenizer::next_raw",
+      "class": "guest",
+      "offset_in_function": "0xca2",
+      "function_bytes": 4124
+    }
+  ],
+  "method": "LD_PRELOAD SIGPROF (ITIMER_PROF) userspace self-PC sampling of unmodified binaries; 500us requested, kernel tick (CONFIG_HZ=1000) limited; no stack attribution, no hardware counters (perf_event_paranoid=4). The `dense` sampler is the repository sampler with the first expiration moved inside the first tick, so no prefix of a short run goes unsampled. A sample inside a shared library counts in `samples` and is reported only as `outside_main_executable`, so libc memcpy/malloc in the LLVM builds is inside that share. LTO inlines many guest functions into their callers, so a sample is attributed to the surviving outer symbol. Every run is pinned to CPU 6 and its output hash is verified; no wall-time claim is made from profiled runs.",
+  "sampler": "dense",
+  "sampler_source": "experiments/perf-parity-audit-20260921/profiles/sample_dense.c",
+  "sampler_source_sha256": "f494bbd1caa925d9ee02616d09f65dd2ff31a8b8f8d81cfd231b2c5b3ef54061",
+  "sampler_sha256": "312212283319eeec021923ce05881f6636e34a5ed6f9dbdcecedf4edcb354a4c",
+  "cpu": 6,
+  "seed": 20260921,
+  "output_digest": "f96e951ea7d9fa54c4d2ca91abd44c8a",
+  "interleaved_with": [
+    "sexpr-o3-lto-census",
+    "sexpr-o3-lto-render",
+    "sexpr-qbe-census",
+    "sexpr-qbe-render"
+  ]
+}

@@ -9,6 +9,36 @@ test "standard strings classify search trim pad and convert text at signed bound
 }
 
 // spec-case: STANDARD-STRINGS-1
+test "standard float wrapper shares the pinned parser and stays noalloc" {
+    try fixture.run(t.allocator,
+        \\module main
+        \\import strings
+        \\
+        \\
+        \\def parse(text: str) -> int noalloc:
+        \\    match strings.to_float(text):
+        \\        case Some(value):
+        \\            if value == 1000.5:
+        \\                return 42
+        \\            return 1
+        \\        case None:
+        \\            return 2
+        \\
+        \\
+        \\def main() -> int:
+        \\    if parse(" 1_000.5 ") != 42:
+        \\        return 3
+        \\    match strings.to_float("inf"):
+        \\        case Some(value):
+        \\            if value == 1.0 / 0.0:
+        \\                return 42
+        \\            return 4
+        \\        case None:
+        \\            return 5
+    , 42);
+}
+
+// spec-case: STANDARD-STRINGS-1
 test "standard string results survive collection at every managed allocation" {
     try fixture.stress(t.allocator, "module main\nimport strings\n" ++
         "def main() -> int:\n" ++

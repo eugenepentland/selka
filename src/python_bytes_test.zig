@@ -4,12 +4,17 @@ const t = std.testing;
 const debug = std.debug;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
+const effect_bound = "E_EFFECT_BOUND";
+
+fn printDiagnostics(c: *language.Compilation) void {
+    for (c.diagnostics.items) |d| debug.print("{s}: {s} [{s}]\n", .{ d.code, d.message, c.src.text(d.span) });
+}
 
 fn run(source: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(t.allocator, "bytes.my", source);
     defer c.deinit();
     const result = native.runWithOptions(&c, .{ .gc_stress = true }) catch |err| {
-        for (c.diagnostics.items) |d| debug.print("{s}: {s} [{s}]\n", .{ d.code, d.message, c.src.text(d.span) });
+        printDiagnostics(&c);
         return err;
     };
     if (result.trapped()) debug.print("trap {s}: {s}\n", .{ result.trap.code, result.stderr });
@@ -20,7 +25,10 @@ fn run(source: []const u8, expected: i64) !void {
 fn trapped(source: []const u8, code: []const u8) !void {
     var c = try language.Compilation.init(t.allocator, "bytes-trap.my", source);
     defer c.deinit();
-    const result = try native.runWithOptions(&c, .{ .gc_stress = true });
+    const result = native.runWithOptions(&c, .{ .gc_stress = true }) catch |err| {
+        printDiagnostics(&c);
+        return err;
+    };
     try t.expect(result.trapped());
     try t.expectEqualStrings(code, result.trap.code);
 }
@@ -40,7 +48,10 @@ fn rejected(source: []const u8, code: []const u8) !void {
 fn value(source: []const u8) !i64 {
     var c = try language.Compilation.init(t.allocator, "utf8-decode.my", source);
     defer c.deinit();
-    const result = try native.runWithOptions(&c, .{ .gc_stress = true });
+    const result = native.runWithOptions(&c, .{ .gc_stress = true }) catch |err| {
+        printDiagnostics(&c);
+        return err;
+    };
     if (result.trapped()) debug.print("trap {s}: {s}\n", .{ result.trap.code, result.stderr });
     try t.expect(!result.trapped());
     return result.value;
@@ -75,15 +86,15 @@ test "PY-BYTES-1 byte strings are immutable and never convert through str" {
     try rejected("def main() -> int:\n    return len(b\"ab\".encode())\n", "E_COLLECTION_METHOD");
     try rejected(
         "def build() -> int noalloc:\n    raw = b\"ab\"\n    return len(raw)\ndef main() -> int:\n    return build()\n",
-        "E_EFFECT_BOUND",
+        effect_bound,
     );
     try rejected(
         "def grow(a: bytes, b: bytes) -> int noalloc:\n    return len(a + b)\ndef main() -> int:\n    return grow(b\"a\", b\"b\")\n",
-        "E_EFFECT_BOUND",
+        effect_bound,
     );
     try rejected(
         "def cut(a: bytes) -> int noalloc:\n    return len(a[0:1])\ndef main() -> int:\n    return cut(b\"ab\")\n",
-        "E_EFFECT_BOUND",
+        effect_bound,
     );
 }
 
@@ -322,5 +333,102 @@ test "PY-BYTES-9 numeric parsing is accepted under noalloc and a view is not" {
             "            if found > 2.0:\n                return 42\n            return 0\n        case None:\n            return 0\n" ++
             "def main() -> int:\n    return parse(b\"2.5\")\n",
     ));
-    try rejected("def peek(raw: bytes) -> int noalloc:\n    return len(raw.view(0, 1))\ndef main() -> int:\n    return peek(b\"abc\")\n", "E_EFFECT_BOUND");
+    try rejected("def peek(raw: bytes) -> int noalloc:\n    return len(raw.view(0, 1))\ndef main() -> int:\n    return peek(b\"abc\")\n", effect_bound);
+}
+
+// spec: PY-BYTES-RANGE-1
+test "PY-BYTES-RANGE-1 range parsing and scalar counting clamp without a view allocation" {
+    try t.expectEqual(@as(i64, 42), try value(
+        "def ranged(raw: bytes) -> int noalloc:\n" ++
+            "    match raw.parse_int_range(2, 4):\n        case Some(number):\n            if number != 42:\n                return 1\n        case None:\n            return 2\n" ++
+            "    match raw.parse_float_range(5, 8):\n        case Some(number):\n            if number != 2.5:\n                return 3\n        case None:\n            return 4\n" ++
+            "    return 0\n" ++
+            "def main() -> int:\n    raw = b\"xx42=2.5abc\"\n    if ranged(raw) != 0:\n        return 1\n" ++
+            "    match raw.scalar_count_range(0 - 3, 99):\n        case Ok(width):\n            return width + 39\n        case Err(_):\n            return 5\n",
+    ));
+    try t.expectEqual(@as(i64, 42), try value(
+        "def main() -> int:\n" ++
+            "    raw = b\"x-9223372036854775808y\"\n" ++
+            "    match raw.parse_int_range(1, 21):\n        case Some(number):\n            if number != -9223372036854775808:\n                return 1\n        case None:\n            return 2\n" ++
+            "    match raw.parse_int_range(21, 1):\n        case Some(_):\n            return 3\n        case None:\n            pass\n" ++
+            "    match b\"a\\xce\\xbbb\".scalar_count_range(1, 3):\n        case Ok(width):\n            return width + 41\n        case Err(_):\n            return 4\n",
+    ));
+    try t.expectEqual(@as(i64, 42), try value(
+        "def main() -> int:\n" ++
+            "    values: list[int] = []\n    raw = bytes(values)\n" ++
+            "    match raw.parse_int_range(0 - 10, 10):\n        case Some(_):\n            return 1\n        case None:\n            pass\n" ++
+            "    match raw.scalar_count_range(0 - 10, 10):\n        case Ok(width):\n            return width + 42\n        case Err(_):\n            return 2\n",
+    ));
+    try t.expectEqual(@as(i64, 42), try value(
+        "def main() -> int:\n" ++
+            "    match b\"a\\xffb\".scalar_count_range(1, 2):\n" ++
+            "        case Ok(_):\n            return 1\n" ++
+            "        case Err(message):\n            if message == \"invalid UTF-8 in byte string\":\n                return 42\n            return 2\n",
+    ));
+    try rejected(
+        "def measure(raw: bytes) -> int noalloc:\n" ++
+            "    match raw.scalar_count_range(0, len(raw)):\n        case Ok(width):\n            return width\n        case Err(_):\n            return 0\n" ++
+            "def main() -> int:\n    return measure(b\"abc\")\n",
+        effect_bound,
+    );
+}
+
+// spec: PY-BYTES-FUSED-RANGE-1
+test "PY-BYTES-FUSED-RANGE-1 immediate slices and views parse under noalloc" {
+    try t.expectEqual(@as(i64, 42), try value(
+        "def fused(raw: bytes) -> int noalloc:\n" ++
+            "    match raw[2:4].parse_int():\n        case Some(number):\n            if number != 42:\n                return 1\n        case None:\n            return 2\n" ++
+            "    match raw.view(5, 8).parse_float():\n        case Some(number):\n            if number != 2.5:\n                return 3\n        case None:\n            return 4\n" ++
+            "    match raw[0 - 8:0 - 6].parse_int():\n        case Some(number):\n            if number != 42:\n                return 5\n        case None:\n            return 6\n" ++
+            "    match raw[8:2].parse_int():\n        case Some(_):\n            return 7\n        case None:\n            pass\n" ++
+            "    return 42\n" ++
+            "def main() -> int:\n    if fused(b\"xx42=2.5yy\") != 42:\n        return 8\n" ++
+            "    match b\"42\"[:].parse_int():\n        case Some(number):\n            if number != 42:\n                return 9\n        case None:\n            return 10\n" ++
+            "    match b\"42\"[0 - 99:99].parse_int():\n        case Some(number):\n            return number\n        case None:\n            return 11\n",
+    ));
+    try rejected(
+        "def retained(raw: bytes) -> int noalloc:\n" ++
+            "    part = raw[0:2]\n" ++
+            "    match part.parse_int():\n        case Some(number):\n            return number\n        case None:\n            return 0\n" ++
+            "def main() -> int:\n    return retained(b\"42\")\n",
+        effect_bound,
+    );
+    try rejected(
+        "def retained(raw: bytes) -> int noalloc:\n" ++
+            "    part = raw.view(0, 2)\n" ++
+            "    match part.parse_int():\n        case Some(number):\n            return number\n        case None:\n            return 0\n" ++
+            "def main() -> int:\n    return retained(b\"42\")\n",
+        effect_bound,
+    );
+    try rejected(
+        "def mutable(data: byte_buffer) -> int noalloc:\n" ++
+            "    match data[0:2].parse_int():\n        case Some(number):\n            return number\n        case None:\n            return 0\n" ++
+            "def main() -> int:\n    values: list[int] = [52, 50]\n    return mutable(byte_buffer(values))\n",
+        effect_bound,
+    );
+}
+
+// spec-case: PY-BYTES-FUSED-RANGE-1
+test "PY-BYTES-FUSED-RANGE-1 receiver and bounds keep source order and run once" {
+    try t.expectEqual(@as(i64, 42), try value(
+        "def source(log: list[int], raw: bytes) -> bytes effects(mutation) mutates(log):\n" ++
+            "    log[0] = log[0] + 1\n    return raw\n" ++
+            "def bound(log: list[int]) -> int effects(mutation) mutates(log):\n" ++
+            "    value = log[0]\n    log[0] = value + 1\n    return value\n" ++
+            "def main() -> int:\n    log: list[int] = [0]\n" ++
+            "    match source(log, b\"x42\")[bound(log):bound(log)].parse_int():\n" ++
+            "        case Some(number):\n            if number != 4 or log[0] != 3:\n                return 1\n" ++
+            "        case None:\n            return 2\n    return 42\n",
+    ));
+}
+
+// spec-case: PY-BYTES-FUSED-RANGE-1
+test "PY-BYTES-FUSED-RANGE-1 generic noalloc bodies accept immediate ranges" {
+    try t.expectEqual(@as(i64, 42), try value(
+        "def generic[T](raw: bytes, marker: T) -> int noalloc:\n" ++
+            "    match raw[2:].parse_int():\n        case Some(number):\n            if number != 42:\n                return 1\n        case None:\n            return 2\n" ++
+            "    match raw.view(2, 4).parse_float():\n        case Some(number):\n            if number != 42.0:\n                return 3\n        case None:\n            return 4\n" ++
+            "    return 42\n" ++
+            "def main() -> int:\n    return generic[int](b\"xx42\", 0)\n",
+    ));
 }

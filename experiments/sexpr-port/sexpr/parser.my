@@ -119,7 +119,7 @@ def parse_si(src: bytes, raw: tk.RawToken) -> Result[ast.Node, ParseError]:
     end = si_number_end(src, raw)
     if end == 0 or end >= raw.text_end - raw.text_start:
         return Err(invalid_number(span))
-    match src.view(raw.text_start, raw.text_start + end).parse_float():
+    match src.parse_float_range(raw.text_start, raw.text_start + end):
         case Some(value):
             letter = src[raw.text_start + end]
             return Ok(ast.Node.decimal(value * si_scale(letter), span, Some(view_of(src, raw.text_start, raw.text_end))))
@@ -134,13 +134,13 @@ def parse_leaf(src: bytes, raw: tk.RawToken) -> Result[ast.Node, ParseError]:
     if raw.kind == tk.Kind.atom:
         return Ok(ast.Node.atom(view_of(src, raw.text_start, raw.text_end), span))
     if raw.kind == tk.Kind.int_val:
-        match src.view(raw.text_start, raw.text_end).parse_int():
+        match src.parse_int_range(raw.text_start, raw.text_end):
             case Some(value):
                 return Ok(ast.Node.integer(value, span))
             case None:
                 return Err(invalid_number(span))
     if raw.kind == tk.Kind.float_val:
-        match src.view(raw.text_start, raw.text_end).parse_float():
+        match src.parse_float_range(raw.text_start, raw.text_end):
             case Some(value):
                 return Ok(ast.Node.decimal(value, span))
             case None:
@@ -155,7 +155,7 @@ def parse_leaf(src: bytes, raw: tk.RawToken) -> Result[ast.Node, ParseError]:
             number_end = raw.text_end - 2
         else:
             is_mil = source_has_mil_suffix(src, raw)
-        match src.view(raw.text_start, number_end).parse_float():
+        match src.parse_float_range(raw.text_start, number_end):
             case Some(value):
                 return Ok(parse_unit(raw, value, is_mil))
             case None:

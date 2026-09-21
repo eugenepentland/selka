@@ -296,8 +296,11 @@ fn sequenceType(program: Program, ty: typed.Type) bool {
 
 fn validateCollectionBinary(program: Program, binary: @FieldType(@FieldType(Instruction, "op"), "binary_integer")) Error!void {
     if (validType(binary.ty, program) and binary.ty.isAggregate()) {
-        const concatenate = program.records[binary.ty.recordIndex()].managed and binary.op == .add and sequenceType(program, binary.ty);
-        if (!concatenate and binary.op != .eq and binary.op != .ne) return error.InternalError;
+        const record = program.records[binary.ty.recordIndex()];
+        const concatenate = record.managed and binary.op == .add and sequenceType(program, binary.ty);
+        const text_order = record.collection.kind == .string and binary.op == .lt;
+        if (concatenate or text_order) return;
+        if (binary.op != .eq and binary.op != .ne) return error.InternalError;
         return;
     }
     if (!binary.ty.isInteger() or binary.op == .logical_and or binary.op == .logical_or) return error.InternalError;
@@ -307,6 +310,7 @@ fn validateCollectionBinary(program: Program, binary: @FieldType(@FieldType(Inst
 fn validateManagedOperation(program: Program, local: typed.Local, operation: BufferOperation) Error!void {
     const schema = program.records[local.ty.recordIndex()];
     if (schema.collection.kind == .list) return validateManagedListOperation(local, schema, operation);
+    if (try validateByteRangeOperation(schema.collection.kind == .bytes, operation)) return;
     return validateManagedTextOperation(program, local, schema, operation);
 }
 
@@ -326,6 +330,13 @@ fn validateManagedListOperation(local: typed.Local, schema: typed.Record, operat
     if (operation.output != expected) return error.InternalError;
 }
 
+fn validateByteRangeOperation(byte_string: bool, operation: BufferOperation) Error!bool {
+    return switch (operation.kind) {
+        .parse_int_range, .parse_float_range, .scalar_count_range => if (byte_string) true else error.InternalError,
+        else => false,
+    };
+}
+
 fn validateManagedTextOperation(program: Program, local: typed.Local, schema: typed.Record, operation: BufferOperation) Error!void {
     const element = schema.shape.buffer.?;
     const dictionary = schema.collection.kind == .dictionary;
@@ -340,7 +351,7 @@ fn validateManagedTextOperation(program: Program, local: typed.Local, schema: ty
         .slice_step => if (!dictionary and !byte_string) local.ty else return error.InternalError,
         .read => if (dictionary or byte_string) element else local.ty,
         .write => if (dictionary) .unit else return error.InternalError,
-        .get => if (dictionary) element else return error.InternalError,
+        .get, .value_at => if (dictionary) element else return error.InternalError,
         .contains => .bool,
         .starts_with, .ends_with => if (dictionary) return error.InternalError else .bool,
         .to_list, .hex, .decode => if (byte_string) try validateConversion(program, operation) else return error.InternalError,

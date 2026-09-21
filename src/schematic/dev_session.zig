@@ -5,14 +5,16 @@ const std = @import("std");
 const print = std.debug.print;
 const application = @import("app.zig");
 const diagnostics = @import("diagnostics.zig");
+const native = @import("host_native");
 /// The native step budget one prepared rendering may spend.
-const arguments = [_][]const u8{@import("host_native").step_budget};
+const arguments = [_][]const u8{native.step_budget};
 const Request = struct {
     action: enum { prepare, commit, discard, quit },
     project: ?[]const u8 = null,
     documents: ?[3][]const u8 = null,
 };
 const State = struct {
+    build: native.BuildOptions,
     active: ?*application.App = null,
     candidate: ?*application.App = null,
     fn release(allocator: std.mem.Allocator, slot: *?*application.App) void {
@@ -32,7 +34,7 @@ const State = struct {
         for (paths, &documents) |path, *out| out.* = try std.Io.Dir.cwd().readFileAlloc(init.io, path, arena.allocator(), .limited(1024 * 1024));
         const app = try init.gpa.create(application.App);
         errdefer init.gpa.destroy(app);
-        try app.initDisk(init, request.project.?);
+        try app.initDiskWithOptions(init, request.project.?, self.build);
         errdefer app.deinit();
         const svg = app.run(&documents, &arguments) catch |err| {
             if (app.issue) |issue| diagnostics.report(issue, &paths, &documents);
@@ -49,8 +51,8 @@ fn reply(init: std.process.Init, status: []const u8, svg: ?[]const u8, failure: 
     try std.Io.File.stdout().writeStreamingAll(init.io, "\n");
 }
 /// The coordinator owns immutable input snapshots and chooses whether a prepared generation is current.
-pub fn run(init: std.process.Init) (std.Io.Reader.DelimiterError || std.Io.File.Writer.Error || std.mem.Allocator.Error)!void {
-    var state: State = .{};
+pub fn run(init: std.process.Init, build: native.BuildOptions) (std.Io.Reader.DelimiterError || std.Io.File.Writer.Error || std.mem.Allocator.Error)!void {
+    var state: State = .{ .build = build };
     defer State.release(init.gpa, &state.active);
     defer State.release(init.gpa, &state.candidate);
     var buffer: [16384]u8 = undefined;

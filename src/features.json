@@ -372,6 +372,16 @@
       "summary": "A generic call omits its type arguments when the argument types determine every parameter.",
       "doc": "docs/generic-inference.md#generic-call-inference"
     },
+    "expected-type-inference": {
+      "kind": "language",
+      "summary": "A generic call infers type and const arguments from its expected result as well as its arguments.",
+      "doc": "docs/generic-inference.md#expected-result-types"
+    },
+    "flow-sensitive-option-guards": {
+      "kind": "language",
+      "summary": "Local Option payloads are available on paths guarded by `is None` or `is not None`.",
+      "doc": "docs/results-and-options.md#flow-sensitive-option-guards"
+    },
     "const-length-generics": {
       "kind": "language",
       "summary": "A `const N: u64` parameter carries a bounded array length through generic signatures.",

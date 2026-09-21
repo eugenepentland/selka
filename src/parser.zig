@@ -63,7 +63,6 @@ pub const HintForm = enum {
     from_import,
     ternary,
     tuple,
-    is_none,
     chained_assignment,
     set_literal,
     exceptions,
@@ -91,7 +90,6 @@ pub const declaration_hints = [_]DeclarationHint{
     .{ .form = .from_import, .idiom = "from-import", .message = "a from-import is not a declaration", .accepted = "import the module and declare a record: import dataclasses" },
     .{ .form = .ternary, .idiom = "ternary", .message = "a conditional expression is not part of the language", .accepted = "write an if/else statement that assigns the same name" },
     .{ .form = .tuple, .idiom = "tuple", .message = "a comma-separated target list declares no binding", .accepted = "bind one name per statement and use a temporary variable; declare a record to return several values" },
-    .{ .form = .is_none, .idiom = "is-none", .message = "`is` is not an operator", .accepted = "compare the value with `== None`, or match it: `case Some(value)` and `case None`" },
     .{ .form = .chained_assignment, .idiom = "chained-assign", .message = "a chained assignment declares no binding", .accepted = "assign one name per statement: `x = 21` first, then `y = 21`" },
     .{ .form = .set_literal, .idiom = "set-literal", .message = "a set literal is not a collection this language has", .accepted = "use a dict literal keyed by the value: `{1: True, 2: True}`" },
     .{ .form = .exceptions, .idiom = "exceptions", .message = "a try statement is not part of the language", .accepted = "return `Result` and match it: `case Ok(value)` and `case Err(reason)`" },
@@ -260,12 +258,10 @@ pub const Parser = struct {
         }
         return self.expect(.semicolon);
     }
-    /// The `indent` that opens a suite, or the hint that names the Python form
-    /// standing in its place. A missing indent is already a failure, so the hint
-    /// only chooses the message.
+    /// The `indent` that opens a suite. A missing indent is already a failure;
+    /// the `is`-is-not-an-operator hint that once lived here is gone because
+    /// `is None` is an expression now (OPTION-FLOW-1).
     fn blockOpen(self: *Parser) diagnostic.Error!lex.Token {
-        const token = self.current();
-        if (token.tag == .ident and std.mem.eql(u8, self.src.text(token.span), "is")) return self.hintHere(.is_none);
         return self.expect(.indent);
     }
     /// The `)` that closes a call's arguments, or the hint that names a generator
@@ -1350,6 +1346,7 @@ pub const Parser = struct {
         var start: ?ast.NodeId = null;
         var end: ?ast.NodeId = null;
         var iterable = input;
+        var enumerated = false;
         if (try self.rangeBounds(input)) |bounds| {
             start = bounds.start;
             end = bounds.end;
@@ -1359,15 +1356,11 @@ pub const Parser = struct {
                 const call = node.data.call;
                 if (call.arguments.len != 1 or second_name == null) return self.sink.fail("E_ARITY", node.span, "enumerate requires one iterable and two iteration names");
                 iterable = call.arguments[0];
+                enumerated = true;
             } else if (node.data == .call and node.data.call.owner == null and std.mem.eql(u8, self.src.text(node.data.call.name), "zip")) {
                 const call = node.data.call;
                 if (call.arguments.len != 2 or second_name == null) return self.sink.fail("E_ARITY", node.span, "zip requires two iterables and two iteration names");
-            } else if (second_name != null and node.data == .call and node.data.call.owner != null and std.mem.eql(u8, self.src.text(node.data.call.name), "items")) {
-                // `for position, value in d.items()` consumes the value snapshot
-                // that `items` produces; the first name receives the position.
-            } else if (second_name != null and node.data == .method_call and std.mem.eql(u8, self.src.text(node.data.method_call.name), "items")) {
-                // The same form when the receiver is a postfix expression.
-            } else if (second_name != null) return self.sink.fail(eIteration, node.span, "two iteration names require enumerate or zip");
+            }
         }
         const body = try self.block(null);
         if (self.current().tag == .kw_else) return self.alternative(expression_code, for_else_message, loop_else_accepted);
@@ -1376,7 +1369,16 @@ pub const Parser = struct {
             if (second_name != null) return self.sink.fail(eIteration, span, "range requires one iteration name");
             return self.addStatement(.{ .span = span, .data = .{ .for_range = .{ .name = first_name, .start = range_start, .end = end.?, .body = body } } });
         }
-        return self.addStatement(.{ .span = span, .data = .{ .for_each = .{ .name = second_name orelse first_name, .index_name = if (second_name != null) first_name else null, .iterable = iterable, .body = body } } });
+        return self.addStatement(.{
+            .span = span,
+            .data = .{ .for_each = .{
+                .name = second_name orelse first_name,
+                .index_name = if (second_name != null) first_name else null,
+                .iterable = iterable,
+                .body = body,
+                .enumerated = enumerated,
+            } },
+        });
     }
     fn assignmentExpression(self: *Parser) diagnostic.Error!ast.NodeId {
         const value = try self.expression(0);
@@ -1604,7 +1606,13 @@ pub const Parser = struct {
             else => unreachable,
         };
     }
+    /// Parse the postfix tests that bind below comparison: `in`, `not in`, and
+    /// the optional-value identity test `is None` / `is not None`.
     fn parseMembership(self: *Parser, left: ast.NodeId, precedence: u8) diagnostic.Error!?ast.NodeId {
+        if (precedence <= 3 and self.current().tag == .kw_is) {
+            const none_test = try self.parseNoneTest(left);
+            return none_test;
+        }
         const not_in = self.current().tag == .bang and self.cursor.pos + 1 < self.tokens.len and self.tokens[self.cursor.pos + 1].tag == .kw_in;
         if (precedence > 3 or (self.current().tag != .kw_in and !not_in)) return null;
         self.cursor.pos += if (not_in) @as(usize, 2) else 1;
@@ -1612,6 +1620,16 @@ pub const Parser = struct {
         const span = Span.join(self.syntax.nodes.items[@backingInt(left)].span, self.syntax.nodes.items[@backingInt(container)].span);
         const result = try self.append(.{ .span = span, .data = .{ .membership = .{ .needle = left, .container = container, .negate = not_in } } });
         return result;
+    }
+    /// Parse only optional-value identity tests, without adding general object identity.
+    fn parseNoneTest(self: *Parser, left: ast.NodeId) diagnostic.Error!ast.NodeId {
+        const operator = try self.expect(.kw_is);
+        const negate = self.take(.bang);
+        const none = try self.expect(.kw_none);
+        const span = Span.join(self.syntax.nodes.items[@backingInt(left)].span, none.span);
+        const test_value = try self.append(.{ .span = span, .data = .{ .unary = .{ .op = .is_none, .operand = left, .op_span = operator.span } } });
+        if (!negate) return test_value;
+        return self.append(.{ .span = span, .data = .{ .unary = .{ .op = .not, .operand = test_value, .op_span = operator.span } } });
     }
     /// Parse the tail of `[value for name in iterable if condition]` after its value.
     fn parseComprehension(self: *Parser, token: lex.Token, output: ast.NodeId) diagnostic.Error!ast.NodeId {

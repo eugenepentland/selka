@@ -1,0 +1,3545 @@
+{
+ "work": ".tmp/perf-audit-20260921/merged/measure",
+ "cpu": 6,
+ "rounds": 21,
+ "input_dir": ".tmp/runtime-audit-20260919",
+ "arms": {
+  "zig": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/zig-parity-20260921/install/bin/zig-bench",
+   "sha256": "8b41730e5680b4b5c6e778262932b0aa26e25b41decea66b15766ebba3a9ec48"
+  },
+  "zig-safe": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/zig-parity-20260921/install-safe/bin/zig-bench",
+   "sha256": "9d8f00cfa39fc816e18aaa780e8cd93cffb3a8fccf2748ba0e0075fa583ffac9"
+  },
+  "qbe-before": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260921/sexpr-qbe",
+   "sha256": "65912253a679e3f0a9bd64857b425da404ccd9741ae700351384ffb949fdba80",
+   "runtime": {
+    "path": "/home/epentland/ai/canopy/mylang/zig-out/lib/mylang-runtime/811053df16318fb018ce844f11ea256ab5d5dd173a54e8c374bf3fdf2bb935cc.a",
+    "sha256": "7c645a6b9068d80918ff3dab1761d81165b1545658880e9dd29a3e482567a6b0"
+   }
+  },
+  "o3-lto-before": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260921/sexpr-o3-lto",
+   "sha256": "2a796c6c57a0705ad8178083f66f8ad46627317f1882700b71962797fb5921b3",
+   "runtime": {
+    "path": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260921/cache-llvm/objects/633ec57fb64c65ab862f1004c5a7d34c7da7e4e5295c09e5a50a639c63c23184/3d80d597f475f458108c1eb9431d25639c50cd5a54d55635f6588412776a3d19.a",
+    "sha256": "2dbabc786e3c459bff615a829b82c86cc1fd234010877792a66957b0a4a005b2"
+   }
+  },
+  "qbe": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260921/merged/sexpr-qbe",
+   "sha256": "8c745590143b2982a74d711e96e1921ec9c936d0520a7110de3d44c7f6aec5f1",
+   "runtime": {
+    "path": "/home/epentland/ai/canopy/mylang/zig-out/lib/mylang-runtime/7b090181e3bf996c984a3f1defea1cf15b7909bcbe87a380e38524fa701e0c1f.a",
+    "sha256": "ad0771a1a228f2ed403b6d4dd40cac03e85a79afce5cdacd69f9558e99a32a18"
+   }
+  },
+  "o3": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260921/merged/sexpr-o3",
+   "sha256": "13e0cfb2936be11cf259b74acc77dd9e9935d0cefb384f48b0a0d622b6993faa",
+   "runtime": {
+    "path": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260921/merged/cache-llvm/objects/223c19bf4b2a91adce45f053f6c8d0a86bbf1888c3490d9377a2a92bcc7d7161/6463feb4635f704c4ce51078eb9845b00645bfabadcb3aeab32a40c0a18176fe.a",
+    "sha256": "abb4603bfc9b2591ae8a47bfd9aa46252bb2f507a047c1ffe70ccc4f4a5e4803"
+   }
+  },
+  "o3-lto": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260921/merged/sexpr-o3-lto",
+   "sha256": "f978e00238fb32552e5c4949696ac82f42351cace3dbaadbf3f4a89b6853f2e5",
+   "runtime": {
+    "path": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260921/merged/cache-llvm/objects/223c19bf4b2a91adce45f053f6c8d0a86bbf1888c3490d9377a2a92bcc7d7161/beca5eb3e693d44e27bc4ca940a982bfe78ef21003d495227478597a0541d0c2.a",
+    "sha256": "2532ec115e4e9ec898290dc67b79a13d33f9c78727d49d64aa0aec2e30edd5cf"
+   }
+  }
+ },
+ "workloads": {
+  "census": {
+   "stdout_bytes": 118,
+   "stdout_sha256": "f4178a68773c1ada93ec1e9051b25a1f77a9f70d688e507783aeee897cc8b137",
+   "arms": {
+    "zig": {
+     "wall_ms_median": 1.982268,
+     "wall_ms_iqr": 0.17662750000000038,
+     "wall_ms_min": 1.793161,
+     "wall_samples": 21,
+     "wall_ms": [
+      1.844826,
+      2.045539,
+      1.925952,
+      1.982268,
+      2.021643,
+      2.062062,
+      2.059142,
+      1.801601,
+      2.098187,
+      1.793161,
+      2.036768,
+      1.911832,
+      1.856117,
+      2.063315,
+      2.08132,
+      2.09902,
+      1.968638,
+      2.027682,
+      1.844625,
+      1.958375,
+      1.946791
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "zig-safe": {
+     "wall_ms_median": 2.141632,
+     "wall_ms_iqr": 0.19361749999999978,
+     "wall_ms_min": 1.934453,
+     "wall_samples": 21,
+     "wall_ms": [
+      2.031964,
+      1.938918,
+      2.172467,
+      2.04001,
+      2.141632,
+      2.284367,
+      1.934453,
+      2.25894,
+      1.99389,
+      2.223546,
+      2.195201,
+      2.22003,
+      2.118688,
+      2.258466,
+      2.245451,
+      1.960082,
+      2.065792,
+      2.235663,
+      2.123385,
+      2.139919,
+      2.177807
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "qbe-before": {
+     "wall_ms_median": 4.46441,
+     "wall_ms_iqr": 0.33536450000000073,
+     "wall_ms_min": 4.276333,
+     "wall_samples": 21,
+     "wall_ms": [
+      4.300604,
+      4.397328,
+      4.674172,
+      4.741354,
+      4.696693,
+      4.686433,
+      4.276333,
+      4.339299,
+      4.680349,
+      4.823483,
+      4.46441,
+      4.496758,
+      4.368403,
+      4.453189,
+      4.809922,
+      4.362132,
+      4.350265,
+      4.64114,
+      4.423946,
+      4.276986,
+      4.802817
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3-lto-before": {
+     "wall_ms_median": 3.494001,
+     "wall_ms_iqr": 0.36003700000000016,
+     "wall_ms_min": 3.26283,
+     "wall_samples": 21,
+     "wall_ms": [
+      4.016374,
+      3.649968,
+      3.26283,
+      3.364861,
+      3.334593,
+      3.414157,
+      3.494001,
+      3.802458,
+      4.135523,
+      3.768137,
+      3.385901,
+      3.69646,
+      3.770038,
+      3.503406,
+      3.554776,
+      3.446036,
+      3.468945,
+      3.425972,
+      3.329767,
+      3.7101,
+      3.372262
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "qbe": {
+     "wall_ms_median": 4.634081,
+     "wall_ms_iqr": 0.3118324999999995,
+     "wall_ms_min": 4.233263,
+     "wall_samples": 21,
+     "wall_ms": [
+      4.790963,
+      4.291655,
+      4.638468,
+      4.677975,
+      4.233263,
+      4.466771,
+      4.791302,
+      4.796202,
+      4.869619,
+      4.332305,
+      4.634081,
+      4.473297,
+      4.491718,
+      4.814627,
+      4.268666,
+      4.756194,
+      4.514009,
+      4.50023,
+      4.582434,
+      4.719971,
+      4.77277
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3": {
+     "wall_ms_median": 3.709638,
+     "wall_ms_iqr": 0.3679285000000001,
+     "wall_ms_min": 3.378324,
+     "wall_samples": 21,
+     "wall_ms": [
+      3.551028,
+      3.89246,
+      3.568612,
+      3.405274,
+      3.673941,
+      3.766182,
+      3.872715,
+      3.941959,
+      3.820883,
+      3.439328,
+      3.843083,
+      3.551761,
+      3.391166,
+      3.709638,
+      3.865702,
+      3.451532,
+      3.899183,
+      3.378324,
+      3.895804,
+      3.83142,
+      3.577239
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3-lto": {
+     "wall_ms_median": 3.569687,
+     "wall_ms_iqr": 0.1510864999999999,
+     "wall_ms_min": 3.257321,
+     "wall_samples": 21,
+     "wall_ms": [
+      3.569687,
+      3.570463,
+      3.496588,
+      3.620672,
+      3.661742,
+      3.476762,
+      3.68459,
+      3.257321,
+      3.504628,
+      3.551314,
+      3.52634,
+      3.495309,
+      3.677558,
+      3.470513,
+      3.527113,
+      3.612383,
+      3.632328,
+      3.66918,
+      3.624989,
+      3.408391,
+      3.681587
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    }
+   },
+   "ratios": {
+    "zig/zig-safe": {
+     "median": 0.9255875892777097,
+     "low": 0.8843538477009212,
+     "high": 0.9786285356899436,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/qbe-before": {
+     "median": 0.4440156706037304,
+     "low": 0.4189779494635627,
+     "high": 0.46305288187858185,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3-lto-before": {
+     "median": 0.5673346973856046,
+     "low": 0.5260604909004105,
+     "high": 0.5921353353111765,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/qbe": {
+     "median": 0.42775859981731,
+     "low": 0.4121688454032668,
+     "high": 0.4525919786322032,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3": {
+     "median": 0.5343561824630867,
+     "low": 0.5095133768817313,
+     "high": 0.5673929721642448,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3-lto": {
+     "median": 0.5553058293346167,
+     "low": 0.5370474227645933,
+     "high": 0.5798253829427643,
+     "formula": "median(zig wall) / median(arm wall)"
+    }
+   }
+  },
+  "render": {
+   "stdout_bytes": 700425,
+   "stdout_sha256": "78a74270e2ec8842471e8e1ec5f94c8a42c631f0addec5ac2ec4bb97870240a7",
+   "arms": {
+    "zig": {
+     "wall_ms_median": 2.529433,
+     "wall_ms_iqr": 0.1352070000000003,
+     "wall_ms_min": 2.167586,
+     "wall_samples": 21,
+     "wall_ms": [
+      2.534262,
+      2.540825,
+      2.167586,
+      2.564725,
+      2.530837,
+      2.529433,
+      2.33041,
+      2.440236,
+      2.543914,
+      2.514116,
+      2.53564,
+      2.500142,
+      2.515616,
+      2.49197,
+      2.261158,
+      2.560227,
+      2.393491,
+      2.574875,
+      2.354315,
+      2.621246,
+      2.596514
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "zig-safe": {
+     "wall_ms_median": 2.69614,
+     "wall_ms_iqr": 0.1946804999999996,
+     "wall_ms_min": 2.440229,
+     "wall_samples": 21,
+     "wall_ms": [
+      2.558768,
+      2.835124,
+      2.524686,
+      2.549587,
+      2.496639,
+      2.655875,
+      2.69614,
+      2.664535,
+      2.754548,
+      2.733477,
+      2.729209,
+      2.569673,
+      2.64639,
+      2.800321,
+      2.440229,
+      2.763254,
+      2.72922,
+      2.711434,
+      2.690477,
+      2.838687,
+      2.792519
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "qbe-before": {
+     "wall_ms_median": 8.477223,
+     "wall_ms_iqr": 0.28979649999999957,
+     "wall_ms_min": 8.221452,
+     "wall_samples": 21,
+     "wall_ms": [
+      8.438798,
+      8.355953,
+      8.236722,
+      8.221452,
+      8.621104,
+      8.287075,
+      8.594591,
+      8.484511,
+      8.373575,
+      8.439676,
+      8.936353,
+      8.477223,
+      8.417197,
+      8.601517,
+      8.545631,
+      8.673077,
+      8.673775,
+      8.249429,
+      8.670243,
+      8.25374,
+      8.494983
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3-lto-before": {
+     "wall_ms_median": 6.072306,
+     "wall_ms_iqr": 0.3768105000000004,
+     "wall_ms_min": 5.736769,
+     "wall_samples": 21,
+     "wall_ms": [
+      5.833797,
+      5.736769,
+      6.233151,
+      6.138247,
+      5.904309,
+      5.800204,
+      5.903107,
+      6.116537,
+      6.276407,
+      6.455589,
+      6.022315,
+      6.390773,
+      5.85283,
+      5.839011,
+      6.359019,
+      5.995678,
+      6.443561,
+      6.126253,
+      6.072306,
+      6.152181,
+      6.00884
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "qbe": {
+     "wall_ms_median": 8.37945,
+     "wall_ms_iqr": 0.26159350000000003,
+     "wall_ms_min": 7.994813,
+     "wall_samples": 21,
+     "wall_ms": [
+      8.316117,
+      7.994813,
+      8.526186,
+      8.353678,
+      8.657392,
+      8.231985,
+      8.401352,
+      8.288024,
+      8.3282,
+      8.786659,
+      8.647701,
+      8.20658,
+      8.728181,
+      8.193901,
+      8.283141,
+      8.47351,
+      8.294091,
+      8.540265,
+      8.37945,
+      8.554087,
+      8.535857
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3": {
+     "wall_ms_median": 6.421809,
+     "wall_ms_iqr": 0.33734399999999987,
+     "wall_ms_min": 6.022334,
+     "wall_samples": 21,
+     "wall_ms": [
+      6.434037,
+      6.296975,
+      6.37504,
+      6.022334,
+      6.421809,
+      6.232322,
+      6.664016,
+      6.349547,
+      6.66771,
+      6.41521,
+      6.529008,
+      6.264463,
+      6.62094,
+      6.303539,
+      6.211548,
+      6.527466,
+      6.751938,
+      6.748813,
+      6.210808,
+      6.457091,
+      6.615186
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3-lto": {
+     "wall_ms_median": 6.011943,
+     "wall_ms_iqr": 0.47060550000000045,
+     "wall_ms_min": 5.780562,
+     "wall_samples": 21,
+     "wall_ms": [
+      6.339561,
+      5.780562,
+      6.344072,
+      5.95168,
+      6.407674,
+      6.219699,
+      5.998155,
+      5.878242,
+      6.113717,
+      5.806176,
+      6.348602,
+      5.858455,
+      6.067069,
+      5.911965,
+      6.357929,
+      5.995539,
+      5.84235,
+      5.872997,
+      6.348378,
+      6.374144,
+      6.011943
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    }
+   },
+   "ratios": {
+    "zig/zig-safe": {
+     "median": 0.9381682701936842,
+     "low": 0.9130740811715042,
+     "high": 0.9576298278031583,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/qbe-before": {
+     "median": 0.2983799057781068,
+     "low": 0.2897128494892238,
+     "high": 0.30281450873730753,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3-lto-before": {
+     "median": 0.4165522949601025,
+     "low": 0.40110403229442054,
+     "high": 0.42864236949658296,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/qbe": {
+     "median": 0.3018614586876227,
+     "low": 0.29421379630389877,
+     "high": 0.304906725097783,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3": {
+     "median": 0.39388169283764124,
+     "low": 0.38236763108399374,
+     "high": 0.4012718886961753,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3-lto": {
+     "median": 0.4207346942577467,
+     "low": 0.3986588385253682,
+     "high": 0.42690887278885964,
+     "formula": "median(zig wall) / median(arm wall)"
+    }
+   }
+  },
+  "census-7.4MB": {
+   "stdout_bytes": 124,
+   "stdout_sha256": "969242c9729df7567a1e9d236aec504aa7bba8a9356ac8f12205da505696782f",
+   "arms": {
+    "zig": {
+     "wall_ms_median": 13.291356,
+     "wall_ms_iqr": 0.4904470000000014,
+     "wall_ms_min": 12.958896,
+     "wall_samples": 21,
+     "wall_ms": [
+      13.133078,
+      13.031934,
+      13.131805,
+      13.158743,
+      13.43617,
+      13.356972,
+      13.168566,
+      13.213478,
+      13.434834,
+      13.710575,
+      13.277712,
+      13.70723,
+      13.679295,
+      13.694173,
+      13.022763,
+      12.958896,
+      13.996447,
+      13.291356,
+      13.50902,
+      13.566482,
+      13.050181
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "zig-safe": {
+     "wall_ms_median": 14.66801,
+     "wall_ms_iqr": 0.2967150000000025,
+     "wall_ms_min": 14.273403,
+     "wall_samples": 21,
+     "wall_ms": [
+      14.607102,
+      14.273403,
+      14.557525,
+      14.774278,
+      14.35304,
+      14.957596,
+      15.293201,
+      14.720451,
+      14.66801,
+      14.715414,
+      14.424603,
+      14.639621,
+      15.297919,
+      14.867521,
+      14.342472,
+      14.79878,
+      14.621316,
+      14.555025,
+      14.39207,
+      14.697548,
+      14.705476
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "qbe-before": {
+     "wall_ms_median": 38.027088,
+     "wall_ms_iqr": 0.5882675000000006,
+     "wall_ms_min": 37.514854,
+     "wall_samples": 21,
+     "wall_ms": [
+      37.514854,
+      38.093277,
+      38.024339,
+      38.233017,
+      39.185456,
+      37.676252,
+      38.027088,
+      37.869486,
+      39.581884,
+      38.474718,
+      38.085034,
+      37.916986,
+      38.310087,
+      37.771234,
+      38.583831,
+      37.68037,
+      37.881998,
+      37.658237,
+      37.614635,
+      38.318052,
+      38.05563
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3-lto-before": {
+     "wall_ms_median": 28.62216,
+     "wall_ms_iqr": 0.5443275000000014,
+     "wall_ms_min": 28.029389,
+     "wall_samples": 21,
+     "wall_ms": [
+      28.029389,
+      28.873202,
+      28.082628,
+      28.508289,
+      29.582773,
+      28.615023,
+      28.502899,
+      28.758559,
+      28.692864,
+      28.060806,
+      28.537178,
+      29.410975,
+      28.62216,
+      28.620343,
+      28.436167,
+      28.642057,
+      36.339912,
+      28.294098,
+      29.356722,
+      28.655284,
+      29.154519
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "qbe": {
+     "wall_ms_median": 37.681979,
+     "wall_ms_iqr": 0.37325249999999244,
+     "wall_ms_min": 37.128293,
+     "wall_samples": 21,
+     "wall_ms": [
+      37.128293,
+      37.367135,
+      37.767905,
+      37.621285,
+      37.515777,
+      37.780407,
+      37.778056,
+      38.640321,
+      37.171952,
+      37.74003,
+      37.959489,
+      38.063808,
+      39.69319,
+      37.50247,
+      37.490921,
+      37.963178,
+      37.718711,
+      37.26239,
+      37.629142,
+      37.600553,
+      37.681979
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3": {
+     "wall_ms_median": 29.850299,
+     "wall_ms_iqr": 0.5597494999999988,
+     "wall_ms_min": 29.399002,
+     "wall_samples": 21,
+     "wall_ms": [
+      29.42572,
+      30.366432,
+      29.641086,
+      29.877956,
+      29.850299,
+      30.215514,
+      30.17665,
+      29.858983,
+      29.685309,
+      29.63158,
+      29.428103,
+      30.41785,
+      30.138769,
+      31.869776,
+      30.117368,
+      29.481028,
+      30.061632,
+      29.71621,
+      29.663756,
+      29.399002,
+      29.56434
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3-lto": {
+     "wall_ms_median": 28.494749,
+     "wall_ms_iqr": 0.4634180000000008,
+     "wall_ms_min": 27.637996,
+     "wall_samples": 21,
+     "wall_ms": [
+      27.637996,
+      28.568915,
+      28.005874,
+      28.465341,
+      28.499099,
+      27.882355,
+      28.181985,
+      28.603413,
+      28.73385,
+      28.643422,
+      28.658195,
+      28.494749,
+      28.374718,
+      28.648597,
+      28.197971,
+      28.965244,
+      28.325755,
+      29.041941,
+      29.770647,
+      28.137283,
+      28.314748
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    }
+   },
+   "ratios": {
+    "zig/zig-safe": {
+     "median": 0.9061458234620784,
+     "low": 0.894882468138511,
+     "high": 0.9229707659784201,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/qbe-before": {
+     "median": 0.34952337133992484,
+     "low": 0.34543478630100527,
+     "high": 0.35627884558123896,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3-lto-before": {
+     "median": 0.4643729194442348,
+     "low": 0.45887213860434867,
+     "high": 0.4720076205935058,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/qbe": {
+     "median": 0.35272446810715546,
+     "low": 0.3486708092492819,
+     "high": 0.35900419945796264,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3": {
+     "median": 0.4452670976595578,
+     "low": 0.4395462628243204,
+     "high": 0.45435177748686223,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3-lto": {
+     "median": 0.46644930966052733,
+     "low": 0.4617953644722401,
+     "high": 0.4760935421455113,
+     "formula": "median(zig wall) / median(arm wall)"
+    }
+   }
+  },
+  "render-7.4MB": {
+   "stdout_bytes": 5603400,
+   "stdout_sha256": "e8c07a29632c947f031988034b44a63effea51fb93754461f5450a5daeb223dc",
+   "arms": {
+    "zig": {
+     "wall_ms_median": 16.997516,
+     "wall_ms_iqr": 0.4808415000000039,
+     "wall_ms_min": 16.542125,
+     "wall_samples": 21,
+     "wall_ms": [
+      16.542125,
+      16.81533,
+      16.739826,
+      16.652075,
+      16.582196,
+      17.065528,
+      16.937071,
+      16.720491,
+      17.528962,
+      17.294325,
+      16.800478,
+      16.997516,
+      16.735855,
+      16.688438,
+      17.178688,
+      17.172075,
+      17.239341,
+      17.359978,
+      17.352417,
+      17.08935,
+      17.054674
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "zig-safe": {
+     "wall_ms_median": 18.595672,
+     "wall_ms_iqr": 0.4264185000000005,
+     "wall_ms_min": 18.049407,
+     "wall_samples": 21,
+     "wall_ms": [
+      18.184299,
+      18.584777,
+      18.750193,
+      18.217498,
+      18.768547,
+      19.013437,
+      18.049407,
+      18.628688,
+      18.33678,
+      18.708766,
+      18.90492,
+      18.476984,
+      18.595672,
+      18.396088,
+      18.329123,
+      18.716698,
+      18.268204,
+      18.784472,
+      18.686935,
+      18.871229,
+      18.58346
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "qbe-before": {
+     "wall_ms_median": 69.048092,
+     "wall_ms_iqr": 0.7715694999999982,
+     "wall_ms_min": 68.53332,
+     "wall_samples": 21,
+     "wall_ms": [
+      69.67854,
+      68.819226,
+      68.744737,
+      68.943057,
+      68.884345,
+      68.781973,
+      69.303939,
+      68.908778,
+      69.56817,
+      70.400018,
+      68.973986,
+      69.048092,
+      68.903427,
+      70.560385,
+      68.603743,
+      70.393797,
+      72.387286,
+      69.314034,
+      68.53332,
+      69.124345,
+      69.348286
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3-lto-before": {
+     "wall_ms_median": 50.643471,
+     "wall_ms_iqr": 0.8898115000000004,
+     "wall_ms_min": 49.940491,
+     "wall_samples": 21,
+     "wall_ms": [
+      50.129595,
+      49.940491,
+      50.317629,
+      50.150962,
+      51.051073,
+      50.303922,
+      51.163357,
+      50.33328,
+      50.56327,
+      50.643471,
+      50.621051,
+      50.234512,
+      51.238009,
+      51.413965,
+      51.095826,
+      54.020623,
+      50.706956,
+      50.470148,
+      51.237817,
+      51.690967,
+      51.024846
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "qbe": {
+     "wall_ms_median": 68.882683,
+     "wall_ms_iqr": 0.32826800000000844,
+     "wall_ms_min": 68.059559,
+     "wall_samples": 21,
+     "wall_ms": [
+      68.81388,
+      68.482094,
+      68.059559,
+      68.681523,
+      68.775564,
+      69.026452,
+      68.958694,
+      69.32837,
+      68.750479,
+      69.196969,
+      68.985162,
+      69.128365,
+      68.999791,
+      68.747802,
+      68.773345,
+      69.468258,
+      69.318701,
+      68.975657,
+      68.882683,
+      68.564614,
+      68.790668
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3": {
+     "wall_ms_median": 53.59034,
+     "wall_ms_iqr": 0.5611010000000007,
+     "wall_ms_min": 52.332624,
+     "wall_samples": 21,
+     "wall_ms": [
+      52.86839,
+      52.95829,
+      53.414722,
+      53.720821,
+      53.868337,
+      53.040026,
+      53.443514,
+      53.59034,
+      53.790976,
+      52.332624,
+      53.827754,
+      53.795045,
+      55.270389,
+      53.376521,
+      53.197368,
+      54.018999,
+      54.927355,
+      53.656358,
+      53.585397,
+      53.96791,
+      53.549297
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "o3-lto": {
+     "wall_ms_median": 50.436367,
+     "wall_ms_iqr": 0.6548739999999995,
+     "wall_ms_min": 49.470377,
+     "wall_samples": 21,
+     "wall_ms": [
+      49.877449,
+      49.921132,
+      49.598992,
+      49.866405,
+      49.470377,
+      50.544697,
+      50.518183,
+      50.207872,
+      50.483227,
+      49.94251,
+      50.835884,
+      50.503609,
+      50.048567,
+      50.628693,
+      50.436367,
+      50.355859,
+      50.491545,
+      50.752661,
+      50.678699,
+      50.290472,
+      50.797978
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    }
+   },
+   "ratios": {
+    "zig/zig-safe": {
+     "median": 0.9140576366371702,
+     "low": 0.8983915023967335,
+     "high": 0.9270815621234253,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/qbe-before": {
+     "median": 0.24616923520493517,
+     "low": 0.24259632616390495,
+     "high": 0.24842296878183798,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3-lto-before": {
+     "median": 0.3356309444113734,
+     "low": 0.3290915746276282,
+     "high": 0.3390777658190135,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/qbe": {
+     "median": 0.24676036501075316,
+     "low": 0.24320464127295252,
+     "high": 0.24939051807839716,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3": {
+     "median": 0.3171749983299229,
+     "low": 0.3121561001595427,
+     "high": 0.32046184149760054,
+     "formula": "median(zig wall) / median(arm wall)"
+    },
+    "zig/o3-lto": {
+     "median": 0.33700912676759615,
+     "low": 0.3327838124088396,
+     "high": 0.34060121737158433,
+     "formula": "median(zig wall) / median(arm wall)"
+    }
+   }
+  }
+ },
+ "inputs": {
+  "input.sexp": {
+   "bytes": 927415,
+   "sha256": "0a670a08470e5b19d67272bca2186a369f8bc826a724a5d2ffe574a62932ee49"
+  },
+  "input8.sexp": {
+   "bytes": 7419320,
+   "sha256": "368ebdee5164fdba21ef4c0c08bbc6467b54b4b07709ab8d9b1799349a41d797"
+  }
+ },
+ "counters": [
+  "task-clock",
+  "instructions:u",
+  "cycles:u",
+  "branches:u",
+  "branch-misses:u"
+ ],
+ "sink": "null",
+ "reference": "zig",
+ "warmups": 3,
+ "wall_round_order": [
+  [
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ]
+  ],
+  [
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ]
+  ],
+  [
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ]
+  ],
+  [
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ]
+  ],
+  [
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "qbe"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ]
+  ],
+  [
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ]
+  ],
+  [
+   [
+    "census",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3-lto"
+   ],
+   [
+    "census-7.4MB",
+    "qbe"
+   ],
+   [
+    "census",
+    "qbe-before"
+   ],
+   [
+    "render-7.4MB",
+    "qbe"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "render",
+    "qbe"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3"
+   ],
+   [
+    "census",
+    "o3-lto"
+   ],
+   [
+    "census",
+    "o3-lto-before"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "zig-safe"
+   ],
+   [
+    "census",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "o3-lto"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "o3"
+   ],
+   [
+    "render-7.4MB",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "zig-safe"
+   ],
+   [
+    "render",
+    "o3-lto-before"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "o3-lto-before"
+   ],
+   [
+    "census",
+    "qbe"
+   ],
+   [
+    "render",
+    "qbe-before"
+   ],
+   [
+    "census-7.4MB",
+    "qbe-before"
+   ]
+  ]
+ ],
+ "counter_round_order": [],
+ "toolchain": {
+  "compiler_sha256": "0c9c4d2b3e477049c012b09cc9bd2cb4f499fc5807ecded6f702a67616a6c952",
+  "adapter_sources": {
+   "amd64_sysv.py": "1d0252b37ec42904808f879590b9100292720c746efc3d9c85b537c001422919",
+   "inventory.py": "fc112547232c614979eb24cbc100f42830719dc08ce0c1681c9f1b0c371888e6",
+   "llvm_emit.py": "a403525070e2d999f1dafe7c3ad47c3a2fbddbb8e5826ac3aa9daf1ee0350340",
+   "measure.py": "f804d50d5a6b9d648989886e6531bfcf2dafcd04b9db9183434b915a0c9af9cf",
+   "qbe_llvm.py": "50f9af3582ca21be9471847e8f215af27d6bb180519f0afeb374ab422e6f1773",
+   "qualify_affected.py": "eecf6f5325e9a58707815b5f056153c578fad86c86a19ac982fb84910a6fd83b",
+   "qualify_cost.py": "1771820b695f46f14356543550bee50d59034258e6ecff13b8a1b3f35955085c",
+   "qualify_equiv.py": "a1a4af6138e75f203bd4a64b0326c62422b330112c9c4b3e7cc1d35be0453407",
+   "qualify_identity.py": "112c0a1aceda46e4ad250caef492cf459123b2560f1ba6411ae1b2cdafa01d4d",
+   "qualify_sweep.py": "2a53168ab7a63d5a61eaa32c579aaf09282f9e7a08031a300693bd729f5ec3e0",
+   "qualify_traps.py": "9ddcecf97e3ac7212d0e14018cbe1149253dffd4972b555431abe069bfa19372",
+   "resolve_symbols.py": "fedcc6de37e738551604a160274e2ae666ccea49c0df623eb2364a3de2f29ae0",
+   "runtime_signatures.py": "24760d4f3de48bd5c1a0c5a49eff3b48c2dc9bb44711a1427e8f0b7fd48528c9",
+   "symbol_census.py": "720c0cc2acf5019936e202c806e6a2e147e9634700b9d6bd5349d51c4597b949",
+   "test_adapter.py": "eb28f50ff3cc506a25a7b3af69d3f65632814c898ee8666094c2f6004616185a",
+   "verify_binaries.py": "0a288dc2594f59241cc0372d52cbf3c3055a989b4011e36c8eab2f6f95b7ee00",
+   "verify_semantics.py": "52bf0bccaa5e079601a2282474020cfcc8d44042a0a6b38c2ff2a73ade74e60f",
+   "verify_traps.py": "151ff49b00eb74c0f7fc2bced067b6e3ddeadabedd3d8552f91b737424c4cc26",
+   "verify_units.py": "eb5293554e9dfad296d30e413f9ff69da7d5c6041edcab93052fd9d5ae9362c6"
+  },
+  "zig": "0.17.0-dev.1683+5ceec001b"
+ },
+ "timing_scope": "process launch through completion; timed stdout redirected to /dev/null"
+}

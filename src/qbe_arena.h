@@ -4,7 +4,7 @@
 #include "qbe_runtime.h"
 /* Located trap for a managed reference that would outlive its arena. */
 void myl_qbe_fail_arena_escape(void *context);
-void myl_qbe_region_begin(void *context);
+int myl_qbe_region_begin(void *context);
 void myl_qbe_region_end(void *context);
 /* Arena depth on entry to one native frame. */
 uint64_t myl_qbe_region_mark(void *context);

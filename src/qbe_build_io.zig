@@ -329,6 +329,11 @@ pub const Context = struct {
         try std.Io.File.stderr().writeStreamingAll(self.io, result.stderr);
         return result;
     }
+    /// Capture a tool query whose stderr is machine-readable rather than a user
+    /// diagnostic. Callers must check the returned termination status.
+    pub fn captureQuiet(self: Context, argv: []const []const u8) Error!std.process.RunResult {
+        return std.process.run(self.allocator, self.io, .{ .argv = argv });
+    }
     /// Invoke tools directly, preserving inherited environment and stderr.
     pub fn command(self: Context, argv: []const []const u8, environment: ?*const std.process.Environ.Map) Error!void {
         const result = try std.process.run(self.allocator, self.io, .{ .argv = argv, .environ_map = environment });

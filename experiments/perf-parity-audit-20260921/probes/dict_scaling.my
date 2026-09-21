@@ -1,0 +1,14 @@
+def main(out: Stream) -> int:
+    keys: list[str] = []
+    i = 0
+    while i < K:
+        keys.append("key" + str(i))
+        i += 1
+    counts: dict[str, int] = {}
+    n = 0
+    while n < 300000:
+        key = keys[n % K]
+        counts[key] = counts.get(key, 0) + 1
+        n += 1
+    out.print(str(len(counts)) + " " + str(counts.get("key7", 0)))
+    return 0

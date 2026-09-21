@@ -6,6 +6,8 @@ pub const Kind = enum {
     length,
     iteration_check,
     key_at,
+    /// Internal insertion-order dictionary value read used by live views.
+    value_at,
     slice,
     /// `values[start:stop:step]`; the endpoints carry omission sentinels.
     slice_step,
@@ -51,6 +53,9 @@ pub const Kind = enum {
     zfill,
     parse_int,
     parse_float,
+    /// Allocation-free numeric parsing over one clamped byte range.
+    parse_int_range,
+    parse_float_range,
     /// `bytes.view(start, end)`: the same octets as an owner-retaining range
     /// instead of a copy. Its endpoints clamp like a slice's, the source's
     /// backing storage stays reachable through the view, and every read —
@@ -61,6 +66,9 @@ pub const Kind = enum {
     /// in the same nonallocating pass, as `Result[int, str]` with the decoder's
     /// invalid-UTF-8 reason. Measuring a range never decodes it.
     scalar_count,
+    /// Allocation-free UTF-8 validation and scalar counting over one clamped
+    /// byte range, with the same checked result as `scalar_count()`.
+    scalar_count_range,
     /// Python-shaped everyday collection vocabulary. `pop` is the no-argument
     /// list form; `pop_at`, `pop_key` and `pop_default` are its arity variants.
     extend,
@@ -124,9 +132,10 @@ pub const Kind = enum {
             .extend, .pop_at, .remove, .index_of, .pop_key, .update => 1,
             .buffer_append_range => 3,
             .replace, .insert, .setdefault, .pop_default => 2,
-            .iteration_check, .key_at, .read, .append, .take, .truncate, .contains, .split, .join, .starts_with, .ends_with, .find => 1,
+            .iteration_check, .key_at, .value_at, .read, .append, .take, .truncate, .contains, .split, .join, .starts_with, .ends_with, .find => 1,
             .text_chr => 1,
             .write, .resize, .reserve, .get, .slice, .find_any, .view => 2,
+            .parse_int_range, .parse_float_range, .scalar_count_range => 2,
             .slice_step => 3,
         };
     }
@@ -137,12 +146,13 @@ pub const Kind = enum {
     /// Identify operations that modify buffer contents or initialized length.
     pub fn mutates(self: Kind) bool {
         return switch (self) {
-            .length, .capacity, .iteration_check, .key_at, .read, .get, .contains, .keys, .values, .split, .join => false,
+            .length, .capacity, .iteration_check, .key_at, .value_at, .read, .get, .contains, .keys, .values, .split, .join => false,
             .encode, .decode, .to_list, .hex, .from_hex, .starts_with, .ends_with, .find, .find_any => false,
             .strip, .lstrip, .rstrip, .upper, .lower, .splitlines, .split_whitespace, .replace, .count, .zfill => false,
             .text_ord, .text_chr => false,
             .is_digit, .is_alpha, .is_space, .parse_int, .parse_float => false,
-            .view, .scalar_count => false,
+            .parse_int_range, .parse_float_range => false,
+            .view, .scalar_count, .scalar_count_range => false,
             .copy, .items, .index_of => false,
             else => true,
         };
@@ -194,7 +204,9 @@ const methods = [_]Method{
     .{ .spelling = "lower", .kind = .lower, .string = true },
     .{ .spelling = "lstrip", .kind = .lstrip, .string = true },
     .{ .spelling = "parse_float", .kind = .parse_float, .string = true, .bytes = true },
+    .{ .spelling = "parse_float_range", .kind = .parse_float_range, .bytes = true },
     .{ .spelling = "parse_int", .kind = .parse_int, .string = true, .bytes = true },
+    .{ .spelling = "parse_int_range", .kind = .parse_int_range, .bytes = true },
     .{ .spelling = "pop", .kind = .pop, .list = true, .dictionary = true },
     .{ .spelling = "remove", .kind = .remove, .list = true },
     .{ .spelling = "replace", .kind = .replace, .string = true },
@@ -202,6 +214,7 @@ const methods = [_]Method{
     .{ .spelling = "reverse", .kind = .reverse, .list = true },
     .{ .spelling = "rstrip", .kind = .rstrip, .string = true },
     .{ .spelling = "scalar_count", .kind = .scalar_count, .bytes = true },
+    .{ .spelling = "scalar_count_range", .kind = .scalar_count_range, .bytes = true },
     .{ .spelling = "setdefault", .kind = .setdefault, .dictionary = true },
     .{ .spelling = "sort", .kind = .sort, .list = true },
     .{ .spelling = "split", .kind = .split, .string = true, .bytes = true },
@@ -327,11 +340,14 @@ fn signatureBody(allocator: std.mem.Allocator, kind: Kind, names: SignatureNames
         .is_digit, .is_alpha, .is_space => try allocator.dupe(u8, "() -> bool"),
         .parse_int => try allocator.dupe(u8, "() -> Option[int]"),
         .parse_float => try allocator.dupe(u8, "() -> Option[float]"),
+        .parse_int_range => try allocator.dupe(u8, "(start: int, end: int) -> Option[int]"),
+        .parse_float_range => try allocator.dupe(u8, "(start: int, end: int) -> Option[float]"),
         .encode => try allocator.dupe(u8, "() -> bytes"),
         .decode => try allocator.dupe(u8, "() -> Result[str, str]"),
         .hex => try allocator.dupe(u8, "() -> str"),
         .to_list => try allocator.dupe(u8, "() -> list[int]"),
         .scalar_count => try allocator.dupe(u8, "() -> Result[int, str]"),
+        .scalar_count_range => try allocator.dupe(u8, "(start: int, end: int) -> Result[int, str]"),
         .view, .slice => try std.fmt.allocPrint(allocator, span_signature, .{receiver}),
         .find_any => try std.fmt.allocPrint(allocator, "(values: {s}, start: int) -> int", .{receiver}),
         .slice_step => try std.fmt.allocPrint(allocator, "(start: int, end: int, step: int) -> {s}", .{receiver}),
@@ -359,6 +375,7 @@ fn signatureBody(allocator: std.mem.Allocator, kind: Kind, names: SignatureNames
         .update => try std.fmt.allocPrint(allocator, "(other: {s}) -> None", .{receiver}),
         .setdefault, .pop_default => try std.fmt.allocPrint(allocator, "(key: {s}, default: {s}) -> {s}", .{ key, element, element }),
         .key_at => try std.fmt.allocPrint(allocator, index_signature, .{key}),
+        .value_at => try std.fmt.allocPrint(allocator, index_signature, .{element}),
         .buffer_reserve => try allocator.dupe(u8, "(extra: int) -> bool"),
         .buffer_append_byte, .buffer_append_int => try allocator.dupe(u8, "(value: int) -> bool"),
         .buffer_append_float => try allocator.dupe(u8, "(value: float) -> bool"),
@@ -412,8 +429,10 @@ pub fn byteBuffer(kind: Kind) bool {
 /// Whether a managed operation can allocate, including new dictionary entries.
 /// Both numeric parses are absent on purpose: the shared grammar reads the
 /// scalars or the octets in place, so `noalloc` accepts `int(text)`,
-/// `float(text)`, `bytes.parse_int()` and `bytes.parse_float()`, exactly as it
-/// accepts a comparison, a search or `bytes.scalar_count()`.
+/// `float(text)`, byte numeric parsing and comparisons/searches. Scalar-count
+/// ranges are conservatively allocating because malformed UTF-8 constructs the
+/// checked result's error text; the older whole-value spelling retains its
+/// compatibility classification.
 pub fn managedAllocation(kind: Kind, dictionary: bool) bool {
     return switch (kind) {
         .append, .split, .join, .keys, .values, .slice, .slice_step => true,
@@ -422,6 +441,7 @@ pub fn managedAllocation(kind: Kind, dictionary: bool) bool {
         .strip, .lstrip, .rstrip, .upper, .lower, .splitlines, .replace, .zfill => true,
         .split_whitespace, .text_chr => true,
         .view => true,
+        .scalar_count_range => true,
         .buffer_reserve, .buffer_append_byte, .buffer_append_range => true,
         .buffer_append_utf8, .buffer_append_int, .buffer_append_float => true,
         .write => dictionary,
