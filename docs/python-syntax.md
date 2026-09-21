@@ -338,9 +338,6 @@ as an `alternative` note on the diagnostic:
 
 | rejected spelling | accepted spelling |
 | --- | --- |
-| `y = 42 if x > 0 else 0` | an `if`/`else` statement that assigns `y` |
-| `a, b = b, a` | one name per statement, with a temporary variable |
-| `return a // b, a % b` | a declared `record` carrying both values |
 | `x = y = 21` | `x = 21` then `y = 21` |
 | `del xs[0]` | `_ = xs.pop(index)`; for a dictionary `_ = d.pop(key)` |
 | `try:` / `except` | `Result` and `match`: `case Ok(value)` / `case Err(reason)` |
@@ -354,13 +351,6 @@ as an `alternative` note on the diagnostic:
 | `v = parse(s).unwrap()` | `match` on the `Result`, or `?` to propagate it |
 | `if (n := len(xs)) > 2:` | `n = len(xs)` on its own line, then the test |
 | `if __name__ == "__main__":` | nothing: `mylang run` calls `def main()` |
-
-```mylang
-# doc: expect-error E_SYNTAX
-def main() -> int:
-    y = 42 if True else 0
-    return y
-```
 
 ```mylang
 # doc: expect-error E_SYNTAX

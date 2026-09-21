@@ -281,6 +281,11 @@ const Writer = struct {
         return position - start;
     }
 
+    /// Whether this comma is the redundant one before a closing delimiter, as in
+    /// `(a, b,)` or `f(x,)`. Canonical text drops it, so a trailing comma in a
+    /// tuple, argument list or field list is removed consistently rather than
+    /// preserved; no one-element tuple is spellable, so dropping it never changes
+    /// what a program means.
     fn commaIsRedundant(self: *const Writer, index: usize) bool {
         if (index + 1 >= self.tokens.len) return false;
         const next = self.next_real[index + 1] orelse return false;

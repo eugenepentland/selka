@@ -1425,6 +1425,12 @@ const Checker = struct {
                 try self.supports(target, .integer, cast.ty);
                 break :result target;
             },
+            // lane: tuples (item 4), conditional expression (item 6) and the
+            // `mut` marker (item 1): the lanes add real support for the ones
+            // that can appear in a generic body.
+            .tuple => return self.sink.fail(eUnsupported, node.span, "tuple values are not supported inside generic function bodies yet"),
+            .conditional => return self.sink.fail(eUnsupported, node.span, "conditional expressions are not supported inside generic function bodies yet"),
+            .mut_argument => return self.sink.fail(eUnsupported, node.span, "the `mut` argument marker is not supported inside generic function bodies yet"),
         };
     }
     fn externalValue(self: *Checker, read: @FieldType(@FieldType(ast.Node, "data"), "external_read")) Error!Symbolic {

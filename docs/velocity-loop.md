@@ -72,8 +72,8 @@ those it emits friction records:
 
 ```text
 {"version":"friction-v1","task":"greenfield/042","phase":"check",
- "code":"E_SYNTAX","idiom":"ternary","count":2,"latency_s":0.03,
- "excerpt":"y = 42 if x > 0 else 0"}
+ "code":"E_SYNTAX","idiom":"chained-assign","count":2,"latency_s":0.03,
+ "excerpt":"x = y = 21"}
 ```
 
 The idiom classifier is a fixed table from diagnostic code plus a source regex to

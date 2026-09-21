@@ -419,3 +419,270 @@ test "undocumented-export reports missing short and name-restating docstrings" {
     // A shorter configured floor accepts the five-character docstring.
     try t.expectEqual(@as(?usize, 5), try parsedMinChars(t.allocator, "{\"version\":2,\"lint\":{\"min_chars\":5}}"));
 }
+
+/// The statement list of the first function's body, for a parse-only assertion.
+fn bodyOf(syntax: ast.Program) []const ast.StatementId {
+    return syntax.statements.items[@backingInt(syntax.functions[0].body)].data.block;
+}
+
+/// The source text a node's span covers, for a parse-only assertion.
+fn nodeText(syntax: ast.Program, src: source.Source, id: ast.NodeId) []const u8 {
+    return src.text(syntax.nodes.items[@backingInt(id)].span);
+}
+
+/// Parse one source that must fail, asserting the first diagnostic's code, its
+/// message, and the source text its span covers.
+fn parseFailure(text: []const u8, code: []const u8, message: []const u8, at: []const u8) !void {
+    var c = try language.Compilation.init(t.allocator, "syntax.my", text);
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.parse());
+    try t.expectEqualStrings(code, c.diagnostics.items[0].code);
+    try t.expectEqualStrings(message, c.diagnostics.items[0].message);
+    try t.expectEqualStrings(at, c.src.text(c.diagnostics.items[0].span));
+}
+
+// spec: SYNTAX-MUT-1
+test "foundation syntax: a mut parameter marker sets the flag and leaves the type span" {
+    var c = try language.Compilation.init(t.allocator, "mut.my",
+        \\def fill(values: mut list[int], count: int) -> None:
+        \\    return
+    );
+    defer c.deinit();
+    try c.parse();
+    const parameters = c.syntax.?.functions[0].signature.parameters;
+    try t.expectEqual(@as(usize, 2), parameters.len);
+    try t.expect(parameters[0].mut);
+    try t.expectEqualStrings("list[int]", c.src.text(parameters[0].ty));
+    try t.expect(!parameters[1].mut);
+    try t.expectEqualStrings("int", c.src.text(parameters[1].ty));
+}
+
+// spec-case: SYNTAX-MUT-1
+test "foundation syntax: mut stays an ordinary name in every position outside a marker" {
+    var c = try language.Compilation.init(t.allocator, "mut.my",
+        \\def tally(mut: int) -> int:
+        \\    mut = mut + 1
+        \\    return mut
+    );
+    defer c.deinit();
+    try c.parse();
+    const parameters = c.syntax.?.functions[0].signature.parameters;
+    try t.expect(!parameters[0].mut);
+    try t.expectEqualStrings("int", c.src.text(parameters[0].ty));
+    var d = try language.Compilation.init(t.allocator, "mut.my", "def mut(value: int) -> int:\n    return value\n");
+    defer d.deinit();
+    try d.parse();
+    try t.expectEqualStrings("mut", d.src.text(d.syntax.?.functions[0].name));
+}
+
+// spec-case: SYNTAX-MUT-1
+test "foundation syntax: a mut call-argument marker wraps its target and leaves other arguments plain" {
+    var c = try language.Compilation.init(t.allocator, "mut.my",
+        \\def main() -> int:
+        \\    push(mut values, 1)
+        \\    return 0
+    );
+    defer c.deinit();
+    try c.parse();
+    const parsed_program = c.syntax.?;
+    const call = parsed_program.statements.items[@backingInt(bodyOf(parsed_program)[0])].data.discard;
+    const arguments = parsed_program.nodes.items[@backingInt(call)].data.call.arguments;
+    try t.expectEqual(@as(usize, 2), arguments.len);
+    const marker = parsed_program.nodes.items[@backingInt(arguments[0])];
+    try t.expect(marker.data == .mut_argument);
+    try t.expectEqualStrings("values", nodeText(parsed_program, c.src, marker.data.mut_argument));
+    try t.expect(parsed_program.nodes.items[@backingInt(arguments[1])].data == .integer);
+}
+
+// spec-case: SYNTAX-MUT-1
+test "foundation syntax: the existing ampersand argument marker keeps its plumbing" {
+    var c = try language.Compilation.init(t.allocator, "mut.my",
+        \\def main() -> int:
+        \\    push(&values)
+        \\    return 0
+    );
+    defer c.deinit();
+    c.src.mutation_markers = true;
+    try c.parse();
+    const parsed_program = c.syntax.?;
+    const call = parsed_program.statements.items[@backingInt(bodyOf(parsed_program)[0])].data.discard;
+    const markers = parsed_program.nodes.items[@backingInt(call)].data.call.argument_markers;
+    try t.expectEqual(@as(usize, 1), markers.len);
+    try t.expect(markers[0]);
+}
+
+// spec-case: SYNTAX-MUT-1
+test "foundation syntax: a callback type records one mut flag per parameter" {
+    var c = try language.Compilation.init(t.allocator, "mut.my",
+        \\def apply(cb: def(values: mut list[int], count: int) -> None) -> None:
+        \\    return
+    );
+    defer c.deinit();
+    try c.parse();
+    const callbacks = c.syntax.?.types.expressions.callbacks;
+    try t.expectEqual(@as(usize, 1), callbacks.len);
+    try t.expectEqual(@as(usize, 2), callbacks[0].mut_parameters.len);
+    try t.expect(callbacks[0].mut_parameters[0]);
+    try t.expect(!callbacks[0].mut_parameters[1]);
+    try t.expectEqualStrings("list[int]", c.src.text(callbacks[0].parameters[0]));
+}
+
+// spec: SYNTAX-KEYWORD-ONLY-1
+test "foundation syntax: a bare star records the keyword-only boundary and frees its ordering rule" {
+    var c = try language.Compilation.init(t.allocator, "keywords.my",
+        \\def issue(host: int, *, code: int = 13, file: int) -> None:
+        \\    return
+    );
+    defer c.deinit();
+    try c.parse();
+    const signature = c.syntax.?.functions[0].signature;
+    try t.expectEqual(@as(usize, 3), signature.parameters.len);
+    try t.expectEqual(@as(?usize, 1), signature.keyword_only_from);
+    try t.expect(signature.parameters[1].default_value != null);
+    try t.expect(signature.parameters[2].default_value == null);
+    var d = try language.Compilation.init(t.allocator, "keywords.my", "def plain(a: int, b: int) -> None:\n    return\n");
+    defer d.deinit();
+    try d.parse();
+    try t.expectEqual(@as(?usize, null), d.syntax.?.functions[0].signature.keyword_only_from);
+}
+
+// spec-case: SYNTAX-KEYWORD-ONLY-1
+test "foundation syntax: a star with no parameter a repeated star and a callback star are rejected" {
+    try parseFailure("def f(a: int, *) -> None:\n    return\n", "E_SYNTAX", "`*` must be followed by at least one parameter", "*");
+    try parseFailure("def f(a: int, *, b: int, *, c: int) -> None:\n    return\n", "E_SYNTAX", "`*` may appear once in a parameter list", "*");
+    try parseFailure("def f(cb: def(x: int, *) -> None) -> None:\n    return\n", "E_SYNTAX", "`*` is not permitted in a callback type; declare the keyword-only parameters on a function", "*");
+}
+
+// spec: SYNTAX-TUPLE-1
+test "foundation syntax: a parenthesized comma list builds a tuple and parentheses alone only group" {
+    var c = try language.Compilation.init(t.allocator, "tuple.my",
+        \\def main() -> int:
+        \\    pair = (first, second)
+        \\    trailing = (first, second,)
+        \\    grouped = (first)
+        \\    return 0
+    );
+    defer c.deinit();
+    try c.parse();
+    const parsed_program = c.syntax.?;
+    const body = bodyOf(parsed_program);
+    const pair = parsed_program.nodes.items[@backingInt(parsed_program.statements.items[@backingInt(body[0])].data.assignment.value)];
+    try t.expect(pair.data == .tuple);
+    try t.expectEqual(@as(usize, 2), pair.data.tuple.len);
+    try t.expectEqualStrings("first", nodeText(parsed_program, c.src, pair.data.tuple[0]));
+    try t.expectEqualStrings("second", nodeText(parsed_program, c.src, pair.data.tuple[1]));
+    const trailing = parsed_program.nodes.items[@backingInt(parsed_program.statements.items[@backingInt(body[1])].data.assignment.value)];
+    try t.expect(trailing.data == .tuple);
+    try t.expectEqual(@as(usize, 2), trailing.data.tuple.len);
+    const grouped = parsed_program.nodes.items[@backingInt(parsed_program.statements.items[@backingInt(body[2])].data.assignment.value)];
+    try t.expect(grouped.data == .name);
+    try t.expectEqualStrings("first", c.src.text(grouped.data.name));
+}
+
+// spec-case: SYNTAX-TUPLE-1
+test "foundation syntax: return and a multi-target assignment build a tuple on both sides" {
+    var c = try language.Compilation.init(t.allocator, "tuple.my",
+        \\def swap(a: int, b: int) -> int:
+        \\    a, b = b, a
+        \\    return a, b
+    );
+    defer c.deinit();
+    try c.parse();
+    const parsed_program = c.syntax.?;
+    const body = bodyOf(parsed_program);
+    const assignment = parsed_program.nodes.items[@backingInt(parsed_program.statements.items[@backingInt(body[0])].data.discard)];
+    try t.expect(assignment.data == .field_assignment);
+    const targets = parsed_program.nodes.items[@backingInt(assignment.data.field_assignment.target)];
+    const values = parsed_program.nodes.items[@backingInt(assignment.data.field_assignment.value)];
+    try t.expect(targets.data == .tuple);
+    try t.expect(values.data == .tuple);
+    try t.expectEqual(@as(usize, 2), targets.data.tuple.len);
+    try t.expectEqual(@as(usize, 2), values.data.tuple.len);
+    try t.expectEqualStrings("a", c.src.text(parsed_program.nodes.items[@backingInt(targets.data.tuple[0])].data.name));
+    try t.expectEqualStrings("b", c.src.text(parsed_program.nodes.items[@backingInt(targets.data.tuple[1])].data.name));
+    try t.expectEqualStrings("b", nodeText(parsed_program, c.src, values.data.tuple[0]));
+    try t.expectEqualStrings("a", nodeText(parsed_program, c.src, values.data.tuple[1]));
+    const returned = parsed_program.nodes.items[@backingInt(parsed_program.statements.items[@backingInt(body[1])].data.ret)];
+    try t.expect(returned.data == .tuple);
+    try t.expectEqual(@as(usize, 2), returned.data.tuple.len);
+}
+
+// spec-case: SYNTAX-TUPLE-1
+test "foundation syntax: a one-element tuple is rejected as a value as a target list and bare" {
+    try parseFailure("def main() -> int:\n    x = (1,)\n    return 0\n", "E_SYNTAX", "a one-element tuple is not a value; write the element alone or a two-element tuple", ",");
+    try parseFailure("def main() -> int:\n    pair = (1, 2)\n    x, = pair\n    return 0\n", "E_SYNTAX", "a one-element target list is not a tuple; bind the name directly", ",");
+    try parseFailure("def main() -> int:\n    x, y\n    return 0\n", "E_SYNTAX", "a bare comma list is not an expression; write `x, y = value` or parenthesize it as a tuple", "x, y");
+}
+
+// spec: SYNTAX-TUPLE-2
+test "foundation syntax: a tuple type records every element span in the type catalog" {
+    var c = try language.Compilation.init(t.allocator, "tuple.my",
+        \\def split(text: str) -> tuple[str, str]:
+        \\    return text, text
+    );
+    defer c.deinit();
+    try c.parse();
+    const tuples = c.syntax.?.types.expressions.tuples;
+    try t.expectEqual(@as(usize, 1), tuples.len);
+    try t.expectEqual(@as(usize, 2), tuples[0].elements.len);
+    try t.expectEqualStrings("str", c.src.text(tuples[0].elements[0]));
+    try t.expectEqualStrings("str", c.src.text(tuples[0].elements[1]));
+    try t.expectEqualStrings("tuple[str, str]", c.src.text(tuples[0].span));
+    try t.expectEqualStrings("tuple[str, str]", c.src.text(c.syntax.?.functions[0].signature.return_type));
+}
+
+// spec: SYNTAX-CONDITIONAL-1
+test "foundation syntax: a conditional expression binds loosest and nests in its else arm" {
+    var c = try language.Compilation.init(t.allocator, "conditional.my",
+        \\def choose(x: int) -> int:
+        \\    y = 42 if x > 0 else 0
+        \\    z = 1 or 2 if x > 0 else 3 + 4
+        \\    w = 1 if x > 0 else 2 if x < 0 else 3
+        \\    return y
+    );
+    defer c.deinit();
+    try c.parse();
+    const parsed_program = c.syntax.?;
+    const body = bodyOf(parsed_program);
+    const y = parsed_program.nodes.items[@backingInt(parsed_program.statements.items[@backingInt(body[0])].data.assignment.value)];
+    try t.expect(y.data == .conditional);
+    try t.expect(parsed_program.nodes.items[@backingInt(y.data.conditional.condition)].data == .binary);
+    try t.expect(parsed_program.nodes.items[@backingInt(y.data.conditional.then_value)].data == .integer);
+    try t.expect(parsed_program.nodes.items[@backingInt(y.data.conditional.else_value)].data == .integer);
+    const z = parsed_program.nodes.items[@backingInt(parsed_program.statements.items[@backingInt(body[1])].data.assignment.value)];
+    try t.expect(z.data == .conditional);
+    try t.expect(parsed_program.nodes.items[@backingInt(z.data.conditional.then_value)].data == .binary);
+    try t.expect(parsed_program.nodes.items[@backingInt(z.data.conditional.else_value)].data == .binary);
+    const w = parsed_program.nodes.items[@backingInt(parsed_program.statements.items[@backingInt(body[2])].data.assignment.value)];
+    try t.expect(w.data == .conditional);
+    try t.expect(parsed_program.nodes.items[@backingInt(w.data.conditional.else_value)].data == .conditional);
+}
+
+// spec: SYNTAX-CONDITIONAL-2
+test "foundation syntax: a conditional expression parses in arguments holes lists returns and fields" {
+    var c = try language.Compilation.init(t.allocator, "conditional.my",
+        \\def choose(p: bool) -> int:
+        \\    f(1 if p else 2, value=3 if p else 4)
+        \\    items = [5 if p else 6]
+        \\    label = f"{7 if p else 8}"
+        \\    return 9 if p else 10
+    );
+    defer c.deinit();
+    try c.parse();
+    const parsed_program = c.syntax.?;
+    const body = bodyOf(parsed_program);
+    const call_node = parsed_program.nodes.items[@backingInt(parsed_program.statements.items[@backingInt(body[0])].data.discard)];
+    const call = call_node.data.call;
+    try t.expectEqual(@as(usize, 2), call.arguments.len);
+    try t.expect(parsed_program.nodes.items[@backingInt(call.arguments[0])].data == .conditional);
+    try t.expect(parsed_program.nodes.items[@backingInt(call.arguments[1])].data == .conditional);
+    try t.expectEqualStrings("value", c.src.text(call.argument_names[1].?));
+    const items = parsed_program.nodes.items[@backingInt(parsed_program.statements.items[@backingInt(body[1])].data.assignment.value)];
+    try t.expect(items.data == .list_literal);
+    try t.expect(parsed_program.nodes.items[@backingInt(items.data.list_literal[0])].data == .conditional);
+    const label = parsed_program.nodes.items[@backingInt(parsed_program.statements.items[@backingInt(body[2])].data.assignment.value)];
+    try t.expect(label.data == .format);
+    try t.expect(parsed_program.nodes.items[@backingInt(label.data.format[0])].data == .conditional);
+    const returned = parsed_program.nodes.items[@backingInt(parsed_program.statements.items[@backingInt(body[3])].data.ret)];
+    try t.expect(returned.data == .conditional);
+}

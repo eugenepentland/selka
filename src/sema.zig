@@ -111,6 +111,11 @@ fn augmentedOperator(op: ast.AssignmentOp) ast.BinaryOp {
     };
 }
 const eTextOperator = "E_TEXT_OPERATOR";
+/// Temporary rejection for the syntax the foundation parser accepts before its
+/// lane implements the check: tuple values and destructuring, the conditional
+/// expression, and the `mut` argument marker. Every use carries a `// lane:`
+/// comment and is deleted by that lane.
+const eNotImplemented = "E_NOT_IMPLEMENTED";
 const unsupported_collection = "operation is not supported by this collection";
 const unsupported_list = "operation is not supported by lists";
 const method_arity = "collection method argument count differs from its signature";
@@ -1750,6 +1755,11 @@ const Checker = struct {
     }
     fn checkFieldAssignment(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
         const assignment = node.data.field_assignment;
+        // lane: tuples (item 4): a multi-target assignment parses to a `.tuple`
+        // target here, and this arm is replaced by the binding check the tuple
+        // lane adds.
+        if (self.syntax.nodes.items[@backingInt(assignment.target)].data == .tuple)
+            return self.sink.fail(eNotImplemented, node.span, "tuple destructuring parses but is not checked yet");
         const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
         var path_fields: std.ArrayList(source.Span) = .empty;
         var root = assignment.target;
@@ -4081,6 +4091,15 @@ const Checker = struct {
             },
             .unary => |u| return self.checkUnary(node, u),
             .binary => |b| try self.checkValueBinary(b, &out),
+            // lane: tuples (item 4): this arm is replaced by the record-backed
+            // tuple check the tuple lane adds.
+            .tuple => return self.sink.fail(eNotImplemented, node.span, "tuple values parse but are not checked yet"),
+            // lane: conditional expression (item 6): this arm is replaced by the
+            // two-branch check the simple lane adds.
+            .conditional => return self.sink.fail(eNotImplemented, node.span, "conditional expressions parse but are not checked yet"),
+            // lane: mut marker (item 1): this arm is replaced by the
+            // mutation-marker check the `mut` lane adds.
+            .mut_argument => return self.sink.fail(eNotImplemented, node.span, "the `mut` argument marker parses but is not checked yet"),
         }
         return out;
     }

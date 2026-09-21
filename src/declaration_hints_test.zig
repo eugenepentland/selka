@@ -195,15 +195,6 @@ test "a from-import names the accepted module import and record declaration" {
 test "a Python statement shape names its accepted spelling where the terminator belongs" {
     var fixture = Fixture.init(t.allocator);
     defer fixture.deinit();
-    const target_list = "bind one name per statement and use a temporary variable; declare a record to return several values";
-    const ternary = try fixture.failure("def main() -> int:\n    y = 42 if x > 0 else 0\n");
-    try expectHint(&fixture, ternary, "a conditional expression is not part of the language", "write an if/else statement that assigns the same name", 2, 12);
-    const inside_call = try fixture.failure("def main() -> int:\n    return int(1.5 if x else 0.0)\n");
-    try expectHint(&fixture, inside_call, "a conditional expression is not part of the language", "write an if/else statement that assigns the same name", 2, 20);
-    const swap = try fixture.failure("def main() -> int:\n    a = 1\n    b = 41\n    a, b = b, a\n");
-    try expectHint(&fixture, swap, "a comma-separated target list declares no binding", target_list, 4, 6);
-    const returning = try fixture.failure("def divmod2(a: int, b: int) -> int:\n    return a // b, a % b\n");
-    try expectHint(&fixture, returning, "a comma-separated return list is not one value", target_list, 2, 18);
     const chained = try fixture.failure("def main() -> int:\n    x = y = 21\n    return x + y\n");
     try expectHint(&fixture, chained, "a chained assignment declares no binding", "assign one name per statement: `x = 21` first, then `y = 21`", 2, 11);
     const deletion = try fixture.failure("def main() -> int:\n    xs = [1]\n    del xs[0]\n    return 0\n");

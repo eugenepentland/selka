@@ -95,7 +95,7 @@ their neighbours). Everything else cannot be named honestly:
   lambda-capture`, `W_UNUSED_BINDING → unused-binding`, …).
 - A code that is neither a source-free classifier row nor in that table is
   reported as `unclassified`, **never guessed**. `E_SYNTAX` is the important
-  case: its classifier rows distinguish ternary, tuple, `is None`, docstring,
+  case: its classifier rows distinguish `is None`, docstring,
   module constant, method, set literal, nested comprehension, generator
   argument, exceptions and `del`, and a record with no source cannot choose
   between them.

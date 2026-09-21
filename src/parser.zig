@@ -61,8 +61,6 @@ pub const HintForm = enum {
     module_constant,
     method,
     from_import,
-    ternary,
-    tuple,
     chained_assignment,
     set_literal,
     exceptions,
@@ -88,8 +86,6 @@ pub const declaration_hints = [_]DeclarationHint{
     .{ .form = .module_constant, .idiom = "module-constant", .message = "a bare assignment declares no module-level binding", .accepted = "declare it as a constant: const MAX: int = 42" },
     .{ .form = .method, .idiom = "method", .message = "a record or class body declares fields, not methods", .accepted = "declare a top-level function taking the record: def norm1(p: Point) -> int" },
     .{ .form = .from_import, .idiom = "from-import", .message = "a from-import is not a declaration", .accepted = "import the module and declare a record: import dataclasses" },
-    .{ .form = .ternary, .idiom = "ternary", .message = "a conditional expression is not part of the language", .accepted = "write an if/else statement that assigns the same name" },
-    .{ .form = .tuple, .idiom = "tuple", .message = "a comma-separated target list declares no binding", .accepted = "bind one name per statement and use a temporary variable; declare a record to return several values" },
     .{ .form = .chained_assignment, .idiom = "chained-assign", .message = "a chained assignment declares no binding", .accepted = "assign one name per statement: `x = 21` first, then `y = 21`" },
     .{ .form = .set_literal, .idiom = "set-literal", .message = "a set literal is not a collection this language has", .accepted = "use a dict literal keyed by the value: `{1: True, 2: True}`" },
     .{ .form = .exceptions, .idiom = "exceptions", .message = "a try statement is not part of the language", .accepted = "return `Result` and match it: `case Ok(value)` and `case Err(reason)`" },
@@ -146,6 +142,7 @@ pub const Parser = struct {
             callbacks: std.ArrayList(ast.CallbackType) = .empty,
             applications: std.ArrayList(ast.TypeApplication) = .empty,
             aliases: std.ArrayList(ast.TypeAlias) = .empty,
+            tuples: std.ArrayList(ast.TupleType) = .empty,
         } = .{},
         lambdas: std.ArrayList(ast.Lambda) = .empty,
         import_aliases: std.StringHashMapUnmanaged(void) = .empty,
@@ -240,20 +237,15 @@ pub const Parser = struct {
             if ((token.tag == .bytes or token.tag == .format) and self.previousEnd() == token.span.start) return .string_prefix;
         }
         return switch (token.tag) {
-            .kw_if => .ternary,
             .equal => .chained_assignment,
             else => null,
         };
     }
     /// One statement's terminator, or the hint that names the Python statement
-    /// shape standing in its place: a conditional expression, a tuple target or
-    /// return list, a chained assignment, `del`, `try:` or a string prefix.
+    /// shape standing in its place: a chained assignment, `del`, `try:` or a
+    /// string prefix.
     fn statementEnd(self: *Parser, first: lex.Token) diagnostic.Error!lex.Token {
         if (!self.terminatorAhead()) {
-            if (self.current().tag == .comma) {
-                const message = if (first.tag == .kw_return) "a comma-separated return list is not one value" else declaration_hints[@backingInt(HintForm.tuple)].message;
-                return self.hint(.tuple, self.current().span, message, self.current().span);
-            }
             if (self.statementShapeHint(first)) |form| return self.hintHere(form);
         }
         return self.expect(.semicolon);
@@ -270,14 +262,7 @@ pub const Parser = struct {
     /// reaches this point.
     fn callClose(self: *Parser) diagnostic.Error!lex.Token {
         if (self.current().tag == .kw_for) return self.hintHere(.generator_argument);
-        return self.closeWithHint(.rparen);
-    }
-    /// A closing delimiter, or the hint that names a conditional expression
-    /// standing where the close belongs. Every token but the one expected is
-    /// already a failure here, so the hint only chooses the message.
-    fn closeWithHint(self: *Parser, comptime tag: lex.Tag) diagnostic.Error!lex.Token {
-        if (self.current().tag == .kw_if) return self.hintHere(.ternary);
-        return self.expect(tag);
+        return self.expect(.rparen);
     }
     /// Whether the cursor sits on an identifier in `previous`'s column: the next
     /// case of a union, enum or result written without the separating comma.
@@ -326,6 +311,45 @@ pub const Parser = struct {
         if (self.current().tag != .ident or !std.mem.eql(u8, self.src.text(self.current().span), "record")) return false;
         self.cursor.pos += 1;
         return true;
+    }
+    /// Whether the cursor names the contextual `mut` marker by text. `mut` has no
+    /// lexer tag, so it stays an ordinary identifier everywhere else, exactly as
+    /// the `mutates` clause does.
+    fn identIsMut(self: *Parser) bool {
+        const token = self.current();
+        return token.tag == .ident and std.mem.eql(u8, self.src.text(token.span), "mut");
+    }
+    /// Whether the cursor starts a `mut` parameter or callback-parameter marker:
+    /// `mut` followed by the type it marks. A `mut` with nothing after it is the
+    /// declared name or the type itself, so `def f(mut: int)` and `def f(a: mut)`
+    /// are unchanged.
+    fn atMutParameter(self: *Parser) bool {
+        if (!self.identIsMut()) return false;
+        return switch (self.tokens[self.cursor.pos + 1].tag) {
+            .comma, .rparen, .equal, .colon, .semicolon, .eof, .dedent, .indent => false,
+            else => true,
+        };
+    }
+    /// Whether the cursor starts a `mut` call-argument marker: `mut` followed by
+    /// the expression it marks. A call, index, member access or operator after
+    /// `mut` keeps it an ordinary name, so `mut(x)`, `mut[0]`, `mut.x` and
+    /// `mut + 1` all keep their meaning.
+    fn atMutArgument(self: *Parser) bool {
+        if (!self.identIsMut()) return false;
+        return switch (self.tokens[self.cursor.pos + 1].tag) {
+            .ident, .integer, .bytes, .format, .kw_true, .kw_false, .kw_none, .kw_len, .kw_replace, .kw_todo, .minus, .bang => true,
+            else => false,
+        };
+    }
+    /// One call argument's value: an optional `mut` marker wrapping the
+    /// expression it applies to. The parser does not validate the target; the
+    /// checker decides whether the position admits a marker.
+    fn argumentValue(self: *Parser) diagnostic.Error!ast.NodeId {
+        if (!self.atMutArgument()) return self.expression(0);
+        const marker = self.current();
+        self.cursor.pos += 1;
+        const value = try self.expression(0);
+        return self.append(.{ .span = .join(marker.span, self.syntax.nodes.items[@backingInt(value)].span), .data = .{ .mut_argument = value } });
     }
     /// Record top-level `def len`/`def replace` once so shadowing checks are
     /// constant-time instead of a fresh full token scan for every prelude call.
@@ -428,6 +452,7 @@ pub const Parser = struct {
         const token = self.current();
         if (self.take(.kw_def)) return self.callbackType(token.span);
         if (self.take(.kw_none)) return token.span;
+        if (token.tag == .ident and std.mem.eql(u8, self.src.text(token.span), "tuple") and self.tokens[self.cursor.pos + 1].tag == .lbracket) return self.tupleType(token);
         if (self.take(.lparen)) return .join(token.span, (try self.expect(.rparen)).span);
         if (self.take(.lbracket)) {
             const index: ast.ArrayIndex = if (self.current().tag == .integer) .{ .length = (try self.expect(.integer)).span } else .{ .enum_type = try self.typeName() };
@@ -462,18 +487,43 @@ pub const Parser = struct {
         if (self.current().tag == .integer) return (try self.expect(.integer)).span;
         return self.typeName();
     }
+    /// `tuple[T1, T2, ...]`: one entry in `TypeExpressions.tuples` holding the
+    /// element type spans in source order. The parser accepts any comma count,
+    /// including one; `sema.zig` reports `E_TUPLE_ARITY` for arity outside the
+    /// two-to-eight range, so a wrong arity is a check error rather than a parse
+    /// error.
+    fn tupleType(self: *Parser, token: lex.Token) diagnostic.Error!Span {
+        self.cursor.pos += 1;
+        _ = try self.expect(.lbracket);
+        const allocator = self.arena.allocator();
+        var elements: std.ArrayList(Span) = .empty;
+        while (true) {
+            try elements.append(allocator, try self.typeName());
+            if (!self.take(.comma) or self.current().tag == .rbracket) break;
+        }
+        const close = try self.expect(.rbracket);
+        const span: Span = .join(token.span, close.span);
+        try self.syntax.types.tuples.append(allocator, .{ .span = span, .elements = try elements.toOwnedSlice(allocator) });
+        return span;
+    }
     fn callbackType(self: *Parser, first: Span) diagnostic.Error!Span {
         _ = try self.expect(.lparen);
         const allocator = self.arena.allocator();
         var parameters: std.ArrayList(Span) = .empty;
         var names: std.ArrayList(?Span) = .empty;
+        var mut_parameters: std.ArrayList(bool) = .empty;
         if (self.current().tag != .rparen) while (true) {
             if (parameters.items.len == 16) return self.sink.fail(eGenericLimit, first, "callbacks support at most 16 value parameters");
+            // A callback type is positional, so it has no keyword-only group.
+            if (self.current().tag == .star) return self.sink.fail(syntax_code, self.current().span, "`*` is not permitted in a callback type; declare the keyword-only parameters on a function");
             var name: ?Span = null;
             if (self.current().tag == .ident and self.tokens[self.cursor.pos + 1].tag == .colon) {
                 name = (try self.expect(.ident)).span;
                 _ = try self.expect(.colon);
             }
+            const mutable = self.atMutParameter();
+            if (mutable) self.cursor.pos += 1;
+            try mut_parameters.append(allocator, mutable);
             try parameters.append(allocator, try self.typeName());
             try names.append(allocator, name);
             if (!self.take(.comma) or self.current().tag == .rparen) break;
@@ -493,6 +543,7 @@ pub const Parser = struct {
             .return_type = result,
             .effect_bound = bound,
             .mutates = mutates,
+            .mut_parameters = try mut_parameters.toOwnedSlice(allocator),
         });
         return span;
     }
@@ -816,6 +867,7 @@ pub const Parser = struct {
                     .arrays = try self.syntax.types.arrays.toOwnedSlice(self.arena.allocator()),
                     .applications = try self.syntax.types.applications.toOwnedSlice(self.arena.allocator()),
                     .aliases = try self.syntax.types.aliases.toOwnedSlice(self.arena.allocator()),
+                    .tuples = try self.syntax.types.tuples.toOwnedSlice(self.arena.allocator()),
                 },
                 .records = try records.toOwnedSlice(self.arena.allocator()),
                 .constraints = try constraints.toOwnedSlice(self.arena.allocator()),
@@ -853,15 +905,15 @@ pub const Parser = struct {
         const effect_bound = try self.effectBound();
         if (host) |span| if (effect_bound.?.allowed & effects.bit(.host) == 0) return self.sink.fail("E_HOST_EFFECTS", span, "host declarations must include the host effect");
         var parameter_names: std.ArrayList(?Span) = .empty;
-        for (parameters.items) |parameter| try parameter_names.append(self.arena.allocator(), parameter.name);
+        for (parameters.parameters.items) |parameter| try parameter_names.append(self.arena.allocator(), parameter.name);
         const mutates = try self.mutatesClause(parameter_names.items, effect_bound);
         if (c_abi and !annotated_return) return self.sink.fail("E_EXTERN_SIGNATURE", name.span, "extern functions require an explicit return type (unit for C void)");
         // A foreign call is the one ambient authority left, so every `extern def`
         // and `host def` takes the `Host` capability as a visible first parameter.
         if (host != null) {
-            if (parameters.items.len == 0 or !std.mem.eql(u8, self.src.text(parameters.items[0].ty), "Host")) return self.sink.fail(
+            if (parameters.parameters.items.len == 0 or !std.mem.eql(u8, self.src.text(parameters.parameters.items[0].ty), "Host")) return self.sink.fail(
                 "E_HOST_CAPABILITY",
-                if (parameters.items.len == 0) name.span else parameters.items[0].ty,
+                if (parameters.parameters.items.len == 0) name.span else parameters.parameters.items[0].ty,
                 "an extern or host declaration must take `host: Host` as its first parameter",
             );
         }
@@ -877,28 +929,50 @@ pub const Parser = struct {
             },
             .signature = .{
                 .type_parameters = type_parameters,
-                .parameters = try parameters.toOwnedSlice(self.arena.allocator()),
+                .parameters = try parameters.parameters.toOwnedSlice(self.arena.allocator()),
                 .return_type = return_type,
                 .mutates = mutates,
+                .keyword_only_from = parameters.keyword_only_from,
             },
             .name = name.span,
             .body = body,
         };
     }
-    fn functionParameters(self: *Parser) diagnostic.Error!std.ArrayList(ast.Parameter) {
-        var parameters: std.ArrayList(ast.Parameter) = .empty;
+    /// One declared parameter list together with the keyword-only boundary its
+    /// bare `*` records: the zero-based index of the first parameter after the
+    /// `*`, or null when the list has none.
+    const ParameterList = struct {
+        parameters: std.ArrayList(ast.Parameter) = .empty,
+        keyword_only_from: ?usize = null,
+    };
+    fn functionParameters(self: *Parser) diagnostic.Error!ParameterList {
+        var list: ParameterList = .{};
         var default_seen = false;
         if (self.current().tag != .rparen) while (true) {
+            if (self.current().tag == .star) {
+                if (list.keyword_only_from != null) return self.sink.fail(syntax_code, self.current().span, "`*` may appear once in a parameter list");
+                const star = self.current();
+                self.cursor.pos += 1;
+                if (!self.take(.comma) or self.current().tag == .rparen) return self.sink.fail(syntax_code, star.span, "`*` must be followed by at least one parameter");
+                list.keyword_only_from = list.parameters.items.len;
+                continue;
+            }
             const parameter = try self.declaredName();
             _ = try self.expect(.colon);
+            const mutable = self.atMutParameter();
+            if (mutable) self.cursor.pos += 1;
             const ty = try self.typeName();
             const default_value = if (self.take(.equal)) try self.defaultArgument() else null;
-            if (default_seen and default_value == null) return self.sink.fail(eDefaultArgument, parameter, "required parameters must precede parameters with defaults");
-            default_seen = default_seen or default_value != null;
-            try parameters.append(self.arena.allocator(), .{ .name = parameter, .ty = ty, .default_value = default_value });
+            // Python's ordering rule holds inside the positional group; the
+            // keyword-only group may mix required and defaulted parameters.
+            if (list.keyword_only_from == null) {
+                if (default_seen and default_value == null) return self.sink.fail(eDefaultArgument, parameter, "required parameters must precede parameters with defaults");
+                default_seen = default_seen or default_value != null;
+            }
+            try list.parameters.append(self.arena.allocator(), .{ .name = parameter, .ty = ty, .default_value = default_value, .mut = mutable });
             if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
-        return parameters;
+        return list;
     }
     fn defaultArgument(self: *Parser) diagnostic.Error!ast.NodeId {
         const value = try self.expression(0);
@@ -1293,9 +1367,14 @@ pub const Parser = struct {
             },
             .kw_return => ret: {
                 self.cursor.pos += 1;
-                break :ret .{ .ret = if (self.current().tag == .semicolon or lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos)) try self.append(.{ .span = first.span, .data = .unit }) else try self.expression(0) };
+                const empty = self.current().tag == .semicolon or lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos);
+                break :ret .{ .ret = if (empty) try self.append(.{ .span = first.span, .data = .unit }) else try self.bareTuple(try self.expression(0)) };
             },
             .ident => assignment: {
+                if (self.tokens[self.cursor.pos + 1].tag == .comma) {
+                    implicit_discard = true;
+                    break :assignment .{ .discard = try self.destructuringAssignment(first) };
+                }
                 if (self.tokens[self.cursor.pos + 1].tag == .colon and self.tokens[self.cursor.pos + 2].tag != .colon) {
                     self.cursor.pos += 2;
                     const annotation = try self.typeName();
@@ -1380,6 +1459,42 @@ pub const Parser = struct {
             } },
         });
     }
+    /// `x, y = value`: a destructuring assignment. Both sides are `.tuple` nodes
+    /// in source order and the whole statement keeps the shape a field
+    /// assignment uses, an assignment node inside a discard, so the target list
+    /// and the value stay reachable from one node. A bare `x, y` with no `=` is
+    /// not a value and is rejected here.
+    fn destructuringAssignment(self: *Parser, first: lex.Token) diagnostic.Error!ast.NodeId {
+        const targets = try self.destructuringTargets(first);
+        const target_span = self.syntax.nodes.items[@backingInt(targets)].span;
+        if (!self.take(.equal)) return self.sink.fail(syntax_code, target_span, "a bare comma list is not an expression; write `x, y = value` or parenthesize it as a tuple");
+        const value = try self.bareTuple(try self.expression(0));
+        return self.append(.{
+            .span = .join(target_span, self.syntax.nodes.items[@backingInt(value)].span),
+            .data = .{ .field_assignment = .{ .target = targets, .value = value } },
+        });
+    }
+    /// The target list of a destructuring assignment: two or more names separated
+    /// by commas, with an optional trailing comma after the last one. One name
+    /// is never a tuple, so `x, = pair` is rejected.
+    fn destructuringTargets(self: *Parser, first: lex.Token) diagnostic.Error!ast.NodeId {
+        const allocator = self.arena.allocator();
+        var elements: std.ArrayList(ast.NodeId) = .empty;
+        try elements.append(allocator, try self.append(.{ .span = first.span, .data = .{ .name = first.span } }));
+        var last = first.span;
+        var comma_span: ?Span = null;
+        self.cursor.pos += 1;
+        while (self.current().tag == .comma) {
+            comma_span = self.current().span;
+            _ = self.take(.comma);
+            if (self.current().tag == .equal or self.terminatorAhead()) break;
+            const name = try self.expect(.ident);
+            last = name.span;
+            try elements.append(allocator, try self.append(.{ .span = name.span, .data = .{ .name = name.span } }));
+        }
+        if (elements.items.len < 2) return self.sink.fail(syntax_code, comma_span orelse first.span, "a one-element target list is not a tuple; bind the name directly");
+        return self.append(.{ .span = .join(first.span, last), .data = .{ .tuple = try elements.toOwnedSlice(allocator) } });
+    }
     fn assignmentExpression(self: *Parser) diagnostic.Error!ast.NodeId {
         const value = try self.expression(0);
         const operator = self.current();
@@ -1420,6 +1535,15 @@ pub const Parser = struct {
         const id: ast.NodeId = @fromBackingInt(self.syntax.nodes.items.len);
         try self.syntax.nodes.append(self.arena.allocator(), node);
         return id;
+    }
+    /// Whether the cursor stands at the start of a new logical line: the boundary
+    /// an expression stops at unless a delimiter holds the line open. A keyword
+    /// that continues an expression on the next line of the same statement is
+    /// never parsed across this boundary.
+    fn implicitBoundary(self: *Parser) bool {
+        if (self.cursor.delimiters != 0) return false;
+        if (self.current().tag == .dedent or self.current().tag == .eof) return false;
+        return lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos);
     }
     fn expression(self: *Parser, min_precedence: u8) diagnostic.Error!ast.NodeId {
         try self.enter();
@@ -1492,24 +1616,14 @@ pub const Parser = struct {
                     } },
                 });
             },
-            .lparen => group: {
-                _ = self.take(.lparen);
-                if (self.take(.rparen)) break :group try self.append(.{ .span = .join(token.span, self.tokens[self.cursor.pos - 1].span), .data = .unit });
-                const inner = try self.expression(0);
-                if (self.current().tag == .colon and self.tokens[self.cursor.pos + 1].tag == .equal) return self.hintHere(.walrus);
-                const close = try self.closeWithHint(.rparen);
-                self.syntax.nodes.items[@backingInt(inner)].span = .join(token.span, close.span);
-                break :group inner;
-            },
+            .lparen => try self.parenthesizedExpression(token),
             // A `def` or `match` in expression position, and the second `*` or
             // `<` of a `**` or `<<`, name their accepted spelling; every other
             // token keeps the plain rejection.
             else => return self.pythonExpressionFailure(token),
         };
         while (true) {
-            if (self.cursor.delimiters == 0 and self.current().tag != .dedent and self.current().tag != .eof) {
-                if (lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos)) break;
-            }
+            if (self.implicitBoundary()) break;
             if (self.take(.question)) {
                 left = try self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, self.tokens[self.cursor.pos - 1].span), .data = .{ .propagate = left } });
                 continue;
@@ -1547,7 +1661,77 @@ pub const Parser = struct {
                 .op_span = op.span,
             } } });
         }
+        // `a if p else b` is the loosest expression form and nests to the right.
+        if (min_precedence == 0 and self.current().tag == .kw_if and !self.implicitBoundary()) return self.conditionalExpression(left);
         return left;
+    }
+    /// The `if condition else value` tail of `a if p else b`, taken after the
+    /// then-arm has been parsed. The condition is parsed above `or` and the else
+    /// arm at the lowest precedence, so `a if p else b if q else c` nests in its
+    /// else arm. A `kw_if` on a new logical line starts an `if` statement, not a
+    /// conditional, so the caller checks the line boundary first.
+    fn conditionalExpression(self: *Parser, then_value: ast.NodeId) diagnostic.Error!ast.NodeId {
+        self.cursor.pos += 1;
+        const condition = try self.expression(1);
+        _ = try self.expect(.kw_else);
+        const else_value = try self.expression(0);
+        return self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(then_value)].span, self.syntax.nodes.items[@backingInt(else_value)].span), .data = .{ .conditional = .{
+            .condition = condition,
+            .then_value = then_value,
+            .else_value = else_value,
+        } } });
+    }
+    /// One parenthesized expression: `()`, an ordinary grouped expression, or a
+    /// tuple. A comma after the first element makes a tuple; without one the
+    /// parentheses only group, so `(a)` stays the name `a`.
+    fn parenthesizedExpression(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        _ = self.take(.lparen);
+        if (self.take(.rparen)) return self.append(.{ .span = .join(token.span, self.tokens[self.cursor.pos - 1].span), .data = .unit });
+        const inner = try self.expression(0);
+        if (self.current().tag == .colon and self.tokens[self.cursor.pos + 1].tag == .equal) return self.hintHere(.walrus);
+        if (self.current().tag == .comma) return self.parenthesizedTuple(token, inner);
+        const close = try self.expect(.rparen);
+        self.syntax.nodes.items[@backingInt(inner)].span = .join(token.span, close.span);
+        return inner;
+    }
+    /// The trailing elements of a parenthesized tuple, after its first: `(a, b)`,
+    /// `(a, b, c)` and `(a, b,)` all build one `.tuple` in source order. A
+    /// trailing comma is accepted after two or more elements; `(a,)` is a
+    /// one-element tuple, which this language has no value for.
+    fn parenthesizedTuple(self: *Parser, open: lex.Token, first: ast.NodeId) diagnostic.Error!ast.NodeId {
+        const allocator = self.arena.allocator();
+        var elements: std.ArrayList(ast.NodeId) = .empty;
+        try elements.append(allocator, first);
+        var comma_span: ?Span = null;
+        while (self.current().tag == .comma) {
+            comma_span = self.current().span;
+            _ = self.take(.comma);
+            if (self.current().tag == .rparen) break;
+            try elements.append(allocator, try self.expression(0));
+        }
+        if (elements.items.len < 2) return self.sink.fail(syntax_code, comma_span orelse self.syntax.nodes.items[@backingInt(first)].span, "a one-element tuple is not a value; write the element alone or a two-element tuple");
+        const close = try self.expect(.rparen);
+        return self.append(.{ .span = .join(open.span, close.span), .data = .{ .tuple = try elements.toOwnedSlice(allocator) } });
+    }
+    /// The trailing elements of a bare tuple after its first: the `a, b` of a
+    /// `return` or of an assignment's right-hand side. A trailing comma is
+    /// accepted after two or more elements; a bare `a,` is a one-element tuple
+    /// and stays rejected.
+    fn bareTuple(self: *Parser, first: ast.NodeId) diagnostic.Error!ast.NodeId {
+        if (self.current().tag != .comma) return first;
+        const allocator = self.arena.allocator();
+        var elements: std.ArrayList(ast.NodeId) = .empty;
+        try elements.append(allocator, first);
+        var comma_span: ?Span = null;
+        while (self.current().tag == .comma) {
+            comma_span = self.current().span;
+            _ = self.take(.comma);
+            if (self.terminatorAhead()) break;
+            try elements.append(allocator, try self.expression(0));
+        }
+        if (elements.items.len < 2) return self.sink.fail(syntax_code, comma_span orelse self.syntax.nodes.items[@backingInt(first)].span, "a one-element tuple is not a value; write the element alone or a two-element tuple");
+        const last = self.syntax.nodes.items[@backingInt(elements.items[elements.items.len - 1])].span;
+        return self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(first)].span, last), .data = .{ .tuple = try elements.toOwnedSlice(allocator) } });
     }
     fn lambdaExpression(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
@@ -1577,7 +1761,7 @@ pub const Parser = struct {
         if (self.take(.lparen)) {
             var arguments: std.ArrayList(ast.NodeId) = .empty;
             if (self.current().tag != .rparen) while (true) {
-                try arguments.append(self.arena.allocator(), try self.expression(0));
+                try arguments.append(self.arena.allocator(), try self.argumentValue());
                 if (!self.take(.comma) or self.current().tag == .rparen) break;
             };
             const close = try self.callClose();
@@ -1632,13 +1816,16 @@ pub const Parser = struct {
         return self.append(.{ .span = span, .data = .{ .unary = .{ .op = .not, .operand = test_value, .op_span = operator.span } } });
     }
     /// Parse the tail of `[value for name in iterable if condition]` after its value.
+    /// The source and the filter are parsed above the conditional expression, as
+    /// Python's grammar parses them: the `if` after the iterable starts the
+    /// filter, so `[x for x in xs if p]` never reads as a conditional.
     fn parseComprehension(self: *Parser, token: lex.Token, output: ast.NodeId) diagnostic.Error!ast.NodeId {
         _ = try self.expect(.kw_for);
         const name = try self.expect(.ident);
         _ = try self.expect(.kw_in);
-        const input = try self.expression(0);
+        const input = try self.expression(1);
         if (self.current().tag == .kw_for) return self.hintHere(.nested_comprehension);
-        const filter = if (self.take(.kw_if)) try self.expression(0) else null;
+        const filter = if (self.take(.kw_if)) try self.expression(1) else null;
         const close = try self.expect(.rbracket);
         const src: ast.Comprehension.Source = if (try self.rangeBounds(input)) |bounds|
             .{ .range = .{ .start = bounds.start, .end = bounds.end } }
@@ -1978,7 +2165,7 @@ pub const Parser = struct {
             keyword_seen = keyword_seen or keyword;
             try names.append(self.arena.allocator(), name);
             try markers.append(self.arena.allocator(), marked);
-            try values.append(self.arena.allocator(), try self.expression(0));
+            try values.append(self.arena.allocator(), try self.argumentValue());
             if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
         return .{

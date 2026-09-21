@@ -1,4 +1,8 @@
 //! Interpolated `f"..."` literals render once and join multiple pieces into text.
+//! The `foundation syntax:` cases at the end cover the token formatter's
+//! canonical text for the local-reasoning spellings: `mut` on a parameter and a
+//! call argument, a bare `*` keyword-only separator, tuple values and types, and
+//! the conditional expression, each of which must survive `mylang fmt` unchanged.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
@@ -192,4 +196,41 @@ test "a failing later f-string hole writes none of the unfinished result" {
 test "renderAlloc releases its partial buffer when the allocator fails" {
     var failing = t.FailingAllocator.init(t.allocator, .{ .fail_index = 0 });
     try t.expectError(error.OutOfMemory, io_render.renderAlloc(failing.allocator(), &.{}, .{ .i64 = 42 }));
+}
+
+/// Format one already-canonical source twice and require the bytes back
+/// unchanged both times, so a spelling that only looks stable on the first pass
+/// fails here.
+fn canonical(source: []const u8) !void {
+    var c = try language.Compilation.init(t.allocator, "canonical.my", source);
+    defer c.deinit();
+    const formatted = try c.format(t.allocator);
+    defer t.allocator.free(formatted);
+    try t.expectEqualStrings(source, formatted);
+    var again = try language.Compilation.init(t.allocator, "canonical.my", formatted);
+    defer again.deinit();
+    const twice = try again.format(t.allocator);
+    defer t.allocator.free(twice);
+    try t.expectEqualStrings(source, twice);
+}
+
+// spec: SYNTAX-FMT-1
+test "foundation syntax: fmt round-trips the mut star tuple and conditional spellings unchanged" {
+    try canonical("def fill(values: mut list[int], count: int) -> None:\n    return\n");
+    try canonical("def issue(host: int, *, code: int, file: int) -> None:\n    return\n");
+    try canonical("def main() -> int:\n    push(mut values, 1)\n    return 0\n");
+    try canonical("def swap(a: int, b: int) -> None:\n    a, b = b, a\n    return\n");
+    try canonical("def split(text: str) -> tuple[str, str]:\n    return text, text\n");
+    try canonical("def choose(flag: bool) -> int:\n    y = 1 if flag else 2\n    return y\n");
+    try canonical("def label(flag: bool) -> int:\n    pair = (1, 2)\n    return pair[0] if flag else pair[1]\n");
+}
+
+// spec-case: SYNTAX-FMT-1
+test "foundation syntax: fmt drops a redundant trailing comma after the last tuple element" {
+    try canonical("def main() -> int:\n    pair = (1, 2)\n    return pair[0]\n");
+    var c = try language.Compilation.init(t.allocator, "canonical.my", "def main() -> int:\n    pair = (1, 2,)\n    return pair[0]\n");
+    defer c.deinit();
+    const formatted = try c.format(t.allocator);
+    defer t.allocator.free(formatted);
+    try t.expectEqualStrings("def main() -> int:\n    pair = (1, 2)\n    return pair[0]\n", formatted);
 }

@@ -25,7 +25,7 @@ round. Codes the classifier cannot name without source fall back to
 CODE_ONLY_IDIOMS below, a code-only extension documented in README.md; any code
 in neither place is reported as `unclassified` rather than guessed at, because
 one code can cover several idioms (an `E_SYNTAX` record may be a union comma, a
-ternary or a comprehension, and only the source tells them apart).
+chained assignment or a comprehension, and only the source tells them apart).
 
 Usage:
     harvest.py LOG [--json] [--top N] [--window N] [--classifier PATH]

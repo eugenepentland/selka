@@ -103,6 +103,12 @@ pub const Node = struct {
         call: struct { argument_names: []const ?Span = &.{}, evaluation_order: []const usize = &.{}, owner: ?Span = null, type_arguments: []const Span = &.{}, name: Span, arguments: []const NodeId, argument_markers: []const bool = &.{} },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
+        /// A parenthesized or bare tuple value; two to eight elements.
+        tuple: []const NodeId,
+        /// `value_if_true if condition else value_if_false`.
+        conditional: struct { condition: NodeId, then_value: NodeId, else_value: NodeId },
+        /// The `mut` call-argument marker wrapping its target. No type of its own.
+        mut_argument: NodeId,
     },
 };
 /// Parsed statement and control-flow structure before ownership and type checking.
@@ -156,7 +162,13 @@ pub const FieldInit = struct { name: Span, value: NodeId, default: bool = false 
 /// reference spelling; `record` is the explicit copy/value spelling.
 pub const Record = struct { managed: bool = false, type_parameters: []const TypeParameter = &.{}, name: Span, fields: []const Parameter };
 /// Source parameter name, declared type, and optional literal default.
-pub const Parameter = struct { default_value: ?NodeId = null, name: Span, ty: Span };
+pub const Parameter = struct {
+    default_value: ?NodeId = null,
+    name: Span,
+    ty: Span,
+    /// Whether the declared type was preceded by `mut`.
+    mut: bool = false,
+};
 /// Source-spelled wire type and domain decoder/encoder names.
 pub const Codec = struct { wire: Span, decode: Span, encode: Span };
 /// Nominal domain declaration with backing type and optional explicit codec.
@@ -211,6 +223,9 @@ pub const FunctionSignature = struct {
     inferred_mutates: []const u16 = &.{},
     /// Whether the abstract body performed a managed receiver write.
     inferred_mutation_writes: bool = false,
+    /// Zero-based index of the first keyword-only parameter, or null when the
+    /// list has no `*`. Equal to the positional parameter count.
+    keyword_only_from: ?usize = null,
 };
 
 /// Fixed integer length or enum key spelling of an array/table type.
@@ -313,6 +328,11 @@ pub const CallbackType = struct {
     effect_bound: effect_set.Bound,
     /// Normalized parameter positions from an optional `mutates(...)` clause.
     mutates: []const u16 = &.{},
+    /// One flag per parameter in source order, true where the declared type was
+    /// preceded by `mut`.
+    mut_parameters: []const bool = &.{},
 };
+/// One `tuple[T1, ..., Tn]` type spelling with its element type spans.
+pub const TupleType = struct { span: Span, elements: []const Span };
 /// Source catalog of structural types and nominal type applications.
-pub const TypeExpressions = struct { callbacks: []const CallbackType = &.{}, arrays: []const ArrayType = &.{}, applications: []const TypeApplication = &.{}, aliases: []const TypeAlias = &.{} };
+pub const TypeExpressions = struct { callbacks: []const CallbackType = &.{}, arrays: []const ArrayType = &.{}, applications: []const TypeApplication = &.{}, aliases: []const TypeAlias = &.{}, tuples: []const TupleType = &.{} };
