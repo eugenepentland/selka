@@ -20,6 +20,15 @@ typedef struct {
     myl_native_type entry_type;
     myl_native_field entry_fields[2];
     myl_native_dictionary_index index;
+    /* Where the last string-keyed probe landed, and the key object it landed on.
+     * A read-modify-write probes one key object twice — a read immediately
+     * followed by a write of the same key — so the second probe answers with two
+     * pointer comparisons instead of another hash, table walk and content
+     * comparison. The record is a hint, never an answer: it is revalidated
+     * against the live entry list, so a `pop`, a `clear` or a rebuild only costs
+     * the full probe. */
+    myl_native_text *cache_key;
+    size_t cache_entry;
 } myl_native_dictionary;
 myl_native_dictionary *myl_native_dictionary_new(myl_native_heap *, const myl_native_type *key, const myl_native_type *value, int string_keys);
 size_t myl_native_dictionary_length(const myl_native_dictionary *);

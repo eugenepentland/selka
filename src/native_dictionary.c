@@ -24,6 +24,7 @@ myl_native_dictionary *myl_native_dictionary_new(myl_native_heap *heap, const my
     dict->entry_type=(myl_native_type){.size=size,.alignment=alignment,.kind=MYL_NATIVE_RECORD,.fields=dict->entry_fields,.field_count=2};
     /* An empty dictionary carries no table: the first write sizes one. */
     dict->index=(myl_native_dictionary_index){.slots=NULL,.capacity=0};
+    dict->cache_key=NULL; dict->cache_entry=SIZE_MAX;
     myl_native_root root;
     myl_native_root_push(heap,&root,&dict,&pointer_type);
     dict->entries=myl_native_list_new(heap,&dict->entry_type,0);
@@ -97,7 +98,10 @@ static void index_reserve(myl_native_heap *heap, myl_native_dictionary *dict, si
     dict->index.slots=slots; dict->index.capacity=capacity;
     index_rebuild(dict);
 }
-static size_t find(const myl_native_dictionary *dict, const void *key) {
+/* The exact lookup `find` answers once no remembered entry applies: a scan of
+ * the entry list when the dictionary carries no table, and otherwise the masked
+ * hash followed by linear probing. */
+static size_t probe(const myl_native_dictionary *dict, const void *key) {
     if (!dict->index.capacity) {
         for (size_t i=0;i<dict->entries->length;i++)
             if (same_key(dict,entry_at(dict,i),key)) return i;
@@ -110,6 +114,41 @@ static size_t find(const myl_native_dictionary *dict, const void *key) {
         at=(at+1)&mask;
     }
     return SIZE_MAX;
+}
+/* The entry the last string-keyed probe found for exactly this key object, or
+ * SIZE_MAX when the record cannot be trusted. Identity is the whole test: a
+ * pointer that matches the recorded one names the same text with the same
+ * content, and the entry at the recorded position must hold that same pointer,
+ * which no insertion, removal or rebuild can fake. Two equal texts that are not
+ * the same object therefore never take this path — they get the full probe. */
+static size_t remembered_entry(const myl_native_dictionary *dict, const void *key) {
+    if (!dict->cache_key || dict->cache_entry>=dict->entries->length) return SIZE_MAX;
+    myl_native_text *queried, *recorded;
+    memcpy(&queried,key,sizeof queried);
+    if (queried!=dict->cache_key) return SIZE_MAX;
+    memcpy(&recorded,entry_at(dict,dict->cache_entry),sizeof recorded);
+    return recorded==queried ? dict->cache_entry : SIZE_MAX;
+}
+/* Record where a probe landed. Only a hit is worth remembering: a miss is cheap
+ * to recompute and a later write turns it into a hit, which the record would
+ * then answer wrongly. A key type compared by value has no stable identity to
+ * record, so only a text key is cached. */
+static void remember(myl_native_dictionary *dict, const void *key, size_t entry) {
+    if (!dict->string_keys || entry==SIZE_MAX) { dict->cache_key=NULL; return; }
+    myl_native_text *text;
+    memcpy(&text,key,sizeof text);
+    dict->cache_key=text;
+    dict->cache_entry=entry;
+}
+/* Locate one key, answering the remembered entry when the same key object was
+ * probed last. Only the reported position is cached; a probe that misses still
+ * walks the table exactly as it did before. */
+static size_t find(const myl_native_dictionary *dict, const void *key) {
+    size_t remembered=remembered_entry(dict,key);
+    if (remembered!=SIZE_MAX) return remembered;
+    size_t index=probe(dict,key);
+    remember((myl_native_dictionary *)dict,key,index);
+    return index;
 }
 size_t myl_native_dictionary_length(const myl_native_dictionary *dict) { return dict->entries->length; }
 int myl_native_dictionary_contains(const myl_native_dictionary *dict, const void *key) { return find(dict,key)!=SIZE_MAX; }

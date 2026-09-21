@@ -151,5 +151,37 @@ public def test_a_dictionary_built_and_read_inside_an_arena_escapes_intact() -> 
     return escaped == 319600 and kept["key0"] == 7 and len(kept) == 800 and "key800" not in kept
 
 
+# A read-modify-write probes one key object twice in a row, and the second probe
+# must still name the entry the first one found: an insertion, a `pop` that
+# shifts every later entry down, and a `clear` between the two probes each leave
+# the answer to the live entry list, and a text built at run time with the same
+# content lands on the same entry.
+# spec: DICT-GETORPUT-1
+public def test_repeated_probes_of_one_key_survive_a_shift_between_them() -> bool:
+    counts: dict[str, i64] = {}
+    for i in range(40):
+        counts["k" + str(i)] = i
+    key = "k7"
+    seen = counts.get(key, 0)
+    counts["k39"] = 39
+    _ = counts.pop("k1")
+    counts[key] = seen + 1
+    if counts[key] != 8 or len(counts) != 39:
+        return False
+    equal_content = chr(107) + chr(55)
+    seen = counts.get(equal_content, 0)
+    counts[equal_content] = seen + 1
+    if counts[key] != 9 or len(counts) != 39:
+        return False
+    counts[equal_content] = counts.get(equal_content, 0) + 1
+    if counts[key] != 10:
+        return False
+    counts.clear()
+    counts[key] = counts.get(key, 0) + 5
+    if counts[key] != 5 or len(counts) != 1 or "k0" in counts:
+        return False
+    return True
+
+
 def main() -> int:
     return 0

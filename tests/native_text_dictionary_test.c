@@ -136,7 +136,87 @@ static void index_limits(void) {
     assert(myl_native_root_pop(&heap,&root));
     myl_native_heap_destroy(&heap);
 }
+/* spec-case: DICT-GETORPUT-1. A read-modify-write probes one key object twice in
+   a row, and the remembered entry the second probe answers with is only a hint:
+   it must name the entry the first probe found even after an insertion, a `pop`
+   that shifts every later entry down, a `clear`, and a lookup of a *different*
+   text object holding the same content. */
+static void repeated_probes_survive_a_shift(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,1<<20);
+    myl_native_text *key=myl_native_text_from_utf8(&heap,(const unsigned char *)"k7",2);
+    assert(key);
+    myl_native_root key_root;
+    myl_native_root_push(&heap,&key_root,&key,&pointer);
+    /* The shape `dict[str, i64]` has: a traced text pointer per key, one word of
+       value. */
+    static const myl_native_type text_key={.size=sizeof(void *),.alignment=_Alignof(void *),.kind=MYL_NATIVE_POINTER};
+    myl_native_dictionary *counts=myl_native_dictionary_new(&heap,&text_key,&number,1);
+    assert(counts);
+    myl_native_root dict_root;
+    myl_native_root_push(&heap,&dict_root,&counts,&pointer);
+    for (int i=0;i<40;++i) {
+        char spelling[8];
+        int width=snprintf(spelling,sizeof spelling,"k%d",i);
+        myl_native_text *name=myl_native_text_from_utf8(&heap,(const unsigned char *)spelling,(size_t)width);
+        assert(name);
+        myl_native_root name_root;
+        myl_native_root_push(&heap,&name_root,&name,&pointer);
+        int64_t value=i;
+        assert(myl_native_dictionary_write(&heap,counts,&name,&value));
+        myl_native_root_pop(&heap,&name_root);
+    }
+    myl_native_text *last=text(&heap,"k39");
+    assert(last);
+    myl_native_root last_root;
+    myl_native_root_push(&heap,&last_root,&last,&pointer);
+    int64_t seen=0;
+    assert(myl_native_dictionary_read(counts,&key,&seen) && seen==7);
+    /* An insertion, then a removal that shifts every later entry down, both
+       between the read and the write of one read-modify-write. */
+    assert(myl_native_dictionary_write(&heap,counts,&last,&seen));
+    char removed[8];
+    int removed_width=snprintf(removed,sizeof removed,"k1");
+    myl_native_text *dropped=myl_native_text_from_utf8(&heap,(const unsigned char *)removed,(size_t)removed_width);
+    assert(dropped);
+    myl_native_root dropped_root;
+    myl_native_root_push(&heap,&dropped_root,&dropped,&pointer);
+    int64_t popped=0;
+    assert(myl_native_dictionary_pop(counts,&dropped,&popped) && popped==1);
+    myl_native_root_pop(&heap,&dropped_root);
+    int64_t bumped=seen+1;
+    assert(myl_native_dictionary_write(&heap,counts,&key,&bumped));
+    assert(myl_native_dictionary_length(counts)==39);
+    assert(myl_native_dictionary_read(counts,&key,&seen) && seen==8);
+    /* A different text object with the same content is not the remembered one:
+       the full probe finds the same entry and the write lands there. */
+    myl_native_text *rebuilt=myl_native_text_from_utf8(&heap,(const unsigned char *)"k7",2);
+    assert(rebuilt && rebuilt!=key);
+    myl_native_root rebuilt_root;
+    myl_native_root_push(&heap,&rebuilt_root,&rebuilt,&pointer);
+    assert(myl_native_dictionary_read(counts,&rebuilt,&seen) && seen==8);
+    int64_t again=seen+1;
+    assert(myl_native_dictionary_write(&heap,counts,&rebuilt,&again));
+    assert(myl_native_dictionary_length(counts)==39);
+    assert(myl_native_dictionary_read(counts,&key,&seen) && seen==9);
+    myl_native_root_pop(&heap,&last_root);
+    /* A clear leaves the remembered entry beyond the live range, so the next
+       read-modify-write inserts again. */
+    myl_native_dictionary_clear(counts);
+    int64_t fresh=0;
+    assert(!myl_native_dictionary_read(counts,&key,&fresh));
+    int64_t first=fresh+5;
+    assert(myl_native_dictionary_write(&heap,counts,&key,&first));
+    assert(myl_native_dictionary_length(counts)==1);
+    assert(myl_native_dictionary_read(counts,&key,&seen) && seen==5);
+    myl_native_root_pop(&heap,&rebuilt_root);
+    myl_native_root_pop(&heap,&dict_root);
+    myl_native_root_pop(&heap,&key_root);
+    myl_native_heap_destroy(&heap);
+}
+
 int main(void) {
+    repeated_probes_survive_a_shift();
     myl_native_heap heap;
     myl_native_heap_init(&heap,1<<20); heap.stress=1;
     myl_native_root roots[8];

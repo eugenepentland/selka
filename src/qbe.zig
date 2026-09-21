@@ -610,6 +610,23 @@ const pure_callees = [_][]const u8{
     "myl_qbe_int_binary",
     "myl_qbe_float_check",
     "myl_qbe_float_unary",
+    // The read-only collection surfaces: a dictionary probe, a byte search and
+    // the octet copy the inlined buffer append performs all take a `const`
+    // receiver, walk storage the caller already holds, and allocate nothing. The
+    // one write any of them makes is the hash a text caches in its own header, so
+    // a frame whose only calls are these never reaches a collection and needs no
+    // root record around them.
+    "myl_native_dictionary_read",
+    "myl_native_dictionary_contains",
+    "myl_native_dictionary_length",
+    "myl_native_dictionary_key_at",
+    "myl_native_dictionary_value_at",
+    "myl_native_bytes_find",
+    "myl_native_bytes_find_any",
+    "myl_native_bytes_starts_with",
+    "myl_native_bytes_ends_with",
+    "myl_native_bytes_has_byte",
+    "myl_native_bytes_copy_octets",
 };
 
 /// Frame and prologue plumbing that allocates nothing. It appears in a unit

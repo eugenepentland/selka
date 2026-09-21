@@ -733,6 +733,32 @@ test "QBE specializes scalar generic calls" {
     defer parsed.deinit();
     try std.testing.expectEqual(@as(usize, 2), parsed.value.functions.len);
 }
+// spec: QBE-PURE-READ-1
+test "QBE-PURE-READ-1 a read-only collection probe pushes no roots" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def probe(counts: dict[str, i64], key: str) -> i64:
+        \\    return counts.get(key, 0)
+        \\
+        \\
+        \\def bump(counts: dict[str, i64], key: str) -> i64:
+        \\    counts[key] = 1
+        \\    return len(counts)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    counts: dict[str, i64] = {}
+        \\    return probe(counts, "k") + bump(counts, "k")
+    );
+    defer parsed.deinit();
+    const probe = named(parsed.value, "probe").?.il;
+    try std.testing.expect(std.mem.indexOf(u8, probe, "myl_native_dictionary_read(") != null);
+    try std.testing.expect(std.mem.indexOf(u8, probe, "myl_qbe_root_mark") == null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, probe, "=l add %root"));
+    const bump = named(parsed.value, "bump").?.il;
+    try std.testing.expect(std.mem.indexOf(u8, bump, "myl_native_dictionary_length(") != null);
+    try std.testing.expect(std.mem.count(u8, bump, "=l add %root") != 0);
+}
+
 // spec: QBE-PURECALL-1
 test "a call to a function that cannot allocate pushes no roots" {
     const a = std.testing.allocator;
