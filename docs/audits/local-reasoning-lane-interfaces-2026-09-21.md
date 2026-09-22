@@ -157,20 +157,35 @@ sharded and slow, and lanes run the filtered subsets.
 
 ## Build and commit protocol (shared since 2026-09-22)
 
-All four lane worktrees share one Zig local cache and one native cache, so a
-cold build is about a second instead of minutes. Prefix every Zig invocation:
+Each lane has its **own** Zig local cache under `$HOME` and shares the native
+cache, so lane builds cannot poison each other and guest builds and test receipts
+are reused across worktrees. Prefix every Zig invocation:
 
 ```sh
-ZIG_LOCAL_CACHE_DIR=$HOME/.cache/mylang/zig-local-cache zig build -j4
-ZIG_LOCAL_CACHE_DIR=$HOME/.cache/mylang/zig-local-cache zig build test-units -Dtest-filter=NAME
+cd /home/epentland/ai/canopy/mylang-<lane>
+rm -f zig-out/bin/mylang                      # see "installs are gated on green"
+ZIG_LOCAL_CACHE_DIR=$HOME/.cache/mylang/zig-local-cache-<lane> zig build -j4
+ZIG_LOCAL_CACHE_DIR=$HOME/.cache/mylang/zig-local-cache-<lane> zig build test-units -Dtest-filter=NAME
+ls -la zig-out/bin/mylang                     # MISSING means the gate failed
+zig-out/bin/mylang test tests/lang --cache-dir $HOME/.cache/mylang/native-cache
 ```
 
-and give every `zig-out/bin/mylang` invocation that accepts one the shared
-native cache, so guest builds and test receipts are reused across worktrees:
+**Installs are gated on green, and that is the whole "stale binary" story.** Every
+artifact install step depends on Guardian, so a failing Guardian check makes
+`zig build` exit non-zero and install nothing: the compile succeeded, the binary
+keeps the previous revision or does not exist, and a lane that reads only the tail
+of the log sees a green-looking build. Delete `zig-out/bin/mylang` before the
+build and check that it exists afterwards; never conclude a diagnostic changed
+from a build whose exit status you did not read.
 
-```sh
-zig-out/bin/mylang test tests/lang --cache-dir /home/epentland/.cache/mylang/native-cache
-```
+**Never put a build cache or scratch directory under `/tmp`.** It is a 16 GB
+tmpfs with a user quota; one lane's Debug cache filled it and every agent on the
+machine lost the ability to spawn a process, including `grep` and `glob`. Caches
+live under `$HOME/.cache/mylang/` only.
+
+**Guardian also gates commits.** The pre-commit hook fails on a red tree, which is
+wrong for work in progress. Commit anyway with `git commit --no-verify`, and say
+so in the report; the integration pass re-runs the whole-tree gate.
 
 Each lane **commits incrementally** — `git add -A && git commit -m "lane NAME:
 …"` after every coherent step, even one that does not build yet — and never runs
