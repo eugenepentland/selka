@@ -90,9 +90,6 @@ static int managed(Work *work,Pair pair) {
 static int compare(Work *work,Pair pair) {
     const myl_native_type *type=pair.type;
     if (type->kind==MYL_NATIVE_POINTER) return managed(work,pair);
-    /* Two niche optionals compare as their references, and `managed` already
-       answers null against null as equal and null against a reference as not. */
-    if (type->kind==MYL_NATIVE_NICHE) return managed(work,(Pair){type->fields[0].type,pair.left,pair.right});
     if (type->kind==MYL_NATIVE_FLOAT) {
         double a,b;
         memcpy(&a,pair.left,sizeof(a)); memcpy(&b,pair.right,sizeof(b));

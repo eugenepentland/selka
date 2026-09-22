@@ -267,7 +267,10 @@ void myl_print_domain(MylPrint *out, const void *value, unsigned depth, const ch
     inner(out, value, depth + 1);
     byte(out, ')');
 }
-static void print_case(MylPrint *out, const void *value, unsigned depth, const MylPrintField *cases, size_t count, uint32_t tag) {
+void myl_print_variant(MylPrint *out, const void *value, unsigned depth, const MylPrintField *cases, size_t count) {
+    if (myl_print_deep(out, depth)) return;
+    uint32_t tag = 0;
+    memcpy(&tag, value, sizeof tag);
     for (size_t i = 0; i < count; ++i) {
         if (cases[i].tag != tag) continue;
         literal(out, cases[i].name);
@@ -279,12 +282,6 @@ static void print_case(MylPrint *out, const void *value, unsigned depth, const M
     }
     literal(out, "...");
 }
-void myl_print_variant(MylPrint *out, const void *value, unsigned depth, const MylPrintField *cases, size_t count) {
-    if (myl_print_deep(out, depth)) return;
-    uint32_t tag = 0;
-    memcpy(&tag, value, sizeof tag);
-    print_case(out, value, depth, cases, count, tag);
-}
 void myl_print_niche(MylPrint *out, const void *value, unsigned depth, const MylPrintField *cases, size_t count) {
     if (myl_print_deep(out, depth)) return;
     const void *reference = NULL;
@@ -292,7 +289,11 @@ void myl_print_niche(MylPrint *out, const void *value, unsigned depth, const Myl
     /* The one case with a payload renderer is `Some`; the null word is the other. */
     for (size_t i = 0; i < count; ++i) {
         if ((cases[i].render != NULL) != (reference != NULL)) continue;
-        print_case(out, value, depth, cases, count, cases[i].tag);
+        literal(out, cases[i].name);
+        if (!cases[i].render) return;
+        byte(out, '(');
+        cases[i].render(out, (const unsigned char *)value + cases[i].offset, depth + 1);
+        byte(out, ')');
         return;
     }
     literal(out, "...");

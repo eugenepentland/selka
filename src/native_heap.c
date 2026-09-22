@@ -212,8 +212,7 @@ static void mark(myl_native_heap *heap, void *payload) {
 static void trace(myl_native_heap *heap, const myl_native_type *type, const void *address) {
     const unsigned char *bytes = address;
     if (type->trace_mode == MYL_NATIVE_TRACE_NONE) return;
-    /* A niche optional's word is its reference or null; `mark` skips null. */
-    if (type->kind == MYL_NATIVE_POINTER || type->kind == MYL_NATIVE_NICHE || type->kind == MYL_NATIVE_OWNED_BUFFER || type->kind == MYL_NATIVE_OWNED_POOL) {
+    if (type->kind == MYL_NATIVE_POINTER || type->kind == MYL_NATIVE_OWNED_BUFFER || type->kind == MYL_NATIVE_OWNED_POOL) {
         void *pointer;
         memcpy(&pointer, bytes, sizeof(pointer));
         mark(heap, pointer);
