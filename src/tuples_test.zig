@@ -232,3 +232,71 @@ test "a tuple rejects indexing, fields, methods and len with the destructuring p
     defer t.allocator.free(sized);
     try t.expect(std.mem.indexOf(u8, sized, "a tuple has no length; take it apart with `head, rest = value`") != null);
 }
+
+/// Execute one program natively and return everything it wrote to standard output.
+fn output(text: []const u8) ![]const u8 {
+    const native = @import("native_execute.zig");
+    var compilation = try language.Compilation.init(t.allocator, unit_name, text);
+    defer compilation.deinit();
+    const outcome = native.run(&compilation) catch |err| {
+        @import("diagnostics_test.zig").report(compilation.diagnostics.items);
+        return err;
+    };
+    try t.expectEqualStrings("", outcome.trap.code);
+    return outcome.stdout;
+}
+
+/// Execute one program natively and return its exit value.
+fn value(text: []const u8) !i64 {
+    const native = @import("native_execute.zig");
+    var compilation = try language.Compilation.init(t.allocator, unit_name, text);
+    defer compilation.deinit();
+    const outcome = native.run(&compilation) catch |err| {
+        @import("diagnostics_test.zig").report(compilation.diagnostics.items);
+        return err;
+    };
+    try t.expectEqualStrings("", outcome.trap.code);
+    return outcome.value;
+}
+
+// spec: TUPLE-6
+test "a tuple prints as its bracketed elements and compares structurally" {
+    try t.expectEqualStrings("(1, 'a')\n", try output(
+        \\def main(out: Stream) -> int:
+        \\    pair = (1, "a")
+        \\    out.print(pair)
+        \\    return 0
+        \\
+    ));
+    // Nested tuples, and a tuple held in a list, keep the same element rules.
+    try t.expectEqualStrings("(1, (2, 'b'))\n[(1, 'a'), (2, 'b')]\n", try output(
+        \\def main(out: Stream) -> int:
+        \\    nested = (1, (2, "b"))
+        \\    pairs: list[tuple[int, str]] = [(1, "a"), (2, "b")]
+        \\    out.print(nested)
+        \\    out.print(pairs)
+        \\    return 0
+        \\
+    ));
+    // Equality is structural, including a text element compared by content.
+    try t.expectEqual(@as(i64, 1), try value(
+        \\def main() -> int:
+        \\    left, right = (1, "a"), (1, "a")
+        \\    if left == right and left != (2, "a") and left != (1, "b"):
+        \\        return 1
+        \\    return 0
+        \\
+    ));
+}
+
+// spec-case: TUPLE-5
+test "the host boundary rejects a tuple signature" {
+    try rejects(
+        \\host def measure(host: Host, pair: tuple[int, str]) -> i64 effects(host)
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+        \\
+    , "E_HOST_SIGNATURE");
+}

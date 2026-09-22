@@ -29,6 +29,8 @@ void myl_print_dictionary(MylPrint *out, const void *value, unsigned depth, MylP
 void myl_print_dictionary_ref(MylPrint *out, const void *value, unsigned depth, MylPrintFn key, MylPrintFn item);
 void myl_print_array(MylPrint *out, const void *value, unsigned depth, size_t count, size_t stride, MylPrintFn element);
 void myl_print_record(MylPrint *out, const void *value, unsigned depth, const char *name, const MylPrintField *fields, size_t count);
+/* A tuple renders as its bracketed elements; the field spellings are ignored. */
+void myl_print_tuple(MylPrint *out, const void *value, unsigned depth, const MylPrintField *elements, size_t count);
 void myl_print_domain(MylPrint *out, const void *value, unsigned depth, const char *name, MylPrintFn inner);
 /* Case names already carry their printed spelling, bare for results, options
    and `None`, and `Owner.case` for an enum or ordinary union. */

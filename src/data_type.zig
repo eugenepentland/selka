@@ -36,6 +36,9 @@ fn checkMode(allocator: std.mem.Allocator, records: []const typed.Record, root: 
         const record = records[ty.recordIndex()];
         if (record.contract.callback != null) return error.NotDataType;
         if (record.managed or record.shape.hasRuntimeIdentity() or record.contract.move_only) return error.NotDataType;
+        // A tuple is taken apart by destructuring, not by a wire field name, so
+        // it has no implicit codec: the boundary rejects it like a managed graph.
+        if (record.shape.tuple) return error.NotDataType;
         if (record.shape.domain) |backing| {
             const next = switch (mode) {
                 .reject => return error.NotDataType,

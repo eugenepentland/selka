@@ -135,6 +135,14 @@ fn aggregate(writer: *std.Io.Writer, records: []const typed.Record, record: *run
     const schema = records[record.ty.recordIndex()];
     if (schema.contract.callback != null or schema.shape.resource != null) return error.Unprintable;
     if (numeric_surface.isFloat(record.ty, records)) return float(writer, record);
+    if (schema.shape.tuple) {
+        try writer.writeByte('(');
+        for (record.fields, 0..) |element, index| {
+            if (index != 0) try writer.writeAll(", ");
+            try render(writer, records, element, depth + 1);
+        }
+        return writer.writeByte(')');
+    }
     if (schema.shape.variants) |variants| return variant(writer, records, .{ .record = record, .variants = variants }, depth);
     if (schema.shape.array != null) {
         try writer.writeByte('[');
