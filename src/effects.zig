@@ -311,26 +311,54 @@ pub fn supplyingParameter(effect: sets.Effect) ?[]const u8 {
     };
 }
 
-/// Effects one type's ownership implies: an external resource family carries its
-/// own effect, and every element, case payload or field contributes what it
-/// holds. This mirrors `cleanupMasks` for one type, with a depth guard in place
-/// of the fixpoint so a recursive shape cannot loop.
-pub fn ownershipMask(records: []const typed.Record, ty: typed.Type, depth: usize) sets.Mask {
-    if (depth == 128 or !ty.isAggregate() or ty.recordIndex() >= records.len) return 0;
+/// Walk one type for the effects it carries. `ownership_only` reads just the
+/// external resource families — what dropping the value needs — while the
+/// authority walk also adds capability effects and bounded callback ceilings.
+///
+/// `path` holds the types on the current walk, so a shape that reaches itself
+/// (a `class` node holding a union that holds the class again) contributes each
+/// type once instead of expanding every path: the union of the effects a type
+/// carries is the same however many times the walk arrives at it.
+fn walkTypeEffects(
+    comptime ownership_only: bool,
+    records: []const typed.Record,
+    ty: typed.Type,
+    path: *[64]typed.Type,
+    depth: usize,
+) sets.Mask {
+    var mask: sets.Mask = 0;
+    if (!ownership_only) {
+        // A capability and a callback are builtins rather than catalog records,
+        // so both are read before the aggregate walk below.
+        if (capabilityEffect(ty)) |effect| mask |= sets.bit(effect);
+        if (callables.signature(ty, records)) |contract| mask |= callbackContribution(contract);
+    }
+    if (depth == path.len or !ty.isAggregate() or ty.recordIndex() >= records.len) return mask;
+    for (path[0..depth]) |seen| if (seen == ty) return mask;
+    path[depth] = ty;
     const record = records[ty.recordIndex()];
-    var mask: sets.Mask = if (record.shape.resource) |kind| sets.bit(kind.effect()) else 0;
+    if (record.shape.resource) |kind| mask |= sets.bit(kind.effect());
     if (record.shape.array) |array| {
-        if (array.length != 0) mask |= ownershipMask(records, array.element, depth + 1);
+        if (array.length != 0) mask |= walkTypeEffects(ownership_only, records, array.element, path, depth + 1);
     } else if (record.shape.variants) |variants| {
         for (variants.cases) |case| {
-            if (case.payload) |payload| mask |= ownershipMask(records, payload, depth + 1);
+            if (case.payload) |payload| mask |= walkTypeEffects(ownership_only, records, payload, path, depth + 1);
         }
-    } else {
+    } else if (record.contract.callback == null) {
         for (record.fields) |field| {
-            mask |= ownershipMask(records, field.ty, depth + 1);
+            mask |= walkTypeEffects(ownership_only, records, field.ty, path, depth + 1);
         }
     }
     return mask;
+}
+
+/// Effects one type's ownership implies: an external resource family carries its
+/// own effect, and every element, case payload or field contributes what it
+/// holds. This mirrors `cleanupMasks` for one type, without building the whole
+/// catalog's fixpoint.
+pub fn ownershipMask(records: []const typed.Record, ty: typed.Type) sets.Mask {
+    var path: [64]typed.Type = undefined;
+    return walkTypeEffects(true, records, ty, &path, 0);
 }
 
 /// Effect a callback parameter's contract contributes. A bounded ceiling is a
@@ -347,26 +375,9 @@ fn callbackContribution(contract: typed.Callable) sets.Mask {
 /// callback type the bounded ceiling it declares, and an owned resource the
 /// effect of dropping it. A record that holds an `Environment` therefore permits
 /// `environment` exactly as an `Environment` parameter does.
-pub fn authorityMask(records: []const typed.Record, ty: typed.Type, depth: usize) sets.Mask {
-    // A capability and a callback are builtins rather than catalog records, so
-    // both are read before the aggregate walk below.
-    var mask: sets.Mask = if (capabilityEffect(ty)) |effect| sets.bit(effect) else 0;
-    if (callables.signature(ty, records)) |contract| mask |= callbackContribution(contract);
-    if (depth == 128 or !ty.isAggregate() or ty.recordIndex() >= records.len) return mask;
-    mask |= ownershipMask(records, ty, depth);
-    const record = records[ty.recordIndex()];
-    if (record.shape.array) |array| {
-        if (array.length != 0) mask |= authorityMask(records, array.element, depth + 1);
-    } else if (record.shape.variants) |variants| {
-        for (variants.cases) |case| {
-            if (case.payload) |payload| mask |= authorityMask(records, payload, depth + 1);
-        }
-    } else if (record.contract.callback == null) {
-        for (record.fields) |field| {
-            mask |= authorityMask(records, field.ty, depth + 1);
-        }
-    }
-    return mask;
+pub fn authorityMask(records: []const typed.Record, ty: typed.Type) sets.Mask {
+    var path: [64]typed.Type = undefined;
+    return walkTypeEffects(false, records, ty, &path, 0);
 }
 
 /// Effect ceiling a signature implies by construction: one effect per capability
@@ -379,9 +390,9 @@ pub fn derivedCeiling(records: []const typed.Record, function: typed.Function) s
     const signature = function.signature;
     if (signature.parameter_count > function.scope.locals.len) return sets.all;
     var mask: sets.Mask = sets.bit(.managed_allocation);
-    mask |= ownershipMask(records, signature.return_type, 0);
+    mask |= ownershipMask(records, signature.return_type);
     for (function.scope.locals[0..signature.parameter_count]) |parameter| {
-        mask |= authorityMask(records, parameter.ty, 0);
+        mask |= authorityMask(records, parameter.ty);
     }
     for (signature.declared_mutates) |position| {
         if (position < signature.parameter_count) mask |= sets.bit(.mutation);

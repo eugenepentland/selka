@@ -1342,6 +1342,17 @@ test "a body that exceeds the ceiling its own signature implies names the parame
 }
 
 // spec-case: DERIVED-EFFECTS-1
+test "a recursive class and union signature derives its ceiling without expanding every path" {
+    try result("class Binary:\n    left: Expr\n    right: Expr\n\n\n" ++
+        "union Expr:\n    number: int,\n    binary: Binary\n\n\n" ++
+        "def total(expr: Expr) -> int:\n" ++
+        "    match expr:\n" ++
+        "        case Expr.number(n):\n            return n\n" ++
+        "        case Expr.binary(node):\n            return total(node.left) + total(node.right)\n\n\n" ++
+        "def main() -> int:\n    return total(Expr.binary(Binary(left=Expr.number(20), right=Expr.number(22))))\n", 42);
+}
+
+// spec-case: DERIVED-EFFECTS-1
 test "a record that holds a capability permits that capability's effect" {
     try accept("class Authority:\n    env: Environment\n\n\n" ++
         "def lookup(auth: Authority) -> int effects(environment):\n    _ = auth.env\n    return 0\n\n\n" ++
