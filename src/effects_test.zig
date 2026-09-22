@@ -1341,6 +1341,17 @@ test "a body that exceeds the ceiling its own signature implies names the parame
         "def main() -> int:\n    values = [0]\n    write(mut values)\n    return values[0]\n");
 }
 
+// spec-case: DERIVED-EFFECTS-1
+test "a record that holds a capability permits that capability's effect" {
+    try accept("class Authority:\n    env: Environment\n\n\n" ++
+        "def lookup(auth: Authority) -> int effects(environment):\n    _ = auth.env\n    return 0\n\n\n" ++
+        "def main(env: Environment) -> int:\n    return lookup(Authority(env=env))\n");
+    // The same shape without the capability in the record is an over-claim.
+    try reject("class Holder:\n    value: int\n\n\n" ++
+        "def lookup(held: Holder) -> int effects(environment):\n    _ = held\n    return 0\n\n\n" ++
+        "def main() -> int:\n    return 0\n", "E_DERIVED_EFFECTS", "add `env: Environment` to the parameters or drop the clause");
+}
+
 // spec: DERIVED-EFFECTS-2
 test "an effect clause that restates the derived ceiling warns and a narrowing stays" {
     const restating = try warningOf("host def probe(host: Host) -> int effects(host)\n\n" ++

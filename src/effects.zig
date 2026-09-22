@@ -348,9 +348,11 @@ fn callbackContribution(contract: typed.Callable) sets.Mask {
 /// effect of dropping it. A record that holds an `Environment` therefore permits
 /// `environment` exactly as an `Environment` parameter does.
 pub fn authorityMask(records: []const typed.Record, ty: typed.Type, depth: usize) sets.Mask {
-    if (depth == 128 or !ty.isAggregate() or ty.recordIndex() >= records.len) return 0;
+    // A capability and a callback are builtins rather than catalog records, so
+    // both are read before the aggregate walk below.
     var mask: sets.Mask = if (capabilityEffect(ty)) |effect| sets.bit(effect) else 0;
     if (callables.signature(ty, records)) |contract| mask |= callbackContribution(contract);
+    if (depth == 128 or !ty.isAggregate() or ty.recordIndex() >= records.len) return mask;
     mask |= ownershipMask(records, ty, depth);
     const record = records[ty.recordIndex()];
     if (record.shape.array) |array| {
