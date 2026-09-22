@@ -77,27 +77,46 @@ pub const Finding = struct {
     subject: Subject = .{},
 };
 
-/// Resolved per-function facts every rule reads: the call graph, the export
-/// roots and the discovered tests.
-pub const Facts = struct {
-    program: typed.Program,
-    src: source.Source,
-    functions: []const quality.Function,
+/// The exported declarations and discovered tests one run judges, each beside
+/// the per-function flag array built from it.
+pub const Roots = struct {
     exports: []const typed.FunctionId,
     tests: []const typed.FunctionId,
-    test_flags: []const bool,
     export_flags: []const bool,
+    test_flags: []const bool,
 
     /// Whether `id` names a discovered test.
-    pub fn isTest(self: *const Facts, id: typed.FunctionId) bool {
+    pub fn isTest(self: Roots, id: typed.FunctionId) bool {
         const index = @backingInt(id);
         return index < self.test_flags.len and self.test_flags[index];
     }
 
     /// Whether `id` names an exported declaration.
-    pub fn isExport(self: *const Facts, id: typed.FunctionId) bool {
+    pub fn isExport(self: Roots, id: typed.FunctionId) bool {
         const index = @backingInt(id);
         return index < self.export_flags.len and self.export_flags[index];
+    }
+};
+
+/// Resolved per-function facts every rule reads: the call graph, the checked
+/// syntax the call sites were written in, and the roots one run judges.
+pub const Facts = struct {
+    program: typed.Program,
+    /// The checked merged source and its syntax, so a rule can read the operands
+    /// a checked node was built from.
+    src: source.Source,
+    syntax: ast.Program,
+    functions: []const quality.Function,
+    roots: Roots,
+
+    /// Whether `id` names a discovered test.
+    pub fn isTest(self: *const Facts, id: typed.FunctionId) bool {
+        return self.roots.isTest(id);
+    }
+
+    /// Whether `id` names an exported declaration.
+    pub fn isExport(self: *const Facts, id: typed.FunctionId) bool {
+        return self.roots.isExport(id);
     }
 };
 
@@ -205,6 +224,7 @@ const rule_repeated_literal = "repeated-literal";
 const rule_same_type_adjacent_params = "same-type-adjacent-params";
 const rule_duplicate_body = "duplicate-body";
 const rule_output_in_library = "output-in-library";
+const rule_positional_literal = "positional-literal";
 
 /// Advisory size-budget defaults for the report-only rules (plan section 9).
 const default_max_function_lines: usize = 80;
@@ -355,7 +375,196 @@ pub const rules = [_]Rule{
         .modes = .{ .agent = .report, .strict = .report, .safety = .report },
         .run = runOutputInLibrary,
     },
+    .{
+        .name = rule_positional_literal,
+        .description = "a call passes a bool, integer or None literal positionally, where naming the parameter reads better",
+        .modes = .{ .agent = .report, .strict = .report, .safety = .report },
+        .run = runPositionalLiteral,
+    },
 };
+
+// ---------------------------------------------------------------------------
+// `positional-literal`: a bool, integer or `None` literal passed positionally
+// in a call of three or more arguments says nothing about what it means, so the
+// rule names the parameter it binds to and prints the call as it should be
+// written. Only a resolved declared function or record constructor counts: an
+// intrinsic and a call through a callback value have no parameter names to
+// write, so they are exempt. The rule never blocks; it is a report-only
+// readability finding.
+
+/// Which declaration kind one linted call constructs.
+const Origin = enum { function, record };
+
+/// One linted call: the checked syntax it was written in, the declared names its
+/// operands bind to in source order, and the kind of its callee.
+const PositionalCall = struct {
+    syntax: ast.Program,
+    src: source.Source,
+    call: @import("call_arguments.zig").Call,
+    names: []const []const u8,
+    origin: Origin,
+};
+
+/// The call sites and declarations of one run, keyed by the span their checked
+/// node carries, so a rule can read the operands a checked call was written
+/// with: `call` maps a checked node's span to the parsed call node, and
+/// `parameters` maps a checked function's declaration span to its declared
+/// parameter names.
+const CallSites = struct {
+    /// Every parsed call node, keyed by its own span.
+    calls: std.AutoHashMapUnmanaged(source.Span, ast.NodeId) = .empty,
+    /// Every declared function, keyed by its name span.
+    functions: std.AutoHashMapUnmanaged(source.Span, usize) = .empty,
+
+    /// Index the checked syntax of one compilation.
+    fn init(memory: std.mem.Allocator, syntax: ast.Program) std.mem.Allocator.Error!CallSites {
+        var sites: CallSites = .{};
+        for (syntax.nodes.items, 0..) |node, index| {
+            if (node.data != .call) continue;
+            try sites.calls.put(memory, node.span, @fromBackingInt(index));
+        }
+        for (syntax.functions, 0..) |function, index| try sites.functions.put(memory, function.name, index);
+        return sites;
+    }
+
+    /// The parsed call node a checked node at `span` was built from, or null
+    /// when that position is not a call.
+    fn call(self: CallSites, syntax: ast.Program, span: source.Span) ?@import("call_arguments.zig").Call {
+        const index = self.calls.get(span) orelse return null;
+        return syntax.nodes.items[@backingInt(index)].data.call;
+    }
+
+    /// The declared parameter names of one function, in source order, or null
+    /// when no declaration has that span.
+    fn parameters(self: CallSites, memory: std.mem.Allocator, src: source.Source, syntax: ast.Program, declaration: source.Span) std.mem.Allocator.Error!?[]const []const u8 {
+        const index = self.functions.get(declaration) orelse return null;
+        return try @import("call_arguments.zig").parameterNames(memory, src, syntax.functions[index].signature.parameters);
+    }
+};
+
+/// Section 9 `positional-literal`: report a declared call or record constructor
+/// of three or more arguments whose operands include a positional bool, integer
+/// or `None` literal, naming the parameter the last one binds to.
+fn runPositionalLiteral(context: *RuleContext) std.mem.Allocator.Error!void {
+    const facts = context.facts;
+    var sites = try CallSites.init(context.memory, facts.syntax);
+    var names: std.ArrayList([]const u8) = .empty;
+    defer names.deinit(context.memory);
+    for (facts.program.nodes) |node| {
+        const call = sites.call(facts.syntax, node.span) orelse continue;
+        if (call.arguments.len < 3) continue;
+        names.clearRetainingCapacity();
+        const origin: Origin = switch (node.data) {
+            .call => |invocation| found: {
+                const function = facts.program.functions[@backingInt(invocation.function)];
+                const parameters = try sites.parameters(context.memory, facts.src, facts.syntax, function.declaration) orelse continue;
+                try names.appendSlice(context.memory, parameters);
+                break :found .function;
+            },
+            .record => |fields| found: {
+                try appendRecordFields(context, node, fields, &names) orelse continue;
+                break :found .record;
+            },
+            else => continue,
+        };
+        const literals = positionalLiterals(facts.syntax, call) orelse continue;
+        if (literals.last >= names.items.len or literals.first >= names.items.len) continue;
+        const site: PositionalCall = .{ .syntax = facts.syntax, .src = facts.src, .call = call, .names = names.items, .origin = origin };
+        try context.findings.append(context.memory, .{
+            .code = "L_POSITIONAL_LITERAL",
+            .rule = rule_positional_literal,
+            .span = call.name,
+            .message = try positionalLiteralMessage(context.memory, site, literals),
+            .subject = positionalSubject(facts, node),
+        });
+    }
+}
+
+/// Append the declared field names of one record construction, in the source
+/// order its checked initializers were written.
+fn appendRecordFields(context: *RuleContext, node: typed.Node, fields: []const typed.FieldInit, names: *std.ArrayList([]const u8)) std.mem.Allocator.Error!?void {
+    if (!node.ty.isAggregate()) return null;
+    const index = node.ty.recordIndex();
+    if (index >= context.facts.program.records.len) return null;
+    const record = context.facts.program.records[index];
+    for (fields) |field| {
+        if (field.index >= record.fields.len) return null;
+        try names.append(context.memory, record.fields[field.index].name);
+    }
+    return {};
+}
+
+/// The first and last operand one call passes positionally as a bool, integer
+/// or `None` literal. The finding names the last one, where the reader has the
+/// least left to go on, while the repair names the call from the first one on.
+const LiteralRange = struct { first: usize, last: usize };
+
+/// The positional-literal range of one call, or null when it passes none.
+fn positionalLiterals(syntax: ast.Program, call: @import("call_arguments.zig").Call) ?LiteralRange {
+    var range: ?LiteralRange = null;
+    for (call.arguments, 0..) |argument, index| {
+        const named = call.argument_names.len != 0 and call.argument_names[index] != null;
+        if (named) continue;
+        if (!isLiteral(syntax.nodes.items[@backingInt(argument)])) continue;
+        if (range) |*found| found.last = index else range = .{ .first = index, .last = index };
+    }
+    return range;
+}
+
+/// Whether one parsed operand is a `bool`, integer or `None` literal.
+fn isLiteral(node: ast.Node) bool {
+    return switch (node.data) {
+        .integer, .boolean, .unit => true,
+        else => false,
+    };
+}
+
+/// The finding's subject: the callee's own declaration identity, or the record
+/// type's name for a construction.
+fn positionalSubject(facts: *const Facts, node: typed.Node) Subject {
+    if (node.data == .call) {
+        const name = facts.program.functions[@backingInt(node.data.call.function)].name;
+        return .{ .module = moduleName(name), .qualified = name };
+    }
+    if (!node.ty.isAggregate()) return .{};
+    const index = node.ty.recordIndex();
+    if (index >= facts.program.records.len) return .{};
+    const name = facts.program.records[index].name;
+    return .{ .module = moduleName(name), .qualified = name };
+}
+
+/// Render the `positional-literal` finding: the last positional literal, the
+/// ordinal and name of the parameter it binds to, and the call with every
+/// operand from the first positional literal on written by name, through the one
+/// shared call renderer.
+fn positionalLiteralMessage(memory: std.mem.Allocator, site: PositionalCall, literals: LiteralRange) std.mem.Allocator.Error![]const u8 {
+    const call_arguments = @import("call_arguments.zig");
+    const at = literals.last;
+    const literal = site.src.text(site.syntax.nodes.items[@backingInt(site.call.arguments[at])].span);
+    const callee = call_arguments.calleeText(site.src, site.call);
+    const repaired = try call_arguments.render(memory, site.src, site.syntax.nodes.items, site.call, site.names, literals.first);
+    return std.fmt.allocPrint(memory, "`{s}` is passed positionally to `{s}`'s {d}{s} {s} `{s}`; name it: `{s}`", .{
+        literal,
+        callee,
+        at + 1,
+        ordinalSuffix(at + 1),
+        if (site.origin == .function) "parameter" else "field",
+        site.names[at],
+        repaired,
+    });
+}
+
+/// The English ordinal suffix of `value`.
+fn ordinalSuffix(value: usize) []const u8 {
+    const last_two = value % 100;
+    if (last_two >= 11 and last_two <= 13) return "th";
+    return switch (value % 10) {
+        1 => "st",
+        2 => "nd",
+        3 => "rd",
+        else => "th",
+    };
+}
 
 /// Resolve one rule's mode for the run's profile, applying configured overrides.
 fn resolveMode(rule: Rule, profile: lint_config.Profile, config: ?*const lint_config.Config) lint_config.Mode {
@@ -412,11 +621,9 @@ pub fn evaluate(request: Request, scratch: std.mem.Allocator) RunError!Outcome {
     var facts: Facts = .{
         .program = program,
         .src = request.compilation.src,
+        .syntax = request.compilation.syntax,
         .functions = analysis.functions,
-        .exports = exports,
-        .tests = test_ids.items,
-        .test_flags = test_flags,
-        .export_flags = export_flags,
+        .roots = .{ .exports = exports, .tests = test_ids.items, .test_flags = test_flags, .export_flags = export_flags },
     };
 
     // One reachability walk for the whole run, built before any rule reads it:
@@ -732,7 +939,7 @@ fn configuredExemptFrom(config: ?*const lint_config.Config, rule: []const u8, qu
 fn runUntestedExport(context: *RuleContext) std.mem.Allocator.Error!void {
     const facts = context.facts;
     const transitive_is_tested = context.reach.profile == .agent;
-    for (facts.exports) |id| {
+    for (facts.roots.exports) |id| {
         const index = @backingInt(id);
         const function = facts.program.functions[index];
         if (isSyntheticOrEntry(function.name)) continue;
@@ -784,7 +991,7 @@ fn runDeadPrivate(context: *RuleContext) std.mem.Allocator.Error!void {
 /// fail, which makes it worse than no test at all.
 fn runTestNoAssertion(context: *RuleContext) std.mem.Allocator.Error!void {
     const facts = context.facts;
-    for (facts.tests) |id| {
+    for (facts.roots.tests) |id| {
         const function = facts.program.functions[@backingInt(id)];
         if (configuredExempt(context, rule_test_no_assertion, function.name)) continue;
         const body = try scanTestBody(context.memory, facts.program, function.scope.body);
@@ -806,7 +1013,7 @@ fn runTestNoAssertion(context: *RuleContext) std.mem.Allocator.Error!void {
 /// loop or match at the top level of a test body is a finding.
 fn runTestConditional(context: *RuleContext) std.mem.Allocator.Error!void {
     const facts = context.facts;
-    for (facts.tests) |id| {
+    for (facts.roots.tests) |id| {
         const function = facts.program.functions[@backingInt(id)];
         if (configuredExempt(context, rule_test_conditional, function.name)) continue;
         const top = topLevelStatements(facts.program, function.scope.body);
@@ -825,7 +1032,7 @@ fn runTestConditional(context: *RuleContext) std.mem.Allocator.Error!void {
 /// W2 `test-empty`: a discovered test with an empty body asserts nothing.
 fn runTestEmpty(context: *RuleContext) std.mem.Allocator.Error!void {
     const facts = context.facts;
-    for (facts.tests) |id| {
+    for (facts.roots.tests) |id| {
         const function = facts.program.functions[@backingInt(id)];
         if (configuredExempt(context, rule_test_empty, function.name)) continue;
         if (topLevelStatements(facts.program, function.scope.body).len != 0) continue;
@@ -1180,7 +1387,7 @@ pub fn appendChangeWithoutTestFindings(query: ChangeQuery, findings: *std.ArrayL
 /// Whether a test whose own body changed calls `target` directly. That is the
 /// one thing that lets a changed declaration through.
 fn hasChangedTestCaller(facts: *const Facts, changed: []const bool, target: typed.FunctionId) bool {
-    for (facts.tests) |test_id| {
+    for (facts.roots.tests) |test_id| {
         const index = @backingInt(test_id);
         if (index >= changed.len or !changed[index]) continue;
         if (callsDirectly(facts.functions[index], target)) return true;
@@ -1201,7 +1408,7 @@ fn callsDirectly(function: quality.Function, target: typed.FunctionId) bool {
 /// do. The note points at the first caller when there is one.
 fn callerNote(memory: std.mem.Allocator, function: typed.Function, facts: *const Facts, target: typed.FunctionId) std.mem.Allocator.Error!diagnostic.Related {
     var callers: std.ArrayList(typed.Function) = .empty;
-    for (facts.tests) |test_id| {
+    for (facts.roots.tests) |test_id| {
         const index = @backingInt(test_id);
         if (!callsDirectly(facts.functions[index], target)) continue;
         try callers.append(memory, facts.program.functions[index]);
@@ -1273,7 +1480,7 @@ fn reachedTestsMessage(scratch: std.mem.Allocator, answer: tests_index.Answer) s
 /// `integration.*`). A declared `exempt` entry or a matching module exempts it.
 fn runIntegrationTests(context: *RuleContext) std.mem.Allocator.Error!void {
     const facts = context.facts;
-    for (facts.tests) |id| {
+    for (facts.roots.tests) |id| {
         const function = facts.program.functions[@backingInt(id)];
         if (!requestsCapability(function)) continue;
         if (configuredExempt(context, rule_integration_tests, function.name)) continue;

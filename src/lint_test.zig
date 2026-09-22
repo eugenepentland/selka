@@ -239,11 +239,9 @@ fn collectChangeFindings(scratch: std.mem.Allocator, proj: *project.Project, roo
     const facts: lint.Facts = .{
         .program = program,
         .src = compilation.src,
+        .syntax = compilation.syntax,
         .functions = analysis.functions,
-        .exports = exports,
-        .tests = tests.items,
-        .test_flags = test_flags,
-        .export_flags = export_flags,
+        .roots = .{ .exports = exports, .tests = tests.items, .test_flags = test_flags, .export_flags = export_flags },
     };
     try lint.appendChangeWithoutTestFindings(.{
         .memory = scratch,
@@ -581,4 +579,79 @@ test "section-9 advisory rules report records files literals params naming condi
     try t.expect(hasFinding(outcome, "L_SAME_TYPE_ADJACENT_PARAMS"));
     try t.expect(hasFinding(outcome, "L_DUPLICATE_BODY"));
     try t.expect(hasFinding(outcome, "L_OUTPUT_IN_LIBRARY"));
+}
+
+/// One declared function and one record whose calls carry positional literals
+/// beside the negated cases: a named call, a short call, and an intrinsic.
+const positional_literal_fixture =
+    \\module main
+    \\
+    \\
+    \\record Point:
+    \\    x: int
+    \\    y: int
+    \\    z: int
+    \\
+    \\
+    \\def draw(canvas: int, x: int, y: int, filled: bool) -> int:
+    \\    _ = canvas
+    \\    _ = filled
+    \\    return x + y
+    \\
+    \\
+    \\def short(a: int, b: int) -> int:
+    \\    return a + b
+    \\
+    \\
+    \\def main() -> int:
+    \\    canvas = 0
+    \\    _ = draw(canvas=1, x=10, y=20, filled=True)
+    \\    _ = short(1, 2)
+    \\    return draw(canvas, 10, 20, True)
+;
+
+// spec: KEYWORD-ONLY-4
+test "the positional-literal lint names the parameter a positional literal binds to" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    try writeFixture(&temp, positional_literal_fixture);
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const scratch = arena.allocator();
+    const outcome = try evaluateFixture(scratch, root, .{});
+    const finding = findFinding(outcome, "L_POSITIONAL_LITERAL");
+    try t.expect(finding != null);
+    try t.expectEqualStrings("positional-literal", finding.?.rule);
+    try t.expectEqualStrings("`True` is passed positionally to `draw`'s 4th parameter `filled`; name it: `draw(canvas, x=10, y=20, filled=True)`", finding.?.message);
+}
+
+// spec-case: KEYWORD-ONLY-4
+test "the positional-literal lint names the field a positional record literal binds to" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    try writeFixture(&temp,
+        \\module main
+        \\
+        \\
+        \\record Point:
+        \\    x: int
+        \\    y: int
+        \\    z: int
+        \\
+        \\
+        \\def main() -> int:
+        \\    point = Point(1, 2, 3)
+        \\    return point.x
+    );
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const scratch = arena.allocator();
+    const outcome = try evaluateFixture(scratch, root, .{});
+    const finding = findFinding(outcome, "L_POSITIONAL_LITERAL");
+    try t.expect(finding != null);
+    try t.expectEqualStrings("`3` is passed positionally to `Point`'s 3rd field `z`; name it: `Point(x=1, y=2, z=3)`", finding.?.message);
 }

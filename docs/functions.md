@@ -42,6 +42,36 @@ through the same rules — and generic calls infer their type arguments from the
 values they are given unless the [explicit
 list](#explicit-call-type-arguments) is written out.
 
+### Keyword-only parameters
+
+A bare `*` ends the positional group: every parameter after it binds by name
+only. Keyword-only parameters may be passed in any order, and required and
+defaulted ones may sit in either order, because the required-before-defaulted
+rule holds inside the positional group alone. A call that passes a keyword-only
+parameter positionally is `E_KEYWORD_ONLY`, and the rejection names the
+parameter and prints the whole call as it must be written.
+
+```mylang
+# doc: expect 1204
+def issue(host: int, *, code: int, file: int = 0, position: int = 4) -> int:
+    return host * 1000 + code * 100 + file * 10 + position
+
+
+def main() -> int:
+    written = issue(1, position=4, code=2)
+    defaulted = issue(1, code=2)
+    if written != defaulted:
+        return 0
+    return written
+```
+
+So `io.issue(host, 13, 0, span.start)` reports
+`` `code` is keyword-only; write `io.issue(host, code=13, file=0, position=span.start)` ``.
+The rendered interface signature carries the same `*`, so
+[`mylang list-interfaces`](tooling/navigation.md) prints
+`def(host:int,*,code:int,file:int=0,position:int=4)->i64`, and a reader of the
+contract knows which parameters a call may pass positionally.
+
 ## Unit procedures
 
 A function that produces no value is a procedure. Write `-> None` or omit the

@@ -72,47 +72,52 @@ pub fn bind(allocator: std.mem.Allocator, src: source.Source, syntax: []const as
 fn positionalTarget(allocator: std.mem.Allocator, src: source.Source, binding: Binding, source_index: usize, sink: *diagnostic.Sink) diagnostic.Error!usize {
     const boundary = binding.signature.keyword_only_from orelse return source_index;
     if (source_index < boundary) return source_index;
-    const parameter = src.text(binding.signature.parameters[source_index].name);
-    const message = try std.fmt.allocPrint(allocator, "`{s}` is keyword-only; write `{s}`", .{ parameter, try rewrite(allocator, src, binding) });
+    const names = try parameterNames(allocator, src, binding.signature.parameters);
+    const message = try std.fmt.allocPrint(allocator, "`{s}` is keyword-only; write `{s}`", .{ names[source_index], try render(allocator, src, binding.syntax, binding.call, names, boundary) });
     return sink.fail(eKeywordOnly, binding.call.name, message);
 }
+/// The declared parameter names in source order, for the shared call renderer.
+pub fn parameterNames(allocator: std.mem.Allocator, src: source.Source, parameters: []const ast.Parameter) std.mem.Allocator.Error![]const []const u8 {
+    const names = try allocator.alloc([]const u8, parameters.len);
+    for (parameters, names) |parameter, *name| name.* = src.text(parameter.name);
+    return names;
+}
 /// Render one call exactly as it must be written: the callee as the call site
-/// spells it, then every operand in source order, with an operand that was
-/// already named or that binds to a keyword-only parameter written `name=value`.
-/// This is the one renderer every call-site rejection that prints a repaired
-/// call uses, so the paste and the diagnostic can never disagree.
-fn rewrite(allocator: std.mem.Allocator, src: source.Source, binding: Binding) std.mem.Allocator.Error![]const u8 {
+/// spells it, then every operand in source order, with each operand from
+/// `named_from` on written `name=value` beside the parameter its own position
+/// binds to. An operand the call site already named keeps the name it spells.
+/// Every call-site rejection and lint that prints a repaired call goes through
+/// this one renderer, so the paste and the message can never disagree.
+pub fn render(allocator: std.mem.Allocator, src: source.Source, syntax: []const ast.Node, call: Call, names: []const []const u8, named_from: usize) std.mem.Allocator.Error![]const u8 {
     var out: std.ArrayList(u8) = .empty;
     defer out.deinit(allocator);
-    try out.appendSlice(allocator, calleeText(src, binding.call));
+    try out.appendSlice(allocator, calleeText(src, call));
     try out.append(allocator, '(');
-    for (binding.call.arguments, 0..) |value, source_index| {
+    for (call.arguments, 0..) |value, source_index| {
         if (source_index != 0) try out.appendSlice(allocator, ", ");
-        const named = if (binding.call.argument_names.len == 0) null else binding.call.argument_names[source_index];
-        const position = if (named) |keyword| parameterNameIndex(src, binding.signature, keyword) else source_index;
-        if (position) |index| if (named != null or index >= (binding.signature.keyword_only_from orelse binding.signature.parameters.len)) {
-            try out.appendSlice(allocator, src.text(binding.signature.parameters[index].name));
+        const written = if (call.argument_names.len == 0) null else call.argument_names[source_index];
+        const parameter = if (source_index < names.len) names[source_index] else null;
+        if (written) |keyword| {
+            try out.appendSlice(allocator, src.text(keyword));
+            try out.append(allocator, '=');
+        } else if (source_index >= named_from) if (parameter) |name| {
+            try out.appendSlice(allocator, name);
             try out.append(allocator, '=');
         };
-        try out.appendSlice(allocator, src.text(binding.syntax[@backingInt(value)].span));
+        try out.appendSlice(allocator, src.text(syntax[@backingInt(value)].span));
     }
     try out.append(allocator, ')');
     return out.toOwnedSlice(allocator);
 }
 /// The callee as the call site spells it: `io.issue`, `open`, or a member name
 /// joined to its receiver.
-fn calleeText(src: source.Source, call: Call) []const u8 {
+pub fn calleeText(src: source.Source, call: Call) []const u8 {
     const owner = call.owner orelse return src.text(call.name);
     return src.text(source.Span.join(owner, call.name));
 }
 fn parameterIndex(src: source.Source, parameters: []const ast.Parameter, name: source.Span, sink: *diagnostic.Sink) diagnostic.Error!usize {
     for (parameters, 0..) |parameter, index| if (std.mem.eql(u8, src.text(parameter.name), src.text(name))) return index;
     return sink.fail(eArgument, name, "keyword names no parameter of this function");
-}
-/// The parameter one keyword spelling names, or null when it names none.
-fn parameterNameIndex(src: source.Source, signature: ast.FunctionSignature, name: source.Span) ?usize {
-    for (signature.parameters, 0..) |parameter, index| if (std.mem.eql(u8, src.text(parameter.name), src.text(name))) return index;
-    return null;
 }
 /// Map source-order indices to parameter-order indices after binding.
 pub fn parameterPosition(call: Call, source_index: usize) usize {
