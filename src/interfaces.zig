@@ -815,6 +815,9 @@ pub const Index = struct {
         try out.appendSlice(allocator, "def(");
         for (signature.parameters, 0..) |parameter, index| {
             if (index != 0) try out.appendSlice(allocator, ",");
+            // The bare `*` is part of the signature text: every parameter after
+            // it binds by name.
+            if (signature.keyword_only_from == index) try out.appendSlice(allocator, "*,");
             try out.appendSlice(allocator, src.text(parameter.name));
             try out.appendSlice(allocator, ":");
             try out.appendSlice(allocator, try self.contractTypeText(module, parameter.ty, signature.type_parameters));

@@ -4,12 +4,27 @@ const ast = @import("ast.zig");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const eArgument = "E_CALL_ARGUMENT";
+/// A keyword-only parameter reached by a positional operand; the message prints
+/// the whole call with every keyword-only operand passed by name.
+const eKeywordOnly = "E_KEYWORD_ONLY";
 pub const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
+
+/// One call, the declared signature its operands bind to, and the parsed operand
+/// nodes the repaired-call renderer reads source text from.
+const Binding = struct {
+    call: Call,
+    signature: ast.FunctionSignature,
+    syntax: []const ast.Node,
+};
 
 /// Normalize argument positions while retaining their source evaluation order.
 /// Scalar literal defaults are appended after explicitly supplied expressions.
-pub fn bind(allocator: std.mem.Allocator, src: source.Source, call: Call, parameters: []const ast.Parameter, sink: *diagnostic.Sink) diagnostic.Error!Call {
-    if (call.argument_names.len == 0 and call.arguments.len == parameters.len) return call;
+/// A positional operand that would land on the signature's first keyword-only
+/// parameter, or a later one, is `E_KEYWORD_ONLY` instead of a binding.
+pub fn bind(allocator: std.mem.Allocator, src: source.Source, syntax: []const ast.Node, call: Call, signature: ast.FunctionSignature, sink: *diagnostic.Sink) diagnostic.Error!Call {
+    const parameters = signature.parameters;
+    const binding: Binding = .{ .call = call, .signature = signature, .syntax = syntax };
+    if (call.argument_names.len == 0 and call.arguments.len == parameters.len and (signature.keyword_only_from == null or call.arguments.len <= signature.keyword_only_from.?)) return call;
     if (call.arguments.len > parameters.len) {
         const message = try std.fmt.allocPrint(allocator, "too many arguments for this function: expected {d}, given {d}", .{ parameters.len, call.arguments.len });
         return sink.fail("E_ARITY", call.name, message);
@@ -27,7 +42,7 @@ pub fn bind(allocator: std.mem.Allocator, src: source.Source, call: Call, parame
     @memset(filled, false);
     for (call.arguments, 0..) |value, source_index| {
         const name = if (call.argument_names.len == 0) null else call.argument_names[source_index];
-        const target = if (name) |keyword| try parameterIndex(src, parameters, keyword, sink) else source_index;
+        const target = if (name) |keyword| try parameterIndex(src, parameters, keyword, sink) else try positionalTarget(allocator, src, binding, source_index, sink);
         if (filled[target]) return sink.fail(eArgument, name orelse call.name, "parameter receives more than one argument");
         filled[target] = true;
         values[target] = value;
@@ -51,9 +66,53 @@ pub fn bind(allocator: std.mem.Allocator, src: source.Source, call: Call, parame
     out.argument_markers = if (marker_buffer) |buffer| buffer else &.{};
     return out;
 }
+/// The parameter one positional operand binds to, or `E_KEYWORD_ONLY` when the
+/// declaration makes that parameter keyword-only. The rejection names the
+/// parameter and prints the whole call as it must be written.
+fn positionalTarget(allocator: std.mem.Allocator, src: source.Source, binding: Binding, source_index: usize, sink: *diagnostic.Sink) diagnostic.Error!usize {
+    const boundary = binding.signature.keyword_only_from orelse return source_index;
+    if (source_index < boundary) return source_index;
+    const parameter = src.text(binding.signature.parameters[source_index].name);
+    const message = try std.fmt.allocPrint(allocator, "`{s}` is keyword-only; write `{s}`", .{ parameter, try rewrite(allocator, src, binding) });
+    return sink.fail(eKeywordOnly, binding.call.name, message);
+}
+/// Render one call exactly as it must be written: the callee as the call site
+/// spells it, then every operand in source order, with an operand that was
+/// already named or that binds to a keyword-only parameter written `name=value`.
+/// This is the one renderer every call-site rejection that prints a repaired
+/// call uses, so the paste and the diagnostic can never disagree.
+fn rewrite(allocator: std.mem.Allocator, src: source.Source, binding: Binding) std.mem.Allocator.Error![]const u8 {
+    var out: std.ArrayList(u8) = .empty;
+    defer out.deinit(allocator);
+    try out.appendSlice(allocator, calleeText(src, binding.call));
+    try out.append(allocator, '(');
+    for (binding.call.arguments, 0..) |value, source_index| {
+        if (source_index != 0) try out.appendSlice(allocator, ", ");
+        const named = if (binding.call.argument_names.len == 0) null else binding.call.argument_names[source_index];
+        const position = if (named) |keyword| parameterNameIndex(src, binding.signature, keyword) else source_index;
+        if (position) |index| if (named != null or index >= (binding.signature.keyword_only_from orelse binding.signature.parameters.len)) {
+            try out.appendSlice(allocator, src.text(binding.signature.parameters[index].name));
+            try out.append(allocator, '=');
+        };
+        try out.appendSlice(allocator, src.text(binding.syntax[@backingInt(value)].span));
+    }
+    try out.append(allocator, ')');
+    return out.toOwnedSlice(allocator);
+}
+/// The callee as the call site spells it: `io.issue`, `open`, or a member name
+/// joined to its receiver.
+fn calleeText(src: source.Source, call: Call) []const u8 {
+    const owner = call.owner orelse return src.text(call.name);
+    return src.text(source.Span.join(owner, call.name));
+}
 fn parameterIndex(src: source.Source, parameters: []const ast.Parameter, name: source.Span, sink: *diagnostic.Sink) diagnostic.Error!usize {
     for (parameters, 0..) |parameter, index| if (std.mem.eql(u8, src.text(parameter.name), src.text(name))) return index;
     return sink.fail(eArgument, name, "keyword names no parameter of this function");
+}
+/// The parameter one keyword spelling names, or null when it names none.
+fn parameterNameIndex(src: source.Source, signature: ast.FunctionSignature, name: source.Span) ?usize {
+    for (signature.parameters, 0..) |parameter, index| if (std.mem.eql(u8, src.text(parameter.name), src.text(name))) return index;
+    return null;
 }
 /// Map source-order indices to parameter-order indices after binding.
 pub fn parameterPosition(call: Call, source_index: usize) usize {

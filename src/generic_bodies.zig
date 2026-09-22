@@ -1137,7 +1137,7 @@ const Checker = struct {
         const resolved = try self.resolveCall(input_call);
         const function = try self.callTarget(resolved, input_call.name);
         const signature = function.signature;
-        const invocation = try call_arguments.bind(self.field_arena.allocator(), self.src, resolved, signature.parameters, self.sink);
+        const invocation = try call_arguments.bind(self.field_arena.allocator(), self.src, self.program.nodes.items, resolved, signature, self.sink);
         if (function.policy.conversion) return self.sink.fail(eUnsupported, span, "generic conversions still need abstract checking");
         if (invocation.type_arguments.len != 0 and invocation.type_arguments.len != signature.type_parameters.len) return self.sink.fail("E_GENERIC_ARITY", span, "explicit type argument count does not match generic parameters");
         if (invocation.arguments.len != signature.parameters.len) return self.sink.fail("E_ARITY", span, "argument count does not match function parameters");

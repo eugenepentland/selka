@@ -980,7 +980,7 @@ const Checker = struct {
                 .message = "private function declared here",
             },
         );
-        const bound = try call_arguments.bind(self.allocator, self.src, call, signature.signature.parameters, self.sink);
+        const bound = try call_arguments.bind(self.allocator, self.src, self.syntax.nodes.items, call, signature.signature, self.sink);
         return .{ .declaration = function, .call = bound };
     }
     fn requireDomainAccess(self: *Checker, domain_type: typed.Type, span: source.Span) Error!void {
