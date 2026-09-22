@@ -135,6 +135,31 @@ test "IO-6 the native backend lowers print through generated per-type renderers"
     try t.expect(std.mem.indexOf(u8, manifest, "\\\"Some\\\"") != null);
 }
 
+// spec: IO-15
+test "IO-15 print and write work on a Stream held in a class field" {
+    const source =
+        \\class Sink:
+        \\    stream: Stream
+        \\    label: str
+        \\
+        \\record Pair:
+        \\    first: Sink
+        \\    count: int
+        \\
+        \\def emit(sink: Sink) -> int:
+        \\    written = sink.stream.write(b"hello\n")
+        \\    sink.stream.print(sink.label, written)
+        \\    return written
+        \\
+        \\def main(out: Stream) -> int:
+        \\    pair = Pair(first=Sink(stream=out, label="n"), count=1)
+        \\    _ = pair.first.stream.write("x\n")
+        \\    return emit(pair.first) - 6
+    ;
+    try expectOutput(source, "x\nhello\nn 6\n");
+    try reject("class Sink:\n    stream: Stream\n\ndef main(out: Stream) -> int:\n    sink = Sink(stream=out)\n    sink.stream.flush()\n    return 0\n", "E_COLLECTION_METHOD");
+}
+
 // spec: QBE-BULK-TEXT-1
 test "QBE-BULK-TEXT-1 raw top-level text is encoded into the line buffer in one pass" {
     // Empty text writes nothing and still ends the line.

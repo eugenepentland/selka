@@ -1642,6 +1642,24 @@ const Checker = struct {
         } };
         _ = node;
     }
+    /// `print` and `write` on a `Stream` reached through an expression rather
+    /// than a bare name, such as a class field (`sink.stream.write(data)`). The
+    /// parser hands such a call over as a method call, so it lands here with its
+    /// receiver already checked; it lowers exactly like the named-receiver form.
+    /// A method call carries positional arguments only, so `sep=` and `end=`
+    /// still need the stream bound to a name first.
+    fn checkStreamReceiverMethod(self: *Checker, node: ast.Node, stream: typed.NodeId, temporaries: []const typed.Type) Error!typed.Node {
+        const method = node.data.method_call;
+        const name = self.src.text(method.name);
+        const write = std.mem.eql(u8, name, "write");
+        if (!write and !std.mem.eql(u8, name, "print"))
+            return self.sink.fail(eCollectionMethod, method.name, "unknown method for a Stream receiver; a Stream has the methods print and write");
+        for (method.arguments) |argument| _ = try self.expressionWithTemporaries(argument, temporaries);
+        const call: @FieldType(@FieldType(ast.Node, "data"), "call") = .{ .name = method.name, .arguments = method.arguments };
+        var out: typed.Node = .{ .span = node.span, .ty = .unit, .data = .unit };
+        if (write) try self.checkStreamWrite(node, call, stream, &out) else try self.checkPrint(node, call, .{ .stream = stream }, &out);
+        return out;
+    }
     fn checkStreamWrite(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), stream: typed.NodeId, out: *typed.Node) Error!void {
         try call_arguments.positional(call, self.sink);
         if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "stream.write takes one str or bytes argument");
@@ -2362,6 +2380,7 @@ const Checker = struct {
         const owner_type = self.nodes.items[@backingInt(base)].ty;
         if (prelude.optionShape(owner_type, self.catalog.records) != null)
             return self.checkOptionMethod(node, base, call.name, call.arguments, temporaries);
+        if (owner_type == .stream_cap) return self.checkStreamReceiverMethod(node, base, temporaries);
         const kind = buffer_operations.methodFor(name, call.arguments.len) orelse {
             const managed = owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].isCollection();
             const family: ?ManagedKind = if (managed) self.catalog.records[owner_type.recordIndex()].collection.kind else null;
@@ -4535,6 +4554,9 @@ const Checker = struct {
         // neither the tag test nor the two-arm match consumes a temporary.
         if (node.data == .method_call and option_flow.methodNamed(self.src.text(node.data.method_call.name)) != null) return 0;
         if (node.data == .call and self.optionReceiverMethod(node.data.call)) return 0;
+        // `print`/`write` through a `Stream` field checks its receiver and
+        // arguments in place, so none of them reached this stack either.
+        if (node.data == .method_call and (out.data == .print or out.data == .stream_write)) return 0;
         if (node.data == .index and out.data == .block_value) return 2;
         if (node.data == .length and out.data == .block_value) return 1;
         if (node.data == .bytes or node.data == .text or node.data == .integer) return 0;
