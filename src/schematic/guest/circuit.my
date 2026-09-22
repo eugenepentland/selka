@@ -251,7 +251,7 @@ def railKind(host: Host, span: text.Span) -> int:
 
 # Resolve textual identities and topology facts once. Layout and routing retain
 # the original source spans for metadata, but compare these compact identities.
-public def normalize(host: Host, parts: list[Part], pins: list[Pin]) effects(host, managed_allocation, mutation) mutates(parts, pins):
+public def normalize(host: Host, parts: mut list[Part], pins: mut list[Pin]) effects(host, managed_allocation, mutation):
     i = 0
     while i < len(pins):
         pins[i].display = displayNet(host, pins[i].net, parts, pins)

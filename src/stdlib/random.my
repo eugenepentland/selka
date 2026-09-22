@@ -46,7 +46,7 @@ public def from_entropy(capability: Entropy) -> Result[Random, str] effects(rand
 
 
 # The next SplitMix64 word, advancing the shared state exactly once.
-public def next_word(generator: Random) -> u64 effects(mutation) mutates(generator):
+public def next_word(generator: mut Random) -> u64 effects(mutation):
     state = wrapping_add(generator.state[0], 11400714819323198485u64)
     generator.state[0] = state
     word = wrapping_mul(bit_xor(state, shift_right(state, 30u64)), 13787848793156543929u64)
@@ -55,7 +55,7 @@ public def next_word(generator: Random) -> u64 effects(mutation) mutates(generat
 
 
 # A float uniformly drawn from the 2^53 multiples of 2^-53 in [0, 1).
-public def random(generator: Random) -> float effects(mutation) mutates(generator):
+public def random(generator: Random) -> float effects(mutation):
     drawn = shift_right(next_word(generator), 11u64)
     return float(i64(drawn)) / 9007199254740992.0
 
@@ -86,7 +86,7 @@ def offset(low: int, value: u64) -> int:
 
 
 # A uniform integer in an inclusive range, covering the full signed width.
-public def randint(generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation) mutates(generator):
+public def randint(generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):
     if low > high:
         return Err("randint needs low <= high")
     width = span(low, high)
@@ -96,7 +96,7 @@ public def randint(generator: Random, low: int, high: int) -> Result[int, str] e
 
 
 # A uniformly chosen element, or nothing when the list is empty.
-public def choice[T: copy + storable](generator: Random, items: list[T]) -> Option[T] effects(mutation, managed_allocation) mutates(generator):
+public def choice[T: copy + storable](generator: Random, items: list[T]) -> Option[T] effects(mutation, managed_allocation):
     if len(items) == 0:
         return None
     match randint(generator, 0, len(items) - 1):
@@ -107,7 +107,7 @@ public def choice[T: copy + storable](generator: Random, items: list[T]) -> Opti
 
 
 # A list permuted in place by an unbiased Fisher-Yates pass.
-public def shuffle[T: copy + storable](generator: Random, items: list[T]) effects(mutation, managed_allocation) mutates(generator, items):
+public def shuffle[T: copy + storable](generator: Random, items: list[T]) effects(mutation, managed_allocation):
     index = len(items) - 1
     while index > 0:
         match randint(generator, 0, index):

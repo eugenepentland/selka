@@ -1,7 +1,7 @@
 module managed_cell_case_1
 
 
-def bump(cell: Cell[int]) -> None effects(mutation) mutates(cell):
+def bump(cell: mut Cell[int]) -> None effects(mutation):
     cell.value = cell.value + 1
 
 

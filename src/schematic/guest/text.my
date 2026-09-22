@@ -56,11 +56,11 @@ public def number(host: Host, a: Span) -> int effects(host):
     return value
 
 
-public def write(out: io.Output, value: bytes) effects(managed_allocation, mutation) mutates(out):
+public def write(out: mut io.Output, value: bytes) effects(managed_allocation, mutation):
     return io.append(out, value)
 
 
-public def escaped(out: io.Output, a: Span) effects(managed_allocation, mutation) mutates(out):
+public def escaped(out: mut io.Output, a: Span) effects(managed_allocation, mutation):
     i = a.start
     while i < a.end:
         c = u8(a.source[i])
@@ -93,7 +93,7 @@ public def escaped(out: io.Output, a: Span) effects(managed_allocation, mutation
     return
 
 
-public def decimal(out: io.Output, value: int) effects(managed_allocation, mutation) mutates(out):
+public def decimal(out: mut io.Output, value: int) effects(managed_allocation, mutation):
     return io.appendInt(out, value)
 
 

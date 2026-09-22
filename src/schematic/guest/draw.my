@@ -3,7 +3,7 @@ import text
 import io
 
 
-public def rect(out: io.Output, x: int, y: int, w: int, h: int) effects(managed_allocation, mutation) mutates(out):
+public def rect(out: mut io.Output, x: int, y: int, w: int, h: int) effects(managed_allocation, mutation):
     text.write(out, b"<rect class=\"chip\" x=\"")
     text.decimal(out, x)
     text.write(out, b"\" y=\"")
@@ -16,7 +16,7 @@ public def rect(out: io.Output, x: int, y: int, w: int, h: int) effects(managed_
     return
 
 
-public def line(out: io.Output, x1: int, y1: int, x2: int, y2: int) effects(managed_allocation, mutation) mutates(out):
+public def line(out: mut io.Output, x1: int, y1: int, x2: int, y2: int) effects(managed_allocation, mutation):
     text.write(out, b"<line x1=\"")
     text.decimal(out, x1)
     text.write(out, b"\" y1=\"")
@@ -29,7 +29,7 @@ public def line(out: io.Output, x1: int, y1: int, x2: int, y2: int) effects(mana
     return
 
 
-public def labelStart(out: io.Output, x: int, y: int, anchor: int) effects(managed_allocation, mutation) mutates(out):
+public def labelStart(out: mut io.Output, x: int, y: int, anchor: int) effects(managed_allocation, mutation):
     text.write(out, b"<text x=\"")
     text.decimal(out, x)
     text.write(out, b"\" y=\"")
@@ -45,18 +45,18 @@ public def labelStart(out: io.Output, x: int, y: int, anchor: int) effects(manag
     return
 
 
-public def labelEnd(out: io.Output) effects(managed_allocation, mutation) mutates(out):
+public def labelEnd(out: mut io.Output) effects(managed_allocation, mutation):
     text.write(out, b"</text>")
     return
 
 
-public def label(out: io.Output, x: int, y: int, anchor: int, value: text.Span) effects(managed_allocation, mutation) mutates(out):
+public def label(out: mut io.Output, x: int, y: int, anchor: int, value: text.Span) effects(managed_allocation, mutation):
     labelStart(out, x, y, anchor)
     text.escaped(out, value)
     return labelEnd(out)
 
 
-public def symbol(out: io.Output, kind: int) effects(managed_allocation, mutation) mutates(out):
+public def symbol(out: mut io.Output, kind: int) effects(managed_allocation, mutation):
     text.write(out, b"<g class=\"symbol\">")
     line(out, - 20, 0, - 12, 0)
     line(out, 12, 0, 20, 0)

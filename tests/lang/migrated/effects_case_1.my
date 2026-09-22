@@ -1,7 +1,7 @@
 module effects_case_1
 
 
-def touch(values: list[int]) -> None effects(mutation) mutates(values):
+def touch(values: mut list[int]) -> None effects(mutation):
     values[0] = 42
 
 

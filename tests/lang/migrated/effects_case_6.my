@@ -1,12 +1,12 @@
 module effects_case_6
 
 
-def write_both(x: list[int], y: list[int]) -> None effects(mutation) mutates(x, y):
+def write_both(x: mut list[int], y: mut list[int]) -> None effects(mutation):
     x[0] = 1
     y[0] = 2
 
 
-def use(values: list[int]) -> None effects(mutation) mutates(values):
+def use(values: mut list[int]) -> None effects(mutation):
     write_both(values, values)
 
 

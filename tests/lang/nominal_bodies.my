@@ -18,7 +18,7 @@ def extract[T](box: Box[T]) -> T:
     return box.value
 
 
-def alter[T](box: Box[T], x: T) -> Box[T] effects(mutation) mutates(box):
+def alter[T](box: mut Box[T], x: T) -> Box[T] effects(mutation):
     y = box
     y.value = x
     return y

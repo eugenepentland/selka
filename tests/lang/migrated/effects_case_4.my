@@ -1,7 +1,7 @@
 module effects_case_4
 
 
-def touch[T](values: list[T], item: T) -> None effects(mutation) mutates(values):
+def touch[T](values: mut list[T], item: T) -> None effects(mutation):
     values[0] = item
 
 

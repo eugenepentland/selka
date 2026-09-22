@@ -5,12 +5,12 @@ record Box:
     values: list[int]
 
 
-def write_text(pieces: list[str], box: Box) -> None effects(mutation, managed_allocation) mutates(pieces):
+def write_text(pieces: mut list[str], box: Box) -> None effects(mutation, managed_allocation):
     pieces.append("x")
     _ = box
 
 
-def use(pieces: list[str], box: Box) -> None effects(mutation, managed_allocation) mutates(pieces):
+def use(pieces: mut list[str], box: Box) -> None effects(mutation, managed_allocation):
     write_text(pieces, box)
 
 

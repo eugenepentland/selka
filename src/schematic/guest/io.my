@@ -44,7 +44,7 @@ public def output() -> Output effects(managed_allocation):
     return Output(buffer=byte_buffer(values), failed=False)
 
 
-public def append(out: Output, value: bytes) effects(managed_allocation, mutation) mutates(out):
+public def append(out: mut Output, value: bytes) effects(managed_allocation, mutation):
     if out.failed:
         return
     if len(out.buffer) > 4194304 - len(value):
@@ -55,7 +55,7 @@ public def append(out: Output, value: bytes) effects(managed_allocation, mutatio
     return
 
 
-public def appendByte(out: Output, value: u8) effects(managed_allocation, mutation) mutates(out):
+public def appendByte(out: mut Output, value: u8) effects(managed_allocation, mutation):
     if out.failed:
         return
     if len(out.buffer) == 4194304:
@@ -66,7 +66,7 @@ public def appendByte(out: Output, value: u8) effects(managed_allocation, mutati
     return
 
 
-public def appendInt(out: Output, value: int) effects(managed_allocation, mutation) mutates(out):
+public def appendInt(out: mut Output, value: int) effects(managed_allocation, mutation):
     if out.failed:
         return
     width = decimalWidth(value)

@@ -1,7 +1,7 @@
 module python_calls
 
 
-def mark(log: list[int], value: int) -> int effects(mutation, managed_allocation) mutates(log):
+def mark(log: mut list[int], value: int) -> int effects(mutation, managed_allocation):
     log.append(value)
     return value
 
