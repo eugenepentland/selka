@@ -455,6 +455,45 @@ the schematic host and `mylang test` pay. Batch straight-line regions and
 charge them together, with the exact per-instruction path near exhaustion, as
 the 2026-09-21 gap audit specified.
 
+## Where the micro suite stands, and the checked-arithmetic floor (2026-09-22)
+
+After items 1, 3, 4, 5 (complete), item 6's first two halves and the
+`float_loop` defect fix, the default `o3-lto` arm measures (same-process
+interleaved medians, every arm's stdout byte-identical):
+
+| kernel | ratio to Zig ReleaseFast | target |
+| --- | ---: | --- |
+| `intloop` / `records` / `calls` | 0.97× / 0.95× / 1.00× | ≤ 1.3× — met |
+| `float_loop` | 1.08× (was 2.76×) | ≤ 1.3× — met |
+| `list_append_sum` | 1.36× | ≤ 2× — met |
+| `str_build` / `dict_count` | 1.15× / 1.39× | ≤ 1.5× — met |
+| `bytes_scan` | 1.23–1.51× across runs | ≤ 1.3× — met on a quiet machine, not under load |
+| `list_records` | 1.34× (was 2.16×) | ≤ 1.3× — marginally short |
+| `alloc_churn` | 2.0–2.2× | ≤ 2× — at the boundary |
+| `fib` | 3.49× | frozen (item 2) |
+
+**The two remaining loop gaps are bounded by checked arithmetic, and that is
+measured, not argued.** `bytes_scan`'s scan and `list_records`' sum both
+accumulate with `+`, which must trap on overflow. Replacing the accumulator with
+the prelude's `wrapping_add` in a scratch copy of each kernel — same source, same
+stdout, only the never-taken overflow case changed — takes `bytes_scan` 80 → 63 ms
+(`vpcmpeqb`/`vpaddq` appear) and `list_records` 79 → 63 ms (28 `vpaddq`), i.e.
+about **1.15× and 1.13×** against the same Zig builds. LLVM will not vectorise a
+reduction whose every step may branch to a trap, and Zig's ReleaseFast `+` is
+unchecked, so the floor *with checked arithmetic removed* sits inside the target
+while the current form cannot reach it. The earlier hypotheses are dead and
+recorded so they are not retried: the scan loop carries no length reload, bounds
+check, index normalisation or `i += 1` check, and the inner `if` is not the cost
+(`count += data[i]` and `for b in data:` measure the same).
+
+Closing those two kernels therefore needs one of: a proof that a given
+accumulator cannot overflow (a range/bounds analysis the checker could carry to
+the lowering), an explicit unchecked-arithmetic escape hatch in the language, or
+accepting the checked floor. This is a language-semantics decision rather than a
+lowering change, and it is the only lever left on those two kernels.
+`experiments/perf-parity-audit-20260921/micro/loop-parity-notes.md` carries the
+per-kernel evidence.
+
 ## Measuring
 
 - Re-run `experiments/perf-parity-audit-20260921` (micro suite, probes, parser
