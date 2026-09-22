@@ -33,6 +33,28 @@ pub const Context = struct {
         node.* = .{ .declaration = declaration, .arguments = try self.arena.allocator().dupe(Value, arguments) };
         return .{ .nominal = node };
     }
+    /// Build a symbolic tuple from its element values. A concrete element list
+    /// that the catalog has already materialized keeps that identity; anything
+    /// else stays the ordered argument list of the tuple's declaration, so the
+    /// elements remain visible without a representative substitution.
+    // twin-drift-ok: this context carries a catalog by value, so it can look an
+    // interned tuple up but never create one; `generic_bodies.symbolicTuple`
+    // holds the checker's catalog and interns a concrete element list on demand.
+    pub fn tuple(self: Context, elements: []const Value) ?Value {
+        const store = self.catalog.templates.store orelse return null;
+        const declaration = store.index.tupleDeclaration(elements.len) orelse return null;
+        var concrete: [8]typed.Type = undefined;
+        var all_concrete = true;
+        for (elements, 0..) |element, index| {
+            if (element != .concrete) {
+                all_concrete = false;
+                break;
+            }
+            concrete[index] = element.concrete;
+        }
+        if (all_concrete) if (typed.internedTuple(self.catalog.records, concrete[0..elements.len])) |ty| return .{ .concrete = ty };
+        return self.nominal(declaration, elements) catch return null;
+    }
     fn lengthArgument(self: Context, span: source.Span) Error!Value {
         for (self.parameters, 0..) |parameter, index| {
             if (!std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) continue;
@@ -125,6 +147,11 @@ pub const Context = struct {
             array.* = .{ .length = if (size == .length) size.length else 0, .length_parameter = if (size == .length_parameter) size.length_parameter else null, .element = try self.sourceType(template.syntax.element, depth + 1, aliases) };
             return .{ .array = array };
         }
+        if (self.catalog.templates.store) |store| if (store.index.syntax.tuples.get(span.start)) |syntax| {
+            var elements: [8]Value = undefined;
+            for (syntax.elements, 0..) |element, index| elements[index] = try self.sourceType(element, depth + 1, aliases);
+            return self.tuple(elements[0..syntax.elements.len]) orelse return self.sink.fail("E_TUPLE_ARITY", syntax.span, tuple_arity_message);
+        };
         if (scope == .local) {
             for (self.parameters, 0..) |parameter, i| {
                 if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) {
@@ -140,6 +167,7 @@ pub const Context = struct {
         if (value == .nominal) return self.catalog.templates.store.?.index.declarations.items[value.nominal.declaration].kind;
         if (value != .concrete or !value.concrete.isAggregate()) return null;
         const shape = self.catalog.records[value.concrete.recordIndex()];
+        if (shape.shape.tuple) return .tuple;
         if (shape.shape.buffer != null) return .buffer;
         if (shape.shape.variants) |variants| return if (variants.fallible) .result else if (variants.is_union) .variants else .enumeration;
         return if (shape.isRecord()) .record else null;
@@ -228,6 +256,20 @@ pub const Context = struct {
             if (nominal_value.schema) |cached| return cached.*;
             const store = self.catalog.templates.store.?;
             const declaration = store.index.declarations.items[nominal_value.declaration];
+            // A tuple declaration has no declared fields: its positional elements
+            // are exactly the arguments the spelling supplied.
+            if (declaration.kind == .tuple) {
+                const elements = try self.arena.allocator().alloc(symbolic.Field, nominal_value.arguments.len);
+                for (nominal_value.arguments, elements, 0..) |argument, *out, index| out.* = .{
+                    .name = try typed.positionalFieldName(self.arena.allocator(), index),
+                    .span = span,
+                    .ty = argument,
+                };
+                const resolved = try self.arena.allocator().create(Schema);
+                resolved.* = .{ .kind = .tuple, .fields = elements };
+                nominal_value.schema = resolved;
+                return resolved.*;
+            }
             const fields = try self.arena.allocator().alloc(symbolic.Field, declaration.fields.len);
             for (declaration.fields, fields) |field, *out| out.* = .{
                 .name = field.builtin_name orelse self.src.text(field.name),
@@ -260,7 +302,7 @@ pub const Context = struct {
         if (!record.isRecord() and record.tableKey() == null) return self.sink.fail("E_TYPE", span, "operation requires a record or variant value");
         const fields = try self.arena.allocator().alloc(symbolic.Field, record.fields.len);
         for (record.fields, fields) |field, *out| out.* = .{ .name = field.name, .span = field.declaration, .ty = .{ .concrete = field.ty }, .default_value = field.default_value };
-        return .{ .kind = .record, .fields = fields, .key = record.tableKey() };
+        return .{ .kind = if (record.shape.tuple) .tuple else .record, .fields = fields, .key = record.tableKey() };
     }
     /// Require a record, permitting enum-indexed tables only for complete construction.
     pub fn requireRecord(self: Context, value: Value, span: source.Span, complete: bool) Error!Schema {
@@ -278,6 +320,7 @@ pub const Context = struct {
     /// Resolve member identity within this exact declared shape.
     pub fn memberIndex(self: Context, shape: Schema, span: source.Span) Error!usize {
         for (shape.fields, 0..) |member, i| if (std.mem.eql(u8, member.name, self.src.text(span))) return i;
+        if (shape.kind == .tuple) return self.sink.fail("E_TYPE", span, "a tuple has no fields; take it apart with `head, rest = value`");
         return self.sink.fail(if (shape.kind == .record) "E_UNKNOWN_FIELD" else "E_UNKNOWN_VARIANT", span, "member is not declared on this type");
     }
     fn leaf(self: Context, value: Value) ?Properties {
@@ -491,3 +534,33 @@ fn writeCanonical(writer: *std.Io.Writer, catalog: type_catalog.Catalog, value: 
         },
     }
 }
+
+/// The element count of a symbolic tuple, or null for any other type. A
+/// concrete tuple answers its positional field count, a nominal tuple its
+/// ordered arguments, so both representations destructure the same way.
+pub fn tupleArity(catalog: type_catalog.Catalog, value: Value) ?usize {
+    if (value == .nominal) {
+        const store = catalog.templates.store orelse return null;
+        if (!store.index.isTuple(value.nominal.declaration)) return null;
+        return value.nominal.arguments.len;
+    }
+    if (value != .concrete) return null;
+    const schema = @import("record_layouts.zig").tupleRecord(catalog.records, value.concrete) orelse return null;
+    return schema.fields.len;
+}
+
+/// One positional element of a symbolic tuple, or null past its end or for a
+/// value that is not a tuple at all.
+pub fn tupleElement(catalog: type_catalog.Catalog, value: Value, index: usize) ?Value {
+    if (value == .nominal) {
+        const store = catalog.templates.store orelse return null;
+        if (!store.index.isTuple(value.nominal.declaration)) return null;
+        return if (index < value.nominal.arguments.len) value.nominal.arguments[index] else null;
+    }
+    if (value != .concrete) return null;
+    const schema = @import("record_layouts.zig").tupleRecord(catalog.records, value.concrete) orelse return null;
+    return if (index < schema.fields.len) .{ .concrete = schema.fields[index].ty } else null;
+}
+
+/// The accepted arity beside a rejected tuple spelling in a symbolic position.
+pub const tuple_arity_message = "a tuple has between 2 and 8 elements; declare a record for a larger group";

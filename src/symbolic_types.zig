@@ -184,6 +184,14 @@ fn sameIdentity(value: Value, id: @import("nominal_layouts.zig").Id, catalog: Ca
         return sameIdentity(callback.result, node.key.arguments[callback.parameters.len], catalog);
     }
     if (value == .nominal) {
+        // A tuple is a structural identity: its layout node carries the element
+        // identities themselves rather than a named declaration.
+        if (node.key.base == .tuple) {
+            if (!store.index.isTuple(value.nominal.declaration)) return false;
+            if (value.nominal.arguments.len != node.key.arguments.len) return false;
+            for (value.nominal.arguments, node.key.arguments) |argument, key| if (!sameIdentity(argument, key, catalog)) return false;
+            return true;
+        }
         if (node.key.base != .named or value.nominal.declaration != node.key.base.named or value.nominal.arguments.len != node.key.arguments.len) return false;
         for (value.nominal.arguments, node.key.arguments) |argument, key| if (!sameIdentity(argument, key, catalog)) return false;
         return true;
@@ -202,7 +210,14 @@ pub fn supports(value: Value, requirement: requirements.Requirement, parameters:
         .length, .length_parameter => false,
         .parameter => |index| parameters[index].requirements.contains(requirement),
         .array => |shape| (requirement == .copy or requirement == .storable) and ((shape.length_parameter == null and shape.length == 0) or supports(shape.element, requirement, parameters, catalog)),
-        .nominal => |value_type| catalog.templates.store.?.index.declarations.items[value_type.declaration].guarantees.contains(requirement),
+        .nominal => |value_type| result: {
+            const declaration = catalog.templates.store.?.index.declarations.items[value_type.declaration];
+            // A tuple's requirements are its elements': its declaration owns no
+            // fields, so a blanket declaration-level guarantee would be unsound.
+            if (declaration.kind != .tuple) break :result declaration.guarantees.contains(requirement);
+            for (value_type.arguments) |argument| if (!supports(argument, requirement, parameters, catalog)) break :result false;
+            break :result true;
+        },
         .concrete => |ty| result: {
             var required: requirements.Set = .{};
             required.include(requirement);

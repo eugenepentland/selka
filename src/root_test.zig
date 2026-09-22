@@ -169,6 +169,7 @@ test {
     _ = @import("managed_cell_test.zig");
     _ = @import("for_range_test.zig");
     _ = @import("type_aliases_test.zig");
+    _ = @import("tuples_test.zig");
 }
 test {
     _ = @import("surface_statements_test.zig");

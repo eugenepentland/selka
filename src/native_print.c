@@ -251,6 +251,15 @@ void myl_print_record(MylPrint *out, const void *value, unsigned depth, const ch
     }
     byte(out, ')');
 }
+void myl_print_tuple(MylPrint *out, const void *value, unsigned depth, const MylPrintField *elements, size_t count) {
+    if (myl_print_deep(out, depth)) return;
+    byte(out, '(');
+    for (size_t i = 0; i < count; ++i) {
+        if (i) literal(out, ", ");
+        elements[i].render(out, (const unsigned char *)value + elements[i].offset, depth + 1);
+    }
+    byte(out, ')');
+}
 void myl_print_domain(MylPrint *out, const void *value, unsigned depth, const char *name, MylPrintFn inner) {
     if (myl_print_deep(out, depth)) return;
     literal(out, name);

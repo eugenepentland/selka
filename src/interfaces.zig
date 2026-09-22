@@ -311,6 +311,13 @@ pub const Index = struct {
             if (array.index == .enum_type) try self.signatureType(module, array.index.enum_type);
             return self.signatureType(module, array.element);
         }
+        // A tuple is structural: its element spans are checked in place and the
+        // whole spelling names no declaration of its own.
+        for (syntax.types.expressions.tuples) |tuple| {
+            if (tuple.span.start != span.start or tuple.span.end != span.end) continue;
+            for (tuple.elements) |element| try self.signatureType(module, element);
+            return;
+        }
         const src = self.project.modules.items[module].src;
         if (typed.Type.fromName(src.text(span)) != null) return;
         if (!self.units[module].names.contains(src.text(span)) and prelude.scalar(src.text(span))) return;
@@ -447,6 +454,11 @@ pub const Index = struct {
             if (array.span.start != span.start or array.span.end != span.end) continue;
             if (array.index == .enum_type) try self.genericSignatureType(module, array.index.enum_type, parameters);
             return self.genericSignatureType(module, array.element, parameters);
+        }
+        for (self.units[module].syntax.types.expressions.tuples) |tuple| {
+            if (tuple.span.start != span.start or tuple.span.end != span.end) continue;
+            for (tuple.elements) |element| try self.genericSignatureType(module, element, parameters);
+            return;
         }
         try self.signatureType(module, span);
     }
@@ -988,6 +1000,20 @@ pub const Index = struct {
         }
         return error.InternalError;
     }
+    /// Render one `tuple[T1, ..., Tn]` spelling as its canonical descriptor.
+    /// Element descriptors are already canonical, so a tuple renders as
+    /// `tuple[i64,str]` and the surface rewriter turns it into source spelling.
+    fn contractTupleText(self: *Index, module: usize, tuple: ast.TupleType, parameters: []const ast.TypeParameter, path: *std.ArrayList(Identity)) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        var out: std.ArrayList(u8) = .empty;
+        try out.appendSlice(allocator, "tuple[");
+        for (tuple.elements, 0..) |element, index| {
+            if (index != 0) try out.appendSlice(allocator, ",");
+            try out.appendSlice(allocator, try self.contractTypeTextPath(module, element, parameters, path));
+        }
+        try out.appendSlice(allocator, "]");
+        return out.toOwnedSlice(allocator);
+    }
     fn contractTypeText(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter) ContractError![]const u8 {
         var path: std.ArrayList(Identity) = .empty;
         defer path.deinit(self.project.arena.allocator());
@@ -1031,6 +1057,10 @@ pub const Index = struct {
             try out.appendSlice(allocator, "]");
             try out.appendSlice(allocator, try self.contractTypeTextPath(module, array.element, parameters, path));
             return out.toOwnedSlice(allocator);
+        }
+        for (self.units[module].syntax.types.expressions.tuples) |tuple| {
+            if (tuple.span.start != span.start or tuple.span.end != span.end) continue;
+            return self.contractTupleText(module, tuple, parameters, path);
         }
         if (typed.Type.fromName(text)) |builtin| return allocator.dupe(u8, prelude.reservedTypeName(builtin) orelse typed.typeName(builtin, &.{}));
         if (!self.units[module].names.contains(text)) {

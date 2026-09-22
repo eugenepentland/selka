@@ -12,6 +12,7 @@ const Names = @import("module_names.zig").Names;
 const Error = diagnostic.Error;
 const Store = @import("nominal_state.zig").Store;
 const callables = @import("callables.zig");
+const record_layouts = @import("record_layouts.zig");
 const Context = @FieldType(Store, "context");
 const Identities = @FieldType(Store, "identities");
 const Builder = struct {
@@ -46,6 +47,7 @@ const Builder = struct {
                 return;
             },
             .named => |declaration| base = self.index.declarations.items[declaration].builtin_name orelse try self.declarationName(self.index.declarations.items[declaration].name),
+            .tuple => base = "tuple",
             .array => |array| {
                 if (array.length_parameter != null) return;
                 if (array.key) |key| {
@@ -61,17 +63,18 @@ const Builder = struct {
             if (name.len > 1048576 - @min(size, 1048576)) return self.nameLimit(node.site);
             size += name.len;
         }
-        const punctuation = if (node.key.base == .named and node.key.arguments.len != 0) node.key.arguments.len + 1 else 0;
+        const bracketed = (node.key.base == .named or node.key.base == .tuple) and node.key.arguments.len != 0;
+        const punctuation = if (bracketed) node.key.arguments.len + 1 else 0;
         if (size > 1048576 - @min(punctuation + self.identities.name_bytes, 1048576)) return self.nameLimit(node.site);
         var output: std.Io.Writer.Allocating = .init(allocator);
         defer output.deinit();
         output.writer.writeAll(base) catch return error.OutOfMemory;
-        if (node.key.base == .named and node.key.arguments.len != 0) output.writer.writeByte('<') catch return error.OutOfMemory;
+        if (bracketed) output.writer.writeByte('<') catch return error.OutOfMemory;
         for (node.key.arguments, 0..) |argument, i| {
             if (i != 0) output.writer.writeByte(',') catch return error.OutOfMemory;
             output.writer.writeAll(self.identities.items.items[@backingInt(argument)].name.?) catch return error.OutOfMemory;
         }
-        if (node.key.base == .named and node.key.arguments.len != 0) output.writer.writeByte('>') catch return error.OutOfMemory;
+        if (bracketed) output.writer.writeByte('>') catch return error.OutOfMemory;
         self.identities.items.items[id].name = try output.toOwnedSlice();
         self.identities.name_bytes += size + punctuation;
     }
@@ -151,6 +154,16 @@ const Builder = struct {
                     continue;
                 }
             }
+            if (node.key.base == .tuple) {
+                var elements: [8]typed.Type = undefined;
+                for (node.key.arguments, 0..) |argument, index| elements[index] = try self.runtimeType(argument);
+                // A tuple value may already have interned this element list, so
+                // the spelling and the value keep one record instead of two.
+                if (typed.internedTuple(storage.items, elements[0..node.key.arguments.len])) |found| {
+                    identity.ty = found;
+                    continue;
+                }
+            }
             if (node.key.base == .callback) {
                 var parameters: [16]typed.Type = undefined;
                 for (node.key.arguments[0 .. node.key.arguments.len - 1], 0..) |argument, argument_index| parameters[argument_index] = try self.runtimeType(argument);
@@ -189,7 +202,7 @@ const Builder = struct {
         const first = self.catalog.records.len;
         try self.identify();
         try self.fill(first);
-        try @import("record_layouts.zig").validate(self.context.allocator, self.catalog.records, self.context.sink);
+        try record_layouts.validate(self.context.allocator, self.catalog.records, self.context.sink);
     }
     fn runtimeType(self: Builder, id: layouts.Id) Error!typed.Type {
         return self.identities.items.items[@backingInt(id)].ty orelse error.InternalError;
@@ -235,6 +248,20 @@ const Builder = struct {
             schema.fields = fields_out;
         }
         try self.catalog.arrays.shapes.put(self.context.allocator, schema.shape.array.?, schema.id);
+    }
+    /// Give one tuple identity its positional element fields. The element list
+    /// comes from the graph key, which already deduplicates equal element
+    /// identities, so two spellings of `tuple[int, str]` share one record.
+    fn fillTuple(self: Builder, node: layouts.Node, schema: *typed.Record) Error!void {
+        const allocator = self.context.allocator;
+        const fields_out = try allocator.alloc(typed.Field, node.key.arguments.len);
+        for (node.key.arguments, fields_out, 0..) |argument, *out, index| out.* = .{
+            .name = try typed.positionalFieldName(allocator, index),
+            .declaration = node.site,
+            .ty = try self.runtimeType(argument),
+        };
+        schema.fields = fields_out;
+        schema.shape.tuple = true;
     }
     fn special(self: Builder, declaration: templates.Declaration, schema: *typed.Record) Error!void {
         switch (declaration.kind) {
@@ -286,6 +313,10 @@ const Builder = struct {
                 try self.fillArray(node, schema);
                 continue;
             }
+            if (node.key.base == .tuple) {
+                try self.fillTuple(node, schema);
+                continue;
+            }
             const id = node.key.base.named;
             const declaration = self.index.declarations.items[id];
             schema.declaration = declaration.name;
@@ -316,6 +347,9 @@ const Builder = struct {
                     }
                 },
                 .domain, .resource => try self.special(declaration, schema),
+                // A tuple declaration never reaches a `.named` node: the layout
+                // resolver interns its spelling under the `.tuple` base instead.
+                .tuple => return error.InternalError,
             }
         }
     }
@@ -356,8 +390,21 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     var resolved = sources.resolved.iterator();
     while (resolved.next()) |entry| try catalog.arrays.resolved.put(allocator, entry.key_ptr.*, try builder.runtimeType(entry.value_ptr.*));
     try builder.fill(0);
-    try @import("record_layouts.zig").validate(allocator, catalog.records, sink);
+    try record_layouts.validate(allocator, catalog.records, sink);
     return catalog;
+}
+
+/// Materialize the interned record for one concrete tuple element list. The
+/// graph key carries the element identities, so two spellings or values with
+/// the same elements materialize one record, exactly as a closed spelling does.
+pub fn instantiateTuple(catalog: *Catalog, elements: []const typed.Type, span: source.Span) Error!typed.Type {
+    const state = catalog.templates.store orelse return error.InternalError;
+    var ids: [8]layouts.Id = undefined;
+    for (elements, 0..) |element, i| ids[i] = try state.typeArgument(catalog.records, element, span, 0);
+    const id = try state.graph.materializeKey(.{ .base = .{ .tuple = {} }, .arguments = ids[0..elements.len] }, span);
+    var builder: Builder = .{ .context = state.context, .index = state.index, .graph = state.graph, .catalog = catalog, .identities = &state.identities };
+    try builder.complete();
+    return builder.runtimeType(id);
 }
 
 /// Materialize ordered type identities and their optional constant length values.

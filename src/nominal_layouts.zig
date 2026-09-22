@@ -22,6 +22,8 @@ pub const Base = union(enum) {
     parameter: struct { declaration: usize, index: usize },
     named: usize,
     array: struct { length: usize, key: ?Id, length_parameter: ?Id = null },
+    /// An anonymous tuple identity; its element identities are the arguments.
+    tuple: void,
 };
 /// Ordered semantic identity accepted by layout materialization.
 pub const Key = struct { base: Base, arguments: []const Id };
@@ -63,6 +65,7 @@ const KeyContext = struct {
                 std.hash.autoHash(hasher, @as(u8, 5));
                 std.hash.autoHash(hasher, array);
             },
+            .tuple => std.hash.autoHash(hasher, @as(u8, 6)),
         }
     }
     fn equalBase(a: Base, b: Base) bool {
@@ -78,6 +81,7 @@ const KeyContext = struct {
             .parameter => |left| b == .parameter and left.declaration == b.parameter.declaration and left.index == b.parameter.index,
             .named => |left| b == .named and b.named == left,
             .array => |left| b == .array and left.length == b.array.length and left.key == b.array.key and left.length_parameter == b.array.length_parameter,
+            .tuple => b == .tuple,
         };
     }
     /// Hash declaration, parameter and ordered argument identities without pointer identity.
@@ -173,6 +177,10 @@ pub const Graph = struct {
             .application => |application| application: {
                 var resolved: [16]Id = undefined;
                 for (application.arguments, 0..) |argument, i| resolved[i] = try self.resolve(argument, arguments, application.syntax.arguments[i]);
+                if (self.templates.isTuple(application.declaration)) break :application self.intern(
+                    .{ .base = .{ .tuple = {} }, .arguments = resolved[0..application.arguments.len] },
+                    application.syntax.span,
+                );
                 break :application self.intern(.{ .base = .{ .named = application.declaration }, .arguments = resolved[0..application.arguments.len] }, application.syntax.span);
             },
             .array => |array| array: {
@@ -239,6 +247,10 @@ pub const Graph = struct {
                     if (array.key) |key| try self.need(key);
                     // Existing finite-type policy follows even zero-length array elements.
                     const element = node.key.arguments[0];
+                    try self.need(element);
+                    try edges.append(self.allocator, .{ .target = element, .span = node.site });
+                },
+                .tuple => for (node.key.arguments) |element| {
                     try self.need(element);
                     try edges.append(self.allocator, .{ .target = element, .span = node.site });
                 },
