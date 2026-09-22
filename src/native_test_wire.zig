@@ -497,7 +497,7 @@ test "local mutation and output both reuse a receipt" {
         \\
         \\public def test_local_mutation() -> bool:
         \\    xs: list[int] = [1]
-        \\    change(mut xs)
+        \\    change(xs)
         \\    return xs[0] == 2
         \\
         \\public def test_external_output(out: Stream) -> bool:

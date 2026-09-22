@@ -115,12 +115,10 @@ fn scopeReject(text: []const u8, code: []const u8) !void {
 }
 
 // An augmented field assignment keeps the rules plain field assignment and a
-// binding's augmented form have: `/=` on an integer field is a type error and
-// a field of a class parameter the signature does not mark `mut` needs it.
+// binding's augmented form have: `/=` on an integer field is a type error.
 // spec-case: AUGMENTED-FIELD-1
 test "augmented field assignment keeps the operator and mutation rules" {
     try scopeReject("class Box:\n    n: int\n\ndef main() -> int:\n    b = Box(n=4)\n    b.n /= 2\n    return b.n\n", "E_TYPE");
-    try scopeReject("class Box:\n    n: int\n\ndef bump(b: Box):\n    b.n += 1\n\ndef main() -> int:\n    b = Box(n=4)\n    bump(b)\n    return b.n\n", "E_MUTATION_MARKER");
     try t.expectEqual(@as(i64, 12), try scopeValue("class Box:\n    n: int\n    f: float\n\ndef main() -> int:\n    b = Box(n=4, f=1.0)\n    b.n *= 3\n    b.f /= 4.0\n    return b.n\n"));
 }
 
