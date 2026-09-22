@@ -4,7 +4,14 @@ pub const ValidateError = error{
     InternalError,
     OutOfMemory,
 };
-/// Diagnostic code for an exported declaration without a declared ceiling.
+/// Diagnostic code for a body that exceeds the ceiling its signature implies.
+const bound_code = "E_EFFECT_BOUND";
+/// Diagnostic code for a clause that names an effect no parameter supplies.
+const unsupplied_clause_code = "E_DERIVED_EFFECTS";
+/// Diagnostic code for a clause that restates the ceiling its parameters imply.
+const restating_clause_code = "W_DERIVED_EFFECTS";
+/// Diagnostic code for a capability parameter the body never reads.
+pub const unused_capability_code = "E_UNUSED_CAPABILITY";
 const std = @import("std");
 const typed = @import("typed.zig");
 const sets = @import("effect_set.zig");
@@ -14,6 +21,7 @@ const Span = source.Span;
 const diagnostic = @import("diagnostic.zig");
 const mutation = @import("mutation.zig");
 const bytecode_model = @import("bytecode_model.zig");
+const callables = @import("callables.zig");
 const Witness = struct { span: Span, via: ?usize = null };
 const Edge = struct { caller: usize, span: Span };
 fn allocatingSequence(records: []const typed.Record, ty: typed.Type) bool {
@@ -272,6 +280,159 @@ fn effectsText(allocator: std.mem.Allocator, mask: sets.Mask) diagnostic.Error![
     return std.fmt.allocPrint(allocator, "effects({s})", .{list.items}) catch return error.OutOfMemory;
 }
 
+/// The effect one capability parameter type permits, or null for a value type.
+fn capabilityEffect(ty: typed.Type) ?sets.Effect {
+    return switch (ty.capabilityIndex() orelse return null) {
+        0 => .clock,
+        1 => .random,
+        2 => .filesystem,
+        3 => .network,
+        4 => .environment,
+        5 => .output,
+        6 => .host,
+        else => null,
+    };
+}
+
+/// The parameter declaration that would supply one effect, spelled as the paste
+/// a rejection asks for. `managed_allocation` is ambient, so nothing supplies it
+/// and the table has no entry: it is never an unsupplied effect.
+pub fn supplyingParameter(effect: sets.Effect) ?[]const u8 {
+    return switch (effect) {
+        .filesystem => "fs: Filesystem",
+        .network => "net: Network",
+        .clock => "clock: Clock",
+        .random => "entropy: Entropy",
+        .environment => "env: Environment",
+        .host => "host: Host",
+        .output => "out: Stream",
+        .mutation => "changed: mut T",
+        .managed_allocation => null,
+    };
+}
+
+/// Effect ceiling a signature implies by construction: one effect per capability
+/// parameter, `mutation` for every `mut` parameter, the declared ceiling of every
+/// callback parameter, and `managed_allocation`, which is always permitted.
+/// A body may not exceed this set; a clause may only narrow it further.
+pub fn derivedCeiling(records: []const typed.Record, signature: typed.FunctionSignature, locals: []const typed.Local) sets.Mask {
+    if (signature.parameter_count > locals.len) return sets.all;
+    var mask: sets.Mask = sets.bit(.managed_allocation);
+    for (locals[0..signature.parameter_count]) |parameter| {
+        if (capabilityEffect(parameter.ty)) |effect| mask |= sets.bit(effect);
+        if (callables.signature(parameter.ty, records)) |contract| mask |= contract.effects;
+    }
+    for (signature.declared_mutates) |position| {
+        if (position < signature.parameter_count) mask |= sets.bit(.mutation);
+    }
+    return mask;
+}
+
+/// Ceiling a checked function is actually held to. A `host def` or `extern def`
+/// has no body to derive from and declares its authority directly, so its clause
+/// stays the ceiling; every other function is bounded by the derived set, and a
+/// clause narrows it further.
+pub fn effectiveCeiling(records: []const typed.Record, function: typed.Function) sets.Mask {
+    const declared = if (function.policy.effect_bound) |bound| bound.allowed else null;
+    if (function.policy.host != null or function.policy.c_abi) return declared orelse sets.all;
+    const derived = derivedCeiling(records, function.signature, function.scope.locals);
+    return if (declared) |mask| mask & derived else derived;
+}
+
+/// Whether a clause is one of the negative forms (`noalloc`, `noio`) rather than
+/// an explicit `effects(...)` list. Only an explicit list names effects, so only
+/// it can name one that no parameter supplies.
+pub fn negativeClause(src: source.Source, span: Span) bool {
+    const text = src.text(span);
+    return std.mem.startsWith(u8, text, "noalloc") or std.mem.startsWith(u8, text, "noio");
+}
+
+/// Append one `E_EFFECT_BOUND` for a body that exceeds the ceiling its own
+/// parameter list implies. There is no clause to point at, so the diagnostic
+/// sits on the operation (or the call) that reaches the effect and names the
+/// parameter that would permit it.
+fn appendDerivedViolation(allocator: std.mem.Allocator, ctx: BoundContext, index: usize, effect: sets.Effect, sink: *diagnostic.Sink) diagnostic.Error!void {
+    const program = ctx.program;
+    const graph = ctx.graph;
+    const function = program.functions[index];
+    const witness = graph.states[index].witnesses[@backingInt(effect)].?;
+    var path: std.Io.Writer.Allocating = .init(allocator);
+    defer path.deinit();
+    path.writer.print("effect `{s}` exceeds this signature's ceiling: {s}", .{ @tagName(effect), function.name }) catch return error.OutOfMemory;
+    var cursor = index;
+    var steps: usize = 0;
+    while (graph.states[cursor].witnesses[@backingInt(effect)].?.via) |callee| {
+        path.writer.print(" -> {s}", .{program.functions[callee].name}) catch return error.OutOfMemory;
+        cursor = callee;
+        steps += 1;
+        std.debug.assert(steps < program.functions.len);
+    }
+    if (supplyingParameter(effect)) |paste| {
+        path.writer.print(", which no parameter permits; add `{s}` to the parameters", .{paste}) catch return error.OutOfMemory;
+    } else {
+        path.writer.writeAll(", which no parameter permits") catch return error.OutOfMemory;
+    }
+    const message = allocator.dupe(u8, path.written()) catch return error.OutOfMemory;
+    sink.items.append(allocator, .{
+        .code = bound_code,
+        .span = witness.span,
+        .message = message,
+        .related = .{ .span = function.declaration, .message = "this signature is the whole contract" },
+    }) catch return error.OutOfMemory;
+}
+
+/// Report the two clause-only diagnostics of a signature-derived ceiling. A
+/// clause that names an effect no parameter can supply is `E_DERIVED_EFFECTS`
+/// because it can never be satisfied; a clause that permits exactly what the
+/// parameters imply is `W_DERIVED_EFFECTS` because it says nothing.
+fn appendClauseDiagnostics(allocator: std.mem.Allocator, src: source.Source, function: typed.Function, derived: sets.Mask, sink: *diagnostic.Sink) diagnostic.Error!bool {
+    const bound = function.policy.effect_bound orelse return false;
+    const clause = src.text(bound.span);
+    if (!negativeClause(src, bound.span)) {
+        const unsupplied = bound.allowed & ~derived;
+        if (unsupplied != 0) {
+            var message: std.Io.Writer.Allocating = .init(allocator);
+            defer message.deinit();
+            message.writer.print("`{s}` names ", .{clause}) catch return error.OutOfMemory;
+            var separator = false;
+            for (std.meta.tags(sets.Effect)) |effect| {
+                if (unsupplied & sets.bit(effect) == 0) continue;
+                if (separator) message.writer.writeAll(", ") catch return error.OutOfMemory;
+                message.writer.print("`{s}`", .{@tagName(effect)}) catch return error.OutOfMemory;
+                separator = true;
+            }
+            message.writer.writeAll(", which no parameter supplies; add ") catch return error.OutOfMemory;
+            separator = false;
+            for (std.meta.tags(sets.Effect)) |effect| {
+                if (unsupplied & sets.bit(effect) == 0) continue;
+                const paste = supplyingParameter(effect) orelse continue;
+                if (separator) message.writer.writeAll(", ") catch return error.OutOfMemory;
+                message.writer.print("`{s}`", .{paste}) catch return error.OutOfMemory;
+                separator = true;
+            }
+            message.writer.writeAll(" to the parameters or drop the clause") catch return error.OutOfMemory;
+            const text = allocator.dupe(u8, message.written()) catch return error.OutOfMemory;
+            sink.items.append(allocator, .{
+                .severity = .err,
+                .code = unsupplied_clause_code,
+                .span = bound.span,
+                .message = text,
+            }) catch return error.OutOfMemory;
+            return true;
+        }
+    }
+    if (derived & ~bound.allowed == 0) {
+        const text = std.fmt.allocPrint(allocator, "`{s}` is exactly what the parameters imply; remove it", .{clause}) catch return error.OutOfMemory;
+        sink.items.append(allocator, .{
+            .severity = .warning,
+            .code = restating_clause_code,
+            .span = bound.span,
+            .message = text,
+        }) catch return error.OutOfMemory;
+    }
+    return false;
+}
+
 /// Bundles the inferred graph with the program it indexes for violation reports.
 const BoundContext = struct { program: typed.Program, graph: *const Graph };
 
@@ -297,7 +458,7 @@ fn appendBoundViolation(allocator: std.mem.Allocator, ctx: BoundContext, index: 
     path.writer.print("; inferred bound is {s}", .{inferred}) catch return error.OutOfMemory;
     const message = allocator.dupe(u8, path.written()) catch return error.OutOfMemory;
     sink.items.append(allocator, .{
-        .code = "E_EFFECT_BOUND",
+        .code = bound_code,
         .span = bound.span,
         .message = message,
         .related = .{ .span = graph.states[cursor].witnesses[@backingInt(effect)].?.span, .message = "effect originates at this operation or owned type" },
@@ -382,7 +543,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, request: Requ
                     if (managed and @import("buffer_operations.zig").managedAllocation(op.kind, dictionary)) graph.direct(index, .managed_allocation, node.span);
                 },
                 .invoke => |call| {
-                    const contract = @import("callables.zig").signature(program.nodes[@backingInt(call.callee)].ty, program.records).?;
+                    const contract = callables.signature(program.nodes[@backingInt(call.callee)].ty, program.records).?;
                     inline for (std.meta.tags(sets.Effect)) |effect| if (effect != .mutation and contract.effects & sets.bit(effect) != 0) graph.direct(index, effect, node.span);
                 },
                 .call => |call| graph.call(index, @backingInt(call.function), node.span) catch |err| switch (err) {
@@ -427,26 +588,62 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, request: Requ
     // inferred transitive mask is frozen onto the checked function below and is
     // what interfaces/fingerprints publish; an explicit `noalloc`, `noio` or
     // `effects(...)` remains an opt-in upper bound enforced by the loop below.
+    // The signature is the whole contract: every checked function is held to the
+    // ceiling its parameter list implies (a `mut` parameter permits `mutation`,
+    // a capability parameter its effect, a callback parameter its declared
+    // ceiling, and allocation is always permitted). An explicit `noalloc`,
+    // `noio` or `effects(...)` clause may only narrow that set, and the inferred
+    // transitive mask stays a checked body fact for diagnostics.
     for (@constCast(program.functions), 0..) |*function, index| {
         function.policy.effects = graph.states[index].mask;
         if (function.signature.mutation_facts.external) function.policy.effects |= sets.bit(.mutation);
     }
     var violated = mutation_violated;
-    for (program.functions, 0..) |function, index| {
-        const bound = function.policy.effect_bound orelse continue;
-        const forbidden = function.policy.effects & ~bound.allowed;
-        if (forbidden == 0) continue;
-        for (std.meta.tags(sets.Effect)) |effect| {
-            // `mutation` permission and footprint violations are reported by
-            // origins.check with argument witnesses; the effect graph does not
-            // carry a mutation witness.
-            if (effect == .mutation) continue;
-            if (forbidden & sets.bit(effect) == 0) continue;
-            try appendBoundViolation(allocator, .{ .program = program, .graph = &graph }, index, effect, bound, sink);
-            violated = true;
-        }
+    const context: CeilingContext = .{ .allocator = allocator, .program = program, .graph = &graph, .src = request.src, .sink = sink };
+    for (program.functions, 0..) |_, index| {
+        if (try checkSignatureCeiling(context, index)) violated = true;
     }
     if (violated) return error.SourceError;
+}
+
+/// Everything one per-function ceiling check reads: the allocator, the checked
+/// program, the inferred graph, the merged source, and the diagnostic sink.
+const CeilingContext = struct {
+    allocator: std.mem.Allocator,
+    program: typed.Program,
+    graph: *const Graph,
+    src: source.Source,
+    sink: *diagnostic.Sink,
+};
+
+/// Enforce one checked function's signature-derived ceiling and report the clause
+/// diagnostics that belong to it. Returns whether this function alone exceeded
+/// its ceiling, so the caller can keep collecting every violation.
+fn checkSignatureCeiling(ctx: CeilingContext, index: usize) diagnostic.Error!bool {
+    const function = ctx.program.functions[index];
+    // A `host def`/`extern def` has no body to derive from: its clause is its
+    // authority and stays its ceiling.
+    const derived_applies = function.policy.host == null and !function.policy.c_abi;
+    const derived = derivedCeiling(ctx.program.records, function.signature, function.scope.locals);
+    var violated = false;
+    if (derived_applies) violated = try appendClauseDiagnostics(ctx.allocator, ctx.src, function, derived, ctx.sink);
+    const forbidden = function.policy.effects & ~effectiveCeiling(ctx.program.records, function);
+    if (forbidden == 0) return violated;
+    for (std.meta.tags(sets.Effect)) |effect| {
+        // `mutation` permission and footprint violations are reported by
+        // origins.check with argument witnesses; the effect graph does not carry
+        // a mutation witness.
+        if (effect == .mutation) continue;
+        if (forbidden & sets.bit(effect) == 0) continue;
+        const bound_context: BoundContext = .{ .program = ctx.program, .graph = ctx.graph };
+        if (function.policy.effect_bound) |bound| {
+            try appendBoundViolation(ctx.allocator, bound_context, index, effect, bound, ctx.sink);
+        } else {
+            try appendDerivedViolation(ctx.allocator, bound_context, index, effect, ctx.sink);
+        }
+        violated = true;
+    }
+    return violated;
 }
 
 /// Resolved declaration edge collected while checking symbolic template bodies.
@@ -478,7 +675,7 @@ pub fn checkAbstract(allocator: std.mem.Allocator, functions: []const @import("a
             const inferred = try effectsText(sink.allocator, graph.states[index].mask);
             const message = try std.fmt.allocPrint(sink.allocator, "effect `{s}` from an operation, owned cleanup or a reachable helper exceeds declared bound; inferred bound is {s}", .{ @tagName(effect), inferred });
             sink.items.append(sink.allocator, .{
-                .code = "E_EFFECT_BOUND",
+                .code = bound_code,
                 .span = bound.span,
                 .message = message,
                 .related = .{ .span = graph.states[origin].witnesses[@backingInt(effect)].?.span, .message = "effect originates in this function's operations or owned types" },
@@ -579,7 +776,7 @@ fn seedInstructionEffects(
             }
         },
         .invoke => |ty| {
-            const contract = @import("callables.zig").signature(ty, program.records) orelse return error.InternalError;
+            const contract = callables.signature(ty, program.records) orelse return error.InternalError;
             inline for (std.meta.tags(sets.Effect)) |effect| if (effect != .mutation and contract.effects & sets.bit(effect) != 0) graph.direct(index, effect, instruction.span);
         },
         .call => |callee| try graph.call(index, @backingInt(callee), instruction.span),

@@ -5968,6 +5968,23 @@ fn warnBindings(allocator: std.mem.Allocator, functions: []const typed.Function,
                 });
             }
             if (local.usage.temporary or local.usage.reads != 0) continue;
+            // A capability parameter is the signature's whole claim to an
+            // effect: a body that never reads it promises authority it does not
+            // use, so the over-claim is rejected rather than warned about.
+            if (local.origin == .parameter and local.ty.capabilityIndex() != null) {
+                const message = try std.fmt.allocPrint(
+                    allocator,
+                    "`{s}` is never used, so this signature claims an effect the body cannot have; remove the parameter or use it",
+                    .{local.name},
+                );
+                try sink.items.append(allocator, .{
+                    .severity = .err,
+                    .code = @import("effects.zig").unused_capability_code,
+                    .span = local.declaration,
+                    .message = message,
+                });
+                continue;
+            }
             try sink.items.append(allocator, .{
                 .severity = .warning,
                 .code = "W_UNUSED_BINDING",

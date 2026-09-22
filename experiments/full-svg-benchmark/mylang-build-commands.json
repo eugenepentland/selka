@@ -1,0 +1,70 @@
+[
+  {
+    "name": "mylang-o3",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "build",
+      "src/schematic/guest/main.my",
+      "--project",
+      "--provider",
+      "src/schematic/native_schematic.c",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--keep-symbols",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/mylang-o3-cache",
+      "--report",
+      "-o",
+      "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/mylang-o3"
+    ],
+    "sha256": "557c2c2f429e87b2771060b44cedfe37346f557046b315ad125df2a677a8a195"
+  },
+  {
+    "name": "mylang-o3-lto",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "build",
+      "src/schematic/guest/main.my",
+      "--project",
+      "--provider",
+      "src/schematic/native_schematic.c",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--lto",
+      "--keep-symbols",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/mylang-o3-lto-cache",
+      "--report",
+      "-o",
+      "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/mylang-o3-lto"
+    ],
+    "sha256": "c9601369ba4b23ac2e5368030fe1f6e25d00afc11304e41295570efb54f004f2"
+  },
+  {
+    "name": "mylang-o3-bounded",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "build",
+      "src/schematic/guest/main.my",
+      "--project",
+      "--provider",
+      "src/schematic/native_schematic.c",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--step-accounting",
+      "--keep-symbols",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/mylang-o3-bounded-cache",
+      "--report",
+      "-o",
+      "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/mylang-o3-bounded"
+    ],
+    "sha256": "142c11032c06d7b6de7c1b7b232376a410a7bcea830ceb8bbdf818e8adc32a9c"
+  }
+]
