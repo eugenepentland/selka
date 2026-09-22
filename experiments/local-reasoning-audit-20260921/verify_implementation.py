@@ -216,14 +216,14 @@ def run_case(case: Case, directory: Path, binary: Path) -> str:
     path.write_text(case.source)
 
     if case.extra == "lint":
-        # `lint` writes the same `diagnostic-v1` records but with `location` at
-        # the top level, and its human summary goes to stdout.
+        # `lint --json` writes `diagnostic-v1` records on stderr (like every
+        # other command's `--diagnostics=json`) and its human summary on stdout.
         result = subprocess.run(
             [str(binary), "lint", str(path), "--profile=agent", "--json"],
             capture_output=True, text=True, cwd=ROOT,
         )
         records = []
-        for line in result.stdout.splitlines():
+        for line in result.stderr.splitlines():
             line = line.strip()
             if line.startswith("{"):
                 payload = json.loads(line)
