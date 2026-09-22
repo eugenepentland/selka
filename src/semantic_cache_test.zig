@@ -25,6 +25,32 @@ const suffix =
     \\def main() -> i64:
     \\    return keep(helper(40))
 ;
+/// An allocator that never grows or shrinks a block in place, so every resize
+/// becomes a fresh allocation. `checkAllAllocationFailures` needs the same
+/// allocations in the same order on every run, but whether the backing
+/// allocator can resize in place depends on the address-space layout left by
+/// everything else in the process (a native run maps and unmaps pages), which
+/// made the count drift by one between otherwise identical runs.
+const Steady = struct {
+    inner: std.mem.Allocator,
+    fn alloc(ctx: *anyopaque, len: usize, alignment: std.mem.Alignment, ra: usize) ?[*]u8 {
+        const self: *Steady = @ptrCast(@alignCast(ctx));
+        return self.inner.rawAlloc(len, alignment, ra);
+    }
+    fn resize(_: *anyopaque, _: []u8, _: std.mem.Alignment, _: usize, _: usize) bool {
+        return false;
+    }
+    fn remap(_: *anyopaque, _: []u8, _: std.mem.Alignment, _: usize, _: usize) ?[*]u8 {
+        return null;
+    }
+    fn free(ctx: *anyopaque, memory: []u8, alignment: std.mem.Alignment, ra: usize) void {
+        const self: *Steady = @ptrCast(@alignCast(ctx));
+        self.inner.rawFree(memory, alignment, ra);
+    }
+    fn allocator(self: *Steady) std.mem.Allocator {
+        return .{ .ptr = self, .vtable = &.{ .alloc = alloc, .resize = resize, .remap = remap, .free = free } };
+    }
+};
 fn compare(allocator: std.mem.Allocator, cache: *Cache, bytes: []const u8, expected: ?i64) !void {
     var cached = try language.Compilation.init(allocator, "edited.my", bytes);
     defer cached.deinit();
@@ -1899,7 +1925,8 @@ test "generic publication rolls back cleanly on allocation failure" {
     // creating one on first use costs a few allocations, and a baseline run that
     // pays them while a later run does not looks like nondeterministic memory
     // usage to `checkAllAllocationFailures`.
-    try genericScenario(t.allocator);
-    try genericScenario(t.allocator);
-    try t.checkAllAllocationFailures(t.allocator, genericScenario, .{});
+    var steady: Steady = .{ .inner = t.allocator };
+    try genericScenario(steady.allocator());
+    try genericScenario(steady.allocator());
+    try t.checkAllAllocationFailures(steady.allocator(), genericScenario, .{});
 }
