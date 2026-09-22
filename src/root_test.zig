@@ -135,6 +135,7 @@ test {
     _ = @import("records_test.zig");
     _ = @import("integers_test.zig");
     _ = @import("arrays_test.zig");
+    _ = @import("array_places_test.zig");
     _ = @import("domains_test.zig");
     _ = @import("variants_test.zig");
     _ = @import("tables_test.zig");

@@ -32,6 +32,10 @@ pub const Context = struct {
                 .value => |index| values[index],
             };
             const original = self.storage.nodes.items[@backingInt(input)];
+            // A `mut` argument names a variable, which reading at the call
+            // itself cannot reorder; a `mut` fixed array must also stay that
+            // variable, because the callee writes through its storage.
+            if (self.parameters[parameter_index].mut and original.data == .local) continue;
             const slot: typed.LocalId = @fromBackingInt(self.storage.locals.items.len);
             try self.storage.locals.append(allocator, .{
                 .name = "<argument>",

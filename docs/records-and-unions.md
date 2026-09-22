@@ -390,6 +390,91 @@ def main() -> int:
 This returns `115`. `window.samples` is unchanged by `replace`, and `codes` writes
 `Status.failed` first while the table still reads back in declaration order.
 
+### Writing array elements
+
+An array element is written with the list spelling. `a[i] = v`, `a[i] += v`,
+`a[i].field = v`, `grid[r][c] = v` and `window.samples[i] = v` all work on a
+fixed array or table held in a variable, in a record field of one, or in a list
+slot. The array is still a value: the write changes the variable it is spelled
+through, and a copy taken earlier keeps what it held. `a[i] = v` is exactly
+`a = replace(a, i, v)`, and the compiler writes that element in place, so it
+costs one bounds check and one store however long the array is.
+
+```mylang
+# doc: expect 91234
+record Point:
+    x: int
+    y: int
+
+def main() -> int:
+    counts: [4]int = [0, 0, 0, 0]
+    before = counts
+    for step in range(4):
+        counts[step] = step + 1
+    points: [2]Point = [Point(x=0, y=0), Point(x=5, y=5)]
+    points[1].y = 9
+    return points[1].y * 10000 + counts[0] * 1000 + counts[1] * 100 + counts[2] * 10 + counts[3] + before[3] + points[0].y
+```
+
+This returns `91234`: every element of `counts` was written, `before` is the
+copy taken before the loop and still holds zeros, and only `points[1]` changed.
+An index is checked exactly as a read is: anything outside `0 <= i < N`, a
+negative index included, traps with `R_INDEX_BOUNDS`. Unlike a list, a fixed
+array does not count a negative index from the end.
+
+### Passing an array to be written
+
+A parameter declared `mut [N]T` names the caller's array for the whole call, and
+the caller marks the argument `mut`, as for a list. The callee's element writes
+land in the caller's variable; nothing is copied in or out.
+
+```mylang
+# doc: expect 1023
+def fill(values: mut [3]int, start: int) -> None:
+    for index in range(3):
+        values[index] = start + index
+
+def main() -> int:
+    values: [3]int = [0, 0, 0]
+    fill(mut values, 10)
+    fill(mut values, values[2] - 11)
+    return values[0] * 1000 + values[1] * 10 + values[2]
+```
+
+This returns `1023`: the second call starts from the `12` the first one left.
+The rules are the list rules. A function that writes an element of an array
+parameter it did not declare `mut` is `E_MUTATION_MARKER`, naming the
+declaration to write, and so is a `mut` array parameter the body never writes.
+The argument must be a variable: `fill(mut box.cells, 0)` is rejected with a
+message that says to copy the field into a local, pass that, and store it back.
+Because the name is the caller's array, rebinding it as a whole
+(`values = [0, 0, 0]`) is `E_ASSIGNMENT_TARGET`; write its elements instead. An
+array parameter without `mut` is still the callee's own copy, which it may
+rebind, or copy into a local and change freely.
+
+### Iterating a fixed array
+
+`for x in a`, `for i, x in enumerate(a)` and `[f(x) for x in a]` walk a fixed
+array from its first element to its last. The loop reads the array as it was
+when the loop began, so element writes in the body do not change which values
+the loop visits. An enum table is indexed by its key rather than walked.
+
+```mylang
+# doc: expect 124
+def main() -> int:
+    values: [4]int = [3, 1, 4, 1]
+    total = 0
+    for index, value in enumerate(values):
+        total += index * value
+        values[index] = 0
+    doubled = [value * 2 for value in values]
+    return total * 10 + len(doubled) + doubled[0]
+```
+
+This returns `124`. The loop saw `3, 1, 4, 1` although it zeroed each element as
+it went, so the weighted sum is 12, and the comprehension afterwards reads the
+four zeros.
+
 ## Related pages
 
 - [Results and options](results-and-options.md) — `Result`, `Option` and their contextual constructors

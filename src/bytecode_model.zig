@@ -61,6 +61,10 @@ pub const Instruction = struct {
         move_local: typed.LocalId,
         drop_local: typed.LocalId,
         load_local: typed.LocalId,
+        /// Push the address of a local's own storage rather than its value: the
+        /// argument a `mut` fixed-array parameter receives, which the callee
+        /// writes the caller's array through.
+        ref_local: typed.LocalId,
         store_local: typed.LocalId,
         add_i64_checked,
         sub_i64_checked,

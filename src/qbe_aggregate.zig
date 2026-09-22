@@ -175,7 +175,9 @@ fn replaceDestination(comptime E: type, self: E, pc: usize) Error!?usize {
     };
     if (slot >= self.function.scope.locals.len) return null;
     if (self.function.scope.locals[slot].ty != ty) return null;
-    if (self.isScalar(ty) or self.byReference(slot)) return null;
+    // A `mut` array parameter's slot holds the caller's address, and writing
+    // the caller's array is what its element write means.
+    if (self.isScalar(ty) or (self.byReference(slot) and !self.callerStorage(slot))) return null;
     const value = try self.layout(ty);
     if (value.drop or value.size == 0) return null;
     if (!borrowsLocal(E, self, pc, slot)) return null;
@@ -215,10 +217,11 @@ fn branchTarget(comptime E: type, self: E, pc: usize) bool {
 }
 
 /// Whether one instruction writes local `slot`: a whole-value store, a move
-/// that clears it, an explicit drop, or a match arm's payload binding.
+/// that clears it, an explicit drop, a match arm's payload binding, or a
+/// `ref_local` handing its storage to a callee that writes through it.
 fn writesLocal(op: @FieldType(bytecode.Instruction, "op"), slot: usize) bool {
     return switch (op) {
-        .store_local, .move_local, .drop_local => |target| @backingInt(target) == slot,
+        .store_local, .move_local, .drop_local, .ref_local => |target| @backingInt(target) == slot,
         .switch_variant => |dispatch| for (dispatch.arms) |arm| {
             if (arm.slot) |target| if (@backingInt(target) == slot) break true;
         } else false,
@@ -270,9 +273,11 @@ fn constructorDestination(comptime E: type, self: E, pc: usize) Error!?usize {
     return slot;
 }
 
-/// The pointer a forwarded constructor writes its fields through: the address of
-/// the destination local itself.
+/// The pointer a forwarded constructor or replace writes through: the address
+/// of the destination local itself, or the caller's array a `mut` array
+/// parameter's slot holds.
 fn localPointer(comptime E: type, self: E, slot: usize) Error!usize {
+    if (self.byReference(slot)) return self.load("l", slot);
     const pointer = self.temp();
     try self.print(" %v{d} =l copy %l{d}\n", .{ pointer, slot });
     return pointer;
@@ -330,7 +335,7 @@ fn inRange(target: usize, reached: []const bool) bool {
 /// store is not a read: the address it consumes was read where it was produced.
 fn readsLocal(op: @FieldType(bytecode.Instruction, "op"), slot: usize) bool {
     return switch (op) {
-        .load_local, .move_local, .drop_local => |target| @backingInt(target) == slot,
+        .load_local, .move_local, .drop_local, .ref_local => |target| @backingInt(target) == slot,
         else => false,
     };
 }

@@ -546,7 +546,7 @@ fn branchTarget(comptime E: type, self: *E, pc: usize) bool {
 /// move, an explicit drop, or a match arm's payload binding into it.
 fn writesLocalAt(f: bytecode.Function, pc: usize, index: usize) bool {
     return switch (f.scope.instructions[pc].op) {
-        .store_local, .move_local, .drop_local => |target| @backingInt(target) == index,
+        .store_local, .move_local, .drop_local, .ref_local => |target| @backingInt(target) == index,
         .switch_variant => |dispatch| for (dispatch.arms) |arm| {
             if (arm.slot) |target| if (@backingInt(target) == index) break true;
         } else false,
@@ -558,7 +558,7 @@ fn writesLocalAt(f: bytecode.Function, pc: usize, index: usize) bool {
 /// store is not a read: the address it consumes was produced elsewhere.
 fn readsLocal(op: @FieldType(bytecode.Instruction, "op"), slot: usize) bool {
     return switch (op) {
-        .load_local, .move_local => |target| @backingInt(target) == slot,
+        .load_local, .move_local, .ref_local => |target| @backingInt(target) == slot,
         .buffer_operation => |operation| @backingInt(operation.owner) == slot,
         else => false,
     };

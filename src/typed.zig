@@ -357,6 +357,15 @@ pub fn carriesWritableStorage(records: []const Record, ty: Type) bool {
     return writableDepth(records, ty, 0);
 }
 
+/// Whether a `mut` parameter of this type crosses the call as the caller's own
+/// storage: a fixed array `[N]T` or enum table `[Kind]T`. Every other writable
+/// parameter is a reference already, so only these value types need the
+/// callee to write through the caller's address for an element write to reach
+/// the caller.
+pub fn referenceArray(records: []const Record, ty: Type) bool {
+    return ty.isAggregate() and ty.recordIndex() < records.len and records[ty.recordIndex()].shape.array != null;
+}
+
 /// Whether a managed byte-kind schema is the immutable byte string rather than
 /// the mutable octet buffer. The two share one collection kind, so the builtin
 /// name -- repeated here rather than imported, because the template index that
@@ -515,7 +524,10 @@ fn nameLessThan(_: void, left: []const u8, right: []const u8) bool {
     return std.mem.lessThan(u8, left, right);
 }
 /// Resolved local assignment target and the expression being stored.
-pub const Store = struct { slot: LocalId, value: NodeId };
+/// `element` marks the store an element write such as `a[i] = v` lowers to:
+/// the value rebuilds the local from its own current value with one element
+/// changed, so the write is a mutation of the binding rather than a rebinding.
+pub const Store = struct { slot: LocalId, value: NodeId, element: bool = false };
 /// Checked control flow, ownership operations, and expression statements.
 pub const Statement = struct {
     span: Span,

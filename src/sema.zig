@@ -89,6 +89,8 @@ const eResourceIoResult = "E_RESOURCE_IO_RESULT";
 const eResultLoop = diagnostic.result_loop;
 const bindingDeclaredHere = "binding declared here";
 const eImmutable = diagnostic.immutable;
+/// Diagnostic code for an assignment whose target cannot be written as spelled.
+const eAssignmentTarget = "E_ASSIGNMENT_TARGET";
 const eResultDiscard = diagnostic.result_discard;
 const eCellEquality = "E_CELL_EQUALITY";
 /// One diagnostic for every rejected `Option` operation, so the intrinsic
@@ -221,6 +223,18 @@ fn scopedDirectoryPath(bytes: []const u8) bool {
 const Pending = struct { available: bool, transfer_span: ?source.Span };
 const Work = struct { default_value: bool = false, id: ast.NodeId, emit: bool = false, checkpoint: ?option_flow.Guard = null, sorted_key: bool = false, verify: ?struct { pending: []const Pending, facts: []const usize } = null };
 const FieldDestination = struct { owner: typed.LocalId, index: ?typed.NodeId, value: typed.NodeId, refresh: ?typed.StatementId };
+/// One step of an assignment path below the value it rebuilds: a record field,
+/// or an element of the fixed array or enum table the path has reached.
+const PlaceStep = union(enum) { field: source.Span, element: ast.NodeId };
+/// An assignment target that writes inside a fixed array or table: the root it
+/// rebuilds — a binding name, or the last list or dictionary slot on the path —
+/// and the steps below that root in source order.
+const ArrayPlace = struct { root: ast.NodeId, steps: []const PlaceStep };
+/// The operator and source value of one element assignment.
+const PlaceWrite = struct { op: ast.AssignmentOp, value: ast.NodeId };
+/// How a loop reads its source: a collection kind, a fixed array read by
+/// index, or a dictionary view's projection.
+const IterationShape = struct { kind: ManagedKind, fixed: ?typed.Array = null, projection: ?@import("dictionary_views.zig").Kind = null };
 /// An already-evaluated managed receiver and the source arguments of its method.
 const ManagedAccess = struct { base: typed.NodeId, kind: BufferKind, inputs: []const ast.NodeId, receiver: ?typed.LocalId = null };
 /// One list method call whose receiver and arguments are already evaluated.
@@ -1863,6 +1877,7 @@ const Checker = struct {
         const value_type = self.nodes.items[@backingInt(value)].ty;
         if (self.active.get(text)) |slot| {
             if (!self.locals.items[@backingInt(slot)].mutable) return self.sink.fail(eImmutable, name, "this binding cannot be assigned");
+            try self.requireRebindable(slot, name);
             try self.requireArenaAssignment(slot, value);
             if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
                 if (self.pendingObligation(self.locals.items[@backingInt(slot)])) return self.sink.fail("E_RESULT_OVERWRITE", name, "assignment would overwrite an unhandled result-bearing value");
@@ -1894,6 +1909,8 @@ const Checker = struct {
         const assignment = node.data.field_assignment;
         if (self.syntax.nodes.items[@backingInt(assignment.target)].data == .tuple)
             return self.checkTupleAssignment(assignment, temporaries);
+        if (try self.arrayPlace(assignment.target, null)) |place|
+            return self.checkArrayPlace(node, place, .{ .op = .set, .value = assignment.value }, temporaries);
         const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
         var path_fields: std.ArrayList(source.Span) = .empty;
         var root = assignment.target;
@@ -1967,10 +1984,12 @@ const Checker = struct {
     /// the operator's ordinary rules and writing the result back through the same slot.
     fn checkIndexAugmented(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
         const assignment = node.data.index_assignment;
+        if (try self.arrayPlace(assignment.target, null)) |place|
+            return self.checkArrayPlace(node, place, .{ .op = assignment.op, .value = assignment.value }, temporaries);
         const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
         var statements: std.ArrayList(typed.StatementId) = .empty;
         const destination = try self.fieldDestination(self.syntax.nodes.items[@backingInt(assignment.target)], &statements, temporaries);
-        const index = destination.index orelse return self.sink.fail("E_ASSIGNMENT_TARGET", node.span, "augmented assignment requires a list slot or dictionary entry");
+        const index = destination.index orelse return self.sink.fail(eAssignmentTarget, node.span, "augmented assignment requires a list slot or dictionary entry");
         const element = self.nodes.items[@backingInt(destination.value)].ty;
         try self.hint(assignment.value, element);
         const right = try self.expressionWithTemporaries(assignment.value, temporaries);
@@ -2048,11 +2067,11 @@ const Checker = struct {
             try statements.append(self.allocator, refresh);
             return .{ .owner = owner, .index = null, .value = try b.read(saved), .refresh = refresh };
         }
-        if (root.data != .index) return self.sink.fail("E_ASSIGNMENT_TARGET", root.span, "field assignment requires a mutable local record or list slot");
+        if (root.data != .index) return self.sink.fail(eAssignmentTarget, root.span, "field assignment requires a mutable local record or list slot");
         const access = root.data.index;
         const base = try self.expressionWithTemporaries(access.base, temporaries);
         const ty_value = self.nodes.items[@backingInt(base)].ty;
-        if (!ty_value.isAggregate() or !self.catalog.records[ty_value.recordIndex()].isCollection()) return self.sink.fail(eCollectionMethod, root.span, "indexed field assignment requires a list or dictionary");
+        if (!self.collectionType(ty_value)) return self.sink.fail(eCollectionMethod, root.span, "indexed field assignment requires a list, dictionary or fixed array reached from a variable");
         const schema = self.catalog.records[ty_value.recordIndex()];
         if (schema.collection.kind == .string or schema.collection.kind == .bytes) return self.sink.fail(eCollectionMethod, root.span, "str and bytes are immutable");
         const element = schema.shape.buffer.?;
@@ -2068,6 +2087,226 @@ const Checker = struct {
         const refresh = try b.stmt(.{ .initialize = .{ .slot = saved, .value = try b.operation(owner, .read, &.{index}) } });
         try statements.append(self.allocator, refresh);
         return .{ .owner = owner, .index = index, .value = try b.read(saved), .refresh = refresh };
+    }
+    /// Whether local `slot` is a `mut` fixed-array parameter of the function
+    /// being checked. It names the caller's array for the whole call, so an
+    /// element write through it reaches the caller.
+    fn referenceParameter(self: *Checker, slot: typed.LocalId) bool {
+        if (self.current_lambda != null) return false;
+        const id = self.current_function orelse return false;
+        const index = @backingInt(slot);
+        const signature = self.syntaxFunction(id).signature;
+        if (index >= signature.parameters.len or !markerPositionDeclared(signature.mut_positions, @intCast(index))) return false;
+        return typed.referenceArray(self.catalog.records, self.locals.items[index].ty);
+    }
+    /// Refuse rebinding a `mut` fixed-array parameter as a whole. The name is
+    /// the caller's array, so `values = other` would either silently stay local
+    /// (the list rule) or overwrite the caller's array (the element rule); the
+    /// program says which it means by writing elements or copying to a local.
+    fn requireRebindable(self: *Checker, slot: typed.LocalId, name: source.Span) Error!void {
+        if (!self.referenceParameter(slot)) return;
+        const text = self.src.text(name);
+        return self.sink.fail(eAssignmentTarget, name, try std.fmt.allocPrint(
+            self.allocator,
+            "`{s}` is a `mut` array parameter and names the caller's array; write its elements (`{s}[i] = value`), or copy it into a local first",
+            .{ text, text },
+        ));
+    }
+    /// The array place an assignment target names, or null when its path writes
+    /// no fixed array or table element and the list, dictionary and record rules
+    /// own it. `trailing` is the final index of `target[trailing] = value`, which
+    /// the parser keeps apart from the target expression.
+    ///
+    /// The walk reads declared types only, so it reports nothing: a path it
+    /// cannot follow falls back to the ordinary rules and their diagnostics.
+    /// A list or dictionary slot on the path is a reference, so the value below
+    /// the last such slot is rebuilt from that slot, and everything above it is
+    /// an ordinary read of the collection.
+    fn arrayPlace(self: *Checker, target: ast.NodeId, trailing: ?ast.NodeId) Error!?ArrayPlace {
+        var chain: std.ArrayList(ast.NodeId) = .empty;
+        var cursor = target;
+        while (true) switch (self.syntax.nodes.items[@backingInt(cursor)].data) {
+            .field => |field| {
+                try chain.append(self.allocator, cursor);
+                cursor = field.base;
+            },
+            .index => |index| {
+                try chain.append(self.allocator, cursor);
+                cursor = index.base;
+            },
+            .name => break,
+            else => return null,
+        };
+        const slot = self.active.get(self.src.text(self.syntax.nodes.items[@backingInt(cursor)].data.name)) orelse return null;
+        var reached = self.locals.items[@backingInt(slot)].ty;
+        const count = chain.items.len + @intFromBool(trailing != null);
+        const steps = try self.allocator.alloc(PlaceStep, count);
+        var root = cursor;
+        var first: usize = 0;
+        var element_below = false;
+        for (steps, 0..) |*step, position| {
+            const id: ?ast.NodeId = if (position < chain.items.len) chain.items[chain.items.len - 1 - position] else null;
+            if (!reached.isAggregate()) return null;
+            const record = self.catalog.records[reached.recordIndex()];
+            if (id) |node_id| if (self.syntax.nodes.items[@backingInt(node_id)].data == .field) {
+                const name = self.syntax.nodes.items[@backingInt(node_id)].data.field.name;
+                if (!record.isRecord() or record.shape.tuple) return null;
+                const index = self.catalog.field_names.items[reached.recordIndex()].get(self.src.text(name)) orelse return null;
+                step.* = .{ .field = name };
+                reached = record.fields[index].ty;
+                continue;
+            };
+            step.* = .{ .element = if (id) |node_id| self.syntax.nodes.items[@backingInt(node_id)].data.index.index else trailing.? };
+            if (record.shape.array) |array| {
+                element_below = true;
+                reached = array.element;
+                continue;
+            }
+            if (!record.isCollection()) return null;
+            if (record.collection.kind != .list and record.collection.kind != .dictionary) return null;
+            root = id orelse return null;
+            first = position + 1;
+            element_below = false;
+            reached = record.shape.buffer.?;
+        }
+        if (!element_below) return null;
+        return .{ .root = root, .steps = steps[first..] };
+    }
+    /// Whether a checked value can neither trap nor have an effect, so when it
+    /// is evaluated relative to the rest of an assignment cannot be observed.
+    fn inertValue(self: *Checker, id: typed.NodeId) bool {
+        return switch (self.nodes.items[@backingInt(id)].data) {
+            .integer, .boolean, .unit, .local => true,
+            else => false,
+        };
+    }
+    /// Whether a checked value has no effect other than a possible trap, so it
+    /// may be evaluated twice — once to read a path, once to rebuild it — and
+    /// cannot write the binding an element assignment is rebuilding.
+    fn effectFreeValue(self: *Checker, id: typed.NodeId, depth: usize) bool {
+        if (depth == 16) return false;
+        return switch (self.nodes.items[@backingInt(id)].data) {
+            .integer, .boolean, .unit, .local => true,
+            .binary => |binary| self.effectFreeValue(binary.left, depth + 1) and self.effectFreeValue(binary.right, depth + 1),
+            .unary => |unary| self.effectFreeValue(unary.operand, depth + 1),
+            .field => |field| self.effectFreeValue(field.base, depth + 1),
+            .index => |index| self.effectFreeValue(index.base, depth + 1) and self.effectFreeValue(index.index, depth + 1),
+            .cast => |operand| self.effectFreeValue(operand, depth + 1),
+            else => false,
+        };
+    }
+    /// Evaluate `value` into a fresh temporary now, answering a read of it.
+    fn spillValue(self: *Checker, b: collections.Builder(Checker), value: typed.NodeId, statements: *std.ArrayList(typed.StatementId)) Error!typed.NodeId {
+        const slot = try b.local(self.nodes.items[@backingInt(value)].ty);
+        try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = slot, .value = value } }));
+        return b.read(slot);
+    }
+    /// Check an assignment that writes inside a fixed array or table:
+    /// `a[i] = v`, `a[i].f = v`, `a[i][j] = v`, `r.cells[i] = v`, `xs[k][j] = v`
+    /// and their augmented forms.
+    ///
+    /// The place is rebuilt from its root with `replace` for each element step and
+    /// a record update for each field step, then stored back where it came from:
+    /// into the binding, with the store marked as an element write, or into the
+    /// list or dictionary slot the path runs through. `a[i] = v` on a local is
+    /// therefore exactly `a = replace(a, i, v)`, which the backend writes in
+    /// place, and value semantics are those of `replace`: a copy taken earlier
+    /// keeps its value. The assigned value is evaluated before the target's
+    /// indices, as Python does; an index used to both read and rebuild the path
+    /// is evaluated once, and nothing the right-hand side does can be lost,
+    /// because a value that could write the binding is computed before the
+    /// binding is read.
+    fn checkArrayPlace(self: *Checker, node: ast.Node, place: ArrayPlace, write: PlaceWrite, temporaries: []const typed.Type) Error!typed.Node {
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+        const root_node = self.syntax.nodes.items[@backingInt(place.root)];
+        var root_statements: std.ArrayList(typed.StatementId) = .empty;
+        var owner: typed.LocalId = undefined;
+        var slot_index: ?typed.NodeId = null;
+        var current: typed.NodeId = undefined;
+        if (root_node.data == .name) {
+            owner = try self.resolve(root_node.data.name);
+            try self.requireReadable(owner, root_node.data.name);
+            const local = &self.locals.items[@backingInt(owner)];
+            if (!local.mutable) return self.sink.fail(eImmutable, root_node.span, "element assignment requires a mutable binding");
+            if (self.transfers(local.ty)) return self.sink.fail(eResultOperation, root_node.span, "element assignment requires a copyable value without pending results");
+            local.usage.writes += 1;
+            local.usage.reads += 1;
+            current = try b.read(owner);
+        } else {
+            const destination = try self.fieldDestination(root_node, &root_statements, temporaries);
+            owner = destination.owner;
+            slot_index = destination.index;
+            current = destination.value;
+        }
+        const bases = try self.allocator.alloc(typed.NodeId, place.steps.len);
+        const keys = try self.allocator.alloc(typed.NodeId, place.steps.len);
+        const members = try self.allocator.alloc(usize, place.steps.len);
+        var key_statements: std.ArrayList(typed.StatementId) = .empty;
+        var keys_inert = true;
+        for (place.steps, 0..) |step, i| {
+            bases[i] = current;
+            const base_type = self.nodes.items[@backingInt(current)].ty;
+            switch (step) {
+                .field => |name| {
+                    const schema = try self.catalog.record(base_type, name, self.sink);
+                    if (self.transfers(base_type)) return self.sink.fail(eResultOperation, name, "field assignment requires a copyable record without pending results");
+                    members[i] = try self.catalog.field(base_type, self.src, name, self.sink);
+                    current = try b.node(schema.fields[members[i]].ty, .{ .field = .{ .base = current, .index = members[i] } });
+                },
+                .element => |key_node| {
+                    const key_span = self.syntax.nodes.items[@backingInt(key_node)].span;
+                    const schema = try self.catalog.array(base_type, key_span, self.sink);
+                    if (self.requiresHandling(schema.element)) return self.sink.fail(eResultOperation, node.span, "replacement would drop an unhandled result-bearing element");
+                    if (schema.key) |key| try self.hint(key_node, key);
+                    var key = try self.expressionWithTemporaries(key_node, temporaries);
+                    try self.requireIndex(schema, self.nodes.items[@backingInt(key)].ty, key_span);
+                    if (!self.effectFreeValue(key, 0)) key = try self.spillValue(b, key, &key_statements);
+                    keys_inert = keys_inert and self.inertValue(key);
+                    keys[i] = key;
+                    current = try b.node(schema.element, .{ .index = .{ .base = current, .index = key } });
+                },
+            }
+        }
+        const leaf_type = self.nodes.items[@backingInt(current)].ty;
+        try self.hint(write.value, leaf_type);
+        const right = try self.expressionWithTemporaries(write.value, temporaries);
+        try self.require(self.nodes.items[@backingInt(right)].ty, leaf_type, node.span);
+        var statements: std.ArrayList(typed.StatementId) = .empty;
+        var value = right;
+        if (write.op == .set) {
+            // A binding root reads the binding only at the store, so an inert
+            // index cannot be reordered against the value; a slot root is read
+            // by the statements that locate it, which Python runs after the value.
+            const spill = !self.inertValue(right) and (slot_index != null or !keys_inert or !self.effectFreeValue(right, 0));
+            if (spill) value = try self.spillValue(b, right, &statements);
+            try statements.appendSlice(self.allocator, root_statements.items);
+            try statements.appendSlice(self.allocator, key_statements.items);
+        } else {
+            // Python reads the element, then evaluates the operand, then stores.
+            try statements.appendSlice(self.allocator, root_statements.items);
+            try statements.appendSlice(self.allocator, key_statements.items);
+            value = try self.augmented(write.op, current, right, node.span);
+            if (!self.effectFreeValue(right, 0)) value = try self.spillValue(b, value, &statements);
+        }
+        if (slot_index == null) try self.requireArenaStore(owner, if (write.op == .set) right else value);
+        var i = place.steps.len;
+        while (i > 0) {
+            i -= 1;
+            const base_type = self.nodes.items[@backingInt(bases[i])].ty;
+            value = switch (place.steps[i]) {
+                .field => try b.node(base_type, .{ .update = .{
+                    .base = bases[i],
+                    .fields = try self.allocator.dupe(typed.FieldInit, &.{.{ .index = members[i], .value = value }}),
+                } }),
+                .element => try b.node(base_type, .{ .replace = .{ .base = bases[i], .index = keys[i], .value = value } }),
+            };
+        }
+        const stored = if (slot_index) |index|
+            try b.stmt(.{ .discard = try b.operation(owner, .write, &.{ index, value }) })
+        else
+            try b.stmt(.{ .assign = .{ .slot = owner, .value = value, .element = true } });
+        try statements.append(self.allocator, stored);
+        return b.block(statements.items, try b.node(.unit, .unit));
     }
     /// Build a fixed array from a list literal whose context already demands `[N]T`.
     fn checkFixedArray(self: *Checker, node: ast.Node, inputs: []const ast.NodeId, temporaries: []const typed.Type, expected: typed.Type) Error!typed.Node {
@@ -2121,9 +2360,10 @@ const Checker = struct {
         const projected = view != null and view.? != .item;
         const iterable = if (projected) try dictionary_views.owner(Checker, self, node.span, source_value) else source_value;
         const iterable_type = self.nodes.items[@backingInt(iterable)].ty;
-        if (!iterable_type.isAggregate() or !self.catalog.records[iterable_type.recordIndex()].isCollection()) return self.sink.fail(eCollectionMethod, node.span, "iteration requires a list, str, or dictionary");
+        const fixed = arrays.fixed(self.catalog, iterable_type);
+        if (fixed == null and !self.collectionType(iterable_type)) return self.sink.fail(eCollectionMethod, node.span, "iteration requires a list, str, fixed array or dictionary");
         const schema = self.catalog.records[iterable_type.recordIndex()];
-        const element = if (projected) try dictionary_views.element(&self.catalog, iterable_type, view.?, node.span) else switch (schema.collection.kind) {
+        const element = if (fixed) |shape| shape.element else if (projected) try dictionary_views.element(&self.catalog, iterable_type, view.?, node.span) else switch (schema.collection.kind) {
             .list => schema.shape.buffer.?,
             .string => iterable_type,
             .bytes => typed.Type.i64,
@@ -2141,6 +2381,7 @@ const Checker = struct {
             .kind = schema.collection.kind,
             .reserve = each.filter == null,
             .projection = if (projected) view else null,
+            .fixed = fixed,
         };
         return self.comprehensionLoop(b, slots, parts.body, source_values);
     }
@@ -2199,6 +2440,8 @@ const Checker = struct {
         kind: ManagedKind,
         reserve: bool,
         projection: ?dictionary_views.Kind = null,
+        /// Set when the source is a fixed array, which is read by index.
+        fixed: ?typed.Array = null,
     };
     fn comprehensionLoop(
         self: *Checker,
@@ -2208,17 +2451,22 @@ const Checker = struct {
         source_values: ComprehensionSource,
     ) Error!typed.Node {
         const i = try b.read(slots.index);
-        const guard = try b.stmt(.{ .discard = try b.operation(slots.owner, .iteration_check, &.{try b.read(slots.limit)}) });
-        const value = try self.projectedIterationValue(b, slots.owner, i, source_values.kind, source_values.projection);
-        const iteration = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
-            guard,
-            try b.stmt(.{ .initialize = .{ .slot = slots.slot, .value = value } }),
-            body,
-        }) });
-        const step = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
-            guard,
-            try b.stmt(.{ .assign = .{ .slot = slots.index, .value = try b.binary(.add, i, try b.integer(1), .i64) } }),
-        }) });
+        const initialize = try b.stmt(.{ .initialize = .{ .slot = slots.slot, .value = try self.iterationRead(b, slots.owner, i, .{
+            .kind = source_values.kind,
+            .fixed = source_values.fixed,
+            .projection = source_values.projection,
+        }) } });
+        const advance = try b.stmt(.{ .assign = .{ .slot = slots.index, .value = try b.binary(.add, i, try b.integer(1), .i64) } });
+        // A fixed array cannot change length, so it needs no iteration guard.
+        const guard = if (source_values.fixed == null) try b.stmt(.{ .discard = try b.operation(slots.owner, .iteration_check, &.{try b.read(slots.limit)}) }) else null;
+        const iteration = try b.stmt(.{ .block = if (guard) |guarded|
+            try self.allocator.dupe(typed.StatementId, &.{ guarded, initialize, body })
+        else
+            try self.allocator.dupe(typed.StatementId, &.{ initialize, body }) });
+        const step = try b.stmt(.{ .block = if (guard) |guarded|
+            try self.allocator.dupe(typed.StatementId, &.{ guarded, advance })
+        else
+            try self.allocator.dupe(typed.StatementId, &.{advance}) });
         const loop_id = self.loops.next;
         self.loops.next += 1;
         const output_capacity = if (source_values.reserve) try b.read(slots.limit) else try b.integer(0);
@@ -2227,7 +2475,7 @@ const Checker = struct {
         return b.block(&.{
             try b.stmt(.{ .initialize = .{ .slot = slots.owner, .value = source_values.iterable } }),
             try b.stmt(.{ .initialize = .{ .slot = slots.index, .value = try b.integer(0) } }),
-            try b.stmt(.{ .initialize = .{ .slot = slots.limit, .value = try b.length(slots.owner) } }),
+            try b.stmt(.{ .initialize = .{ .slot = slots.limit, .value = if (source_values.fixed) |shape| try b.integer(@intCast(shape.length)) else try b.length(slots.owner) } }),
             try b.stmt(.{ .initialize = .{ .slot = source_values.output, .value = acquire_output } }),
             try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, i, try b.read(slots.limit), .bool), .body = iteration, .step = step } }),
         }, try b.read(source_values.output));
@@ -3344,6 +3592,8 @@ const Checker = struct {
         for (function.signature.parameters, parameters) |input, *parameter| {
             parameter.* = try self.catalog.resolve(self.src, input.ty, self.sink);
         }
+        for (function.signature.mut_positions) |position| if (position < parameters.len and typed.referenceArray(self.catalog.records, parameters[position]))
+            return self.sink.fail(callback_type_code, name, "a function with a `mut` fixed-array parameter writes the caller's own array and cannot be used as a value; call it directly");
         const result = try self.catalog.resolve(self.src, function.signature.return_type, self.sink);
         const expected_type = self.expected_types.get(name);
         const destination = if (expected_type) |expected| callables.signature(expected, self.catalog.records) else null;
@@ -3844,7 +4094,23 @@ const Checker = struct {
                 arg_node.span,
                 "`mut` requires an assignable argument (a variable, field or list slot); assign it to a local first",
             );
+            try self.requireArrayMarkerTarget(argument, target);
         }
+    }
+    /// A `mut` fixed array crosses the call as the caller's own storage, so its
+    /// argument must be a variable the caller can write: a local array or a
+    /// `mut` array parameter being passed on. A field or element is a part of
+    /// some other value, and the call would have nowhere of its own to write.
+    fn requireArrayMarkerTarget(self: *Checker, argument: ast.NodeId, target: ast.Node) Error!void {
+        const checked = self.resolved[@backingInt(argument)] orelse return;
+        const node = self.nodes.items[@backingInt(checked)];
+        if (!typed.referenceArray(self.catalog.records, node.ty)) return;
+        if (target.data != .name or node.data != .local) return self.sink.fail(
+            mutation_marker_code,
+            target.span,
+            "`mut` on a fixed array passes a variable itself; copy the field or element into a local, pass `mut` that local, and store it back",
+        );
+        if (!self.locals.items[@backingInt(node.data.local)].mutable) return self.sink.fail(eImmutable, target.span, "`mut` on a fixed array requires a mutable binding");
     }
     /// The call's own source text with `mut ` inserted before argument `target`,
     /// so a missing-marker diagnostic carries the whole corrected call rather
@@ -4292,7 +4558,11 @@ const Checker = struct {
             .list_literal => |inputs| return self.checkListLiteral(node, inputs, temporaries),
             .format => |parts| return self.checkFormat(node, parts, temporaries),
             .comprehension => |each| return self.checkComprehension(node, each, temporaries),
-            .list_operation => |op| return self.checkListAccess(node, .{ .base = op.base, .kind = op.kind, .inputs = op.arguments }, temporaries),
+            .list_operation => |op| {
+                if (op.kind == .write and op.arguments.len == 2) if (try self.arrayPlace(op.base, op.arguments[0])) |place|
+                    return self.checkArrayPlace(node, place, .{ .op = .set, .value = op.arguments[1] }, temporaries);
+                return self.checkListAccess(node, .{ .base = op.base, .kind = op.kind, .inputs = op.arguments }, temporaries);
+            },
             .method_call => return self.checkCollectionMethod(node, temporaries),
             .slice => return self.checkCollectionSlice(node, temporaries),
             .buffer_operation => |operation| try self.checkBufferOperation(node, operation, &out),
@@ -4517,6 +4787,8 @@ const Checker = struct {
         );
         const lambda = self.syntax.lambdas[index];
         if (lambda.parameters.len != contract.parameters.len) return self.sink.fail("E_ARITY", node.span, "lambda parameter count must match its expected callback type");
+        for (contract.mutates) |position| if (position < contract.parameters.len and typed.referenceArray(self.catalog.records, contract.parameters[position]))
+            return self.sink.fail(lambda_context_code, node.span, "a callback with a `mut` fixed-array parameter cannot be a lambda; write a function and call it directly");
         if (self.lambda_types[index]) |previous| {
             const old = callables.signature(previous, self.catalog.records) orelse return error.InternalError;
             if (!callables.equal(old, contract)) return self.sink.fail(lambda_context_code, node.span, "one lambda expression cannot have conflicting callback types");
@@ -5144,15 +5416,13 @@ const Checker = struct {
         const projected = view != null and view.? != .item;
         const iterable = if (projected) try dictionary_views.owner(Checker, self, stmt.span, source_value) else source_value;
         const iterable_type = self.nodes.items[@backingInt(iterable)].ty;
-        if (!iterable_type.isAggregate() or !self.catalog.records[iterable_type.recordIndex()].isCollection()) return self.sink.fail(eCollectionMethod, stmt.span, "iteration requires a collection or dictionary view");
-        const schema = self.catalog.records[iterable_type.recordIndex()];
-        const kind = schema.collection.kind;
-        const element = if (projected) try dictionary_views.element(&self.catalog, iterable_type, view.?, stmt.span) else switch (kind) {
-            .list => schema.shape.buffer.?,
-            .string => iterable_type,
-            .bytes => typed.Type.i64,
-            .dictionary => schema.collection.key.?,
-        };
+        // A fixed array iterates like a list over the value it had when the
+        // loop began: the loop reads a copy, so element writes in the body
+        // change the array but not the elements this loop visits.
+        const fixed = arrays.fixed(self.catalog, iterable_type);
+        if (fixed == null and !self.collectionType(iterable_type)) return self.sink.fail(eCollectionMethod, stmt.span, "iteration requires a collection, fixed array or dictionary view");
+        const kind = self.catalog.records[iterable_type.recordIndex()].collection.kind;
+        const element = try self.iterationElement(iterable_type, fixed, if (projected) view else null, stmt.span);
         const unpack = each.index_name != null and !each.enumerated;
         if (unpack and dictionary_views.identify(self.catalog, element) != .item) {
             const pair = record_layouts.tupleRecord(self.catalog.records, element) orelse
@@ -5192,10 +5462,11 @@ const Checker = struct {
         if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
         self.restorePending(before);
         const i = try b.read(index);
-        const iteration_check = try b.stmt(.{ .discard = try b.operation(owner, .iteration_check, &.{try b.read(limit)}) });
+        // A fixed array's length is its type's, and nothing can resize it.
+        const iteration_check = if (fixed == null) try b.stmt(.{ .discard = try b.operation(owner, .iteration_check, &.{try b.read(limit)}) }) else null;
         var iteration_statements: std.ArrayList(typed.StatementId) = .empty;
-        try iteration_statements.append(self.allocator, iteration_check);
-        const value = try self.projectedIterationValue(b, owner, i, kind, if (projected) view else null);
+        if (iteration_check) |guarded| try iteration_statements.append(self.allocator, guarded);
+        const value = try self.iterationRead(b, owner, i, .{ .kind = kind, .fixed = fixed, .projection = if (projected) view else null });
         if (unpack) {
             const pair = try b.local(element);
             try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = pair, .value = value } }));
@@ -5207,16 +5478,39 @@ const Checker = struct {
         } else try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = value } }));
         try iteration_statements.append(self.allocator, body.id);
         const iteration = try b.stmt(.{ .block = try iteration_statements.toOwnedSlice(self.allocator) });
-        const step = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
-            iteration_check,
-            try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.integer(1), .i64) } }),
-        }) });
+        const advance = try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.integer(1), .i64) } });
+        const step = try b.stmt(.{ .block = if (iteration_check) |guarded|
+            try self.allocator.dupe(typed.StatementId, &.{ guarded, advance })
+        else
+            try self.allocator.dupe(typed.StatementId, &.{advance}) });
         return .{ .block = try self.allocator.dupe(typed.StatementId, &.{
             try b.stmt(.{ .initialize = .{ .slot = owner, .value = iterable } }),
             try b.stmt(.{ .initialize = .{ .slot = index, .value = try b.integer(0) } }),
-            try b.stmt(.{ .initialize = .{ .slot = limit, .value = try b.length(owner) } }),
+            try b.stmt(.{ .initialize = .{ .slot = limit, .value = if (fixed) |shape| try b.integer(@intCast(shape.length)) else try b.length(owner) } }),
             try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, i, try b.read(limit), .bool), .body = iteration, .step = step } }),
         }) };
+    }
+    /// Read the element at `index` of the loop's source copy in `owner`.
+    fn iterationRead(self: *Checker, b: collections.Builder(Checker), owner: typed.LocalId, index: typed.NodeId, source_shape: IterationShape) Error!typed.NodeId {
+        if (source_shape.fixed) |shape| return b.node(shape.element, .{ .index = .{ .base = try b.read(owner), .index = index } });
+        return self.projectedIterationValue(b, owner, index, source_shape.kind, source_shape.projection);
+    }
+    /// Whether a type is a managed collection a loop can walk by position.
+    fn collectionType(self: *Checker, candidate: typed.Type) bool {
+        return candidate.isAggregate() and self.catalog.records[candidate.recordIndex()].isCollection();
+    }
+    /// The value one `for` iteration binds: a fixed array's element, a
+    /// dictionary view's projection, or the collection's own element kind.
+    fn iterationElement(self: *Checker, iterable_type: typed.Type, fixed: ?typed.Array, projection: ?dictionary_views.Kind, span: source.Span) Error!typed.Type {
+        if (fixed) |shape| return shape.element;
+        if (projection) |view| return dictionary_views.element(&self.catalog, iterable_type, view, span);
+        const schema = self.catalog.records[iterable_type.recordIndex()];
+        return switch (schema.collection.kind) {
+            .list => schema.shape.buffer.?,
+            .string => iterable_type,
+            .bytes => typed.Type.i64,
+            .dictionary => schema.collection.key.?,
+        };
     }
     /// `for x in reversed(xs):` and `for a, b in zip(xs, ys):` walk their sources
     /// directly, so no intermediate list is materialised.
@@ -5425,6 +5719,7 @@ const Checker = struct {
         const slot = try self.resolve(a.name);
         if (!self.locals.items[@backingInt(slot)].mutable)
             return self.sink.fail(eImmutable, a.name, "this binding cannot be assigned");
+        try self.requireRebindable(slot, a.name);
         var value = try self.expressionExpected(a.value, self.locals.items[@backingInt(slot)].ty);
         if (a.op != .set) {
             try self.requireReadable(slot, a.name);
@@ -5485,7 +5780,19 @@ const Checker = struct {
             // only on a type that can carry one. Rejecting it here, before any
             // body or call is checked, keeps the declaration out of the published
             // footprint: the call site reports the missing marker instead.
-            if (parameter.mut and !typed.carriesWritableStorage(self.catalog.records, parameter_type)) {
+            const reference = parameter.mut and typed.referenceArray(self.catalog.records, parameter_type);
+            if (reference) {
+                if (function.policy.host != null or function.policy.c_abi) {
+                    try markMutRejected(self);
+                    return sink.fail(mutation_marker_code, parameter.ty, "a host or C ABI function cannot take a `mut` fixed array; pass the array and return the changed copy");
+                }
+                if (self.transfers(parameter_type)) {
+                    try markMutRejected(self);
+                    return sink.fail(mutation_marker_code, parameter.ty, "a `mut` fixed array needs copyable elements without pending results");
+                }
+            }
+            const writable = reference or typed.carriesWritableStorage(self.catalog.records, parameter_type);
+            if (parameter.mut and !writable) {
                 try markMutRejected(self);
                 return sink.fail(
                     mutation_marker_code,

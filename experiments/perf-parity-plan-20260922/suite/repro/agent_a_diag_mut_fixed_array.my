@@ -1,9 +1,11 @@
-# Diagnostic repro (agent-a): a fixed array of records cannot be updated in
-# place through a parameter. `mut [2]P` is rejected with a message whose own
-# list of mutable kinds includes "array", and without `mut` the in-place
-# spelling `ps[i].x = ...` is E_COLLECTION_METHOD ("indexed field assignment
-# requires a list or dictionary"), as is `for p in ps` ("iteration requires a
-# collection or dictionary view"). Expected today: E_MUTATION_MARKER at 11:18.
+# Diagnostic repro (agent-a): a fixed array of records updated in place through
+# a parameter. On the 2026-09-22 base `mut [2]P` was rejected with a message
+# whose own list of mutable kinds included "array", `ps[i].x = ...` was
+# E_COLLECTION_METHOD ("indexed field assignment requires a list or
+# dictionary") and `for p in ps` was E_COLLECTION_METHOD ("iteration requires a
+# collection or dictionary view"). Since wave 3 (`lang/fixed-array-writes`,
+# PY-ARRAY-WRITE-1 / PY-ARRAY-MUT-1 / PY-ARRAY-ITER-1) all three are accepted:
+# `ps` names the caller's array, the write lands there, and this prints 1.0.
 record P:
     x: float
 

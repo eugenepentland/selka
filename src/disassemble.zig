@@ -119,6 +119,7 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
         .move_local => |slot| try writer.print("MOVE_LOCAL {d}", .{@backingInt(slot)}),
         .drop_local => |slot| try writer.print("DROP_LOCAL {d}", .{@backingInt(slot)}),
         .load_local => |slot| try writer.print("LOAD_LOCAL {d}", .{@backingInt(slot)}),
+        .ref_local => |slot| try writer.print("REF_LOCAL {d}", .{@backingInt(slot)}),
         .store_local => |slot| try writer.print("STORE_LOCAL {d}", .{@backingInt(slot)}),
         .cmp_i64 => |predicate| try writer.print("CMP_I64 {s}", .{@tagName(predicate)}),
         .cmp_bool => |predicate| try writer.print("CMP_BOOL {s}", .{@tagName(predicate)}),
