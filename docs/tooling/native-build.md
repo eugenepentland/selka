@@ -55,6 +55,48 @@ $ mylang build examples/factorial.my --mode Debug -o /tmp/factorial-debug --cach
 $ mylang build examples/factorial.my --backend qbe -o /tmp/factorial-qbe --cache-dir /tmp/cache
 ```
 
+### What the LLVM backend is allowed to assume
+
+The adapter states no fact that a check the frontend emitted is about to
+establish. It emits no `nsw`/`nuw`/`exact`/fast-math flag, no `inbounds`, no
+TBAA and no `noalias` pointer attribute, because every overflow, bounds, cast
+and allocation check is explicit code in the IL: the emitted sequence computes
+the wrapped result and *then* tests it, so an arithmetic flag would make the
+test that follows dead.
+
+It does state one aliasing fact, and that fact never depends on a check having
+run. Memory an emitted unit touches falls into two classes the adapter can place
+without looking at a guard:
+
+- **frame** — storage this activation itself obtained: every `alloc4/8/16` of
+  the unit (the local slots, the operand scratch, the aggregate scratch, the root
+  records and the frame record), the private copy an aggregate parameter arrives
+  in, and, for a unit whose frame is too large for the stack, the block
+  `myl_qbe_frame_allocate` freshly allocates on entry and releases on exit;
+- **foreign** — storage some other allocation owns: a value the caller computed
+  (a scalar parameter such as `%ctx`), a global's address, the context's embedded
+  heap record that `myl_qbe_heap` answers, and every address the emitter marked
+  `# myl-obj %temp` — a managed container's header and the element storage that
+  header points at, both from `myl_native_heap_alloc`.
+
+The two are disjoint because everything in **frame** is an allocation this
+activation made after it was entered: no value that existed before the call can
+point into it, no managed object is allocated inside it, and it is released
+before the activation returns. So the adapter gives each placed access
+`!alias.scope`/`!noalias` saying the two classes never meet. It carries a class
+through `copy` and offsetting `add`, and
+through a stack slot whose address never leaves the unit — either because every
+store to it agrees on one class and one of those stores dominates every load, or,
+inside one block, from the last value stored above the load. Everything else is
+left unplaced and carries no metadata, which keeps it aliasing both classes the
+way every access behaved before. This is what lets a loop keep a container's
+length and storage pointer in registers instead of reloading the header on every
+element; `MYLANG_QBE_LLVM_ALIAS=0` turns the metadata off for an A/B run.
+
+The `# myl-obj` markers are comment lines of their own. QBE's lexer drops a `#`
+comment to end of line, so the QBE backend's assembly is byte-identical with and
+without them.
+
 ## `mylang build`
 
 `mylang build <file.my> -o <output>` checks the program, lowers it, compiles one
@@ -98,6 +140,62 @@ Because such a binary cannot honor a ceiling, giving it `--max-steps=` at runtim
 reports `R_NO_STEP_ACCOUNTING` and names how to get a bounded run, rather than
 silently ignoring the flag. `--max-frames`, `--timeout` and `--max-memory` are
 enforced by the runtime and are unaffected.
+
+## Unchecked release builds
+
+`--unchecked` is a release policy for a program already known to be correct: it
+tells the emitter to leave out the code that turns an invalid value into a named
+trap. On the schematic renderer it is worth about 13% of the render
+([the parity audit's strip ladder](../audits/schematic-parity-gap-2026-09-22.md#2-what-safety-costs-the-strip-ladder)
+priced the same omissions at 15%), and the program's output is byte-identical.
+
+```console
+$ mylang build examples/factorial.my -o /tmp/factorial-unchecked --unchecked --cache-dir /tmp/qbe-cache
+$ /tmp/factorial-unchecked
+120
+```
+
+**What it omits.** Integer-overflow guards on `+`, `-`, `*`, unary `-`;
+narrowing integer casts (`u8(...)`, `i32(...)` and friends); index-bounds guards
+on lists, fixed arrays, `bytes`, `str` and dictionary position reads
+(`key_at`/`value_at`), and the empty-container guard on `pop()`. When the build
+also carries no ceiling — the default for a `ReleaseFast` executable — it
+additionally omits the per-call frame record, the stack-floor test, the function
+metadata store and every instruction-position store.
+
+**What it keeps.** Allocation failure (out of memory still exits 1 with
+`R_MEMORY_BUDGET` or `R_ALLOCATION`), the memory budget itself, GC roots and
+everything else the collector traces, host-call and capability validation,
+`assert`, division by zero and signed `MIN // -1` (both fault the hardware
+divider, so removing them would trade a named trap for `SIGFPE`), shift-count
+range tests, arena escape checks, dictionary missing-key and list
+concurrent-modification errors.
+
+**What is no longer detected.** Under `--unchecked` each of the following is
+undefined behaviour rather than a trap, and the program may produce wrong values,
+corrupt memory or crash:
+
+| was reported | now |
+|---|---|
+| `R_INT_OVERFLOW` on add, subtract, multiply, negate | the wrapped or out-of-range 64-bit result is used |
+| `R_INT_CAST` narrowing out of range | the un-narrowed value is used |
+| `R_LIST_BOUNDS`, `R_ARRAY_BOUNDS`, `R_TEXT_BOUNDS` | memory next to the container is read or written |
+| `R_LIST_BOUNDS` from `pop()` on an empty list | an undefined element is produced |
+| `R_FRAME_LIMIT` from runaway recursion | the process overruns its stack and takes `SIGSEGV` |
+| a trap's source location and call trace | a trap that still fires (out of memory, division by zero) reports no frames and no `assert` message text |
+
+**Where it is refused.** `mylang test --unchecked` is refused by name: a test
+asserts that invalid input traps, so there would be nothing left to assert.
+`--mode Debug` and `--library` are refused too — a Debug build exists to report
+failures, and a library is embedded by hosts (the embed API, the guest-test
+runner) that always run their guest under a finite budget.
+
+**What it composes with.** A build that also asked for `--max-steps=N`,
+`--max-frames=N` or `--step-accounting` keeps the frame protocol and the
+accounting that enforces the ceiling, and gives up only the value guards; that
+combination is supported and measured. A build with neither ceiling is the one
+that also drops the frame record, and giving such a binary `--max-steps=` at
+runtime still reports `R_NO_STEP_ACCOUNTING` rather than ignoring it.
 
 ## Object cache and link
 

@@ -44,6 +44,12 @@ pub fn describe(allocator: std.mem.Allocator, program: bc.Program, catalog: *nat
             item.kind = "scalar";
             item.bits = 1;
         } else if (ty.isAggregate()) {
+            // The immutable byte string is the one managed shape the boundary
+            // carries: one owned payload the packed bridge copies whole.
+            if (typed.isByteString(program.records[ty.recordIndex()])) {
+                item.kind = "bytes";
+                continue;
+            }
             if (layout.trace or layout.drop) continue;
             if (program.records[ty.recordIndex()].contract.callback != null) continue;
             if (program.records[ty.recordIndex()].shape.hasRuntimeIdentity()) continue;

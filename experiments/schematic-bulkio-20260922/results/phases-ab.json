@@ -1,0 +1,1244 @@
+{
+ "rounds": 31,
+ "cpu": "10",
+ "summary": {
+  "main::main": {
+   "before_us": 1924.785,
+   "after_us": 1889.55,
+   "delta_us": -35.23500000000013,
+   "ci95_us": [
+    -91.25099999999998,
+    34.56899999999996
+   ]
+  },
+  "io::load": {
+   "before_us": 117.709,
+   "after_us": 80.072,
+   "delta_us": -37.637,
+   "ci95_us": [
+    -43.16029999999999,
+    -35.188
+   ]
+  },
+  "sexpr::parse": {
+   "before_us": 281.253,
+   "after_us": 279.932,
+   "delta_us": -1.3209999999999695,
+   "ci95_us": [
+    -15.278999999999996,
+    9.406000000000006
+   ]
+  },
+  "schematic::build": {
+   "before_us": 563.571,
+   "after_us": 597.993,
+   "delta_us": 34.422000000000025,
+   "ci95_us": [
+    14.716999999999985,
+    54.59500000000003
+   ]
+  },
+  "svg::render": {
+   "before_us": 944.18,
+   "after_us": 925.085,
+   "delta_us": -19.094999999999914,
+   "ci95_us": [
+    -72.47199999999998,
+    17.743000000000052
+   ]
+  },
+  "io::flush": {
+   "before_us": 103.989,
+   "after_us": 62.301,
+   "delta_us": -41.688,
+   "ci95_us": [
+    -59.745000000000005,
+    -38.28999999999999
+   ]
+  },
+  "wall_median_ms": {
+   "before": 3.714951,
+   "after": 3.692525
+  }
+ },
+ "rows": [
+  {
+   "after": {
+    "wall_ms": 4.287929,
+    "phases": {
+     "io::load": 76157,
+     "sexpr::parse": 270105,
+     "circuit::collectPins": 178067,
+     "validate::model": 78505,
+     "circuit::normalize": 149141,
+     "ports::collect": 16558,
+     "schematic::build": 592760,
+     "layout_graph::build": 66963,
+     "layout::build": 336933,
+     "layout_routes::build": 58582,
+     "io::flush": 67189,
+     "svg::render": 898304,
+     "main::main": 1859315
+    }
+   },
+   "before": {
+    "wall_ms": 3.577671,
+    "phases": {
+     "io::load": 113733,
+     "sexpr::parse": 268281,
+     "circuit::collectPins": 178085,
+     "validate::model": 73703,
+     "circuit::normalize": 150011,
+     "ports::collect": 12748,
+     "schematic::build": 549448,
+     "layout_graph::build": 60580,
+     "layout::build": 328363,
+     "layout_routes::build": 57747,
+     "io::flush": 167185,
+     "svg::render": 971640,
+     "main::main": 1924785
+    }
+   }
+  },
+  {
+   "after": {
+    "wall_ms": 3.581824,
+    "phases": {
+     "io::load": 77035,
+     "sexpr::parse": 266591,
+     "circuit::collectPins": 177427,
+     "validate::model": 78010,
+     "circuit::normalize": 144699,
+     "ports::collect": 12709,
+     "schematic::build": 578843,
+     "layout_graph::build": 61738,
+     "layout::build": 330209,
+     "layout_routes::build": 58469,
+     "io::flush": 55042,
+     "svg::render": 877321,
+     "main::main": 1822558
+    }
+   },
+   "before": {
+    "wall_ms": 3.547138,
+    "phases": {
+     "io::load": 113998,
+     "sexpr::parse": 265402,
+     "circuit::collectPins": 176783,
+     "validate::model": 73822,
+     "circuit::normalize": 177922,
+     "ports::collect": 12873,
+     "schematic::build": 578043,
+     "layout_graph::build": 60735,
+     "layout::build": 329669,
+     "layout_routes::build": 54971,
+     "io::flush": 94035,
+     "svg::render": 884923,
+     "main::main": 1863722
+    }
+   }
+  },
+  {
+   "after": {
+    "wall_ms": 3.670179,
+    "phases": {
+     "io::load": 77538,
+     "sexpr::parse": 263732,
+     "circuit::collectPins": 177841,
+     "validate::model": 72712,
+     "circuit::normalize": 165262,
+     "ports::collect": 14476,
+     "schematic::build": 597620,
+     "layout_graph::build": 63228,
+     "layout::build": 330407,
+     "layout_routes::build": 58723,
+     "io::flush": 55461,
+     "svg::render": 874131,
+     "main::main": 1834906
+    }
+   },
+   "before": {
+    "wall_ms": 3.602239,
+    "phases": {
+     "io::load": 111422,
+     "sexpr::parse": 264641,
+     "circuit::collectPins": 175907,
+     "validate::model": 73408,
+     "circuit::normalize": 143965,
+     "ports::collect": 11805,
+     "schematic::build": 539438,
+     "layout_graph::build": 67739,
+     "layout::build": 333656,
+     "layout_routes::build": 54926,
+     "io::flush": 101462,
+     "svg::render": 896143,
+     "main::main": 1833802
+    }
+   }
+  },
+  {
+   "before": {
+    "wall_ms": 3.409287,
+    "phases": {
+     "io::load": 115260,
+     "sexpr::parse": 277974,
+     "circuit::collectPins": 182085,
+     "validate::model": 76197,
+     "circuit::normalize": 150560,
+     "ports::collect": 12796,
+     "schematic::build": 560707,
+     "layout_graph::build": 61811,
+     "layout::build": 342253,
+     "layout_routes::build": 56225,
+     "io::flush": 96631,
+     "svg::render": 912652,
+     "main::main": 1889798
+    }
+   },
+   "after": {
+    "wall_ms": 3.692525,
+    "phases": {
+     "io::load": 84339,
+     "sexpr::parse": 289285,
+     "circuit::collectPins": 190668,
+     "validate::model": 78804,
+     "circuit::normalize": 154835,
+     "ports::collect": 15621,
+     "schematic::build": 618166,
+     "layout_graph::build": 67235,
+     "layout::build": 389639,
+     "layout_routes::build": 60308,
+     "io::flush": 63200,
+     "svg::render": 970840,
+     "main::main": 1986999
+    }
+   }
+  },
+  {
+   "before": {
+    "wall_ms": 3.677148,
+    "phases": {
+     "io::load": 120590,
+     "sexpr::parse": 281253,
+     "circuit::collectPins": 182685,
+     "validate::model": 76871,
+     "circuit::normalize": 150458,
+     "ports::collect": 12591,
+     "schematic::build": 562275,
+     "layout_graph::build": 62143,
+     "layout::build": 391848,
+     "layout_routes::build": 55807,
+     "io::flush": 100577,
+     "svg::render": 971902,
+     "main::main": 1958712
+    }
+   },
+   "after": {
+    "wall_ms": 3.525513,
+    "phases": {
+     "io::load": 77215,
+     "sexpr::parse": 278260,
+     "circuit::collectPins": 183484,
+     "validate::model": 75509,
+     "circuit::normalize": 152271,
+     "ports::collect": 15681,
+     "schematic::build": 598858,
+     "layout_graph::build": 63474,
+     "layout::build": 348130,
+     "layout_routes::build": 58548,
+     "io::flush": 52077,
+     "svg::render": 901874,
+     "main::main": 1880164
+    }
+   }
+  },
+  {
+   "after": {
+    "wall_ms": 3.621338,
+    "phases": {
+     "io::load": 77339,
+     "sexpr::parse": 288990,
+     "circuit::collectPins": 182920,
+     "validate::model": 75801,
+     "circuit::normalize": 150195,
+     "ports::collect": 14098,
+     "schematic::build": 597931,
+     "layout_graph::build": 69230,
+     "layout::build": 381347,
+     "layout_routes::build": 55444,
+     "io::flush": 63985,
+     "svg::render": 949576,
+     "main::main": 1937497
+    }
+   },
+   "before": {
+    "wall_ms": 3.748403,
+    "phases": {
+     "io::load": 115758,
+     "sexpr::parse": 281388,
+     "circuit::collectPins": 182296,
+     "validate::model": 75988,
+     "circuit::normalize": 149833,
+     "ports::collect": 12191,
+     "schematic::build": 559786,
+     "layout_graph::build": 61160,
+     "layout::build": 400920,
+     "layout_routes::build": 57886,
+     "io::flush": 99667,
+     "svg::render": 974669,
+     "main::main": 1953990
+    }
+   }
+  },
+  {
+   "after": {
+    "wall_ms": 3.72065,
+    "phases": {
+     "io::load": 78517,
+     "sexpr::parse": 277795,
+     "circuit::collectPins": 184121,
+     "validate::model": 75186,
+     "circuit::normalize": 149442,
+     "ports::collect": 13305,
+     "schematic::build": 591655,
+     "layout_graph::build": 71911,
+     "layout::build": 406143,
+     "layout_routes::build": 60438,
+     "io::flush": 56318,
+     "svg::render": 972712,
+     "main::main": 1945589
+    }
+   },
+   "before": {
+    "wall_ms": 3.467668,
+    "phases": {
+     "io::load": 112449,
+     "sexpr::parse": 308245,
+     "circuit::collectPins": 176616,
+     "validate::model": 73513,
+     "circuit::normalize": 146495,
+     "ports::collect": 12049,
+     "schematic::build": 544124,
+     "layout_graph::build": 59951,
+     "layout::build": 335559,
+     "layout_routes::build": 55795,
+     "io::flush": 105321,
+     "svg::render": 911428,
+     "main::main": 1897715
+    }
+   }
+  },
+  {
+   "after": {
+    "wall_ms": 3.397379,
+    "phases": {
+     "io::load": 75887,
+     "sexpr::parse": 262990,
+     "circuit::collectPins": 177992,
+     "validate::model": 73585,
+     "circuit::normalize": 144727,
+     "ports::collect": 13977,
+     "schematic::build": 581667,
+     "layout_graph::build": 60691,
+     "layout::build": 326999,
+     "layout_routes::build": 57082,
+     "io::flush": 53209,
+     "svg::render": 871785,
+     "main::main": 1814057
+    }
+   },
+   "before": {
+    "wall_ms": 3.47006,
+    "phases": {
+     "io::load": 108835,
+     "sexpr::parse": 263542,
+     "circuit::collectPins": 181299,
+     "validate::model": 76020,
+     "circuit::normalize": 154424,
+     "ports::collect": 11999,
+     "schematic::build": 560306,
+     "layout_graph::build": 60384,
+     "layout::build": 334451,
+     "layout_routes::build": 56601,
+     "io::flush": 100365,
+     "svg::render": 905355,
+     "main::main": 1870975
+    }
+   }
+  },
+  {
+   "after": {
+    "wall_ms": 3.6472,
+    "phases": {
+     "io::load": 79007,
+     "sexpr::parse": 272072,
+     "circuit::collectPins": 182185,
+     "validate::model": 73250,
+     "circuit::normalize": 153870,
+     "ports::collect": 15929,
+     "schematic::build": 597993,
+     "layout_graph::build": 67833,
+     "layout::build": 339669,
+     "layout_routes::build": 57040,
+     "io::flush": 67136,
+     "svg::render": 899168,
+     "main::main": 1876026
+    }
+   },
+   "before": {
+    "wall_ms": 3.710622,
+    "phases": {
+     "io::load": 111588,
+     "sexpr::parse": 268067,
+     "circuit::collectPins": 177719,
+     "validate::model": 74157,
+     "circuit::normalize": 148735,
+     "ports::collect": 11988,
+     "schematic::build": 547996,
+     "layout_graph::build": 62121,
+     "layout::build": 329252,
+     "layout_routes::build": 55592,
+     "io::flush": 137420,
+     "svg::render": 944180,
+     "main::main": 1894895
+    }
+   }
+  },
+  {
+   "after": {
+    "wall_ms": 3.695859,
+    "phases": {
+     "io::load": 77178,
+     "sexpr::parse": 263093,
+     "circuit::collectPins": 178316,
+     "validate::model": 116443,
+     "circuit::normalize": 145768,
+     "ports::collect": 13259,
+     "schematic::build": 618428,
+     "layout_graph::build": 60808,
+     "layout::build": 344151,
+     "layout_routes::build": 58537,
+     "io::flush": 50047,
+     "svg::render": 885544,
+     "main::main": 1869084
+    }
+   },
+   "before": {
+    "wall_ms": 6.553314,
+    "phases": {
+     "io::load": 120658,
+     "sexpr::parse": 282998,
+     "circuit::collectPins": 217835,
+     "validate::model": 86604,
+     "circuit::normalize": 181454,
+     "ports::collect": 13900,
+     "schematic::build": 653323,
+     "layout_graph::build": 76639,
+     "layout::build": 461291,
+     "layout_routes::build": 72243,
+     "io::flush": 138799,
+     "svg::render": 1206409,
+     "main::main": 2290027
+    }
+   }
+  },
+  {
+   "before": {
+    "wall_ms": 4.199651,
+    "phases": {
+     "io::load": 133009,
+     "sexpr::parse": 319928,
+     "circuit::collectPins": 204503,
+     "validate::model": 82011,
+     "circuit::normalize": 167193,
+     "ports::collect": 14887,
+     "schematic::build": 624452,
+     "layout_graph::build": 75805,
+     "layout::build": 463878,
+     "layout_routes::build": 76795,
+     "io::flush": 132566,
+     "svg::render": 1223864,
+     "main::main": 2330398
+    }
+   },
+   "after": {
+    "wall_ms": 4.254884,
+    "phases": {
+     "io::load": 96439,
+     "sexpr::parse": 322282,
+     "circuit::collectPins": 200136,
+     "validate::model": 80691,
+     "circuit::normalize": 169389,
+     "ports::collect": 18186,
+     "schematic::build": 668623,
+     "layout_graph::build": 76645,
+     "layout::build": 455754,
+     "layout_routes::build": 76888,
+     "io::flush": 63291,
+     "svg::render": 1157707,
+     "main::main": 2272847
+    }
+   }
+  },
+  {
+   "after": {
+    "wall_ms": 3.987595,
+    "phases": {
+     "io::load": 92564,
+     "sexpr::parse": 319023,
+     "circuit::collectPins": 205169,
+     "validate::model": 80941,
+     "circuit::normalize": 167428,
+     "ports::collect": 16611,
+     "schematic::build": 658877,
+     "layout_graph::build": 75603,
+     "layout::build": 450263,
+     "layout_routes::build": 79077,
+     "io::flush": 62301,
+     "svg::render": 1148583,
+     "main::main": 2251351
+    }
+   },
+   "before": {
+    "wall_ms": 3.528969,
+    "phases": {
+     "io::load": 132963,
+     "sexpr::parse": 277396,
+     "circuit::collectPins": 177328,
+     "validate::model": 71422,
+     "circuit::normalize": 140800,
+     "ports::collect": 12154,
+     "schematic::build": 537947,
+     "layout_graph::build": 59368,
+     "layout::build": 320459,
+     "layout_routes::build": 52666,
+     "io::flush": 92720,
+     "svg::render": 871310,
+     "main::main": 1847570
+    }
+   }
+  },
+  {
+   "before": {
+    "wall_ms": 3.504425,
+    "phases": {
+     "io::load": 109506,
+     "sexpr::parse": 260345,
+     "circuit::collectPins": 178210,
+     "validate::model": 71220,
+     "circuit::normalize": 141092,
+     "ports::collect": 12020,
+     "schematic::build": 535495,
+     "layout_graph::build": 60214,
+     "layout::build": 321251,
+     "layout_routes::build": 54189,
+     "io::flush": 102943,
+     "svg::render": 889716,
+     "main::main": 1816892
+    }
+   },
+   "after": {
+    "wall_ms": 3.671164,
+    "phases": {
+     "io::load": 79599,
+     "sexpr::parse": 269658,
+     "circuit::collectPins": 179780,
+     "validate::model": 71296,
+     "circuit::normalize": 140617,
+     "ports::collect": 13049,
+     "schematic::build": 570454,
+     "layout_graph::build": 62231,
+     "layout::build": 323842,
+     "layout_routes::build": 56620,
+     "io::flush": 52930,
+     "svg::render": 865939,
+     "main::main": 1809019
+    }
+   }
+  },
+  {
+   "before": {
+    "wall_ms": 3.60933,
+    "phases": {
+     "io::load": 114783,
+     "sexpr::parse": 269332,
+     "circuit::collectPins": 178500,
+     "validate::model": 72452,
+     "circuit::normalize": 142580,
+     "ports::collect": 13011,
+     "schematic::build": 544011,
+     "layout_graph::build": 61048,
+     "layout::build": 321983,
+     "layout_routes::build": 55027,
+     "io::flush": 97802,
+     "svg::render": 880096,
+     "main::main": 1829314
+    }
+   },
+   "after": {
+    "wall_ms": 3.407291,
+    "phases": {
+     "io::load": 78650,
+     "sexpr::parse": 274701,
+     "circuit::collectPins": 176622,
+     "validate::model": 72081,
+     "circuit::normalize": 146328,
+     "ports::collect": 13887,
+     "schematic::build": 575079,
+     "layout_graph::build": 65206,
+     "layout::build": 325848,
+     "layout_routes::build": 56535,
+     "io::flush": 56014,
+     "svg::render": 871263,
+     "main::main": 1821578
+    }
+   }
+  },
+  {
+   "before": {
+    "wall_ms": 4.243735,
+    "phases": {
+     "io::load": 132339,
+     "sexpr::parse": 339803,
+     "circuit::collectPins": 211462,
+     "validate::model": 88412,
+     "circuit::normalize": 176036,
+     "ports::collect": 15195,
+     "schematic::build": 648105,
+     "layout_graph::build": 79138,
+     "layout::build": 523748,
+     "layout_routes::build": 71188,
+     "io::flush": 152486,
+     "svg::render": 1336857,
+     "main::main": 2490237
+    }
+   },
+   "after": {
+    "wall_ms": 4.306459,
+    "phases": {
+     "io::load": 95293,
+     "sexpr::parse": 419647,
+     "circuit::collectPins": 220648,
+     "validate::model": 86245,
+     "circuit::normalize": 183298,
+     "ports::collect": 22375,
+     "schematic::build": 718059,
+     "layout_graph::build": 76778,
+     "layout::build": 459698,
+     "layout_routes::build": 77732,
+     "io::flush": 70938,
+     "svg::render": 1192959,
+     "main::main": 2456281
+    }
+   }
+  },
+  {
+   "after": {
+    "wall_ms": 4.261049,
+    "phases": {
+     "io::load": 93857,
+     "sexpr::parse": 327029,
+     "circuit::collectPins": 205329,
+     "validate::model": 82060,
+     "circuit::normalize": 168852,
+     "ports::collect": 15640,
+     "schematic::build": 662472,
+     "layout_graph::build": 77461,
+     "layout::build": 475582,
+     "layout_routes::build": 83993,
+     "io::flush": 70399,
+     "svg::render": 1329857,
+     "main::main": 2440613
+    }
+   },
+   "before": {
+    "wall_ms": 4.405055,
+    "phases": {
+     "io::load": 139842,
+     "sexpr::parse": 336704,
+     "circuit::collectPins": 211071,
+     "validate::model": 89781,
+     "circuit::normalize": 177820,
+     "ports::collect": 15794,
+     "schematic::build": 660603,
+     "layout_graph::build": 79101,
+     "layout::build": 492500,
+     "layout_routes::build": 88372,
+     "io::flush": 132846,
+     "svg::render": 1290012,
+     "main::main": 2456911
+    }
+   }
+  },
+  {
+   "before": {
+    "wall_ms": 4.450896,
+    "phases": {
+     "io::load": 150132,
+     "sexpr::parse": 348824,
+     "circuit::collectPins": 211542,
+     "validate::model": 86057,
+     "circuit::normalize": 179272,
+     "ports::collect": 16413,
+     "schematic::build": 661034,
+     "layout_graph::build": 81422,
+     "layout::build": 493637,
+     "layout_routes::build": 77238,
+     "io::flush": 138284,
+     "svg::render": 1296085,
+     "main::main": 2487551
+    }
+   },
+   "after": {
+    "wall_ms": 4.407661,
+    "phases": {
+     "io::load": 93371,
+     "sexpr::parse": 339768,
+     "circuit::collectPins": 206573,
+     "validate::model": 85020,
+     "circuit::normalize": 174698,
+     "ports::collect": 19273,
+     "schematic::build": 686860,
+     "layout_graph::build": 86250,
+     "layout::build": 482128,
+     "layout_routes::build": 80575,
+     "io::flush": 76963,
+     "svg::render": 1222509,
+     "main::main": 2374355
+    }
+   }
+  },
+  {
+   "before": {
+    "wall_ms": 3.826694,
+    "phases": {
+     "io::load": 120167,
+     "sexpr::parse": 278942,
+     "circuit::collectPins": 184837,
+     "validate::model": 76468,
+     "circuit::normalize": 151113,
+     "ports::collect": 14286,
+     "schematic::build": 578646,
+     "layout_graph::build": 64469,
+     "layout::build": 344032,
+     "layout_routes::build": 56616,
+     "io::flush": 106614,
+     "svg::render": 968104,
+     "main::main": 1969951
+    }
+   },
+   "after": {
+    "wall_ms": 3.666368,
+    "phases": {
+     "io::load": 83898,
+     "sexpr::parse": 277308,
+     "circuit::collectPins": 186274,
+     "validate::model": 76195,
+     "circuit::normalize": 149220,
+     "ports::collect": 13857,
+     "schematic::build": 605111,
+     "layout_graph::build": 64863,
+     "layout::build": 341541,
+     "layout_routes::build": 60942,
+     "io::flush": 62680,
+     "svg::render": 925085,
+     "main::main": 1914242
+    }
+   }
+  },
+  {
+   "after": {
+    "wall_ms": 3.695137,
+    "phases": {
+     "io::load": 78931,
+     "sexpr::parse": 305949,
+     "circuit::collectPins": 180020,
+     "validate::model": 72533,
+     "circuit::normalize": 146373,
+     "ports::collect": 13190,
+     "schematic::build": 589584,
+     "layout_graph::build": 63497,
+     "layout::build": 334217,
+     "layout_routes::build": 58271,
+     "io::flush": 57921,
+     "svg::render": 876567,
+     "main::main": 1874519
+    }
+   },
+   "before": {
+    "wall_ms": 3.789662,
+    "phases": {
+     "io::load": 117709,
+     "sexpr::parse": 295027,
+     "circuit::collectPins": 177651,
+     "validate::model": 74035,
+     "circuit::normalize": 143696,
+     "ports::collect": 12369,
+     "schematic::build": 544721,
+     "layout_graph::build": 60566,
+     "layout::build": 348798,
+     "layout_routes::build": 62258,
+     "io::flush": 98220,
+     "svg::render": 920030,
+     "main::main": 1900855
+    }
+   }
+  },
+  {
+   "after": {
+    "wall_ms": 3.586673,
+    "phases": {
+     "io::load": 77872,
+     "sexpr::parse": 272091,
+     "circuit::collectPins": 174275,
+     "validate::model": 71341,
+     "circuit::normalize": 145889,
+     "ports::collect": 14875,
+     "schematic::build": 578336,
+     "layout_graph::build": 66887,
+     "layout::build": 332634,
+     "layout_routes::build": 57599,
+     "io::flush": 67420,
+     "svg::render": 879839,
+     "main::main": 1834258
+    }
+   },
+   "before": {
+    "wall_ms": 3.853707,
+    "phases": {
+     "io::load": 129715,
+     "sexpr::parse": 326461,
+     "circuit::collectPins": 190417,
+     "validate::model": 78131,
+     "circuit::normalize": 162049,
+     "ports::collect": 14718,
+     "schematic::build": 596669,
+     "layout_graph::build": 74051,
+     "layout::build": 455049,
+     "layout_routes::build": 72742,
+     "io::flush": 128071,
+     "svg::render": 1180418,
+     "main::main": 2259368
+    }
+   }
+  },
+  {
+   "after": {
+    "wall_ms": 4.078184,
+    "phases": {
+     "io::load": 95747,
+     "sexpr::parse": 319707,
+     "circuit::collectPins": 199446,
+     "validate::model": 82311,
+     "circuit::normalize": 166795,
+     "ports::collect": 18942,
+     "schematic::build": 661488,
+     "layout_graph::build": 74152,
+     "layout::build": 442327,
+     "layout_routes::build": 73387,
+     "io::flush": 64076,
+     "svg::render": 1121346,
+     "main::main": 2225552
+    }
+   },
+   "before": {
+    "wall_ms": 4.106555,
+    "phases": {
+     "io::load": 134549,
+     "sexpr::parse": 322926,
+     "circuit::collectPins": 205467,
+     "validate::model": 80767,
+     "circuit::normalize": 167589,
+     "ports::collect": 15959,
+     "schematic::build": 624949,
+     "layout_graph::build": 77200,
+     "layout::build": 466988,
+     "layout_routes::build": 89866,
+     "io::flush": 129583,
+     "svg::render": 1225635,
+     "main::main": 2336534
+    }
+   }
+  },
+  {
+   "before": {
+    "wall_ms": 3.902847,
+    "phases": {
+     "io::load": 134210,
+     "sexpr::parse": 322855,
+     "circuit::collectPins": 179547,
+     "validate::model": 74019,
+     "circuit::normalize": 154615,
+     "ports::collect": 13445,
+     "schematic::build": 581591,
+     "layout_graph::build": 63210,
+     "layout::build": 339044,
+     "layout_routes::build": 53315,
+     "io::flush": 101222,
+     "svg::render": 908675,
+     "main::main": 1978496
+    }
+   },
+   "after": {
+    "wall_ms": 3.727396,
+    "phases": {
+     "io::load": 80182,
+     "sexpr::parse": 273551,
+     "circuit::collectPins": 181032,
+     "validate::model": 74646,
+     "circuit::normalize": 154285,
+     "ports::collect": 16317,
+     "schematic::build": 601567,
+     "layout_graph::build": 62823,
+     "layout::build": 330759,
+     "layout_routes::build": 56999,
+     "io::flush": 62932,
+     "svg::render": 882809,
+     "main::main": 1859703
+    }
+   }
+  },
+  {
+   "before": {
+    "wall_ms": 3.445267,
+    "phases": {
+     "io::load": 124913,
+     "sexpr::parse": 280677,
+     "circuit::collectPins": 183484,
+     "validate::model": 75913,
+     "circuit::normalize": 149346,
+     "ports::collect": 12392,
+     "schematic::build": 565794,
+     "layout_graph::build": 71227,
+     "layout::build": 350778,
+     "layout_routes::build": 58194,
+     "io::flush": 101025,
+     "svg::render": 916961,
+     "main::main": 1912431
+    }
+   },
+   "after": {
+    "wall_ms": 3.584613,
+    "phases": {
+     "io::load": 83453,
+     "sexpr::parse": 280234,
+     "circuit::collectPins": 179208,
+     "validate::model": 79524,
+     "circuit::normalize": 144258,
+     "ports::collect": 15164,
+     "schematic::build": 587813,
+     "layout_graph::build": 61398,
+     "layout::build": 382590,
+     "layout_routes::build": 59173,
+     "io::flush": 60897,
+     "svg::render": 949019,
+     "main::main": 1924704
+    }
+   }
+  },
+  {
+   "before": {
+    "wall_ms": 3.30628,
+    "phases": {
+     "io::load": 117290,
+     "sexpr::parse": 279608,
+     "circuit::collectPins": 178792,
+     "validate::model": 73119,
+     "circuit::normalize": 143910,
+     "ports::collect": 12966,
+     "schematic::build": 546825,
+     "layout_graph::build": 61584,
+     "layout::build": 340215,
+     "layout_routes::build": 54542,
+     "io::flush": 103989,
+     "svg::render": 909941,
+     "main::main": 1875316
+    }
+   },
+   "after": {
+    "wall_ms": 3.567544,
+    "phases": {
+     "io::load": 80072,
+     "sexpr::parse": 279932,
+     "circuit::collectPins": 178119,
+     "validate::model": 73021,
+     "circuit::normalize": 144280,
+     "ports::collect": 13067,
+     "schematic::build": 578258,
+     "layout_graph::build": 61689,
+     "layout::build": 326997,
+     "layout_routes::build": 61189,
+     "io::flush": 60448,
+     "svg::render": 879232,
+     "main::main": 1841889
+    }
+   }
+  },
+  {
+   "after": {
+    "wall_ms": 3.381033,
+    "phases": {
+     "io::load": 78166,
+     "sexpr::parse": 269109,
+     "circuit::collectPins": 192344,
+     "validate::model": 73257,
+     "circuit::normalize": 143194,
+     "ports::collect": 13289,
+     "schematic::build": 587747,
+     "layout_graph::build": 62857,
+     "layout::build": 331561,
+     "layout_routes::build": 54258,
+     "io::flush": 59023,
+     "svg::render": 882695,
+     "main::main": 1838937
+    }
+   },
+   "before": {
+    "wall_ms": 3.714951,
+    "phases": {
+     "io::load": 117450,
+     "sexpr::parse": 279879,
+     "circuit::collectPins": 178701,
+     "validate::model": 73239,
+     "circuit::normalize": 145021,
+     "ports::collect": 12163,
+     "schematic::build": 550727,
+     "layout_graph::build": 60997,
+     "layout::build": 329650,
+     "layout_routes::build": 57024,
+     "io::flush": 99425,
+     "svg::render": 904743,
+     "main::main": 1874298
+    }
+   }
+  },
+  {
+   "after": {
+    "wall_ms": 3.434391,
+    "phases": {
+     "io::load": 80037,
+     "sexpr::parse": 267000,
+     "circuit::collectPins": 179621,
+     "validate::model": 78897,
+     "circuit::normalize": 148587,
+     "ports::collect": 14066,
+     "schematic::build": 589750,
+     "layout_graph::build": 68153,
+     "layout::build": 344668,
+     "layout_routes::build": 58124,
+     "io::flush": 56856,
+     "svg::render": 929171,
+     "main::main": 1889550
+    }
+   },
+   "before": {
+    "wall_ms": 3.502176,
+    "phases": {
+     "io::load": 113033,
+     "sexpr::parse": 265227,
+     "circuit::collectPins": 177112,
+     "validate::model": 74037,
+     "circuit::normalize": 184552,
+     "ports::collect": 13316,
+     "schematic::build": 585240,
+     "layout_graph::build": 60812,
+     "layout::build": 326692,
+     "layout_routes::build": 56250,
+     "io::flush": 112931,
+     "svg::render": 900890,
+     "main::main": 1886252
+    }
+   }
+  },
+  {
+   "after": {
+    "wall_ms": 6.144185,
+    "phases": {
+     "io::load": 80950,
+     "sexpr::parse": 290698,
+     "circuit::collectPins": 179203,
+     "validate::model": 73225,
+     "circuit::normalize": 145556,
+     "ports::collect": 13342,
+     "schematic::build": 579869,
+     "layout_graph::build": 63773,
+     "layout::build": 340143,
+     "layout_routes::build": 60501,
+     "io::flush": 52413,
+     "svg::render": 883938,
+     "main::main": 1856594
+    }
+   },
+   "before": {
+    "wall_ms": 3.507492,
+    "phases": {
+     "io::load": 109967,
+     "sexpr::parse": 271060,
+     "circuit::collectPins": 176845,
+     "validate::model": 71430,
+     "circuit::normalize": 139248,
+     "ports::collect": 11912,
+     "schematic::build": 532232,
+     "layout_graph::build": 60531,
+     "layout::build": 319962,
+     "layout_routes::build": 53002,
+     "io::flush": 95077,
+     "svg::render": 866325,
+     "main::main": 1801774
+    }
+   }
+  },
+  {
+   "before": {
+    "wall_ms": 4.132756,
+    "phases": {
+     "io::load": 126976,
+     "sexpr::parse": 322217,
+     "circuit::collectPins": 193306,
+     "validate::model": 77867,
+     "circuit::normalize": 158521,
+     "ports::collect": 13824,
+     "schematic::build": 594318,
+     "layout_graph::build": 72837,
+     "layout::build": 473632,
+     "layout_routes::build": 72228,
+     "io::flush": 123036,
+     "svg::render": 1183356,
+     "main::main": 2253918
+    }
+   },
+   "after": {
+    "wall_ms": 4.221329,
+    "phases": {
+     "io::load": 89469,
+     "sexpr::parse": 327089,
+     "circuit::collectPins": 200002,
+     "validate::model": 84224,
+     "circuit::normalize": 169472,
+     "ports::collect": 17126,
+     "schematic::build": 660264,
+     "layout_graph::build": 78246,
+     "layout::build": 453400,
+     "layout_routes::build": 81028,
+     "io::flush": 64012,
+     "svg::render": 1161292,
+     "main::main": 2266142
+    }
+   }
+  },
+  {
+   "before": {
+    "wall_ms": 4.300754,
+    "phases": {
+     "io::load": 143966,
+     "sexpr::parse": 369444,
+     "circuit::collectPins": 218660,
+     "validate::model": 88702,
+     "circuit::normalize": 173584,
+     "ports::collect": 16030,
+     "schematic::build": 663640,
+     "layout_graph::build": 78475,
+     "layout::build": 480017,
+     "layout_routes::build": 78341,
+     "io::flush": 141800,
+     "svg::render": 1262887,
+     "main::main": 2469799
+    }
+   },
+   "after": {
+    "wall_ms": 4.515113,
+    "phases": {
+     "io::load": 102365,
+     "sexpr::parse": 347439,
+     "circuit::collectPins": 219852,
+     "validate::model": 91506,
+     "circuit::normalize": 182419,
+     "ports::collect": 18517,
+     "schematic::build": 726573,
+     "layout_graph::build": 83730,
+     "layout::build": 497513,
+     "layout_routes::build": 82774,
+     "io::flush": 71891,
+     "svg::render": 1255546,
+     "main::main": 2461688
+    }
+   }
+  },
+  {
+   "after": {
+    "wall_ms": 3.656858,
+    "phases": {
+     "io::load": 80921,
+     "sexpr::parse": 286186,
+     "circuit::collectPins": 190335,
+     "validate::model": 77722,
+     "circuit::normalize": 161199,
+     "ports::collect": 14175,
+     "schematic::build": 619884,
+     "layout_graph::build": 63821,
+     "layout::build": 346336,
+     "layout_routes::build": 61392,
+     "io::flush": 63234,
+     "svg::render": 926570,
+     "main::main": 1935424
+    }
+   },
+   "before": {
+    "wall_ms": 3.7508,
+    "phases": {
+     "io::load": 122158,
+     "sexpr::parse": 290431,
+     "circuit::collectPins": 188618,
+     "validate::model": 78442,
+     "circuit::normalize": 159550,
+     "ports::collect": 13487,
+     "schematic::build": 584826,
+     "layout_graph::build": 64835,
+     "layout::build": 350408,
+     "layout_routes::build": 58491,
+     "io::flush": 114535,
+     "svg::render": 956309,
+     "main::main": 1977273
+    }
+   }
+  },
+  {
+   "after": {
+    "wall_ms": 3.954501,
+    "phases": {
+     "io::load": 82215,
+     "sexpr::parse": 289853,
+     "circuit::collectPins": 194564,
+     "validate::model": 78538,
+     "circuit::normalize": 153847,
+     "ports::collect": 14417,
+     "schematic::build": 624919,
+     "layout_graph::build": 64683,
+     "layout::build": 342050,
+     "layout_routes::build": 64722,
+     "io::flush": 59663,
+     "svg::render": 925760,
+     "main::main": 1946284
+    }
+   },
+   "before": {
+    "wall_ms": 3.83503,
+    "phases": {
+     "io::load": 117132,
+     "sexpr::parse": 292587,
+     "circuit::collectPins": 182150,
+     "validate::model": 76154,
+     "circuit::normalize": 149066,
+     "ports::collect": 12845,
+     "schematic::build": 563571,
+     "layout_graph::build": 61558,
+     "layout::build": 394495,
+     "layout_routes::build": 57829,
+     "io::flush": 99602,
+     "svg::render": 973729,
+     "main::main": 1971415
+    }
+   }
+  }
+ ]
+}

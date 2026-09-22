@@ -363,7 +363,14 @@ pub fn carriesWritableStorage(records: []const Record, ty: Type) bool {
 /// declares it depends on this module -- is what tells them apart.
 fn isImmutableBytes(record: Record) bool {
     if (record.collection.kind == .string) return true;
-    return record.collection.kind == .bytes and !std.mem.eql(u8, record.name, "byte_buffer");
+    return isByteString(record);
+}
+
+/// Whether a managed schema is the immutable `bytes` byte string rather than the
+/// mutable `byte_buffer` or the separate `str` kind. The distinction is nominal,
+/// like `isImmutableBytes`, because both byte kinds share one collection kind.
+pub fn isByteString(record: Record) bool {
+    return record.managed and record.collection.kind == .bytes and !std.mem.eql(u8, record.name, "byte_buffer");
 }
 
 fn writableDepth(records: []const Record, ty: Type, depth: usize) bool {

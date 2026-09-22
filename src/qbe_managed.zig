@@ -109,6 +109,7 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
     const h = stack.len;
     const base = h - op.kind.arity();
     const list = try self.load("l", @backingInt(op.owner));
+    try self.markObject(list);
     const output = self.temp();
     switch (op.kind) {
         .length, .capacity => {
@@ -281,18 +282,26 @@ fn checkedPointer(comptime E: type, self: *E, result: usize, slot: usize) Error!
 /// Require `result`, otherwise raise a bounds trap carrying the already-loaded
 /// original index and receiver length. `failure` names the detail-carrying
 /// runtime helper; both values are captured, never recomputed.
+///
+/// QBE-UNCHECKED-1: an unchecked build emits neither the test nor the cold
+/// block. The runtime call or inline address that produced `result` still runs,
+/// so the value the caller goes on to use is unchanged on a valid index.
 fn requireIndexBounds(comptime E: type, self: *E, result: usize, index: usize, length: usize, failure: []const u8) Error!void {
+    if (!self.checks) return;
     const label = self.temp();
     try self.print(" jnz %v{d}, @success{d}, @failed{d}\n@failed{d}\n call ${s}(l %ctx, l %v{d}, l %v{d})\n jmp @failure\n@success{d}\n", .{ result, label, label, label, failure, index, length, label });
 }
 /// Require a pop that has no caller index; report the receiver length only.
+/// QBE-UNCHECKED-1 drops this test with the other container-range tests.
 fn requirePopBounds(comptime E: type, self: *E, result: usize, length: usize) Error!void {
+    if (!self.checks) return;
     const label = self.temp();
     try self.print(" jnz %v{d}, @success{d}, @failed{d}\n@failed{d}\n call $myl_qbe_fail_pop_bounds(l %ctx, l %v{d})\n jmp @failure\n@success{d}\n", .{ result, label, label, label, length, label });
 }
 /// Load one native list-like header word (length for lists, text and bytes).
 fn receiverLength(comptime E: type, self: *E, receiver: usize) Error!usize {
     const length = self.temp();
+    try self.markObject(receiver);
     try self.print(load_word, .{ length, receiver });
     return length;
 }
@@ -453,6 +462,7 @@ fn inlineAppend(comptime E: type, self: *E, list: usize, element: typed.Type, va
     // keep the pointer the runtime copies from.
     const scalar = self.isScalar(element) and width != 0 and width <= 8;
     const held = if (scalar) try self.readValue(value_pointer, element) else value_pointer;
+    try self.markObject(list);
     const generation = try self.address(list, list_generation_offset);
     const current = self.temp();
     try self.print(load_pointer, .{ current, generation });
@@ -474,6 +484,7 @@ fn inlineAppend(comptime E: type, self: *E, list: usize, element: typed.Type, va
     const storage = try self.address(list, list_storage_offset);
     const backing = self.temp();
     try self.print(load_pointer, .{ backing, storage });
+    try self.markObject(backing);
     const destination = self.temp();
     if (width == 1) {
         try self.print(" %v{d} =l add %v{d}, %v{d}\n", .{ destination, backing, length });
@@ -496,6 +507,7 @@ fn emitLength(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.T
     if (self.program.records[ty.recordIndex()].collection.kind == .dictionary) {
         try self.print(dictionary_length, .{ result, input });
     } else {
+        try self.markObject(input);
         try self.print(load_word, .{ result, input });
     }
     try self.store(base, result);
@@ -648,9 +660,13 @@ fn elementFeedsStore(comptime E: type, self: *E, element: typed.Type) Error!bool
 /// original index and the receiver length: `failure` names the helper that
 /// reports an index this lowering already normalized, or one it has not.
 fn inlineIndexRead(comptime E: type, self: *E, read: IndexRead, failure: []const u8) Error!void {
-    const valid = self.temp();
-    try self.print(unsigned_below, .{ valid, read.at, read.length });
-    try requireIndexBounds(E, self, valid, read.raw_index, read.length, failure);
+    // QBE-UNCHECKED-1: the comparison exists only to feed the test, so an
+    // unchecked build emits neither and reads the element address directly.
+    if (self.checks) {
+        const valid = self.temp();
+        try self.print(unsigned_below, .{ valid, read.at, read.length });
+        try requireIndexBounds(E, self, valid, read.raw_index, read.length, failure);
+    }
     const address = try elementAddress(E, self, read.input, read.at, read.element);
     if (self.isScalar(read.element)) {
         try self.store(read.slot, try self.readValue(address, read.element));
@@ -688,9 +704,13 @@ fn inlineIndexRead(comptime E: type, self: *E, read: IndexRead, failure: []const
 /// region inside the element can only be the element itself. That is exactly
 /// the aliasing the runtime `memcpy` already had.
 fn inlineIndexWrite(comptime E: type, self: *E, write: IndexRead, failure: []const u8) Error!void {
-    const valid = self.temp();
-    try self.print(unsigned_below, .{ valid, write.at, write.length });
-    try requireIndexBounds(E, self, valid, write.raw_index, write.length, failure);
+    // QBE-UNCHECKED-1: the comparison exists only to feed the test, so an
+    // unchecked build emits neither and writes the element address directly.
+    if (self.checks) {
+        const valid = self.temp();
+        try self.print(unsigned_below, .{ valid, write.at, write.length });
+        try requireIndexBounds(E, self, valid, write.raw_index, write.length, failure);
+    }
     const address = try elementAddress(E, self, write.input, write.at, write.element);
     try self.writeValue(address, try self.load("s", write.slot), write.element);
 }
@@ -702,7 +722,9 @@ fn elementAddress(comptime E: type, self: *E, list: usize, index: usize, element
     const storage = self.temp();
     const offset = self.temp();
     const address = self.temp();
+    try self.markObject(list);
     try self.print(" %v{d} =l add %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ header, list, list_storage_offset, storage, header });
+    try self.markObject(storage);
     const stride = (try self.layout(element)).size;
     if (stride == 1) {
         try self.print(" %v{d} =l add %v{d}, %v{d}\n", .{ address, storage, index });
@@ -897,9 +919,13 @@ fn textAt(comptime E: type, self: *E, input: usize, at: usize, ty: typed.Type, r
     const size = self.temp();
     try self.print(load_pointer, .{ size, input });
     const normalized = try normalizedIndex(E, self, at, size, ty);
-    const valid = self.temp();
-    try self.print(unsigned_below, .{ valid, normalized, size });
-    try requireIndexBounds(E, self, valid, at, size, "myl_qbe_fail_text_bounds_detail");
+    // QBE-UNCHECKED-1: keep the negative-index normalization, which produces the
+    // offset the read uses, and drop only its range test and cold block.
+    if (self.checks) {
+        const valid = self.temp();
+        try self.print(unsigned_below, .{ valid, normalized, size });
+        try requireIndexBounds(E, self, valid, at, size, "myl_qbe_fail_text_bounds_detail");
+    }
     try self.print(" %v{d} =l call $myl_native_text_at(l %heap, l %v{d}, l %v{d})\n", .{ result, input, normalized });
     try checkedPointer(E, self, result, base);
 }

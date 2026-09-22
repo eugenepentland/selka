@@ -75,17 +75,17 @@ pub const Compilation = struct {
     }
     /// Allocate independently compilable scalar QBE units after full project checking.
     pub fn emitQbe(self: *Compilation, allocator: @import("std").mem.Allocator) EmitNativeError![]u8 {
-        return self.emitQbeWithOptions(allocator, false, true, true);
+        return self.emitQbeWithOptions(allocator, .{});
     }
 
-    /// Emit QBE units under an explicit `debug` policy and step-accounting choice.
-    pub fn emitQbeWithOptions(self: *Compilation, allocator: @import("std").mem.Allocator, drop_debug: bool, step_checks: bool, frame_checks: bool) EmitNativeError![]u8 {
-        try self.emitWithOptions(drop_debug);
+    /// Emit QBE units under an explicit debug, accounting and safety policy.
+    pub fn emitQbeWithOptions(self: *Compilation, allocator: @import("std").mem.Allocator, policy: @import("native_interface.zig").Policy) EmitNativeError![]u8 {
+        try self.emitWithOptions(policy.drop_debug);
         const roots = try self.exportRoots(allocator);
         defer allocator.free(roots);
         const schema = try self.renderSchema(allocator, roots);
         defer allocator.free(schema);
-        return @import("qbe.zig").generateWithInterface(allocator, self.code.?, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema, .step_checks = step_checks, .frame_checks = frame_checks });
+        return @import("qbe.zig").generateWithInterface(allocator, self.code.?, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema, .policy = policy });
     }
 
     /// Emit checked native-test dependency facts without lowering or QBE emission.

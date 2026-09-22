@@ -22,6 +22,9 @@ pub const Identity = struct {
     policy: ?[]const u8 = null,
     step_checks: bool = false,
     frame_checks: bool = true,
+    /// `--unchecked`: the units carry no overflow, cast or bounds guards, so a
+    /// checked manifest for the same sources must never be reused for them.
+    checks: bool = true,
 };
 
 /// One validated cache hit and the exact fragment count its manifest records.
@@ -77,6 +80,7 @@ fn keyFor(context: fs.Context, identity: Identity) ![]const u8 {
     hash.update("native-run-validated-graph-v1");
     frame(&hash, if (identity.step_checks) "steps-on" else "steps-off");
     frame(&hash, if (identity.frame_checks) "frames-on" else "frames-off");
+    frame(&hash, if (identity.checks) "checks-on" else "checks-off");
     frame(&hash, identity.policy orelse "");
     for (identity.sources) |source| {
         frame(&hash, source.path);
@@ -112,6 +116,7 @@ test "manifest identity changes with source path bytes policy and emission contr
     try std.testing.expect(!std.mem.eql(u8, key, try keyFor(context, .{ .sources = &moved_sources })));
     try std.testing.expect(!std.mem.eql(u8, key, try keyFor(context, .{ .sources = &sources, .policy = "policy" })));
     try std.testing.expect(!std.mem.eql(u8, key, try keyFor(context, .{ .sources = &sources, .step_checks = true })));
+    try std.testing.expect(!std.mem.eql(u8, key, try keyFor(context, .{ .sources = &sources, .checks = false })));
 }
 
 // spec-case: NATIVE-RUN-MANIFEST-CACHE-1

@@ -146,6 +146,14 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
         try std.Io.File.stdout().writeStreamingAll(process.io, options.usage);
         return 0;
     }
+    // QBE-UNCHECKED-1: `--unchecked` is refused here by name rather than as an
+    // unknown flag. A guest test asserts that invalid input traps, and every
+    // test child runs under a finite step and memory budget, so a build with no
+    // guards and no frame protocol has nothing left for a test to observe.
+    for (args) |argument| if (std.mem.eql(u8, argument, "--unchecked")) {
+        try std.Io.File.stderr().writeStreamingAll(process.io, "mylang test: --unchecked is refused: tests need the traps it removes. Run the tests checked, then `mylang build --unchecked` the program they passed on.\n");
+        return 2;
+    };
     var opts = options.parse(args) catch {
         try std.Io.File.stderr().writeStreamingAll(process.io, options.usage);
         return 2;

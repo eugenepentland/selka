@@ -27,6 +27,16 @@ public def test_output_limit_fails_without_oversized_buffer() -> bool:
     return out.failed and len(out.buffer) == 4194304
 
 
+# SCHEMATIC-BULK-2: one payload call must carry the buffer the appends filled.
+public def test_payload_snapshot_matches_the_appended_buffer() -> bool:
+    out = io.output()
+    io.append(mut out, b"<svg")
+    io.appendInt(mut out, - 42)
+    io.appendByte(mut out, 62u8)
+    payload = bytes(out.buffer)
+    return not out.failed and payload == b"<svg-42>" and len(payload) == len(out.buffer)
+
+
 public def test_decimal_uses_exact_remaining_capacity() -> bool:
     out = io.output()
     block = b"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"

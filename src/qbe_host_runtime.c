@@ -1,6 +1,7 @@
 /* Copied host calls: metadata immutable, budgets and scratch execution-local. */
 #include "qbe_runtime.h"
 #include "native_providers.h"
+#include "native_bytes.h"
 #include <stdlib.h>
 #include <string.h>
 typedef struct {
@@ -18,7 +19,7 @@ typedef struct {
 typedef struct {
     const MylangHostRegistry *registry;
     uint64_t calls,work,call_limit;
-    size_t value_limit,depth_limit;
+    size_t value_limit,depth_limit,payload_limit;
     int initialized,invoking;
     const MylangHostBinding *bound[];
 } QbeHostState;
@@ -61,7 +62,8 @@ void myl_qbe_host_begin(void *context) {
     state->work=registry->max_work?registry->max_work:1000000;
     state->value_limit=registry->max_values?registry->max_values:65536;
     state->depth_limit=registry->max_depth?registry->max_depth:64;
-    if (state->value_limit>100000 || state->depth_limit>128) { myl_qbe_fail(ctx,"HostInvalidBudget"); return; }
+    state->payload_limit=registry->max_payload?registry->max_payload:1024u*1024u;
+    if (state->value_limit>100000 || state->depth_limit>128 || state->payload_limit>64u*1024u*1024u) { myl_qbe_fail(ctx,"HostInvalidBudget"); return; }
     for (size_t i=0;i<registry->count;i++) {
         const char *name=registry->bindings[i].name;
         int found=0;
@@ -168,9 +170,19 @@ static int qbe_host_scalar_call(const QbeHostState *state,const QbeHostDeclarati
     for (size_t i=0;i<declaration->count;i++) if (qbe_host_types[declaration->parameters[i]].kind!=1) return 0;
     return 1;
 }
+/* Kind 6 is the immutable `bytes` byte string: one owned payload the runtime
+   copies in both directions. Its guest value is a single managed pointer word,
+   so the schema carries no octet count and the payload ceiling bounds it. */
+static int qbe_host_payload_type(size_t index) {
+    return qbe_host_types[index].kind==6;
+}
 static int qbe_host_packed_type(size_t index,size_t *nodes,size_t depth,size_t depth_limit) {
     const QbeHostType *type=&qbe_host_types[index];
     if (depth>depth_limit) return 0;
+    if (type->kind==6) {
+        if (type->size!=sizeof(myl_native_bytes *)) return 0;
+        *nodes=1; return 1;
+    }
     if (type->kind==1) {
         if ((type->bits!=8 && type->bits!=16 && type->bits!=32 && type->bits!=64) || type->size!=type->bits/8) return 0;
         *nodes=1; return 1;
@@ -190,41 +202,84 @@ static int qbe_host_packed_call(QbeHostState *state,const QbeHostDeclaration *de
         if (!qbe_host_packed_type(declaration->parameters[i],&nodes,1,state->depth_limit) ||
             nodes>state->value_limit-total) return 0;
         total+=nodes;
-        size_t size=qbe_host_types[declaration->parameters[i]].size;
+        size_t size=qbe_host_payload_type(declaration->parameters[i])?0:qbe_host_types[declaration->parameters[i]].size;
         if (size>SIZE_MAX-*bytes) return 0;
         *bytes+=size;
     }
     if (!qbe_host_packed_type(declaration->result,&nodes,1,state->depth_limit) ||
         nodes>state->value_limit-total) return 0;
-    size_t size=qbe_host_types[declaration->result].size;
+    size_t size=qbe_host_payload_type(declaration->result)?0:qbe_host_types[declaration->result].size;
     if (size>SIZE_MAX-*bytes) return 0;
     *bytes+=size;
+    /* Only the fixed part of the scratch is bounded here; a `bytes` payload is
+       measured at call time against the registry's payload ceiling. */
     if (*bytes>1024u*1024u) return 0;
     return 1;
 }
-static void qbe_host_invoke_packed(void *ctx,QbeHostState *state,const QbeHostDeclaration *declaration,const MylangHostBinding *binding,const void *const *arguments,void *output,size_t bytes) {
+/* One argument's copied payload: a fixed shape's own storage, or the octets an
+   immutable byte string currently holds. */
+typedef struct { const unsigned char *octets; size_t size; } QbeHostPayload;
+static int qbe_host_payload_of(void *ctx,QbeHostState *state,size_t index,const void *argument,QbeHostPayload *payload) {
+    if (!qbe_host_payload_type(index)) {
+        payload->octets=argument; payload->size=qbe_host_types[index].size; return 1;
+    }
+    myl_native_bytes *value=NULL;
+    memcpy(&value,argument,sizeof value);
+    if (!value) return qbe_host_error(ctx,"InvalidDataValue");
+    size_t length=0;
+    payload->octets=myl_native_bytes_range(value,0,INT64_MAX,&length);
+    if (length>state->payload_limit) return qbe_host_error(ctx,"ValueCountLimit");
+    payload->size=length;
+    return 1;
+}
+/* Copy a callback's published octets into a fresh guest byte string. Those
+   octets belong to the callback, so the runtime only reads them, and a sticky
+   trap or a refused allocation publishes no value. */
+static void qbe_host_publish_payload(void *ctx,QbeHostState *state,const MylangHostPackedCall *call,void *output) {
+    if (call->output.size!=call->output_written || (!call->output.bytes && call->output.size)) { qbe_host_error(ctx,"InvalidDataValue"); return; }
+    if (call->output.size>state->payload_limit) { qbe_host_error(ctx,"ValueCountLimit"); return; }
+    if (((MylQbeContext *)ctx)->trap) return;
+    myl_native_bytes *value=myl_native_bytes_new(myl_qbe_heap(ctx),call->output.bytes,call->output.size);
+    if (!value) { myl_qbe_fail_allocation(ctx); return; }
+    memcpy(output,&value,sizeof value);
+}
+static void qbe_host_invoke_packed(void *ctx,QbeHostState *state,const QbeHostDeclaration *declaration,const MylangHostBinding *binding,const void *const *arguments,void *output) {
     if (declaration->count==SIZE_MAX) { qbe_host_error(ctx,"OutOfMemory"); return; }
     size_t value_count=declaration->count+1;
     if (value_count>SIZE_MAX/sizeof(MylangHostPackedValue)) { qbe_host_error(ctx,"OutOfMemory"); return; }
     size_t headers=value_count*sizeof(MylangHostPackedValue);
+    /* Measure every argument before copying one, so an oversized byte string is
+       refused before the callback can observe any of them. */
+    size_t bytes=0;
+    for (size_t i=0;i<declaration->count;i++) {
+        QbeHostPayload payload;
+        if (!qbe_host_payload_of(ctx,state,declaration->parameters[i],arguments[i],&payload)) return;
+        if (payload.size>SIZE_MAX-bytes) { qbe_host_error(ctx,"OutOfMemory"); return; }
+        bytes+=payload.size;
+    }
+    size_t output_size=qbe_host_payload_type(declaration->result)?0:qbe_host_types[declaration->result].size;
+    if (output_size>SIZE_MAX-bytes) { qbe_host_error(ctx,"OutOfMemory"); return; }
+    bytes+=output_size;
     if (bytes>SIZE_MAX-headers) { qbe_host_error(ctx,"OutOfMemory"); return; }
     union { max_align_t alignment; unsigned char bytes[1024]; } local;
     int owned=headers+bytes>sizeof local.bytes;
     unsigned char *scratch=owned?myl_qbe_frame_allocate(ctx,headers+bytes):local.bytes;
     if (!scratch) return;
-    if (owned) memset(scratch,0,headers+bytes);
+    memset(scratch,0,headers);
     MylangHostPackedValue *values=(MylangHostPackedValue *)scratch;
     unsigned char *cursor=scratch+headers;
     for (size_t i=0;i<declaration->count;i++) {
-        size_t size=qbe_host_types[declaration->parameters[i]].size;
-        values[i]=(MylangHostPackedValue){cursor,size};
-        if (size) memcpy(cursor,arguments[i],size);
-        cursor+=size;
+        QbeHostPayload payload={NULL,0};
+        (void)qbe_host_payload_of(ctx,state,declaration->parameters[i],arguments[i],&payload);
+        values[i]=(MylangHostPackedValue){cursor,payload.size};
+        if (payload.size) memcpy(cursor,payload.octets,payload.size);
+        cursor+=payload.size;
     }
-    size_t output_size=qbe_host_types[declaration->result].size;
-    values[declaration->count]=(MylangHostPackedValue){cursor,output_size};
+    /* A `bytes` result starts as an empty output the callback replaces with its
+       own octets; every other shape keeps the zeroed scratch it is given. */
+    void *expected_output=output_size?cursor:NULL;
     if (output_size) memset(cursor,0,output_size);
-    void *expected_output=cursor;
+    values[declaration->count]=(MylangHostPackedValue){expected_output,output_size};
     state->calls++; state->work--;
     MylangHostPackedCall call={values,declaration->count,values[declaration->count],0,state->work,0};
     state->invoking=1;
@@ -234,6 +289,7 @@ static void qbe_host_invoke_packed(void *ctx,QbeHostState *state,const QbeHostDe
     else {
         state->work=call.work_remaining;
         if (failure) qbe_host_error(ctx,failure);
+        else if (qbe_host_payload_type(declaration->result)) qbe_host_publish_payload(ctx,state,&call,output);
         else if (call.output.bytes!=expected_output || call.output.size!=output_size || call.output_written!=output_size) qbe_host_error(ctx,"InvalidDataValue");
         else if (!((MylQbeContext *)ctx)->trap && output_size) memcpy(output,call.output.bytes,output_size);
     }
@@ -277,7 +333,7 @@ static void qbe_host_invoke(void *context,size_t declaration_index,const void *c
     if (!state->work) { qbe_host_error(ctx,"HostWorkLimit"); return; }
     size_t packed_bytes=0;
     if (qbe_host_packed_call(state,declaration,binding,&packed_bytes)) {
-        qbe_host_invoke_packed(ctx,state,declaration,binding,arguments,output,packed_bytes);
+        qbe_host_invoke_packed(ctx,state,declaration,binding,arguments,output);
         return;
     }
     if (qbe_host_scalar_call(state,declaration)) {

@@ -3,6 +3,7 @@
 
 usage: build_arms.py --compiler /path/mylang --work /path/work --arms spec.json
 spec.json: {"name": {"backend": "llvm"|"qbe", "opt": "3", "lto": true, "bounded": false,
+                     "unchecked": true (optional: emit with --drop-safety-checks, the compiler's own policy),
                      "strip": "overflow,cast" (optional, applied to the emitted manifest),
                      "guest": "gc"|"arena" (optional; arena wraps main in `with arena():`),
                      "manifest_from": "other-arm" (optional: reuse that arm's emitted manifest before stripping)}}
@@ -77,6 +78,8 @@ def main():
             emit = [compiler, 'emit-project-qbe', entry, '--drop-debug', '--no-cache']
             if not arm.get('bounded'):
                 emit += ['--drop-step-checks', '--drop-frame-checks']
+            if arm.get('unchecked'):
+                emit += ['--drop-safety-checks']
             result = run(emit)
             source_manifest = work / f'{name}-raw.json'
             source_manifest.write_bytes(result.stdout)
