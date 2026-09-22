@@ -9,9 +9,42 @@ const tools = @import("host_tools");
 pub const Error = qbe_build.Error || std.Io.Dir.CreateDirError || error{ GuestTrap, InvalidGuestResult, InvalidBuildConfiguration };
 /// Bound on what one child may leave on a captured stream before publication.
 pub const stream_limit = 256 * 1024 * 1024;
-/// The step budget a host application gives one guest invocation. Host guests
-/// parse and render whole documents, so it is far above an ordinary `run`.
+/// The step budget a host application gives one guest invocation that carries
+/// instruction accounting. Host guests parse and render whole documents, so it
+/// is far above an ordinary `run`.
 pub const step_budget = "--max-steps=100000000";
+/// The call-depth ceiling a host application gives one guest invocation. It is
+/// the number of frame slots the runtime tracks for an unbounded run anyway, so
+/// naming it costs neither address space nor a wider execution stack, and it
+/// turns runaway recursion into a deterministic `R_FRAME_LIMIT`.
+pub const frame_budget = "--max-frames=1024";
+/// The wall-clock ceiling a host application gives one guest invocation. One
+/// armed monotonic timer at start-up bounds a guest that counts no
+/// instructions; it is the runaway guard that instruction accounting used to
+/// be, at no measurable cost to an honest render.
+pub const wall_clock_budget = "--timeout=60";
+/// What one host application asks the runtime to enforce on its guest, and
+/// therefore the accounting that guest's build must carry. Instruction
+/// accounting triples the render time of an optimized guest, so a host that
+/// does not need an exact instruction ceiling chooses `.frames`.
+pub const Accounting = enum {
+    /// Count instructions: build with `--step-accounting` and run under
+    /// `step_budget`, which a guest without that accounting would refuse.
+    steps,
+    /// Count call depth only: build with `frame_budget`, and bound one
+    /// invocation with that ceiling and the wall clock. The byte ceiling and
+    /// the native stack floor stay in force either way.
+    frames,
+    /// The runtime ceilings that match this policy. One invocation is bounded
+    /// by exactly what its build can enforce, so a host can never hand a guest
+    /// a ceiling whose accounting the build dropped.
+    pub fn bounds(self: Accounting) []const []const u8 {
+        return switch (self) {
+            .steps => &.{step_budget},
+            .frames => &.{ frame_budget, wall_clock_budget },
+        };
+    }
+};
 /// Private per-invocation build products and transport files.
 const Files = struct {
     allocator: std.mem.Allocator,
@@ -39,17 +72,25 @@ pub const Request = struct {
     provider: []const u8,
     build: BuildOptions = .{},
 };
-/// Native backend selected by an embedding host.
+/// Native backend selected by an embedding host. `.qbe` pins QBE and names the
+/// tool; `.llvm` asks the driver for the release code generator and pins no
+/// assembler, so the driver's own backend policy decides the rest.
 pub const Backend = enum { qbe, llvm };
+/// Controls for the qualified LLVM adapter. A null value leaves the driver's
+/// own default in place rather than restating it here.
+pub const Llvm = struct {
+    adapter: ?[]const u8 = null,
+    optimization: ?[]const u8 = null,
+    lto: bool = false,
+};
 /// Native guest build controls shared by host applications.
 pub const BuildOptions = struct {
     cache: ?[]const u8 = null,
     qbe: []const u8 = "qbe",
     zig: []const u8 = "zig",
     backend: Backend = .qbe,
-    llvm_adapter: ?[]const u8 = null,
-    llvm_opt: ?[]const u8 = null,
-    lto: bool = false,
+    llvm: Llvm = .{},
+    accounting: Accounting = .steps,
     /// Apply these controls to one project and trusted provider.
     pub fn request(self: BuildOptions, project: []const u8, provider: []const u8) Request {
         return .{ .project = project, .provider = provider, .build = self };
@@ -88,14 +129,12 @@ pub const Program = struct {
         const source = try self.file("provider.c");
         try self.write(source, request.provider);
         const entry = try std.fs.path.join(self.allocator, &.{ try files.absolute(request.project), "main.my" });
-        // Every invocation runs the guest under `step_budget`, so the guest must
-        // carry the accounting that enforces it.
         var arguments: std.ArrayList([]const u8) = .empty;
         try arguments.appendSlice(self.allocator, &.{
-            entry,               "--project", "--provider",                                          source,  "-o",                                                  self.path, "--cache-dir", cache,
-            "--step-accounting", "--qbe",     located(self.io, request.build.qbe, "qbe", tools.qbe), "--zig", located(self.io, request.build.zig, "zig", tools.zig),
+            entry,   "--project",                                           "--provider", source, "-o", self.path, "--cache-dir", cache,
+            "--zig", located(self.io, request.build.zig, "zig", tools.zig),
         });
-        try arguments.appendSlice(self.allocator, try backendArguments(self.allocator, self.io, request));
+        try arguments.appendSlice(self.allocator, try policyArguments(self.allocator, self.io, request.build));
         const status = try qbe_build.run(process, arguments.items);
         if (status != 0) return error.NativeToolFailed;
     }
@@ -143,21 +182,32 @@ pub const Program = struct {
         return outcome(result.stdout);
     }
 };
-fn backendArguments(allocator: std.mem.Allocator, io: std.Io, request: Request) Error![]const []const u8 {
-    if (request.build.backend == .qbe) return &.{};
+/// The build arguments that carry one host's policy: which accounting the guest
+/// must enforce, and which code generator produces it. Only a QBE build names
+/// `--qbe`, because an explicit assembler pins the backend the driver would
+/// otherwise resolve from the optimize mode.
+fn policyArguments(allocator: std.mem.Allocator, io: std.Io, build: BuildOptions) Error![]const []const u8 {
     var args: std.ArrayList([]const u8) = .empty;
+    switch (build.accounting) {
+        .steps => try args.append(allocator, "--step-accounting"),
+        .frames => try args.append(allocator, frame_budget),
+    }
+    if (build.backend == .qbe) {
+        try args.appendSlice(allocator, &.{ "--qbe", located(io, build.qbe, "qbe", tools.qbe) });
+        return args.toOwnedSlice(allocator);
+    }
     try args.appendSlice(allocator, &.{ "--backend", "llvm" });
-    if (request.build.llvm_adapter) |path| {
+    if (build.llvm.adapter) |path| {
         try args.appendSlice(allocator, &.{ "--llvm-adapter", path });
     } else if (!installedAdapter(allocator, io)) {
         try args.appendSlice(allocator, &.{ "--llvm-adapter", tools.llvm_adapter });
     }
-    if (request.build.llvm_opt) |opt| try args.appendSlice(allocator, &.{ "--llvm-opt", opt });
-    if (request.build.lto) try args.append(allocator, "--lto");
+    if (build.llvm.optimization) |opt| try args.appendSlice(allocator, &.{ "--llvm-opt", opt });
+    if (build.llvm.lto) try args.append(allocator, "--lto");
     return args.toOwnedSlice(allocator);
 }
 fn validateBuild(build: BuildOptions) error{InvalidBuildConfiguration}!void {
-    if (build.backend == .qbe and (build.llvm_adapter != null or build.llvm_opt != null or build.lto)) return error.InvalidBuildConfiguration;
+    if (build.backend == .qbe and (build.llvm.adapter != null or build.llvm.optimization != null or build.llvm.lto)) return error.InvalidBuildConfiguration;
 }
 fn installedAdapter(allocator: std.mem.Allocator, io: std.Io) bool {
     const executable = std.Io.Dir.cwd().realPathFileAlloc(io, "/proc/self/exe", allocator) catch return false;
@@ -200,20 +250,38 @@ pub fn outcome(stdout: []const u8) error{InvalidGuestResult}!i64 {
 }
 
 test "QBE host builds reject LLVM-only controls" {
-    try std.testing.expectError(error.InvalidBuildConfiguration, validateBuild(.{ .llvm_opt = "3" }));
-    try std.testing.expectError(error.InvalidBuildConfiguration, validateBuild(.{ .lto = true }));
-    try validateBuild(.{ .backend = .llvm, .llvm_opt = "3", .lto = true });
+    try std.testing.expectError(error.InvalidBuildConfiguration, validateBuild(.{ .llvm = .{ .optimization = "3" } }));
+    try std.testing.expectError(error.InvalidBuildConfiguration, validateBuild(.{ .llvm = .{ .lto = true } }));
+    try validateBuild(.{ .backend = .llvm, .llvm = .{ .optimization = "3", .lto = true } });
 }
 
+/// One policy's build arguments as a single string, for the assertions below.
+fn joinedPolicy(allocator: std.mem.Allocator, build: BuildOptions) ![]const u8 {
+    const args = try policyArguments(allocator, std.testing.io, build);
+    defer allocator.free(args);
+    return std.mem.join(allocator, " ", args);
+}
+
+// spec: HOST-GUEST-POLICY-1
+test "a host names its guest's accounting and pins an assembler only for QBE" {
+    const allocator = std.testing.allocator;
+    const bounded_qbe = try joinedPolicy(allocator, .{ .qbe = "/tools/qbe" });
+    defer allocator.free(bounded_qbe);
+    try std.testing.expectEqualStrings("--step-accounting --qbe /tools/qbe", bounded_qbe);
+    const release = try joinedPolicy(allocator, .{ .backend = .llvm, .accounting = .frames, .llvm = .{ .adapter = "/adapter.py", .optimization = "3" } });
+    defer allocator.free(release);
+    try std.testing.expectEqualStrings("--max-frames=1024 --backend llvm --llvm-adapter /adapter.py --llvm-opt 3", release);
+    try std.testing.expectEqualDeep(@as([]const []const u8, &.{step_budget}), Accounting.steps.bounds());
+    try std.testing.expectEqualDeep(@as([]const []const u8, &.{ frame_budget, wall_clock_budget }), Accounting.frames.bounds());
+}
+
+// spec-case: HOST-GUEST-POLICY-1
 test "an explicit host LLVM adapter carries optimization and LTO to the driver" {
     const allocator = std.testing.allocator;
-    const args = try backendArguments(allocator, std.testing.io, .{
-        .project = "project",
-        .provider = "provider",
-        .build = .{ .backend = .llvm, .llvm_adapter = "/adapter.py", .llvm_opt = "3", .lto = true },
+    const joined = try joinedPolicy(allocator, .{
+        .backend = .llvm,
+        .llvm = .{ .adapter = "/adapter.py", .optimization = "3", .lto = true },
     });
-    defer allocator.free(args);
-    const joined = try std.mem.join(allocator, " ", args);
     defer allocator.free(joined);
-    try std.testing.expectEqualStrings("--backend llvm --llvm-adapter /adapter.py --llvm-opt 3 --lto", joined);
+    try std.testing.expectEqualStrings("--step-accounting --backend llvm --llvm-adapter /adapter.py --llvm-opt 3 --lto", joined);
 }

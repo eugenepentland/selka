@@ -1,0 +1,6 @@
+{
+ "runner-before": {"kind": "runner", "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-before/bin/schematic-svg", "project": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/guest", "args": []},
+ "runner-after": {"kind": "runner", "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-after/bin/schematic-svg", "project": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/guest", "args": []},
+ "runner-after-qbe": {"kind": "runner", "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-after/bin/schematic-svg", "project": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/guest", "args": ["--backend", "qbe"]},
+ "runner-after-lto": {"kind": "runner", "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-after/bin/schematic-svg", "project": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/guest", "args": ["--lto"]}
+}

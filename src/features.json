@@ -612,6 +612,11 @@
       "summary": "`--max-steps=N` and `--max-frames=N` impose opt-in instruction and call-depth ceilings on an otherwise unbounded guest run, and each trap names the flag that raises it.",
       "doc": "docs/tooling/runtime-budgets.md#instruction-and-frame-budgets"
     },
+    "host-application-guest-bounds": {
+      "kind": "tooling",
+      "summary": "A host application bounds its guest with the ceilings its build can enforce: `schematic-svg` renders under a call-depth and wall-clock ceiling with no instruction accounting, and `--bounded` restores the instruction ceiling.",
+      "doc": "docs/tooling/runtime-budgets.md#host-application-guests"
+    },
     "memory-bounded-test-fanout": {
       "kind": "tooling",
       "summary": "A directory test run sizes its worker pool from free memory as well as cores, with --jobs and MYLANG_JOBS to override it.",
