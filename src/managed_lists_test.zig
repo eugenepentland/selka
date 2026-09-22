@@ -58,7 +58,7 @@ test "bytecode rejects managed metadata on a shape that cannot own storage" {
 // spec: GC-SOURCE-1
 test "managed aliases mutate immutable bindings across helpers without allocator authority" {
     const source =
-        \\def change(values: list[i64]):
+        \\def change(values: mut list[i64]):
         \\    values.append(40)
         \\    values[0u64] = 42
         \\
@@ -66,7 +66,7 @@ test "managed aliases mutate immutable bindings across helpers without allocator
         \\def main() -> i64:
         \\    values: list[i64] = []
         \\    alias = values
-        \\    change(alias)
+        \\    change(mut alias)
         \\    if len(values) != 1:
         \\        return 1
         \\    return values[0u64]
@@ -113,14 +113,15 @@ test "managed intermediate call arguments and record snapshots survive collectio
         \\    return values
         \\
         \\
-        \\def consume(first: Holder, second: list[i64]) -> i64:
+        \\def consume(first: Holder, second: mut list[i64]) -> i64:
         \\    second.append(9)
         \\    values = first.values
         \\    return values[0u64]
         \\
         \\
         \\def main() -> i64:
-        \\    return consume(Holder(values=make()), [])
+        \\    scratch: list[i64] = []
+        \\    return consume(Holder(values=make()), mut scratch)
     ;
     try t.expectEqual(@as(i64, 42), (try execute(source)).value);
 }
@@ -163,12 +164,12 @@ test "noalloc rejects transitive managed allocation while permitting fixed-slot 
         defer t.allocator.free(create_source);
         try reject(create_source, "E_EFFECT_BOUND");
         const append_source = try std.fmt.allocPrint(t.allocator,
-            \\def grow(values: list[i64]) -> None:
+            \\def grow(values: mut list[i64]) -> None:
             \\    values.append(42)
             \\
             \\
-            \\def constrained(values: list[i64]) -> None {s}:
-            \\    grow(values)
+            \\def constrained(values: mut list[i64]) -> None {s}:
+            \\    grow(mut values)
             \\
             \\
             \\def main() -> i64:
@@ -179,19 +180,19 @@ test "noalloc rejects transitive managed allocation while permitting fixed-slot 
         try reject(append_source, "E_EFFECT_BOUND");
     }
     const source =
-        \\def fixed(values: list[i64]) -> None effects(mutation) mutates(values):
+        \\def fixed(values: mut list[i64]) -> None effects(mutation):
         \\    values[0u64] = 42
         \\
         \\
-        \\def inspect(values: list[i64]) -> i64 effects(mutation) mutates(values):
-        \\    fixed(values)
+        \\def inspect(values: mut list[i64]) -> i64 effects(mutation):
+        \\    fixed(mut values)
         \\    return values[0u64]
         \\
         \\
         \\def main() -> i64:
         \\    values: list[i64] = []
         \\    values.append(0)
-        \\    return inspect(values)
+        \\    return inspect(mut values)
     ;
     try t.expectEqual(@as(i64, 42), (try execute(source)).value);
 }
