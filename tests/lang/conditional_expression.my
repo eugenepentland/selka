@@ -25,6 +25,10 @@ def describe(value: int) -> int:
     return value + 1
 
 
+def lookup(found: bool) -> Option[int]:
+    return Some(7) if found else None
+
+
 # spec-case: CONDITIONAL-EXPR-3
 public def test_only_the_chosen_arm_is_evaluated() -> bool:
     return (42 if True else fails()) == 42
@@ -64,9 +68,9 @@ public def test_a_conditional_selects_between_record_values() -> bool:
     return point.x == 532
 
 
-# spec-case: CONDITIONAL-EXPR-4
+# spec-case: CONDITIONAL-EXPR-2
 public def test_a_conditional_selects_by_an_expected_option_type() -> bool:
-    found = Some(7) if True else None
+    found: Option[int] = Some(7) if True else None
     match found:
         case Some(index):
             return index == 7
@@ -77,3 +81,12 @@ public def test_a_conditional_selects_by_an_expected_option_type() -> bool:
 # spec-case: CONDITIONAL-EXPR-3
 public def test_a_conditional_expression_forwards_its_condition_to_a_helper() -> bool:
     return scaled(21, True) == 42
+
+
+# spec-case: CONDITIONAL-EXPR-2
+public def test_a_conditional_return_takes_its_arm_type_from_the_return_type() -> bool:
+    match lookup(True):
+        case Some(index):
+            return index == 7
+        case None:
+            return False
