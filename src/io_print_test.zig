@@ -127,7 +127,7 @@ test "IO-6 the native backend lowers print through generated per-type renderers"
     defer compilation.deinit();
     const manifest = try compilation.emitQbe(t.allocator);
     defer t.allocator.free(manifest);
-    for ([_][]const u8{ "myl_qbe_stream_begin", "myl_qbe_stream_finish", "myl_qbe_print_raw", "myl_print_dictionary", "myl_print_bytes", "myl_print_record", "myl_print_variant", "myl_print_float" }) |symbol| {
+    for ([_][]const u8{ "myl_qbe_stream_begin", "myl_qbe_stream_finish", "myl_qbe_print_raw", "myl_print_dictionary", "myl_print_bytes", "myl_print_class", "myl_print_variant", "myl_print_float" }) |symbol| {
         try t.expect(std.mem.indexOf(u8, manifest, symbol) != null);
     }
     // Case spellings and field names travel in the generated renderers.

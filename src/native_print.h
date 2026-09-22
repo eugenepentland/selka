@@ -4,6 +4,10 @@
 /* Python-style rendering of native values for `print`. One growable line buffer
    collects a whole call, so a refused write never leaves half a line behind. */
 typedef struct { unsigned char *bytes; size_t length, capacity; int failed, unprintable; } MylPrint;
+/* Every renderer takes the address of the value's own slot: the bytes of an
+   inline value, or the one word that holds a collection's or a class's pointer.
+   A container therefore hands each renderer the address of the element, field
+   or payload slot unchanged, whatever the element's type. */
 typedef void (*MylPrintFn)(MylPrint *, const void *, unsigned depth);
 /* One record field or variant case: its byte offset, renderer (NULL for a case
    without a payload), declared spelling and, for a case, its tag. */
@@ -24,11 +28,11 @@ void myl_print_float(MylPrint *out, const void *value, unsigned depth);
 void myl_print_text(MylPrint *out, const void *value, unsigned depth);
 void myl_print_bytes(MylPrint *out, const void *value, unsigned depth);
 void myl_print_list(MylPrint *out, const void *value, unsigned depth, MylPrintFn element);
-void myl_print_list_ref(MylPrint *out, const void *value, unsigned depth, MylPrintFn element);
 void myl_print_dictionary(MylPrint *out, const void *value, unsigned depth, MylPrintFn key, MylPrintFn item);
-void myl_print_dictionary_ref(MylPrint *out, const void *value, unsigned depth, MylPrintFn key, MylPrintFn item);
 void myl_print_array(MylPrint *out, const void *value, unsigned depth, size_t count, size_t stride, MylPrintFn element);
 void myl_print_record(MylPrint *out, const void *value, unsigned depth, const char *name, const MylPrintField *fields, size_t count);
+/* A class renders like a record whose fields live behind the pointer in `slot`. */
+void myl_print_class(MylPrint *out, const void *slot, unsigned depth, const char *name, const MylPrintField *fields, size_t count);
 /* A tuple renders as its bracketed elements; the field spellings are ignored. */
 void myl_print_tuple(MylPrint *out, const void *value, unsigned depth, const MylPrintField *elements, size_t count);
 void myl_print_domain(MylPrint *out, const void *value, unsigned depth, const char *name, MylPrintFn inner);

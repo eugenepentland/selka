@@ -186,19 +186,6 @@ void myl_print_list(MylPrint *out, const void *value, unsigned depth, MylPrintFn
     }
     byte(out, ']');
 }
-void myl_print_list_ref(MylPrint *out, const void *value, unsigned depth, MylPrintFn element) {
-    if (myl_print_deep(out, depth)) return;
-    myl_native_list *list;
-    memcpy(&list, value, sizeof list);
-    byte(out, '[');
-    for (size_t i = 0; i < list->length; ++i) {
-        if (i) literal(out, ", ");
-        const void *item;
-        memcpy(&item, (const unsigned char *)list->storage + i * list->element->size, sizeof item);
-        element(out, item, depth + 1);
-    }
-    byte(out, ']');
-}
 void myl_print_dictionary(MylPrint *out, const void *value, unsigned depth, MylPrintFn key, MylPrintFn item) {
     if (myl_print_deep(out, depth)) return;
     myl_native_dictionary *dict;
@@ -214,22 +201,6 @@ void myl_print_dictionary(MylPrint *out, const void *value, unsigned depth, MylP
     byte(out, '}');
 }
 
-void myl_print_dictionary_ref(MylPrint *out, const void *value, unsigned depth, MylPrintFn key, MylPrintFn item) {
-    if (myl_print_deep(out, depth)) return;
-    myl_native_dictionary *dict;
-    memcpy(&dict, value, sizeof dict);
-    byte(out, '{');
-    for (size_t i = 0; i < dict->entries->length; ++i) {
-        const unsigned char *entry = (const unsigned char *)dict->entries->storage + i * dict->entry_type.size;
-        if (i) literal(out, ", ");
-        key(out, entry, depth + 1);
-        literal(out, ": ");
-        const void *element_value;
-        memcpy(&element_value, entry + dict->value_offset, sizeof element_value);
-        item(out, element_value, depth + 1);
-    }
-    byte(out, '}');
-}
 void myl_print_array(MylPrint *out, const void *value, unsigned depth, size_t count, size_t stride, MylPrintFn element) {
     if (myl_print_deep(out, depth)) return;
     byte(out, '[');
@@ -250,6 +221,11 @@ void myl_print_record(MylPrint *out, const void *value, unsigned depth, const ch
         fields[i].render(out, (const unsigned char *)value + fields[i].offset, depth + 1);
     }
     byte(out, ')');
+}
+void myl_print_class(MylPrint *out, const void *slot, unsigned depth, const char *name, const MylPrintField *fields, size_t count) {
+    const void *body;
+    memcpy(&body, slot, sizeof body);
+    myl_print_record(out, body, depth, name, fields, count);
 }
 void myl_print_tuple(MylPrint *out, const void *value, unsigned depth, const MylPrintField *elements, size_t count) {
     if (myl_print_deep(out, depth)) return;
