@@ -1,0 +1,14 @@
+[
+  {
+    "path": "workbench.json",
+    "sha256": "ec30057af89f51e40e75adbe4d793645f7e26bca0695d9c04755e1ce62c3add3"
+  },
+  {
+    "path": "README.md",
+    "sha256": "a276480bfc060a678f8f95eb79d5be090f5132bd0dd2be5a89615d2903a5435b"
+  },
+  {
+    "path": "AGENTS.md",
+    "sha256": "bfa4ef3ed90db50ff6b1a73c83946a0e24f5b643ee02cedf47efdbe0f1c727e2"
+  }
+]

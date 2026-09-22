@@ -1,0 +1,1 @@
+build-app: built diagnostics=/tmp/pcb-warm-gate-20260921/workbench/.workbench/results/build-b50188fcb7dfe23f9130bfe116b0b7e06affdb196efa77614c277e791edfe4a9.LtPrjj/diagnostics.log stdout=/tmp/pcb-warm-gate-20260921/workbench/.workbench/results/build-b50188fcb7dfe23f9130bfe116b0b7e06affdb196efa77614c277e791edfe4a9.LtPrjj/stdout.log

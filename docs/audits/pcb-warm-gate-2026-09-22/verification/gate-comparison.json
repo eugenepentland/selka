@@ -1,0 +1,62 @@
+[
+  {
+    "label": "release-first",
+    "seconds": 183.4918947069964,
+    "counts": {
+      "passed": 400,
+      "cached": 0,
+      "failed": 0,
+      "executed": 400
+    }
+  },
+  {
+    "label": "release-warm-1",
+    "seconds": 1.6240688279940514,
+    "counts": {
+      "passed": 0,
+      "cached": 400,
+      "failed": 0,
+      "executed": 0
+    }
+  },
+  {
+    "label": "debug-warm-1",
+    "seconds": 7.137770631001331,
+    "counts": {
+      "passed": 0,
+      "cached": 400,
+      "failed": 0,
+      "executed": 0
+    }
+  },
+  {
+    "label": "release-warm-2",
+    "seconds": 0.8478372100071283,
+    "counts": {
+      "passed": 0,
+      "cached": 400,
+      "failed": 0,
+      "executed": 0
+    }
+  },
+  {
+    "label": "debug-warm-2",
+    "seconds": 7.188469319007709,
+    "counts": {
+      "passed": 0,
+      "cached": 400,
+      "failed": 0,
+      "executed": 0
+    }
+  },
+  {
+    "label": "release-warm-3",
+    "seconds": 0.8536418360017706,
+    "counts": {
+      "passed": 0,
+      "cached": 400,
+      "failed": 0,
+      "executed": 0
+    }
+  }
+]

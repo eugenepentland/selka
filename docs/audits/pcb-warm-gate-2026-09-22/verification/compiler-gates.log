@@ -1,0 +1,1646 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e: 22/393 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 10 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 8 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1446 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e, 22 file(s) in scope
+guardian: diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e: 22/393 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 10 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 8 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1446 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e, 22 file(s) in scope
+guardian: diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e: 22/393 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 10 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 8 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1446 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e, 22 file(s) in scope
+guardian: diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e: 22/393 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 10 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 8 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1446 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e, 22 file(s) in scope
+guardian: diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e: 22/393 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 10 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 8 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1446 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e, 22 file(s) in scope
+guardian: diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e: 22/393 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 10 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 8 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1446 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e, 22 file(s) in scope
+native heap tests passed
+hint table and classifier agree on 16 forms
+test_fixture_carries_exactly_the_pinned_record_shape (__main__.FixtureShapeTests.test_fixture_carries_exactly_the_pinned_record_shape) ... ok
+test_classifier_rows_that_need_no_source_text_still_name_codes (__main__.SessionReplayTests.test_classifier_rows_that_need_no_source_text_still_name_codes) ... ok
+test_idiom_table_totals_the_code_table (__main__.SessionReplayTests.test_idiom_table_totals_the_code_table) ... ok
+test_replay_yields_the_four_named_repair_rounds (__main__.SessionReplayTests.test_replay_yields_the_four_named_repair_rounds) ... ok
+test_the_two_free_diagnostics_attribute_zero_rounds (__main__.SessionReplayTests.test_the_two_free_diagnostics_attribute_zero_rounds) ... ok
+test_union_comma_syntax_stays_unclassified_instead_of_guessing (__main__.SessionReplayTests.test_union_comma_syntax_stays_unclassified_instead_of_guessing) ... ok
+test_only_the_next_pass_is_needed_per_failing_record (__main__.WindowAndOptionTests.test_only_the_next_pass_is_needed_per_failing_record) ... ok
+test_top_limits_each_table_and_json_is_one_document (__main__.WindowAndOptionTests.test_top_limits_each_table_and_json_is_one_document) ... ok
+test_truncated_line_is_skipped_rather_than_fatal (__main__.WindowAndOptionTests.test_truncated_line_is_skipped_rather_than_fatal) ... ok
+test_warning_severity_never_seeds_a_round (__main__.WindowAndOptionTests.test_warning_severity_never_seeds_a_round) ... ok
+test_window_parameter_decides_whether_a_late_pass_counts (__main__.WindowAndOptionTests.test_window_parameter_decides_whether_a_late_pass_counts) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.429s
+
+OK
+hint table and classifier agree on 16 forms
+probes print the hinted message, span and accepted spelling
+doc-coverage: 168 documented features (111 language, 57 tooling) across 48 pages
+  docs/arenas.md: 1
+  docs/byte-io-bulk.md: 1
+  docs/bytes.md: 5
+  docs/c-ffi.md: 3
+  docs/const-length-generics.md: 1
+  docs/diagnostic-recovery.md: 1
+  docs/effects.md: 8
+  docs/experiments/incremental-contract.md: 4
+  docs/floating-point.md: 2
+  docs/functions.md: 8
+  docs/generic-inference.md: 2
+  docs/generics.md: 5
+  docs/integer-operations.md: 4
+  docs/io.md: 9
+  docs/lambdas.md: 1
+  docs/managed-memory.md: 10
+  docs/match-expressions.md: 1
+  docs/module-constants.md: 2
+  docs/modules.md: 6
+  docs/performance.md: 2
+  docs/python-syntax.md: 2
+  docs/range-iteration.md: 1
+  docs/records-and-unions.md: 9
+  docs/reference.md: 1
+  docs/results-and-options.md: 8
+  docs/source-evaluation.md: 1
+  docs/standard-library.md: 12
+  docs/statements.md: 5
+  docs/structured-loop-exits.md: 1
+  docs/text.md: 6
+  docs/tooling/agent-context.md: 1
+  docs/tooling/agent-tools.md: 1
+  docs/tooling/api-diff.md: 1
+  docs/tooling/byte-runner.md: 3
+  docs/tooling/caches.md: 6
+  docs/tooling/documentation-gate.md: 2
+  docs/tooling/guest-tests.md: 11
+  docs/tooling/import-policy.md: 2
+  docs/tooling/invocation.md: 1
+  docs/tooling/lint.md: 1
+  docs/tooling/native-build.md: 1
+  docs/tooling/navigation.md: 4
+  docs/tooling/packages.md: 1
+  docs/tooling/runtime-budgets.md: 4
+  docs/tooling/work-report.md: 3
+  docs/type-aliases.md: 1
+  docs/typed-holes.md: 2
+  docs/typed-json.md: 1
+doc-coverage: 12 standard modules, 168 exports named in docs/standard-library.md
+doc-coverage: 0 failures
+aggregate_refs.my:56:5: warning[W_MUTATES_MISSING]: this function writes `items` (parameter 1) reachable from the caller; declare `mutates(items)`
+      items.append(Point(x=100, y=200))
+      ^
+python_variants.my:105:27: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+                  case Some(_found):
+                            ^
+cached aggregate_refs::test_a_copy_returned_from_a_large_array_parameter_leaves_the_argument_alone
+cached aggregate_refs::test_a_field_write_inside_a_callee_leaves_the_callers_value_alone
+cached aggregate_refs::test_a_large_array_parameter_is_read_where_it_lives_across_many_calls
+cached aggregate_refs::test_a_large_array_parameter_survives_deep_recursion_and_a_relay
+cached aggregate_refs::test_a_match_payload_bound_from_a_record_local_keeps_the_local_intact
+cached aggregate_refs::test_a_record_read_from_a_list_argument_keeps_its_value_across_a_write
+cached aggregate_refs::test_a_record_returned_from_a_generic_body_keeps_its_value
+cached aggregate_refs::test_a_returned_record_passed_straight_into_another_call
+cached aggregate_refs::test_a_returned_record_stored_into_a_local_carries_its_fields
+cached aggregate_refs::test_a_returned_union_payload_reaches_the_caller_unchanged
+cached aggregate_refs::test_a_returning_path_still_returns_its_record_next_to_a_trapping_one
+cached aggregate_refs::test_a_written_record_parameter_leaves_the_callers_value_alone
+cached compiler___precedence_grouping_left_associativity_and_o::test_precedence_grouping_left_associativity_and_o_1
+cached compiler___precedence_grouping_left_associativity_and_o_2::test_precedence_grouping_left_associativity_and_o_2
+cached compiler___precedence_grouping_left_associativity_and_o_3::test_precedence_grouping_left_associativity_and_o_3
+cached compiler___precedence_grouping_left_associativity_and_o_4::test_precedence_grouping_left_associativity_and_o_4
+cached compiler___precedence_grouping_left_associativity_and_o_5::test_precedence_grouping_left_associativity_and_o_5
+cached compiler___signed_division_and_remainder_implement_trun::test_signed_division_and_remainder_implement_trun_1
+cached compiler___signed_division_and_remainder_implement_trun_2::test_signed_division_and_remainder_implement_trun_2
+cached compiler___signed_division_and_remainder_implement_trun_3::test_signed_division_and_remainder_implement_trun_3
+cached compiler___signed_division_and_remainder_implement_trun_4::test_signed_division_and_remainder_implement_trun_4
+cached compiler___signed_division_and_remainder_implement_trun_5::test_signed_division_and_remainder_implement_trun_5
+cached compiler___signed_division_and_remainder_implement_trun_6::test_signed_division_and_remainder_implement_trun_6
+cached compiler___signed_division_and_remainder_implement_trun_7::test_signed_division_and_remainder_implement_trun_7
+cached compiler___signed_division_and_remainder_implement_trun_8::test_signed_division_and_remainder_implement_trun_8
+cached const_lengths___const_length_function_parameters_specialize::test_const_length_function_parameters_specialize
+cached const_lengths___one_helper_serves_distinct_nominal_element_t::test_one_helper_serves_distinct_nominal_element_t
+cached float_operations___ordinary_float_values_reach_the_same_binary6::test_ordinary_float_values_reach_the_same_binary6
+cached python_syntax___match_merges_definite_assignment_across_cont::test_match_merges_definite_assignment_across_cont_1
+cached python_syntax___match_merges_definite_assignment_across_cont_2::test_match_merges_definite_assignment_across_cont_2
+cached python_syntax___py_scope_1_predeclared_loop_state_and_comple::test_py_scope_1_predeclared_loop_state_and_comple_1
+cached python_syntax___py_scope_1_predeclared_loop_state_and_comple_2::test_py_scope_1_predeclared_loop_state_and_comple_2
+cached python_syntax___py_scope_1_predeclared_loop_state_and_comple_3::test_py_scope_1_predeclared_loop_state_and_comple_3
+cached python_syntax___py_scope_1_predeclared_loop_state_and_comple_4::test_py_scope_1_predeclared_loop_state_and_comple_4
+cached python_syntax___py_scope_1_predeclared_loop_state_and_comple_5::test_py_scope_1_predeclared_loop_state_and_comple_5
+cached python_syntax___py_scope_1_predeclared_loop_state_and_comple_6::test_py_scope_1_predeclared_loop_state_and_comple_6
+cached python_syntax___python_generic_value_records_use_square_cons::test_python_generic_value_records_use_square_cons
+cached python_syntax___python_generics_default_to_copy_and_none_mea::test_python_generics_default_to_copy_and_none_mea
+cached python_syntax___record_is_the_canonical_declaration_head_wit::test_record_is_the_canonical_declaration_head_wit_1
+cached python_syntax___record_is_the_canonical_declaration_head_wit_2::test_record_is_the_canonical_declaration_head_wit_2
+cached unit___unit_fallthrough_and_early_return_release_ma::test_unit_fallthrough_and_early_return_release_ma
+cached builtin_context::test_builtin_list_and_result_resolve_without_imports_or_explicit_declarations
+cached builtin_context::test_empty_lists_and_ok_err_inherit_binding_return_and_argument_contexts
+cached builtin_context::test_generic_list_result_and_contextual_constructors_keep_symbolic_type_parameters
+cached builtin_context::test_ok_unit_values_preserve_fallible_result_handling
+cached builtin_context::test_record_fields_and_nested_list_elements_propagate_empty_list_context
+cached byte_range_fusion::test_immediate_byte_ranges_use_the_numeric_range_parser
+cached byte_range_fusion::test_omitted_negative_and_clamped_bounds_keep_slice_semantics
+cached byte_ranges_llvm::test_native_byte_range_boundaries_and_scalar_counts
+cached callbacks::test_callbacks_infer_function_values_and_invoke_passed_exact_signatures
+cached callbacks::test_callbacks_invoke_passed_exact_signatures_through_a_parameter
+cached callbacks::test_callbacks_retain_values_through_records_arrays_and_ordinary_generic_forwarding
+cached callbacks::test_callbacks_return_from_a_chooser_and_invoke
+cached callbacks::test_expression_lambdas_read_module_constants
+cached callbacks::test_expression_lambdas_use_an_expected_callback_signature_and_invoke_correctly
+passed callbacks::test_generic_callback_parameters_use_the_same_directional_relation
+passed callbacks::test_stored_and_returned_callbacks_retain_the_destination_effect_contract
+cached dictionary_hash_index::test_a_dictionary_built_and_read_inside_an_arena_escapes_intact
+cached dictionary_hash_index::test_insertion_order_survives_growth_and_pop_rebuilds_the_index
+cached dictionary_hash_index::test_integer_keys_hash_the_bytes_their_equality_compares
+cached dictionary_hash_index::test_large_dictionaries_still_compare_by_content_not_by_index_layout
+cached dictionary_hash_index::test_setdefault_update_clear_and_copy_agree_with_the_index
+cached dictionary_hash_index::test_thousands_of_string_keys_read_write_and_miss_through_the_index
+cached float_environment::test_float_arithmetic_keeps_exact_bits
+cached compiler::test_branches_and_loops_execute_both_outcomes_wit_1
+cached compiler::test_branches_and_loops_execute_both_outcomes_wit_2
+cached compiler::test_branches_and_loops_execute_both_outcomes_wit_3
+cached compiler::test_branches_and_loops_execute_both_outcomes_wit_4
+cached compiler::test_branches_and_loops_execute_both_outcomes_wit_5
+cached compiler::test_branches_and_loops_execute_both_outcomes_wit_6
+cached compiler::test_branches_and_loops_execute_both_outcomes_wit_7
+cached compiler::test_forward_mutual_recursive_and_nested_calls_pr_1
+cached compiler::test_forward_mutual_recursive_and_nested_calls_pr_2
+cached compiler::test_forward_mutual_recursive_and_nested_calls_pr_3
+cached compiler::test_forward_mutual_recursive_and_nested_calls_pr_4
+cached compiler::test_forward_mutual_recursive_and_nested_calls_pr_5
+cached compiler::test_locals_mutation_annotations_and_lexical_scop_1
+cached compiler::test_locals_mutation_annotations_and_lexical_scop_2
+cached compiler::test_locals_mutation_annotations_and_lexical_scop_3
+cached compiler::test_locals_mutation_annotations_and_lexical_scop_4
+cached domain_equality::test_domain_equality_participates_in_generic_equa
+cached effects::test_m2_declared_mutation_permits_direct_writes_a
+cached effects::test_m2_disjoint_managed_argument_types_are_prove
+cached effects::test_m2_fresh_containers_may_be_built_inserted_in
+cached effects::test_m2_generic_helpers_carry_mutation_permission
+cached effects::test_m2_read_only_queries_require_no_mutation_per
+cached effects::test_m2_two_writable_aliases_remain_permitted
+cached generic_arrays::test_generic_arrays_nest_substitute_across_calls_1
+cached generic_arrays::test_generic_arrays_nest_substitute_across_calls_2
+cached generic_arrays::test_generic_fixed_array_length_is_signed_int_lik
+cached generic_inference::test_generic_inference_follows_arrays_nominal_app_1
+cached generic_inference::test_generic_inference_follows_arrays_nominal_app_2
+cached generic_inference::test_generic_inference_follows_arrays_nominal_app_3
+cached generic_inference::test_generic_inference_follows_arrays_nominal_app_4
+cached generic_results::test_generic_try_converts_a_narrower_error_into_a
+cached managed_cell::test_cell_construction_reads_and_replacement_shar_1
+cached managed_cell::test_cell_construction_reads_and_replacement_shar_2
+cached managed_values::test_managed_dictionary_source_literals_indexing_1
+cached managed_values::test_managed_dictionary_source_literals_indexing_2
+cached managed_values::test_managed_dictionary_source_literals_indexing_3
+cached managed_values::test_managed_equality_source_compares_values_rath_1
+cached managed_values::test_managed_equality_source_compares_values_rath_2
+cached managed_values::test_managed_equality_source_compares_values_rath_3
+cached managed_values::test_managed_membership_source_searches_list_valu_1
+cached managed_values::test_managed_membership_source_searches_list_valu_2
+cached managed_values::test_managed_membership_source_searches_list_valu_3
+cached managed_values::test_managed_str_conversion_source_evaluates_argu
+cached managed_values::test_managed_text_source_literals_concat_equality
+cached prelude_builtins::test_a_declared_function_or_binding_keeps_its_own_1
+cached prelude_builtins::test_a_declared_function_or_binding_keeps_its_own_2
+cached prelude_builtins::test_a_declared_function_or_binding_keeps_its_own_3
+cached prelude_builtins::test_a_declared_function_or_binding_keeps_its_own_4
+cached propagation::test_nested_results_can_be_propagated_repeatedly_1
+cached propagation::test_nested_results_can_be_propagated_repeatedly_2
+cached propagation::test_nested_results_can_be_propagated_repeatedly_3
+cached propagation::test_option_propagation_unwraps_some_and_forwards_1
+cached propagation::test_option_propagation_unwraps_some_and_forwards_2
+cached propagation::test_try_unwraps_success_and_remaps_errors_betwee_1
+cached propagation::test_try_unwraps_success_and_remaps_errors_betwee_2
+cached propagation::test_try_wraps_a_mismatched_error_into_the_matchi_1
+cached propagation::test_try_wraps_a_mismatched_error_into_the_matchi_2
+cached python_format::test_an_f_before_anything_but_a_quote_stays_an_or
+cached python_format::test_doubled_braces_are_literal_and_an_empty_form
+cached python_format::test_format_strings_interpolate_expressions_and_r
+cached python_generics::test_explicit_and_inferred_type_arguments_reach_t
+cached python_generics::test_square_type_arguments_select_a_generic_funct
+cached python_surface::test_a_subscript_index_may_begin_with_a_parenthes
+cached python_surface::test_an_intrinsic_name_is_an_ordinary_field_keywo
+cached python_surface::test_bytes_and_float_resolve_wherever_their_names
+cached records::test_record_construction_nesting_named_order_fiel_1
+cached records::test_record_construction_nesting_named_order_fiel_2
+cached records::test_record_construction_nesting_named_order_fiel_3
+cached records::test_record_construction_nesting_named_order_fiel_4
+cached structural_constraints::test_named_constraints_coalesce_alpha_renamed_sub_1
+cached structural_constraints::test_named_constraints_coalesce_alpha_renamed_sub_2
+cached structural_constraints::test_named_constraints_coalesce_alpha_renamed_sub_3
+cached structural_constraints::test_named_constraints_coalesce_nested_callbacks
+cached structural_constraints::test_named_constraints_execute_forward_and_interc
+cached structural_constraints::test_named_constraints_normalize_callbacks_and_fo
+cached structural_constraints::test_named_constraints_normalizeone_and_canonical
+cached structural_constraints::test_named_constraints_substitute_the_subject_thr
+cached structural_constraints::test_structural_fields_execute_multiple_nominal_r
+cached structural_constraints::test_structural_public_domain_operations_execute
+cached surface_collections::test_generic_list_methods_retain_element_type_che
+cached surface_collections::test_list_methods_indexing_and_indexed_assignment
+cached surface_collections::test_record_constructors_without_new_support_gene
+cached surface_statements::test_condition_calls_admit_nested_record_construc
+cached surface_statements::test_nested_generic_record_constructors_retain_li
+cached surface_statements::test_parentheses_spell_unit_types_values_and_bare
+cached surface_statements::test_postfix_question_propagates_success_and_erro_1
+cached surface_statements::test_postfix_question_propagates_success_and_erro_2
+cached surface_statements::test_trailing_call_commas_and_multiline_binary_op_1
+cached surface_statements::test_trailing_call_commas_and_multiline_binary_op_2
+cached surface_statements::test_trailing_call_commas_and_multiline_binary_op_3
+cached nominal_bodies::test_nominal_bodies_construct_project_update_match_and_forward_symbolic_arguments
+cached nominal_bodies::test_nominal_bodies_reuse_concrete_array_identities_created_by_earlier_function_specialization
+cached nominal_instances::test_nominal_instances_compose_with_existing_generic_functions_and_fixed_arrays
+cached nominal_instances::test_nominal_instances_construct_assign_nest_and_exhaustively_match_on_the_vm
+cached nominal_instances::test_nominal_instances_keep_growing_phantom_arguments_outside_runtime_storage
+cached python_arrays::test_a_dict_literal_builds_an_enum_indexed_table_from_qualified_case_keys
+cached python_arrays::test_a_list_literal_builds_a_fixed_array_wherever_the_context_declares_one
+cached python_arrays::test_a_list_literal_without_an_array_context_still_builds_a_managed_list
+cached python_arrays::test_divtrunc_and_remtrunc_round_toward_zero_beside_flooring
+cached python_arrays::test_truncating_helpers_keep_the_full_unsigned_width
+cached python_bytes::test_a_decoded_slice_keeps_clamping_and_invalid_utf8
+cached python_bytes::test_byte_literals_index_slice_concatenate_compare_and_iterate
+cached python_bytes::test_byte_strings_alias_through_helpers_and_survive_collection_stress
+cached python_bytes::test_find_any_clamps_start_and_reads_values_as_a_byte_set
+cached python_bytes::test_find_any_reports_the_first_octet_of_a_set_at_or_after_start
+cached python_bytes::test_find_any_searches_a_two_octet_set_with_one_pass_per_octet
+cached python_bytes::test_find_keeps_its_first_index_answer_for_short_and_long_needles
+cached python_bytes::test_generic_bodies_preserve_managed_byte_string_identities
+cached python_bytes::test_integer_list_text_and_hexadecimal_conversions_round_trip
+cached python_bytes::test_membership_accepts_a_byte_scalar_or_a_contiguous_subsequence
+cached python_bytes::test_split_join_prefix_suffix_search_and_container_storage
+cached python_calls::test_empty_and_positional_record_constructors_resolve_alongside_keyword_functions
+cached python_calls::test_generic_keyword_arguments_bind_out_of_order
+cached python_calls::test_keyword_call_temporaries_remain_rooted_under_gc_stress_and_are_reclaimed
+cached python_calls::test_keyword_calls_evaluate_effects_in_source_order_before_parameter_binding
+cached python_calls::test_keyword_defaults_bind_by_name
+cached python_calls::test_repeated_keyword_calls_bind_independently
+cached python_collections::test_augmented_assignment_applies_each_binding_types_own_operator_rules
+cached python_collections::test_augmented_assignment_writes_a_list_slot_and_a_dictionary_entry_in_place
+cached python_collections::test_contextual_nested_lists_and_receiver_fields
+cached python_collections::test_dictionary_pop_update_and_setdefault_keep_insertion_order
+cached python_collections::test_field_receiver_index_and_right_side_run_once_in_order_under_collection_stress
+cached python_collections::test_field_writeback_preserves_sibling_changes_made_by_its_right_hand_side
+cached python_collections::test_foreach_enumerate_range_and_continue
+cached python_collections::test_generic_bodies_bind_items_key_then_value_in_insertion_order
+cached python_collections::test_generic_lists_preserve_literal_foreach_slice_and_write_element_types
+cached python_collections::test_generic_record_slot_updates_and_list_aliases_remain_copyable
+cached python_collections::test_inferred_literal_indexing_negative_indices_and_append
+cached python_collections::test_list_extends_in_place_and_items_binds_key_then_value_in_insertion_order
+cached python_collections::test_list_index_and_copy_are_read_forms_with_first_occurrence_order
+cached python_collections::test_list_methods_mutate_in_place_with_python_shaped_bounds
+cached python_collections::test_outer_annotated_postfix_expressions_do_not_contaminate_literal_element_inference
+cached python_collections::test_range_end_syntax_agrees_in_constant_and_runtime_evaluation
+cached python_collections::test_record_fields_update_values_and_list_slots_without_changing_prior_copies
+cached python_collections::test_scalar_element_reads_load_every_width_from_backing_storage
+cached python_collections::test_slice_copies_clamps_and_length_uses_signed_index_type
+cached python_collections::test_slice_negative_clamp_empty_and_copy_alias_semantics
+cached python_collections::test_slice_step_selects_every_nth_element_of_a_list_and_of_text_in_both_directions
+cached python_comprehension::test_a_comprehension_accepts_range_as_a_source_in_one_and_two_argument_forms
+cached python_comprehension::test_a_comprehension_maps_one_generator_optionally_filtered_into_a_fresh_list
+cached python_comprehension::test_comprehensions_read_strings_and_dictionaries_and_leave_the_source_unchanged
+cached python_comprehension::test_range_comprehension_capacity_math_preserves_signed_and_unsigned_results
+cached python_core::test_class_is_a_shared_managed_reference_while_record_copies
+cached python_core::test_floating_comparisons_and_remainder_preserve_operand_evaluation_once_in_source_order
+cached python_core::test_floating_literals_operators_and_comparisons_use_numeric_binary64_semantics
+passed python_core::test_omitted_callback_ceilings_are_unbounded_and_unannotated_functions_fill_slots
+cached python_core::test_python_contextual_option_constructors_work_in_generic_functions
+cached python_core::test_python_division_remainder_numeric_conversions_and_generic_numbers
+cached python_core::test_python_indexed_assignment_evaluates_rhs_before_receiver_and_index_exactly_once
+cached python_core::test_python_payloadless_enum_values_use_ordinary_dotted_members
+cached python_core::test_python_string_and_float_defaults_remain_typed_and_independent_across_repeated_calls
+cached python_core::test_unannotated_functions_fill_the_sorted_key_callback_slot
+cached python_split_scalar::test_byte_string_whitespace_split_follows_python
+cached python_split_scalar::test_ord_and_chr_answer_one_unicode_scalar
+cached python_split_scalar::test_separator_split_is_unchanged
+cached python_split_scalar::test_whitespace_split_drops_empty_parts
+cached python_strings::test_search_replacement_and_classification_follow_python_answers
+cached python_strings::test_splitlines_drops_terminators_and_int_float_parse_a_whole_string
+cached python_strings::test_trimming_case_mapping_and_padding_copy_the_receiver_without_changing_it
+cached python_values::test_ascii_scalar_indexing_survives_frame_restores_and_collections
+cached python_values::test_python_values_collection_float_equality_and_membership_preserve_numeric_semantics
+cached python_values::test_python_values_dictionary_and_unicode_text_iteration_preserve_order
+cached python_values::test_python_values_dictionary_literal_growing_aliases_and_arbitrary_method_receivers
+cached python_values::test_python_values_generic_dictionary_preserves_symbolic_value_types
+cached python_values::test_python_values_generic_str_conversion_and_unicode_escapes
+cached python_values::test_python_values_unicode_literals_chained_methods_indexing_and_membership
+cached python_values::test_python_values_unicode_slicing_clamps_endpoints_and_returns_independent_text
+cached python_variants::test_a_generic_parenthesized_case_specializes_with_the_union_arguments
+cached python_variants::test_a_generic_variant_infers_its_type_arguments_from_the_expected_type
+cached python_variants::test_a_named_field_pattern_binds_one_name_per_field_and_discards_with_underscore
+cached python_variants::test_a_parenthesized_case_constructs_positionally_by_name_and_with_defaults
+cached python_variants::test_python_payload_variant_construction_names_the_union_case_like_a_call
+cached python_variants::test_python_payload_variants_nest_flow_through_locals_and_reach_record_fields
+cached rounding::test_round_answers_a_float_and_agrees_with_math_round
+cached rounding::test_round_passes_not_a_number_and_infinities_through
+cached rounding::test_round_sends_halves_away_from_zero_for_both_signs
+cached rounding::test_round_takes_the_nearest_integral_float_off_the_tie
+cached standard_strings::test_chr_builds_one_character_and_round_trips
+cached standard_strings::test_chr_rejects_surrogates_and_out_of_range_code_points
+cached standard_strings::test_ord_reads_unicode_scalar_values
+cached value_equality::test_class_equality_is_reference_identity
+cached value_equality::test_cyclic_class_equality_terminates
+cached value_equality::test_equality_through_a_field_supplies_the_option_type
+cached value_equality::test_record_array_and_nested_equality_is_structural
+cached value_equality::test_union_result_and_option_equality_is_structural
+3 passed, 246 cached, 0 failed, 0 skipped, 0 dropped across 69 programs
+agree  invoke lists::sum_numbers list-numbers.json -> "9"
+agree  invoke lists::sum_numbers list-empty.json -> "0"
+agree  invoke lists::make_numbers list-count.json -> ["0", "1", "2", "3"]
+agree  invoke lists::join_text list-pieces.json -> "abc"
+agree  invoke lists::lengths list-lengths.json -> ["1", "2", "3"]
+agree  invoke lists::bracket_all list-text.json -> ["[hi]", "hi"]
+agree  invoke lists::row_totals list-rows.json -> ["3", "3"]
+agree  invoke lists::scale_rows list-scale-rows.json -> [["10", "20"], ["30"]]
+agree  invoke tool::bracket text-unicode.json -> "[a\u00e9\ud83d\ude00e\u0301]"
+agree  invoke tool::bracket text-nul.json -> "[a\u0000b]"
+agree  invoke tool::bracket text-empty.json -> "[]"
+agree  invoke tool::scale scale.json -> "42"
+agree  invoke tool::answer empty.json -> "42"
+agree  invoke tool::sample_label sample.json -> "7"
+agree  invoke tool::grow grow.json -> {"label": "-9", "span": {"low": "-9", "high": "-18"}, "weigh
+agree  invoke tool::ratio ratio.json -> {"case": "ok", "value": "-9223372036854775807"}
+agree  invoke tool::ratio ratio-error.json -> {"case": "err", "value": "-1"}
+agree  invoke boundary::scalar_argument boundary-scalar.json -> "6"
+agree  invoke boundary::record_argument boundary-span.json -> "1002"
+agree  invoke boundary::codec_round_trip boundary-codec.json -> {"n": "7", "m": "1"}
+agree  invoke boundary::codec_result boundary-codec-result.json -> {"n": "5", "m": "1"}
+agree  invoke boundary::text_round_trip boundary-text.json -> "[hi]"
+agree  invoke boundary::variant_argument boundary-choice.json -> "7"
+agree  invoke boundary::empty_result boundary-empty.json -> {"nothing": []}
+agree  invoke calls::twice call-value.json -> "6"
+agree  invoke calls::quad call-value.json -> "12"
+agree  invoke calls::shifted call-value.json -> "13"
+agree  invoke composed::labels_of buckets-two.json -> ["x", "y"]
+agree  invoke composed::grand_total buckets-two.json -> "6"
+agree  invoke composed::bucket_total bucket-one.json -> "3"
+agree  invoke composed::bucket_labels buckets-two.json -> ["x", "y"]
+agree  invoke composed::totals buckets-two.json -> ["1", "5"]
+agree  invoke composed::make_buckets list-count.json -> [{"label": "b", "values": ["0", "1"]}, {"label": "b", "value
+agree  invoke composed::first_or_none option-some.json -> {"case": "some", "value": "7"}
+agree  invoke composed::first_or_none option-none.json -> {"case": "none"}
+agree  invoke composed::find lookup-hit.json -> {"case": "ok", "value": {"label": "x", "values": ["1"]}}
+agree  invoke composed::find lookup-miss.json -> {"case": "err", "value": "no bucket named z"}
+agree  invoke reading_validator::validate reading-ok.json -> {"case": "ok", "value": {"site": "7", "mean": "15", "spread"
+agree  invoke reading_validator::validate reading-cold.json -> {"case": "err", "value": {"site": "3", "rule": "too_cold", "
+agree  invoke reading_validator::validate reading-unsteady.json -> {"case": "err", "value": {"site": "5", "rule": "unsteady", "
+agree  invoke text_report::summarize text-report.json -> {"scalars": "5", "pieces": "3", "longest": "2", "empty": "1"
+agree  invoke text_report::widths pieces.json -> ["1", "2", "0"]
+agree  invoke text_report::join join.json -> "a|bb|"
+agree  describe lists::sum_numbers -> eligible=True wire=True
+agree  describe lists::join_text -> eligible=True wire=True
+agree  describe lists::row_totals -> eligible=True wire=True
+agree  describe lists::scale_rows -> eligible=True wire=True
+agree  describe tool::bracket -> eligible=True wire=True
+agree  describe tool::grow -> eligible=True wire=True
+agree  describe tool::identity -> eligible=None wire=None
+agree  describe tool::probe_filesystem -> eligible=False wire=False
+agree  describe reading_validator::validate -> eligible=True wire=True
+agree  describe text_report::summarize -> eligible=True wire=True
+agree  describe text_report::join -> eligible=True wire=True
+agree  describe text_report::widths -> eligible=True wire=True
+agree  describe text_report::bracket_all -> eligible=True wire=True
+agree  describe composed::bucket_total -> eligible=True wire=True
+agree  describe composed::bucket_labels -> eligible=True wire=True
+agree  describe composed::totals -> eligible=True wire=True
+agree  describe composed::first_or_none -> eligible=True wire=True
+agree  describe composed::find -> eligible=True wire=True
+agree  describe boundary::codec_round_trip -> eligible=True wire=True
+agree  describe boundary::codec_result -> eligible=True wire=True
+agree  describe boundary::record_argument -> eligible=True wire=True
+agree  describe boundary::variant_argument -> eligible=True wire=True
+agree  describe boundary::large_argument -> eligible=True wire=True
+agree  cases list_boundary.my -> 6 passed, 0 cached, 0 failed, 0 skipped
+agree  cases aggref_arguments.my -> 7 passed, 0 cached, 0 failed, 0 skipped
+native-boundary: 68 case(s) agree across QBE and LLVM
+self-test: the comparator keeps the contract and drops the backend identity
+test
++- run test w
+guardian/test: 115 test(s) selected [shard 10/12 of 1393]
+guardian/test: SLOW  10.51s  semantic_cache_test.test.semantic cache reuses unchanged checked bodies after edits and preserves diagnostics and ownership under allocation failures
+guardian/test: test wall 17.67s; slowest over 50ms:
+guardian/test:   10.51s  semantic_cache_test.test.semantic cache reuses unchanged checked bodies after edits and preserves diagnostics and ownership under allocation failures
+guardian/test:   2.60s  invoke_test.test.an export that calls another function is lowered with its call closure
+guardian/test:   0.83s  stdlib_time_random_test.test.standard time random calls reach the machine only through granted capabilities
+guardian/test:   0.67s  stdlib_path_test.test.standard path helpers need no capability and stay inside a noio ceiling
+guardian/test:   0.51s  semantic_cache_test.test.durable entries isolate every contract dimension and the mutation version
+guardian/test:   0.35s  integers_test.test.inlined shifts wrap within the width and reject out of range counts
+guardian/test:   0.22s  context_test.test.context resolves a position to the innermost declaration or its diagnostic
+guardian/test:   0.20s  semantic_cache_test.test.const-length specialization keys keep identity and nominal generics miss conservatively
+guardian/test:   0.14s  domain_equality_test.test.domain equality compares every scalar backing by value
+guardian/test:   0.10s  compiler_test.test.unary arithmetic and directly negated minimum literal
+guardian/test: PASS — 115 passed
+guardian/test: RESULT {"passed":115,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/16e059f5d9e2f0c1343172d7aa90457e/test --guardian-shard=10/12 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+idiom probes: 57 selected, 50 at target, 7 not yet
+  builtins        12/ 12 at target
+  collections     17/ 19 at target
+  dictionary       6/  6 at target
+  entry-command    1/  1 at target
+  expressions      2/  6 at target
+  program-edge     6/  7 at target
+  removals         6/  6 at target
+
+changed (neither baseline nor target — review these):
+  ternary: /home/epentland/ai/canopy/mylang/tests/fixtures/idioms/ternary.my:3:12: error[E_NOT_IMPLEMENTED]: conditional expressions parse but are not checked yet
+  tuple_swap: /home/epentland/ai/canopy/mylang/tests/fixtures/idioms/tuple_swap.my:4:5: error[E_NOT_IMPLEMENTED]: tuple destructuring parses but is not checked yet
+  is_none: /home/epentland/ai/canopy/mylang/tests/fixtures/idioms/is_none.my:3:10: error[E_OPTION_TEST]: is None requires an Option value
+idiom classifier self-test: 12 passed
+cpython oracle self-test: 5 passed
+  docs/arenas.md: 5 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/agent-usefulness-reports/baseline-2026-09-20.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/agent-usefulness-reports/interface-facts.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/agent-usefulness-reports/invoke-callee-selection.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/agent-usefulness-reports/typed-holes.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/interfaces-and-agent-development-2026-09-15.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/language-level-ssa-2026-09-19.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/language-simplicity-2026-09-12.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: removed feature
+  docs/audits/llvm-backend-qualification-2026-09-20.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/phase2-dir-notes.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/wave1-notes.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/wave2-notes.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/wave3-notes.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/audits/wave4-notes.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/byte-io-bulk.md: 0 run, 0 checked, 2 skipped, 0 mis-tagged, 0 failed
+      skip: fragment: declarations appended to an existing host io.my module
+      skip: needs host capability: the mylang-io byte host and its io.my module
+  docs/bytes.md: 14 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/c-ffi.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/const-length-generics.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/diagnostic-recovery.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/domains.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/effects.md: 8 run, 8 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/arrays.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/callbacks.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/doc-examples.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/module-discovery.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: fragment: header excerpt whose imported modules are not shown
+  docs/experiments/module-interfaces.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: fragment: the imported `shared.units` module is not shown
+  docs/experiments/nominal-template-checks.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/resource-io.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/source-codecs.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: fragment: statements without the Positive domain and Wire declarations
+  docs/experiments/source-resources.md: 0 run, 2 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/structural-constraints.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/tables.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/unit-procedures.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/variants.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/floating-point.md: 3 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/functions.md: 9 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/generic-inference.md: 2 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/generics.md: 5 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/integer-operations.md: 4 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/io.md: 7 run, 7 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/lambdas.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/managed-memory.md: 13 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/match-expressions.md: 1 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/module-constants.md: 1 run, 2 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/modules.md: 6 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/named-constraints-proposal.md: 0 run, 2 checked, 4 skipped, 0 mis-tagged, 0 failed
+      skip: proposed named-constraint syntax
+      skip: proposed named-constraint syntax
+      skip: proposed named-constraint syntax; contracts.my
+      skip: proposed named-constraint syntax; checkout.my
+  docs/performance.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/plan.md: 2 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/python-syntax.md: 9 run, 5 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/range-iteration.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/records-and-unions.md: 10 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/reference.md: 6 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/results-and-options.md: 7 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/source-evaluation.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/standard-library.md: 13 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/standard-time-random.md: 2 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/statements.md: 5 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/structured-loop-exits.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/text.md: 6 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/tooling/import-policy.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/tooling/invocation.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/tooling/invoke.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: library fragment: the bash example below is what calls this export
+  docs/type-aliases.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/typed-holes.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/typed-json.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+Doc examples: 373 files scanned, 901 blocks found, 158 run, 45 checked, 11 skipped, 0 mis-tagged, 0 failed
+test
++- run test w
+guardian/test: 115 test(s) selected [shard 5/12 of 1393]
+guardian/test: test wall 4.75s; slowest over 50ms:
+guardian/test:   0.77s  byte_builder_test.test.standard byte builder preserves snapshots and handles binary text and indentation
+guardian/test:   0.64s  stdlib_strings_test.test.standard string results survive collection at every managed allocation
+guardian/test:   0.58s  propagation_test.test.propagation releases partial aggregate operands and survives every allocation failure
+guardian/test:   0.49s  invoke_test.test.a nested record argument executes through the copied-value adapter
+guardian/test:   0.23s  generic_arrays_test.test.expanding generic array recursion stops at the specialization budget
+guardian/test:   0.19s  managed_lists_test.test.GC-SEGMENT-1 a churn loop reuses reclaimed slots without stale fields
+guardian/test:   0.18s  stdlib_pool_test.test.standard pool handles stay valid across collection of the released values
+guardian/test:   0.15s  python_format_test.test.a native build spells an interpolated aggregate exactly as print writes it
+guardian/test:   0.11s  managed_lists_test.test.managed cycles lose local and record roots on block break and continue exits
+guardian/test:   0.11s  domains_test.test.domain backing types require built-in scalars and exact wrapping types
+guardian/test: PASS — 115 passed
+guardian/test: RESULT {"passed":115,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/16e059f5d9e2f0c1343172d7aa90457e/test --guardian-shard=5/12 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+cached arithmetic::test_comparisons_and_short_circuit
+cached arithmetic::test_division_rounding
+cached arithmetic::test_float_arithmetic
+cached arithmetic::test_float_rounding
+cached arithmetic::test_int_precedence
+cached bytes::test_conversion
+cached bytes::test_indexing_and_slicing
+cached bytes::test_search_and_split
+cached callbacks::test_callbacks
+cached callbacks::test_effect_ceilings
+cached dicts::test_aliases_and_values
+cached dicts::test_insertion_order
+cached dicts::test_membership_and_get
+cached generics::test_generic_functions
+cached generics::test_generic_records
+cached generics::test_generic_results
+cached generics::test_structural_contracts
+cached integers::test_bitwise_and_shifts
+cached integers::test_checked_division
+cached integers::test_extremes
+cached integers::test_saturating_arithmetic
+cached integers::test_width_conversions
+cached integers::test_wrapping_arithmetic
+cached lists::test_comprehension_and_loops
+cached lists::test_growth_and_indexing
+cached lists::test_membership_and_iteration
+cached lists::test_slices
+cached loops::test_comprehension_filter
+cached loops::test_enumerate_and_control
+cached loops::test_range_loops
+cached loops::test_while_and_locals
+cached records::test_arrays_and_tables
+cached records::test_enums
+cached records::test_unions
+cached records::test_value_records
+cached results_options::test_options
+cached results_options::test_parsing_and_conversion
+cached results_options::test_propagation
+cached results_options::test_results
+cached text::test_indexing_and_slicing
+cached text::test_interpolation_and_conversion
+cached text::test_methods
+0 passed, 42 cached, 0 failed, 0 skipped, 0 dropped across 11 programs
+test
++- run test w
+guardian/test: 27 test(s) selected [shard 4/6 of 163]
+guardian/test: test wall 12.14s; slowest over 50ms:
+guardian/test:   2.70s  integration.test.C3s provider body changes stay visible through reused specializations
+guardian/test:   1.27s  integration.test.PURE-SKIP-1 no-cache and force disable pure outcome replay
+guardian/test:   1.19s  integration.test.an executable built without a frame ceiling refuses a runtime frame budget
+guardian/test:   1.12s  integration.test.library modules and bare *_test.my files are valid guest test entries
+guardian/test:   0.90s  integration.test.P1 rejects stronger or malformed replacements and a bad production interface
+guardian/test:   0.79s  integration.test.C4 invalid selected project fails before any green result
+guardian/test:   0.76s  integration.test.CLI invalidation reports actual query work and marks unexecuted stages skipped
+guardian/test:   0.45s  integration.test.CLI forwards guest arguments after -- for run and build --run
+guardian/test:   0.45s  integration.test.CLI handles recoverable results and rejects silent error loss
+guardian/test:   0.30s  integration.test.CLI checks host declarations and refuses to run one with no registration
+guardian/test: PASS — 27 passed
+guardian/test: RESULT {"passed":27,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/9842699841f3f53a63e6737327e4b37e/test --guardian-shard=4/6 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+test
++- run test w
+guardian/test: 115 test(s) selected [shard 7/12 of 1393]
+guardian/test: test wall 8.50s; slowest over 50ms:
+guardian/test:   4.46s  invoke_test.test.a list round-trips through invoke at every shape the codec carries
+guardian/test:   0.78s  native_test_wire.test.a record, an array, a nested record, a zero-length and a large argument round-trip through mylang test
+guardian/test:   0.66s  stdlib_sort_test.test.standard sort orders integers floats and text stably and searches the result
+guardian/test:   0.42s  qbe_build_test.test.a native executable exits with its entry int result truncated to a byte
+guardian/test:   0.35s  interfaces_test.test.module native emission is deterministic and cleans all failed allocations
+guardian/test:   0.30s  domains_test.test.domain factories accessors qualified names and discovery clean up on allocation failure
+guardian/test:   0.13s  reference_test.test.the command reports usage on a malformed request and answers a well-formed one
+guardian/test:   0.10s  prelude_builtins_test.test.round returns the nearest integral float with halves away from zero
+guardian/test:   0.09s  semantic_cache_test.test.semantic cache binds the mutation contract version and effects contract
+guardian/test:   0.08s  native_execute.test.native execution reports original bounds indexes for read write pop array text and bytes
+guardian/test: PASS — 115 passed
+guardian/test: RESULT {"passed":115,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/16e059f5d9e2f0c1343172d7aa90457e/test --guardian-shard=7/12 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+test
++- run test w
+guardian/test: 115 test(s) selected [shard 4/12 of 1393]
+guardian/test: test wall 3.45s; slowest over 50ms:
+guardian/test:   0.68s  stdlib_strings_test.test.standard float wrapper shares the pinned parser and stays noalloc
+guardian/test:   0.59s  stdlib_pool_test.test.standard pool reuses slots and reports stale handles as absent
+guardian/test:   0.25s  prelude_builtins_test.test.sorted returns a new ascending list for int, float and str
+guardian/test:   0.21s  generic_concrete_test.test.generic record updates and array replacement preserve snapshots under allocation failures
+guardian/test:   0.12s  dictionary_views_test.test.dictionary views retain mappings and generic snapshots under GC stress
+guardian/test:   0.11s  compiler_test.test.short circuit skips traps while an explicit drop retains evaluation
+guardian/test:   0.10s  semantic_cache_test.test.symbolic template direct results reuse while changed templates miss
+guardian/test:   0.08s  python_bytes_test.test.UTF8-DECODE-1 truncated and stray continuation bytes stay invalid
+guardian/test:   0.06s  semantic_cache_test.test.semantic cache keeps previous committed bodies when remember reports OutOfMemory
+guardian/test:   0.05s  resource_source_test.test.generic owned resources clean up explicit and implicit drops under allocation failure
+guardian/test: PASS — 115 passed
+guardian/test: RESULT {"passed":115,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/16e059f5d9e2f0c1343172d7aa90457e/test --guardian-shard=4/12 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+test
++- run test w
+guardian/test: 27 test(s) selected [shard 2/6 of 163]
+guardian/test: test wall 14.45s; slowest over 50ms:
+guardian/test:   1.64s  integration.test.guest print output stays off the test protocol and shows on failure
+guardian/test:   1.29s  integration.test.PURE-SKIP-1 pure failure outcome replays without executing and is never masked
+guardian/test:   0.97s  integration.test.R3 canonical descriptors compare provider scalar and nominal contracts
+guardian/test:   0.91s  integration.test.CLI test affected selects tests that reach a changed declaration
+guardian/test:   0.87s  integration.test.CLI project run reuses emitted manifest while no-cache and grants stay authoritative
+guardian/test:   0.87s  integration.test.C4 unchanged deterministic rerun executes zero tests without lowering emission or linking
+guardian/test:   0.85s  integration.test.named constraints review repros keep their repaired checking outcomes
+guardian/test:   0.81s  integration.test.loadConfiguredPolicy policy applies to native test preparation ProjectConfigurationFailed and ProjectPolicyRejected
+guardian/test:   0.72s  integration.test.CLI frame budgets count main and reject invalid overrides
+guardian/test:   0.72s  integration.test.CLI test ignores unexported test_ helpers that cannot default
+guardian/test: PASS — 27 passed
+guardian/test: RESULT {"passed":27,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/9842699841f3f53a63e6737327e4b37e/test --guardian-shard=2/6 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+test
++- run test w
+guardian/test: 115 test(s) selected [shard 3/12 of 1393]
+guardian/test: SLOW  12.07s  qbe_test.test.a caller charges one word of outgoing space for an argument that crosses by address
+guardian/test: test wall 20.19s; slowest over 50ms:
+guardian/test:   12.07s  qbe_test.test.a caller charges one word of outgoing space for an argument that crosses by address
+guardian/test:   1.80s  standard_library_test.test.standard modules compose with one another inside a single project
+guardian/test:   1.33s  stdlib_json_test.test.standard json error unions carry a matchable category and a message helper
+guardian/test:   0.85s  stdlib_strings_test.test.standard strings classify search trim pad and convert text at signed boundaries
+guardian/test:   0.84s  managed_lists_test.test.UTF8-TEXT-1 text stores UTF-8 octets and still indexes Unicode scalars
+guardian/test:   0.42s  semantic_cache_test.test.shared budget covers ordinary hash growth boundaries
+guardian/test:   0.40s  nominal_layouts_test.test.nominal layout expansion bounds distinct array identities
+guardian/test:   0.30s  invalidation_matrix_test.test.invalidation matrix clean and warm results agree with exact reuse deltas
+guardian/test:   0.29s  compiler_test.test.all comparisons boolean operations and logical precedence have observable results
+guardian/test:   0.21s  qbe_test.test.large fixed scratch recursion reaches a structured frame trap
+guardian/test: PASS — 115 passed
+guardian/test: RESULT {"passed":115,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/16e059f5d9e2f0c1343172d7aa90457e/test --guardian-shard=3/12 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+test
++- run test w
+guardian/test: 27 test(s) selected [shard 1/6 of 163]
+guardian/test: test wall 8.90s; slowest over 50ms:
+guardian/test:   1.04s  integration.test.a directory benchmark run measures sequentially and stays green without tests
+guardian/test:   0.99s  integration.test.CLI executes the exact plan acceptance programs and recursive functions
+guardian/test:   0.71s  integration.test.CLI test discovers a test_ function without an explicit export
+guardian/test:   0.69s  integration.test.R3 canonical descriptors expand transparent aliases for discovery and nested contracts
+guardian/test:   0.59s  integration.test.CLI binding warnings do not alter status or result output
+guardian/test:   0.58s  integration.test.C4 no-cache performs fresh runs without durable result or graph entries
+guardian/test:   0.50s  integration.test.CLI checks domain privacy unit mismatches and qualified factory execution
+guardian/test:   0.44s  integration.test.named constraints fake-only entry ignores an absent or invalid production module
+guardian/test:   0.43s  integration.test.CLI exposes fs.read_only permission attenuation and rejects the removed spelling
+guardian/test:   0.43s  integration.test.CLI checks resource ownership completion and implicit cleanup effects without ambient access
+guardian/test: PASS — 27 passed
+guardian/test: RESULT {"passed":27,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/9842699841f3f53a63e6737327e4b37e/test --guardian-shard=1/6 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+test
++- run test w
+guardian/test: 115 test(s) selected [shard 9/12 of 1393]
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+unexpected errno: 2
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x12f79b0 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x133c618 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x138d96d in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x138dd0f in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x138ba63 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:178:43: 0x17a7ebb in temporary (root_test.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:454:40: 0x1f82651 in raceStaging (root_test.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x1f82155 in callFn__anon_153380 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:753:30: 0x1f81f49 in entryFn (std.zig)
+                return callFn(f, args_ptr.*);
+                             ^
+???:?:?: 0x77fe76aa3df9 in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+???:?:?: 0x77fe76b375cb in ??? (/usr/lib/x86_64-linux-gnu/libc.so.6)
+retention: budget=5862 retained=4156 spec_bytes=4156 evictions=38 oldest_fresh_checks=+1
+guardian/test: test wall 10.32s; slowest over 50ms:
+guardian/test:   3.02s  qbe_build_io.test.concurrent staging in one destination never loses a child to another build's reclaim
+guardian/test:   1.06s  semantic_cache_test.test.shared retention budget bounds distinct specializations and eviction forces fresh checks
+guardian/test:   0.88s  stdlib_path_test.test.standard path joins splits and normalizes without filesystem authority
+guardian/test:   0.67s  interfaces_test.test.generic execution retains module identities and ordinary public schema roots
+guardian/test:   0.66s  nominal_bodies_test.test.nominal bodies release shape catalogs and VM storage after every allocation failure
+guardian/test:   0.58s  qbe_test.test.QBE bounds ABI stack usage and heap backs large local frames
+guardian/test:   0.55s  stdlib_time_random_test.test.standard time random boundary arithmetic and pinned deterministic vectors
+guardian/test:   0.48s  integers_test.test.inlined division and remainder trap zero and narrow overflow only
+guardian/test:   0.34s  prelude_builtins_test.test.reversed, list and zip iterate or materialise without a new runtime
+guardian/test:   0.23s  nominal_type_syntax_test.test.public nominal templates survive cached syntax and project relocation with requirements intact
+guardian/test: PASS — 115 passed
+guardian/test: RESULT {"passed":115,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/16e059f5d9e2f0c1343172d7aa90457e/test --guardian-shard=9/12 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+test
++- run test w
+guardian/test: 27 test(s) selected [shard 5/6 of 163]
+guardian/test: test wall 10.82s; slowest over 50ms:
+guardian/test:   2.75s  integration.test.C4 expectation argument budget and force invalidate while irrelevant environment preserves receipts
+guardian/test:   1.52s  integration.test.guest benchmarks write a candidate and enforce an approved baseline immutably
+guardian/test:   0.90s  integration.test.CLI preserves integer width bounds and explicit casts
+guardian/test:   0.76s  integration.test.an executable built without a requested ceiling refuses a runtime step budget
+guardian/test:   0.72s  integration.test.a directory run discovers project roots instead of every module
+guardian/test:   0.53s  integration.test.CLI checks external capabilities but cannot silently grant ambient providers
+guardian/test:   0.53s  integration.test.duplicate discovery is separate advisory analysis with explicit options
+guardian/test:   0.41s  integration.test.P1 rejects every incompatible replacement dimension
+guardian/test:   0.34s  integration.test.multiple missing capabilities report exactly one identical diagnostic
+guardian/test:   0.34s  integration.test.CLI directory grants scope the file surface and separate reading from writing
+guardian/test: PASS — 27 passed
+guardian/test: RESULT {"passed":27,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/9842699841f3f53a63e6737327e4b37e/test --guardian-shard=5/6 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+test
++- run test w
+guardian/test: 115 test(s) selected [shard 6/12 of 1393]
+guardian/test: test wall 12.08s; slowest over 50ms:
+guardian/test:   3.07s  resource_io_test.test.source IO traps at every instruction boundary release or complete exactly once
+guardian/test:   2.54s  qbe_build_test.test.a prebuilt runtime installed beside the compiler links directly, and damage falls back to source
+guardian/test:   1.55s  invoke_test.test.a text argument and result round-trip through invoke with an embedded NUL preserved
+guardian/test:   1.08s  native_test_wire.test.local mutation reuses a receipt while output executes again
+guardian/test:   0.67s  stdlib_strings_test.test.standard strings error unions expose the category and message of a rejected builder
+guardian/test:   0.64s  byte_builder_test.test.standard byte builder remains rooted when every managed allocation collects
+guardian/test:   0.62s  generic_bodies_test.test.generic body contracts bound wide statement work without host execution
+guardian/test:   0.38s  near_duplicates_test.test.banded distance and edit explanations agree with a full matrix over short sequences
+guardian/test:   0.17s  semantic_cache_test.test.semantic cache retains a bounded prefix of bodies when the snapshot exceeds its budget
+guardian/test:   0.11s  integers_test.test.all integer widths accept their limits and reject one-past literals
+guardian/test: PASS — 115 passed
+guardian/test: RESULT {"passed":115,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/16e059f5d9e2f0c1343172d7aa90457e/test --guardian-shard=6/12 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+test
++- run test w
+guardian/test: 115 test(s) selected [shard 11/12 of 1393]
+guardian/test: test wall 12.55s; slowest over 50ms:
+guardian/test:   3.50s  invoke_test.test.a record holding a text or a list composes with Option and Result
+guardian/test:   2.57s  generic_execution_test.test.generic execution bounds actual discovery and reuses instances at capacity
+guardian/test:   1.02s  stdlib_codecs_test.test.standard base64 and hex match their vectors and reject noncanonical input
+guardian/test:   1.00s  native_execute.test.a wall-clock timeout ends an unbounded native run with R_TIMEOUT
+guardian/test:   1.00s  qbe_test.test.a callee that only reads a large array parameter keeps a native frame
+guardian/test:   0.76s  nominal_bodies_test.test.nominal bodies bound growing function specialization before executable output
+guardian/test:   0.28s  stdlib_time_random_test.test.standard time random calls preserve effect ceilings and reproducible draws
+guardian/test:   0.18s  standard_library_test.test.standard modules load through embedded providers and execute reserved sources
+guardian/test:   0.16s  integers_test.test.checked signed and unsigned operations retain each declared width
+guardian/test:   0.15s  semantic_cache_test.test.durable entry and byte bounds evict without changing acceptance
+guardian/test: PASS — 115 passed
+guardian/test: RESULT {"passed":115,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/16e059f5d9e2f0c1343172d7aa90457e/test --guardian-shard=11/12 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+test
++- run test w
+guardian/test: 27 test(s) selected [shard 3/6 of 163]
+guardian/test: test wall 13.77s; slowest over 50ms:
+guardian/test:   1.75s  integration.test.CLI managed constants import run build installed and invalidate warm caches
+guardian/test:   1.42s  integration.test.P1 selects a validated fake while the unfinished production body is never checked
+guardian/test:   1.33s  integration.test.C4 helper edit reruns only the dependent test and lower only on an uncached selection
+guardian/test:   1.15s  integration.test.PURE-SKIP-1 a changed dependency invalidates the recorded pure outcome
+guardian/test:   0.92s  integration.test.loadConfiguredPolicy enforces mylang.json across ordinary project commands cold warm and after policy-only edits
+guardian/test:   0.86s  integration.test.CLI refuses an ungranted entry capability only while --restrict is active
+guardian/test:   0.80s  integration.test.CLI budget traps name the flag that raises the budget
+guardian/test:   0.66s  integration.test.CLI executes control flow and preserves discarded traps
+guardian/test:   0.66s  integration.test.a typed expectation failure names both actual and expected values
+guardian/test:   0.60s  integration.test.all commands reject invalid programs before execution and locate runtime traps
+guardian/test: PASS — 27 passed
+guardian/test: RESULT {"passed":27,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/9842699841f3f53a63e6737327e4b37e/test --guardian-shard=3/6 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+test
++- run test w
+guardian/test: 115 test(s) selected [shard 2/12 of 1393]
+expected 41, found 1
+guardian/test: test wall 9.23s; slowest over 50ms:
+guardian/test:   1.49s  stdlib_json_test.test.standard json keeps parsed values rooted under collection stress
+guardian/test:   1.28s  syntax_cache_large_test.test.default syntax retention survives 97 modules and matches fresh execution and errors after leaf edits
+guardian/test:   1.06s  qbe_test.test.a parameter that crosses by address occupies one word of its callee's frame
+guardian/test:   0.86s  compiler_test.test.long left-associative expressions do not recursively traverse host stacks
+guardian/test:   0.80s  semantic_cache_test.test.generic publication rolls back cleanly on allocation failure
+guardian/test:   0.60s  stdlib_math_test.test.standard integer extrema and clamp cover every width and full signed range
+guardian/test:   0.56s  domain_codecs_test.test.source codec operations resolve declared methods and preserve formatting under allocation failures
+guardian/test:   0.37s  standard_library_test.test.standard fixture helpers report every assertion failure through declared errors
+guardian/test:   0.32s  reference_test.test.the same query renders byte-identical answers and a dated envelope
+guardian/test:   0.18s  python_core_test.test.prelude containers results options and dictionary views keep one identity across modules
+guardian/test: PASS — 115 passed
+guardian/test: RESULT {"passed":115,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/16e059f5d9e2f0c1343172d7aa90457e/test --guardian-shard=2/12 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+test
++- run test w
+guardian/test: 115 test(s) selected [shard 8/12 of 1393]
+guardian/test: test wall 2.87s; slowest over 50ms:
+guardian/test:   0.67s  qbe_build_test.test.a default build shares its runtime tree under XDG while an explicit cache-dir stays hermetic
+guardian/test:   0.48s  invoke_test.test.an undersized codec result buffer reports OutputTooSmall, not WireLimit
+guardian/test:   0.17s  stdlib_sort_test.test.standard sort keeps its copies rooted under collection stress
+guardian/test:   0.12s  integers_test.test.inlined multiplication keeps every width and traps past its bounds
+guardian/test:   0.11s  generic_calls_test.test.generic calls forward contracts substitute types and check recursion without body expansion
+guardian/test:   0.11s  reference_test.test.an implemented feature answers with its manifest record and a live doc anchor
+guardian/test:   0.10s  qbe_test.test.aggregate projections preserve snapshots and managed fields across mutation growth and GC
+guardian/test:   0.09s  byte_builder_test.test.standard byte builder freezes a snapshot that is appended back into its builder
+guardian/test:   0.07s  semantic_cache_test.test.a reused caller recomputes its return-origin bound after a callee alias change
+guardian/test:   0.06s  prelude_builtins_test.test.any and all fold a list of conditions
+guardian/test: PASS — 115 passed
+guardian/test: RESULT {"passed":115,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/16e059f5d9e2f0c1343172d7aa90457e/test --guardian-shard=8/12 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+test
++- run test w
+guardian/test: 28 test(s) selected [shard 0/6 of 163]
+guardian/test: test wall 11.34s; slowest over 50ms:
+guardian/test:   2.12s  integration.test.C4 two providers with reversed map order prepare one graph and one library
+guardian/test:   2.11s  integration.test.boundary acceptance CLI runs through run build --run and installed paths
+guardian/test:   1.00s  integration.test.CLI build report states the default and explicit optimize modes
+guardian/test:   0.86s  integration.test.P1 ignores an unselected production body type error while its declarations stay valid
+guardian/test:   0.84s  integration.test.CLI checks array schemas dumps indexing and reports bounds traps
+guardian/test:   0.67s  integration.test.a wrong benchmark result or trap fails the run and reports no measurement
+guardian/test:   0.62s  integration.test.CLI checks runs and dumps records and declared complete conversions
+guardian/test:   0.39s  integration.test.CLI checks bounded environment access without granting ambient process access
+guardian/test:   0.31s  integration.test.CLI streams program output and reports the entry result only on request
+guardian/test:   0.31s  integration.test.run build --run and installed executables accept more than 256 guest arguments
+guardian/test: PASS — 28 passed
+guardian/test: RESULT {"passed":28,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/9842699841f3f53a63e6737327e4b37e/test --guardian-shard=0/6 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+test
++- run test w
+guardian/test: 127 test(s) selected [shard 0/12 of 1393]
+guardian/test: SLOW  12.75s  qbe_test.test.a [4096]int parameter keeps the native frame while the local that holds the array is heap-backed
+guardian/test: test wall 25.93s; slowest over 50ms:
+guardian/test:   12.75s  qbe_test.test.a [4096]int parameter keeps the native frame while the local that holds the array is heap-backed
+guardian/test:   4.41s  nominal_providers_test.test.nominal providers unwind traps at every instruction including failed completion ownership transfer
+guardian/test:   3.51s  resource_source_test.test.nested resource wrappers release at scope exit and traps unwind every instruction
+guardian/test:   0.76s  domain_codecs_test.test.domain codec module relocation and public schemas preserve contracts and opaque backing under allocation failures
+guardian/test:   0.56s  stdlib_math_test.test.standard math roots rounding classification and checked integer helpers
+guardian/test:   0.47s  semantic_cache_test.test.durable-hit promotion is bounded by the shared budget without changing acceptance
+guardian/test:   0.44s  generic_arrays_test.test.generic array specialization and execution clean up under allocation failure
+guardian/test:   0.41s  semantic_cache_test.test.durable publication batch inventories a fresh namespace once instead of per body
+guardian/test:   0.32s  value_test.test.deep aggregate release is iterative and needs no additional allocations
+guardian/test:   0.26s  stdlib_codecs_test.test.standard base64 round-trips every byte value under collection stress
+guardian/test: PASS — 127 passed
+guardian/test: RESULT {"passed":127,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/16e059f5d9e2f0c1343172d7aa90457e/test --guardian-shard=0/12 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+test
++- run test w
+guardian/test: 116 test(s) selected [shard 1/12 of 1393]
+guardian/test: SLOW  12.81s  qbe_test.test.a frame whose surviving scratch alone exceeds the limit is still heap-backed
+symbolic retention: budget=4386 retained=4276 symbolic_bytes=4276 templates=8 evictions=8 warm_fresh=+4 warm_reused=+8
+guardian/test: test wall 17.23s; slowest over 50ms:
+guardian/test:   12.81s  qbe_test.test.a frame whose surviving scratch alone exceeds the limit is still heap-backed
+guardian/test:   1.67s  stdlib_json_test.test.standard json parses renders navigates and rejects noncompliant documents
+guardian/test:   0.69s  syntax_cache_test.test.buildWithCache lookup remember and clone preserve changed results and independent storage under allocation failures
+guardian/test:   0.36s  semantic_cache_test.test.durable batch publication issues one shared sync per batch and none when warm
+guardian/test:   0.20s  reference_test.test.unsupported and removed names answer as exclusions, never as features
+guardian/test:   0.18s  value_test.test.repeated record allocation retains bounded live storage
+guardian/test:   0.12s  python_bytes_test.test.PY-BYTES-5 the native backend lowers every byte-string operation
+guardian/test:   0.08s  io_print_test.test.IO-1 print renders scalars, text, bytes and containers with Python spellings
+guardian/test:   0.06s  environment_test.test.environment reads outside an explicit allowlist are denied before the host is asked
+guardian/test:   0.06s  nominal_layouts_test.test.nominal layout collect preserves identity finite nesting and phantom arguments across allocation failures
+guardian/test: PASS — 116 passed
+guardian/test: RESULT {"passed":116,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/16e059f5d9e2f0c1343172d7aa90457e/test --guardian-shard=1/12 --cache-dir=./.zig-cache --seed=0x8589c3f6 --listen=-
+
+Build Summary: 96/96 steps succeeded; 1556/17694 tests passed (16138 skipped)
+fmt-check success
++- zig fmt --check success
+test-qbe-build success
++- run test cached
+|  +- compile test debug native cached 7ms MaxRSS:37M
+|  |  +- options cached
+|  |  |  +- compile exe qbe fast native cached 10ms MaxRSS:41M
+|  |  +- WriteFile src/native_arena.c cached
+|  +- install success
+|     +- install mylang success
+|     |  +- compile exe mylang debug native cached 5ms MaxRSS:42M
+|     |  |  +- WriteFile src/native_arena.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check success 694ms
+|     |     +- guardian-selfcheck success
+|     |        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
+|     +- install qbe cached
+|     |  +- compile exe qbe fast native (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- install experiments/llvm-backend/qbe_llvm.py to mylang-llvm/qbe_llvm.py cached
+|     +- install experiments/llvm-backend/llvm_emit.py to mylang-llvm/llvm_emit.py cached
+|     +- install experiments/llvm-backend/runtime_signatures.py to mylang-llvm/runtime_signatures.py cached
+|     +- install experiments/llvm-backend/amd64_sysv.py to mylang-llvm/amd64_sysv.py cached
+|     +- install generated/ success
+|     |  +- run exe mylang (mylang-runtime) success 5s
+|     |     +- compile exe mylang debug native (+1 more reused dependencies)
+|     |     +- compile exe qbe fast native (reused)
+|     +- install board-trial success
+|     |  +- compile exe board-trial debug native cached 7ms MaxRSS:42M
+|     |  |  +- options (+1 more reused dependencies)
+|     |  |  +- WriteFile src/native_arena.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- install schematic-svg success
+|     |  +- compile exe schematic-svg debug native cached 7ms MaxRSS:42M
+|     |  |  +- options (+1 more reused dependencies)
+|     |  |  +- WriteFile src/native_arena.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- install mylang-io success
+|     |  +- compile exe mylang-io debug native cached 8ms MaxRSS:37M
+|     |  |  +- options (+1 more reused dependencies)
+|     |  |  +- WriteFile src/native_arena.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- run test cached
+|  +- compile test debug native cached 5ms MaxRSS:40M
+|  |  +- WriteFile src/native_arena.c (reused)
+|  +- install (+11 more reused dependencies)
++- run exe host-bridge-test success 1ms
+|  +- compile exe host-bridge-test debug native cached 13ms MaxRSS:41M
+|  +- install (+11 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check success 628ms
+   +- guardian-selfcheck (+1 more reused dependencies)
+test-qbe success
++- run exe native-heap-test success 39ms
+|  +- compile exe native-heap-test debug native cached 15ms MaxRSS:41M
++- run exe native-arena-chunks-test success 1ms
+|  +- compile exe native-arena-chunks-test debug native cached 12ms MaxRSS:37M
++- test-native-tests success
+|  +- run test cached
+|  |  +- compile test debug native cached 5ms MaxRSS:39M
+|  |  |  +- WriteFile src/native_arena.c (reused)
+|  |  +- install (+11 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 652ms
+|     +- guardian-selfcheck (+1 more reused dependencies)
++- test-c-ffi success
+|  +- run test cached
+|  |  +- compile test debug native cached 10ms MaxRSS:38M
+|  |  +- install (+11 more reused dependencies)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 797ms
+|     +- guardian-selfcheck (+1 more reused dependencies)
++- test-qbe-build (+4 more reused dependencies)
++- test-golden success
+|  +- run test cached
+|     +- compile test debug native cached 7ms MaxRSS:42M
+|     |  +- options cached
+|     |     +- compile exe mylang debug native (+1 more reused dependencies)
+|     |     +- compile exe qbe fast native (reused)
+|     +- install (+11 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check success 673ms
+   +- guardian-selfcheck (+1 more reused dependencies)
+test success
++- run ../guardian-zig/zig-out/bin/guardian-check success 611ms
+|  +- guardian-selfcheck (+1 more reused dependencies)
++- run test 127 pass, 1266 skip (1393 total) 26s MaxRSS:416M
+|  +- compile test debug native cached 14ms MaxRSS:42M
+|  |  +- WriteFile src/native_arena.c (reused)
+|  |  +- options cached
+|  |     +- compile exe qbe fast native (reused)
+|  +- install qbe cached
+|  |  +- compile exe qbe fast native (reused)
+|  +- install mylang cached
+|     +- compile exe mylang debug native (+1 more reused dependencies)
++- run test 116 pass, 1277 skip (1393 total) 17s MaxRSS:451M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 115 pass, 1278 skip (1393 total) 9s MaxRSS:257M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 115 pass, 1278 skip (1393 total) 20s MaxRSS:418M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 115 pass, 1278 skip (1393 total) 4s MaxRSS:135M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 115 pass, 1278 skip (1393 total) 5s MaxRSS:155M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 115 pass, 1278 skip (1393 total) 12s MaxRSS:228M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 115 pass, 1278 skip (1393 total) 9s MaxRSS:107M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 115 pass, 1278 skip (1393 total) 3s MaxRSS:92M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 115 pass, 1278 skip (1393 total) 11s MaxRSS:304M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 115 pass, 1278 skip (1393 total) 18s MaxRSS:360M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 115 pass, 1278 skip (1393 total) 13s MaxRSS:140M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test cached
+|  +- compile test debug native cached 6ms MaxRSS:41M
+|  |  +- options (+1 more reused dependencies)
+|  |  +- WriteFile src/native_arena.c (reused)
+|  +- install (+11 more reused dependencies)
++- run test 28 pass, 135 skip (163 total) 11s MaxRSS:136M
+|  +- compile test debug native cached 6ms MaxRSS:40M
+|  |  +- options (+2 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 27 pass, 136 skip (163 total) 8s MaxRSS:93M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 27 pass, 136 skip (163 total) 14s MaxRSS:93M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 27 pass, 136 skip (163 total) 13s MaxRSS:93M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 27 pass, 136 skip (163 total) 12s MaxRSS:114M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test 27 pass, 136 skip (163 total) 10s MaxRSS:93M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- install qbe (+1 more reused dependencies)
+|  +- install mylang (+1 more reused dependencies)
++- run test cached
+|  +- compile test debug native cached 6ms MaxRSS:41M
+|  |  +- options (+1 more reused dependencies)
+|  |  +- WriteFile src/native_arena.c (reused)
+|  +- install (+11 more reused dependencies)
++- run test cached
+|  +- compile test debug native cached 8ms MaxRSS:42M
+|  |  +- options cached
+|  |  |  +- compile exe mylang debug native (+1 more reused dependencies)
+|  |  +- options (+1 more reused dependencies)
+|  |  +- WriteFile src/native_arena.c (reused)
+|  +- install (+11 more reused dependencies)
++- run exe native-heap-test (+1 more reused dependencies)
++- run exe native-arena-chunks-test (+1 more reused dependencies)
++- test-idioms success
+|  +- run python3 success 220ms
+|  |  +- install (+11 more reused dependencies)
+|  +- run python3 success 3s
+|     +- install (+11 more reused dependencies)
+|     +- compile exe mylang debug native (+1 more reused dependencies)
++- test-agent-usefulness success
+|  +- run python3 success 41ms
+|  |  +- install (+11 more reused dependencies)
+|  +- run python3 success 682ms
+|  |  +- install (+11 more reused dependencies)
+|  |  +- compile exe mylang debug native (+1 more reused dependencies)
+|  +- run python3 success 474ms
+|     +- install (+11 more reused dependencies)
++- test-native-boundary success
+|  +- run python3 success 44ms
+|  |  +- install (+11 more reused dependencies)
+|  +- run python3 success 54s
+|     +- install (+11 more reused dependencies)
+|     +- compile exe mylang debug native (+1 more reused dependencies)
++- run exe mylang success 53ms
+|  +- compile exe mylang debug native (+1 more reused dependencies)
+|  +- install (+11 more reused dependencies)
++- run exe mylang success 168ms
+|  +- compile exe mylang debug native (+1 more reused dependencies)
+|  +- install (+11 more reused dependencies)
++- run exe mylang success 1s
+|  +- compile exe mylang debug native (+1 more reused dependencies)
+|  +- install (+11 more reused dependencies)
++- run exe mylang success 6s
+   +- compile exe mylang debug native (+1 more reused dependencies)
+   +- install (+11 more reused dependencies)

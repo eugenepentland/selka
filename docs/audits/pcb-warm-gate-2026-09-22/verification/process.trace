@@ -1,0 +1,526 @@
+755058 1790035175.403748 execve("/usr/bin/env", ["env", "-u", "MYLANG", "-u", "CACHE", "MYLANG_TEST_TRACE=/tmp/pcb-warm-"..., "/usr/bin/time", "-v", "/home/epentland/ai/canopy/pcb-wo"...], 0x7ffd229ad438 /* 36 vars */) = 0 <0.000939>
+755058 1790035175.413663 execve("/usr/bin/time", ["/usr/bin/time", "-v", "/home/epentland/ai/canopy/pcb-wo"...], 0x621847afe2b0 /* 37 vars */) = 0 <0.000725>
+755058 1790035175.415951 wait4(-1 <unfinished ...>
+755059 1790035175.416518 execve("/home/epentland/ai/canopy/pcb-workbench/guest/gate.sh", ["/home/epentland/ai/canopy/pcb-wo"...], 0x7ffdbdc2caa8 /* 37 vars */) = 0 <0.000332>
+755061 1790035175.419668 execve("/usr/bin/dirname", ["dirname", "--", "/home/epentland/ai/canopy/pcb-wo"...], 0x5cf0a4fa5e68 /* 37 vars */) = 0 <0.000389>
+755061 1790035175.425889 +++ exited with 0 +++
+755060 1790035175.425943 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755061, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755060 1790035175.426032 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755061 <0.000021>
+755060 1790035175.426592 wait4(-1, 0x7ffeb562e3cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000011>
+755060 1790035175.426839 +++ exited with 0 +++
+755059 1790035175.426873 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755060, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755059 1790035175.426972 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755060 <0.000018>
+755059 1790035175.427030 wait4(-1, 0x7ffeb562e6fc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000021>
+755063 1790035175.428014 +++ exited with 0 +++
+755059 1790035175.428063 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755063, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755059 1790035175.428243 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755063 <0.000022>
+755059 1790035175.428316 wait4(-1, 0x7ffeb562e6fc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000012>
+755065 1790035175.428787 execve("/home/epentland/ai/canopy/pcb-workbench/tools/workbench-store.py", ["/home/epentland/ai/canopy/pcb-wo"..., "compiler"], 0x5cf0a4fa5b28 /* 37 vars */) = 0 <0.000305>
+755065 1790035175.433179 execve("/home/epentland/.codex/packages/standalone/releases/0.153.4-x86_64-unknown-linux-musl/codex-path/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "compiler"], 0x7ffcab587b00 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000014>
+755065 1790035175.433243 execve("/home/epentland/.local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "compiler"], 0x7ffcab587b00 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000010>
+755065 1790035175.433284 execve("/home/epentland/.codex/tmp/arg0/codex-arg0Hl1Wod/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "compiler"], 0x7ffcab587b00 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000010>
+755065 1790035175.433324 execve("/home/epentland/.codex/packages/standalone/releases/0.153.4-x86_64-unknown-linux-musl/codex-path/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "compiler"], 0x7ffcab587b00 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000009>
+755065 1790035175.433362 execve("/home/epentland/.local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "compiler"], 0x7ffcab587b00 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000009>
+755065 1790035175.433399 execve("/home/epentland/.local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "compiler"], 0x7ffcab587b00 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000009>
+755065 1790035175.433436 execve("/home/epentland/.local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "compiler"], 0x7ffcab587b00 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000011>
+755065 1790035175.433476 execve("/usr/local/sbin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "compiler"], 0x7ffcab587b00 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000010>
+755065 1790035175.433514 execve("/usr/local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "compiler"], 0x7ffcab587b00 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000010>
+755065 1790035175.433560 execve("/usr/sbin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "compiler"], 0x7ffcab587b00 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000009>
+755065 1790035175.433600 execve("/usr/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "compiler"], 0x7ffcab587b00 /* 37 vars */) = 0 <0.000420>
+755065 1790035175.493645 +++ exited with 0 +++
+755059 1790035175.493675 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755065, si_uid=1000, si_status=0, si_utime=4 /* 0.04 s */, si_stime=1 /* 0.01 s */} ---
+755059 1790035175.493845 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755065 <0.000063>
+755059 1790035175.493942 wait4(-1, 0x7ffeb562e6fc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000007>
+755080 1790035175.494983 execve("/home/epentland/ai/canopy/pcb-workbench/tools/workbench-store.py", ["/home/epentland/ai/canopy/pcb-wo"..., "cache", "tests", "/home/epentland/.cache/mylang/wo"...], 0x5cf0a4fa6038 /* 37 vars */) = 0 <0.000267>
+755080 1790035175.498534 execve("/home/epentland/.codex/packages/standalone/releases/0.153.4-x86_64-unknown-linux-musl/codex-path/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "cache", "tests", "/home/epentland/.cache/mylang/wo"...], 0x7ffc6f47a840 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000012>
+755080 1790035175.498585 execve("/home/epentland/.local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "cache", "tests", "/home/epentland/.cache/mylang/wo"...], 0x7ffc6f47a840 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000007>
+755080 1790035175.498617 execve("/home/epentland/.codex/tmp/arg0/codex-arg0Hl1Wod/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "cache", "tests", "/home/epentland/.cache/mylang/wo"...], 0x7ffc6f47a840 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000008>
+755080 1790035175.498647 execve("/home/epentland/.codex/packages/standalone/releases/0.153.4-x86_64-unknown-linux-musl/codex-path/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "cache", "tests", "/home/epentland/.cache/mylang/wo"...], 0x7ffc6f47a840 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000006>
+755080 1790035175.498676 execve("/home/epentland/.local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "cache", "tests", "/home/epentland/.cache/mylang/wo"...], 0x7ffc6f47a840 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000006>
+755080 1790035175.498704 execve("/home/epentland/.local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "cache", "tests", "/home/epentland/.cache/mylang/wo"...], 0x7ffc6f47a840 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000006>
+755080 1790035175.498732 execve("/home/epentland/.local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "cache", "tests", "/home/epentland/.cache/mylang/wo"...], 0x7ffc6f47a840 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000006>
+755080 1790035175.498760 execve("/usr/local/sbin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "cache", "tests", "/home/epentland/.cache/mylang/wo"...], 0x7ffc6f47a840 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000008>
+755080 1790035175.498789 execve("/usr/local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "cache", "tests", "/home/epentland/.cache/mylang/wo"...], 0x7ffc6f47a840 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000006>
+755080 1790035175.498817 execve("/usr/sbin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "cache", "tests", "/home/epentland/.cache/mylang/wo"...], 0x7ffc6f47a840 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000007>
+755080 1790035175.498846 execve("/usr/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "cache", "tests", "/home/epentland/.cache/mylang/wo"...], 0x7ffc6f47a840 /* 37 vars */) = 0 <0.000642>
+755080 1790035175.544892 +++ exited with 0 +++
+755059 1790035175.544917 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755080, si_uid=1000, si_status=0, si_utime=3 /* 0.03 s */, si_stime=1 /* 0.01 s */} ---
+755059 1790035175.545029 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755080 <0.000105>
+755059 1790035175.545174 wait4(-1, 0x7ffeb562e6fc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755081 1790035175.546253 execve("/usr/bin/realpath", ["realpath", "/home/epentland/.cache/mylang/wo"...], 0x5cf0a4fa5be8 /* 37 vars */) = 0 <0.000279>
+755081 1790035175.549904 +++ exited with 0 +++
+755059 1790035175.549925 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755081, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755059 1790035175.550044 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755081 <0.000015>
+755059 1790035175.550093 wait4(-1, 0x7ffeb562e6fc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755082 1790035175.550737 execve("/usr/bin/dirname", ["dirname", "/home/epentland/.cache/mylang/wo"...], 0x5cf0a4fa5be8 /* 37 vars */) = 0 <0.000219>
+755082 1790035175.554288 +++ exited with 0 +++
+755059 1790035175.554309 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755082, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755059 1790035175.554431 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755082 <0.000063>
+755059 1790035175.554533 wait4(-1, 0x7ffeb562e53c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755083 1790035175.555015 +++ exited with 0 +++
+755059 1790035175.555035 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755083, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755059 1790035175.555159 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755083 <0.000009>
+755059 1790035175.555196 wait4(-1, 0x7ffeb562e53c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000007>
+755084 1790035175.555663 execve("/usr/bin/realpath", ["realpath", "/home/epentland/.cache/mylang/wo"...], 0x5cf0a4fa5bf0 /* 37 vars */) = 0 <0.000201>
+755084 1790035175.559059 +++ exited with 0 +++
+755059 1790035175.559174 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755084, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755059 1790035175.559213 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755084 <0.000008>
+755059 1790035175.559233 wait4(-1, 0x7ffeb562e69c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000003>
+755085 1790035175.559604 execve("/usr/bin/realpath", ["realpath", "/home/epentland/.local/bin/zig"], 0x5cf0a4fa5b90 /* 37 vars */) = 0 <0.000198>
+755085 1790035175.563079 +++ exited with 0 +++
+755059 1790035175.563096 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755085, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755059 1790035175.563146 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755085 <0.000011>
+755059 1790035175.563179 wait4(-1, 0x7ffeb562e69c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755086 1790035175.563445 execve("/usr/bin/mkdir", ["mkdir", "-p", "/home/epentland/.cache/mylang/wo"..., "/home/epentland/ai/canopy/pcb-wo"...], 0x5cf0a4fa6688 /* 37 vars */ <unfinished ...>
+755059 1790035175.563588 wait4(-1 <unfinished ...>
+755086 1790035175.563634 <... execve resumed>) = 0 <0.000170>
+755086 1790035175.567486 +++ exited with 0 +++
+755059 1790035175.567538 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755086 <0.003943>
+755059 1790035175.567560 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755086, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755059 1790035175.567601 wait4(-1, 0x7ffeb562e86c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000010>
+755087 1790035175.567805 execve("/home/epentland/ai/canopy/pcb-workbench/guest/check-test-inventory.sh", ["/home/epentland/ai/canopy/pcb-wo"...], 0x5cf0a4fa6aa8 /* 37 vars */ <unfinished ...>
+755059 1790035175.567957 wait4(-1 <unfinished ...>
+755087 1790035175.568013 <... execve resumed>) = 0 <0.000193>
+755089 1790035175.570056 execve("/usr/bin/dirname", ["dirname", "--", "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd86e68 /* 37 vars */) = 0 <0.000254>
+755089 1790035175.575561 +++ exited with 0 +++
+755088 1790035175.575602 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755089, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755088 1790035175.575653 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755089 <0.000019>
+755088 1790035175.575702 wait4(-1, 0x7ffe190e804c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000009>
+755088 1790035175.575917 +++ exited with 0 +++
+755087 1790035175.576003 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755088, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.576131 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755088 <0.000012>
+755087 1790035175.576169 wait4(-1, 0x7ffe190e837c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000009>
+755090 1790035175.576767 execve("/usr/bin/mktemp", ["mktemp"], 0x58aa8bd86fb8 /* 37 vars */) = 0 <0.000611>
+755090 1790035175.580639 +++ exited with 0 +++
+755087 1790035175.580673 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755090, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.580819 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755090 <0.000019>
+755087 1790035175.580879 wait4(-1, 0x7ffe190e825c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000009>
+755091 1790035175.581543 execve("/usr/bin/mktemp", ["mktemp"], 0x58aa8bd87018 /* 37 vars */) = 0 <0.000333>
+755091 1790035175.587947 +++ exited with 0 +++
+755087 1790035175.587966 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755091, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.588071 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755091 <0.000027>
+755087 1790035175.588135 wait4(-1, 0x7ffe190e825c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000012>
+755092 1790035175.588937 execve("/usr/bin/mktemp", ["mktemp"], 0x58aa8bd87078 /* 37 vars */) = 0 <0.000395>
+755092 1790035175.595135 +++ exited with 0 +++
+755087 1790035175.595175 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755092, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.595211 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755092 <0.000011>
+755087 1790035175.595249 wait4(-1, 0x7ffe190e82bc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000007>
+755093 1790035175.595957 execve("/usr/bin/mktemp", ["mktemp"], 0x58aa8bd870d8 /* 37 vars */) = 0 <0.000371>
+755093 1790035175.601214 +++ exited with 0 +++
+755087 1790035175.601249 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755093, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.601341 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755093 <0.000022>
+755087 1790035175.601402 wait4(-1, 0x7ffe190e831c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000012>
+755094 1790035175.602596 execve("/usr/bin/awk", ["awk", "!/^#/ && NF { print $1, $2 }", "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd872d8 /* 37 vars */) = 0 <0.000378>
+755087 1790035175.603115 wait4(-1 <unfinished ...>
+755095 1790035175.603528 execve("/usr/bin/sort", ["sort"], 0x58aa8bd86ba8 /* 37 vars */) = 0 <0.000384>
+755094 1790035175.608884 +++ exited with 0 +++
+755087 1790035175.608931 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755094 <0.005806>
+755087 1790035175.608954 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755094, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.609023 wait4(-1 <unfinished ...>
+755096 1790035175.610587 +++ exited with 0 +++
+755095 1790035175.610907 +++ exited with 0 +++
+755087 1790035175.610980 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755095 <0.001948>
+755087 1790035175.611006 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755095, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.611042 wait4(-1, 0x7ffe190e856c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000007>
+755087 1790035175.611355 wait4(-1 <unfinished ...>
+755098 1790035175.611641 execve("/usr/bin/sort", ["sort"], 0x58aa8bd87788 /* 37 vars */) = 0 <0.000266>
+755099 1790035175.612260 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd877a0 /* 37 vars */) = 0 <0.000275>
+755099 1790035175.616474 +++ exited with 0 +++
+755097 1790035175.616492 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755099, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.616548 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755099 <0.000012>
+755097 1790035175.616581 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000009>
+755101 1790035175.617005 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87840 /* 37 vars */) = 0 <0.000201>
+755101 1790035175.619769 +++ exited with 0 +++
+755097 1790035175.619785 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755101, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.619813 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755101 <0.000005>
+755097 1790035175.619831 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000003>
+755102 1790035175.620033 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87828 /* 37 vars */) = 0 <0.000211>
+755102 1790035175.624243 +++ exited with 0 +++
+755097 1790035175.624278 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755102, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.624315 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755102 <0.000010>
+755097 1790035175.624349 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755103 1790035175.624851 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87840 /* 37 vars */) = 0 <0.000215>
+755103 1790035175.627947 +++ exited with 0 +++
+755097 1790035175.627968 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755103, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.627986 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755103 <0.000006>
+755097 1790035175.628006 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000003>
+755104 1790035175.628238 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87828 /* 37 vars */) = 0 <0.000194>
+755104 1790035175.632625 +++ exited with 0 +++
+755097 1790035175.632646 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755104, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.632761 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755104 <0.000012>
+755097 1790035175.632800 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755105 1790035175.633265 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87840 /* 37 vars */) = 0 <0.000178>
+755105 1790035175.636445 +++ exited with 0 +++
+755097 1790035175.636457 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755105, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.636505 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755105 <0.000012>
+755097 1790035175.636536 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755106 1790035175.636820 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87828 /* 37 vars */) = 0 <0.000177>
+755106 1790035175.639722 +++ exited with 0 +++
+755097 1790035175.639739 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755106, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.639756 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755106 <0.000005>
+755097 1790035175.639776 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000003>
+755107 1790035175.640236 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87838 /* 37 vars */) = 0 <0.000190>
+755107 1790035175.643411 +++ exited with 0 +++
+755097 1790035175.643421 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755107, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.643471 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755107 <0.000012>
+755097 1790035175.643503 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000007>
+755108 1790035175.644004 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87820 /* 37 vars */) = 0 <0.000236>
+755108 1790035175.647977 +++ exited with 0 +++
+755097 1790035175.648000 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755108, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.648156 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755108 <0.000010>
+755097 1790035175.648195 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755109 1790035175.648681 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87840 /* 37 vars */) = 0 <0.000222>
+755109 1790035175.652729 +++ exited with 0 +++
+755097 1790035175.652761 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755109, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.652959 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755109 <0.000020>
+755097 1790035175.653018 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000009>
+755110 1790035175.653389 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87828 /* 37 vars */) = 0 <0.000271>
+755110 1790035175.659225 +++ exited with 0 +++
+755097 1790035175.659261 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755110, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.659300 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755110 <0.000010>
+755097 1790035175.659332 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755111 1790035175.659941 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87838 /* 37 vars */) = 0 <0.000209>
+755111 1790035175.663154 +++ exited with 0 +++
+755097 1790035175.663168 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755111, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.663223 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755111 <0.000011>
+755097 1790035175.663255 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755112 1790035175.663545 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87820 /* 37 vars */) = 0 <0.000175>
+755112 1790035175.666622 +++ exited with 0 +++
+755097 1790035175.666659 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755112, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.666690 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755112 <0.000008>
+755097 1790035175.666720 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755113 1790035175.667168 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87838 /* 37 vars */) = 0 <0.000195>
+755113 1790035175.670370 +++ exited with 0 +++
+755097 1790035175.670403 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755113, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.670434 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755113 <0.000012>
+755097 1790035175.670472 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755114 1790035175.670760 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87820 /* 37 vars */) = 0 <0.000195>
+755114 1790035175.674211 +++ exited with 0 +++
+755097 1790035175.674237 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755114, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.674267 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755114 <0.000010>
+755097 1790035175.674295 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755115 1790035175.674723 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87838 /* 37 vars */) = 0 <0.000189>
+755115 1790035175.678401 +++ exited with 0 +++
+755097 1790035175.678421 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755115, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.678458 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755115 <0.000007>
+755097 1790035175.678478 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000003>
+755116 1790035175.678743 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87820 /* 37 vars */) = 0 <0.000177>
+755116 1790035175.680795 +++ exited with 0 +++
+755097 1790035175.680806 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755116, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.680845 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755116 <0.000007>
+755097 1790035175.680872 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755117 1790035175.681256 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87840 /* 37 vars */) = 0 <0.000191>
+755117 1790035175.684606 +++ exited with 0 +++
+755097 1790035175.684617 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755117, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.684666 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755117 <0.000013>
+755097 1790035175.684699 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755118 1790035175.685009 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87828 /* 37 vars */) = 0 <0.000175>
+755118 1790035175.689550 +++ exited with 0 +++
+755097 1790035175.689570 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755118, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.689630 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755118 <0.000010>
+755097 1790035175.689663 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755119 1790035175.690116 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87838 /* 37 vars */) = 0 <0.000170>
+755119 1790035175.693221 +++ exited with 0 +++
+755097 1790035175.693230 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755119, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.693277 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755119 <0.000010>
+755097 1790035175.693305 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755120 1790035175.693720 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87820 /* 37 vars */) = 0 <0.000225>
+755120 1790035175.698143 +++ exited with 0 +++
+755097 1790035175.698171 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755120, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.698202 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755120 <0.000008>
+755097 1790035175.698230 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755121 1790035175.698670 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87840 /* 37 vars */) = 0 <0.000191>
+755121 1790035175.701880 +++ exited with 0 +++
+755097 1790035175.701889 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755121, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.701934 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755121 <0.000011>
+755097 1790035175.701963 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755122 1790035175.703036 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87828 /* 37 vars */) = 0 <0.000189>
+755122 1790035175.706209 +++ exited with 0 +++
+755097 1790035175.706234 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755122, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.706264 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755122 <0.000008>
+755097 1790035175.706290 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755123 1790035175.706838 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87838 /* 37 vars */) = 0 <0.000211>
+755123 1790035175.709809 +++ exited with 0 +++
+755097 1790035175.709829 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755123, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.709845 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755123 <0.000007>
+755097 1790035175.709865 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000003>
+755124 1790035175.710085 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87820 /* 37 vars */) = 0 <0.000172>
+755124 1790035175.713410 +++ exited with 0 +++
+755097 1790035175.713443 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755124, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.713474 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755124 <0.000008>
+755097 1790035175.713502 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755125 1790035175.713959 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87840 /* 37 vars */) = 0 <0.000186>
+755125 1790035175.717181 +++ exited with 0 +++
+755097 1790035175.717224 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755125, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.717327 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755125 <0.000011>
+755097 1790035175.717357 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000008>
+755126 1790035175.717639 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87828 /* 37 vars */) = 0 <0.000176>
+755126 1790035175.721827 +++ exited with 0 +++
+755097 1790035175.721846 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755126, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.721864 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755126 <0.000005>
+755097 1790035175.721882 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000003>
+755127 1790035175.722461 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87838 /* 37 vars */) = 0 <0.000181>
+755127 1790035175.726240 +++ exited with 0 +++
+755097 1790035175.726255 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755127, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.726304 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755127 <0.000011>
+755097 1790035175.726336 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755128 1790035175.726721 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87820 /* 37 vars */) = 0 <0.000207>
+755128 1790035175.730238 +++ exited with 0 +++
+755097 1790035175.730269 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755128, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.730306 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755128 <0.000010>
+755097 1790035175.730338 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755129 1790035175.730900 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87840 /* 37 vars */) = 0 <0.000242>
+755129 1790035175.734407 +++ exited with 0 +++
+755097 1790035175.734434 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755129, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.734465 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755129 <0.000010>
+755097 1790035175.734493 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755130 1790035175.734778 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87828 /* 37 vars */) = 0 <0.000178>
+755130 1790035175.738480 +++ exited with 0 +++
+755097 1790035175.738506 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755130, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.738538 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755130 <0.000011>
+755097 1790035175.738568 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755131 1790035175.739137 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87840 /* 37 vars */) = 0 <0.000183>
+755131 1790035175.742459 +++ exited with 0 +++
+755097 1790035175.742484 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755131, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.742513 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755131 <0.000010>
+755097 1790035175.742542 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755132 1790035175.742823 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87828 /* 37 vars */) = 0 <0.000168>
+755132 1790035175.747492 +++ exited with 0 +++
+755097 1790035175.747512 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755132, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.747625 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755132 <0.000010>
+755097 1790035175.747663 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755133 1790035175.748407 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87840 /* 37 vars */) = 0 <0.000213>
+755133 1790035175.751734 +++ exited with 0 +++
+755097 1790035175.751745 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755133, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.751795 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755133 <0.000012>
+755097 1790035175.751826 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755134 1790035175.752404 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87828 /* 37 vars */) = 0 <0.000205>
+755134 1790035175.756759 +++ exited with 0 +++
+755097 1790035175.756789 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755134, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.756818 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755134 <0.000008>
+755097 1790035175.756846 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755135 1790035175.757287 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87840 /* 37 vars */) = 0 <0.000198>
+755135 1790035175.760667 +++ exited with 0 +++
+755097 1790035175.760681 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755135, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.760721 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755135 <0.000009>
+755097 1790035175.760747 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755136 1790035175.760984 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87828 /* 37 vars */) = 0 <0.000188>
+755136 1790035175.764806 +++ exited with 0 +++
+755097 1790035175.764827 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755136, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.764940 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755136 <0.000012>
+755097 1790035175.764980 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755137 1790035175.765563 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87838 /* 37 vars */) = 0 <0.000206>
+755137 1790035175.768821 +++ exited with 0 +++
+755097 1790035175.768830 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755137, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.768881 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755137 <0.000012>
+755097 1790035175.768912 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755138 1790035175.769212 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87820 /* 37 vars */) = 0 <0.000184>
+755138 1790035175.773261 +++ exited with 0 +++
+755097 1790035175.773292 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755138, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.773324 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755138 <0.000008>
+755097 1790035175.773353 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755139 1790035175.773807 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87840 /* 37 vars */) = 0 <0.000198>
+755139 1790035175.777236 +++ exited with 0 +++
+755097 1790035175.777269 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755139, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.777301 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755139 <0.000011>
+755097 1790035175.777335 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755140 1790035175.777636 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87828 /* 37 vars */) = 0 <0.000222>
+755140 1790035175.781565 +++ exited with 0 +++
+755097 1790035175.781594 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755140, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.781627 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755140 <0.000011>
+755097 1790035175.781658 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755141 1790035175.782111 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"..., ".my"], 0x58aa8bd87840 /* 37 vars */) = 0 <0.000191>
+755141 1790035175.785464 +++ exited with 0 +++
+755097 1790035175.785497 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755141, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.785528 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755141 <0.000010>
+755097 1790035175.785560 wait4(-1, 0x7ffe190e80cc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755142 1790035175.785834 execve("/usr/bin/awk", ["awk", "/^public def test_/ { count++ } "..., "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd87828 /* 37 vars */) = 0 <0.000188>
+755142 1790035175.788971 +++ exited with 0 +++
+755097 1790035175.789004 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755142, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755097 1790035175.789034 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755142 <0.000009>
+755097 1790035175.789066 wait4(-1, 0x7ffe190e812c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755097 1790035175.789178 +++ exited with 0 +++
+755087 1790035175.789227 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755097 <0.177863>
+755087 1790035175.789298 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755097, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.789377 wait4(-1 <unfinished ...>
+755100 1790035175.789390 +++ exited with 0 +++
+755098 1790035175.789685 +++ exited with 0 +++
+755087 1790035175.789737 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755098 <0.000354>
+755087 1790035175.789752 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755098, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.789774 wait4(-1, 0x7ffe190e856c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755143 1790035175.789924 execve("/usr/bin/awk", ["awk", "{ print $1 }", "/tmp/tmp.nhzkYKVHKH"], 0x58aa8bd86b28 /* 37 vars */ <unfinished ...>
+755087 1790035175.790040 wait4(-1 <unfinished ...>
+755143 1790035175.790084 <... execve resumed>) = 0 <0.000148>
+755143 1790035175.792692 +++ exited with 0 +++
+755087 1790035175.792720 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755143 <0.002671>
+755087 1790035175.792744 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755143, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.792770 wait4(-1, 0x7ffe190e84ec, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755087 1790035175.793014 wait4(-1 <unfinished ...>
+755144 1790035175.793109 execve("/usr/bin/awk", ["awk", "/^import / { print $2 }", "/home/epentland/ai/canopy/pcb-wo"...], 0x58aa8bd86bb8 /* 37 vars */ <unfinished ...>
+755145 1790035175.793211 execve("/usr/bin/sort", ["sort"], 0x58aa8bd86b70 /* 37 vars */ <unfinished ...>
+755144 1790035175.793314 <... execve resumed>) = 0 <0.000190>
+755145 1790035175.793443 <... execve resumed>) = 0 <0.000221>
+755144 1790035175.796193 +++ exited with 0 +++
+755087 1790035175.796202 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755144 <0.003182>
+755087 1790035175.796219 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755144, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.796248 wait4(-1 <unfinished ...>
+755146 1790035175.797009 +++ exited with 0 +++
+755145 1790035175.797213 +++ exited with 0 +++
+755087 1790035175.797220 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755145 <0.000966>
+755087 1790035175.797234 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755145, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.797259 wait4(-1, 0x7ffe190e856c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755147 1790035175.797449 execve("/usr/bin/cmp", ["cmp", "-s", "/tmp/tmp.oNt66lnlFr", "/tmp/tmp.NSM896Zkjw"], 0x58aa8bd87768 /* 37 vars */ <unfinished ...>
+755087 1790035175.797560 wait4(-1 <unfinished ...>
+755147 1790035175.797604 <... execve resumed>) = 0 <0.000144>
+755147 1790035175.799561 +++ exited with 0 +++
+755087 1790035175.799595 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755147 <0.002025>
+755087 1790035175.799615 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755147, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.799641 wait4(-1, 0x7ffe190e848c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755148 1790035175.799715 execve("/usr/bin/cmp", ["cmp", "-s", "/tmp/tmp.nhzkYKVHKH", "/tmp/tmp.pBsGBKJ2lY"], 0x58aa8bd87998 /* 37 vars */ <unfinished ...>
+755087 1790035175.799821 wait4(-1 <unfinished ...>
+755148 1790035175.799867 <... execve resumed>) = 0 <0.000141>
+755148 1790035175.801800 +++ exited with 0 +++
+755087 1790035175.801833 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755148 <0.002000>
+755087 1790035175.801852 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755148, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.801876 wait4(-1, 0x7ffe190e848c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000004>
+755149 1790035175.802110 execve("/usr/bin/awk", ["awk", "{ sum += $2 } END { print sum + "..., "/tmp/tmp.nhzkYKVHKH"], 0x58aa8bd86b28 /* 37 vars */) = 0 <0.000184>
+755149 1790035175.805074 +++ exited with 0 +++
+755087 1790035175.805094 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755149, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.805262 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755149 <0.000011>
+755087 1790035175.805298 wait4(-1, 0x7ffe190e837c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000009>
+755150 1790035175.805630 execve("/usr/bin/awk", ["awk", "{ sum += $2 } END { print sum + "..., "/tmp/tmp.pBsGBKJ2lY"], 0x58aa8bd86b28 /* 37 vars */) = 0 <0.000183>
+755150 1790035175.808472 +++ exited with 0 +++
+755087 1790035175.808497 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755150, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.808528 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755150 <0.000009>
+755087 1790035175.808556 wait4(-1, 0x7ffe190e837c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755152 1790035175.809338 execve("/usr/bin/wc", ["wc", "-l"], 0x58aa8bd86bb8 /* 37 vars */ <unfinished ...>
+755151 1790035175.809420 wait4(-1 <unfinished ...>
+755153 1790035175.809466 execve("/usr/bin/tr", ["tr", "-d", " "], 0x58aa8bd86bb0 /* 37 vars */ <unfinished ...>
+755152 1790035175.809548 <... execve resumed>) = 0 <0.000190>
+755153 1790035175.809678 <... execve resumed>) = 0 <0.000202>
+755152 1790035175.813020 +++ exited with 0 +++
+755151 1790035175.813031 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755152 <0.003605>
+755151 1790035175.813050 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755152, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755151 1790035175.813084 wait4(-1 <unfinished ...>
+755153 1790035175.813283 +++ exited with 0 +++
+755151 1790035175.813290 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755153 <0.000199>
+755151 1790035175.813304 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755153, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755151 1790035175.813329 wait4(-1, 0x7ffe190e829c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755151 1790035175.813411 +++ exited with 0 +++
+755087 1790035175.813425 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755151, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.813475 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755151 <0.000010>
+755087 1790035175.813503 wait4(-1, 0x7ffe190e837c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000007>
+755154 1790035175.813808 execve("/usr/bin/rm", ["rm", "-f", "/tmp/tmp.pBsGBKJ2lY", "/tmp/tmp.nhzkYKVHKH", "/tmp/tmp.oNt66lnlFr", "/tmp/tmp.NSM896Zkjw"], 0x58aa8bd86bb8 /* 37 vars */ <unfinished ...>
+755087 1790035175.813944 wait4(-1 <unfinished ...>
+755154 1790035175.813983 <... execve resumed>) = 0 <0.000154>
+755154 1790035175.815756 +++ exited with 0 +++
+755087 1790035175.815798 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755154 <0.001846>
+755087 1790035175.815815 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755154, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755087 1790035175.815845 wait4(-1, 0x7ffe190e84dc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755087 1790035175.815949 +++ exited with 0 +++
+755059 1790035175.815965 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755087 <0.248000>
+755059 1790035175.815983 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755087, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755059 1790035175.816013 wait4(-1, 0x7ffeb562e7ac, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755155 1790035175.816320 execve("/home/epentland/ai/canopy/pcb-workbench/tools/workbench-store.py", ["/home/epentland/ai/canopy/pcb-wo"..., "snapshot", "tests"], 0x5cf0a4fa5b28 /* 37 vars */) = 0 <0.000176>
+755155 1790035175.819361 execve("/home/epentland/.codex/packages/standalone/releases/0.153.4-x86_64-unknown-linux-musl/codex-path/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "snapshot", "tests"], 0x7ffde0a99528 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000010>
+755155 1790035175.819399 execve("/home/epentland/.local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "snapshot", "tests"], 0x7ffde0a99528 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000007>
+755155 1790035175.819429 execve("/home/epentland/.codex/tmp/arg0/codex-arg0Hl1Wod/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "snapshot", "tests"], 0x7ffde0a99528 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000007>
+755155 1790035175.819459 execve("/home/epentland/.codex/packages/standalone/releases/0.153.4-x86_64-unknown-linux-musl/codex-path/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "snapshot", "tests"], 0x7ffde0a99528 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000006>
+755155 1790035175.819487 execve("/home/epentland/.local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "snapshot", "tests"], 0x7ffde0a99528 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000006>
+755155 1790035175.819516 execve("/home/epentland/.local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "snapshot", "tests"], 0x7ffde0a99528 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000006>
+755155 1790035175.819543 execve("/home/epentland/.local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "snapshot", "tests"], 0x7ffde0a99528 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000006>
+755155 1790035175.819571 execve("/usr/local/sbin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "snapshot", "tests"], 0x7ffde0a99528 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000006>
+755155 1790035175.819600 execve("/usr/local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "snapshot", "tests"], 0x7ffde0a99528 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000006>
+755155 1790035175.819629 execve("/usr/sbin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "snapshot", "tests"], 0x7ffde0a99528 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000007>
+755155 1790035175.819658 execve("/usr/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "snapshot", "tests"], 0x7ffde0a99528 /* 37 vars */) = 0 <0.000289>
+755155 1790035175.876911 +++ exited with 0 +++
+755059 1790035175.876972 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755155, si_uid=1000, si_status=0, si_utime=3 /* 0.03 s */, si_stime=1 /* 0.01 s */} ---
+755059 1790035175.877075 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755155 <0.000011>
+755059 1790035175.877113 wait4(-1, 0x7ffeb562e6fc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755156 1790035175.877727 execve("/usr/bin/basename", ["basename", "/home/epentland/.cache/mylang/wo"...], 0x5cf0a4fa5bf0 /* 37 vars */) = 0 <0.000278>
+755156 1790035175.881340 +++ exited with 0 +++
+755059 1790035175.881381 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755156, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755059 1790035175.881507 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755156 <0.000014>
+755059 1790035175.881539 wait4(-1, 0x7ffeb562e6fc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755157 1790035175.882052 execve("/usr/bin/basename", ["basename", "/home/epentland/ai/canopy/pcb-wo"...], 0x5cf0a4fa6688 /* 37 vars */) = 0 <0.000196>
+755157 1790035175.885396 +++ exited with 0 +++
+755059 1790035175.885418 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755157, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755059 1790035175.885476 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755157 <0.000011>
+755059 1790035175.885511 wait4(-1, 0x7ffeb562e6fc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755158 1790035175.885948 execve("/usr/bin/mktemp", ["mktemp", "-d", "/home/epentland/ai/canopy/pcb-wo"...], 0x5cf0a4fa7588 /* 37 vars */) = 0 <0.000186>
+755158 1790035175.889405 +++ exited with 0 +++
+755059 1790035175.889430 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755158, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755059 1790035175.889467 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755158 <0.000009>
+755059 1790035175.889500 wait4(-1, 0x7ffeb562e6fc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755160 1790035175.890209 +++ exited with 0 +++
+755159 1790035175.890219 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755160, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755161 1790035175.890489 execve("/usr/bin/sha256sum", ["sha256sum"], 0x5cf0a4fa6688 /* 37 vars */ <unfinished ...>
+755159 1790035175.890692 wait4(-1 <unfinished ...>
+755161 1790035175.890701 <... execve resumed>) = 0 <0.000200>
+755159 1790035175.890709 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755160 <0.000010>
+755159 1790035175.890730 wait4(-1 <unfinished ...>
+755162 1790035175.890854 execve("/usr/bin/awk", ["awk", "{ print $1 }"], 0x5cf0a4fa6688 /* 37 vars */) = 0 <0.000219>
+755161 1790035175.893508 +++ exited with 0 +++
+755159 1790035175.893518 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755161 <0.002783>
+755159 1790035175.893536 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755161, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755159 1790035175.893567 wait4(-1 <unfinished ...>
+755162 1790035175.893930 +++ exited with 0 +++
+755159 1790035175.893936 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755162 <0.000364>
+755159 1790035175.893950 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755162, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755159 1790035175.893977 wait4(-1, 0x7ffeb562e61c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755159 1790035175.894054 +++ exited with 0 +++
+755059 1790035175.894066 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755159, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755059 1790035175.894108 wait4(-1, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755159 <0.000008>
+755059 1790035175.894133 wait4(-1, 0x7ffeb562e6fc, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755163 1790035175.894227 execve("/usr/bin/mkdir", ["mkdir", "-p", "/home/epentland/.cache/mylang/wo"...], 0x5cf0a4fa5b28 /* 37 vars */ <unfinished ...>
+755059 1790035175.894342 wait4(-1 <unfinished ...>
+755163 1790035175.894381 <... execve resumed>) = 0 <0.000143>
+755163 1790035175.897666 +++ exited with 0 +++
+755059 1790035175.897715 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755163 <0.003366>
+755059 1790035175.897732 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755163, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755059 1790035175.897761 wait4(-1, 0x7ffeb562e86c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755164 1790035175.898064 execve("/usr/bin/flock", ["flock", "9"], 0x5cf0747d6588 /* 37 vars */ <unfinished ...>
+755059 1790035175.898196 wait4(-1 <unfinished ...>
+755164 1790035175.898248 <... execve resumed>) = 0 <0.000166>
+755164 1790035175.899949 +++ exited with 0 +++
+755059 1790035175.899987 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755164 <0.001784>
+755059 1790035175.900005 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755164, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755059 1790035175.900041 wait4(-1, 0x7ffeb562e86c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755165 1790035175.900453 execve("/usr/bin/env", ["env", "-u", "MYLANG_HOST_COMPILER", "/home/epentland/.cache/mylang/wo"..., "test", "/home/epentland/.cache/mylang/wo"..., "--cache-dir", "/home/epentland/.cache/mylang/wo"..., "--max-steps", "4294967295", "--report", "--json", "--qbe", "/home/epentland/.cache/mylang/wo"..., "--zig", "/home/epentland/zig-toolchains/0"...], 0x5cf0a4faa4a0 /* 37 vars */ <unfinished ...>
+755059 1790035175.900579 wait4(-1 <unfinished ...>
+755165 1790035175.900617 <... execve resumed>) = 0 <0.000144>
+755165 1790035175.902951 execve("/home/epentland/.cache/mylang/workbench/toolchains/4bbbce22f660a58c0f7a024d5a31138cc6a8bb32b1040f8b8d59295761cf72ce/bin/mylang", ["/home/epentland/.cache/mylang/wo"..., "test", "/home/epentland/.cache/mylang/wo"..., "--cache-dir", "/home/epentland/.cache/mylang/wo"..., "--max-steps", "4294967295", "--report", "--json", "--qbe", "/home/epentland/.cache/mylang/wo"..., "--zig", "/home/epentland/zig-toolchains/0"...], 0x7ffc8b9cc150 /* 37 vars */) = 0 <0.000349>
+755168 1790035176.367073 execve("/home/epentland/.cache/mylang/workbench/toolchains/4bbbce22f660a58c0f7a024d5a31138cc6a8bb32b1040f8b8d59295761cf72ce/bin/mylang", ["/home/epentland/.cache/mylang/wo"..., "list-interfaces", "--contracts", "/tmp/.pending/f833c0f7682c7ceebd"..., "--report"], 0x709bd1a5aad0 /* 37 vars */) = 0 <0.000854>
+755168 1790035177.655273 +++ exited with 0 +++
+755165 1790035177.655301 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755168, si_uid=1000, si_status=0, si_utime=106 /* 1.06 s */, si_stime=8 /* 0.08 s */} ---
+755165 1790035177.655321 wait4(755168, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755168 <0.000008>
+755175 1790035177.843278 execve("/home/epentland/.cache/mylang/workbench/toolchains/4bbbce22f660a58c0f7a024d5a31138cc6a8bb32b1040f8b8d59295761cf72ce/bin/mylang", ["/home/epentland/.cache/mylang/wo"..., "check-project", "/tmp/.pending/f833c0f7682c7ceebd"..., "--cache-dir=/home/epentland/.cac"..., "--report"], 0x709bbaa94200 /* 37 vars */) = 0 <0.001111>
+755175 1790035178.352047 +++ exited with 0 +++
+755165 1790035178.352072 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755175, si_uid=1000, si_status=0, si_utime=49 /* 0.49 s */, si_stime=1 /* 0.01 s */} ---
+755165 1790035178.352090 wait4(755175, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755175 <0.000008>
+755165 1790035181.567414 +++ exited with 0 +++
+755059 1790035181.567552 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755165 <5.666963>
+755059 1790035181.567586 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755165, si_uid=1000, si_status=0, si_utime=372 /* 3.72 s */, si_stime=8 /* 0.08 s */} ---
+755059 1790035181.567620 wait4(-1, 0x7ffeb562e86c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000005>
+755176 1790035181.567965 execve("/home/epentland/ai/canopy/pcb-workbench/tools/summarize-test-report.py", ["/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "734cb427fa13f36fb4b6a5f3e88b4a3f"...], 0x5cf0a4fa6688 /* 37 vars */ <unfinished ...>
+755059 1790035181.568195 wait4(-1 <unfinished ...>
+755176 1790035181.568343 <... execve resumed>) = 0 <0.000349>
+755176 1790035181.571545 execve("/home/epentland/.codex/packages/standalone/releases/0.153.4-x86_64-unknown-linux-musl/codex-path/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "734cb427fa13f36fb4b6a5f3e88b4a3f"...], 0x7fffe5fdfa40 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000011>
+755176 1790035181.571594 execve("/home/epentland/.local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "734cb427fa13f36fb4b6a5f3e88b4a3f"...], 0x7fffe5fdfa40 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000007>
+755176 1790035181.571625 execve("/home/epentland/.codex/tmp/arg0/codex-arg0Hl1Wod/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "734cb427fa13f36fb4b6a5f3e88b4a3f"...], 0x7fffe5fdfa40 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000007>
+755176 1790035181.571659 execve("/home/epentland/.codex/packages/standalone/releases/0.153.4-x86_64-unknown-linux-musl/codex-path/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "734cb427fa13f36fb4b6a5f3e88b4a3f"...], 0x7fffe5fdfa40 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000006>
+755176 1790035181.571687 execve("/home/epentland/.local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "734cb427fa13f36fb4b6a5f3e88b4a3f"...], 0x7fffe5fdfa40 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000006>
+755176 1790035181.571714 execve("/home/epentland/.local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "734cb427fa13f36fb4b6a5f3e88b4a3f"...], 0x7fffe5fdfa40 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000006>
+755176 1790035181.571741 execve("/home/epentland/.local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "734cb427fa13f36fb4b6a5f3e88b4a3f"...], 0x7fffe5fdfa40 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000006>
+755176 1790035181.571767 execve("/usr/local/sbin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "734cb427fa13f36fb4b6a5f3e88b4a3f"...], 0x7fffe5fdfa40 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000007>
+755176 1790035181.571795 execve("/usr/local/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "734cb427fa13f36fb4b6a5f3e88b4a3f"...], 0x7fffe5fdfa40 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000006>
+755176 1790035181.571822 execve("/usr/sbin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "734cb427fa13f36fb4b6a5f3e88b4a3f"...], 0x7fffe5fdfa40 /* 37 vars */) = -1 ENOENT (No such file or directory) <0.000006>
+755176 1790035181.571849 execve("/usr/bin/python3", ["python3", "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "/home/epentland/ai/canopy/pcb-wo"..., "734cb427fa13f36fb4b6a5f3e88b4a3f"...], 0x7fffe5fdfa40 /* 37 vars */) = 0 <0.000399>
+755176 1790035181.595880 +++ exited with 0 +++
+755059 1790035181.596055 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 755176 <0.027849>
+755059 1790035181.596139 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755176, si_uid=1000, si_status=0, si_utime=1 /* 0.01 s */, si_stime=0} ---
+755059 1790035181.596242 wait4(-1, 0x7ffeb562e86c, WNOHANG, NULL) = -1 ECHILD (No child processes) <0.000006>
+755059 1790035181.596585 +++ exited with 0 +++
+755058 1790035181.596649 <... wait4 resumed>, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, {ru_utime={tv_sec=5, tv_usec=496043}, ru_stime={tv_sec=0, tv_usec=365666}, ...}) = 755059 <6.180372>
+755058 1790035181.596670 --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=755059, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
+755058 1790035181.604535 +++ exited with 0 +++

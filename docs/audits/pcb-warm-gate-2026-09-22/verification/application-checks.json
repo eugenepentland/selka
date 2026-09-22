@@ -1,0 +1,27 @@
+[
+  {
+    "command": "help",
+    "seconds": 0.2077699959918391,
+    "status": 0
+  },
+  {
+    "command": "status",
+    "seconds": 0.22302776901051402,
+    "status": 0
+  },
+  {
+    "command": "observe",
+    "seconds": 0.23896453599445522,
+    "status": 0
+  },
+  {
+    "command": "evaluate",
+    "seconds": 0.2375644999992801,
+    "status": 3
+  },
+  {
+    "command": "unknown-command",
+    "seconds": 0.21497636099229567,
+    "status": 2
+  }
+]

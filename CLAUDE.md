@@ -14,6 +14,11 @@ any other toolchain.
 - `zig build test` — runs the gate. It **does not install**, so `zig-out/bin/mylang` stays
   stale unless you also ran `zig build`.
 - `zig build test-compile` — type-checks every Zig test root without running anything.
+- Use `zig build -Doptimize=ReleaseFast --prefix /path/to/install` for a compiler
+  installation used by application agents or performance measurements. Default
+  `zig build` produces a Debug compiler; cached guest tests still pay its parsing,
+  JSON and dependency-planning costs. This setting optimizes the compiler itself,
+  independently of the guest program's backend and optimization flags.
 
 ## Fast loops (use these while iterating)
 

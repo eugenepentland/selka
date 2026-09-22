@@ -1,0 +1,37 @@
+[
+  {
+    "mode": "ReleaseFast",
+    "seconds": 0.8106511009973474,
+    "cached": 400,
+    "executed": 0,
+    "report": "/home/epentland/ai/canopy/pcb-workbench/.workbench/results/test-734cb427fa13f36fb4b6a5f3e88b4a3f8c0672dd119a4bd6471788218a642090.qkU4ii/result.jsonl"
+  },
+  {
+    "mode": "Debug",
+    "seconds": 5.183290241999202,
+    "cached": 400,
+    "executed": 0,
+    "report": "/tmp/pcb-shared-cache-20260921/real worktree A/.workbench/results/test-734cb427fa13f36fb4b6a5f3e88b4a3f8c0672dd119a4bd6471788218a642090.tpTdXV/result.jsonl"
+  },
+  {
+    "mode": "ReleaseFast",
+    "seconds": 0.676487297998392,
+    "cached": 400,
+    "executed": 0,
+    "report": "/home/epentland/ai/canopy/pcb-workbench/.workbench/results/test-734cb427fa13f36fb4b6a5f3e88b4a3f8c0672dd119a4bd6471788218a642090.C48AnV/result.jsonl"
+  },
+  {
+    "mode": "Debug",
+    "seconds": 5.212791719997767,
+    "cached": 400,
+    "executed": 0,
+    "report": "/tmp/pcb-shared-cache-20260921/real worktree A/.workbench/results/test-734cb427fa13f36fb4b6a5f3e88b4a3f8c0672dd119a4bd6471788218a642090.VxlRLE/result.jsonl"
+  },
+  {
+    "mode": "ReleaseFast",
+    "seconds": 0.7393491190014174,
+    "cached": 400,
+    "executed": 0,
+    "report": "/home/epentland/ai/canopy/pcb-workbench/.workbench/results/test-734cb427fa13f36fb4b6a5f3e88b4a3f8c0672dd119a4bd6471788218a642090.HeCfKy/result.jsonl"
+  }
+]

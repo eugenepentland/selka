@@ -1,0 +1,64 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e: 22/393 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 10 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 8 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1446 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e, 22 file(s) in scope
+guardian: diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e: 22/393 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 10 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 8 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1446 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e, 22 file(s) in scope
+test-native-tests
++- run test w
+guardian/test: 150 test(s) selected
+guardian/test: test wall 3.51s; slowest over 50ms:
+guardian/test:   1.65s  qbe_build_io.test.concurrent staging in one destination never loses a child to another build's reclaim
+guardian/test:   1.08s  native_test_wire.test.local mutation reuses a receipt while output executes again
+guardian/test:   0.71s  native_test_wire.test.a record, an array, a nested record, a zero-length and a large argument round-trip through mylang test
+guardian/test: PASS — 150 passed
+guardian/test: RESULT {"passed":150,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_LLVM_ADAPTER=/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py ./.zig-cache/o/13bd1636d81fa845e22de5bebd8eddcd/test --cache-dir=./.zig-cache --seed=0x47b24cad --listen=-
+
+Build Summary: 26/26 steps succeeded; 150/150 tests passed
+test-native-tests success
++- run test 150 pass (150 total) 3s MaxRSS:93M
+|  +- compile test fast native success 49s MaxRSS:1G
+|  |  +- WriteFile src/native_arena.c cached
+|  +- install success
+|     +- install mylang success
+|     |  +- compile exe mylang fast native cached 7ms MaxRSS:42M
+|     |  |  +- WriteFile src/native_arena.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check success 683ms
+|     |     +- guardian-selfcheck success
+|     |        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
+|     +- install qbe cached
+|     |  +- compile exe qbe fast native cached 15ms MaxRSS:39M
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- install experiments/llvm-backend/qbe_llvm.py to mylang-llvm/qbe_llvm.py cached
+|     +- install experiments/llvm-backend/llvm_emit.py to mylang-llvm/llvm_emit.py cached
+|     +- install experiments/llvm-backend/runtime_signatures.py to mylang-llvm/runtime_signatures.py cached
+|     +- install experiments/llvm-backend/amd64_sysv.py to mylang-llvm/amd64_sysv.py cached
+|     +- install generated/ success
+|     |  +- run exe mylang (mylang-runtime) success 5s
+|     |     +- compile exe mylang fast native (+1 more reused dependencies)
+|     |     +- compile exe qbe fast native (reused)
+|     +- install board-trial success
+|     |  +- compile exe board-trial fast native cached 7ms MaxRSS:42M
+|     |  |  +- options cached
+|     |  |  |  +- compile exe qbe fast native (reused)
+|     |  |  +- WriteFile src/native_arena.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- install schematic-svg success
+|     |  +- compile exe schematic-svg fast native cached 7ms MaxRSS:42M
+|     |  |  +- options (+1 more reused dependencies)
+|     |  |  +- WriteFile src/native_arena.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- install mylang-io success
+|     |  +- compile exe mylang-io fast native cached 7ms MaxRSS:42M
+|     |  |  +- options (+1 more reused dependencies)
+|     |  |  +- WriteFile src/native_arena.c (reused)
+|     |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|     +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check success 699ms
+   +- guardian-selfcheck (+1 more reused dependencies)

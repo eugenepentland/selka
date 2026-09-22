@@ -1,0 +1,28 @@
+diff --git a/AGENTS.md b/AGENTS.md
+index 95f1b11..41cca98 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -11 +11,3 @@
+-  checkout's pin; review and commit it deliberately.
++  checkout's pin; review and commit it deliberately. Build the compiler install
++  with `zig build -Doptimize=ReleaseFast --prefix PATH` before verification and
++  pinning. Default `zig build` produces a Debug compiler with slow warm tests.
+diff --git a/README.md b/README.md
+index 261aec0..40a3088 100644
+--- a/README.md
++++ b/README.md
+@@ -41,0 +42,7 @@ toolchain experiment and bypasses the active pin.
++The pinned compiler itself is built with `-Doptimize=ReleaseFast`. A default
++`zig build` produces a Debug compiler and makes even fully cached guest tests
++several times slower. To prepare a replacement installation, build Mylang with
++`zig build -Doptimize=ReleaseFast --prefix /path/to/install`, verify it, then
++register that complete install with `tools/update-toolchain.sh`. This compiler
++build setting is separate from the guest application's LLVM optimization mode.
++
+diff --git a/workbench.json b/workbench.json
+index 8888b59..855b7d7 100644
+--- a/workbench.json
++++ b/workbench.json
+@@ -4 +4 @@
+-  "toolchain": "4bbbce22f660a58c0f7a024d5a31138cc6a8bb32b1040f8b8d59295761cf72ce"
++  "toolchain": "18971074cb0b1993a57482a93776ce94f9dc39efe30f63de496d66c8fb22df12"

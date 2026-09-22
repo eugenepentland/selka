@@ -1,0 +1,2 @@
+f9a7ba227e46861e3f76af9f5b10a3944c22c4215176ad1aee7243cb5d1a3fa4  zig-out/bin/mylang
+f9a7ba227e46861e3f76af9f5b10a3944c22c4215176ad1aee7243cb5d1a3fa4  /home/epentland/.cache/mylang/workbench/toolchains/4bbbce22f660a58c0f7a024d5a31138cc6a8bb32b1040f8b8d59295761cf72ce/bin/mylang

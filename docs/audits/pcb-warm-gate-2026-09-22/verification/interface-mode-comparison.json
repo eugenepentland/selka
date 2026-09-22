@@ -1,0 +1,22 @@
+[
+  {
+    "mode": "Debug",
+    "run": 0,
+    "seconds": 0.6149886380007956
+  },
+  {
+    "mode": "Debug",
+    "run": 1,
+    "seconds": 0.6180287809984293
+  },
+  {
+    "mode": "ReleaseFast",
+    "run": 0,
+    "seconds": 0.13287224501254968
+  },
+  {
+    "mode": "ReleaseFast",
+    "run": 1,
+    "seconds": 0.07502789299178403
+  }
+]

@@ -1,0 +1,42 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e: 22/393 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 10 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 8 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1446 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 3f1331f3bbd03bfa28826bcc02e12c21c406689e, 22 file(s) in scope
+Build Summary: 22/22 steps succeeded
+install success
++- install mylang success
+|  +- compile exe mylang fast native success 2m MaxRSS:2G
+|  |  +- WriteFile src/native_arena.c success
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 563ms
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
++- install qbe success
+|  +- compile exe qbe fast native cached 16ms MaxRSS:41M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install experiments/llvm-backend/qbe_llvm.py to mylang-llvm/qbe_llvm.py success
++- install experiments/llvm-backend/llvm_emit.py to mylang-llvm/llvm_emit.py success
++- install experiments/llvm-backend/runtime_signatures.py to mylang-llvm/runtime_signatures.py success
++- install experiments/llvm-backend/amd64_sysv.py to mylang-llvm/amd64_sysv.py success
++- install generated/ success
+|  +- run exe mylang (mylang-runtime) success 4s
+|     +- compile exe mylang fast native (+1 more reused dependencies)
+|     +- compile exe qbe fast native (reused)
++- install board-trial success
+|  +- compile exe board-trial fast native success 1m MaxRSS:1G
+|  |  +- options cached
+|  |  |  +- compile exe qbe fast native (reused)
+|  |  +- WriteFile src/native_arena.c (reused)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install schematic-svg success
+|  +- compile exe schematic-svg fast native success 1m MaxRSS:1G
+|  |  +- options (+1 more reused dependencies)
+|  |  +- WriteFile src/native_arena.c (reused)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install mylang-io success
+|  +- compile exe mylang-io fast native success 1m MaxRSS:1G
+|  |  +- options (+1 more reused dependencies)
+|  |  +- WriteFile src/native_arena.c (reused)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
