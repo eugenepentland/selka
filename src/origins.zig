@@ -361,6 +361,23 @@ const Context = struct {
         return origin;
     }
 
+    /// The caller inputs a callee's write through one argument can reach. A
+    /// fixed array crosses a `mut` position as the caller's own variable, so a
+    /// write to its elements reaches only that variable: a parameter's
+    /// position when the argument passes a parameter on, fresh storage for a
+    /// local. Managed elements it holds are shared like any value's, so their
+    /// origins still count.
+    fn writtenArgumentOrigin(self: *const Context, function: typed.Function, origins: []const Origin, argument: typed.NodeId) Origin {
+        const node = self.program.nodes[@backingInt(argument)];
+        if (!typed.referenceArray(self.program.records, node.ty)) return self.nodeOrigin(function, origins, argument, 0);
+        const own: Origin = if (node.data == .local and @backingInt(node.data.local) < function.signature.parameter_count)
+            Origin.fromPosition(@intCast(@backingInt(node.data.local)))
+        else
+            .{};
+        if (!mayContainManaged(self.program, node.ty)) return own;
+        return Origin.merge(own, self.nodeOrigin(function, origins, argument, 0));
+    }
+
     fn callResultOrigin(self: *const Context, function: typed.Function, origins: []const Origin, callee: typed.FunctionId, arguments: []const typed.NodeId, depth: usize) Origin {
         const index = @backingInt(callee);
         if (index >= self.summaries.len) return .{ .unknown = true };
@@ -419,11 +436,23 @@ const WriteSite = struct {
                 if (self.summary.witness == null) self.summary.witness = span;
                 continue;
             }
-            const origin_value = self.context.nodeOrigin(self.function, self.origins, self.arguments[position], 0);
+            const origin_value = self.context.writtenArgumentOrigin(self.function, self.origins, self.arguments[position]);
             self.absorbWrite(origin_value, span);
         }
     }
 };
+
+/// Record an element write `a[i] = v` into a local. Only a fixed-array
+/// parameter's own storage belongs to the caller — a `mut` one is the caller's
+/// array, and any other is refused as an undeclared write exactly as a list
+/// parameter is — so a write into any other local stays inside this frame.
+fn absorbElementWrite(context: *const Context, function: typed.Function, origins: []const Origin, store: typed.Store, span: source.Span, summary: *Summary) void {
+    const slot = @backingInt(store.slot);
+    if (!store.element or slot >= function.signature.parameter_count) return;
+    if (!typed.referenceArray(context.program.records, function.scope.locals[slot].ty)) return;
+    const site = WriteSite{ .context = context, .function = function, .origins = origins, .arguments = &.{}, .summary = summary };
+    site.absorbWrite(Origin.fromPosition(@intCast(slot)), span);
+}
 
 fn absorbDirectWrite(context: *const Context, function: typed.Function, origins: []const Origin, node: typed.Node, summary: *Summary) void {
     const witness = mutation.typedNode(context.program, function, node) orelse return;
@@ -468,6 +497,7 @@ fn applyStatement(context: *const Context, function: typed.Function, origins: []
             const value = context.nodeOrigin(function, origins, store.value, 0);
             const slot = @backingInt(store.slot);
             if (slot < origins.len) origins[slot] = Origin.merge(origins[slot], value);
+            absorbElementWrite(context, function, origins, store, statement.span, summary);
         },
         .ret => |value| summary.return_origin = Origin.merge(summary.return_origin, context.nodeOrigin(function, origins, value, 0)),
         else => {},

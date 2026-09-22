@@ -97,6 +97,11 @@ fn eligible(program: bytecode.Program, index: usize, code: []const bytecode.Inst
     if (code.len == 0 or code.len > max_loop_instructions) return false;
     if (locals.len > max_locals) return false;
     if (function.signature.parameter_count > locals.len) return false;
+    // A `mut` fixed array names its caller's variable; a splice would bind a
+    // copy of it instead, so such a callee keeps its call.
+    for (function.signature.declared_mutates) |position| {
+        if (position < locals.len and typed.referenceArray(program.records, locals[position].ty)) return false;
+    }
     var returns = false;
     for (code) |instruction| {
         if (instruction.op == .ret) returns = true;
@@ -355,6 +360,7 @@ fn remapCallee(allocator: std.mem.Allocator, op: @FieldType(bytecode.Instruction
         .jump => |target| .{ .jump = body_base + target },
         .jump_if_false => |target| .{ .jump_if_false = body_base + target },
         .load_local => |slot| .{ .load_local = shift(slot, fresh) },
+        .ref_local => |slot| .{ .ref_local = shift(slot, fresh) },
         .store_local => |slot| .{ .store_local = shift(slot, fresh) },
         .move_local => |slot| .{ .move_local = shift(slot, fresh) },
         .drop_local => |slot| .{ .drop_local = shift(slot, fresh) },

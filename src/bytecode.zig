@@ -235,6 +235,12 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         .load_local, .store_local, .move_local, .drop_local => |slot| if (@backingInt(slot) >= function.scope.locals.len) {
             return error.InternalError;
         },
+        // Only a fixed array crosses a call as its caller's own storage.
+        .ref_local => |slot| if (@backingInt(slot) >= function.scope.locals.len or
+            !typed.referenceArray(program.records, function.scope.locals[@backingInt(slot)].ty))
+        {
+            return error.InternalError;
+        },
         .wrap_domain, .unwrap_domain => |ty| {
             if (function.policy.owner != ty and !@import("numeric_surface.zig").isFloat(ty, program.records)) return error.InternalError;
             if (!ty.isAggregate()) return error.InternalError;
@@ -563,7 +569,7 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
         const instruction = function.scope.instructions[pc];
         var height = heights[pc].?;
         switch (instruction.op) {
-            .function_value, .push_unit, .push_i64, .push_bool, .push_integer, .load_local, .move_local => height += 1,
+            .function_value, .push_unit, .push_i64, .push_bool, .push_integer, .load_local, .ref_local, .move_local => height += 1,
             .drop_local, .begin_arena, .end_arena => {},
             .resource_io => |io| {
                 height = try resourceIoHeight(io, height);

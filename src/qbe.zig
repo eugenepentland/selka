@@ -268,11 +268,12 @@ const ownedPointer = qbe_wire.ownedPointer;
 const ArmAddress = struct { slot: usize, source: usize, offset: u64, indirect: bool };
 
 /// Whether any instruction writes local `slot`: a whole-value store, a move
-/// that also clears the source, an explicit drop, or a match arm's payload
-/// binding, which blits the payload into the arm's slot.
+/// that also clears the source, an explicit drop, a match arm's payload
+/// binding, which blits the payload into the arm's slot, or a `ref_local`,
+/// which hands the slot's storage to a callee that writes through it.
 fn writtenLocal(function: bytecode.Function, slot: usize) bool {
     for (function.scope.instructions) |instruction| switch (instruction.op) {
-        .store_local, .move_local, .drop_local => |target| if (@backingInt(target) == slot) return true,
+        .store_local, .move_local, .drop_local, .ref_local => |target| if (@backingInt(target) == slot) return true,
         .switch_variant => |dispatch| for (dispatch.arms) |arm| if (arm.slot) |target| if (@backingInt(target) == slot) return true,
         else => {},
     };
@@ -280,10 +281,11 @@ fn writtenLocal(function: bytecode.Function, slot: usize) bool {
 }
 
 /// Whether the instruction at `pc` writes local `index`: a whole-value store, a
-/// move, an explicit drop, or a match arm's payload binding into it.
+/// move, an explicit drop, a match arm's payload binding into it, or a
+/// `ref_local` handing its storage to a callee that writes through it.
 fn writesLocalAt(f: bytecode.Function, pc: usize, index: usize) bool {
     return switch (f.scope.instructions[pc].op) {
-        .store_local, .move_local, .drop_local => |target| @backingInt(target) == index,
+        .store_local, .move_local, .drop_local, .ref_local => |target| @backingInt(target) == index,
         .switch_variant => |dispatch| armWrites(dispatch.arms, index),
         else => false,
     };
@@ -302,7 +304,7 @@ fn armWrites(arms: []const @import("bytecode_model.zig").SwitchArm, index: usize
 /// holds stale or the value it names released.
 fn writtenOutsideBindings(f: bytecode.Function, slot: usize) bool {
     for (f.scope.instructions) |instruction| switch (instruction.op) {
-        .store_local, .move_local, .drop_local => |target| if (@backingInt(target) == slot) return true,
+        .store_local, .move_local, .drop_local, .ref_local => |target| if (@backingInt(target) == slot) return true,
         else => {},
     };
     return false;
@@ -579,7 +581,7 @@ fn stickyTrap(text: []const u8) bool {
 /// temporary has no reader other than the pair a fusion replaces.
 fn mentionsLocal(op: @FieldType(bytecode.Instruction, "op"), slot: typed.LocalId) bool {
     switch (op) {
-        .begin_arena, .end_arena, .move_local, .drop_local, .load_local, .store_local => |other| return other == slot,
+        .begin_arena, .end_arena, .move_local, .drop_local, .load_local, .ref_local, .store_local => |other| return other == slot,
         .buffer_operation => |operation| return operation.owner == slot,
         .resource_io => |operation| return operation.owner == slot,
         .file_method => |method| return method.owner == slot,
@@ -1568,6 +1570,13 @@ const Emitter = struct {
     fn readLocal(self: *Emitter, index: usize, slot: usize) GenerateError!void {
         const ty = self.function.scope.locals[index].ty;
         if (scalar(ty, self.program.records)) return self.store(slot, try self.load("l", index));
+        if (self.callerStorage(index) and !try self.borrowableLocal(index, slot)) {
+            // A `mut` array parameter is written through while this operand
+            // could still be read, so the operand is a snapshot of the caller's
+            // array exactly as an ordinary local's would be.
+            const caller = try self.load("l", index);
+            return self.print(" blit %v{d}, %agg{d}, {d}\n storel %agg{d}, %s{d}\n", .{ caller, self.pc, (try self.layout(ty)).size, self.pc, slot });
+        }
         if (self.byReference(index)) return self.store(slot, try self.load("l", index));
         if (try self.borrowableLocal(index, slot)) return self.print(" storel %l{d}, %s{d}\n", .{ index, slot });
         try self.print(" blit %l{d}, %agg{d}, {d}\n storel %agg{d}, %s{d}\n", .{ index, self.pc, (try self.layout(ty)).size, self.pc, slot });
@@ -1585,6 +1594,7 @@ const Emitter = struct {
     fn borrowableLocal(self: *Emitter, index: usize, slot: usize) GenerateError!bool {
         const value = try self.layout(self.function.scope.locals[index].ty);
         if (value.drop) return false;
+        if (self.pendingReference(index)) return false;
         // A zero-length aggregate copies nothing; it keeps the scratch the
         // frame protocol places after the entry block, because that scratch is
         // what stops QBE folding a null-like address into the load.
@@ -1614,6 +1624,37 @@ const Emitter = struct {
         if (op == .switch_variant) for (op.switch_variant.arms) |arm| if (arm.slot) |target| if (@backingInt(target) == index) return false;
         return consumesOperand(op);
     }
+    /// Whether local `index` is a `mut` fixed-array parameter. Its slot holds
+    /// the caller's address, as a read-only parameter's does, but this function
+    /// writes the caller's array through it: an element write lands in the
+    /// caller's variable, and no entry copy is ever taken.
+    pub fn callerStorage(self: *Emitter, index: usize) bool {
+        const signature = self.function.signature;
+        if (index >= signature.parameter_count) return false;
+        for (signature.declared_mutates) |position| if (position == index)
+            return typed.referenceArray(self.program.records, self.function.scope.locals[index].ty);
+        return false;
+    }
+    /// Whether an operand already on the stack below the read at this pc is a
+    /// `ref_local` of local `index`: the call that consumes both will write
+    /// through that address, so this read cannot name the same storage. The
+    /// operands below were all pushed at or after the last instruction that ran
+    /// with an empty stack, so the scan stops there.
+    fn pendingReference(self: *Emitter, index: usize) bool {
+        const below = self.states[self.pc] orelse return true;
+        if (below.len == 0) return false;
+        var pc = self.pc;
+        while (pc > 0) {
+            pc -= 1;
+            switch (self.function.scope.instructions[pc].op) {
+                .ref_local => |target| if (@backingInt(target) == index) return true,
+                else => {},
+            }
+            const before = self.states[pc] orelse return true;
+            if (before.len == 0) return false;
+        }
+        return false;
+    }
     /// Mark every parameter this function never writes. Such a parameter
     /// crosses the call boundary as the address of the caller's value, which
     /// the callee reads where it is: the caller's copy at the argument site
@@ -1636,7 +1677,7 @@ const Emitter = struct {
             // frame protocol places after the entry block, because that scratch
             // is what stops QBE folding a null-like address into the load.
             if (value.size == 0) continue;
-            if (writtenLocal(f, index)) continue;
+            if (writtenLocal(f, index) and !self.callerStorage(index)) continue;
             flags[index] = .value;
         }
         self.arm_addresses = try self.payloadAddresses(f, flags);
@@ -2706,6 +2747,13 @@ const Emitter = struct {
             .push_bool => |v| try self.print(store_scalar, .{ @intFromBool(v), h }),
             .push_unit => try self.print(" storel 0, %s{d}\n", .{h}),
             .make_record, .get_field, .update_record, .array_length, .get_index, .replace_index, .make_variant, .switch_variant => try @import("qbe_aggregate.zig").emit(self, op, stack),
+            .ref_local => |slot| {
+                // The argument a `mut` array parameter receives: the address of
+                // this frame's variable, or the caller's address a `mut` array
+                // parameter of this function already holds.
+                const index = @backingInt(slot);
+                if (self.byReference(index)) try self.store(h, try self.load("l", index)) else try self.print(" storel %l{d}, %s{d}\n", .{ index, h });
+            },
             .load_local, .move_local => |slot| {
                 const index = @backingInt(slot);
                 const ty = self.function.scope.locals[index].ty;
@@ -2715,17 +2763,24 @@ const Emitter = struct {
             .store_local => |slot| {
                 const index = @backingInt(slot);
                 const ty = self.function.scope.locals[index].ty;
+                // QBE-CTORFWD-1 and QBE-ARRAYWRITE-1: the instruction before
+                // this store may already have written this local where it
+                // lives — a constructor field by field, a `replace` one
+                // element — leaving nothing to copy.
+                const forwarded = try @import("qbe_aggregate.zig").storeForwarded(@TypeOf(self), self, self.pc, index);
                 // QBE-ELEMENT-ADDRESS-1: an iteration local that names its
                 // element in place holds the checked address the read produced,
                 // so the store keeps that word instead of copying the element
                 // into the frame and reading it back out of there.
-                if (self.byReference(index)) {
+                if (self.callerStorage(index)) {
+                    // A `mut` array parameter stores into the caller's array.
+                    if (!forwarded) {
+                        const caller = try self.load("l", index);
+                        try self.print(" blit %v{d}, %v{d}, {d}\n", .{ try self.load("s", h - 1), caller, (try self.layout(ty)).size });
+                    }
+                } else if (self.byReference(index)) {
                     try self.print(" storel %v{d}, %l{d}\n", .{ try self.load("s", h - 1), index });
-                } else if (!try @import("qbe_aggregate.zig").storeForwarded(@TypeOf(self), self, self.pc, index)) {
-                    // QBE-CTORFWD-1 and QBE-ARRAYWRITE-1: the instruction before
-                    // this store already wrote this local where it lives — a
-                    // constructor field by field, a `replace` one element — so
-                    // there is nothing left to copy.
+                } else if (!forwarded) {
                     const v = try self.load("s", h - 1);
                     if ((try self.layout(ty)).drop) {
                         try self.print(drop_local, .{ try self.descriptor(ty), index });

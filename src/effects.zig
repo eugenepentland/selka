@@ -155,6 +155,18 @@ fn recordExpressionMutation(ctx: *const ExpressionMutationContext, node: typed.N
     return !owner_is_fresh;
 }
 
+/// The parameter position an element write `a[i] = v` writes through: a
+/// fixed-array parameter, whose element writes reach the caller when it is
+/// `mut` and are refused as undeclared writes when it is not.
+fn elementWriteInput(program: typed.Program, function: typed.Function, statement: typed.Statement) ?u16 {
+    if (statement.data != .assign) return null;
+    const store = statement.data.assign;
+    const slot = @backingInt(store.slot);
+    if (!store.element or slot >= function.signature.parameter_count) return null;
+    if (!typed.referenceArray(program.records, function.scope.locals[slot].ty)) return null;
+    return @intCast(slot);
+}
+
 /// Infer one function's direct write footprint and return-origin bound from its checked body.
 fn inferFacts(allocator: std.mem.Allocator, program: typed.Program, function: typed.Function) error{ OutOfMemory, InternalError }!Facts {
     var mutate_positions: std.ArrayList(u16) = .empty;
@@ -190,6 +202,11 @@ fn inferFacts(allocator: std.mem.Allocator, program: typed.Program, function: ty
         },
         .statement => |id| {
             const statement = program.statements[@backingInt(id)];
+            if (elementWriteInput(program, function, statement)) |position| {
+                saw_write = true;
+                saw_external = true;
+                try mutation.insertPosition(&mutate_positions, allocator, position);
+            }
             switch (statement.data) {
                 .initialize => |store| if (@backingInt(store.slot) < fresh.len) {
                     fresh[@backingInt(store.slot)] = isFreshValue(program, store.value, 0);
@@ -897,6 +914,7 @@ fn seedInstructionEffects(
         .move_local,
         .drop_local,
         .load_local,
+        .ref_local,
         .store_local,
         .cmp_bool,
         .not_bool,

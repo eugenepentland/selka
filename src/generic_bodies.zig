@@ -663,7 +663,7 @@ const Checker = struct {
     /// produced values.
     fn comprehensionValue(self: *Checker, each: ast.Comprehension, span: source.Span) Error!Symbolic {
         const element = switch (each.source) {
-            .iterable => |iterable| try self.collectionElement(try self.expression(iterable), span),
+            .iterable => |iterable| try self.comprehensionElement(try self.expression(iterable), span),
             .range => |bounds| try self.rangeElement(bounds, each.name, span),
         };
         const text = self.src.text(each.name);
@@ -676,6 +676,17 @@ const Checker = struct {
         try self.supports(produced, .storable, span);
         self.seedEffect(.managed_allocation);
         return self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{produced});
+    }
+    /// The element a comprehension over a collection or fixed array binds.
+    fn comprehensionElement(self: *Checker, source_type: Symbolic, span: source.Span) Error!Symbolic {
+        if (self.walkableArray(source_type)) |shape| return shape.element;
+        return self.collectionElement(source_type, span);
+    }
+    /// The shape of a fixed array a loop may walk by position; an enum table
+    /// is indexed by its key, not by position, so it is not one.
+    fn walkableArray(self: *Checker, value: Symbolic) ?symbolic.Array {
+        const shape = symbolic.array(value, self.catalog.records) orelse return null;
+        return if (shape.key == null) shape else null;
     }
     /// Resolve a `range(...)` comprehension source to its integer element type, mirroring the
     /// generic `for` range bounds check: a unit start is zero, and both bounds share one type.
@@ -764,7 +775,27 @@ const Checker = struct {
         return output;
     }
     fn listOperation(self: *Checker, node: ast.Node, operation: @FieldType(@FieldType(ast.Node, "data"), "list_operation")) Error!Symbolic {
-        return self.collectionOperation(try self.expression(operation.base), .{ .kind = operation.kind, .inputs = operation.arguments, .span = node.span, .owner_node = operation.base });
+        const owner = try self.expression(operation.base);
+        if (operation.kind == .write and operation.arguments.len == 2 and symbolic.array(owner, self.catalog.records) != null)
+            return self.arrayWrite(owner, operation, node.span);
+        return self.collectionOperation(owner, .{ .kind = operation.kind, .inputs = operation.arguments, .span = node.span, .owner_node = operation.base });
+    }
+    /// `values[index] = value` on a fixed array in a template body: the index
+    /// and element follow the array's own rules, and the binding the path is
+    /// rooted at must be one the body may modify, as for a record field write.
+    fn arrayWrite(self: *Checker, owner: Symbolic, operation: @FieldType(@FieldType(ast.Node, "data"), "list_operation"), span: source.Span) Error!Symbolic {
+        const shape = try self.arrayIndex(owner, operation.arguments[0], span);
+        try self.compatible(try self.expressionExpected(operation.arguments[1], shape.element), shape.element, span);
+        var root = operation.base;
+        while (true) switch (self.program.nodes.items[@backingInt(root)].data) {
+            .field => |field| root = field.base,
+            .index => |index| root = index.base,
+            else => break,
+        };
+        const root_node = self.program.nodes.items[@backingInt(root)];
+        if (root_node.data == .name) try self.runtimeOwner(root_node.data.name, true);
+        self.seedManagedWrite(self.parameterIndex(root, 0));
+        return .{ .concrete = .unit };
     }
     fn listMethod(self: *Checker, node: ast.Node) Error!Symbolic {
         const method = node.data.method_call;
@@ -2080,8 +2111,9 @@ const Checker = struct {
                 const view = dictionary_views.symbolicKind(self.catalog, source_type);
                 const projected = view != null and view.? != .item;
                 const owner = if (projected) try dictionary_views.symbolicOwner(self.shapes(), source_type, statement_value.span) else source_type;
-                if (!self.shapes().managed(owner)) return self.sink.fail(eListType, statement_value.span, "iteration requires a collection or dictionary view");
-                const element = try self.iterationElement(source_type, owner, statement_value.span);
+                const fixed = self.walkableArray(owner);
+                if (fixed == null and !self.shapes().managed(owner)) return self.sink.fail(eListType, statement_value.span, "iteration requires a collection, fixed array or dictionary view");
+                const element = if (fixed) |shape| shape.element else try self.iterationElement(source_type, owner, statement_value.span);
                 const first = self.locals.items.len;
                 if (each.index_name != null and !each.enumerated) {
                     if (symbolic_shapes.tupleArity(self.catalog, element)) |arity| {

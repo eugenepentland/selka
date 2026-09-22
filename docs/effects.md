@@ -173,7 +173,10 @@ exists to prevent. A receiver is never marked: `values.append(1)` and
 `mut` is accepted only on a type that can carry a write back to the caller:
 `list`, `dict`, `class`, `Cell`, `[N]T`, `byte_buffer`, and a `record`, union,
 option or result holding one. A scalar, `str` or `bytes` parameter declared `mut`
-is rejected, because no write through it could be observed.
+is rejected, because no write through it could be observed. A fixed array is a
+value with no reference of its own, so a `mut [N]T` parameter names the caller's
+variable itself and its argument must be one; see
+[passing an array to be written](records-and-unions.md#passing-an-array-to-be-written).
 
 The guarantee is for the duration of the call and covers lists, dictionaries,
 `Cell`, and mutable descendants reached through records, arrays, options, unions,

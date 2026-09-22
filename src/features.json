@@ -152,6 +152,21 @@
       "summary": "A list literal becomes a fixed `[N]T` array and a dict literal an enum-indexed `[Kind]T` table when the context demands one.",
       "doc": "docs/records-and-unions.md#fixed-arrays-and-enum-tables"
     },
+    "fixed-array-element-writes": {
+      "kind": "language",
+      "summary": "`a[i] = v`, `a[i] += v`, `a[i].f = v`, `grid[r][c] = v` and `r.cells[i] = v` write one element of a fixed array or table in place while assignment still copies the array.",
+      "doc": "docs/records-and-unions.md#writing-array-elements"
+    },
+    "mut-fixed-array-parameters": {
+      "kind": "language",
+      "summary": "A `values: mut [N]T` parameter names the caller's array, so `f(mut values)` lets the callee write its elements; an array parameter without `mut` is the callee's own copy.",
+      "doc": "docs/records-and-unions.md#passing-an-array-to-be-written"
+    },
+    "fixed-array-iteration": {
+      "kind": "language",
+      "summary": "`for x in a`, `enumerate(a)` and comprehensions walk a fixed array over the value it had when the loop began.",
+      "doc": "docs/records-and-unions.md#iterating-a-fixed-array"
+    },
     "python-call-type-arguments": {
       "kind": "language",
       "summary": "`identity[int](2)` supplies a generic call's type arguments explicitly in Python syntax.",
@@ -893,7 +908,7 @@
     "noalloc": "managed-backing-operations-only",
     "type_aliases": "non-parameterized",
     "constants": "bounded-scalar-expressions-and-nongeneric-source-functions-plus-str-bytes-literals",
-    "iteration": "range(end/start,end), list/str/dict foreach and enumerate; fixed bounds and structural mutation checks",
+    "iteration": "range(end/start,end), list/str/dict/fixed-array foreach and enumerate; fixed bounds and structural mutation checks",
     "native_runtime": "QBE only; host effects require explicit ABI registration",
     "workers": "no host worker facility and no guest spawn syntax; parallelism is one guest process per task",
     "floating_point": "float literals, ordinary operators, signed int conversions; IEEE binary64; standard sqrt is the correctly rounded binary64 operation, decimal parsing is accurate rather than correctly rounded; no transcendentals",
