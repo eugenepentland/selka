@@ -180,6 +180,10 @@ void myl_qbe_fail_cast(void *context, int64_t value, uint64_t width);
 myl_native_heap *myl_qbe_heap(void *context);
 uint64_t myl_qbe_failed(void *context);
 void myl_qbe_float_check(void *context);
+/* Cold path of an inlined binary64 operation whose result is a NaN: the
+ * canonical bit pattern that result takes, kept out of line so the finite path
+ * stays a compare plus a predicted branch with no select on its critical path. */
+uint64_t myl_qbe_float_canonical(void *context);
 void myl_qbe_fail_step(void *context);
 void myl_qbe_fail_overflow(void *context);
 /* Cold path of the generated frame prologue: the logical depth ceiling or the

@@ -609,6 +609,7 @@ const pure_callees = [_][]const u8{
     "myl_qbe_int_neg",
     "myl_qbe_int_binary",
     "myl_qbe_float_check",
+    "myl_qbe_float_canonical",
     "myl_qbe_float_unary",
     // The read-only collection surfaces: a dictionary probe, a byte search and
     // the octet copy the inlined buffer append performs all take a `const`

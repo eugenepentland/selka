@@ -136,13 +136,19 @@ pub fn Lower(comptime E: type) type {
             if (op == .f64_eq or op == .f64_lt or op == .f64_le) {
                 try self.print(binary_instruction, .{ values.result, instruction, left, right });
             } else {
+                // The result is canonicalized only when the operation produced a
+                // NaN, and the canonical bits arrive through an out-of-line call.
+                // A call cannot be speculated, so the finite result stays on the
+                // fall-through path: one compare and one predicted branch beside
+                // the arithmetic, instead of a select that depends on it.
                 const value = self.temp();
                 const nan = self.temp();
+                const canonical = self.temp();
                 const raw = self.temp();
                 try self.print(" %v{d} =d {s} %v{d}, %v{d}\n", .{ value, instruction, left, right });
                 try self.print(" %v{d} =l cuod %v{d}, %v{d}\n jnz %v{d}, @nan{d}, @finite{d}\n", .{ nan, value, value, nan, value, value });
-                try self.print("@nan{d}\n jmp @float{d}\n@finite{d}\n %v{d} =l cast %v{d}\n jmp @float{d}\n", .{ value, value, value, raw, value, value });
-                try self.print("@float{d}\n %v{d} =l phi @nan{d} 9221120237041090560, @finite{d} %v{d}\n", .{ value, values.result, value, value, raw });
+                try self.print("@nan{d}\n %v{d} =l call $myl_qbe_float_canonical(l %ctx)\n jmp @float{d}\n@finite{d}\n %v{d} =l cast %v{d}\n jmp @float{d}\n", .{ value, canonical, value, value, raw, value, value });
+                try self.print("@float{d}\n %v{d} =l phi @nan{d} %v{d}, @finite{d} %v{d}\n", .{ value, values.result, value, canonical, value, raw });
             }
         }
     };
