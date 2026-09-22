@@ -18,7 +18,7 @@ def value_of(store: pool.Pool[int], handle: pool.Handle[int]) -> int:
 def lifecycle() -> int:
     seed: list[int] = []
     store = pool.create(seed)
-    first = pool.insert(store, 10)
+    first = pool.insert(mut store, 10)
     second = pool.insert(store, 20)
     if pool.count(store) != 2 or pool.capacity(store) != 2:
         return 1
@@ -34,7 +34,7 @@ def lifecycle() -> int:
         return 6
     if pool.occupied(store, first) or pool.count(store) != 1:
         return 7
-    third = pool.insert(store, 30)
+    third = poomut l.insert(store, 30)
     if pool.capacity(store) != 2 or value_of(store, third) != 30:
         return 8
     if value_of(store, first) != 0 - 1:
@@ -47,7 +47,7 @@ def sharing() -> int:
     if pool.count(store) != 3:
         return 20
     alias = store
-    _ = pool.insert(alias, 40)
+    _ = pool.insert(mut alias, 40)
     if pool.count(store) != 4 or pool.capacity(store) != 4:
         return 21
     live = pool.handles(store)
@@ -70,7 +70,7 @@ def sharing() -> int:
 def records() -> int:
     empty: list[Node] = []
     store = pool.create(empty)
-    handle = pool.insert(store, Node(label="a", weight=2))
+    handle = pool.insert(mut store, Node(label="a", weight=2))
     match pool.get(store, handle):
         case Some(node):
             if node.label != "a" or node.weight != 2:
@@ -101,7 +101,7 @@ def churn() -> int:
     handles: list[pool.Handle[int]] = []
     index = 0
     while index < 32:
-        handles.append(pool.insert(store, index))
+        handles.append(pool.insert(mut store, index))
         index += 1
     index = 0
     while index < 32:

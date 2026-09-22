@@ -266,7 +266,11 @@ const Context = struct {
     }
 
     fn childIfManaged(self: *const Context, ty: typed.Type, function: typed.Function, origins: []const Origin, base: typed.NodeId, depth: usize) Origin {
-        if (!mayContainManaged(self.program, ty)) return Origin{};
+        // The test is writability, not managedness: a `byte_buffer` is managed
+        // like `bytes` but keeps writable storage, so a write through it belongs
+        // to whoever owns the buffer. A read-only `str`, `bytes` or scalar-only
+        // record carries no origin because nothing can be written through it.
+        if (!typed.carriesWritableStorage(self.program.records, ty)) return Origin{};
         return self.nodeOrigin(function, origins, base, depth + 1);
     }
 
@@ -454,6 +458,9 @@ fn absorbExpressionCall(context: *const Context, function: typed.Function, origi
     }
 }
 
+/// Bind one statement's effect on the local origin table. A `return` merges its
+/// value's origin into the summary; that reads only bindings already resolved,
+/// because the first pass visits statements in source order.
 fn applyStatement(context: *const Context, function: typed.Function, origins: []Origin, statement_id: typed.StatementId, summary: *Summary) void {
     const statement = context.program.statements[@backingInt(statement_id)];
     switch (statement.data) {
@@ -480,11 +487,23 @@ fn analyzeFunction(context: *const Context, index: usize) std.mem.Allocator.Erro
     defer context.allocator.free(origins);
     @memset(origins, .{});
     var summary = Summary{};
+    // Bindings are resolved first, in source order. A hidden temporary such as
+    // the receiver of `builder.buffer.append_byte(v)` is initialized by an
+    // earlier statement than the expression that reads it, so a single walk that
+    // also recorded writes could meet the read before the store and attribute the
+    // write to fresh storage. Return origins are merged in the same first pass
+    // because they only read the bindings that are already known.
+    var bindings = try Walker.init(context.allocator, context.program, function.scope.body);
+    defer bindings.deinit();
+    while (try bindings.next()) |item| switch (item) {
+        .statement => |statement_id| applyStatement(context, function, origins, statement_id, &summary),
+        else => {},
+    };
     var walker = try Walker.init(context.allocator, context.program, function.scope.body);
     defer walker.deinit();
     while (try walker.next()) |item| switch (item) {
-        .statement => |statement_id| applyStatement(context, function, origins, statement_id, &summary),
         .expression => |expression_id| applyExpression(context, function, origins, expression_id, &summary),
+        else => {},
     };
     return summary;
 }

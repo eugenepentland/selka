@@ -118,13 +118,13 @@ test "PY-BYTES-4 byte strings are region allocated escaped and barrier checked u
         \\    return len(outer)
     , "E_ARENA_ESCAPE");
     try trapped(
-        \\def stash(target: list[bytes], value: bytes):
+        \\def stash(target: mut list[bytes], value: bytes):
         \\    target.append(value)
         \\
         \\def main() -> int:
         \\    outer: list[bytes] = []
         \\    with arena():
-        \\        stash(outer, b"x" + b"y")
+        \\        stash(mut outer, b"x" + b"y")
         \\    return len(outer)
     , "R_ARENA_ESCAPE");
 }

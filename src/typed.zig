@@ -332,13 +332,23 @@ pub fn carriesWritableStorage(records: []const Record, ty: Type) bool {
     return writableDepth(records, ty, 0);
 }
 
+/// Whether a managed byte-kind schema is the immutable byte string rather than
+/// the mutable octet buffer. The two share one collection kind, so the builtin
+/// name -- repeated here rather than imported, because the template index that
+/// declares it depends on this module -- is what tells them apart.
+fn isImmutableBytes(record: Record) bool {
+    if (record.collection.kind == .string) return true;
+    return record.collection.kind == .bytes and !std.mem.eql(u8, record.name, "byte_buffer");
+}
+
 fn writableDepth(records: []const Record, ty: Type, depth: usize) bool {
     if (!ty.isAggregate() or ty.recordIndex() >= records.len or depth == 64) return false;
     const record = records[ty.recordIndex()];
     if (record.managed) {
-        // `str` and `bytes` are immutable managed buffers; every other managed
-        // schema -- a collection, `Cell`, or a user `class` -- is writable.
-        return record.collection.kind != .string and record.collection.kind != .bytes;
+        // `str`, `bytes` and a byte kind that is not the octet buffer are
+        // immutable; every other managed schema -- a collection, `byte_buffer`,
+        // `Cell`, or a user `class` -- keeps writable storage.
+        return !isImmutableBytes(record);
     }
     if (record.shape.array) |array| if (writableDepth(records, array.element, depth + 1)) return true;
     if (record.shape.variants) |variants| for (variants.cases) |case| {
