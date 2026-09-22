@@ -180,10 +180,14 @@ class Case:
 
 
 CASES = [
+    # A function body reports one mutation fault per check, so the declaration
+    # and the call are two cases: `restock` is unmarked in the first, and already
+    # marked in the second so the call itself is what the checker reaches.
     Case(1, "class write needs a declaration paste", INVENTORY,
          codes=["E_MUTATION_MARKER"], pastes=["inv: mut Inventory"]),
-    Case(1, "class write needs a call paste", INVENTORY,
-         codes=["E_MUTATION_MARKER"], pastes=['restock(mut inv, "bolt", 5)']),
+    Case(1, "class write needs a call paste", INVENTORY_MARKED.replace(
+        'restock(mut inv, "bolt", 5)', 'restock(inv, "bolt", 5)'),
+         codes=["E_MUTATION_MARKER"], pastes=['(mut inv, "bolt", 5)']),
     Case(1, "both markers accepted", INVENTORY_MARKED, output="5 1"),
     Case(1, "unneeded marker rejected", INVENTORY_REPORT_MARKED,
          codes=["E_MUTATION_MARKER"], pastes=["remove `mut`"]),
