@@ -7,10 +7,10 @@ def write_both(x: mut list[int], y: mut list[int]) -> None effects(mutation):
 
 
 def use(values: mut list[int]) -> None effects(mutation):
-    write_both(values, values)
+    write_both(mut values, mut values)
 
 
 public def program() -> int:
     values = [0, 0]
-    use(values)
+    use(mut values)
     return values[0] + values[1] - 3

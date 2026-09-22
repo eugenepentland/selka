@@ -8,6 +8,6 @@ def bump(cell: mut Cell[int]) -> None effects(mutation):
 public def program() -> int:
     cell = Cell(value=40)
     alias = cell
-    bump(alias)
-    bump(cell)
+    bump(mut alias)
+    bump(mut cell)
     return cell.value

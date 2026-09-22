@@ -1,0 +1,6 @@
+module main
+import json
+
+
+def main() -> int:
+    return 0

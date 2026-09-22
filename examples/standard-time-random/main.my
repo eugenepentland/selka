@@ -5,7 +5,7 @@ import time
 
 def streams() -> int:
     generator = random.seeded(0)
-    if random.next_word(generator) != 16294208416658607535u64:
+    if random.next_word(mut generator) != 16294208416658607535u64:
         return 1
     if random.next_word(generator) != 7960286522194355700u64:
         return 2
@@ -70,7 +70,7 @@ def limits() -> int:
             return 23
         case Err(_):
             _ = 0
-    match time.milliseconds(42):
+    match time.millismut econds(42):
         case Ok(span):
             if span.nanoseconds != 42000000:
                 return 24

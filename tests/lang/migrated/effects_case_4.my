@@ -7,7 +7,7 @@ def touch[T](values: mut list[T], item: T) -> None effects(mutation):
 
 public def program() -> int:
     values = [1]
-    touch[int](values, 5)
+    touch[int](mut values, 5)
     if values[0] != 5:
         return 1
     return 0

@@ -56,7 +56,7 @@ public def next_word(generator: mut Random) -> u64 effects(mutation):
 
 # A float uniformly drawn from the 2^53 multiples of 2^-53 in [0, 1).
 public def random(generator: Random) -> float effects(mutation):
-    drawn = shift_right(next_word(generator), 11u64)
+    drawn = shift_right(next_word(mut generator), 11u64)
     return float(i64(drawn)) / 9007199254740992.0
 
 
@@ -70,11 +70,11 @@ def span(low: int, high: int) -> u64:
 # An unbiased word below a modulus, retrying the biased tail of the range.
 def below(generator: Random, modulus: u64) -> u64:
     if modulus == 0u64:
-        return next_word(generator)
+        return next_word(mut generator)
     threshold = wrapping_sub(0u64, modulus) % modulus
-    word = next_word(generator)
+    word = next_word(mut generator)
     while word < threshold:
-        word = next_word(generator)
+        word = next_word(mut generator)
     return word % modulus
 
 
@@ -91,7 +91,7 @@ public def randint(generator: Random, low: int, high: int) -> Result[int, str] e
         return Err("randint needs low <= high")
     width = span(low, high)
     if width == 18446744073709551615u64:
-        return Ok(offset(low, next_word(generator)))
+        return Ok(offset(low, next_word(mut generator)))
     return Ok(offset(low, below(generator, width + 1u64)))
 
 

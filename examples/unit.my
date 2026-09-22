@@ -1,4 +1,4 @@
-def set(values: list[int], index: int, replacement: int):
+def set(values: mut list[int], index: int, replacement: int):
     values[index] = replacement
 
 
@@ -14,6 +14,6 @@ def apply(callback: def(int) -> None effects(), value: int):
 
 def main() -> int:
     values: list[int] = [0]
-    set(values, 0, 42)
+    set(mut values, 0, 42)
     apply(countdown, 3)
     return values[0]
