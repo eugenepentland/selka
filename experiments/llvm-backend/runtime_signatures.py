@@ -17,20 +17,10 @@ V = "void"
 #
 # - `myl_qbe_heap` only computes the address of the context's embedded heap. It
 #   neither reads nor writes the context.
-# - `myl_qbe_float_canonical` (QBE-FLOAT-CANON-1) returns the canonical NaN
-#   constant after one volatile read of `float_canonical_probe`, a file-static
-#   in qbe_runtime.c whose address never leaves that file. It ignores its
-#   context argument and touches no guest memory: not the frame record, not a
-#   managed object, not the context. `inaccessiblemem: readwrite` states exactly
-#   that (the volatile read counts as a side effect, so it is not `read` or
-#   `none`), which lets a float loop keep its list headers and frame position in
-#   registers across the cold NaN branch. It is not `speculatable`, so the call
-#   still stays on the branch that produced the NaN. (QBE-NORETURN-1 lane)
 #
 # The `myl_qbe_fail_*` helpers are handled in llvm_emit.declaration_attributes:
 # `cold` everywhere, `noreturn` only where the unit ends each call in `hlt`.
-ATTRIBUTES = {"myl_qbe_heap": "memory(none) nounwind willreturn",
-              "myl_qbe_float_canonical": "memory(inaccessiblemem: readwrite) nounwind willreturn"}
+ATTRIBUTES = {"myl_qbe_heap": "memory(none) nounwind willreturn"}
 
 SIGNATURES = {
     "myl_native_bytes_concat": ((P, P, P), P),
