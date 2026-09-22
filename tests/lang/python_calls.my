@@ -44,7 +44,7 @@ def use(first: list[int], second: list[int]) -> int:
 # spec: PYTHON-CALL-1
 public def test_keyword_calls_evaluate_effects_in_source_order_before_parameter_binding() -> bool:
     log: list[int] = []
-    answer = combine(b=mark(log, 2), a=mark(log, 4))
+    answer = combine(b=mark(mut log, 2), a=mark(mut log, 4))
     return answer + log[0] * 100 + log[1] * 1000 == 4242
 
 

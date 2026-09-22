@@ -46,7 +46,7 @@ def boxed[T](x: T) -> Box[[2]T]:
 
 # spec: NOMINAL-BODY-1
 public def test_nominal_bodies_construct_project_update_match_and_forward_symbolic_arguments() -> bool:
-    return extract[i64](alter[i64](pack[i64](3), choose[i64](slot_of[i64](7), 0))) == 7
+    return extract[i64](alter[i64](mut pack[i64](3), choose[i64](slot_of[i64](7), 0))) == 7
 
 
 public def test_nominal_bodies_reuse_concrete_array_identities_created_by_earlier_function_specialization() -> bool:

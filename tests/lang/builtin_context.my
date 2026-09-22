@@ -82,7 +82,7 @@ public def test_record_fields_and_nested_list_elements_propagate_empty_list_cont
     nested: list[list[i64]] = []
     inner: list[i64] = []
     nested.append(inner)
-    return choose_holder(Holder(values=[]), []) == 42
+    return choose_holder(mut Holder(values=[]), []) == 42
 
 
 # spec: BUILTIN-CONTEXT-4

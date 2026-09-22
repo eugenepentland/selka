@@ -57,7 +57,7 @@ public def number(host: Host, a: Span) -> int effects(host):
 
 
 public def write(out: mut io.Output, value: bytes) effects(managed_allocation, mutation):
-    return io.append(out, value)
+    return io.append(mut out, value)
 
 
 public def escaped(out: mut io.Output, a: Span) effects(managed_allocation, mutation):
@@ -75,26 +75,26 @@ public def escaped(out: mut io.Output, a: Span) effects(managed_allocation, muta
             elif c == 116u8:
                 c = 9u8
         if c == 9u8:
-            write(out, b"&#9;")
+            write(mut out, b"&#9;")
         elif c == 10u8:
-            write(out, b"&#10;")
+            write(mut out, b"&#10;")
         elif c == 13u8:
-            write(out, b"&#13;")
+            write(mut out, b"&#13;")
         elif c == 38u8:
-            write(out, b"&amp;")
+            write(mut out, b"&amp;")
         elif c == 60u8:
-            write(out, b"&lt;")
+            write(mut out, b"&lt;")
         elif c == 62u8:
-            write(out, b"&gt;")
+            write(mut out, b"&gt;")
         elif c == 34u8:
-            write(out, b"&quot;")
+            write(mut out, b"&quot;")
         else:
-            io.appendByte(out, c)
+            io.appendByte(mut out, c)
     return
 
 
 public def decimal(out: mut io.Output, value: int) effects(managed_allocation, mutation):
-    return io.appendInt(out, value)
+    return io.appendInt(mut out, value)
 
 
 public def identifier(host: Host, a: Span) -> bool effects(host):
