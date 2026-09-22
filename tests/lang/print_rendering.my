@@ -49,5 +49,29 @@ public def test_a_class_renders_its_fields_wherever_it_is_nested() -> bool:
     return f"{table}" == "{'a': RenderItem.box(RenderBox(n=12))}" and f"{[box]}" == "[RenderBox(n=1)]"
 
 
+def zeros(count: int) -> str:
+    text = ""
+    for _ in range(count):
+        text = text + "0"
+    return text
+
+
+# A float prints positionally however long that spelling is: the largest and
+# smallest finite doubles render whole, digit for digit as `str` spells them,
+# instead of reporting the line unprintable.
+# spec: IO-14
+public def test_a_float_with_a_long_positional_spelling_renders_whole() -> bool:
+    big = 1.2345e300
+    largest = -1.7976931348623157e308
+    tiny = 5e-324
+    if f"{[big]}" != "[12345" + zeros(296) + ".0]":
+        return False
+    if f"{[largest]}" != "[-17976931348623157" + zeros(292) + ".0]":
+        return False
+    if f"{[tiny]}" != "[0." + zeros(323) + "5]":
+        return False
+    return f"{[big, largest, tiny]}" == "[" + str(big) + ", " + str(largest) + ", " + str(tiny) + "]"
+
+
 def main() -> int:
     return 0

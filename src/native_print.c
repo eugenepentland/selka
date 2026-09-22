@@ -1,12 +1,14 @@
 /* Python-style rendering of native values, byte-identical to src/io_render.zig.
-   The VM formats a float into a 64-byte frame and reports a value that does not
-   fit as unprintable; this runtime keeps that bound so both backends agree. */
+   A float renders positionally, so its frame must hold the longest finite
+   double: a sign, `0.`, the 323 zeros before the smallest subnormal's digit and
+   up to 17 significant digits, or the 309 integer digits of the largest double.
+   Both renderers use the same frame, so no finite value is ever unprintable. */
 #include "native_print.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define FLOAT_FRAME 64u
+#define FLOAT_FRAME 352u
 /* Make room for `length` more bytes, doubling the buffer until they fit. A line
    that cannot grow is marked failed and keeps the bytes it already holds. */
 static int reserve(MylPrint *out, size_t length) {
