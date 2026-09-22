@@ -1,0 +1,292 @@
+{
+ "p-qbe-steps": {
+  "spec": {
+   "build": [
+    "--step-accounting",
+    "--qbe",
+    "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-before/bin/qbe"
+   ]
+  },
+  "build_argv": [
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-before/bin/mylang",
+   "build",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/guest/main.my",
+   "--project",
+   "--provider",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/native_schematic.c",
+   "--zig",
+   "/home/epentland/.local/bin/zig",
+   "--cache-dir",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/cache-p-qbe-steps",
+   "-o",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/p-qbe-steps",
+   "--step-accounting",
+   "--qbe",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-before/bin/qbe"
+  ],
+  "cold_seconds": 5.993515637994278,
+  "warm_seconds": [
+   0.3804791849979665,
+   0.3755686410004273
+  ],
+  "binary_sha256": "1034432336c9110e9a1731c0706407cd9aa0f074f83ad99f2a9e5524e145847d",
+  "compiler_sha256": "34d1e1568bced059f81fb43327ea1cbc66b5cb6d037219415c82e8fae52b3190"
+ },
+ "p-llvm-lto": {
+  "spec": {
+   "build": [
+    "--backend",
+    "llvm",
+    "--llvm-opt",
+    "3",
+    "--lto"
+   ]
+  },
+  "build_argv": [
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-before/bin/mylang",
+   "build",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/guest/main.my",
+   "--project",
+   "--provider",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/native_schematic.c",
+   "--zig",
+   "/home/epentland/.local/bin/zig",
+   "--cache-dir",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/cache-p-llvm-lto",
+   "-o",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/p-llvm-lto",
+   "--backend",
+   "llvm",
+   "--llvm-opt",
+   "3",
+   "--lto"
+  ],
+  "cold_seconds": 8.036100298020756,
+  "warm_seconds": [
+   2.586150393006392,
+   2.6082727190223522
+  ],
+  "binary_sha256": "b2877dfa2f66d6585d8e5769e53e91f6748270b01a46f1bb1241573fd7e7c057",
+  "compiler_sha256": "34d1e1568bced059f81fb43327ea1cbc66b5cb6d037219415c82e8fae52b3190"
+ },
+ "p-llvm-nolto": {
+  "spec": {
+   "build": [
+    "--backend",
+    "llvm",
+    "--llvm-opt",
+    "3"
+   ]
+  },
+  "build_argv": [
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-before/bin/mylang",
+   "build",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/guest/main.my",
+   "--project",
+   "--provider",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/native_schematic.c",
+   "--zig",
+   "/home/epentland/.local/bin/zig",
+   "--cache-dir",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/cache-p-llvm-nolto",
+   "-o",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/p-llvm-nolto",
+   "--backend",
+   "llvm",
+   "--llvm-opt",
+   "3"
+  ],
+  "cold_seconds": 9.819713328994112,
+  "warm_seconds": [
+   0.35353155399207026,
+   0.3682686499960255
+  ],
+  "binary_sha256": "028971425e75dd66a09efa7c6a095aa439174cfd385496de3cf22983622cf12f",
+  "compiler_sha256": "34d1e1568bced059f81fb43327ea1cbc66b5cb6d037219415c82e8fae52b3190"
+ },
+ "p-llvm-lto-frames": {
+  "spec": {
+   "build": [
+    "--backend",
+    "llvm",
+    "--llvm-opt",
+    "3",
+    "--lto",
+    "--max-frames=1000000"
+   ]
+  },
+  "build_argv": [
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-before/bin/mylang",
+   "build",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/guest/main.my",
+   "--project",
+   "--provider",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/native_schematic.c",
+   "--zig",
+   "/home/epentland/.local/bin/zig",
+   "--cache-dir",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/cache-p-llvm-lto-frames",
+   "-o",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/p-llvm-lto-frames",
+   "--backend",
+   "llvm",
+   "--llvm-opt",
+   "3",
+   "--lto",
+   "--max-frames=1000000"
+  ],
+  "cold_seconds": 7.606345487001818,
+  "warm_seconds": [
+   2.833466000010958,
+   2.8849074250028934
+  ],
+  "binary_sha256": "1892c8bacd6059a4ff152e81fc099e92c7800476a5e084689c8b9d87792397e5",
+  "compiler_sha256": "34d1e1568bced059f81fb43327ea1cbc66b5cb6d037219415c82e8fae52b3190"
+ },
+ "p-llvm-lto-steps": {
+  "spec": {
+   "build": [
+    "--backend",
+    "llvm",
+    "--llvm-opt",
+    "3",
+    "--lto",
+    "--step-accounting"
+   ]
+  },
+  "build_argv": [
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-before/bin/mylang",
+   "build",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/guest/main.my",
+   "--project",
+   "--provider",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/native_schematic.c",
+   "--zig",
+   "/home/epentland/.local/bin/zig",
+   "--cache-dir",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/cache-p-llvm-lto-steps",
+   "-o",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/p-llvm-lto-steps",
+   "--backend",
+   "llvm",
+   "--llvm-opt",
+   "3",
+   "--lto",
+   "--step-accounting"
+  ],
+  "cold_seconds": 16.664552490983624,
+  "warm_seconds": [
+   5.679765907989349,
+   5.61263737999252
+  ],
+  "binary_sha256": "98cc83258c586a8ca312a26df593e83b8f3b5feffb61fb8396534dd9f3c56c61",
+  "compiler_sha256": "34d1e1568bced059f81fb43327ea1cbc66b5cb6d037219415c82e8fae52b3190"
+ },
+ "p-qbe-plain": {
+  "spec": {
+   "build": [
+    "--qbe",
+    "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-before/bin/qbe"
+   ]
+  },
+  "build_argv": [
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-before/bin/mylang",
+   "build",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/guest/main.my",
+   "--project",
+   "--provider",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/native_schematic.c",
+   "--zig",
+   "/home/epentland/.local/bin/zig",
+   "--cache-dir",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/cache-p-qbe-plain",
+   "-o",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/p-qbe-plain",
+   "--qbe",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-before/bin/qbe"
+  ],
+  "cold_seconds": 4.77504454299924,
+  "warm_seconds": [
+   0.38430751097621396,
+   0.3915366069995798
+  ],
+  "binary_sha256": "6d1d30e89c968d78b03789b830cfa25b6036a2474e15c7b4e96635d0e8e532a9",
+  "compiler_sha256": "34d1e1568bced059f81fb43327ea1cbc66b5cb6d037219415c82e8fae52b3190"
+ },
+ "p-release": {
+  "spec": {
+   "build": [
+    "--backend",
+    "llvm",
+    "--llvm-opt",
+    "3",
+    "--max-frames=1024"
+   ]
+  },
+  "build_argv": [
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-after/bin/mylang",
+   "build",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/guest/main.my",
+   "--project",
+   "--provider",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/native_schematic.c",
+   "--zig",
+   "/home/epentland/.local/bin/zig",
+   "--cache-dir",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/cache-p-release",
+   "-o",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/p-release",
+   "--backend",
+   "llvm",
+   "--llvm-opt",
+   "3",
+   "--max-frames=1024"
+  ],
+  "cold_seconds": 16.37817991801421,
+  "warm_seconds": [
+   0.5317150059854612,
+   0.7840084160270635
+  ],
+  "binary_sha256": "c83657fabc27e24ca70a002857151f1b6ba868d40bbe085d65a002719cb6dfe4",
+  "compiler_sha256": "b27eed23291b1e280a39544870d80851a1ff0035ff238434f0852d1aa755b04c"
+ },
+ "p-release-lto": {
+  "spec": {
+   "build": [
+    "--backend",
+    "llvm",
+    "--llvm-opt",
+    "3",
+    "--lto",
+    "--max-frames=1024"
+   ]
+  },
+  "build_argv": [
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-after/bin/mylang",
+   "build",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/guest/main.my",
+   "--project",
+   "--provider",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/native_schematic.c",
+   "--zig",
+   "/home/epentland/.local/bin/zig",
+   "--cache-dir",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/cache-p-release-lto",
+   "-o",
+   "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/p-release-lto",
+   "--backend",
+   "llvm",
+   "--llvm-opt",
+   "3",
+   "--lto",
+   "--max-frames=1024"
+  ],
+  "cold_seconds": 12.569398400984937,
+  "warm_seconds": [
+   4.454485033988021,
+   3.956863475992577
+  ],
+  "binary_sha256": "1892c8bacd6059a4ff152e81fc099e92c7800476a5e084689c8b9d87792397e5",
+  "compiler_sha256": "b27eed23291b1e280a39544870d80851a1ff0035ff238434f0852d1aa755b04c"
+ }
+}

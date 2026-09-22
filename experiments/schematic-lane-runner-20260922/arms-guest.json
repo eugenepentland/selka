@@ -1,0 +1,58 @@
+{
+ "zig-o3": {
+  "kind": "native",
+  "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/zig-o3"
+ },
+ "rust-o3": {
+  "kind": "native",
+  "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/rust-o3"
+ },
+ "before-prod-default": {
+  "kind": "guest",
+  "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/prod/prod-default",
+  "args": [
+   "--max-steps=100000000"
+  ],
+  "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::write_block,io::finish,io::output_limit,io::byte,io::put,io::issue"
+ },
+ "after-release": {
+  "kind": "guest",
+  "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/p-release",
+  "args": [
+   "--max-frames=1024",
+   "--timeout=60"
+  ],
+  "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::write_block,io::finish,io::output_limit,io::byte,io::put,io::issue"
+ },
+ "after-release-lto": {
+  "kind": "guest",
+  "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/p-release-lto",
+  "args": [
+   "--max-frames=1024",
+   "--timeout=60"
+  ],
+  "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::write_block,io::finish,io::output_limit,io::byte,io::put,io::issue"
+ },
+ "reference-gc-lto": {
+  "kind": "guest",
+  "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/arms/gc-lto",
+  "args": [],
+  "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::write_block,io::finish,io::output_limit,io::byte,io::put,io::issue"
+ },
+ "link-dynamic": {
+  "kind": "guest",
+  "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/link-dynamic",
+  "args": [
+   "--timeout=60"
+  ],
+  "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::write_block,io::finish,io::output_limit,io::byte,io::put,io::issue"
+ },
+ "link-static": {
+  "kind": "guest",
+  "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/audit/arms/link-static",
+  "args": [
+   "--timeout=60"
+  ],
+  "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::write_block,io::finish,io::output_limit,io::byte,io::put,io::issue"
+ }
+}
