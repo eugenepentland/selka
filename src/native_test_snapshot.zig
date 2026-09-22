@@ -183,6 +183,66 @@ fn identity(allocator: std.mem.Allocator, entry: []const u8, files: []const File
     return fs.hash(allocator, encoded);
 }
 
+/// The absolute paths of the project sources one test entry's import closure
+/// reaches, the entry first, resolved from the same project root a child run
+/// of that entry uses. Only the module headers are read. A graph that fails to
+/// load still reports every source it read before the failure, so a broken
+/// import never hides the modules its entry did reach.
+pub fn reach(context: fs.Context, entry: []const u8) Error![]const []const u8 {
+    const absolute = try context.absolute(entry);
+    var root: []const u8 = std.fs.path.dirname(absolute) orelse return error.InvalidTestSnapshot;
+    var name: []const u8 = std.fs.path.basename(absolute);
+    if (project_config.testEntryLocation(context.allocator, context.io, absolute) catch return error.InvalidTestSnapshot) |location| {
+        root = location.root;
+        name = location.relative;
+    }
+    var provider: DiskProvider = .{ .context = context, .root = root };
+    var loaded = project.Project.init(context.allocator);
+    defer loaded.deinit();
+    const module_name = try entryModule(context.allocator, name);
+    loaded.load(.{ .context = &provider, .read = DiskProvider.read }, module_name, .{}) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => {},
+    };
+    if (provider.paths.items.len == 0) try provider.paths.append(context.allocator, absolute);
+    return provider.paths.items;
+}
+
+/// The live paths of the captured sources a project check loaded, given the
+/// check's `{"modules": [{"name": ...}]}` listing. An embedded standard module
+/// has no captured source and is left out.
+pub fn sourcesOf(context: fs.Context, snapshot: Snapshot, listing: std.json.Value) Error![]const []const u8 {
+    var paths: std.ArrayList([]const u8) = .empty;
+    for (v.array(v.get(listing, "modules"))) |module| {
+        const relative = project.modulePath(context.allocator, v.text(v.get(module, "name"))) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.InvalidModuleName => continue,
+        };
+        if (find(snapshot.files, relative) == null) continue;
+        try paths.append(context.allocator, try std.fs.path.join(context.allocator, &.{ snapshot.root, relative }));
+    }
+    return paths.items;
+}
+
+/// Reads project sources beneath one root and records each path it served.
+const DiskProvider = struct {
+    context: fs.Context,
+    root: []const u8,
+    paths: std.ArrayList([]const u8) = .empty,
+    fn read(raw: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) project.ReadError![]u8 {
+        const self: *DiskProvider = @ptrCast(@alignCast(raw.?));
+        const absolute = std.fs.path.join(self.context.allocator, &.{ self.root, path }) catch return error.OutOfMemory;
+        const bytes = std.Io.Dir.cwd().readFileAlloc(self.context.io, absolute, allocator, .limited(limit + 1)) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.FileNotFound => return error.NotFound,
+            error.StreamTooLong => return error.TooLarge,
+            else => return error.ReadFailed,
+        };
+        self.paths.append(self.context.allocator, absolute) catch return error.OutOfMemory;
+        return bytes;
+    }
+};
+
 const MemoryProvider = struct {
     files: []const File,
     fn read(raw: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) project.ReadError![]u8 {
