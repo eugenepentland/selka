@@ -9,6 +9,7 @@
 //! itself a blocking finding.
 const std = @import("std");
 const ast = @import("ast.zig");
+const call_arguments = @import("call_arguments.zig");
 const declaration_diff = @import("declaration_diff.zig");
 const diagnostic = @import("diagnostic.zig");
 const diagnostic_output = @import("diagnostic_output.zig");
@@ -400,7 +401,7 @@ const Origin = enum { function, record };
 const PositionalCall = struct {
     syntax: ast.Program,
     src: source.Source,
-    call: @import("call_arguments.zig").Call,
+    call: call_arguments.Call,
     names: []const []const u8,
     origin: Origin,
 };
@@ -419,6 +420,8 @@ const CallSites = struct {
     /// Index the checked syntax of one compilation.
     fn init(memory: std.mem.Allocator, syntax: ast.Program) std.mem.Allocator.Error!CallSites {
         var sites: CallSites = .{};
+        errdefer sites.calls.deinit(memory);
+        errdefer sites.functions.deinit(memory);
         for (syntax.nodes.items, 0..) |node, index| {
             if (node.data != .call) continue;
             try sites.calls.put(memory, node.span, @fromBackingInt(index));
@@ -429,7 +432,7 @@ const CallSites = struct {
 
     /// The parsed call node a checked node at `span` was built from, or null
     /// when that position is not a call.
-    fn call(self: CallSites, syntax: ast.Program, span: source.Span) ?@import("call_arguments.zig").Call {
+    fn call(self: CallSites, syntax: ast.Program, span: source.Span) ?call_arguments.Call {
         const index = self.calls.get(span) orelse return null;
         return syntax.nodes.items[@backingInt(index)].data.call;
     }
@@ -438,7 +441,8 @@ const CallSites = struct {
     /// when no declaration has that span.
     fn parameters(self: CallSites, memory: std.mem.Allocator, src: source.Source, syntax: ast.Program, declaration: source.Span) std.mem.Allocator.Error!?[]const []const u8 {
         const index = self.functions.get(declaration) orelse return null;
-        return try @import("call_arguments.zig").parameterNames(memory, src, syntax.functions[index].signature.parameters);
+        const names = try call_arguments.parameterNames(memory, src, syntax.functions[index].signature.parameters);
+        return names;
     }
 };
 
@@ -500,7 +504,7 @@ fn appendRecordFields(context: *RuleContext, node: typed.Node, fields: []const t
 const LiteralRange = struct { first: usize, last: usize };
 
 /// The positional-literal range of one call, or null when it passes none.
-fn positionalLiterals(syntax: ast.Program, call: @import("call_arguments.zig").Call) ?LiteralRange {
+fn positionalLiterals(syntax: ast.Program, call: call_arguments.Call) ?LiteralRange {
     var range: ?LiteralRange = null;
     for (call.arguments, 0..) |argument, index| {
         const named = call.argument_names.len != 0 and call.argument_names[index] != null;
@@ -538,7 +542,6 @@ fn positionalSubject(facts: *const Facts, node: typed.Node) Subject {
 /// operand from the first positional literal on written by name, through the one
 /// shared call renderer.
 fn positionalLiteralMessage(memory: std.mem.Allocator, site: PositionalCall, literals: LiteralRange) std.mem.Allocator.Error![]const u8 {
-    const call_arguments = @import("call_arguments.zig");
     const at = literals.last;
     const literal = site.src.text(site.syntax.nodes.items[@backingInt(site.call.arguments[at])].span);
     const callee = call_arguments.calleeText(site.src, site.call);

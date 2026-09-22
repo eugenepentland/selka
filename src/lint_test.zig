@@ -655,3 +655,29 @@ test "the positional-literal lint names the field a positional record literal bi
     try t.expect(finding != null);
     try t.expectEqualStrings("`3` is passed positionally to `Point`'s 3rd field `z`; name it: `Point(x=1, y=2, z=3)`", finding.?.message);
 }
+
+// spec-case: KEYWORD-ONLY-4
+test "the positional-literal lint exempts named operands and an intrinsic" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    try writeFixture(&temp,
+        \\module main
+        \\
+        \\
+        \\def draw(canvas: int, x: int, y: int) -> int:
+        \\    _ = canvas
+        \\    return x + y
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    out.print(1, 2, 3)
+        \\    return draw(canvas=1, x=2, y=3)
+    );
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const scratch = arena.allocator();
+    const outcome = try evaluateFixture(scratch, root, .{});
+    try t.expect(findFinding(outcome, "L_POSITIONAL_LITERAL") == null);
+}
