@@ -27,6 +27,7 @@ Two properties matter for correctness:
 
 from __future__ import annotations
 
+import hashlib
 import os
 import re
 import sys
@@ -484,6 +485,154 @@ class MemoryClasses:
 #: The runtime's failure helpers: each records a trap and calls `fail`.
 FAIL_HELPER_PREFIX = "myl_qbe_fail_"
 
+#: First metadata number the frame-map debug nodes use, clear of the alias
+#: scopes (`ALIAS_METADATA`, !0-!4).
+FRAME_MAP_METADATA_BASE = 100
+
+#: A call line in the emitted LLVM, direct or through a pointer.
+LLVM_CALL = re.compile(r"^\s*(?:%[\w.]+ = )?call ")
+
+
+class FrameMapDebug:
+    """Call-site positions for a frame-map unit (QBE-FRAMEMAP-1).
+
+    The frontend links no frame record in a fast executable.  It positions
+    every call with `dbgloc PC+1` instead, and the build maps each call's
+    return address to its frames from the assembly LLVM prints
+    (`src/qbe_frame_map.zig`).  Each call gets a debug location whose line is
+    the position and whose discriminator is a pseudo-probe call index equal to
+    it.  LLVM then prints `.pseudoprobe GUID INDEX ...` immediately before the
+    call, and when the call was inlined through other guest functions it
+    appends `@ GUID:INDEX` for every caller — so LLVM may inline guest code
+    freely and the trace still names each logical frame at its own call site.
+    `llvm.pseudo_probe_desc` is what turns the probe inserter on and names each
+    GUID's function for the build.
+
+    * A runtime helper LLVM inlines carries no debug information, so every
+      instruction of its body takes the location — and the probe — of the call
+      it replaced: a trap inside it reports the helper's call site, as the
+      record's position did.
+    * Every call is `nomerge`: merging two call sites would merge their
+      positions.  `"disable-tail-calls"` keeps a call from replacing its
+      caller's frame, and `"frame-pointer"="non-leaf"` keeps the frame-pointer
+      chain the runtime walks.
+    * A probe index is 16 bits.  A call at a position past that carries its
+      location without a probe and is `noinline`, and so is its function, so
+      nothing is ever inlined through a position the probe cannot name; the
+      build reads such a call's position from its `.loc` line instead.
+    * The entry guard's frame-failure call (column 1) gets probe index 0,
+      which the build records as a frame to skip.
+    * A unit that makes no call carries no debug information: no trap can
+      start in it and no frame can be above it, so inlining it changes no
+      trace, and its inlined body takes its call site's location.
+
+    The compile unit is `DebugDirectivesOnly`, so LLVM prints `.file`/`.loc`
+    and no DWARF; the build removes those and the probe directives after
+    reading them.
+    """
+
+    #: The largest pseudo-probe index LLVM can encode in a discriminator.
+    MAX_PROBE = 0xFFFF
+
+    def __init__(self, unit):
+        self.file = getattr(unit, "debug_file", None)
+        positions = [instruction.extra
+                     for block in unit.function.blocks for instruction in block.instructions
+                     if instruction.opcode == "dbgloc"]
+        self.active = self.file is not None and bool(positions)
+        self.unprobed = any(self.probe(line, column) is None and line != 0
+                            for line, column in positions)
+        self.location = (0, 0)
+        self.locations = {}
+
+    @staticmethod
+    def probe(line, column):
+        """The probe index one `dbgloc` position gets, or None."""
+        if column == 1:
+            return 0
+        if 1 <= line <= FrameMapDebug.MAX_PROBE:
+            return line
+        return None
+
+    @staticmethod
+    def discriminator(index):
+        """LLVM's pseudo-probe discriminator for a direct-call probe `index`:
+        `PseudoProbeDwarfDiscriminator::packProbeData(index, DirectCall, 0,
+        FullDistributionFactor)`."""
+        return (index << 3) | (100 << 19) | (2 << 26) | 0x7
+
+    def guid(self):
+        """The GUID LLVM derives from the subprogram's linkage name: the low
+        eight bytes of its MD5, little-endian."""
+        return int.from_bytes(hashlib.md5(self.file.encode()).digest()[:8], "little")
+
+    def attributes(self):
+        """The function attributes a frame-map unit's definition carries."""
+        if not self.active:
+            return []
+        extra = ["noinline"] if self.unprobed else []
+        return ['"frame-pointer"="non-leaf"', '"disable-tail-calls"="true"', *extra]
+
+    def reference(self, location):
+        """The metadata number of one `(line, column)` debug location."""
+        number = self.locations.get(location)
+        if number is None:
+            number = FRAME_MAP_METADATA_BASE + 10 + 2 * len(self.locations)
+            self.locations[location] = number
+        return number
+
+    def position_calls(self, lines):
+        """Mark every call line `nomerge` and give it the current location."""
+        if not self.active:
+            return lines
+        reference = self.reference(self.location)
+        unprobed = self.probe(*self.location) is None
+        out = []
+        for line in lines:
+            if LLVM_CALL.match(line):
+                if "@llvm." not in line and line.rstrip().endswith(")"):
+                    line += " nomerge noinline" if unprobed else " nomerge"
+                line += f", !dbg !{reference}"
+            out.append(line)
+        return out
+
+    def subprogram(self):
+        """The `!dbg` suffix of the function definition, or ''."""
+        return f" !dbg !{FRAME_MAP_METADATA_BASE + 1}" if self.active else ""
+
+    def metadata(self):
+        """Named and numbered debug metadata for the module."""
+        if not self.active:
+            return []
+        base = FRAME_MAP_METADATA_BASE
+        name = self.file.replace("\\", "\\\\").replace('"', '\\"')
+        out = [
+            f"!llvm.dbg.cu = !{{!{base}}}",
+            f"!llvm.module.flags = !{{!{base + 2}, !{base + 3}}}",
+            f"!llvm.pseudo_probe_desc = !{{!{base + 7}}}",
+            f'!{base} = distinct !DICompileUnit(language: DW_LANG_C99, file: !{base + 4}, '
+            'producer: "mylang", isOptimized: true, runtimeVersion: 0, '
+            "emissionKind: DebugDirectivesOnly)",
+            f'!{base + 4} = !DIFile(filename: "{name}", directory: "")',
+            f'!{base + 1} = distinct !DISubprogram(name: "{name}", linkageName: "{name}", '
+            f"scope: !{base + 4}, file: !{base + 4}, line: 1, type: !{base + 5}, "
+            f"spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !{base})",
+            f"!{base + 5} = !DISubroutineType(types: !{base + 6})",
+            f"!{base + 6} = !{{}}",
+            f'!{base + 2} = !{{i32 7, !"Dwarf Version", i32 4}}',
+            f'!{base + 3} = !{{i32 2, !"Debug Info Version", i32 3}}',
+            f'!{base + 7} = !{{i64 {self.guid()}, i64 0, !"{name}"}}',
+        ]
+        for (line, column), number in sorted(self.locations.items(), key=lambda item: item[1]):
+            index = self.probe(line, column)
+            scope = f"!{base + 1}"
+            if index is not None:
+                out.append(f"!{number + 1} = !DILexicalBlockFile(scope: !{base + 1}, "
+                           f"file: !{base + 4}, discriminator: {self.discriminator(index)})")
+                scope = f"!{number + 1}"
+            out.append(f"!{number} = !DILocation(line: {line}, column: {column}, scope: {scope})")
+        return out
+
 
 class Emitter:
     """Translates one parsed QBE unit into a self-contained LLVM module."""
@@ -510,6 +659,7 @@ class Emitter:
         self.memory = (MemoryClasses(self.function, self.sizes)
                        if os.environ.get("MYLANG_QBE_LLVM_ALIAS", "1") != "0" else None)
         self.alias_metadata = False
+        self.frame_map = FrameMapDebug(unit)
 
     def alias_of(self, argument):
         """The alias metadata one access through this address operand carries.
@@ -1147,6 +1297,8 @@ class Emitter:
         if handler is not None:
             if instruction.opcode == "phi":
                 return handler(instruction, block)
+            if instruction.opcode == "call":
+                return self.frame_map.position_calls(handler(instruction))
             return handler(instruction)
         opcode = instruction.opcode
         if opcode in COMPARISONS:
@@ -1534,6 +1686,11 @@ class Emitter:
         """`hlt`: the end of a failure path whose fail helper never returns."""
         return ["  unreachable"]
 
+    def on_dbgloc(self, instruction):
+        """`dbgloc LINE[, COLUMN]`: the position the following calls report."""
+        self.frame_map.location = instruction.extra
+        return []
+
     # -- module ------------------------------------------------------------
 
     def emit(self):
@@ -1589,6 +1746,7 @@ class Emitter:
             out.append("attributes #0 = { " + " ".join(sorted(self.attributes)) + " }")
         if self.alias_metadata:
             out.append(ALIAS_METADATA.rstrip("\n"))
+        out.extend(self.frame_map.metadata())
         return "\n".join(out) + "\n"
 
     def parameter_shapes(self):
@@ -1648,12 +1806,13 @@ class Emitter:
             self.attributes.add(f'"target-cpu"="{target_cpu}"')
         if target_features:
             self.attributes.add(f'"target-features"="{target_features}"')
+        self.attributes.update(self.frame_map.attributes())
         attributes = " #0" if self.attributes or not self.function.export else ""
         if not self.function.export:
             self.attributes.add("noinline")
         first = self.function.blocks[0].label
         out = [f"define dllexport {result} @{self.function.name}"
-               f"({', '.join(rendered)}){attributes} {{",
+               f"({', '.join(rendered)}){attributes}{self.frame_map.subprogram()} {{",
                f"{self.label(first)}:"]
         # The slots live in the entry block, so they dominate every use, and the
         # source's own allocations keep their place in the code below.  They come

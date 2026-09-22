@@ -25,6 +25,11 @@ const drop_local = " call $myl_native_owned_drop(l %heap, l extern ${s}, l %l{d}
 const frame_headroom: u64 = 65536;
 /// The largest frame the native stack carries; a bigger one is heap-backed.
 const native_frame_limit: u64 = 32768;
+/// The `dbgloc` column that marks an entry guard's frame-failure call for the
+/// frame map. It is `qbe_frame_map.guard_column`; this file belongs to the
+/// compiler module and that one to the native-build module, which cannot share
+/// a file, so `src/qbe_frame_map_test.zig` checks the two are the same value.
+pub const frame_map_guard_column: u32 = 1;
 /// Where one function's frame lives: on the native stack, bounded by
 /// `native_frame_limit`, or in a heap block of this many bytes that the
 /// prologue allocates and every return path releases.
@@ -515,6 +520,47 @@ fn sinkPositions(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
     return std.mem.join(a, "\n", kept.items);
 }
 
+/// Whether one IL line is a call instruction, direct or indirect.
+fn callLine(line: []const u8) bool {
+    const trimmed = std.mem.trimStart(u8, line, " ");
+    if (trimmed.len == 0 or trimmed[0] == '#') return false;
+    return std.mem.indexOf(u8, trimmed, "call $") != null or std.mem.indexOf(u8, trimmed, "call %") != null;
+}
+
+/// QBE-FRAMEMAP-1: replace the frame-position stores with call-site positions.
+/// The unit opens with `dbgfile "SYMBOL"`, every position store is dropped (it
+/// only delimits instruction bodies), and every call is preceded by
+/// `dbgloc PC+1` naming the instruction it belongs to — the position a trace
+/// reports for a frame whose return address is that call. A call before the
+/// first instruction (the prologue's accounting refusal, a heap frame's
+/// allocation) reports pc 0, the position the linked record started at, and a
+/// call the prologue already positioned (the entry guard) keeps its own.
+fn callSitePositions(a: std.mem.Allocator, text: []const u8, unit_symbol: []const u8) GenerateError![]u8 {
+    var out: std.Io.Writer.Allocating = .init(a);
+    errdefer out.deinit();
+    const w = &out.writer;
+    w.print("dbgfile \"{s}\"\n", .{unit_symbol}) catch return error.OutOfMemory;
+    var pc: []const u8 = "0";
+    var previous: []const u8 = "";
+    var lines = std.mem.splitScalar(u8, text, '\n');
+    var first = true;
+    while (lines.next()) |line| {
+        if (positionStore(line)) |digits| {
+            pc = digits;
+            continue;
+        }
+        if (!first) w.writeByte('\n') catch return error.OutOfMemory;
+        first = false;
+        if (callLine(line) and !std.mem.startsWith(u8, previous, " dbgloc ")) {
+            const number = std.fmt.parseInt(u64, pc, 10) catch return error.InternalError;
+            w.print(" dbgloc {d}\n", .{number + 1}) catch return error.OutOfMemory;
+        }
+        w.writeAll(line) catch return error.OutOfMemory;
+        previous = line;
+    }
+    return out.toOwnedSlice() catch error.OutOfMemory;
+}
+
 /// QBE-NORETURN-1: end every failure path whose last call is a `myl_qbe_fail_*`
 /// helper in `hlt` (LLVM's `unreachable`) instead of `jmp @failure`. Only the
 /// fast protocol runs this: there the guest-stack trampoline has armed the
@@ -947,6 +993,18 @@ fn nameCount(text: []const u8, name: []const u8) usize {
 }
 
 // spec: QBE-PROMOTE-2
+// spec-case: QBE-FRAMEMAP-1
+test "callSitePositions positions each call at its instruction and frees a partial result" {
+    const a = std.testing.allocator;
+    const text = "export function l $f(l %ctx) {\n@entry\n call $myl_qbe_heap(l %ctx)\n@i3\n storel 3, %position\n %v1 =l call $g(l %ctx)\n ret 0\n}";
+    const positioned = try callSitePositions(a, text, "myl_f_x");
+    defer a.free(positioned);
+    try std.testing.expect(std.mem.startsWith(u8, positioned, "dbgfile \"myl_f_x\"\n"));
+    try std.testing.expect(std.mem.indexOf(u8, positioned, " dbgloc 1\n call $myl_qbe_heap") != null);
+    try std.testing.expect(std.mem.indexOf(u8, positioned, " dbgloc 4\n %v1 =l call $g") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, positioned, "%position"));
+    try std.testing.expectError(error.OutOfMemory, callSitePositions(std.testing.failing_allocator, text, "myl_f_x"));
+}
 test "slot reference counting equals the per-name scan it replaces" {
     const text =
         " %l1 =l alloc8 16\n" ++
@@ -1406,8 +1464,11 @@ const Emitter = struct {
         // With no step check, the only reason to store a position is a trap trace
         // or an `assert` message, and both are emitted by a body that mentions a
         // failure path. With a step check, every instruction can fail, so every
-        // instruction keeps its position.
-        if (!self.step_checks) {
+        // instruction keeps its position. The frame map stores none at all: each
+        // call names its own position for the return-address table instead.
+        if (self.frameMap()) {
+            text = try callSitePositions(self.allocator, text, name);
+        } else if (!self.step_checks) {
             text = try elideUnobservablePositions(self.allocator, text, !self.stickyFlagTest());
             text = try sinkPositions(self.allocator, text);
         }
@@ -1750,6 +1811,15 @@ const Emitter = struct {
     fn framesLinked(self: *const Emitter) bool {
         return self.checks or self.step_checks or self.frame_checks;
     }
+    /// QBE-FRAMEMAP-1: the fast protocol (no step and no frame accounting) with
+    /// its value guards on links no frame record at all. Every call instead
+    /// names its bytecode position with `dbgloc PC+1`, the build turns those
+    /// into a return-address table (`qbe_frame_map.zig`), and the runtime walks
+    /// the frame-pointer chain only when a trap fires. Nothing else reads a
+    /// record there: no step check, no depth counter.
+    fn frameMap(self: *const Emitter) bool {
+        return self.checks and !self.step_checks and !self.frame_checks;
+    }
     /// Link this function's native-stack frame record and enforce the logical
     /// depth ceiling and the execution-stack floor without a runtime call. The
     /// record is `{prev, function, position, native_bytes}`; generated code owns
@@ -1758,6 +1828,7 @@ const Emitter = struct {
     /// at all emits nothing here (see `framesLinked`).
     fn enterFrame(self: *Emitter, name: []const u8) GenerateError!void {
         if (!self.framesLinked()) return;
+        if (self.frameMap()) return self.guardFrame();
         const admit = self.temp();
         const stack = self.temp();
         const limit_fail = self.temp();
@@ -1811,6 +1882,27 @@ const Emitter = struct {
         );
         try self.print(" %position =l add %v{d}, 16\n", .{self.record});
         self.linked = true;
+    }
+    /// The frame-map prologue (QBE-FRAMEMAP-1): only the execution-stack floor
+    /// test, with no record to link. The probe is a stack allocation made after
+    /// the static frame, exactly where the record used to sit, and the adapter
+    /// reads the real stack pointer in its place. The failure call is positioned
+    /// at pc 0 with the guard column, so the trace a floor failure builds starts
+    /// at the caller — the frame this prologue belongs to was never entered.
+    fn guardFrame(self: *Emitter) GenerateError!void {
+        if (self.small_leaf) return;
+        const admit = self.temp();
+        const stack = self.temp();
+        const floor_fail = self.temp();
+        const probe = self.temp();
+        const floor_slot = self.temp();
+        const floor = self.temp();
+        const below = self.temp();
+        try self.print(
+            " jmp @frameadmit{d}\n@frameadmit{d}\n %v{d} =l alloc8 8\n %v{d} =l add %ctx, 64\n %v{d} =l loadl %v{d}\n %v{d} =l cultl %v{d}, %v{d}\n" ++
+                " jnz %v{d}, @floorfail{d}, @stackadmit{d}\n@floorfail{d}\n dbgloc 1, {d}\n call $myl_qbe_fail_frame(l %ctx)\n jmp @entry_failure\n@stackadmit{d}\n",
+            .{ admit, admit, probe, floor_slot, floor, floor_slot, below, probe, floor, below, floor_fail, stack, floor_fail, frame_map_guard_column, stack },
+        );
     }
     /// Unlink this function's frame record and drop the frame count.
     /// Refuse, once at the entry point, any runtime ceiling this build omitted

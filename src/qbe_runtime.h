@@ -119,6 +119,11 @@ typedef struct {
        points, which keep the sticky behavior. Appended after the frozen ABI
        prefix, so generated-code offsets stay unchanged. */
     void *unwind;
+    /* One past the highest address of the guest-stack mapping while generated
+       code runs, zero otherwise. With `native_stack_bottom` it bounds the
+       frame-pointer walk a frame-map trap performs (QBE-FRAMEMAP-1). Appended
+       after the frozen ABI prefix. */
+    uintptr_t native_stack_top;
 } MylQbeContext;
 typedef struct {
     uint64_t value, steps;

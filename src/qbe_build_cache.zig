@@ -1,6 +1,7 @@
 //! Content-addressed native objects and direct assembler/compiler invocations.
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
+const frame_map = @import("qbe_frame_map.zig");
 /// Cache and native tool failures.
 pub const Error = fs.Error || error{EmptyNativeObject};
 /// Wave-3 contract mirrored for the native-build module.
@@ -64,6 +65,24 @@ fn frame(hash: *std.crypto.hash.sha2.Sha256, bytes: []const u8) void {
     hash.update(bytes);
 }
 
+/// QBE-FRAMEMAP-1: every runtime and generated C function that calls keeps a
+/// frame pointer, so a trap in a frame-map program can walk from the runtime's
+/// `fail` through any runtime frames to the guest frame that called them. A
+/// leaf calls nothing, so it can never sit between a guest frame and `fail`.
+const frame_pointer_flags = [_][]const u8{ "-fno-omit-frame-pointer", "-momit-leaf-frame-pointer" };
+/// Annotate assembly for the frame map, reporting a call positioned in another
+/// unit's function — a guest body inlined into another guest body, whose
+/// caller frame a trace would then miss — as a failed native tool.
+pub fn annotateText(context: fs.Context, text: []const u8) Error![]u8 {
+    return frame_map.annotate(context.allocator, text) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.FrameMapMismatch => {
+            if (context.environ.get("MYLANG_FRAME_MAP_KEEP")) |keep| try context.write(keep, text);
+            try std.Io.File.stderr().writeStreamingAll(context.io, "mylang: a call site's frame-map position names another guest function than the one it was compiled into\n");
+            return error.NativeToolFailed;
+        },
+    };
+}
 /// Native compilation tools and invocation-local runtime source directory.
 pub const Cache = struct {
     context: fs.Context,
@@ -112,8 +131,18 @@ pub const Cache = struct {
     /// the job's private scratch whether or not the tool succeeded.
     fn complete(self: Cache, job: Job) Error!Object {
         defer self.context.remove(job.work);
-        if (job.assemble) |argv| try self.context.command(argv, null);
+        if (job.assemble) |argv| {
+            try self.annotateAssembly(try std.fs.path.join(self.context.allocator, &.{ job.work, "unit.s" }));
+            try self.context.command(argv, null);
+        }
         return self.store(job.key, job.path, job.candidate);
+    }
+    /// Give a unit's assembly its frame-map table before it is assembled
+    /// (QBE-FRAMEMAP-1). Assembly with no call-site positions is left untouched.
+    fn annotateAssembly(self: Cache, path: []const u8) Error!void {
+        const text = try self.context.read(path);
+        const annotated = try annotateText(self.context, text);
+        if (!std.mem.eql(u8, text, annotated)) try self.context.write(path, annotated);
     }
     /// Reclaim a staged job that a failed wave will not finish.
     pub fn discard(self: Cache, job: Job) void {
@@ -253,8 +282,10 @@ pub const Cache = struct {
             zig_mode,                                 "-I",              self.assets, "-cflags",
             "-std=c11",                               optimization,      "-g0",       "-fno-ident",
             "-ffunction-sections",                    "-fdata-sections", shared,      shared_debug,
-            "-fdebug-compilation-dir=mylang-runtime", "--",
+            "-fdebug-compilation-dir=mylang-runtime",
         });
+        try argv.appendSlice(a, &frame_pointer_flags);
+        try argv.append(a, "--");
         if (self.codegen.lto) try argv.append(a, "-flto");
         for (sources) |source| try argv.append(a, try std.fs.path.join(a, &.{ self.assets, source }));
         try argv.append(a, try std.fmt.allocPrint(a, "-femit-bin={s}", .{output}));
@@ -312,6 +343,7 @@ pub const Cache = struct {
             "-fdebug-compilation-dir=mylang-qbe", debug,   shared,                shared_debug,      "-I",
             self.assets,
         });
+        try result.appendSlice(a, &frame_pointer_flags);
         if (self.codegen.lto) try result.append(a, "-flto");
         return result.toOwnedSlice(a);
     }
