@@ -234,3 +234,9 @@ test "foundation syntax: fmt drops a redundant trailing comma after the last tup
     defer t.allocator.free(formatted);
     try t.expectEqualStrings("def main() -> int:\n    pair = (1, 2)\n    return pair[0]\n", formatted);
 }
+
+// spec-case: CONDITIONAL-EXPR-2
+test "a nested conditional and one inside a call argument survive fmt unchanged" {
+    try canonical("def main() -> int:\n    x = 1 if False else 2 if False else 3\n    return x\n");
+    try canonical("def main() -> int:\n    return describe(1 if True else 2)\n");
+}

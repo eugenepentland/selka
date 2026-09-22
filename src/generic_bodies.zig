@@ -1425,13 +1425,34 @@ const Checker = struct {
                 try self.supports(target, .integer, cast.ty);
                 break :result target;
             },
-            // lane: tuples (item 4), conditional expression (item 6) and the
-            // `mut` marker (item 1): the lanes add real support for the ones
-            // that can appear in a generic body.
+            // lane: tuples (item 4) and the `mut` marker (item 1): those lanes
+            // add real support for the spellings that can appear in a generic
+            // body. The conditional expression is checked here, with the same
+            // condition and arm agreement rules as an ordinary function body.
             .tuple => return self.sink.fail(eUnsupported, node.span, "tuple values are not supported inside generic function bodies yet"),
-            .conditional => return self.sink.fail(eUnsupported, node.span, "conditional expressions are not supported inside generic function bodies yet"),
+            .conditional => |conditional| try self.conditionalValue(node, conditional),
             .mut_argument => return self.sink.fail(eUnsupported, node.span, "the `mut` argument marker is not supported inside generic function bodies yet"),
         };
+    }
+    /// `value_if_true if condition else value_if_false` inside a template body:
+    /// the condition is bool, both arms agree on one symbolic type, and only the
+    /// chosen arm runs, so the value carries the then arm's type.
+    fn conditionalValue(self: *Checker, node: ast.Node, conditional: @FieldType(@FieldType(ast.Node, "data"), "conditional")) Error!Symbolic {
+        const condition = try self.expressionExpected(conditional.condition, .{ .concrete = .bool });
+        try self.compatible(condition, .{ .concrete = .bool }, self.program.nodes.items[@backingInt(conditional.condition)].span);
+        const facts = try self.option_facts.snapshot(self.field_arena.allocator());
+        defer self.option_facts.restore(facts);
+        const expected = self.expected_types.get(node.span);
+        try self.assumeOption(conditional.condition, true);
+        const then_value = if (expected) |ty_value| try self.expressionExpected(conditional.then_value, ty_value) else try self.expression(conditional.then_value);
+        self.option_facts.restore(facts);
+        try self.assumeOption(conditional.condition, false);
+        const else_value = try self.expressionExpected(conditional.else_value, expected orelse then_value);
+        if (expected) |ty_value| {
+            try self.compatible(then_value, ty_value, self.program.nodes.items[@backingInt(conditional.then_value)].span);
+            try self.compatible(else_value, ty_value, self.program.nodes.items[@backingInt(conditional.else_value)].span);
+        } else try self.same(else_value, then_value, self.program.nodes.items[@backingInt(conditional.else_value)].span);
+        return then_value;
     }
     fn externalValue(self: *Checker, read: @FieldType(@FieldType(ast.Node, "data"), "external_read")) Error!Symbolic {
         const success: typed.Type = if (read.kind == .clock) .i64 else .u64;

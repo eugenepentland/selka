@@ -407,3 +407,26 @@ test "a generic body constructs and destructures a parenthesized case with a def
     try compilation.check();
     try t.expectEqual(@as(usize, 0), compilation.diagnostics.items.len);
 }
+
+fn conditionalScenario(allocator: std.mem.Allocator) !void {
+    const text =
+        \\def pick[T](left: T, right: T, choose_left: bool) -> T:
+        \\    return left if choose_left else right
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return pick(1, 2, True)
+    ;
+    var compilation = try language.Compilation.init(allocator, "generic.my", text);
+    defer compilation.deinit();
+    try compilation.parse();
+    var sink: diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
+    try bodies.check(allocator, compilation.src, compilation.syntax.?, &sink);
+    try t.expectEqual(@as(usize, 0), sink.items.items.len);
+    try compilation.check();
+    try t.expectEqual(@as(i64, 1), (try @import("native_execute.zig").run(&compilation)).value);
+}
+// spec-case: CONDITIONAL-EXPR-4
+test "a generic body checks a conditional expression symbolically" {
+    try conditionalScenario(t.allocator);
+}
