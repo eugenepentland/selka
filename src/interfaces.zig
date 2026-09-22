@@ -343,6 +343,22 @@ pub const Index = struct {
         const qualified = lexer.qualifiedName(src.text(span), tokens) orelse return error.InternalError;
         return self.resolve(.{ .from = module, .alias = qualified.alias, .name = qualified.name, .kind = .type, .owner = null, .span = span });
     }
+    /// `typeIdentity` for a caller that recovers from an unresolved name.
+    ///
+    /// A signature names types the module index cannot resolve on purpose — a
+    /// type parameter, a builtin — and the effect and resource scans simply
+    /// skip those. `resolve` reports its refusal by recording a project
+    /// problem, which is a diagnostic the project owns, not this scan's; left
+    /// behind it makes the whole project read as failed to anything that asks
+    /// later. The lookup therefore restores whatever problem the project
+    /// already had.
+    fn optionalTypeIdentity(self: *Index, module: usize, span: source.Span) ?Identity {
+        const existing = self.project.problem;
+        return self.typeIdentity(module, span) catch {
+            self.project.problem = existing;
+            return null;
+        };
+    }
     fn requirePublicType(self: *Index, module: usize, span: source.Span, id: Identity) diagnostic.Error!void {
         const symbol = self.units[id.module].symbols.items[id.symbol];
         if (!symbol.exported) return self.project.fail("E_PRIVATE_INTERFACE", "exported interface exposes an unexported type", .{ .module = module, .span = span }, .{ .module = id.module, .span = symbol.span });
@@ -613,7 +629,7 @@ pub const Index = struct {
             // declares nothing and therefore contributes nothing.
             if (callback.effect_bound.allowed != effect_set.all) mask |= callback.effect_bound.allowed;
         }
-        const identity = self.typeIdentity(module, span) catch return mask;
+        const identity = self.optionalTypeIdentity(module, span) orelse return mask;
         const symbol = self.units[identity.module].symbols.items[identity.symbol];
         for (self.units[identity.module].syntax.types.records) |record| {
             if (record.type_parameters.len != 0) continue;
@@ -630,7 +646,7 @@ pub const Index = struct {
     /// resource is read here; a resource nested inside a record is caught by the
     /// checked program, which walks the whole record catalog.
     fn resourceTypeEffect(self: *Index, module: usize, span: source.Span) ContractError!effect_set.Mask {
-        const identity = self.typeIdentity(module, span) catch return 0;
+        const identity = self.optionalTypeIdentity(module, span) orelse return 0;
         const symbol = self.units[identity.module].symbols.items[identity.symbol];
         const source_text = self.project.modules.items[identity.module].src;
         for (self.units[identity.module].syntax.types.resources) |resource| {

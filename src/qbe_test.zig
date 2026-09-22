@@ -740,14 +740,14 @@ test "QBE-PURE-READ-1 a read-only collection probe pushes no roots" {
         \\    return counts.get(key, 0)
         \\
         \\
-        \\def bump(counts: dict[str, i64], key: str) -> i64:
+        \\def bump(counts: mut dict[str, i64], key: str) -> i64:
         \\    counts[key] = 1
         \\    return len(counts)
         \\
         \\
         \\def main() -> i64:
         \\    counts: dict[str, i64] = {}
-        \\    return probe(counts, "k") + bump(counts, "k")
+        \\    return probe(counts, "k") + bump(mut counts, "k")
     );
     defer parsed.deinit();
     const probe = named(parsed.value, "probe").?.il;
@@ -1926,6 +1926,57 @@ test "QBE-ELEMREF-2 an indexed element local is named in place across branches" 
     // never copied out of the list.
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_list_get"));
+}
+
+// spec-case: QBE-ELEMREF-2
+test "QBE-ELEMREF-2 a temporary reused by two element reads is borrowed for both" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def span(rows: list[Row], i: i64, j: i64) -> i64:
+        \\    left = rows[i]
+        \\    total = left.a + left.b
+        \\    left = rows[j]
+        \\    return total + left.a + left.b
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return span([Row(a=1, b=2), Row(a=3, b=4)], 0, 1)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "span").?.il;
+    // Both writes store an element address, so the slot holds an address for
+    // the whole function and neither read copies.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+    try std.testing.expect(std.mem.indexOf(u8, body, " %l3 =l alloc8 8\n") != null);
+}
+
+// spec-case: QBE-ELEMREF-2
+test "QBE-ELEMREF-2 a local one write fills from a copy keeps its value" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def span(rows: list[Row], i: i64) -> i64:
+        \\    left = rows[i]
+        \\    total = left.a
+        \\    left = Row(a=9, b=9)
+        \\    return total + left.b
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return span([Row(a=1, b=2)], 0)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "span").?.il;
+    // The constructor's write is not an address, so the slot holds the value
+    // and the element read copies into it.
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit ") != null);
 }
 
 // spec-case: QBE-ELEMREF-2

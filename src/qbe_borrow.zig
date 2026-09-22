@@ -135,6 +135,14 @@ fn elementSource(comptime E: type, self: *E, receiver: typed.Type) Error!?Source
 
 /// Claim the local the address-producing instruction at `candidate.pc` fills,
 /// when every condition the address-holding form needs holds.
+///
+/// The slot holds either an address or a value for the whole function, never
+/// one and then the other, so a local written more than once is claimed only
+/// when *every* write is an address of the same type and the same stability.
+/// A compiler temporary the front end reuses for two element reads in a row —
+/// `xs[i].f = ...` followed by `xs[i].g = ...` — is exactly that shape, and
+/// each write then carries its own live-range proof, over a range the other
+/// writes end.
 fn claimOne(comptime E: type, self: *E, candidate: Candidate) Error!void {
     const f = self.function;
     const code = f.scope.instructions;
@@ -146,8 +154,8 @@ fn claimOne(comptime E: type, self: *E, candidate: Candidate) Error!void {
         else => return,
     };
     if (slot >= candidate.flags.len or candidate.flags[slot] != .none) return;
-    // A parameter's slot is written by the prologue as well, so this store is
-    // never its only write.
+    // A parameter's slot is written by the prologue as well, so that write is
+    // never one of the addresses this rule accounts for.
     if (slot < f.signature.parameter_count) return;
     if (f.scope.locals[slot].ty != candidate.source.ty) return;
     if (self.isScalar(candidate.source.ty)) return;
@@ -160,10 +168,41 @@ fn claimOne(comptime E: type, self: *E, candidate: Candidate) Error!void {
     // slot. A borrowed element's slot is meaningful only inside its own inert
     // run, so a frame that can reach that scan keeps the copy.
     if (!candidate.source.stable and arena_lower.releasesOnReturn(self.arenas, f)) return;
-    for (code, 0..) |_, at| if (at != at_store and writesLocalAt(f, at, slot)) return;
-    if (!candidate.source.stable and !try inertWhileLive(E, self, at_store, slot)) return;
+    const writes = try collectWrites(E, self, slot);
+    defer self.allocator.free(writes);
+    for (writes) |at| if (at == 0 or !try writesAddress(E, self, .{ .flags = candidate.flags, .pc = at - 1, .source = candidate.source })) return;
+    if (!candidate.source.stable) {
+        for (writes) |at| if (!try inertWhileLive(E, self, .{ .store = at, .slot = slot, .writes = writes })) return;
+    }
     candidate.flags[slot] = if (candidate.source.stable) .value else .element;
 }
+
+/// Every instruction that writes local `slot`, in program order.
+fn collectWrites(comptime E: type, self: *E, slot: usize) Error![]usize {
+    var writes: std.ArrayList(usize) = .empty;
+    for (self.function.scope.instructions, 0..) |_, at| {
+        if (writesLocalAt(self.function, at, slot)) try writes.append(self.allocator, at);
+    }
+    return writes.toOwnedSlice(self.allocator);
+}
+
+/// Whether the write at `candidate.pc + 1` stores an address of the
+/// candidate's own type and stability, reached by falling through from the
+/// instruction that produced it.
+fn writesAddress(comptime E: type, self: *E, candidate: Candidate) Error!bool {
+    const code = self.function.scope.instructions;
+    const at_store = candidate.pc + 1;
+    if (candidate.pc >= code.len or at_store >= code.len or at_store >= self.states.len) return false;
+    if (self.states[candidate.pc] == null or self.states[at_store] == null) return false;
+    if (branchTarget(E, self, at_store)) return false;
+    if (code[at_store].op != .store_local) return false;
+    const source = try addressSource(E, self, candidate.pc) orelse return false;
+    return source.ty == candidate.source.ty and source.stable == candidate.source.stable;
+}
+
+/// One borrow's live range: the write that creates it, the local it fills and
+/// every write of that local, each of which ends a range.
+const Range = struct { store: usize, slot: usize, writes: []const usize };
 
 /// Whether every instruction that can run while local `slot` holds a borrowed
 /// address is inert.
@@ -174,7 +213,7 @@ fn claimOne(comptime E: type, self: *E, candidate: Candidate) Error!void {
 /// instruction is in the live range when it is reachable from the store without
 /// the store running again *and* either a read of the slot is reachable from
 /// it or it still runs with that read's operand live.
-fn inertWhileLive(comptime E: type, self: *E, at_store: usize, slot: usize) Error!bool {
+fn inertWhileLive(comptime E: type, self: *E, range: Range) Error!bool {
     const code = self.function.scope.instructions;
     const reachable = try self.allocator.alloc(bool, code.len);
     defer self.allocator.free(reachable);
@@ -182,32 +221,34 @@ fn inertWhileLive(comptime E: type, self: *E, at_store: usize, slot: usize) Erro
     defer self.allocator.free(live);
     @memset(reachable, false);
     @memset(live, false);
-    markReachable(E, self, at_store, reachable);
-    markReaching(E, self, slot, reachable, live);
-    try markOperandLive(E, self, slot, reachable, live);
+    markReachable(E, self, range, reachable);
+    markReaching(E, self, range.slot, reachable, live);
+    try markOperandLive(E, self, range.slot, reachable, live);
     const returns = try epilogueKeepsBorrows(E, self);
     for (code, 0..) |instruction, pc| {
-        if (!live[pc] or pc == at_store) continue;
+        if (!live[pc] or pc == range.store) continue;
         if (!try inert(E, self, instruction.op, returns)) return false;
     }
     return true;
 }
 
-/// Mark every instruction control can reach from `from`, never re-entering
-/// `from` itself: the store that created the borrow ends the previous one.
-fn markReachable(comptime E: type, self: *E, from: usize, reachable: []bool) void {
+/// Mark every instruction control can reach from this range's own write, never
+/// entering a write of the same local: each one ends this borrow and starts
+/// another.
+fn markReachable(comptime E: type, self: *E, range: Range, reachable: []bool) void {
     var changed = true;
     while (changed) {
         changed = false;
         for (self.function.scope.instructions, 0..) |instruction, pc| {
-            if (pc != from and !reachable[pc]) continue;
-            changed = reachSuccessors(E, self, .{ .op = instruction.op, .pc = pc, .marks = reachable, .stop = from }) or changed;
+            if (pc != range.store and !reachable[pc]) continue;
+            changed = reachSuccessors(E, self, .{ .op = instruction.op, .pc = pc, .marks = reachable, .stop = 0 }, range.writes) or changed;
         }
     }
 }
 
 /// One successor-marking step: the instruction, where it sits, the table to
-/// mark and the pc marking must never re-enter.
+/// mark and — for the operand pass — the stack height at and below which the
+/// operand it carries is gone.
 const Step = struct { op: @FieldType(bytecode.Instruction, "op"), pc: usize, marks: []bool, stop: usize };
 
 /// Mark every instruction control can enter from this one, and answer whether
@@ -215,29 +256,30 @@ const Step = struct { op: @FieldType(bytecode.Instruction, "op"), pc: usize, mar
 /// stack heights along: a `switch_variant` leaves only through its arms, a
 /// `ret` leaves nowhere, and every other instruction but an unconditional
 /// `jump` also falls through.
-fn reachSuccessors(comptime E: type, self: *E, step: Step) bool {
+fn reachSuccessors(comptime E: type, self: *E, step: Step, kills: []const usize) bool {
     var changed = false;
     switch (step.op) {
-        .jump => |target| changed = reach(E, self, step, target),
+        .jump => |target| changed = reach(E, self, step, target, kills),
         .jump_if_false => |target| {
-            changed = reach(E, self, step, target) or changed;
-            changed = reach(E, self, step, step.pc + 1) or changed;
+            changed = reach(E, self, step, target, kills) or changed;
+            changed = reach(E, self, step, step.pc + 1, kills) or changed;
         },
         .try_result => |propagate| {
-            changed = reach(E, self, step, propagate.error_target) or changed;
-            changed = reach(E, self, step, step.pc + 1) or changed;
+            changed = reach(E, self, step, propagate.error_target, kills) or changed;
+            changed = reach(E, self, step, step.pc + 1, kills) or changed;
         },
         .switch_variant => |dispatch| for (dispatch.arms) |arm| {
-            changed = reach(E, self, step, arm.target) or changed;
+            changed = reach(E, self, step, arm.target, kills) or changed;
         },
         .ret => {},
-        else => changed = reach(E, self, step, step.pc + 1),
+        else => changed = reach(E, self, step, step.pc + 1, kills),
     }
     return changed;
 }
 
-fn reach(comptime E: type, self: *E, step: Step, target: usize) bool {
-    if (target >= step.marks.len or target == step.stop) return false;
+fn reach(comptime E: type, self: *E, step: Step, target: usize, kills: []const usize) bool {
+    if (target >= step.marks.len) return false;
+    for (kills) |at| if (at == target) return false;
     if (self.states[target] == null or step.marks[target]) return false;
     step.marks[target] = true;
     return true;
@@ -280,12 +322,20 @@ fn marked(target: usize, live: []const bool) bool {
 /// Extend the live range past each read by the run over which the operand that
 /// read pushed can still be dereferenced.
 ///
-/// A read pushes the address at operand slot `h`, the stack height before it,
-/// so the address is certainly gone once the height falls to `h` or below. The
-/// run is therefore every instruction reachable from a read whose own height
-/// still stands above that slot, which is where a `ret` that returns the
-/// borrow, and a call the address was handed to as an argument, both sit. Where
-/// two reads overlap, the lower floor wins, which only widens the run.
+/// A read pushes the address at operand slot `k`, the stack height before it,
+/// and that slot is its own until something writes it. An instruction that
+/// produces a result writes it one below its own resulting height, so one that
+/// leaves the stack exactly `k + 1` high has overwritten slot `k`; one that
+/// leaves it lower removed the slot outright, whatever it was. An instruction
+/// that only pops — a branch, a store, a `pop` — writes nothing, so it ends the
+/// run only by taking the stack below `k + 1`. Propagation stops accordingly,
+/// while the read itself, which creates the operand at exactly `k + 1`, always
+/// reaches its own successors.
+///
+/// That run is where a `ret` returning the borrow and a call the address was
+/// handed to as an argument both sit, and it ends at the field read or record
+/// update that consumed the address. Where two reads overlap, the lower floor
+/// wins, which only widens the run.
 fn markOperandLive(comptime E: type, self: *E, slot: usize, reachable: []const bool, live: []bool) Error!void {
     const code = self.function.scope.instructions;
     const floor = try self.allocator.alloc(usize, code.len);
@@ -297,6 +347,7 @@ fn markOperandLive(comptime E: type, self: *E, slot: usize, reachable: []const b
         const state = self.states[pc] orelse continue;
         floor[pc] = state.len + 1;
         seeded = true;
+        _ = spreadOperand(E, self, .{ .op = instruction.op, .pc = pc, .marks = live, .stop = floor[pc] }, floor, floor[pc]);
     }
     if (!seeded) return;
     var changed = true;
@@ -304,7 +355,8 @@ fn markOperandLive(comptime E: type, self: *E, slot: usize, reachable: []const b
         changed = false;
         for (code, 0..) |instruction, pc| {
             if (floor[pc] == 0) continue;
-            changed = spreadOperand(E, self, .{ .op = instruction.op, .pc = pc, .marks = live, .stop = floor[pc] }, floor) or changed;
+            const minimum = floor[pc] + @intFromBool(producesResult(instruction.op));
+            changed = spreadOperand(E, self, .{ .op = instruction.op, .pc = pc, .marks = live, .stop = floor[pc] }, floor, minimum) or changed;
         }
     }
     for (floor, 0..) |held, pc| if (held != 0) {
@@ -312,35 +364,89 @@ fn markOperandLive(comptime E: type, self: *E, slot: usize, reachable: []const b
     };
 }
 
-/// Carry one operand floor to every successor whose own stack still stands
-/// above it. A lower floor replaces a higher one, so the run only grows.
-fn spreadOperand(comptime E: type, self: *E, step: Step, floor: []usize) bool {
+/// Carry one operand floor to every successor whose own stack still stands at
+/// `minimum` or above. A lower floor replaces a higher one, so the run only
+/// grows.
+fn spreadOperand(comptime E: type, self: *E, step: Step, floor: []usize, minimum: usize) bool {
     var changed = false;
     switch (step.op) {
-        .jump => |target| changed = carry(E, self, step, target, floor),
+        .jump => |target| changed = carry(E, self, .{ .step = step, .target = target, .floor = floor, .minimum = minimum }),
         .jump_if_false => |target| {
-            changed = carry(E, self, step, target, floor) or changed;
-            changed = carry(E, self, step, step.pc + 1, floor) or changed;
+            changed = carry(E, self, .{ .step = step, .target = target, .floor = floor, .minimum = minimum }) or changed;
+            changed = carry(E, self, .{ .step = step, .target = step.pc + 1, .floor = floor, .minimum = minimum }) or changed;
         },
         .try_result => |propagate| {
-            changed = carry(E, self, step, propagate.error_target, floor) or changed;
-            changed = carry(E, self, step, step.pc + 1, floor) or changed;
+            changed = carry(E, self, .{ .step = step, .target = propagate.error_target, .floor = floor, .minimum = minimum }) or changed;
+            changed = carry(E, self, .{ .step = step, .target = step.pc + 1, .floor = floor, .minimum = minimum }) or changed;
         },
         .switch_variant => |dispatch| for (dispatch.arms) |arm| {
-            changed = carry(E, self, step, arm.target, floor) or changed;
+            changed = carry(E, self, .{ .step = step, .target = arm.target, .floor = floor, .minimum = minimum }) or changed;
         },
         .ret => {},
-        else => changed = carry(E, self, step, step.pc + 1, floor),
+        else => changed = carry(E, self, .{ .step = step, .target = step.pc + 1, .floor = floor, .minimum = minimum }),
     }
     return changed;
 }
 
-fn carry(comptime E: type, self: *E, step: Step, target: usize, floor: []usize) bool {
-    if (target >= floor.len) return false;
-    if (floor[target] != 0 and floor[target] <= step.stop) return false;
-    const state = self.states[target] orelse return false;
-    if (state.len < step.stop) return false;
-    floor[target] = step.stop;
+/// Whether an instruction leaves a result of its own on the operand stack, at
+/// the slot one below its resulting height. Only such an instruction can
+/// overwrite the slot a borrow's address sits in; one that merely pops — a
+/// branch, a store, a drop, a `pop`, a return — leaves every slot below its
+/// own operands alone. The default is `false`, which keeps an operand live
+/// longer, so an opcode added later only widens the run. `try_result` and
+/// `switch_variant` are `false` on purpose: they also write slots their
+/// resulting height does not name, and neither is inert, so a range that
+/// reaches one declines anyway.
+fn producesResult(op: @FieldType(bytecode.Instruction, "op")) bool {
+    return switch (op) {
+        .load_local,
+        .move_local,
+        .push_i64,
+        .push_integer,
+        .push_bool,
+        .push_unit,
+        .get_field,
+        .get_index,
+        .update_record,
+        .make_record,
+        .make_variant,
+        .replace_index,
+        .array_length,
+        .binary_integer,
+        .add_i64_checked,
+        .sub_i64_checked,
+        .mul_i64_checked,
+        .div_i64_checked,
+        .rem_i64_checked,
+        .neg_integer,
+        .neg_i64_checked,
+        .cmp_i64,
+        .cmp_bool,
+        .cmp_enum,
+        .cmp_domain,
+        .not_bool,
+        .wrap_domain,
+        .unwrap_domain,
+        .cast_integer,
+        .call,
+        .invoke,
+        .buffer_operation,
+        .function_value,
+        => true,
+        else => false,
+    };
+}
+
+/// One operand-floor carry: the step it leaves, where it lands, the floor table
+/// and the height the landing instruction must still stand at.
+const Carry = struct { step: Step, target: usize, floor: []usize, minimum: usize };
+
+fn carry(comptime E: type, self: *E, move: Carry) bool {
+    if (move.target >= move.floor.len) return false;
+    if (move.floor[move.target] != 0 and move.floor[move.target] <= move.step.stop) return false;
+    const state = self.states[move.target] orelse return false;
+    if (state.len < move.minimum) return false;
+    move.floor[move.target] = move.step.stop;
     return true;
 }
 
@@ -397,10 +503,22 @@ fn inert(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"),
         // A whole-value store can drop the value it replaces, which is a
         // release the run must not contain; a drop-free destination cannot.
         .store_local => |target| !(try self.layout(self.function.scope.locals[@backingInt(target)].ty)).drop,
+        // Building or updating a plain record writes this pc's own scratch, or
+        // a destination `constructorDestination` proved no reachable
+        // instruction reads — never the receiver's backing. A managed record
+        // is a heap cell the update writes through, and a collection literal
+        // allocates, so both stay off the list.
+        .make_variant => true,
+        .make_record => |record| !self.program.records[record.ty.recordIndex()].isCollection() and
+            !self.program.records[record.ty.recordIndex()].isManagedRecord(),
+        .update_record => |record| !self.program.records[record.ty.recordIndex()].isManagedRecord(),
         // Another element read of a list or byte string is the inline load this
         // same rule lowers: it allocates nothing and writes nothing. A string
         // or dictionary read calls the runtime, so it is not on this list.
+        // A `replace` on a fixed array writes a local or this pc's scratch; on
+        // a managed list it writes the receiver's own backing.
         .get_index => |ty| try readsInline(E, self, ty),
+        .replace_index => |ty| ty.isAggregate() and !self.program.records[ty.recordIndex()].managed,
         .buffer_operation => |operation| switch (operation.kind) {
             .length, .capacity => true,
             .read => try readsInline(E, self, self.function.scope.locals[@backingInt(operation.owner)].ty),
