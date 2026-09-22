@@ -540,17 +540,18 @@ test "mutation summaries are recomputed rather than copied with a reused body" {
     ;
     try compare(t.allocator, &cache, writing, 1);
     const reading =
-        \\def touch(values: list[int]) -> None:
-        \\    _ = values
+        \\def touch(values: mut list[int]) -> None:
+        \\    first = 1
+        \\    values[0] = first
         \\
         \\
         \\def main() -> i64:
         \\    values = [1]
-        \\    touch(values)
+        \\    touch(mut values)
         \\    return values[0]
     ;
     const before = cache.statistics.reused;
-    // `main` is unchanged and reused; its `mutates`/`return_origin` summary is
+    // `touch`'s signature is unchanged, so `main` is reused; its summary is
     // recomputed by the mandatory global effect pass and must match fresh.
     try compare(t.allocator, &cache, reading, 1);
     try t.expectEqual(before + 1, cache.statistics.reused);
