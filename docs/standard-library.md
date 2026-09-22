@@ -241,19 +241,29 @@ unique_strs(values: list[str]) -> list[str]
 ```
 
 The concrete `sort_ints`, `sort_floats` and `sort_strs` wrappers delegate to the
-same stable merge engine as `sorted`, returning a new list and leaving the input
-untouched. That engine uses one reusable work buffer rather than recursive slices.
+same stable merge engine as `sorted` and `values.sort()`, returning a new list and
+leaving the input untouched. That engine keeps the ascending runs a list already
+has, reverses strictly descending ones, extends short runs by insertion and merges
+through one scratch buffer of at most half the list, with a comparison compiled
+for each element type, so an ordered or reversed list sorts in linear time.
 Not-a-number follows every ordered float, equal values and signed zeros retain
 their input order, and text compares its stored Unicode scalar values directly.
 `compare_strs` and `min_str` therefore allocate no temporary encodings. A generic
 sort over an arbitrary element type needs an integer key function, because the
 language has no ordering contract: `copy`, `equality`, `integer`, `codec` and
-`storable` are the only generic requirements. `sort_by_key` retains its recursive
-merge so existing callback comparison and trap order do not change; keyed
-`sorted` retains its bottom-up order but now reuses one scratch list across every
-pass. Sorting NaNs last is a deliberate regularization: the earlier comparator
-treated a NaN as tied with every value, so its position could depend on merge
-boundaries rather than one ordering contract.
+`storable` are the only generic requirements.
+
+`sort_by_key` computes each element's key once and lets the integer engine order
+the positions: it packs every key, less the smallest, above the element's
+position in one integer, so sorting those integers sorts by key with ties in
+input order, and keys too far apart to share a word with a position take two
+such sorts of 32 key bits each. It computes the keys in the order its earlier
+recursive merge first asked for them, so a key function that traps still raises
+the same trap. Keyed `sorted` retains its bottom-up callback order and reuses one
+scratch list across every pass. Sorting NaNs last is a deliberate
+regularization: the earlier comparator treated a NaN as tied with every value,
+so its position could depend on merge boundaries rather than one ordering
+contract.
 
 ```mylang
 # doc: expect 42

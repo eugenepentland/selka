@@ -26,3 +26,59 @@ test "standard sort keeps its copies rooted under collection stress" {
         "        case None:\n" ++
         "            return 2\n", 42);
 }
+
+// spec-case: STANDARD-SORT-KEY-1
+test "keyed sort computes keys in the order the recursive merge first asked for them" {
+    // Seven elements halve into [0, 3) and [3, 7), and the first block is
+    // reached from its last element, so element 2's division traps before
+    // element 1's overflow even though element 1 comes first in the list.
+    try fixture.trap(t.allocator, "module main\nimport sort\n" ++
+        "def fragile(value: int) -> int effects():\n" ++
+        "    if value == 1:\n" ++
+        "        return 9223372036854775807 + value\n" ++
+        "    if value == 2:\n" ++
+        "        return 10 // (value - 2)\n" ++
+        "    return value\n" ++
+        "def main() -> int:\n" ++
+        "    ordered = sort.sort_by_key([0, 1, 2, 3, 4, 5, 6], fragile)\n" ++
+        "    return ordered[0]\n", .{}, "R_DIVISION_BY_ZERO");
+    try fixture.trap(t.allocator, "module main\nimport sort\n" ++
+        "def fragile(value: int) -> int effects():\n" ++
+        "    if value == 0:\n" ++
+        "        return 10 // value\n" ++
+        "    if value == 1:\n" ++
+        "        return 9223372036854775807 + value\n" ++
+        "    return value\n" ++
+        "def main() -> int:\n" ++
+        "    ordered = sort.sort_by_key([0, 1, 2, 3], fragile)\n" ++
+        "    return ordered[0]\n", .{}, "R_OVERFLOW");
+}
+
+// spec-case: STANDARD-SORT-KEY-1
+test "keyed sort keeps records and their text rooted under collection stress" {
+    try fixture.stress(t.allocator, "module main\nimport sort\n" ++
+        "record Entry:\n" ++
+        "    name: str\n" ++
+        "    score: int\n" ++
+        "def by_score(entry: Entry) -> int effects():\n" ++
+        "    return entry.score\n" ++
+        "def main() -> int:\n" ++
+        "    entries: list[Entry] = []\n" ++
+        "    index = 0\n" ++
+        "    while index < 300:\n" ++
+        "        entries.append(Entry(name=chr(19968 + index), score=(index * 37) % 11))\n" ++
+        "        index += 1\n" ++
+        "    ranked = sort.sort_by_key(entries, by_score)\n" ++
+        "    at = 1\n" ++
+        "    while at < 300:\n" ++
+        "        earlier = ord(ranked[at - 1].name) - 19968\n" ++
+        "        later = ord(ranked[at].name) - 19968\n" ++
+        "        if ranked[at - 1].score > ranked[at].score:\n" ++
+        "            return 1\n" ++
+        "        if ranked[at - 1].score == ranked[at].score and earlier >= later:\n" ++
+        "            return 2\n" ++
+        "        if (earlier * 37) % 11 != ranked[at - 1].score:\n" ++
+        "            return 3\n" ++
+        "        at += 1\n" ++
+        "    return 42\n", 42);
+}

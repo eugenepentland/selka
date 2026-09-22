@@ -430,3 +430,60 @@ fn conditionalScenario(allocator: std.mem.Allocator) !void {
 test "a generic body checks a conditional expression symbolically" {
     try conditionalScenario(t.allocator);
 }
+
+fn sortingScenario(allocator: std.mem.Allocator) !void {
+    const text =
+        \\def ranked(keys: list[int]) -> list[int]:
+        \\    words = [k for k in keys]
+        \\    words.sort()
+        \\    return words
+        \\
+        \\
+        \\def smallest_key[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> int:
+        \\    names = ["b", "a"]
+        \\    names.sort()
+        \\    scores = [2.5, 0.5]
+        \\    scores.sort()
+        \\    return ranked([key(value) for value in values])[0] + len(names[0]) + int(scores[0] * 2.0)
+        \\
+        \\
+        \\def negated(value: int) -> int effects():
+        \\    return 0 - value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return smallest_key([3, 9, 4], negated) + 50
+    ;
+    var compilation = try language.Compilation.init(allocator, "generic_sort.my", text);
+    defer compilation.deinit();
+    try compilation.parse();
+    var sink: diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
+    try bodies.check(allocator, compilation.src, compilation.syntax.?, &sink);
+    try t.expectEqual(@as(usize, 0), sink.items.items.len);
+    try compilation.check();
+    try t.expectEqual(@as(i64, 43), (try @import("native_execute.zig").run(&compilation)).value);
+}
+// spec: GENERIC-BODY-3
+test "a generic body and its helpers sort concrete lists and reject a symbolic element" {
+    try sortingScenario(t.allocator);
+    try reject(
+        \\def ordered[T: copy + storable](values: list[T]) -> list[T]:
+        \\    copy = values[:]
+        \\    copy.sort()
+        \\    return copy
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_COLLECTION_METHOD");
+    try reject(
+        \\def last[T: copy + storable](values: list[T]) -> int:
+        \\    stack = [1, 2]
+        \\    _ = stack.pop()
+        \\    return len(values)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_GENERIC_BODY_UNSUPPORTED");
+}

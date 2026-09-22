@@ -283,59 +283,313 @@ static int compare_unsigned(const void *left, const void *right, size_t size) {
     }
     return a < b ? -1 : a > b ? 1 : 0;
 }
-static int compare_float(const void *left, const void *right) {
-    double a, b;
-    memcpy(&a, left, 8);
-    memcpy(&b, right, 8);
-    if (isnan(a)) return isnan(b) ? 0 : 1;
-    if (isnan(b)) return -1;
-    if (a < b) return -1;
-    if (a > b) return 1;
-    return 0;
+/* `list.sort()` is an adaptive stable merge sort, the shape of CPython's
+   listsort without galloping. The list is cut into natural runs; a strictly
+   descending run is reversed, and a run shorter than `minrun` is extended by
+   insertion sort. Runs are merged in the order the powersort rule picks, so
+   the merge tree stays balanced over any mix of run lengths, through one
+   scratch buffer of at most half the list: a merge copies the shorter run out
+   and merges forward or backward into the space it left.
+
+   Equal elements never pass each other. A reversed run is strictly
+   descending, insertion stops at the first element not greater than the one
+   it places, a merge first skips the left elements not greater than the right
+   run's head and the right elements not less than the left run's tail, and it
+   takes the left element on a tie. The order itself is the one the language
+   documents: integers by value, binary64 values with every NaN after every
+   ordered value and signed zeros tied, text by Unicode scalar value.
+
+   The algorithm is written once, over a `sort_kind`. Each entry point passes a
+   constant kind, so after inlining every comparison and move is compiled for
+   that element type: merging 64-bit integers or floats is a compare and a few
+   conditional selects per element, with no branch to mispredict. The narrower
+   integer widths share one generic entry that keeps a per-comparison switch on
+   the width. Sorting calls no guest code and allocates nothing managed, so no
+   collection can run while text pointers sit in the scratch buffer. */
+enum { SORT_I64, SORT_U64, SORT_F64, SORT_TEXT, SORT_GENERIC };
+typedef struct { unsigned kind, order; size_t size; } sort_kind;
+typedef struct { size_t start, length; int power; } sort_run;
+/* Runs below this length are extended by insertion sort; `sort_minrun` picks
+   a value in [SORT_MINRUN_LIMIT / 2, SORT_MINRUN_LIMIT] that splits the list
+   into close to a power of two runs. */
+#define SORT_MINRUN_LIMIT 32
+/* The powers on the stack strictly increase, so a 64-bit length needs at most
+   65 pending runs, the bound CPython's listsort uses; the rest is margin, and
+   a full stack would merge its top pair first. */
+#define SORT_STACK 96
+#define SORT_INLINE static inline __attribute__((always_inline))
+SORT_INLINE size_t sort_size(sort_kind kind) {
+    return kind.kind == SORT_GENERIC ? kind.size : 8;
 }
-static int compare_text(const void *left, const void *right) {
-    myl_native_text *a, *b;
-    memcpy(&a,left,sizeof a);
-    memcpy(&b,right,sizeof b);
-    return myl_native_text_compare(a,b);
+/* Move one element of a sortable width: 1, 2, 4 or 8 bytes. */
+SORT_INLINE void sort_copy(unsigned char *to, const unsigned char *from, size_t size) {
+    switch (size) {
+    case 1: memcpy(to, from, 1); return;
+    case 2: memcpy(to, from, 2); return;
+    case 4: memcpy(to, from, 4); return;
+    default: memcpy(to, from, 8); return;
+    }
 }
-static int compare_element(const void *left, const void *right, size_t size, unsigned order) {
-    if (order==0) return compare_signed(left,right,size);
-    if (order==1) return compare_unsigned(left,right,size);
-    if (order==2) return compare_float(left,right);
-    return compare_text(left,right);
+SORT_INLINE int sort_less(const unsigned char *left, const unsigned char *right, sort_kind kind) {
+    switch (kind.kind) {
+    case SORT_I64: { int64_t a, b; memcpy(&a, left, 8); memcpy(&b, right, 8); return a < b; }
+    case SORT_U64: { uint64_t a, b; memcpy(&a, left, 8); memcpy(&b, right, 8); return a < b; }
+    case SORT_F64: { double a, b; memcpy(&a, left, 8); memcpy(&b, right, 8); return a < b || (isnan(b) && !isnan(a)); }
+    case SORT_TEXT: {
+        myl_native_text *a, *b;
+        memcpy(&a, left, sizeof a);
+        memcpy(&b, right, sizeof b);
+        return myl_native_text_compare(a, b) < 0;
+    }
+    default: return (kind.order == 0 ? compare_signed(left, right, kind.size) : compare_unsigned(left, right, kind.size)) < 0;
+    }
+}
+/* Length of the natural run that starts at `start`, left ascending: a strictly
+   descending run is reversed in place, which cannot reorder equal elements
+   because it holds none. */
+SORT_INLINE size_t sort_natural_run(unsigned char *base, size_t start, size_t end, sort_kind kind) {
+    size_t size = sort_size(kind), last = start + 1;
+    if (last == end) return 1;
+    if (sort_less(base + last * size, base + start * size, kind)) {
+        while (last + 1 < end && sort_less(base + (last + 1) * size, base + last * size, kind)) last++;
+        unsigned char held[8];
+        for (size_t low = start, high = last; low < high; low++, high--) {
+            sort_copy(held, base + low * size, size);
+            sort_copy(base + low * size, base + high * size, size);
+            sort_copy(base + high * size, held, size);
+        }
+    } else {
+        while (last + 1 < end && !sort_less(base + (last + 1) * size, base + last * size, kind)) last++;
+    }
+    return last - start + 1;
+}
+/* Extend the ascending run [start, sorted) to [start, end) by stable
+   insertion: each element moves left only past elements greater than it. */
+SORT_INLINE void sort_insertion(unsigned char *base, size_t start, size_t sorted, size_t end, sort_kind kind) {
+    size_t size = sort_size(kind);
+    unsigned char held[8];
+    for (size_t i = sorted; i < end; i++) {
+        if (!sort_less(base + i * size, base + (i - 1) * size, kind)) continue;
+        sort_copy(held, base + i * size, size);
+        size_t j = i;
+        do {
+            sort_copy(base + j * size, base + (j - 1) * size, size);
+            j--;
+        } while (j > start && sort_less(held, base + (j - 1) * size, kind));
+        sort_copy(base + j * size, held, size);
+    }
+}
+/* How many leading elements of the ascending `run` are not greater than
+   `value`: the place a stable merge gives `value` when it comes from the right. */
+SORT_INLINE size_t sort_upper_bound(const unsigned char *run, size_t count, const unsigned char *value, sort_kind kind) {
+    size_t size = sort_size(kind), low = 0, high = count;
+    while (low < high) {
+        size_t middle = low + (high - low) / 2;
+        if (sort_less(value, run + middle * size, kind)) high = middle;
+        else low = middle + 1;
+    }
+    return low;
+}
+/* How many leading elements of the ascending `run` are less than `value`: the
+   place a stable merge gives `value` when it comes from the left. */
+SORT_INLINE size_t sort_lower_bound(const unsigned char *run, size_t count, const unsigned char *value, sort_kind kind) {
+    size_t size = sort_size(kind), low = 0, high = count;
+    while (low < high) {
+        size_t middle = low + (high - low) / 2;
+        if (sort_less(run + middle * size, value, kind)) low = middle + 1;
+        else high = middle;
+    }
+    return low;
+}
+/* One comparison of two 8-byte elements held in registers. */
+SORT_INLINE int sort_less_words(uint64_t left, uint64_t right, sort_kind kind) {
+    unsigned char a[8], b[8];
+    memcpy(a, &left, 8);
+    memcpy(b, &right, 8);
+    return sort_less(a, b, kind);
+}
+/* Merge the adjacent ascending runs [first, middle) and [middle, last). Only
+   the stretch the two runs actually interleave over moves; the shorter side of
+   it goes to `scratch`, which holds at least half the list.
+
+   For 8-byte elements the bulk of the merge runs while both sides still hold
+   two elements: the element after each side's head is loaded before the
+   comparison that picks one, so advancing is a pair of selects rather than a
+   load that has to wait for the comparison. The element loop finishes the
+   last few elements and serves the narrower widths. */
+SORT_INLINE void sort_merge(unsigned char *base, size_t first, size_t middle, size_t last, unsigned char *scratch, sort_kind kind) {
+    size_t size = sort_size(kind);
+    first += sort_upper_bound(base + first * size, middle - first, base + middle * size, kind);
+    if (first == middle) return;
+    last = middle + sort_lower_bound(base + middle * size, last - middle, base + (middle - 1) * size, kind);
+    size_t left = middle - first, right = last - middle;
+    if (left <= right) {
+        /* Forward: the left run waits in scratch, the output never overtakes
+           the unread right elements, and whatever of the right run is left
+           over is already in place. */
+        memcpy(scratch, base + first * size, left * size);
+        const unsigned char *a = scratch, *a_end = scratch + left * size;
+        const unsigned char *b = base + middle * size, *b_end = base + last * size;
+        unsigned char *out = base + first * size;
+        while (kind.kind != SORT_GENERIC) {
+            size_t a_left = (size_t)(a_end - a) / 8, b_left = (size_t)(b_end - b) / 8;
+            size_t steps = a_left < b_left ? a_left : b_left;
+            if (steps < 2) break;
+            uint64_t x, y;
+            memcpy(&x, a, 8);
+            memcpy(&y, b, 8);
+            for (steps--; steps; steps--) {
+                int take_right = sort_less_words(y, x, kind);
+                uint64_t chosen = take_right ? y : x, x_next, y_next;
+                memcpy(out, &chosen, 8);
+                out += 8;
+                memcpy(&x_next, a + 8, 8);
+                memcpy(&y_next, b + 8, 8);
+                a += take_right ? 0 : 8;
+                b += take_right ? 8 : 0;
+                x = take_right ? x : x_next;
+                y = take_right ? y_next : y;
+            }
+        }
+        while (a < a_end && b < b_end) {
+            int take_right = sort_less(b, a, kind);
+            sort_copy(out, take_right ? b : a, size);
+            out += size;
+            b += take_right ? size : 0;
+            a += take_right ? 0 : size;
+        }
+        if (a < a_end) memcpy(out, a, (size_t)(a_end - a));
+    } else {
+        /* Backward: the right run waits in scratch and the larger element of
+           each pair goes last, the right one on a tie; whatever of the left
+           run is left over is already in place. */
+        memcpy(scratch, base + middle * size, right * size);
+        const unsigned char *a = base + middle * size, *a_begin = base + first * size;
+        const unsigned char *b = scratch + right * size;
+        unsigned char *out = base + last * size;
+        while (kind.kind != SORT_GENERIC) {
+            size_t a_left = (size_t)(a - a_begin) / 8, b_left = (size_t)(b - scratch) / 8;
+            size_t steps = a_left < b_left ? a_left : b_left;
+            if (steps < 2) break;
+            uint64_t x, y;
+            memcpy(&x, a - 8, 8);
+            memcpy(&y, b - 8, 8);
+            for (steps--; steps; steps--) {
+                int take_left = sort_less_words(y, x, kind);
+                uint64_t chosen = take_left ? x : y, x_next, y_next;
+                out -= 8;
+                memcpy(out, &chosen, 8);
+                memcpy(&x_next, a - 16, 8);
+                memcpy(&y_next, b - 16, 8);
+                a -= take_left ? 8 : 0;
+                b -= take_left ? 0 : 8;
+                x = take_left ? x_next : x;
+                y = take_left ? y : y_next;
+            }
+        }
+        while (a > a_begin && b > scratch) {
+            int take_left = sort_less(b - size, a - size, kind);
+            out -= size;
+            sort_copy(out, take_left ? a - size : b - size, size);
+            a -= take_left ? size : 0;
+            b -= take_left ? 0 : size;
+        }
+        if (b > scratch) memcpy(out - (b - scratch), scratch, (size_t)(b - scratch));
+    }
+}
+/* A run length in [SORT_MINRUN_LIMIT / 2, SORT_MINRUN_LIMIT] such that
+   `count / minrun` is a power of two or just under one, as in listsort. */
+static size_t sort_minrun(size_t count) {
+    size_t low_bits = 0;
+    while (count >= SORT_MINRUN_LIMIT) {
+        low_bits |= count & 1;
+        count >>= 1;
+    }
+    return count + low_bits;
+}
+/* The powersort depth of the boundary between the adjacent runs
+   [start, start + left) and [start + left, start + left + right) of a list of
+   `total` elements: the first bit at which the two runs' midpoints, as
+   fractions of the list, differ. */
+static int sort_power(size_t start, size_t left, size_t right, size_t total) {
+    int power = 0;
+    size_t a = 2 * start + left, b = a + left + right;
+    for (;;) {
+        ++power;
+        if (a >= total) {
+            a -= total;
+            b -= total;
+        } else if (b >= total) {
+            break;
+        }
+        a <<= 1;
+        b <<= 1;
+    }
+    return power;
+}
+SORT_INLINE int sort_elements(unsigned char *base, size_t count, sort_kind kind) {
+    size_t size = sort_size(kind), minrun = sort_minrun(count);
+    unsigned char *scratch = NULL;
+    if (count > minrun) {
+        scratch = malloc(count / 2 * size);
+        if (!scratch) return 0;
+    }
+    sort_run stack[SORT_STACK];
+    size_t depth = 0, start = 0;
+    for (;;) {
+        /* Power 0 once the input is exhausted, which merges everything left. */
+        int power = 0;
+        size_t length = 0;
+        if (start < count) {
+            length = sort_natural_run(base, start, count, kind);
+            if (length < minrun) {
+                size_t end = count - start < minrun ? count : start + minrun;
+                sort_insertion(base, start, start + length, end, kind);
+                length = end - start;
+            }
+            if (depth) power = sort_power(stack[depth - 1].start, stack[depth - 1].length, length, count);
+        }
+        while (depth > 1 && (stack[depth - 2].power > power || depth == SORT_STACK)) {
+            sort_run *left = &stack[depth - 2], *right = &stack[depth - 1];
+            sort_merge(base, left->start, right->start, right->start + right->length, scratch, kind);
+            left->length += right->length;
+            depth--;
+        }
+        if (start >= count) break;
+        if (depth) stack[depth - 1].power = power;
+        stack[depth++] = (sort_run){ .start = start, .length = length, .power = 0 };
+        start += length;
+    }
+    free(scratch);
+    return 1;
+}
+static int sort_i64(unsigned char *base, size_t count) {
+    return sort_elements(base, count, (sort_kind){ .kind = SORT_I64, .order = 0, .size = 8 });
+}
+static int sort_u64(unsigned char *base, size_t count) {
+    return sort_elements(base, count, (sort_kind){ .kind = SORT_U64, .order = 1, .size = 8 });
+}
+static int sort_f64(unsigned char *base, size_t count) {
+    return sort_elements(base, count, (sort_kind){ .kind = SORT_F64, .order = 2, .size = 8 });
+}
+static int sort_text(unsigned char *base, size_t count) {
+    return sort_elements(base, count, (sort_kind){ .kind = SORT_TEXT, .order = 3, .size = 8 });
+}
+static int sort_generic(unsigned char *base, size_t count, unsigned order, size_t size) {
+    return sort_elements(base, count, (sort_kind){ .kind = SORT_GENERIC, .order = order, .size = size });
 }
 int myl_native_list_sort(myl_native_list *list, unsigned order) {
     if (order > 3) return 0;
     if (list->length < 2) return 1;
     size_t size = list->element->size;
-    if (!size || list->length>SIZE_MAX/size) return 0;
-    size_t bytes=list->length*size;
-    unsigned char *buffer=malloc(bytes);
-    if (!buffer) return 0;
-    unsigned char *storage=list->storage, *source=storage, *target=buffer;
-    size_t width=1;
-    while (width<list->length) {
-        for (size_t start=0;start<list->length;) {
-            size_t middle=list->length-start<width?list->length:start+width;
-            size_t remaining=list->length-middle;
-            size_t end=remaining<width?list->length:middle+width;
-            size_t left=start, right=middle, out=start;
-            while (left<middle && right<end) {
-                size_t take=compare_element(source+left*size,source+right*size,size,order)<=0?left++:right++;
-                copy_element(target+out*size,source+take*size,size);
-                out++;
-            }
-            while (left<middle) copy_element(target+out++*size,source+left++*size,size);
-            while (right<end) copy_element(target+out++*size,source+right++*size,size);
-            start=end;
-        }
-        unsigned char *swap=source; source=target; target=swap;
-        width=width>list->length/2?list->length:width*2;
-    }
-    if (source!=storage) memcpy(storage,source,bytes);
-    free(buffer);
-    return 1;
+    if (size != 1 && size != 2 && size != 4 && size != 8) return 0;
+    if ((order == 2 || order == 3) && size != 8) return 0;
+    if (list->length > SIZE_MAX / size) return 0;
+    unsigned char *base = list->storage;
+    if (order == 2) return sort_f64(base, list->length);
+    if (order == 3) return sort_text(base, list->length);
+    if (size == 8) return order == 0 ? sort_i64(base, list->length) : sort_u64(base, list->length);
+    return sort_generic(base, list->length, order, size);
 }
 myl_native_list *myl_native_list_copy(myl_native_heap *heap, const myl_native_list *input) {
     const myl_native_list *rooted = input;
