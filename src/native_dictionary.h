@@ -1,34 +1,49 @@
 #ifndef MYLANG_NATIVE_DICTIONARY_H
 #define MYLANG_NATIVE_DICTIONARY_H
 #include "native_text.h"
-/* Open-addressing hash index over the insertion-ordered entry list. A slot holds
- * one past an entry index, so zero means empty; `capacity` is a power of two and
- * a zero capacity means the dictionary carries no index and every lookup scans.
- * `slots` is an untraced managed block owned by the dictionary's own region, so
- * the collector keeps it alive through the dictionary and an arena releases the
- * two together. Nothing outside native_dictionary.c may append to `entries`: the
- * index names entry positions and only this module keeps it in step. */
+/* Open-addressing hash index over the insertion-ordered entry list. A slot packs
+ * the key's 32-bit hash above one past an entry index, so zero means empty and a
+ * probe compares the stored hash before it loads the entry it names — a
+ * mismatch skips the entry, and a table grows or loses an entry without
+ * rehashing a single key. `capacity` is a power of two and a zero capacity means
+ * the dictionary carries no index and every lookup scans. `slots` is an untraced
+ * managed block owned by the dictionary's own region, so the collector keeps it
+ * alive through the dictionary and an arena releases the two together. Nothing
+ * outside native_dictionary.c may append to `entries`: the index names entry
+ * positions and only this module keeps it in step. */
 typedef struct {
-    size_t *slots;
+    uint64_t *slots;
     size_t capacity;
 } myl_native_dictionary_index;
+/* One past the entry index a slot names, or zero for an empty slot. */
+#define MYL_NATIVE_DICTIONARY_SLOT_ENTRY(slot) ((size_t)((slot)&0xffffffffu))
+/* Where the last probe landed, and on which key. `key` holds a text key's object
+ * pointer or a scalar key's bytes; `state` says whether the probe found `entry`
+ * or found the key absent with `slot` the empty slot a write would fill. The
+ * record is a hint, never an answer: a found entry is revalidated against the
+ * live entry list, and an absence is recorded only for keys compared by value
+ * and is dropped by every change that could insert, move or remove a key. */
+typedef struct {
+    uint64_t key;
+    size_t entry;
+    uint32_t slot, hash;
+    unsigned state;
+} myl_native_dictionary_probe;
 typedef struct {
     myl_native_list *entries;
     const myl_native_type *key, *value;
     size_t value_offset;
     int string_keys;
+    /* How keys hash and compare, fixed from the key type at creation: a text,
+     * one eight-byte word, a narrower scalar, or wider bytes (only from C). */
+    unsigned key_kind;
     myl_native_type entry_type;
     myl_native_field entry_fields[2];
     myl_native_dictionary_index index;
-    /* Where the last string-keyed probe landed, and the key object it landed on.
-     * A read-modify-write probes one key object twice — a read immediately
-     * followed by a write of the same key — so the second probe answers with two
-     * pointer comparisons instead of another hash, table walk and content
-     * comparison. The record is a hint, never an answer: it is revalidated
-     * against the live entry list, so a `pop`, a `clear` or a rebuild only costs
-     * the full probe. */
-    myl_native_text *cache_key;
-    size_t cache_entry;
+    /* A read-modify-write probes one key twice in a row — a read immediately
+     * followed by a write of the same key — so the second probe answers from
+     * this record instead of another hash, table walk and key comparison. */
+    myl_native_dictionary_probe last;
 } myl_native_dictionary;
 myl_native_dictionary *myl_native_dictionary_new(myl_native_heap *, const myl_native_type *key, const myl_native_type *value, int string_keys);
 size_t myl_native_dictionary_length(const myl_native_dictionary *);
@@ -44,8 +59,9 @@ int myl_native_dictionary_key_at(const myl_native_dictionary *, size_t index, vo
 int myl_native_dictionary_value_at(const myl_native_dictionary *, size_t index, void *output);
 /* Python-shaped dictionary methods. `pop` removes a matching entry and answers 1
  * found or 0 absent; `update`/`setdefault` may allocate and answer 0 on refusal.
- * `pop` shifts every later entry down, so it also rebuilds the index and is the
- * one operation that stays linear in the entry count. */
+ * `pop` shifts every later entry down, so it also renumbers the index in place,
+ * without allocating or rehashing, and is the one operation that stays linear
+ * in the dictionary's size. */
 int myl_native_dictionary_pop(myl_native_dictionary *, const void *key, void *output);
 int myl_native_dictionary_update(myl_native_heap *, myl_native_dictionary *, const myl_native_dictionary *source);
 int myl_native_dictionary_setdefault(myl_native_heap *, myl_native_dictionary *, const void *key, const void *fallback, void *output);

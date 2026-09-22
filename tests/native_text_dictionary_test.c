@@ -14,18 +14,22 @@ static void equals(myl_native_text *value,const char *bytes) {
 typedef struct { int32_t tag; int64_t serial; } Wide;
 static const myl_native_type wide={.size=sizeof(Wide),.alignment=_Alignof(Wide),.kind=MYL_NATIVE_PLAIN};
 /* Every live slot names an entry that exists, no entry is named twice, none is
-   left unnamed, and the load factor the writer promised still holds. */
+   left unnamed, every slot is reachable by linear probing from the home its
+   stored hash names, and the load factor the writer promised still holds. */
 static void index_sound(const myl_native_dictionary *dict) {
     if (!dict->index.capacity) return;
     assert(!(dict->index.capacity&(dict->index.capacity-1)));
     assert(dict->entries->length*8<=dict->index.capacity*5);
-    size_t named=0;
+    size_t named=0, mask=dict->index.capacity-1;
     for (size_t at=0;at<dict->index.capacity;++at) {
-        if (!dict->index.slots[at]) continue;
-        assert(dict->index.slots[at]-1<dict->entries->length);
+        size_t entry=MYL_NATIVE_DICTIONARY_SLOT_ENTRY(dict->index.slots[at]);
+        if (!entry) continue;
+        assert(entry-1<dict->entries->length);
         named++;
         for (size_t other=at+1;other<dict->index.capacity;++other)
-            assert(dict->index.slots[other]!=dict->index.slots[at]);
+            assert(MYL_NATIVE_DICTIONARY_SLOT_ENTRY(dict->index.slots[other])!=entry);
+        for (size_t walk=(size_t)(dict->index.slots[at]>>32)&mask;walk!=at;walk=(walk+1)&mask)
+            assert(dict->index.slots[walk]);
     }
     assert(named==dict->entries->length);
 }
@@ -215,8 +219,102 @@ static void repeated_probes_survive_a_shift(void) {
     myl_native_heap_destroy(&heap);
 }
 
+/* spec-case: PY-DICT-4 -- a scalar key's recorded absence names the empty slot a
+   write would fill, so every change that could fill that slot or move the table
+   must drop it: an insertion of another key (which may take that very slot), a
+   growth, a pop and a clear, each between the missed read and the write. */
+static void absent_records_are_dropped_by_every_change(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,1<<22);
+    myl_native_root root;
+    myl_native_dictionary *dict=myl_native_dictionary_new(&heap,&number,&number,0); assert(dict);
+    myl_native_root_push(&heap,&root,&dict,&pointer);
+    int64_t out=-1,one=1,two=2;
+    for (int64_t other=1;other<64;++other) {
+        int64_t key=0;
+        out=-1;
+        myl_native_dictionary_clear(dict);
+        assert(!myl_native_dictionary_read(dict,&key,&out) && out==-1);
+        assert(!myl_native_dictionary_contains(dict,&key));
+        assert(myl_native_dictionary_write(&heap,dict,&other,&two));
+        assert(myl_native_dictionary_write(&heap,dict,&key,&one));
+        index_sound(dict);
+        assert(myl_native_dictionary_length(dict)==2);
+        assert(myl_native_dictionary_read(dict,&other,&out) && out==2);
+        assert(myl_native_dictionary_read(dict,&key,&out) && out==1);
+    }
+    /* A miss, then enough insertions to grow the table several times. */
+    int64_t late=-5;
+    myl_native_dictionary_clear(dict);
+    assert(!myl_native_dictionary_contains(dict,&late));
+    for (int64_t i=0;i<200;++i) assert(myl_native_dictionary_write(&heap,dict,&i,&i));
+    assert(myl_native_dictionary_write(&heap,dict,&late,&one));
+    index_sound(dict);
+    assert(myl_native_dictionary_length(dict)==201);
+    /* A miss, then a pop that shifts entries and slots, then the write. */
+    int64_t fresh=1000,victim=3;
+    assert(!myl_native_dictionary_read(dict,&fresh,&out));
+    assert(myl_native_dictionary_pop(dict,&victim,&out) && out==3);
+    assert(myl_native_dictionary_write(&heap,dict,&fresh,&two));
+    index_sound(dict);
+    for (int64_t i=0;i<200;++i) assert(i==3 || (myl_native_dictionary_read(dict,&i,&out) && out==i));
+    assert(myl_native_dictionary_read(dict,&fresh,&out) && out==2);
+    /* A miss, then a clear, then the write: one entry. */
+    assert(!myl_native_dictionary_contains(dict,&victim));
+    myl_native_dictionary_clear(dict);
+    assert(myl_native_dictionary_write(&heap,dict,&victim,&one));
+    index_sound(dict);
+    assert(myl_native_dictionary_length(dict)==1);
+    /* setdefault of a missing key inserts once and answers the fallback. */
+    int64_t fallback=9;
+    assert(myl_native_dictionary_setdefault(&heap,dict,&fresh,&fallback,&out) && out==9);
+    assert(myl_native_dictionary_setdefault(&heap,dict,&fresh,&one,&out) && out==9);
+    assert(myl_native_dictionary_length(dict)==2);
+    assert(myl_native_root_pop(&heap,&root));
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: PY-DICT-5 -- popping keys out of the middle of long collision runs
+   and across the table's wraparound closes every gap: after each pop the table
+   is sound, every remaining key reads back, and every popped key misses. */
+static void pops_close_collision_runs(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,1<<22);
+    myl_native_root root;
+    myl_native_dictionary *dict=myl_native_dictionary_new(&heap,&number,&number,0); assert(dict);
+    myl_native_root_push(&heap,&root,&dict,&pointer);
+    enum { COUNT=300 };
+    int64_t out=0;
+    for (int64_t i=0;i<COUNT;++i) {
+        int64_t key=i<<40;
+        assert(myl_native_dictionary_write(&heap,dict,&key,&i));
+    }
+    for (int64_t step=0;step<COUNT;step+=7) {
+        int64_t key=step<<40;
+        assert(myl_native_dictionary_pop(dict,&key,&out) && out==step);
+        index_sound(dict);
+    }
+    for (int64_t i=0;i<COUNT;++i) {
+        int64_t key=i<<40;
+        if (i%7) assert(myl_native_dictionary_read(dict,&key,&out) && out==i);
+        else assert(!myl_native_dictionary_contains(dict,&key));
+    }
+    /* Reinserting the popped keys appends them after every survivor. */
+    for (int64_t step=0;step<COUNT;step+=7) {
+        int64_t key=step<<40;
+        assert(myl_native_dictionary_write(&heap,dict,&key,&step));
+    }
+    index_sound(dict);
+    assert(myl_native_dictionary_length(dict)==COUNT);
+    int64_t last=0;
+    assert(myl_native_dictionary_key_at(dict,COUNT-1,&last) && last==((int64_t)(COUNT-1)/7*7)<<40);
+    assert(myl_native_root_pop(&heap,&root));
+    myl_native_heap_destroy(&heap);
+}
+
 int main(void) {
     repeated_probes_survive_a_shift();
+    absent_records_are_dropped_by_every_change();
+    pops_close_collision_runs();
     myl_native_heap heap;
     myl_native_heap_init(&heap,1<<20); heap.stress=1;
     myl_native_root roots[8];

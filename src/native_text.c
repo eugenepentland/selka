@@ -73,23 +73,49 @@ void myl_native_text_publish(myl_native_text *text, size_t scalars, int plain) {
      * written can never survive into the published value. */
     text->flags=plain ? MYL_TEXT_ASCII : 0;
 }
-/* FNV-1a over the payload octets, then one avalanche so the low bits a
- * dictionary's table mask depends on come from the whole value. Fixed
- * constants, no seed: the runtime has no sanctioned randomness and a dictionary
- * must behave identically on every run. The answer is cached in the header,
- * because a dictionary hashes the same key text once per lookup and a text can
- * never change under it. */
+/* The high and low halves of one full 64×64-bit product folded together, so
+ * every output bit depends on every input bit of both factors. */
+static inline uint64_t fold_multiply(uint64_t a, uint64_t b) {
+    unsigned __int128 product=(unsigned __int128)a*b;
+    return (uint64_t)product^(uint64_t)(product>>64);
+}
+#define TEXT_HASH_WORD 0xa0761d6478bd642fULL
+#define TEXT_HASH_STATE 0xe7037ed1a0b428dbULL
+/* The payload read eight octets at a time: each word is folded into a running
+ * state by one multiply, a payload of at most eight octets is read as two
+ * overlapping halves and folded once, and a longer one ends on the word that
+ * finishes exactly at its last octet, so no read passes the payload and every
+ * octet reaches the answer. The length seeds the state, so payloads of
+ * different lengths start apart. Fixed constants, no seed: the runtime has no
+ * sanctioned randomness and a dictionary must behave identically on every run.
+ * The answer is cached in the header, because a dictionary hashes the same key
+ * text once per lookup and a text can never change under it. */
 uint32_t myl_native_text_hash(const myl_native_text *input) {
     myl_native_text *text=(myl_native_text *)input;
     if (text->flags&MYL_TEXT_HASHED) return text->hash;
-    uint64_t hash=0xcbf29ce484222325ULL;
     const unsigned char *bytes=myl_native_text_storage(text);
-    for (size_t i=0;i<text->bytes;i++) { hash^=bytes[i]; hash*=0x100000001b3ULL; }
-    hash^=text->bytes;
-    hash^=hash>>33; hash*=0xff51afd7ed558ccdULL;
-    hash^=hash>>33; hash*=0xc4ceb9fe1a85ec53ULL;
-    hash^=hash>>32;
-    text->hash=(uint32_t)hash;
+    size_t length=text->bytes;
+    uint64_t state=0x243f6a8885a308d3ULL^length, hash;
+    if (length<=8) {
+        uint64_t low=0, high=0;
+        if (length>=4) {
+            uint32_t first, last;
+            memcpy(&first,bytes,4); memcpy(&last,bytes+length-4,4);
+            low=first; high=last;
+        } else if (length) {
+            low=(uint64_t)bytes[0]<<16|(uint64_t)bytes[length>>1]<<8|bytes[length-1];
+        }
+        hash=fold_multiply(low^TEXT_HASH_WORD,high^state^TEXT_HASH_STATE);
+    } else {
+        uint64_t word;
+        for (size_t at=0;at+8<length;at+=8) {
+            memcpy(&word,bytes+at,8);
+            state=fold_multiply(word^TEXT_HASH_WORD,state^TEXT_HASH_STATE);
+        }
+        memcpy(&word,bytes+length-8,8);
+        hash=fold_multiply(word^TEXT_HASH_WORD,state^TEXT_HASH_STATE);
+    }
+    text->hash=(uint32_t)(hash^(hash>>32));
     text->flags|=MYL_TEXT_HASHED;
     return text->hash;
 }
