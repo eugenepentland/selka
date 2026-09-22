@@ -154,6 +154,70 @@ test "IO-9 whole-path helpers report provider failures as readable Result errors
     );
 }
 
+/// Make a FIFO at `path` in the sandbox.
+fn makeFifo(path: [:0]const u8) !void {
+    const linux = std.os.linux;
+    try t.expectEqual(linux.E.SUCCESS, linux.errno(linux.mknod(path, linux.S.IFIFO | 0o600, 0)));
+}
+
+/// Open the FIFO for writing, which waits until the guest opens it to read,
+/// then write `bytes` and close, so the guest reads them and then end of file.
+fn feedFifo(path: [:0]const u8, bytes: []const u8) void {
+    const linux = std.os.linux;
+    const fd = linux.open(path, .{ .ACCMODE = .WRONLY, .CLOEXEC = true }, 0);
+    if (linux.errno(fd) != .SUCCESS) return;
+    _ = linux.write(@intCast(fd), bytes.ptr, bytes.len);
+    _ = linux.close(@intCast(fd));
+}
+
+/// Let a writer that is still waiting for a reader finish: open the FIFO
+/// without blocking, wait for the writer, and only then close the read end, so
+/// the writer never writes into a pipe with no reader.
+fn finishFifo(path: [:0]const u8, writer: std.Thread) void {
+    const linux = std.os.linux;
+    const fd = linux.open(path, .{ .ACCMODE = .RDONLY, .NONBLOCK = true, .CLOEXEC = true }, 0);
+    writer.join();
+    if (linux.errno(fd) == .SUCCESS) _ = linux.close(@intCast(fd));
+}
+
+// A shell's process substitution `<(...)` hands a program `/dev/fd/N`, a pipe;
+// the default grant opens it the way `fopen` does and reads to end of file.
+// spec: CAPABILITY-6
+test "the default grant reads a FIFO named by its absolute path the way fopen does" {
+    var sandbox: Sandbox = undefined;
+    try sandbox.init(false);
+    defer sandbox.deinit();
+    const fifo = try std.fs.path.joinZ(t.allocator, &.{ sandbox.path, "pipe" });
+    defer t.allocator.free(fifo);
+    try makeFifo(fifo);
+    const program = try std.fmt.allocPrint(t.allocator, "def main(fs: Filesystem, out: Stream) -> int:\n    out.print(read_file(fs, \"{s}\"))\n    return 0\n", .{fifo});
+    defer t.allocator.free(program);
+    var compilation = try language.Compilation.init(t.allocator, module, program);
+    defer compilation.deinit();
+    const writer = try std.Thread.spawn(.{}, feedFifo, .{ fifo, "print 1;\n" });
+    const outcome = native.runWithOptions(&compilation, .{ .directory = sandbox.path });
+    finishFifo(fifo, writer);
+    try t.expectEqualStrings("Ok(b'print 1;\\n')\n", (try outcome).stdout);
+}
+
+// Under `--restrict` a granted directory still serves regular files only, and
+// a FIFO in it is refused at once rather than waiting for a writer.
+// spec-case: CAPABILITY-6
+test "a restricted grant refuses a FIFO inside the granted directory without blocking" {
+    var sandbox: Sandbox = undefined;
+    try sandbox.init(false);
+    defer sandbox.deinit();
+    const fifo = try std.fs.path.joinZ(t.allocator, &.{ sandbox.path, "pipe" });
+    defer t.allocator.free(fifo);
+    try makeFifo(fifo);
+    const outcome = try sandbox.run(module,
+        \\def main(fs: Filesystem, out: Stream) -> int:
+        \\    out.print(read_file(fs, "pipe"))
+        \\    return 0
+    );
+    try t.expectEqualStrings("Err('read \\'pipe\\': denied: outside the granted directories, or the mode needs a write grant')\n", outcome.stdout);
+}
+
 // spec: IO-10
 test "IO-10 a read-only grant denies every writing mode" {
     var sandbox: Sandbox = undefined;
