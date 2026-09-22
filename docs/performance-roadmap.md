@@ -142,6 +142,13 @@ and every arm's stdout byte-identical. One negative result worth keeping:
 `noinline` alone did **not** work — LLVM still folded the diamond into a blend —
 which is why the helper's volatile read is load-bearing.
 
+*Superseded 2026-09-22 by `FLOAT-NAN-OBSERVED-1`:* the language now canonicalizes
+a NaN where its bits can be observed (text, foreign-call arguments, the host
+bridge) instead of after every operation, so the branch, the cold call and
+`myl_qbe_float_canonical` itself are gone and a float operation is the bare
+instruction. See [NaN payloads](floating-point.md#nan-payloads) and
+`docs/audits/nan-when-observed-2026-09-22.md`.
+
 Two measured negatives from the same work redirect what is left. The printer's
 `str(value)`-to-measure width path is real but **under 0.6%** of render samples
 (only 10,160 of 120,840 AST nodes are numeric), so it cannot close the parser's

@@ -1,8 +1,11 @@
 //! Binary64 operations over explicit bit patterns, with strict rounding and canonical NaNs.
+//! This is the compiler's constant evaluator. It folds a NaN to the canonical
+//! pattern; the running program may produce other payloads, which no
+//! observation point can tell apart (FLOAT-NAN-OBSERVED-1).
 const std = @import("std");
 const typed = @import("typed.zig");
 pub const Error = error{ FloatConversion, InternalError };
-/// Canonical quiet NaN used for every floating operation result.
+/// Canonical quiet NaN: every observed NaN and every NaN the compiler folds.
 pub const canonical_nan: u64 = 0x7ff8000000000000;
 /// Round and canonicalize a binary64 result without exposing host NaN payload choices.
 pub fn bits(value: f64) u64 {

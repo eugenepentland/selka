@@ -108,11 +108,20 @@ static int qbe_host_write(void *ctx,QbeHostState *state,size_t index,const void 
     } else if (type->kind!=2 && type->kind!=3 && type->kind!=5) return qbe_host_error(ctx,"NotDataType");
     if (nodes) nodes[*cursor]=node;
     (*cursor)++;
+    size_t backing=*cursor;
     for (size_t i=0;i<node.children;i++) {
         size_t field=type->kind==3?0:type->kind==4?(size_t)node.bits:i;
         size_t next=type->kind==4?child:type->children[field];
         size_t offset=type->kind==3?i*type->stride:type->offsets[field];
         if (!qbe_host_write(ctx,state,next,(const unsigned char *)input+offset,nodes,cursor,depth+1)) return 0;
+    }
+    /* FLOAT-NAN-OBSERVED-6: a binary64 domain (the one domain with a width) is
+       a host-visible bit pattern, so any NaN crosses as the canonical quiet NaN
+       whatever payload and sign guest arithmetic gave it. */
+    if (nodes && type->kind==5 && type->bits==64 && backing<*cursor) {
+        uint64_t bits=nodes[backing].bits;
+        if ((bits&UINT64_C(0x7ff0000000000000))==UINT64_C(0x7ff0000000000000) && (bits&UINT64_C(0x000fffffffffffff)))
+            nodes[backing].bits=UINT64_C(0x7ff8000000000000);
     }
     return 1;
 }

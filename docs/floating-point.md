@@ -25,7 +25,8 @@ def main() -> int:
 `+`, `-`, `*` and `/` are separate IEEE binary64 operations; no fused contraction
 or reassociation is allowed. Overflow produces a signed infinity, division by zero
 produces an infinity or a NaN exactly as IEEE specifies, and underflow preserves
-subnormals. Arithmetic NaNs become the canonical quiet NaN `0x7ff8000000000000`.
+subnormals. A NaN you can observe is the canonical quiet NaN `0x7ff8000000000000`;
+see [NaN payloads](#nan-payloads).
 
 `==`, `!=`, `<`, `<=`, `>` and `>=` are numeric comparisons. Positive and negative
 zero compare equal, and every comparison with a NaN is false, so `value != value`
@@ -53,6 +54,44 @@ def main() -> int:
     return int(math.round(41.5))
 ```
 
+## NaN payloads
+
+A NaN's payload and sign are never observable. Arithmetic, the prelude helpers and
+a foreign function's result propagate NaNs the way IEEE and the hardware do, so
+`0.0 / 0.0`, its negation and `sqrt(-1.0)` may carry different bits while the
+program runs, exactly as they do in C, Zig or Rust. Nothing a program can do tells
+them apart: every comparison with any NaN is false, and every place a float's bits
+leave the value sees the canonical quiet NaN `0x7ff8000000000000`:
+
+- text: `str`, `print`, f-strings and `byte_buffer.append_float` spell every NaN
+  `nan`, never `-nan`;
+- a float argument passed to an `extern def` crosses as the canonical pattern, so
+  `copysign(1.0, -(0.0 / 0.0))` in C answers `1.0`, and a float copied to a
+  `host def` callback, at any depth inside a record, array or variant, carries
+  the canonical pattern in its node's bits;
+- equality of lists, records, fixed arrays and options compares floats
+  numerically, and sorting orders every NaN after the ordered values whatever its
+  sign.
+
+No guest spelling reads a float's representation: `float` is a private builtin
+domain and the raw `f64_*` spellings are removed. Dictionary keys are integers or
+`str`, and the wire, codec, typed-JSON and `invoke` boundaries reject `float`, so
+no hash or encoding sees a float's bits either. Canonicalizing at these points
+instead of after every operation keeps float loops free of a compare, branch and
+call per operation, and results stay identical across machines, because a NaN is
+canonical before anything could see that two processors produced different
+payloads.
+
+```mylang
+# doc: expect nan nan True False
+def main(out: Stream) -> int:
+    zero = 0.0
+    nan = zero / zero
+    flipped = -nan
+    out.print(str(nan), f"{flipped}", flipped != flipped, [nan] == [flipped])
+    return 0
+```
+
 ## Rounding, roots and powers
 
 `math.trunc`, `math.floor`, `math.ceil` and `math.round` return integral-valued
@@ -60,11 +99,10 @@ floats and pass infinities and NaNs through unchanged; `math.round` rounds halve
 away from zero. `math.fabs` maps both zeros to positive zero. `math.pow` takes an
 integer exponent and squares repeatedly.
 
-`math.sqrt` calls the binary64 `f64_sqrt` intrinsic on its ordinary `float`
-argument, so it is the correctly rounded square root and is exact for values whose
-root is exactly representable. The `f64_*` intrinsics accept a `float` directly for
-`sqrt`, `floor`, `ceil`, `trunc`, `abs` and `neg`; the `u64` spellings still own raw
-bit patterns. There are no transcendental functions yet.
+`math.sqrt` calls the compiler-internal binary64 square root on its ordinary
+`float` argument, so it is the correctly rounded square root and is exact for
+values whose root is exactly representable. There are no transcendental functions
+yet.
 
 Prelude `sqrt`, `floor`, `ceil`, `trunc` and `abs` take one `float` and answer a
 `float`, running the host binary64 operation directly, so ordinary guest code never
@@ -74,13 +112,11 @@ shadows each of them, which is how `math.sqrt` keeps its own definition. `round`
 
 ## Intrinsics and the execution environment
 
-The low-level `f64_add`, `f64_sqrt`, `f64_from_u64`, `f64_to_u64` and related
-intrinsics accept and return `u64` bit patterns. They remain available for code
-that owns a representation directly, work in scalar constants and in ordinary and
-generic function bodies with concrete `u64` arguments, and add no new primitive
-type. Raw `f64_to_u64` traps with `R_FLOAT_CONVERSION` on a nonfinite or
-out-of-range value; module constants report located constant-arithmetic
-diagnostics instead.
+The raw `f64_add`, `f64_sqrt`, `f64_from_u64`, `f64_to_u64` and related
+spellings that took and returned `u64` bit patterns are removed and rejected with
+`E_REMOVED_SPELLING`, so no program handles a float's bit pattern. A conversion in
+a module constant reports a located constant-arithmetic diagnostic where the
+running program would trap with `R_FLOAT_CONVERSION`.
 
 Virtual-machine floating arithmetic uses strict host binary64 operations.
 Supported execution requires round-to-nearest and gradual underflow; embedders

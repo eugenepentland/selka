@@ -54,6 +54,7 @@ const unsigned char *myl_native_bytes_range(const myl_native_bytes *input,int64_
 }
 
 static const size_t array_child[]={0},byte_array_child[]={2},byte_array_offset[]={0};
+static const size_t float_child[]={9};
 static const QbeHostType qbe_host_types[]={
     {"i64",8,0,0,1,64,1,NULL,NULL},
     {"Nine",72,9,8,3,0,0,array_child,NULL},
@@ -64,6 +65,9 @@ static const QbeHostType qbe_host_types[]={
     {"Bytes2048",2048,2048,1,3,0,0,byte_array_child,byte_array_offset},
     {"bytes",sizeof(myl_native_bytes *),0,0,6,0,0,NULL,NULL},
     {"BadPayload",4,0,0,6,0,0,NULL,NULL},
+    {"u64",8,0,0,1,64,0,NULL,NULL},
+    {"float",8,1,0,5,64,0,float_child,byte_array_offset},
+    {"Code",8,1,0,5,0,0,float_child,byte_array_offset},
 };
 static const size_t scalar_parameter[]={0};
 static const size_t u8_parameter[]={2},i8_parameter[]={3};
@@ -509,5 +513,23 @@ int main(void) {
     qbe_host_invoke(&ctx,0,arguments,&result);
     assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_FAILURE")); dispose(&ctx);
     assert(allocations==frees);
+
+    /* FLOAT-NAN-OBSERVED-6: a binary64 domain crosses to the host with any NaN
+       canonical; its finite bits, and a plain u64 domain's NaN-shaped word,
+       cross unchanged. */
+    QbeHostState bits_state={0};
+    bits_state.value_limit=8; bits_state.depth_limit=4;
+    const uint64_t words[]={UINT64_C(0xfff8000000000000),UINT64_C(0x7ff0000000000001),UINT64_C(0x7ff8000000000000),UINT64_C(0xbff0000000000000),UINT64_C(0x7ff0000000000000)};
+    const uint64_t crossed[]={UINT64_C(0x7ff8000000000000),UINT64_C(0x7ff8000000000000),UINT64_C(0x7ff8000000000000),UINT64_C(0xbff0000000000000),UINT64_C(0x7ff0000000000000)};
+    MylQbeContext bits_ctx=context();
+    for (size_t i=0;i<sizeof words/sizeof words[0];i++) {
+        MylangHostNode nodes[2]={{0}}; size_t cursor=0;
+        assert(qbe_host_write(&bits_ctx,&bits_state,10,&words[i],nodes,&cursor,0) && cursor==2);
+        assert(!strcmp(nodes[0].type,"float") && nodes[0].children==1 && nodes[1].bits==crossed[i]);
+        cursor=0;
+        assert(qbe_host_write(&bits_ctx,&bits_state,11,&words[i],nodes,&cursor,0) && cursor==2);
+        assert(nodes[1].bits==words[i]);
+    }
+    assert(!bits_ctx.trap);
     return 0;
 }

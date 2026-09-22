@@ -193,6 +193,27 @@ test "CLI threads a Host capability through an extern call and runs it natively"
     try invoke("check", source, 0, "", "");
     try invokeOptions("run", source, &.{}, 0, "7\n", "");
 }
+// spec: FLOAT-NAN-OBSERVED-3
+test "CLI passes every NaN to foreign code as the canonical quiet NaN" {
+    // `-(0.0 / 0.0)` carries the sign bit; C's `copysign` reads it, so an
+    // argument that crossed uncanonicalized would answer -1.0. A NaN the
+    // foreign function returns enters the guest and still prints `nan`.
+    const source =
+        \\extern def copysign(host: Host, x: float, y: float) -> float effects(host)
+        \\
+        \\
+        \\def nan_of(zero: float) -> float:
+        \\    return zero / zero
+        \\
+        \\
+        \\def main(host: Host, out: Stream) -> int:
+        \\    nan = nan_of(0.0)
+        \\    out.print(copysign(host, 1.0, nan), copysign(host, 1.0, -nan), copysign(host, 1.0, -2.0))
+        \\    out.print(copysign(host, -nan, 1.0), copysign(host, nan, -1.0))
+        \\    return 0
+    ;
+    try invokeOptions("run", source, &.{}, 0, "1.0 1.0 -1.0\nnan nan\n0\n", "");
+}
 // spec-case: HOST-CAPABILITY-1
 test "CLI withholds Host under restrict and grants it with --allow-host" {
     const source =

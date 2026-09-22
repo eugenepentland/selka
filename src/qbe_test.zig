@@ -1043,26 +1043,32 @@ test "float arithmetic lowers without a per-operation environment check" {
     try std.testing.expect(std.mem.indexOf(u8, body, "=d div %v") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "myl_qbe_float_unary") != null);
 }
-// spec: QBE-FLOAT-CANON-1
-test "a float result canonicalizes its NaN off the finite path" {
+// spec: FLOAT-NAN-OBSERVED-1
+test "a float result is the bare IEEE operation with no NaN canonicalization" {
     var parsed = try emitted(std.testing.allocator,
         \\def main() -> int:
         \\    a = 1.5
         \\    b = 2.5
         \\    c = a * b
         \\    d = c + a
-        \\    if d > b:
+        \\    e = d - b
+        \\    f = e / a
+        \\    if f > b:
         \\        return 1
         \\    return 0
     );
     defer parsed.deinit();
     const body = named(parsed.value, "main").?.il;
-    // The finite result reaches the merge through the fall-through block, and
-    // the canonical bits arrive only on the NaN path.
-    try std.testing.expect(std.mem.count(u8, body, "myl_qbe_float_canonical") == 2);
-    try std.testing.expect(std.mem.count(u8, body, "=l cuod %v") == 2);
+    // Each operation is the arithmetic and the cast back to its bit word: no
+    // unordered self-compare, no branch and no out-of-line call beside it, so
+    // nothing in a float loop can write memory or needs a source position.
+    try std.testing.expect(std.mem.indexOf(u8, body, "=d mul %v") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "=d add %v") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "=d sub %v") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "=d div %v") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "cuod") == null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "float_canonical") == null);
     try std.testing.expect(std.mem.indexOf(u8, body, "9221120237041090560") == null);
-    try std.testing.expect(std.mem.indexOf(u8, body, "call $myl_qbe_float_canonical(l %ctx)\n jmp @float") != null);
 }
 // spec-case: QBE-FLOAT-ENV-1
 test "a C FFI call boundary re-verifies the floating environment" {
