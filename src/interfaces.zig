@@ -578,6 +578,36 @@ pub const Index = struct {
         }
         return output.toOwnedSlice();
     }
+    /// Effects one declaration's parameter list permits by construction. It is
+    /// read from the signature alone — resolved capability parameter types, the
+    /// `mut` markers, every callback parameter's declared ceiling — plus
+    /// `managed_allocation`, which is always ambient. A checked body may not
+    /// exceed it, and an explicit `noalloc`/`noio`/`effects(...)` clause only
+    /// narrows it, so this is the ceiling the interface publishes for a
+    /// declaration whose body was never checked.
+    fn derivedCeiling(self: *Index, module: usize, signature: ast.FunctionSignature) ContractError!effect_set.Mask {
+        var mask = effect_set.bit(.managed_allocation);
+        for (signature.parameters) |parameter| {
+            if (parameter.mut) mask |= effect_set.bit(.mutation);
+            const text = try self.contractTypeText(module, parameter.ty, signature.type_parameters);
+            if (capabilityEffect(text)) |effect| mask |= effect_set.bit(effect);
+            for (self.units[module].syntax.types.expressions.callbacks) |callback| {
+                if (callback.span.start != parameter.ty.start or callback.span.end != parameter.ty.end) continue;
+                mask |= callback.effect_bound.allowed;
+            }
+        }
+        return mask;
+    }
+
+    /// Ceiling the interface publishes for one declaration: the derived set, and
+    /// the source's own clause when it narrows that set. A `host def`/`extern
+    /// def` has no body to derive from, so its clause is its ceiling as written.
+    fn effectiveCeiling(self: *Index, module: usize, function: ast.Function) ContractError!effect_set.Mask {
+        const declared = if (function.policy.effect_bound) |bound| bound.allowed else null;
+        if (function.policy.host != null or function.policy.c_abi) return declared orelse effect_set.all;
+        const derived = try self.derivedCeiling(module, function.signature);
+        return if (declared) |mask| mask & derived else derived;
+    }
     /// Render one exported function as `export function NAME def(...) effects(...)
     /// [analysis(STATUS)] [mutates(names)] [ceiling(...)] [tests(N)]
     /// [# first docstring line]`.
@@ -608,13 +638,15 @@ pub const Index = struct {
         }
         writer.writeAll(")") catch return error.OutOfMemory;
         if (inferred == null) writer.print(" analysis({s})", .{fact_status.name(unavailableAnalysis(self.program, function))}) catch return error.OutOfMemory;
-        if (function.policy.effect_bound) |bound| {
-            writer.writeAll(" ceiling(") catch return error.OutOfMemory;
-            var ceiling: std.ArrayList(u8) = .empty;
-            try appendEffectNames(&ceiling, allocator, bound.allowed);
-            writer.writeAll(ceiling.items) catch return error.OutOfMemory;
-            writer.writeAll(")") catch return error.OutOfMemory;
-        }
+        // The ceiling is the signature's own contract: the derived set, narrowed
+        // by the source's clause when it wrote one. It is published for every
+        // declaration, checked body or not, because it follows from the
+        // parameters alone.
+        writer.writeAll(" ceiling(") catch return error.OutOfMemory;
+        var ceiling: std.ArrayList(u8) = .empty;
+        try appendEffectNames(&ceiling, allocator, try self.effectiveCeiling(origin.module, function));
+        writer.writeAll(ceiling.items) catch return error.OutOfMemory;
+        writer.writeAll(")") catch return error.OutOfMemory;
         if (tests) |index| {
             if (try self.programFunction(origin.module, origin.symbol.name)) |id| {
                 const answer = index.answer(id);
@@ -755,20 +787,12 @@ pub const Index = struct {
     }
     fn contractFunction(self: *Index, module: usize, symbol: Symbol) ContractError!ContractDeclaration {
         const function = self.findFunction(self.units[module], symbol.span) orelse return error.InternalError;
-        // An explicit `noalloc`/`noio`/`effects(...)` is an opt-in narrowing and
-        // is published exactly as declared. Without one, publish the ceiling the
-        // checker already inferred for the body; pure interface pre-validation
-        // falls back to the unbounded `all` mask, which is what an omitted
-        // ceiling promises.
-        //
-        // F1 keeps that fallback here rather than publishing an unknown token:
-        // the manifest is the directional declared bound a provider replaces
-        // (`interface-contracts-v2`, consumed by `native_test_contracts.zig`'s
-        // subset relation), and unannotated functions carry `origin=unknown` for
-        // the return origin they never checked. The interface listing and
-        // `index-project`, which do publish inferred summaries, report the
-        // unavailable case explicitly instead.
-        const mask = if (function.policy.effect_bound) |bound| bound.allowed else self.publishedEffects(module, symbol) orelse effect_set.all;
+        // The declared bound is the signature's own: the ceiling the parameter
+        // list implies, narrowed by an explicit `noalloc`/`noio`/`effects(...)`
+        // clause. A `host def`/`extern def` declares its authority directly.
+        // Pure interface pre-validation therefore has a real bound to publish
+        // instead of the unbounded `all` mask an omitted ceiling used to mean.
+        const mask = try self.effectiveCeiling(module, function);
         var out: ContractDeclaration = .{ .name = symbol.name, .kind = "function" };
         out.generics = try self.contractGenericsText(module, function.signature.type_parameters);
         out.signature = try self.contractSignatureText(module, function.signature);
@@ -1157,6 +1181,22 @@ fn moduleLess(_: void, a: ContractModule, b: ContractModule) bool {
 }
 fn tokenLess(_: void, a: []const u8, b: []const u8) bool {
     return std.mem.lessThan(u8, a, b);
+}
+/// The effect one canonical capability parameter descriptor permits, or null for
+/// a value type. The descriptors come from `contractTypeText`, which resolves
+/// aliases and prints capabilities under their reserved spellings.
+fn capabilityEffect(text: []const u8) ?effect_set.Effect {
+    const table = [_]struct { []const u8, effect_set.Effect }{
+        .{ "filesystem_cap", .filesystem },
+        .{ "network_cap", .network },
+        .{ "clock_cap", .clock },
+        .{ "random_cap", .random },
+        .{ "environment_cap", .environment },
+        .{ "stream_cap", .output },
+        .{ "host_cap", .host },
+    };
+    inline for (table) |entry| if (std.mem.eql(u8, text, entry[0])) return entry[1];
+    return null;
 }
 fn appendUniqueToken(allocator: std.mem.Allocator, list: *std.ArrayList([]const u8), token: []const u8) !void {
     for (list.items) |existing| if (std.mem.eql(u8, existing, token)) return;

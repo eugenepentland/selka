@@ -582,13 +582,14 @@ fn writeTypedFunction(writer: *std.Io.Writer, function: typed.Function, records:
         if (value) |length| try writerPrint(writer, "{d}", .{length}) else try writerWrite(writer, "-");
         try writerWrite(writer, "\x00");
     }
-    // E2: the public interface fingerprint carries only the declared ceiling.
-    // Inferred implementation effects stay in the checked program for
+    // E2: the public interface fingerprint carries only the signature's own
+    // ceiling: the effects the parameter list implies, narrowed by an explicit
+    // clause. Inferred implementation effects stay in the checked program for
     // diagnostics and in `body_sha256` for runtime-test cacheability, so an
     // implementation edit that stays inside the published bound cannot change
     // the API fingerprint or invalidate callers' type checking.
     try writerWrite(writer, "\npublic-ceiling=");
-    if (function.policy.effect_bound) |bound| try writeEffectMask(writer, bound.allowed) else try writerWrite(writer, "unbounded");
+    try writeEffectMask(writer, @import("effects.zig").effectiveCeiling(records, function));
 
     // M1/M2: the declared ceiling also includes the normalized mutation
     // footprint and the return-origin bound. Exported declarations publish the

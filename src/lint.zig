@@ -227,6 +227,7 @@ const rule_duplicate_body = "duplicate-body";
 const rule_output_in_library = "output-in-library";
 const rule_positional_literal = "positional-literal";
 const rule_sentinel_int = "sentinel-int";
+const rule_derived_effects = "derived-effects";
 
 /// Advisory size-budget defaults for the report-only rules (plan section 9).
 const default_max_function_lines: usize = 80;
@@ -388,6 +389,12 @@ pub const rules = [_]Rule{
         .description = "an `int` sentinel a negative literal marks, where `Option[int]` with `is None` or `unwrap_or` would say it",
         .modes = .{ .agent = .report, .strict = .block, .safety = .block },
         .run = runSentinelInt,
+    },
+    .{
+        .name = rule_derived_effects,
+        .description = "an effect clause that restates the ceiling its own parameter list implies",
+        .modes = .{ .agent = .report, .strict = .block, .safety = .block },
+        .run = runDerivedEffects,
     },
 };
 
@@ -2195,4 +2202,29 @@ fn reportMinusOneSites(context: *RuleContext, sites: []MinusOneSite) std.mem.All
 
 fn minusOneLessThan(_: void, left: MinusOneSite, right: MinusOneSite) bool {
     return std.mem.lessThan(u8, left.key, right.key);
+}
+
+/// Report every declared effect clause that permits exactly what the function's
+/// own parameter list already implies. Such a clause says nothing, so under
+/// `--profile=strict` it is the same finding the checker warns about, and
+/// removing it is the whole fix.
+fn runDerivedEffects(context: *RuleContext) std.mem.Allocator.Error!void {
+    const facts = context.facts;
+    const derived_effects = @import("effects.zig");
+    for (facts.program.functions) |function| {
+        if (function.policy.host != null or function.policy.c_abi) continue;
+        const bound = function.policy.effect_bound orelse continue;
+        const derived = derived_effects.derivedCeiling(facts.program.records, function.signature, function.scope.locals);
+        if (derived & ~bound.allowed != 0) continue;
+        if (!derived_effects.negativeClause(facts.src, bound.span) and bound.allowed & ~derived != 0) continue;
+        const clause = facts.src.text(bound.span);
+        const message = try std.fmt.allocPrint(context.memory, "`{s}` is exactly what the parameters imply; remove it", .{clause});
+        try context.findings.append(context.memory, .{
+            .code = "W_DERIVED_EFFECTS",
+            .rule = rule_derived_effects,
+            .span = bound.span,
+            .message = message,
+            .subject = .{ .module = moduleName(function.name), .qualified = function.name },
+        });
+    }
 }
