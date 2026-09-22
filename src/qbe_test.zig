@@ -193,7 +193,7 @@ test "a build with no requested ceiling emits no step check but keeps the positi
         \\    return total
     );
     defer c.deinit();
-    const manifest = try c.emitQbeWithOptions(a, false, false, true);
+    const manifest = try c.emitQbeWithOptions(a, .{ .step_checks = false });
     defer a.free(manifest);
     var parsed = try std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer parsed.deinit();
@@ -219,7 +219,7 @@ test "a build without a frame ceiling omits depth accounting and refuses one at 
     ;
     var without = try language.Compilation.init(a, "qbe.my", source);
     defer without.deinit();
-    const bare = try without.emitQbeWithOptions(a, false, true, false);
+    const bare = try without.emitQbeWithOptions(a, .{ .frame_checks = false });
     defer a.free(bare);
     var parsed = try std.json.parseFromSlice(Manifest, a, bare, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer parsed.deinit();
@@ -236,7 +236,7 @@ test "a build without a frame ceiling omits depth accounting and refuses one at 
 
     var with = try language.Compilation.init(a, "qbe.my", source);
     defer with.deinit();
-    const accounted = try with.emitQbeWithOptions(a, false, true, true);
+    const accounted = try with.emitQbeWithOptions(a, .{});
     defer a.free(accounted);
     var full = try std.json.parseFromSlice(Manifest, a, accounted, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer full.deinit();
@@ -266,14 +266,14 @@ test "a leaf skips the stack-floor guard while a calling function keeps it" {
     // Accounting is off so the floor test is the only user of the frame-failure
     // helper: a leaf's frame is bounded at compile time and its caller proved the
     // headroom, so the guard is redundant; a function that calls may recurse.
-    const manifest = try c.emitQbeWithOptions(a, false, true, false);
+    const manifest = try c.emitQbeWithOptions(a, .{ .frame_checks = false });
     defer a.free(manifest);
     var parsed = try std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer parsed.deinit();
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, named(parsed.value, "leaf").?.il, "myl_qbe_fail_frame"));
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, named(parsed.value, "rec").?.il, "myl_qbe_fail_frame"));
 
-    const unaccounted = try c.emitQbeWithOptions(a, false, true, false);
+    const unaccounted = try c.emitQbeWithOptions(a, .{ .frame_checks = false });
     defer a.free(unaccounted);
     var unaccounted_parsed = try std.json.parseFromSlice(Manifest, a, unaccounted, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer unaccounted_parsed.deinit();
@@ -494,7 +494,7 @@ test "a build without a ceiling stores a position only where a diagnostic reads 
         \\    return 7
     );
     defer plain.deinit();
-    const elided = try plain.emitQbeWithOptions(a, false, false, true);
+    const elided = try plain.emitQbeWithOptions(a, .{ .step_checks = false });
     defer a.free(elided);
     var parsed = try std.json.parseFromSlice(Manifest, a, elided, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer parsed.deinit();
@@ -511,7 +511,7 @@ test "a build without a ceiling stores a position only where a diagnostic reads 
         \\    return 0
     );
     defer calls.deinit();
-    const observable = try calls.emitQbeWithOptions(a, false, false, true);
+    const observable = try calls.emitQbeWithOptions(a, .{ .step_checks = false });
     defer a.free(observable);
     var kept = try std.json.parseFromSlice(Manifest, a, observable, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer kept.deinit();
@@ -654,7 +654,7 @@ test "the fast protocol drops the per-call sticky test and keeps the trace posit
     ;
     var fast = try language.Compilation.init(a, "qbe.my", source);
     defer fast.deinit();
-    const bare = try fast.emitQbeWithOptions(a, false, false, false);
+    const bare = try fast.emitQbeWithOptions(a, .{ .step_checks = false, .frame_checks = false });
     defer a.free(bare);
     var parsed = try std.json.parseFromSlice(Manifest, a, bare, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer parsed.deinit();
@@ -672,7 +672,7 @@ test "the fast protocol drops the per-call sticky test and keeps the trace posit
     // An accounting build keeps the flag test, so its trap delivery is unchanged.
     var accounted = try language.Compilation.init(a, "qbe.my", source);
     defer accounted.deinit();
-    const full = try accounted.emitQbeWithOptions(a, false, false, true);
+    const full = try accounted.emitQbeWithOptions(a, .{ .step_checks = false });
     defer a.free(full);
     var full_parsed = try std.json.parseFromSlice(Manifest, a, full, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer full_parsed.deinit();
@@ -690,7 +690,7 @@ test "a trap position stores on the cold path and a call site keeps its own" {
         \\    return pick(b"abc", 1)
     );
     defer program.deinit();
-    const manifest = try program.emitQbeWithOptions(a, false, false, true);
+    const manifest = try program.emitQbeWithOptions(a, .{ .step_checks = false });
     defer a.free(manifest);
     var parsed = try std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer parsed.deinit();
@@ -714,7 +714,7 @@ test "a requested ceiling keeps the exact per-instruction step check" {
         \\    return 7
     );
     defer c.deinit();
-    const manifest = try c.emitQbeWithOptions(a, false, true, true);
+    const manifest = try c.emitQbeWithOptions(a, .{});
     defer a.free(manifest);
     try std.testing.expect(std.mem.indexOf(u8, manifest, "@step_limit") != null);
     try std.testing.expect(std.mem.indexOf(u8, manifest, "%maxsteps") != null);
@@ -1761,4 +1761,100 @@ test "a list element the loop variable copies is read through its own address" {
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_list_get"));
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
     try std.testing.expect(std.mem.indexOf(u8, body, "myl_qbe_fail_normalized_index_bounds") != null);
+}
+
+/// Every lowered unit's text for one emission policy, joined so a test can
+/// count guard sites across the whole program in one straight-line assertion.
+fn lowered(a: std.mem.Allocator, input: []const u8, policy: language.native_interface.Policy) ![]u8 {
+    var c = try language.Compilation.init(a, "qbe.my", input);
+    defer c.deinit();
+    const manifest = try c.emitQbeWithOptions(a, policy);
+    defer a.free(manifest);
+    var parsed = try std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer parsed.deinit();
+    var text: std.ArrayList(u8) = .empty;
+    errdefer text.deinit(a);
+    for (parsed.value.functions) |unit| try text.appendSlice(a, unit.il);
+    return text.toOwnedSlice(a);
+}
+
+/// A program reaching every guard class the unchecked policy removes: a checked
+/// add and multiply, a narrowing cast, a fixed-array index and a list index,
+/// plus an append whose allocation failure the policy keeps.
+const unchecked_program =
+    \\def scale(xs: list[i64], at: i64, factor: i64) -> u8:
+    \\    return u8(xs[at] * factor + 1)
+    \\
+    \\def main() -> i64:
+    \\    fixed: [3]i64 = [1, 2, 3]
+    \\    xs: list[i64] = []
+    \\    xs.append(fixed[1])
+    \\    return i64(scale(xs, 0, 2))
+;
+
+// spec: QBE-UNCHECKED-1
+test "the unchecked policy emits no overflow cast or bounds guard and no frame record" {
+    const a = std.testing.allocator;
+    const guarded = try lowered(a, unchecked_program, .{ .step_checks = false, .frame_checks = false });
+    defer a.free(guarded);
+    const bare = try lowered(a, unchecked_program, .{ .step_checks = false, .frame_checks = false, .checks = false });
+    defer a.free(bare);
+    // The default unbounded policy carries every guard class and the frame
+    // record the position stores are written into.
+    try std.testing.expect(std.mem.indexOf(u8, guarded, "myl_qbe_fail_overflow_op") != null);
+    try std.testing.expect(std.mem.indexOf(u8, guarded, "myl_qbe_fail_cast") != null);
+    try std.testing.expect(std.mem.indexOf(u8, guarded, "myl_qbe_fail_normalized_index_bounds") != null);
+    try std.testing.expect(std.mem.indexOf(u8, guarded, "myl_qbe_fail_array_bounds") != null);
+    try std.testing.expect(std.mem.indexOf(u8, guarded, ", %position") != null);
+    try std.testing.expect(std.mem.indexOf(u8, guarded, "_meta") != null);
+    // The unchecked policy carries none of them.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_overflow_op"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_cast"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_index_bounds"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_normalized_index_bounds"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_array_bounds"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "%position"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "_meta"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_frame"));
+    try std.testing.expect(bare.len < guarded.len);
+}
+
+// spec-case: QBE-UNCHECKED-1
+test "the unchecked policy keeps allocation failure division by zero and the collector" {
+    const a = std.testing.allocator;
+    const bare = try lowered(a, unchecked_program, .{ .step_checks = false, .frame_checks = false, .checks = false });
+    defer a.free(bare);
+    const divide = try lowered(a,
+        \\def half(left: i64, right: i64) -> i64:
+        \\    return left // right
+        \\
+        \\def main() -> i64:
+        \\    return half(8, 2)
+    , .{ .step_checks = false, .frame_checks = false, .checks = false });
+    defer a.free(divide);
+    // Out of memory must still fail cleanly, so every allocating call keeps its
+    // failure test and the collector keeps the heap handle it traces through.
+    try std.testing.expect(std.mem.indexOf(u8, bare, "myl_qbe_fail_allocation") != null);
+    try std.testing.expect(std.mem.indexOf(u8, bare, "%heap") != null);
+    // A zero divisor and a signed `MIN // -1` fault the hardware divider, so
+    // both tests stay even here; only their reported detail could be lost.
+    try std.testing.expect(std.mem.indexOf(u8, divide, "myl_qbe_fail_division") != null);
+    try std.testing.expect(std.mem.indexOf(u8, divide, "myl_qbe_fail_overflow_op") != null);
+}
+
+// spec-case: QBE-UNCHECKED-1
+test "an unchecked build that was given a ceiling keeps the accounting that enforces it" {
+    const a = std.testing.allocator;
+    const bounded = try lowered(a, unchecked_program, .{ .checks = false });
+    defer a.free(bounded);
+    // Step and depth accounting are orthogonal to the value guards: the frame
+    // record, the position stores and the step limit survive, while the
+    // overflow, cast and bounds guards are gone.
+    try std.testing.expect(std.mem.indexOf(u8, bounded, ", %position") != null);
+    try std.testing.expect(std.mem.indexOf(u8, bounded, "_meta") != null);
+    try std.testing.expect(std.mem.indexOf(u8, bounded, "@step_limit") != null);
+    try std.testing.expect(std.mem.indexOf(u8, bounded, "myl_qbe_fail_frame") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bounded, "myl_qbe_fail_cast"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bounded, "myl_qbe_fail_overflow_op"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bounded, "myl_qbe_fail_array_bounds"));
 }

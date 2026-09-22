@@ -31,12 +31,16 @@ MYLANG_MODES = {
     "qbe": [],
     "o3": ["--backend", "llvm", "--llvm-opt", "3"],
     "o3-lto": ["--backend", "llvm", "--llvm-opt", "3", "--lto"],
+    # The compiler's own unchecked release policy (QBE-UNCHECKED-1): no
+    # overflow, cast or index-bounds guards and, unbounded, no frame record.
+    # The suite's byte-identical-checksum rule is what qualifies it.
+    "o3-lto-unchecked": ["--backend", "llvm", "--llvm-opt", "3", "--lto", "--unchecked"],
 }
 ZIG_MODES = {
     "fast": "ReleaseFast",
     "safe": "ReleaseSafe",
 }
-ALL_MYLANG = ["qbe", "o3", "o3-lto"]
+ALL_MYLANG = ["qbe", "o3", "o3-lto", "o3-lto-unchecked"]
 ALL_ZIG = ["fast", "safe"]
 
 GLOBAL_NOTES = [

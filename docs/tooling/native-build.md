@@ -99,6 +99,62 @@ reports `R_NO_STEP_ACCOUNTING` and names how to get a bounded run, rather than
 silently ignoring the flag. `--max-frames`, `--timeout` and `--max-memory` are
 enforced by the runtime and are unaffected.
 
+## Unchecked release builds
+
+`--unchecked` is a release policy for a program already known to be correct: it
+tells the emitter to leave out the code that turns an invalid value into a named
+trap. On the schematic renderer it is worth about 13% of the render
+([the parity audit's strip ladder](../audits/schematic-parity-gap-2026-09-22.md#2-what-safety-costs-the-strip-ladder)
+priced the same omissions at 15%), and the program's output is byte-identical.
+
+```console
+$ mylang build examples/factorial.my -o /tmp/factorial-unchecked --unchecked --cache-dir /tmp/qbe-cache
+$ /tmp/factorial-unchecked
+120
+```
+
+**What it omits.** Integer-overflow guards on `+`, `-`, `*`, unary `-`;
+narrowing integer casts (`u8(...)`, `i32(...)` and friends); index-bounds guards
+on lists, fixed arrays, `bytes`, `str` and dictionary position reads
+(`key_at`/`value_at`), and the empty-container guard on `pop()`. When the build
+also carries no ceiling — the default for a `ReleaseFast` executable — it
+additionally omits the per-call frame record, the stack-floor test, the function
+metadata store and every instruction-position store.
+
+**What it keeps.** Allocation failure (out of memory still exits 1 with
+`R_MEMORY_BUDGET` or `R_ALLOCATION`), the memory budget itself, GC roots and
+everything else the collector traces, host-call and capability validation,
+`assert`, division by zero and signed `MIN // -1` (both fault the hardware
+divider, so removing them would trade a named trap for `SIGFPE`), shift-count
+range tests, arena escape checks, dictionary missing-key and list
+concurrent-modification errors.
+
+**What is no longer detected.** Under `--unchecked` each of the following is
+undefined behaviour rather than a trap, and the program may produce wrong values,
+corrupt memory or crash:
+
+| was reported | now |
+|---|---|
+| `R_INT_OVERFLOW` on add, subtract, multiply, negate | the wrapped or out-of-range 64-bit result is used |
+| `R_INT_CAST` narrowing out of range | the un-narrowed value is used |
+| `R_LIST_BOUNDS`, `R_ARRAY_BOUNDS`, `R_TEXT_BOUNDS` | memory next to the container is read or written |
+| `R_LIST_BOUNDS` from `pop()` on an empty list | an undefined element is produced |
+| `R_FRAME_LIMIT` from runaway recursion | the process overruns its stack and takes `SIGSEGV` |
+| a trap's source location and call trace | a trap that still fires (out of memory, division by zero) reports no frames and no `assert` message text |
+
+**Where it is refused.** `mylang test --unchecked` is refused by name: a test
+asserts that invalid input traps, so there would be nothing left to assert.
+`--mode Debug` and `--library` are refused too — a Debug build exists to report
+failures, and a library is embedded by hosts (the embed API, the guest-test
+runner) that always run their guest under a finite budget.
+
+**What it composes with.** A build that also asked for `--max-steps=N`,
+`--max-frames=N` or `--step-accounting` keeps the frame protocol and the
+accounting that enforces the ceiling, and gives up only the value guards; that
+combination is supported and measured. A build with neither ceiling is the one
+that also drops the frame record, and giving such a binary `--max-steps=` at
+runtime still reports `R_NO_STEP_ACCOUNTING` rather than ignoring it.
+
 ## Object cache and link
 
 For project entries, `mylang run` also caches the emitted manifest after validating

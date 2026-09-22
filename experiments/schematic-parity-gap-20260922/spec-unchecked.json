@@ -1,0 +1,5 @@
+{
+ "gc-lto": {"backend": "llvm", "opt": "3", "lto": true, "bounded": false},
+ "unchecked": {"backend": "llvm", "opt": "3", "lto": true, "bounded": false, "unchecked": true},
+ "s-all": {"backend": "llvm", "opt": "3", "lto": true, "bounded": false, "manifest_from": "gc-lto", "strip": "overflow,cast,bounds,alloc,frames,positions"}
+}

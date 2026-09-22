@@ -279,12 +279,19 @@ fn checkedPointer(comptime E: type, self: *E, result: usize, slot: usize) Error!
 /// Require `result`, otherwise raise a bounds trap carrying the already-loaded
 /// original index and receiver length. `failure` names the detail-carrying
 /// runtime helper; both values are captured, never recomputed.
+///
+/// QBE-UNCHECKED-1: an unchecked build emits neither the test nor the cold
+/// block. The runtime call or inline address that produced `result` still runs,
+/// so the value the caller goes on to use is unchanged on a valid index.
 fn requireIndexBounds(comptime E: type, self: *E, result: usize, index: usize, length: usize, failure: []const u8) Error!void {
+    if (!self.checks) return;
     const label = self.temp();
     try self.print(" jnz %v{d}, @success{d}, @failed{d}\n@failed{d}\n call ${s}(l %ctx, l %v{d}, l %v{d})\n jmp @failure\n@success{d}\n", .{ result, label, label, label, failure, index, length, label });
 }
 /// Require a pop that has no caller index; report the receiver length only.
+/// QBE-UNCHECKED-1 drops this test with the other container-range tests.
 fn requirePopBounds(comptime E: type, self: *E, result: usize, length: usize) Error!void {
+    if (!self.checks) return;
     const label = self.temp();
     try self.print(" jnz %v{d}, @success{d}, @failed{d}\n@failed{d}\n call $myl_qbe_fail_pop_bounds(l %ctx, l %v{d})\n jmp @failure\n@success{d}\n", .{ result, label, label, label, length, label });
 }
@@ -614,9 +621,13 @@ fn elementFeedsStore(comptime E: type, self: *E, element: typed.Type) Error!bool
 /// original index and the receiver length: `failure` names the helper that
 /// reports an index this lowering already normalized, or one it has not.
 fn inlineIndexRead(comptime E: type, self: *E, read: IndexRead, failure: []const u8) Error!void {
-    const valid = self.temp();
-    try self.print(" %v{d} =l cultl %v{d}, %v{d}\n", .{ valid, read.at, read.length });
-    try requireIndexBounds(E, self, valid, read.raw_index, read.length, failure);
+    // QBE-UNCHECKED-1: the comparison exists only to feed the test, so an
+    // unchecked build emits neither and reads the element address directly.
+    if (self.checks) {
+        const valid = self.temp();
+        try self.print(" %v{d} =l cultl %v{d}, %v{d}\n", .{ valid, read.at, read.length });
+        try requireIndexBounds(E, self, valid, read.raw_index, read.length, failure);
+    }
     const address = try elementAddress(E, self, read.input, read.at, read.element);
     if (self.isScalar(read.element)) {
         try self.store(read.slot, try self.readValue(address, read.element));
@@ -833,9 +844,13 @@ fn textAt(comptime E: type, self: *E, input: usize, at: usize, ty: typed.Type, r
     const size = self.temp();
     try self.print(load_pointer, .{ size, input });
     const normalized = try normalizedIndex(E, self, at, size, ty);
-    const valid = self.temp();
-    try self.print(" %v{d} =l cultl %v{d}, %v{d}\n", .{ valid, normalized, size });
-    try requireIndexBounds(E, self, valid, at, size, "myl_qbe_fail_text_bounds_detail");
+    // QBE-UNCHECKED-1: keep the negative-index normalization, which produces the
+    // offset the read uses, and drop only its range test and cold block.
+    if (self.checks) {
+        const valid = self.temp();
+        try self.print(" %v{d} =l cultl %v{d}, %v{d}\n", .{ valid, normalized, size });
+        try requireIndexBounds(E, self, valid, at, size, "myl_qbe_fail_text_bounds_detail");
+    }
     try self.print(" %v{d} =l call $myl_native_text_at(l %heap, l %v{d}, l %v{d})\n", .{ result, input, normalized });
     try checkedPointer(E, self, result, base);
 }
