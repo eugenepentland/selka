@@ -99,9 +99,10 @@ pub fn parse(args: []const []const u8) Error!Options {
     while (index < args.len) : (index += 1) {
         const argument = args[index];
         if (std.mem.eql(u8, argument, "--")) {
-            // Keep the delimiter in the child argument vector so the runtime can
-            // distinguish guest arguments from its own options, including a guest
-            // value that happens to spell `--print-result` or `--max-steps`.
+            // Keep the delimiter so the launcher can tell this command's runtime
+            // options from the guest's arguments: the options travel in
+            // `MYLANG_OPTIONS`, and the child's argv carries only the values after
+            // it, including one that happens to spell `--print-result`.
             result.arguments = args[index..];
             break;
         }

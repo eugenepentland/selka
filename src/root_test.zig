@@ -25,6 +25,7 @@ test {
     _ = @import("wiring/native_session.zig");
     _ = @import("qbe_build_test.zig");
     _ = @import("qbe_build.zig");
+    _ = @import("runtime_options.zig");
     _ = @import("qbe_build_cache.zig");
     _ = @import("qbe_build_host.zig");
     _ = @import("qbe_build_value.zig");

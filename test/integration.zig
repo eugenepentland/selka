@@ -25,7 +25,20 @@ test "CLI managed constants check and reject expressions" {
 }
 
 fn expectConstantProcess(argv: []const []const u8, expected: []const u8) !void {
-    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = argv });
+    return expectConstantRun(argv, null, expected);
+}
+
+/// The inherited environment plus `MYLANG_OPTIONS`, where a built program reads
+/// its runtime options.
+fn runtimeOptions(value: []const u8) !std.process.Environ.Map {
+    var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
+    errdefer environment.deinit();
+    try environment.put("MYLANG_OPTIONS", value);
+    return environment;
+}
+
+fn expectConstantRun(argv: []const []const u8, environment: ?*const std.process.Environ.Map, expected: []const u8) !void {
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = argv, .environ_map = environment });
     defer testing.allocator.free(result.stdout);
     defer testing.allocator.free(result.stderr);
     try testing.expectEqualStrings("", result.stderr);
@@ -49,7 +62,9 @@ fn managedConstantModes(temporary: *testing.TmpDir, data: []const u8, expected: 
     try expectConstantProcess(&.{ compiler_path, "build", entry, "--run", "--cache-dir", cache, tools[0], tools[1] }, expected);
     try expectConstantProcess(&.{ compiler_path, "build", entry, "--project", "-o", output, "--cache-dir", cache, tools[0], tools[1] }, "");
     try expectConstantProcess(&.{output}, expected);
-    try expectConstantProcess(&.{ output, "--gc-stress" }, expected);
+    var stressed = try runtimeOptions("--gc-stress");
+    defer stressed.deinit();
+    try expectConstantRun(&.{output}, &stressed, expected);
 }
 
 // A module-entry `run` prints the check phase's diagnostics and the project
@@ -739,12 +754,91 @@ test "run build --run and installed executables share the restricted capability 
     defer testing.allocator.free(link.stdout);
     defer testing.allocator.free(link.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, link.term);
-    const installed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ output, "--restrict" } });
+    var restricted = try runtimeOptions("--restrict");
+    defer restricted.deinit();
+    const installed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{output}, .environ_map = &restricted });
     defer testing.allocator.free(installed.stdout);
     defer testing.allocator.free(installed.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, installed.term);
     try testing.expectEqualStrings("", installed.stdout);
     try testing.expectEqualStrings(message, installed.stderr);
+}
+
+/// Build `program` with `-o` in `temp` and return the executable's path.
+fn buildExecutable(temp: *testing.TmpDir, program: []const u8) ![]const u8 {
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "argv.my", .data = program });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "argv.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const output = try std.fs.path.join(testing.allocator, &.{ root, "argv-bin" });
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+    try expectConstantProcess(&.{ compiler_path, "build", path, "-o", output, "--cache-dir", cache, tools[0], tools[1] }, "");
+    return output;
+}
+
+/// Run a built executable with `argv` under `MYLANG_OPTIONS=options`.
+fn runExecutable(argv: []const []const u8, options: []const u8) !std.process.RunResult {
+    var environment = try runtimeOptions(options);
+    defer environment.deinit();
+    return std.process.run(testing.allocator, testing.io, .{ .argv = argv, .environ_map = &environment });
+}
+
+const argv_echo =
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    out.print("count", len(args))
+    \\    for value in args:
+    \\        out.print("[" + value + "]")
+    \\    return 0
+;
+
+// spec: NATIVE-ARGV-1
+test "a built executable hands main every argument and reads runtime options from MYLANG_OPTIONS" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const output = try buildExecutable(&temp, argv_echo);
+    defer testing.allocator.free(output);
+    // Every former runtime spelling, `--` included, is now the program's data.
+    const verbatim = try runExecutable(&.{ output, "--gc-stress", "--print-result", "--max-steps=9", "--restrict", "--allow-list", "--", "x" }, "");
+    defer testing.allocator.free(verbatim.stdout);
+    defer testing.allocator.free(verbatim.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, verbatim.term);
+    try testing.expectEqualStrings("count 7\n[--gc-stress]\n[--print-result]\n[--max-steps=9]\n[--restrict]\n[--allow-list]\n[--]\n[x]\n", verbatim.stdout);
+    try testing.expectEqualStrings("", verbatim.stderr);
+    // The runtime reads its options from the environment, quoted or bare.
+    const optioned = try runExecutable(&.{ output, "--" }, "--gc-stress \"--print-result\"");
+    defer testing.allocator.free(optioned.stdout);
+    defer testing.allocator.free(optioned.stderr);
+    try testing.expectEqualStrings("count 1\n[--]\n0\n", optioned.stdout);
+    try testing.expectEqualStrings("", optioned.stderr);
+    // An option the runtime does not know is refused before the guest runs.
+    const unknown = try runExecutable(&.{output}, "--engine=vm");
+    defer testing.allocator.free(unknown.stdout);
+    defer testing.allocator.free(unknown.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, unknown.term);
+    try testing.expectEqualStrings("", unknown.stdout);
+    try testing.expectEqualStrings("mylang: MYLANG_OPTIONS names --engine=vm, which is not a runtime option\n", unknown.stderr);
+    const unterminated = try runExecutable(&.{output}, "\"--print-result");
+    defer testing.allocator.free(unterminated.stdout);
+    defer testing.allocator.free(unterminated.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, unterminated.term);
+    try testing.expectEqualStrings("mylang: MYLANG_OPTIONS has an unterminated quote\n", unterminated.stderr);
+}
+
+// spec-case: NATIVE-ARGV-1
+test "run replaces an inherited MYLANG_OPTIONS with its own command line" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "argv.my", .data = argv_echo });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "argv.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const inherited = try runExecutable(&.{ compiler_path, "run", path, tools[0], tools[1], "--", "--gc-stress" }, "--print-result");
+    defer testing.allocator.free(inherited.stdout);
+    defer testing.allocator.free(inherited.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, inherited.term);
+    try testing.expectEqualStrings("count 1\n[--gc-stress]\n", inherited.stdout);
+    try testing.expectEqualStrings("", inherited.stderr);
 }
 
 // spec: RESULT-MAIN-1
@@ -946,8 +1040,9 @@ test "build --run detects module projects and installed binaries receive the sam
 
     var install_argv: std.ArrayList([]const u8) = .empty;
     defer install_argv.deinit(testing.allocator);
+    // An installed executable reads no option from its arguments: every value,
+    // flag-looking or not, is the guest's without a `--`.
     try install_argv.append(testing.allocator, output);
-    try install_argv.append(testing.allocator, "--");
     try install_argv.appendSlice(testing.allocator, &guest);
     const installed = try std.process.run(testing.allocator, testing.io, .{ .argv = install_argv.items });
     defer testing.allocator.free(installed.stdout);
@@ -958,9 +1053,11 @@ test "build --run detects module projects and installed binaries receive the sam
 
     var installed_stress_argv: std.ArrayList([]const u8) = .empty;
     defer installed_stress_argv.deinit(testing.allocator);
-    try installed_stress_argv.appendSlice(testing.allocator, &.{ output, "--gc-stress", "--" });
+    try installed_stress_argv.append(testing.allocator, output);
     try installed_stress_argv.appendSlice(testing.allocator, &guest);
-    const installed_stress = try std.process.run(testing.allocator, testing.io, .{ .argv = installed_stress_argv.items });
+    var stressed = try runtimeOptions("--gc-stress");
+    defer stressed.deinit();
+    const installed_stress = try std.process.run(testing.allocator, testing.io, .{ .argv = installed_stress_argv.items, .environ_map = &stressed });
     defer testing.allocator.free(installed_stress.stdout);
     defer testing.allocator.free(installed_stress.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, installed_stress.term);
@@ -979,7 +1076,7 @@ test "build --run detects module projects and installed binaries receive the sam
 
     var installed_invalid_argv: std.ArrayList([]const u8) = .empty;
     defer installed_invalid_argv.deinit(testing.allocator);
-    try installed_invalid_argv.appendSlice(testing.allocator, &.{ output, "--", "\xff" });
+    try installed_invalid_argv.appendSlice(testing.allocator, &.{ output, "\xff" });
     const installed_invalid = try std.process.run(testing.allocator, testing.io, .{ .argv = installed_invalid_argv.items });
     defer testing.allocator.free(installed_invalid.stdout);
     defer testing.allocator.free(installed_invalid.stderr);
@@ -1087,7 +1184,7 @@ test "boundary acceptance CLI runs through run build --run and installed paths" 
     defer testing.allocator.free(link.stdout);
     defer testing.allocator.free(link.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, link.term);
-    const installed = try spawnWithEnv(&.{ output, "--", input }, &trace_env);
+    const installed = try spawnWithEnv(&.{ output, input }, &trace_env);
     defer testing.allocator.free(installed.stdout);
     defer testing.allocator.free(installed.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, installed.term);
@@ -1277,7 +1374,9 @@ test "an executable built without a frame ceiling refuses a runtime frame budget
     try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", output, cache_argument, tools[0], tools[1] }, "");
     try expectConstantProcess(&.{output}, "");
     // A ceiling it cannot enforce is refused instead of silently ignored.
-    const refused = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ output, "--max-frames=1" } });
+    var one_frame = try runtimeOptions("--max-frames=1");
+    defer one_frame.deinit();
+    const refused = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{output}, .environ_map = &one_frame });
     defer testing.allocator.free(refused.stdout);
     defer testing.allocator.free(refused.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, refused.term);
@@ -1289,9 +1388,9 @@ test "an executable built without a frame ceiling refuses a runtime frame budget
     // requested budget. Emission cannot depend on `saw_frames`: emit-qbe does
     // not accept run-only budget flags from its build-driver parent.
     try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", output, cache_argument, tools[0], tools[1], "--max-frames=1" }, "");
-    try expectConstantProcess(&.{ output, "--max-frames=1" }, "");
+    try expectConstantRun(&.{output}, &one_frame, "");
     try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", output, cache_argument, tools[0], tools[1], "--mode=Debug" }, "");
-    try expectConstantProcess(&.{ output, "--max-frames=1" }, "");
+    try expectConstantRun(&.{output}, &one_frame, "");
 }
 // spec-case: QBE-STEP-ACCOUNTING-1
 test "an executable built without a requested ceiling refuses a runtime step budget" {
@@ -1315,7 +1414,9 @@ test "an executable built without a requested ceiling refuses a runtime step bud
     try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", output, cache_argument, tools[0], tools[1] }, "");
     try expectConstantProcess(&.{output}, "");
     // A ceiling it cannot enforce is refused instead of silently ignored.
-    const refused = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ output, "--max-steps=1" } });
+    var one_step = try runtimeOptions("--max-steps=1");
+    defer one_step.deinit();
+    const refused = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{output}, .environ_map = &one_step });
     defer testing.allocator.free(refused.stdout);
     defer testing.allocator.free(refused.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, refused.term);
@@ -1870,7 +1971,9 @@ test "CLI build loads a module project entry without --project" {
     defer testing.allocator.free(link.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, link.term);
     try testing.expectEqualStrings("", link.stderr);
-    const installed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ output, "--print-result" } });
+    var reporting = try runtimeOptions("--print-result");
+    defer reporting.deinit();
+    const installed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{output}, .environ_map = &reporting });
     defer testing.allocator.free(installed.stdout);
     defer testing.allocator.free(installed.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 42 }, installed.term);
@@ -4845,7 +4948,9 @@ test "multiple missing capabilities report exactly one identical diagnostic" {
     defer testing.allocator.free(link.stdout);
     defer testing.allocator.free(link.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, link.term);
-    const installed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ output, "--restrict" } });
+    var restricted = try runtimeOptions("--restrict");
+    defer restricted.deinit();
+    const installed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{output}, .environ_map = &restricted });
     defer testing.allocator.free(installed.stdout);
     defer testing.allocator.free(installed.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, installed.term);
@@ -4906,8 +5011,9 @@ test "run build --run and installed executables accept more than 256 guest argum
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, link.term);
     var installed_argv: std.ArrayList([]const u8) = .empty;
     defer installed_argv.deinit(testing.allocator);
+    // An installed executable reads no option from its arguments, so every one
+    // of them is the guest's and no `--` is needed.
     try installed_argv.append(testing.allocator, output);
-    try installed_argv.append(testing.allocator, "--");
     try installed_argv.appendSlice(testing.allocator, &guest);
     const installed = try std.process.run(testing.allocator, testing.io, .{ .argv = installed_argv.items });
     defer testing.allocator.free(installed.stdout);

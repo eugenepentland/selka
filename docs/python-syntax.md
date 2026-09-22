@@ -376,8 +376,8 @@ project; `run-project` remains an explicit alias. An entry point may declare
 `mylang build <entry.my> --run` and an executable produced with `-o` use the same
 native runtime and integer exit-status rule. `build --run` auto-detects a module
 entry like `run`; a persistent module build still requires `--project`. An
-installed executable receives OS arguments after `argv[0]` as guest data, with a
-`--` separating its own runtime controls from the list. `mylang test <entry.my>`
+installed executable receives every OS argument after `argv[0]` as guest data,
+unchanged, and reads its own runtime controls from `MYLANG_OPTIONS` instead. `mylang test <entry.my>`
 also builds native children, but reports the test runner's aggregate status rather
 than treating a test function's value as a process exit status. Guest tests
 receive no ambient capabilities.

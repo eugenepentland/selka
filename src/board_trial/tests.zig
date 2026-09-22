@@ -140,7 +140,7 @@ test "a native guest reports its entry result on its own final output line" {
     try t.expectEqual(@as(i64, -3), try native.outcome("noise\n-3\n"));
     try t.expectError(error.InvalidGuestResult, native.outcome(""));
     try t.expectError(error.InvalidGuestResult, native.outcome("trapped\n"));
-    const argv = try native.command(t.allocator, "/guest", &.{"--max-steps=1"});
-    defer t.allocator.free(argv);
-    try t.expectEqualSlices([]const u8, &.{ "/guest", "--print-result", "--max-steps=1" }, argv);
+    const options = try native.command(t.allocator, &.{"--max-steps=1"});
+    defer t.allocator.free(options);
+    try t.expectEqualSlices([]const u8, &.{ "--print-result", "--max-steps=1" }, options);
 }

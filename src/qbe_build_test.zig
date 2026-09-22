@@ -6,6 +6,7 @@ const bundled = @import("qbe_build_assets");
 
 test {
     _ = @import("qbe_build.zig");
+    _ = @import("runtime_options.zig");
     _ = @import("qbe_build_cache.zig");
     _ = @import("qbe_build_io.zig");
     _ = @import("qbe_build_options.zig");
@@ -102,7 +103,11 @@ fn buildOnly(context: fs.Context, spec: Spec) !void {
 fn buildAndRun(context: fs.Context, spec: Spec) !BuildReport {
     const stdout = try spawnOk(context, try buildArgv(context, spec, true), cwdOf(spec), spec.environment);
     const parsed = try std.json.parseFromSlice(std.json.Value, context.allocator, stdout, .{ .allocate = .alloc_always });
-    const output = try runOutput(context, &.{ spec.output, "--print-result" }, spec.environment);
+    // A built program reads its runtime options from the environment, never
+    // from its own arguments.
+    var reporting = if (spec.environment) |environment| try environment.clone(context.allocator) else try std.process.Environ.createMap(std.testing.environ, context.allocator);
+    try reporting.put("MYLANG_OPTIONS", "--print-result");
+    const output = try runOutput(context, &.{spec.output}, &reporting);
     return .{
         .installed = v.boolean(v.get(parsed.value, "runtime_installed")),
         .reused = v.boolean(v.get(parsed.value, "runtime_reused")),

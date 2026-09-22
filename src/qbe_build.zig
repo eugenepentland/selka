@@ -70,8 +70,9 @@ pub const PhaseTimings = struct {
     native: ?f64 = null,
     complete: bool = false,
 };
-/// Collect runtime/authority controls from a `build --run` command line. They are
-/// forwarded before the `--` guest delimiter and revalidated by the native runtime.
+/// Collect runtime/authority controls from a `build --run` command line. They
+/// travel to the temporary executable in `MYLANG_OPTIONS` and are revalidated by
+/// the native runtime; the values after `--` are the program's own arguments.
 fn runtimeControls(allocator: std.mem.Allocator, args: []const []const u8) ![]const []const u8 {
     var list: std.ArrayList([]const u8) = .empty;
     for (args) |argument| {
@@ -363,6 +364,22 @@ pub fn ceiling(context: fs.Context, parsed: options.Options) Error!*const std.pr
     const budget = @import("memory_budget");
     return context.bounded(try budget.resolve(parsed.max_memory, context.environ, budget.variable, budget.run_default));
 }
+/// The channel a built program's runtime options travel in.
+pub const runtime_options = @import("runtime_options.zig");
+/// How one built program is started: the argument vector it receives and the
+/// environment that carries its byte ceiling and runtime options.
+pub const Launch = struct { argv: []const []const u8, environ: *const std.process.Environ.Map };
+/// Start `output` from a launcher's command tail: the runtime options before the
+/// tail's first `--` travel in `MYLANG_OPTIONS`, replacing any inherited value,
+/// and only the values after it reach the program's argv, so a built program
+/// never has to tell its own arguments apart from the runtime's.
+pub fn launch(context: fs.Context, output: []const u8, arguments: []const []const u8, parsed: options.Options) Error!Launch {
+    const tail = runtime_options.split(arguments);
+    const environment = try context.allocator.create(std.process.Environ.Map);
+    environment.* = try (try ceiling(context, parsed)).clone(context.allocator);
+    try runtime_options.apply(context.allocator, environment, tail.options);
+    return .{ .argv = try command(context, output, tail.program), .environ = environment };
+}
 /// Run a built program with the arguments it was given, under its byte ceiling.
 pub fn spawn(context: fs.Context, output: []const u8, parsed: options.Options) Error!u8 {
     return spawnParts(context, output, &.{}, parsed);
@@ -371,11 +388,10 @@ pub fn spawn(context: fs.Context, output: []const u8, parsed: options.Options) E
 fn spawnParts(context: fs.Context, output: []const u8, controls: []const []const u8, parsed: options.Options) Error!u8 {
     var arguments: std.ArrayList([]const u8) = .empty;
     try arguments.appendSlice(context.allocator, controls);
+    if (parsed.arguments.len == 0 or !std.mem.eql(u8, parsed.arguments[0], "--")) try arguments.append(context.allocator, "--");
     try arguments.appendSlice(context.allocator, parsed.arguments);
-    var child = try std.process.spawn(context.io, .{
-        .argv = try command(context, output, arguments.items),
-        .environ_map = try ceiling(context, parsed),
-    });
+    const started = try launch(context, output, arguments.items, parsed);
+    var child = try std.process.spawn(context.io, .{ .argv = started.argv, .environ_map = started.environ });
     return status(try child.wait(context.io));
 }
 /// The native object-cache directory. `--no-cache` is a frontend-reuse sentinel,

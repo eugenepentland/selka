@@ -63,7 +63,8 @@ pub const Options = struct {
     max_steps: ?u64 = null,
     max_frames: ?u64 = null,
     gc_stress: bool = false,
-    /// Capability grants and any other switches the native runtime accepts.
+    /// Capability grants and any other switches the native runtime accepts,
+    /// which travel in `MYLANG_OPTIONS`; values after a `--` are the program's.
     arguments: []const []const u8 = &.{},
     directory: ?[]const u8 = null,
     /// Replaces the inherited environment, which `Environment` capabilities read.
@@ -122,16 +123,22 @@ fn link(session: *wiring.Session, manifest: []const u8, output: []const u8) Erro
 fn spawn(executable: []const u8, options: Options) Error!Run {
     const session = try wiring.acquire();
     const allocator = session.allocator();
+    const tail = native_build.runtime_options.split(options.arguments);
+    var runtime: std.ArrayList([]const u8) = .empty;
+    try runtime.append(allocator, "--print-result");
+    if (options.max_steps) |steps| try runtime.append(allocator, try std.fmt.allocPrint(allocator, "--max-steps={d}", .{steps}));
+    if (options.max_frames) |frames| try runtime.append(allocator, try std.fmt.allocPrint(allocator, "--max-frames={d}", .{frames}));
+    if (options.gc_stress) try runtime.append(allocator, "--gc-stress");
+    try runtime.appendSlice(allocator, tail.options);
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(allocator, &.{ executable, "--print-result" });
-    if (options.max_steps) |steps| try argv.append(allocator, try std.fmt.allocPrint(allocator, "--max-steps={d}", .{steps}));
-    if (options.max_frames) |frames| try argv.append(allocator, try std.fmt.allocPrint(allocator, "--max-frames={d}", .{frames}));
-    if (options.gc_stress) try argv.append(allocator, "--gc-stress");
-    try argv.appendSlice(allocator, options.arguments);
+    try argv.append(allocator, executable);
+    try argv.appendSlice(allocator, tail.program);
+    const environment = try bounded(session, options);
+    try native_build.runtime_options.apply(allocator, environment, runtime.items);
     const outcome = try std.process.run(allocator, session.io, .{
         .argv = argv.items,
         .cwd = if (options.directory) |directory| .{ .path = directory } else .inherit,
-        .environ_map = try bounded(session, options),
+        .environ_map = environment,
         .stdout_limit = .limited(64 * 1024 * 1024),
         .stderr_limit = .limited(4 * 1024 * 1024),
     });
@@ -154,7 +161,7 @@ fn spawn(executable: []const u8, options: Options) Error!Run {
 /// Every test guest runs under a byte ceiling, so a program that allocates without
 /// bound traps with `R_MEMORY_BUDGET` instead of exhausting the machine. A test that
 /// supplies its own environment keeps it, with the ceiling added.
-fn bounded(session: *wiring.Session, options: Options) Error!*const std.process.Environ.Map {
+fn bounded(session: *wiring.Session, options: Options) Error!*std.process.Environ.Map {
     const allocator = session.allocator();
     const map = try allocator.create(std.process.Environ.Map);
     map.* = try (options.environment orelse &session.environ).clone(allocator);
