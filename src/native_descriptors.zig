@@ -31,7 +31,16 @@ pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]
     writer.writeAll("#include \"native_heap.h\"\n") catch return error.OutOfMemory;
     for (items) |item| writer.print("extern const myl_native_type {s};\n", .{item.name}) catch return error.OutOfMemory;
     for (items) |item| {
-        try emit(a, writer, catalog, item.name, try catalog.layout(item.ty), item.ty);
+        const layout = try catalog.layout(item.ty);
+        if (layout.kind == .niche) {
+            // QBE-NICHE-1: a niche optional's word is its payload reference or
+            // null, and every descriptor walk — tracing, the region check, the
+            // escape copier, structural equality — already treats a null pointer
+            // as no reference. So the runtime sees the payload's own pointer
+            // descriptor under this name and needs no kind of its own.
+            const payload = layout.fields[0].ty;
+            try emit(a, writer, catalog, item.name, try catalog.layout(payload), payload);
+        } else try emit(a, writer, catalog, item.name, layout, item.ty);
         if (item.ty.isAggregate() and catalog.records[item.ty.recordIndex()].managed) {
             // Collections use their runtime header and typed element descriptors.
             // Nominal managed records can allocate this inline body directly.
@@ -154,4 +163,49 @@ test "native descriptors separate GC fields from complete structural fields" {
     defer std.testing.allocator.free(holder_mode);
     try std.testing.expect(std.mem.indexOf(u8, output, holder_mode) != null);
     try std.testing.expect(std.mem.indexOf(u8, output, ".trace_fields=NULL,.trace_field_count=0,.trace_mode=MYL_NATIVE_TRACE_NONE") != null);
+}
+
+// spec-case: QBE-NICHE-1
+test "a niche optional is described to the runtime exactly as its payload's pointer" {
+    const span = @import("source.zig").Span{ .start = 0, .end = 0 };
+    const base = typed.Type.record_base;
+    const node: typed.Type = @fromBackingInt(base);
+    const maybe: typed.Type = @fromBackingInt(base + 1);
+    const holder: typed.Type = @fromBackingInt(base + 2);
+    const cases = [_]typed.Variant{ .{ .name = "none", .declaration = span, .payload = null }, .{ .name = "some", .declaration = span, .payload = node } };
+    const fields = [_]typed.Field{
+        .{ .name = "span", .declaration = span, .ty = .u64 },
+        .{ .name = "next", .declaration = span, .ty = maybe },
+    };
+    const records = [_]typed.Record{
+        .{ .id = node, .name = "Node", .declaration = span, .fields = &.{}, .managed = true },
+        .{ .id = maybe, .name = "Option<Node>", .declaration = span, .fields = &.{}, .shape = .{ .variants = .{ .is_union = true, .cases = &cases } } },
+        .{ .id = holder, .name = "Holder", .declaration = span, .fields = &fields },
+    };
+    var catalog = try native.Catalog.initRecords(std.testing.allocator, &records);
+    defer catalog.deinit();
+    const output = try generate(std.testing.allocator, &catalog);
+    defer std.testing.allocator.free(output);
+    const holder_name = try symbol(std.testing.allocator, &catalog, holder);
+    defer std.testing.allocator.free(holder_name);
+    const node_name = try symbol(std.testing.allocator, &catalog, node);
+    defer std.testing.allocator.free(node_name);
+    const maybe_name = try symbol(std.testing.allocator, &catalog, maybe);
+    defer std.testing.allocator.free(maybe_name);
+    // The holder's GC table names the optional's own descriptor at the field's offset.
+    const traced = try std.fmt.allocPrint(std.testing.allocator, "static const myl_native_field {s}_trace_fields[] = {{\n {{.offset=8,.type=&{s},.tag=0}},\n}};", .{ holder_name, maybe_name });
+    defer std.testing.allocator.free(traced);
+    try std.testing.expect(std.mem.indexOf(u8, output, traced) != null);
+    // That descriptor is the payload's pointer descriptor under the optional's name.
+    const maybe_head = try std.fmt.allocPrint(std.testing.allocator, "const myl_native_type {s} = ", .{maybe_name});
+    defer std.testing.allocator.free(maybe_head);
+    const node_head = try std.fmt.allocPrint(std.testing.allocator, "const myl_native_type {s} = ", .{node_name});
+    defer std.testing.allocator.free(node_head);
+    const maybe_at = std.mem.indexOf(u8, output, maybe_head).? + maybe_head.len;
+    const node_at = std.mem.indexOf(u8, output, node_head).? + node_head.len;
+    const maybe_body = output[maybe_at..std.mem.indexOfScalarPos(u8, output, maybe_at, '\n').?];
+    const node_body = output[node_at..std.mem.indexOfScalarPos(u8, output, node_at, '\n').?];
+    try std.testing.expectEqualStrings(node_body, maybe_body);
+    try std.testing.expect(std.mem.indexOf(u8, maybe_body, ".size=8,.alignment=8,.fields=NULL,") != null);
+    try std.testing.expect(std.mem.indexOf(u8, maybe_body, ".kind=MYL_NATIVE_POINTER,") != null);
 }

@@ -97,7 +97,7 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
         .make_variant => |variant| {
             const pointer = try self.aggregatePointer();
             const layout_value = try self.layout(variant.ty);
-            try self.print(" storew {d}, %v{d}\n", .{ variant.tag, pointer });
+            try self.writeTag(variant.ty, variant.tag, pointer);
             const case = self.program.records[variant.ty.recordIndex()].shape.variants.?.cases[variant.tag];
             if (case.payload) |ty| {
                 try self.writeValue(try self.address(pointer, layout_value.payload_offset), try self.load("s", h - 1), ty);
@@ -106,8 +106,7 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
         },
         .switch_variant => |dispatch| {
             const pointer = try self.load("s", h - 1);
-            const tag = self.temp();
-            try self.print(" %v{d} =l loaduw %v{d}\n", .{ tag, pointer });
+            const tag = try self.readTag(dispatch.ty, pointer);
             for (dispatch.arms, 0..) |arm, i| {
                 const matches = self.temp();
                 try self.print(" %v{d} =l ceql %v{d}, {d}\n jnz %v{d}, @arm{d}, @armnext{d}\n@arm{d}\n", .{ matches, tag, i, matches, matches, matches, matches });

@@ -148,6 +148,14 @@ static int co_read(size_t index,void *output,size_t depth){
         if(node->children!=(child==SIZE_MAX ? 0u : 1u))return co_bad("InvalidArgument");
         memcpy(output,&tag,4);return child==SIZE_MAX || co_read(child,(unsigned char *)output+type->offsets[tag],depth+1);
     }
+    if(type->kind==7){
+        /* A niche optional has no tag word: `None` is the null reference and
+           `Some` is the reference itself, decoded over the same word. */
+        if(node->bits>=type->count)return co_bad("InvalidArgument");
+        size_t child=type->children[node->bits];
+        if(node->children!=(child==SIZE_MAX ? 0u : 1u))return co_bad("InvalidArgument");
+        memset(output,0,type->size);return child==SIZE_MAX || co_read(child,output,depth+1);
+    }
     if(node->bits || node->children!=type->count)return co_bad("InvalidArgument");
     for(size_t i=0;i<type->count;++i){
         size_t child=type->children[type->kind==2 ? 0:i],offset=type->kind==2 ? i*type->stride:type->offsets[i];
@@ -212,6 +220,14 @@ static int co_write(size_t index,const void *input,size_t depth){
         uint32_t tag;memcpy(&tag,input,4);if(tag>=type->count)return co_bad("InternalError");
         size_t child=type->children[tag];node->bits=tag;node->children=child==SIZE_MAX ? 0:1;
         return child==SIZE_MAX || co_write(child,(const unsigned char *)input+type->offsets[tag],depth+1);
+    }
+    if(type->kind==7){
+        const void *reference;memcpy(&reference,input,sizeof reference);
+        size_t tag=0;
+        while(tag<type->count && (type->children[tag]==SIZE_MAX)!=(reference==NULL))++tag;
+        if(tag==type->count)return co_bad("InternalError");
+        size_t child=type->children[tag];node->bits=tag;node->children=child==SIZE_MAX ? 0:1;
+        return child==SIZE_MAX || co_write(child,input,depth+1);
     }
     for(size_t i=0;i<type->count;++i){
         size_t child=type->children[type->kind==2 ? 0:i],offset=type->kind==2 ? i*type->stride:type->offsets[i];
