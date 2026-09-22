@@ -34,7 +34,7 @@ pub const Application = struct { syntax: ast.TypeApplication, declaration: usize
 /// or null for a case and for a required field.
 pub const Field = struct { name: Span, ty: ?Expression, builtin_name: ?[]const u8 = null, default_value: ?usize = null };
 /// Declaration category determines equality and owner/result obligations independently of spelling.
-pub const Kind = enum { record, variants, result, enumeration, domain, buffer, resource };
+pub const Kind = enum { record, variants, result, enumeration, domain, buffer, resource, tuple };
 /// Template metadata is arena-owned and has no executable placeholder type ID.
 pub const Declaration = struct {
     builtin_name: ?[]const u8 = null,
@@ -51,6 +51,7 @@ const Syntax = struct {
     aliases: std.StringHashMapUnmanaged(Alias) = .empty,
     arrays: std.AutoHashMapUnmanaged(usize, ast.ArrayType) = .empty,
     applications: std.AutoHashMapUnmanaged(usize, ast.TypeApplication) = .empty,
+    tuples: std.AutoHashMapUnmanaged(usize, ast.TupleType) = .empty,
 };
 const Context = struct { allocator: std.mem.Allocator, src: source.Source, sink: *diagnostic.Sink, names: ?*Names };
 const Budget = struct { depth: usize = 0, work: usize = 0 };
@@ -64,10 +65,27 @@ pub const Index = struct {
     /// Declaration indices of synthesized case-payload records, which name no
     /// source type and therefore never become spellable type names.
     synthetic: std.AutoHashMapUnmanaged(usize, void) = .empty,
+    /// Declaration index of the arity-two tuple, or null before `addTuples` runs.
+    /// The seven tuple declarations are appended consecutively, so arity n is
+    /// `tuple_base + n - 2`.
+    tuple_base: ?usize = null,
 
     /// Whether a declaration index names a synthesized case-payload record.
     pub fn isSynthetic(self: Index, declaration: usize) bool {
         return self.synthetic.contains(declaration);
+    }
+
+    /// The synthetic declaration index for one tuple arity, or null outside the
+    /// two-to-eight range the language accepts.
+    pub fn tupleDeclaration(self: Index, arity: usize) ?usize {
+        if (arity < 2 or arity > 8) return null;
+        return (self.tuple_base orelse return null) + arity - 2;
+    }
+
+    /// Whether a declaration index is one of the synthetic tuple declarations.
+    pub fn isTuple(self: Index, declaration: usize) bool {
+        const base = self.tuple_base orelse return false;
+        return declaration >= base and declaration < base + 7;
     }
 
     fn add(self: *Index, name: Span, parameters: []const ast.TypeParameter, kind: Kind) Error!void {
@@ -134,6 +152,28 @@ pub const Index = struct {
         try self.addByteBuffer();
         try self.addBuiltin("dict", 2, .buffer);
         try self.addDictionaryViews();
+        try self.addTuples();
+    }
+    /// Register the seven anonymous tuple declarations, arity two to eight. They
+    /// are synthetic: no source name reaches them and their parameters carry no
+    /// requirements, so `tuple[T, int]` stays spellable for an unbounded `T` and
+    /// the element contract is enforced where the value is used. The layout graph
+    /// turns each spelling into the one interned record per element-type list.
+    fn addTuples(self: *Index) Error!void {
+        const allocator = self.context.allocator;
+        const span: Span = .{ .start = 0, .end = 0 };
+        self.tuple_base = self.declarations.items.len;
+        for (2..9) |arity| {
+            const parameters = try allocator.alloc(requirements.Parameter, arity);
+            for (parameters) |*slot| slot.* = .{ .name = span, .requirements = .{} };
+            try self.synthetic.put(allocator, self.declarations.items.len, {});
+            try self.declarations.append(allocator, .{
+                .builtin_name = "tuple",
+                .name = span,
+                .parameters = parameters,
+                .kind = .tuple,
+            });
+        }
     }
     fn addDictionaryViews(self: *Index) Error!void {
         const allocator = self.context.allocator;
@@ -224,6 +264,56 @@ pub const Index = struct {
         const key = if (ctx.names) |names| try names.reference(span, .type, null, null, ctx.sink) else text;
         return self.names.get(key) orelse ctx.sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
     }
+    /// Resolve one array or enum-keyed table spelling, including its const
+    /// length parameter when the spelling names one.
+    fn arrayExpression(self: *Index, syntax: ast.ArrayType, parameters: []const requirements.Parameter) Error!Expression {
+        const ctx = self.context;
+        const element = try self.expression(syntax.element, parameters);
+        var enum_key: ?Expression = null;
+        var length_parameter: ?usize = null;
+        const length: ?usize = switch (syntax.index) {
+            .length => |at| try @import("generic_arrays.zig").length(ctx.src, at, ctx.sink),
+            .enum_type => |at| length: {
+                if (self.lengthParameter(at, parameters)) |id| {
+                    length_parameter = id;
+                    break :length null;
+                }
+                const key = try self.expression(at, parameters);
+                enum_key = key;
+                if (depends(element) or depends(key)) return ctx.sink.fail("E_GENERIC_ARRAY_KEY", syntax.span, "parameterized arrays currently require a fixed numeric length");
+                const id = switch (key) {
+                    .named => |id| id,
+                    .application => |application| application.declaration,
+                    else => return ctx.sink.fail("E_TABLE_KEY", at, "table key must be a closed enum type"),
+                };
+                if (self.declarations.items[id].kind != .enumeration) return ctx.sink.fail("E_TABLE_KEY", at, "table key must be a closed enum type");
+                break :length null;
+            },
+        };
+        const array = try ctx.allocator.create(Array);
+        array.* = .{ .syntax = syntax, .length = length, .length_parameter = length_parameter, .element = element, .key = enum_key };
+        return .{ .array = array };
+    }
+    /// Resolve one `tuple[...]` spelling into a tuple application. Arity is a
+    /// checker rule, not a parse rule, so a wrong arity is rejected here at the
+    /// whole spelling rather than at one element.
+    fn tupleExpression(self: *Index, syntax: ast.TupleType, parameters: []const requirements.Parameter) Error!Expression {
+        const ctx = self.context;
+        if (syntax.elements.len < 2 or syntax.elements.len > 8) return ctx.sink.fail(
+            "E_TUPLE_ARITY",
+            syntax.span,
+            "a tuple has between 2 and 8 elements; declare a record for a larger group",
+        );
+        const arguments = try ctx.allocator.alloc(Expression, syntax.elements.len);
+        for (syntax.elements, arguments) |element, *out| out.* = try self.expression(element, parameters);
+        const application = try ctx.allocator.create(Application);
+        application.* = .{
+            .syntax = .{ .span = syntax.span, .name = syntax.span, .arguments = syntax.elements },
+            .declaration = self.tupleDeclaration(syntax.elements.len) orelse return error.InternalError,
+            .arguments = arguments,
+        };
+        return .{ .application = application };
+    }
     fn parameter(self: *Index, span: Span, parameters: []const requirements.Parameter) ?usize {
         for (parameters, 0..) |item, i| if (std.mem.eql(u8, self.context.src.text(span), self.context.src.text(item.name))) return i;
         return null;
@@ -243,33 +333,8 @@ pub const Index = struct {
             callback.* = .{ .syntax = syntax, .arguments = arguments };
             return .{ .callback = callback };
         }
-        if (self.syntax.arrays.get(span.start)) |syntax| {
-            const element = try self.expression(syntax.element, parameters);
-            var enum_key: ?Expression = null;
-            var length_parameter: ?usize = null;
-            const length: ?usize = switch (syntax.index) {
-                .length => |at| try @import("generic_arrays.zig").length(ctx.src, at, ctx.sink),
-                .enum_type => |at| length: {
-                    if (self.lengthParameter(at, parameters)) |id| {
-                        length_parameter = id;
-                        break :length null;
-                    }
-                    const key = try self.expression(at, parameters);
-                    enum_key = key;
-                    if (depends(element) or depends(key)) return ctx.sink.fail("E_GENERIC_ARRAY_KEY", syntax.span, "parameterized arrays currently require a fixed numeric length");
-                    const id = switch (key) {
-                        .named => |id| id,
-                        .application => |application| application.declaration,
-                        else => return ctx.sink.fail("E_TABLE_KEY", at, "table key must be a closed enum type"),
-                    };
-                    if (self.declarations.items[id].kind != .enumeration) return ctx.sink.fail("E_TABLE_KEY", at, "table key must be a closed enum type");
-                    break :length null;
-                },
-            };
-            const array = try ctx.allocator.create(Array);
-            array.* = .{ .syntax = syntax, .length = length, .length_parameter = length_parameter, .element = element, .key = enum_key };
-            return .{ .array = array };
-        }
+        if (self.syntax.tuples.get(span.start)) |syntax| return self.tupleExpression(syntax, parameters);
+        if (self.syntax.arrays.get(span.start)) |syntax| return self.arrayExpression(syntax, parameters);
         if (self.syntax.applications.get(span.start)) |syntax| {
             if (self.parameter(syntax.name, parameters) != null) return ctx.sink.fail("E_TYPE_APPLICATION", syntax.name, "a type parameter cannot be used as a type constructor");
             const id = try self.lookup(syntax.name);
@@ -422,7 +487,7 @@ pub const Index = struct {
         defer pending.deinit(allocator);
         for (self.declarations.items, 0..) |*declaration, id| {
             declaration.guarantees = switch (declaration.kind) {
-                .record, .variants => copyGuarantee(),
+                .record, .variants, .tuple => copyGuarantee(),
                 .enumeration, .domain => .{ .bits = 19 },
                 .buffer => copyGuarantee(),
                 .resource, .result => .{},
@@ -550,6 +615,7 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     try index.addPrelude(program);
     for (program.types.expressions.callbacks) |syntax| try index.syntax.callbacks.put(allocator, syntax.span.start, syntax);
     for (program.types.expressions.arrays) |syntax| try index.syntax.arrays.put(allocator, syntax.span.start, syntax);
+    for (program.types.expressions.tuples) |syntax| try index.syntax.tuples.put(allocator, syntax.span.start, syntax);
     for (program.types.expressions.applications) |syntax| try index.syntax.applications.put(allocator, syntax.span.start, syntax);
     for (program.types.records) |declaration| try index.fields(declaration.name, declaration.fields);
     for (program.types.variants) |declaration| try index.fields(declaration.name, declaration.cases);

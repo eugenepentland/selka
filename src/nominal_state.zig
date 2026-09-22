@@ -44,6 +44,12 @@ pub const Store = struct {
                     .return_origin = contract.return_origin,
                 } }, .arguments = arguments[0 .. contract.parameters.len + 1] }, span);
             }
+            if (records[ty.recordIndex()].shape.tuple) {
+                const fields = records[ty.recordIndex()].fields;
+                var arguments: [8]layouts.Id = undefined;
+                for (fields, 0..) |field, i| arguments[i] = try self.typeArgument(records, field.ty, span, depth + 1);
+                break :array try self.graph.materializeKey(.{ .base = .{ .tuple = {} }, .arguments = arguments[0..fields.len] }, span);
+            }
             const shape = records[ty.recordIndex()].shape.array orelse return error.InternalError;
             const element = try self.typeArgument(records, shape.element, span, depth + 1);
             const key = if (shape.key) |key_type| try self.typeArgument(records, key_type, span, depth + 1) else null;

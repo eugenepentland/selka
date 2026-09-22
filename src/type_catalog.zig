@@ -137,14 +137,85 @@ pub const Catalog = struct {
     }
     /// Resolve a record field name to its stable field index.
     pub fn field(self: Catalog, ty: typed.Type, src: Source, name: Span, sink: *diagnostic.Sink) Error!usize {
-        _ = try self.record(ty, name, sink);
+        const schema = try self.record(ty, name, sink);
+        if (schema.shape.tuple) return sink.fail("E_TYPE", name, "a tuple has no fields; take it apart with `head, rest = value`");
         const members = &self.field_names.items[ty.recordIndex()];
         return members.get(src.text(name)) orelse {
             const message = try declaredMessage(sink.allocator, "field does not exist on this record type", "fields", members);
             return sink.fail("E_UNKNOWN_FIELD", name, message);
         };
     }
+    /// Intern or look up the anonymous record for a tuple with these element types.
+    /// Records are append-only and in compilation order, and the element list is
+    /// compared in source order, so the same element list always answers the same
+    /// identity: caches, fingerprints and interface rendering cannot thrash.
+    pub fn tupleType(self: *Catalog, elements: []const typed.Type) Error!typed.Type {
+        for (self.records, 0..) |schema, index| {
+            if (!schema.shape.tuple or schema.fields.len != elements.len) continue;
+            var same = true;
+            for (schema.fields, elements) |element_field, element| if (element_field.ty != element) {
+                same = false;
+                break;
+            };
+            if (same) return @fromBackingInt(typed.Type.record_base + index);
+        }
+        const store = self.templates.store orelse return error.InternalError;
+        const allocator = store.context.allocator;
+        const fields = try allocator.alloc(typed.Field, elements.len);
+        for (elements, fields, 0..) |element, *slot, index| slot.* = .{
+            .name = try typed.positionalFieldName(allocator, index),
+            .declaration = .{ .start = 0, .end = 0 },
+            .ty = element,
+        };
+        const id: typed.Type = @fromBackingInt(typed.Type.record_base + self.records.len);
+        const schema: typed.Record = .{
+            .id = id,
+            .name = try self.tupleName(allocator, elements),
+            .declaration = .{ .start = 0, .end = 0 },
+            .fields = fields,
+            .shape = .{ .tuple = true },
+            .contract = tupleContract(elements, self.records),
+        };
+        var storage: std.ArrayList(typed.Record) = .{ .items = self.records, .capacity = self.record_capacity };
+        defer {
+            self.records = storage.items;
+            self.record_capacity = storage.capacity;
+        }
+        try storage.ensureUnusedCapacity(allocator, 1);
+        storage.appendAssumeCapacity(schema);
+        const indexed = self.field_names.items.len;
+        try self.field_names.resize(allocator, storage.items.len);
+        @memset(self.field_names.items[indexed..], .empty);
+        return id;
+    }
+    /// Render the canonical internal spelling of a tuple type, so one element
+    /// list has one name in diagnostics, interfaces and identity fingerprints.
+    fn tupleName(self: Catalog, allocator: std.mem.Allocator, elements: []const typed.Type) std.mem.Allocator.Error![]const u8 {
+        var out: std.ArrayList(u8) = .empty;
+        defer out.deinit(allocator);
+        try out.appendSlice(allocator, "tuple<");
+        for (elements, 0..) |element, index| {
+            if (index != 0) try out.append(allocator, ',');
+            try out.appendSlice(allocator, typed.typeName(element, self.records));
+        }
+        try out.append(allocator, '>');
+        return out.toOwnedSlice(allocator);
+    }
 };
+
+/// Ownership and result obligations of an anonymous tuple, derived from its
+/// elements exactly as `record_layouts.finishLayout` derives them from fields.
+fn tupleContract(elements: []const typed.Type, records: []const typed.Record) typed.RecordContract {
+    var storable = true;
+    var move_only = false;
+    var requires_handling = false;
+    for (elements) |element| {
+        storable = storable and typed.storable(element, records);
+        move_only = move_only or typed.moveOnly(element, records);
+        requires_handling = requires_handling or typed.requiresHandling(element, records);
+    }
+    return .{ .storable = storable and !requires_handling, .move_only = move_only, .requires_handling = requires_handling };
+}
 
 /// Compose a diagnostic message with a sorted `; declared <label>: a, b` hint.
 fn declaredMessage(allocator: std.mem.Allocator, base: []const u8, label: []const u8, members: *const std.StringHashMapUnmanaged(usize)) Error![]const u8 {

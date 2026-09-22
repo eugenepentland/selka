@@ -182,6 +182,10 @@ pub const RecordShape = struct {
     resource: ?external_resources.Kind = null,
     /// The builtin Cell: a managed record with closed field and content rules.
     builtin_cell: bool = false,
+    /// An anonymous tuple: positional fields no source can name, taken apart by
+    /// destructuring only. It keeps the plain record representation, so
+    /// construction, field reads, equality and layout are the record ones.
+    tuple: bool = false,
     /// Identify representations carrying a managed collection or resource identity.
     pub fn hasRuntimeIdentity(self: RecordShape) bool {
         return self.buffer != null or self.resource != null;
@@ -239,6 +243,12 @@ pub const RecordContract = struct {
     storable: bool = true,
     requires_handling: bool = false,
 };
+/// The positional field name of one tuple element. The `$` makes every tuple
+/// field unnameable from source, so no program can reach an element except by
+/// destructuring and no declared field can collide with one.
+pub fn positionalFieldName(allocator: std.mem.Allocator, index: usize) std.mem.Allocator.Error![]const u8 {
+    return std.fmt.allocPrint(allocator, "${d}", .{index});
+}
 /// Payload types and case tags of a checked ok/err result schema.
 pub const ResultShape = struct { ok_type: Type, error_type: Type, ok_tag: usize, error_tag: usize };
 /// Recognize a valid fallible result and return its payload types and tags.
