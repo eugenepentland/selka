@@ -116,7 +116,7 @@ const eTextOperator = "E_TEXT_OPERATOR";
 /// expression, and the `mut` argument marker. Every use carries a `// lane:`
 /// comment and is deleted by that lane.
 const eNotImplemented = "E_NOT_IMPLEMENTED";
-const eTupleArity = "E_TUPLE_ARITY";
+const eTupleArity = diagnostic.tuple_arity;
 /// The accepted spelling beside a rejected tuple arity.
 const tuple_arity_alternative = "a tuple has between 2 and 8 elements; declare a record for a larger group";
 /// The accepted spelling beside a rejected tuple index, which is the only way

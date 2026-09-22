@@ -55,7 +55,7 @@ def swap_pair[T](pair: tuple[T, T]) -> tuple[T, T]:
 
 # A returned tuple destructures by name, `_` skips one, and the swap idiom
 # rewrites both names from one tuple value.
-# spec: TUPLE-3
+# spec-case: TUPLE-3
 public def test_a_returned_tuple_destructures_and_the_swap_idiom_works() -> bool:
     head, rest = split_first("key=value", "=")
     if head != "key" or rest != "value":
@@ -71,7 +71,7 @@ public def test_a_returned_tuple_destructures_and_the_swap_idiom_works() -> bool
 
 # A tuple is an ordinary value: it lives in a list, in a record field, and each
 # element keeps its own type.
-# spec: TUPLE-2
+# spec-case: TUPLE-2
 public def test_a_tuple_nests_in_a_list_and_in_a_record_field() -> bool:
     pairs: list[tuple[int, str]] = [(1, "a"), (2, "b")]
     total = 0
@@ -102,7 +102,7 @@ public def test_an_option_and_a_result_payload_can_be_a_tuple() -> bool:
             return False
 
 
-# spec: TUPLE-6
+# spec-case: TUPLE-6
 public def test_tuple_equality_and_rendering_follow_the_aggregate_rule() -> bool:
     left: tuple[int, str] = (1, "a")
     right = (1, "a")
@@ -135,7 +135,7 @@ public def test_a_tuple_carrying_a_managed_element_escapes_an_arena() -> bool:
 
 # A template may take, destructure and return `tuple[T, int]`; the element that
 # is a type parameter stays that parameter, so one definition serves int and str.
-# spec: TUPLE-8
+# spec-case: TUPLE-8
 public def test_a_generic_function_over_a_tuple_keeps_its_element_type() -> bool:
     if first_or((7, 1), 0) != 7:
         return False

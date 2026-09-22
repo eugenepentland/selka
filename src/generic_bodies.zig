@@ -30,7 +30,7 @@ const eTryReturn = "E_TRY_RETURN";
 const eArgument = diagnostic.generic_argument;
 const eListType = @import("collection_lower.zig").list_type_error;
 const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
-const eTupleArity = "E_TUPLE_ARITY";
+const eTupleArity = diagnostic.tuple_arity;
 /// The accepted arity beside a rejected tuple in a template body.
 const tuple_arity_message = symbolic_shapes.tuple_arity_message;
 const Catalog = @import("records.zig").Catalog;
@@ -114,7 +114,7 @@ const Checker = struct {
         if (!terminates and !implicit_unit) return sink.fail("E_MISSING_RETURN", function.name, "template may fall through without returning its declared type");
         if (!terminates) try self.requireHandled(0, function.name);
     }
-    fn shapes(self: *Checker) @import("symbolic_shapes.zig").Context {
+    fn shapes(self: *Checker) symbolic_shapes.Context {
         return .{
             .arena = &self.field_arena,
             .catalog = self.catalog,
@@ -2140,7 +2140,7 @@ fn resolveTemplate(context: TemplateCheck, function: ast.Function) Error!?Resolv
         error.SourceError => return null,
         else => return err,
     };
-    const parameters = @import("symbolic_shapes.zig").normalizeRequirements(allocator, context.catalog, context.src, raw, context.sink) catch |err| switch (err) {
+    const parameters = symbolic_shapes.normalizeRequirements(allocator, context.catalog, context.src, raw, context.sink) catch |err| switch (err) {
         error.SourceError => {
             requirements.deinitResolved(allocator, raw);
             return null;

@@ -380,5 +380,3 @@ test "the formatter returns a tuple value, type and target list unchanged" {
     try t.expect(std.mem.indexOf(u8, once, "tuple[int, str]") != null);
     try t.expect(std.mem.indexOf(u8, once, "first, second = pair()") != null);
 }
-
-

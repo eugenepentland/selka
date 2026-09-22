@@ -1016,6 +1016,20 @@ pub const Index = struct {
         }
         return error.InternalError;
     }
+    /// Render one `tuple[T1, ..., Tn]` spelling as its canonical descriptor.
+    /// Element descriptors are already canonical, so a tuple renders as
+    /// `tuple[i64,str]` and the surface rewriter turns it into source spelling.
+    fn contractTupleText(self: *Index, module: usize, tuple: ast.TupleType, parameters: []const ast.TypeParameter, path: *std.ArrayList(Identity)) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        var out: std.ArrayList(u8) = .empty;
+        try out.appendSlice(allocator, "tuple[");
+        for (tuple.elements, 0..) |element, index| {
+            if (index != 0) try out.appendSlice(allocator, ",");
+            try out.appendSlice(allocator, try self.contractTypeTextPath(module, element, parameters, path));
+        }
+        try out.appendSlice(allocator, "]");
+        return out.toOwnedSlice(allocator);
+    }
     fn contractTypeText(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter) ContractError![]const u8 {
         var path: std.ArrayList(Identity) = .empty;
         defer path.deinit(self.project.arena.allocator());
@@ -1069,14 +1083,7 @@ pub const Index = struct {
         }
         for (self.units[module].syntax.types.expressions.tuples) |tuple| {
             if (tuple.span.start != span.start or tuple.span.end != span.end) continue;
-            var out: std.ArrayList(u8) = .empty;
-            try out.appendSlice(allocator, "tuple[");
-            for (tuple.elements, 0..) |element, index| {
-                if (index != 0) try out.appendSlice(allocator, ",");
-                try out.appendSlice(allocator, try self.contractTypeTextPath(module, element, parameters, path));
-            }
-            try out.appendSlice(allocator, "]");
-            return out.toOwnedSlice(allocator);
+            return self.contractTupleText(module, tuple, parameters, path);
         }
         if (typed.Type.fromName(text)) |builtin| return allocator.dupe(u8, prelude.reservedTypeName(builtin) orelse typed.typeName(builtin, &.{}));
         if (!self.units[module].names.contains(text)) {
