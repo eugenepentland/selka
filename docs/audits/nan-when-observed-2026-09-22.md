@@ -156,7 +156,7 @@ Logs were diffed with `gate_diff.py` against the base's `l5-*.log`.
 
 | step | result | vs base |
 |---|---|---|
-| `zig build test --summary all` | 46 failing (base 46) | **no new failures** once the snapshot below is re-pinned. The first run showed one new name, `qbe_build_host…bridge snapshot`. After re-pinning, the filtered test passes. |
+| `zig build test --summary all` | 46 failing (base 46) | **no new failures**, confirmed by a full rerun at `b4203431`. The first run showed one new name, `qbe_build_host…bridge snapshot`, fixed by the re-pin below. |
 | `test-qbe` | 2 failing (base 2) | no new failures |
 | `test-qbe-build` | green (30/30) | — |
 | `test-schematic` | green (21/21) | — |
