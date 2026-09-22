@@ -146,7 +146,9 @@ use a ```mylang block; `kind: "tooling"` features may use a ```bash or ```consol
   `E_OUTPUT_CAPABILITY`. See `docs/io.md`.
 - **`mylang run` grants every capability** unless you pass `--restrict` — it builds the
   program natively and runs it in a child process. A binary from `mylang build` grants
-  every capability too; `--restrict` after `--` denies them.
+  every capability too and hands `main` its argv unchanged; runtime options such as
+  `--restrict`, `--allow-*` and `--gc-stress` go in the `MYLANG_OPTIONS` environment
+  variable instead (`MYLANG_OPTIONS=--restrict ./prog`).
 - Integers have fixed width, conditions must be `bool`, lists are homogeneous, ranges
   take one or two arguments, and slices have no step.
 
