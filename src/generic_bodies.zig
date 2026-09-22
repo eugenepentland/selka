@@ -677,6 +677,10 @@ const Checker = struct {
     fn listMethod(self: *Checker, node: ast.Node) Error!Symbolic {
         const method = node.data.method_call;
         const name = self.src.text(method.name);
+        if (option_flow.methodNamed(name) != null) {
+            const receiver = try self.expression(method.base);
+            if (try self.optionMethod(receiver, name, method.arguments, node.span)) |value| return value;
+        }
         if (std.mem.eql(u8, name, "read_only")) {
             if (method.arguments.len != 0) return self.sink.fail("E_ARITY", node.span, "read_only takes no arguments");
             const value = try self.expression(method.base);
@@ -774,6 +778,33 @@ const Checker = struct {
         if (slice.step) |input| try self.supports(try self.expression(input), .integer, node.span);
         self.seedEffect(.managed_allocation);
         return owner;
+    }
+    /// One intrinsic `Option[T]` method checked over a symbolic receiver, or
+    /// null when the receiver is not an `Option` or the name is no such method.
+    /// The three are pure, allocate nothing and contribute no effect, so a
+    /// generic body may call them under a `noalloc` ceiling.
+    fn optionMethod(self: *Checker, receiver: Symbolic, name: []const u8, arguments: []const ast.NodeId, span: source.Span) Error!?Symbolic {
+        const shape = (try self.shapes().matchOption(receiver, span)) orelse return null;
+        const method = option_flow.methodNamed(name) orelse return null;
+        if (method == .unwrap_or and arguments.len != 1)
+            return self.sink.fail("E_ARITY", span, "`unwrap_or` takes exactly one argument: `unwrap_or(default)`");
+        if (method != .unwrap_or and arguments.len != 0) {
+            const message = try std.fmt.allocPrint(self.allocator, "`{s}` takes no arguments", .{name});
+            return self.sink.fail("E_ARITY", span, message);
+        }
+        if (method == .unwrap_or) try self.compatible(try self.expressionExpected(arguments[0], shape.element), shape.element, span);
+        return if (method == .unwrap_or) shape.element else .{ .concrete = .bool };
+    }
+    /// The intrinsic `Option` method a call on a named local spells, or null
+    /// when the receiver is not an `Option` binding or another receiver's
+    /// methods win. A narrowed collection payload keeps its own methods, exactly
+    /// as the concrete checker decides.
+    fn optionReceiverCall(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
+        const owner = input_call.owner orelse return null;
+        const slot = self.active.get(self.src.text(owner)) orelse return null;
+        const name = self.src.text(input_call.name);
+        if (option_flow.methodNamed(name) == null and self.shapes().managed(self.locals.items[slot].ty)) return null;
+        return self.optionMethod(self.locals.items[slot].ty, name, input_call.arguments, span);
     }
     fn managedMethod(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
         if (input_call.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
@@ -1007,6 +1038,7 @@ const Checker = struct {
         }
         if (try self.truncatingHelper(input_call, span)) |value| return value;
         if (try self.variantConstruction(input_call, span)) |value| return value;
+        if (try self.optionReceiverCall(input_call, span)) |value| return value;
         if (try self.managedMethod(input_call, span)) |value| return value;
         if (try self.cellConstructor(input_call, span)) |value| return value;
         if (try self.contextualResult(input_call, span)) |value| return value;
