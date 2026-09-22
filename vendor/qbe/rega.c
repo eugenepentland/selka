@@ -16,16 +16,21 @@ struct RMap {
 };
 
 enum {
-	NPm = 64,      /* max copies in a parallel move */
+	NPm = 64,      /* initial copies in a parallel move */
 };
 
 static bits regu;      /* registers used */
 static Tmp *tmp;       /* function temporaries */
 static Mem *mem;       /* function mem references */
+/* mylang local change: upstream keeps `pm` in a fixed NPm-entry array and
+ * dies with "no more pm slots" once one parallel move needs more copies. A
+ * block edge's move has one copy per phi of the successor plus one per
+ * temporary live into it, which valid IL can push past any fixed bound
+ * (a loop header with 65 phis is enough), so the table grows on demand. */
 static struct {
 	Ref src, dst;
 	int cls;
-} pm[NPm];             /* parallel move constructed */
+} *pm;                 /* parallel move constructed */
 static int npm;        /* size of pm */
 static int loop;       /* current loop level */
 
@@ -194,8 +199,9 @@ mdump(RMap *m)
 static void
 pmadd(Ref src, Ref dst, int k)
 {
-	if (npm == NPm)
-		die("no more pm slots");
+	if (!pm)
+		pm = vnew(NPm, sizeof pm[0], PHeap);
+	vgrow(&pm, npm+1);
 	pm[npm].src = src;
 	pm[npm].dst = dst;
 	pm[npm].cls = k;
