@@ -243,6 +243,21 @@ pub const RecordContract = struct {
     storable: bool = true,
     requires_handling: bool = false,
 };
+/// The already-interned tuple record for a concrete element list, or null when
+/// the catalog has not materialized that list yet. The spelling path and the
+/// value path both ask here first, so one element list is one record.
+pub fn internedTuple(records: []const Record, elements: []const Type) ?Type {
+    for (records, 0..) |schema, index| {
+        if (!schema.shape.tuple or schema.fields.len != elements.len) continue;
+        var same = true;
+        for (schema.fields, elements) |field, element| if (field.ty != element) {
+            same = false;
+            break;
+        };
+        if (same) return @fromBackingInt(Type.record_base + index);
+    }
+    return null;
+}
 /// The positional field name of one tuple element. The `$` makes every tuple
 /// field unnameable from source, so no program can reach an element except by
 /// destructuring and no declared field can collide with one.

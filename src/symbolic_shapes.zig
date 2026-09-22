@@ -37,10 +37,22 @@ pub const Context = struct {
     /// that the catalog has already materialized keeps that identity; anything
     /// else stays the ordered argument list of the tuple's declaration, so the
     /// elements remain visible without a representative substitution.
+    // twin-drift-ok: this context carries a catalog by value, so it can look an
+    // interned tuple up but never create one; `generic_bodies.symbolicTuple`
+    // holds the checker's catalog and interns a concrete element list on demand.
     pub fn tuple(self: Context, elements: []const Value) ?Value {
         const store = self.catalog.templates.store orelse return null;
         const declaration = store.index.tupleDeclaration(elements.len) orelse return null;
-        if (internedTuple(self.catalog.records, elements)) |ty| return .{ .concrete = ty };
+        var concrete: [8]typed.Type = undefined;
+        var all_concrete = true;
+        for (elements, 0..) |element, index| {
+            if (element != .concrete) {
+                all_concrete = false;
+                break;
+            }
+            concrete[index] = element.concrete;
+        }
+        if (all_concrete) if (typed.internedTuple(self.catalog.records, concrete[0..elements.len])) |ty| return .{ .concrete = ty };
         return self.nominal(declaration, elements) catch return null;
     }
     fn lengthArgument(self: Context, span: source.Span) Error!Value {
@@ -548,24 +560,6 @@ pub fn tupleElement(catalog: type_catalog.Catalog, value: Value, index: usize) ?
     if (value != .concrete) return null;
     const schema = @import("record_layouts.zig").tupleRecord(catalog.records, value.concrete) orelse return null;
     return if (index < schema.fields.len) .{ .concrete = schema.fields[index].ty } else null;
-}
-
-/// The already-materialized concrete tuple for an all-concrete element list, or
-/// null when the catalog has not interned that list yet. Interning itself stays
-/// with `type_catalog.tupleType`, which owns the append-only record list.
-pub fn internedTuple(records: []const typed.Record, elements: []const Value) ?typed.Type {
-    for (records, 0..) |schema, index| {
-        if (!schema.shape.tuple or schema.fields.len != elements.len) continue;
-        var same = true;
-        for (schema.fields, elements) |field, element| {
-            if (element != .concrete or field.ty != element.concrete) {
-                same = false;
-                break;
-            }
-        }
-        if (same) return @fromBackingInt(typed.Type.record_base + index);
-    }
-    return null;
 }
 
 /// The accepted arity beside a rejected tuple spelling in a symbolic position.

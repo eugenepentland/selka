@@ -110,13 +110,13 @@ public def test_tuple_equality_and_rendering_follow_the_aggregate_rule() -> bool
         return False
     if left == (1, "b") or left == (2, "a"):
         return False
-    if str(left) != "(1, 'a')":
+    if f"{left}" != "(1, 'a')":
         return False
     nested = (1, (2, "b"))
-    if str(nested) != "(1, (2, 'b'))":
+    if f"{nested}" != "(1, (2, 'b'))":
         return False
     pairs: list[tuple[int, str]] = [left, (2, "b")]
-    return str(pairs) == "[(1, 'a'), (2, 'b')]"
+    return f"{pairs}" == "[(1, 'a'), (2, 'b')]"
 
 
 # A tuple is managed-bearing when an element is, so `escape` copies the whole

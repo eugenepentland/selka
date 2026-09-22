@@ -154,6 +154,16 @@ const Builder = struct {
                     continue;
                 }
             }
+            if (node.key.base == .tuple) {
+                var elements: [8]typed.Type = undefined;
+                for (node.key.arguments, 0..) |argument, index| elements[index] = try self.runtimeType(argument);
+                // A tuple value may already have interned this element list, so
+                // the spelling and the value keep one record instead of two.
+                if (typed.internedTuple(storage.items, elements[0..node.key.arguments.len])) |found| {
+                    identity.ty = found;
+                    continue;
+                }
+            }
             if (node.key.base == .callback) {
                 var parameters: [16]typed.Type = undefined;
                 for (node.key.arguments[0 .. node.key.arguments.len - 1], 0..) |argument, argument_index| parameters[argument_index] = try self.runtimeType(argument);

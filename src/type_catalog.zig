@@ -150,15 +150,7 @@ pub const Catalog = struct {
     /// compared in source order, so the same element list always answers the same
     /// identity: caches, fingerprints and interface rendering cannot thrash.
     pub fn tupleType(self: *Catalog, elements: []const typed.Type) Error!typed.Type {
-        for (self.records, 0..) |schema, index| {
-            if (!schema.shape.tuple or schema.fields.len != elements.len) continue;
-            var same = true;
-            for (schema.fields, elements) |element_field, element| if (element_field.ty != element) {
-                same = false;
-                break;
-            };
-            if (same) return @fromBackingInt(typed.Type.record_base + index);
-        }
+        if (typed.internedTuple(self.records, elements)) |found| return found;
         const store = self.templates.store orelse return error.InternalError;
         const allocator = store.context.allocator;
         const fields = try allocator.alloc(typed.Field, elements.len);

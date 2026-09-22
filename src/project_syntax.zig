@@ -53,9 +53,11 @@ pub fn build(index: *interfaces.Index) BuildError!Merged {
         for (unit.syntax.functions) |_| try function_modules.append(allocator, module);
     }
     // Append each declaration category once, avoiding quadratic slice copying.
-    inline for (.{ "functions", "records", "domains", "variants", "constraints", "arrays", "applications", "callbacks", "aliases", "resources" }) |field| {
+    inline for (.{ "functions", "records", "domains", "variants", "constraints", "arrays", "tuples", "applications", "callbacks", "aliases", "resources" }) |field| {
         const is_function = comptime std.mem.eql(u8, field, "functions");
-        const is_expression = comptime std.mem.eql(u8, field, "arrays") or std.mem.eql(u8, field, "applications") or std.mem.eql(u8, field, "aliases") or std.mem.eql(u8, field, "callbacks");
+        // `tuples` is a structural type expression too: a module program that
+        // names one keeps it, exactly as it keeps a fixed-array spelling.
+        const is_expression = comptime std.mem.eql(u8, field, "arrays") or std.mem.eql(u8, field, "tuples") or std.mem.eql(u8, field, "applications") or std.mem.eql(u8, field, "aliases") or std.mem.eql(u8, field, "callbacks");
         const Collection = if (is_function) ast.Program else if (is_expression) ast.TypeExpressions else ast.TypeDeclarations;
         const Slice = @FieldType(Collection, field);
         const Item = @typeInfo(Slice).pointer.child;

@@ -289,6 +289,57 @@ test "a tuple prints as its bracketed elements and compares structurally" {
     ));
 }
 
+/// Check one module program through the project pipeline, which merges module
+/// syntax before checking: a structural spelling lost in that merge would make
+/// every tuple type in a module program unknown.
+fn acceptsModule(source: []const u8) !void {
+    const interfaces = @import("interfaces.zig");
+    const project_compile = @import("project_compile.zig");
+    const graph = @import("project.zig");
+    const Files = struct {
+        bytes: []const u8,
+        fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) graph.ReadError![]u8 {
+            const self: *@This() = @ptrCast(@alignCast(context.?));
+            if (!std.mem.eql(u8, path, unit_name)) return error.NotFound;
+            if (self.bytes.len > limit) return error.TooLarge;
+            return allocator.dupe(u8, self.bytes);
+        }
+        fn provider(self: *@This()) graph.Provider {
+            return .{ .context = self, .read = read };
+        }
+    };
+    var files: Files = .{ .bytes = source };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "tuples", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile.Compilation.init(&index);
+    try compilation.check();
+}
+
+// spec-case: TUPLE-1
+test "a module program keeps its tuple type spellings" {
+    try acceptsModule(
+        \\module tuples
+        \\
+        \\
+        \\record Holder:
+        \\    pair: tuple[str, str]
+        \\
+        \\
+        \\def split(text: str, sep: str) -> tuple[str, str]:
+        \\    return text, sep
+        \\
+        \\
+        \\def main() -> int:
+        \\    head, rest = split("key=value", "=")
+        \\    holder = Holder(pair=(head, rest))
+        \\    first, second = holder.pair
+        \\    return len(first) + len(second)
+        \\
+    );
+}
+
 // spec-case: TUPLE-5
 test "the host boundary rejects a tuple signature" {
     try rejects(

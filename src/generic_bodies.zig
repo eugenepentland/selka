@@ -552,6 +552,9 @@ const Checker = struct {
     /// are interned in the catalog, so a value and a `tuple[...]` spelling of
     /// the same elements are one identity; anything else keeps the elements as
     /// ordered arguments, which is what makes `tuple[T, int]` spellable.
+    // twin-drift-ok: the shape-only copy in `symbolic_shapes.Context.tuple`
+    // carries a catalog by value, so it may look an interned tuple up but never
+    // create one; this one holds the checker's catalog and interns on demand.
     fn symbolicTuple(self: *Checker, elements: []const Symbolic, span: source.Span) Error!Symbolic {
         if (elements.len < 2 or elements.len > 8) return self.sink.fail(eTupleArity, span, tuple_arity_message);
         var concrete: [8]typed.Type = undefined;
