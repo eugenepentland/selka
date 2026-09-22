@@ -1,0 +1,14 @@
+## Summary
+
+**What I changed** (`project/main.my`): removed the unusable generic parameter from `maximum` and `maximum_of`. Both were declared `[T: Numeric]`, but `Numeric` is not a known requirement (`E_GENERIC_REQUIREMENT`), and even with the valid `integer` requirement `T` never appears in either signature, so it could not be inferred at the call sites (`E_GENERIC_INFERENCE`). Since both functions already take concrete `list[int]`, I dropped the dead `[T: …]` clauses. No other changes.
+
+**Command and result:**
+```
+bin/mylang check project/main.my
+```
+now exits 0 with no output (was 1 diagnostic before), and:
+```
+bin/mylang run project/main.my -- 1 3 2   →  3
+bin/mylang run project/main.my -- 5 5 5   →  5
+```
+Both match `public/expected.json`. I also verified largest-in-first/middle/last, all-equal, zeros, and negative inputs (`9 2 3`→9, `1 2 9`→9, `0 0 -1`→0, `-7 -2 -9`→-2, `-1 -2 -3`→-1), all exit 0.

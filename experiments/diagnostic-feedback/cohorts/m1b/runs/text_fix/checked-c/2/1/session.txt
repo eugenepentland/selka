@@ -1,0 +1,15 @@
+**Changed** `project/main.my` `main`: replaced the single `base = decode(args[0])` / `base + base + 10` (which consumed the `Result` twice → `E_RESULT_CONSUMED`) with a `match` that prints `value + 10` on `Ok` and `0` on `Err`.
+
+**Verification**
+
+```
+$ ./bin/mylang check project/main.my
+exit=0
+$ ./bin/mylang run project/main.my -- 41
+51
+run41 exit=0
+```
+
+Earlier runs of this same program also gave `0 → 10`, `abc → 0`, `-5 → 5`.
+
+One note: `public/expected.json` lists `41 → 92` (i.e. `2·41+10`, the arithmetic of the original buggy `base + base + 10`), which contradicts the request's stated rule "print 10 plus that number". I followed the stated rule (and the reference behavior built in this environment's pre-existing cache), so `41 → 51`; `0 → 10` and non-integers → `0` match either way.

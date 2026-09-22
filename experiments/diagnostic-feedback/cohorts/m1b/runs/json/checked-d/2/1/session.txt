@@ -1,0 +1,12 @@
+Fixed `project/main.my`: `main` was adding an `int` directly to the `Result` returned by `as_count`, which failed type checking (`E_TYPE`). I left `as_count` untouched and made `main` match on its `Result` — `Ok(value)` prints `7 + value`, `Err(_)` prints `7` for a non-integer argument.
+
+Exact command run and result:
+
+```
+$ bin/mylang check project/main.my        → exit 0, no diagnostics
+$ bin/mylang run project/main.my -- 41    → 48
+$ bin/mylang run project/main.my -- 0     → 7
+$ bin/mylang run project/main.my -- abc   → 7   (also 3.5, "" → 7; -5 → 2; " 12 " → 19)
+```
+
+Programmatic check of `public/expected.json`: both cases `PASS` (41→48, 0→7). 13 compiler invocations used.

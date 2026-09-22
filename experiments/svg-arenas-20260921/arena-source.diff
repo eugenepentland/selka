@@ -1,0 +1,22 @@
+diff -ru .tmp/svg-arenas-20260921/guest-gc/main.my .tmp/svg-arenas-20260921/guest-arena/main.my
+--- .tmp/svg-arenas-20260921/guest-gc/main.my	2026-09-21 09:13:22.576754499 +0000
++++ .tmp/svg-arenas-20260921/guest-arena/main.my	2026-09-21 09:13:22.601320628 +0000
+@@ -5,10 +5,11 @@
+ import svg
+ 
+ def main(host: Host) -> Result[None, int]:
+-    inputs = schematic_inputs.load(host)
+-    circuit = sexpr.parse(host, inputs.circuit)?
+-    pinout = sexpr.parse(host, inputs.pinout)?
+-    interface = sexpr.parse(host, inputs.interface)?
+-    drawing = schematic.build(host, circuit, pinout, interface)?
+-    svg.render(host, drawing)
+-    return Ok(None)
++    with arena():
++        inputs = schematic_inputs.load(host)
++        circuit = sexpr.parse(host, inputs.circuit)?
++        pinout = sexpr.parse(host, inputs.pinout)?
++        interface = sexpr.parse(host, inputs.interface)?
++        drawing = schematic.build(host, circuit, pinout, interface)?
++        svg.render(host, drawing)
++        return Ok(None)

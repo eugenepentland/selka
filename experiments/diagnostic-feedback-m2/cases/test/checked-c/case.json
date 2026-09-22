@@ -1,0 +1,13 @@
+{
+  "id": "checked-c",
+  "split": "test",
+  "family": "checked-result",
+  "code": "E_RESULT_CONSUMED",
+  "observed_codes": [
+    "E_RESULT_CONSUMED"
+  ],
+  "version": 1,
+  "public_inputs": 2,
+  "hidden_inputs": 4,
+  "structural": ""
+}

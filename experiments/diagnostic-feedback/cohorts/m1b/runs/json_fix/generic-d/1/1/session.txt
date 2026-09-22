@@ -1,0 +1,17 @@
+Done.
+
+**What I changed:** both functions in `project/main.my` had an invalid generic requirement (`[T: Numeric]`), which the checker rejected with `E_GENERIC_REQUIREMENT` (`Numeric` is not a known requirement; only `copy`, `equality`, `integer`, `codec`, `storable` are). Since the type parameter `T` was unused — both functions operate on `list[int]` and return `int` — I removed the two generic clauses, making them plain `def maximum(values: list[int]) -> int:` and `def maximum_of(values: list[int]) -> int:`. No other logic changed.
+
+**Exact commands and results:**
+
+```
+$ ./bin/mylang check project/main.my
+(no output — clean)
+
+$ ./bin/mylang run project/main.my -- 1 3 2
+3
+$ ./bin/mylang run project/main.my -- 5 5 5
+5
+```
+
+I also verified negatives, ties, a leading-zero case, and large mixed-sign values (`-1 -5 -3` → `-1`, `0 -1 -2` → `0`, `7 7 1` → `7`, `-2 -2 -9` → `-2`, `1000000 -1000000 999999` → `1000000`) — all print the largest argument.

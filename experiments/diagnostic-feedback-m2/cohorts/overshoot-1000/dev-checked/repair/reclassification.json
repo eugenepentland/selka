@@ -1,0 +1,33 @@
+{
+  "schema": "m2-stop-reclassification-v1",
+  "record": "experiments/diagnostic-feedback-m2/cohorts/overshoot-1000/dev-checked/repair/record.json",
+  "record_sha256": "450fabccdf01532312c8012a716a4faa36b5a4f74bfac50d6a21f108f6ad5914",
+  "record_runner_sha256": "52018fe9c5197cecf67332bdf159bc560d55a15af4659236772886665aa4c955",
+  "reclassified_by": "5548c55541fce4c58d724872d0eb003fd269d330fe17589367087abb2c4f2ba1",
+  "reclassified_utc": "2026-09-19T21:25:26.006008+00:00",
+  "candidates": [
+    {
+      "label": "repair-1",
+      "requested": true,
+      "exit": 0,
+      "exit_signal": "",
+      "kill_signal_sent": "SIGTERM",
+      "reaped_after_request_seconds": 0.234,
+      "latency_source": "upper bound: finished_utc - refusal observed_utc",
+      "late_calls_after_stop": 0,
+      "stop": "graceful-after-request",
+      "why": "SIGTERM was sent and the process was gone within 0.234s (upper bound: finished_utc - refusal observed_utc) with no call charged after the refusal",
+      "ended_by_overshoot": true,
+      "overshoot": 131,
+      "spent": 1131,
+      "calls": 7,
+      "late_call_keys": [],
+      "unflagged_after_refusal": 0,
+      "recorded_killed_by_harness": false,
+      "recorded_stop": null,
+      "recorded_mechanism_failures": [
+        "an overshooting call was charged but the participant was not terminated by the harness"
+      ]
+    }
+  ]
+}

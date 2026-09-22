@@ -1,0 +1,50 @@
+dsh: reasoning:
+Let me run the checker to see the errors. First invocation.
+dsh: reasoning:
+The error is `E_GENERIC_REQUIREMENT` — `Ordered` is not a valid requirement. Also, the function is generic `[T: Ordered]` but uses `list[int]` — the type parameter T isn't used meaningfully; the function is effectively concrete for `list[int]`. The simplest fix required: remove the unneeded generic parameter, since it's not used. Let's check: `largest[T: Ordered](values: list[int]) -> int` — T is unused entirely. So remove `[T: Ordered]`.
+
+But wait — maybe the valid requirement names include `integer`. Let me check the docs to be safe. The error says "expected copy, equality, integer, codec, storable, or a declared constraint". Since the request says "Change only what the request requires", removing the unused generic parameter is the minimal fix.
+
+Let me make the change and then run check. Also, there could be a further issue: `main(args: list[str], out: Stream)` — does `main` with args and out get invoked properly? Let me check docs. Note that `args` may not include the program name, or may. Let me test after fixing.
+
+Also `number(text)` uses `match int(text)` — need to check that `int()` returns an Option. Let me first fix and check.
+dsh: reasoning:
+No docs here. The error message lists valid requirements: `copy, equality, integer, codec, storable, or a declared constraint`. But T isn't used anywhere in the signature or body, so the generic parameter is superfluous. The minimal fix is to remove `[T: Ordered]`.
+
+Actually wait — maybe the intent was `def largest[T: integer](values: list[T]) -> T:` but the body uses list[int] and returns int, and main passes list[int]. The request says "Change only what the request requires" — remove the stray generic parameter.
+
+Let me apply the edit.
+dsh: reasoning:
+Check passes. Now run the two example cases.
+
+Note: `main(args: list[str], out: Stream)` — args likely include the program name at index 0, or not. Let's test with the expected args.
+
+Command: `bin/mylang run project/main.my -- 1 3 2`. Let's see what output. Note args[0] might be the program path. Let's run.
+dsh: reasoning:
+Both examples pass. But the requirement says "The same behavior is required for every input, not only the examples in public/."
+
+Let's think about edge cases:
+1. Negative numbers: `-5 -1 -3` → largest -1. The `number` function handles `int(text)`. Does `int("-5")` work? Presumably yes.
+2. Missing arguments: args fewer than 3 would be an out-of-bounds runtime trap, but the task says "three integers given as arguments", so presumably always 3.
+3. Invalid text: returns 0. Suppose args are "abc", "-1", "-2" → then values [0, -1, -2] → largest 0. That's the designed behavior of `number` returning 0 for invalid.
+4. Do `args` include the program name? Let's check: with `-- 1 3 2`, output was 3, meaning args[0..2] = "1","3","2". So no program name. Good.
+5. Large values: int is fixed width — probably 64-bit. Fine.
+6. Duplicates and ordering — handled.
+
+Let's verify a few edge cases: negatives, unordered, invalid inputs, extra arguments, zeros.
+
+One concern: `int(text)` — does it accept leading `+`? Not relevant really. Let me test negative values since `-- -5 -1 -3` may be parsed by the CLI arg parser as options. Let's use `--` separator which we already do. Let's test.
+
+Also test huge values maybe. Let's run a few.
+
+Actually let's also double-check the checker requirement — maybe the checker (`mylang check`) is what "checker" refers to, and it passes.
+
+Let me run edge cases.
+dsh: reasoning:
+All edge cases behave correctly — largest of the three values, with invalid text treated as 0 (the existing `number` behavior, unchanged).
+
+Let me verify the final file content and confirm the check one more time with the exact command for the final report. Actually I already have check exit 0 and runs. Let me read the final file to confirm.
+
+Compiler invocations used: check (1), check (2), run x2 (4), run x8 (12). Total 12 invocations, under 20. Good.
+
+Let me read the final file.

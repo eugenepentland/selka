@@ -1,0 +1,12 @@
+Fixed: `area` was missing its `square` branch, so the match was non-exhaustive and didn't compile. I added:
+
+```python
+case Shape.square(side):
+    return side * side
+```
+
+(4 lines added, nothing else changed.)
+
+Command: `bin/mylang check project/main.my && bin/mylang run project/main.my -- circle 2 && bin/mylang run project/main.my -- square 3`
+
+Result: check passed silently; outputs `12`, `9` — matching `public/expected.json`. I also verified additional inputs: `square 0` → `0`, `circle 5` → `75`.

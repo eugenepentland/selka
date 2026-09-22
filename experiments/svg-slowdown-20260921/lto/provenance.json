@@ -1,0 +1,144 @@
+{
+  "schema": "mylang-full-svg-lto-diagnosis-v1",
+  "date": "2026-09-21",
+  "mylang_head": "b8f6ec3f1178f12971e7dcb1d2255ab8c055b024",
+  "toolchain": {
+    "zig_path": "/home/epentland/.local/bin/zig",
+    "zig_version": "0.17.0-dev.1683+5ceec001b"
+  },
+  "baseline_measurements_ms": {
+    "o3": 17.567368,
+    "full_lto": 34.592855
+  },
+  "binaries": {
+    "o3": {
+      "path": ".tmp/full-svg-benchmark-20260921/mylang-o3",
+      "bytes": 1776560,
+      "sha256": "d9eeddfadfaad1509ef828a32afb7fcac9fdbd4a277cc8c670b5324bfb7e54b8"
+    },
+    "full-lto": {
+      "path": ".tmp/full-svg-benchmark-20260921/mylang-o3-lto",
+      "bytes": 872440,
+      "sha256": "84c590c3d7169642a4782d36ca4ec44219d664c461f658089c6b48ebf3c8e077"
+    },
+    "guest-lto-runtime-native": {
+      "path": ".tmp/svg-slowdown-20260921/lto/guest-lto-runtime-native",
+      "bytes": 1766312,
+      "sha256": "9dcef8a1a41223ec45a3172c9ae610d65619bb1211757450af011f36a71b81e9"
+    },
+    "guest-native-runtime-lto": {
+      "path": ".tmp/svg-slowdown-20260921/lto/guest-native-runtime-lto",
+      "bytes": 892408,
+      "sha256": "aa9196f764a507dbdd3cd8457e3bab36f0e5819db91d980912fdd0aed9525aed"
+    },
+    "lto-guest-noinline": {
+      "path": ".tmp/svg-slowdown-20260921/lto/lto-guest-noinline",
+      "bytes": 872056,
+      "sha256": "b342481b1690587fde88cbf8a10c0583c89dfbe85722a98b0c7e48c819e08117"
+    },
+    "lto-partpin-avx2": {
+      "path": ".tmp/svg-slowdown-20260921/lto/lto-partpin-avx2",
+      "bytes": 872296,
+      "sha256": "723f0e6c5c48f179f9a0755c212eac3b978f19a89fbed01ec8e3ff35d178c7c3"
+    },
+    "lto-guest-avx2": {
+      "path": ".tmp/svg-slowdown-20260921/lto/lto-guest-avx2",
+      "bytes": 871704,
+      "sha256": "1e21e79554af5fddf40750811389030a0bc45df4090d2f5cd2c89f0cd3a6abcd"
+    }
+  },
+  "adapter_probes": {
+    "adapter-noinline": {
+      "path": "experiments/svg-slowdown-20260921/lto/adapter-noinline",
+      "files": 19,
+      "bytes": 228078,
+      "sha256": "3d499996e05945e1494487c8164e4c65979027ee36ebf4965d84b558b08cf92b"
+    },
+    "adapter-lto-native-cpu": {
+      "path": "experiments/svg-slowdown-20260921/lto/adapter-lto-native-cpu",
+      "files": 19,
+      "bytes": 228079,
+      "sha256": "f4b00afb32ffbe69486613277d8102ce9ceb955542d12c445cb7139588498bee"
+    },
+    "adapter-avx2-attrs": {
+      "path": "experiments/svg-slowdown-20260921/lto/adapter-avx2-attrs",
+      "files": 19,
+      "bytes": 228178,
+      "sha256": "f34127e114c6fb809cb1c82a71331d66cf54263dd5fff17d782fd6486fdac925"
+    },
+    "adapter-partpin-avx2": {
+      "path": "experiments/svg-slowdown-20260921/lto/adapter-partpin-avx2",
+      "files": 19,
+      "bytes": 228361,
+      "sha256": "196ad3a3b0b56910222ef9d1ae175690a2688dcb3dbad210dfb99d8d47fc3a54"
+    }
+  },
+  "scripts": {
+    "analyze.py": {
+      "path": "experiments/svg-slowdown-20260921/lto/analyze.py",
+      "bytes": 1610,
+      "sha256": "c9f61170451e0d41fef0c660819a2590c3695aa2a501eebc6a1a88d71a0dc7b9"
+    },
+    "build_hybrids.py": {
+      "path": "experiments/svg-slowdown-20260921/lto/build_hybrids.py",
+      "bytes": 1302,
+      "sha256": "b5a9085d39c1ae9b06764c24d23ff481462367bca107c3a90fda994b1bcfa269"
+    }
+  },
+  "correctness": {
+    "expected_fixture_svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+    "all_candidate_fixture_outputs_equal": true
+  },
+  "static_summary": {
+    "o3": {
+      "text_bytes": 324694,
+      "rodata_bytes": 14472,
+      "partpin_bytes": 653,
+      "vex_instructions": 2076,
+      "partpin_rep_movsq": 0,
+      "partpin_vmov": 27
+    },
+    "full_lto": {
+      "text_bytes": 330150,
+      "rodata_bytes": 334536,
+      "partpin_bytes": 752,
+      "vex_instructions": 233,
+      "partpin_rep_movsq": 2,
+      "partpin_vmov": 0
+    },
+    "lto_partpin_avx2": {
+      "text_bytes": 330006,
+      "partpin_bytes": 602,
+      "vex_instructions": 269,
+      "partpin_rep_movsq": 0,
+      "partpin_vmov": 29
+    },
+    "lto_guest_avx2": {
+      "text_bytes": 327510,
+      "partpin_bytes": 602,
+      "vex_instructions": 1981,
+      "partpin_rep_movsq": 0,
+      "partpin_vmov": 29
+    }
+  },
+  "notes": [
+    "GNU size text includes .rodata; the apparent 357383 to 674154 text growth is not executable code growth. ELF .text grows only 1.7%.",
+    "Final-link -march=native and adapter compile-command -march=native probes did not alter existing textual-IR function target attributes or partPin lowering.",
+    "Probe attrs are diagnostic, host-specific. Production should propagate the selected target CPU/features and include them in cache identity."
+  ],
+  "final_randomized_measurements": {
+    "path": "experiments/svg-slowdown-20260921/measurements.json",
+    "sha256": "e5b803ac8c4162803e3f9c7015cca3228b76f5fd5c1a4fdec410b9c48ed00130",
+    "rounds": 31,
+    "median_ms": {
+      "o3": 17.492,
+      "full_lto": 34.47,
+      "bounded": 42.764,
+      "guest_lto_runtime_native": 35.206,
+      "native_guest_runtime_lto": 16.182,
+      "lto_guest_noinline": 36.259,
+      "lto_guest_avx2": 16.01,
+      "lto_partpin_avx2": 17.367
+    }
+  }
+}

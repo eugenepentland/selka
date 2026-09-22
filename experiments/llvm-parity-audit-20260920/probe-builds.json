@@ -1,0 +1,47 @@
+{
+  "inputs": {
+    ".tmp/bench/armsset/maxperf/builds.json": "b33b4a1247b8dcdaebbac59840e2ad1b878f29d889555992c7a871d04f976150",
+    ".tmp/bench/armsset/manifest.json": "402b8176bf2c397ff6137c20206f14c24432bd17efcc8f47a71984a9f8a7f5b5",
+    "/home/epentland/ai/canopy/mylang/.tmp/bench/armsset/maxperf/whole-o3/000.ll": "139aae02f44fbd5abba532e7102db607b5b43c73f4ca7a3e75dde8d87a988fd5",
+    "/home/epentland/ai/canopy/mylang/.tmp/bench/armsset/maxperf/whole-o3/runtime.a": "fde58fcdaeb7f0a7c39fbbd6090354ffb7cd6a228b939c070a9c4b8bcec127e9",
+    "/home/epentland/ai/canopy/mylang/.tmp/bench/armsset/maxperf/whole-o3/unchecked_runtime.o": "5a0c1a55e6e0e701e77265a8b72cd021085bd29e3f777225ae958824c6e05fc1",
+    "/home/epentland/ai/canopy/mylang/experiments/llvm-parity-audit-20260920/width_probe.c": "f4957c8f19c15a0de9338ac6e04db443ba45262e0f313142cf45d03926073f51",
+    "/home/epentland/ai/canopy/mylang/experiments/llvm-parity-audit-20260920/build_probes.py": "6c3872b8846e41fc85c0665fa0aa899b91c3d5487cbe8e7a5d71df88c1716110",
+    "/home/epentland/ai/canopy/mylang/.tmp/bench/armsset/cache/objects/4076e5a5d3179d63adb8aa6647ff27015f156902c29acb0dabe15a08ea869f75/29e2c2ce64ec22618eb20f82e7a6e3c769a1b72d6a9020c894ebfc0a15f485e3.o": "5402f4b165f519e50f085bcc6c2c451a14f1a06559572b4dbd078d5452d881ce",
+    "/home/epentland/ai/canopy/mylang/.tmp/bench/armsset/cache/objects/4076e5a5d3179d63adb8aa6647ff27015f156902c29acb0dabe15a08ea869f75/c134f8e6307133b89a520b061fbfdd5a52c41dc7b6d22e0c89c3e146e9bad674.o": "964ff5f9d7fb1471f80872bfee6088827777e1d79ad46c2402d587d88c05e9fa",
+    "/home/epentland/ai/canopy/mylang/zig-out/lib/mylang-runtime/972215e34446fec419c9728556b9929d7a663348af356a8854e539ffb8ec68e0.o": "9276557f176de20ff6ca03589d6ab8c70a79001d73c7c1e0dfc323b527a49a50"
+  },
+  "original": {
+    "path": "/home/epentland/ai/canopy/mylang/.tmp/bench/armsset/maxperf/whole-o3.bin",
+    "sha256": "efdb3c3267a6ad2c52c720c0efec54ffdfac06ec4ecfbf1ad1416acf11b0fce2"
+  },
+  "preserved_symbols": [
+    "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5"
+  ],
+  "arms": {
+    "rebuilt": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-parity-audit-20260920/probes/rebuilt.bin",
+      "sha256": "80d9a8b3cc79fc4e5bf6052ff3b9a721d9e80b40333a0ff2f4a5f0a298c03772",
+      "ir_sha256": "139aae02f44fbd5abba532e7102db607b5b43c73f4ca7a3e75dde8d87a988fd5",
+      "internalized_functions": 0
+    },
+    "internal": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-parity-audit-20260920/probes/internal.bin",
+      "sha256": "7c1dd3afba0054409ab0b9f88d1d8acf7354c54c98949b4bb2f446b329673b25",
+      "ir_sha256": "5ec197cb91da08b8fc1a4492b087349f414578805693c77962c06bbf09275ab8",
+      "internalized_functions": 100
+    },
+    "width": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-parity-audit-20260920/probes/width.bin",
+      "sha256": "7cf18d2589f093cf07d1fb99c758114214def95e95608c6d706663e776964c48",
+      "ir_sha256": "7f2fed355ee401c08ffb2249c14283cace8de37f3083e035914acc56682b4540",
+      "internalized_functions": 0
+    },
+    "combined": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-parity-audit-20260920/probes/combined.bin",
+      "sha256": "86ca378a7acc1946943285da5a420efa0d010827f6e9a4ee97f86ce0f2c33bfa",
+      "ir_sha256": "27f0ce1f5482e74dccb5d194c44b1ba5a05e78526cde99e609d7a1c37d774efd",
+      "internalized_functions": 97
+    }
+  }
+}

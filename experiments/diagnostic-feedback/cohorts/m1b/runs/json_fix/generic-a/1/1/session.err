@@ -1,0 +1,62 @@
+dsh: reasoning:
+Let me read PROMPT.md and request.md, and run the checker.
+dsh: reasoning:
+The error: `Ordered` is not a known requirement. The language supports `copy`, `equality`, `integer`, `codec`, `storable`, or a declared constraint.
+
+The task says: `largest` returns the largest of three integers given as arguments. The generic parameter T is unused effectively — the function takes `list[int]`. The simplest fix: remove the generic parameter entirely, or replace `Ordered` with `integer`.
+
+"Change only what the request requires." The minimal fix that keeps the program's structure: change `[T: Ordered]` to `[T: integer]`. But T is not used in the signature at all; `integer` requirement presumably works. Let's check whether `integer` requirement allows `>` comparison. Let me look at the docs for constraints. But constraints say work only inside this directory — so I can't read the mylang docs outside. I can only use the compiler.
+
+Let me think about what's minimal. Options:
+1. Remove the generics: `def largest(values: list[int]) -> int:` and `def largest_of(values: list[int]) -> int:`.
+2. Replace `Ordered` with `integer`.
+
+The function is not actually generic — it takes `list[int]`. The cleanest minimal fix is to remove the unused type parameter. But maybe the checker requires it? Let's just try.
+
+Also, `int(text)` returning Option — need to check that works. Let's test after fixing generics.
+
+Let me be careful with compiler invocation budget (20). I've used 1. Let's edit and check.
+
+Actually, I'll write the fix and run check + run in one go, but each `bin/mylang` invocation counts. Let me plan: run check once after edit, then run the two examples. `mylang run` builds and runs — that's an invocation too.
+
+First fix: remove `[T: Ordered]` from both functions. Actually, maybe better to keep generics with `integer` requirement to preserve original structure? The task says "Change only what the request requires" — the request is to make it compile and print the largest value. The generic parameter is unused; simplest to remove. But maybe the intended fix is `[T: integer]`. Hmm.
+
+Either works functionally. I'd go with removing the unused type parameter since it's not needed at all — but "change only what the request requires" suggests minimal changes. Changing `Ordered` → `integer` is the most minimal diff. Let me check if `integer` requirement supports `>` comparisons. Presumably yes, integer requirement gives arithmetic/comparison ops.
+
+Let me try `[T: integer]` first. Also need to check `args[0]` — args is `list[str]` presumably excluding program name? Let's see: main(args: list[str], out: Stream). In mylang, the args may include program name or not. Given expected behavior with 3 arguments ("1","3","2") → "3", indices 0,1,2. If args included program name, args[0] would be program name and int() would return 0 → wrong. So likely args are the arguments only. We'll verify by running.
+
+Let me edit with `[T: integer]`.
+dsh: reasoning:
+I read via cat, not the read tool. Need to use read tool.
+dsh: reasoning:
+Now the generic parameter T is unused in the signature, so it can't be inferred. The natural fix: remove the unused generic parameter entirely from both functions. That's clean and minimal in spirit — the functions operate on `list[int]`.
+
+Let me remove `[T: integer]` from both.
+dsh: reasoning:
+Check passes. Now run the examples. Let me run both example cases.
+
+Also I should verify behavior for arbitrary input: the largest of three integers, including negatives. The `number` function returns 0 for unparseable input — but all arguments should be integers. For negative values, `int(text)` should parse. Let's test a few cases.
+
+Let me run the two expected examples first.
+dsh: reasoning:
+Both examples pass. Now test extra cases for general correctness: negatives, ordering variations, equal values, larger magnitudes.
+
+Note: each `bin/mylang run` is a compiler invocation. Budget: 20. Used so far: 1 (initial check) + 1 (failing check) + 1 (check pass) + 2 runs = 5. So I have room. Let me test a batch of cases — but each run counts. I could better write a quick shell loop — each invocation still counts as a compiler invocation. The rule "At most 20 compiler invocations" — I should be economical. Let me do one run per case, maybe 5 more cases: negatives (-5 -1 -3 → -1), (10 2 7 → 10), (2 7 10 → 10), (0 -1 1 → 1), large numbers. Actually let me be smart: use `mylang build` once to a binary, then run the binary many times without compiler invocations. That's 1 invocation instead of many. Let's do that.
+
+`bin/mylang build project/main.my -o /tmp/largest` — but wait, constraint: work only inside this directory; don't write outside. /tmp may be outside the directory. Write output inside working directory, e.g. `project/largest` or a `.tmp` file. Let me build to `./largest_bin` in cwd. Hmm, "Change only what the request requires" — adding a binary artifact may be fine but I should clean it up after.
+
+Actually also there's a checker for checking against expected.json presumably — some harness. The grader will run its own checks. Simpler: build once, run many cases, then remove the artifact.
+
+Let me check `bin/mylang build --help` maybe. Actually that could itself be a compiler invocation? `--help` probably not counted but let's not. Just try: `bin/mylang build project/main.my -o project/largest`. Wait, writing into project/ dir adds a file; I'll remove it after. Or use `.mylang-cache` dir which already exists. Let me build to `/home/.../1/1/largest_tmp` in the workspace root. That's inside this directory. Then run cases and delete.
+
+Let me do that.
+dsh: reasoning:
+All correct. Now clean up the temporary binary. Also there's `.mylang-cache` in project/ — that's pre-existing, and the build may have added cache entries; that's fine (compiler cache).
+
+Remove ./largest_tmp.
+
+Then final verification: run the exact commands mentioned. Final message should include exact command and result. Let me do a final `bin/mylang check project/main.my` and maybe the two example runs after cleanup. Actually I already have results. But the final answer wants "the exact command you ran with its result". I'll report `bin/mylang check project/main.my` (exit 0) and the example runs.
+
+Let me clean up and do one final confirmation run pairing check + examples, since cleanup doesn't affect source. Actually I've already confirmed both. But to be safe and honest, run the final check command once more after cleanup (1 invocation; total 7). Fine.
+
+Let me remove binary and show final file.

@@ -1,0 +1,6 @@
+{
+  "id": "output-capability",
+  "family": "E_OUTPUT_CAPABILITY",
+  "split": "dev",
+  "expect": "hi"
+}

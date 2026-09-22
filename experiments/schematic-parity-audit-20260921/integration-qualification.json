@@ -1,0 +1,46 @@
+{
+  "date": "2026-09-21",
+  "compiler_sha256": "97d033bfa8c8c75c85a75cce01094e63682b69351f80bbd97f1ada6279546f39",
+  "commands": [
+    {
+      "command": "zig build test-qbe-build test-schematic test-byte-io",
+      "exit_code": 0,
+      "tests": {
+        "build": 62,
+        "host_configuration": 2,
+        "schematic": 13,
+        "byte_io": 11
+      },
+      "c_host_bridge": "passed"
+    },
+    {
+      "command": "../guardian-zig/zig-out/bin/guardian-check all . --full --quiet",
+      "exit_code": 0,
+      "checks_passed": 88
+    },
+    {
+      "command": "python3 experiments/llvm-backend/test_adapter.py",
+      "exit_code": 0,
+      "tests_passed": 19
+    },
+    {
+      "command": "python3 tests/schematic_svg.py --runner .tmp/schematic-implementation-20260921/llvm-schematic-runner",
+      "exit_code": 0,
+      "backend": "llvm O3 full LTO",
+      "rejection_cases": 23,
+      "netlist_geometry": "30 components, 95 pads, 4 NC, 9 ports, all 34 nets match"
+    },
+    {
+      "command": "python3 tests/schematic_layout.py --runner .tmp/schematic-implementation-20260921/llvm-schematic-runner",
+      "exit_code": 0,
+      "backend": "llvm O3 full LTO",
+      "checks": "independent geometry, changed-net relocation, rejected route mutant"
+    },
+    {
+      "command": "zig build -Doptimize=ReleaseFast",
+      "exit_code": 0,
+      "guardian_checks_passed": 88
+    }
+  ],
+  "gc_stress_limitation": "The broader sexpr printer suite has preexisting crashes. See implementation-range-qualification.md for retained compiler baseline."
+}

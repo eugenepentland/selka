@@ -1,0 +1,208 @@
+module sexpr.ast
+
+# The shared vocabulary of the S-expression reader, ported from
+# eda/src/sexpr/ast.zig: source spans, the recursive syntax tree, and the
+# numeric-suffix table.
+#
+# The table is here because this is the one module sexpr.tokenizer and
+# sexpr.printer both import. `suffixes()` is the single home of every spelling
+# the reader accepts after a numeric prefix, the factor it multiplies by, and
+# the way it may combine; `canonical_length()` is the row every `measure` is
+# normalised to and printed with, so the lexer's `mm` and the printer's `mm`
+# are the same datum and cannot drift.
+#
+# Every node case carries the source span of its first token, and `decimal`
+# carries the source spelling of a suffixed literal (`220k`, `100nF`, `3.3V`,
+# `10%`). That mirrors Zig's `Node { tag, span, literal }`.
+
+public record Span:
+    line: int
+    col: int
+    offset: int
+
+
+public def zero_span() -> Span:
+    return Span(line=1, col=1, offset=0)
+
+
+# ── The numeric-suffix table ─────────────────────────────────────────
+
+# How a suffix combines with what the source writes around it.
+#   scale      - k M G u n p: a multiplier, alone or before a unit letter
+#   unit_scale - m: a multiplier only when a unit letter follows (`10mA`)
+#   unit       - V A F H R: a unit letter, no multiplier of its own
+#   length     - mm mil: a dimension, normalised to the canonical length unit
+#   percent    - %: no multiplier
+public enum SuffixRole:
+    scale,
+    unit_scale,
+    unit,
+    length,
+    percent
+
+
+# One row of the table: the spelling the source writes, the factor applied to
+# the numeric prefix before it, and how it may combine.
+public record Suffix:
+    spelling: str
+    factor: float
+    role: SuffixRole
+
+
+# The length unit a `measure` is normalised to and printed with. Its factor is
+# 1 by definition: every other length unit's factor is measured in it.
+public def canonical_length() -> Suffix:
+    return Suffix(spelling="mm", factor=1.0, role=SuffixRole.length)
+
+
+# Every suffix the reader accepts after a numeric prefix: the SI scales, the
+# unit letters that may follow one or stand alone, the dimension units and the
+# percent sign. A scale letter followed by a unit letter (`mV`, `kA`) is read
+# as the pair, which is what keeps bare `3m` and `mm`/`mil` their own meanings.
+public def suffixes() -> list[Suffix]:
+    return [
+        Suffix(spelling="k", factor=1e3, role=SuffixRole.scale),
+        Suffix(spelling="M", factor=1e6, role=SuffixRole.scale),
+        Suffix(spelling="G", factor=1e9, role=SuffixRole.scale),
+        Suffix(spelling="m", factor=1e-3, role=SuffixRole.unit_scale),
+        Suffix(spelling="u", factor=1e-6, role=SuffixRole.scale),
+        Suffix(spelling="n", factor=1e-9, role=SuffixRole.scale),
+        Suffix(spelling="p", factor=1e-12, role=SuffixRole.scale),
+        Suffix(spelling="V", factor=1.0, role=SuffixRole.unit),
+        Suffix(spelling="A", factor=1.0, role=SuffixRole.unit),
+        Suffix(spelling="F", factor=1.0, role=SuffixRole.unit),
+        Suffix(spelling="H", factor=1.0, role=SuffixRole.unit),
+        Suffix(spelling="R", factor=1.0, role=SuffixRole.unit),
+        canonical_length(),
+        Suffix(spelling="mil", factor=0.0254, role=SuffixRole.length),
+        Suffix(spelling="%", factor=1.0, role=SuffixRole.percent),
+    ]
+
+
+# One parsed S-expression. A form reaches itself only through a list payload,
+# so the union closes in finite space and needs no class indirection.
+#   form    - a parenthesised form, in source order
+#   atom    - a bare symbol
+#   string  - a quoted string (raw content, escapes intact)
+#   integer - a plain integer literal
+#   decimal - a float literal, with the source spelling when one was written
+#   measure - a `mm`/`mil` dimension, normalised to `canonical_length()`
+public union Node:
+    form(items: list[Node], span: Span),
+    atom(text: str, span: Span),
+    string(text: str, span: Span),
+    integer(value: int, span: Span),
+    decimal(value: float, span: Span, literal: Option[str] = None),
+    measure(value: float, span: Span)
+
+
+public def is_form(node: Node, name: str) -> bool:
+    match node:
+        case Node.form(entries, _):
+            if len(entries) == 0:
+                return False
+            return is_atom_named(entries[0], name)
+        case _:
+            return False
+
+
+def is_atom_named(node: Node, name: str) -> bool:
+    match node:
+        case Node.atom(text, _):
+            return text == name
+        case _:
+            return False
+
+
+public def as_items(node: Node) -> Option[list[Node]]:
+    match node:
+        case Node.form(entries, _):
+            return Some(entries)
+        case _:
+            return None
+
+
+public def as_atom(node: Node) -> Option[str]:
+    match node:
+        case Node.atom(text, _):
+            return Some(text)
+        case _:
+            return None
+
+
+public def as_string(node: Node) -> Option[str]:
+    match node:
+        case Node.string(text, _):
+            return Some(text)
+        case _:
+            return None
+
+
+# The literal text of a string or atom node; None for forms and numbers.
+public def as_text(node: Node) -> Option[str]:
+    match node:
+        case Node.string(text, _):
+            return Some(text)
+        case Node.atom(text, _):
+            return Some(text)
+        case _:
+            return None
+
+
+# The numeric value of an integer, decimal or measure node.
+public def as_number(node: Node) -> Option[float]:
+    match node:
+        case Node.integer(value, _):
+            return Some(float(value))
+        case Node.decimal(value, _, _):
+            return Some(value)
+        case Node.measure(value, _):
+            return Some(value)
+        case _:
+            return None
+
+
+# The source spelling of a suffixed literal, else a string's or atom's text.
+# None for a plain number, a measure or a form. This is the single reader of
+# `literal`, so the precedence cannot drift between callers.
+public def value_text(node: Node) -> Option[str]:
+    match node:
+        case Node.decimal(_, _, literal):
+            match literal:
+                case Some(text):
+                    return Some(text)
+                case None:
+                    return None
+        case Node.string(text, _):
+            return Some(text)
+        case Node.atom(text, _):
+            return Some(text)
+        case _:
+            return None
+
+
+# The source span of a node's first token.
+public def span_of(node: Node) -> Span:
+    match node:
+        case Node.form(_, span):
+            return span
+        case Node.atom(_, span):
+            return span
+        case Node.string(_, span):
+            return span
+        case Node.integer(_, span):
+            return span
+        case Node.decimal(_, span, _):
+            return span
+        case Node.measure(_, span):
+            return span
+
+
+# The children of a form, or an empty list for every other node.
+public def children(node: Node) -> list[Node]:
+    match node:
+        case Node.form(entries, _):
+            return entries
+        case _:
+            empty: list[Node] = []
+            return empty

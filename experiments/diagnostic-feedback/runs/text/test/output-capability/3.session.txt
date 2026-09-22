@@ -1,0 +1,11 @@
+Both the checker and the run pass.
+
+**What I changed:** In `project/main.my`, `banner` used a bare `print(...)`, which the checker rejects with `E_OUTPUT_CAPABILITY` because printing must go through an explicit `Stream` parameter. I added `out: Stream` as the first parameter of `banner` and changed the call to `out.print("==", text)`, passing `out` through from `main` (`banner(out, "ok")`).
+
+**Command and result:**
+```
+$ bin/mylang run project/main.my
+== ok
+[exit 0]
+```
+`bin/mylang check project/main.my` also exits 0.

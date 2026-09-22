@@ -1,0 +1,19 @@
+module main
+
+
+def to_int(raw: str) -> Result[int, str]:
+    match int(raw):
+        case Some(value):
+            return Ok(value)
+        case None:
+            return Err("not a number")
+
+
+def main(args: list[str], out: Stream) -> int:
+    value = to_int(args[0])
+    match value:
+        case Ok(found):
+            out.print(-3 + found)
+        case Err(_):
+            out.print(-1)
+    return 0

@@ -1,0 +1,13 @@
+Done. Both errors were in the helper module `project/stats.my`; `main.my` was left unchanged.
+
+**Changes to `project/stats.my`:**
+1. `module statistics` → `module stats` — the declared module name didn't match the path/import name (`E_MODULE_NAME`).
+2. `def total()` → `public def total()` — the function was private to its module, so `main` couldn't call it (`E_PRIVATE_SYMBOL`).
+
+**Command run and result:**
+```
+$ bin/mylang run project/main.my
+7
+[exit code: 0]
+```
+`bin/mylang check project/main.my` also exits 0.

@@ -1,0 +1,6118 @@
+{
+  "method": "Fresh process through complete SVG file output and shutdown; compilation, preparation and verification excluded. All outputs checked. Randomized interleaved same-CPU runs.",
+  "cpu": 6,
+  "seed": 20260923,
+  "rounds": 31,
+  "warmups": 3,
+  "mylang_memory_limit_bytes": 268435456,
+  "timed_runs": 1023,
+  "arms": {
+    "gc-lto": {
+      "binary": ".tmp/svg-gap-fixes-20260921/gc-lto",
+      "sha256": "17e8697563d750cb8418142fc6aff3744a0c2a9e9474c7d55439ef1b4beebed8",
+      "bounded": false
+    },
+    "arena-lto": {
+      "binary": ".tmp/svg-gap-fixes-20260921/arena-lto",
+      "sha256": "bc0ea2b3f8ddf17a01ad3960a941c991f7a8eec7bc0442ed8824a0c20d69142f",
+      "bounded": false
+    },
+    "gc-lto-bounded": {
+      "binary": ".tmp/svg-gap-fixes-20260921/gc-lto-bounded",
+      "sha256": "0d381b7b50f8ad073d097a93eee2167180b15a90640f72631cd11754ca252690",
+      "bounded": true
+    },
+    "arena-lto-bounded": {
+      "binary": ".tmp/svg-gap-fixes-20260921/arena-lto-bounded",
+      "sha256": "3533d535fe796a781e5cb99b8fda6fa913a0e87aea0c52e86738b010f939dbe2",
+      "bounded": true
+    },
+    "before-gc-lto": {
+      "binary": ".tmp/svg-arenas-20260921/gc-lto",
+      "sha256": "de1733408c0e3a9c69129bb166c122acb0ab572e201dff45c37bdd43a4a23210",
+      "bounded": false
+    },
+    "before-arena-lto": {
+      "binary": ".tmp/svg-arenas-20260921/arena-lto",
+      "sha256": "8cb40e6f5a6627d929c39b360c8f895c4fc66e1e78363f1125f009c07bb61572",
+      "bounded": false
+    },
+    "before-gc-lto-bounded": {
+      "binary": ".tmp/svg-arenas-20260921/gc-lto-bounded",
+      "sha256": "e5bbd804057112c9bd4b7c100b9aab09072e525b7dcc611d0321dc7c794c79c0",
+      "bounded": true
+    },
+    "before-arena-lto-bounded": {
+      "binary": ".tmp/svg-arenas-20260921/arena-lto-bounded",
+      "sha256": "40f2d407f411f30116305f00703b4d0fcf3c8eb8c3d4e915534d766ee1f29b21",
+      "bounded": true
+    },
+    "rust-o3": {
+      "binary": ".tmp/full-svg-benchmark-20260921/rust-o3",
+      "sha256": "57a931f718fd234f54ec8b7775267eff6cac08c628308614d2502d483bccb39d",
+      "native": true
+    },
+    "go-fast": {
+      "binary": ".tmp/full-svg-benchmark-20260921/go-fast",
+      "sha256": "6e786ac6174b1996c0120ff0c51e9a7acb8e6de5e663808056558818583ced90",
+      "native": true
+    },
+    "zig-o3": {
+      "binary": ".tmp/full-svg-benchmark-20260921/zig-o3",
+      "sha256": "0a80f2fa747d033ef979110109a1fbc4155d738d76018c930738847b3f358a63",
+      "native": true
+    }
+  },
+  "qualification": {
+    "gc-lto": {
+      "binary_sha256": "17e8697563d750cb8418142fc6aff3744a0c2a9e9474c7d55439ef1b4beebed8",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "arena-lto": {
+      "binary_sha256": "bc0ea2b3f8ddf17a01ad3960a941c991f7a8eec7bc0442ed8824a0c20d69142f",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "gc-lto-bounded": {
+      "binary_sha256": "0d381b7b50f8ad073d097a93eee2167180b15a90640f72631cd11754ca252690",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "arena-lto-bounded": {
+      "binary_sha256": "3533d535fe796a781e5cb99b8fda6fa913a0e87aea0c52e86738b010f939dbe2",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "before-gc-lto": {
+      "binary_sha256": "de1733408c0e3a9c69129bb166c122acb0ab572e201dff45c37bdd43a4a23210",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "before-arena-lto": {
+      "binary_sha256": "8cb40e6f5a6627d929c39b360c8f895c4fc66e1e78363f1125f009c07bb61572",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "before-gc-lto-bounded": {
+      "binary_sha256": "e5bbd804057112c9bd4b7c100b9aab09072e525b7dcc611d0321dc7c794c79c0",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "before-arena-lto-bounded": {
+      "binary_sha256": "40f2d407f411f30116305f00703b4d0fcf3c8eb8c3d4e915534d766ee1f29b21",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "rust-o3": {
+      "binary_sha256": "57a931f718fd234f54ec8b7775267eff6cac08c628308614d2502d483bccb39d",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": false
+    },
+    "go-fast": {
+      "binary_sha256": "6e786ac6174b1996c0120ff0c51e9a7acb8e6de5e663808056558818583ced90",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": false
+    },
+    "zig-o3": {
+      "binary_sha256": "0a80f2fa747d033ef979110109a1fbc4155d738d76018c930738847b3f358a63",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": false
+    }
+  },
+  "summary": {
+    "fixture": {
+      "median_ms": {
+        "gc-lto": 3.5304,
+        "arena-lto": 3.435534,
+        "gc-lto-bounded": 8.557002,
+        "arena-lto-bounded": 8.884389,
+        "before-gc-lto": 5.506216,
+        "before-arena-lto": 5.572751,
+        "before-gc-lto-bounded": 10.899151,
+        "before-arena-lto-bounded": 10.891545,
+        "rust-o3": 1.707499,
+        "go-fast": 2.214495,
+        "zig-o3": 1.516978
+      },
+      "comparisons": {
+        "gc-lto/before-gc-lto": {
+          "ratio": 0.6411662746248967,
+          "paired_bootstrap_95": [
+            0.6127273906175733,
+            0.6550700811341431
+          ]
+        },
+        "arena-lto/before-arena-lto": {
+          "ratio": 0.6164879787379698,
+          "paired_bootstrap_95": [
+            0.5975163170481865,
+            0.627667108565747
+          ]
+        },
+        "gc-lto-bounded/before-gc-lto-bounded": {
+          "ratio": 0.7851072069741947,
+          "paired_bootstrap_95": [
+            0.7699873713805427,
+            0.804890055701407
+          ]
+        },
+        "arena-lto-bounded/before-arena-lto-bounded": {
+          "ratio": 0.8157142994864365,
+          "paired_bootstrap_95": [
+            0.7998013137713703,
+            0.8291619413125998
+          ]
+        },
+        "gc-lto/rust-o3": {
+          "ratio": 2.067585398293059,
+          "paired_bootstrap_95": [
+            1.9500321241248748,
+            2.1023145012274362
+          ]
+        },
+        "gc-lto/go-fast": {
+          "ratio": 1.594223513713059,
+          "paired_bootstrap_95": [
+            1.5175558155362696,
+            1.6789329827520791
+          ]
+        },
+        "gc-lto/zig-o3": {
+          "ratio": 2.3272585363795653,
+          "paired_bootstrap_95": [
+            2.2104257741034274,
+            2.3718197705058053
+          ]
+        },
+        "arena-lto/rust-o3": {
+          "ratio": 2.0120269470143173,
+          "paired_bootstrap_95": [
+            1.9452860990566254,
+            2.06089954930363
+          ]
+        },
+        "arena-lto/go-fast": {
+          "ratio": 1.551384852980025,
+          "paired_bootstrap_95": [
+            1.501218485320278,
+            1.6603834321357023
+          ]
+        },
+        "arena-lto/zig-o3": {
+          "ratio": 2.26472236248647,
+          "paired_bootstrap_95": [
+            2.1510564522289246,
+            2.3294078252307875
+          ]
+        },
+        "gc-lto-bounded/rust-o3": {
+          "ratio": 5.011424311229465,
+          "paired_bootstrap_95": [
+            4.841989134209446,
+            5.142968330981309
+          ]
+        },
+        "gc-lto-bounded/go-fast": {
+          "ratio": 3.8640872975554252,
+          "paired_bootstrap_95": [
+            3.738764124759951,
+            4.136210227565928
+          ]
+        },
+        "gc-lto-bounded/zig-o3": {
+          "ratio": 5.640821422591495,
+          "paired_bootstrap_95": [
+            5.35324687033932,
+            5.842205018043877
+          ]
+        },
+        "arena-lto-bounded/rust-o3": {
+          "ratio": 5.203159123372839,
+          "paired_bootstrap_95": [
+            5.0240131683469444,
+            5.295574564170523
+          ]
+        },
+        "arena-lto-bounded/go-fast": {
+          "ratio": 4.011925518007492,
+          "paired_bootstrap_95": [
+            3.8708739757072563,
+            4.272673754014727
+          ]
+        },
+        "arena-lto-bounded/zig-o3": {
+          "ratio": 5.8566366816130495,
+          "paired_bootstrap_95": [
+            5.514194500047483,
+            5.970941021892161
+          ]
+        },
+        "arena-lto/gc-lto": {
+          "ratio": 0.9731288239292998,
+          "paired_bootstrap_95": [
+            0.9587976066178066,
+            1.0182691592297743
+          ]
+        },
+        "arena-lto-bounded/gc-lto-bounded": {
+          "ratio": 1.0382595446395828,
+          "paired_bootstrap_95": [
+            1.0119110005478558,
+            1.0532087794219318
+          ]
+        }
+      }
+    },
+    "changed-net": {
+      "median_ms": {
+        "gc-lto": 3.436266,
+        "arena-lto": 3.359901,
+        "gc-lto-bounded": 8.52894,
+        "arena-lto-bounded": 8.889016,
+        "before-gc-lto": 5.613842,
+        "before-arena-lto": 5.510484,
+        "before-gc-lto-bounded": 10.811421,
+        "before-arena-lto-bounded": 10.964749,
+        "rust-o3": 1.651689,
+        "go-fast": 2.168442,
+        "zig-o3": 1.515926
+      },
+      "comparisons": {
+        "gc-lto/before-gc-lto": {
+          "ratio": 0.6121059338684629,
+          "paired_bootstrap_95": [
+            0.5757929624676484,
+            0.6466225311300907
+          ]
+        },
+        "arena-lto/before-arena-lto": {
+          "ratio": 0.6097288368861973,
+          "paired_bootstrap_95": [
+            0.5881239136986746,
+            0.6211728610012962
+          ]
+        },
+        "gc-lto-bounded/before-gc-lto-bounded": {
+          "ratio": 0.7888824235038114,
+          "paired_bootstrap_95": [
+            0.7759311418479589,
+            0.8152245168847264
+          ]
+        },
+        "arena-lto-bounded/before-arena-lto-bounded": {
+          "ratio": 0.8106903313518623,
+          "paired_bootstrap_95": [
+            0.7899106332328892,
+            0.8308001649368075
+          ]
+        },
+        "gc-lto/rust-o3": {
+          "ratio": 2.080455824310751,
+          "paired_bootstrap_95": [
+            2.00307345941679,
+            2.159397207237845
+          ]
+        },
+        "gc-lto/go-fast": {
+          "ratio": 1.5846704684746005,
+          "paired_bootstrap_95": [
+            1.5183542900439435,
+            1.663114346613836
+          ]
+        },
+        "gc-lto/zig-o3": {
+          "ratio": 2.2667768743329155,
+          "paired_bootstrap_95": [
+            2.1554325428810683,
+            2.3923965168596806
+          ]
+        },
+        "arena-lto/rust-o3": {
+          "ratio": 2.034221333435047,
+          "paired_bootstrap_95": [
+            1.9629894530830347,
+            2.0815445534933437
+          ]
+        },
+        "arena-lto/go-fast": {
+          "ratio": 1.5494539397410674,
+          "paired_bootstrap_95": [
+            1.4879701208099674,
+            1.5985940098404037
+          ]
+        },
+        "arena-lto/zig-o3": {
+          "ratio": 2.2164017240947116,
+          "paired_bootstrap_95": [
+            2.1082770106038318,
+            2.2742471795856494
+          ]
+        },
+        "gc-lto-bounded/rust-o3": {
+          "ratio": 5.1637687240152355,
+          "paired_bootstrap_95": [
+            5.004991103914748,
+            5.302552580470643
+          ]
+        },
+        "gc-lto-bounded/go-fast": {
+          "ratio": 3.9332110335438992,
+          "paired_bootstrap_95": [
+            3.765074912624436,
+            4.089969406312209
+          ]
+        },
+        "gc-lto-bounded/zig-o3": {
+          "ratio": 5.626224499085048,
+          "paired_bootstrap_95": [
+            5.336216429823708,
+            5.865976990480717
+          ]
+        },
+        "arena-lto-bounded/rust-o3": {
+          "ratio": 5.381773445243021,
+          "paired_bootstrap_95": [
+            5.216603790014733,
+            5.568438601609047
+          ]
+        },
+        "arena-lto-bounded/go-fast": {
+          "ratio": 4.099263895460427,
+          "paired_bootstrap_95": [
+            3.9414090070401087,
+            4.252457077122624
+          ]
+        },
+        "arena-lto-bounded/zig-o3": {
+          "ratio": 5.863753243891852,
+          "paired_bootstrap_95": [
+            5.574331262329581,
+            6.06962284412433
+          ]
+        },
+        "arena-lto/gc-lto": {
+          "ratio": 0.9777767495298676,
+          "paired_bootstrap_95": [
+            0.9414812627151509,
+            1.0000815048725284
+          ]
+        },
+        "arena-lto-bounded/gc-lto-bounded": {
+          "ratio": 1.0422181419965435,
+          "paired_bootstrap_95": [
+            1.0196085359860363,
+            1.0646621750750596
+          ]
+        }
+      }
+    },
+    "changed-value": {
+      "median_ms": {
+        "gc-lto": 3.504778,
+        "arena-lto": 3.456381,
+        "gc-lto-bounded": 8.791801,
+        "arena-lto-bounded": 8.891232,
+        "before-gc-lto": 5.563974,
+        "before-arena-lto": 5.556185,
+        "before-gc-lto-bounded": 10.902261,
+        "before-arena-lto-bounded": 10.879903,
+        "rust-o3": 1.715774,
+        "go-fast": 2.145062,
+        "zig-o3": 1.549584
+      },
+      "comparisons": {
+        "gc-lto/before-gc-lto": {
+          "ratio": 0.6299055315499318,
+          "paired_bootstrap_95": [
+            0.610269703506151,
+            0.6486279319055361
+          ]
+        },
+        "arena-lto/before-arena-lto": {
+          "ratio": 0.6220780985514341,
+          "paired_bootstrap_95": [
+            0.6037917009312559,
+            0.6362232641581058
+          ]
+        },
+        "gc-lto-bounded/before-gc-lto-bounded": {
+          "ratio": 0.8064199710500418,
+          "paired_bootstrap_95": [
+            0.786442346621039,
+            0.8224625439015223
+          ]
+        },
+        "arena-lto-bounded/before-arena-lto-bounded": {
+          "ratio": 0.8172161093715633,
+          "paired_bootstrap_95": [
+            0.803471332816685,
+            0.8317982871272263
+          ]
+        },
+        "gc-lto/rust-o3": {
+          "ratio": 2.042680446259239,
+          "paired_bootstrap_95": [
+            1.9768419752045743,
+            2.1291195970713686
+          ]
+        },
+        "gc-lto/go-fast": {
+          "ratio": 1.6338819111055998,
+          "paired_bootstrap_95": [
+            1.532638950090411,
+            1.7161495669458613
+          ]
+        },
+        "gc-lto/zig-o3": {
+          "ratio": 2.2617541223967206,
+          "paired_bootstrap_95": [
+            2.1731559354615384,
+            2.3452098184165946
+          ]
+        },
+        "arena-lto/rust-o3": {
+          "ratio": 2.014473351385439,
+          "paired_bootstrap_95": [
+            1.9579269901553855,
+            2.089399790121188
+          ]
+        },
+        "arena-lto/go-fast": {
+          "ratio": 1.6113198592861186,
+          "paired_bootstrap_95": [
+            1.5164340664377642,
+            1.6846714397163052
+          ]
+        },
+        "arena-lto/zig-o3": {
+          "ratio": 2.230521869095189,
+          "paired_bootstrap_95": [
+            2.149238414072396,
+            2.289072177227251
+          ]
+        },
+        "gc-lto-bounded/rust-o3": {
+          "ratio": 5.124102008772717,
+          "paired_bootstrap_95": [
+            4.983651293884799,
+            5.348797876212293
+          ]
+        },
+        "gc-lto-bounded/go-fast": {
+          "ratio": 4.098623256577199,
+          "paired_bootstrap_95": [
+            3.893108326377236,
+            4.298467124775551
+          ]
+        },
+        "gc-lto-bounded/zig-o3": {
+          "ratio": 5.673652412518456,
+          "paired_bootstrap_95": [
+            5.4650342634461735,
+            5.844785860312735
+          ]
+        },
+        "arena-lto-bounded/rust-o3": {
+          "ratio": 5.182053114221337,
+          "paired_bootstrap_95": [
+            5.0768738094235015,
+            5.399852725037645
+          ]
+        },
+        "arena-lto-bounded/go-fast": {
+          "ratio": 4.1449766953123035,
+          "paired_bootstrap_95": [
+            3.924717773025341,
+            4.340752588821869
+          ]
+        },
+        "arena-lto-bounded/zig-o3": {
+          "ratio": 5.73781866617105,
+          "paired_bootstrap_95": [
+            5.556723042011961,
+            5.906769820793991
+          ]
+        },
+        "arena-lto/gc-lto": {
+          "ratio": 0.9861911367852686,
+          "paired_bootstrap_95": [
+            0.9571042878661631,
+            1.0107239146364124
+          ]
+        },
+        "arena-lto-bounded/gc-lto-bounded": {
+          "ratio": 1.0113095143986994,
+          "paired_bootstrap_95": [
+            0.9904110994601415,
+            1.035446164068391
+          ]
+        }
+      }
+    }
+  },
+  "samples": [
+    {
+      "round": 0,
+      "order": [
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-lto": 3.530355,
+          "before-arena-lto-bounded": 11.052501,
+          "arena-lto-bounded": 9.23872,
+          "rust-o3": 1.514693,
+          "arena-lto": 3.672647,
+          "zig-o3": 1.722524,
+          "before-arena-lto": 6.044658,
+          "gc-lto-bounded": 9.296055,
+          "go-fast": 2.792085,
+          "before-gc-lto-bounded": 12.753627,
+          "before-gc-lto": 5.308765
+        },
+        "changed-net": {
+          "before-gc-lto": 5.890758,
+          "arena-lto": 3.855835,
+          "gc-lto-bounded": 10.183598,
+          "rust-o3": 1.645191,
+          "before-arena-lto-bounded": 12.070833,
+          "zig-o3": 1.516959,
+          "arena-lto-bounded": 10.190364,
+          "before-gc-lto-bounded": 10.702497,
+          "go-fast": 2.259499,
+          "before-arena-lto": 5.442457,
+          "gc-lto": 3.391857
+        },
+        "changed-value": {
+          "before-arena-lto-bounded": 10.995527,
+          "gc-lto": 3.988599,
+          "rust-o3": 1.631319,
+          "before-arena-lto": 5.828809,
+          "before-gc-lto-bounded": 13.082659,
+          "before-gc-lto": 6.13132,
+          "arena-lto": 3.896399,
+          "gc-lto-bounded": 8.791801,
+          "arena-lto-bounded": 10.284694,
+          "zig-o3": 1.650746,
+          "go-fast": 2.493677
+        }
+      }
+    },
+    {
+      "round": 1,
+      "order": [
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-gc-lto": 5.636534,
+          "gc-lto": 3.5304,
+          "gc-lto-bounded": 9.020739,
+          "before-arena-lto": 6.03199,
+          "before-arena-lto-bounded": 12.413565,
+          "arena-lto-bounded": 8.941764,
+          "zig-o3": 1.651547,
+          "rust-o3": 2.251503,
+          "arena-lto": 4.362526,
+          "go-fast": 2.478681,
+          "before-gc-lto-bounded": 14.954124
+        },
+        "changed-net": {
+          "arena-lto": 3.743318,
+          "arena-lto-bounded": 10.182706,
+          "rust-o3": 1.853293,
+          "before-arena-lto-bounded": 11.493154,
+          "gc-lto-bounded": 8.953624,
+          "gc-lto": 3.834334,
+          "go-fast": 2.463841,
+          "zig-o3": 1.568883,
+          "before-arena-lto": 8.776353,
+          "before-gc-lto": 9.481921,
+          "before-gc-lto-bounded": 15.204099
+        },
+        "changed-value": {
+          "before-gc-lto-bounded": 14.275053,
+          "gc-lto-bounded": 10.099104,
+          "arena-lto": 4.00552,
+          "go-fast": 2.053474,
+          "before-gc-lto": 5.054975,
+          "arena-lto-bounded": 8.866358,
+          "gc-lto": 4.359819,
+          "rust-o3": 1.791699,
+          "zig-o3": 1.626134,
+          "before-arena-lto": 7.446252,
+          "before-arena-lto-bounded": 13.09813
+        }
+      }
+    },
+    {
+      "round": 2,
+      "order": [
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "go-fast": 2.24803,
+          "before-arena-lto-bounded": 11.934783,
+          "zig-o3": 1.751112,
+          "before-arena-lto": 6.853843,
+          "arena-lto": 5.149014,
+          "before-gc-lto": 6.109876,
+          "before-gc-lto-bounded": 12.190355,
+          "rust-o3": 2.040792,
+          "gc-lto-bounded": 8.406858,
+          "arena-lto-bounded": 8.627075,
+          "gc-lto": 3.263863
+        },
+        "changed-net": {
+          "arena-lto": 3.274542,
+          "before-gc-lto-bounded": 10.098917,
+          "go-fast": 2.168442,
+          "before-arena-lto-bounded": 12.503556,
+          "gc-lto": 3.667263,
+          "arena-lto-bounded": 11.57174,
+          "zig-o3": 1.318269,
+          "gc-lto-bounded": 13.524419,
+          "before-arena-lto": 9.553533,
+          "before-gc-lto": 8.81108,
+          "rust-o3": 2.034799
+        },
+        "changed-value": {
+          "before-gc-lto": 6.057829,
+          "go-fast": 2.483547,
+          "arena-lto-bounded": 8.982952,
+          "zig-o3": 1.503029,
+          "before-arena-lto": 5.458216,
+          "gc-lto-bounded": 9.724175,
+          "before-gc-lto-bounded": 13.121772,
+          "arena-lto": 4.263981,
+          "before-arena-lto-bounded": 11.74761,
+          "gc-lto": 5.311364,
+          "rust-o3": 2.041508
+        }
+      }
+    },
+    {
+      "round": 3,
+      "order": [
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-lto-bounded": 12.782395,
+          "before-gc-lto": 7.826761,
+          "before-gc-lto-bounded": 10.456304,
+          "before-arena-lto-bounded": 10.552014,
+          "zig-o3": 1.434711,
+          "arena-lto-bounded": 8.24853,
+          "gc-lto": 3.138148,
+          "go-fast": 2.013562,
+          "rust-o3": 1.530419,
+          "before-arena-lto": 5.125621,
+          "arena-lto": 3.435534
+        },
+        "changed-net": {
+          "before-gc-lto": 8.272113,
+          "gc-lto": 4.747887,
+          "rust-o3": 1.950382,
+          "before-arena-lto": 9.015834,
+          "gc-lto-bounded": 12.074425,
+          "go-fast": 2.214104,
+          "before-arena-lto-bounded": 10.794205,
+          "zig-o3": 1.457033,
+          "arena-lto-bounded": 8.159641,
+          "arena-lto": 3.308608,
+          "before-gc-lto-bounded": 10.355904
+        },
+        "changed-value": {
+          "before-arena-lto-bounded": 17.043608,
+          "gc-lto": 4.843004,
+          "arena-lto": 4.646568,
+          "go-fast": 2.72321,
+          "before-gc-lto": 8.168761,
+          "arena-lto-bounded": 12.545153,
+          "before-gc-lto-bounded": 11.77162,
+          "rust-o3": 1.663555,
+          "zig-o3": 1.41033,
+          "before-arena-lto": 5.249159,
+          "gc-lto-bounded": 8.553631
+        }
+      }
+    },
+    {
+      "round": 4,
+      "order": [
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "rust-o3": 1.757517,
+          "gc-lto-bounded": 8.374102,
+          "zig-o3": 1.495244,
+          "arena-lto": 3.408876,
+          "arena-lto-bounded": 8.839927,
+          "before-arena-lto": 5.349057,
+          "before-arena-lto-bounded": 10.877653,
+          "gc-lto": 3.373609,
+          "before-gc-lto": 5.209858,
+          "before-gc-lto-bounded": 10.921896,
+          "go-fast": 2.005225
+        },
+        "changed-net": {
+          "arena-lto-bounded": 8.866265,
+          "before-arena-lto": 5.394691,
+          "gc-lto-bounded": 8.506603,
+          "rust-o3": 1.712728,
+          "arena-lto": 3.271059,
+          "go-fast": 1.998189,
+          "before-arena-lto-bounded": 10.683849,
+          "before-gc-lto": 5.376125,
+          "zig-o3": 1.526251,
+          "gc-lto": 3.18974,
+          "before-gc-lto-bounded": 10.358078
+        },
+        "changed-value": {
+          "before-arena-lto": 5.337346,
+          "before-gc-lto-bounded": 10.583048,
+          "arena-lto": 3.344249,
+          "before-arena-lto-bounded": 10.531127,
+          "zig-o3": 1.548652,
+          "before-gc-lto": 5.378133,
+          "gc-lto-bounded": 8.457194,
+          "go-fast": 2.151551,
+          "arena-lto-bounded": 8.487074,
+          "rust-o3": 1.529014,
+          "gc-lto": 3.170477
+        }
+      }
+    },
+    {
+      "round": 5,
+      "order": [
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "go-fast": 2.033154,
+          "gc-lto": 3.291189,
+          "zig-o3": 1.502141,
+          "before-gc-lto-bounded": 10.699306,
+          "arena-lto-bounded": 8.509697,
+          "gc-lto-bounded": 8.384628,
+          "arena-lto": 3.510098,
+          "before-arena-lto": 5.705076,
+          "rust-o3": 1.778078,
+          "before-arena-lto-bounded": 11.018401,
+          "before-gc-lto": 5.725549
+        },
+        "changed-net": {
+          "arena-lto-bounded": 8.563977,
+          "before-arena-lto": 5.399113,
+          "arena-lto": 3.05825,
+          "before-gc-lto-bounded": 10.468169,
+          "before-arena-lto-bounded": 10.964749,
+          "rust-o3": 1.525844,
+          "gc-lto-bounded": 8.840702,
+          "gc-lto": 3.43072,
+          "before-gc-lto": 5.422202,
+          "zig-o3": 1.761117,
+          "go-fast": 2.23292
+        },
+        "changed-value": {
+          "arena-lto-bounded": 8.864418,
+          "before-arena-lto": 5.28504,
+          "before-gc-lto": 5.19409,
+          "zig-o3": 1.609733,
+          "go-fast": 2.03546,
+          "before-gc-lto-bounded": 10.314199,
+          "gc-lto": 3.291646,
+          "gc-lto-bounded": 8.505778,
+          "before-arena-lto-bounded": 10.879903,
+          "arena-lto": 3.569604,
+          "rust-o3": 1.715774
+        }
+      }
+    },
+    {
+      "round": 6,
+      "order": [
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "zig-o3": 1.597138,
+          "arena-lto-bounded": 8.466571,
+          "gc-lto-bounded": 8.059406,
+          "before-gc-lto": 5.418145,
+          "before-arena-lto-bounded": 10.970443,
+          "arena-lto": 3.359998,
+          "go-fast": 2.012055,
+          "before-arena-lto": 5.480296,
+          "gc-lto": 3.571334,
+          "rust-o3": 1.565791,
+          "before-gc-lto-bounded": 10.384984
+        },
+        "changed-net": {
+          "arena-lto": 3.349112,
+          "zig-o3": 1.39676,
+          "rust-o3": 1.64656,
+          "gc-lto": 3.189662,
+          "before-gc-lto": 5.429014,
+          "before-gc-lto-bounded": 11.14025,
+          "arena-lto-bounded": 8.694956,
+          "gc-lto-bounded": 8.171935,
+          "before-arena-lto-bounded": 11.368134,
+          "before-arena-lto": 5.489183,
+          "go-fast": 2.12388
+        },
+        "changed-value": {
+          "before-arena-lto-bounded": 10.644992,
+          "go-fast": 2.410143,
+          "zig-o3": 1.550829,
+          "arena-lto-bounded": 8.457164,
+          "rust-o3": 1.483944,
+          "gc-lto-bounded": 8.824489,
+          "before-gc-lto-bounded": 11.205693,
+          "arena-lto": 3.460047,
+          "before-gc-lto": 5.774616,
+          "gc-lto": 3.226558,
+          "before-arena-lto": 5.767928
+        }
+      }
+    },
+    {
+      "round": 7,
+      "order": [
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "zig-o3": 1.814027,
+          "before-gc-lto": 5.425709,
+          "rust-o3": 1.800932,
+          "before-arena-lto-bounded": 10.389229,
+          "gc-lto": 3.719531,
+          "arena-lto-bounded": 8.941895,
+          "go-fast": 2.255812,
+          "before-arena-lto": 5.506528,
+          "gc-lto-bounded": 8.745234,
+          "arena-lto": 3.397119,
+          "before-gc-lto-bounded": 10.79865
+        },
+        "changed-net": {
+          "rust-o3": 1.531813,
+          "gc-lto": 3.180298,
+          "before-arena-lto": 5.467792,
+          "gc-lto-bounded": 8.626772,
+          "zig-o3": 1.594235,
+          "before-gc-lto-bounded": 11.732969,
+          "arena-lto-bounded": 9.250791,
+          "before-gc-lto": 5.92148,
+          "before-arena-lto-bounded": 10.783594,
+          "go-fast": 2.336451,
+          "arena-lto": 3.623222
+        },
+        "changed-value": {
+          "rust-o3": 1.813661,
+          "before-gc-lto": 5.460058,
+          "before-arena-lto-bounded": 10.540669,
+          "arena-lto": 3.456469,
+          "arena-lto-bounded": 9.473016,
+          "gc-lto": 3.59973,
+          "go-fast": 2.065032,
+          "gc-lto-bounded": 8.60015,
+          "before-arena-lto": 5.66837,
+          "before-gc-lto-bounded": 10.763965,
+          "zig-o3": 1.660443
+        }
+      }
+    },
+    {
+      "round": 8,
+      "order": [
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "zig-o3": 1.516978,
+          "gc-lto-bounded": 8.382827,
+          "go-fast": 1.988874,
+          "arena-lto-bounded": 8.334769,
+          "before-gc-lto": 5.525623,
+          "before-arena-lto-bounded": 10.501626,
+          "gc-lto": 3.404578,
+          "before-arena-lto": 5.567334,
+          "before-gc-lto-bounded": 10.931543,
+          "rust-o3": 1.698537,
+          "arena-lto": 3.455714
+        },
+        "changed-net": {
+          "rust-o3": 1.608938,
+          "gc-lto-bounded": 8.290164,
+          "before-gc-lto-bounded": 10.344982,
+          "before-arena-lto": 5.413588,
+          "go-fast": 2.161557,
+          "gc-lto": 3.323422,
+          "arena-lto-bounded": 8.448862,
+          "before-gc-lto": 5.294425,
+          "before-arena-lto-bounded": 10.657159,
+          "zig-o3": 1.515926,
+          "arena-lto": 3.311912
+        },
+        "changed-value": {
+          "go-fast": 2.18495,
+          "zig-o3": 1.551777,
+          "arena-lto": 3.202317,
+          "rust-o3": 1.758955,
+          "gc-lto-bounded": 8.51437,
+          "before-arena-lto-bounded": 10.685565,
+          "gc-lto": 3.522177,
+          "before-arena-lto": 5.494329,
+          "before-gc-lto": 5.577158,
+          "before-gc-lto-bounded": 10.654389,
+          "arena-lto-bounded": 8.642444
+        }
+      }
+    },
+    {
+      "round": 9,
+      "order": [
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-lto": 3.289588,
+          "gc-lto": 3.312331,
+          "before-gc-lto-bounded": 10.822601,
+          "go-fast": 2.161694,
+          "gc-lto-bounded": 8.267636,
+          "zig-o3": 1.456627,
+          "arena-lto-bounded": 8.711072,
+          "before-arena-lto": 5.600072,
+          "before-gc-lto": 5.418434,
+          "rust-o3": 1.65166,
+          "before-arena-lto-bounded": 10.598145
+        },
+        "changed-net": {
+          "before-arena-lto-bounded": 10.583131,
+          "zig-o3": 1.404716,
+          "gc-lto-bounded": 8.218415,
+          "before-gc-lto": 5.415537,
+          "gc-lto": 3.447,
+          "arena-lto": 3.301326,
+          "rust-o3": 1.523896,
+          "arena-lto-bounded": 8.619044,
+          "before-arena-lto": 5.196107,
+          "go-fast": 1.973169,
+          "before-gc-lto-bounded": 10.828616
+        },
+        "changed-value": {
+          "gc-lto": 3.400498,
+          "before-gc-lto-bounded": 10.605037,
+          "arena-lto-bounded": 8.761014,
+          "before-arena-lto-bounded": 10.492484,
+          "gc-lto-bounded": 8.916337,
+          "rust-o3": 1.731595,
+          "go-fast": 2.022152,
+          "zig-o3": 1.350105,
+          "before-gc-lto": 5.238322,
+          "before-arena-lto": 5.379738,
+          "arena-lto": 3.426103
+        }
+      }
+    },
+    {
+      "round": 10,
+      "order": [
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-gc-lto": 5.187744,
+          "zig-o3": 1.498573,
+          "gc-lto-bounded": 8.307717,
+          "rust-o3": 1.641209,
+          "arena-lto-bounded": 8.888802,
+          "before-arena-lto": 5.415635,
+          "arena-lto": 3.403208,
+          "before-arena-lto-bounded": 10.661347,
+          "go-fast": 2.214495,
+          "before-gc-lto-bounded": 10.600123,
+          "gc-lto": 3.549454
+        },
+        "changed-net": {
+          "before-arena-lto": 5.439086,
+          "arena-lto": 3.359901,
+          "go-fast": 1.929757,
+          "gc-lto": 3.239777,
+          "before-arena-lto-bounded": 10.486789,
+          "before-gc-lto": 5.341983,
+          "zig-o3": 1.519904,
+          "gc-lto-bounded": 8.394835,
+          "before-gc-lto-bounded": 10.515201,
+          "arena-lto-bounded": 8.800851,
+          "rust-o3": 2.020472
+        },
+        "changed-value": {
+          "go-fast": 1.960474,
+          "before-arena-lto": 5.612174,
+          "gc-lto-bounded": 8.29174,
+          "gc-lto": 3.423916,
+          "arena-lto": 3.194528,
+          "before-gc-lto": 5.58613,
+          "zig-o3": 1.564777,
+          "before-gc-lto-bounded": 10.62519,
+          "rust-o3": 1.636698,
+          "arena-lto-bounded": 8.963793,
+          "before-arena-lto-bounded": 10.996945
+        }
+      }
+    },
+    {
+      "round": 11,
+      "order": [
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-lto-bounded": 8.809042,
+          "rust-o3": 1.800224,
+          "before-gc-lto": 5.313911,
+          "zig-o3": 1.528895,
+          "before-arena-lto-bounded": 10.56353,
+          "arena-lto": 3.438311,
+          "before-arena-lto": 5.490138,
+          "go-fast": 1.914253,
+          "gc-lto": 3.763343,
+          "arena-lto-bounded": 9.125795,
+          "before-gc-lto-bounded": 11.769873
+        },
+        "changed-net": {
+          "before-arena-lto-bounded": 12.572645,
+          "zig-o3": 1.478669,
+          "arena-lto-bounded": 8.495777,
+          "go-fast": 2.36657,
+          "before-arena-lto": 5.951299,
+          "before-gc-lto-bounded": 10.811421,
+          "rust-o3": 1.857571,
+          "arena-lto": 3.526754,
+          "gc-lto": 3.356444,
+          "before-gc-lto": 6.256314,
+          "gc-lto-bounded": 9.537085
+        },
+        "changed-value": {
+          "before-arena-lto-bounded": 11.284503,
+          "before-gc-lto-bounded": 10.881118,
+          "before-arena-lto": 5.434678,
+          "arena-lto-bounded": 9.089885,
+          "zig-o3": 1.618127,
+          "arena-lto": 3.271387,
+          "go-fast": 1.840477,
+          "before-gc-lto": 5.262983,
+          "gc-lto": 3.619056,
+          "rust-o3": 1.732013,
+          "gc-lto-bounded": 9.648121
+        }
+      }
+    },
+    {
+      "round": 12,
+      "order": [
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-lto": 3.748948,
+          "before-arena-lto-bounded": 10.589383,
+          "before-gc-lto-bounded": 11.131807,
+          "arena-lto-bounded": 8.662669,
+          "gc-lto-bounded": 8.385489,
+          "go-fast": 2.068945,
+          "before-arena-lto": 6.105059,
+          "before-gc-lto": 5.510594,
+          "rust-o3": 1.653786,
+          "zig-o3": 1.500953,
+          "arena-lto": 3.227176
+        },
+        "changed-net": {
+          "zig-o3": 1.5102,
+          "before-arena-lto-bounded": 10.841768,
+          "arena-lto": 3.822197,
+          "go-fast": 2.04381,
+          "before-arena-lto": 5.449961,
+          "arena-lto-bounded": 9.130727,
+          "before-gc-lto": 5.621305,
+          "rust-o3": 1.682039,
+          "before-gc-lto-bounded": 10.761927,
+          "gc-lto-bounded": 8.507183,
+          "gc-lto": 3.390435
+        },
+        "changed-value": {
+          "before-arena-lto-bounded": 11.03265,
+          "arena-lto-bounded": 9.345671,
+          "gc-lto": 3.606828,
+          "gc-lto-bounded": 8.598224,
+          "before-arena-lto": 5.639782,
+          "rust-o3": 1.645339,
+          "arena-lto": 3.456381,
+          "before-gc-lto": 5.262622,
+          "zig-o3": 1.549584,
+          "before-gc-lto-bounded": 10.578426,
+          "go-fast": 2.136643
+        }
+      }
+    },
+    {
+      "round": 13,
+      "order": [
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "zig-o3": 1.441985,
+          "before-gc-lto": 5.28828,
+          "arena-lto": 3.274192,
+          "go-fast": 2.061541,
+          "gc-lto-bounded": 8.735874,
+          "rust-o3": 1.742165,
+          "arena-lto-bounded": 8.695858,
+          "before-arena-lto-bounded": 10.697016,
+          "before-gc-lto-bounded": 10.758991,
+          "before-arena-lto": 5.503909,
+          "gc-lto": 3.33472
+        },
+        "changed-net": {
+          "before-gc-lto-bounded": 10.601516,
+          "arena-lto-bounded": 8.848699,
+          "arena-lto": 3.361089,
+          "zig-o3": 1.606165,
+          "rust-o3": 1.651689,
+          "before-arena-lto-bounded": 10.679132,
+          "before-arena-lto": 5.616408,
+          "before-gc-lto": 5.442539,
+          "go-fast": 2.095036,
+          "gc-lto-bounded": 8.425716,
+          "gc-lto": 3.380975
+        },
+        "changed-value": {
+          "gc-lto-bounded": 8.509856,
+          "before-gc-lto": 5.513551,
+          "before-arena-lto": 5.670038,
+          "before-gc-lto-bounded": 10.739268,
+          "zig-o3": 1.51128,
+          "rust-o3": 1.681524,
+          "arena-lto-bounded": 8.977205,
+          "go-fast": 2.203379,
+          "arena-lto": 3.391155,
+          "gc-lto": 3.504778,
+          "before-arena-lto-bounded": 10.422801
+        }
+      }
+    },
+    {
+      "round": 14,
+      "order": [
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-lto": 3.264474,
+          "before-arena-lto": 5.244884,
+          "before-arena-lto-bounded": 10.788814,
+          "before-gc-lto-bounded": 10.744089,
+          "gc-lto-bounded": 8.520356,
+          "gc-lto": 3.316084,
+          "before-gc-lto": 5.571062,
+          "zig-o3": 1.452056,
+          "arena-lto-bounded": 8.702369,
+          "rust-o3": 1.604879,
+          "go-fast": 1.921628
+        },
+        "changed-net": {
+          "before-arena-lto": 5.42371,
+          "gc-lto-bounded": 8.631598,
+          "arena-lto-bounded": 8.770803,
+          "rust-o3": 1.604133,
+          "before-arena-lto-bounded": 10.587268,
+          "before-gc-lto-bounded": 10.858845,
+          "go-fast": 2.051794,
+          "arena-lto": 3.202679,
+          "before-gc-lto": 6.428066,
+          "zig-o3": 1.343801,
+          "gc-lto": 3.349493
+        },
+        "changed-value": {
+          "rust-o3": 1.734682,
+          "before-gc-lto": 5.563974,
+          "go-fast": 2.045732,
+          "before-arena-lto-bounded": 10.613647,
+          "gc-lto-bounded": 8.621637,
+          "gc-lto": 3.339026,
+          "before-arena-lto": 5.399825,
+          "zig-o3": 1.376524,
+          "arena-lto": 3.487101,
+          "arena-lto-bounded": 8.891232,
+          "before-gc-lto-bounded": 10.571549
+        }
+      }
+    },
+    {
+      "round": 15,
+      "order": [
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-lto-bounded": 8.947891,
+          "before-arena-lto": 5.316224,
+          "before-arena-lto-bounded": 11.154137,
+          "go-fast": 2.290998,
+          "before-gc-lto": 5.506216,
+          "zig-o3": 1.432506,
+          "before-gc-lto-bounded": 10.839404,
+          "gc-lto": 3.531388,
+          "rust-o3": 1.678566,
+          "gc-lto-bounded": 9.058308,
+          "arena-lto": 3.514981
+        },
+        "changed-net": {
+          "go-fast": 1.941499,
+          "gc-lto-bounded": 8.460865,
+          "arena-lto": 3.242413,
+          "before-gc-lto": 5.35392,
+          "rust-o3": 1.510047,
+          "gc-lto": 3.357802,
+          "arena-lto-bounded": 9.296591,
+          "before-gc-lto-bounded": 11.173142,
+          "before-arena-lto-bounded": 11.204816,
+          "zig-o3": 1.917816,
+          "before-arena-lto": 5.883429
+        },
+        "changed-value": {
+          "before-arena-lto-bounded": 10.652888,
+          "before-gc-lto": 5.372632,
+          "gc-lto-bounded": 9.094253,
+          "gc-lto": 3.552491,
+          "go-fast": 1.933279,
+          "arena-lto-bounded": 8.699566,
+          "zig-o3": 1.419738,
+          "before-arena-lto": 5.251653,
+          "rust-o3": 1.521848,
+          "arena-lto": 3.733286,
+          "before-gc-lto-bounded": 11.394748
+        }
+      }
+    },
+    {
+      "round": 16,
+      "order": [
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "rust-o3": 1.762408,
+          "arena-lto": 3.361165,
+          "zig-o3": 1.335687,
+          "before-gc-lto": 5.189935,
+          "arena-lto-bounded": 8.740836,
+          "gc-lto": 3.256249,
+          "before-arena-lto-bounded": 11.113788,
+          "before-arena-lto": 5.469404,
+          "before-gc-lto-bounded": 11.026003,
+          "gc-lto-bounded": 8.847322,
+          "go-fast": 2.287432
+        },
+        "changed-net": {
+          "go-fast": 2.336368,
+          "gc-lto": 3.559006,
+          "zig-o3": 1.280911,
+          "before-gc-lto-bounded": 11.371848,
+          "rust-o3": 1.643749,
+          "before-arena-lto-bounded": 11.212132,
+          "before-arena-lto": 6.012831,
+          "gc-lto-bounded": 8.699085,
+          "arena-lto-bounded": 8.969038,
+          "before-gc-lto": 8.539466,
+          "arena-lto": 3.346086
+        },
+        "changed-value": {
+          "zig-o3": 1.429182,
+          "before-gc-lto-bounded": 10.998579,
+          "before-arena-lto-bounded": 10.994779,
+          "before-arena-lto": 5.624125,
+          "rust-o3": 1.756502,
+          "gc-lto": 3.614126,
+          "go-fast": 2.321319,
+          "gc-lto-bounded": 8.991414,
+          "arena-lto": 3.370798,
+          "before-gc-lto": 5.348398,
+          "arena-lto-bounded": 9.041056
+        }
+      }
+    },
+    {
+      "round": 17,
+      "order": [
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-lto-bounded": 8.790777,
+          "go-fast": 2.038498,
+          "gc-lto": 3.683807,
+          "rust-o3": 1.820353,
+          "gc-lto-bounded": 8.800335,
+          "arena-lto": 3.390882,
+          "before-arena-lto-bounded": 10.625475,
+          "before-gc-lto-bounded": 11.105182,
+          "before-gc-lto": 5.505889,
+          "zig-o3": 1.672958,
+          "before-arena-lto": 5.508967
+        },
+        "changed-net": {
+          "go-fast": 2.484857,
+          "arena-lto-bounded": 8.764374,
+          "arena-lto": 3.616421,
+          "before-gc-lto": 6.244898,
+          "before-arena-lto": 6.09487,
+          "zig-o3": 1.601606,
+          "gc-lto": 3.168148,
+          "before-arena-lto-bounded": 10.771015,
+          "rust-o3": 1.640861,
+          "before-gc-lto-bounded": 10.540873,
+          "gc-lto-bounded": 8.317321
+        },
+        "changed-value": {
+          "before-gc-lto": 5.774909,
+          "gc-lto": 3.698806,
+          "before-gc-lto-bounded": 11.148335,
+          "go-fast": 2.155885,
+          "zig-o3": 1.641622,
+          "rust-o3": 1.760642,
+          "arena-lto-bounded": 8.703843,
+          "before-arena-lto": 5.354872,
+          "arena-lto": 3.4597,
+          "before-arena-lto-bounded": 10.787855,
+          "gc-lto-bounded": 8.674191
+        }
+      }
+    },
+    {
+      "round": 18,
+      "order": [
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-arena-lto": 5.573571,
+          "rust-o3": 1.702386,
+          "gc-lto-bounded": 8.552651,
+          "arena-lto": 3.489671,
+          "before-arena-lto-bounded": 10.834756,
+          "arena-lto-bounded": 8.902193,
+          "before-gc-lto-bounded": 11.070991,
+          "go-fast": 2.287561,
+          "zig-o3": 1.505881,
+          "gc-lto": 3.56336,
+          "before-gc-lto": 5.35769
+        },
+        "changed-net": {
+          "arena-lto-bounded": 8.889016,
+          "before-arena-lto": 5.530506,
+          "gc-lto-bounded": 8.404033,
+          "before-arena-lto-bounded": 10.734828,
+          "before-gc-lto": 5.433272,
+          "zig-o3": 1.463371,
+          "go-fast": 2.031056,
+          "gc-lto": 3.320773,
+          "before-gc-lto-bounded": 10.889675,
+          "rust-o3": 1.692649,
+          "arena-lto": 3.279077
+        },
+        "changed-value": {
+          "arena-lto": 3.459429,
+          "before-gc-lto-bounded": 10.841025,
+          "gc-lto-bounded": 8.585874,
+          "zig-o3": 1.428725,
+          "go-fast": 2.042382,
+          "arena-lto-bounded": 9.090128,
+          "before-arena-lto-bounded": 10.81286,
+          "before-gc-lto": 5.443022,
+          "before-arena-lto": 5.536814,
+          "rust-o3": 1.732567,
+          "gc-lto": 3.386851
+        }
+      }
+    },
+    {
+      "round": 19,
+      "order": [
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-lto-bounded": 8.884389,
+          "rust-o3": 1.749464,
+          "gc-lto-bounded": 8.435544,
+          "before-gc-lto": 5.411437,
+          "arena-lto": 3.30975,
+          "gc-lto": 3.353715,
+          "before-arena-lto": 5.409672,
+          "before-arena-lto-bounded": 10.564098,
+          "go-fast": 2.151781,
+          "zig-o3": 1.527972,
+          "before-gc-lto-bounded": 10.575245
+        },
+        "changed-net": {
+          "before-arena-lto": 5.670954,
+          "gc-lto-bounded": 8.427504,
+          "before-arena-lto-bounded": 10.73855,
+          "arena-lto": 3.349766,
+          "before-gc-lto-bounded": 10.58373,
+          "before-gc-lto": 5.340452,
+          "arena-lto-bounded": 8.93235,
+          "zig-o3": 1.494706,
+          "rust-o3": 1.699624,
+          "gc-lto": 3.436266,
+          "go-fast": 2.390915
+        },
+        "changed-value": {
+          "zig-o3": 1.489248,
+          "arena-lto": 3.351861,
+          "before-arena-lto-bounded": 11.167204,
+          "before-gc-lto": 5.551247,
+          "rust-o3": 1.695337,
+          "go-fast": 2.258023,
+          "before-arena-lto": 5.425998,
+          "gc-lto-bounded": 8.683503,
+          "gc-lto": 3.577607,
+          "arena-lto-bounded": 8.786374,
+          "before-gc-lto-bounded": 10.929812
+        }
+      }
+    },
+    {
+      "round": 20,
+      "order": [
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-arena-lto-bounded": 10.891545,
+          "arena-lto-bounded": 9.005037,
+          "before-gc-lto-bounded": 10.889274,
+          "arena-lto": 3.488056,
+          "gc-lto-bounded": 8.614063,
+          "go-fast": 2.041172,
+          "gc-lto": 3.411511,
+          "rust-o3": 1.686033,
+          "before-arena-lto": 5.469666,
+          "before-gc-lto": 5.718961,
+          "zig-o3": 1.894822
+        },
+        "changed-net": {
+          "gc-lto-bounded": 8.576173,
+          "before-arena-lto": 5.911927,
+          "arena-lto-bounded": 9.207369,
+          "gc-lto": 3.554039,
+          "zig-o3": 1.760079,
+          "go-fast": 2.147165,
+          "rust-o3": 1.63854,
+          "before-gc-lto": 5.213882,
+          "arena-lto": 3.396444,
+          "before-gc-lto-bounded": 10.520661,
+          "before-arena-lto-bounded": 10.656388
+        },
+        "changed-value": {
+          "before-gc-lto": 5.590369,
+          "before-arena-lto-bounded": 10.775798,
+          "go-fast": 2.091788,
+          "gc-lto-bounded": 8.165446,
+          "arena-lto": 3.35902,
+          "arena-lto-bounded": 8.626934,
+          "before-arena-lto": 5.621506,
+          "gc-lto": 3.608147,
+          "rust-o3": 1.794572,
+          "zig-o3": 1.509715,
+          "before-gc-lto-bounded": 10.796518
+        }
+      }
+    },
+    {
+      "round": 21,
+      "order": [
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-lto": 3.662318,
+          "before-gc-lto": 5.523657,
+          "go-fast": 2.194452,
+          "before-arena-lto-bounded": 11.374838,
+          "arena-lto-bounded": 9.515547,
+          "gc-lto": 3.53821,
+          "gc-lto-bounded": 8.557002,
+          "rust-o3": 1.667384,
+          "zig-o3": 1.621614,
+          "before-gc-lto-bounded": 10.675861,
+          "before-arena-lto": 5.828967
+        },
+        "changed-net": {
+          "arena-lto": 3.194421,
+          "before-arena-lto-bounded": 10.681261,
+          "before-arena-lto": 5.650481,
+          "rust-o3": 1.56588,
+          "gc-lto": 3.886816,
+          "before-gc-lto": 5.613842,
+          "gc-lto-bounded": 8.898295,
+          "zig-o3": 1.485556,
+          "before-gc-lto-bounded": 10.534535,
+          "go-fast": 1.990186,
+          "arena-lto-bounded": 9.405378
+        },
+        "changed-value": {
+          "go-fast": 2.322431,
+          "before-arena-lto": 5.454088,
+          "before-gc-lto": 5.7572,
+          "arena-lto": 3.472644,
+          "arena-lto-bounded": 8.924358,
+          "before-arena-lto-bounded": 10.621385,
+          "zig-o3": 1.490452,
+          "before-gc-lto-bounded": 10.89069,
+          "gc-lto-bounded": 9.125262,
+          "rust-o3": 1.693334,
+          "gc-lto": 3.43684
+        }
+      }
+    },
+    {
+      "round": 22,
+      "order": [
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-arena-lto": 5.827762,
+          "arena-lto-bounded": 9.043873,
+          "gc-lto-bounded": 8.691726,
+          "rust-o3": 2.023624,
+          "gc-lto": 3.55999,
+          "before-arena-lto-bounded": 10.899512,
+          "before-gc-lto": 5.816109,
+          "arena-lto": 3.499099,
+          "go-fast": 2.257527,
+          "zig-o3": 1.539061,
+          "before-gc-lto-bounded": 10.558325
+        },
+        "changed-net": {
+          "gc-lto": 3.549507,
+          "gc-lto-bounded": 8.52894,
+          "arena-lto-bounded": 8.918466,
+          "before-gc-lto-bounded": 11.54406,
+          "go-fast": 2.63631,
+          "zig-o3": 1.612803,
+          "rust-o3": 1.752846,
+          "arena-lto": 3.362067,
+          "before-arena-lto": 5.32752,
+          "before-arena-lto-bounded": 11.342037,
+          "before-gc-lto": 5.363551
+        },
+        "changed-value": {
+          "before-gc-lto": 5.543362,
+          "zig-o3": 1.59526,
+          "gc-lto-bounded": 8.705004,
+          "arena-lto-bounded": 9.013563,
+          "gc-lto": 3.330114,
+          "arena-lto": 3.343131,
+          "before-gc-lto-bounded": 10.600525,
+          "before-arena-lto-bounded": 11.101301,
+          "go-fast": 2.035902,
+          "before-arena-lto": 6.05129,
+          "rust-o3": 1.87501
+        }
+      }
+    },
+    {
+      "round": 23,
+      "order": [
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-lto-bounded": 9.564574,
+          "zig-o3": 1.85774,
+          "before-gc-lto": 5.402635,
+          "arena-lto": 3.272941,
+          "before-gc-lto-bounded": 10.673167,
+          "go-fast": 2.441226,
+          "gc-lto": 3.414879,
+          "before-arena-lto-bounded": 10.720294,
+          "before-arena-lto": 5.665879,
+          "rust-o3": 1.713343,
+          "gc-lto-bounded": 8.597127
+        },
+        "changed-net": {
+          "before-arena-lto-bounded": 11.12889,
+          "rust-o3": 1.684747,
+          "gc-lto": 3.592397,
+          "before-gc-lto": 5.458021,
+          "gc-lto-bounded": 8.476538,
+          "before-gc-lto-bounded": 11.024181,
+          "zig-o3": 1.741031,
+          "arena-lto": 3.721049,
+          "arena-lto-bounded": 8.646274,
+          "go-fast": 2.374098,
+          "before-arena-lto": 5.352316
+        },
+        "changed-value": {
+          "gc-lto-bounded": 8.994132,
+          "before-gc-lto": 5.761702,
+          "before-arena-lto": 5.673979,
+          "before-gc-lto-bounded": 11.553648,
+          "before-arena-lto-bounded": 11.495233,
+          "go-fast": 2.372326,
+          "gc-lto": 3.235354,
+          "zig-o3": 1.514786,
+          "arena-lto": 3.391092,
+          "rust-o3": 1.527516,
+          "arena-lto-bounded": 8.820165
+        }
+      }
+    },
+    {
+      "round": 24,
+      "order": [
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-gc-lto": 5.635384,
+          "arena-lto-bounded": 8.854361,
+          "before-gc-lto-bounded": 10.899151,
+          "rust-o3": 1.776526,
+          "zig-o3": 1.429563,
+          "gc-lto-bounded": 8.354971,
+          "arena-lto": 3.407968,
+          "before-arena-lto-bounded": 10.915647,
+          "go-fast": 2.29046,
+          "gc-lto": 3.307484,
+          "before-arena-lto": 5.377883
+        },
+        "changed-net": {
+          "gc-lto-bounded": 8.329428,
+          "before-gc-lto": 5.489303,
+          "rust-o3": 1.876638,
+          "zig-o3": 1.424012,
+          "before-gc-lto-bounded": 10.588001,
+          "arena-lto": 3.379349,
+          "before-arena-lto": 5.427857,
+          "before-arena-lto-bounded": 11.250379,
+          "arena-lto-bounded": 9.469619,
+          "go-fast": 2.439882,
+          "gc-lto": 3.395075
+        },
+        "changed-value": {
+          "before-arena-lto": 5.799152,
+          "gc-lto-bounded": 9.039639,
+          "rust-o3": 1.629666,
+          "arena-lto": 3.491255,
+          "gc-lto": 3.313077,
+          "go-fast": 2.382184,
+          "before-arena-lto-bounded": 10.728993,
+          "arena-lto-bounded": 9.056399,
+          "before-gc-lto": 5.624975,
+          "zig-o3": 1.746601,
+          "before-gc-lto-bounded": 11.179206
+        }
+      }
+    },
+    {
+      "round": 25,
+      "order": [
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "zig-o3": 1.446194,
+          "gc-lto-bounded": 8.735522,
+          "before-arena-lto": 6.4034,
+          "before-gc-lto-bounded": 12.470211,
+          "before-arena-lto-bounded": 10.917431,
+          "rust-o3": 1.723935,
+          "arena-lto-bounded": 9.03041,
+          "go-fast": 2.29135,
+          "gc-lto": 3.883964,
+          "arena-lto": 3.435242,
+          "before-gc-lto": 5.420816
+        },
+        "changed-net": {
+          "before-arena-lto": 5.510484,
+          "rust-o3": 1.667254,
+          "before-arena-lto-bounded": 11.437423,
+          "zig-o3": 1.595914,
+          "go-fast": 2.180488,
+          "before-gc-lto": 5.437663,
+          "gc-lto": 3.462163,
+          "before-gc-lto-bounded": 10.643936,
+          "gc-lto-bounded": 8.417945,
+          "arena-lto": 3.323183,
+          "arena-lto-bounded": 8.58957
+        },
+        "changed-value": {
+          "arena-lto-bounded": 8.63302,
+          "arena-lto": 3.331378,
+          "before-arena-lto": 5.107179,
+          "go-fast": 2.550369,
+          "before-gc-lto": 6.048583,
+          "rust-o3": 1.991818,
+          "before-arena-lto-bounded": 10.837321,
+          "gc-lto-bounded": 8.898847,
+          "gc-lto": 3.460734,
+          "zig-o3": 1.538365,
+          "before-gc-lto-bounded": 10.997511
+        }
+      }
+    },
+    {
+      "round": 26,
+      "order": [
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-arena-lto-bounded": 11.107733,
+          "gc-lto": 3.805503,
+          "rust-o3": 1.692492,
+          "arena-lto-bounded": 9.153991,
+          "go-fast": 2.186471,
+          "before-gc-lto-bounded": 10.996258,
+          "arena-lto": 3.559244,
+          "before-gc-lto": 5.443839,
+          "before-arena-lto": 5.572751,
+          "gc-lto-bounded": 8.549874,
+          "zig-o3": 1.554518
+        },
+        "changed-net": {
+          "before-gc-lto": 6.061007,
+          "zig-o3": 1.473213,
+          "gc-lto-bounded": 8.669768,
+          "gc-lto": 3.721641,
+          "arena-lto-bounded": 8.956584,
+          "before-arena-lto-bounded": 11.367409,
+          "arena-lto": 3.363698,
+          "rust-o3": 1.798162,
+          "go-fast": 2.185694,
+          "before-arena-lto": 5.538521,
+          "before-gc-lto-bounded": 11.128976
+        },
+        "changed-value": {
+          "rust-o3": 1.654288,
+          "before-arena-lto-bounded": 10.402884,
+          "before-arena-lto": 5.432237,
+          "gc-lto-bounded": 8.797246,
+          "arena-lto": 3.411544,
+          "arena-lto-bounded": 8.862103,
+          "zig-o3": 3.416015,
+          "gc-lto": 3.4507,
+          "before-gc-lto": 5.549761,
+          "go-fast": 2.028092,
+          "before-gc-lto-bounded": 11.469801
+        }
+      }
+    },
+    {
+      "round": 27,
+      "order": [
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-gc-lto": 5.590805,
+          "before-gc-lto-bounded": 11.200986,
+          "go-fast": 2.288497,
+          "before-arena-lto": 5.844576,
+          "arena-lto-bounded": 9.015112,
+          "gc-lto-bounded": 9.053483,
+          "gc-lto": 3.47362,
+          "zig-o3": 1.404836,
+          "arena-lto": 3.222728,
+          "rust-o3": 1.594239,
+          "before-arena-lto-bounded": 10.770773
+        },
+        "changed-net": {
+          "arena-lto-bounded": 8.871184,
+          "before-gc-lto": 5.636913,
+          "gc-lto": 3.871745,
+          "before-arena-lto-bounded": 10.930931,
+          "before-gc-lto-bounded": 10.838399,
+          "rust-o3": 2.044448,
+          "arena-lto": 3.185228,
+          "zig-o3": 1.479038,
+          "go-fast": 2.026859,
+          "before-arena-lto": 5.278423,
+          "gc-lto-bounded": 8.944847
+        },
+        "changed-value": {
+          "arena-lto": 3.697966,
+          "gc-lto-bounded": 8.698746,
+          "before-arena-lto": 5.556185,
+          "before-gc-lto": 5.659786,
+          "rust-o3": 1.809255,
+          "before-gc-lto-bounded": 10.902261,
+          "before-arena-lto-bounded": 10.928971,
+          "zig-o3": 1.621633,
+          "arena-lto-bounded": 8.659375,
+          "go-fast": 2.100756,
+          "gc-lto": 3.273055
+        }
+      }
+    },
+    {
+      "round": 28,
+      "order": [
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-arena-lto": 5.776246,
+          "gc-lto-bounded": 8.226615,
+          "zig-o3": 1.81037,
+          "gc-lto": 3.580705,
+          "arena-lto-bounded": 8.756112,
+          "before-arena-lto-bounded": 11.086144,
+          "arena-lto": 3.768978,
+          "before-gc-lto": 5.574049,
+          "before-gc-lto-bounded": 10.612598,
+          "rust-o3": 1.707499,
+          "go-fast": 3.231508
+        },
+        "changed-net": {
+          "gc-lto": 3.606367,
+          "before-gc-lto": 5.633435,
+          "gc-lto-bounded": 8.366144,
+          "zig-o3": 1.758003,
+          "rust-o3": 1.528446,
+          "arena-lto-bounded": 8.886794,
+          "before-arena-lto": 5.418207,
+          "go-fast": 2.112692,
+          "before-arena-lto-bounded": 11.261603,
+          "arena-lto": 3.427388,
+          "before-gc-lto-bounded": 10.987668
+        },
+        "changed-value": {
+          "gc-lto": 3.422724,
+          "go-fast": 2.145062,
+          "rust-o3": 1.602994,
+          "before-gc-lto": 5.121938,
+          "before-arena-lto": 5.735579,
+          "before-arena-lto-bounded": 11.109603,
+          "arena-lto-bounded": 8.917539,
+          "arena-lto": 3.3958,
+          "zig-o3": 1.57555,
+          "before-gc-lto-bounded": 10.488173,
+          "gc-lto-bounded": 9.225366
+        }
+      }
+    },
+    {
+      "round": 29,
+      "order": [
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-lto-bounded": 8.214067,
+          "arena-lto-bounded": 8.687551,
+          "before-gc-lto-bounded": 12.11959,
+          "go-fast": 2.353989,
+          "before-gc-lto": 6.073586,
+          "before-arena-lto-bounded": 12.605481,
+          "gc-lto": 3.919747,
+          "rust-o3": 2.000571,
+          "before-arena-lto": 6.218432,
+          "zig-o3": 1.630684,
+          "arena-lto": 3.523329
+        },
+        "changed-net": {
+          "zig-o3": 1.622657,
+          "before-gc-lto": 6.086507,
+          "before-arena-lto-bounded": 12.342269,
+          "before-arena-lto": 6.380084,
+          "arena-lto": 3.591,
+          "go-fast": 2.352251,
+          "gc-lto": 3.639289,
+          "rust-o3": 1.508196,
+          "before-gc-lto-bounded": 12.030314,
+          "arena-lto-bounded": 13.25129,
+          "gc-lto-bounded": 9.309427
+        },
+        "changed-value": {
+          "rust-o3": 1.729984,
+          "arena-lto-bounded": 8.81379,
+          "arena-lto": 3.581483,
+          "before-gc-lto": 5.683029,
+          "zig-o3": 1.713864,
+          "before-gc-lto-bounded": 11.713934,
+          "go-fast": 2.036534,
+          "before-arena-lto": 5.628507,
+          "gc-lto-bounded": 9.286777,
+          "before-arena-lto-bounded": 11.34838,
+          "gc-lto": 3.772678
+        }
+      }
+    },
+    {
+      "round": 30,
+      "order": [
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-arena-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "before-gc-lto",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto",
+          "changed-value"
+        ],
+        [
+          "before-gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "before-arena-lto-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "go-fast": 2.293253,
+          "gc-lto-bounded": 9.089162,
+          "before-arena-lto": 5.989423,
+          "before-arena-lto-bounded": 11.677208,
+          "rust-o3": 1.693367,
+          "before-gc-lto": 5.91728,
+          "zig-o3": 1.38047,
+          "arena-lto-bounded": 9.606134,
+          "arena-lto": 3.693578,
+          "before-gc-lto-bounded": 12.029453,
+          "gc-lto": 4.064863
+        },
+        "changed-net": {
+          "before-arena-lto-bounded": 11.110905,
+          "go-fast": 2.101933,
+          "rust-o3": 1.551861,
+          "zig-o3": 1.41897,
+          "before-arena-lto": 5.779151,
+          "arena-lto-bounded": 9.741406,
+          "arena-lto": 3.523625,
+          "gc-lto": 3.538037,
+          "before-gc-lto": 6.057992,
+          "gc-lto-bounded": 9.470685,
+          "before-gc-lto-bounded": 11.419748
+        },
+        "changed-value": {
+          "zig-o3": 1.549405,
+          "rust-o3": 1.561674,
+          "gc-lto": 3.524028,
+          "before-arena-lto": 5.829939,
+          "gc-lto-bounded": 9.591838,
+          "before-gc-lto-bounded": 12.189384,
+          "go-fast": 2.428093,
+          "arena-lto": 3.424143,
+          "arena-lto-bounded": 9.837957,
+          "before-gc-lto": 6.108031,
+          "before-arena-lto-bounded": 11.625037
+        }
+      }
+    }
+  ]
+}

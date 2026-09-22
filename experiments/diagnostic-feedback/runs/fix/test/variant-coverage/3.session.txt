@@ -1,0 +1,12 @@
+Fixed.
+
+**What I changed:** `project/main.my` — the `match` in `describe` was missing an arm for the `Event.stop` variant (`E_INCOMPLETE_MATCH`). I added the arm:
+
+```python
+case Event.stop(name):
+    return "stopped"
+```
+
+The only stderr output is the pre-existing unused-`name`-binding warning pattern (also present on the original `start` arm); stdout is unaffected.
+
+**Command run:** `bin/mylang run project/main.my` → exit 0, stdout exactly `stopped\n` (`check` also exits 0).

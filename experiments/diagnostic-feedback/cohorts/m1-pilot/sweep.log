@@ -1,0 +1,17 @@
+# sweep 2026-09-19T12:45:09.593976+00:00 pending=16 jobs=1
+2026-09-19T12:45:56.350751+00:00 text/dev-checked/1: hidden-NO  text/dev-checked/1  invocations=13 failed=2 failed_on_changed=1 public=ok outcome=completed
+2026-09-19T12:46:44.014962+00:00 json_fix/dev-checked/1: hidden-NO  json_fix/dev-checked/1  invocations=18 failed=3 failed_on_changed=1 public=ok outcome=completed
+2026-09-19T12:47:10.737424+00:00 text_fix/dev-checked/1: hidden-NO  text_fix/dev-checked/1  invocations=17 failed=1 failed_on_changed=0 public=ok outcome=completed
+2026-09-19T12:48:09.997776+00:00 json/dev-checked/1: hidden-NO  json/dev-checked/1  invocations=10 failed=1 failed_on_changed=0 public=ok outcome=completed
+2026-09-19T12:48:29.333901+00:00 json/dev-bool/1: hidden-NO  json/dev-bool/1  invocations=10 failed=1 failed_on_changed=0 public=ok outcome=completed
+2026-09-19T12:48:53.310182+00:00 json_fix/dev-bool/1: hidden-NO  json_fix/dev-bool/1  invocations=15 failed=7 failed_on_changed=6 public=ok outcome=completed
+2026-09-19T12:49:18.549921+00:00 text_fix/dev-bool/1: hidden-NO  text_fix/dev-bool/1  invocations=8 failed=2 failed_on_changed=1 public=ok outcome=completed
+2026-09-19T12:49:40.684626+00:00 text/dev-bool/1: hidden-NO  text/dev-bool/1  invocations=14 failed=1 failed_on_changed=0 public=ok outcome=completed
+2026-09-19T12:50:04.577613+00:00 text_fix/dev-variant/1: hidden-NO  text_fix/dev-variant/1  invocations=18 failed=1 failed_on_changed=0 public=ok outcome=completed
+2026-09-19T12:50:25.708455+00:00 json_fix/dev-variant/1: hidden-NO  json_fix/dev-variant/1  invocations=12 failed=1 failed_on_changed=0 public=ok outcome=completed
+2026-09-19T12:50:48.748727+00:00 json/dev-variant/1: hidden-NO  json/dev-variant/1  invocations=10 failed=1 failed_on_changed=0 public=ok outcome=completed
+2026-09-19T12:51:09.534113+00:00 text/dev-variant/1: hidden-NO  text/dev-variant/1  invocations=10 failed=1 failed_on_changed=0 public=ok outcome=completed
+2026-09-19T12:51:36.552546+00:00 json/dev-generic/1: hidden-NO  json/dev-generic/1  invocations=12 failed=1 failed_on_changed=0 public=ok outcome=completed
+2026-09-19T12:52:00.826097+00:00 text_fix/dev-generic/1: hidden-NO  text_fix/dev-generic/1  invocations=11 failed=1 failed_on_changed=0 public=ok outcome=completed
+2026-09-19T12:52:38.116870+00:00 json_fix/dev-generic/1: hidden-NO  json_fix/dev-generic/1  invocations=9 failed=1 failed_on_changed=0 public=ok outcome=completed
+2026-09-19T12:53:15.489490+00:00 text/dev-generic/1: hidden-NO  text/dev-generic/1  invocations=7 failed=1 failed_on_changed=0 public=ok outcome=completed

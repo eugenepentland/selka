@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "note": "Pack soundness: every task must fail on the frozen baseline B and pass on the author's reference solution. Raw reports live outside the repository at ../mylang-eval/cascade-authoring/evidence/. unmodified_arm_passes records which tasks an arm already satisfies before any maintainer session; it is False everywhere except P1 on T7, whose redesign removed the parser's second position walk, which is what T7 asks for.",
+  "tasks": [
+    {
+      "task": "T1",
+      "on_B": false,
+      "on_reference": true,
+      "B_steps": {
+        "port-suite": "failed",
+        "t1-exponents": "failed",
+        "t1-goldens": "blocked"
+      },
+      "reference_steps": {
+        "port-suite": "passed",
+        "t1-exponents": "passed",
+        "t1-goldens": "passed"
+      },
+      "unmodified_arm_passes": {
+        "B": false,
+        "P1": false,
+        "P2": false
+      }
+    },
+    {
+      "task": "T2",
+      "on_B": false,
+      "on_reference": true,
+      "B_steps": {
+        "port-suite": "failed",
+        "t2-inches": "failed",
+        "t2-goldens": "blocked"
+      },
+      "reference_steps": {
+        "port-suite": "passed",
+        "t2-inches": "passed",
+        "t2-goldens": "passed"
+      },
+      "unmodified_arm_passes": {
+        "B": false,
+        "P1": false,
+        "P2": false
+      }
+    },
+    {
+      "task": "T3",
+      "on_B": false,
+      "on_reference": true,
+      "B_steps": {
+        "t3-measures": "failed",
+        "t3-goldens": "blocked"
+      },
+      "reference_steps": {
+        "t3-measures": "passed",
+        "t3-goldens": "passed"
+      },
+      "unmodified_arm_passes": {
+        "B": false,
+        "P1": false,
+        "P2": false
+      }
+    },
+    {
+      "task": "T4",
+      "on_B": false,
+      "on_reference": true,
+      "B_steps": {
+        "t4-layout": "failed",
+        "t4-goldens": "blocked"
+      },
+      "reference_steps": {
+        "t4-layout": "passed",
+        "t4-goldens": "passed"
+      },
+      "unmodified_arm_passes": {
+        "B": false,
+        "P1": false,
+        "P2": false
+      }
+    },
+    {
+      "task": "T5",
+      "on_B": false,
+      "on_reference": true,
+      "B_steps": {
+        "port-suite": "failed",
+        "t5-form-bounds": "failed"
+      },
+      "reference_steps": {
+        "port-suite": "passed",
+        "t5-form-bounds": "passed"
+      },
+      "unmodified_arm_passes": {
+        "B": false,
+        "P1": false,
+        "P2": false
+      }
+    },
+    {
+      "task": "T6",
+      "on_B": false,
+      "on_reference": true,
+      "B_steps": {
+        "port-suite": "failed",
+        "t6-dialects": "failed"
+      },
+      "reference_steps": {
+        "port-suite": "passed",
+        "t6-dialects": "passed"
+      },
+      "unmodified_arm_passes": {
+        "B": false,
+        "P1": false,
+        "P2": false
+      }
+    },
+    {
+      "task": "T7",
+      "on_B": false,
+      "on_reference": true,
+      "B_steps": {
+        "port-suite": "failed",
+        "t7-lex-column": "failed"
+      },
+      "reference_steps": {
+        "port-suite": "passed",
+        "t7-lex-column": "passed"
+      },
+      "unmodified_arm_passes": {
+        "B": false,
+        "P1": true,
+        "P2": false
+      }
+    }
+  ]
+}

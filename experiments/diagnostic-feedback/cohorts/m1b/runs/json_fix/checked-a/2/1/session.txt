@@ -1,0 +1,19 @@
+Fixed `project/main.my`:
+
+- **What changed:** `main` was adding `1` directly to a `Result[int, str]` (the `E_TYPE` error). I now match on `parse_count(args[0])`: `case Ok(value)` prints `1 + value`, `case Err(_)` prints `-1`. I also print `-1` when no argument is supplied, since a missing argument is not an integer.
+- **`parse_count` itself is unchanged** — it already returned `Ok`/`Err` correctly.
+
+Verification (all exit code 0, `bin/mylang check project/main.my` clean with no diagnostics):
+
+| Command | Output |
+|---|---|
+| `bin/mylang check project/main.my` | (no diagnostics, exit 0) |
+| `bin/mylang run project/main.my -- 41` | `42` |
+| `bin/mylang run project/main.my -- 0` | `1` |
+| `bin/mylang run project/main.my -- abc` | `-1` |
+| `bin/mylang run project/main.my -- 3.5` | `-1` |
+| `bin/mylang run project/main.my -- -7` | `-6` |
+| `bin/mylang run project/main.my -- 999999` | `1000000` |
+| `bin/mylang run project/main.my` (no args) | `-1` |
+
+Both cases in `public/expected.json` produce exactly the expected stdout (`42\n`, `1\n`).

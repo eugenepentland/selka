@@ -1,0 +1,12 @@
+**What I changed** (`project/main.my`, `main` only): the original `out.print(1 + parse_count(args[0]))` added `1` to a `Result`. I replaced it with a `match` on the result — `case Ok(count): out.print(1 + count)` and `case Err(_): out.print(-1)`. `parse_count` itself was left unchanged.
+
+**Commands and results:**
+
+- `bin/mylang check project/main.my` → exit 0, no diagnostics.
+- `bin/mylang run project/main.my -- 41` → `42` (expected)
+- `bin/mylang run project/main.my -- 0` → `1` (expected)
+- `bin/mylang run project/main.my -- abc` → `-1`
+- `bin/mylang run project/main.my -- -5` → `-4`
+- `bin/mylang run project/main.my -- 1.5` → `-1`
+
+Both `public/expected.json` cases pass, and non-integer arguments now print `-1`. 11 of the 20 compiler invocations were used.

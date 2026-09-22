@@ -1,0 +1,30 @@
+{
+  "commands": [
+    {
+      "command": "zig-out/bin/mylang test experiments/sexpr-port",
+      "exit": 0,
+      "result": "114 passed, 0 cached, 0 failed, 0 skipped across 8 programs"
+    },
+    {
+      "command": "python3 experiments/sexpr-port/golden_compare.py",
+      "exit": 0,
+      "result": "17/17 passed, 0 failed"
+    },
+    {
+      "command": "zig-out/bin/mylang-audit-20260920 test experiments/sexpr-port",
+      "exit": 0,
+      "result": "114 passed, 0 cached, 0 failed, 0 skipped across 8 programs",
+      "log": "tests-after.log"
+    }
+  ],
+  "benchmark": "checked-qbe-vs-zig.json",
+  "probes": "probes.json",
+  "optimized_aggregate_probe": "aggregate-assembly.json",
+  "guardian_exercised": false,
+  "goldens_after": {
+    "passed": 17,
+    "failed": 0,
+    "evidence": "goldens-after.json"
+  },
+  "followup_benchmark": "aggregate-change-vs-zig.json"
+}

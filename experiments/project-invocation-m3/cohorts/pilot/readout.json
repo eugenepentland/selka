@@ -1,0 +1,83 @@
+{
+  "applications": {
+    "planner": {
+      "diagnostics": [
+        "E_REMOVED_SPELLING"
+      ],
+      "public_passed": false,
+      "public_seconds": 0.042,
+      "ready": false
+    },
+    "sexpr-port": {
+      "diagnostics": [],
+      "public_passed": true,
+      "public_seconds": 38.227,
+      "ready": true
+    }
+  },
+  "blocker": {
+    "blocked_cases": [
+      "planner-boundary",
+      "planner-chain",
+      "planner-empty",
+      "planner-ties",
+      "planner-zero-duration"
+    ],
+    "detail": "the frozen planner snapshot does not compile with the frozen toolchain: `E_REMOVED_SPELLING` for `=>` and `&`, and `E_EXPORT_REMOVED` for plain `export`; it predates the Wave 1 surface migration of 2026-09-14",
+    "kind": "readiness",
+    "preflight_evidence": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/evidence/preflight.json",
+    "readiness_evidence": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/evidence/readiness.md",
+    "ready_applications": [
+      "sexpr-port"
+    ],
+    "ready_cases": [
+      "sexpr-escaping",
+      "sexpr-invalid-input",
+      "sexpr-nesting",
+      "sexpr-percent",
+      "sexpr-units"
+    ],
+    "summary": "no participant session was launched: the frozen application pack is not preflight-ready, and the runbook stops here rather than spending on participants"
+  },
+  "captured_utc": "2026-09-20T13:05:41.317805+00:00",
+  "cells": 0,
+  "cohort": "pilot",
+  "decision_rule": {
+    "row": "not-reached",
+    "verdict": "the predeclared decision rule cannot be applied without a scored cohort; the readiness stop takes precedence"
+  },
+  "gate": {
+    "evaluated": false,
+    "passed": null,
+    "reason": "the headroom pilot was not run because the runbook's readiness check failed before any participant was engaged"
+  },
+  "identity": {
+    "applications": {
+      "planner": "b1795b992bdc724067f8061e256fb38602abce52e2c18e7e548703cf4de042e3",
+      "sexpr-port": "c7b43e6be85e387e38db05a04bd12cf640d32f39d87e2e3cb2ba6bce6e2d0ca3"
+    },
+    "arms": [
+      "manual"
+    ],
+    "cache_policy": "fresh per-session ZIG_GLOBAL_CACHE_DIR/ZIG_LOCAL_CACHE_DIR and project verification cache under the session's .m3/, outside the application source tree",
+    "case_pack_sha256": "474e732999bd8860c45b14c06a08ae46b3affc5f0d02ab104a636ff3f8bf1b2c",
+    "case_split": "pilot",
+    "compiler_sha256": "4024b68f1815ba1a29955e6c15a5d52b62fd11a5ba8cd65deb5ab7e4790ced1c",
+    "events_module_sha256": "dcd98a352ad5e34a7b55a47aa9a0bc05d210cd236b94bdcbcad553560b5e3302",
+    "host_sha256": "41f7a1a1404c0b5fa23898449504a8c2638dcfd933e7e8054731f4bc97dcaba8",
+    "invocation_limit": null,
+    "launcher_sha256": "668863638be91ccc4c435c7337de01bfc368bcd8072e0b849e9009689b27fa1d",
+    "model": "deepseek-v4-flash",
+    "qbe_sha256": "808cce427c310c4ecdcdae6360fade2f5579548f5af3852b1c94e77b22960c5d",
+    "reasoning_effort": "max",
+    "repetitions": 2,
+    "runner_sha256": "7f6b437be545f7e4b6c00eddbf13f9a20cb13c75c8ea3abbf52297ee84f5d2f0",
+    "session_deadline_s": 900.0,
+    "version": "m3-cohort-identity-v1",
+    "workflow_scripts_digest": "3fae73ef0be0bba936052c9fd88b7140647edac1e90e9ff40c27f2eb23f597df"
+  },
+  "next_action": "do not spend on participants; either supply a current second application snapshot (a working-tree application that compiles with the frozen toolchain) or re-specify the experiment",
+  "recorded": 0,
+  "status": "not-run",
+  "version": "m3-readout-v1"
+}

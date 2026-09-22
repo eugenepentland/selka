@@ -1,0 +1,53 @@
+dsh: reasoning:
+Let me read the main.my, PROMPT.md, request.md.
+dsh: reasoning:
+The program looks correct at a glance: `exceeds` returns `a > b`, which is a bool. But the return type is `int`. In mylang, conditions must be bool and integer types are fixed width. Comparing `a > b` yields `bool`, and returning a bool where `int` is declared — maybe the compiler coerces? Actually likely the issue: `out.print(exceeds(...))` prints "True"/"False" perhaps? Let's check by running.
+
+Wait, actually the declared return type is `int`, so maybe the compiler rejects bool -> int. But maybe bool is not int in mylang. Let's run the compiler to see.
+
+Let me first check what "installed compiler" — bin/mylang. Let's check.
+
+Compiler invocations count: at most 20. Let me be efficient.
+
+Let's run `bin/mylang check project/main.my` and then run.
+
+Actually, the fix likely: return `1 if a > b else 0`. But wait — the task title mentions "diagnostic-feedback" and it's about bool. Maybe the compiler rejects `return bigger` because it's bool and expected int. Let's check.
+
+Also, an edge: int(text) may fail for negative numbers? `Some(value)` / `None`. That's fine.
+
+Let me run check first.
+dsh: reasoning:
+As suspected: bool vs int. Fix: return 1 if a > b else 0.
+
+In mylang, is there a conditional expression? Python syntax `1 if a > b else 0` — probably supported. Let me write it.
+
+Change only what request requires: `exceeds` must print 1/0. Minimal change: 
+
+```
+def exceeds(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+That's safe. But maybe the checker counts minimal diff? Either works. Let me use the ternary if supported. Hmm, safer to use if statement since docs mention Python syntax but I'm not sure ternaries exist. Let me try ternary; if it fails, fall back. But compiler invocations are limited to 20 — we've used 1.
+
+Actually let's just use the if statement — definitely supported (docs/statements.md). Simple and safe.
+
+Also, need to double-check `number` handles things — e.g. int(text) for "5" returns Some(5). Fine.
+
+Edge case: what about args indexing if fewer args? Task just says first argument larger than second. Keep as is.
+
+Let me edit.
+dsh: reasoning:
+Both public examples pass. Now check other inputs for the "same behavior for every input" requirement: equal values, negatives, large numbers, zero.
+
+Let me run a few more cases: 3 3 -> 0, -1 -5 -> 1, -5 -1 -> 0, 0 0 -> 0, 10 9 -> 1.
+
+Each run is a compiler invocation; we've used 2 so far (1 check + 1 run... actually the run command above had two runs, so 3 invocations: check + run + run). Limit is 20. I can batch multiple runs in one bash call but each is still an invocation. Let's do 4 more meaningful cases → 7 total.
+dsh: reasoning:
+All correct: 3 3 -> 0, -1 > -5 -> 1, -5 > -1 -> 0, 0 0 -> 0.
+
+Total compiler invocations: 1 (check) + 2 (runs) + 4 (runs) = 7. Under 20.
+
+Done. Give final short message.

@@ -1,0 +1,493 @@
+{
+  "schema": "m2-design-v1",
+  "cohort_id": "m2",
+  "frozen_utc": "2026-09-19T21:32:34.919014+00:00",
+  "module": "experiments/diagnostic-feedback-m2",
+  "status": "frozen; no M2 comparison session has run",
+  "preregistration": {
+    "path": "docs/audits/m2-preregistration-2026-09-19.md",
+    "sha256": "6e131206bdaf5259a0dace3f9410aabe4cf3014b4beffa38d5acac1eefb4f2c8"
+  },
+  "corrections": [
+    {
+      "date": "2026-09-19",
+      "before": "14 cases / 28 task-cells",
+      "after": "13 cases / 26 task-cells",
+      "what": "case-list correction before any M2 session: `variant-a` and `variant-b` are byte-identical tasks (project/, public/, hidden/ and request.md identical; case.json differs only in id), so a paired-by-case analysis counting both would count one task twice and inflate n",
+      "action": "`variant-b` is excluded from the design case list; the corpus on disk and its digest are unchanged, because the corpus is also what M1b measured",
+      "also_true_of_m1b": true,
+      "effective_paired_n": 13
+    }
+  ],
+  "artifacts": {
+    "runner": {
+      "path": "experiments/diagnostic-feedback-m2/enforcing_runner.py",
+      "sha256": "f8b70c35ad67ba4de9600005cfb05b413f45b7f6aea01987abc73824b79c0cfd",
+      "version": 2,
+      "note": "v2 stop classification plus `--cohort-id`; the record schema and the stop semantics are unchanged by the flag"
+    },
+    "budget": {
+      "path": "experiments/diagnostic-feedback-m2/budget.py",
+      "sha256": "28b4fd13d119536b4777890b7176a30dc18f2806e4b87a602ff52e3dbe0080ef",
+      "note": "unmodified; the frozen contract"
+    },
+    "usage_reader": {
+      "path": "experiments/diagnostic-feedback-m2/m2_usage.py",
+      "sha256": "3f6941b469dcd8e0a53f5f6235ac02ab0b726576b026ce94bd531817e11a4cee",
+      "note": "unmodified semantics"
+    },
+    "m1_runner": {
+      "path": "experiments/diagnostic-feedback-m2/run.py",
+      "sha256": "eea7b7cc331ee656cbf2c8ffd24e1e46bb98ec4d63a8eba93396be24bbd36f66",
+      "note": "owns the working-copy layout, the M1 prompt and the grading path"
+    },
+    "prompt_template": {
+      "where": "enforcing_runner.PROMPT",
+      "sha256": "73f425c69ad2c4820cb8f05e7821c0b9172066446ab4335e9893df32e39e8e43",
+      "chars": 922,
+      "placeholders": [
+        "request",
+        "limit",
+        "cap"
+      ],
+      "m1_base_template_sha256": "ae2fba8f334fb92a489a328e28d1d07615ca84f314d0fb89f39980aa8187ab30"
+    },
+    "superseded_runners": [
+      {
+        "sha256": "52018fe9c5197cecf67332bdf159bc560d55a15af4659236772886665aa4c955",
+        "version": 1,
+        "attribution": "produced the 8-session pilot (cohorts/pilot-5000) and the cap-1000 probe (cohorts/overshoot-1000); its binary killed_by_harness predicate cannot certify a stop against a SIGTERM-trapping launcher"
+      },
+      {
+        "sha256": "5548c55541fce4c58d724872d0eb003fd269d330fe17589367087abb2c4f2ba1",
+        "version": 2,
+        "attribution": "first tri-state-stop revision; produced no live session, and produced cohorts/overshoot-1000/dev-checked/repair/reclassification.json (sha256 4cfa72c9103bcc45d30e968f8cc3a4889fbba2b9f7b7b9c04382ed3eae815cec). The current revision re-derives the same verdict with identical content apart from the provenance fields"
+      }
+    ]
+  },
+  "compiler": {
+    "path": "experiments/cascade/tools/bin/mylang",
+    "sha256": "4a9ad0c17789e422fa90dbb8e91497f007abdc2ef5152f3123889dbdc2cfbcb2",
+    "role": "participant wrapper and grading, frozen for both policies"
+  },
+  "participant": {
+    "launcher": [
+      "dsh",
+      "--profile",
+      "headless",
+      "{prompt}"
+    ],
+    "model": "deepseek-v4-flash",
+    "reasoning_effort": "max",
+    "arm": "text",
+    "invocation_limit": 20,
+    "session_deadline_s": 900,
+    "cache_policy": "ZIG_GLOBAL_CACHE_DIR and ZIG_LOCAL_CACHE_DIR per candidate inside the working copy",
+    "budget_disclosure": "the cap sentence is in the prompt and in every raw session log",
+    "cohort_id_flag": "--cohort-id (default pilot-5000); the M2 run passes --cohort-id m2",
+    "one_participant_at_a_time": true
+  },
+  "cases": {
+    "split": "test",
+    "design_count": 13,
+    "corpus": {
+      "path": "experiments/diagnostic-feedback-m2/cases/test",
+      "digest_unchanged_on_disk": "7efcd5738e970bb06271c93159caa3bf2721ad73ce18986a17b4864035f4bcdb",
+      "files": 551,
+      "contains_on_disk": [
+        "bool-a",
+        "bool-b",
+        "checked-a",
+        "checked-b",
+        "checked-c",
+        "checked-d",
+        "checked-e",
+        "generic-a",
+        "generic-b",
+        "generic-c",
+        "generic-d",
+        "generic-e",
+        "variant-a",
+        "variant-b"
+      ],
+      "digest_equals_m1b_manifest": true,
+      "note": "the digest pins the corpus as it is on disk (14 case directories) and is unchanged; the DESIGN list below is the 13 distinct tasks"
+    },
+    "excluded": [
+      {
+        "case": "variant-b",
+        "duplicate_of": "variant-a",
+        "reason": "project/, public/ and hidden/ are byte-identical and request.md is identical; case.json differs only in id; the rendered prompts hash the same",
+        "effect": "excluded before any session; effective paired n = 13"
+      }
+    ],
+    "families": {
+      "bool-int": [
+        "bool-a",
+        "bool-b"
+      ],
+      "checked-result": [
+        "checked-a",
+        "checked-b",
+        "checked-c",
+        "checked-d",
+        "checked-e"
+      ],
+      "generic-requirement": [
+        "generic-a",
+        "generic-b",
+        "generic-c",
+        "generic-d",
+        "generic-e"
+      ],
+      "variant-coverage": [
+        "variant-a"
+      ]
+    },
+    "family_status": {
+      "bool-int": "paired",
+      "checked-result": "paired",
+      "generic-requirement": "paired",
+      "variant-coverage": "descriptive-only (fewer than 2 paired cases)"
+    },
+    "list": [
+      {
+        "case": "bool-a",
+        "family": "bool-int",
+        "prompt_sha256_at_cap_5000": "133712a0be9b31784cb450ce2f1792a7266f4cfb26460903a3004ba224841522"
+      },
+      {
+        "case": "bool-b",
+        "family": "bool-int",
+        "prompt_sha256_at_cap_5000": "fd5e8b6299da42b1fbeb1ca198c6b9479ca806822795feab4d423ca27360d5ca"
+      },
+      {
+        "case": "checked-a",
+        "family": "checked-result",
+        "prompt_sha256_at_cap_5000": "8a6525a75d0cf03e7fbb0ae08760d6fa2e9105a2e332847c3916a00e37567494"
+      },
+      {
+        "case": "checked-b",
+        "family": "checked-result",
+        "prompt_sha256_at_cap_5000": "0354deca8644111bd2695196bffa00c8cf83effd60dc00e477e7f4c065779feb"
+      },
+      {
+        "case": "checked-c",
+        "family": "checked-result",
+        "prompt_sha256_at_cap_5000": "7bdca4a1b42f474ce993f4bef21ca89d0748e0bd1ac5574a475f938263b6a8aa"
+      },
+      {
+        "case": "checked-d",
+        "family": "checked-result",
+        "prompt_sha256_at_cap_5000": "42eba4f78805eeabbceaa286f9ddb3b83c93e894c364385a03d69088db5dd881"
+      },
+      {
+        "case": "checked-e",
+        "family": "checked-result",
+        "prompt_sha256_at_cap_5000": "236f96866087726aa46f682cd5b038a44e489f1a6d9be9cb83743b5d108f4d16"
+      },
+      {
+        "case": "generic-a",
+        "family": "generic-requirement",
+        "prompt_sha256_at_cap_5000": "fd2d1435c03a4147a67227e014b252a98ab6e9da45cf639bcca0f4254a6b3096"
+      },
+      {
+        "case": "generic-b",
+        "family": "generic-requirement",
+        "prompt_sha256_at_cap_5000": "426e38b5847c55573cc0fe71518edb535439c1867c5834e98c5186c0076df696"
+      },
+      {
+        "case": "generic-c",
+        "family": "generic-requirement",
+        "prompt_sha256_at_cap_5000": "3569336da34f8b97c0a6bed8877f00e903491dee8c66b226c571b30fe4875689"
+      },
+      {
+        "case": "generic-d",
+        "family": "generic-requirement",
+        "prompt_sha256_at_cap_5000": "ae3813b97ff4000435508a78f209b940931a1932c93ced5ff6a20d6058b3b6bc"
+      },
+      {
+        "case": "generic-e",
+        "family": "generic-requirement",
+        "prompt_sha256_at_cap_5000": "ef2b0587f6480a8206b623eb657f6db6bab38fc6b6953b2968adb2e9c437ef89"
+      },
+      {
+        "case": "variant-a",
+        "family": "variant-coverage",
+        "prompt_sha256_at_cap_5000": "191564e5f55de19ec30d1052ab788d06b180737215f3422f1fc63e6fe303bb20"
+      }
+    ],
+    "prompt_sha256_at_cap_5000": {
+      "bool-a": "133712a0be9b31784cb450ce2f1792a7266f4cfb26460903a3004ba224841522",
+      "bool-b": "fd5e8b6299da42b1fbeb1ca198c6b9479ca806822795feab4d423ca27360d5ca",
+      "checked-a": "8a6525a75d0cf03e7fbb0ae08760d6fa2e9105a2e332847c3916a00e37567494",
+      "checked-b": "0354deca8644111bd2695196bffa00c8cf83effd60dc00e477e7f4c065779feb",
+      "checked-c": "7bdca4a1b42f474ce993f4bef21ca89d0748e0bd1ac5574a475f938263b6a8aa",
+      "checked-d": "42eba4f78805eeabbceaa286f9ddb3b83c93e894c364385a03d69088db5dd881",
+      "checked-e": "236f96866087726aa46f682cd5b038a44e489f1a6d9be9cb83743b5d108f4d16",
+      "generic-a": "fd2d1435c03a4147a67227e014b252a98ab6e9da45cf639bcca0f4254a6b3096",
+      "generic-b": "426e38b5847c55573cc0fe71518edb535439c1867c5834e98c5186c0076df696",
+      "generic-c": "3569336da34f8b97c0a6bed8877f00e903491dee8c66b226c571b30fe4875689",
+      "generic-d": "ae3813b97ff4000435508a78f209b940931a1932c93ced5ff6a20d6058b3b6bc",
+      "generic-e": "ef2b0587f6480a8206b623eb657f6db6bab38fc6b6953b2968adb2e9c437ef89",
+      "variant-a": "191564e5f55de19ec30d1052ab788d06b180737215f3422f1fc63e6fe303bb20"
+    },
+    "dev_case_overlap": {
+      "dev-bool": [
+        "bool-a"
+      ],
+      "dev-checked": [
+        "checked-a"
+      ],
+      "dev-variant": [
+        "variant-a",
+        "variant-b"
+      ],
+      "dev-generic": [],
+      "effect": "the pilot's dev cells ran on three instances that are also M2 design cases, so the pilot's spend figures describe some of M2's own tasks and its 'no prior trajectories' claim does not hold for them; no treatment contamination in M2 (fresh sessions, no tuning)"
+    },
+    "why_not_dev": "cap 5000 does not bind on the dev cases (pilot's largest dev cell 2592 = 51.8% of cap); on the test corpus the M1b replay bounds 3 of 14 repair tasks at cap 5000 and keeps 11 answers \u2014 note those replay denominators count the duplicated variant task twice, so they are indicative rather than this 13-case sheet's own denominators"
+  },
+  "design": {
+    "cap": 5000,
+    "cap_unit": "generated (output) tokens per model call, reasoning included once",
+    "envelope": "one per task, shared by every candidate of that task and by the selection step",
+    "repetitions": 1,
+    "sheet_size": {
+      "cases": 13,
+      "policies": 2,
+      "task_cells": 26,
+      "paired_by": "case (one pair per case)"
+    },
+    "policies": {
+      "repair": {
+        "sessions_per_task": 1,
+        "end": "an overshoot ends the task's only candidate; the task keeps no answer"
+      },
+      "independent": {
+        "sessions_per_task": "fresh sessions, one after another",
+        "start_rule": "another candidate starts only while remaining() > 0 (and within the pool bound of `unresolved`)",
+        "envelope": "each candidate charges the SAME envelope instance",
+        "live_vs_replay": "live there is no look-ahead: a call's size is unknown until it is generated, so a candidate's FIRST call may itself overshoot and end the cell; the replay could refuse to start a candidate whose first call did not fit, so live independent is weakly more expensive per started candidate and the replay's 'unstarted' counts have no live counterpart"
+      }
+    },
+    "selection": {
+      "rule": "public check only; the hidden manifest runs once, on the selected answer, and never chooses",
+      "selected": "first complete public-passing candidate, else the last complete candidate, else nothing",
+      "no_selection": "the task contributes no answer and hidden_acceptance is null (never false)"
+    },
+    "metrics": {
+      "primary": {
+        "generated_tokens_per_accepted_answer": "R_p = sum_c S(c,p) / sum_c A(c,p)",
+        "input_volume_per_accepted_answer": "RV_p = sum_c V(c,p) / sum_c A(c,p)",
+        "accepted": "A(c,p) = 1 iff the selected answer passes the hidden manifest; no selection => 0"
+      },
+      "secondary": [
+        "public acceptance",
+        "hidden acceptance",
+        "candidates started",
+        "candidates ended by overshoot",
+        "compiler invocations"
+      ],
+      "acceptance_ceiling_note": "M1b's unbudgeted sessions accepted 111/112 hidden cohort-wide (the text arm 28/28), so acceptance may sit at ceiling and the cost-per-answer comparison is the informative part",
+      "honest_bound": "live spend is bounded by cap + the overshooting call, never by the cap alone: the harness can only stop the participant after that call's usage line is written"
+    },
+    "candidate_end_semantics": {
+      "rule": "an overshoot-ended candidate is incomplete and unselectable EVEN WHEN its sealed snapshot passes public and hidden; this binds both policies symmetrically and is a deliberate commitment device",
+      "observed_instance": {
+        "cell": "dev-checked/repair",
+        "cap": 1000,
+        "runner": "52018fe9 (v1)",
+        "spent_generated": 1131,
+        "calls": 7,
+        "overshoot": 131,
+        "out_of_band_grading_of_the_killed_snapshot": {
+          "public": "2/2",
+          "hidden": "4/4"
+        },
+        "meaning": "the envelope discarded an answer that was already correct because the task closed 131 generated tokens past a cap of 1000"
+      }
+    },
+    "stop_semantics": {
+      "schema": "tri-state-v1",
+      "states": {
+        "signal": "the process died from the signal the harness sent (success)",
+        "graceful-after-request": "SIGTERM sent, process reaped inside the grace window, and no call charged after the refusal (success; the expected `dsh` shape)",
+        "none": "no stop requested, process outlived the grace window, or calls continued after the refusal (failure)"
+      },
+      "launcher_note": "dsh --profile headless installs process.on('SIGTERM', () => interrupt(0)) (\u2026/@deepseek-ai/dsh/lib/profile-boot-Dk-7KqJc.js) and exits 0, so a signal-exit predicate is structurally unreachable for this launcher; v1's binary killed_by_harness was the wrong predicate",
+      "mechanism_failures_fire_on": [
+        "ended_by_overshoot with stop == none",
+        "any call charged after the refusal without the after_overshoot flag",
+        "an overshoot above 3x the cap",
+        "a candidate that overshot yet is marked complete"
+      ],
+      "graceful_after_request_is": "a SUCCESS, not a mechanism failure",
+      "strictness": "one call charged after the refusal downgrades the cell to stop: none; late_calls_after_stop and the late call keys are recorded so an in-flight flush is distinguishable from continued generation"
+    },
+    "sensitivities_predeclared": [
+      "the primary rule on the public-acceptance denominator",
+      "the primary rule on input volume per accepted answer",
+      "the same rule re-including variant-b (the duplicate), to show what the corrected case list avoids; reported as a defect-sensitivity and never as the design",
+      "'correct at kill': count and cost of overshoot-ended candidates whose sealed snapshot passes public and hidden (graded out of band, no model calls), reported separately and never substituted for the primary metric"
+    ]
+  },
+  "analysis": {
+    "pairing": "paired by case, treatment - baseline, per family; pooled only as a secondary view",
+    "treatment": "independent",
+    "baseline": "repair",
+    "interval": {
+      "method": "paired bootstrap by case",
+      "resamples": 10000,
+      "seed": 20260919,
+      "percentile": [
+        2.5,
+        97.5
+      ],
+      "detail": "resample the group's case indices with replacement and evaluate both policies on the same drawn cases"
+    },
+    "families": {
+      "bool-int": 2,
+      "checked-result": 5,
+      "generic-requirement": 5,
+      "variant-coverage": 1
+    },
+    "family_status": {
+      "bool-int": "paired",
+      "checked-result": "paired",
+      "generic-requirement": "paired",
+      "variant-coverage": "descriptive-only (fewer than 2 paired cases)"
+    },
+    "acceptance_contrasts": {
+      "method": "exact two-sided McNemar (binomial) on discordant pairs, plus a paired bootstrap interval on the difference of proportions",
+      "alpha_adjustment": "none; predeclared descriptive states"
+    },
+    "decision_rule": {
+      "estimand": "dR = R_independent - R_repair per group (positive = independent costs more per accepted answer)",
+      "equivalence_margin_delta": 1000,
+      "equivalence_margin_unit": "generated tokens per accepted answer (one fifth of the per-task cap)",
+      "outcomes": {
+        "no_separation": "lo >= -delta and hi <= +delta; materiality outranks significance (an interval inside the margin is no separation even if it excludes 0)",
+        "policy_wins": "hi < -delta => independent wins; lo > +delta => repair wins",
+        "inconclusive": "every other interval (it contains a value inside the margin and is not wholly inside it)"
+      },
+      "families_with_fewer_than_two_pairs": {
+        "rule": "reported descriptively (point estimate and raw numbers only; no interval is formed), excluded from the overall composition, and the exclusion is stated wherever the overall state appears",
+        "applies_to": [
+          "variant-coverage"
+        ]
+      },
+      "degenerate_denominator": {
+        "one_policy_zero_accepted": "that policy cannot win the group; if the other accepts >= 1 the group is a win for it, flagged denominator-degenerate",
+        "both_zero_accepted": "the group is inconclusive (nothing to price)"
+      },
+      "acceptance_cost_clause": "a primary win accompanied by a significantly negative paired acceptance difference is recorded as a win AND annotated 'with an acceptance deficit'",
+      "overall_composition": {
+        "over": "the families with at least 2 paired cases",
+        "all_no_separation": "no separation",
+        "exactly_one_policy_wins_some_family_with_no_other_win_and_no_inconclusive_family": "that policy wins",
+        "anything_else": "inconclusive"
+      },
+      "pooled": "same rule over all 13 design cases, reported as a secondary view only and never overriding a family state"
+    },
+    "discipline": {
+      "one_participant_at_a_time": true,
+      "missing_or_invalid": "stay visible, never imputed, never counted as zero spend",
+      "retry": "a new attempt with a reason; attempt 1 is preserved and never overwritten",
+      "spend": "per-call ground truth; each call's usage counted once and deduplicated by (session, call index); the log carries each usage twice (data.usage and a trailing stream chunk)",
+      "audit": "every cell audited against the frozen digests; records are audited under the mechanism rule of the runner sha they name",
+      "frozen_artifact_change": "re-freeze this sheet before the first session; a record whose runner_sha256 is not the frozen one is not an M2 observation",
+      "scratch": "experiments/diagnostic-feedback-m2/.tmp/ only"
+    }
+  },
+  "evidence_inputs": [
+    {
+      "role": "mechanism pilot (8 sessions, cap 5000, dev cases, runner v1)",
+      "path": "docs/audits/m2-pilot-2026-09-19.md",
+      "note": "its dev cases are three of this design's tasks (dev-bool/=bool-a, dev-checked/=checked-a, dev-variant/=variant-a)"
+    },
+    {
+      "role": "simulated cap binding on the test corpus (replay of M1b, no sessions)",
+      "path": "docs/audits/m2-budget-calibration-2026-09-19.md",
+      "note": "its 14-task denominators count the duplicated variant task twice"
+    },
+    {
+      "role": "the unbudgeted M1b cohort whose cases these are",
+      "path": "docs/audits/m1b-diagnostic-feedback-readout-2026-09-19.md",
+      "note": "111/112 hidden acceptance cohort-wide, 28/28 for the text arm"
+    },
+    {
+      "role": "the one live overshoot probe at cap 1000 (runner v1) and its reclassification",
+      "path": "experiments/diagnostic-feedback-m2/cohorts/overshoot-1000/dev-checked/repair/record.json",
+      "reclassification": "experiments/diagnostic-feedback-m2/cohorts/overshoot-1000/dev-checked/repair/reclassification.json",
+      "reclassification_producer_sha256": "5548c55541fce4c58d724872d0eb003fd269d330fe17589367087abb2c4f2ba1",
+      "reclassification_reverified_by_current_runner": "identical content apart from the provenance fields"
+    }
+  ],
+  "sessions": {
+    "m2_comparison_sessions_run": 0,
+    "approved_but_unspent": {
+      "what": "the second overshoot probe (dev-bool/repair at cap 1000)",
+      "why": "with a SIGTERM-trapping launcher it would reproduce the same v1 classification dead-end as probe 1 and could not add evidence; the stop rule forbade spending it"
+    },
+    "prior_sessions_in_this_module": {
+      "pilot": 8,
+      "probe": 1
+    },
+    "ceiling_at_M": {
+      "1": 26,
+      "2": 39,
+      "3": 52,
+      "5": 78
+    },
+    "ceiling_formula": "13 repair sessions + 13 x M independent sessions"
+  },
+  "unresolved": [
+    {
+      "id": "independent-candidate-pool",
+      "question": "how many independent candidates may a cell start, and is there a per-candidate sub-allowance?",
+      "status": "UNRESOLVED \u2014 the user's choice; must be fixed before the first M2 session",
+      "why_unresolved": "the pilot's independent cells ran one candidate per cell (its stop_reason was session-budget, not envelope-exhausted, with 2408-4250 generated tokens left), so live multi-candidate independent is demonstrated only against stand-in processes",
+      "options": {
+        "A_pool_bound_M_no_sub_allowance": {
+          "recommended": true,
+          "M": 5,
+          "rule": "start while remaining() > 0 and started < M",
+          "session_ceiling": 78
+        },
+        "B_envelope_only": {
+          "rule": "start while remaining() > 0",
+          "session_ceiling": "unbounded"
+        },
+        "C_per_candidate_sub_allowance": {
+          "rule": "cap/M per candidate",
+          "effect": "changes the treatment; no replayed policy models it"
+        },
+        "D_pool_bound_M3": {
+          "M": 3,
+          "session_ceiling": 52
+        }
+      },
+      "recommendation": "A with M = 5 and no per-candidate sub-allowance (matches the runner's declared default; the envelope stays the only spending bound)",
+      "evidence": "simulated per-task candidate counts at cap 5000: independent started 28 candidates over 14 corpus tasks, 2.0/task, worst task 3 (headline pool; 25 started, worst 2 in the text pool) \u2014 simulated, not live"
+    }
+  ],
+  "operational_caveats": [
+    {
+      "id": "cohort_id-label",
+      "status": "RESOLVED before the run",
+      "resolution": "`--cohort-id` added to the runner (default pilot-5000); the M2 run passes `--cohort-id m2`"
+    }
+  ],
+  "constraints": {
+    "never_write": [
+      "experiments/diagnostic-feedback/",
+      "experiments/cascade/"
+    ],
+    "do_not_modify": [
+      "budget.py",
+      "m2_usage.py"
+    ],
+    "scratch": "experiments/diagnostic-feedback-m2/.tmp/ (never /tmp)"
+  }
+}

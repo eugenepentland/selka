@@ -1,0 +1,305 @@
+1/25 qbe_build_backend.test.LLVM defaults to O3 for ReleaseFast and O0 for Debug...OK
+2/25 qbe_build_backend.test.LLVM target probe retains CPU and positive and negative features...OK
+3/25 qbe_build_backend.test.LLVM adapter identity changes when an imported sibling changes...OK
+4/25 qbe_build_io.test.a build context reclaims its scratch on deinit, so repeated builds do not accumulate...OK
+5/25 qbe_build_io.test.one staging folder per directory contains concurrent and abandoned scratch...OK
+6/25 qbe_build_io.test.concurrent staging in one destination never loses a child to another build's reclaim...unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x104ac60 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x116ff08 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x11c08be in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x11c0c60 in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x11be863 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:175:43: 0x128694b in temporary (qbe_build_backend.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:451:40: 0x12ba531 in raceStaging (qbe_build_backend.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x12b9fc5 in callFn__anon_44623 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:1457:30: 0x12b9cc0 in entryFn (std.zig)
+                return callFn(f, self.fn_args);
+                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/os/linux/x86_64.zig:134:5: 0x11d0225 in clone (std.zig)
+    asm volatile (
+    ^
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x104ac60 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x116ff08 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x11c08be in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x11c0c60 in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x11be863 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:175:43: 0x128694b in temporary (qbe_build_backend.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:451:40: 0x12ba531 in raceStaging (qbe_build_backend.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x12b9fc5 in callFn__anon_44623 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:1457:30: 0x12b9cc0 in entryFn (std.zig)
+                return callFn(f, self.fn_args);
+                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/os/linux/x86_64.zig:134:5: 0x11d0225 in clone (std.zig)
+    asm volatile (
+    ^
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x104ac60 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x116ff08 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x11c08be in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x11c0c60 in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x11be863 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:175:43: 0x128694b in temporary (qbe_build_backend.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:451:40: 0x12ba531 in raceStaging (qbe_build_backend.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x12b9fc5 in callFn__anon_44623 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:1457:30: 0x12b9cc0 in entryFn (std.zig)
+                return callFn(f, self.fn_args);
+                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/os/linux/x86_64.zig:134:5: 0x11d0225 in clone (std.zig)
+    asm volatile (
+    ^
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x104ac60 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x116ff08 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x11c08be in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x11c0c60 in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x11be863 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:175:43: 0x128694b in temporary (qbe_build_backend.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:451:40: 0x12ba531 in raceStaging (qbe_build_backend.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x12b9fc5 in callFn__anon_44623 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:1457:30: 0x12b9cc0 in entryFn (std.zig)
+                return callFn(f, self.fn_args);
+                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/os/linux/x86_64.zig:134:5: 0x11d0225 in clone (std.zig)
+    asm volatile (
+    ^
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x104ac60 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x116ff08 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x11c08be in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x11c0c60 in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x11be863 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:175:43: 0x128694b in temporary (qbe_build_backend.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:451:40: 0x12ba531 in raceStaging (qbe_build_backend.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x12b9fc5 in callFn__anon_44623 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:1457:30: 0x12b9cc0 in entryFn (std.zig)
+                return callFn(f, self.fn_args);
+                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/os/linux/x86_64.zig:134:5: 0x11d0225 in clone (std.zig)
+    asm volatile (
+    ^
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x104ac60 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x116ff08 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x11c08be in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x11c0c60 in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x11be863 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:175:43: 0x128694b in temporary (qbe_build_backend.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:451:40: 0x12ba531 in raceStaging (qbe_build_backend.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x12b9fc5 in callFn__anon_44623 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:1457:30: 0x12b9cc0 in entryFn (std.zig)
+                return callFn(f, self.fn_args);
+                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/os/linux/x86_64.zig:134:5: 0x11d0225 in clone (std.zig)
+    asm volatile (
+    ^
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x104ac60 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x116ff08 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x11c08be in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x11c0c60 in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x11be863 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:175:43: 0x128694b in temporary (qbe_build_backend.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:451:40: 0x12ba531 in raceStaging (qbe_build_backend.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x12b9fc5 in callFn__anon_44623 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:1457:30: 0x12b9cc0 in entryFn (std.zig)
+                return callFn(f, self.fn_args);
+                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/os/linux/x86_64.zig:134:5: 0x11d0225 in clone (std.zig)
+    asm volatile (
+    ^
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x104ac60 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x116ff08 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x11c08be in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x11c0c60 in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x11be863 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:175:43: 0x128694b in temporary (qbe_build_backend.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:451:40: 0x12ba531 in raceStaging (qbe_build_backend.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x12b9fc5 in callFn__anon_44623 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:1457:30: 0x12b9cc0 in entryFn (std.zig)
+                return callFn(f, self.fn_args);
+                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/os/linux/x86_64.zig:134:5: 0x11d0225 in clone (std.zig)
+    asm volatile (
+    ^
+unexpected errno: 2
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/posix.zig:1672:40: 0x104ac60 in unexpectedErrno (std.zig)
+        std.debug.dumpCurrentStackTrace(.{});
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:1448:37: 0x116ff08 in unexpectedErrno (std.zig)
+        return posix.unexpectedErrno(err);
+                                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3817:61: 0x11c08be in filePathKind (std.zig)
+                else => |err| return syscall.unexpectedErrno(err),
+                                                            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:3460:46: 0x11c0c60 in dirCreateDirPath (std.zig)
+                const kind = try filePathKind(t, dir, component.path);
+                                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Dir.zig:847:39: 0x11be863 in createDirPath (std.zig)
+    _ = try io.vtable.dirCreateDirPath(io.userdata, dir, sub_path, .default_dir);
+                                      ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:175:43: 0x128694b in temporary (qbe_build_backend.zig)
+            std.Io.Dir.cwd().createDirPath(self.io, staging) catch |err| switch (err) {
+                                          ^
+/home/epentland/ai/canopy/mylang/src/qbe_build_io.zig:451:40: 0x12ba531 in raceStaging (qbe_build_backend.zig)
+        const child = context.temporary(worker.parent) catch {
+                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:422:13: 0x12b9fc5 in callFn__anon_44623 (std.zig)
+            @call(.auto, f, args);
+            ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Thread.zig:1457:30: 0x12b9cc0 in entryFn (std.zig)
+                return callFn(f, self.fn_args);
+                             ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/os/linux/x86_64.zig:134:5: 0x11d0225 in clone (std.zig)
+    asm volatile (
+    ^
+OK
+7/25 qbe_build_io.test.native build IO owns allocations and rejects missing tools or failing commands...OK
+8/25 qbe_build_io.test.object integrity fingerprints separate truncated, padded and altered bytes...OK
+9/25 qbe_build_io.test.native publication repairs executable permissions and tool lookup skips directories...OK
+10/25 qbe_build_io.test.native tools resolve beside the compiler then PATH, never from the working directory...OK
+11/25 qbe_build_io.test.tool stamps distinguish rebuilt tools without rereading their contents...OK
+12/25 qbe_build_io.test.sweeping a cache family removes every entry but the kept generation and the staging folder...OK
+13/25 qbe_build_io.test.a sweep skips a leased generation and still evicts an unleased one...OK
+14/25 qbe_build_io.test.publication recreates and re-leases a generation a concurrent sweep removed...OK
+15/25 qbe_build_options.test.build options accept equals syntax and later tool overrides...OK
+16/25 qbe_build_options.test.LLVM backend has explicit optimization and full LTO controls...OK
+17/25 qbe_build_options.test.a build that names no optimize mode uses the fast one and Debug stays explicit...OK
+18/25 qbe_build_options.test.build options reject missing values unsupported targets and incompatible provider controls...OK
+19/25 qbe_build_options.test.temporary native runs accept runtime options and reject persistent output...OK
+20/25 qbe_build_options.test.build options accept --no-cache only without a cache directory...OK
+21/25 qbe_build_options.test.build options carry an internal already-checked manifest without a new field...OK
+22/25 qbe_build_options.test.a temporary native run accepts a suffixed byte ceiling and rejects malformed text...OK
+23/25 qbe_build_options.test.a profile build keeps the guest symbol table the default strips...OK
+24/25 qbe_build_options.test.a build accepts the phase-timings request without a new build option field...OK
+25/25 qbe_build_options.test.native link controls are repeatable and reject injected compiler switches...OK
+All 25 tests passed.

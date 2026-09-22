@@ -1,0 +1,4419 @@
+{
+  "cpu": 6,
+  "seed": 20260923,
+  "rounds": 31,
+  "warmup_rounds": 3,
+  "scope": "fresh process: input read, model, placement, routing, SVG private-file output, shutdown; excludes compilation and verification",
+  "all_timed_outputs_hash_checked": true,
+  "timed_runs": 744,
+  "binary_sha256": {
+    "netlisp": "6006ae5a1fc4e6a009fd9e5e2c138f885ae6211ffa01fe05731b76566e4e7316",
+    "before-o3": "d9eeddfadfaad1509ef828a32afb7fcac9fdbd4a277cc8c670b5324bfb7e54b8",
+    "before-lto": "84c590c3d7169642a4782d36ca4ec44219d664c461f658089c6b48ebf3c8e077",
+    "before-bounded": "f6f43ce5acd5cd7ca3951d3eac2df7f198086a7349beeee357c0d8a3869d0649",
+    "after-o3": "daa4af272ad46e21cdd492273869c16903fe92f928b329029117150d5327db08",
+    "after-lto": "4ec0edc427be52fc64c93ae9f677b302bab96acaab01628731466c4fe48c2a0d",
+    "after-bounded": "13ecc6633363d50da459e3b9454d3ea18f8be3e21b321aae8d0d373c0ca4f064",
+    "after-lto-bounded": "e8631ebf991f87ac4931ead13677a865940001519047e7aa4ec7462582ca7219"
+  },
+  "summary": {
+    "fixture": {
+      "median_ms": {
+        "netlisp": 2.543452,
+        "before-o3": 18.560761,
+        "before-lto": 35.350436,
+        "before-bounded": 45.466709,
+        "after-o3": 5.998218,
+        "after-lto": 5.30482,
+        "after-bounded": 11.295815,
+        "after-lto-bounded": 10.544781
+      },
+      "comparisons": {
+        "before-o3/netlisp": {
+          "ratio": 7.297468558478792,
+          "paired_bootstrap_95": [
+            7.136237442248572,
+            7.373526731602502
+          ]
+        },
+        "before-lto/netlisp": {
+          "ratio": 13.898605517226196,
+          "paired_bootstrap_95": [
+            13.594381923499597,
+            14.052855872350305
+          ]
+        },
+        "before-bounded/netlisp": {
+          "ratio": 17.87598468538034,
+          "paired_bootstrap_95": [
+            17.47481085688591,
+            18.06870486906707
+          ]
+        },
+        "after-o3/netlisp": {
+          "ratio": 2.358298092513639,
+          "paired_bootstrap_95": [
+            2.3038332683526708,
+            2.3898964684310657
+          ]
+        },
+        "after-lto/netlisp": {
+          "ratio": 2.0856772606677856,
+          "paired_bootstrap_95": [
+            2.0251001002084474,
+            2.1155845323812574
+          ]
+        },
+        "after-bounded/netlisp": {
+          "ratio": 4.441135511894858,
+          "paired_bootstrap_95": [
+            4.3330566310163094,
+            4.495370095471988
+          ]
+        },
+        "after-lto-bounded/netlisp": {
+          "ratio": 4.145854138391447,
+          "paired_bootstrap_95": [
+            4.050577428954047,
+            4.1855504701554045
+          ]
+        },
+        "after-o3/before-o3": {
+          "ratio": 0.32316659861090824,
+          "paired_bootstrap_95": [
+            0.32057139527498246,
+            0.32645509467972117
+          ]
+        },
+        "after-lto/before-lto": {
+          "ratio": 0.15006377856273118,
+          "paired_bootstrap_95": [
+            0.14755046512857828,
+            0.15142356657762462
+          ]
+        },
+        "after-bounded/before-bounded": {
+          "ratio": 0.24844144756551434,
+          "paired_bootstrap_95": [
+            0.24694517091703141,
+            0.24992826283327477
+          ]
+        },
+        "after-lto-bounded/before-bounded": {
+          "ratio": 0.23192311983697786,
+          "paired_bootstrap_95": [
+            0.23069614330879598,
+            0.232856735311035
+          ]
+        }
+      }
+    },
+    "changed-net": {
+      "median_ms": {
+        "netlisp": 2.562703,
+        "before-o3": 18.960232,
+        "before-lto": 35.349485,
+        "before-bounded": 45.82109,
+        "after-o3": 6.013457,
+        "after-lto": 5.360945,
+        "after-bounded": 11.33789,
+        "after-lto-bounded": 10.475141
+      },
+      "comparisons": {
+        "before-o3/netlisp": {
+          "ratio": 7.398528818985267,
+          "paired_bootstrap_95": [
+            7.164332996296629,
+            7.497597106893006
+          ]
+        },
+        "before-lto/netlisp": {
+          "ratio": 13.793828235265655,
+          "paired_bootstrap_95": [
+            13.35875237936065,
+            13.969953766520137
+          ]
+        },
+        "before-bounded/netlisp": {
+          "ratio": 17.879984531957078,
+          "paired_bootstrap_95": [
+            17.313157514620258,
+            18.124741306007618
+          ]
+        },
+        "after-o3/netlisp": {
+          "ratio": 2.3465290359436892,
+          "paired_bootstrap_95": [
+            2.255850561404331,
+            2.389906741925492
+          ]
+        },
+        "after-lto/netlisp": {
+          "ratio": 2.091910377441319,
+          "paired_bootstrap_95": [
+            2.0152978615437087,
+            2.1294758253053523
+          ]
+        },
+        "after-bounded/netlisp": {
+          "ratio": 4.424191956695723,
+          "paired_bootstrap_95": [
+            4.2733097968594,
+            4.496830629403989
+          ]
+        },
+        "after-lto-bounded/netlisp": {
+          "ratio": 4.087536089823909,
+          "paired_bootstrap_95": [
+            3.9545650827454097,
+            4.186689591227801
+          ]
+        },
+        "after-o3/before-o3": {
+          "ratio": 0.31716157270649425,
+          "paired_bootstrap_95": [
+            0.3128709906728972,
+            0.3197879118778715
+          ]
+        },
+        "after-lto/before-lto": {
+          "ratio": 0.15165553331257867,
+          "paired_bootstrap_95": [
+            0.15043630145895223,
+            0.15256498869374682
+          ]
+        },
+        "after-bounded/before-bounded": {
+          "ratio": 0.24743824295755515,
+          "paired_bootstrap_95": [
+            0.2440134226400987,
+            0.24898732948895566
+          ]
+        },
+        "after-lto-bounded/before-bounded": {
+          "ratio": 0.22860959876772904,
+          "paired_bootstrap_95": [
+            0.22771939671672314,
+            0.23194325769973828
+          ]
+        }
+      }
+    },
+    "changed-value": {
+      "median_ms": {
+        "netlisp": 2.594444,
+        "before-o3": 18.638632,
+        "before-lto": 35.372471,
+        "before-bounded": 45.688238,
+        "after-o3": 5.933987,
+        "after-lto": 5.298704,
+        "after-bounded": 11.313925,
+        "after-lto-bounded": 10.546092
+      },
+      "comparisons": {
+        "before-o3/netlisp": {
+          "ratio": 7.184056391273043,
+          "paired_bootstrap_95": [
+            6.986190271490675,
+            7.343382139796329
+          ]
+        },
+        "before-lto/netlisp": {
+          "ratio": 13.633931200673437,
+          "paired_bootstrap_95": [
+            13.268879746721499,
+            13.933541938426348
+          ]
+        },
+        "before-bounded/netlisp": {
+          "ratio": 17.61003051135426,
+          "paired_bootstrap_95": [
+            17.15432201207044,
+            18.00734302530752
+          ]
+        },
+        "after-o3/netlisp": {
+          "ratio": 2.287190241916958,
+          "paired_bootstrap_95": [
+            2.226936140207542,
+            2.3629699521350718
+          ]
+        },
+        "after-lto/netlisp": {
+          "ratio": 2.042327373417965,
+          "paired_bootstrap_95": [
+            1.9873945860632312,
+            2.0898806242661934
+          ]
+        },
+        "after-bounded/netlisp": {
+          "ratio": 4.3608283701633175,
+          "paired_bootstrap_95": [
+            4.247979812012318,
+            4.464255936634742
+          ]
+        },
+        "after-lto-bounded/netlisp": {
+          "ratio": 4.06487555715213,
+          "paired_bootstrap_95": [
+            3.955141351207457,
+            4.159029186768851
+          ]
+        },
+        "after-o3/before-o3": {
+          "ratio": 0.31837030743457995,
+          "paired_bootstrap_95": [
+            0.3173847658660221,
+            0.32292916896443463
+          ]
+        },
+        "after-lto/before-lto": {
+          "ratio": 0.14979739470279022,
+          "paired_bootstrap_95": [
+            0.14729820340381358,
+            0.15126756618352774
+          ]
+        },
+        "after-bounded/before-bounded": {
+          "ratio": 0.24763320922991164,
+          "paired_bootstrap_95": [
+            0.24657241394005627,
+            0.24994175295284993
+          ]
+        },
+        "after-lto-bounded/before-bounded": {
+          "ratio": 0.2308272864451459,
+          "paired_bootstrap_95": [
+            0.22964679771144836,
+            0.23288859065052142
+          ]
+        }
+      }
+    }
+  },
+  "samples": [
+    {
+      "round": 0,
+      "order": [
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-o3": 18.463557,
+          "after-o3": 5.745955,
+          "after-lto": 5.272863,
+          "before-lto": 35.54145,
+          "after-lto-bounded": 10.227312,
+          "before-bounded": 45.52929,
+          "after-bounded": 11.356141,
+          "netlisp": 2.628381
+        },
+        "changed-net": {
+          "before-lto": 35.262529,
+          "after-o3": 5.829585,
+          "netlisp": 2.54557,
+          "after-bounded": 11.099387,
+          "before-o3": 18.887717,
+          "before-bounded": 45.784566,
+          "after-lto-bounded": 10.293734,
+          "after-lto": 5.470043
+        },
+        "changed-value": {
+          "netlisp": 2.734169,
+          "before-o3": 18.346383,
+          "after-o3": 6.143054,
+          "before-lto": 35.327166,
+          "after-lto": 5.34578,
+          "before-bounded": 45.57039,
+          "after-bounded": 11.458696,
+          "after-lto-bounded": 10.426564
+        }
+      }
+    },
+    {
+      "round": 1,
+      "order": [
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-lto": 34.827284,
+          "after-lto": 5.170793,
+          "netlisp": 2.452491,
+          "after-bounded": 11.527826,
+          "after-lto-bounded": 10.517067,
+          "after-o3": 6.329034,
+          "before-bounded": 44.924967,
+          "before-o3": 17.939752
+        },
+        "changed-net": {
+          "after-lto-bounded": 10.439967,
+          "after-o3": 6.118863,
+          "before-bounded": 45.191229,
+          "after-lto": 5.396869,
+          "before-lto": 35.619882,
+          "before-o3": 18.263313,
+          "after-bounded": 11.409819,
+          "netlisp": 2.450895
+        },
+        "changed-value": {
+          "after-lto": 5.142299,
+          "before-o3": 18.785526,
+          "after-lto-bounded": 10.29012,
+          "netlisp": 2.666156,
+          "after-bounded": 11.422116,
+          "before-bounded": 45.840351,
+          "after-o3": 6.216896,
+          "before-lto": 35.372471
+        }
+      }
+    },
+    {
+      "round": 2,
+      "order": [
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "after-o3": 6.038213,
+          "before-lto": 35.034469,
+          "after-lto": 5.086584,
+          "after-bounded": 11.240649,
+          "before-bounded": 45.079735,
+          "netlisp": 2.609438,
+          "after-lto-bounded": 10.128687,
+          "before-o3": 18.782136
+        },
+        "changed-net": {
+          "after-bounded": 11.180961,
+          "before-bounded": 45.894511,
+          "before-lto": 34.976583,
+          "after-lto-bounded": 10.674545,
+          "after-lto": 5.416519,
+          "netlisp": 2.483704,
+          "after-o3": 5.727826,
+          "before-o3": 18.819231
+        },
+        "changed-value": {
+          "after-lto": 5.388182,
+          "netlisp": 2.803609,
+          "after-bounded": 11.107273,
+          "before-o3": 18.354736,
+          "after-o3": 5.91288,
+          "before-lto": 35.222247,
+          "after-lto-bounded": 10.676271,
+          "before-bounded": 45.688663
+        }
+      }
+    },
+    {
+      "round": 3,
+      "order": [
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "after-lto-bounded": 10.573479,
+          "netlisp": 2.452045,
+          "after-o3": 5.979931,
+          "before-o3": 18.242526,
+          "before-lto": 35.002389,
+          "before-bounded": 45.466709,
+          "after-lto": 5.430358,
+          "after-bounded": 11.258242
+        },
+        "changed-net": {
+          "after-lto-bounded": 10.443293,
+          "before-o3": 18.70365,
+          "before-bounded": 44.870331,
+          "after-lto": 5.375097,
+          "after-o3": 5.965863,
+          "netlisp": 2.701455,
+          "after-bounded": 11.387439,
+          "before-lto": 35.349485
+        },
+        "changed-value": {
+          "after-bounded": 11.503204,
+          "before-lto": 35.220382,
+          "after-o3": 5.933987,
+          "after-lto-bounded": 10.64025,
+          "before-o3": 18.694638,
+          "after-lto": 5.139098,
+          "netlisp": 2.596731,
+          "before-bounded": 45.164188
+        }
+      }
+    },
+    {
+      "round": 4,
+      "order": [
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "after-lto-bounded": 10.688236,
+          "after-lto": 5.336707,
+          "before-lto": 35.172769,
+          "before-bounded": 45.27035,
+          "netlisp": 2.543452,
+          "before-o3": 18.358267,
+          "after-o3": 5.998218,
+          "after-bounded": 11.317745
+        },
+        "changed-net": {
+          "after-lto": 5.214576,
+          "before-o3": 18.850912,
+          "netlisp": 2.673901,
+          "after-bounded": 11.299984,
+          "after-lto-bounded": 10.602222,
+          "before-lto": 34.660211,
+          "before-bounded": 45.84818,
+          "after-o3": 5.87426
+        },
+        "changed-value": {
+          "after-lto": 5.098736,
+          "before-bounded": 45.598498,
+          "after-bounded": 11.26566,
+          "before-o3": 18.686694,
+          "before-lto": 35.275545,
+          "after-o3": 5.90075,
+          "netlisp": 2.517872,
+          "after-lto-bounded": 10.699972
+        }
+      }
+    },
+    {
+      "round": 5,
+      "order": [
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-lto": 35.284037,
+          "after-lto-bounded": 10.544781,
+          "after-o3": 6.084248,
+          "netlisp": 2.644415,
+          "after-bounded": 11.121286,
+          "after-lto": 5.354093,
+          "before-o3": 18.560761,
+          "before-bounded": 45.050045
+        },
+        "changed-net": {
+          "after-bounded": 11.387612,
+          "netlisp": 2.488304,
+          "after-lto": 5.179243,
+          "before-lto": 35.016495,
+          "after-o3": 5.95761,
+          "after-lto-bounded": 10.625204,
+          "before-o3": 18.986645,
+          "before-bounded": 45.04067
+        },
+        "changed-value": {
+          "after-bounded": 11.025167,
+          "before-bounded": 45.632309,
+          "before-o3": 18.527295,
+          "after-o3": 5.929265,
+          "after-lto-bounded": 10.096281,
+          "after-lto": 5.378762,
+          "before-lto": 35.257689,
+          "netlisp": 2.50913
+        }
+      }
+    },
+    {
+      "round": 6,
+      "order": [
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-o3": 18.845672,
+          "after-bounded": 11.079389,
+          "after-lto-bounded": 10.747978,
+          "netlisp": 2.599751,
+          "before-lto": 35.453477,
+          "after-o3": 6.037323,
+          "after-lto": 5.035196,
+          "before-bounded": 45.693183
+        },
+        "changed-net": {
+          "netlisp": 2.789468,
+          "after-lto-bounded": 10.232741,
+          "before-bounded": 45.628532,
+          "after-o3": 6.17661,
+          "before-lto": 35.371982,
+          "after-bounded": 11.453524,
+          "after-lto": 5.307397,
+          "before-o3": 19.259241
+        },
+        "changed-value": {
+          "before-bounded": 45.577096,
+          "after-o3": 5.726616,
+          "before-lto": 35.414083,
+          "before-o3": 18.486169,
+          "after-lto-bounded": 10.59913,
+          "after-lto": 5.151842,
+          "netlisp": 2.563267,
+          "after-bounded": 10.950659
+        }
+      }
+    },
+    {
+      "round": 7,
+      "order": [
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "after-lto-bounded": 10.486683,
+          "after-lto": 5.345034,
+          "before-lto": 35.771098,
+          "before-o3": 17.849612,
+          "before-bounded": 45.737246,
+          "after-o3": 6.021682,
+          "netlisp": 2.521797,
+          "after-bounded": 11.164572
+        },
+        "changed-net": {
+          "after-lto-bounded": 10.816052,
+          "after-o3": 6.060776,
+          "netlisp": 2.621879,
+          "before-lto": 35.080044,
+          "before-o3": 19.086469,
+          "after-lto": 5.393182,
+          "before-bounded": 44.60142,
+          "after-bounded": 11.271662
+        },
+        "changed-value": {
+          "before-bounded": 45.643808,
+          "after-lto": 5.312012,
+          "before-o3": 17.952754,
+          "netlisp": 2.511271,
+          "after-lto-bounded": 10.618742,
+          "after-o3": 5.825901,
+          "after-bounded": 11.225256,
+          "before-lto": 35.262261
+        }
+      }
+    },
+    {
+      "round": 8,
+      "order": [
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-bounded": 45.266629,
+          "after-lto-bounded": 10.411893,
+          "before-lto": 35.286337,
+          "before-o3": 17.865326,
+          "netlisp": 2.566699,
+          "after-lto": 5.182486,
+          "after-bounded": 11.267814,
+          "after-o3": 5.990258
+        },
+        "changed-net": {
+          "before-bounded": 45.735014,
+          "after-lto-bounded": 10.093957,
+          "after-lto": 5.093818,
+          "after-bounded": 10.864656,
+          "before-o3": 18.278498,
+          "before-lto": 35.769093,
+          "netlisp": 2.68792,
+          "after-o3": 5.853287
+        },
+        "changed-value": {
+          "before-lto": 35.210415,
+          "after-bounded": 11.188113,
+          "after-o3": 5.607176,
+          "after-lto-bounded": 10.033051,
+          "before-bounded": 45.632928,
+          "after-lto": 5.340057,
+          "before-o3": 18.422357,
+          "netlisp": 2.558307
+        }
+      }
+    },
+    {
+      "round": 9,
+      "order": [
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-lto": 35.342008,
+          "before-bounded": 45.691382,
+          "before-o3": 18.6269,
+          "after-lto": 5.316392,
+          "netlisp": 2.528038,
+          "after-o3": 5.656456,
+          "after-bounded": 11.498168,
+          "after-lto-bounded": 10.56817
+        },
+        "changed-net": {
+          "after-lto-bounded": 10.432442,
+          "after-o3": 6.042902,
+          "netlisp": 2.498608,
+          "before-o3": 18.406451,
+          "before-bounded": 45.724329,
+          "after-bounded": 11.041235,
+          "after-lto": 5.406202,
+          "before-lto": 35.220426
+        },
+        "changed-value": {
+          "after-lto": 5.193792,
+          "before-o3": 18.278295,
+          "after-o3": 5.783,
+          "before-lto": 35.176311,
+          "after-lto-bounded": 10.395611,
+          "netlisp": 2.444905,
+          "after-bounded": 11.281456,
+          "before-bounded": 45.630785
+        }
+      }
+    },
+    {
+      "round": 10,
+      "order": [
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "after-bounded": 11.239771,
+          "before-bounded": 45.363423,
+          "after-lto": 5.393104,
+          "after-o3": 6.084875,
+          "netlisp": 2.290317,
+          "after-lto-bounded": 9.924498,
+          "before-lto": 35.262449,
+          "before-o3": 18.711066
+        },
+        "changed-net": {
+          "before-lto": 35.146445,
+          "after-bounded": 11.20149,
+          "netlisp": 2.732433,
+          "before-o3": 18.992611,
+          "after-lto-bounded": 10.471985,
+          "after-lto": 5.13711,
+          "after-o3": 5.93259,
+          "before-bounded": 45.996927
+        },
+        "changed-value": {
+          "after-bounded": 11.090434,
+          "after-o3": 5.930872,
+          "before-o3": 18.4265,
+          "before-lto": 35.243065,
+          "before-bounded": 45.817857,
+          "after-lto": 5.368527,
+          "after-lto-bounded": 10.529187,
+          "netlisp": 2.57267
+        }
+      }
+    },
+    {
+      "round": 11,
+      "order": [
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "after-o3": 5.935105,
+          "after-lto-bounded": 10.166774,
+          "after-lto": 5.32652,
+          "after-bounded": 11.297476,
+          "netlisp": 2.606893,
+          "before-o3": 18.521712,
+          "before-bounded": 45.425686,
+          "before-lto": 35.43815
+        },
+        "changed-net": {
+          "before-o3": 18.97537,
+          "netlisp": 2.541336,
+          "after-lto": 5.218817,
+          "before-lto": 35.156448,
+          "after-bounded": 11.558589,
+          "before-bounded": 45.293125,
+          "after-o3": 5.928451,
+          "after-lto-bounded": 10.62783
+        },
+        "changed-value": {
+          "before-lto": 34.956407,
+          "after-lto": 5.28126,
+          "after-o3": 6.021134,
+          "after-lto-bounded": 10.51007,
+          "before-o3": 19.049647,
+          "before-bounded": 45.834553,
+          "netlisp": 2.492403,
+          "after-bounded": 11.151705
+        }
+      }
+    },
+    {
+      "round": 12,
+      "order": [
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "after-bounded": 11.059605,
+          "after-o3": 5.930676,
+          "before-bounded": 45.511181,
+          "after-lto-bounded": 10.694392,
+          "before-lto": 35.609471,
+          "netlisp": 2.68958,
+          "after-lto": 5.198982,
+          "before-o3": 18.623505
+        },
+        "changed-net": {
+          "after-o3": 6.111115,
+          "after-bounded": 11.190759,
+          "after-lto": 5.200879,
+          "before-lto": 35.267055,
+          "before-bounded": 45.82109,
+          "netlisp": 2.353306,
+          "after-lto-bounded": 10.289932,
+          "before-o3": 18.996437
+        },
+        "changed-value": {
+          "before-lto": 35.262164,
+          "before-bounded": 45.671651,
+          "after-lto-bounded": 10.675608,
+          "after-lto": 5.113658,
+          "after-o3": 6.214107,
+          "after-bounded": 11.46631,
+          "netlisp": 2.507543,
+          "before-o3": 18.368167
+        }
+      }
+    },
+    {
+      "round": 13,
+      "order": [
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "after-bounded": 11.282715,
+          "before-o3": 18.329078,
+          "after-lto": 5.344334,
+          "before-lto": 35.266498,
+          "after-o3": 5.777085,
+          "before-bounded": 45.406041,
+          "netlisp": 2.496147,
+          "after-lto-bounded": 10.324414
+        },
+        "changed-net": {
+          "after-lto-bounded": 10.427408,
+          "before-o3": 18.416971,
+          "after-bounded": 11.44626,
+          "before-lto": 35.581567,
+          "before-bounded": 46.006023,
+          "after-lto": 5.53288,
+          "netlisp": 2.363648,
+          "after-o3": 6.063253
+        },
+        "changed-value": {
+          "before-bounded": 45.45285,
+          "before-o3": 18.743105,
+          "after-o3": 6.176025,
+          "after-bounded": 11.293901,
+          "before-lto": 35.641093,
+          "netlisp": 2.694388,
+          "after-lto": 5.016761,
+          "after-lto-bounded": 10.328527
+        }
+      }
+    },
+    {
+      "round": 14,
+      "order": [
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "netlisp": 2.489658,
+          "after-lto": 5.46877,
+          "after-bounded": 11.194644,
+          "before-lto": 35.509966,
+          "before-bounded": 45.324996,
+          "after-lto-bounded": 10.351677,
+          "before-o3": 18.617089,
+          "after-o3": 5.673169
+        },
+        "changed-net": {
+          "before-lto": 34.988186,
+          "after-lto-bounded": 10.749929,
+          "netlisp": 2.644618,
+          "before-bounded": 45.828213,
+          "after-o3": 6.210195,
+          "after-bounded": 11.11682,
+          "after-lto": 5.329693,
+          "before-o3": 18.957476
+        },
+        "changed-value": {
+          "before-bounded": 45.694119,
+          "before-o3": 18.231656,
+          "after-lto": 5.298163,
+          "after-lto-bounded": 10.533989,
+          "after-bounded": 11.313925,
+          "after-o3": 5.926208,
+          "netlisp": 2.67523,
+          "before-lto": 35.414136
+        }
+      }
+    },
+    {
+      "round": 15,
+      "order": [
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-lto": 35.350436,
+          "after-lto": 5.432128,
+          "after-o3": 6.146695,
+          "before-bounded": 45.60891,
+          "before-o3": 18.345051,
+          "after-lto-bounded": 10.546102,
+          "after-bounded": 11.424828,
+          "netlisp": 2.651732
+        },
+        "changed-net": {
+          "after-lto": 5.175159,
+          "before-o3": 18.946924,
+          "netlisp": 2.604718,
+          "before-bounded": 45.93471,
+          "after-lto-bounded": 10.692674,
+          "after-o3": 6.032494,
+          "before-lto": 35.385223,
+          "after-bounded": 11.075995
+        },
+        "changed-value": {
+          "after-lto": 5.298704,
+          "netlisp": 2.663366,
+          "after-lto-bounded": 10.268292,
+          "before-o3": 18.499258,
+          "before-bounded": 45.766238,
+          "before-lto": 35.506135,
+          "after-o3": 5.835044,
+          "after-bounded": 11.458413
+        }
+      }
+    },
+    {
+      "round": 16,
+      "order": [
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "after-bounded": 11.377896,
+          "after-lto-bounded": 10.959648,
+          "before-lto": 36.787198,
+          "after-lto": 5.374101,
+          "netlisp": 2.632398,
+          "before-bounded": 45.868209,
+          "before-o3": 18.384952,
+          "after-o3": 5.976415
+        },
+        "changed-net": {
+          "after-bounded": 10.892194,
+          "before-bounded": 46.101738,
+          "before-lto": 35.447775,
+          "after-lto": 5.43639,
+          "netlisp": 2.562703,
+          "after-o3": 5.879819,
+          "before-o3": 18.878736,
+          "after-lto-bounded": 10.650593
+        },
+        "changed-value": {
+          "before-lto": 35.880509,
+          "before-bounded": 45.663259,
+          "after-o3": 6.179818,
+          "after-lto": 5.341206,
+          "after-lto-bounded": 10.091637,
+          "after-bounded": 11.033457,
+          "netlisp": 2.705287,
+          "before-o3": 18.727283
+        }
+      }
+    },
+    {
+      "round": 17,
+      "order": [
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-bounded": 45.574481,
+          "after-bounded": 11.178837,
+          "after-lto-bounded": 10.513857,
+          "after-lto": 5.162017,
+          "netlisp": 2.510809,
+          "before-lto": 35.352227,
+          "after-o3": 5.940477,
+          "before-o3": 18.110349
+        },
+        "changed-net": {
+          "after-o3": 6.017424,
+          "after-lto": 5.571238,
+          "after-bounded": 10.989545,
+          "netlisp": 2.534365,
+          "before-bounded": 45.9775,
+          "after-lto-bounded": 10.423651,
+          "before-lto": 35.891811,
+          "before-o3": 19.256499
+        },
+        "changed-value": {
+          "before-bounded": 45.688238,
+          "after-bounded": 11.559827,
+          "netlisp": 2.586833,
+          "after-lto": 5.37256,
+          "after-o3": 6.308961,
+          "before-lto": 35.665928,
+          "after-lto-bounded": 10.547783,
+          "before-o3": 18.800624
+        }
+      }
+    },
+    {
+      "round": 18,
+      "order": [
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "after-lto-bounded": 10.744698,
+          "before-o3": 18.710999,
+          "netlisp": 2.465685,
+          "after-o3": 5.623633,
+          "before-bounded": 45.304235,
+          "after-lto": 5.544262,
+          "before-lto": 35.549541,
+          "after-bounded": 11.254398
+        },
+        "changed-net": {
+          "before-o3": 18.950848,
+          "after-o3": 6.328411,
+          "netlisp": 2.532364,
+          "before-lto": 35.510686,
+          "after-lto-bounded": 10.217837,
+          "after-lto": 5.482366,
+          "after-bounded": 11.343457,
+          "before-bounded": 45.761532
+        },
+        "changed-value": {
+          "after-bounded": 11.452012,
+          "netlisp": 2.769726,
+          "before-lto": 35.302062,
+          "after-o3": 6.035426,
+          "after-lto": 5.384632,
+          "after-lto-bounded": 10.5882,
+          "before-bounded": 45.720788,
+          "before-o3": 18.763265
+        }
+      }
+    },
+    {
+      "round": 19,
+      "order": [
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "after-lto-bounded": 10.612113,
+          "before-o3": 18.677201,
+          "before-lto": 35.241806,
+          "after-o3": 6.051626,
+          "netlisp": 2.614926,
+          "before-bounded": 45.454123,
+          "after-lto": 5.371593,
+          "after-bounded": 11.399274
+        },
+        "changed-net": {
+          "after-bounded": 11.33789,
+          "before-bounded": 45.731049,
+          "netlisp": 2.742953,
+          "after-o3": 5.86498,
+          "before-o3": 19.142771,
+          "before-lto": 35.228113,
+          "after-lto-bounded": 10.440775,
+          "after-lto": 5.333033
+        },
+        "changed-value": {
+          "before-lto": 34.979729,
+          "after-o3": 6.003384,
+          "after-lto": 5.335312,
+          "after-bounded": 11.408776,
+          "netlisp": 2.477063,
+          "before-o3": 18.779116,
+          "before-bounded": 45.633854,
+          "after-lto-bounded": 10.830277
+        }
+      }
+    },
+    {
+      "round": 20,
+      "order": [
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "after-lto": 5.020202,
+          "after-o3": 6.003699,
+          "before-o3": 18.603444,
+          "after-bounded": 11.424112,
+          "before-lto": 35.068399,
+          "before-bounded": 45.693571,
+          "after-lto-bounded": 10.63804,
+          "netlisp": 2.595644
+        },
+        "changed-net": {
+          "after-lto": 5.363403,
+          "netlisp": 2.5577,
+          "before-lto": 35.377008,
+          "after-lto-bounded": 10.385893,
+          "before-o3": 18.94599,
+          "after-o3": 6.180773,
+          "after-bounded": 11.390021,
+          "before-bounded": 45.938528
+        },
+        "changed-value": {
+          "after-lto": 5.253334,
+          "after-o3": 5.827379,
+          "before-o3": 18.638632,
+          "before-lto": 35.476466,
+          "after-lto-bounded": 10.690661,
+          "netlisp": 2.616072,
+          "before-bounded": 45.576882,
+          "after-bounded": 11.454696
+        }
+      }
+    },
+    {
+      "round": 21,
+      "order": [
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "after-bounded": 11.703639,
+          "before-bounded": 46.032032,
+          "after-o3": 6.106119,
+          "after-lto": 5.30482,
+          "before-o3": 18.419007,
+          "before-lto": 36.113265,
+          "after-lto-bounded": 10.529377,
+          "netlisp": 2.512966
+        },
+        "changed-net": {
+          "netlisp": 2.344322,
+          "before-lto": 35.37423,
+          "after-o3": 6.056896,
+          "before-bounded": 44.619031,
+          "before-o3": 19.046964,
+          "after-lto": 5.457236,
+          "after-bounded": 11.421527,
+          "after-lto-bounded": 10.707645
+        },
+        "changed-value": {
+          "before-bounded": 45.184101,
+          "after-lto": 5.32325,
+          "netlisp": 2.708761,
+          "before-lto": 35.115185,
+          "before-o3": 18.524225,
+          "after-bounded": 11.285214,
+          "after-lto-bounded": 10.539822,
+          "after-o3": 5.893863
+        }
+      }
+    },
+    {
+      "round": 22,
+      "order": [
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "after-lto": 5.279348,
+          "netlisp": 2.534142,
+          "after-bounded": 11.463532,
+          "before-bounded": 45.823232,
+          "before-lto": 35.422921,
+          "after-lto-bounded": 10.504672,
+          "after-o3": 6.099086,
+          "before-o3": 18.894561
+        },
+        "changed-net": {
+          "after-bounded": 11.091367,
+          "before-lto": 35.216698,
+          "after-lto-bounded": 10.628819,
+          "netlisp": 2.604077,
+          "before-bounded": 45.786688,
+          "before-o3": 19.357051,
+          "after-lto": 5.314473,
+          "after-o3": 6.013457
+        },
+        "changed-value": {
+          "netlisp": 2.509057,
+          "after-o3": 6.03016,
+          "after-bounded": 11.2593,
+          "before-lto": 35.408402,
+          "after-lto": 5.393826,
+          "before-o3": 18.702737,
+          "before-bounded": 45.736837,
+          "after-lto-bounded": 10.495414
+        }
+      }
+    },
+    {
+      "round": 23,
+      "order": [
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-lto": 35.610088,
+          "before-o3": 18.810753,
+          "after-o3": 5.801821,
+          "before-bounded": 45.675,
+          "after-lto-bounded": 10.573975,
+          "netlisp": 2.565128,
+          "after-lto": 5.22209,
+          "after-bounded": 11.40719
+        },
+        "changed-net": {
+          "netlisp": 2.735481,
+          "after-lto": 5.366128,
+          "after-lto-bounded": 10.475141,
+          "after-o3": 5.975557,
+          "after-bounded": 11.424418,
+          "before-lto": 35.327065,
+          "before-bounded": 45.808083,
+          "before-o3": 18.92746
+        },
+        "changed-value": {
+          "before-bounded": 45.780816,
+          "after-lto-bounded": 10.254843,
+          "after-bounded": 11.353514,
+          "after-o3": 5.931146,
+          "after-lto": 5.113212,
+          "netlisp": 2.594444,
+          "before-lto": 35.577488,
+          "before-o3": 18.088752
+        }
+      }
+    },
+    {
+      "round": 24,
+      "order": [
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-lto": 35.7852,
+          "before-bounded": 45.853175,
+          "after-bounded": 11.635474,
+          "netlisp": 2.387864,
+          "after-lto": 5.075469,
+          "after-o3": 5.985584,
+          "before-o3": 18.245182,
+          "after-lto-bounded": 10.766523
+        },
+        "changed-net": {
+          "after-bounded": 11.6512,
+          "before-o3": 18.969985,
+          "after-o3": 5.825522,
+          "netlisp": 2.614745,
+          "before-bounded": 45.812707,
+          "after-lto": 5.360945,
+          "after-lto-bounded": 10.375657,
+          "before-lto": 35.395472
+        },
+        "changed-value": {
+          "before-bounded": 45.811913,
+          "after-lto-bounded": 10.038211,
+          "netlisp": 2.372498,
+          "after-o3": 5.978181,
+          "after-lto": 5.232265,
+          "before-o3": 18.619443,
+          "after-bounded": 11.413155,
+          "before-lto": 35.391315
+        }
+      }
+    },
+    {
+      "round": 25,
+      "order": [
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "after-lto-bounded": 10.308892,
+          "before-o3": 18.773315,
+          "after-o3": 6.108204,
+          "netlisp": 2.715934,
+          "before-lto": 34.978647,
+          "before-bounded": 45.089611,
+          "after-lto": 5.437289,
+          "after-bounded": 11.2238
+        },
+        "changed-net": {
+          "after-bounded": 11.141736,
+          "before-bounded": 45.979254,
+          "before-o3": 19.145882,
+          "after-lto": 5.354755,
+          "before-lto": 35.328797,
+          "after-o3": 5.945036,
+          "netlisp": 2.453299,
+          "after-lto-bounded": 10.624876
+        },
+        "changed-value": {
+          "before-lto": 35.397781,
+          "before-bounded": 45.775587,
+          "after-lto-bounded": 10.808615,
+          "before-o3": 18.516203,
+          "after-o3": 5.813107,
+          "netlisp": 2.724025,
+          "after-lto": 5.137603,
+          "after-bounded": 11.02246
+        }
+      }
+    },
+    {
+      "round": 26,
+      "order": [
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "after-lto": 5.157914,
+          "after-bounded": 10.918162,
+          "after-o3": 6.340335,
+          "after-lto-bounded": 10.543628,
+          "before-bounded": 45.744639,
+          "before-lto": 35.34836,
+          "netlisp": 2.56511,
+          "before-o3": 18.496305
+        },
+        "changed-net": {
+          "netlisp": 2.40151,
+          "before-o3": 19.014374,
+          "after-lto": 5.41829,
+          "after-o3": 6.117628,
+          "before-lto": 35.513337,
+          "before-bounded": 46.319557,
+          "after-lto-bounded": 10.798287,
+          "after-bounded": 11.39529
+        },
+        "changed-value": {
+          "netlisp": 2.527063,
+          "after-lto": 5.087398,
+          "before-o3": 18.644906,
+          "after-bounded": 11.553496,
+          "before-lto": 35.471725,
+          "before-bounded": 45.832707,
+          "after-o3": 6.071558,
+          "after-lto-bounded": 10.642394
+        }
+      }
+    },
+    {
+      "round": 27,
+      "order": [
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "after-lto-bounded": 10.588973,
+          "after-o3": 5.963732,
+          "after-bounded": 11.295815,
+          "before-bounded": 45.151731,
+          "before-lto": 35.5255,
+          "before-o3": 18.544537,
+          "netlisp": 2.530007,
+          "after-lto": 5.239512
+        },
+        "changed-net": {
+          "before-lto": 35.437068,
+          "after-bounded": 11.449736,
+          "before-o3": 18.960232,
+          "after-lto": 5.362643,
+          "netlisp": 2.870337,
+          "after-o3": 6.321562,
+          "after-lto-bounded": 10.650899,
+          "before-bounded": 45.962079
+        },
+        "changed-value": {
+          "before-o3": 18.660534,
+          "after-o3": 6.006194,
+          "before-lto": 35.609459,
+          "netlisp": 2.539008,
+          "before-bounded": 45.96632,
+          "after-bounded": 11.288104,
+          "after-lto": 5.425912,
+          "after-lto-bounded": 10.546092
+        }
+      }
+    },
+    {
+      "round": 28,
+      "order": [
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-o3": 18.61122,
+          "after-bounded": 10.955659,
+          "netlisp": 2.657923,
+          "before-bounded": 45.430157,
+          "before-lto": 35.616744,
+          "after-lto-bounded": 10.575871,
+          "after-lto": 5.216762,
+          "after-o3": 5.821587
+        },
+        "changed-net": {
+          "after-o3": 6.090227,
+          "netlisp": 2.653187,
+          "before-bounded": 45.864261,
+          "before-lto": 35.577135,
+          "after-lto": 5.159286,
+          "before-o3": 18.166123,
+          "after-bounded": 11.504751,
+          "after-lto-bounded": 10.458314
+        },
+        "changed-value": {
+          "before-o3": 18.689742,
+          "before-lto": 35.821934,
+          "after-o3": 6.020984,
+          "after-bounded": 11.473315,
+          "before-bounded": 45.668139,
+          "after-lto": 5.215594,
+          "netlisp": 2.645516,
+          "after-lto-bounded": 10.637391
+        }
+      }
+    },
+    {
+      "round": 29,
+      "order": [
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "before-o3": 18.7664,
+          "before-lto": 35.253423,
+          "netlisp": 2.470115,
+          "after-o3": 6.063413,
+          "after-lto": 5.343183,
+          "before-bounded": 45.407658,
+          "after-lto-bounded": 10.729296,
+          "after-bounded": 11.36027
+        },
+        "changed-net": {
+          "after-lto": 5.226582,
+          "after-lto-bounded": 10.492139,
+          "after-o3": 5.763753,
+          "before-o3": 18.976774,
+          "before-bounded": 45.950172,
+          "netlisp": 2.498923,
+          "after-bounded": 11.579953,
+          "before-lto": 35.270176
+        },
+        "changed-value": {
+          "netlisp": 2.598987,
+          "before-bounded": 45.751984,
+          "after-o3": 5.974157,
+          "after-lto-bounded": 10.656748,
+          "after-lto": 5.374538,
+          "before-o3": 18.713367,
+          "after-bounded": 11.406764,
+          "before-lto": 35.377017
+        }
+      }
+    },
+    {
+      "round": 30,
+      "order": [
+        [
+          "before-o3",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "fixture"
+        ],
+        [
+          "before-o3",
+          "fixture"
+        ],
+        [
+          "before-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-value"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "before-lto",
+          "changed-net"
+        ],
+        [
+          "after-bounded",
+          "changed-net"
+        ],
+        [
+          "after-lto",
+          "changed-net"
+        ],
+        [
+          "after-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "before-bounded",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "fixture"
+        ],
+        [
+          "after-o3",
+          "changed-value"
+        ],
+        [
+          "after-lto",
+          "fixture"
+        ],
+        [
+          "after-lto-bounded",
+          "fixture"
+        ],
+        [
+          "after-bounded",
+          "changed-value"
+        ],
+        [
+          "after-o3",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "before-lto",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "netlisp": 2.526186,
+          "after-bounded": 11.363278,
+          "before-o3": 18.788682,
+          "before-bounded": 45.69948,
+          "after-o3": 6.050356,
+          "after-lto": 5.231697,
+          "after-lto-bounded": 10.421095,
+          "before-lto": 35.294307
+        },
+        "changed-net": {
+          "before-o3": 18.994386,
+          "before-bounded": 46.029609,
+          "before-lto": 35.562684,
+          "after-bounded": 11.290888,
+          "after-lto": 5.346103,
+          "after-lto-bounded": 10.538282,
+          "after-o3": 5.935158,
+          "netlisp": 2.679994
+        },
+        "changed-value": {
+          "before-o3": 18.758785,
+          "after-lto": 5.310058,
+          "netlisp": 2.748511,
+          "before-lto": 35.233731,
+          "after-lto-bounded": 10.673248,
+          "before-bounded": 45.971003,
+          "after-o3": 5.880289,
+          "after-bounded": 11.397466
+        }
+      }
+    }
+  ]
+}

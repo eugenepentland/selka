@@ -1,0 +1,64 @@
+{
+  "sexpr.printer::push_node": {
+    "calls": {
+      "myl_qbe_heap": 15,
+      "myl_native_bytes_buffer_append_range": 6,
+      "sexpr.printer::is_short_list": 1,
+      "__wrap_myl_native_list_get": 3,
+      "sexpr.printer::push_node": 3,
+      "myl_native_bytes_buffer_append_int": 1,
+      "sexpr.printer::append_float": 2,
+      "byte_builder::append_spaces": 1
+    },
+    "static_blits": 4,
+    "assembly_lines": 4564,
+    "stack_reservations": [
+      "sub    $0x4e8,%rsp"
+    ]
+  },
+  "sexpr.printer::estimate_width": {
+    "calls": {
+      "myl_qbe_heap": 2,
+      "__wrap_myl_native_list_get": 1,
+      "sexpr.printer::estimate_width": 1,
+      "sexpr.printer::literal_width": 1,
+      "sexpr.printer::scalar_len": 2,
+      "myl_native_text_scalar": 1,
+      "sexpr.printer::measure_width": 1,
+      "sexpr.printer::decimal_width": 1
+    },
+    "static_blits": 4,
+    "assembly_lines": 440,
+    "stack_reservations": [
+      "sub    $0x1a8,%rsp"
+    ]
+  },
+  "sexpr.parser::parse_node": {
+    "calls": {
+      "myl_qbe_heap": 1,
+      "sexpr.parser::advance": 7,
+      "sexpr.parser::parse_leaf": 5,
+      "sexpr.parser::parse_list": 1
+    },
+    "static_blits": 37,
+    "assembly_lines": 728,
+    "stack_reservations": [
+      "sub    $0x6f8,%rsp"
+    ]
+  },
+  "sexpr.tokenizer::next_raw": {
+    "calls": {
+      "myl_qbe_heap": 1,
+      "myl_native_bytes_find_any": 1,
+      "sexpr.tokenizer::read_string": 1,
+      "sexpr.tokenizer::read_operator": 1,
+      "sexpr.tokenizer::read_atom": 1,
+      "sexpr.tokenizer::read_number": 1
+    },
+    "static_blits": 7,
+    "assembly_lines": 482,
+    "stack_reservations": [
+      "sub    $0x308,%rsp"
+    ]
+  }
+}

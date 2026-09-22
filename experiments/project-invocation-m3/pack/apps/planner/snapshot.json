@@ -1,0 +1,48 @@
+{
+  "version": "m3-app-snapshot-v1",
+  "app": "planner",
+  "captured_utc": "2026-09-20T11:30:51.874536+00:00",
+  "source": "/home/epentland/ai/canopy/mylang/experiments/application_comparison/baselines/planner/my",
+  "files": {
+    "README.md": {
+      "sha256": "40da5317936f7c8d8f82b7c4a053eb2e45e233767da684534d5e2ce6ee83e8e5"
+    },
+    "bin/planner-checks": {
+      "sha256": "52eb0ee1980d14e329d70fa26a070d477327fc66ea0da7c8749776fe89b5e583"
+    },
+    "io.my": {
+      "sha256": "318bf703f8fa8e1fe706d7211b226c19ea60f9e885ef06da4279a8970df395e9"
+    },
+    "json.my": {
+      "sha256": "c4ff44f1102c4f8406bd79167003fc26c376bf6c1383d2482e631f7323267e99"
+    },
+    "main.my": {
+      "sha256": "d175b32295994856479be3a00d4a01a524f91a03c665023b5b56cbec00d80619"
+    },
+    "output.my": {
+      "sha256": "58614ffdb504bde81fc2ae0365c60a02c06c865078078246df8b27ef9e9d3703"
+    },
+    "planner.my": {
+      "sha256": "5bad8f7d2ea34155b843bb296f4b9b8d3f5f3285aba97372984650697fee72da"
+    },
+    "project.json": {
+      "sha256": "8e1af39a3da66fbc301eeeacfb82c313f819056497807fff1d3e40a6d33b9f3c"
+    },
+    "schema.my": {
+      "sha256": "530aea677a8febc54f0fce4dcd48f8a9954d0b3053e3b923dabe445b347d324f"
+    },
+    "stress_cli.py": {
+      "sha256": "486cb0b80e87dc706968cad789730c89c2a13f899a2cdc398d05e396da6ef67e"
+    },
+    "test_cli.py": {
+      "sha256": "4b61633bacad8c684a50651beb2e709760f97650976b795a081fd9d935d392d6"
+    },
+    "verify.json": {
+      "sha256": "16085643697c4cad090a4fe2a24d62178d3111973d1189e74b42cbae671be89c"
+    }
+  },
+  "digest": "b1795b992bdc724067f8061e256fb38602abce52e2c18e7e548703cf4de042e3",
+  "entry": "main.my",
+  "manifest": "verify.json",
+  "host": "mylang-io"
+}

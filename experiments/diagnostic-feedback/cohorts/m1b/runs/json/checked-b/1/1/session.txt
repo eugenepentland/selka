@@ -1,0 +1,17 @@
+Done.
+
+**What I changed:** `project/main.my` — `main` was adding `0` directly to the `Result[int, str]` returned by `read_number` (E_TYPE). I replaced that with a `match` on the result: `Ok(value)` prints `0 + value`, and `Err(_)` prints `-99` for a non-integer argument. `read_number` itself was left unchanged.
+
+**Command and result:**
+```
+./bin/mylang check project/main.my
+```
+→ exit 0, no diagnostics/warnings.
+
+```
+./bin/mylang run project/main.my -- 41   → 41
+./bin/mylang run project/main.my -- 0    → 0
+./bin/mylang run project/main.my -- abc  → -99
+./bin/mylang run project/main.my -- -7   → -7
+```
+All match `public/expected.json` (41 → `41\n`, 0 → `0\n`) and the non-integer rule.

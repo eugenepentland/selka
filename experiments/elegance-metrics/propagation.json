@@ -1,0 +1,3415 @@
+{
+  "version": 2,
+  "captured_utc": "2026-09-19T11:28:18.470517+00:00",
+  "cost_term": "v2",
+  "compiler": "4a9ad0c17789e422",
+  "architecture": {
+    "B": {
+      "project": "/home/epentland/ai/canopy/mylang/experiments/cascade/designs/B",
+      "nodes": 123,
+      "edges": 371,
+      "propagation_cost": 0.0471,
+      "median_impact": 0.0328,
+      "top10_mean_impact": 0.1779,
+      "nodes_over_ten_percent": 11,
+      "mean_dependencies": 0.0471,
+      "most_impactful": [
+        [
+          "sexpr.ast::Node",
+          0.2869
+        ],
+        [
+          "sexpr.tokenizer::Kind",
+          0.2377
+        ],
+        [
+          "sexpr.ast::Span",
+          0.2295
+        ],
+        [
+          "sexpr.ast::Span.offset",
+          0.1639
+        ],
+        [
+          "sexpr.ast::Span.col",
+          0.1557
+        ],
+        [
+          "sexpr.ast::Span.line",
+          0.1557
+        ]
+      ],
+      "most_depended_on": [
+        [
+          "sexpr.ast::Node",
+          31
+        ],
+        [
+          "sexpr.ast::Span",
+          22
+        ],
+        [
+          "sexpr.tokenizer::Kind",
+          18
+        ],
+        [
+          "sexpr.tokenizer::Token",
+          17
+        ],
+        [
+          "sexpr.parser::ParseError",
+          15
+        ],
+        [
+          "sexpr.tokenizer::Lexer",
+          13
+        ]
+      ],
+      "per_module": {
+        "main": {
+          "nodes": 13,
+          "mean_impact": 0.0265
+        },
+        "sexpr.ast": {
+          "nodes": 22,
+          "mean_impact": 0.0455
+        },
+        "sexpr.parser": {
+          "nodes": 31,
+          "mean_impact": 0.0561
+        },
+        "sexpr.printer": {
+          "nodes": 16,
+          "mean_impact": 0.0282
+        },
+        "sexpr.tokenizer": {
+          "nodes": 41,
+          "mean_impact": 0.0552
+        }
+      },
+      "sensitivity": {
+        "all": {
+          "nodes": 123,
+          "edges": 371,
+          "propagation_cost": 0.0471,
+          "top10_mean": 0.1779,
+          "nodes_over_ten_percent": 11
+        },
+        "without_uses_type": {
+          "nodes": 123,
+          "edges": 314,
+          "propagation_cost": 0.0471,
+          "top10_mean": 0.1779,
+          "nodes_over_ten_percent": 11
+        },
+        "calls_only": {
+          "nodes": 123,
+          "edges": 128,
+          "propagation_cost": 0.0199,
+          "top10_mean": 0.0713,
+          "nodes_over_ten_percent": 0
+        },
+        "calls_and_fields": {
+          "nodes": 123,
+          "edges": 268,
+          "propagation_cost": 0.0435,
+          "top10_mean": 0.1434,
+          "nodes_over_ten_percent": 9
+        }
+      }
+    },
+    "P1": {
+      "project": "/home/epentland/ai/canopy/mylang/experiments/cascade/designs/P1",
+      "nodes": 137,
+      "edges": 384,
+      "propagation_cost": 0.0414,
+      "median_impact": 0.0294,
+      "top10_mean_impact": 0.1537,
+      "nodes_over_ten_percent": 15,
+      "mean_dependencies": 0.0414,
+      "most_impactful": [
+        [
+          "sexpr.ast::Node",
+          0.2426
+        ],
+        [
+          "sexpr.tokenizer::Kind",
+          0.1985
+        ],
+        [
+          "sexpr.ast::Span",
+          0.1838
+        ],
+        [
+          "sexpr.ast::SuffixRole",
+          0.1838
+        ],
+        [
+          "sexpr.tokenizer::Lexer",
+          0.1471
+        ],
+        [
+          "sexpr.ast::Suffix",
+          0.1324
+        ]
+      ],
+      "most_depended_on": [
+        [
+          "sexpr.ast::Node",
+          29
+        ],
+        [
+          "sexpr.tokenizer::Kind",
+          19
+        ],
+        [
+          "sexpr.ast::Span",
+          18
+        ],
+        [
+          "sexpr.tokenizer::Lexer",
+          17
+        ],
+        [
+          "sexpr.tokenizer::Token",
+          14
+        ],
+        [
+          "sexpr.parser::ParseError",
+          12
+        ]
+      ],
+      "per_module": {
+        "main": {
+          "nodes": 13,
+          "mean_impact": 0.0238
+        },
+        "sexpr.ast": {
+          "nodes": 34,
+          "mean_impact": 0.0443
+        },
+        "sexpr.parser": {
+          "nodes": 22,
+          "mean_impact": 0.0441
+        },
+        "sexpr.printer": {
+          "nodes": 16,
+          "mean_impact": 0.0253
+        },
+        "sexpr.tokenizer": {
+          "nodes": 52,
+          "mean_impact": 0.0477
+        }
+      },
+      "sensitivity": {
+        "all": {
+          "nodes": 137,
+          "edges": 384,
+          "propagation_cost": 0.0414,
+          "top10_mean": 0.1537,
+          "nodes_over_ten_percent": 15
+        },
+        "without_uses_type": {
+          "nodes": 137,
+          "edges": 329,
+          "propagation_cost": 0.0412,
+          "top10_mean": 0.1537,
+          "nodes_over_ten_percent": 15
+        },
+        "calls_only": {
+          "nodes": 137,
+          "edges": 143,
+          "propagation_cost": 0.016,
+          "top10_mean": 0.0669,
+          "nodes_over_ten_percent": 0
+        },
+        "calls_and_fields": {
+          "nodes": 137,
+          "edges": 278,
+          "propagation_cost": 0.037,
+          "top10_mean": 0.1176,
+          "nodes_over_ten_percent": 12
+        }
+      }
+    },
+    "P2": {
+      "project": "/home/epentland/ai/canopy/mylang/experiments/cascade/designs/P2",
+      "nodes": 218,
+      "edges": 738,
+      "propagation_cost": 0.0391,
+      "median_impact": 0.0323,
+      "top10_mean_impact": 0.1756,
+      "nodes_over_ten_percent": 13,
+      "mean_dependencies": 0.0391,
+      "most_impactful": [
+        [
+          "sexpr.tokenizer::CharClasses",
+          0.2903
+        ],
+        [
+          "sexpr.tokenizer::Syntax",
+          0.2028
+        ],
+        [
+          "sexpr.tokenizer::NumberPolicy",
+          0.1935
+        ],
+        [
+          "sexpr.tokenizer::Scan",
+          0.1935
+        ],
+        [
+          "sexpr.ast::Node",
+          0.1751
+        ],
+        [
+          "sexpr.tokenizer::Kind",
+          0.1475
+        ]
+      ],
+      "most_depended_on": [
+        [
+          "sexpr.ast::Node",
+          32
+        ],
+        [
+          "sexpr.tokenizer::Lexer",
+          24
+        ],
+        [
+          "sexpr.ast::Span",
+          22
+        ],
+        [
+          "sexpr.parser::ParseOptions",
+          19
+        ],
+        [
+          "sexpr.printer::Layout",
+          18
+        ],
+        [
+          "sexpr.tokenizer::CharClasses",
+          18
+        ]
+      ],
+      "per_module": {
+        "main": {
+          "nodes": 13,
+          "mean_impact": 0.0149
+        },
+        "sexpr.ast": {
+          "nodes": 22,
+          "mean_impact": 0.0281
+        },
+        "sexpr.parser": {
+          "nodes": 37,
+          "mean_impact": 0.0374
+        },
+        "sexpr.printer": {
+          "nodes": 39,
+          "mean_impact": 0.0232
+        },
+        "sexpr.tokenizer": {
+          "nodes": 107,
+          "mean_impact": 0.0507
+        }
+      },
+      "sensitivity": {
+        "all": {
+          "nodes": 218,
+          "edges": 738,
+          "propagation_cost": 0.0391,
+          "top10_mean": 0.1756,
+          "nodes_over_ten_percent": 13
+        },
+        "without_uses_type": {
+          "nodes": 218,
+          "edges": 630,
+          "propagation_cost": 0.0391,
+          "top10_mean": 0.1756,
+          "nodes_over_ten_percent": 13
+        },
+        "calls_only": {
+          "nodes": 218,
+          "edges": 219,
+          "propagation_cost": 0.0104,
+          "top10_mean": 0.0539,
+          "nodes_over_ten_percent": 0
+        },
+        "calls_and_fields": {
+          "nodes": 218,
+          "edges": 533,
+          "propagation_cost": 0.0356,
+          "top10_mean": 0.1157,
+          "nodes_over_ten_percent": 9
+        }
+      }
+    }
+  },
+  "cohort": {
+    "path": "/home/epentland/ai/canopy/mylang/experiments/cascade/cohorts/original.json",
+    "records": 72
+  },
+  "runs": [
+    {
+      "arm": "B",
+      "task": "T1",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 126782,
+      "cost_term": "v2",
+      "steps": 38,
+      "compiler_seconds": 91.742,
+      "bytes_read": 128395,
+      "failure_results": 7,
+      "diff_lines": 119,
+      "files_changed": 6,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_float",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "sexpr.parser::float_has_exponent",
+        "sexpr.parser::parse_float",
+        "sexpr.tokenizer::exponent_len",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 4,
+      "blast_radius_before": 0.0492,
+      "blast_radius_after": 0.0645,
+      "read_surface": 0.3065,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0468
+    },
+    {
+      "arm": "B",
+      "task": "T1",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 159836,
+      "cost_term": "v2",
+      "steps": 65,
+      "compiler_seconds": 195.61,
+      "bytes_read": 113844,
+      "failure_results": 13,
+      "diff_lines": 142,
+      "files_changed": 6,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_float",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "sexpr.parser::has_exponent",
+        "sexpr.parser::parse_float",
+        "sexpr.tokenizer::exponent_sign_len",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 4,
+      "blast_radius_before": 0.0492,
+      "blast_radius_after": 0.0645,
+      "read_surface": 0.3065,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0468
+    },
+    {
+      "arm": "B",
+      "task": "T1",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 103077,
+      "cost_term": "v2",
+      "steps": 49,
+      "compiler_seconds": 146.278,
+      "bytes_read": 144844,
+      "failure_results": 13,
+      "diff_lines": 168,
+      "files_changed": 6,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_float",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "sexpr.parser::carries_exponent",
+        "sexpr.parser::parse_float",
+        "sexpr.tokenizer::exponent_len",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 4,
+      "blast_radius_before": 0.0492,
+      "blast_radius_after": 0.0645,
+      "read_surface": 0.3065,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0468
+    },
+    {
+      "arm": "B",
+      "task": "T2",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 94480,
+      "cost_term": "v2",
+      "steps": 43,
+      "compiler_seconds": 134.802,
+      "bytes_read": 118556,
+      "failure_results": 10,
+      "diff_lines": 84,
+      "files_changed": 5,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_unit",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "sexpr.parser::inch_to_mm",
+        "sexpr.parser::parse_unit",
+        "sexpr.parser::source_has_in_suffix",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 4,
+      "blast_radius_before": 0.0492,
+      "blast_radius_after": 0.0565,
+      "read_surface": 0.3226,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0468
+    },
+    {
+      "arm": "B",
+      "task": "T2",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 163087,
+      "cost_term": "v2",
+      "steps": 51,
+      "compiler_seconds": 102.443,
+      "bytes_read": 116455,
+      "failure_results": 12,
+      "diff_lines": 88,
+      "files_changed": 5,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_unit",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "sexpr.parser::inch_to_mm",
+        "sexpr.parser::parse_unit",
+        "sexpr.parser::source_has_in_suffix",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 4,
+      "blast_radius_before": 0.0492,
+      "blast_radius_after": 0.0565,
+      "read_surface": 0.3226,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0468
+    },
+    {
+      "arm": "B",
+      "task": "T2",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 86483,
+      "cost_term": "v2",
+      "steps": 35,
+      "compiler_seconds": 89.157,
+      "bytes_read": 119900,
+      "failure_results": 6,
+      "diff_lines": 93,
+      "files_changed": 5,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_unit",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "sexpr.parser::in_to_mm",
+        "sexpr.parser::parse_unit",
+        "sexpr.parser::source_has_in_suffix",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 4,
+      "blast_radius_before": 0.0492,
+      "blast_radius_after": 0.0565,
+      "read_surface": 0.3226,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0468
+    },
+    {
+      "arm": "B",
+      "task": "T2",
+      "run": 1,
+      "chain": true,
+      "chain_repetition": 1,
+      "verdict": "passed",
+      "cost": 120751,
+      "cost_term": "v2",
+      "steps": 42,
+      "compiler_seconds": 107.467,
+      "bytes_read": 101772,
+      "failure_results": 9,
+      "diff_lines": 110,
+      "files_changed": 6,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_unit",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "sexpr.parser::in_to_mm",
+        "sexpr.parser::parse_unit",
+        "sexpr.parser::source_has_in_suffix",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 4,
+      "blast_radius_before": 0.0492,
+      "blast_radius_after": 0.0565,
+      "read_surface": 0.3226,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0468
+    },
+    {
+      "arm": "B",
+      "task": "T3",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 147170,
+      "cost_term": "v2",
+      "steps": 63,
+      "compiler_seconds": 181.128,
+      "bytes_read": 151883,
+      "failure_results": 16,
+      "diff_lines": 177,
+      "files_changed": 8,
+      "api_breaking": 1,
+      "production_files_changed": [
+        "main.my",
+        "sexpr/ast.my",
+        "sexpr/parser.my",
+        "sexpr/printer.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::parse_unit",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::parse_unit",
+        "sexpr.parser::source_spelling",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 10,
+      "blast_radius_before": 0.0902,
+      "blast_radius_after": 0.0976,
+      "read_surface": 0.4715,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0471
+    },
+    {
+      "arm": "B",
+      "task": "T3",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 149289,
+      "cost_term": "v2",
+      "steps": 75,
+      "compiler_seconds": 199.682,
+      "bytes_read": 137698,
+      "failure_results": 18,
+      "diff_lines": 167,
+      "files_changed": 9,
+      "api_breaking": 1,
+      "production_files_changed": [
+        "main.my",
+        "sexpr/ast.my",
+        "sexpr/parser.my",
+        "sexpr/printer.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::parse_unit",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::parse_unit",
+        "sexpr.parser::unit_literal",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 10,
+      "blast_radius_before": 0.0902,
+      "blast_radius_after": 0.0976,
+      "read_surface": 0.4715,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.047
+    },
+    {
+      "arm": "B",
+      "task": "T3",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 149743,
+      "cost_term": "v2",
+      "steps": 98,
+      "compiler_seconds": 287.181,
+      "bytes_read": 120063,
+      "failure_results": 22,
+      "diff_lines": 185,
+      "files_changed": 9,
+      "api_breaking": 1,
+      "production_files_changed": [
+        "main.my",
+        "sexpr/ast.my",
+        "sexpr/parser.my",
+        "sexpr/printer.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::parse_unit",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::parse_unit",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 9,
+      "blast_radius_before": 0.0902,
+      "blast_radius_after": 0.0902,
+      "read_surface": 0.4672,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0471
+    },
+    {
+      "arm": "B",
+      "task": "T3",
+      "run": 1,
+      "chain": true,
+      "chain_repetition": 1,
+      "verdict": "passed",
+      "cost": 162878,
+      "cost_term": "v2",
+      "steps": 74,
+      "compiler_seconds": 131.528,
+      "bytes_read": 156067,
+      "failure_results": 18,
+      "diff_lines": 243,
+      "files_changed": 10,
+      "api_breaking": 5,
+      "production_files_changed": [
+        "main.my",
+        "sexpr/ast.my",
+        "sexpr/parser.my",
+        "sexpr/printer.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::Cursor.src",
+        "sexpr.parser::parse_list",
+        "sexpr.parser::parse_node",
+        "sexpr.parser::parse_unit",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.parser::source_has_in_suffix",
+        "sexpr.parser::source_has_mil_suffix",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::Cursor",
+        "sexpr.parser::parse_list",
+        "sexpr.parser::parse_node",
+        "sexpr.parser::parse_unit",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 13,
+      "blast_radius_before": 0.0968,
+      "blast_radius_after": 0.1157,
+      "read_surface": 0.686,
+      "propagation_cost_before": 0.0468,
+      "propagation_cost_after": 0.0471
+    },
+    {
+      "arm": "B",
+      "task": "T4",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 134033,
+      "cost_term": "v2",
+      "steps": 49,
+      "compiler_seconds": 124.194,
+      "bytes_read": 78214,
+      "failure_results": 10,
+      "diff_lines": 96,
+      "files_changed": 2,
+      "api_breaking": 1,
+      "production_files_changed": [
+        "sexpr/printer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.printer::render",
+        "sexpr.printer::short_list_max_width"
+      ],
+      "touched_after": [
+        "sexpr.printer::render",
+        "sexpr.printer::short_list_max_width"
+      ],
+      "touched_declarations": 2,
+      "blast_radius_before": 0.0082,
+      "blast_radius_after": 0.0082,
+      "read_surface": 0.0902,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0471
+    },
+    {
+      "arm": "B",
+      "task": "T4",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 80380,
+      "cost_term": "v2",
+      "steps": 35,
+      "compiler_seconds": 116.487,
+      "bytes_read": 72910,
+      "failure_results": 9,
+      "diff_lines": 94,
+      "files_changed": 2,
+      "api_breaking": 1,
+      "production_files_changed": [
+        "sexpr/printer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.printer::render",
+        "sexpr.printer::short_list_max_width"
+      ],
+      "touched_after": [
+        "sexpr.printer::render",
+        "sexpr.printer::short_list_max_width"
+      ],
+      "touched_declarations": 2,
+      "blast_radius_before": 0.0082,
+      "blast_radius_after": 0.0082,
+      "read_surface": 0.0902,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0471
+    },
+    {
+      "arm": "B",
+      "task": "T4",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 93296,
+      "cost_term": "v2",
+      "steps": 56,
+      "compiler_seconds": 141.702,
+      "bytes_read": 82711,
+      "failure_results": 7,
+      "diff_lines": 118,
+      "files_changed": 2,
+      "api_breaking": 1,
+      "production_files_changed": [
+        "sexpr/printer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.printer::render",
+        "sexpr.printer::short_list_max_width"
+      ],
+      "touched_after": [
+        "sexpr.printer::render",
+        "sexpr.printer::short_list_max_width"
+      ],
+      "touched_declarations": 2,
+      "blast_radius_before": 0.0082,
+      "blast_radius_after": 0.0082,
+      "read_surface": 0.0902,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0471
+    },
+    {
+      "arm": "B",
+      "task": "T5",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 87412,
+      "cost_term": "v2",
+      "steps": 34,
+      "compiler_seconds": 103.605,
+      "bytes_read": 84122,
+      "failure_results": 10,
+      "diff_lines": 184,
+      "files_changed": 2,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_with_depth_cap"
+      ],
+      "touched_after": [
+        "sexpr.parser::FormBounds",
+        "sexpr.parser::FormBounds.end",
+        "sexpr.parser::FormBounds.start",
+        "sexpr.parser::bounds_in_tokens",
+        "sexpr.parser::form_bounds"
+      ],
+      "touched_declarations": 5,
+      "blast_radius_before": 0.0164,
+      "blast_radius_after": 0.0315,
+      "read_surface": 0.315,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0466
+    },
+    {
+      "arm": "B",
+      "task": "T5",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 88378,
+      "cost_term": "v2",
+      "steps": 32,
+      "compiler_seconds": 104.523,
+      "bytes_read": 70542,
+      "failure_results": 8,
+      "diff_lines": 134,
+      "files_changed": 2,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_with_depth_cap"
+      ],
+      "touched_after": [
+        "sexpr.parser::FormBounds",
+        "sexpr.parser::FormBounds.end",
+        "sexpr.parser::FormBounds.start",
+        "sexpr.parser::form_bounds"
+      ],
+      "touched_declarations": 4,
+      "blast_radius_before": 0.0164,
+      "blast_radius_after": 0.0238,
+      "read_surface": 0.3095,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0467
+    },
+    {
+      "arm": "B",
+      "task": "T5",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 73358,
+      "cost_term": "v2",
+      "steps": 22,
+      "compiler_seconds": 76.439,
+      "bytes_read": 92970,
+      "failure_results": 8,
+      "diff_lines": 164,
+      "files_changed": 2,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_with_depth_cap"
+      ],
+      "touched_after": [
+        "sexpr.parser::FormBounds",
+        "sexpr.parser::FormBounds.end",
+        "sexpr.parser::FormBounds.start",
+        "sexpr.parser::bounds_in_tokens",
+        "sexpr.parser::form_bounds",
+        "sexpr.parser::matching_rparen"
+      ],
+      "touched_declarations": 6,
+      "blast_radius_before": 0.0164,
+      "blast_radius_after": 0.0312,
+      "read_surface": 0.3203,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0463
+    },
+    {
+      "arm": "B",
+      "task": "T6",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 126333,
+      "cost_term": "v2",
+      "steps": 54,
+      "compiler_seconds": 128.904,
+      "bytes_read": 105128,
+      "failure_results": 8,
+      "diff_lines": 227,
+      "files_changed": 3,
+      "api_breaking": 1,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.tokenizer::Lexer.col",
+        "sexpr.tokenizer::read_atom",
+        "sexpr.tokenizer::read_number",
+        "sexpr.tokenizer::si_suffix_len",
+        "sexpr.tokenizer::tokenize"
+      ],
+      "touched_after": [
+        "sexpr.parser::parse",
+        "sexpr.parser::parse_dialect",
+        "sexpr.parser::parse_in_dialect",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.tokenizer::Dialect",
+        "sexpr.tokenizer::Dialect.kicad",
+        "sexpr.tokenizer::Dialect.standard",
+        "sexpr.tokenizer::Lexer.dialect",
+        "sexpr.tokenizer::continues_atom",
+        "sexpr.tokenizer::is_semicolon",
+        "sexpr.tokenizer::read_atom",
+        "sexpr.tokenizer::read_number",
+        "sexpr.tokenizer::si_suffix_len",
+        "sexpr.tokenizer::starts_atom",
+        "sexpr.tokenizer::tokenize",
+        "sexpr.tokenizer::tokenize_dialect"
+      ],
+      "touched_declarations": 16,
+      "blast_radius_before": 0.0738,
+      "blast_radius_after": 0.1894,
+      "read_surface": 0.5455,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0538
+    },
+    {
+      "arm": "B",
+      "task": "T6",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 115269,
+      "cost_term": "v2",
+      "steps": 80,
+      "compiler_seconds": 171.603,
+      "bytes_read": 106600,
+      "failure_results": 17,
+      "diff_lines": 226,
+      "files_changed": 4,
+      "api_breaking": 1,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.tokenizer::Lexer.col",
+        "sexpr.tokenizer::read_atom",
+        "sexpr.tokenizer::read_number",
+        "sexpr.tokenizer::si_suffix_len",
+        "sexpr.tokenizer::tokenize"
+      ],
+      "touched_after": [
+        "sexpr.parser::parse_dialect",
+        "sexpr.parser::parse_dialect_with_depth_cap",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.tokenizer::Dialect",
+        "sexpr.tokenizer::Dialect.kicad",
+        "sexpr.tokenizer::Dialect.standard",
+        "sexpr.tokenizer::Lexer.dialect",
+        "sexpr.tokenizer::continues",
+        "sexpr.tokenizer::read_atom",
+        "sexpr.tokenizer::read_number",
+        "sexpr.tokenizer::si_suffix_len",
+        "sexpr.tokenizer::starts_atom",
+        "sexpr.tokenizer::tokenize",
+        "sexpr.tokenizer::tokenize_dialect"
+      ],
+      "touched_declarations": 14,
+      "blast_radius_before": 0.0738,
+      "blast_radius_after": 0.1908,
+      "read_surface": 0.542,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0543
+    },
+    {
+      "arm": "B",
+      "task": "T6",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 141975,
+      "cost_term": "v2",
+      "steps": 61,
+      "compiler_seconds": 132.366,
+      "bytes_read": 112389,
+      "failure_results": 17,
+      "diff_lines": 210,
+      "files_changed": 4,
+      "api_breaking": 1,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.tokenizer::Lexer.col",
+        "sexpr.tokenizer::read_atom",
+        "sexpr.tokenizer::read_number",
+        "sexpr.tokenizer::si_suffix_len",
+        "sexpr.tokenizer::tokenize"
+      ],
+      "touched_after": [
+        "sexpr.parser::parse_capped_dialect",
+        "sexpr.parser::parse_dialect",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.tokenizer::Dialect",
+        "sexpr.tokenizer::Dialect.kicad",
+        "sexpr.tokenizer::Dialect.standard",
+        "sexpr.tokenizer::Lexer.dialect",
+        "sexpr.tokenizer::atom_continue",
+        "sexpr.tokenizer::atom_start",
+        "sexpr.tokenizer::read_atom",
+        "sexpr.tokenizer::read_number",
+        "sexpr.tokenizer::si_suffix_len",
+        "sexpr.tokenizer::tokenize",
+        "sexpr.tokenizer::tokenize_dialect"
+      ],
+      "touched_declarations": 14,
+      "blast_radius_before": 0.0738,
+      "blast_radius_after": 0.1908,
+      "read_surface": 0.542,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0541
+    },
+    {
+      "arm": "B",
+      "task": "T7",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 101939,
+      "cost_term": "v2",
+      "steps": 43,
+      "compiler_seconds": 152.488,
+      "bytes_read": 71953,
+      "failure_results": 11,
+      "diff_lines": 97,
+      "files_changed": 6,
+      "api_breaking": 3,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::lex_failure",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.parser::span_at",
+        "sexpr.tokenizer::LexError.line",
+        "sexpr.tokenizer::read_string",
+        "sexpr.tokenizer::tokenize"
+      ],
+      "touched_after": [
+        "sexpr.parser::lex_failure",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.tokenizer::LexError.col",
+        "sexpr.tokenizer::read_string",
+        "sexpr.tokenizer::tokenize"
+      ],
+      "touched_declarations": 5,
+      "blast_radius_before": 0.0492,
+      "blast_radius_after": 0.0492,
+      "read_surface": 0.5328,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0468
+    },
+    {
+      "arm": "B",
+      "task": "T7",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 63905,
+      "cost_term": "v2",
+      "steps": 37,
+      "compiler_seconds": 91.887,
+      "bytes_read": 75020,
+      "failure_results": 7,
+      "diff_lines": 57,
+      "files_changed": 3,
+      "api_breaking": 3,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::lex_failure",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.parser::span_at",
+        "sexpr.tokenizer::LexError.line",
+        "sexpr.tokenizer::read_string",
+        "sexpr.tokenizer::tokenize"
+      ],
+      "touched_after": [
+        "sexpr.parser::lex_failure",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.tokenizer::LexError.col",
+        "sexpr.tokenizer::read_string",
+        "sexpr.tokenizer::tokenize"
+      ],
+      "touched_declarations": 5,
+      "blast_radius_before": 0.0492,
+      "blast_radius_after": 0.0492,
+      "read_surface": 0.5328,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0468
+    },
+    {
+      "arm": "B",
+      "task": "T7",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 86458,
+      "cost_term": "v2",
+      "steps": 39,
+      "compiler_seconds": 104.397,
+      "bytes_read": 86441,
+      "failure_results": 9,
+      "diff_lines": 103,
+      "files_changed": 6,
+      "api_breaking": 3,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::lex_failure",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.parser::span_at",
+        "sexpr.tokenizer::LexError.line",
+        "sexpr.tokenizer::read_string",
+        "sexpr.tokenizer::tokenize"
+      ],
+      "touched_after": [
+        "sexpr.parser::lex_failure",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.tokenizer::LexError.col",
+        "sexpr.tokenizer::read_string",
+        "sexpr.tokenizer::tokenize"
+      ],
+      "touched_declarations": 5,
+      "blast_radius_before": 0.0492,
+      "blast_radius_after": 0.0492,
+      "read_surface": 0.5328,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0468
+    },
+    {
+      "arm": "B",
+      "task": "T7",
+      "run": 1,
+      "chain": true,
+      "chain_repetition": 1,
+      "verdict": "passed",
+      "cost": 96545,
+      "cost_term": "v2",
+      "steps": 43,
+      "compiler_seconds": 115.093,
+      "bytes_read": 90671,
+      "failure_results": 6,
+      "diff_lines": 90,
+      "files_changed": 4,
+      "api_breaking": 3,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::lex_failure",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.parser::span_at",
+        "sexpr.tokenizer::LexError.line",
+        "sexpr.tokenizer::read_string",
+        "sexpr.tokenizer::tokenize"
+      ],
+      "touched_after": [
+        "sexpr.parser::lex_failure",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.tokenizer::LexError.col",
+        "sexpr.tokenizer::read_string",
+        "sexpr.tokenizer::tokenize"
+      ],
+      "touched_declarations": 5,
+      "blast_radius_before": 0.0496,
+      "blast_radius_after": 0.0496,
+      "read_surface": 0.5289,
+      "propagation_cost_before": 0.0471,
+      "propagation_cost_after": 0.0468
+    },
+    {
+      "arm": "P1",
+      "task": "T1",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 141894,
+      "cost_term": "v2",
+      "steps": 52,
+      "compiler_seconds": 126.287,
+      "bytes_read": 143973,
+      "failure_results": 11,
+      "diff_lines": 288,
+      "files_changed": 4,
+      "api_breaking": 2,
+      "production_files_changed": [
+        "sexpr/ast.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.tokenizer::number_for",
+        "sexpr.tokenizer::read_number",
+        "sexpr.tokenizer::spelled_at",
+        "sexpr.tokenizer::suffix_at"
+      ],
+      "touched_after": [
+        "sexpr.tokenizer::exponent_ends_token",
+        "sexpr.tokenizer::exponent_length",
+        "sexpr.tokenizer::number_for",
+        "sexpr.tokenizer::read_number",
+        "sexpr.tokenizer::spelled_at",
+        "sexpr.tokenizer::suffix_at",
+        "sexpr.tokenizer::suffix_at_offset"
+      ],
+      "touched_declarations": 7,
+      "blast_radius_before": 0.0441,
+      "blast_radius_after": 0.0576,
+      "read_surface": 0.2806,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0425
+    },
+    {
+      "arm": "P1",
+      "task": "T1",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 95630,
+      "cost_term": "v2",
+      "steps": 45,
+      "compiler_seconds": 74.638,
+      "bytes_read": 111327,
+      "failure_results": 5,
+      "diff_lines": 210,
+      "files_changed": 6,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/ast.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "sexpr.tokenizer::exponent_length",
+        "sexpr.tokenizer::exponent_number",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 3,
+      "blast_radius_before": 0.0294,
+      "blast_radius_after": 0.0362,
+      "read_surface": 0.2754,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0412
+    },
+    {
+      "arm": "P1",
+      "task": "T1",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 113403,
+      "cost_term": "v2",
+      "steps": 49,
+      "compiler_seconds": 137.533,
+      "bytes_read": 113951,
+      "failure_results": 9,
+      "diff_lines": 158,
+      "files_changed": 6,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/ast.my",
+        "sexpr/parser.my",
+        "sexpr/printer.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "sexpr.tokenizer::exponent_length",
+        "sexpr.tokenizer::exponent_number",
+        "sexpr.tokenizer::is_exponent_marker",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 4,
+      "blast_radius_before": 0.0294,
+      "blast_radius_after": 0.0432,
+      "read_surface": 0.2806,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0409
+    },
+    {
+      "arm": "P1",
+      "task": "T2",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 87787,
+      "cost_term": "v2",
+      "steps": 55,
+      "compiler_seconds": 138.371,
+      "bytes_read": 100790,
+      "failure_results": 9,
+      "diff_lines": 71,
+      "files_changed": 6,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/ast.my",
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.ast::suffixes"
+      ],
+      "touched_after": [
+        "sexpr.ast::suffixes"
+      ],
+      "touched_declarations": 1,
+      "blast_radius_before": 0.0294,
+      "blast_radius_after": 0.0294,
+      "read_surface": 0.0441,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0414
+    },
+    {
+      "arm": "P1",
+      "task": "T2",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 113010,
+      "cost_term": "v2",
+      "steps": 41,
+      "compiler_seconds": 114.193,
+      "bytes_read": 94104,
+      "failure_results": 6,
+      "diff_lines": 66,
+      "files_changed": 6,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/ast.my",
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.ast::suffixes"
+      ],
+      "touched_after": [
+        "sexpr.ast::suffixes"
+      ],
+      "touched_declarations": 1,
+      "blast_radius_before": 0.0294,
+      "blast_radius_after": 0.0294,
+      "read_surface": 0.0441,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0414
+    },
+    {
+      "arm": "P1",
+      "task": "T2",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 110111,
+      "cost_term": "v2",
+      "steps": 49,
+      "compiler_seconds": 131.095,
+      "bytes_read": 105579,
+      "failure_results": 12,
+      "diff_lines": 49,
+      "files_changed": 5,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/ast.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.ast::suffixes"
+      ],
+      "touched_after": [
+        "sexpr.ast::suffixes"
+      ],
+      "touched_declarations": 1,
+      "blast_radius_before": 0.0294,
+      "blast_radius_after": 0.0294,
+      "read_surface": 0.0441,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0414
+    },
+    {
+      "arm": "P1",
+      "task": "T2",
+      "run": 1,
+      "chain": true,
+      "chain_repetition": 1,
+      "verdict": "passed",
+      "cost": 102981,
+      "cost_term": "v2",
+      "steps": 52,
+      "compiler_seconds": 86.668,
+      "bytes_read": 130992,
+      "failure_results": 9,
+      "diff_lines": 112,
+      "files_changed": 7,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/ast.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.ast::suffixes"
+      ],
+      "touched_after": [
+        "sexpr.ast::suffixes"
+      ],
+      "touched_declarations": 1,
+      "blast_radius_before": 0.0294,
+      "blast_radius_after": 0.0294,
+      "read_surface": 0.0441,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0414
+    },
+    {
+      "arm": "P1",
+      "task": "T3",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 130373,
+      "cost_term": "v2",
+      "steps": 66,
+      "compiler_seconds": 181.133,
+      "bytes_read": 129173,
+      "failure_results": 18,
+      "diff_lines": 182,
+      "files_changed": 11,
+      "api_breaking": 2,
+      "production_files_changed": [
+        "main.my",
+        "sexpr/ast.my",
+        "sexpr/parser.my",
+        "sexpr/printer.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::number_node",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::Number.measure",
+        "sexpr.tokenizer::number_for",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::number_node",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::Number.measure",
+        "sexpr.tokenizer::number_for",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 11,
+      "blast_radius_before": 0.0956,
+      "blast_radius_after": 0.0956,
+      "read_surface": 0.4191,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0414
+    },
+    {
+      "arm": "P1",
+      "task": "T3",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 148582,
+      "cost_term": "v2",
+      "steps": 86,
+      "compiler_seconds": 215.017,
+      "bytes_read": 107917,
+      "failure_results": 18,
+      "diff_lines": 107,
+      "files_changed": 8,
+      "api_breaking": 2,
+      "production_files_changed": [
+        "main.my",
+        "sexpr/ast.my",
+        "sexpr/parser.my",
+        "sexpr/printer.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::number_node",
+        "sexpr.parser::parse_number",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::number_node",
+        "sexpr.parser::parse_number",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 10,
+      "blast_radius_before": 0.0882,
+      "blast_radius_after": 0.0882,
+      "read_surface": 0.5,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0416
+    },
+    {
+      "arm": "P1",
+      "task": "T3",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 141560,
+      "cost_term": "v2",
+      "steps": 74,
+      "compiler_seconds": 207.622,
+      "bytes_read": 127703,
+      "failure_results": 25,
+      "diff_lines": 111,
+      "files_changed": 8,
+      "api_breaking": 2,
+      "production_files_changed": [
+        "main.my",
+        "sexpr/ast.my",
+        "sexpr/parser.my",
+        "sexpr/printer.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::number_node",
+        "sexpr.parser::parse_number",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::number_node",
+        "sexpr.parser::parse_number",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 10,
+      "blast_radius_before": 0.0882,
+      "blast_radius_after": 0.0882,
+      "read_surface": 0.5,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0416
+    },
+    {
+      "arm": "P1",
+      "task": "T3",
+      "run": 1,
+      "chain": true,
+      "chain_repetition": 1,
+      "verdict": "passed",
+      "cost": 140187,
+      "cost_term": "v2",
+      "steps": 73,
+      "compiler_seconds": 213.519,
+      "bytes_read": 141454,
+      "failure_results": 16,
+      "diff_lines": 154,
+      "files_changed": 9,
+      "api_breaking": 2,
+      "production_files_changed": [
+        "main.my",
+        "sexpr/ast.my",
+        "sexpr/parser.my",
+        "sexpr/printer.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::number_node",
+        "sexpr.parser::parse_number",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::number_node",
+        "sexpr.parser::parse_number",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 10,
+      "blast_radius_before": 0.0882,
+      "blast_radius_after": 0.0882,
+      "read_surface": 0.5,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0414
+    },
+    {
+      "arm": "P1",
+      "task": "T4",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 119490,
+      "cost_term": "v2",
+      "steps": 50,
+      "compiler_seconds": 93.062,
+      "bytes_read": 58931,
+      "failure_results": 12,
+      "diff_lines": 103,
+      "files_changed": 2,
+      "api_breaking": 1,
+      "production_files_changed": [
+        "sexpr/printer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.printer::render",
+        "sexpr.printer::short_list_max_width"
+      ],
+      "touched_after": [
+        "sexpr.printer::render",
+        "sexpr.printer::short_list_max_width"
+      ],
+      "touched_declarations": 2,
+      "blast_radius_before": 0.0074,
+      "blast_radius_after": 0.0074,
+      "read_surface": 0.125,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0414
+    },
+    {
+      "arm": "P1",
+      "task": "T4",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 97184,
+      "cost_term": "v2",
+      "steps": 45,
+      "compiler_seconds": 213.32,
+      "bytes_read": 66689,
+      "failure_results": 10,
+      "diff_lines": 104,
+      "files_changed": 2,
+      "api_breaking": 1,
+      "production_files_changed": [
+        "sexpr/printer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.printer::render",
+        "sexpr.printer::short_list_max_width"
+      ],
+      "touched_after": [
+        "sexpr.printer::render",
+        "sexpr.printer::short_list_max_width"
+      ],
+      "touched_declarations": 2,
+      "blast_radius_before": 0.0074,
+      "blast_radius_after": 0.0074,
+      "read_surface": 0.125,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0414
+    },
+    {
+      "arm": "P1",
+      "task": "T4",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 61967,
+      "cost_term": "v2",
+      "steps": 31,
+      "compiler_seconds": 108.321,
+      "bytes_read": 54670,
+      "failure_results": 6,
+      "diff_lines": 94,
+      "files_changed": 2,
+      "api_breaking": 1,
+      "production_files_changed": [
+        "sexpr/printer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.printer::render",
+        "sexpr.printer::short_list_max_width"
+      ],
+      "touched_after": [
+        "sexpr.printer::render",
+        "sexpr.printer::short_list_max_width"
+      ],
+      "touched_declarations": 2,
+      "blast_radius_before": 0.0074,
+      "blast_radius_after": 0.0074,
+      "read_surface": 0.125,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0414
+    },
+    {
+      "arm": "P1",
+      "task": "T5",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 117347,
+      "cost_term": "v2",
+      "steps": 39,
+      "compiler_seconds": 50.105,
+      "bytes_read": 119108,
+      "failure_results": 12,
+      "diff_lines": 160,
+      "files_changed": 2,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_with_depth_cap"
+      ],
+      "touched_after": [
+        "sexpr.parser::FormBounds",
+        "sexpr.parser::FormBounds.end",
+        "sexpr.parser::FormBounds.start",
+        "sexpr.parser::form_bounds",
+        "sexpr.parser::outermost_bounds"
+      ],
+      "touched_declarations": 5,
+      "blast_radius_before": 0.0147,
+      "blast_radius_after": 0.0284,
+      "read_surface": 0.3901,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0418
+    },
+    {
+      "arm": "P1",
+      "task": "T5",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 130606,
+      "cost_term": "v2",
+      "steps": 50,
+      "compiler_seconds": 121.732,
+      "bytes_read": 90498,
+      "failure_results": 12,
+      "diff_lines": 140,
+      "files_changed": 2,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_with_depth_cap"
+      ],
+      "touched_after": [
+        "sexpr.parser::FormBounds",
+        "sexpr.parser::FormBounds.end",
+        "sexpr.parser::FormBounds.start",
+        "sexpr.parser::form_bounds",
+        "sexpr.parser::form_bounds_in"
+      ],
+      "touched_declarations": 5,
+      "blast_radius_before": 0.0147,
+      "blast_radius_after": 0.0284,
+      "read_surface": 0.3901,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0418
+    },
+    {
+      "arm": "P1",
+      "task": "T5",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 100211,
+      "cost_term": "v2",
+      "steps": 39,
+      "compiler_seconds": 103.715,
+      "bytes_read": 71139,
+      "failure_results": 10,
+      "diff_lines": 144,
+      "files_changed": 2,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_with_depth_cap"
+      ],
+      "touched_after": [
+        "sexpr.parser::FormBounds",
+        "sexpr.parser::FormBounds.end",
+        "sexpr.parser::FormBounds.start",
+        "sexpr.parser::bounds_in_tokens",
+        "sexpr.parser::form_bounds"
+      ],
+      "touched_declarations": 5,
+      "blast_radius_before": 0.0147,
+      "blast_radius_after": 0.0284,
+      "read_surface": 0.3901,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0418
+    },
+    {
+      "arm": "P1",
+      "task": "T6",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 104416,
+      "cost_term": "v2",
+      "steps": 50,
+      "compiler_seconds": 77.708,
+      "bytes_read": 106247,
+      "failure_results": 11,
+      "diff_lines": 280,
+      "files_changed": 3,
+      "api_breaking": 1,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.tokenizer::Lexer.lookahead",
+        "sexpr.tokenizer::read_atom",
+        "sexpr.tokenizer::read_number",
+        "sexpr.tokenizer::spelled_at",
+        "sexpr.tokenizer::tokenize"
+      ],
+      "touched_after": [
+        "sexpr.parser::parse",
+        "sexpr.parser::parse_dialect",
+        "sexpr.parser::parse_tokens",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.tokenizer::Dialect",
+        "sexpr.tokenizer::Dialect.kicad",
+        "sexpr.tokenizer::Dialect.standard",
+        "sexpr.tokenizer::Lexer.dialect",
+        "sexpr.tokenizer::atom_continue_in",
+        "sexpr.tokenizer::atom_start_in",
+        "sexpr.tokenizer::read_atom",
+        "sexpr.tokenizer::read_number",
+        "sexpr.tokenizer::spelled_at",
+        "sexpr.tokenizer::tokenize",
+        "sexpr.tokenizer::tokenize_dialect"
+      ],
+      "touched_declarations": 15,
+      "blast_radius_before": 0.0441,
+      "blast_radius_after": 0.1931,
+      "read_surface": 0.5448,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0467
+    },
+    {
+      "arm": "P1",
+      "task": "T6",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 95323,
+      "cost_term": "v2",
+      "steps": 38,
+      "compiler_seconds": 93.534,
+      "bytes_read": 95235,
+      "failure_results": 8,
+      "diff_lines": 248,
+      "files_changed": 3,
+      "api_breaking": 3,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.tokenizer::Lexer.col",
+        "sexpr.tokenizer::is_atom_continue",
+        "sexpr.tokenizer::is_atom_start",
+        "sexpr.tokenizer::read_atom",
+        "sexpr.tokenizer::read_number",
+        "sexpr.tokenizer::spelled_at",
+        "sexpr.tokenizer::tokenize"
+      ],
+      "touched_after": [
+        "sexpr.parser::parse",
+        "sexpr.parser::parse_dialect",
+        "sexpr.parser::parse_dialect_with_depth_cap",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.tokenizer::Dialect",
+        "sexpr.tokenizer::Dialect.kicad",
+        "sexpr.tokenizer::Dialect.standard",
+        "sexpr.tokenizer::Lexer.dialect",
+        "sexpr.tokenizer::is_atom_continue",
+        "sexpr.tokenizer::is_atom_start",
+        "sexpr.tokenizer::read_atom",
+        "sexpr.tokenizer::read_number",
+        "sexpr.tokenizer::spelled_at",
+        "sexpr.tokenizer::tokenize",
+        "sexpr.tokenizer::tokenize_dialect"
+      ],
+      "touched_declarations": 15,
+      "blast_radius_before": 0.0956,
+      "blast_radius_after": 0.2028,
+      "read_surface": 0.5315,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.049
+    },
+    {
+      "arm": "P1",
+      "task": "T6",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 104264,
+      "cost_term": "v2",
+      "steps": 54,
+      "compiler_seconds": 98.227,
+      "bytes_read": 78900,
+      "failure_results": 12,
+      "diff_lines": 248,
+      "files_changed": 3,
+      "api_breaking": 3,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.tokenizer::Lexer.lookahead",
+        "sexpr.tokenizer::is_atom_continue",
+        "sexpr.tokenizer::is_atom_start",
+        "sexpr.tokenizer::read_atom",
+        "sexpr.tokenizer::read_number",
+        "sexpr.tokenizer::spelled_at",
+        "sexpr.tokenizer::tokenize"
+      ],
+      "touched_after": [
+        "sexpr.parser::parse",
+        "sexpr.parser::parse_dialect",
+        "sexpr.parser::parse_source",
+        "sexpr.parser::parse_with_depth_cap",
+        "sexpr.tokenizer::Dialect",
+        "sexpr.tokenizer::Dialect.kicad",
+        "sexpr.tokenizer::Dialect.standard",
+        "sexpr.tokenizer::Lexer.dialect",
+        "sexpr.tokenizer::is_atom_continue",
+        "sexpr.tokenizer::is_atom_start",
+        "sexpr.tokenizer::read_atom",
+        "sexpr.tokenizer::read_number",
+        "sexpr.tokenizer::spelled_at",
+        "sexpr.tokenizer::tokenize",
+        "sexpr.tokenizer::tokenize_dialect"
+      ],
+      "touched_declarations": 15,
+      "blast_radius_before": 0.0662,
+      "blast_radius_after": 0.2028,
+      "read_surface": 0.5245,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0489
+    },
+    {
+      "arm": "P1",
+      "task": "T7",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 121977,
+      "cost_term": "v2",
+      "steps": 37,
+      "compiler_seconds": 76.908,
+      "bytes_read": 68529,
+      "failure_results": 11,
+      "diff_lines": 0,
+      "files_changed": 0,
+      "api_breaking": 0,
+      "production_files_changed": [],
+      "deleted_modules": [],
+      "touched_before": [],
+      "touched_after": [],
+      "touched_declarations": 0,
+      "blast_radius_before": 0.0,
+      "blast_radius_after": 0.0,
+      "read_surface": 0.0,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0414
+    },
+    {
+      "arm": "P1",
+      "task": "T7",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 109179,
+      "cost_term": "v2",
+      "steps": 30,
+      "compiler_seconds": 89.377,
+      "bytes_read": 98188,
+      "failure_results": 10,
+      "diff_lines": 0,
+      "files_changed": 0,
+      "api_breaking": 0,
+      "production_files_changed": [],
+      "deleted_modules": [],
+      "touched_before": [],
+      "touched_after": [],
+      "touched_declarations": 0,
+      "blast_radius_before": 0.0,
+      "blast_radius_after": 0.0,
+      "read_surface": 0.0,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0414
+    },
+    {
+      "arm": "P1",
+      "task": "T7",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 85354,
+      "cost_term": "v2",
+      "steps": 25,
+      "compiler_seconds": 76.482,
+      "bytes_read": 69674,
+      "failure_results": 7,
+      "diff_lines": 0,
+      "files_changed": 0,
+      "api_breaking": 0,
+      "production_files_changed": [],
+      "deleted_modules": [],
+      "touched_before": [],
+      "touched_after": [],
+      "touched_declarations": 0,
+      "blast_radius_before": 0.0,
+      "blast_radius_after": 0.0,
+      "read_surface": 0.0,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0414
+    },
+    {
+      "arm": "P1",
+      "task": "T7",
+      "run": 1,
+      "chain": true,
+      "chain_repetition": 1,
+      "verdict": "passed",
+      "cost": 75691,
+      "cost_term": "v2",
+      "steps": 31,
+      "compiler_seconds": 58.907,
+      "bytes_read": 64430,
+      "failure_results": 6,
+      "diff_lines": 0,
+      "files_changed": 0,
+      "api_breaking": 0,
+      "production_files_changed": [],
+      "deleted_modules": [],
+      "touched_before": [],
+      "touched_after": [],
+      "touched_declarations": 0,
+      "blast_radius_before": 0.0,
+      "blast_radius_after": 0.0,
+      "read_surface": 0.0,
+      "propagation_cost_before": 0.0414,
+      "propagation_cost_after": 0.0414
+    },
+    {
+      "arm": "P2",
+      "task": "T1",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 123319,
+      "cost_term": "v2",
+      "steps": 50,
+      "compiler_seconds": 128.375,
+      "bytes_read": 161734,
+      "failure_results": 9,
+      "diff_lines": 124,
+      "files_changed": 6,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_float",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "sexpr.parser::has_exponent",
+        "sexpr.parser::parse_float",
+        "sexpr.tokenizer::exponent_len",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 4,
+      "blast_radius_before": 0.0369,
+      "blast_radius_after": 0.0457,
+      "read_surface": 0.2648,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0389
+    },
+    {
+      "arm": "P2",
+      "task": "T1",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 148500,
+      "cost_term": "v2",
+      "steps": 64,
+      "compiler_seconds": 146.961,
+      "bytes_read": 169853,
+      "failure_results": 13,
+      "diff_lines": 163,
+      "files_changed": 6,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_float",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "sexpr.parser::has_exponent",
+        "sexpr.parser::parse_float",
+        "sexpr.tokenizer::exponent_lower",
+        "sexpr.tokenizer::exponent_plus",
+        "sexpr.tokenizer::exponent_suffix_len",
+        "sexpr.tokenizer::exponent_upper",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 7,
+      "blast_radius_before": 0.0369,
+      "blast_radius_after": 0.045,
+      "read_surface": 0.2613,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0379
+    },
+    {
+      "arm": "P2",
+      "task": "T1",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 135994,
+      "cost_term": "v2",
+      "steps": 49,
+      "compiler_seconds": 127.884,
+      "bytes_read": 134705,
+      "failure_results": 11,
+      "diff_lines": 120,
+      "files_changed": 6,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_float",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "sexpr.parser::has_exponent",
+        "sexpr.parser::parse_float",
+        "sexpr.tokenizer::exponent_len",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 4,
+      "blast_radius_before": 0.0369,
+      "blast_radius_after": 0.0457,
+      "read_surface": 0.2648,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0389
+    },
+    {
+      "arm": "P2",
+      "task": "T2",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 124919,
+      "cost_term": "v2",
+      "steps": 52,
+      "compiler_seconds": 106.588,
+      "bytes_read": 138429,
+      "failure_results": 7,
+      "diff_lines": 72,
+      "files_changed": 6,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.tokenizer::default_number_policy"
+      ],
+      "touched_after": [
+        "sexpr.tokenizer::default_number_policy"
+      ],
+      "touched_declarations": 1,
+      "blast_radius_before": 0.0276,
+      "blast_radius_after": 0.0276,
+      "read_surface": 0.0507,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0391
+    },
+    {
+      "arm": "P2",
+      "task": "T2",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 122751,
+      "cost_term": "v2",
+      "steps": 49,
+      "compiler_seconds": 123.607,
+      "bytes_read": 177651,
+      "failure_results": 11,
+      "diff_lines": 116,
+      "files_changed": 5,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.tokenizer::default_number_policy"
+      ],
+      "touched_after": [
+        "sexpr.tokenizer::default_number_policy"
+      ],
+      "touched_declarations": 1,
+      "blast_radius_before": 0.0276,
+      "blast_radius_after": 0.0276,
+      "read_surface": 0.0507,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0391
+    },
+    {
+      "arm": "P2",
+      "task": "T2",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 131380,
+      "cost_term": "v2",
+      "steps": 74,
+      "compiler_seconds": 163.96,
+      "bytes_read": 174925,
+      "failure_results": 15,
+      "diff_lines": 107,
+      "files_changed": 8,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/ast.my",
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.tokenizer::default_number_policy"
+      ],
+      "touched_after": [
+        "sexpr.tokenizer::default_number_policy"
+      ],
+      "touched_declarations": 1,
+      "blast_radius_before": 0.0276,
+      "blast_radius_after": 0.0276,
+      "read_surface": 0.0507,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0391
+    },
+    {
+      "arm": "P2",
+      "task": "T2",
+      "run": 1,
+      "chain": true,
+      "chain_repetition": 1,
+      "verdict": "passed",
+      "cost": 120913,
+      "cost_term": "v2",
+      "steps": 38,
+      "compiler_seconds": 93.767,
+      "bytes_read": 140650,
+      "failure_results": 12,
+      "diff_lines": 50,
+      "files_changed": 4,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.tokenizer::default_number_policy"
+      ],
+      "touched_after": [
+        "sexpr.tokenizer::default_number_policy"
+      ],
+      "touched_declarations": 1,
+      "blast_radius_before": 0.0276,
+      "blast_radius_after": 0.0276,
+      "read_surface": 0.0507,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0391
+    },
+    {
+      "arm": "P2",
+      "task": "T3",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 184671,
+      "cost_term": "v2",
+      "steps": 77,
+      "compiler_seconds": 274.728,
+      "bytes_read": 188366,
+      "failure_results": 21,
+      "diff_lines": 144,
+      "files_changed": 10,
+      "api_breaking": 2,
+      "production_files_changed": [
+        "main.my",
+        "sexpr/ast.my",
+        "sexpr/parser.my",
+        "sexpr/printer.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::parse_unit",
+        "sexpr.parser::source_dimension_factor",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::dimension_factor",
+        "sexpr.parser::parse_unit",
+        "sexpr.parser::source_dimension_suffix",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 11,
+      "blast_radius_before": 0.0691,
+      "blast_radius_after": 0.0688,
+      "read_surface": 0.445,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0391
+    },
+    {
+      "arm": "P2",
+      "task": "T3",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 161914,
+      "cost_term": "v2",
+      "steps": 71,
+      "compiler_seconds": 207.448,
+      "bytes_read": 149585,
+      "failure_results": 15,
+      "diff_lines": 130,
+      "files_changed": 8,
+      "api_breaking": 2,
+      "production_files_changed": [
+        "main.my",
+        "sexpr/ast.my",
+        "sexpr/parser.my",
+        "sexpr/printer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::parse_unit",
+        "sexpr.parser::source_dimension_factor",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node"
+      ],
+      "touched_after": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::parse_unit",
+        "sexpr.parser::source_dimension",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node"
+      ],
+      "touched_declarations": 9,
+      "blast_radius_before": 0.0599,
+      "blast_radius_after": 0.0599,
+      "read_surface": 0.2995,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0391
+    },
+    {
+      "arm": "P2",
+      "task": "T3",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 157249,
+      "cost_term": "v2",
+      "steps": 91,
+      "compiler_seconds": 367.922,
+      "bytes_read": 159593,
+      "failure_results": 25,
+      "diff_lines": 155,
+      "files_changed": 8,
+      "api_breaking": 2,
+      "production_files_changed": [
+        "main.my",
+        "sexpr/ast.my",
+        "sexpr/parser.my",
+        "sexpr/printer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::parse_unit",
+        "sexpr.parser::source_dimension_factor",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node"
+      ],
+      "touched_after": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::dimension_factor",
+        "sexpr.parser::parse_unit",
+        "sexpr.parser::source_dimension_suffix",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node"
+      ],
+      "touched_declarations": 10,
+      "blast_radius_before": 0.0599,
+      "blast_radius_after": 0.0596,
+      "read_surface": 0.3028,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0391
+    },
+    {
+      "arm": "P2",
+      "task": "T3",
+      "run": 1,
+      "chain": true,
+      "chain_repetition": 1,
+      "verdict": "passed",
+      "cost": 160605,
+      "cost_term": "v2",
+      "steps": 94,
+      "compiler_seconds": 255.879,
+      "bytes_read": 167933,
+      "failure_results": 19,
+      "diff_lines": 210,
+      "files_changed": 13,
+      "api_breaking": 1,
+      "production_files_changed": [
+        "main.my",
+        "sexpr/ast.my",
+        "sexpr/parser.my",
+        "sexpr/printer.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::parse_unit",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_after": [
+        "main::tally",
+        "sexpr.ast::Node.measure",
+        "sexpr.ast::as_number",
+        "sexpr.ast::span_of",
+        "sexpr.ast::value_text",
+        "sexpr.parser::parse_unit",
+        "sexpr.printer::estimate_width",
+        "sexpr.printer::push_node",
+        "sexpr.tokenizer::read_number"
+      ],
+      "touched_declarations": 9,
+      "blast_radius_before": 0.0645,
+      "blast_radius_after": 0.0645,
+      "read_surface": 0.4424,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0391
+    },
+    {
+      "arm": "P2",
+      "task": "T4",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 94284,
+      "cost_term": "v2",
+      "steps": 43,
+      "compiler_seconds": 99.513,
+      "bytes_read": 81534,
+      "failure_results": 8,
+      "diff_lines": 110,
+      "files_changed": 3,
+      "api_breaking": 1,
+      "production_files_changed": [
+        "sexpr/printer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.printer::Layout.max_width",
+        "sexpr.printer::Layout.trailing_newline"
+      ],
+      "touched_after": [
+        "sexpr.printer::Layout.max_width",
+        "sexpr.printer::Layout.trailing_newline"
+      ],
+      "touched_declarations": 2,
+      "blast_radius_before": 0.0276,
+      "blast_radius_after": 0.0276,
+      "read_surface": 0.0046,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0391
+    },
+    {
+      "arm": "P2",
+      "task": "T4",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 137667,
+      "cost_term": "v2",
+      "steps": 47,
+      "compiler_seconds": 139.265,
+      "bytes_read": 83521,
+      "failure_results": 11,
+      "diff_lines": 121,
+      "files_changed": 3,
+      "api_breaking": 1,
+      "production_files_changed": [
+        "sexpr/printer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.printer::Layout.max_width",
+        "sexpr.printer::Layout.trailing_newline"
+      ],
+      "touched_after": [
+        "sexpr.printer::Layout.max_width",
+        "sexpr.printer::Layout.trailing_newline"
+      ],
+      "touched_declarations": 2,
+      "blast_radius_before": 0.0276,
+      "blast_radius_after": 0.0276,
+      "read_surface": 0.0046,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0391
+    },
+    {
+      "arm": "P2",
+      "task": "T4",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 84547,
+      "cost_term": "v2",
+      "steps": 44,
+      "compiler_seconds": 187.647,
+      "bytes_read": 91715,
+      "failure_results": 11,
+      "diff_lines": 123,
+      "files_changed": 3,
+      "api_breaking": 1,
+      "production_files_changed": [
+        "sexpr/printer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.printer::Layout.max_width",
+        "sexpr.printer::Layout.trailing_newline"
+      ],
+      "touched_after": [
+        "sexpr.printer::Layout.max_width",
+        "sexpr.printer::Layout.trailing_newline"
+      ],
+      "touched_declarations": 2,
+      "blast_radius_before": 0.0276,
+      "blast_radius_after": 0.0276,
+      "read_surface": 0.0046,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0391
+    },
+    {
+      "arm": "P2",
+      "task": "T5",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 100050,
+      "cost_term": "v2",
+      "steps": 30,
+      "compiler_seconds": 145.608,
+      "bytes_read": 96057,
+      "failure_results": 10,
+      "diff_lines": 186,
+      "files_changed": 2,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_with_depth_cap"
+      ],
+      "touched_after": [
+        "sexpr.parser::FormBounds",
+        "sexpr.parser::FormBounds.end",
+        "sexpr.parser::FormBounds.start",
+        "sexpr.parser::bounds_in_tokens",
+        "sexpr.parser::form_bounds"
+      ],
+      "touched_declarations": 5,
+      "blast_radius_before": 0.0,
+      "blast_radius_after": 0.018,
+      "read_surface": 0.4414,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0396
+    },
+    {
+      "arm": "P2",
+      "task": "T5",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 93386,
+      "cost_term": "v2",
+      "steps": 32,
+      "compiler_seconds": 105.377,
+      "bytes_read": 111764,
+      "failure_results": 11,
+      "diff_lines": 153,
+      "files_changed": 2,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_with_depth_cap"
+      ],
+      "touched_after": [
+        "sexpr.parser::FormBounds",
+        "sexpr.parser::FormBounds.end",
+        "sexpr.parser::FormBounds.start",
+        "sexpr.parser::form_bounds"
+      ],
+      "touched_declarations": 4,
+      "blast_radius_before": 0.0,
+      "blast_radius_after": 0.0136,
+      "read_surface": 0.4389,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0397
+    },
+    {
+      "arm": "P2",
+      "task": "T5",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 106299,
+      "cost_term": "v2",
+      "steps": 40,
+      "compiler_seconds": 138.103,
+      "bytes_read": 101004,
+      "failure_results": 13,
+      "diff_lines": 116,
+      "files_changed": 2,
+      "api_breaking": 0,
+      "production_files_changed": [
+        "sexpr/parser.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::parse_with_depth_cap"
+      ],
+      "touched_after": [
+        "sexpr.parser::FormBounds",
+        "sexpr.parser::FormBounds.end",
+        "sexpr.parser::FormBounds.start",
+        "sexpr.parser::bounds_in_tokens",
+        "sexpr.parser::form_bounds"
+      ],
+      "touched_declarations": 5,
+      "blast_radius_before": 0.0,
+      "blast_radius_after": 0.018,
+      "read_surface": 0.4414,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0396
+    },
+    {
+      "arm": "P2",
+      "task": "T6",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 114196,
+      "cost_term": "v2",
+      "steps": 60,
+      "compiler_seconds": 132.086,
+      "bytes_read": 121378,
+      "failure_results": 15,
+      "diff_lines": 294,
+      "files_changed": 6,
+      "api_breaking": 4,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::ParseOptions.dialect",
+        "sexpr.tokenizer::Dialect",
+        "sexpr.tokenizer::default_dialect",
+        "sexpr.tokenizer::tokenize",
+        "sexpr.tokenizer::tokenize_with"
+      ],
+      "touched_after": [
+        "sexpr.parser::ParseOptions.dialect",
+        "sexpr.parser::parse_dialect",
+        "sexpr.tokenizer::Dialect",
+        "sexpr.tokenizer::Dialect.kicad",
+        "sexpr.tokenizer::Dialect.standard",
+        "sexpr.tokenizer::DialectConfig",
+        "sexpr.tokenizer::default_dialect",
+        "sexpr.tokenizer::dialect_config",
+        "sexpr.tokenizer::kicad_atom_continue",
+        "sexpr.tokenizer::kicad_atom_start",
+        "sexpr.tokenizer::kicad_dialect",
+        "sexpr.tokenizer::tokenize_dialect",
+        "sexpr.tokenizer::tokenize_with"
+      ],
+      "touched_declarations": 13,
+      "blast_radius_before": 0.1429,
+      "blast_radius_after": 0.1637,
+      "read_surface": 0.6062,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0421
+    },
+    {
+      "arm": "P2",
+      "task": "T6",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 99781,
+      "cost_term": "v2",
+      "steps": 66,
+      "compiler_seconds": 60.503,
+      "bytes_read": 121302,
+      "failure_results": 10,
+      "diff_lines": 294,
+      "files_changed": 6,
+      "api_breaking": 4,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::ParseOptions.dialect",
+        "sexpr.tokenizer::Dialect",
+        "sexpr.tokenizer::default_dialect",
+        "sexpr.tokenizer::tokenize",
+        "sexpr.tokenizer::tokenize_with"
+      ],
+      "touched_after": [
+        "sexpr.parser::ParseOptions.dialect",
+        "sexpr.parser::parse_dialect",
+        "sexpr.tokenizer::Dialect",
+        "sexpr.tokenizer::Dialect.kicad",
+        "sexpr.tokenizer::Dialect.standard",
+        "sexpr.tokenizer::DialectSpec",
+        "sexpr.tokenizer::default_dialect",
+        "sexpr.tokenizer::kicad_atom_continue",
+        "sexpr.tokenizer::kicad_atom_start",
+        "sexpr.tokenizer::spec_of",
+        "sexpr.tokenizer::tokenize_dialect",
+        "sexpr.tokenizer::tokenize_with"
+      ],
+      "touched_declarations": 12,
+      "blast_radius_before": 0.1429,
+      "blast_radius_after": 0.16,
+      "read_surface": 0.6044,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0417
+    },
+    {
+      "arm": "P2",
+      "task": "T6",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 116105,
+      "cost_term": "v2",
+      "steps": 60,
+      "compiler_seconds": 77.31,
+      "bytes_read": 131492,
+      "failure_results": 9,
+      "diff_lines": 247,
+      "files_changed": 5,
+      "api_breaking": 4,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::ParseOptions.dialect",
+        "sexpr.tokenizer::Dialect",
+        "sexpr.tokenizer::default_dialect",
+        "sexpr.tokenizer::tokenize",
+        "sexpr.tokenizer::tokenize_with"
+      ],
+      "touched_after": [
+        "sexpr.parser::ParseOptions.dialect",
+        "sexpr.parser::parse_dialect",
+        "sexpr.tokenizer::Dialect",
+        "sexpr.tokenizer::Dialect.kicad",
+        "sexpr.tokenizer::Dialect.standard",
+        "sexpr.tokenizer::LexConfig",
+        "sexpr.tokenizer::config_of",
+        "sexpr.tokenizer::default_dialect",
+        "sexpr.tokenizer::kicad_atom_continue",
+        "sexpr.tokenizer::kicad_atom_start",
+        "sexpr.tokenizer::tokenize_dialect",
+        "sexpr.tokenizer::tokenize_with"
+      ],
+      "touched_declarations": 12,
+      "blast_radius_before": 0.1429,
+      "blast_radius_after": 0.16,
+      "read_surface": 0.6044,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0417
+    },
+    {
+      "arm": "P2",
+      "task": "T7",
+      "run": 1,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 82991,
+      "cost_term": "v2",
+      "steps": 30,
+      "compiler_seconds": 86.924,
+      "bytes_read": 96533,
+      "failure_results": 6,
+      "diff_lines": 67,
+      "files_changed": 6,
+      "api_breaking": 3,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::lex_failure",
+        "sexpr.parser::parse_with",
+        "sexpr.parser::span_at",
+        "sexpr.tokenizer::LexError.line",
+        "sexpr.tokenizer::read_string",
+        "sexpr.tokenizer::skip_trivia",
+        "sexpr.tokenizer::tokenize_with"
+      ],
+      "touched_after": [
+        "sexpr.parser::lex_failure",
+        "sexpr.parser::parse_with",
+        "sexpr.tokenizer::LexError.col",
+        "sexpr.tokenizer::read_string",
+        "sexpr.tokenizer::skip_trivia",
+        "sexpr.tokenizer::tokenize_with"
+      ],
+      "touched_declarations": 6,
+      "blast_radius_before": 0.0415,
+      "blast_radius_after": 0.0415,
+      "read_surface": 0.576,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0387
+    },
+    {
+      "arm": "P2",
+      "task": "T7",
+      "run": 2,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 89446,
+      "cost_term": "v2",
+      "steps": 59,
+      "compiler_seconds": 125.287,
+      "bytes_read": 100593,
+      "failure_results": 8,
+      "diff_lines": 93,
+      "files_changed": 7,
+      "api_breaking": 3,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::lex_failure",
+        "sexpr.parser::parse_with",
+        "sexpr.parser::span_at",
+        "sexpr.tokenizer::LexError.line",
+        "sexpr.tokenizer::read_string",
+        "sexpr.tokenizer::skip_trivia",
+        "sexpr.tokenizer::tokenize_with"
+      ],
+      "touched_after": [
+        "sexpr.parser::lex_failure",
+        "sexpr.parser::parse_with",
+        "sexpr.tokenizer::LexError.col",
+        "sexpr.tokenizer::read_string",
+        "sexpr.tokenizer::skip_trivia",
+        "sexpr.tokenizer::tokenize_with"
+      ],
+      "touched_declarations": 6,
+      "blast_radius_before": 0.0415,
+      "blast_radius_after": 0.0415,
+      "read_surface": 0.576,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0387
+    },
+    {
+      "arm": "P2",
+      "task": "T7",
+      "run": 3,
+      "chain": false,
+      "chain_repetition": null,
+      "verdict": "passed",
+      "cost": 140794,
+      "cost_term": "v2",
+      "steps": 46,
+      "compiler_seconds": 123.882,
+      "bytes_read": 115541,
+      "failure_results": 15,
+      "diff_lines": 101,
+      "files_changed": 8,
+      "api_breaking": 3,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::lex_failure",
+        "sexpr.parser::parse_with",
+        "sexpr.parser::span_at",
+        "sexpr.tokenizer::LexError.line",
+        "sexpr.tokenizer::read_string",
+        "sexpr.tokenizer::skip_trivia",
+        "sexpr.tokenizer::tokenize_with"
+      ],
+      "touched_after": [
+        "sexpr.parser::lex_failure",
+        "sexpr.parser::parse_with",
+        "sexpr.tokenizer::LexError.col",
+        "sexpr.tokenizer::read_string",
+        "sexpr.tokenizer::skip_trivia",
+        "sexpr.tokenizer::tokenize_with"
+      ],
+      "touched_declarations": 6,
+      "blast_radius_before": 0.0415,
+      "blast_radius_after": 0.0415,
+      "read_surface": 0.576,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0387
+    },
+    {
+      "arm": "P2",
+      "task": "T7",
+      "run": 1,
+      "chain": true,
+      "chain_repetition": 1,
+      "verdict": "passed",
+      "cost": 109445,
+      "cost_term": "v2",
+      "steps": 40,
+      "compiler_seconds": 121.439,
+      "bytes_read": 100364,
+      "failure_results": 9,
+      "diff_lines": 110,
+      "files_changed": 7,
+      "api_breaking": 3,
+      "production_files_changed": [
+        "sexpr/parser.my",
+        "sexpr/tokenizer.my"
+      ],
+      "deleted_modules": [],
+      "touched_before": [
+        "sexpr.parser::lex_failure",
+        "sexpr.parser::parse_with",
+        "sexpr.parser::span_at",
+        "sexpr.tokenizer::LexError.line",
+        "sexpr.tokenizer::read_string",
+        "sexpr.tokenizer::skip_trivia",
+        "sexpr.tokenizer::tokenize_with"
+      ],
+      "touched_after": [
+        "sexpr.parser::lex_failure",
+        "sexpr.parser::parse_with",
+        "sexpr.tokenizer::LexError.col",
+        "sexpr.tokenizer::read_string",
+        "sexpr.tokenizer::skip_trivia",
+        "sexpr.tokenizer::tokenize_with"
+      ],
+      "touched_declarations": 6,
+      "blast_radius_before": 0.0415,
+      "blast_radius_after": 0.0415,
+      "read_surface": 0.576,
+      "propagation_cost_before": 0.0391,
+      "propagation_cost_after": 0.0387
+    }
+  ],
+  "independent_runs": 63,
+  "chain_runs": 9,
+  "correlations": {
+    "rows_used": 63,
+    "chains_included": false,
+    "overall_pearson_with_cost": {
+      "blast_radius_before": 0.333,
+      "blast_radius_after": 0.196,
+      "read_surface": 0.101,
+      "touched_declarations": 0.292,
+      "diff_lines": 0.146,
+      "files_changed": 0.549,
+      "api_breaking": -0.006,
+      "steps": 0.699,
+      "compiler_seconds": 0.569,
+      "bytes_read": 0.627,
+      "failure_results": 0.695
+    },
+    "within_task_spearman": {
+      "blast_radius_before": -0.223,
+      "blast_radius_after": -0.214,
+      "read_surface": -0.005,
+      "touched_declarations": 0.006,
+      "diff_lines": -0.115,
+      "files_changed": 0.082,
+      "api_breaking": -0.093,
+      "steps": 0.568,
+      "compiler_seconds": 0.302,
+      "bytes_read": 0.314,
+      "failure_results": 0.547
+    },
+    "within_task_centered_rank": {
+      "blast_radius_before": -0.223,
+      "blast_radius_after": -0.214,
+      "read_surface": -0.005,
+      "touched_declarations": 0.006,
+      "diff_lines": -0.115,
+      "files_changed": 0.082,
+      "api_breaking": -0.093,
+      "steps": 0.568,
+      "compiler_seconds": 0.302,
+      "bytes_read": 0.314,
+      "failure_results": 0.547
+    }
+  },
+  "compiler_calls": 75
+}

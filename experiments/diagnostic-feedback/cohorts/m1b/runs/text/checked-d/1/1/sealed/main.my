@@ -1,0 +1,21 @@
+module main
+
+
+def as_count(raw: str) -> Result[int, str]:
+    match int(raw):
+        case Some(value):
+            return Ok(value)
+        case None:
+            return Err("not a number")
+
+
+def main(args: list[str], out: Stream) -> int:
+    total = 7
+    if len(args) > 0:
+        match as_count(args[0]):
+            case Ok(value):
+                total = 7 + value
+            case Err(_):
+                total = 7
+    out.print(total)
+    return 0

@@ -1,0 +1,7 @@
+Done.
+
+**What I changed:** `project/main.my` — removed the unused, invalid `[T: Comparable]` generic parameters from `highest` and `highest_of`. `Comparable` is not a requirement the compiler knows (`E_GENERIC_REQUIREMENT`), and `T` appeared nowhere in either signature or body (both already operate on `list[int]`/`int`), so the type parameter was purely vestigial. No other changes.
+
+**Commands and results:**
+- `bin/mylang check project/main.my` → exit 0, no diagnostics.
+- `bin/mylang run project/main.my -- 1 3 2` → `3`; `-- 5 5 5` → `5`; also `-- -7 -3 -5` → `-3` and `-- 10 -2 4` → `10`, all exit 0 (both cases in `public/expected.json` match exactly).

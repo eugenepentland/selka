@@ -1,0 +1,10 @@
+Done.
+
+**What changed:** In `project/main.my`, `above` was declared `-> int` but returned `a > b`, a `bool` (the cause of the `E_TYPE: expected int, found bool` check error). Since booleans print as `True`/`False` rather than `1`/`0`, I kept the `-> int` signature and made the body return `1` when `a > b` and `0` otherwise via an `if`/`return`. Nothing else was touched, and the scratch files I used to probe language behavior were removed.
+
+**Command run:**
+```
+$ bin/mylang run project/main.my
+1
+```
+Exit code 0, stdout exactly `1\n`; `bin/mylang check project/main.my` also exits 0.

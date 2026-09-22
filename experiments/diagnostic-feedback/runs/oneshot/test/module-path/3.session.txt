@@ -1,0 +1,15 @@
+**Change made:** one line in `project/main.my` — the import was pointing at a non-existent package path (`import lib.stats as stats`) while the helper is a sibling module declaring `module stats`; I corrected it to `import stats as stats`. `project/stats.my` was left untouched.
+
+**Command run (once, at the end):**
+`bin/mylang run project/main.my`
+
+**Result:** exit 1 — the program does **not** yet print `7`. The compiler rejected it with:
+
+```
+main.my:7:15: error[E_PRIVATE_SYMBOL]: declaration is private to its module
+      out.print(stats.total())
+                ^
+  note: stats.my:4:5: declaration is here
+```
+
+So the run revealed a second, independent defect I had not fixed within the one allowed attempt: the helper's function must be exported, i.e. `public def total() -> int:` in `project/stats.my`. Per the single-attempt rule (“do not revise the code after you have run it”), I stopped there rather than applying that edit or re-running. If you want, the remaining fix is that one keyword on `project/stats.my:4`.

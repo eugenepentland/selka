@@ -1,0 +1,8 @@
+module main
+
+import lib.stats as stats
+
+
+def main(out: Stream) -> int:
+    out.print(stats.total())
+    return 0

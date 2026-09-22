@@ -1,0 +1,9 @@
+Fixed `project/main.my`: `lookup("five")` returns a `Result[int, str]`, but line 12 added it directly to the `int` `bonus` (the `E_TYPE` diagnostic). I changed `main` to unwrap the `Result` with an exhaustive `match` — `Ok(value)` computes `bonus + value`, `Err(_)` keeps just `bonus` — while leaving `lookup` and the `bonus = 0` value untouched.
+
+Ran:
+
+```
+bin/mylang run project/main.my
+```
+
+Result: prints `5`, exit code 0 (`bin/mylang check project/main.my` also exits 0 with no warnings).

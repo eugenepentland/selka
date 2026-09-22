@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "compiler_sha256": "09a322dce0e2a2ec0a566a81ec5657e354c21673265e6904b1db7923e6d4cff1",
+  "svg_timed_runs": 837,
+  "allocation_timed_runs": 62,
+  "source_hashes_checked": 77,
+  "svg_binaries_checked": 9,
+  "allocation_binaries_checked": 2,
+  "chart_data_checked": true,
+  "chart_javascript_syntax_checked": true
+}

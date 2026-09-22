@@ -1,0 +1,8 @@
+**What changed:** In `project/main.my`, `main` was adding `1` directly to `parse_count(args[0])`, which is a `Result[int, str]` (hence `E_TYPE`). I replaced that line with a `match` on the `Result`: `case Ok(value)` prints `1 + value`, and `case Err(_)` prints `-1`. `parse_count` itself was already correct and is unchanged. Only `main` was touched.
+
+**Commands and results:**
+- `./bin/mylang check project/main.my` → exit 0, no diagnostics
+- `./bin/mylang run project/main.my -- 41` → `42`
+- `./bin/mylang run project/main.my -- 0` → `1`
+
+Both cases from `public/expected.json` pass (stdout matched exactly, exit 0). Extra checks: `abc`, `3.5`, and `""` → `-1`; `-5` → `-4`; `007` → `8`.

@@ -1,0 +1,11 @@
+Fixed. The bug was that `main` passed the `Result` directly into arithmetic; I matched on it instead.
+
+**Change** (`project/main.my`): replaced `out.print(0 + value)` with a `match value:` that prints `0 + number` for `case Ok(number)` and `-99` for `case Err(_)` — exhausting both `Result` variants (reusing `read_number`'s existing `int()`/`None` handling of non-integers).
+
+**Commands and results:**
+- `bin/mylang check project/main.my` → exit 0, no diagnostics
+- `bin/mylang run project/main.my -- 41` → `41`
+- `bin/mylang run project/main.my -- 0` → `0`
+- Also verified a built binary across other inputs: `-5`→`-5`, `abc`→`-99`, `3.5`→`-99`, `999999999999999999999999`→`-99`, `007`→`7`
+
+Build artifacts (`prog`, manifest) were removed afterward; only `project/main.my` was modified.

@@ -1,0 +1,6 @@
+{
+  "id": "generic-requirement",
+  "family": "E_GENERIC_REQUIREMENT",
+  "split": "dev",
+  "expect": "3"
+}

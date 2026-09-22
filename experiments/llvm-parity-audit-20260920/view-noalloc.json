@@ -1,0 +1,13 @@
+{
+  "source": "module view_noalloc\n\ndef count(source: bytes) -> Result[int, str] noalloc:\n    return source.view(0, len(source)).scalar_count()\n\ndef main() -> int:\n    return 0\n",
+  "command": [
+    "zig-out/bin/mylang",
+    "check",
+    ".tmp/llvm-parity-audit-20260920/view_noalloc.my"
+  ],
+  "exit": 1,
+  "stdout": "",
+  "stderr": "view_noalloc.my:3:46: error[E_EFFECT_BOUND]: effect `managed_allocation` exceeds declared bound: view_noalloc::count; inferred bound is effects(managed_allocation)\n  def count(source: bytes) -> Result[int, str] noalloc:\n                                               ^\n  note: view_noalloc.my:4:12: effect originates at this operation or owned type\n",
+  "compiler_sha256": "2c2ed027cb810836101474ba91f929f0a710f6b34b9f19842eccd4bc659acd21",
+  "compiler_unchanged": true
+}

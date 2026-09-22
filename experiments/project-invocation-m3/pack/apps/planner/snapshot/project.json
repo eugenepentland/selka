@@ -1,0 +1,8 @@
+{
+  "version": "m3-project-description-v1",
+  "name": "planner",
+  "entry": "main.my",
+  "manifest": "verify.json",
+  "host": "mylang-io",
+  "note": "The workflow dependency planner: `main.my` plus json/schema/planner/output modules, driven as a byte-I/O program that reads one JSON request on stdin and writes one response on stdout."
+}

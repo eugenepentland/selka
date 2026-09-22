@@ -1,0 +1,274 @@
+{
+  "binary": "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+  "sha256_before": "544f3dc0b96f888a46d0bb9c090ba29bc394c7529ba5f367e385e3931593807d",
+  "sha256_after": "544f3dc0b96f888a46d0bb9c090ba29bc394c7529ba5f367e385e3931593807d",
+  "revision": "dcbcc2fd12b17b74b41f4fc2442cf847e7436e37",
+  "cases": [
+    {
+      "case": "unannotated_list_write",
+      "source_sha256": "e1894b8a89670abef91313907290430bce4542b64baf8b7d1e8668518f3def10",
+      "check": {
+        "args": [
+          "check",
+          "experiments/local-reasoning-audit-20260921/sources/unannotated_list_write.my",
+          "--mutation-markers"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "experiments/local-reasoning-audit-20260921/sources/unannotated_list_write.my:2:5: warning[W_MUTATES_MISSING]: this function writes `values` (parameter 1) reachable from the caller; declare `mutates(values)`\n      values[0] = 42\n      ^\n"
+      },
+      "run": {
+        "args": [
+          "run",
+          "experiments/local-reasoning-audit-20260921/sources/unannotated_list_write.my",
+          "--print-result",
+          "--mutation-markers"
+        ],
+        "exit": 42,
+        "stdout": "42\n",
+        "stderr": "experiments/local-reasoning-audit-20260921/sources/unannotated_list_write.my:2:5: warning[W_MUTATES_MISSING]: this function writes `values` (parameter 1) reachable from the caller; declare `mutates(values)`\n      values[0] = 42\n      ^\n"
+      },
+      "matches_expected": true
+    },
+    {
+      "case": "unannotated_class_write",
+      "source_sha256": "cf359ddee89a0c8a967ddd33201251888a6db732db38c46f529ba3c06de31fd8",
+      "check": {
+        "args": [
+          "check",
+          "experiments/local-reasoning-audit-20260921/sources/unannotated_class_write.my",
+          "--mutation-markers"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "run": {
+        "args": [
+          "run",
+          "experiments/local-reasoning-audit-20260921/sources/unannotated_class_write.my",
+          "--print-result",
+          "--mutation-markers"
+        ],
+        "exit": 42,
+        "stdout": "42\n",
+        "stderr": ""
+      },
+      "matches_expected": true
+    },
+    {
+      "case": "declared_write_missing_marker",
+      "source_sha256": "63a6bf2d802d0f9d62e602b9b13fd9599b826679291b0fd4c57ee170f4195a19",
+      "check": {
+        "args": [
+          "check",
+          "experiments/local-reasoning-audit-20260921/sources/declared_write_missing_marker.my",
+          "--mutation-markers"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "experiments/local-reasoning-audit-20260921/sources/declared_write_missing_marker.my:5:11: error[E_MUTATION_MARKER]: argument 1 is declared writable by `mutates(...)`; add the `&` marker so the call shows the write: `&values`\n      touch(values)\n            ^\n"
+      },
+      "matches_expected": true
+    },
+    {
+      "case": "declared_write_marked",
+      "source_sha256": "f435db1aae4565509b60ee0db3a9cf8a08c7e8ffac00626bfa192ea7c3c26e91",
+      "check": {
+        "args": [
+          "check",
+          "experiments/local-reasoning-audit-20260921/sources/declared_write_marked.my",
+          "--mutation-markers"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "run": {
+        "args": [
+          "run",
+          "experiments/local-reasoning-audit-20260921/sources/declared_write_marked.my",
+          "--print-result",
+          "--mutation-markers"
+        ],
+        "exit": 42,
+        "stdout": "42\n",
+        "stderr": ""
+      },
+      "matches_expected": true
+    },
+    {
+      "case": "option_context",
+      "source_sha256": "129cf708d9ea41b537b24048dd15940f048ecc9a044a5817de0a5ee3c9e7c278",
+      "check": {
+        "args": [
+          "check",
+          "experiments/local-reasoning-audit-20260921/sources/option_context.my"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "run": {
+        "args": [
+          "run",
+          "experiments/local-reasoning-audit-20260921/sources/option_context.my",
+          "--print-result"
+        ],
+        "exit": 42,
+        "stdout": "42\n",
+        "stderr": ""
+      },
+      "matches_expected": true
+    },
+    {
+      "case": "record_shallow_copy",
+      "source_sha256": "6599393d243ff4e745d91e358aac1fa4a49aadf759997e93a36dd7d338fb147e",
+      "check": {
+        "args": [
+          "check",
+          "experiments/local-reasoning-audit-20260921/sources/record_shallow_copy.my"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "run": {
+        "args": [
+          "run",
+          "experiments/local-reasoning-audit-20260921/sources/record_shallow_copy.my",
+          "--print-result"
+        ],
+        "exit": 42,
+        "stdout": "42\n",
+        "stderr": ""
+      },
+      "matches_expected": true
+    },
+    {
+      "case": "list_augmented_alias",
+      "source_sha256": "d419dc25af998b0f23f4ac29fe12d3ab1d37f15e8651b0f7b86cd629a32158bc",
+      "check": {
+        "args": [
+          "check",
+          "experiments/local-reasoning-audit-20260921/sources/list_augmented_alias.my"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "run": {
+        "args": [
+          "run",
+          "experiments/local-reasoning-audit-20260921/sources/list_augmented_alias.my",
+          "--print-result"
+        ],
+        "exit": 42,
+        "stdout": "42\n",
+        "stderr": ""
+      },
+      "matches_expected": true
+    },
+    {
+      "case": "same_literal_different_storage",
+      "source_sha256": "e832616afb83188163269852b864a95eff608c4fbffe8ee22a3c3dc18c717c05",
+      "check": {
+        "args": [
+          "check",
+          "experiments/local-reasoning-audit-20260921/sources/same_literal_different_storage.my"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "run": {
+        "args": [
+          "run",
+          "experiments/local-reasoning-audit-20260921/sources/same_literal_different_storage.my",
+          "--print-result"
+        ],
+        "exit": 42,
+        "stdout": "42\n",
+        "stderr": ""
+      },
+      "matches_expected": true
+    },
+    {
+      "case": "shadow_ok",
+      "source_sha256": "77139393c5105313608c6a05bd43cb54c13fdf7dd5349a1f41c34cee221c2ad0",
+      "check": {
+        "args": [
+          "check",
+          "experiments/local-reasoning-audit-20260921/sources/shadow_ok.my"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "run": {
+        "args": [
+          "run",
+          "experiments/local-reasoning-audit-20260921/sources/shadow_ok.my",
+          "--print-result"
+        ],
+        "exit": 42,
+        "stdout": "42\n",
+        "stderr": ""
+      },
+      "matches_expected": true
+    },
+    {
+      "case": "result_discard",
+      "source_sha256": "002c939e46090008236889102f8711926d33b09d93838e17f07549a7545c866b",
+      "check": {
+        "args": [
+          "check",
+          "experiments/local-reasoning-audit-20260921/sources/result_discard.my"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "run": {
+        "args": [
+          "run",
+          "experiments/local-reasoning-audit-20260921/sources/result_discard.my",
+          "--print-result"
+        ],
+        "exit": 42,
+        "stdout": "42\n",
+        "stderr": ""
+      },
+      "matches_expected": true
+    },
+    {
+      "case": "class_field_augmented_rejected",
+      "source_sha256": "44246cc7068cdb7fac1c846fecd1d5eeac55fa15548877da8567638f8535bd65",
+      "check": {
+        "args": [
+          "check",
+          "experiments/local-reasoning-audit-20260921/sources/class_field_augmented_rejected.my"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "experiments/local-reasoning-audit-20260921/sources/class_field_augmented_rejected.my:4:16: error[E_ASSIGNMENT_TARGET]: augmented assignment to a record field is not supported; write the field out in full\n      cursor.pos += 1\n                 ^\n"
+      },
+      "matches_expected": true
+    },
+    {
+      "case": "array_index_write_rejected",
+      "source_sha256": "65a42b3010631b9deae418ea005b9ef04056fee793a2eb05a1a6bf340972e94c",
+      "check": {
+        "args": [
+          "check",
+          "experiments/local-reasoning-audit-20260921/sources/array_index_write_rejected.my",
+          "--mutation-markers"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "experiments/local-reasoning-audit-20260921/sources/array_index_write_rejected.my:4:5: error[E_LIST_TYPE]: operation requires a managed list\n      fixed_copy[0] = 9\n      ^\n"
+      },
+      "matches_expected": true
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "cases": [
+    {
+      "args": [
+        "circle",
+        "2"
+      ],
+      "stdout": "12\n"
+    },
+    {
+      "args": [
+        "square",
+        "3"
+      ],
+      "stdout": "9\n"
+    }
+  ]
+}

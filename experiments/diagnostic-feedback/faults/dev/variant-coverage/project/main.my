@@ -1,0 +1,17 @@
+module main
+
+
+union Shape:
+    circle(radius: float),
+    square(side: float)
+
+
+def area(shape: Shape) -> float:
+    match shape:
+        case Shape.circle(radius):
+            return 3.0 * radius * radius
+
+
+def main(out: Stream) -> int:
+    out.print(int(area(Shape.square(2.0))))
+    return 0

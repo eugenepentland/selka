@@ -1,0 +1,18 @@
+dsh: reasoning:
+Let me read expected.json, PROMPT.md, request.md.
+dsh: reasoning:
+The bug: `area` match handles only circle case; missing square case → non-exhaustive match, doesn't compile. Fix: add square case returning side*side.
+
+Note the parameter naming: `square(side: int)`. In the match, `case Shape.square(side): return side * side`.
+
+Let me check the check output first (compiler invocation count matters — 20 max). Let me run check to confirm error.
+
+Also note `union Shape:` syntax — let me verify the language uses `union` keyword. Let me just run check.
+
+Let me run bin/mylang check project/main.my.
+dsh: reasoning:
+Add the square arm exactly as suggested. The suggested fix uses `side * side`.
+dsh: reasoning:
+Both match expected outputs: "12\n" and "9\n". Let me also verify a couple of other inputs for robustness (same behavior for every input) — e.g. circle 0, square 0, larger values. And also the `number` function returns 0 for non-int, but that's beyond the request. Let me do one more run with a few extra inputs to confirm. Actually run counts toward compiler invocations? "At most 20 compiler invocations" — I've used 1 check + 3 runs = 4. Fine.
+
+Let me test a couple more.

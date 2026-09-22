@@ -1,0 +1,11 @@
+**Change:** In `project/main.my`, added the missing union variant arm to `describe`'s `match`:
+
+```python
+case Event.stop(name):
+    return "stopped"
+```
+
+making the match exhaustive over `Event` so the program compiles and `describe(Event.stop("job"))` returns `"stopped"`.
+
+**Command run:** `bin/mylang run project/main.my`
+**Result:** printed `stopped` on stdout, exit code 0 (only two non-fatal `W_UNUSED_BINDING` warnings for the payload bindings on stderr).

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "steps": [
+    {
+      "id": "guest",
+      "kind": "test",
+      "timeout": 300,
+      "commands": [
+        [
+          "bin/mylang",
+          "test",
+          "main.my"
+        ]
+      ]
+    }
+  ]
+}

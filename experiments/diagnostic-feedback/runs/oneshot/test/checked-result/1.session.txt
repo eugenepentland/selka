@@ -1,0 +1,11 @@
+Done.
+
+**Change made** (`project/main.my`): `lookup` returns `Result[int, str]`, so `bonus + lookup("five")` was a type error. I replaced that line with a `match` over the result — `case Ok(value)` computes `score = bonus + value`, `case Err(message)` leaves `score = bonus` — with `score = bonus` predeclared before the match so it is definitely assigned afterwards.
+
+**Command run and result:**
+```
+$ bin/mylang run project/main.my
+5
+[exit code: 0]
+```
+It compiles, exits 0, and prints exactly `5`. (The compiler also emitted a non-fatal `W_UNUSED_BINDING` warning for the `Err(message)` payload; per the single-attempt rule I did not revise the code after running it.)

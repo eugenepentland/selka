@@ -1,0 +1,36 @@
+dsh: reasoning:
+Let me run the check to see the error(s).
+
+Note the `main` signature: `def main(args: list[str], out: Stream) -> int`. Let me first check the compiler's error.
+
+The `largest` has a type parameter `[T: Ordered]` but takes `list[int]` and returns `int` — T is unused, which may be an error. Let's see.
+
+Let me run `bin/mylang check project/main.my`.
+dsh: reasoning:
+The error: `Ordered` is not a valid requirement. The function is only for `list[int]`, so simply remove the generic parameter: `def largest(values: list[int]) -> int:`.
+
+Also, `number` uses `match int(text): case Some(value): ... case None:` — is that valid? Let's fix the generic and re-check.
+
+Also `main(args: list[str], out: Stream)` — need to check if that's the right entry signature. The docs mention `def main(out: Stream) -> int` and `def main(args: list[str], out: Stream) -> int` maybe. Let's just fix and check.
+
+Compiler invocations: I've used 1. Let me make the edit and check.
+
+The task says "Change only what the request requires." So minimal change: remove the generic parameter (and maybe `[T: Ordered]`). Since it takes `list[int]` and returns `int`, removing the type parameter is the minimal fix.
+
+But hold on — maybe the intended fix is `[T: integer]`? That would also work but `T` is unused, which might produce a warning or error. Minimal is removing it. Let me do that.
+dsh: reasoning:
+Now run the examples. `bin/mylang run project/main.my -- 1 3 2`. Note the argument indexing: does `args` include the program name? In many languages args[0] is the first user arg for mylang? Let's test.
+
+Let me run both examples and a few extra inputs.
+dsh: reasoning:
+Both public cases pass. Now test additional inputs for robustness (negative numbers, largest in different positions, single-digit vs multi-digit, etc.).
+
+`number` uses `int(text)` returning an Option. Note: does `int()` handle negative numbers? Let's test. Also test with arguments where the largest is first, last, negative, etc.
+
+Also should test that args[0] is the first argument (it is, given case 1 works).
+
+Let me run extra cases.
+dsh: reasoning:
+All cases give the correct largest value. Let me verify the final file content and count compiler invocations: check (1), check (2), run case1 (3), run case2 (4), and 7 runs (11). Well within 20.
+
+Let me display the final file for the record.

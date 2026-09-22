@@ -1,0 +1,46 @@
+[
+  {
+    "label": "value_and_order",
+    "command": [
+      ".tmp/struct-layout-audit-20260920/mylang",
+      "run",
+      "experiments/struct-layout-audit-20260920/probe.my",
+      "--qbe=/home/epentland/ai/canopy/mylang/zig-out/bin/qbe",
+      "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--cache-dir=.tmp/struct-layout-audit-20260920/cache"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "value_and_order_gc_stress",
+    "command": [
+      ".tmp/struct-layout-audit-20260920/mylang",
+      "run",
+      "experiments/struct-layout-audit-20260920/probe.my",
+      "--qbe=/home/epentland/ai/canopy/mylang/zig-out/bin/qbe",
+      "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--cache-dir=.tmp/struct-layout-audit-20260920/cache",
+      "--gc-stress"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "dead_initializer_trap",
+    "command": [
+      ".tmp/struct-layout-audit-20260920/mylang",
+      "run",
+      ".tmp/struct-layout-audit-20260920/dead_trap.my",
+      "--qbe=/home/epentland/ai/canopy/mylang/zig-out/bin/qbe",
+      "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--cache-dir=.tmp/struct-layout-audit-20260920/cache"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": ".tmp/struct-layout-audit-20260920/dead_trap.my:6:32: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 10, right 0)\n  in project at .tmp/struct-layout-audit-20260920/dead_trap.my:6:32\n  in main at .tmp/struct-layout-audit-20260920/dead_trap.my:10:12\n",
+    "source_retained_as": "experiments/struct-layout-audit-20260920/dead_trap.my"
+  }
+]

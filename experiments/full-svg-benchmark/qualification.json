@@ -1,0 +1,533 @@
+{
+  "passed": true,
+  "comparison": "exact SVG equality within each implementation family; semantic model and independent renderer oracles across families",
+  "cases": {
+    "fixture": {
+      "netlisp-llvm-fast": {
+        "svg_sha256": "8a78de19c4c4121855904c2d5e4f0397d6ce24ab901e4f037a3735d671f7081f",
+        "svg_bytes": 70549,
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nets": 34,
+          "ports": 9,
+          "visible_ic_pins": 37,
+          "passives": 29
+        }
+      },
+      "netlisp-llvm-safe": {
+        "svg_sha256": "8a78de19c4c4121855904c2d5e4f0397d6ce24ab901e4f037a3735d671f7081f",
+        "svg_bytes": 70549,
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nets": 34,
+          "ports": 9,
+          "visible_ic_pins": 37,
+          "passives": 29
+        }
+      },
+      "mylang-o3": {
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "svg_bytes": 49617,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      },
+      "mylang-o3-lto": {
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "svg_bytes": 49617,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      },
+      "mylang-o3-bounded": {
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "svg_bytes": 49617,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      },
+      "rust-o3": {
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "svg_bytes": 49617,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      },
+      "go-fast": {
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "svg_bytes": 49617,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      },
+      "zig-o3": {
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "svg_bytes": 49617,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      }
+    },
+    "changed-net": {
+      "netlisp-llvm-fast": {
+        "svg_sha256": "58c6092f80c09e854e58cea5acd540d4c683817cf858051522b95701dc70968f",
+        "svg_bytes": 70555,
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nets": 34,
+          "ports": 9,
+          "visible_ic_pins": 37,
+          "passives": 29
+        }
+      },
+      "netlisp-llvm-safe": {
+        "svg_sha256": "58c6092f80c09e854e58cea5acd540d4c683817cf858051522b95701dc70968f",
+        "svg_bytes": 70555,
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nets": 34,
+          "ports": 9,
+          "visible_ic_pins": 37,
+          "passives": 29
+        }
+      },
+      "mylang-o3": {
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "svg_bytes": 49647,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      },
+      "mylang-o3-lto": {
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "svg_bytes": 49647,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      },
+      "mylang-o3-bounded": {
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "svg_bytes": 49647,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      },
+      "rust-o3": {
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "svg_bytes": 49647,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      },
+      "go-fast": {
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "svg_bytes": 49647,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      },
+      "zig-o3": {
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "svg_bytes": 49647,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      }
+    },
+    "changed-value": {
+      "netlisp-llvm-fast": {
+        "svg_sha256": "3a25ab638c02888f0efae5015a0a93bcdbb7b6aad8071d5f92f0ce5af4f69a58",
+        "svg_bytes": 70549,
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nets": 34,
+          "ports": 9,
+          "visible_ic_pins": 37,
+          "passives": 29
+        }
+      },
+      "netlisp-llvm-safe": {
+        "svg_sha256": "3a25ab638c02888f0efae5015a0a93bcdbb7b6aad8071d5f92f0ce5af4f69a58",
+        "svg_bytes": 70549,
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nets": 34,
+          "ports": 9,
+          "visible_ic_pins": 37,
+          "passives": 29
+        }
+      },
+      "mylang-o3": {
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+        "svg_bytes": 49617,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      },
+      "mylang-o3-lto": {
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+        "svg_bytes": 49617,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      },
+      "mylang-o3-bounded": {
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+        "svg_bytes": 49617,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      },
+      "rust-o3": {
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+        "svg_bytes": 49617,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      },
+      "go-fast": {
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+        "svg_bytes": 49617,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      },
+      "zig-o3": {
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+        "svg_bytes": 49617,
+        "geometry": "passed",
+        "model": {
+          "components": 30,
+          "connected_pins": 95,
+          "nc_pins": 4,
+          "nets": 34,
+          "ports": 9
+        }
+      }
+    }
+  },
+  "family_equality": {
+    "mylang": [
+      "mylang-o3",
+      "mylang-o3-lto",
+      "mylang-o3-bounded"
+    ],
+    "netlisp_zig": [
+      "netlisp-llvm-fast",
+      "netlisp-llvm-safe"
+    ],
+    "mylang_identical_native_ports": [
+      "rust-o3",
+      "go-fast",
+      "zig-o3"
+    ]
+  },
+  "layout_comparison": {
+    "fixture": {
+      "viewBox": "0 0 884 1144",
+      "matched_connected_ic_pins": 31,
+      "different_connected_ic_pins": {
+        "7": {
+          "netlisp": [
+            352.0,
+            648.0
+          ],
+          "mylang": [
+            352.0,
+            668.0
+          ]
+        },
+        "11": {
+          "netlisp": [
+            352.0,
+            688.0
+          ],
+          "mylang": [
+            352.0,
+            708.0
+          ]
+        },
+        "15": {
+          "netlisp": [
+            352.0,
+            728.0
+          ],
+          "mylang": [
+            352.0,
+            748.0
+          ]
+        },
+        "21": {
+          "netlisp": [
+            352.0,
+            768.0
+          ],
+          "mylang": [
+            352.0,
+            788.0
+          ]
+        },
+        "26": {
+          "netlisp": [
+            352.0,
+            808.0
+          ],
+          "mylang": [
+            352.0,
+            828.0
+          ]
+        },
+        "37": {
+          "netlisp": [
+            352.0,
+            848.0
+          ],
+          "mylang": [
+            352.0,
+            868.0
+          ]
+        }
+      },
+      "pixel_identical": false
+    },
+    "changed-net": {
+      "viewBox": "0 0 884 1144",
+      "matched_connected_ic_pins": 31,
+      "different_connected_ic_pins": {
+        "7": {
+          "netlisp": [
+            352.0,
+            648.0
+          ],
+          "mylang": [
+            352.0,
+            668.0
+          ]
+        },
+        "11": {
+          "netlisp": [
+            352.0,
+            688.0
+          ],
+          "mylang": [
+            352.0,
+            708.0
+          ]
+        },
+        "15": {
+          "netlisp": [
+            352.0,
+            728.0
+          ],
+          "mylang": [
+            352.0,
+            748.0
+          ]
+        },
+        "21": {
+          "netlisp": [
+            352.0,
+            768.0
+          ],
+          "mylang": [
+            352.0,
+            788.0
+          ]
+        },
+        "26": {
+          "netlisp": [
+            352.0,
+            808.0
+          ],
+          "mylang": [
+            352.0,
+            828.0
+          ]
+        },
+        "37": {
+          "netlisp": [
+            352.0,
+            848.0
+          ],
+          "mylang": [
+            352.0,
+            868.0
+          ]
+        }
+      },
+      "pixel_identical": false
+    },
+    "changed-value": {
+      "viewBox": "0 0 884 1144",
+      "matched_connected_ic_pins": 31,
+      "different_connected_ic_pins": {
+        "7": {
+          "netlisp": [
+            352.0,
+            648.0
+          ],
+          "mylang": [
+            352.0,
+            668.0
+          ]
+        },
+        "11": {
+          "netlisp": [
+            352.0,
+            688.0
+          ],
+          "mylang": [
+            352.0,
+            708.0
+          ]
+        },
+        "15": {
+          "netlisp": [
+            352.0,
+            728.0
+          ],
+          "mylang": [
+            352.0,
+            748.0
+          ]
+        },
+        "21": {
+          "netlisp": [
+            352.0,
+            768.0
+          ],
+          "mylang": [
+            352.0,
+            788.0
+          ]
+        },
+        "26": {
+          "netlisp": [
+            352.0,
+            808.0
+          ],
+          "mylang": [
+            352.0,
+            828.0
+          ]
+        },
+        "37": {
+          "netlisp": [
+            352.0,
+            848.0
+          ],
+          "mylang": [
+            352.0,
+            868.0
+          ]
+        }
+      },
+      "pixel_identical": false
+    }
+  },
+  "gc_stress": {
+    "mylang-o3": {
+      "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+      "equals_normal": true
+    },
+    "mylang-o3-lto": {
+      "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+      "equals_normal": true
+    },
+    "mylang-o3-bounded": {
+      "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+      "equals_normal": true
+    }
+  }
+}

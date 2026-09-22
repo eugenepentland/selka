@@ -1,0 +1,15 @@
+{
+  "checks": "Retained binary hashes, all reported medians/ratios, raw profile run counts and sample totals, Python syntax, report/README local links, extended qualification records",
+  "timed_runs": 2976,
+  "batches": {
+    "measurements.json": 1581,
+    "headroom-measurements.json": 1395
+  },
+  "unique_timed_binaries": 25,
+  "profile_runs": 6000,
+  "actual_profile_samples": 52597,
+  "python_files_parsed": 20,
+  "local_links_checked": 18,
+  "extended_qualification_executions": 160,
+  "status": "passed"
+}

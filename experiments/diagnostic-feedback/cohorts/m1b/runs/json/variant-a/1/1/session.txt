@@ -1,0 +1,14 @@
+Fixed.
+
+**What changed:** `project/main.my` — the `match shape` in `area` handled only `Shape.circle`, so the checker rejected it with `E_INCOMPLETE_MATCH` ("match does not handle variant `square`"). I added the missing arm:
+
+```python
+        case Shape.square(side):
+            return side * side
+```
+
+`area` now returns `3*r*r` for a circle and `r*r` for a square. No other changes.
+
+**Command and result:**
+- `./bin/mylang check project/main.my` → exit 0 (no diagnostics, was exit 1 with `E_INCOMPLETE_MATCH`)
+- `./bin/mylang run project/main.my -- circle 2` → `12`; `./bin/mylang run project/main.my -- square 3` → `9`; both match `public/expected.json` (verified programmatically, ALL PASS), plus spot checks `circle 5` → `75`, `square 12` → `144`, `circle 0` → `0`, `circle -3` → `27`.

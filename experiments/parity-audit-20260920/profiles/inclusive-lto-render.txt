@@ -1,0 +1,73 @@
+   100.00%     0.00%  arm.bin  libc.so.6             [.] execvpe
+    99.63%     0.00%  arm.bin  arm.bin               [.] _start
+    99.63%     0.00%  arm.bin  libc.so.6             [.] __libc_start_main
+    99.61%     0.01%  arm.bin  arm.bin               [.] mylang_qbe_run_grants
+                                                        0xffffffff8ce00b90
+    99.57%     0.00%  arm.bin  arm.bin               [.] launch
+                                     0xffffffff8ce00b90
+    99.57%     0.02%  arm.bin  arm.bin               [.] myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                             0xffffffff8ce00b90
+    49.08%    20.61%  arm.bin  arm.bin               [.] myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                       0x79a86562a5fb
+    40.19%     4.15%  arm.bin  arm.bin               [.] myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+    28.14%     4.78%  arm.bin  arm.bin               [.] myl_f_59c4bbc7071b8e5740b45acc273a5dd464bfcfe4b67081aa51105d0e1634c116
+    23.12%     9.21%  arm.bin  arm.bin               [.] myl_f_522a0393f0b978ec89dcf0a01ed40fe4c77fd2e0c5e149267c4a06b2be768f98
+    14.50%    14.50%  arm.bin  [unknown]             [k] 0xffffffff8ce00b90
+                       0x7909ad82a5fb
+    13.68%     4.82%  arm.bin  arm.bin               [.] myl_native_bytes_buffer_append_range
+                                             0xffffffff8ce00b90
+    12.00%    11.12%  arm.bin  arm.bin               [.] myl_native_bytes_find_any
+     8.47%     0.00%  arm.bin  taskset               [.] 0x00005761902ba08f
+                          0x79a86562a5fb
+     8.45%     0.00%  arm.bin  taskset               [.] 0x00005d54ff5de08f
+                          0x72b70962a5fb
+     8.43%     0.00%  arm.bin  libc.so.6             [.] 0x000079a86562a5fb
+     8.43%     0.00%  arm.bin  libc.so.6             [.] 0x000072b70962a5fb
+     8.39%     0.00%  arm.bin  taskset               [.] 0x000060cf3be2208f
+                          0x70d34be2a5fb
+     8.37%     0.00%  arm.bin  taskset               [.] 0x0000569f097c908f
+                          0x79646062a5fb
+     8.37%     0.00%  arm.bin  taskset               [.] 0x00005d080afae08f
+                          0x78b79362a5fb
+     8.36%     0.00%  arm.bin  libc.so.6             [.] 0x000070d34be2a5fb
+     8.34%     0.00%  arm.bin  libc.so.6             [.] 0x000078b79362a5fb
+     8.33%     0.00%  arm.bin  libc.so.6             [.] 0x000079646062a5fb
+     8.33%     0.00%  arm.bin  taskset               [.] 0x00005e52c219e08f
+                          0x7c507162a5fb
+     8.31%     0.00%  arm.bin  taskset               [.] 0x00005e40651ed08f
+                          0x74eaf302a5fb
+     8.30%     0.00%  arm.bin  taskset               [.] 0x00005e7eea2e808f
+                          0x7e6465e2a5fb
+     8.29%     0.00%  arm.bin  libc.so.6             [.] 0x00007c507162a5fb
+     8.28%     0.00%  arm.bin  taskset               [.] 0x00005583a676c08f
+     8.28%     0.00%  arm.bin  libc.so.6             [.] 0x000074eaf302a5fb
+     8.27%     0.00%  arm.bin  libc.so.6             [.] 0x00007e6465e2a5fb
+     8.27%     0.00%  arm.bin  taskset               [.] 0x0000581ce1ca108f
+                          0x7fd9c682a5fb
+     8.25%     0.00%  arm.bin  libc.so.6             [.] 0x0000798ea7c2a5fb
+     8.25%     0.00%  arm.bin  taskset               [.] 0x00005f4e2bbe908f
+                          0x74725ce2a5fb
+     8.23%     0.00%  arm.bin  libc.so.6             [.] 0x000074725ce2a5fb
+     8.23%     0.00%  arm.bin  libc.so.6             [.] 0x00007fd9c682a5fb
+     8.21%     0.00%  arm.bin  taskset               [.] 0x00005bb2dd14a08f
+     8.18%     0.00%  arm.bin  libc.so.6             [.] 0x00007909ad82a5fb
+     7.38%     2.37%  arm.bin  arm.bin               [.] myl_f_0e5340f31bcdf0c4b2fdbb9574ba048b1a3b28d2313f0935cd0144f4b6851fe2
+     7.32%     0.02%  arm.bin  arm.bin               [.] myl_qbe_file_access
+                                  0xffffffff8ce00b90
+     5.07%     0.79%  arm.bin  arm.bin               [.] buffer_grow_rooted
+                                  0xffffffff8ce00b90
+     4.09%     0.08%  arm.bin  arm.bin               [.] myl_native_text_scalar
+     3.93%     3.93%  arm.bin  libc.so.6             [.] 0x0000000000197d07
+     3.62%     3.62%  arm.bin  libc.so.6             [.] 0x0000000000197a11
+     2.90%     0.01%  arm.bin  arm.bin               [.] myl_qbe_bytes_copy
+                                  0xffffffff8ce00b90
+     2.30%     0.49%  arm.bin  arm.bin               [.] __wrap_myl_native_list_append
+     2.10%     0.60%  arm.bin  arm.bin               [.] myl_f_998beee1bca4ed98df5239fd3360e93dc7435bf13adf117793e129355f5cd155
+     1.84%     0.14%  arm.bin  arm.bin               [.] myl_f_015e6d1ba948419ce51968c6ab69fcb699887ef206a0181d92dc1ccd02f8fcc5
+     1.70%     0.91%  arm.bin  arm.bin               [.] myl_native_list_append
+     1.62%     1.62%  arm.bin  arm.bin               [.] myl_f_c7216ff81b82e9d60b2aefddc873a7cdb611d664b3deb9b17e22a05b9481cf8a
+     1.61%     0.82%  arm.bin  arm.bin               [.] memcpy@plt
+     1.48%     1.48%  arm.bin  arm.bin               [.] myl_qbe_heap
+     1.37%     1.37%  arm.bin  libc.so.6             [.] 0x0000000000197a21
+     1.28%     0.04%  arm.bin  arm.bin               [.] myl_native_text_from_utf8
+     1.23%     1.23%  arm.bin  arm.bin               [.] __wrap_myl_native_list_get

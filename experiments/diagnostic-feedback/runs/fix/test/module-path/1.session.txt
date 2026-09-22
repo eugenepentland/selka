@@ -1,0 +1,14 @@
+Fixed. Two changes in `project/`:
+
+1. **`main.my`** — the import path was wrong: `import lib.stats as stats` resolved to `project/lib/stats.my`, which doesn't exist. Changed it to `import stats as stats` (imports resolve from the project root).
+2. **`stats.my`** — `total()` was private to its module, causing `E_PRIVATE_SYMBOL` at the call site. Changed it to `public def total() -> int:`.
+
+Verified command and result:
+
+```
+$ bin/mylang run project/main.my
+7
+[exit: 0]
+```
+
+`bin/mylang check project/main.my` also exits 0.

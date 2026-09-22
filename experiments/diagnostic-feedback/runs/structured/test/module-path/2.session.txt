@@ -1,0 +1,14 @@
+Done. Two problems blocked the checker, both in `project/`:
+
+1. **Wrong import path** — `project/main.my` imported `lib.stats`, but the helper lives at `project/stats.my`. Changed line 3 to `import stats`.
+2. **Private declaration** — `project/stats.my` defined `def total()` without visibility, so cross-module use failed with `E_PRIVATE_SYMBOL`. Changed it to `public def total() -> int:`.
+
+Command run and result:
+
+```
+$ ./bin/mylang run project/main.my
+7
+[exit code: 0]
+```
+
+(`check` also exits 0, stderr is empty, and stdout is exactly `7\n`.)

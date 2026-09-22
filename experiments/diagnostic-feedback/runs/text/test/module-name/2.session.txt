@@ -1,0 +1,14 @@
+Fixed `project/stats.my` with two minimal changes, both required by the checker:
+
+1. `module statistics` → `module stats` — the declared module name must match the file's requested path (`stats.my`), which is what `import stats as stats` resolves.
+2. `def total()` → `public def total()` — the helper is used from `main`, so it can't stay module-private.
+
+`main.my` needed no changes.
+
+Command run:
+
+```
+bin/mylang run project/main.my
+```
+
+Result: printed `7`, exit code `0`.

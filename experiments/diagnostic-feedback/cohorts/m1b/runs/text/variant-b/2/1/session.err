@@ -1,0 +1,21 @@
+dsh: reasoning:
+The program is missing a case for `Shape.square(side)` in the `match`. Let me first run the checker to see the diagnostic.
+
+Let me run `bin/mylang check project/main.my` to see the error.
+
+Note: `bin/mylang` is in this directory - relative path `bin/mylang`. Let me check.
+dsh: reasoning:
+Now I need to add the square case. The `square(side)` payload — note the naming: the union declares `square(side: int)` but the binding name in the case can be anything presumably. Let me add:
+
+```
+        case Shape.square(side):
+            return side * side
+```
+
+Let me use edit.
+dsh: reasoning:
+Both cases pass. Let me also test a few additional inputs to make sure behavior is correct for any input (e.g. circle 0, square 0, larger values, and non-numeric -> 0). Also verify the final file.
+
+Let me run additional checks — carefully counting compiler invocations. So far: check (1), run circle (2), run square (3). I have plenty left (up to 20). Let me test circle 5 = 75, square 4 = 16, and maybe circle 0 / square 0.
+
+Actually, let me batch: `bin/mylang run` for each. Each run is an invocation. Let me do a few key ones.

@@ -1,0 +1,9 @@
+Fixed. Summary:
+
+**What changed** — only `project/main.my`, two lines:
+- Replaced the unknown generic requirement `Ordered` with the valid `integer` requirement (the checker's `E_GENERIC_REQUIREMENT`).
+- Made the otherwise-unused type parameter inferable by using it: `def largest[T: integer](values: list[T]) -> T` and likewise for `largest_of` (previously `list[int]) -> int`, which triggered `E_GENERIC_INFERENCE: cannot infer every generic argument`). No other edits.
+
+**Commands and results:**
+- `bin/mylang check project/main.my` → exit code 0 (no diagnostics).
+- `bin/mylang run project/main.my -- 1 3 2` → `3` (exit 0); also verified `5 5 5` → `5`, plus `9 2 7` → `9`, `-4 -9 -1` → `-1`, `0 -3 0` → `0`, and 64-bit boundary values → correct maximum. 10 of the 20 compiler invocations were used.

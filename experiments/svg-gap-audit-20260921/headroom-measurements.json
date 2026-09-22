@@ -1,0 +1,8170 @@
+{
+  "method": "Fresh process through complete SVG file output and shutdown; compilation, preparation and verification excluded. All outputs checked. Randomized interleaved same-CPU runs.",
+  "cpu": 6,
+  "seed": 20260923,
+  "rounds": 31,
+  "warmups": 3,
+  "mylang_memory_limit_bytes": 268435456,
+  "timed_runs": 1395,
+  "arms": {
+    "gc-lto": {
+      "binary": ".tmp/svg-arenas-20260921/gc-lto",
+      "sha256": "de1733408c0e3a9c69129bb166c122acb0ab572e201dff45c37bdd43a4a23210",
+      "bounded": false
+    },
+    "gc-lto-bounded": {
+      "binary": ".tmp/svg-arenas-20260921/gc-lto-bounded",
+      "sha256": "e5bbd804057112c9bd4b7c100b9aab09072e525b7dcc611d0321dc7c794c79c0",
+      "bounded": true
+    },
+    "rust-o3": {
+      "binary": ".tmp/full-svg-benchmark-20260921/rust-o3",
+      "sha256": "57a931f718fd234f54ec8b7775267eff6cac08c628308614d2502d483bccb39d",
+      "native": true
+    },
+    "go-fast": {
+      "binary": ".tmp/full-svg-benchmark-20260921/go-fast",
+      "sha256": "6e786ac6174b1996c0120ff0c51e9a7acb8e6de5e663808056558818583ced90",
+      "native": true
+    },
+    "zig-o3": {
+      "binary": ".tmp/full-svg-benchmark-20260921/zig-o3",
+      "sha256": "0a80f2fa747d033ef979110109a1fbc4155d738d76018c930738847b3f358a63",
+      "native": true
+    },
+    "host-metadata-control": {
+      "binary": ".tmp/svg-gap-audit-20260921/host/metadata-control",
+      "sha256": "83c903d0b1a6d1476831b9b8b1cb06fdb4bbfa044ca30247cbc2e918b15f5303"
+    },
+    "host-typed-host": {
+      "binary": ".tmp/svg-gap-audit-20260921/host/typed-host",
+      "sha256": "6327e4082e1abf5cafb216836203448fb3c34638ac5703bd317b31f9922fe347"
+    },
+    "aggregate-inline": {
+      "binary": ".tmp/svg-gap-audit-20260921/codegen/gc-lto-none-aggregate-inline",
+      "sha256": "21b49ad38327e6925d16c1bd9d9229f28e1c78fa1c7aed15d37cc2769b2b6af0",
+      "bounded": false
+    },
+    "aggregate-inline-bounded": {
+      "binary": ".tmp/svg-gap-audit-20260921/codegen/gc-lto-both-aggregate-inline",
+      "sha256": "1159e58ed27d7743dac37eb15af0dca17956f66e3f3b635368cc5ff57d9c1b13",
+      "bounded": true
+    },
+    "combined-control": {
+      "binary": ".tmp/svg-gap-audit-20260921/host/aggregate-inline-metadata-control",
+      "sha256": "dd51549a5ee557c7d983f0cc2c0b8278e91dcd2fd03a410e979562ceb8bbc111",
+      "bounded": false
+    },
+    "combined-typed": {
+      "binary": ".tmp/svg-gap-audit-20260921/host/aggregate-inline-typed-host",
+      "sha256": "f13c18e5d402b36c9e000c2b588354355b5a9eafcaeabfb56bfb31d5f2129431",
+      "bounded": false
+    },
+    "combined-control-bounded": {
+      "binary": ".tmp/svg-gap-audit-20260921/host/aggregate-inline-bounded-metadata-control",
+      "sha256": "5613818494a4bd8e480889e65133b6b0ab641406f6acb2b6bab78a356c0b7848",
+      "bounded": true
+    },
+    "combined-typed-bounded": {
+      "binary": ".tmp/svg-gap-audit-20260921/host/aggregate-inline-bounded-typed-host",
+      "sha256": "83a01d8110168eda4ac055ffaf1401726d7d92f3965a2c5e7e3c4ad1f3605377",
+      "bounded": true
+    },
+    "stack-ceiling": {
+      "binary": ".tmp/svg-gap-audit-20260921/frames/gc-lto-none-stack-ceiling",
+      "sha256": "bce4cf3d41a11b42c9b8ab34528c6737cac40fa26b17c51dc0f155e7aca652c8",
+      "bounded": false
+    },
+    "stack-ceiling-bounded": {
+      "binary": ".tmp/svg-gap-audit-20260921/frames/gc-lto-both-stack-ceiling",
+      "sha256": "8525cccd7acd46f1804f224804ef01ebc6e1950a2fc2382aad95eb3642415e59",
+      "bounded": true
+    }
+  },
+  "qualification": {
+    "gc-lto": {
+      "binary_sha256": "de1733408c0e3a9c69129bb166c122acb0ab572e201dff45c37bdd43a4a23210",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "gc-lto-bounded": {
+      "binary_sha256": "e5bbd804057112c9bd4b7c100b9aab09072e525b7dcc611d0321dc7c794c79c0",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "rust-o3": {
+      "binary_sha256": "57a931f718fd234f54ec8b7775267eff6cac08c628308614d2502d483bccb39d",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": false
+    },
+    "go-fast": {
+      "binary_sha256": "6e786ac6174b1996c0120ff0c51e9a7acb8e6de5e663808056558818583ced90",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": false
+    },
+    "zig-o3": {
+      "binary_sha256": "0a80f2fa747d033ef979110109a1fbc4155d738d76018c930738847b3f358a63",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": false
+    },
+    "host-metadata-control": {
+      "binary_sha256": "83c903d0b1a6d1476831b9b8b1cb06fdb4bbfa044ca30247cbc2e918b15f5303",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "host-typed-host": {
+      "binary_sha256": "6327e4082e1abf5cafb216836203448fb3c34638ac5703bd317b31f9922fe347",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "aggregate-inline": {
+      "binary_sha256": "21b49ad38327e6925d16c1bd9d9229f28e1c78fa1c7aed15d37cc2769b2b6af0",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "aggregate-inline-bounded": {
+      "binary_sha256": "1159e58ed27d7743dac37eb15af0dca17956f66e3f3b635368cc5ff57d9c1b13",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "combined-control": {
+      "binary_sha256": "dd51549a5ee557c7d983f0cc2c0b8278e91dcd2fd03a410e979562ceb8bbc111",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "combined-typed": {
+      "binary_sha256": "f13c18e5d402b36c9e000c2b588354355b5a9eafcaeabfb56bfb31d5f2129431",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "combined-control-bounded": {
+      "binary_sha256": "5613818494a4bd8e480889e65133b6b0ab641406f6acb2b6bab78a356c0b7848",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "combined-typed-bounded": {
+      "binary_sha256": "83a01d8110168eda4ac055ffaf1401726d7d92f3965a2c5e7e3c4ad1f3605377",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "stack-ceiling": {
+      "binary_sha256": "bce4cf3d41a11b42c9b8ab34528c6737cac40fa26b17c51dc0f155e7aca652c8",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    },
+    "stack-ceiling-bounded": {
+      "binary_sha256": "8525cccd7acd46f1804f224804ef01ebc6e1950a2fc2382aad95eb3642415e59",
+      "svg_sha256": {
+        "fixture": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "gc_stress": true
+    }
+  },
+  "summary": {
+    "fixture": {
+      "median_ms": {
+        "gc-lto": 5.0943,
+        "gc-lto-bounded": 10.023135,
+        "rust-o3": 1.564997,
+        "go-fast": 2.016597,
+        "zig-o3": 1.434225,
+        "host-metadata-control": 5.104301,
+        "host-typed-host": 3.96545,
+        "aggregate-inline": 4.744196,
+        "aggregate-inline-bounded": 9.786445,
+        "combined-control": 4.760422,
+        "combined-typed": 3.651999,
+        "combined-control-bounded": 9.796634,
+        "combined-typed-bounded": 8.805993,
+        "stack-ceiling": 5.169982,
+        "stack-ceiling-bounded": 9.954155
+      },
+      "comparisons": {
+        "aggregate-inline/gc-lto": {
+          "ratio": 0.9312753469564022,
+          "paired_bootstrap_95": [
+            0.9229599565931034,
+            0.9534809694606463
+          ]
+        },
+        "aggregate-inline-bounded/gc-lto-bounded": {
+          "ratio": 0.9763856318407366,
+          "paired_bootstrap_95": [
+            0.9689800662764186,
+            0.9820537867133152
+          ]
+        },
+        "stack-ceiling/gc-lto": {
+          "ratio": 1.0148562118446107,
+          "paired_bootstrap_95": [
+            1.0039934851623096,
+            1.0294309044369105
+          ]
+        },
+        "stack-ceiling-bounded/gc-lto-bounded": {
+          "ratio": 0.9931179216881745,
+          "paired_bootstrap_95": [
+            0.9865083562671256,
+            1.003216957568665
+          ]
+        },
+        "combined-control/aggregate-inline": {
+          "ratio": 1.00342017909884,
+          "paired_bootstrap_95": [
+            0.9814934522902209,
+            1.0185809758684254
+          ]
+        },
+        "combined-control-bounded/aggregate-inline-bounded": {
+          "ratio": 1.001041133935765,
+          "paired_bootstrap_95": [
+            0.9912427289975131,
+            1.0097243259930027
+          ]
+        },
+        "combined-typed/combined-control": {
+          "ratio": 0.7671586678660001,
+          "paired_bootstrap_95": [
+            0.7544545263358827,
+            0.7783357190425524
+          ]
+        },
+        "combined-typed-bounded/combined-control-bounded": {
+          "ratio": 0.8988794518607107,
+          "paired_bootstrap_95": [
+            0.8904282404659118,
+            0.9117547339404204
+          ]
+        },
+        "combined-typed/host-typed-host": {
+          "ratio": 0.9209544944457754,
+          "paired_bootstrap_95": [
+            0.9037648307495919,
+            0.9351061609467676
+          ]
+        },
+        "combined-typed/gc-lto": {
+          "ratio": 0.7168794535068607,
+          "paired_bootstrap_95": [
+            0.7085155967281,
+            0.7282231169700367
+          ]
+        },
+        "combined-typed-bounded/gc-lto-bounded": {
+          "ratio": 0.8785667358565958,
+          "paired_bootstrap_95": [
+            0.8697287018250518,
+            0.8858455096558951
+          ]
+        },
+        "host-typed-host/host-metadata-control": {
+          "ratio": 0.7768840434762762,
+          "paired_bootstrap_95": [
+            0.7683809733210372,
+            0.7892233894116318
+          ]
+        },
+        "gc-lto/rust-o3": {
+          "ratio": 3.255150009872223,
+          "paired_bootstrap_95": [
+            3.1282940973014344,
+            3.3475590456826607
+          ]
+        },
+        "gc-lto/go-fast": {
+          "ratio": 2.5261864418126176,
+          "paired_bootstrap_95": [
+            2.4781013018254345,
+            2.5868837682076657
+          ]
+        },
+        "gc-lto/zig-o3": {
+          "ratio": 3.5519531454269724,
+          "paired_bootstrap_95": [
+            3.393911611583307,
+            3.6853069927977526
+          ]
+        },
+        "aggregate-inline/rust-o3": {
+          "ratio": 3.031440954838891,
+          "paired_bootstrap_95": [
+            2.9223997955224856,
+            3.1517391082682646
+          ]
+        },
+        "aggregate-inline/go-fast": {
+          "ratio": 2.352575155075605,
+          "paired_bootstrap_95": [
+            2.312695111044099,
+            2.4352737079741216
+          ]
+        },
+        "aggregate-inline/zig-o3": {
+          "ratio": 3.307846397880388,
+          "paired_bootstrap_95": [
+            3.1716919379256865,
+            3.4298649076562926
+          ]
+        },
+        "combined-typed/rust-o3": {
+          "ratio": 2.3335501601600517,
+          "paired_bootstrap_95": [
+            2.2410119627835416,
+            2.414117426366552
+          ]
+        },
+        "combined-typed/go-fast": {
+          "ratio": 1.8109711558630703,
+          "paired_bootstrap_95": [
+            1.782452568219144,
+            1.8526622703683013
+          ]
+        },
+        "combined-typed/zig-o3": {
+          "ratio": 2.5463222297756625,
+          "paired_bootstrap_95": [
+            2.435435942211885,
+            2.645645693516762
+          ]
+        },
+        "stack-ceiling/rust-o3": {
+          "ratio": 3.3035092080048716,
+          "paired_bootstrap_95": [
+            3.1918631284812733,
+            3.4028707675845795
+          ]
+        },
+        "stack-ceiling/go-fast": {
+          "ratio": 2.5637160027511694,
+          "paired_bootstrap_95": [
+            2.5197379562676243,
+            2.629855010922458
+          ]
+        },
+        "stack-ceiling/zig-o3": {
+          "ratio": 3.604721713817567,
+          "paired_bootstrap_95": [
+            3.449737328844146,
+            3.742030283925951
+          ]
+        }
+      }
+    },
+    "changed-net": {
+      "median_ms": {
+        "gc-lto": 5.096092,
+        "gc-lto-bounded": 9.958966,
+        "rust-o3": 1.595951,
+        "go-fast": 2.037187,
+        "zig-o3": 1.478049,
+        "host-metadata-control": 5.084245,
+        "host-typed-host": 3.965605,
+        "aggregate-inline": 4.772937,
+        "aggregate-inline-bounded": 9.849273,
+        "combined-control": 4.759989,
+        "combined-typed": 3.62729,
+        "combined-control-bounded": 9.671201,
+        "combined-typed-bounded": 8.760952,
+        "stack-ceiling": 5.157255,
+        "stack-ceiling-bounded": 9.90024
+      },
+      "comparisons": {
+        "aggregate-inline/gc-lto": {
+          "ratio": 0.9365876832678846,
+          "paired_bootstrap_95": [
+            0.9193509340734589,
+            0.9569757734304365
+          ]
+        },
+        "aggregate-inline-bounded/gc-lto-bounded": {
+          "ratio": 0.9889855031134759,
+          "paired_bootstrap_95": [
+            0.979354792523818,
+            0.998943798185195
+          ]
+        },
+        "stack-ceiling/gc-lto": {
+          "ratio": 1.0120019418801702,
+          "paired_bootstrap_95": [
+            0.9984888588993096,
+            1.0299753062602102
+          ]
+        },
+        "stack-ceiling-bounded/gc-lto-bounded": {
+          "ratio": 0.994103203083533,
+          "paired_bootstrap_95": [
+            0.9850406468260243,
+            1.0016588687559214
+          ]
+        },
+        "combined-control/aggregate-inline": {
+          "ratio": 0.9972872049222523,
+          "paired_bootstrap_95": [
+            0.9832437668753533,
+            1.0183788993915466
+          ]
+        },
+        "combined-control-bounded/aggregate-inline-bounded": {
+          "ratio": 0.9819202899543956,
+          "paired_bootstrap_95": [
+            0.9744470359642976,
+            0.9917048157796033
+          ]
+        },
+        "combined-typed/combined-control": {
+          "ratio": 0.7620374752966866,
+          "paired_bootstrap_95": [
+            0.7463189256234116,
+            0.7722760772822044
+          ]
+        },
+        "combined-typed-bounded/combined-control-bounded": {
+          "ratio": 0.905880458900606,
+          "paired_bootstrap_95": [
+            0.8963174312155237,
+            0.9131618710023709
+          ]
+        },
+        "combined-typed/host-typed-host": {
+          "ratio": 0.9146876706076373,
+          "paired_bootstrap_95": [
+            0.9052141922379681,
+            0.9325772353867966
+          ]
+        },
+        "combined-typed/gc-lto": {
+          "ratio": 0.711778751247034,
+          "paired_bootstrap_95": [
+            0.6993173056443232,
+            0.7254142214957414
+          ]
+        },
+        "combined-typed-bounded/gc-lto-bounded": {
+          "ratio": 0.8797049814207619,
+          "paired_bootstrap_95": [
+            0.8685135196393106,
+            0.887620551608745
+          ]
+        },
+        "host-typed-host/host-metadata-control": {
+          "ratio": 0.7799791316114782,
+          "paired_bootstrap_95": [
+            0.7640992549261689,
+            0.7860185205183907
+          ]
+        },
+        "gc-lto/rust-o3": {
+          "ratio": 3.1931381351933736,
+          "paired_bootstrap_95": [
+            3.109251557525596,
+            3.3576160686581282
+          ]
+        },
+        "gc-lto/go-fast": {
+          "ratio": 2.501533732543944,
+          "paired_bootstrap_95": [
+            2.4490786532963784,
+            2.586602926776602
+          ]
+        },
+        "gc-lto/zig-o3": {
+          "ratio": 3.4478505110453037,
+          "paired_bootstrap_95": [
+            3.367279318470183,
+            3.669171920747789
+          ]
+        },
+        "aggregate-inline/rust-o3": {
+          "ratio": 2.990653848395095,
+          "paired_bootstrap_95": [
+            2.9090744479274533,
+            3.1455157345507905
+          ]
+        },
+        "aggregate-inline/go-fast": {
+          "ratio": 2.3429056831797963,
+          "paired_bootstrap_95": [
+            2.292546145507194,
+            2.427761336630847
+          ]
+        },
+        "aggregate-inline/zig-o3": {
+          "ratio": 3.2292143223939123,
+          "paired_bootstrap_95": [
+            3.1459214949516587,
+            3.438907559256567
+          ]
+        },
+        "combined-typed/rust-o3": {
+          "ratio": 2.2728078744272224,
+          "paired_bootstrap_95": [
+            2.2147040432111234,
+            2.380217837925974
+          ]
+        },
+        "combined-typed/go-fast": {
+          "ratio": 1.7805385563524605,
+          "paired_bootstrap_95": [
+            1.7486153316340758,
+            1.838652474257808
+          ]
+        },
+        "combined-typed/zig-o3": {
+          "ratio": 2.4541067312382743,
+          "paired_bootstrap_95": [
+            2.407259560409951,
+            2.5979204153771853
+          ]
+        },
+        "stack-ceiling/rust-o3": {
+          "ratio": 3.23146199350732,
+          "paired_bootstrap_95": [
+            3.163587692795872,
+            3.3820127419242847
+          ]
+        },
+        "stack-ceiling/go-fast": {
+          "ratio": 2.5315569950132217,
+          "paired_bootstrap_95": [
+            2.4840331026631195,
+            2.6271872752066776
+          ]
+        },
+        "stack-ceiling/zig-o3": {
+          "ratio": 3.4892314124903847,
+          "paired_bootstrap_95": [
+            3.414111107350415,
+            3.7206877278631447
+          ]
+        }
+      }
+    },
+    "changed-value": {
+      "median_ms": {
+        "gc-lto": 5.105985,
+        "gc-lto-bounded": 10.032146,
+        "rust-o3": 1.583695,
+        "go-fast": 1.986241,
+        "zig-o3": 1.453495,
+        "host-metadata-control": 5.10154,
+        "host-typed-host": 3.963378,
+        "aggregate-inline": 4.794993,
+        "aggregate-inline-bounded": 9.774292,
+        "combined-control": 4.834366,
+        "combined-typed": 3.67902,
+        "combined-control-bounded": 9.8135,
+        "combined-typed-bounded": 8.866129,
+        "stack-ceiling": 5.169406,
+        "stack-ceiling-bounded": 9.964071
+      },
+      "comparisons": {
+        "aggregate-inline/gc-lto": {
+          "ratio": 0.9390926530336458,
+          "paired_bootstrap_95": [
+            0.9207772675684001,
+            0.9469720937197016
+          ]
+        },
+        "aggregate-inline-bounded/gc-lto-bounded": {
+          "ratio": 0.9742972241432692,
+          "paired_bootstrap_95": [
+            0.9660633678706649,
+            0.9861293913022532
+          ]
+        },
+        "stack-ceiling/gc-lto": {
+          "ratio": 1.0124209138883096,
+          "paired_bootstrap_95": [
+            0.9990299185170396,
+            1.0203028304659756
+          ]
+        },
+        "stack-ceiling-bounded/gc-lto-bounded": {
+          "ratio": 0.993214313268567,
+          "paired_bootstrap_95": [
+            0.9820462417907113,
+            1.0015373750499559
+          ]
+        },
+        "combined-control/aggregate-inline": {
+          "ratio": 1.0082112737182307,
+          "paired_bootstrap_95": [
+            0.9961155874737262,
+            1.0264157274335244
+          ]
+        },
+        "combined-control-bounded/aggregate-inline-bounded": {
+          "ratio": 1.0040113391333099,
+          "paired_bootstrap_95": [
+            0.9869026183213903,
+            1.007543334243734
+          ]
+        },
+        "combined-typed/combined-control": {
+          "ratio": 0.7610139571559125,
+          "paired_bootstrap_95": [
+            0.7515770230769152,
+            0.7739757395282029
+          ]
+        },
+        "combined-typed-bounded/combined-control-bounded": {
+          "ratio": 0.9034624751617671,
+          "paired_bootstrap_95": [
+            0.9002138356011149,
+            0.9135474392450638
+          ]
+        },
+        "combined-typed/host-typed-host": {
+          "ratio": 0.928253626073516,
+          "paired_bootstrap_95": [
+            0.9186904663516743,
+            0.9413610712278849
+          ]
+        },
+        "combined-typed/gc-lto": {
+          "ratio": 0.7205309063775157,
+          "paired_bootstrap_95": [
+            0.7127580449625842,
+            0.728934337233752
+          ]
+        },
+        "combined-typed-bounded/gc-lto-bounded": {
+          "ratio": 0.8837719267642239,
+          "paired_bootstrap_95": [
+            0.8758326689682576,
+            0.8924473370619893
+          ]
+        },
+        "host-typed-host/host-metadata-control": {
+          "ratio": 0.7768983483418732,
+          "paired_bootstrap_95": [
+            0.7634121404215932,
+            0.7846708428266096
+          ]
+        },
+        "gc-lto/rust-o3": {
+          "ratio": 3.2240961801356955,
+          "paired_bootstrap_95": [
+            3.1569617692050653,
+            3.356628932949586
+          ]
+        },
+        "gc-lto/go-fast": {
+          "ratio": 2.5706774756940374,
+          "paired_bootstrap_95": [
+            2.5220510970391787,
+            2.6532822851019446
+          ]
+        },
+        "gc-lto/zig-o3": {
+          "ratio": 3.5129016611684256,
+          "paired_bootstrap_95": [
+            3.4613726355521846,
+            3.598457655379331
+          ]
+        },
+        "aggregate-inline/rust-o3": {
+          "ratio": 3.027725035439273,
+          "paired_bootstrap_95": [
+            2.940498377906972,
+            3.1420528840833746
+          ]
+        },
+        "aggregate-inline/go-fast": {
+          "ratio": 2.4141043307433487,
+          "paired_bootstrap_95": [
+            2.354278657378886,
+            2.481653173592777
+          ]
+        },
+        "aggregate-inline/zig-o3": {
+          "ratio": 3.2989401408329577,
+          "paired_bootstrap_95": [
+            3.2320880003618933,
+            3.3726166848159274
+          ]
+        },
+        "combined-typed/rust-o3": {
+          "ratio": 2.323060942921459,
+          "paired_bootstrap_95": [
+            2.279100612761968,
+            2.410286093684829
+          ]
+        },
+        "combined-typed/go-fast": {
+          "ratio": 1.852252571566089,
+          "paired_bootstrap_95": [
+            1.815111281844356,
+            1.9104583735340264
+          ]
+        },
+        "combined-typed/zig-o3": {
+          "ratio": 2.5311542179367663,
+          "paired_bootstrap_95": [
+            2.4954048211246036,
+            2.5974260386552857
+          ]
+        },
+        "stack-ceiling/rust-o3": {
+          "ratio": 3.2641424011567883,
+          "paired_bootstrap_95": [
+            3.1741410889886015,
+            3.396585445385657
+          ]
+        },
+        "stack-ceiling/go-fast": {
+          "ratio": 2.60260763925425,
+          "paired_bootstrap_95": [
+            2.5481212745759225,
+            2.6920965103258223
+          ]
+        },
+        "stack-ceiling/zig-o3": {
+          "ratio": 3.556535110199898,
+          "paired_bootstrap_95": [
+            3.4888117540321764,
+            3.6497387348142483
+          ]
+        }
+      }
+    }
+  },
+  "samples": [
+    {
+      "round": 0,
+      "order": [
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "aggregate-inline-bounded": 9.718,
+          "gc-lto": 5.075125,
+          "zig-o3": 1.415148,
+          "aggregate-inline": 4.714539,
+          "rust-o3": 1.489039,
+          "gc-lto-bounded": 9.972028,
+          "go-fast": 2.06501,
+          "combined-typed-bounded": 8.805993,
+          "host-metadata-control": 5.060381,
+          "combined-typed": 3.660516,
+          "stack-ceiling-bounded": 9.847543,
+          "combined-control-bounded": 9.812501,
+          "combined-control": 4.695488,
+          "stack-ceiling": 5.048229,
+          "host-typed-host": 3.871935
+        },
+        "changed-net": {
+          "host-typed-host": 3.910134,
+          "combined-control-bounded": 9.602749,
+          "go-fast": 2.150837,
+          "combined-control": 4.828796,
+          "gc-lto": 5.060058,
+          "host-metadata-control": 5.02828,
+          "zig-o3": 1.479368,
+          "combined-typed": 3.548091,
+          "aggregate-inline-bounded": 9.653473,
+          "gc-lto-bounded": 9.830105,
+          "stack-ceiling": 5.028229,
+          "combined-typed-bounded": 8.720049,
+          "aggregate-inline": 4.744126,
+          "rust-o3": 1.630607,
+          "stack-ceiling-bounded": 9.91187
+        },
+        "changed-value": {
+          "host-typed-host": 3.980837,
+          "zig-o3": 1.422947,
+          "combined-typed-bounded": 8.834301,
+          "rust-o3": 1.439424,
+          "stack-ceiling-bounded": 9.936037,
+          "stack-ceiling": 5.28178,
+          "host-metadata-control": 5.126648,
+          "gc-lto": 5.054333,
+          "go-fast": 1.915818,
+          "aggregate-inline-bounded": 9.752942,
+          "combined-control": 4.841457,
+          "gc-lto-bounded": 10.014277,
+          "combined-typed": 3.741682,
+          "combined-control-bounded": 9.683469,
+          "aggregate-inline": 4.819105
+        }
+      }
+    },
+    {
+      "round": 1,
+      "order": [
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "host-typed-host": 4.045973,
+          "stack-ceiling": 5.096077,
+          "rust-o3": 1.678006,
+          "zig-o3": 1.571946,
+          "aggregate-inline-bounded": 9.779947,
+          "combined-control-bounded": 9.60904,
+          "stack-ceiling-bounded": 9.891971,
+          "gc-lto-bounded": 9.920163,
+          "combined-typed": 3.523989,
+          "go-fast": 2.035465,
+          "gc-lto": 5.026837,
+          "aggregate-inline": 4.713419,
+          "combined-control": 4.745548,
+          "combined-typed-bounded": 8.61184,
+          "host-metadata-control": 5.187004
+        },
+        "changed-net": {
+          "host-metadata-control": 5.190531,
+          "zig-o3": 1.376772,
+          "aggregate-inline-bounded": 9.583965,
+          "combined-typed-bounded": 8.792427,
+          "host-typed-host": 3.913336,
+          "aggregate-inline": 4.723768,
+          "gc-lto-bounded": 9.99094,
+          "combined-control": 4.70174,
+          "go-fast": 2.000631,
+          "combined-typed": 3.60985,
+          "stack-ceiling-bounded": 9.806603,
+          "stack-ceiling": 5.000411,
+          "gc-lto": 5.083293,
+          "combined-control-bounded": 9.661046,
+          "rust-o3": 1.659629
+        },
+        "changed-value": {
+          "stack-ceiling-bounded": 9.863306,
+          "combined-typed": 3.722742,
+          "combined-control": 4.965972,
+          "stack-ceiling": 5.145167,
+          "go-fast": 2.053957,
+          "combined-typed-bounded": 8.845456,
+          "aggregate-inline-bounded": 9.752311,
+          "aggregate-inline": 4.779462,
+          "host-metadata-control": 4.979713,
+          "gc-lto": 5.100577,
+          "rust-o3": 1.660142,
+          "zig-o3": 1.502044,
+          "combined-control-bounded": 9.609441,
+          "gc-lto-bounded": 10.094164,
+          "host-typed-host": 3.969964
+        }
+      }
+    },
+    {
+      "round": 2,
+      "order": [
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "host-metadata-control": 5.059355,
+          "combined-control-bounded": 9.695323,
+          "combined-typed": 3.591627,
+          "go-fast": 2.026336,
+          "rust-o3": 1.474626,
+          "stack-ceiling-bounded": 9.863109,
+          "zig-o3": 1.601717,
+          "gc-lto": 5.003164,
+          "host-typed-host": 4.052177,
+          "combined-typed-bounded": 8.706239,
+          "aggregate-inline": 4.908642,
+          "combined-control": 5.052673,
+          "stack-ceiling": 5.118182,
+          "gc-lto-bounded": 10.095789,
+          "aggregate-inline-bounded": 9.807279
+        },
+        "changed-net": {
+          "gc-lto": 5.108752,
+          "combined-control": 4.759989,
+          "host-metadata-control": 5.151637,
+          "zig-o3": 1.424294,
+          "rust-o3": 1.609182,
+          "combined-typed-bounded": 8.666376,
+          "stack-ceiling": 5.111485,
+          "stack-ceiling-bounded": 9.84833,
+          "combined-typed": 3.643326,
+          "gc-lto-bounded": 9.935438,
+          "aggregate-inline": 4.806731,
+          "combined-control-bounded": 9.627887,
+          "aggregate-inline-bounded": 9.771514,
+          "host-typed-host": 3.866762,
+          "go-fast": 2.065608
+        },
+        "changed-value": {
+          "host-metadata-control": 5.05914,
+          "aggregate-inline": 4.732673,
+          "gc-lto-bounded": 9.92759,
+          "combined-control-bounded": 9.664298,
+          "combined-control": 4.85769,
+          "aggregate-inline-bounded": 9.855871,
+          "combined-typed-bounded": 8.767847,
+          "zig-o3": 1.463102,
+          "combined-typed": 3.61915,
+          "host-typed-host": 3.941662,
+          "go-fast": 2.00237,
+          "stack-ceiling-bounded": 9.670769,
+          "gc-lto": 5.089218,
+          "stack-ceiling": 5.121202,
+          "rust-o3": 1.548856
+        }
+      }
+    },
+    {
+      "round": 3,
+      "order": [
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "combined-typed-bounded": 8.716388,
+          "gc-lto": 5.140197,
+          "aggregate-inline-bounded": 9.874339,
+          "host-typed-host": 3.955991,
+          "combined-control-bounded": 9.695466,
+          "aggregate-inline": 4.656842,
+          "combined-typed": 3.686363,
+          "go-fast": 2.1704,
+          "zig-o3": 1.540431,
+          "stack-ceiling": 5.21759,
+          "rust-o3": 1.635278,
+          "gc-lto-bounded": 9.905517,
+          "host-metadata-control": 4.925412,
+          "combined-control": 4.682456,
+          "stack-ceiling-bounded": 10.322558
+        },
+        "changed-net": {
+          "combined-control": 4.66242,
+          "stack-ceiling-bounded": 9.837165,
+          "aggregate-inline": 4.718874,
+          "zig-o3": 1.402706,
+          "stack-ceiling": 5.097955,
+          "gc-lto-bounded": 9.967792,
+          "go-fast": 2.061685,
+          "host-typed-host": 3.897091,
+          "host-metadata-control": 5.046619,
+          "aggregate-inline-bounded": 9.644795,
+          "gc-lto": 5.023658,
+          "combined-control-bounded": 9.721519,
+          "combined-typed-bounded": 9.057316,
+          "rust-o3": 1.704032,
+          "combined-typed": 3.312941
+        },
+        "changed-value": {
+          "aggregate-inline-bounded": 9.678927,
+          "gc-lto-bounded": 10.024711,
+          "combined-typed-bounded": 8.695192,
+          "combined-typed": 3.872866,
+          "rust-o3": 1.583695,
+          "aggregate-inline": 4.808964,
+          "host-typed-host": 3.884193,
+          "go-fast": 2.066079,
+          "combined-control-bounded": 9.63456,
+          "combined-control": 4.969608,
+          "stack-ceiling-bounded": 9.923239,
+          "host-metadata-control": 5.023784,
+          "zig-o3": 1.510621,
+          "stack-ceiling": 5.061014,
+          "gc-lto": 4.959418
+        }
+      }
+    },
+    {
+      "round": 4,
+      "order": [
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "combined-typed-bounded": 8.870928,
+          "zig-o3": 1.328621,
+          "gc-lto": 5.174016,
+          "aggregate-inline": 4.840595,
+          "stack-ceiling-bounded": 10.297776,
+          "host-typed-host": 4.108011,
+          "aggregate-inline-bounded": 10.602827,
+          "host-metadata-control": 5.148476,
+          "gc-lto-bounded": 10.573421,
+          "combined-typed": 3.829229,
+          "stack-ceiling": 5.096558,
+          "go-fast": 1.930762,
+          "combined-control-bounded": 10.088407,
+          "combined-control": 4.941996,
+          "rust-o3": 1.594902
+        },
+        "changed-net": {
+          "combined-typed": 3.727932,
+          "combined-typed-bounded": 9.367934,
+          "aggregate-inline": 5.015767,
+          "combined-control-bounded": 10.546303,
+          "rust-o3": 1.753729,
+          "host-typed-host": 4.036381,
+          "go-fast": 1.848728,
+          "combined-control": 5.046065,
+          "stack-ceiling-bounded": 10.355875,
+          "gc-lto-bounded": 10.209105,
+          "host-metadata-control": 5.382083,
+          "stack-ceiling": 5.321952,
+          "aggregate-inline-bounded": 10.058915,
+          "gc-lto": 5.260731,
+          "zig-o3": 1.398842
+        },
+        "changed-value": {
+          "combined-control": 4.817949,
+          "stack-ceiling": 5.481627,
+          "go-fast": 2.060018,
+          "gc-lto": 5.27905,
+          "aggregate-inline": 5.017296,
+          "rust-o3": 1.475112,
+          "host-metadata-control": 5.303728,
+          "stack-ceiling-bounded": 10.052849,
+          "zig-o3": 1.488571,
+          "combined-typed-bounded": 9.062733,
+          "combined-control-bounded": 9.869264,
+          "gc-lto-bounded": 10.18078,
+          "combined-typed": 3.67902,
+          "aggregate-inline-bounded": 10.107714,
+          "host-typed-host": 4.048744
+        }
+      }
+    },
+    {
+      "round": 5,
+      "order": [
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "stack-ceiling": 5.301466,
+          "combined-control-bounded": 9.81794,
+          "go-fast": 2.016597,
+          "combined-control": 4.938939,
+          "aggregate-inline-bounded": 9.786445,
+          "gc-lto-bounded": 10.10186,
+          "stack-ceiling-bounded": 10.055379,
+          "host-typed-host": 3.96545,
+          "aggregate-inline": 4.895332,
+          "combined-typed-bounded": 9.132542,
+          "gc-lto": 5.103909,
+          "combined-typed": 3.83988,
+          "rust-o3": 1.673336,
+          "zig-o3": 1.503025,
+          "host-metadata-control": 5.226957
+        },
+        "changed-net": {
+          "aggregate-inline-bounded": 10.086601,
+          "go-fast": 2.023698,
+          "rust-o3": 1.511978,
+          "gc-lto": 5.27274,
+          "host-metadata-control": 5.383187,
+          "stack-ceiling": 5.236868,
+          "stack-ceiling-bounded": 9.921628,
+          "combined-control": 5.006118,
+          "zig-o3": 1.398169,
+          "combined-typed": 3.605094,
+          "combined-typed-bounded": 8.956511,
+          "combined-control-bounded": 10.016027,
+          "aggregate-inline": 4.904979,
+          "host-typed-host": 4.035899,
+          "gc-lto-bounded": 10.731315
+        },
+        "changed-value": {
+          "gc-lto": 5.27293,
+          "host-metadata-control": 5.252218,
+          "combined-typed": 3.649253,
+          "zig-o3": 1.39105,
+          "stack-ceiling": 5.316767,
+          "aggregate-inline-bounded": 10.355822,
+          "combined-control-bounded": 10.130129,
+          "host-typed-host": 3.882489,
+          "combined-typed-bounded": 8.987164,
+          "aggregate-inline": 4.950221,
+          "gc-lto-bounded": 10.190851,
+          "combined-control": 4.894139,
+          "rust-o3": 1.612698,
+          "stack-ceiling-bounded": 10.077938,
+          "go-fast": 2.014839
+        }
+      }
+    },
+    {
+      "round": 6,
+      "order": [
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "combined-control-bounded": 10.203116,
+          "host-metadata-control": 5.277785,
+          "gc-lto": 5.310929,
+          "zig-o3": 1.528289,
+          "combined-typed": 3.696635,
+          "gc-lto-bounded": 10.014146,
+          "stack-ceiling": 5.206074,
+          "aggregate-inline": 4.744196,
+          "combined-typed-bounded": 8.915272,
+          "combined-control": 4.903433,
+          "rust-o3": 1.824307,
+          "go-fast": 1.967081,
+          "host-typed-host": 4.015929,
+          "aggregate-inline-bounded": 9.992262,
+          "stack-ceiling-bounded": 10.137971
+        },
+        "changed-net": {
+          "rust-o3": 1.844067,
+          "gc-lto": 5.42133,
+          "combined-control-bounded": 10.200999,
+          "gc-lto-bounded": 10.213884,
+          "stack-ceiling": 9.279094,
+          "aggregate-inline": 4.830912,
+          "zig-o3": 1.495672,
+          "combined-typed-bounded": 8.831372,
+          "go-fast": 1.962952,
+          "host-typed-host": 3.966736,
+          "host-metadata-control": 5.093438,
+          "aggregate-inline-bounded": 9.97854,
+          "combined-control": 4.819969,
+          "combined-typed": 3.331305,
+          "stack-ceiling-bounded": 10.299848
+        },
+        "changed-value": {
+          "gc-lto": 5.465973,
+          "combined-control": 4.948102,
+          "combined-typed-bounded": 8.980883,
+          "aggregate-inline": 4.710849,
+          "zig-o3": 1.562459,
+          "stack-ceiling-bounded": 10.008216,
+          "combined-control-bounded": 10.04318,
+          "rust-o3": 1.633892,
+          "host-typed-host": 4.072477,
+          "aggregate-inline-bounded": 9.957181,
+          "gc-lto-bounded": 10.239099,
+          "stack-ceiling": 5.406361,
+          "combined-typed": 3.70221,
+          "host-metadata-control": 5.271423,
+          "go-fast": 2.017886
+        }
+      }
+    },
+    {
+      "round": 7,
+      "order": [
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "rust-o3": 1.715513,
+          "zig-o3": 1.737906,
+          "combined-typed-bounded": 10.11347,
+          "stack-ceiling-bounded": 10.577833,
+          "gc-lto-bounded": 10.316538,
+          "host-metadata-control": 5.490029,
+          "aggregate-inline": 5.175005,
+          "combined-control-bounded": 11.196711,
+          "combined-control": 5.420721,
+          "gc-lto": 7.308917,
+          "go-fast": 2.695726,
+          "host-typed-host": 4.559521,
+          "stack-ceiling": 5.700042,
+          "aggregate-inline-bounded": 11.90641,
+          "combined-typed": 4.055193
+        },
+        "changed-net": {
+          "aggregate-inline-bounded": 9.960066,
+          "zig-o3": 1.479191,
+          "combined-typed-bounded": 8.788961,
+          "stack-ceiling": 5.374563,
+          "host-metadata-control": 5.248551,
+          "host-typed-host": 7.093987,
+          "combined-control": 6.373203,
+          "stack-ceiling-bounded": 12.565029,
+          "combined-typed": 4.405557,
+          "gc-lto": 5.879391,
+          "rust-o3": 1.794878,
+          "combined-control-bounded": 11.511257,
+          "go-fast": 2.227565,
+          "aggregate-inline": 5.149159,
+          "gc-lto-bounded": 11.220286
+        },
+        "changed-value": {
+          "combined-control-bounded": 10.584728,
+          "aggregate-inline": 4.841598,
+          "combined-control": 5.184851,
+          "host-metadata-control": 5.281008,
+          "combined-typed-bounded": 10.175056,
+          "host-typed-host": 4.452014,
+          "stack-ceiling-bounded": 16.038716,
+          "zig-o3": 2.283941,
+          "gc-lto": 6.274126,
+          "rust-o3": 1.631901,
+          "go-fast": 2.099901,
+          "stack-ceiling": 5.872603,
+          "combined-typed": 4.013287,
+          "gc-lto-bounded": 11.207739,
+          "aggregate-inline-bounded": 11.405965
+        }
+      }
+    },
+    {
+      "round": 8,
+      "order": [
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "combined-control": 4.711144,
+          "gc-lto-bounded": 10.160457,
+          "go-fast": 2.12056,
+          "combined-typed-bounded": 9.017164,
+          "gc-lto": 5.147634,
+          "aggregate-inline": 4.733522,
+          "stack-ceiling": 5.156327,
+          "combined-control-bounded": 9.823652,
+          "host-typed-host": 4.04613,
+          "zig-o3": 1.304049,
+          "host-metadata-control": 5.053304,
+          "combined-typed": 3.603391,
+          "aggregate-inline-bounded": 9.794667,
+          "stack-ceiling-bounded": 9.89428,
+          "rust-o3": 1.58582
+        },
+        "changed-net": {
+          "stack-ceiling-bounded": 10.517765,
+          "gc-lto-bounded": 10.293929,
+          "aggregate-inline-bounded": 10.258753,
+          "combined-typed-bounded": 9.205405,
+          "rust-o3": 1.753764,
+          "aggregate-inline": 4.885322,
+          "combined-control": 4.912834,
+          "gc-lto": 5.362681,
+          "zig-o3": 1.478049,
+          "stack-ceiling": 5.289247,
+          "combined-control-bounded": 9.701828,
+          "host-metadata-control": 5.084245,
+          "host-typed-host": 3.98104,
+          "go-fast": 2.037187,
+          "combined-typed": 3.790971
+        },
+        "changed-value": {
+          "rust-o3": 1.693853,
+          "host-metadata-control": 5.198192,
+          "combined-typed": 3.902108,
+          "combined-control-bounded": 17.293467,
+          "zig-o3": 1.384367,
+          "aggregate-inline-bounded": 10.27162,
+          "combined-typed-bounded": 9.007671,
+          "aggregate-inline": 4.941735,
+          "go-fast": 1.883863,
+          "gc-lto-bounded": 10.014546,
+          "stack-ceiling-bounded": 10.05445,
+          "gc-lto": 5.037528,
+          "stack-ceiling": 5.085879,
+          "host-typed-host": 3.928687,
+          "combined-control": 4.834366
+        }
+      }
+    },
+    {
+      "round": 9,
+      "order": [
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-lto-bounded": 10.086346,
+          "stack-ceiling": 5.294201,
+          "combined-typed-bounded": 9.112441,
+          "combined-control-bounded": 10.092051,
+          "rust-o3": 1.564997,
+          "stack-ceiling-bounded": 9.962008,
+          "zig-o3": 1.345907,
+          "aggregate-inline": 4.75228,
+          "gc-lto": 5.118299,
+          "host-metadata-control": 5.166383,
+          "combined-control": 4.894869,
+          "go-fast": 1.98003,
+          "aggregate-inline-bounded": 10.169538,
+          "combined-typed": 3.653161,
+          "host-typed-host": 4.080484
+        },
+        "changed-net": {
+          "host-typed-host": 3.803035,
+          "stack-ceiling": 4.990182,
+          "combined-control-bounded": 9.623558,
+          "aggregate-inline": 4.807519,
+          "rust-o3": 1.427696,
+          "host-metadata-control": 5.182171,
+          "stack-ceiling-bounded": 10.372883,
+          "gc-lto-bounded": 9.883844,
+          "zig-o3": 1.493434,
+          "combined-typed": 3.760509,
+          "combined-typed-bounded": 8.956196,
+          "go-fast": 2.084967,
+          "aggregate-inline-bounded": 9.894882,
+          "combined-control": 4.654193,
+          "gc-lto": 4.892204
+        },
+        "changed-value": {
+          "combined-control-bounded": 9.775807,
+          "rust-o3": 1.479184,
+          "gc-lto": 5.099709,
+          "stack-ceiling": 5.191458,
+          "combined-typed": 3.667461,
+          "combined-control": 4.992718,
+          "stack-ceiling-bounded": 9.969043,
+          "host-typed-host": 3.983438,
+          "combined-typed-bounded": 8.821297,
+          "aggregate-inline-bounded": 9.795359,
+          "zig-o3": 1.453495,
+          "host-metadata-control": 5.046579,
+          "aggregate-inline": 4.682164,
+          "gc-lto-bounded": 10.083642,
+          "go-fast": 1.859195
+        }
+      }
+    },
+    {
+      "round": 10,
+      "order": [
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "host-typed-host": 4.014822,
+          "combined-typed": 3.642815,
+          "host-metadata-control": 4.955651,
+          "aggregate-inline-bounded": 9.746473,
+          "go-fast": 1.928084,
+          "stack-ceiling": 5.105939,
+          "rust-o3": 1.535506,
+          "stack-ceiling-bounded": 9.741521,
+          "zig-o3": 1.448272,
+          "combined-control": 4.774765,
+          "combined-typed-bounded": 8.920255,
+          "aggregate-inline": 5.022936,
+          "gc-lto": 5.284506,
+          "combined-control-bounded": 10.144524,
+          "gc-lto-bounded": 9.921394
+        },
+        "changed-net": {
+          "gc-lto-bounded": 9.702694,
+          "combined-control-bounded": 10.141926,
+          "gc-lto": 5.048386,
+          "combined-typed-bounded": 8.692695,
+          "rust-o3": 1.52777,
+          "stack-ceiling-bounded": 9.866596,
+          "combined-typed": 3.559625,
+          "host-typed-host": 3.775682,
+          "combined-control": 4.644968,
+          "host-metadata-control": 4.99063,
+          "aggregate-inline-bounded": 9.620774,
+          "aggregate-inline": 4.739403,
+          "zig-o3": 1.316928,
+          "stack-ceiling": 5.245562,
+          "go-fast": 1.920708
+        },
+        "changed-value": {
+          "rust-o3": 1.500915,
+          "combined-typed-bounded": 9.114203,
+          "stack-ceiling": 5.138753,
+          "gc-lto": 5.031467,
+          "zig-o3": 1.474762,
+          "combined-control-bounded": 9.694582,
+          "aggregate-inline-bounded": 9.614176,
+          "combined-control": 4.775958,
+          "host-metadata-control": 5.020424,
+          "gc-lto-bounded": 9.843633,
+          "combined-typed": 3.645863,
+          "go-fast": 1.926791,
+          "aggregate-inline": 4.630687,
+          "stack-ceiling-bounded": 10.002767,
+          "host-typed-host": 4.069893
+        }
+      }
+    },
+    {
+      "round": 11,
+      "order": [
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "combined-typed": 3.579232,
+          "rust-o3": 1.491789,
+          "stack-ceiling": 4.962971,
+          "aggregate-inline-bounded": 9.720715,
+          "gc-lto": 4.963197,
+          "host-metadata-control": 5.427072,
+          "host-typed-host": 4.179646,
+          "zig-o3": 1.467036,
+          "combined-typed-bounded": 8.692735,
+          "combined-control-bounded": 9.751393,
+          "go-fast": 1.989194,
+          "combined-control": 4.673983,
+          "aggregate-inline": 4.651782,
+          "gc-lto-bounded": 9.973112,
+          "stack-ceiling-bounded": 10.077743
+        },
+        "changed-net": {
+          "aggregate-inline": 4.688378,
+          "combined-control-bounded": 9.559815,
+          "stack-ceiling-bounded": 9.78228,
+          "combined-typed-bounded": 9.206734,
+          "aggregate-inline-bounded": 9.819156,
+          "rust-o3": 1.626137,
+          "host-metadata-control": 4.952532,
+          "combined-control": 4.857639,
+          "zig-o3": 1.542164,
+          "host-typed-host": 3.904133,
+          "gc-lto": 5.016661,
+          "combined-typed": 3.50263,
+          "go-fast": 2.122807,
+          "gc-lto-bounded": 9.825023,
+          "stack-ceiling": 5.054117
+        },
+        "changed-value": {
+          "stack-ceiling": 4.91581,
+          "stack-ceiling-bounded": 9.879945,
+          "host-typed-host": 3.959816,
+          "host-metadata-control": 5.311348,
+          "gc-lto-bounded": 10.32167,
+          "combined-typed-bounded": 8.649678,
+          "combined-control": 4.713727,
+          "combined-control-bounded": 9.618428,
+          "aggregate-inline-bounded": 9.945593,
+          "gc-lto": 5.199378,
+          "aggregate-inline": 4.715597,
+          "rust-o3": 1.691085,
+          "go-fast": 2.063814,
+          "combined-typed": 3.757566,
+          "zig-o3": 1.486243
+        }
+      }
+    },
+    {
+      "round": 12,
+      "order": [
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "combined-control": 4.732678,
+          "host-metadata-control": 5.165737,
+          "aggregate-inline-bounded": 9.802628,
+          "go-fast": 1.972305,
+          "stack-ceiling-bounded": 9.947885,
+          "stack-ceiling": 5.138401,
+          "host-typed-host": 3.861885,
+          "zig-o3": 1.499201,
+          "aggregate-inline": 4.846865,
+          "combined-control-bounded": 9.816187,
+          "gc-lto": 5.076761,
+          "gc-lto-bounded": 10.013213,
+          "combined-typed": 3.782937,
+          "combined-typed-bounded": 8.618455,
+          "rust-o3": 1.529922
+        },
+        "changed-net": {
+          "zig-o3": 1.580889,
+          "aggregate-inline": 4.711854,
+          "rust-o3": 1.53325,
+          "gc-lto": 4.976172,
+          "stack-ceiling-bounded": 9.892396,
+          "go-fast": 2.064478,
+          "combined-typed-bounded": 8.703962,
+          "combined-typed": 3.662171,
+          "aggregate-inline-bounded": 9.71269,
+          "combined-control": 4.742049,
+          "gc-lto-bounded": 9.836578,
+          "host-typed-host": 4.040209,
+          "combined-control-bounded": 9.520108,
+          "stack-ceiling": 5.074637,
+          "host-metadata-control": 5.009293
+        },
+        "changed-value": {
+          "gc-lto-bounded": 9.83421,
+          "combined-control": 4.789721,
+          "aggregate-inline": 4.709517,
+          "combined-typed-bounded": 8.947528,
+          "aggregate-inline-bounded": 10.010702,
+          "host-typed-host": 4.069056,
+          "rust-o3": 1.596004,
+          "host-metadata-control": 5.153242,
+          "stack-ceiling-bounded": 10.005338,
+          "stack-ceiling": 5.078157,
+          "combined-control-bounded": 9.716993,
+          "zig-o3": 1.481618,
+          "go-fast": 2.055319,
+          "gc-lto": 4.993854,
+          "combined-typed": 3.572922
+        }
+      }
+    },
+    {
+      "round": 13,
+      "order": [
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "host-metadata-control": 4.965039,
+          "host-typed-host": 3.785201,
+          "stack-ceiling": 5.089382,
+          "combined-control": 4.664198,
+          "gc-lto": 4.933112,
+          "combined-control-bounded": 9.721394,
+          "aggregate-inline-bounded": 10.075382,
+          "zig-o3": 1.425227,
+          "combined-typed-bounded": 8.704615,
+          "go-fast": 1.957885,
+          "stack-ceiling-bounded": 9.799094,
+          "rust-o3": 1.554347,
+          "combined-typed": 3.540737,
+          "aggregate-inline": 4.627327,
+          "gc-lto-bounded": 9.753741
+        },
+        "changed-net": {
+          "combined-control": 4.622341,
+          "host-typed-host": 3.889987,
+          "rust-o3": 1.488645,
+          "aggregate-inline-bounded": 9.798084,
+          "host-metadata-control": 4.939167,
+          "go-fast": 1.993338,
+          "combined-typed": 3.58353,
+          "stack-ceiling-bounded": 9.708039,
+          "aggregate-inline": 4.629838,
+          "zig-o3": 1.368269,
+          "gc-lto": 5.154383,
+          "combined-control-bounded": 9.518711,
+          "gc-lto-bounded": 9.866859,
+          "stack-ceiling": 5.157255,
+          "combined-typed-bounded": 8.760952
+        },
+        "changed-value": {
+          "host-typed-host": 3.896157,
+          "stack-ceiling": 5.192537,
+          "aggregate-inline": 4.872068,
+          "rust-o3": 1.668832,
+          "combined-typed-bounded": 8.775936,
+          "combined-control": 4.740361,
+          "zig-o3": 1.449004,
+          "go-fast": 1.979603,
+          "gc-lto-bounded": 9.849974,
+          "combined-typed": 3.743161,
+          "gc-lto": 5.199323,
+          "stack-ceiling-bounded": 9.883414,
+          "aggregate-inline-bounded": 9.694715,
+          "combined-control-bounded": 9.636833,
+          "host-metadata-control": 4.97097
+        }
+      }
+    },
+    {
+      "round": 14,
+      "order": [
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-lto-bounded": 10.021962,
+          "combined-typed-bounded": 8.67238,
+          "stack-ceiling": 5.223311,
+          "aggregate-inline": 4.696812,
+          "go-fast": 2.005038,
+          "rust-o3": 1.435711,
+          "stack-ceiling-bounded": 9.844749,
+          "aggregate-inline-bounded": 9.710775,
+          "combined-typed": 3.71418,
+          "combined-control-bounded": 9.699956,
+          "host-metadata-control": 5.012648,
+          "host-typed-host": 3.802102,
+          "zig-o3": 1.320431,
+          "combined-control": 4.657617,
+          "gc-lto": 4.99794
+        },
+        "changed-net": {
+          "gc-lto-bounded": 9.826789,
+          "aggregate-inline": 4.655168,
+          "stack-ceiling": 5.13799,
+          "aggregate-inline-bounded": 9.494325,
+          "gc-lto": 4.950286,
+          "zig-o3": 1.332908,
+          "rust-o3": 1.526614,
+          "stack-ceiling-bounded": 9.922971,
+          "combined-control": 4.83922,
+          "combined-typed-bounded": 8.751261,
+          "go-fast": 1.991769,
+          "host-metadata-control": 5.03872,
+          "combined-control-bounded": 9.650825,
+          "host-typed-host": 3.750946,
+          "combined-typed": 3.464223
+        },
+        "changed-value": {
+          "combined-control": 4.695609,
+          "host-metadata-control": 4.976595,
+          "combined-control-bounded": 9.680407,
+          "gc-lto-bounded": 9.955151,
+          "combined-typed-bounded": 9.389593,
+          "aggregate-inline": 4.781627,
+          "combined-typed": 3.681054,
+          "host-typed-host": 3.904454,
+          "aggregate-inline-bounded": 9.769197,
+          "stack-ceiling-bounded": 10.020583,
+          "stack-ceiling": 5.191191,
+          "gc-lto": 5.108189,
+          "go-fast": 1.890896,
+          "zig-o3": 1.377461,
+          "rust-o3": 1.453688
+        }
+      }
+    },
+    {
+      "round": 15,
+      "order": [
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "stack-ceiling": 5.118253,
+          "gc-lto": 5.0943,
+          "stack-ceiling-bounded": 10.547902,
+          "gc-lto-bounded": 9.733211,
+          "host-metadata-control": 5.2083,
+          "aggregate-inline": 4.644485,
+          "zig-o3": 1.373599,
+          "combined-typed-bounded": 8.595408,
+          "aggregate-inline-bounded": 9.745589,
+          "go-fast": 1.869549,
+          "combined-control-bounded": 9.624424,
+          "rust-o3": 1.498148,
+          "combined-control": 4.924004,
+          "combined-typed": 3.750042,
+          "host-typed-host": 4.073404
+        },
+        "changed-net": {
+          "aggregate-inline": 4.847407,
+          "combined-typed": 3.451797,
+          "stack-ceiling-bounded": 9.808862,
+          "host-metadata-control": 5.01987,
+          "combined-control": 5.002321,
+          "host-typed-host": 3.939735,
+          "combined-typed-bounded": 8.660056,
+          "gc-lto-bounded": 9.971124,
+          "zig-o3": 1.367769,
+          "rust-o3": 1.471191,
+          "gc-lto": 4.858977,
+          "go-fast": 1.822441,
+          "stack-ceiling": 5.012039,
+          "combined-control-bounded": 9.574932,
+          "aggregate-inline-bounded": 9.670351
+        },
+        "changed-value": {
+          "host-metadata-control": 5.069665,
+          "stack-ceiling": 5.252183,
+          "host-typed-host": 4.005,
+          "aggregate-inline": 4.640818,
+          "gc-lto": 5.024429,
+          "gc-lto-bounded": 10.204179,
+          "rust-o3": 1.597577,
+          "stack-ceiling-bounded": 10.018762,
+          "zig-o3": 1.36591,
+          "go-fast": 1.986241,
+          "combined-control": 4.669664,
+          "combined-typed": 3.569144,
+          "combined-control-bounded": 9.765727,
+          "aggregate-inline-bounded": 9.825527,
+          "combined-typed-bounded": 8.768362
+        }
+      }
+    },
+    {
+      "round": 16,
+      "order": [
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "zig-o3": 1.471393,
+          "stack-ceiling": 5.276075,
+          "combined-typed": 3.588201,
+          "go-fast": 2.038416,
+          "host-typed-host": 4.015559,
+          "gc-lto": 5.125592,
+          "rust-o3": 1.503291,
+          "aggregate-inline": 5.076165,
+          "stack-ceiling-bounded": 9.964653,
+          "aggregate-inline-bounded": 10.179855,
+          "combined-control": 4.689754,
+          "host-metadata-control": 5.438809,
+          "combined-control-bounded": 9.844509,
+          "combined-typed-bounded": 8.786615,
+          "gc-lto-bounded": 11.052525
+        },
+        "changed-net": {
+          "aggregate-inline-bounded": 9.73155,
+          "zig-o3": 1.554536,
+          "host-typed-host": 3.987285,
+          "gc-lto-bounded": 9.958966,
+          "stack-ceiling": 5.397908,
+          "host-metadata-control": 5.158157,
+          "combined-typed-bounded": 8.900524,
+          "combined-typed": 3.742458,
+          "stack-ceiling-bounded": 9.869063,
+          "gc-lto": 5.664323,
+          "go-fast": 2.075656,
+          "rust-o3": 1.616775,
+          "combined-control-bounded": 9.597709,
+          "aggregate-inline": 5.101008,
+          "combined-control": 4.880866
+        },
+        "changed-value": {
+          "host-metadata-control": 5.101508,
+          "rust-o3": 1.631015,
+          "gc-lto-bounded": 10.032146,
+          "aggregate-inline-bounded": 9.778477,
+          "combined-typed": 3.717353,
+          "aggregate-inline": 4.87364,
+          "go-fast": 2.122338,
+          "stack-ceiling-bounded": 10.619117,
+          "stack-ceiling": 5.187357,
+          "zig-o3": 1.342301,
+          "host-typed-host": 3.963378,
+          "combined-typed-bounded": 8.884448,
+          "combined-control-bounded": 10.999935,
+          "combined-control": 4.912878,
+          "gc-lto": 5.157624
+        }
+      }
+    },
+    {
+      "round": 17,
+      "order": [
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "rust-o3": 1.4803,
+          "combined-control-bounded": 9.932994,
+          "combined-typed-bounded": 8.899736,
+          "aggregate-inline": 4.627646,
+          "host-typed-host": 3.860639,
+          "aggregate-inline-bounded": 9.938911,
+          "combined-typed": 3.629121,
+          "stack-ceiling-bounded": 9.932358,
+          "stack-ceiling": 5.313589,
+          "combined-control": 4.760422,
+          "host-metadata-control": 5.094284,
+          "gc-lto-bounded": 10.03977,
+          "gc-lto": 5.193253,
+          "go-fast": 1.931194,
+          "zig-o3": 1.383202
+        },
+        "changed-net": {
+          "aggregate-inline-bounded": 10.261028,
+          "zig-o3": 1.544518,
+          "gc-lto-bounded": 10.080826,
+          "aggregate-inline": 4.994915,
+          "gc-lto": 5.018154,
+          "go-fast": 1.881369,
+          "host-metadata-control": 5.226247,
+          "combined-typed-bounded": 8.605671,
+          "combined-typed": 3.62729,
+          "combined-control": 4.980982,
+          "host-typed-host": 3.959693,
+          "rust-o3": 1.634394,
+          "stack-ceiling-bounded": 9.94246,
+          "stack-ceiling": 5.144427,
+          "combined-control-bounded": 9.683226
+        },
+        "changed-value": {
+          "aggregate-inline": 4.720538,
+          "aggregate-inline-bounded": 9.96157,
+          "stack-ceiling-bounded": 10.208384,
+          "combined-control-bounded": 10.733325,
+          "gc-lto-bounded": 10.935434,
+          "stack-ceiling": 5.329523,
+          "go-fast": 1.921784,
+          "rust-o3": 1.533995,
+          "combined-typed-bounded": 8.97195,
+          "combined-control": 4.740054,
+          "host-metadata-control": 5.10154,
+          "combined-typed": 3.657157,
+          "gc-lto": 4.984451,
+          "zig-o3": 1.417193,
+          "host-typed-host": 3.853297
+        }
+      }
+    },
+    {
+      "round": 18,
+      "order": [
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "combined-typed-bounded": 8.737328,
+          "aggregate-inline-bounded": 9.728337,
+          "zig-o3": 1.548157,
+          "host-metadata-control": 5.104301,
+          "go-fast": 2.031264,
+          "host-typed-host": 3.945521,
+          "gc-lto": 5.211459,
+          "combined-control": 5.165978,
+          "combined-typed": 3.900793,
+          "aggregate-inline": 4.849857,
+          "gc-lto-bounded": 10.346891,
+          "stack-ceiling": 5.253943,
+          "rust-o3": 1.630644,
+          "stack-ceiling-bounded": 10.307835,
+          "combined-control-bounded": 10.101113
+        },
+        "changed-net": {
+          "rust-o3": 1.581374,
+          "zig-o3": 1.533313,
+          "stack-ceiling": 5.146594,
+          "gc-lto": 5.125645,
+          "combined-typed-bounded": 8.887357,
+          "host-typed-host": 4.061504,
+          "stack-ceiling-bounded": 10.041742,
+          "combined-control-bounded": 9.774378,
+          "go-fast": 2.156809,
+          "combined-control": 4.910142,
+          "gc-lto-bounded": 11.279618,
+          "host-metadata-control": 5.605655,
+          "aggregate-inline": 5.067647,
+          "combined-typed": 3.701937,
+          "aggregate-inline-bounded": 10.213664
+        },
+        "changed-value": {
+          "zig-o3": 1.356917,
+          "host-typed-host": 3.942234,
+          "gc-lto-bounded": 10.117651,
+          "stack-ceiling": 5.209188,
+          "gc-lto": 4.990073,
+          "combined-typed-bounded": 9.793715,
+          "combined-control-bounded": 9.814815,
+          "combined-typed": 3.878678,
+          "aggregate-inline-bounded": 10.404428,
+          "aggregate-inline": 4.877309,
+          "combined-control": 4.955444,
+          "host-metadata-control": 5.33832,
+          "stack-ceiling-bounded": 9.908306,
+          "go-fast": 1.96442,
+          "rust-o3": 1.553272
+        }
+      }
+    },
+    {
+      "round": 19,
+      "order": [
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "host-metadata-control": 5.355633,
+          "aggregate-inline": 5.097105,
+          "combined-control-bounded": 10.171086,
+          "host-typed-host": 4.296123,
+          "combined-control": 5.479658,
+          "stack-ceiling-bounded": 10.800449,
+          "rust-o3": 1.630139,
+          "gc-lto": 5.332752,
+          "combined-typed-bounded": 9.429182,
+          "go-fast": 2.096177,
+          "combined-typed": 3.661246,
+          "gc-lto-bounded": 10.041882,
+          "zig-o3": 1.489505,
+          "aggregate-inline-bounded": 9.660677,
+          "stack-ceiling": 5.080956
+        },
+        "changed-net": {
+          "combined-control": 4.819886,
+          "gc-lto-bounded": 10.034281,
+          "zig-o3": 1.403924,
+          "stack-ceiling": 5.459941,
+          "aggregate-inline-bounded": 10.386644,
+          "gc-lto": 5.677074,
+          "host-metadata-control": 5.384913,
+          "aggregate-inline": 4.822862,
+          "combined-typed": 3.980746,
+          "stack-ceiling-bounded": 9.917515,
+          "combined-typed-bounded": 9.02243,
+          "go-fast": 2.072945,
+          "host-typed-host": 3.998721,
+          "combined-control-bounded": 9.775814,
+          "rust-o3": 1.547559
+        },
+        "changed-value": {
+          "stack-ceiling-bounded": 10.110144,
+          "aggregate-inline-bounded": 10.007439,
+          "combined-typed": 3.888833,
+          "host-typed-host": 4.202088,
+          "combined-control": 5.009992,
+          "zig-o3": 1.466755,
+          "gc-lto-bounded": 10.86542,
+          "host-metadata-control": 5.339304,
+          "combined-typed-bounded": 9.1491,
+          "aggregate-inline": 4.670375,
+          "stack-ceiling": 5.291476,
+          "rust-o3": 1.642819,
+          "gc-lto": 5.182348,
+          "combined-control-bounded": 9.826768,
+          "go-fast": 1.913608
+        }
+      }
+    },
+    {
+      "round": 20,
+      "order": [
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "combined-control-bounded": 9.611024,
+          "host-metadata-control": 5.107602,
+          "aggregate-inline-bounded": 9.635556,
+          "stack-ceiling-bounded": 9.890082,
+          "rust-o3": 1.727934,
+          "gc-lto-bounded": 9.843386,
+          "host-typed-host": 3.90173,
+          "combined-control": 4.778457,
+          "zig-o3": 1.543744,
+          "go-fast": 2.066991,
+          "combined-typed-bounded": 8.725571,
+          "gc-lto": 5.286774,
+          "stack-ceiling": 5.251245,
+          "combined-typed": 3.651999,
+          "aggregate-inline": 4.972111
+        },
+        "changed-net": {
+          "combined-control-bounded": 9.590742,
+          "aggregate-inline": 4.732982,
+          "go-fast": 1.772611,
+          "stack-ceiling": 5.163149,
+          "gc-lto-bounded": 9.870202,
+          "gc-lto": 4.996813,
+          "host-typed-host": 3.977586,
+          "combined-typed": 3.619699,
+          "zig-o3": 1.517175,
+          "combined-typed-bounded": 8.786691,
+          "aggregate-inline-bounded": 9.667449,
+          "combined-control": 4.723187,
+          "stack-ceiling-bounded": 10.195252,
+          "rust-o3": 1.673513,
+          "host-metadata-control": 5.076229
+        },
+        "changed-value": {
+          "combined-control": 4.691751,
+          "zig-o3": 1.461621,
+          "aggregate-inline-bounded": 9.707326,
+          "aggregate-inline": 4.963032,
+          "host-typed-host": 3.883751,
+          "combined-typed": 3.672205,
+          "go-fast": 1.921676,
+          "stack-ceiling": 5.085195,
+          "gc-lto-bounded": 9.948776,
+          "host-metadata-control": 5.284264,
+          "rust-o3": 1.495843,
+          "combined-typed-bounded": 8.911669,
+          "gc-lto": 5.190404,
+          "stack-ceiling-bounded": 9.937437,
+          "combined-control-bounded": 9.902923
+        }
+      }
+    },
+    {
+      "round": 21,
+      "order": [
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "aggregate-inline-bounded": 9.99489,
+          "zig-o3": 1.334442,
+          "combined-typed-bounded": 8.910844,
+          "gc-lto-bounded": 10.05914,
+          "stack-ceiling-bounded": 9.873484,
+          "combined-control": 4.817907,
+          "aggregate-inline": 4.919931,
+          "host-metadata-control": 5.206405,
+          "stack-ceiling": 5.223781,
+          "rust-o3": 1.647286,
+          "combined-control-bounded": 9.767592,
+          "host-typed-host": 4.040159,
+          "combined-typed": 3.633454,
+          "gc-lto": 4.991621,
+          "go-fast": 2.042747
+        },
+        "changed-net": {
+          "zig-o3": 1.404781,
+          "aggregate-inline": 4.656915,
+          "combined-control-bounded": 9.649228,
+          "rust-o3": 1.695941,
+          "combined-control": 4.749152,
+          "gc-lto-bounded": 9.881133,
+          "combined-typed-bounded": 8.631035,
+          "host-typed-host": 4.046175,
+          "aggregate-inline-bounded": 9.685419,
+          "stack-ceiling": 5.375847,
+          "go-fast": 2.108373,
+          "combined-typed": 3.516982,
+          "host-metadata-control": 5.125149,
+          "gc-lto": 5.201004,
+          "stack-ceiling-bounded": 9.898487
+        },
+        "changed-value": {
+          "host-typed-host": 3.800277,
+          "go-fast": 2.089513,
+          "host-metadata-control": 5.03656,
+          "combined-control": 4.790284,
+          "rust-o3": 1.600079,
+          "combined-typed-bounded": 8.866129,
+          "aggregate-inline-bounded": 9.761801,
+          "gc-lto-bounded": 9.898553,
+          "stack-ceiling": 5.144057,
+          "gc-lto": 5.088962,
+          "aggregate-inline": 4.85538,
+          "stack-ceiling-bounded": 9.882032,
+          "zig-o3": 1.480947,
+          "combined-typed": 3.657063,
+          "combined-control-bounded": 9.839209
+        }
+      }
+    },
+    {
+      "round": 22,
+      "order": [
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "host-typed-host": 3.943596,
+          "combined-control-bounded": 10.288593,
+          "stack-ceiling-bounded": 9.975012,
+          "gc-lto-bounded": 10.175788,
+          "go-fast": 2.09222,
+          "combined-typed": 3.906964,
+          "stack-ceiling": 5.15138,
+          "aggregate-inline": 4.688729,
+          "zig-o3": 1.273334,
+          "gc-lto": 4.869372,
+          "rust-o3": 1.529301,
+          "aggregate-inline-bounded": 9.715003,
+          "host-metadata-control": 5.158453,
+          "combined-typed-bounded": 8.748873,
+          "combined-control": 4.771411
+        },
+        "changed-net": {
+          "aggregate-inline-bounded": 9.849273,
+          "zig-o3": 1.515196,
+          "combined-control-bounded": 9.649074,
+          "host-typed-host": 3.965605,
+          "combined-typed": 3.673889,
+          "gc-lto": 4.987074,
+          "gc-lto-bounded": 10.107166,
+          "stack-ceiling-bounded": 9.883471,
+          "combined-control": 4.867624,
+          "aggregate-inline": 4.712333,
+          "rust-o3": 1.415177,
+          "go-fast": 1.860006,
+          "combined-typed-bounded": 8.588869,
+          "stack-ceiling": 5.149264,
+          "host-metadata-control": 5.00816
+        },
+        "changed-value": {
+          "stack-ceiling": 5.169406,
+          "zig-o3": 1.391499,
+          "aggregate-inline-bounded": 9.961911,
+          "aggregate-inline": 4.988652,
+          "combined-control": 4.636674,
+          "combined-typed": 3.607568,
+          "host-typed-host": 3.963908,
+          "host-metadata-control": 4.917859,
+          "rust-o3": 1.49532,
+          "gc-lto-bounded": 9.859844,
+          "go-fast": 1.949381,
+          "gc-lto": 5.07844,
+          "combined-typed-bounded": 8.670653,
+          "stack-ceiling-bounded": 10.027738,
+          "combined-control-bounded": 9.926628
+        }
+      }
+    },
+    {
+      "round": 23,
+      "order": [
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "host-typed-host": 3.863778,
+          "gc-lto-bounded": 10.008769,
+          "stack-ceiling": 5.217271,
+          "combined-control": 4.99533,
+          "combined-typed-bounded": 8.85628,
+          "zig-o3": 1.433961,
+          "stack-ceiling-bounded": 9.954155,
+          "combined-control-bounded": 9.906237,
+          "host-metadata-control": 5.065295,
+          "rust-o3": 1.665299,
+          "gc-lto": 5.02094,
+          "go-fast": 2.079929,
+          "aggregate-inline-bounded": 9.837091,
+          "combined-typed": 3.734628,
+          "aggregate-inline": 4.805543
+        },
+        "changed-net": {
+          "combined-control": 4.716054,
+          "combined-typed-bounded": 8.654148,
+          "host-metadata-control": 5.230144,
+          "gc-lto": 5.155162,
+          "go-fast": 1.877029,
+          "aggregate-inline": 4.724457,
+          "combined-control-bounded": 9.710803,
+          "rust-o3": 1.471981,
+          "gc-lto-bounded": 9.923978,
+          "stack-ceiling-bounded": 9.739343,
+          "stack-ceiling": 5.219031,
+          "combined-typed": 3.647245,
+          "aggregate-inline-bounded": 9.8499,
+          "host-typed-host": 4.098608,
+          "zig-o3": 1.506813
+        },
+        "changed-value": {
+          "combined-control": 4.890385,
+          "stack-ceiling-bounded": 9.912379,
+          "aggregate-inline-bounded": 9.740853,
+          "stack-ceiling": 5.035118,
+          "rust-o3": 1.527227,
+          "combined-typed-bounded": 8.882814,
+          "go-fast": 2.005403,
+          "combined-control-bounded": 9.580242,
+          "gc-lto": 5.105985,
+          "combined-typed": 3.675501,
+          "host-typed-host": 3.853213,
+          "host-metadata-control": 5.04384,
+          "aggregate-inline": 4.798628,
+          "zig-o3": 1.577028,
+          "gc-lto-bounded": 10.110902
+        }
+      }
+    },
+    {
+      "round": 24,
+      "order": [
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "aggregate-inline": 4.684588,
+          "combined-typed-bounded": 8.863527,
+          "go-fast": 2.141068,
+          "combined-control-bounded": 9.629087,
+          "host-typed-host": 3.946876,
+          "zig-o3": 1.344678,
+          "host-metadata-control": 4.985511,
+          "stack-ceiling-bounded": 9.942341,
+          "combined-control": 4.567903,
+          "combined-typed": 3.844413,
+          "aggregate-inline-bounded": 9.619554,
+          "rust-o3": 1.502483,
+          "stack-ceiling": 5.046322,
+          "gc-lto": 5.062134,
+          "gc-lto-bounded": 10.026078
+        },
+        "changed-net": {
+          "rust-o3": 1.595951,
+          "combined-typed": 3.714406,
+          "combined-control-bounded": 9.671201,
+          "host-typed-host": 3.891861,
+          "host-metadata-control": 5.065139,
+          "zig-o3": 1.387965,
+          "combined-typed-bounded": 8.634444,
+          "go-fast": 1.890825,
+          "stack-ceiling-bounded": 9.652863,
+          "aggregate-inline": 4.905219,
+          "gc-lto": 4.996634,
+          "gc-lto-bounded": 10.444314,
+          "stack-ceiling": 5.224402,
+          "aggregate-inline-bounded": 9.914388,
+          "combined-control": 4.748651
+        },
+        "changed-value": {
+          "combined-control-bounded": 9.725218,
+          "combined-control": 4.793323,
+          "host-metadata-control": 5.104051,
+          "zig-o3": 1.440422,
+          "gc-lto-bounded": 9.971104,
+          "host-typed-host": 4.048745,
+          "stack-ceiling": 4.969678,
+          "stack-ceiling-bounded": 9.829878,
+          "go-fast": 1.981101,
+          "rust-o3": 1.476729,
+          "gc-lto": 5.149052,
+          "aggregate-inline-bounded": 9.760855,
+          "combined-typed": 3.717312,
+          "aggregate-inline": 4.807821,
+          "combined-typed-bounded": 8.775614
+        }
+      }
+    },
+    {
+      "round": 25,
+      "order": [
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "host-metadata-control": 5.065161,
+          "combined-typed-bounded": 8.708701,
+          "combined-control": 4.840582,
+          "stack-ceiling-bounded": 9.844528,
+          "combined-control-bounded": 9.593525,
+          "zig-o3": 1.318612,
+          "combined-typed": 3.58496,
+          "aggregate-inline-bounded": 9.619593,
+          "go-fast": 1.904037,
+          "gc-lto-bounded": 9.90083,
+          "stack-ceiling": 5.168191,
+          "rust-o3": 1.469349,
+          "gc-lto": 5.409245,
+          "host-typed-host": 3.987928,
+          "aggregate-inline": 4.821915
+        },
+        "changed-net": {
+          "host-typed-host": 3.869248,
+          "stack-ceiling": 5.052645,
+          "combined-typed-bounded": 8.591514,
+          "host-metadata-control": 5.042866,
+          "stack-ceiling-bounded": 9.90024,
+          "go-fast": 2.19503,
+          "combined-typed": 3.67238,
+          "combined-control": 4.681768,
+          "combined-control-bounded": 9.758392,
+          "rust-o3": 1.612195,
+          "aggregate-inline": 4.726508,
+          "gc-lto": 5.096092,
+          "zig-o3": 1.523549,
+          "gc-lto-bounded": 10.05754,
+          "aggregate-inline-bounded": 9.853248
+        },
+        "changed-value": {
+          "zig-o3": 1.428892,
+          "stack-ceiling": 5.137061,
+          "combined-typed-bounded": 8.669366,
+          "combined-typed": 3.583518,
+          "gc-lto-bounded": 9.87369,
+          "rust-o3": 1.689504,
+          "gc-lto": 5.017867,
+          "host-metadata-control": 5.132878,
+          "stack-ceiling-bounded": 9.858831,
+          "host-typed-host": 4.065186,
+          "aggregate-inline-bounded": 9.738319,
+          "aggregate-inline": 4.663843,
+          "combined-control-bounded": 10.211673,
+          "combined-control": 4.747469,
+          "go-fast": 2.051269
+        }
+      }
+    },
+    {
+      "round": 26,
+      "order": [
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "aggregate-inline-bounded": 9.83443,
+          "aggregate-inline": 4.66952,
+          "stack-ceiling-bounded": 10.080274,
+          "host-typed-host": 3.912047,
+          "go-fast": 1.873975,
+          "combined-typed-bounded": 8.887039,
+          "zig-o3": 1.380082,
+          "gc-lto": 5.058405,
+          "host-metadata-control": 5.086856,
+          "combined-typed": 3.514107,
+          "combined-control-bounded": 9.796634,
+          "gc-lto-bounded": 10.158123,
+          "rust-o3": 1.553421,
+          "combined-control": 4.733536,
+          "stack-ceiling": 5.175884
+        },
+        "changed-net": {
+          "combined-control-bounded": 9.637213,
+          "aggregate-inline": 4.772937,
+          "combined-control": 4.728906,
+          "host-typed-host": 3.868599,
+          "gc-lto-bounded": 10.06785,
+          "aggregate-inline-bounded": 9.81513,
+          "stack-ceiling-bounded": 10.111276,
+          "gc-lto": 5.280401,
+          "zig-o3": 1.614882,
+          "combined-typed": 3.625393,
+          "host-metadata-control": 4.955124,
+          "stack-ceiling": 5.137018,
+          "go-fast": 2.138215,
+          "rust-o3": 1.589833,
+          "combined-typed-bounded": 8.639843
+        },
+        "changed-value": {
+          "go-fast": 1.915436,
+          "stack-ceiling-bounded": 9.849448,
+          "host-metadata-control": 5.096006,
+          "gc-lto-bounded": 9.96373,
+          "stack-ceiling": 5.374381,
+          "combined-control": 4.929091,
+          "aggregate-inline": 4.720907,
+          "zig-o3": 1.414078,
+          "combined-control-bounded": 9.8135,
+          "gc-lto": 5.127089,
+          "rust-o3": 1.520844,
+          "aggregate-inline-bounded": 9.746163,
+          "combined-typed": 3.56439,
+          "combined-typed-bounded": 8.860391,
+          "host-typed-host": 4.039533
+        }
+      }
+    },
+    {
+      "round": 27,
+      "order": [
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "host-typed-host": 3.938867,
+          "combined-control": 4.66024,
+          "combined-typed-bounded": 8.866055,
+          "zig-o3": 1.409755,
+          "combined-typed": 3.614233,
+          "gc-lto-bounded": 10.021315,
+          "aggregate-inline-bounded": 9.850258,
+          "stack-ceiling-bounded": 9.969951,
+          "gc-lto": 5.009415,
+          "stack-ceiling": 5.278659,
+          "rust-o3": 1.619738,
+          "combined-control-bounded": 9.563601,
+          "go-fast": 1.976208,
+          "aggregate-inline": 4.654873,
+          "host-metadata-control": 4.885738
+        },
+        "changed-net": {
+          "rust-o3": 1.488366,
+          "combined-control": 4.523631,
+          "zig-o3": 1.370231,
+          "combined-typed-bounded": 8.698965,
+          "aggregate-inline": 4.855313,
+          "aggregate-inline-bounded": 9.957264,
+          "stack-ceiling": 5.287815,
+          "gc-lto": 5.195684,
+          "combined-control-bounded": 9.801179,
+          "go-fast": 2.043768,
+          "gc-lto-bounded": 9.822422,
+          "host-typed-host": 4.091209,
+          "host-metadata-control": 5.027962,
+          "combined-typed": 3.649469,
+          "stack-ceiling-bounded": 9.765463
+        },
+        "changed-value": {
+          "stack-ceiling-bounded": 9.964071,
+          "host-typed-host": 3.940906,
+          "zig-o3": 1.475133,
+          "rust-o3": 1.625343,
+          "gc-lto": 5.152106,
+          "aggregate-inline": 4.794993,
+          "host-metadata-control": 5.162226,
+          "gc-lto-bounded": 9.898504,
+          "aggregate-inline-bounded": 9.774292,
+          "combined-control": 4.769068,
+          "go-fast": 1.852228,
+          "stack-ceiling": 5.141861,
+          "combined-control-bounded": 9.740501,
+          "combined-typed": 3.708565,
+          "combined-typed-bounded": 8.693925
+        }
+      }
+    },
+    {
+      "round": 28,
+      "order": [
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "aggregate-inline": 4.923614,
+          "rust-o3": 1.802353,
+          "combined-control": 4.61962,
+          "combined-typed": 3.606555,
+          "combined-typed-bounded": 8.70999,
+          "combined-control-bounded": 9.686072,
+          "aggregate-inline-bounded": 9.746262,
+          "gc-lto-bounded": 10.023135,
+          "go-fast": 1.981377,
+          "host-typed-host": 3.941105,
+          "zig-o3": 1.505062,
+          "host-metadata-control": 5.129075,
+          "stack-ceiling": 5.305704,
+          "gc-lto": 5.101134,
+          "stack-ceiling-bounded": 10.09629
+        },
+        "changed-net": {
+          "aggregate-inline-bounded": 9.790317,
+          "combined-typed-bounded": 8.778556,
+          "zig-o3": 1.451578,
+          "combined-typed": 3.56749,
+          "rust-o3": 1.629179,
+          "gc-lto": 5.056069,
+          "combined-control-bounded": 9.73958,
+          "host-metadata-control": 5.227534,
+          "stack-ceiling-bounded": 9.841482,
+          "aggregate-inline": 4.674428,
+          "stack-ceiling": 5.278954,
+          "go-fast": 1.986547,
+          "gc-lto-bounded": 9.947624,
+          "combined-control": 4.770716,
+          "host-typed-host": 4.051106
+        },
+        "changed-value": {
+          "aggregate-inline": 4.689448,
+          "host-typed-host": 3.927925,
+          "rust-o3": 1.582647,
+          "go-fast": 1.993946,
+          "combined-control": 4.799327,
+          "zig-o3": 1.458994,
+          "stack-ceiling": 5.159068,
+          "stack-ceiling-bounded": 9.986827,
+          "aggregate-inline-bounded": 9.614077,
+          "combined-typed": 3.581684,
+          "gc-lto-bounded": 10.187387,
+          "combined-typed-bounded": 8.86492,
+          "gc-lto": 5.157096,
+          "combined-control-bounded": 9.834484,
+          "host-metadata-control": 5.257783
+        }
+      }
+    },
+    {
+      "round": 29,
+      "order": [
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "host-typed-host": 3.971962,
+          "zig-o3": 1.434225,
+          "combined-control-bounded": 9.669891,
+          "aggregate-inline": 4.718846,
+          "stack-ceiling": 5.169982,
+          "go-fast": 2.07703,
+          "gc-lto": 5.057235,
+          "combined-control": 4.703004,
+          "host-metadata-control": 5.021062,
+          "rust-o3": 1.610756,
+          "combined-typed-bounded": 9.011019,
+          "gc-lto-bounded": 9.941924,
+          "aggregate-inline-bounded": 9.630953,
+          "stack-ceiling-bounded": 9.845007,
+          "combined-typed": 3.651208
+        },
+        "changed-net": {
+          "combined-typed-bounded": 8.685529,
+          "gc-lto": 4.986467,
+          "rust-o3": 1.512363,
+          "aggregate-inline": 4.841261,
+          "combined-typed": 3.705598,
+          "gc-lto-bounded": 9.89098,
+          "go-fast": 2.062679,
+          "host-typed-host": 3.969641,
+          "combined-control": 4.741357,
+          "stack-ceiling": 5.104831,
+          "zig-o3": 1.401834,
+          "aggregate-inline-bounded": 10.225157,
+          "combined-control-bounded": 9.615483,
+          "stack-ceiling-bounded": 9.940167,
+          "host-metadata-control": 5.125031
+        },
+        "changed-value": {
+          "stack-ceiling-bounded": 9.913672,
+          "zig-o3": 1.444219,
+          "aggregate-inline-bounded": 9.702022,
+          "go-fast": 2.037923,
+          "host-metadata-control": 5.070906,
+          "host-typed-host": 3.886756,
+          "rust-o3": 1.475994,
+          "combined-control-bounded": 9.758341,
+          "aggregate-inline": 4.796657,
+          "gc-lto": 4.945514,
+          "combined-typed": 3.60932,
+          "combined-control": 4.885837,
+          "stack-ceiling": 5.005167,
+          "combined-typed-bounded": 8.840302,
+          "gc-lto-bounded": 10.118179
+        }
+      }
+    },
+    {
+      "round": 30,
+      "order": [
+        [
+          "combined-typed",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-control",
+          "changed-value"
+        ],
+        [
+          "combined-control-bounded",
+          "fixture"
+        ],
+        [
+          "rust-o3",
+          "changed-value"
+        ],
+        [
+          "host-metadata-control",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "combined-control",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "changed-net"
+        ],
+        [
+          "host-typed-host",
+          "fixture"
+        ],
+        [
+          "combined-typed-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "fixture"
+        ],
+        [
+          "zig-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "rust-o3",
+          "fixture"
+        ],
+        [
+          "host-typed-host",
+          "changed-net"
+        ],
+        [
+          "combined-typed-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "fixture"
+        ],
+        [
+          "aggregate-inline",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-net"
+        ],
+        [
+          "host-metadata-control",
+          "changed-value"
+        ],
+        [
+          "stack-ceiling",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "changed-value"
+        ],
+        [
+          "zig-o3",
+          "changed-value"
+        ],
+        [
+          "aggregate-inline-bounded",
+          "changed-net"
+        ],
+        [
+          "aggregate-inline",
+          "changed-net"
+        ],
+        [
+          "stack-ceiling-bounded",
+          "fixture"
+        ],
+        [
+          "go-fast",
+          "changed-value"
+        ],
+        [
+          "combined-typed",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-lto-bounded": 10.10908,
+          "combined-control-bounded": 9.717354,
+          "host-metadata-control": 5.087054,
+          "combined-control": 4.750141,
+          "host-typed-host": 3.877525,
+          "aggregate-inline-bounded": 9.700581,
+          "combined-typed": 3.590386,
+          "zig-o3": 1.51807,
+          "rust-o3": 1.486517,
+          "combined-typed-bounded": 8.720024,
+          "go-fast": 1.965217,
+          "aggregate-inline": 4.724251,
+          "stack-ceiling": 5.041203,
+          "gc-lto": 4.961627,
+          "stack-ceiling-bounded": 9.904317
+        },
+        "changed-net": {
+          "combined-typed": 3.537259,
+          "combined-control": 4.680432,
+          "stack-ceiling": 5.163028,
+          "stack-ceiling-bounded": 9.914613,
+          "combined-control-bounded": 9.871297,
+          "gc-lto": 5.174838,
+          "gc-lto-bounded": 9.907383,
+          "rust-o3": 1.404472,
+          "combined-typed-bounded": 8.999791,
+          "zig-o3": 1.600734,
+          "host-metadata-control": 5.080641,
+          "host-typed-host": 3.901918,
+          "go-fast": 1.857478,
+          "aggregate-inline-bounded": 10.734665,
+          "aggregate-inline": 4.69736
+        },
+        "changed-value": {
+          "combined-typed-bounded": 8.897444,
+          "combined-control-bounded": 9.820585,
+          "aggregate-inline-bounded": 9.704366,
+          "combined-control": 4.858268,
+          "rust-o3": 1.753125,
+          "aggregate-inline": 4.743502,
+          "stack-ceiling": 5.173628,
+          "host-typed-host": 3.979763,
+          "gc-lto-bounded": 10.093597,
+          "gc-lto": 6.149967,
+          "host-metadata-control": 5.074192,
+          "stack-ceiling-bounded": 9.8858,
+          "zig-o3": 1.416377,
+          "go-fast": 1.922365,
+          "combined-typed": 3.83735
+        }
+      }
+    }
+  ]
+}

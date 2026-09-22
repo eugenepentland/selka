@@ -1,0 +1,260 @@
+{
+  "passed": true,
+  "arms": {
+    "control": {
+      "binary_sha256": "de1733408c0e3a9c69129bb166c122acb0ab572e201dff45c37bdd43a4a23210",
+      "cases": {
+        "fixture": {
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/control",
+            "--print-result"
+          ]
+        },
+        "changed-net": {
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/control",
+            "--print-result"
+          ]
+        },
+        "changed-value": {
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/control",
+            "--print-result"
+          ]
+        }
+      }
+    },
+    "counts": {
+      "binary_sha256": "d4140de9731ddc748bccb510c1102fd3a3dc44319e48b9c1b7d691ef0f2e53fb",
+      "cases": {
+        "fixture": {
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/counts",
+            "--print-result"
+          ],
+          "host_counts": {
+            "io::circuit_input": 1,
+            "io::pinout_input": 1,
+            "io::interface_input": 1,
+            "io::length": 3,
+            "io::byte": 55437,
+            "io::put": 49617,
+            "io::issue": 0
+          }
+        },
+        "changed-net": {
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/counts",
+            "--print-result"
+          ],
+          "host_counts": {
+            "io::circuit_input": 1,
+            "io::pinout_input": 1,
+            "io::interface_input": 1,
+            "io::length": 3,
+            "io::byte": 55613,
+            "io::put": 49647,
+            "io::issue": 0
+          }
+        },
+        "changed-value": {
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/counts",
+            "--print-result"
+          ],
+          "host_counts": {
+            "io::circuit_input": 1,
+            "io::pinout_input": 1,
+            "io::interface_input": 1,
+            "io::length": 3,
+            "io::byte": 55437,
+            "io::put": 49617,
+            "io::issue": 0
+          }
+        }
+      }
+    },
+    "unchecked": {
+      "binary_sha256": "5b630d9dfb84a718159ab96380b3d01d795b0990cd138663c543cb3201167d63",
+      "cases": {
+        "fixture": {
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/unchecked",
+            "--print-result"
+          ]
+        },
+        "changed-net": {
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/unchecked",
+            "--print-result"
+          ]
+        },
+        "changed-value": {
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/unchecked",
+            "--print-result"
+          ]
+        }
+      }
+    },
+    "memory-output": {
+      "binary_sha256": "f5ff5d5b93ad4957fde6eb8c8026ea85a586056e78c92dd260abd38602ae3e97",
+      "cases": {
+        "fixture": {
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/memory-output",
+            "--print-result"
+          ]
+        },
+        "changed-net": {
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/memory-output",
+            "--print-result"
+          ]
+        },
+        "changed-value": {
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/memory-output",
+            "--print-result"
+          ]
+        }
+      }
+    },
+    "metadata-control": {
+      "binary_sha256": "83c903d0b1a6d1476831b9b8b1cb06fdb4bbfa044ca30247cbc2e918b15f5303",
+      "cases": {
+        "fixture": {
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/metadata-control",
+            "--print-result"
+          ]
+        },
+        "changed-net": {
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/metadata-control",
+            "--print-result"
+          ]
+        },
+        "changed-value": {
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/metadata-control",
+            "--print-result"
+          ]
+        }
+      }
+    },
+    "typed-host": {
+      "binary_sha256": "6327e4082e1abf5cafb216836203448fb3c34638ac5703bd317b31f9922fe347",
+      "cases": {
+        "fixture": {
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/typed-host",
+            "--print-result"
+          ]
+        },
+        "changed-net": {
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/typed-host",
+            "--print-result"
+          ]
+        },
+        "changed-value": {
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "gc_stress_checked": true,
+          "command": [
+            "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/typed-host",
+            "--print-result"
+          ]
+        }
+      }
+    }
+  }
+}

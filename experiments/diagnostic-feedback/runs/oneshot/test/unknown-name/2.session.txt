@@ -1,0 +1,3 @@
+Fixed the undefined name in `project/main.my`: `pick` read `reward`, which is never bound, so the body now reads the function's own parameter — `return total + bonus` (no other change).
+
+Command run: `bin/mylang run project/main.my` → printed `15`, exit code 0.

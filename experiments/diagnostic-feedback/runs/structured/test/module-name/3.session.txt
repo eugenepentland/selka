@@ -1,0 +1,10 @@
+Fixed `project/stats.my` (the only file changed):
+
+- `module statistics` → `module stats`, matching the filename/main's import (`E_MODULE_NAME`).
+- `def total()` → `public def total()`, so `main` may call it across the module boundary (`E_PRIVATE_SYMBOL`).
+
+Verified with `bin/mylang run project/main.my`, which exits 0 and prints exactly:
+
+```
+7
+```

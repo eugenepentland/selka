@@ -1,0 +1,16 @@
+**What I changed:** In `project/main.my`, `main` added the `Result[int, str]` returned by `as_count` directly to `7` (the `E_TYPE` error). I matched on the result instead: `case Ok(value)` prints `7 + value`, `case Err(_)` prints `7`. `as_count` itself was already correct and is unchanged.
+
+**Command and result:**
+
+```
+bin/mylang check project/main.my && for a in 41 0 abc; do bin/mylang run project/main.my -- "$a"; done
+```
+
+```
+[check: clean]
+41 -> 48
+0 -> 7
+abc -> 7
+```
+
+The check exits 0 with no diagnostics, and the two `public/expected.json` cases (`41` → `48`, `0` → `7`) match, with non-integers (e.g. `abc`, `3.5`, `""`) printing `7`.

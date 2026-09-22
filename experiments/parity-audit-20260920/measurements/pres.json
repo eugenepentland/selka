@@ -1,0 +1,68 @@
+{
+ "ctl": {
+  "census": {
+   "output_identical": true,
+   "task-clock": 22.42,
+   "cycles_u": 61727327.0,
+   "cycles_k": 37427506.0,
+   "instructions_u": 155286643.0,
+   "page-faults": 9684.0,
+   "L1-dcache-load-misses_u": 300333.0,
+   "LLC-load-misses_u": 68103.0
+  },
+  "render": {
+   "output_identical": true,
+   "task-clock": 51.9,
+   "cycles_u": 138742006.0,
+   "cycles_k": 84864637.0,
+   "instructions_u": 360416811.0,
+   "page-faults": 21128.0,
+   "L1-dcache-load-misses_u": 527742.0,
+   "LLC-load-misses_u": 108890.0
+  }
+ },
+ "pall": {
+  "census": {
+   "output_identical": true,
+   "task-clock": 22.44,
+   "cycles_u": 62452243.0,
+   "cycles_k": 36465816.0,
+   "instructions_u": 154539559.0,
+   "page-faults": 9684.0,
+   "L1-dcache-load-misses_u": 292524.0,
+   "LLC-load-misses_u": 70846.0
+  },
+  "render": {
+   "output_identical": true,
+   "task-clock": 42.89,
+   "cycles_u": 121676084.0,
+   "cycles_k": 64124108.0,
+   "instructions_u": 309236267.0,
+   "page-faults": 16009.0,
+   "L1-dcache-load-misses_u": 586759.0,
+   "LLC-load-misses_u": 110499.0
+  }
+ },
+ "pres": {
+  "census": {
+   "output_identical": true,
+   "task-clock": 23.15,
+   "cycles_u": 62635793.0,
+   "cycles_k": 36432858.0,
+   "instructions_u": 154539557.0,
+   "page-faults": 9684.0,
+   "L1-dcache-load-misses_u": 285264.0,
+   "LLC-load-misses_u": 72867.0
+  },
+  "render": {
+   "output_identical": true,
+   "task-clock": 42.63,
+   "cycles_u": 115997122.0,
+   "cycles_k": 54296510.0,
+   "instructions_u": 309229265.0,
+   "page-faults": 13957.0,
+   "L1-dcache-load-misses_u": 470591.0,
+   "LLC-load-misses_u": 97810.0
+  }
+ }
+}

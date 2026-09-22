@@ -1,0 +1,20 @@
+The fix worked on the single run.
+
+**Change made** (`project/main.my`): removed the helper `banner`, which called bare `print("==", text)` with no `Stream` in scope — the cause of the `E_OUTPUT_CAPABILITY` rejection. The print now happens in `main(out: Stream)`, the entry point that receives the stream from the runtime, so no helper effect declaration is needed:
+
+```mylang
+module main
+
+
+def main(out: Stream) -> int:
+    out.print("==", "ok")
+    return 0
+```
+
+**Command run and result:**
+
+```
+$ bin/mylang run project/main.my
+== ok
+[exit code: 0]
+```

@@ -1,0 +1,8 @@
+{
+  "version": "m3-project-description-v1",
+  "name": "control",
+  "entry": "main.my",
+  "manifest": "verify.json",
+  "host": null,
+  "note": "offline negative control project: not part of the scored case pack"
+}

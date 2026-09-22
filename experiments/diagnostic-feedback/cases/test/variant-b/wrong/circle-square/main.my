@@ -1,0 +1,31 @@
+module main
+
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+union Shape:
+    circle(radius: int),
+    square(side: int)
+
+
+def area(shape: Shape) -> int:
+    match shape:
+        case Shape.circle(radius):
+            return radius * radius
+        case Shape.square(side):
+            return side * side
+
+
+def main(args: list[str], out: Stream) -> int:
+    size = number(args[1])
+    if args[0] == "circle":
+        out.print(area(Shape.circle(size)))
+    else:
+        out.print(area(Shape.square(size)))
+    return 0

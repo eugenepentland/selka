@@ -1,0 +1,14 @@
+Done. Summary:
+
+**What I changed** (`project/main.my`, only `main`): the bug was `out.print(1 + parse_count(args[0]))`, which added `int` to a `Result[int, str]` (`E_TYPE`). I replaced it with a `match` on `parse_count(args[0])`: `Ok(value)` prints `1 + value`, `Err(_)` prints `-1`. `parse_count` itself was left unchanged.
+
+**Command run and result:**
+```
+$ bin/mylang check project/main.my
+[exit 0, no diagnostics]
+
+$ bin/mylang run project/main.my -- 41   → 42
+$ bin/mylang run project/main.my -- 0    → 1
+$ bin/mylang run project/main.my -- abc  → -1
+```
+I also verified the built binary on edge cases (`-5`→-4, `+7`→8, `3.5`→-1, empty string→-1, out-of-range→-1, extra args ignored), then removed the binary/artifact files I had created so `main.my` is the only change.

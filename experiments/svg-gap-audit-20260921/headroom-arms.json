@@ -1,0 +1,176 @@
+{
+  "arms": {
+    "gc-lto": {
+      "binary": ".tmp/svg-arenas-20260921/gc-lto",
+      "sha256": "de1733408c0e3a9c69129bb166c122acb0ab572e201dff45c37bdd43a4a23210",
+      "bounded": false
+    },
+    "gc-lto-bounded": {
+      "binary": ".tmp/svg-arenas-20260921/gc-lto-bounded",
+      "sha256": "e5bbd804057112c9bd4b7c100b9aab09072e525b7dcc611d0321dc7c794c79c0",
+      "bounded": true
+    },
+    "rust-o3": {
+      "binary": ".tmp/full-svg-benchmark-20260921/rust-o3",
+      "sha256": "57a931f718fd234f54ec8b7775267eff6cac08c628308614d2502d483bccb39d",
+      "native": true
+    },
+    "go-fast": {
+      "binary": ".tmp/full-svg-benchmark-20260921/go-fast",
+      "sha256": "6e786ac6174b1996c0120ff0c51e9a7acb8e6de5e663808056558818583ced90",
+      "native": true
+    },
+    "zig-o3": {
+      "binary": ".tmp/full-svg-benchmark-20260921/zig-o3",
+      "sha256": "0a80f2fa747d033ef979110109a1fbc4155d738d76018c930738847b3f358a63",
+      "native": true
+    },
+    "host-metadata-control": {
+      "binary": ".tmp/svg-gap-audit-20260921/host/metadata-control",
+      "sha256": "83c903d0b1a6d1476831b9b8b1cb06fdb4bbfa044ca30247cbc2e918b15f5303"
+    },
+    "host-typed-host": {
+      "binary": ".tmp/svg-gap-audit-20260921/host/typed-host",
+      "sha256": "6327e4082e1abf5cafb216836203448fb3c34638ac5703bd317b31f9922fe347"
+    },
+    "aggregate-inline": {
+      "binary": ".tmp/svg-gap-audit-20260921/codegen/gc-lto-none-aggregate-inline",
+      "sha256": "21b49ad38327e6925d16c1bd9d9229f28e1c78fa1c7aed15d37cc2769b2b6af0",
+      "bounded": false
+    },
+    "aggregate-inline-bounded": {
+      "binary": ".tmp/svg-gap-audit-20260921/codegen/gc-lto-both-aggregate-inline",
+      "sha256": "1159e58ed27d7743dac37eb15af0dca17956f66e3f3b635368cc5ff57d9c1b13",
+      "bounded": true
+    },
+    "combined-control": {
+      "binary": ".tmp/svg-gap-audit-20260921/host/aggregate-inline-metadata-control",
+      "sha256": "dd51549a5ee557c7d983f0cc2c0b8278e91dcd2fd03a410e979562ceb8bbc111",
+      "bounded": false
+    },
+    "combined-typed": {
+      "binary": ".tmp/svg-gap-audit-20260921/host/aggregate-inline-typed-host",
+      "sha256": "f13c18e5d402b36c9e000c2b588354355b5a9eafcaeabfb56bfb31d5f2129431",
+      "bounded": false
+    },
+    "combined-control-bounded": {
+      "binary": ".tmp/svg-gap-audit-20260921/host/aggregate-inline-bounded-metadata-control",
+      "sha256": "5613818494a4bd8e480889e65133b6b0ab641406f6acb2b6bab78a356c0b7848",
+      "bounded": true
+    },
+    "combined-typed-bounded": {
+      "binary": ".tmp/svg-gap-audit-20260921/host/aggregate-inline-bounded-typed-host",
+      "sha256": "83a01d8110168eda4ac055ffaf1401726d7d92f3965a2c5e7e3c4ad1f3605377",
+      "bounded": true
+    },
+    "stack-ceiling": {
+      "binary": ".tmp/svg-gap-audit-20260921/frames/gc-lto-none-stack-ceiling",
+      "sha256": "bce4cf3d41a11b42c9b8ab34528c6737cac40fa26b17c51dc0f155e7aca652c8",
+      "bounded": false
+    },
+    "stack-ceiling-bounded": {
+      "binary": ".tmp/svg-gap-audit-20260921/frames/gc-lto-both-stack-ceiling",
+      "sha256": "8525cccd7acd46f1804f224804ef01ebc6e1950a2fc2382aad95eb3642415e59",
+      "bounded": true
+    }
+  },
+  "pairs": [
+    [
+      "aggregate-inline",
+      "gc-lto"
+    ],
+    [
+      "aggregate-inline-bounded",
+      "gc-lto-bounded"
+    ],
+    [
+      "stack-ceiling",
+      "gc-lto"
+    ],
+    [
+      "stack-ceiling-bounded",
+      "gc-lto-bounded"
+    ],
+    [
+      "combined-control",
+      "aggregate-inline"
+    ],
+    [
+      "combined-control-bounded",
+      "aggregate-inline-bounded"
+    ],
+    [
+      "combined-typed",
+      "combined-control"
+    ],
+    [
+      "combined-typed-bounded",
+      "combined-control-bounded"
+    ],
+    [
+      "combined-typed",
+      "host-typed-host"
+    ],
+    [
+      "combined-typed",
+      "gc-lto"
+    ],
+    [
+      "combined-typed-bounded",
+      "gc-lto-bounded"
+    ],
+    [
+      "host-typed-host",
+      "host-metadata-control"
+    ],
+    [
+      "gc-lto",
+      "rust-o3"
+    ],
+    [
+      "gc-lto",
+      "go-fast"
+    ],
+    [
+      "gc-lto",
+      "zig-o3"
+    ],
+    [
+      "aggregate-inline",
+      "rust-o3"
+    ],
+    [
+      "aggregate-inline",
+      "go-fast"
+    ],
+    [
+      "aggregate-inline",
+      "zig-o3"
+    ],
+    [
+      "combined-typed",
+      "rust-o3"
+    ],
+    [
+      "combined-typed",
+      "go-fast"
+    ],
+    [
+      "combined-typed",
+      "zig-o3"
+    ],
+    [
+      "stack-ceiling",
+      "rust-o3"
+    ],
+    [
+      "stack-ceiling",
+      "go-fast"
+    ],
+    [
+      "stack-ceiling",
+      "zig-o3"
+    ]
+  ],
+  "output": "headroom-measurements.json"
+}

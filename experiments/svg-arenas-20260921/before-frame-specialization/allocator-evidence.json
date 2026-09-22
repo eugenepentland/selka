@@ -1,0 +1,72 @@
+{
+  "compiler_sha256": "2dc07d5f71e5bd9d0c8b780536895113b8c04f11724a919a2de277ec1605157d",
+  "arms": {
+    "gc-o3": {
+      "binary_sha256": "3efd39c4b2380d28ea189deca23244f4e310ddd98a2cd8f3c080a2cc4befd89b",
+      "entry_symbol": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "allocator_related_calls": [
+        "myl_qbe_fail_frame",
+        "myl_qbe_heap",
+        "myl_qbe_root_mark"
+      ]
+    },
+    "gc-lto": {
+      "binary_sha256": "207186adc3e21f4df5079f7a4aab2ceb857ffb0674303cd64d75f91e30fc8929",
+      "entry_symbol": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "allocator_related_calls": []
+    },
+    "gc-bounded": {
+      "binary_sha256": "5c4eca26a831cbccd188f11c1e43761c74119923fa8c70d21414b1692ca332e5",
+      "entry_symbol": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "allocator_related_calls": [
+        "myl_qbe_fail_frame",
+        "myl_qbe_heap",
+        "myl_qbe_root_mark"
+      ]
+    },
+    "gc-lto-bounded": {
+      "binary_sha256": "cc91cb88da46e7b660f91b98de5187fa758655e547b1fb8077d8568b5e544849",
+      "entry_symbol": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "allocator_related_calls": [
+        "trace_frame"
+      ]
+    },
+    "arena-o3": {
+      "binary_sha256": "4bf1fc2e64092f13a3edd8fac99883f1c43442530f539dd70d630a5894697307",
+      "entry_symbol": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "allocator_related_calls": [
+        "myl_qbe_fail_frame",
+        "myl_qbe_heap",
+        "myl_qbe_region_begin",
+        "myl_qbe_region_mark",
+        "myl_qbe_region_restore",
+        "myl_qbe_root_mark"
+      ]
+    },
+    "arena-lto": {
+      "binary_sha256": "19d48452a57f0d3eeefc623bff0c6a10babbfc7166d5603f14a1787ce66297e3",
+      "entry_symbol": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "allocator_related_calls": []
+    },
+    "arena-bounded": {
+      "binary_sha256": "3260e541c3c9544e72956f2d6ac992be6666ece1b97166520d8938f02ce23faa",
+      "entry_symbol": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "allocator_related_calls": [
+        "myl_qbe_fail_frame",
+        "myl_qbe_heap",
+        "myl_qbe_region_begin",
+        "myl_qbe_region_mark",
+        "myl_qbe_region_restore",
+        "myl_qbe_root_mark"
+      ]
+    },
+    "arena-lto-bounded": {
+      "binary_sha256": "59b23e5832e66f84373428b1aba7b1326cb8b1d9370408e40e662c3f4065ccef",
+      "entry_symbol": "myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5",
+      "allocator_related_calls": [
+        "myl_qbe_region_restore",
+        "trace_frame"
+      ]
+    }
+  }
+}

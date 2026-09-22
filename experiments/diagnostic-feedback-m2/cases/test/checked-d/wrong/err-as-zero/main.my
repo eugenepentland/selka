@@ -1,0 +1,18 @@
+module main
+
+
+def as_count(raw: str) -> Result[int, str]:
+    match int(raw):
+        case Some(value):
+            return Ok(value)
+        case None:
+            return Err("not a number")
+
+
+def main(args: list[str], out: Stream) -> int:
+    match as_count(args[0] if args[0].lstrip("-").isdigit() else "0"):
+        case Ok(value):
+            out.print(7 + value)
+        case Err(_):
+            out.print(8)
+    return 0

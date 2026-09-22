@@ -1,0 +1,78 @@
+{
+  "binaries": {
+    "relinked": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/schematic-parity-20260921/relinked",
+      "sha256": "fce6a3362b4f03f6a17b63997b99a9784031c5ab9d0bae6d2e037e5786cdbfda",
+      "bytes": 2128184
+    },
+    "regenerated": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/schematic-parity-20260921/regenerated",
+      "sha256": "7e3ff2baaf2a578be32f4ed1ff3fbca7dacebfe806481d92bedf0860534630dd",
+      "bytes": 2128200
+    },
+    "stack": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/schematic-parity-20260921/stack",
+      "sha256": "337adcd4283f57601e14e3ae70c439fe5599d0bf482ac33871816c81427f7fab",
+      "bytes": 2128296
+    },
+    "prebind": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/schematic-parity-20260921/prebind",
+      "sha256": "b7f7f678c91c25799a6f26b4be67f371c4bec64349bca32e98f0b5166f047f4c",
+      "bytes": 2127952
+    },
+    "both": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/schematic-parity-20260921/both",
+      "sha256": "067356fa299056f7fcb871c6424eb702c8902ef7a29359947c2b3460fa2707bd",
+      "bytes": 2128024
+    },
+    "counts": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/schematic-parity-20260921/counts",
+      "sha256": "589cd50588e7c0615920f90d459a30a7ff28b6a3b03a4f0497e8a8acab32fcdf",
+      "bytes": 2128640
+    },
+    "whole-o3": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/schematic-parity-20260921/whole-o3",
+      "sha256": "118e1a0558e827456114723abbf86a70875526e949e2817e6ced9cf531186816",
+      "bytes": 2132616
+    },
+    "whole-both": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/schematic-parity-20260921/whole-both",
+      "sha256": "807a62c4038c695efe7e91fdfd90a79f812a8be9983f72184736a9b945ed501f",
+      "bytes": 2132456
+    }
+  },
+  "manifest_sha256": "9376335f1b8a59dfb7cd0d1db1f919542e05100fc2f89ae554f35e78bfcf5b97",
+  "compiler_sha256": "9dff0b952410129eaf1b3dd51a8acd737b99f26584391a1d52f28a4356ecd9c6",
+  "runtime": {
+    "path": "/home/epentland/ai/canopy/mylang/zig-out/lib/mylang-runtime/15d7a278e89f9d2babac150429f1a42bce6c15685322ad757ced588c49b4b847.a",
+    "sha256": "9fe72e2b4e62387d8168e2f6531d609514755c0f696f23d22562ca46042a7e5f"
+  },
+  "guest_sources": {
+    "src/schematic/guest/circuit.my": "a65904e502a6124b44afebb29aa7790d401763d648bf55f7b47d93c2fc09d347",
+    "src/schematic/guest/draw.my": "cc93575469d5869d5d010f5375b792f880d7b59e9c1fde0ab7f8bdb9c27aff39",
+    "src/schematic/guest/io.my": "b30320cff9c1b8e2af86b0027a7c9c4d8ceaa6cea75840a3882b80b99dcd0c8b",
+    "src/schematic/guest/layout.my": "1bfa68822a6cda93560cad3c4b1e1baddc00097e524442a7c7ccaaa0e093264d",
+    "src/schematic/guest/layout_graph.my": "ea27612d4b7711af91670e2f1b60947b529af26a203adeb8d76fe0fb887dc0b6",
+    "src/schematic/guest/layout_routes.my": "455f07a7eda921a14357384d8b0baa2c9dc7a0d4938418569e83602b65008837",
+    "src/schematic/guest/main.my": "2ce7ad379f1affa24a3350bf6926a261c686be830272e853f0cb51fc65ad68f5",
+    "src/schematic/guest/ports.my": "33af913725014537942feb1fd6f533328aed02a04ddd39a03c9fc33526d6e74a",
+    "src/schematic/guest/schematic.my": "673b41cf0c239d2ee4ab98c110d5187fa43036d4bdcbe0524c8c76cd47c6c979",
+    "src/schematic/guest/schematic_inputs.my": "1ee50b10f9ca81dbc9733bacecba7c92e94bbc00e4c0ea9b4a8f68c38eb378b0",
+    "src/schematic/guest/sexpr.my": "12ce2fe2008edceea05ec7e7d466eae32ff0545059c4fb7770edd530117958f6",
+    "src/schematic/guest/svg.my": "0d5f63bad11a284c6d42288854ad5af83aaf579978cfc878310c4465af558937",
+    "src/schematic/guest/text.my": "94588bbf7e8230c35b427e2617f2f2bb2c6f7d076412957016565ce31ba4076a",
+    "src/schematic/guest/validate.my": "b611d8ce0ba381fbe781a8f6ce99723b79f39d50fb346bfb02a62897c34701cb"
+  },
+  "inputs": {
+    "experiments/schematic/fixtures/lmx2595rhar.sexp": "a567d10222218cd0aceb075afce6279367ce0626c768a0b5e444944378869334",
+    "experiments/schematic/fixtures/spi.sexp": "797591a982b2e266790089259049bf18f7534b5c0d18f1a985038ea2b1f0b726",
+    "experiments/schematic/fixtures/straps-synth-lmx2595.sexp": "8681d12c988a9779a5072fe3070120dad0a15c6121c368d83329846a477a8479"
+  },
+  "bridge_sha256": "3f03c582dc87f72f77fbec6cfedebda67752c5c8f89496b8b0cb4347af965617",
+  "metadata_original_sha256": "f6e3cbfd6f01da8147eb400024843c0bcf4e518a2d5995d01cf54842bc81b5a6",
+  "metadata_regenerated_sha256": "0b15f854f2ea6c1b8bd071aec00890d94f300c9543bcac202028a7f5b89a0bdb",
+  "whole_ir_sha256": "9d27b8a128c91162f7740ea9104f6555caa1af45b32ad9136b5f82f4ddaf1100",
+  "zig": "0.17.0-dev.1683+5ceec001b",
+  "revision": "b8f6ec3f1178f12971e7dcb1d2255ab8c055b024",
+  "working_tree": " M README.md\n M SPEC.md\n M build.zig\n M docs/audits/agent-usefulness-implementation-plan-2026-09-20.md\n M docs/audits/figures/backend-incremental-2026-09-20.png\n M docs/audits/llvm-backend-experiment-results-2026-09-19.md\n M docs/audits/llvm-backend-qualification-2026-09-20.md\n M docs/current-language.md\n M docs/modules.md\n M docs/python-syntax.md\n M docs/text.md\n M docs/tooling/lint.md\n M docs/tooling/navigation.md\n M docs/typed-holes.md\n M docs/typed-json.md\n M experiments/sexpr-audit/evidence/audit.json\n M experiments/sexpr-port/sexpr/parser.my\n M experiments/sexpr-port/sexpr/tokenizer.my\n M scripts/navigate.py\n M scripts/store_server.py\n M src/buffer_operations.zig\n M src/bytecode.zig\n M src/collection_lower.zig\n M src/compiler.zig\n M src/diagnostic.zig\n M src/diagnostic_output.zig\n M src/doctest_command.zig\n M src/features.json\n M src/generic_bodies.zig\n M src/interfaces.zig\n M src/interfaces_test.zig\n M src/lint.zig\n M src/lint_test.zig\n M src/main.zig\n M src/native_bytes.c\n M src/native_test_directory.zig\n M src/native_test_wire.zig\n M src/native_text_methods.c\n M src/navigation.zig\n M src/navigation_partial.zig\n M src/navigation_test.zig\n M src/parser.zig\n M src/prelude_builtins.zig\n M src/project.zig\n M src/python_core_test.zig\n M src/qbe_build_io.zig\n M src/qbe_build_shapes.zig\n M src/qbe_build_templates.zig\n M src/qbe_bytes.zig\n M src/qbe_codecs_runtime.c\n M src/qbe_text.zig\n M src/qbe_wire.zig\n M src/root_test.zig\n M src/sema.zig\n M src/typed_holes_test.zig\n M test/integration.zig\n M tests/idiom_probes.py\n M velocity/README.md\n M velocity/friction/classifier.json\n M velocity/suites/idioms/manifest.json\n?? SPEC.md.orig\n?? docs/audits/agent-usefulness-reports/\n?? docs/audits/cascading-levers-2026-09-21.md\n?? docs/audits/elegant-language-design-research-2026-09-21-evidence.json\n?? docs/audits/elegant-language-design-research-2026-09-21.md\n?? docs/audits/llvm-arena-parity-gap-2026-09-20.md\n?? docs/audits/llvm-zig-parity-2026-09-20.md\n?? docs/reference.md\n?? docs/tooling/agent-context.md\n?? docs/tooling/invoke.md\n?? examples/invoke-report/\n?? experiments/cascade/\n?? experiments/diagnostic-feedback-m2/\n?? experiments/diagnostic-feedback/\n?? experiments/elegance-metrics/\n?? experiments/language-performance-audit-20260920/\n?? experiments/llvm-backend/\n?? experiments/llvm-parity-audit-20260920/\n?? experiments/parity-audit-20260920/\n?? experiments/project-invocation-m3/\n?? experiments/schematic-parity-audit-20260921/\n?? experiments/sexpr-audit/evidence/hot-loops/trapdiff/recursion.my\n?? experiments/sexpr-audit/evidence/next-2x-20260919/\n?? experiments/ssa-audit/\n?? experiments/struct-layout-audit-20260920/\n?? src/bytecode_inline.zig.orig\n?? src/bytecode_inline_test.zig.orig\n?? src/context.zig\n?? src/context_test.zig\n?? src/declaration_hints_test.zig\n?? src/fact_status.zig\n?? src/friction_log.zig\n?? src/friction_log_test.zig\n?? src/headerless_import_test.zig\n?? src/invoke_command.zig\n?? src/lint_reach_test.zig\n?? src/prelude_scalar_test.zig\n?? src/qbe.zig.orig\n?? src/qbe_test.zig.orig\n?? src/reference.zig\n?? src/reference_command.zig\n?? src/reference_test.zig\n?? src/reference_text.zig\n?? tests/lang/python_split_scalar.my\n?? tests/parser_hints.py\n?? tests/test_friction_harvest.py\n?? velocity/friction/README.md\n?? velocity/friction/harvest.py\n?? velocity/friction/session-2026-09-20.jsonl\n?? velocity/score.py\n?? velocity/suites/idioms/score-D1D2S1.json\n?? velocity/suites/idioms/score-baseline-2026-09-20.json\n?? zigw\n"
+}

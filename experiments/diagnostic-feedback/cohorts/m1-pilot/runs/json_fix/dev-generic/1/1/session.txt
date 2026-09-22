@@ -1,0 +1,11 @@
+Fixed `project/main.my`: the checker rejected `def largest[T: Ordered](values: list[int]) -> int` with `E_GENERIC_REQUIREMENT` — `Ordered` isn't a requirement this compiler knows, and the type parameter `T` was unused. I removed the unused generic parameter, changing only that one line:
+
+```mylang
+def largest(values: list[int]) -> int:
+```
+
+Verification:
+
+- `bin/mylang check project/main.my` → exit 0, no diagnostics.
+- `bin/mylang run project/main.my -- 1 3 2` → `3`; `bin/mylang run project/main.my -- 5 5 5` → `5` (both match `public/expected.json`).
+- Also built the program natively once and ran 12 edge cases (max in each position, all-equal, all-negative, mixed sign, values beyond 32 bits): all returned the numeric maximum, then removed the temporary binary and its manifest.

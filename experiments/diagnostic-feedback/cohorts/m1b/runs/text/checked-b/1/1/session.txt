@@ -1,0 +1,9 @@
+**What changed:** In `project/main.my`, `main` still calls `read_number` but now matches on the returned `Result` instead of passing it to `0 + value` (which was `E_TYPE: expected int, found Result[int, str]`). `Ok(value)` prints `0 + value`; `Err(_)` prints `-99`. `read_number` is untouched.
+
+**Commands and results:**
+
+- `./bin/mylang check project/main.my` → exit 0, no diagnostics (before the fix it reported `main.my:14:17: error[E_TYPE]`).
+- `./bin/mylang run project/main.my -- 41` → `41` (stdout bytes `41\n`), exit 0 — matches `public/expected.json`.
+- `./bin/mylang run project/main.my -- 0` → `0` (stdout bytes `0\n`), exit 0 — matches `public/expected.json`.
+
+Additional checks: `abc`, `3.5`, `""` and an out-of-range literal → `-99`; `-7` → `-7`; `+5` → `5`; `9223372036854775807` → itself; all exit 0. Used 17 of the 20 allowed compiler invocations.

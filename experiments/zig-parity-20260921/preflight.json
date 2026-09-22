@@ -1,0 +1,90 @@
+[
+  {
+    "arm": "mylang-o3",
+    "input": "input.sexp",
+    "mode": [],
+    "seconds": 0.005341639998732717,
+    "status": 0,
+    "stderr": "",
+    "output_bytes": 118,
+    "stdout_sha256": "f4178a68773c1ada93ec1e9051b25a1f77a9f70d688e507783aeee897cc8b137"
+  },
+  {
+    "arm": "mylang-o3",
+    "input": "input.sexp",
+    "mode": [
+      "--render"
+    ],
+    "seconds": 0.010705349999625469,
+    "status": 0,
+    "stderr": "",
+    "output_bytes": 700425,
+    "stdout_sha256": "78a74270e2ec8842471e8e1ec5f94c8a42c631f0addec5ac2ec4bb97870240a7"
+  },
+  {
+    "arm": "mylang-o3",
+    "input": "input8.sexp",
+    "mode": [],
+    "seconds": 0.03619073899972136,
+    "status": 0,
+    "stderr": "",
+    "output_bytes": 124,
+    "stdout_sha256": "969242c9729df7567a1e9d236aec504aa7bba8a9356ac8f12205da505696782f"
+  },
+  {
+    "arm": "mylang-o3",
+    "input": "input8.sexp",
+    "mode": [
+      "--render"
+    ],
+    "seconds": 0.062151479000021936,
+    "status": 0,
+    "stderr": "",
+    "output_bytes": 5603400,
+    "stdout_sha256": "e8c07a29632c947f031988034b44a63effea51fb93754461f5450a5daeb223dc"
+  },
+  {
+    "arm": "mylang-o3-lto",
+    "input": "input.sexp",
+    "mode": [],
+    "seconds": 0.005908888999329065,
+    "status": 0,
+    "stderr": "",
+    "output_bytes": 118,
+    "stdout_sha256": "f4178a68773c1ada93ec1e9051b25a1f77a9f70d688e507783aeee897cc8b137"
+  },
+  {
+    "arm": "mylang-o3-lto",
+    "input": "input.sexp",
+    "mode": [
+      "--render"
+    ],
+    "seconds": 0.010233779001282528,
+    "status": 0,
+    "stderr": "",
+    "output_bytes": 700425,
+    "stdout_sha256": "78a74270e2ec8842471e8e1ec5f94c8a42c631f0addec5ac2ec4bb97870240a7"
+  },
+  {
+    "arm": "mylang-o3-lto",
+    "input": "input8.sexp",
+    "mode": [],
+    "seconds": 0.035387407000598614,
+    "status": 0,
+    "stderr": "",
+    "output_bytes": 124,
+    "stdout_sha256": "969242c9729df7567a1e9d236aec504aa7bba8a9356ac8f12205da505696782f"
+  },
+  {
+    "arm": "mylang-o3-lto",
+    "input": "input8.sexp",
+    "mode": [
+      "--render"
+    ],
+    "seconds": 0.06532129200058989,
+    "status": 0,
+    "stderr": "",
+    "output_bytes": 5603400,
+    "stdout_sha256": "e8c07a29632c947f031988034b44a63effea51fb93754461f5450a5daeb223dc"
+  }
+]

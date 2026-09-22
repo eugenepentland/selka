@@ -1,0 +1,5 @@
+def parse(b: bytes, start: int, end: int) -> Option[int]:
+    return b.view(start, end).parse_int()
+
+def main() -> int:
+    return 0

@@ -1,0 +1,8 @@
+Done.
+
+**What I changed:** In `project/main.my`, `main` was adding `1` directly to a `Result[int, str]` (the `E_TYPE` error). I replaced the print with a `match` on `parse_count(args[0])`: `case Ok(value)` prints `1 + value`, and `case Err(_)` prints `-1`. `parse_count` itself was left unchanged.
+
+**Command run and result:**
+- `bin/mylang check project/main.my` → exit 0, no diagnostics.
+- `bin/mylang run project/main.my -- 41` → `42` (exit 0); `bin/mylang run project/main.my -- 0` → `1` (exit 0), matching `public/expected.json`.
+- Also verified non-integers (`abc`, `3.14`, `1e3`, `""`, out-of-range integer) print `-1`, while `-5` → `-4`, `007` → `8`, `+12` → `13`, `2147483647` → `2147483648`.

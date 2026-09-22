@@ -1,0 +1,31 @@
+All cases pass, including equality and negatives. (17 of 20 compiler invocations used; no further runs needed.)
+
+**What changed:** In `project/main.my`, `above` returned the comparison `a > b` directly from an `int`-returning function. mylang rejects that — `E_TYPE: expected int, found bool` — since booleans are not integers. I made it return an explicit integer:
+
+```python
+def above(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+(I first tried the compiler's suggested `return 1 if a > b else 0`, but this language's parser rejects a conditional expression in a `return`, so I used an `if` statement.)
+
+**Command and result:**
+
+```
+cd project && ../bin/mylang check main.my && for pair in "5 2" "2 5" "3 3" "0 0" "-1 -5" "10 9" "-5 -1"; do printf '[%s] -> ' "$pair"; ../bin/mylang run main.my -- $pair; done
+```
+
+```
+CHECK OK
+[5 2] -> 1
+[2 5] -> 0
+[3 3] -> 0
+[0 0] -> 0
+[-1 -5] -> 1
+[10 9] -> 1
+[-5 -1] -> 0
+```
+
+This matches `public/expected.json` (`5 2` → `1`, `2 5` → `0`) and holds for the general case, including equal and negative arguments.

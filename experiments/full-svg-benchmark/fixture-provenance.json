@@ -1,0 +1,299 @@
+{
+  "schema": "full-svg-fixtures-v1",
+  "source_policy": "frozen benchmark documents plus the minimal live EDA component and part resolution closure; no EDA files modified",
+  "expected_model": {
+    "components": 30,
+    "connected_pins": 95,
+    "nets": 34,
+    "ports": 9,
+    "visible_ic_pins": 37,
+    "passives": 29
+  },
+  "variants": {
+    "fixture": {
+      "project": ".tmp/full-svg-benchmark-20260921/projects/fixture",
+      "circuit": "lib/modules/straps-synth-lmx2595.sexp",
+      "pinout": "lib/pinouts/lmx2595rhar.sexp",
+      "interface": "lib/interfaces/spi.sexp",
+      "transformations": [],
+      "files": [
+        {
+          "destination": "lib/modules/straps-synth-lmx2595.sexp",
+          "source": "mylang/experiments/schematic/fixtures/straps-synth-lmx2595.sexp",
+          "source_sha256": "8681d12c988a9779a5072fe3070120dad0a15c6121c368d83329846a477a8479",
+          "staged_sha256": "8681d12c988a9779a5072fe3070120dad0a15c6121c368d83329846a477a8479",
+          "bytes": 24481
+        },
+        {
+          "destination": "lib/pinouts/lmx2595rhar.sexp",
+          "source": "mylang/experiments/schematic/fixtures/lmx2595rhar.sexp",
+          "source_sha256": "a567d10222218cd0aceb075afce6279367ce0626c768a0b5e444944378869334",
+          "staged_sha256": "a567d10222218cd0aceb075afce6279367ce0626c768a0b5e444944378869334",
+          "bytes": 931
+        },
+        {
+          "destination": "lib/interfaces/spi.sexp",
+          "source": "mylang/experiments/schematic/fixtures/spi.sexp",
+          "source_sha256": "797591a982b2e266790089259049bf18f7534b5c0d18f1a985038ea2b1f0b726",
+          "staged_sha256": "797591a982b2e266790089259049bf18f7534b5c0d18f1a985038ea2b1f0b726",
+          "bytes": 433
+        },
+        {
+          "destination": "lib/components/lmx2595rhar.sexp",
+          "source": "eda/projects/designs/lib/components/lmx2595rhar.sexp",
+          "source_sha256": "23768bff4f3a6ffe0d5d6654e5de842a42354de3179cbe5f17c1714649f2b682",
+          "staged_sha256": "23768bff4f3a6ffe0d5d6654e5de842a42354de3179cbe5f17c1714649f2b682",
+          "bytes": 24285
+        },
+        {
+          "destination": "lib/components/cap-0402.sexp",
+          "source": "eda/projects/designs/lib/components/cap-0402.sexp",
+          "source_sha256": "1349aae67a828d0daf02131f34f40470ed2bf14fb66f772db8dc1a74522445a8",
+          "staged_sha256": "1349aae67a828d0daf02131f34f40470ed2bf14fb66f772db8dc1a74522445a8",
+          "bytes": 153
+        },
+        {
+          "destination": "lib/components/cap-0603.sexp",
+          "source": "eda/projects/designs/lib/components/cap-0603.sexp",
+          "source_sha256": "7ea09312ef0141ecd51f10c1e643e4e7d5a41646e646fd3f88233e81317fbda6",
+          "staged_sha256": "7ea09312ef0141ecd51f10c1e643e4e7d5a41646e646fd3f88233e81317fbda6",
+          "bytes": 146
+        },
+        {
+          "destination": "lib/components/res-0402.sexp",
+          "source": "eda/projects/designs/lib/components/res-0402.sexp",
+          "source_sha256": "c9474775b2dc6f997546924470e977100e27076ba57d39f23ff832d080e8b747",
+          "staged_sha256": "c9474775b2dc6f997546924470e977100e27076ba57d39f23ff832d080e8b747",
+          "bytes": 178
+        },
+        {
+          "destination": "lib/components/ind-0402.sexp",
+          "source": "eda/projects/designs/lib/components/ind-0402.sexp",
+          "source_sha256": "2283d7bda7c66cae435389f2ecc5627c43db1d7339c9f15ec5644d1523c7852f",
+          "staged_sha256": "2283d7bda7c66cae435389f2ecc5627c43db1d7339c9f15ec5644d1523c7852f",
+          "bytes": 152
+        },
+        {
+          "destination": "lib/parts/cap-0402.sexp",
+          "source": "eda/projects/designs/lib/parts/cap-0402.sexp",
+          "source_sha256": "d5ea54f151580a2e21b6e5803c6d24ec63b4e53d1dd3e05d5ced69d91e7bbf10",
+          "staged_sha256": "d5ea54f151580a2e21b6e5803c6d24ec63b4e53d1dd3e05d5ced69d91e7bbf10",
+          "bytes": 11906
+        },
+        {
+          "destination": "lib/parts/cap-0603.sexp",
+          "source": "eda/projects/designs/lib/parts/cap-0603.sexp",
+          "source_sha256": "dbf3829fe9c1b34b5f7b5dd236a9251f5f50029b0e10dd07760d130f2b506bc5",
+          "staged_sha256": "dbf3829fe9c1b34b5f7b5dd236a9251f5f50029b0e10dd07760d130f2b506bc5",
+          "bytes": 4340
+        },
+        {
+          "destination": "lib/parts/res-0402.sexp",
+          "source": "eda/projects/designs/lib/parts/res-0402.sexp",
+          "source_sha256": "190d13a132e379af6565c6ed6882764ecb97dd6dfafbfe160cf64a9f2eb81a3e",
+          "staged_sha256": "190d13a132e379af6565c6ed6882764ecb97dd6dfafbfe160cf64a9f2eb81a3e",
+          "bytes": 13925
+        },
+        {
+          "destination": "lib/parts/ind-0402.sexp",
+          "source": "eda/projects/designs/lib/parts/ind-0402.sexp",
+          "source_sha256": "0b0e27f2eb79e29c900f3c2d99e39ba16fdefd3d3d9a9ee6aed36927baf73b23",
+          "staged_sha256": "0b0e27f2eb79e29c900f3c2d99e39ba16fdefd3d3d9a9ee6aed36927baf73b23",
+          "bytes": 558
+        }
+      ]
+    },
+    "changed-net": {
+      "project": ".tmp/full-svg-benchmark-20260921/projects/changed-net",
+      "circuit": "lib/modules/straps-synth-lmx2595.sexp",
+      "pinout": "lib/pinouts/lmx2595rhar.sexp",
+      "interface": "lib/interfaces/spi.sexp",
+      "transformations": [
+        "replace every 'LMX_CE' with 'LMX_CE_BENCH' (3 occurrences)"
+      ],
+      "files": [
+        {
+          "destination": "lib/modules/straps-synth-lmx2595.sexp",
+          "source": "mylang/experiments/schematic/fixtures/straps-synth-lmx2595.sexp",
+          "source_sha256": "8681d12c988a9779a5072fe3070120dad0a15c6121c368d83329846a477a8479",
+          "staged_sha256": "fcc8513115b252ef1d3bc03adc5d4e310b5d653a0d964a4fc935952799a51001",
+          "bytes": 24499,
+          "transform": "replace every 'LMX_CE' with 'LMX_CE_BENCH' (3 occurrences)"
+        },
+        {
+          "destination": "lib/pinouts/lmx2595rhar.sexp",
+          "source": "mylang/experiments/schematic/fixtures/lmx2595rhar.sexp",
+          "source_sha256": "a567d10222218cd0aceb075afce6279367ce0626c768a0b5e444944378869334",
+          "staged_sha256": "a567d10222218cd0aceb075afce6279367ce0626c768a0b5e444944378869334",
+          "bytes": 931
+        },
+        {
+          "destination": "lib/interfaces/spi.sexp",
+          "source": "mylang/experiments/schematic/fixtures/spi.sexp",
+          "source_sha256": "797591a982b2e266790089259049bf18f7534b5c0d18f1a985038ea2b1f0b726",
+          "staged_sha256": "797591a982b2e266790089259049bf18f7534b5c0d18f1a985038ea2b1f0b726",
+          "bytes": 433
+        },
+        {
+          "destination": "lib/components/lmx2595rhar.sexp",
+          "source": "eda/projects/designs/lib/components/lmx2595rhar.sexp",
+          "source_sha256": "23768bff4f3a6ffe0d5d6654e5de842a42354de3179cbe5f17c1714649f2b682",
+          "staged_sha256": "23768bff4f3a6ffe0d5d6654e5de842a42354de3179cbe5f17c1714649f2b682",
+          "bytes": 24285
+        },
+        {
+          "destination": "lib/components/cap-0402.sexp",
+          "source": "eda/projects/designs/lib/components/cap-0402.sexp",
+          "source_sha256": "1349aae67a828d0daf02131f34f40470ed2bf14fb66f772db8dc1a74522445a8",
+          "staged_sha256": "1349aae67a828d0daf02131f34f40470ed2bf14fb66f772db8dc1a74522445a8",
+          "bytes": 153
+        },
+        {
+          "destination": "lib/components/cap-0603.sexp",
+          "source": "eda/projects/designs/lib/components/cap-0603.sexp",
+          "source_sha256": "7ea09312ef0141ecd51f10c1e643e4e7d5a41646e646fd3f88233e81317fbda6",
+          "staged_sha256": "7ea09312ef0141ecd51f10c1e643e4e7d5a41646e646fd3f88233e81317fbda6",
+          "bytes": 146
+        },
+        {
+          "destination": "lib/components/res-0402.sexp",
+          "source": "eda/projects/designs/lib/components/res-0402.sexp",
+          "source_sha256": "c9474775b2dc6f997546924470e977100e27076ba57d39f23ff832d080e8b747",
+          "staged_sha256": "c9474775b2dc6f997546924470e977100e27076ba57d39f23ff832d080e8b747",
+          "bytes": 178
+        },
+        {
+          "destination": "lib/components/ind-0402.sexp",
+          "source": "eda/projects/designs/lib/components/ind-0402.sexp",
+          "source_sha256": "2283d7bda7c66cae435389f2ecc5627c43db1d7339c9f15ec5644d1523c7852f",
+          "staged_sha256": "2283d7bda7c66cae435389f2ecc5627c43db1d7339c9f15ec5644d1523c7852f",
+          "bytes": 152
+        },
+        {
+          "destination": "lib/parts/cap-0402.sexp",
+          "source": "eda/projects/designs/lib/parts/cap-0402.sexp",
+          "source_sha256": "d5ea54f151580a2e21b6e5803c6d24ec63b4e53d1dd3e05d5ced69d91e7bbf10",
+          "staged_sha256": "d5ea54f151580a2e21b6e5803c6d24ec63b4e53d1dd3e05d5ced69d91e7bbf10",
+          "bytes": 11906
+        },
+        {
+          "destination": "lib/parts/cap-0603.sexp",
+          "source": "eda/projects/designs/lib/parts/cap-0603.sexp",
+          "source_sha256": "dbf3829fe9c1b34b5f7b5dd236a9251f5f50029b0e10dd07760d130f2b506bc5",
+          "staged_sha256": "dbf3829fe9c1b34b5f7b5dd236a9251f5f50029b0e10dd07760d130f2b506bc5",
+          "bytes": 4340
+        },
+        {
+          "destination": "lib/parts/res-0402.sexp",
+          "source": "eda/projects/designs/lib/parts/res-0402.sexp",
+          "source_sha256": "190d13a132e379af6565c6ed6882764ecb97dd6dfafbfe160cf64a9f2eb81a3e",
+          "staged_sha256": "190d13a132e379af6565c6ed6882764ecb97dd6dfafbfe160cf64a9f2eb81a3e",
+          "bytes": 13925
+        },
+        {
+          "destination": "lib/parts/ind-0402.sexp",
+          "source": "eda/projects/designs/lib/parts/ind-0402.sexp",
+          "source_sha256": "0b0e27f2eb79e29c900f3c2d99e39ba16fdefd3d3d9a9ee6aed36927baf73b23",
+          "staged_sha256": "0b0e27f2eb79e29c900f3c2d99e39ba16fdefd3d3d9a9ee6aed36927baf73b23",
+          "bytes": 558
+        }
+      ]
+    },
+    "changed-value": {
+      "project": ".tmp/full-svg-benchmark-20260921/projects/changed-value",
+      "circuit": "lib/modules/straps-synth-lmx2595.sexp",
+      "pinout": "lib/pinouts/lmx2595rhar.sexp",
+      "interface": "lib/interfaces/spi.sexp",
+      "transformations": [
+        "replace every '390pF' with '470pF' (1 occurrences)"
+      ],
+      "files": [
+        {
+          "destination": "lib/modules/straps-synth-lmx2595.sexp",
+          "source": "mylang/experiments/schematic/fixtures/straps-synth-lmx2595.sexp",
+          "source_sha256": "8681d12c988a9779a5072fe3070120dad0a15c6121c368d83329846a477a8479",
+          "staged_sha256": "c1f8068fd9e2cb2f696a36bfa27451393a1ccb2da63806d6a79a43dca81ab0b6",
+          "bytes": 24481,
+          "transform": "replace every '390pF' with '470pF' (1 occurrences)"
+        },
+        {
+          "destination": "lib/pinouts/lmx2595rhar.sexp",
+          "source": "mylang/experiments/schematic/fixtures/lmx2595rhar.sexp",
+          "source_sha256": "a567d10222218cd0aceb075afce6279367ce0626c768a0b5e444944378869334",
+          "staged_sha256": "a567d10222218cd0aceb075afce6279367ce0626c768a0b5e444944378869334",
+          "bytes": 931
+        },
+        {
+          "destination": "lib/interfaces/spi.sexp",
+          "source": "mylang/experiments/schematic/fixtures/spi.sexp",
+          "source_sha256": "797591a982b2e266790089259049bf18f7534b5c0d18f1a985038ea2b1f0b726",
+          "staged_sha256": "797591a982b2e266790089259049bf18f7534b5c0d18f1a985038ea2b1f0b726",
+          "bytes": 433
+        },
+        {
+          "destination": "lib/components/lmx2595rhar.sexp",
+          "source": "eda/projects/designs/lib/components/lmx2595rhar.sexp",
+          "source_sha256": "23768bff4f3a6ffe0d5d6654e5de842a42354de3179cbe5f17c1714649f2b682",
+          "staged_sha256": "23768bff4f3a6ffe0d5d6654e5de842a42354de3179cbe5f17c1714649f2b682",
+          "bytes": 24285
+        },
+        {
+          "destination": "lib/components/cap-0402.sexp",
+          "source": "eda/projects/designs/lib/components/cap-0402.sexp",
+          "source_sha256": "1349aae67a828d0daf02131f34f40470ed2bf14fb66f772db8dc1a74522445a8",
+          "staged_sha256": "1349aae67a828d0daf02131f34f40470ed2bf14fb66f772db8dc1a74522445a8",
+          "bytes": 153
+        },
+        {
+          "destination": "lib/components/cap-0603.sexp",
+          "source": "eda/projects/designs/lib/components/cap-0603.sexp",
+          "source_sha256": "7ea09312ef0141ecd51f10c1e643e4e7d5a41646e646fd3f88233e81317fbda6",
+          "staged_sha256": "7ea09312ef0141ecd51f10c1e643e4e7d5a41646e646fd3f88233e81317fbda6",
+          "bytes": 146
+        },
+        {
+          "destination": "lib/components/res-0402.sexp",
+          "source": "eda/projects/designs/lib/components/res-0402.sexp",
+          "source_sha256": "c9474775b2dc6f997546924470e977100e27076ba57d39f23ff832d080e8b747",
+          "staged_sha256": "c9474775b2dc6f997546924470e977100e27076ba57d39f23ff832d080e8b747",
+          "bytes": 178
+        },
+        {
+          "destination": "lib/components/ind-0402.sexp",
+          "source": "eda/projects/designs/lib/components/ind-0402.sexp",
+          "source_sha256": "2283d7bda7c66cae435389f2ecc5627c43db1d7339c9f15ec5644d1523c7852f",
+          "staged_sha256": "2283d7bda7c66cae435389f2ecc5627c43db1d7339c9f15ec5644d1523c7852f",
+          "bytes": 152
+        },
+        {
+          "destination": "lib/parts/cap-0402.sexp",
+          "source": "eda/projects/designs/lib/parts/cap-0402.sexp",
+          "source_sha256": "d5ea54f151580a2e21b6e5803c6d24ec63b4e53d1dd3e05d5ced69d91e7bbf10",
+          "staged_sha256": "d5ea54f151580a2e21b6e5803c6d24ec63b4e53d1dd3e05d5ced69d91e7bbf10",
+          "bytes": 11906
+        },
+        {
+          "destination": "lib/parts/cap-0603.sexp",
+          "source": "eda/projects/designs/lib/parts/cap-0603.sexp",
+          "source_sha256": "dbf3829fe9c1b34b5f7b5dd236a9251f5f50029b0e10dd07760d130f2b506bc5",
+          "staged_sha256": "dbf3829fe9c1b34b5f7b5dd236a9251f5f50029b0e10dd07760d130f2b506bc5",
+          "bytes": 4340
+        },
+        {
+          "destination": "lib/parts/res-0402.sexp",
+          "source": "eda/projects/designs/lib/parts/res-0402.sexp",
+          "source_sha256": "190d13a132e379af6565c6ed6882764ecb97dd6dfafbfe160cf64a9f2eb81a3e",
+          "staged_sha256": "190d13a132e379af6565c6ed6882764ecb97dd6dfafbfe160cf64a9f2eb81a3e",
+          "bytes": 13925
+        },
+        {
+          "destination": "lib/parts/ind-0402.sexp",
+          "source": "eda/projects/designs/lib/parts/ind-0402.sexp",
+          "source_sha256": "0b0e27f2eb79e29c900f3c2d99e39ba16fdefd3d3d9a9ee6aed36927baf73b23",
+          "staged_sha256": "0b0e27f2eb79e29c900f3c2d99e39ba16fdefd3d3d9a9ee6aed36927baf73b23",
+          "bytes": 558
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,13 @@
+**What I changed:** In `project/main.my` I removed the invalid generic requirement from `largest` — the signature `def largest[T: Ordered](values: list[int]) -> int:` was rejected with `E_GENERIC_REQUIREMENT` because `Ordered` is not a known requirement. It is now `def largest(values: list[int]) -> int:`. The function already returned the maximum correctly, so no other changes were needed.
+
+**Command and result:**
+
+```
+$ bin/mylang check project/main.my        # no output, exit 0
+$ bin/mylang run project/main.my -- 1 3 2
+3
+$ bin/mylang run project/main.my -- 5 5 5
+5
+```
+
+Also verified both `public/expected.json` cases match exactly, plus extra cases `-7 -2 -9` → `-2` and `10 2 30` → `30`.

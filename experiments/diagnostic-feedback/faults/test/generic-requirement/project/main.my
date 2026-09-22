@@ -1,0 +1,10 @@
+module main
+
+
+def pick[T: Sortable](values: list[int], index: int) -> int:
+    return values[index]
+
+
+def main(out: Stream) -> int:
+    out.print(pick([4, 9, 1], 1))
+    return 0

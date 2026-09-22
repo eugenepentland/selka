@@ -1,0 +1,90 @@
+{
+  "scope": "7,419,320-byte input; separate /usr/bin/time maximum resident set samples; not wall-time samples",
+  "samples_per_case": 5,
+  "results": {
+    "census": {
+      "zig": {
+        "max_rss_kib_samples": [
+          16924,
+          16924,
+          16924,
+          16924,
+          16924
+        ],
+        "median_max_rss_kib": 16924
+      },
+      "zig-safe": {
+        "max_rss_kib_samples": [
+          16804,
+          16804,
+          16804,
+          16804,
+          16804
+        ],
+        "median_max_rss_kib": 16804
+      },
+      "mylang-o3": {
+        "max_rss_kib_samples": [
+          30024,
+          29980,
+          30032,
+          29852,
+          30120
+        ],
+        "median_max_rss_kib": 30024
+      },
+      "mylang-o3-lto": {
+        "max_rss_kib_samples": [
+          29980,
+          29980,
+          29972,
+          29968,
+          30008
+        ],
+        "median_max_rss_kib": 29980
+      }
+    },
+    "render": {
+      "zig": {
+        "max_rss_kib_samples": [
+          22524,
+          22524,
+          22524,
+          22524,
+          22524
+        ],
+        "median_max_rss_kib": 22524
+      },
+      "zig-safe": {
+        "max_rss_kib_samples": [
+          22404,
+          22404,
+          22404,
+          22404,
+          22404
+        ],
+        "median_max_rss_kib": 22404
+      },
+      "mylang-o3": {
+        "max_rss_kib_samples": [
+          55504,
+          55616,
+          55468,
+          55632,
+          55392
+        ],
+        "median_max_rss_kib": 55504
+      },
+      "mylang-o3-lto": {
+        "max_rss_kib_samples": [
+          55480,
+          55584,
+          55396,
+          55452,
+          55428
+        ],
+        "median_max_rss_kib": 55452
+      }
+    }
+  }
+}

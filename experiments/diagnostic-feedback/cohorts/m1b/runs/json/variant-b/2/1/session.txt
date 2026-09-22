@@ -1,0 +1,15 @@
+All inputs behave correctly: circle returns 3·r·r (0→0, 1→3, 5→75, 100→30000) and square returns r·r (0→0, 1→1, 7→49, 100→10000).
+
+**What I changed:** In `project/main.my`, the `match shape:` in `area` only had the `Shape.circle(radius)` arm, so the checker rejected it with `E_INCOMPLETE_MATCH`. I added the missing arm:
+
+```python
+        case Shape.square(side):
+            return side * side
+```
+
+No other changes were needed — the circle arm already computed `3 * radius * radius`.
+
+**Exact commands and results:**
+- `bin/mylang check project/main.my` → exit code 0 (was exit 1 with `E_INCOMPLETE_MATCH` before the fix)
+- `bin/mylang run project/main.my -- circle 2` → `12`, exit 0 (matches `public/expected.json`)
+- `bin/mylang run project/main.my -- square 3` → `9`, exit 0 (matches `public/expected.json`)

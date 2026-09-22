@@ -1,0 +1,20 @@
+Done. The bug was in `main`: it tried to arithmetically add the `Result` returned by `to_int` instead of unwrapping it (`E_TYPE: expected int, found Result[int, str]`).
+
+**Change** (`project/main.my`, lines 12–21): `main` now matches on the result — `case Ok(value)` prints `value - 3`, `case Err(_)` prints `-1`. I also guarded the empty-argument case (`len(args) == 0` → print `-1`) so a missing argument no longer traps with `R_LIST_BOUNDS`. `to_int` itself was left untouched.
+
+**Verification** (17 of 20 compiler invocations used):
+
+```
+./bin/mylang check project/main.my          → exit 0, no diagnostics
+./bin/mylang run project/main.my -- 41      → 38
+./bin/mylang run project/main.my -- 0       → -3
+./bin/mylang run project/main.my -- abc     → -1
+./bin/mylang run project/main.my -- 4.5     → -1
+./bin/mylang run project/main.my -- 12x     → -1
+./bin/mylang run project/main.my -- ""      → -1
+./bin/mylang run project/main.my -- -5      → -8
+./bin/mylang run project/main.my -- +7      → 4
+./bin/mylang run project/main.my            → -1   (no argument)
+```
+
+Both `public/expected.json` cases match exactly (`"41"` → `"38\n"`, `"0"` → `"-3\n"`), and every non-integer input prints `-1`.

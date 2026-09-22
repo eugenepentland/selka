@@ -1,0 +1,165 @@
+{
+  "arms": {
+    "gc-lto": {
+      "binary": ".tmp/svg-arenas-20260921/gc-lto",
+      "sha256": "de1733408c0e3a9c69129bb166c122acb0ab572e201dff45c37bdd43a4a23210",
+      "bounded": false
+    },
+    "gc-lto-bounded": {
+      "binary": ".tmp/svg-arenas-20260921/gc-lto-bounded",
+      "sha256": "e5bbd804057112c9bd4b7c100b9aab09072e525b7dcc611d0321dc7c794c79c0",
+      "bounded": true
+    },
+    "arena-lto": {
+      "binary": ".tmp/svg-arenas-20260921/arena-lto",
+      "sha256": "8cb40e6f5a6627d929c39b360c8f895c4fc66e1e78363f1125f009c07bb61572",
+      "bounded": false
+    },
+    "rust-o3": {
+      "binary": ".tmp/full-svg-benchmark-20260921/rust-o3",
+      "sha256": "57a931f718fd234f54ec8b7775267eff6cac08c628308614d2502d483bccb39d",
+      "native": true
+    },
+    "go-fast": {
+      "binary": ".tmp/full-svg-benchmark-20260921/go-fast",
+      "sha256": "6e786ac6174b1996c0120ff0c51e9a7acb8e6de5e663808056558818583ced90",
+      "native": true
+    },
+    "zig-o3": {
+      "binary": ".tmp/full-svg-benchmark-20260921/zig-o3",
+      "sha256": "0a80f2fa747d033ef979110109a1fbc4155d738d76018c930738847b3f358a63",
+      "native": true
+    },
+    "step-only": {
+      "binary": ".tmp/svg-gap-audit-20260921/codegen/gc-lto-step",
+      "sha256": "d4dc97f0fca76217e1c9cf81533c7e941e409330fb37ac57c9c71b6ffdb57426",
+      "bounded": true
+    },
+    "frame-only": {
+      "binary": ".tmp/svg-gap-audit-20260921/codegen/gc-lto-frame",
+      "sha256": "e61506e58641ddb57e22907766cf2ab1dedea42d6abcb4d38fa4795272891de2"
+    },
+    "indexed-lto": {
+      "binary": ".tmp/svg-gap-audit-20260921/algorithm/indexed-lto",
+      "sha256": "82ea1987d6e93614d5d8cd537dad2e9ef4129a9d11dc496c450fde8e450fec86",
+      "bounded": false
+    },
+    "indexed-lto-bounded": {
+      "binary": ".tmp/svg-gap-audit-20260921/algorithm/indexed-lto-bounded",
+      "sha256": "4ffaa1e986ab083a34c89d3c4bd201c13747a44a745745938656559265658029",
+      "bounded": true
+    },
+    "normalize-lto": {
+      "binary": ".tmp/svg-gap-audit-20260921/algorithm/normalize-lto",
+      "sha256": "87e6d429b1e212ab14f04951777bb17818c77d6fd44bcf9115c65d13c43eb676",
+      "bounded": false
+    },
+    "normalize-lto-bounded": {
+      "binary": ".tmp/svg-gap-audit-20260921/algorithm/normalize-lto-bounded",
+      "sha256": "66921b645ed3ac15251c6c447fb0c6e12e1fb11d4cfce185c97df1b5d015896a",
+      "bounded": true
+    },
+    "host-unchecked": {
+      "binary": ".tmp/svg-gap-audit-20260921/host/unchecked",
+      "sha256": "5b630d9dfb84a718159ab96380b3d01d795b0990cd138663c543cb3201167d63"
+    },
+    "host-memory-output": {
+      "binary": ".tmp/svg-gap-audit-20260921/host/memory-output",
+      "sha256": "f5ff5d5b93ad4957fde6eb8c8026ea85a586056e78c92dd260abd38602ae3e97"
+    },
+    "host-metadata-control": {
+      "binary": ".tmp/svg-gap-audit-20260921/host/metadata-control",
+      "sha256": "83c903d0b1a6d1476831b9b8b1cb06fdb4bbfa044ca30247cbc2e918b15f5303"
+    },
+    "host-typed-host": {
+      "binary": ".tmp/svg-gap-audit-20260921/host/typed-host",
+      "sha256": "6327e4082e1abf5cafb216836203448fb3c34638ac5703bd317b31f9922fe347"
+    },
+    "copy112": {
+      "binary": ".tmp/svg-gap-audit-20260921/codegen/gc-lto-copy112",
+      "sha256": "543c1a08b704da8f91c754592f6bd1d9d7a59f48c8d9a61783f164454dd1a04b"
+    }
+  },
+  "pairs": [
+    [
+      "arena-lto",
+      "gc-lto"
+    ],
+    [
+      "gc-lto-bounded",
+      "gc-lto"
+    ],
+    [
+      "step-only",
+      "gc-lto"
+    ],
+    [
+      "frame-only",
+      "gc-lto"
+    ],
+    [
+      "indexed-lto",
+      "gc-lto"
+    ],
+    [
+      "normalize-lto",
+      "gc-lto"
+    ],
+    [
+      "host-unchecked",
+      "gc-lto"
+    ],
+    [
+      "host-memory-output",
+      "gc-lto"
+    ],
+    [
+      "host-metadata-control",
+      "gc-lto"
+    ],
+    [
+      "copy112",
+      "gc-lto"
+    ],
+    [
+      "gc-lto",
+      "rust-o3"
+    ],
+    [
+      "gc-lto",
+      "go-fast"
+    ],
+    [
+      "gc-lto",
+      "zig-o3"
+    ],
+    [
+      "gc-lto-bounded",
+      "step-only"
+    ],
+    [
+      "gc-lto-bounded",
+      "frame-only"
+    ],
+    [
+      "indexed-lto-bounded",
+      "gc-lto-bounded"
+    ],
+    [
+      "normalize-lto-bounded",
+      "gc-lto-bounded"
+    ],
+    [
+      "host-typed-host",
+      "host-metadata-control"
+    ]
+  ],
+  "output": "measurements.json",
+  "equivalent_controls": {
+    ".tmp/svg-gap-audit-20260921/host/control": "gc-lto",
+    ".tmp/svg-gap-audit-20260921/algorithm/control-lto": "gc-lto",
+    ".tmp/svg-gap-audit-20260921/algorithm/control-lto-bounded": "gc-lto-bounded",
+    ".tmp/svg-gap-audit-20260921/codegen/gc-lto-none": "gc-lto",
+    ".tmp/svg-gap-audit-20260921/codegen/gc-lto-both": "gc-lto-bounded"
+  }
+}

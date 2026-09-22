@@ -1,0 +1,14 @@
+module main
+
+
+def total(values: list[int]) -> int:
+    index = 0
+    while index < len(values):
+        running = running + values[index]
+        index = index + 1
+    return running
+
+
+def main(out: Stream) -> int:
+    out.print(total([1, 2, 3]))
+    return 0

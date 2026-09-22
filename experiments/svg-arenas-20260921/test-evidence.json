@@ -1,0 +1,28 @@
+{
+  "date": "2026-09-21",
+  "focused": [
+    {
+      "command": "zig cc -std=c11 -Wall -Wextra -Werror -UNDEBUG -O0 -g -fsanitize=address,undefined -fno-omit-frame-pointer tests/native_arena_chunks_test.c src/native_heap.c src/native_arena.c src/native_regions.c src/native_collections.c src/native_dictionary.c src/native_text.c src/native_equal.c src/native_bytes.c -I src -o .tmp/native-arena-chunks-test && ASAN_OPTIONS=detect_leaks=1 .tmp/native-arena-chunks-test",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": "zig cc -std=c11 -Wall -Wextra -Werror -UNDEBUG -O0 -g -fsanitize=address,undefined -fno-omit-frame-pointer tests/native_regions_test.c src/native_heap.c src/native_arena.c src/native_regions.c src/native_collections.c src/native_dictionary.c src/native_text.c src/native_equal.c -I src -o .tmp/native-regions-test && ASAN_OPTIONS=detect_leaks=1 .tmp/native-regions-test",
+      "exit": 0,
+      "stdout": "native region tests passed\n",
+      "stderr": ""
+    }
+  ],
+  "full_native_memory": {
+    "command": "CC='cc -UNDEBUG -O0 -g -fno-omit-frame-pointer' MYLANG_TEST_ASAN=1 python3 -B scripts/test_native_memory.py",
+    "exit": 0,
+    "stdout": "native heap tests passed\nnative collections tests passed\nnative text and dictionary tests passed\nnative structural equality tests passed\nnative byte string tests passed\nnative region tests passed\nnative print tests passed\nnative text method tests passed\nnative scoped provider tests passed\n",
+    "stderr": "",
+    "note": "native_arena_chunks_test.c also ran successfully and intentionally prints no success banner"
+  },
+  "compatibility_repairs": {
+    "text_dictionary_live_count": "The retained-key graph now has three managed allocations: snapshot list, snapshot backing, and one coallocated text header-plus-scalars block. The old expectation of four predates native_text_new coallocation and counted the text backing separately. No arena object participates in this case.",
+    "text_method_fail_stub": "native_text_methods.c now references myl_qbe_fail, while its standalone test does not exercise a trapping case. The test supplies that required symbol and fails closed with assert(0) if any tested operation unexpectedly traps. Tests compile with -UNDEBUG."
+  }
+}

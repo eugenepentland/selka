@@ -1,0 +1,5 @@
+module helper
+
+
+def answer() -> int:
+    return 42

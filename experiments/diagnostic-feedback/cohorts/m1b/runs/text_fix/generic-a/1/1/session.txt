@@ -1,0 +1,23 @@
+Done.
+
+## What I changed
+
+Only `project/main.my`: removed the invalid, unused generic type parameters from the two functions:
+
+- `def largest[T: Ordered](values: list[int]) -> int:` → `def largest(values: list[int]) -> int:`
+- `def largest_of[T: Ordered](values: list[int]) -> int:` → `def largest_of(values: list[int]) -> int:`
+
+`Ordered` is not a requirement this compiler knows (`E_GENERIC_REQUIREMENT`), and `T` was never used since both functions are concretely typed `list[int] -> int`. No other logic changed.
+
+## Verification
+
+```
+$ bin/mylang check project/main.my
+check EXIT: 0
+$ bin/mylang run project/main.my -- 1 3 2
+3
+$ bin/mylang run project/main.my -- 5 5 5
+5
+```
+
+I also built the program once and exercised 107 valid integer triples (all orderings of small triples, ties, negatives, i64 min/max, random values, `+5`/leading zeros) plus invalid-string inputs — all matched `max(...)` with no traps. The temporary test binary and its manifest were deleted; the only source change is `project/main.my`.

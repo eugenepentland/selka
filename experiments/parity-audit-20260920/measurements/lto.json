@@ -1,0 +1,90 @@
+{
+ "zig": {
+  "census": {
+   "output_identical": true,
+   "task-clock": 17.57,
+   "cycles_u": 46363196.0,
+   "cycles_k": 19471192.0,
+   "instructions_u": 155026334.0,
+   "page-faults": 4132.0,
+   "L1-dcache-load-misses_u": 123378.0,
+   "LLC-load-misses_u": 15221.0
+  },
+  "render": {
+   "output_identical": true,
+   "task-clock": 19.74,
+   "cycles_u": 52116924.0,
+   "cycles_k": 31677891.0,
+   "instructions_u": 181612110.0,
+   "page-faults": 5528.0,
+   "L1-dcache-load-misses_u": 160364.0,
+   "LLC-load-misses_u": 9197.0
+  }
+ },
+ "pall-compact": {
+  "census": {
+   "output_identical": true,
+   "task-clock": 19.82,
+   "cycles_u": 57491278.0,
+   "cycles_k": 29454003.0,
+   "instructions_u": 150467230.0,
+   "page-faults": 7788.0,
+   "L1-dcache-load-misses_u": 301146.0,
+   "LLC-load-misses_u": 32760.0
+  },
+  "render": {
+   "output_identical": true,
+   "task-clock": 39.93,
+   "cycles_u": 115757516.0,
+   "cycles_k": 54430190.0,
+   "instructions_u": 303584414.0,
+   "page-faults": 13267.0,
+   "L1-dcache-load-misses_u": 551685.0,
+   "LLC-load-misses_u": 106091.0
+  }
+ },
+ "zlink": {
+  "census": {
+   "output_identical": true,
+   "task-clock": 20.11,
+   "cycles_u": 57504397.0,
+   "cycles_k": 30872652.0,
+   "instructions_u": 157975285.0,
+   "page-faults": 7786.0,
+   "L1-dcache-load-misses_u": 261043.0,
+   "LLC-load-misses_u": 35813.0
+  },
+  "render": {
+   "output_identical": true,
+   "task-clock": 38.1,
+   "cycles_u": 110980601.0,
+   "cycles_k": 54941349.0,
+   "instructions_u": 317629813.0,
+   "page-faults": 13264.0,
+   "L1-dcache-load-misses_u": 494463.0,
+   "LLC-load-misses_u": 75860.0
+  }
+ },
+ "lto": {
+  "census": {
+   "output_identical": true,
+   "task-clock": 18.75,
+   "cycles_u": 52326400.0,
+   "cycles_k": 30493232.0,
+   "instructions_u": 146303734.0,
+   "page-faults": 7786.0,
+   "L1-dcache-load-misses_u": 296909.0,
+   "LLC-load-misses_u": 41487.0
+  },
+  "render": {
+   "output_identical": true,
+   "task-clock": 35.66,
+   "cycles_u": 101305782.0,
+   "cycles_k": 54598056.0,
+   "instructions_u": 276395049.0,
+   "page-faults": 13265.0,
+   "L1-dcache-load-misses_u": 554234.0,
+   "LLC-load-misses_u": 85134.0
+  }
+ }
+}

@@ -1,0 +1,11 @@
+Done.
+
+**What I changed:** `project/main.my` — `banner` used bare `print(...)`, which the checker rejects with `E_OUTPUT_CAPABILITY`. I gave it an `out: Stream` parameter, switched the call to `out.print("==", text)`, declared the required `effects(output)` bound on `banner`, and passed `out` through from `main`.
+
+**Command and result:**
+```
+$ ./bin/mylang run project/main.my
+== ok
+[exit 0]
+```
+(`od -c` confirms the output is exactly `= =   o k \n`; `./bin/mylang check project/main.my` also exits 0.)

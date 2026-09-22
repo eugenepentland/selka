@@ -1,0 +1,68 @@
+{
+  "checks": [
+    {
+      "command": "./zigw build test-units -Doptimize=ReleaseFast '-Dtest-filter=qbe_test' -j2",
+      "exit": 0,
+      "passed": 60,
+      "log": "qbe-tests.log"
+    },
+    {
+      "command": "./zigw build -Doptimize=ReleaseFast -j2",
+      "exit": 0,
+      "guardian_checks": 88,
+      "log": "build-fixed.log"
+    },
+    {
+      "command": "./zigw build test-qbe-build test-schematic -Doptimize=ReleaseFast -j2",
+      "exit": 0,
+      "native_build_passed": 64,
+      "schematic_passed": 16,
+      "host_bridge_c": true,
+      "log": "integration-tests.log"
+    },
+    {
+      "command": "./zigw build test-schematic -Doptimize=ReleaseFast -j2",
+      "exit": 0,
+      "passed": 16,
+      "guardian_checks": 88,
+      "note": "Final test-helper and tag corrections. This target installs all production tools.",
+      "log": "final-schematic.log"
+    },
+    {
+      "command": "Host bridge ASan/UBSan and warning-clean provider compile",
+      "exit": 0,
+      "log": "host-c-sanitizers.txt"
+    },
+    {
+      "command": "Small buffered /dev/full finish failure and provider quotas under ASan/UBSan",
+      "exit": 0,
+      "log": "provider-checks.txt"
+    },
+    {
+      "command": "python3 experiments/svg-gap-fixes-20260921/run.py qualify",
+      "exit": 0,
+      "normal_and_gc_stress_cases": 10,
+      "policies": 4,
+      "evidence": "qualification.json"
+    },
+    {
+      "command": "python3 experiments/svg-gap-fixes-20260921/semantics.py",
+      "exit": 0,
+      "evidence": "llvm-semantics.json"
+    },
+    {
+      "command": "python3 experiments/svg-gap-fixes-20260921/run.py measure",
+      "exit": 0,
+      "timed_invocations": 1023,
+      "evidence": "measurements.json"
+    }
+  ],
+  "final_compiler_sha256": "c803fcacaa852c56ff63bb3cbc94e16fd38356abf860cf1a85b49175945b8823",
+  "final_sources_match_build_records": true,
+  "files": {
+    "src/schematic/tests.zig": "5c9775359f221eaa4960dc04eae3d7d80433611cff3dceb6a3470c42e03e4f93",
+    "src/schematic/guest/bulk_io_test.my": "fb8ccf5694c4ca35d6c26c8acc45e189c6463db3527c674762234d633922d343",
+    "tests/qbe_host_bridge.c": "abe48ca61413c824b28b39d668057dd2f12d52cc2d071b5dee05098ef536a9fd",
+    "experiments/svg-gap-fixes-20260921/provider_checks.c": "1a3156f896fa35e96f8460e86bd54d74e9389e6433fc5eb2963208600999c886"
+  }
+}

@@ -1,0 +1,5 @@
+def order(xs: list[int]) -> list[int]:
+    return sorted(xs)
+
+def main() -> int:
+    return 0

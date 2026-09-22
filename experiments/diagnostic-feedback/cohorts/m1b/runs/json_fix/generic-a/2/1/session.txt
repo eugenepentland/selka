@@ -1,0 +1,10 @@
+**What I changed:** In `project/main.my`, I removed the bogus generic type parameters from `largest` and `largest_of`. `T: Ordered` was not a requirement the compiler knows (`E_GENERIC_REQUIREMENT`), and since `T` was unused in both signatures it also made inference fail at every call site (`E_GENERIC_INFERENCE`). Neither function is actually generic — both are fixed `list[int] -> int` — so deleting the spurious `[T: ...]` is the minimal correct fix. No other lines changed.
+
+**Exact command and result:**
+```
+$ ./bin/mylang check project/main.my && ./bin/mylang run project/main.my -- 1 3 2 && ./bin/mylang run project/main.my -- 5 5 5
+CHECK OK
+3
+5
+```
+I also verified extra inputs not in `public/`: `-5 -1 -3 → -1`, `9 2 4 → 9`, `2 4 9 → 9`, `-10 -20 -30 → -10`, `0 0 0 → 0`.

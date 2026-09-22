@@ -1,0 +1,12 @@
+Done.
+
+**What I changed:** In `project/main.my`, I removed the invalid, unused generic parameter clauses `[T: Numeric]` from `maximum` and `maximum_of` (the compiler rejected `Numeric` with `error[E_GENERIC_REQUIREMENT]: unknown requirement`). Both functions operate on `list[int]`, so no type parameter is needed. No other changes.
+
+**Command and result:**
+```
+$ ./bin/mylang check project/main.my && ./bin/mylang run project/main.my -- 1 3 2 && ./bin/mylang run project/main.my -- 5 5 5
+check OK
+3
+5
+```
+Both cases from `public/expected.json` match exactly (`"3\n"`, `"5\n"`). I also spot-checked negatives (`-5 -3 -2` → `-2`) and max in the first/third position (`7 2 3` → `7`, `1 2 9` → `9`); all correct.

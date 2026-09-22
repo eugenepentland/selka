@@ -1,0 +1,10 @@
+Change: added the missing match arm to `describe` in `project/main.my` so the `match` over `union Event` covers both variants:
+
+```python
+        case Event.stop(name):
+            return "stopped"
+```
+
+Command run: `bin/mylang run project/main.my`
+
+Result: printed `stopped`, exit code 0 (the two `W_UNUSED_BINDING` warnings are non-fatal; the first predates my change).

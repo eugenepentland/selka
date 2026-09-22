@@ -1,0 +1,145 @@
+type :myl_slice = { l, l }
+type :t3576dd72b5413d8309e9b3c0ebbd80e1f1d7442f9cb0274e01ea2b805e90a9a3 = align 8 { b 16 }
+export function l $myl_f_7a6c4fac6c5cd7209ee2eecd9d6ad3673c55315117de1d8daa5aeb3f71bbd7c7(l %ctx, l %a0) {
+@entry
+ %trap =l add %ctx, 32
+ %l0 =l alloc8 8
+ %l1 =l alloc8 16
+ %l2 =l alloc8 8
+ %s0 =l alloc8 8
+ %s1 =l alloc8 8
+ %s2 =l alloc8 8
+ %v6 =l alloc8 32
+ %v11 =l add %ctx, 64
+ %v12 =l loadl %v11
+ %v13 =l cultl %v6, %v12
+ jnz %v13, @floorfail3, @stackadmit1
+@floorfail3
+ call $myl_qbe_fail_frame(l %ctx)
+ jmp @entry_failure
+@stackadmit1
+ %v5 =l add %ctx, 48
+ %v14 =l loadl %v5
+ storel %v14, %v6
+ %v15 =l add %v6, 8
+ storel extern $myl_f_7a6c4fac6c5cd7209ee2eecd9d6ad3673c55315117de1d8daa5aeb3f71bbd7c7_meta, %v15
+ %v16 =l add %v6, 16
+ storel 0, %v16
+ storel %v6, %v5
+ %position =l add %v6, 16
+ %agg2 =l alloc8 16
+ %agg10 =l alloc8 16
+ %agg23 =l alloc8 16
+ storel %a0, %l0
+ jmp @i0
+@i0
+ storel 0, %s0
+ storel 1, %s1
+ %v18 =l copy %agg2
+ %v19 =l add %v18, 0
+ %v20 =l loadl %s0
+ storel %v20, %v19
+ %v21 =l add %v18, 8
+ %v22 =l loadl %s1
+ storel %v22, %v21
+ storel %v18, %s0
+ %v23 =l loadl %s0
+ blit %v23, %l1, 16
+ storel 0, %s0
+ %v24 =l loadl %s0
+ storel %v24, %l2
+@i6
+ %v25 =l loadl %l2
+ storel %v25, %s0
+ %v26 =l loadl %l0
+ storel %v26, %s1
+ %v27 =l loadl %s1
+ %v28 =l loadl %s0
+ %v29 =l csltl %v28, %v27
+ storel %v29, %s0
+ %v30 =l loadl %s0
+ jnz %v30, @next31, @i23
+@next31
+ blit %l1, %agg10, 16
+ storel %agg10, %s0
+ %v31 =l loadl %l2
+ storel %v31, %s1
+ storel 3, %s2
+ %v32 =l loadl %s2
+ %v33 =l loadl %s1
+ %v35 =l ceql %v32, 0
+ jnz %v35, @division34, @nonzero34
+@division34
+ storel 13, %position
+ call $myl_qbe_fail_division(l %ctx, l 6, l %v33, l %v32)
+ jmp @failure
+@nonzero34
+ %v36 =l ceql %v33, -9223372036854775808
+ %v37 =l ceql %v32, -1
+ %v38 =l and %v36, %v37
+ %v39 =l neg %v38
+ %v40 =l xor %v32, 1
+ %v40 =l and %v40, %v39
+ %v41 =l xor %v32, %v40
+ %v34 =l rem %v33, %v41
+ %v42 =l cnel %v34, 0
+ %v43 =l xor %v34, %v41
+ %v44 =l csltl %v43, 0
+ %v45 =l and %v42, %v44
+ %v46 =l neg %v45
+ %v47 =l and %v41, %v46
+ %v34 =l add %v34, %v47
+ storel %v34, %s1
+ %v48 =l loadl %trap
+ jnz %v48, @failure, @ok48
+@ok48
+ storel 0, %s2
+ %v49 =l loadl %s2
+ %v50 =l loadl %s1
+ %v51 =l ceql %v50, %v49
+ storel %v51, %s1
+ storel 16, %position
+ %v52 =l loadl %s0
+ %v53 =l loadl %s1
+ %v54 =:t3576dd72b5413d8309e9b3c0ebbd80e1f1d7442f9cb0274e01ea2b805e90a9a3 call $myl_f_e40dfff1a71eb7baf65ea49495977ddd33d81611a9c59c5573fc42205baa7e85(l %ctx, :t3576dd72b5413d8309e9b3c0ebbd80e1f1d7442f9cb0274e01ea2b805e90a9a3 %v52, l %v53)
+ storel %v54, %s0
+ %v55 =l loadl %trap
+ jnz %v55, @failure, @ok55
+@ok55
+ %v56 =l loadl %s0
+ blit %v56, %l1, 16
+ %v57 =l loadl %l2
+ storel %v57, %s0
+ storel 1, %s1
+ %v58 =l loadl %s1
+ %v59 =l loadl %s0
+ %v60 =l add %v59, %v58
+ %v61 =l csgtl %v59, 9223372036854775806
+ jnz %v61, @overflow60, @checked60
+@overflow60
+ storel 20, %position
+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %v59, l %v58, l 64)
+ jmp @failure
+@checked60
+ storel %v60, %s0
+ %v62 =l loadl %s0
+ storel %v62, %l2
+ jmp @i6
+@i23
+ blit %l1, %agg23, 16
+ storel %agg23, %s0
+ %v63 =l loadl %s0
+ %v64 =l add %v63, 8
+ %v65 =l loadl %v64
+ storel %v65, %s0
+ %v66 =l loadl %s0
+ %v67 =l loadl %v6
+ storel %v67, %v5
+ ret %v66
+@failure
+ %v70 =l loadl %v6
+ storel %v70, %v5
+ ret 0
+@entry_failure
+ ret 0
+}

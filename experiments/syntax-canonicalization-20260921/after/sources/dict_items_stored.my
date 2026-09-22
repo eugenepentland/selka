@@ -1,0 +1,9 @@
+def total(d: dict[str, int]) -> int noalloc:
+    items = d.items()
+    result = 0
+    for key, value in items:
+        result += len(key) + value
+    return result
+
+def main() -> int:
+    return 0

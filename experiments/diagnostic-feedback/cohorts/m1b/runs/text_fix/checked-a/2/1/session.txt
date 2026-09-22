@@ -1,0 +1,9 @@
+**What I changed:** In `project/main.my`, `main` was computing `out.print(1 + parse_count(args[0]))`, which the compiler rejected with `E_TYPE: expected int, found Result[int, str]` (it was also printing the `Result` rather than the number). I replaced that line with a `match` on `parse_count(args[0])`: `Ok(value)` prints `1 + value`, and `Err(_)` prints `-1`.
+
+**Commands and results:**
+- `bin/mylang check project/main.my` → exit 0, no diagnostics.
+- `bin/mylang run project/main.my -- 41` → `42`
+- `bin/mylang run project/main.my -- 0` → `1`
+- Extra checks: `abc` → `-1`, `-5` → `-4`, `007` → `8`, `1x` → `-1`, empty string → `-1`, `99999999999999999999` → `-1`, `+7` → `8` — all exit 0.
+
+Both `public/expected.json` cases pass, and all non-integer/out-of-range inputs print `-1`.

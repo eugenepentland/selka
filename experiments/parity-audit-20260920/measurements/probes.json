@@ -1,0 +1,200 @@
+{
+ "zig": {
+  "census": {
+   "output_identical": true,
+   "task-clock": 13.28,
+   "cycles_u": 41574857.0,
+   "cycles_k": 19508479.0,
+   "instructions_u": 155026329.0,
+   "page-faults": 4132.0,
+   "L1-dcache-load-misses_u": 128824.0,
+   "LLC-load-misses_u": 10717.0
+  },
+  "render": {
+   "output_identical": true,
+   "task-clock": 18.83,
+   "cycles_u": 52261907.0,
+   "cycles_k": 34304593.0,
+   "instructions_u": 181612106.0,
+   "page-faults": 5528.0,
+   "L1-dcache-load-misses_u": 159898.0,
+   "LLC-load-misses_u": 9139.0
+  }
+ },
+ "chart": {
+  "census": {
+   "output_identical": true,
+   "task-clock": 21.77,
+   "cycles_u": 63292342.0,
+   "cycles_k": 38143436.0,
+   "instructions_u": 155286636.0,
+   "page-faults": 9685.0,
+   "L1-dcache-load-misses_u": 302731.0,
+   "LLC-load-misses_u": 64866.0
+  },
+  "render": {
+   "output_identical": true,
+   "task-clock": 48.99,
+   "cycles_u": 139763557.0,
+   "cycles_k": 84319770.0,
+   "instructions_u": 360416849.0,
+   "page-faults": 21128.0,
+   "L1-dcache-load-misses_u": 535907.0,
+   "LLC-load-misses_u": 111525.0
+  }
+ },
+ "ctl": {
+  "census": {
+   "output_identical": true,
+   "task-clock": 21.52,
+   "cycles_u": 62254685.0,
+   "cycles_k": 37988662.0,
+   "instructions_u": 155286638.0,
+   "page-faults": 9684.0,
+   "L1-dcache-load-misses_u": 300376.0,
+   "LLC-load-misses_u": 67446.0
+  },
+  "render": {
+   "output_identical": true,
+   "task-clock": 48.88,
+   "cycles_u": 139577665.0,
+   "cycles_k": 84329804.0,
+   "instructions_u": 360416808.0,
+   "page-faults": 21128.0,
+   "L1-dcache-load-misses_u": 533564.0,
+   "LLC-load-misses_u": 110726.0
+  }
+ },
+ "ctl-compact": {
+  "census": {
+   "output_identical": true,
+   "task-clock": 19.3,
+   "cycles_u": 57808374.0,
+   "cycles_k": 31259167.0,
+   "instructions_u": 151214315.0,
+   "page-faults": 7789.0,
+   "L1-dcache-load-misses_u": 303204.0,
+   "LLC-load-misses_u": 41663.0
+  },
+  "render": {
+   "output_identical": true,
+   "task-clock": 42.65,
+   "cycles_u": 129234259.0,
+   "cycles_k": 64805617.0,
+   "instructions_u": 349162259.0,
+   "page-faults": 15591.0,
+   "L1-dcache-load-misses_u": 511120.0,
+   "LLC-load-misses_u": 86980.0
+  }
+ },
+ "pa": {
+  "census": {
+   "output_identical": true,
+   "task-clock": 22.72,
+   "cycles_u": 62847920.0,
+   "cycles_k": 38016509.0,
+   "instructions_u": 155286689.0,
+   "page-faults": 9684.0,
+   "L1-dcache-load-misses_u": 304809.0,
+   "LLC-load-misses_u": 76676.0
+  },
+  "render": {
+   "output_identical": true,
+   "task-clock": 43.72,
+   "cycles_u": 121732308.0,
+   "cycles_k": 64476024.0,
+   "instructions_u": 309983421.0,
+   "page-faults": 16009.0,
+   "L1-dcache-load-misses_u": 591206.0,
+   "LLC-load-misses_u": 129329.0
+  }
+ },
+ "pb": {
+  "census": {
+   "output_identical": true,
+   "task-clock": 23.0,
+   "cycles_u": 67211046.0,
+   "cycles_k": 38035504.0,
+   "instructions_u": 155899683.0,
+   "page-faults": 9684.0,
+   "L1-dcache-load-misses_u": 305456.0,
+   "LLC-load-misses_u": 75063.0
+  },
+  "render": {
+   "output_identical": true,
+   "task-clock": 48.96,
+   "cycles_u": 142568482.0,
+   "cycles_k": 82605542.0,
+   "instructions_u": 361029856.0,
+   "page-faults": 21128.0,
+   "L1-dcache-load-misses_u": 557421.0,
+   "LLC-load-misses_u": 103587.0
+  }
+ },
+ "pc": {
+  "census": {
+   "output_identical": true,
+   "task-clock": 21.31,
+   "cycles_u": 60023932.0,
+   "cycles_k": 37171529.0,
+   "instructions_u": 153773508.0,
+   "page-faults": 9684.0,
+   "L1-dcache-load-misses_u": 290474.0,
+   "LLC-load-misses_u": 77988.0
+  },
+  "render": {
+   "output_identical": true,
+   "task-clock": 48.11,
+   "cycles_u": 136485403.0,
+   "cycles_k": 83165285.0,
+   "instructions_u": 358903699.0,
+   "page-faults": 21128.0,
+   "L1-dcache-load-misses_u": 539749.0,
+   "LLC-load-misses_u": 105745.0
+  }
+ },
+ "pall": {
+  "census": {
+   "output_identical": true,
+   "task-clock": 21.71,
+   "cycles_u": 62994952.0,
+   "cycles_k": 37475291.0,
+   "instructions_u": 154539554.0,
+   "page-faults": 9684.0,
+   "L1-dcache-load-misses_u": 293662.0,
+   "LLC-load-misses_u": 67641.0
+  },
+  "render": {
+   "output_identical": true,
+   "task-clock": 40.72,
+   "cycles_u": 122016852.0,
+   "cycles_k": 64723506.0,
+   "instructions_u": 309236266.0,
+   "page-faults": 16009.0,
+   "L1-dcache-load-misses_u": 585012.0,
+   "LLC-load-misses_u": 105285.0
+  }
+ },
+ "pall-compact": {
+  "census": {
+   "output_identical": true,
+   "task-clock": 19.16,
+   "cycles_u": 58194734.0,
+   "cycles_k": 30908966.0,
+   "instructions_u": 150467229.0,
+   "page-faults": 7788.0,
+   "L1-dcache-load-misses_u": 299565.0,
+   "LLC-load-misses_u": 36865.0
+  },
+  "render": {
+   "output_identical": true,
+   "task-clock": 38.24,
+   "cycles_u": 116259578.0,
+   "cycles_k": 55499691.0,
+   "instructions_u": 303584414.0,
+   "page-faults": 13267.0,
+   "L1-dcache-load-misses_u": 551370.0,
+   "LLC-load-misses_u": 91772.0
+  }
+ }
+}

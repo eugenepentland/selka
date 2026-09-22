@@ -1,0 +1,5 @@
+def parse(s: str) -> Option[float] noalloc:
+    return float(s)
+
+def main() -> int:
+    return 0

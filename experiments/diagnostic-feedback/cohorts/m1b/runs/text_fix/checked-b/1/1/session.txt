@@ -1,0 +1,19 @@
+**What I changed** — `project/main.my` only: `main` assigned the `Result[int, str]` returned by `read_number` straight into `0 + value`, which is a type error. I replaced that with a `match` that unwraps the result: `case Ok(value)` prints `0 + value`, `case Err(_)` prints `-99`. `read_number` itself is untouched.
+
+**Exact command and result:**
+
+```
+$ ./bin/mylang check project/main.my
+(no output, exit 0)
+
+$ ./bin/mylang run project/main.my -- 41
+41
+
+$ ./bin/mylang run project/main.my -- 0
+0
+
+$ ./bin/mylang run project/main.my -- abc
+-99
+```
+
+Also verified no traps or regressions on `-5`→`-5`, `+5`→`5`, `3.5`→`-99`, `""`→`-99`, `" 41"`→`41`, `007`→`7`, `1_0`→`10`, and an out-of-range integer→`-99` (all exit 0), matching `public/expected.json`.

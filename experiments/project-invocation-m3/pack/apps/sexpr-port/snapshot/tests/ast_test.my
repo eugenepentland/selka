@@ -1,0 +1,51 @@
+module tests.ast_test
+
+import sexpr.ast as ast
+
+import sexpr.view as view
+
+# A node built by hand carries a view of its own spelling, exactly as a parsed
+# node carries a view of the document it came from. These helpers produce that
+# view for a literal in a test body, so a hand-built tree looks the way it did
+# before text became a source range.
+def view_of_text(text: str) -> view.View:
+    data = text.encode()
+    return view.View(source=data, start=0, end=len(data))
+
+
+def text_in(found: view.View) -> str:
+    match view.text_of(found):
+        case Ok(text):
+            return text
+        case Err(_):
+            return "<none>"
+
+
+
+def text_of(node: ast.Node) -> str:
+    match ast.as_text(node):
+        case Some(text):
+            return text_in(text)
+        case None:
+            return ""
+
+
+def number_of(node: ast.Node) -> float:
+    match ast.as_number(node):
+        case Some(value):
+            return value
+        case None:
+            return -1.0
+
+
+public def test_form_and_helpers() -> bool:
+    node = ast.Node.form([ast.Node.atom(view_of_text("net"), ast.zero_span()), ast.Node.integer(1, ast.zero_span())], ast.zero_span())
+    return ast.is_form(node, "net") and len(ast.children(node)) == 2
+
+
+public def test_text_and_number() -> bool:
+    return text_of(ast.Node.atom(view_of_text("GND"), ast.zero_span())) == "GND" and number_of(ast.Node.integer(7, ast.zero_span())) == 7.0
+
+
+public def test_form_is_not_atom() -> bool:
+    return ast.is_form(ast.Node.atom(view_of_text("net"), ast.zero_span()), "net") == False

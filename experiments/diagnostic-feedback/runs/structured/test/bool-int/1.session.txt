@@ -1,0 +1,14 @@
+Fixed `project/main.my`:
+
+- Changed `above`'s return type from `int` to `bool` (it returns the comparison `a > b`), resolving `error[E_TYPE]: expected int, found bool`.
+- Changed `main` to branch on the boolean and `out.print(1)` / `out.print(0)`, so the required `1`/`0` output is produced.
+
+Command and result:
+
+```
+$ bin/mylang run project/main.my
+1
+[exit 0]
+```
+
+`bin/mylang check project/main.my` also exits 0 with no diagnostics.

@@ -1,0 +1,2171 @@
+{
+  "method": "Unmodified binaries with LD_PRELOAD SIGPROF CPU-time sampling; requested 500us, kernel tick limited; self-PC only, no stack attribution or hardware cycles. Actual counts include outside/unmapped samples. Every output hash checked. No wall-time claims from profiled runs.",
+  "sampler_source_sha256": "52abe6322fd3e120d1c10067d735333d0e397bce36d3736a8c63d253606d0aa8",
+  "sampler_sha256": "f0558acb250170b5870cce28554b3a92e9d62ea8999329fa3e2065a5dba8f76c",
+  "summary": {
+    "gc-o3": {
+      "binary_sha256": "0448b9ef55d8bb0402356cdc6bfce8e5bf5a66a38e3e3dd03f84107d4f711279",
+      "runs": 1200,
+      "samples": 10648,
+      "outside_main_executable": 907,
+      "unmapped_inside": 111,
+      "functions": [
+        {
+          "name": "qbe_host_invoke",
+          "samples": 2637,
+          "percent_all_samples": 24.765214124718256
+        },
+        {
+          "name": "memcpy",
+          "samples": 1327,
+          "percent_all_samples": 12.462434259954922
+        },
+        {
+          "name": "myl_native_list_get",
+          "samples": 792,
+          "percent_all_samples": 7.43801652892562
+        },
+        {
+          "name": "circuit::normalize",
+          "samples": 632,
+          "percent_all_samples": 5.935386927122464
+        },
+        {
+          "name": "io::put",
+          "samples": 503,
+          "percent_all_samples": 4.72389181066867
+        },
+        {
+          "name": "layout::partPin",
+          "samples": 432,
+          "percent_all_samples": 4.05709992486852
+        },
+        {
+          "name": "layout::nearest",
+          "samples": 368,
+          "percent_all_samples": 3.4560480841472576
+        },
+        {
+          "name": "layout_routes::build",
+          "samples": 262,
+          "percent_all_samples": 2.460555972952667
+        },
+        {
+          "name": "layout_graph::findId",
+          "samples": 233,
+          "percent_all_samples": 2.188204357625845
+        },
+        {
+          "name": "myl_qbe_host_begin",
+          "samples": 203,
+          "percent_all_samples": 1.9064613072877536
+        },
+        {
+          "name": "put",
+          "samples": 184,
+          "percent_all_samples": 1.7280240420736288
+        },
+        {
+          "name": "layout::collectRows",
+          "samples": 180,
+          "percent_all_samples": 1.69045830202855
+        },
+        {
+          "name": "sexpr::parse",
+          "samples": 135,
+          "percent_all_samples": 1.2678437265214124
+        },
+        {
+          "name": "sexpr::at",
+          "samples": 115,
+          "percent_all_samples": 1.080015026296018
+        },
+        {
+          "name": "layout::innerPin",
+          "samples": 110,
+          "percent_all_samples": 1.0330578512396693
+        },
+        {
+          "name": "byte",
+          "samples": 105,
+          "percent_all_samples": 0.9861006761833208
+        },
+        {
+          "name": "text::equal",
+          "samples": 87,
+          "percent_all_samples": 0.8170548459804658
+        },
+        {
+          "name": "svg::passive",
+          "samples": 86,
+          "percent_all_samples": 0.8076634109691961
+        },
+        {
+          "name": "layout_graph::build",
+          "samples": 83,
+          "percent_all_samples": 0.7794891059353869
+        },
+        {
+          "name": "layout::branch",
+          "samples": 78,
+          "percent_all_samples": 0.7325319308790383
+        },
+        {
+          "name": "text::write",
+          "samples": 65,
+          "percent_all_samples": 0.6104432757325319
+        },
+        {
+          "name": "myl_f_aa8218f0a48c2e2e03dc11d4ad4c25e8cbdbd945f1cfd28f1f06e66db3fd4fe8_host",
+          "samples": 62,
+          "percent_all_samples": 0.5822689706987227
+        },
+        {
+          "name": "circuit::collectPins",
+          "samples": 60,
+          "percent_all_samples": 0.5634861006761833
+        },
+        {
+          "name": "sexpr::form",
+          "samples": 57,
+          "percent_all_samples": 0.5353117956423742
+        },
+        {
+          "name": "myl_f_5ba24e5e60c98e55fdd73ca79bec6030086123c18b1211ba777b1a205d67d96c_host",
+          "samples": 56,
+          "percent_all_samples": 0.5259203606311045
+        },
+        {
+          "name": "text::matches",
+          "samples": 54,
+          "percent_all_samples": 0.507137490608565
+        },
+        {
+          "name": "io::byte",
+          "samples": 46,
+          "percent_all_samples": 0.4320060105184072
+        },
+        {
+          "name": "myl_qbe_heap",
+          "samples": 46,
+          "percent_all_samples": 0.4320060105184072
+        },
+        {
+          "name": "layout::bridge",
+          "samples": 45,
+          "percent_all_samples": 0.4226145755071375
+        },
+        {
+          "name": "myl_qbe_root_mark",
+          "samples": 39,
+          "percent_all_samples": 0.36626596543951917
+        },
+        {
+          "name": "layout::groundBranch",
+          "samples": 39,
+          "percent_all_samples": 0.36626596543951917
+        },
+        {
+          "name": "layout::depth",
+          "samples": 38,
+          "percent_all_samples": 0.35687453042824946
+        },
+        {
+          "name": "text::decimal",
+          "samples": 35,
+          "percent_all_samples": 0.32870022539444027
+        },
+        {
+          "name": "circuit::displayNet",
+          "samples": 35,
+          "percent_all_samples": 0.32870022539444027
+        },
+        {
+          "name": "circuit::label",
+          "samples": 33,
+          "percent_all_samples": 0.30991735537190085
+        },
+        {
+          "name": "myl_native_list_append",
+          "samples": 32,
+          "percent_all_samples": 0.3005259203606311
+        },
+        {
+          "name": "circuit::pinForm",
+          "samples": 32,
+          "percent_all_samples": 0.3005259203606311
+        },
+        {
+          "name": "text::number",
+          "samples": 31,
+          "percent_all_samples": 0.29113448534936137
+        },
+        {
+          "name": "ports::validate",
+          "samples": 30,
+          "percent_all_samples": 0.28174305033809166
+        },
+        {
+          "name": "layout::endpoint",
+          "samples": 27,
+          "percent_all_samples": 0.2535687453042825
+        },
+        {
+          "name": "layout::build",
+          "samples": 25,
+          "percent_all_samples": 0.23478587528174305
+        },
+        {
+          "name": "ports::equal",
+          "samples": 25,
+          "percent_all_samples": 0.23478587528174305
+        },
+        {
+          "name": "text::escaped",
+          "samples": 17,
+          "percent_all_samples": 0.15965439519158528
+        },
+        {
+          "name": "layout::pinGroup",
+          "samples": 9,
+          "percent_all_samples": 0.0845229151014275
+        },
+        {
+          "name": "layout_routes::blocked",
+          "samples": 9,
+          "percent_all_samples": 0.0845229151014275
+        },
+        {
+          "name": "validate::pinoutCheck",
+          "samples": 9,
+          "percent_all_samples": 0.0845229151014275
+        },
+        {
+          "name": "myl_native_list_set",
+          "samples": 8,
+          "percent_all_samples": 0.07513148009015777
+        },
+        {
+          "name": "circuit::collectParts",
+          "samples": 7,
+          "percent_all_samples": 0.06574004507888806
+        },
+        {
+          "name": "validate::model",
+          "samples": 7,
+          "percent_all_samples": 0.06574004507888806
+        },
+        {
+          "name": "ports::byteAt",
+          "samples": 7,
+          "percent_all_samples": 0.06574004507888806
+        },
+        {
+          "name": "layout::placeRows",
+          "samples": 7,
+          "percent_all_samples": 0.06574004507888806
+        },
+        {
+          "name": "svg::chip",
+          "samples": 7,
+          "percent_all_samples": 0.06574004507888806
+        },
+        {
+          "name": "svg::render",
+          "samples": 6,
+          "percent_all_samples": 0.056348610067618335
+        },
+        {
+          "name": "validate::pinForm",
+          "samples": 6,
+          "percent_all_samples": 0.056348610067618335
+        },
+        {
+          "name": "ports::collect",
+          "samples": 5,
+          "percent_all_samples": 0.04695717505634861
+        },
+        {
+          "name": "myl_native_heap_alloc_at",
+          "samples": 5,
+          "percent_all_samples": 0.04695717505634861
+        },
+        {
+          "name": "draw::line",
+          "samples": 5,
+          "percent_all_samples": 0.04695717505634861
+        },
+        {
+          "name": "mylang_scoped_close",
+          "samples": 4,
+          "percent_all_samples": 0.037565740045078885
+        },
+        {
+          "name": "text::empty",
+          "samples": 4,
+          "percent_all_samples": 0.037565740045078885
+        },
+        {
+          "name": "svg::routes",
+          "samples": 4,
+          "percent_all_samples": 0.037565740045078885
+        },
+        {
+          "name": "svg::pinStart",
+          "samples": 3,
+          "percent_all_samples": 0.028174305033809167
+        },
+        {
+          "name": "layout::height",
+          "samples": 3,
+          "percent_all_samples": 0.028174305033809167
+        },
+        {
+          "name": "circuit::body",
+          "samples": 2,
+          "percent_all_samples": 0.018782870022539443
+        },
+        {
+          "name": "svg::finishGroup",
+          "samples": 2,
+          "percent_all_samples": 0.018782870022539443
+        },
+        {
+          "name": "svg::displayRef",
+          "samples": 2,
+          "percent_all_samples": 0.018782870022539443
+        },
+        {
+          "name": "svg::ports",
+          "samples": 2,
+          "percent_all_samples": 0.018782870022539443
+        },
+        {
+          "name": "circuit::railKind",
+          "samples": 2,
+          "percent_all_samples": 0.018782870022539443
+        },
+        {
+          "name": "draw::labelEnd",
+          "samples": 2,
+          "percent_all_samples": 0.018782870022539443
+        },
+        {
+          "name": "validate::metadata",
+          "samples": 2,
+          "percent_all_samples": 0.018782870022539443
+        },
+        {
+          "name": "ports::portForm",
+          "samples": 2,
+          "percent_all_samples": 0.018782870022539443
+        },
+        {
+          "name": "validate::fields",
+          "samples": 2,
+          "percent_all_samples": 0.018782870022539443
+        },
+        {
+          "name": "validate::defmoduleForm",
+          "samples": 1,
+          "percent_all_samples": 0.009391435011269721
+        },
+        {
+          "name": "circuit::instanceForm",
+          "samples": 1,
+          "percent_all_samples": 0.009391435011269721
+        },
+        {
+          "name": "validate::instanceForm",
+          "samples": 1,
+          "percent_all_samples": 0.009391435011269721
+        },
+        {
+          "name": "layout_routes::external",
+          "samples": 1,
+          "percent_all_samples": 0.009391435011269721
+        },
+        {
+          "name": "svg::instanceStart",
+          "samples": 1,
+          "percent_all_samples": 0.009391435011269721
+        },
+        {
+          "name": "validate::decouplesForm",
+          "samples": 1,
+          "percent_all_samples": 0.009391435011269721
+        },
+        {
+          "name": "myl_native_root_push",
+          "samples": 1,
+          "percent_all_samples": 0.009391435011269721
+        },
+        {
+          "name": "schematic::build",
+          "samples": 1,
+          "percent_all_samples": 0.009391435011269721
+        },
+        {
+          "name": "myl_native_list_new",
+          "samples": 1,
+          "percent_all_samples": 0.009391435011269721
+        },
+        {
+          "name": "myl_native_object_region",
+          "samples": 1,
+          "percent_all_samples": 0.009391435011269721
+        },
+        {
+          "name": "validate::i_typForm",
+          "samples": 1,
+          "percent_all_samples": 0.009391435011269721
+        },
+        {
+          "name": "text::identifier",
+          "samples": 1,
+          "percent_all_samples": 0.009391435011269721
+        },
+        {
+          "name": "draw::labelStart",
+          "samples": 1,
+          "percent_all_samples": 0.009391435011269721
+        },
+        {
+          "name": "circuit::ncForm",
+          "samples": 1,
+          "percent_all_samples": 0.009391435011269721
+        },
+        {
+          "name": "circuit::moduleForm",
+          "samples": 1,
+          "percent_all_samples": 0.009391435011269721
+        },
+        {
+          "name": "myl_native_arena_region",
+          "samples": 1,
+          "percent_all_samples": 0.009391435011269721
+        }
+      ],
+      "top_pcs": [
+        {
+          "address": "0x106754f",
+          "samples": 713
+        },
+        {
+          "address": "0x10674d0",
+          "samples": 546
+        },
+        {
+          "address": "0x102611c",
+          "samples": 436
+        },
+        {
+          "address": "0x106e570",
+          "samples": 227
+        },
+        {
+          "address": "0x106e614",
+          "samples": 185
+        },
+        {
+          "address": "0x106b9e0",
+          "samples": 153
+        },
+        {
+          "address": "0x106e618",
+          "samples": 117
+        },
+        {
+          "address": "0x1061040",
+          "samples": 107
+        },
+        {
+          "address": "0x106e72c",
+          "samples": 105
+        },
+        {
+          "address": "0x1057de2",
+          "samples": 76
+        },
+        {
+          "address": "0x106ba04",
+          "samples": 74
+        },
+        {
+          "address": "0x106e726",
+          "samples": 72
+        },
+        {
+          "address": "0x1067463",
+          "samples": 67
+        },
+        {
+          "address": "0x10674dc",
+          "samples": 65
+        },
+        {
+          "address": "0x106e870",
+          "samples": 63
+        },
+        {
+          "address": "0x105fd33",
+          "samples": 62
+        },
+        {
+          "address": "0x105fd29",
+          "samples": 59
+        },
+        {
+          "address": "0x106e5eb",
+          "samples": 59
+        },
+        {
+          "address": "0x1066e80",
+          "samples": 59
+        },
+        {
+          "address": "0x106ba64",
+          "samples": 58
+        },
+        {
+          "address": "0x106e606",
+          "samples": 58
+        },
+        {
+          "address": "0x10610e0",
+          "samples": 58
+        },
+        {
+          "address": "0x106b9f2",
+          "samples": 57
+        },
+        {
+          "address": "0x106bab3",
+          "samples": 56
+        },
+        {
+          "address": "0x106baaf",
+          "samples": 56
+        },
+        {
+          "address": "0x105fa73",
+          "samples": 54
+        },
+        {
+          "address": "0x106b9f6",
+          "samples": 52
+        },
+        {
+          "address": "0x106e7a0",
+          "samples": 48
+        },
+        {
+          "address": "0x106baaa",
+          "samples": 47
+        },
+        {
+          "address": "0x10679d0",
+          "samples": 46
+        }
+      ]
+    },
+    "gc-lto": {
+      "binary_sha256": "de1733408c0e3a9c69129bb166c122acb0ab572e201dff45c37bdd43a4a23210",
+      "runs": 1200,
+      "samples": 9020,
+      "outside_main_executable": 1836,
+      "unmapped_inside": 275,
+      "functions": [
+        {
+          "name": "qbe_host_invoke",
+          "samples": 2039,
+          "percent_all_samples": 22.605321507760532
+        },
+        {
+          "name": "myl_native_list_get",
+          "samples": 739,
+          "percent_all_samples": 8.19290465631929
+        },
+        {
+          "name": "circuit::normalize",
+          "samples": 647,
+          "percent_all_samples": 7.172949002217295
+        },
+        {
+          "name": "layout::partPin",
+          "samples": 437,
+          "percent_all_samples": 4.844789356984479
+        },
+        {
+          "name": "layout::nearest",
+          "samples": 416,
+          "percent_all_samples": 4.611973392461198
+        },
+        {
+          "name": "layout_routes::build",
+          "samples": 282,
+          "percent_all_samples": 3.1263858093126387
+        },
+        {
+          "name": "layout_graph::findId",
+          "samples": 208,
+          "percent_all_samples": 2.305986696230599
+        },
+        {
+          "name": "layout::collectRows",
+          "samples": 179,
+          "percent_all_samples": 1.9844789356984478
+        },
+        {
+          "name": "put",
+          "samples": 176,
+          "percent_all_samples": 1.951219512195122
+        },
+        {
+          "name": "byte",
+          "samples": 159,
+          "percent_all_samples": 1.762749445676275
+        },
+        {
+          "name": "sexpr::at",
+          "samples": 120,
+          "percent_all_samples": 1.3303769401330376
+        },
+        {
+          "name": "text::write",
+          "samples": 103,
+          "percent_all_samples": 1.1419068736141906
+        },
+        {
+          "name": "layout::innerPin",
+          "samples": 99,
+          "percent_all_samples": 1.0975609756097562
+        },
+        {
+          "name": "svg::passive",
+          "samples": 91,
+          "percent_all_samples": 1.0088691796008868
+        },
+        {
+          "name": "text::equal",
+          "samples": 90,
+          "percent_all_samples": 0.9977827050997783
+        },
+        {
+          "name": "layout_graph::build",
+          "samples": 81,
+          "percent_all_samples": 0.8980044345898004
+        },
+        {
+          "name": "sexpr::parse",
+          "samples": 79,
+          "percent_all_samples": 0.8758314855875832
+        },
+        {
+          "name": "myl_qbe_host_begin",
+          "samples": 79,
+          "percent_all_samples": 0.8758314855875832
+        },
+        {
+          "name": "layout::branch",
+          "samples": 69,
+          "percent_all_samples": 0.7649667405764967
+        },
+        {
+          "name": "sexpr::form",
+          "samples": 64,
+          "percent_all_samples": 0.7095343680709535
+        },
+        {
+          "name": "circuit::collectPins",
+          "samples": 58,
+          "percent_all_samples": 0.6430155210643016
+        },
+        {
+          "name": "layout::bridge",
+          "samples": 54,
+          "percent_all_samples": 0.5986696230598669
+        },
+        {
+          "name": "text::decimal",
+          "samples": 52,
+          "percent_all_samples": 0.5764966740576497
+        },
+        {
+          "name": "text::matches",
+          "samples": 45,
+          "percent_all_samples": 0.49889135254988914
+        },
+        {
+          "name": "layout::groundBranch",
+          "samples": 44,
+          "percent_all_samples": 0.4878048780487805
+        },
+        {
+          "name": "layout::depth",
+          "samples": 44,
+          "percent_all_samples": 0.4878048780487805
+        },
+        {
+          "name": "text::number",
+          "samples": 39,
+          "percent_all_samples": 0.43237250554323725
+        },
+        {
+          "name": "circuit::pinForm",
+          "samples": 33,
+          "percent_all_samples": 0.36585365853658536
+        },
+        {
+          "name": "myl_native_list_append",
+          "samples": 31,
+          "percent_all_samples": 0.3436807095343681
+        },
+        {
+          "name": "layout::endpoint",
+          "samples": 30,
+          "percent_all_samples": 0.3325942350332594
+        },
+        {
+          "name": "ports::validate",
+          "samples": 29,
+          "percent_all_samples": 0.3215077605321508
+        },
+        {
+          "name": "ports::equal",
+          "samples": 24,
+          "percent_all_samples": 0.2660753880266075
+        },
+        {
+          "name": "io::byte",
+          "samples": 24,
+          "percent_all_samples": 0.2660753880266075
+        },
+        {
+          "name": "text::escaped",
+          "samples": 22,
+          "percent_all_samples": 0.24390243902439024
+        },
+        {
+          "name": "circuit::displayNet",
+          "samples": 22,
+          "percent_all_samples": 0.24390243902439024
+        },
+        {
+          "name": "layout::build",
+          "samples": 21,
+          "percent_all_samples": 0.2328159645232816
+        },
+        {
+          "name": "circuit::label",
+          "samples": 18,
+          "percent_all_samples": 0.19955654101995565
+        },
+        {
+          "name": "layout::pinGroup",
+          "samples": 14,
+          "percent_all_samples": 0.15521064301552107
+        },
+        {
+          "name": "draw::line",
+          "samples": 13,
+          "percent_all_samples": 0.14412416851441243
+        },
+        {
+          "name": "svg::chip",
+          "samples": 12,
+          "percent_all_samples": 0.13303769401330376
+        },
+        {
+          "name": "svg::routes",
+          "samples": 10,
+          "percent_all_samples": 0.11086474501108648
+        },
+        {
+          "name": "layout_routes::blocked",
+          "samples": 10,
+          "percent_all_samples": 0.11086474501108648
+        },
+        {
+          "name": "myl_native_list_set",
+          "samples": 9,
+          "percent_all_samples": 0.09977827050997783
+        },
+        {
+          "name": "svg::pinStart",
+          "samples": 9,
+          "percent_all_samples": 0.09977827050997783
+        },
+        {
+          "name": "validate::pinoutCheck",
+          "samples": 8,
+          "percent_all_samples": 0.08869179600886919
+        },
+        {
+          "name": "layout::placeRows",
+          "samples": 7,
+          "percent_all_samples": 0.07760532150776053
+        },
+        {
+          "name": "circuit::collectParts",
+          "samples": 6,
+          "percent_all_samples": 0.06651884700665188
+        },
+        {
+          "name": "svg::displayRef",
+          "samples": 6,
+          "percent_all_samples": 0.06651884700665188
+        },
+        {
+          "name": "schematic::build",
+          "samples": 5,
+          "percent_all_samples": 0.05543237250554324
+        },
+        {
+          "name": "ports::byteAt",
+          "samples": 5,
+          "percent_all_samples": 0.05543237250554324
+        },
+        {
+          "name": "text::identifier",
+          "samples": 5,
+          "percent_all_samples": 0.05543237250554324
+        },
+        {
+          "name": "myl_native_heap_alloc_at",
+          "samples": 5,
+          "percent_all_samples": 0.05543237250554324
+        },
+        {
+          "name": "validate::model",
+          "samples": 5,
+          "percent_all_samples": 0.05543237250554324
+        },
+        {
+          "name": "svg::render",
+          "samples": 4,
+          "percent_all_samples": 0.04434589800443459
+        },
+        {
+          "name": "svg::instanceStart",
+          "samples": 4,
+          "percent_all_samples": 0.04434589800443459
+        },
+        {
+          "name": "svg::finishGroup",
+          "samples": 3,
+          "percent_all_samples": 0.03325942350332594
+        },
+        {
+          "name": "circuit::body",
+          "samples": 3,
+          "percent_all_samples": 0.03325942350332594
+        },
+        {
+          "name": "draw::label",
+          "samples": 3,
+          "percent_all_samples": 0.03325942350332594
+        },
+        {
+          "name": "draw::labelEnd",
+          "samples": 3,
+          "percent_all_samples": 0.03325942350332594
+        },
+        {
+          "name": "draw::labelStart",
+          "samples": 2,
+          "percent_all_samples": 0.022172949002217297
+        },
+        {
+          "name": "validate::nc_okForm",
+          "samples": 2,
+          "percent_all_samples": 0.022172949002217297
+        },
+        {
+          "name": "circuit::title",
+          "samples": 1,
+          "percent_all_samples": 0.011086474501108648
+        },
+        {
+          "name": "entry_run",
+          "samples": 1,
+          "percent_all_samples": 0.011086474501108648
+        },
+        {
+          "name": "ports::collect",
+          "samples": 1,
+          "percent_all_samples": 0.011086474501108648
+        },
+        {
+          "name": "ports::port_groupForm",
+          "samples": 1,
+          "percent_all_samples": 0.011086474501108648
+        },
+        {
+          "name": "ports::renameForm",
+          "samples": 1,
+          "percent_all_samples": 0.011086474501108648
+        },
+        {
+          "name": "circuit::railKind",
+          "samples": 1,
+          "percent_all_samples": 0.011086474501108648
+        },
+        {
+          "name": "draw::symbol",
+          "samples": 1,
+          "percent_all_samples": 0.011086474501108648
+        },
+        {
+          "name": "circuit::kind",
+          "samples": 1,
+          "percent_all_samples": 0.011086474501108648
+        },
+        {
+          "name": "ports::portForm",
+          "samples": 1,
+          "percent_all_samples": 0.011086474501108648
+        }
+      ],
+      "top_pcs": [
+        {
+          "address": "0x10bde01",
+          "samples": 554
+        },
+        {
+          "address": "0x10c5460",
+          "samples": 206
+        },
+        {
+          "address": "0x10b63e8",
+          "samples": 187
+        },
+        {
+          "address": "0x10c3310",
+          "samples": 178
+        },
+        {
+          "address": "0x1069886",
+          "samples": 134
+        },
+        {
+          "address": "0x10b7a6d",
+          "samples": 123
+        },
+        {
+          "address": "0x10b7b04",
+          "samples": 105
+        },
+        {
+          "address": "0x10be1d3",
+          "samples": 93
+        },
+        {
+          "address": "0x10bde11",
+          "samples": 74
+        },
+        {
+          "address": "0x10bdd98",
+          "samples": 69
+        },
+        {
+          "address": "0x10c33cc",
+          "samples": 62
+        },
+        {
+          "address": "0x10abe42",
+          "samples": 61
+        },
+        {
+          "address": "0x10bde79",
+          "samples": 59
+        },
+        {
+          "address": "0x10bde3b",
+          "samples": 58
+        },
+        {
+          "address": "0x10bd670",
+          "samples": 57
+        },
+        {
+          "address": "0x10c3334",
+          "samples": 55
+        },
+        {
+          "address": "0x10bdd38",
+          "samples": 54
+        },
+        {
+          "address": "0x10bde3f",
+          "samples": 52
+        },
+        {
+          "address": "0x10c33a0",
+          "samples": 51
+        },
+        {
+          "address": "0x10c338b",
+          "samples": 50
+        },
+        {
+          "address": "0x10bde05",
+          "samples": 50
+        },
+        {
+          "address": "0x10bdbb0",
+          "samples": 47
+        },
+        {
+          "address": "0x10c33d1",
+          "samples": 47
+        },
+        {
+          "address": "0x10c5060",
+          "samples": 44
+        },
+        {
+          "address": "0x10ad3ef",
+          "samples": 43
+        },
+        {
+          "address": "0x10c33d6",
+          "samples": 43
+        },
+        {
+          "address": "0x10bdbc4",
+          "samples": 39
+        },
+        {
+          "address": "0x10c1ca2",
+          "samples": 38
+        },
+        {
+          "address": "0x10bdc3a",
+          "samples": 37
+        },
+        {
+          "address": "0x10bdcd0",
+          "samples": 36
+        }
+      ]
+    },
+    "arena-lto": {
+      "binary_sha256": "8cb40e6f5a6627d929c39b360c8f895c4fc66e1e78363f1125f009c07bb61572",
+      "runs": 1200,
+      "samples": 9089,
+      "outside_main_executable": 1976,
+      "unmapped_inside": 275,
+      "functions": [
+        {
+          "name": "qbe_host_invoke",
+          "samples": 2069,
+          "percent_all_samples": 22.763780393882715
+        },
+        {
+          "name": "myl_native_list_get",
+          "samples": 787,
+          "percent_all_samples": 8.65881835185389
+        },
+        {
+          "name": "circuit::normalize",
+          "samples": 505,
+          "percent_all_samples": 5.5561667950269555
+        },
+        {
+          "name": "layout::partPin",
+          "samples": 432,
+          "percent_all_samples": 4.752998129607217
+        },
+        {
+          "name": "layout::nearest",
+          "samples": 371,
+          "percent_all_samples": 4.081857190009902
+        },
+        {
+          "name": "layout_routes::build",
+          "samples": 237,
+          "percent_all_samples": 2.6075475849928487
+        },
+        {
+          "name": "layout_graph::findId",
+          "samples": 206,
+          "percent_all_samples": 2.26647595995159
+        },
+        {
+          "name": "layout::collectRows",
+          "samples": 193,
+          "percent_all_samples": 2.123445923643965
+        },
+        {
+          "name": "put",
+          "samples": 191,
+          "percent_all_samples": 2.1014413026735617
+        },
+        {
+          "name": "byte",
+          "samples": 169,
+          "percent_all_samples": 1.8593904719991199
+        },
+        {
+          "name": "text::write",
+          "samples": 140,
+          "percent_all_samples": 1.540323467928265
+        },
+        {
+          "name": "sexpr::at",
+          "samples": 127,
+          "percent_all_samples": 1.3972934316206402
+        },
+        {
+          "name": "layout::innerPin",
+          "samples": 119,
+          "percent_all_samples": 1.309274947739025
+        },
+        {
+          "name": "svg::passive",
+          "samples": 95,
+          "percent_all_samples": 1.0452194960941799
+        },
+        {
+          "name": "myl_qbe_host_begin",
+          "samples": 80,
+          "percent_all_samples": 0.8801848388161514
+        },
+        {
+          "name": "sexpr::parse",
+          "samples": 78,
+          "percent_all_samples": 0.8581802178457476
+        },
+        {
+          "name": "text::equal",
+          "samples": 77,
+          "percent_all_samples": 0.8471779073605458
+        },
+        {
+          "name": "layout::branch",
+          "samples": 74,
+          "percent_all_samples": 0.81417097590494
+        },
+        {
+          "name": "sexpr::form",
+          "samples": 70,
+          "percent_all_samples": 0.7701617339641325
+        },
+        {
+          "name": "layout_graph::build",
+          "samples": 63,
+          "percent_all_samples": 0.6931455605677193
+        },
+        {
+          "name": "text::decimal",
+          "samples": 56,
+          "percent_all_samples": 0.6161293871713059
+        },
+        {
+          "name": "circuit::collectPins",
+          "samples": 55,
+          "percent_all_samples": 0.6051270766861041
+        },
+        {
+          "name": "text::matches",
+          "samples": 52,
+          "percent_all_samples": 0.5721201452304984
+        },
+        {
+          "name": "layout::bridge",
+          "samples": 50,
+          "percent_all_samples": 0.5501155242600946
+        },
+        {
+          "name": "layout::depth",
+          "samples": 39,
+          "percent_all_samples": 0.4290901089228738
+        },
+        {
+          "name": "ports::validate",
+          "samples": 38,
+          "percent_all_samples": 0.4180877984376719
+        },
+        {
+          "name": "layout::groundBranch",
+          "samples": 38,
+          "percent_all_samples": 0.4180877984376719
+        },
+        {
+          "name": "text::number",
+          "samples": 33,
+          "percent_all_samples": 0.36307624601166244
+        },
+        {
+          "name": "myl_native_list_append",
+          "samples": 33,
+          "percent_all_samples": 0.36307624601166244
+        },
+        {
+          "name": "io::byte",
+          "samples": 29,
+          "percent_all_samples": 0.31906700407085486
+        },
+        {
+          "name": "circuit::displayNet",
+          "samples": 29,
+          "percent_all_samples": 0.31906700407085486
+        },
+        {
+          "name": "ports::equal",
+          "samples": 26,
+          "percent_all_samples": 0.2860600726152492
+        },
+        {
+          "name": "circuit::pinForm",
+          "samples": 24,
+          "percent_all_samples": 0.2640554516448454
+        },
+        {
+          "name": "circuit::label",
+          "samples": 24,
+          "percent_all_samples": 0.2640554516448454
+        },
+        {
+          "name": "layout::endpoint",
+          "samples": 22,
+          "percent_all_samples": 0.24205083067444164
+        },
+        {
+          "name": "text::escaped",
+          "samples": 21,
+          "percent_all_samples": 0.23104852018923974
+        },
+        {
+          "name": "layout::build",
+          "samples": 21,
+          "percent_all_samples": 0.23104852018923974
+        },
+        {
+          "name": "layout_routes::blocked",
+          "samples": 14,
+          "percent_all_samples": 0.15403234679282649
+        },
+        {
+          "name": "draw::line",
+          "samples": 13,
+          "percent_all_samples": 0.1430300363076246
+        },
+        {
+          "name": "svg::routes",
+          "samples": 11,
+          "percent_all_samples": 0.12102541533722082
+        },
+        {
+          "name": "validate::model",
+          "samples": 10,
+          "percent_all_samples": 0.11002310485201892
+        },
+        {
+          "name": "layout::placeRows",
+          "samples": 9,
+          "percent_all_samples": 0.09902079436681703
+        },
+        {
+          "name": "myl_native_list_set",
+          "samples": 8,
+          "percent_all_samples": 0.08801848388161514
+        },
+        {
+          "name": "circuit::collectParts",
+          "samples": 8,
+          "percent_all_samples": 0.08801848388161514
+        },
+        {
+          "name": "svg::render",
+          "samples": 7,
+          "percent_all_samples": 0.07701617339641324
+        },
+        {
+          "name": "layout::pinGroup",
+          "samples": 7,
+          "percent_all_samples": 0.07701617339641324
+        },
+        {
+          "name": "svg::displayRef",
+          "samples": 7,
+          "percent_all_samples": 0.07701617339641324
+        },
+        {
+          "name": "layout::height",
+          "samples": 5,
+          "percent_all_samples": 0.05501155242600946
+        },
+        {
+          "name": "svg::pinStart",
+          "samples": 5,
+          "percent_all_samples": 0.05501155242600946
+        },
+        {
+          "name": "svg::instanceStart",
+          "samples": 5,
+          "percent_all_samples": 0.05501155242600946
+        },
+        {
+          "name": "circuit::body",
+          "samples": 4,
+          "percent_all_samples": 0.04400924194080757
+        },
+        {
+          "name": "main",
+          "samples": 4,
+          "percent_all_samples": 0.04400924194080757
+        },
+        {
+          "name": "svg::chip",
+          "samples": 4,
+          "percent_all_samples": 0.04400924194080757
+        },
+        {
+          "name": "svg::finishGroup",
+          "samples": 4,
+          "percent_all_samples": 0.04400924194080757
+        },
+        {
+          "name": "validate::pinoutCheck",
+          "samples": 3,
+          "percent_all_samples": 0.033006931455605674
+        },
+        {
+          "name": "myl_native_heap_alloc_at",
+          "samples": 3,
+          "percent_all_samples": 0.033006931455605674
+        },
+        {
+          "name": "draw::labelStart",
+          "samples": 3,
+          "percent_all_samples": 0.033006931455605674
+        },
+        {
+          "name": "text::identifier",
+          "samples": 3,
+          "percent_all_samples": 0.033006931455605674
+        },
+        {
+          "name": "ports::byteAt",
+          "samples": 3,
+          "percent_all_samples": 0.033006931455605674
+        },
+        {
+          "name": "layout::rowHeight",
+          "samples": 2,
+          "percent_all_samples": 0.022004620970403784
+        },
+        {
+          "name": "draw::rect",
+          "samples": 2,
+          "percent_all_samples": 0.022004620970403784
+        },
+        {
+          "name": "draw::labelEnd",
+          "samples": 2,
+          "percent_all_samples": 0.022004620970403784
+        },
+        {
+          "name": "svg::ports",
+          "samples": 2,
+          "percent_all_samples": 0.022004620970403784
+        },
+        {
+          "name": "validate::idForm",
+          "samples": 2,
+          "percent_all_samples": 0.022004620970403784
+        },
+        {
+          "name": "ports::direction",
+          "samples": 2,
+          "percent_all_samples": 0.022004620970403784
+        },
+        {
+          "name": "myl_qbe_region_restore",
+          "samples": 2,
+          "percent_all_samples": 0.022004620970403784
+        },
+        {
+          "name": "circuit::railKind",
+          "samples": 1,
+          "percent_all_samples": 0.011002310485201892
+        },
+        {
+          "name": "draw::symbol",
+          "samples": 1,
+          "percent_all_samples": 0.011002310485201892
+        },
+        {
+          "name": "schematic::build",
+          "samples": 1,
+          "percent_all_samples": 0.011002310485201892
+        },
+        {
+          "name": "draw::label",
+          "samples": 1,
+          "percent_all_samples": 0.011002310485201892
+        },
+        {
+          "name": "validate::pinForm",
+          "samples": 1,
+          "percent_all_samples": 0.011002310485201892
+        },
+        {
+          "name": "ports::portForm",
+          "samples": 1,
+          "percent_all_samples": 0.011002310485201892
+        },
+        {
+          "name": "ports::collect",
+          "samples": 1,
+          "percent_all_samples": 0.011002310485201892
+        },
+        {
+          "name": "svg::portName",
+          "samples": 1,
+          "percent_all_samples": 0.011002310485201892
+        },
+        {
+          "name": "ports::signalForm",
+          "samples": 1,
+          "percent_all_samples": 0.011002310485201892
+        },
+        {
+          "name": "ports::port_groupForm",
+          "samples": 1,
+          "percent_all_samples": 0.011002310485201892
+        },
+        {
+          "name": "layout_routes::external",
+          "samples": 1,
+          "percent_all_samples": 0.011002310485201892
+        }
+      ],
+      "top_pcs": [
+        {
+          "address": "0x10bde51",
+          "samples": 521
+        },
+        {
+          "address": "0x10c5780",
+          "samples": 208
+        },
+        {
+          "address": "0x10b6438",
+          "samples": 186
+        },
+        {
+          "address": "0x10c3530",
+          "samples": 182
+        },
+        {
+          "address": "0x10698d1",
+          "samples": 115
+        },
+        {
+          "address": "0x10b7abd",
+          "samples": 106
+        },
+        {
+          "address": "0x10be223",
+          "samples": 99
+        },
+        {
+          "address": "0x10b7b54",
+          "samples": 98
+        },
+        {
+          "address": "0x10bde61",
+          "samples": 91
+        },
+        {
+          "address": "0x10c35ec",
+          "samples": 83
+        },
+        {
+          "address": "0x10bdec9",
+          "samples": 72
+        },
+        {
+          "address": "0x10c35ab",
+          "samples": 67
+        },
+        {
+          "address": "0x10bde8b",
+          "samples": 66
+        },
+        {
+          "address": "0x10bde8f",
+          "samples": 59
+        },
+        {
+          "address": "0x10bdde8",
+          "samples": 58
+        },
+        {
+          "address": "0x10bdc00",
+          "samples": 58
+        },
+        {
+          "address": "0x10c3554",
+          "samples": 57
+        },
+        {
+          "address": "0x10bd6c0",
+          "samples": 56
+        },
+        {
+          "address": "0x10abe92",
+          "samples": 54
+        },
+        {
+          "address": "0x10bdd20",
+          "samples": 46
+        },
+        {
+          "address": "0x10bde55",
+          "samples": 45
+        },
+        {
+          "address": "0x10c3546",
+          "samples": 42
+        },
+        {
+          "address": "0x10c35f1",
+          "samples": 42
+        },
+        {
+          "address": "0x10bddee",
+          "samples": 42
+        },
+        {
+          "address": "0x10bdc14",
+          "samples": 42
+        },
+        {
+          "address": "0x10bdc25",
+          "samples": 41
+        },
+        {
+          "address": "0x10bdd88",
+          "samples": 40
+        },
+        {
+          "address": "0x10c5380",
+          "samples": 39
+        },
+        {
+          "address": "0x10c35c0",
+          "samples": 37
+        },
+        {
+          "address": "0x1068440",
+          "samples": 35
+        }
+      ]
+    },
+    "gc-lto-bounded": {
+      "binary_sha256": "e5bbd804057112c9bd4b7c100b9aab09072e525b7dcc611d0321dc7c794c79c0",
+      "runs": 1200,
+      "samples": 22370,
+      "outside_main_executable": 2501,
+      "unmapped_inside": 353,
+      "functions": [
+        {
+          "name": "qbe_host_invoke",
+          "samples": 2964,
+          "percent_all_samples": 13.249888243182834
+        },
+        {
+          "name": "layout_graph::findId",
+          "samples": 2188,
+          "percent_all_samples": 9.78095663835494
+        },
+        {
+          "name": "layout::partPin",
+          "samples": 1879,
+          "percent_all_samples": 8.399642378185069
+        },
+        {
+          "name": "myl_native_list_get",
+          "samples": 1545,
+          "percent_all_samples": 6.906571300849352
+        },
+        {
+          "name": "layout_routes::build",
+          "samples": 1462,
+          "percent_all_samples": 6.53553866785874
+        },
+        {
+          "name": "circuit::normalize",
+          "samples": 1320,
+          "percent_all_samples": 5.900759946356728
+        },
+        {
+          "name": "layout::nearest",
+          "samples": 1028,
+          "percent_all_samples": 4.595440321859633
+        },
+        {
+          "name": "sexpr::parse",
+          "samples": 699,
+          "percent_all_samples": 3.1247206079570855
+        },
+        {
+          "name": "sexpr::at",
+          "samples": 669,
+          "percent_all_samples": 2.990612427358069
+        },
+        {
+          "name": "text::write",
+          "samples": 451,
+          "percent_all_samples": 2.016092981671882
+        },
+        {
+          "name": "layout::collectRows",
+          "samples": 311,
+          "percent_all_samples": 1.390254805543138
+        },
+        {
+          "name": "text::matches",
+          "samples": 285,
+          "percent_all_samples": 1.2740277156906572
+        },
+        {
+          "name": "text::equal",
+          "samples": 282,
+          "percent_all_samples": 1.2606168976307555
+        },
+        {
+          "name": "text::number",
+          "samples": 267,
+          "percent_all_samples": 1.1935628073312472
+        },
+        {
+          "name": "svg::passive",
+          "samples": 266,
+          "percent_all_samples": 1.1890925346446133
+        },
+        {
+          "name": "sexpr::form",
+          "samples": 250,
+          "percent_all_samples": 1.117568171658471
+        },
+        {
+          "name": "byte",
+          "samples": 246,
+          "percent_all_samples": 1.0996870809119357
+        },
+        {
+          "name": "circuit::collectPins",
+          "samples": 242,
+          "percent_all_samples": 1.0818059901654
+        },
+        {
+          "name": "layout_graph::build",
+          "samples": 230,
+          "percent_all_samples": 1.0281627179257935
+        },
+        {
+          "name": "layout::branch",
+          "samples": 211,
+          "percent_all_samples": 0.9432275368797497
+        },
+        {
+          "name": "circuit::label",
+          "samples": 198,
+          "percent_all_samples": 0.8851139919535091
+        },
+        {
+          "name": "put",
+          "samples": 192,
+          "percent_all_samples": 0.8582923558337059
+        },
+        {
+          "name": "text::escaped",
+          "samples": 186,
+          "percent_all_samples": 0.8314707197139025
+        },
+        {
+          "name": "layout::innerPin",
+          "samples": 175,
+          "percent_all_samples": 0.7822977201609298
+        },
+        {
+          "name": "text::decimal",
+          "samples": 164,
+          "percent_all_samples": 0.7331247206079571
+        },
+        {
+          "name": "circuit::pinForm",
+          "samples": 143,
+          "percent_all_samples": 0.6392489941886456
+        },
+        {
+          "name": "layout::endpoint",
+          "samples": 120,
+          "percent_all_samples": 0.5364327223960662
+        },
+        {
+          "name": "layout::groundBranch",
+          "samples": 112,
+          "percent_all_samples": 0.5006705409029951
+        },
+        {
+          "name": "circuit::displayNet",
+          "samples": 106,
+          "percent_all_samples": 0.47384890478319175
+        },
+        {
+          "name": "layout::depth",
+          "samples": 97,
+          "percent_all_samples": 0.4336164506034868
+        },
+        {
+          "name": "ports::equal",
+          "samples": 96,
+          "percent_all_samples": 0.42914617791685294
+        },
+        {
+          "name": "layout::bridge",
+          "samples": 82,
+          "percent_all_samples": 0.36656236030397854
+        },
+        {
+          "name": "io::byte",
+          "samples": 76,
+          "percent_all_samples": 0.3397407241841752
+        },
+        {
+          "name": "ports::validate",
+          "samples": 76,
+          "percent_all_samples": 0.3397407241841752
+        },
+        {
+          "name": "myl_qbe_host_begin",
+          "samples": 75,
+          "percent_all_samples": 0.33527045149754137
+        },
+        {
+          "name": "validate::model",
+          "samples": 75,
+          "percent_all_samples": 0.33527045149754137
+        },
+        {
+          "name": "layout::build",
+          "samples": 72,
+          "percent_all_samples": 0.3218596334376397
+        },
+        {
+          "name": "layout_routes::blocked",
+          "samples": 60,
+          "percent_all_samples": 0.2682163611980331
+        },
+        {
+          "name": "draw::line",
+          "samples": 42,
+          "percent_all_samples": 0.18775145283862316
+        },
+        {
+          "name": "text::identifier",
+          "samples": 41,
+          "percent_all_samples": 0.18328118015198927
+        },
+        {
+          "name": "layout::pinGroup",
+          "samples": 40,
+          "percent_all_samples": 0.17881090746535538
+        },
+        {
+          "name": "validate::pinoutCheck",
+          "samples": 39,
+          "percent_all_samples": 0.1743406347787215
+        },
+        {
+          "name": "ports::byteAt",
+          "samples": 33,
+          "percent_all_samples": 0.14751899865891818
+        },
+        {
+          "name": "svg::pinStart",
+          "samples": 28,
+          "percent_all_samples": 0.12516763522574878
+        },
+        {
+          "name": "myl_native_list_append",
+          "samples": 26,
+          "percent_all_samples": 0.11622708985248101
+        },
+        {
+          "name": "circuit::collectParts",
+          "samples": 26,
+          "percent_all_samples": 0.11622708985248101
+        },
+        {
+          "name": "svg::routes",
+          "samples": 25,
+          "percent_all_samples": 0.11175681716584712
+        },
+        {
+          "name": "draw::labelStart",
+          "samples": 24,
+          "percent_all_samples": 0.10728654447921324
+        },
+        {
+          "name": "svg::chip",
+          "samples": 22,
+          "percent_all_samples": 0.09834599910594546
+        },
+        {
+          "name": "layout::placeRows",
+          "samples": 22,
+          "percent_all_samples": 0.09834599910594546
+        },
+        {
+          "name": "svg::render",
+          "samples": 22,
+          "percent_all_samples": 0.09834599910594546
+        },
+        {
+          "name": "text::empty",
+          "samples": 21,
+          "percent_all_samples": 0.09387572641931158
+        },
+        {
+          "name": "svg::displayRef",
+          "samples": 17,
+          "percent_all_samples": 0.07599463567277603
+        },
+        {
+          "name": "svg::instanceStart",
+          "samples": 16,
+          "percent_all_samples": 0.07152436298614215
+        },
+        {
+          "name": "validate::fields",
+          "samples": 15,
+          "percent_all_samples": 0.06705409029950828
+        },
+        {
+          "name": "layout_routes::external",
+          "samples": 11,
+          "percent_all_samples": 0.04917299955297273
+        },
+        {
+          "name": "circuit::railKind",
+          "samples": 11,
+          "percent_all_samples": 0.04917299955297273
+        },
+        {
+          "name": "svg::finishGroup",
+          "samples": 11,
+          "percent_all_samples": 0.04917299955297273
+        },
+        {
+          "name": "ports::collect",
+          "samples": 10,
+          "percent_all_samples": 0.044702726866338846
+        },
+        {
+          "name": "layout::height",
+          "samples": 10,
+          "percent_all_samples": 0.044702726866338846
+        },
+        {
+          "name": "validate::idForm",
+          "samples": 10,
+          "percent_all_samples": 0.044702726866338846
+        },
+        {
+          "name": "draw::symbol",
+          "samples": 9,
+          "percent_all_samples": 0.04023245417970496
+        },
+        {
+          "name": "draw::labelEnd",
+          "samples": 8,
+          "percent_all_samples": 0.035762181493071074
+        },
+        {
+          "name": "circuit::instanceForm",
+          "samples": 7,
+          "percent_all_samples": 0.031291908806437195
+        },
+        {
+          "name": "validate::nc_okForm",
+          "samples": 6,
+          "percent_all_samples": 0.02682163611980331
+        },
+        {
+          "name": "validate::metadata",
+          "samples": 5,
+          "percent_all_samples": 0.022351363433169423
+        },
+        {
+          "name": "myl_native_list_set",
+          "samples": 5,
+          "percent_all_samples": 0.022351363433169423
+        },
+        {
+          "name": "validate::pinForm",
+          "samples": 4,
+          "percent_all_samples": 0.017881090746535537
+        },
+        {
+          "name": "text::folded",
+          "samples": 4,
+          "percent_all_samples": 0.017881090746535537
+        },
+        {
+          "name": "circuit::kind",
+          "samples": 4,
+          "percent_all_samples": 0.017881090746535537
+        },
+        {
+          "name": "validate::source",
+          "samples": 4,
+          "percent_all_samples": 0.017881090746535537
+        },
+        {
+          "name": "svg::ports",
+          "samples": 3,
+          "percent_all_samples": 0.013410818059901655
+        },
+        {
+          "name": "myl_native_heap_alloc_at",
+          "samples": 3,
+          "percent_all_samples": 0.013410818059901655
+        },
+        {
+          "name": "circuit::body",
+          "samples": 3,
+          "percent_all_samples": 0.013410818059901655
+        },
+        {
+          "name": "layout::rowHeight",
+          "samples": 3,
+          "percent_all_samples": 0.013410818059901655
+        },
+        {
+          "name": "circuit::moduleForm",
+          "samples": 2,
+          "percent_all_samples": 0.008940545373267769
+        },
+        {
+          "name": "draw::rect",
+          "samples": 2,
+          "percent_all_samples": 0.008940545373267769
+        },
+        {
+          "name": "validate::pinoutForm",
+          "samples": 2,
+          "percent_all_samples": 0.008940545373267769
+        },
+        {
+          "name": "circuit::ncForm",
+          "samples": 2,
+          "percent_all_samples": 0.008940545373267769
+        },
+        {
+          "name": "ports::port_groupForm",
+          "samples": 2,
+          "percent_all_samples": 0.008940545373267769
+        },
+        {
+          "name": "validate::instanceForm",
+          "samples": 2,
+          "percent_all_samples": 0.008940545373267769
+        },
+        {
+          "name": "main",
+          "samples": 2,
+          "percent_all_samples": 0.008940545373267769
+        },
+        {
+          "name": "svg::ground",
+          "samples": 1,
+          "percent_all_samples": 0.004470272686633884
+        },
+        {
+          "name": "validate::defmoduleForm",
+          "samples": 1,
+          "percent_all_samples": 0.004470272686633884
+        },
+        {
+          "name": "validate::decouplesForm",
+          "samples": 1,
+          "percent_all_samples": 0.004470272686633884
+        },
+        {
+          "name": "ports::direction",
+          "samples": 1,
+          "percent_all_samples": 0.004470272686633884
+        },
+        {
+          "name": "draw::label",
+          "samples": 1,
+          "percent_all_samples": 0.004470272686633884
+        },
+        {
+          "name": "ports::signalForm",
+          "samples": 1,
+          "percent_all_samples": 0.004470272686633884
+        },
+        {
+          "name": "ports::renameForm",
+          "samples": 1,
+          "percent_all_samples": 0.004470272686633884
+        },
+        {
+          "name": "circuit::blockForm",
+          "samples": 1,
+          "percent_all_samples": 0.004470272686633884
+        },
+        {
+          "name": "ports::interfaceForm",
+          "samples": 1,
+          "percent_all_samples": 0.004470272686633884
+        },
+        {
+          "name": "layout_graph::rail",
+          "samples": 1,
+          "percent_all_samples": 0.004470272686633884
+        },
+        {
+          "name": "myl_qbe_on_stack",
+          "samples": 1,
+          "percent_all_samples": 0.004470272686633884
+        },
+        {
+          "name": "validate::importForm",
+          "samples": 1,
+          "percent_all_samples": 0.004470272686633884
+        }
+      ],
+      "top_pcs": [
+        {
+          "address": "0x1122ab1",
+          "samples": 970
+        },
+        {
+          "address": "0x110d897",
+          "samples": 395
+        },
+        {
+          "address": "0x1111560",
+          "samples": 288
+        },
+        {
+          "address": "0x112736c",
+          "samples": 288
+        },
+        {
+          "address": "0x1129400",
+          "samples": 252
+        },
+        {
+          "address": "0x11272b0",
+          "samples": 226
+        },
+        {
+          "address": "0x107c827",
+          "samples": 217
+        },
+        {
+          "address": "0x11272c6",
+          "samples": 207
+        },
+        {
+          "address": "0x107be86",
+          "samples": 191
+        },
+        {
+          "address": "0x1127371",
+          "samples": 151
+        },
+        {
+          "address": "0x11117bf",
+          "samples": 145
+        },
+        {
+          "address": "0x10fb40d",
+          "samples": 141
+        },
+        {
+          "address": "0x10f18e0",
+          "samples": 139
+        },
+        {
+          "address": "0x1104069",
+          "samples": 138
+        },
+        {
+          "address": "0x10fb4af",
+          "samples": 110
+        },
+        {
+          "address": "0x1122885",
+          "samples": 109
+        },
+        {
+          "address": "0x11272ca",
+          "samples": 107
+        },
+        {
+          "address": "0x11272c2",
+          "samples": 103
+        },
+        {
+          "address": "0x10fb45e",
+          "samples": 101
+        },
+        {
+          "address": "0x107cf9b",
+          "samples": 94
+        },
+        {
+          "address": "0x10fdcef",
+          "samples": 92
+        },
+        {
+          "address": "0x1127376",
+          "samples": 92
+        },
+        {
+          "address": "0x1122ab5",
+          "samples": 91
+        },
+        {
+          "address": "0x1122e83",
+          "samples": 90
+        },
+        {
+          "address": "0x1122b29",
+          "samples": 90
+        },
+        {
+          "address": "0x1122ac1",
+          "samples": 90
+        },
+        {
+          "address": "0x107cf04",
+          "samples": 86
+        },
+        {
+          "address": "0x10fb356",
+          "samples": 85
+        },
+        {
+          "address": "0x10fb443",
+          "samples": 85
+        },
+        {
+          "address": "0x10fb428",
+          "samples": 84
+        }
+      ]
+    }
+  }
+}

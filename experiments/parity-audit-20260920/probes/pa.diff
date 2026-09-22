@@ -1,0 +1,16 @@
+diff -ru /tmp/claude-1000/-home-epentland-ai-canopy-mylang/6108061e-40b0-485a-852b-53c35cd1760e/scratchpad/probes/ctl/sexpr/printer.my /tmp/claude-1000/-home-epentland-ai-canopy-mylang/6108061e-40b0-485a-852b-53c35cd1760e/scratchpad/probes/pa/sexpr/printer.my
+--- /tmp/claude-1000/-home-epentland-ai-canopy-mylang/6108061e-40b0-485a-852b-53c35cd1760e/scratchpad/probes/ctl/sexpr/printer.my	2026-09-20 16:01:26.501034542 +0000
++++ /tmp/claude-1000/-home-epentland-ai-canopy-mylang/6108061e-40b0-485a-852b-53c35cd1760e/scratchpad/probes/pa/sexpr/printer.my	2026-09-20 15:58:54.269409384 +0000
+@@ -127,11 +127,7 @@
+ # boundary), so the empty count is the only reachable fallback and it keeps
+ # measurement total, exactly as the empty spelling did.
+ def scalar_len(found: view.View) -> int:
+-    match found.source.view(found.start, found.end).scalar_count():
+-        case Ok(count):
+-            return count
+-        case Err(_):
+-            return 0
++    return found.end - found.start
+ 
+ 
+ # A measured width, or None when Zig's estimate gives up: past four levels of

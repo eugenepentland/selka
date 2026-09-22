@@ -1,0 +1,157 @@
+{
+  "passed": true,
+  "arms": {
+    "aggregate-inline-metadata-control": {
+      "binary_sha256": "dd51549a5ee557c7d983f0cc2c0b8278e91dcd2fd03a410e979562ceb8bbc111",
+      "bounded": false,
+      "cases": {
+        "fixture": {
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "stderr": "",
+          "gc_stress_checked": true,
+          "max_steps": null
+        },
+        "changed-net": {
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647,
+          "status": 0,
+          "stdout": "0\n",
+          "stderr": "",
+          "gc_stress_checked": true,
+          "max_steps": null
+        },
+        "changed-value": {
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "stderr": "",
+          "gc_stress_checked": true,
+          "max_steps": null
+        }
+      }
+    },
+    "aggregate-inline-typed-host": {
+      "binary_sha256": "f13c18e5d402b36c9e000c2b588354355b5a9eafcaeabfb56bfb31d5f2129431",
+      "bounded": false,
+      "cases": {
+        "fixture": {
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "stderr": "",
+          "gc_stress_checked": true,
+          "max_steps": null
+        },
+        "changed-net": {
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647,
+          "status": 0,
+          "stdout": "0\n",
+          "stderr": "",
+          "gc_stress_checked": true,
+          "max_steps": null
+        },
+        "changed-value": {
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "stderr": "",
+          "gc_stress_checked": true,
+          "max_steps": null
+        }
+      }
+    },
+    "aggregate-inline-bounded-metadata-control": {
+      "binary_sha256": "5613818494a4bd8e480889e65133b6b0ab641406f6acb2b6bab78a356c0b7848",
+      "bounded": true,
+      "cases": {
+        "fixture": {
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "stderr": "",
+          "gc_stress_checked": true,
+          "max_steps": 100000000
+        },
+        "changed-net": {
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647,
+          "status": 0,
+          "stdout": "0\n",
+          "stderr": "",
+          "gc_stress_checked": true,
+          "max_steps": 100000000
+        },
+        "changed-value": {
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "stderr": "",
+          "gc_stress_checked": true,
+          "max_steps": 100000000
+        }
+      },
+      "budget_rejection": {
+        "--max-steps=1": {
+          "status": 1,
+          "stderr": "main.my:7:5: error[R_STEP_LIMIT]: instruction budget exhausted; raise it with --max-steps=N\n  in <entry> at main.my:7:5\n"
+        },
+        "--max-frames=1": {
+          "status": 1,
+          "stderr": "main.my:7:5: error[R_FRAME_LIMIT]: call-depth budget exhausted; raise it with --max-frames=N\n  in <entry> at main.my:7:5\n"
+        }
+      }
+    },
+    "aggregate-inline-bounded-typed-host": {
+      "binary_sha256": "83a01d8110168eda4ac055ffaf1401726d7d92f3965a2c5e7e3c4ad1f3605377",
+      "bounded": true,
+      "cases": {
+        "fixture": {
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "stderr": "",
+          "gc_stress_checked": true,
+          "max_steps": 100000000
+        },
+        "changed-net": {
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647,
+          "status": 0,
+          "stdout": "0\n",
+          "stderr": "",
+          "gc_stress_checked": true,
+          "max_steps": 100000000
+        },
+        "changed-value": {
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617,
+          "status": 0,
+          "stdout": "0\n",
+          "stderr": "",
+          "gc_stress_checked": true,
+          "max_steps": 100000000
+        }
+      },
+      "budget_rejection": {
+        "--max-steps=1": {
+          "status": 1,
+          "stderr": "main.my:7:5: error[R_STEP_LIMIT]: instruction budget exhausted; raise it with --max-steps=N\n  in <entry> at main.my:7:5\n"
+        },
+        "--max-frames=1": {
+          "status": 1,
+          "stderr": "main.my:7:5: error[R_FRAME_LIMIT]: call-depth budget exhausted; raise it with --max-frames=N\n  in <entry> at main.my:7:5\n"
+        }
+      }
+    }
+  }
+}

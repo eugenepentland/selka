@@ -1,0 +1,27 @@
+Fixed `project/main.my`.
+
+**What was wrong:** line 12 did `score = bonus + lookup("five")`, adding an `int` to a `Result[int, str]` → `E_TYPE: expected int, found Result[int, str]`.
+
+**What I changed:** the only change is in `main` — `lookup("five")` is now unwrapped with a `match` over its `Ok`/`Err` cases, keeping the `bonus` addition and the existing `out.print(score)`:
+
+```mylang
+def main(out: Stream) -> int:
+    bonus = 0
+    match lookup("five"):
+        case Ok(v):
+            score = bonus + v
+        case Err(_):
+            score = bonus
+    out.print(score)
+    return 0
+```
+
+`lookup` itself is untouched (still returns `Result[int, str]`), and all scratch files I used while probing the language were removed.
+
+**Command and result:**
+
+```
+$ bin/mylang run project/main.my
+5
+```
+exit code 0, stdout exactly `5\n`, empty stderr.

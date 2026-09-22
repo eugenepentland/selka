@@ -1,0 +1,80 @@
+[
+  {
+    "stage": 1,
+    "function": "schematic_inputs::load",
+    "calls": {
+      "io::circuit_input": 1,
+      "io::pinout_input": 1,
+      "io::interface_input": 1,
+      "io::length": 0,
+      "io::byte": 0,
+      "io::put": 0,
+      "io::issue": 0
+    }
+  },
+  {
+    "stage": 2,
+    "function": "sexpr::parse",
+    "calls": {
+      "io::circuit_input": 0,
+      "io::pinout_input": 0,
+      "io::interface_input": 0,
+      "io::length": 1,
+      "io::byte": 25779,
+      "io::put": 0,
+      "io::issue": 0
+    }
+  },
+  {
+    "stage": 3,
+    "function": "sexpr::parse",
+    "calls": {
+      "io::circuit_input": 0,
+      "io::pinout_input": 0,
+      "io::interface_input": 0,
+      "io::length": 1,
+      "io::byte": 1101,
+      "io::put": 0,
+      "io::issue": 0
+    }
+  },
+  {
+    "stage": 4,
+    "function": "sexpr::parse",
+    "calls": {
+      "io::circuit_input": 0,
+      "io::pinout_input": 0,
+      "io::interface_input": 0,
+      "io::length": 1,
+      "io::byte": 475,
+      "io::put": 0,
+      "io::issue": 0
+    }
+  },
+  {
+    "stage": 5,
+    "function": "schematic::build",
+    "calls": {
+      "io::circuit_input": 0,
+      "io::pinout_input": 0,
+      "io::interface_input": 0,
+      "io::length": 0,
+      "io::byte": 11750,
+      "io::put": 0,
+      "io::issue": 0
+    }
+  },
+  {
+    "stage": 6,
+    "function": "svg::render",
+    "calls": {
+      "io::circuit_input": 0,
+      "io::pinout_input": 0,
+      "io::interface_input": 0,
+      "io::length": 0,
+      "io::byte": 491695,
+      "io::put": 49617,
+      "io::issue": 0
+    }
+  }
+]

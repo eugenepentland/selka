@@ -211,7 +211,7 @@ def run_case(case: Case, directory: Path) -> str:
         )
         if "L_SENTINEL_INT" in result.stdout:
             return "PASS"
-        if any(code in result.stdout for code in UNIMPLEMENTED):
+        if any(code in result.stdout + result.stderr for code in UNIMPLEMENTED):
             return "SKIP (construct not implemented)"
         return f"FAIL: no L_SENTINEL_INT in {result.stdout.strip()[:200]}"
 
@@ -230,7 +230,12 @@ def run_case(case: Case, directory: Path) -> str:
         seen = {record.get("code") for record in records}
         missing = [code for code in case.codes if code not in seen]
         if missing:
-            if not seen or seen <= UNIMPLEMENTED:
+            # A case checks against the *installed* compiler, which may predate
+            # the item. `E_MAIN` is in this set because a program whose entry
+            # point the checker has not reached yet reports it first, and
+            # `W_UNUSED_BINDING` because item 2 turns that warning into
+            # `E_UNUSED_CAPABILITY`.
+            if not seen or seen <= UNIMPLEMENTED | {"E_MAIN", "W_UNUSED_BINDING"}:
                 return f"SKIP (construct not implemented: {sorted(seen)})"
             return f"FAIL: missing {missing}; saw {sorted(seen)}"
         for paste in case.pastes:

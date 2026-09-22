@@ -1,0 +1,6 @@
+{
+  "id": "module-path",
+  "family": "E_MODULE_READ",
+  "split": "dev",
+  "expect": "42"
+}

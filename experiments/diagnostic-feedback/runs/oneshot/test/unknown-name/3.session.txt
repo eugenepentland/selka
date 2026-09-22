@@ -1,0 +1,3 @@
+Change: in `project/main.my`, replaced the unknown name `reward` with the function's parameter `bonus` (`return total + bonus`), so `pick(5)` returns `10 + 5`.
+
+Command run: `./bin/mylang run project/main.my` → printed `15`, exit code 0.

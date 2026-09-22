@@ -1,0 +1,136 @@
+<div id="svg-gc-arena-comparison">
+  <style>
+    #svg-gc-arena-comparison .svg-timing-plot { display: block; width: 100%; overflow: visible; }
+    #svg-gc-arena-comparison .svg-timing-plot text { fill: var(--foreground); font-size: 12px; font-family: inherit; }
+    #svg-gc-arena-comparison .svg-timing-plot .timing-value { font-variant-numeric: tabular-nums; font-weight: 500; }
+  </style>
+  <h3>Full SVG: mylang, Rust, Go and Zig</h3>
+  <div class="text-small text-muted">Original circuit · median of 31 runs · milliseconds · lower is faster</div>
+  <svg class="svg-timing-plot" role="img" aria-labelledby="svg-gc-arena-title svg-gc-arena-desc">
+    <title id="svg-gc-arena-title">Full SVG rendering time, current implementations</title>
+    <desc id="svg-gc-arena-desc">Zig port: 1.47 milliseconds. Rust: 1.59 milliseconds. Go: 1.99 milliseconds. Zig NetLisp: 2.47 milliseconds. mylang GC with LTO: 5.05 milliseconds. mylang arena with LTO: 5.04 milliseconds. mylang GC with LTO and tool limits: 9.93 milliseconds. mylang arena with LTO and tool limits: 9.81 milliseconds. NetLisp uses a different renderer; the other implementations produce byte-identical SVGs. Tool limits include step and call-depth checks. Each bar includes process startup through SVG file output and shutdown, excluding compilation.</desc>
+  </svg>
+  <div class="text-small text-muted">mylang: LLVM O3 + LTO · Rust: O3 · Go: default optimization · Zig: ReleaseFast</div>
+  <div class="text-small text-muted">Same SVG except NetLisp (different renderer) · CPU 6 · GC stress excluded</div>
+  <script>
+    (() => {
+      const root = document.getElementById('svg-gc-arena-comparison');
+      const svg = root.querySelector('.svg-timing-plot');
+      const ns = 'http://www.w3.org/2000/svg';
+      const observations = [
+  {
+    "arm": "zig-o3",
+    "label": "Zig port · ReleaseFast",
+    "ms": 1.465086,
+    "color": "var(--viz-series-3)"
+  },
+  {
+    "arm": "rust-o3",
+    "label": "Rust · O3",
+    "ms": 1.590658,
+    "color": "var(--viz-series-4)"
+  },
+  {
+    "arm": "go-fast",
+    "label": "Go · GC",
+    "ms": 1.989627,
+    "color": "var(--viz-series-5)"
+  },
+  {
+    "arm": "netlisp",
+    "label": "Zig NetLisp · different renderer",
+    "ms": 2.473686,
+    "color": "var(--viz-series-6)"
+  },
+  {
+    "arm": "gc-lto",
+    "label": "mylang GC · LTO",
+    "ms": 5.052672,
+    "color": "var(--viz-series-1)"
+  },
+  {
+    "arm": "arena-lto",
+    "label": "mylang arena · LTO",
+    "ms": 5.036487,
+    "color": "var(--viz-series-2)"
+  },
+  {
+    "arm": "gc-lto-bounded",
+    "label": "mylang GC · LTO + tool limits",
+    "ms": 9.931424,
+    "color": "var(--viz-series-1)"
+  },
+  {
+    "arm": "arena-lto-bounded",
+    "label": "mylang arena · LTO + tool limits",
+    "ms": 9.814549,
+    "color": "var(--viz-series-2)"
+  }
+];
+      function element(tag, attributes, content) {
+        const node = document.createElementNS(ns, tag);
+        Object.entries(attributes).forEach(([key, value]) => node.setAttribute(key, value));
+        if (content !== undefined) node.textContent = content;
+        return node;
+      }
+      function draw() {
+        const width = Math.max(280, Math.floor(root.getBoundingClientRect().width));
+        const left = 12;
+        const right = width - 12;
+        const plotTop = 34;
+        const plotBottom = plotTop + observations.length * 56 + 7;
+        const height = plotBottom + 55;
+        const longest = Math.max(...observations.map(row => row.ms));
+        const maximum = Math.ceil(longest * 1.18 / 2) * 2;
+        const scale = value => left + 6 + value / maximum * (right - left - 68);
+        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        svg.setAttribute('height', height);
+        svg.querySelectorAll('g[data-plot]').forEach(node => node.remove());
+        const plot = element('g', { 'data-plot': '' });
+        svg.appendChild(plot);
+        plot.appendChild(element('text', { x: left, y: 22, class: 'axis-title', 'data-axis': 'y' }, 'Build configuration'));
+        plot.appendChild(element('rect', {
+          x: left, y: plotTop, width: right - left, height: plotBottom - plotTop,
+          fill: 'none', stroke: 'var(--border)', 'data-chart-frame': ''
+        }));
+        for (let i = 0; i <= 3; i += 1) {
+          const value = maximum * i / 3;
+          const x = scale(value);
+          plot.appendChild(element('line', { x1: x, x2: x, y1: plotTop + 1, y2: plotBottom, stroke: 'var(--border)', 'stroke-opacity': '0.5' }));
+          plot.appendChild(element('text', { x, y: plotBottom + 20, 'text-anchor': i === 0 ? 'start' : 'middle' }, value.toFixed(1)));
+        }
+        observations.forEach((row, index) => {
+          const y = plotTop + 21 + index * 56;
+          const group = element('g', {});
+          plot.appendChild(group);
+          group.appendChild(element('text', { x: left + 6, y }, row.label));
+          group.appendChild(element('rect', {
+            x: scale(0), y: y + 8, width: scale(row.ms) - scale(0), height: 19,
+            fill: row.color
+          }));
+          group.appendChild(element('text', { x: scale(row.ms) + 7, y: y + 23, class: 'timing-value' }, `${row.ms.toFixed(2)} ms`));
+          group.appendChild(element('rect', {
+            x: scale(0), y: y - 9, width: Math.max(44, scale(row.ms) - scale(0)), height: 44,
+            fill: 'transparent', 'data-chart-hit': '',
+            'data-tooltip': `${row.label}: ${row.ms.toFixed(3)} ms`
+          }));
+        });
+        plot.appendChild(element('text', {
+          x: width / 2, y: height - 10, 'text-anchor': 'middle', class: 'axis-title', 'data-axis': 'x'
+        }, 'Elapsed time (ms)'));
+        // All direct labels have reserved space; check their bounds after layout.
+        requestAnimationFrame(() => {
+          plot.querySelectorAll('text').forEach(label => {
+            const bounds = label.getBBox();
+            if (bounds.x + bounds.width > right) {
+              label.setAttribute('text-anchor', 'end');
+              label.setAttribute('x', right - 4);
+            }
+          });
+        });
+      }
+      new ResizeObserver(draw).observe(root);
+      draw();
+    })();
+  </script>
+</div>

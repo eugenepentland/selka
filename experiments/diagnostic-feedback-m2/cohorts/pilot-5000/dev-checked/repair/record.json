@@ -1,0 +1,521 @@
+{
+  "version": 1,
+  "runner": "enforcing_runner.py",
+  "runner_sha256": "52018fe9c5197cecf67332bdf159bc560d55a15af4659236772886665aa4c955",
+  "case": "dev-checked",
+  "policy": "repair",
+  "cap": 5000,
+  "cohort_id": "pilot-5000",
+  "arm": "text",
+  "prompt_sha256": "8a6525a75d0cf03e7fbb0ae08760d6fa2e9105a2e332847c3916a00e37567494",
+  "prompt_path": "prompt.md",
+  "identity": {
+    "case": "dev-checked",
+    "policy": "repair",
+    "cap": 5000,
+    "prompt_sha256": "8a6525a75d0cf03e7fbb0ae08760d6fa2e9105a2e332847c3916a00e37567494",
+    "arm": "text",
+    "model": "deepseek-v4-flash",
+    "reasoning_effort": "max",
+    "invocation_limit": 20,
+    "session_deadline_s": 900.0,
+    "cache_policy": "ZIG_GLOBAL_CACHE_DIR and ZIG_LOCAL_CACHE_DIR per candidate inside the working copy",
+    "cap_unit": "generated (output) tokens, reasoning included once",
+    "enforcement": "live: the session log is polled every 2.00s and an overshoot terminates the process group",
+    "selection_rule": "public check only; the hidden manifest runs once, after selection"
+  },
+  "totals": {
+    "cap": 5000,
+    "spent": 2070,
+    "remaining": 2930,
+    "charges": 7,
+    "refused": 0,
+    "overshoot": 0,
+    "input_volume": 79521,
+    "generated": 2070
+  },
+  "calls_charged": 7,
+  "charges": [
+    {
+      "label": "repair-1",
+      "requested": 98,
+      "charged": 98,
+      "allowance": 5000,
+      "overshoot": 0,
+      "refused": false,
+      "usage": {
+        "input_tokens": 9401,
+        "cache_read_tokens": 768,
+        "input_volume": 10169,
+        "output_tokens": 98,
+        "reasoning_tokens": 0,
+        "generated": 98
+      },
+      "key": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421#0",
+      "call": {
+        "index": 0,
+        "time_ms": 1789840883124,
+        "step": 1,
+        "session": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421"
+      },
+      "observed_utc": "2026-09-19T18:01:24.254689+00:00",
+      "after_overshoot": false
+    },
+    {
+      "label": "repair-1",
+      "requested": 86,
+      "charged": 86,
+      "allowance": 4902,
+      "overshoot": 0,
+      "refused": false,
+      "usage": {
+        "input_tokens": 290,
+        "cache_read_tokens": 10240,
+        "input_volume": 10530,
+        "output_tokens": 86,
+        "reasoning_tokens": 10,
+        "generated": 86
+      },
+      "key": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421#1",
+      "call": {
+        "index": 1,
+        "time_ms": 1789840884463,
+        "step": 2,
+        "session": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421"
+      },
+      "observed_utc": "2026-09-19T18:01:26.273987+00:00",
+      "after_overshoot": false
+    },
+    {
+      "label": "repair-1",
+      "requested": 338,
+      "charged": 338,
+      "allowance": 4816,
+      "overshoot": 0,
+      "refused": false,
+      "usage": {
+        "input_tokens": 492,
+        "cache_read_tokens": 10496,
+        "input_volume": 10988,
+        "output_tokens": 338,
+        "reasoning_tokens": 266,
+        "generated": 338
+      },
+      "key": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421#2",
+      "call": {
+        "index": 2,
+        "time_ms": 1789840886696,
+        "step": 3,
+        "session": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421"
+      },
+      "observed_utc": "2026-09-19T18:01:28.288650+00:00",
+      "after_overshoot": false
+    },
+    {
+      "label": "repair-1",
+      "requested": 196,
+      "charged": 196,
+      "allowance": 4478,
+      "overshoot": 0,
+      "refused": false,
+      "usage": {
+        "input_tokens": 238,
+        "cache_read_tokens": 11136,
+        "input_volume": 11374,
+        "output_tokens": 196,
+        "reasoning_tokens": 17,
+        "generated": 196
+      },
+      "key": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421#3",
+      "call": {
+        "index": 3,
+        "time_ms": 1789840888537,
+        "step": 4,
+        "session": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421"
+      },
+      "observed_utc": "2026-09-19T18:01:30.304209+00:00",
+      "after_overshoot": false
+    },
+    {
+      "label": "repair-1",
+      "requested": 190,
+      "charged": 190,
+      "allowance": 4282,
+      "overshoot": 0,
+      "refused": false,
+      "usage": {
+        "input_tokens": 238,
+        "cache_read_tokens": 11392,
+        "input_volume": 11630,
+        "output_tokens": 190,
+        "reasoning_tokens": 37,
+        "generated": 190
+      },
+      "key": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421#4",
+      "call": {
+        "index": 4,
+        "time_ms": 1789840890094,
+        "step": 5,
+        "session": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421"
+      },
+      "observed_utc": "2026-09-19T18:01:30.304218+00:00",
+      "after_overshoot": false
+    },
+    {
+      "label": "repair-1",
+      "requested": 951,
+      "charged": 951,
+      "allowance": 4092,
+      "overshoot": 0,
+      "refused": false,
+      "usage": {
+        "input_tokens": 209,
+        "cache_read_tokens": 11648,
+        "input_volume": 11857,
+        "output_tokens": 951,
+        "reasoning_tokens": 814,
+        "generated": 951
+      },
+      "key": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421#5",
+      "call": {
+        "index": 5,
+        "time_ms": 1789840899028,
+        "step": 6,
+        "session": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421"
+      },
+      "observed_utc": "2026-09-19T18:01:40.384337+00:00",
+      "after_overshoot": false
+    },
+    {
+      "label": "repair-1",
+      "requested": 211,
+      "charged": 211,
+      "allowance": 3141,
+      "overshoot": 0,
+      "refused": false,
+      "usage": {
+        "input_tokens": 173,
+        "cache_read_tokens": 12800,
+        "input_volume": 12973,
+        "output_tokens": 211,
+        "reasoning_tokens": 6,
+        "generated": 211
+      },
+      "key": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421#6",
+      "call": {
+        "index": 6,
+        "time_ms": 1789840901450,
+        "step": 7,
+        "session": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421"
+      },
+      "observed_utc": "2026-09-19T18:01:42.405010+00:00",
+      "after_overshoot": false
+    }
+  ],
+  "candidates": [
+    {
+      "label": "repair-1",
+      "index": 1,
+      "policy": "repair",
+      "work_dir": "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback-m2/work/pilot-5000/dev-checked/repair/1",
+      "initial_source_sha256": "0b037b4b38fff3c0bb152242bfc686a31f01cd436ac7abb87f35d94d2a93ff7a",
+      "started_utc": "2026-09-19T18:01:20.220120+00:00",
+      "command": [
+        "dsh",
+        "--profile",
+        "headless",
+        "<PROMPT>"
+      ],
+      "env": {
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback-m2/work/pilot-5000/dev-checked/repair/1/.cache/zig-global",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback-m2/work/pilot-5000/dev-checked/repair/1/.cache/zig-local",
+        "MYLANG_LIMIT": "20",
+        "MYLANG_ATTEMPT": "repair/dev-checked/1"
+      },
+      "poll_seconds": 2.0,
+      "finished_utc": "2026-09-19T18:01:42.423583+00:00",
+      "wall_seconds": 22.203,
+      "exit": 0,
+      "exit_signal": "",
+      "timed_out": false,
+      "kill_signal_sent": "",
+      "killed_by_harness": false,
+      "ended_by_overshoot": false,
+      "overshoot": 0,
+      "complete": true,
+      "calls_charged": 7,
+      "charged": 2070,
+      "input_volume": 79521,
+      "charges": [
+        {
+          "label": "repair-1",
+          "requested": 98,
+          "charged": 98,
+          "allowance": 5000,
+          "overshoot": 0,
+          "refused": false,
+          "usage": {
+            "input_tokens": 9401,
+            "cache_read_tokens": 768,
+            "input_volume": 10169,
+            "output_tokens": 98,
+            "reasoning_tokens": 0,
+            "generated": 98
+          },
+          "key": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421#0",
+          "call": {
+            "index": 0,
+            "time_ms": 1789840883124,
+            "step": 1,
+            "session": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421"
+          },
+          "observed_utc": "2026-09-19T18:01:24.254689+00:00",
+          "after_overshoot": false
+        },
+        {
+          "label": "repair-1",
+          "requested": 86,
+          "charged": 86,
+          "allowance": 4902,
+          "overshoot": 0,
+          "refused": false,
+          "usage": {
+            "input_tokens": 290,
+            "cache_read_tokens": 10240,
+            "input_volume": 10530,
+            "output_tokens": 86,
+            "reasoning_tokens": 10,
+            "generated": 86
+          },
+          "key": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421#1",
+          "call": {
+            "index": 1,
+            "time_ms": 1789840884463,
+            "step": 2,
+            "session": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421"
+          },
+          "observed_utc": "2026-09-19T18:01:26.273987+00:00",
+          "after_overshoot": false
+        },
+        {
+          "label": "repair-1",
+          "requested": 338,
+          "charged": 338,
+          "allowance": 4816,
+          "overshoot": 0,
+          "refused": false,
+          "usage": {
+            "input_tokens": 492,
+            "cache_read_tokens": 10496,
+            "input_volume": 10988,
+            "output_tokens": 338,
+            "reasoning_tokens": 266,
+            "generated": 338
+          },
+          "key": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421#2",
+          "call": {
+            "index": 2,
+            "time_ms": 1789840886696,
+            "step": 3,
+            "session": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421"
+          },
+          "observed_utc": "2026-09-19T18:01:28.288650+00:00",
+          "after_overshoot": false
+        },
+        {
+          "label": "repair-1",
+          "requested": 196,
+          "charged": 196,
+          "allowance": 4478,
+          "overshoot": 0,
+          "refused": false,
+          "usage": {
+            "input_tokens": 238,
+            "cache_read_tokens": 11136,
+            "input_volume": 11374,
+            "output_tokens": 196,
+            "reasoning_tokens": 17,
+            "generated": 196
+          },
+          "key": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421#3",
+          "call": {
+            "index": 3,
+            "time_ms": 1789840888537,
+            "step": 4,
+            "session": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421"
+          },
+          "observed_utc": "2026-09-19T18:01:30.304209+00:00",
+          "after_overshoot": false
+        },
+        {
+          "label": "repair-1",
+          "requested": 190,
+          "charged": 190,
+          "allowance": 4282,
+          "overshoot": 0,
+          "refused": false,
+          "usage": {
+            "input_tokens": 238,
+            "cache_read_tokens": 11392,
+            "input_volume": 11630,
+            "output_tokens": 190,
+            "reasoning_tokens": 37,
+            "generated": 190
+          },
+          "key": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421#4",
+          "call": {
+            "index": 4,
+            "time_ms": 1789840890094,
+            "step": 5,
+            "session": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421"
+          },
+          "observed_utc": "2026-09-19T18:01:30.304218+00:00",
+          "after_overshoot": false
+        },
+        {
+          "label": "repair-1",
+          "requested": 951,
+          "charged": 951,
+          "allowance": 4092,
+          "overshoot": 0,
+          "refused": false,
+          "usage": {
+            "input_tokens": 209,
+            "cache_read_tokens": 11648,
+            "input_volume": 11857,
+            "output_tokens": 951,
+            "reasoning_tokens": 814,
+            "generated": 951
+          },
+          "key": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421#5",
+          "call": {
+            "index": 5,
+            "time_ms": 1789840899028,
+            "step": 6,
+            "session": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421"
+          },
+          "observed_utc": "2026-09-19T18:01:40.384337+00:00",
+          "after_overshoot": false
+        },
+        {
+          "label": "repair-1",
+          "requested": 211,
+          "charged": 211,
+          "allowance": 3141,
+          "overshoot": 0,
+          "refused": false,
+          "usage": {
+            "input_tokens": 173,
+            "cache_read_tokens": 12800,
+            "input_volume": 12973,
+            "output_tokens": 211,
+            "reasoning_tokens": 6,
+            "generated": 211
+          },
+          "key": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421#6",
+          "call": {
+            "index": 6,
+            "time_ms": 1789840901450,
+            "step": 7,
+            "session": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421"
+          },
+          "observed_utc": "2026-09-19T18:01:42.405010+00:00",
+          "after_overshoot": false
+        }
+      ],
+      "calls_charged_before_settle": 7,
+      "late_calls_after_stop": 0,
+      "late_call_keys": [],
+      "watcher_reads": 13,
+      "settle_reads": 1,
+      "repeat_observations": 44,
+      "log_matched": true,
+      "sessions": [
+        {
+          "path": "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421/session.v3.jsonl.zstd",
+          "session_id": "session-5365fd24-7ca7-45c4-917c-fcb52e3e6421",
+          "created_utc": "2026-09-19T18:01:21.328000+00:00",
+          "delegation_depth": 0,
+          "calls": 7,
+          "malformed_lines": 0,
+          "decode_note": ""
+        }
+      ],
+      "session_paths": [
+        "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421/session.v3.jsonl.zstd"
+      ],
+      "raw_session_logs": [
+        "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421/session.v3.jsonl.zstd"
+      ],
+      "malformed_lines": 0,
+      "session_generated": 2070,
+      "missing": null,
+      "session_stdout": "repair-1.stdout.txt",
+      "session_stderr": "repair-1.stderr.txt",
+      "events_log": "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback-m2/work/pilot-5000/dev-checked/repair/1/.events/events.jsonl",
+      "public_acceptance": true,
+      "hidden_acceptance": true,
+      "sealed_source_sha256": "8a0c00f10b57f6cab78a7d63a1673213608e6fa52710b3d7b52be00414628a5f",
+      "mechanism_failures": [],
+      "public_failures": [],
+      "grading_root": "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback-m2/.tmp/grading/dev-checked/repair/repair-1",
+      "raw_session_log_copies": [
+        "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback-m2/cohorts/pilot-5000/dev-checked/repair/logs/repair-1-session-5365fd24-7ca7-45c4-917c-fcb52e3e6421.zstd"
+      ],
+      "events_copy": "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback-m2/cohorts/pilot-5000/dev-checked/repair/repair-1.events.jsonl",
+      "hidden_steps": [
+        {
+          "id": "in-0",
+          "status": "passed"
+        },
+        {
+          "id": "in-1",
+          "status": "passed"
+        },
+        {
+          "id": "in-2",
+          "status": "passed"
+        },
+        {
+          "id": "in-3",
+          "status": "passed"
+        }
+      ],
+      "grader_ok": true,
+      "hidden_source": "run.py grading path on a copy of the sealed snapshot",
+      "work_dir_pruned": true
+    }
+  ],
+  "selected": {
+    "label": "repair-1",
+    "mode": "public",
+    "why": "repair-1 is complete and passes the public examples",
+    "public_acceptance": true,
+    "hidden_acceptance": true,
+    "complete": true,
+    "sealed_source_sha256": "8a0c00f10b57f6cab78a7d63a1673213608e6fa52710b3d7b52be00414628a5f"
+  },
+  "selection_mode": "public",
+  "selection_reason": "repair-1 is complete and passes the public examples",
+  "public_acceptance": true,
+  "hidden_acceptance": true,
+  "hidden_manifest_supplied": true,
+  "candidates_started": 1,
+  "stop_reason": "repair-single-session",
+  "session_budget": {
+    "sessions_this_task": 1,
+    "max_candidates": 5,
+    "sessions_allowed": 1
+  },
+  "started_utc": "2026-09-19T18:01:20.113988+00:00",
+  "finished_utc": "2026-09-19T18:01:50.294463+00:00",
+  "wall_seconds": 30.18,
+  "session_paths": [
+    "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421/session.v3.jsonl.zstd"
+  ],
+  "raw_session_logs": [
+    "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-m2-work-pilot-5000-dev-checked-repair-1--/session-5365fd24-7ca7-45c4-917c-fcb52e3e6421/session.v3.jsonl.zstd"
+  ],
+  "missing": [],
+  "mechanism_failures": []
+}

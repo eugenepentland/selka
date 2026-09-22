@@ -1,0 +1,4 @@
+def Ok(value: int) -> int:
+    return value + 1
+def main() -> int:
+    return Ok(41)

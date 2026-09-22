@@ -1,0 +1,24 @@
+Fixed. The program was adding an `int` to a `Result[int, str]` (`score = bonus + lookup("five")`), which is a type error — `lookup` returns a `Result`, not an `int`.
+
+**Change made** (`project/main.my` only): replaced the direct addition with an exhaustive `match` on the result, adding the `Ok` payload to `bonus` and printing the `Err` message otherwise. The match must be exhaustive (`E_INCOMPLETE_MATCH` otherwise), so both arms are present.
+
+```
+def main(out: Stream) -> int:
+    bonus = 0
+    match lookup("five"):
+        case Ok(score):
+            out.print(bonus + score)
+        case Err(message):
+            out.print(message)
+    return 0
+```
+
+**Command and result:**
+
+```
+$ bin/mylang run project/main.my
+5
+[exit code: 0]
+```
+
+Verified stdout is exactly `5\n`, stderr is empty, and `bin/mylang check project/main.my` exits 0. The temporary experiment files I created while probing the language were deleted, leaving only `project/main.my`.

@@ -1,0 +1,187 @@
+diff -ru /tmp/claude-1000/-home-epentland-ai-canopy-mylang/6108061e-40b0-485a-852b-53c35cd1760e/scratchpad/probes/ctl/sexpr/parser.my /tmp/claude-1000/-home-epentland-ai-canopy-mylang/6108061e-40b0-485a-852b-53c35cd1760e/scratchpad/probes/pc/sexpr/parser.my
+--- /tmp/claude-1000/-home-epentland-ai-canopy-mylang/6108061e-40b0-485a-852b-53c35cd1760e/scratchpad/probes/ctl/sexpr/parser.my	2026-09-20 16:01:26.500973870 +0000
++++ /tmp/claude-1000/-home-epentland-ai-canopy-mylang/6108061e-40b0-485a-852b-53c35cd1760e/scratchpad/probes/pc/sexpr/parser.my	2026-09-20 16:00:51.379675451 +0000
+@@ -23,6 +23,8 @@
+     lexer: tk.Lexer
+     current: tk.RawToken
+     cap: int
++    failed: bool
++    problem: ParseError
+ 
+ def located(span: ast.Span, message: str) -> ParseError:
+     return ParseError(message=message, line=int(span.line), col=int(span.col), offset=int(span.offset))
+@@ -37,13 +39,25 @@
+         message = "unexpected character"
+     return ParseError(message=message, line=int(span.line), col=int(span.col), offset=problem.offset)
+ 
+-def advance(cursor: Cursor) -> Result[bool, ParseError]:
++# PROBE pc: the parse path returns a bare `ast.Node`; a failure is recorded on the
++# cursor and a placeholder node is returned, so no `Result[Node, ParseError]`
++# wrapper is built, copied and unwrapped per node. Valid input behaves as before.
++def fail_with(cursor: Cursor, problem: ParseError, span: ast.Span) -> ast.Node:
++    if not cursor.failed:
++        cursor.failed = True
++        cursor.problem = problem
++    return ast.Node.integer(0, span)
++
++def advance(cursor: Cursor) -> bool:
+     match tk.next_raw(cursor.lexer):
+         case Ok(token):
+             cursor.current = token
+-            return Ok(True)
++            return True
+         case Err(problem):
+-            return Err(lex_failure(cursor.src, problem))
++            if not cursor.failed:
++                cursor.failed = True
++                cursor.problem = lex_failure(cursor.src, problem)
++            return False
+ 
+ # The source range a token's `Token.text` spelling occupies. A node keeps this
+ # range instead of a decoded copy, so an atom or a string costs no allocation.
+@@ -109,42 +123,37 @@
+         end = end + 1
+     return end
+ 
+-# An SI-scaled or `%`-terminated literal. The suffix is one or two bytes — a
+-# scale letter optionally followed by a unit letter, or `%` — and only its first
+-# byte selects the multiplier, exactly as the scalar form's `text[end]` did. The
+-# number part is parsed from its octets, and the node keeps the whole source
+-# spelling, so printing it reproduces `100nF` rather than the `1e-7` value.
+-def parse_si(src: bytes, raw: tk.RawToken) -> Result[ast.Node, ParseError]:
++# An SI-scaled or `%`-terminated literal (probe form: bare node).
++def parse_si(cursor: Cursor, raw: tk.RawToken) -> ast.Node:
++    src = cursor.src
+     span = raw.source.span
+     end = si_number_end(src, raw)
+     if end == 0 or end >= raw.text_end - raw.text_start:
+-        return Err(invalid_number(span))
++        return fail_with(cursor, invalid_number(span), span)
+     match src.view(raw.text_start, raw.text_start + end).parse_float():
+         case Some(value):
+             letter = src[raw.text_start + end]
+-            return Ok(ast.Node.decimal(value * si_scale(letter), span, Some(view_of(src, raw.text_start, raw.text_end))))
++            return ast.Node.decimal(value * si_scale(letter), span, Some(view_of(src, raw.text_start, raw.text_end)))
+         case None:
+-            return Err(invalid_number(span))
++            return fail_with(cursor, invalid_number(span), span)
+ 
+-# One leaf. Punctuation, EOF and the `string` kind are handled by the caller.
+-# The numeric kinds read their octets in place, so no spelling is decoded on the
+-# way to `int` or `float`.
+-def parse_leaf(src: bytes, raw: tk.RawToken) -> Result[ast.Node, ParseError]:
++def parse_leaf(cursor: Cursor, raw: tk.RawToken) -> ast.Node:
++    src = cursor.src
+     span = raw.source.span
+     if raw.kind == tk.Kind.atom:
+-        return Ok(ast.Node.atom(view_of(src, raw.text_start, raw.text_end), span))
++        return ast.Node.atom(view_of(src, raw.text_start, raw.text_end), span)
+     if raw.kind == tk.Kind.int_val:
+         match src.view(raw.text_start, raw.text_end).parse_int():
+             case Some(value):
+-                return Ok(ast.Node.integer(value, span))
++                return ast.Node.integer(value, span)
+             case None:
+-                return Err(invalid_number(span))
++                return fail_with(cursor, invalid_number(span), span)
+     if raw.kind == tk.Kind.float_val:
+         match src.view(raw.text_start, raw.text_end).parse_float():
+             case Some(value):
+-                return Ok(ast.Node.decimal(value, span))
++                return ast.Node.decimal(value, span)
+             case None:
+-                return Err(invalid_number(span))
++                return fail_with(cursor, invalid_number(span), span)
+     if raw.kind == tk.Kind.unit_val:
+         is_mil = False
+         number_end = raw.text_end
+@@ -157,45 +166,51 @@
+             is_mil = source_has_mil_suffix(src, raw)
+         match src.view(raw.text_start, number_end).parse_float():
+             case Some(value):
+-                return Ok(parse_unit(raw, value, is_mil))
++                return parse_unit(raw, value, is_mil)
+             case None:
+-                return Err(invalid_number(span))
++                return fail_with(cursor, invalid_number(span), span)
+     if raw.kind == tk.Kind.si_val:
+-        return parse_si(src, raw)
+-    return Err(located(span, "unexpected token"))
++        return parse_si(cursor, raw)
++    return fail_with(cursor, located(span, "unexpected token"), span)
+ 
+-def parse_node(cursor: Cursor, depth: int) -> Result[ast.Node, ParseError]:
++def parse_node(cursor: Cursor, depth: int) -> ast.Node:
+     raw = cursor.current
+     match raw.kind:
+         case tk.Kind.lparen:
+-            _ = advance(cursor)?
++            if not advance(cursor):
++                return ast.Node.integer(0, raw.source.span)
+             return parse_list(cursor, depth, raw.source.span)
+         case tk.Kind.rparen:
+-            return Err(located(raw.source.span, "unexpected ')' — no matching '(' is open here"))
++            return fail_with(cursor, located(raw.source.span, "unexpected ')' — no matching '(' is open here"), raw.source.span)
+         case tk.Kind.eof:
+-            return Err(located(raw.source.span, "unexpected end of input — a '(' was never closed"))
++            return fail_with(cursor, located(raw.source.span, "unexpected end of input — a '(' was never closed"), raw.source.span)
+         case tk.Kind.string:
+-            # A string node keeps the bytes between the quotes with escapes
+-            # intact, which is exactly the tokenizer's text range.
+             node = ast.Node.string(view_of(cursor.src, raw.text_start, raw.text_end), raw.source.span)
+-            _ = advance(cursor)?
+-            return Ok(node)
++            if not advance(cursor):
++                return ast.Node.integer(0, raw.source.span)
++            return node
+         case _:
+-            node = parse_leaf(cursor.src, raw)?
+-            _ = advance(cursor)?
+-            return Ok(node)
++            node = parse_leaf(cursor, raw)
++            if cursor.failed:
++                return node
++            if not advance(cursor):
++                return ast.Node.integer(0, raw.source.span)
++            return node
+ 
+-def parse_list(cursor: Cursor, depth: int, open_span: ast.Span) -> Result[ast.Node, ParseError]:
++def parse_list(cursor: Cursor, depth: int, open_span: ast.Span) -> ast.Node:
+     if depth >= cursor.cap:
+-        return Err(located(open_span, "s-expression nesting is too deep"))
++        return fail_with(cursor, located(open_span, "s-expression nesting is too deep"), open_span)
+     entries: list[ast.Node] = []
+     while True:
+         if cursor.current.kind == tk.Kind.eof:
+-            return Err(located(open_span, "unexpected end of input — a '(' was never closed"))
++            return fail_with(cursor, located(open_span, "unexpected end of input — a '(' was never closed"), open_span)
+         if cursor.current.kind == tk.Kind.rparen:
+-            _ = advance(cursor)?
+-            return Ok(ast.Node.form(entries, open_span))
+-        entries.append(parse_node(cursor, depth + 1)?)
++            if not advance(cursor):
++                return ast.Node.integer(0, open_span)
++            return ast.Node.form(entries, open_span)
++        entries.append(parse_node(cursor, depth + 1))
++        if cursor.failed:
++            return ast.Node.integer(0, open_span)
+ 
+ # The old parser tokenized all input first. Drain only the syntax-error path so
+ # a later lexical failure retains its historical precedence.
+@@ -225,12 +240,10 @@
+             first = token
+         case Err(problem):
+             return Err(lex_failure(src, problem))
+-    cursor = Cursor(src=src, lexer=lx, current=first, cap=cap)
++    cursor = Cursor(src=src, lexer=lx, current=first, cap=cap, failed=False, problem=ParseError(message="", line=0, col=0, offset=0))
+     nodes: list[ast.Node] = []
+     while cursor.current.kind != tk.Kind.eof:
+-        match parse_node(cursor, 0):
+-            case Ok(node):
+-                nodes.append(node)
+-            case Err(problem):
+-                return finish_after_syntax_error(cursor, problem)
++        nodes.append(parse_node(cursor, 0))
++        if cursor.failed:
++            return finish_after_syntax_error(cursor, cursor.problem)
+     return Ok(nodes)

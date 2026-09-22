@@ -1,0 +1,69 @@
+dsh: reasoning:
+The bug: `def exceeds(a: int, b: int) -> int:` computes `bigger = a > b` which is a bool, then returns it as int. That should be a type error. Let me run `bin/mylang check` to see the diagnostic.
+
+Actually the task is about "diagnostic feedback" — likely the compiler gives a confusing error. Let's check.
+dsh: reasoning:
+The compiler reports error: bool returned as int. The fix: return 1 if a > b else 0.
+
+Let me make the minimal change: 
+
+```python
+def exceeds(a: int, b: int) -> int:
+    return 1 if bigger else 0
+```
+
+Wait, does mylang support ternary conditional expressions? The note suggests `return 1 if condition else 0`. Let me do it.
+
+Change line 13-14:
+
+```python
+def exceeds(a: int, b: int) -> int:
+    bigger = a > b
+    return 1 if bigger else 0
+```
+
+That's minimal. But "change only what the request requires" — this keeps the `bigger` binding, which is fine, though could simplify to `return 1 if a > b else 0`. I'll keep it minimal but clean: assign bigger to the comparison then return the conditional.
+
+Actually the simplest correct: keep `bigger` and return `1 if bigger else 0`. That preserves the structure. Let me do that.
+
+Also consider: the program is called with args, could be non-numeric → number returns 0. Fine.
+
+Let me edit and run.
+dsh: reasoning:
+Interesting — the diagnostic note suggests `1 if condition else 0` but the parser rejects it? Wait, the error says "unexpected token; expected a newline" at column 14 which is `if`. Hmm, maybe conditional expression syntax is different, or maybe the parser is buggy. Let's check docs. But constraint: only work inside this directory, no reading outside. Hmm, "do not read or write anything outside it" — so I can't read docs outside this dir. Actually the workspace instructions mention docs/ but those are outside this directory.
+
+Wait, maybe the parser error is a diagnostic-feedback task: the compiler's note is misleading. Let me think about what syntax mylang supports. Maybe `return 1 if bigger else 0` requires parentheses? Or maybe the conditional expression isn't supported at all and instead I should use match or explicit if statement.
+
+Alternative fix using statements:
+
+```python
+def exceeds(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+That's clean and definitely works if `if` statements are supported. Let me test that. But first, let me consider whether the ternary is really unsupported. The note in the compiler says "for example `return 1 if condition else 0`" — if that syntax is a syntax error, that's a compiler bug (misleading diagnostic). But the task says "Change only what the request requires" — fixing the program, not the compiler. So use if statements.
+
+Let me try parenthesis first? Actually to save invocations, just use the if-statement version which is most robustly supported. Actually let me try both in one invocation? Can't—each run counts. Let me just do the if version.
+
+Actually wait — maybe I should test whether `return 1 if bigger else 0` works with parens `return (1 if bigger else 0)`. It's possible the parser handles conditional expressions only in certain contexts. But the if-statement form is simple and clear. Go with:
+
+```python
+def exceeds(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+This changes more lines but is minimal in intent. Let me do that.
+dsh: reasoning:
+Now run check and both cases. Also test edge cases: equal values, negative numbers. "First argument is larger than the second" — that's what `a > b` gives.
+
+Note `number` parses with `int(text)` returning Option. For "-3", int should handle negative. Let's run several.
+dsh: reasoning:
+All cases match: 5 2 → 1, 2 5 → 0, equal → 0, negatives correct.
+
+I used 5 compiler invocations total (1 check, 2 failed runs, 1 combined check+7 runs = actually check counts as one, and 7 runs). Let me count: check (1), run 5 2 (2), run 2 5 (3), then check (4) + 7 runs (5-11). Total 11, under 20. Fine.
+
+Final answer.

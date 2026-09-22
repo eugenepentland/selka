@@ -1,0 +1,92 @@
+{
+  "sexpr-escaping": {
+    "hidden-escapes-even": {
+      "exit": 0,
+      "stderr_tail": "",
+      "stdout": "(pin \"pad \\\\\" (net \"GND\"))\n"
+    },
+    "hidden-escapes-newline": {
+      "exit": 0,
+      "stderr_tail": "",
+      "stdout": "(note \"line1\\\nline2\")\n"
+    },
+    "hidden-escapes-odd": {
+      "exit": 0,
+      "stderr_tail": "",
+      "stdout": "(label \"q \\\"i\\\" t\")\n"
+    },
+    "hidden-escapes-runs": {
+      "exit": 0,
+      "stderr_tail": "",
+      "stdout": "(note \"four \\\\\\\\ here\" \"mix \\\\ and \\\" here\")\n"
+    }
+  },
+  "sexpr-invalid-input": {
+    "hidden-unterminated-escape": {
+      "exit": 1,
+      "stderr_tail": "parse error: unterminated string at 1:4\n",
+      "stdout": ""
+    },
+    "hidden-unterminated-multiline": {
+      "exit": 1,
+      "stderr_tail": "parse error: unterminated string at 1:4\n",
+      "stdout": ""
+    },
+    "hidden-unterminated-simple": {
+      "exit": 1,
+      "stderr_tail": "parse error: unterminated string at 1:15\n",
+      "stdout": ""
+    }
+  },
+  "sexpr-nesting": {
+    "hidden-nesting-child": {
+      "exit": 0,
+      "stderr_tail": "",
+      "stdout": "(a () (b ()))\n"
+    },
+    "hidden-nesting-deep": {
+      "exit": 0,
+      "stderr_tail": "",
+      "stdout": "(a () () (b () (c () (d ()))))\n"
+    },
+    "hidden-nesting-top": {
+      "exit": 0,
+      "stderr_tail": "",
+      "stdout": "()\n"
+    }
+  },
+  "sexpr-percent": {
+    "hidden-percent-render": {
+      "exit": 0,
+      "stderr_tail": "",
+      "stdout": "(t 1% 0.1% 25% 100%)\n"
+    },
+    "hidden-percent-values": {
+      "exit": 0,
+      "stderr_tail": "",
+      "stdout": "forms=1 nodes=6 atoms=1 strings=0 ints=0 floats=4 measures=0 max_depth=1 value_sum=126.1\n"
+    },
+    "hidden-standalone-percent": {
+      "exit": 0,
+      "stderr_tail": "",
+      "stdout": "forms=1 nodes=4 atoms=3 strings=0 ints=0 floats=0 measures=0 max_depth=1 value_sum=0.0\n"
+    }
+  },
+  "sexpr-units": {
+    "hidden-units-large": {
+      "exit": 0,
+      "stderr_tail": "",
+      "stdout": "forms=3 nodes=8 atoms=3 strings=0 ints=0 floats=0 measures=2 max_depth=2 value_sum=338.96299999999997\n"
+    },
+    "hidden-units-mixed": {
+      "exit": 0,
+      "stderr_tail": "",
+      "stdout": "(dims (a 1.0mm) (b 0.0254mm) (c 220k) (d 5%) (e 2.5))\n"
+    },
+    "hidden-units-small": {
+      "exit": 0,
+      "stderr_tail": "",
+      "stdout": "forms=4 nodes=11 atoms=4 strings=0 ints=0 floats=0 measures=3 max_depth=2 value_sum=0.0889\n"
+    }
+  }
+}

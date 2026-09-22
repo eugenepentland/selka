@@ -1,0 +1,13 @@
+All cases behave correctly, including equality (0), negatives, and max-width integers.
+
+**What I changed:** `project/main.my`, in `above`. It declared `-> int` but returned `a > b`, which is a `bool` (the compiler reported `E_TYPE: expected int, found bool`). I replaced the single `return a > b` with an explicit conditional returning `1` when `a > b` and `0` otherwise. No other change.
+
+**Command and result:**
+
+```
+$ bin/mylang check project/main.my   # exit 0, no diagnostics
+$ bin/mylang run project/main.my -- 5 2   # -> 1
+$ bin/mylang run project/main.my -- 2 5   # -> 0
+```
+
+Both `public/expected.json` examples match, and edge cases pass: `3 3 -> 0`, `0 7 -> 0`, `7 0 -> 1`, `-1 -5 -> 1`, `-5 -1 -> 0`, `2147483647 2147483646 -> 1`.

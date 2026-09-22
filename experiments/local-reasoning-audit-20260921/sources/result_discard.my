@@ -1,0 +1,5 @@
+def fail() -> Result[int, str]:
+    return Err("failed")
+def main() -> int:
+    _ = fail()
+    return 42

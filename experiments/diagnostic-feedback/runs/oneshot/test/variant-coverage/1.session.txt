@@ -1,0 +1,18 @@
+**Change:** In `project/main.my`, added the missing union arm to `describe`'s `match`:
+
+```python
+case Event.stop(name):
+    return "stopped"
+```
+
+The `match` only covered `Event.start`, so the checker rejected the call with an `Event.stop` value; with the variant covered, it compiles.
+
+**Command and result:**
+
+```
+$ ./bin/mylang run project/main.my
+stopped
+[exit: 0]
+```
+
+It printed exactly `stopped` and exited 0 (two pre-existing `W_UNUSED_BINDING` warnings for the unread `name` payloads, non-fatal).

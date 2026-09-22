@@ -1,0 +1,11 @@
+**What I changed:** In `project/main.my`, I removed the unused generic parameter from `pick`: `def pick[T: Sortable](...)` → `def pick(...)`. The check failed with `E_GENERIC_REQUIREMENT` because `Sortable` is not a known requirement (`copy`, `equality`, `integer`, `codec`, `storable`, or a declared constraint), and `T` was not used in the signature or body. Removing the vacuous parameter is the one change that makes it compile; a valid requirement alone still left `T` uninferable at the call site.
+
+**Command run and result:**
+
+```
+$ ./bin/mylang run project/main.my
+9
+exit: 0
+```
+
+`./bin/mylang check project/main.my` also exits 0.

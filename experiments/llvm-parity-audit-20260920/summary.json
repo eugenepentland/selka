@@ -1,0 +1,230 @@
+{
+  "census": {
+    "regenerated": {
+      "wall_ms": 3.081834,
+      "ratio_to_zig": 1.563108450674222,
+      "ratio_95_interval": [
+        1.4768164825450758,
+        1.6937308278667633
+      ],
+      "reduction_vs_regenerated": 0.0,
+      "instructions": 19578502.0,
+      "cycles": 7958230.0
+    },
+    "root-clean": {
+      "wall_ms": 2.732239,
+      "ratio_to_zig": 1.3857936119082614,
+      "ratio_95_interval": [
+        1.2889245554167306,
+        1.5507814819592642
+      ],
+      "reduction_vs_regenerated": 0.1134373233600513,
+      "instructions": 16834569.0,
+      "cycles": 6791922.0
+    },
+    "root-width": {
+      "wall_ms": 2.830516,
+      "ratio_to_zig": 1.4356397779272327,
+      "ratio_95_interval": [
+        1.3441349900864104,
+        1.5772956559963232
+      ],
+      "reduction_vs_regenerated": 0.08154819500336496,
+      "instructions": 16834569.0,
+      "cycles": 6785940.0
+    },
+    "heap-effects": {
+      "wall_ms": 3.291498,
+      "ratio_to_zig": 1.6694501842660248,
+      "ratio_95_interval": [
+        1.557452297638352,
+        1.768701157729038
+      ],
+      "reduction_vs_regenerated": -0.06803221717977004,
+      "instructions": 19578491.0,
+      "cycles": 7942043.0
+    },
+    "zig": {
+      "wall_ms": 1.971606,
+      "ratio_to_zig": 1.0,
+      "ratio_95_interval": [
+        1.0,
+        1.0
+      ],
+      "reduction_vs_regenerated": 0.3602491243850253,
+      "instructions": 19423493.0,
+      "cycles": 5223192.0
+    }
+  },
+  "render": {
+    "regenerated": {
+      "wall_ms": 6.190199,
+      "ratio_to_zig": 2.70952109988138,
+      "ratio_95_interval": [
+        2.4435464285903152,
+        2.8267707656181593
+      ],
+      "reduction_vs_regenerated": 0.0,
+      "instructions": 45215747.0,
+      "cycles": 17292153.0
+    },
+    "root-clean": {
+      "wall_ms": 5.212517,
+      "ratio_to_zig": 2.2815784751007833,
+      "ratio_95_interval": [
+        2.0413792850956716,
+        2.3519704829899006
+      ],
+      "reduction_vs_regenerated": 0.1579403182353265,
+      "instructions": 31379129.0,
+      "cycles": 12397887.0
+    },
+    "root-width": {
+      "wall_ms": 4.491248,
+      "ratio_to_zig": 1.9658707613115587,
+      "ratio_95_interval": [
+        1.7421292188675401,
+        2.054647313242222
+      ],
+      "reduction_vs_regenerated": 0.2744582201638429,
+      "instructions": 28397306.0,
+      "cycles": 11226641.0
+    },
+    "heap-effects": {
+      "wall_ms": 6.022643,
+      "ratio_to_zig": 2.6361799169223636,
+      "ratio_95_interval": [
+        2.4087782960538613,
+        2.710069748004756
+      ],
+      "reduction_vs_regenerated": 0.02706795048107491,
+      "instructions": 44655633.0,
+      "cycles": 16414956.0
+    },
+    "zig": {
+      "wall_ms": 2.28461,
+      "ratio_to_zig": 1.0,
+      "ratio_95_interval": [
+        1.0,
+        1.0
+      ],
+      "reduction_vs_regenerated": 0.6309310896144049,
+      "instructions": 22748497.0,
+      "cycles": 6640084.0
+    }
+  },
+  "census-7.4MB": {
+    "regenerated": {
+      "wall_ms": 22.234463,
+      "ratio_to_zig": 1.7359961223929077,
+      "ratio_95_interval": [
+        1.7102025998956831,
+        1.758288438765155
+      ],
+      "reduction_vs_regenerated": 0.0,
+      "instructions": 155276525.0,
+      "cycles": 61987595.0
+    },
+    "root-clean": {
+      "wall_ms": 20.243527,
+      "ratio_to_zig": 1.5805501745446306,
+      "ratio_95_interval": [
+        1.5489660908667244,
+        1.6082305926990834
+      ],
+      "reduction_vs_regenerated": 0.08954279669358334,
+      "instructions": 133335721.0,
+      "cycles": 53185323.0
+    },
+    "root-width": {
+      "wall_ms": 20.352003,
+      "ratio_to_zig": 1.5890196354608979,
+      "ratio_95_interval": [
+        1.5526087687839687,
+        1.6097096421199624
+      ],
+      "reduction_vs_regenerated": 0.08466406407026794,
+      "instructions": 133335723.0,
+      "cycles": 52628208.0
+    },
+    "heap-effects": {
+      "wall_ms": 22.177675,
+      "ratio_to_zig": 1.7315622960487118,
+      "ratio_95_interval": [
+        1.7039903491526573,
+        1.7652967776838482
+      ],
+      "reduction_vs_regenerated": 0.0025540531381397225,
+      "instructions": 155276512.0,
+      "cycles": 61968857.0
+    },
+    "zig": {
+      "wall_ms": 12.807899,
+      "ratio_to_zig": 1.0,
+      "ratio_95_interval": [
+        1.0,
+        1.0
+      ],
+      "reduction_vs_regenerated": 0.423961846976021,
+      "instructions": 155017587.0,
+      "cycles": 41840407.0
+    }
+  },
+  "render-7.4MB": {
+    "regenerated": {
+      "wall_ms": 48.934614,
+      "ratio_to_zig": 2.9586980392507787,
+      "ratio_95_interval": [
+        2.896398402166036,
+        2.988037050851611
+      ],
+      "reduction_vs_regenerated": 0.0,
+      "instructions": 360406928.0,
+      "cycles": 138254384.0
+    },
+    "root-clean": {
+      "wall_ms": 40.412083,
+      "ratio_to_zig": 2.443406434842619,
+      "ratio_95_interval": [
+        2.3886775238096254,
+        2.480098245221753
+      ],
+      "reduction_vs_regenerated": 0.17416160675140913,
+      "instructions": 249718571.0,
+      "cycles": 98415487.0
+    },
+    "root-width": {
+      "wall_ms": 32.962654,
+      "ratio_to_zig": 1.9929970175774112,
+      "ratio_95_interval": [
+        1.952157337915871,
+        2.0263441153550636
+      ],
+      "reduction_vs_regenerated": 0.3263939100449429,
+      "instructions": 225864486.0,
+      "cycles": 87812764.0
+    },
+    "heap-effects": {
+      "wall_ms": 47.559317,
+      "ratio_to_zig": 2.8755444552194938,
+      "ratio_95_interval": [
+        2.8153279516615997,
+        2.9328612453781724
+      ],
+      "reduction_vs_regenerated": 0.02810478897411972,
+      "instructions": 355926104.0,
+      "cycles": 131249040.0
+    },
+    "zig": {
+      "wall_ms": 16.539239,
+      "ratio_to_zig": 1.0,
+      "ratio_95_interval": [
+        1.0,
+        1.0
+      ],
+      "reduction_vs_regenerated": 0.6620134982570824,
+      "instructions": 181603368.0,
+      "cycles": 51999373.0
+    }
+  }
+}

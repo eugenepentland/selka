@@ -1,0 +1,100 @@
+{
+  "swapped_net_names": {
+    "status": 0,
+    "stdout": "0\n",
+    "stderr": "",
+    "issue": "",
+    "svg_sha256": "287906e279472b9fde85b74173ee1a2428bf9d8d397e92055cb8214edaff5c72",
+    "input_sha256": "566d3001be0c88356c78ac4628d3e46926abd51f0fbe10ead21c7c35547bbeb1",
+    "matches_before_normal_and_gc_stress": [
+      "after-o3",
+      "after-lto",
+      "after-bounded",
+      "after-lto-bounded"
+    ]
+  },
+  "passive_declaration_order": {
+    "status": 0,
+    "stdout": "0\n",
+    "stderr": "",
+    "issue": "",
+    "svg_sha256": "1df26380bfb3e830ef57f7231b63d327fe5520fe36ee23bd0de4e59a173b9e80",
+    "input_sha256": "a468d1447db92a01534867cd2dd36bd1bc61d1ef7c66e926dd15f2a74c14c3d5",
+    "matches_before_normal_and_gc_stress": [
+      "after-o3",
+      "after-lto",
+      "after-bounded",
+      "after-lto-bounded"
+    ]
+  },
+  "passive_pin_order": {
+    "status": 0,
+    "stdout": "0\n",
+    "stderr": "",
+    "issue": "",
+    "svg_sha256": "ac300b4b441e0b83d57be6a4af92d9a968940b42841f847ac646b3038f2324a9",
+    "input_sha256": "1c19884a811747ad0a116a7c3e774f7b48a2376eb074f6d3c0fc0f55140b8b69",
+    "matches_before_normal_and_gc_stress": [
+      "after-o3",
+      "after-lto",
+      "after-bounded",
+      "after-lto-bounded"
+    ]
+  },
+  "display_raw_namespace": {
+    "status": 0,
+    "stdout": "0\n",
+    "stderr": "",
+    "issue": "",
+    "svg_sha256": "192774cde3e1aa2088222835e5702d69c1fc0959e33a560c717cb010353a432d",
+    "input_sha256": "38f55b21d56863b6b962fadda5af834fdce87aa23721443a81e0b3fb1a3517a9",
+    "matches_before_normal_and_gc_stress": [
+      "after-o3",
+      "after-lto",
+      "after-bounded",
+      "after-lto-bounded"
+    ]
+  },
+  "nc_raw_collision": {
+    "status": 0,
+    "stdout": "0\n",
+    "stderr": "",
+    "issue": "",
+    "svg_sha256": "e0706839a0a88af299d348000a413716dc90cb41976187b00c5c2c46f083a665",
+    "input_sha256": "903e70999762c1b6b44e6df3e3d55157dda055d9d3decda6573e1b704f0f7611",
+    "matches_before_normal_and_gc_stress": [
+      "after-o3",
+      "after-lto",
+      "after-bounded",
+      "after-lto-bounded"
+    ]
+  },
+  "nc_only_bridge_collision": {
+    "status": 0,
+    "stdout": "0\n",
+    "stderr": "",
+    "issue": "",
+    "svg_sha256": "1b82af32778b1919048237a012de1b4514a5d8248d4b0b8f77860a5428cc6b91",
+    "input_sha256": "852984d16fd9f8eb4cc38daf1e7639b4aad45624cf98bbc0bc85592b834d58ce",
+    "matches_before_normal_and_gc_stress": [
+      "after-o3",
+      "after-lto",
+      "after-bounded",
+      "after-lto-bounded"
+    ]
+  },
+  "empty_net_rejected": {
+    "status": 13,
+    "stdout": "13\n",
+    "stderr": "",
+    "issue": "13 0 2720\n",
+    "svg_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "input_sha256": "3d3e59283e7ed3157768bc2a6e3f03dae5f08c7b3aaff3b393e051124dc1383b",
+    "matches_before_normal_and_gc_stress": [
+      "after-o3",
+      "after-lto",
+      "after-bounded",
+      "after-lto-bounded"
+    ]
+  }
+}

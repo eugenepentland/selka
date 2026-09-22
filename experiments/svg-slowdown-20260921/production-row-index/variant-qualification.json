@@ -1,0 +1,68 @@
+{
+  "passed": true,
+  "cases": {
+    "swapped_net_names": {
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "svg_sha256": "287906e279472b9fde85b74173ee1a2428bf9d8d397e92055cb8214edaff5c72",
+      "issue": "",
+      "equals_retained_before": true,
+      "gc_stress_equals_normal": true
+    },
+    "passive_declaration_order": {
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "svg_sha256": "1df26380bfb3e830ef57f7231b63d327fe5520fe36ee23bd0de4e59a173b9e80",
+      "issue": "",
+      "equals_retained_before": true,
+      "gc_stress_equals_normal": true
+    },
+    "passive_pin_order": {
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "svg_sha256": "ac300b4b441e0b83d57be6a4af92d9a968940b42841f847ac646b3038f2324a9",
+      "issue": "",
+      "equals_retained_before": true,
+      "gc_stress_equals_normal": true
+    },
+    "display_raw_namespace": {
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "svg_sha256": "192774cde3e1aa2088222835e5702d69c1fc0959e33a560c717cb010353a432d",
+      "issue": "",
+      "equals_retained_before": true,
+      "gc_stress_equals_normal": true
+    },
+    "nc_raw_collision": {
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "svg_sha256": "e0706839a0a88af299d348000a413716dc90cb41976187b00c5c2c46f083a665",
+      "issue": "",
+      "equals_retained_before": true,
+      "gc_stress_equals_normal": true
+    },
+    "nc_only_bridge_collision": {
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "svg_sha256": "1b82af32778b1919048237a012de1b4514a5d8248d4b0b8f77860a5428cc6b91",
+      "issue": "",
+      "equals_retained_before": true,
+      "gc_stress_equals_normal": true
+    },
+    "empty_net_rejected": {
+      "status": 13,
+      "stdout": "13\n",
+      "stderr": "",
+      "svg_sha256": null,
+      "issue": "13 0 2720\n",
+      "equals_retained_before": true,
+      "gc_stress_equals_normal": true
+    }
+  }
+}

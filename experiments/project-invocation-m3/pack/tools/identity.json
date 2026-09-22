@@ -1,0 +1,45 @@
+{
+  "version": "m3-tools-v1",
+  "captured_utc": "2026-09-20T11:29:33.641034+00:00",
+  "tools": {
+    "mylang": {
+      "name": "mylang",
+      "source": "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "optional": false,
+      "present": true,
+      "path": "bin/mylang",
+      "sha256": "4024b68f1815ba1a29955e6c15a5d52b62fd11a5ba8cd65deb5ab7e4790ced1c"
+    },
+    "qbe": {
+      "name": "qbe",
+      "source": "/home/epentland/ai/canopy/mylang/zig-out/bin/qbe",
+      "optional": false,
+      "present": true,
+      "path": "bin/qbe",
+      "sha256": "808cce427c310c4ecdcdae6360fade2f5579548f5af3852b1c94e77b22960c5d"
+    },
+    "mylang-io": {
+      "name": "mylang-io",
+      "source": "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang-io",
+      "optional": true,
+      "present": true,
+      "path": "bin/mylang-io",
+      "sha256": "41f7a1a1404c0b5fa23898449504a8c2638dcfd933e7e8054731f4bc97dcaba8"
+    }
+  },
+  "scripts": {
+    "project.py": "e746b30cb29ddaabd8e36fc17f28b3f00cd25fdc6b8ad44eaebefe8d16144419",
+    "navigate.py": "410fbac467eed9526a72546ffa7875d49914a4a25b28a9f9ae846cf453552b8c",
+    "verify.py": "17a9665866542e23a9472b0d83c65bd52f80252158fe474bae4e4c385c26ecfd",
+    "verification/__init__.py": "07a885aa113b410792ef8f1db47a3fd49bd59718c34a08ae7dea0dc7a2e20983",
+    "verification/core.py": "c3c55092359eba4af837c5b78f562fc0bc1e2197bf05e144426afacbcecc98a3",
+    "verification/merge.py": "70431cff4acb9c638a6867b3bf41297d8aeb4b95a197979262ffc675353ab63c",
+    "verification/scheduler.py": "16032796cb6f56e860aefadcf3204c4d0659b7b6c2aa4f073f25e391f0a0a076"
+  },
+  "scripts_digest": "3fae73ef0be0bba936052c9fd88b7140647edac1e90e9ff40c27f2eb23f597df",
+  "events_module": {
+    "path": "events.py",
+    "sha256": "dcd98a352ad5e34a7b55a47aa9a0bc05d210cd236b94bdcbcad553560b5e3302",
+    "source": "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback/events.py"
+  }
+}

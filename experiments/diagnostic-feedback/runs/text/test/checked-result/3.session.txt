@@ -1,0 +1,11 @@
+Fixed.
+
+**What changed:** In `project/main.my`, `lookup("five")` returns `Result[int, str]`, but the old line `score = bonus + lookup("five")` added the `Result` directly to an `int` (error `E_TYPE`). I replaced it with a `match` that unwraps the result — `Ok(value)` adds `value` to `bonus`, `Err(_)` falls back to `bonus` — leaving `lookup`, `main`'s signature, and the rest of the program untouched.
+
+**Command and result:**
+```
+$ bin/mylang run project/main.my
+5
+[exit 0]
+```
+`bin/mylang check project/main.my` also exits 0 with no diagnostics.

@@ -1,0 +1,17 @@
+The fix is complete and verified with compiler invocations to spare.
+
+**What I changed:** In `project/main.my`, I removed the invalid, unused generic parameter from both functions: `def top[T: Ordered](values: list[int]) -> int:` → `def top(values: list[int]) -> int:` and the same for `top_of`. The checker rejected `Ordered` with `E_GENERIC_REQUIREMENT: unknown requirement; expected copy, equality, integer, codec, storable, or a declared constraint` (only requirement names like `integer` exist). Since `T` was never used in either signature or body, dropping it is the minimal fix; the rest of the program was untouched.
+
+**Exact command and result:**
+
+```
+$ bin/mylang check project/main.my
+[exit code: 0]        # was exit 1 with E_GENERIC_REQUIREMENT
+
+$ bin/mylang run project/main.my -- 1 3 2
+3
+$ bin/mylang run project/main.my -- 5 5 5
+5
+```
+
+Both `public/expected.json` cases match. I also built the program once and ran extra cases directly (largest first/last/middle, ties, all-equal, negatives, mixed signs, large magnitudes — e.g. `1 2 9 → 9`, `-1 -5 -3 → -1`, `0 0 -7 → 0`), all returning the correct maximum. Temporary verification artifacts were removed; only `project/main.my` is changed.

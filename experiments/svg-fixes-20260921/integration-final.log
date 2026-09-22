@@ -1,0 +1,104 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: file-size: 10 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 17 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 4400 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+test-byte-io
++- run test w
+guardian/test: 11 test(s) selected
+guardian/test: test wall 0.00s
+guardian/test: PASS — 11 passed
+guardian/test: RESULT {"passed":11,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/8120116ade915a59ee4eb5f57cf7a676/test --cache-dir=./.zig-cache --seed=0x9207ec49 --listen=-
+
+test-qbe-build
++- run test w
+guardian/test: 62 test(s) selected
+guardian/test: test wall 4.75s; slowest over 50ms:
+guardian/test:   2.23s  qbe_build_test.test.a prebuilt runtime installed beside the compiler links directly, and damage falls back to source
+guardian/test:   1.80s  qbe_build_io.test.concurrent staging in one destination never loses a child to another build's reclaim
+guardian/test:   0.44s  qbe_build_test.test.a default build shares its runtime tree under XDG while an explicit cache-dir stays hermetic
+guardian/test:   0.25s  qbe_build_test.test.a native executable exits with its entry int result truncated to a byte
+guardian/test: PASS — 62 passed
+guardian/test: RESULT {"passed":62,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/266b161badc7852a11dcf46e284332b1/test --cache-dir=./.zig-cache --seed=0x9207ec49 --listen=-
+
+test-qbe-build
++- run test w
+guardian/test: 2 test(s) selected
+guardian/test: test wall 0.00s
+guardian/test: PASS — 2 passed
+guardian/test: RESULT {"passed":2,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/e50fd518f584b308100793377f752068/test --cache-dir=./.zig-cache --seed=0x9207ec49 --listen=-
+
+test-schematic
++- run test w
+guardian/test: 13 test(s) selected
+main.my:7:9: error[R_HOST_FAILURE]: native execution failed
+  in main::main at main.my:7:9
+main.my:6:9: error[R_HOST_FAILURE]: native execution failed
+  in main::main at main.my:6:9
+main.my:2:8: warning[W_UNUSED_IMPORT]: import `io` is never referenced in this module; remove it or use it
+  import io
+         ^
+main.my:5:10: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def main(host: Host) -> i64:
+           ^
+main.my:1:1: error[E_MODULE_READ]: cannot load main.my: NotFound
+  
+  ^
+main.my:5:5: error[E_TYPE]: expected int, found bool
+      return True
+      ^
+main.my:5:5: error[E_TYPE]: expected int, found bool
+      return True
+      ^
+layout.my:25:14: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def pinGroup(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
+               ^
+layout.my:25:38: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def pinGroup(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
+                                       ^
+layout.my:25:59: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def pinGroup(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
+                                                            ^
+layout.my:199:9: warning[W_MUTATES_MISSING]: this function writes `rows` (parameter 1) reachable from the caller; declare `mutates(rows)`
+          rows[i].side = side
+          ^
+layout.my:255:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def depth(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
+            ^
+layout.my:255:35: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def depth(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
+                                    ^
+layout.my:255:56: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def depth(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
+                                                         ^
+layout_graph.my:44:18: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def build(host: Host, parts: list[c.Part], pins: list[c.Pin]) -> list[Net] effects(host, managed_allocation):
+                   ^
+layout_routes.my:42:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def blocked(host: Host, a: l.Point, b: l.Point, net_id: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:
+              ^
+layout_routes.my:42:62: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def blocked(host: Host, a: l.Point, b: l.Point, net_id: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:
+                                                               ^
+guardian/test: SLOW  7.17s  tests.test.schematic renders the whole fixture identically, normally and under collection stress
+main.my:7:9: error[R_HOST_FAILURE]: native execution failed
+  in main::main at main.my:7:9
+guardian/test: test wall 9.48s; slowest over 50ms:
+guardian/test:   7.17s  tests.test.schematic renders the whole fixture identically, normally and under collection stress
+guardian/test:   0.63s  tests.test.schematic byte callbacks reject positions and documents the host never supplied
+guardian/test:   0.59s  tests.test.schematic byte callbacks publish only on success and keep the first located issue
+guardian/test:   0.30s  tests.test.invalid documents are rejected before the guest executable is given any bytes
+guardian/test:   0.23s  tests.test.Python schematic decimal output preserves negative numbers and minimum integer
+guardian/test:   0.22s  tests.test.named schematic input handles select their host documents
+guardian/test:   0.22s  tests.test.named schematic input providers reject documents the host never supplied
+guardian/test:   0.09s  tests.test.disk initDisk rejects failed compilations and reloads bounded sources
+guardian/test: PASS — 13 passed
+guardian/test: RESULT {"passed":13,"failed":0,"skipped":0}
+failed command: ZIG_GLOBAL_CACHE_DIR=/home/epentland/.cache/zig MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/0114e656b8da3f34977dc3a5bbf2afc5/test --cache-dir=./.zig-cache --seed=0x9207ec49 --listen=-
+

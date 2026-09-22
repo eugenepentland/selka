@@ -1,0 +1,8 @@
+**What I changed** (`project/main.my`): `main` was adding an `int` directly to the `Result[int, str]` returned by `as_count`, which failed `E_TYPE` ("expected int, found Result[int, str]"). I now unwrap the result with a `match`: `case Ok(value)` prints `7 + value`, `case Err(_)` prints `7`. I also made the program total by printing `7` when no argument is supplied at all (previously `args[0]` trapped with `R_LIST_BOUNDS`). `as_count` itself is unchanged.
+
+**Command and result** (final source):
+```
+$ ./bin/mylang run project/main.my -- 41
+48
+```
+Also verified: `-- 0` → `7`, `-- abc` → `7`, `-- -5` → `2`, no args → `7`; `./bin/mylang check project/main.my` exits 0 with no diagnostics. All 5 cases pass, matching `public/expected.json`.

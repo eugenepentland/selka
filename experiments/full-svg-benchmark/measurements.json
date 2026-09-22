@@ -1,0 +1,2736 @@
+{
+  "schema": "actual-netlisp-full-svg-v2",
+  "cpu": 6,
+  "seed": 20260921,
+  "rounds": 31,
+  "warmups": 3,
+  "scope": "warm-filesystem-cache fresh-process source-to-SVG to private file; includes launch/read/evaluate-or-validate/layout/route/serialize/write/shutdown; excludes compile/HTTP/HTML/ERC-review/browser/parent mylang driver",
+  "comparison": "mylang and the rust-o3/go-fast/zig-o3 ports run one algorithm and produce identical SVG bytes, so their differences are language, runtime, codegen and host-interface cost; netlisp is a different engine with different algorithms and output and is not matched",
+  "native_arms": [
+    "rust-o3",
+    "go-fast",
+    "zig-o3"
+  ],
+  "binaries": {
+    "netlisp-llvm-fast": {
+      "path": ".tmp/full-svg-benchmark-20260921/netlisp-llvm-fast",
+      "bytes": 13910120,
+      "sha256": "6006ae5a1fc4e6a009fd9e5e2c138f885ae6211ffa01fe05731b76566e4e7316"
+    },
+    "netlisp-llvm-safe": {
+      "path": ".tmp/full-svg-benchmark-20260921/netlisp-llvm-safe",
+      "bytes": 11197432,
+      "sha256": "4be86f4754a74070e3ae39b02f566bf2def78a4b927901d8c7a6c2074de33105"
+    },
+    "mylang-o3": {
+      "path": ".tmp/full-svg-benchmark-20260921/mylang-o3",
+      "bytes": 1776560,
+      "sha256": "d9eeddfadfaad1509ef828a32afb7fcac9fdbd4a277cc8c670b5324bfb7e54b8"
+    },
+    "mylang-o3-lto": {
+      "path": ".tmp/full-svg-benchmark-20260921/mylang-o3-lto",
+      "bytes": 872440,
+      "sha256": "84c590c3d7169642a4782d36ca4ec44219d664c461f658089c6b48ebf3c8e077"
+    },
+    "mylang-o3-bounded": {
+      "path": ".tmp/full-svg-benchmark-20260921/mylang-o3-bounded",
+      "bytes": 2148640,
+      "sha256": "f6f43ce5acd5cd7ca3951d3eac2df7f198086a7349beeee357c0d8a3869d0649"
+    },
+    "rust-o3": {
+      "path": ".tmp/full-svg-benchmark-20260921/rust-o3",
+      "bytes": 4591720,
+      "sha256": "57a931f718fd234f54ec8b7775267eff6cac08c628308614d2502d483bccb39d"
+    },
+    "go-fast": {
+      "path": ".tmp/full-svg-benchmark-20260921/go-fast",
+      "bytes": 2376085,
+      "sha256": "6e786ac6174b1996c0120ff0c51e9a7acb8e6de5e663808056558818583ced90"
+    },
+    "zig-o3": {
+      "path": ".tmp/full-svg-benchmark-20260921/zig-o3",
+      "bytes": 4553712,
+      "sha256": "0a80f2fa747d033ef979110109a1fbc4155d738d76018c930738847b3f358a63"
+    }
+  },
+  "summary": {
+    "fixture": {
+      "median_ms": {
+        "netlisp-llvm-fast": 2.694874,
+        "netlisp-llvm-safe": 2.862357,
+        "mylang-o3": 18.902909,
+        "mylang-o3-lto": 37.228984,
+        "mylang-o3-bounded": 46.451501,
+        "rust-o3": 1.719956,
+        "go-fast": 2.208617,
+        "zig-o3": 1.55402
+      },
+      "p10_p90_ms": {
+        "netlisp-llvm-fast": [
+          2.556682,
+          2.896819
+        ],
+        "netlisp-llvm-safe": [
+          2.676949,
+          2.978203
+        ],
+        "mylang-o3": [
+          18.523805,
+          20.961748
+        ],
+        "mylang-o3-lto": [
+          36.271688,
+          40.043312
+        ],
+        "mylang-o3-bounded": [
+          46.043032,
+          48.050389
+        ],
+        "rust-o3": [
+          1.553397,
+          1.878372
+        ],
+        "go-fast": [
+          2.019783,
+          2.422184
+        ],
+        "zig-o3": [
+          1.366192,
+          1.720155
+        ]
+      },
+      "ratios_to_netlisp_fast": {
+        "netlisp-llvm-safe": {
+          "ratio": 1.0621487312579363,
+          "paired_bootstrap_95": [
+            0.9970437904884614,
+            1.0894462897259756
+          ]
+        },
+        "mylang-o3": {
+          "ratio": 7.014394365005563,
+          "paired_bootstrap_95": [
+            6.778191643783921,
+            7.178949892184736
+          ]
+        },
+        "mylang-o3-lto": {
+          "ratio": 13.814740132562783,
+          "paired_bootstrap_95": [
+            13.28263993873239,
+            14.224739586047876
+          ]
+        },
+        "mylang-o3-bounded": {
+          "ratio": 17.23698436364743,
+          "paired_bootstrap_95": [
+            16.706842087654614,
+            17.653949573488337
+          ]
+        },
+        "rust-o3": {
+          "ratio": 0.638232436841203,
+          "paired_bootstrap_95": [
+            0.6043446793846614,
+            0.6667323107116452
+          ]
+        },
+        "go-fast": {
+          "ratio": 0.8195622504057704,
+          "paired_bootstrap_95": [
+            0.7759180588477168,
+            0.8614554238695554
+          ]
+        },
+        "zig-o3": {
+          "ratio": 0.5766577583961253,
+          "paired_bootstrap_95": [
+            0.541872536576799,
+            0.5983031889105648
+          ]
+        }
+      },
+      "ratios_to_zig_o3": {
+        "netlisp-llvm-fast": {
+          "ratio": 1.7341308348669902,
+          "paired_bootstrap_95": [
+            1.671766721268428,
+            1.845452449606239
+          ]
+        },
+        "netlisp-llvm-safe": {
+          "ratio": 1.8419048660892394,
+          "paired_bootstrap_95": [
+            1.7512855763776984,
+            1.9303144883571877
+          ]
+        },
+        "mylang-o3": {
+          "ratio": 12.163877556273409,
+          "paired_bootstrap_95": [
+            11.754914158528502,
+            12.754851894504332
+          ]
+        },
+        "mylang-o3-lto": {
+          "ratio": 23.956566839551613,
+          "paired_bootstrap_95": [
+            23.177882535355682,
+            25.19736072042138
+          ]
+        },
+        "mylang-o3-bounded": {
+          "ratio": 29.89118608512117,
+          "paired_bootstrap_95": [
+            28.991113339819126,
+            31.38014532723184
+          ]
+        },
+        "rust-o3": {
+          "ratio": 1.106778548538629,
+          "paired_bootstrap_95": [
+            1.058021279589226,
+            1.1873030561683464
+          ]
+        },
+        "go-fast": {
+          "ratio": 1.4212281695216278,
+          "paired_bootstrap_95": [
+            1.3502742458040462,
+            1.5180359851867
+          ]
+        }
+      }
+    },
+    "changed-net": {
+      "median_ms": {
+        "netlisp-llvm-fast": 2.678363,
+        "netlisp-llvm-safe": 2.823425,
+        "mylang-o3": 19.354687,
+        "mylang-o3-lto": 37.45563,
+        "mylang-o3-bounded": 46.791063,
+        "rust-o3": 1.722936,
+        "go-fast": 2.204713,
+        "zig-o3": 1.56082
+      },
+      "p10_p90_ms": {
+        "netlisp-llvm-fast": [
+          2.48626,
+          2.988451
+        ],
+        "netlisp-llvm-safe": [
+          2.695738,
+          2.975297
+        ],
+        "mylang-o3": [
+          18.964228,
+          20.354574
+        ],
+        "mylang-o3-lto": [
+          36.177498,
+          38.837472
+        ],
+        "mylang-o3-bounded": [
+          46.172068,
+          48.584647
+        ],
+        "rust-o3": [
+          1.551583,
+          1.891093
+        ],
+        "go-fast": [
+          2.023535,
+          2.371629
+        ],
+        "zig-o3": [
+          1.386556,
+          1.692957
+        ]
+      },
+      "ratios_to_netlisp_fast": {
+        "netlisp-llvm-safe": {
+          "ratio": 1.0541606944241688,
+          "paired_bootstrap_95": [
+            1.0190686061015783,
+            1.0764206556467537
+          ]
+        },
+        "mylang-o3": {
+          "ratio": 7.226312116766845,
+          "paired_bootstrap_95": [
+            6.9843325554503455,
+            7.40206943075676
+          ]
+        },
+        "mylang-o3-lto": {
+          "ratio": 13.98452338237946,
+          "paired_bootstrap_95": [
+            13.394415868957386,
+            14.297612564920884
+          ]
+        },
+        "mylang-o3-bounded": {
+          "ratio": 17.470022920716872,
+          "paired_bootstrap_95": [
+            16.874883624515807,
+            17.76077308675871
+          ]
+        },
+        "rust-o3": {
+          "ratio": 0.6432794957218271,
+          "paired_bootstrap_95": [
+            0.6090674007492989,
+            0.669249566295626
+          ]
+        },
+        "go-fast": {
+          "ratio": 0.823156905916039,
+          "paired_bootstrap_95": [
+            0.782402029293432,
+            0.8407783693934062
+          ]
+        },
+        "zig-o3": {
+          "ratio": 0.5827514791684324,
+          "paired_bootstrap_95": [
+            0.5363793697119512,
+            0.6060065459615437
+          ]
+        }
+      },
+      "ratios_to_zig_o3": {
+        "netlisp-llvm-fast": {
+          "ratio": 1.715997360361861,
+          "paired_bootstrap_95": [
+            1.653064626927101,
+            1.8701543016985207
+          ]
+        },
+        "netlisp-llvm-safe": {
+          "ratio": 1.8089369690291,
+          "paired_bootstrap_95": [
+            1.745327516102736,
+            1.9723962272327589
+          ]
+        },
+        "mylang-o3": {
+          "ratio": 12.40033251752284,
+          "paired_bootstrap_95": [
+            11.970939617987563,
+            13.528369845261743
+          ]
+        },
+        "mylang-o3-lto": {
+          "ratio": 23.99740521008188,
+          "paired_bootstrap_95": [
+            23.144951253038922,
+            25.98262986536416
+          ]
+        },
+        "mylang-o3-bounded": {
+          "ratio": 29.97851321741136,
+          "paired_bootstrap_95": [
+            28.894744329251626,
+            32.85073468868519
+          ]
+        },
+        "rust-o3": {
+          "ratio": 1.1038659166335643,
+          "paired_bootstrap_95": [
+            1.055192150697375,
+            1.2044861373031173
+          ]
+        },
+        "go-fast": {
+          "ratio": 1.4125350777155596,
+          "paired_bootstrap_95": [
+            1.3538209233629506,
+            1.542129094398864
+          ]
+        }
+      }
+    },
+    "changed-value": {
+      "median_ms": {
+        "netlisp-llvm-fast": 2.704892,
+        "netlisp-llvm-safe": 2.879792,
+        "mylang-o3": 19.108157,
+        "mylang-o3-lto": 36.869535,
+        "mylang-o3-bounded": 46.715458,
+        "rust-o3": 1.704472,
+        "go-fast": 2.164802,
+        "zig-o3": 1.538246
+      },
+      "p10_p90_ms": {
+        "netlisp-llvm-fast": [
+          2.549662,
+          2.902868
+        ],
+        "netlisp-llvm-safe": [
+          2.626617,
+          3.105265
+        ],
+        "mylang-o3": [
+          18.437521,
+          19.589293
+        ],
+        "mylang-o3-lto": [
+          35.859861,
+          39.262105
+        ],
+        "mylang-o3-bounded": [
+          46.370933,
+          49.703108
+        ],
+        "rust-o3": [
+          1.586905,
+          1.845313
+        ],
+        "go-fast": [
+          2.006634,
+          2.398428
+        ],
+        "zig-o3": [
+          1.448372,
+          1.700068
+        ]
+      },
+      "ratios_to_netlisp_fast": {
+        "netlisp-llvm-safe": {
+          "ratio": 1.0646606223095045,
+          "paired_bootstrap_95": [
+            1.0136177309433794,
+            1.1144152778845187
+          ]
+        },
+        "mylang-o3": {
+          "ratio": 7.06429572788858,
+          "paired_bootstrap_95": [
+            6.855328459305834,
+            7.217421504831248
+          ]
+        },
+        "mylang-o3-lto": {
+          "ratio": 13.630686548668116,
+          "paired_bootstrap_95": [
+            13.216430792852384,
+            14.035430001330946
+          ]
+        },
+        "mylang-o3-bounded": {
+          "ratio": 17.2707294782934,
+          "paired_bootstrap_95": [
+            16.857567645356216,
+            17.68002203848404
+          ]
+        },
+        "rust-o3": {
+          "ratio": 0.630144197993857,
+          "paired_bootstrap_95": [
+            0.6075705045503424,
+            0.6631296833740362
+          ]
+        },
+        "go-fast": {
+          "ratio": 0.8003284419488836,
+          "paired_bootstrap_95": [
+            0.7611001988398904,
+            0.8490766906451894
+          ]
+        },
+        "zig-o3": {
+          "ratio": 0.5686903580623551,
+          "paired_bootstrap_95": [
+            0.547506627376469,
+            0.5957163595253253
+          ]
+        }
+      },
+      "ratios_to_zig_o3": {
+        "netlisp-llvm-fast": {
+          "ratio": 1.7584261555043863,
+          "paired_bootstrap_95": [
+            1.6786512305903656,
+            1.8266395622026645
+          ]
+        },
+        "netlisp-llvm-safe": {
+          "ratio": 1.8721270850046092,
+          "paired_bootstrap_95": [
+            1.7631698902434665,
+            1.982868190102229
+          ]
+        },
+        "mylang-o3": {
+          "ratio": 12.422042378137176,
+          "paired_bootstrap_95": [
+            12.010679003470358,
+            12.850782683204994
+          ]
+        },
+        "mylang-o3-lto": {
+          "ratio": 23.968555744659827,
+          "paired_bootstrap_95": [
+            23.186681136543015,
+            24.835658963575106
+          ]
+        },
+        "mylang-o3-bounded": {
+          "ratio": 30.369302439271742,
+          "paired_bootstrap_95": [
+            29.52675577452059,
+            31.35700728384376
+          ]
+        },
+        "rust-o3": {
+          "ratio": 1.1080620394917329,
+          "paired_bootstrap_95": [
+            1.0650321163621335,
+            1.1533004114688359
+          ]
+        },
+        "go-fast": {
+          "ratio": 1.4073184653169908,
+          "paired_bootstrap_95": [
+            1.3318686673002886,
+            1.4950922169239473
+          ]
+        }
+      }
+    }
+  },
+  "samples": [
+    {
+      "round": 0,
+      "case": "changed-net",
+      "order": [
+        "zig-o3",
+        "go-fast",
+        "mylang-o3-bounded",
+        "netlisp-llvm-fast",
+        "rust-o3",
+        "netlisp-llvm-safe",
+        "mylang-o3-lto",
+        "mylang-o3"
+      ],
+      "ms": {
+        "zig-o3": 1.418071,
+        "go-fast": 2.091334,
+        "mylang-o3-bounded": 48.064959,
+        "netlisp-llvm-fast": 2.96595,
+        "rust-o3": 1.891093,
+        "netlisp-llvm-safe": 2.821856,
+        "mylang-o3-lto": 36.288124,
+        "mylang-o3": 19.572999
+      }
+    },
+    {
+      "round": 0,
+      "case": "fixture",
+      "order": [
+        "netlisp-llvm-safe",
+        "zig-o3",
+        "netlisp-llvm-fast",
+        "rust-o3",
+        "mylang-o3-lto",
+        "mylang-o3",
+        "mylang-o3-bounded",
+        "go-fast"
+      ],
+      "ms": {
+        "netlisp-llvm-safe": 2.978203,
+        "zig-o3": 1.520634,
+        "netlisp-llvm-fast": 2.600914,
+        "rust-o3": 1.622585,
+        "mylang-o3-lto": 37.049244,
+        "mylang-o3": 19.760663,
+        "mylang-o3-bounded": 53.689572,
+        "go-fast": 2.238087
+      }
+    },
+    {
+      "round": 0,
+      "case": "changed-value",
+      "order": [
+        "zig-o3",
+        "rust-o3",
+        "mylang-o3-lto",
+        "go-fast",
+        "mylang-o3-bounded",
+        "netlisp-llvm-fast",
+        "netlisp-llvm-safe",
+        "mylang-o3"
+      ],
+      "ms": {
+        "zig-o3": 1.491782,
+        "rust-o3": 1.526527,
+        "mylang-o3-lto": 35.818468,
+        "go-fast": 2.312347,
+        "mylang-o3-bounded": 46.651034,
+        "netlisp-llvm-fast": 2.811713,
+        "netlisp-llvm-safe": 2.600877,
+        "mylang-o3": 18.496409
+      }
+    },
+    {
+      "round": 1,
+      "case": "fixture",
+      "order": [
+        "netlisp-llvm-safe",
+        "netlisp-llvm-fast",
+        "rust-o3",
+        "mylang-o3",
+        "zig-o3",
+        "go-fast",
+        "mylang-o3-lto",
+        "mylang-o3-bounded"
+      ],
+      "ms": {
+        "netlisp-llvm-safe": 2.867662,
+        "netlisp-llvm-fast": 2.372875,
+        "rust-o3": 1.570594,
+        "mylang-o3": 18.433136,
+        "zig-o3": 1.722692,
+        "go-fast": 2.156859,
+        "mylang-o3-lto": 38.110667,
+        "mylang-o3-bounded": 47.021762
+      }
+    },
+    {
+      "round": 1,
+      "case": "changed-net",
+      "order": [
+        "mylang-o3",
+        "go-fast",
+        "netlisp-llvm-safe",
+        "mylang-o3-bounded",
+        "zig-o3",
+        "netlisp-llvm-fast",
+        "rust-o3",
+        "mylang-o3-lto"
+      ],
+      "ms": {
+        "mylang-o3": 19.859264,
+        "go-fast": 2.29787,
+        "netlisp-llvm-safe": 2.801374,
+        "mylang-o3-bounded": 46.128518,
+        "zig-o3": 1.628677,
+        "netlisp-llvm-fast": 2.769054,
+        "rust-o3": 1.641966,
+        "mylang-o3-lto": 36.680349
+      }
+    },
+    {
+      "round": 1,
+      "case": "changed-value",
+      "order": [
+        "mylang-o3-lto",
+        "netlisp-llvm-fast",
+        "rust-o3",
+        "netlisp-llvm-safe",
+        "mylang-o3",
+        "zig-o3",
+        "go-fast",
+        "mylang-o3-bounded"
+      ],
+      "ms": {
+        "mylang-o3-lto": 36.250077,
+        "netlisp-llvm-fast": 2.951358,
+        "rust-o3": 1.710992,
+        "netlisp-llvm-safe": 2.713822,
+        "mylang-o3": 18.5963,
+        "zig-o3": 1.469759,
+        "go-fast": 2.106798,
+        "mylang-o3-bounded": 46.003632
+      }
+    },
+    {
+      "round": 2,
+      "case": "changed-value",
+      "order": [
+        "netlisp-llvm-fast",
+        "go-fast",
+        "rust-o3",
+        "mylang-o3-lto",
+        "mylang-o3",
+        "mylang-o3-bounded",
+        "netlisp-llvm-safe",
+        "zig-o3"
+      ],
+      "ms": {
+        "netlisp-llvm-fast": 2.809821,
+        "go-fast": 2.015447,
+        "rust-o3": 1.674632,
+        "mylang-o3-lto": 35.820255,
+        "mylang-o3": 19.414291,
+        "mylang-o3-bounded": 47.47593,
+        "netlisp-llvm-safe": 3.047648,
+        "zig-o3": 1.57108
+      }
+    },
+    {
+      "round": 2,
+      "case": "fixture",
+      "order": [
+        "zig-o3",
+        "mylang-o3-lto",
+        "mylang-o3",
+        "netlisp-llvm-fast",
+        "mylang-o3-bounded",
+        "rust-o3",
+        "go-fast",
+        "netlisp-llvm-safe"
+      ],
+      "ms": {
+        "zig-o3": 1.491345,
+        "mylang-o3-lto": 36.346972,
+        "mylang-o3": 18.523805,
+        "netlisp-llvm-fast": 2.798841,
+        "mylang-o3-bounded": 46.1749,
+        "rust-o3": 1.878372,
+        "go-fast": 2.155952,
+        "netlisp-llvm-safe": 2.676949
+      }
+    },
+    {
+      "round": 2,
+      "case": "changed-net",
+      "order": [
+        "mylang-o3",
+        "mylang-o3-lto",
+        "zig-o3",
+        "rust-o3",
+        "mylang-o3-bounded",
+        "netlisp-llvm-safe",
+        "go-fast",
+        "netlisp-llvm-fast"
+      ],
+      "ms": {
+        "mylang-o3": 19.159719,
+        "mylang-o3-lto": 38.079946,
+        "zig-o3": 1.671146,
+        "rust-o3": 1.775074,
+        "mylang-o3-bounded": 46.578034,
+        "netlisp-llvm-safe": 2.773717,
+        "go-fast": 2.130164,
+        "netlisp-llvm-fast": 2.546507
+      }
+    },
+    {
+      "round": 3,
+      "case": "changed-value",
+      "order": [
+        "netlisp-llvm-safe",
+        "rust-o3",
+        "netlisp-llvm-fast",
+        "mylang-o3-lto",
+        "mylang-o3-bounded",
+        "zig-o3",
+        "mylang-o3",
+        "go-fast"
+      ],
+      "ms": {
+        "netlisp-llvm-safe": 2.74235,
+        "rust-o3": 1.764417,
+        "netlisp-llvm-fast": 2.35625,
+        "mylang-o3-lto": 35.737162,
+        "mylang-o3-bounded": 46.847275,
+        "zig-o3": 1.723532,
+        "mylang-o3": 18.980145,
+        "go-fast": 2.462112
+      }
+    },
+    {
+      "round": 3,
+      "case": "fixture",
+      "order": [
+        "rust-o3",
+        "netlisp-llvm-safe",
+        "mylang-o3",
+        "mylang-o3-bounded",
+        "go-fast",
+        "zig-o3",
+        "netlisp-llvm-fast",
+        "mylang-o3-lto"
+      ],
+      "ms": {
+        "rust-o3": 1.571875,
+        "netlisp-llvm-safe": 2.704917,
+        "mylang-o3": 18.53161,
+        "mylang-o3-bounded": 46.772374,
+        "go-fast": 2.398832,
+        "zig-o3": 1.603081,
+        "netlisp-llvm-fast": 2.761655,
+        "mylang-o3-lto": 36.559819
+      }
+    },
+    {
+      "round": 3,
+      "case": "changed-net",
+      "order": [
+        "netlisp-llvm-fast",
+        "rust-o3",
+        "netlisp-llvm-safe",
+        "zig-o3",
+        "mylang-o3-bounded",
+        "mylang-o3",
+        "go-fast",
+        "mylang-o3-lto"
+      ],
+      "ms": {
+        "netlisp-llvm-fast": 2.660233,
+        "rust-o3": 1.659669,
+        "netlisp-llvm-safe": 2.680307,
+        "zig-o3": 1.495764,
+        "mylang-o3-bounded": 46.172068,
+        "mylang-o3": 19.276061,
+        "go-fast": 2.402667,
+        "mylang-o3-lto": 36.56283
+      }
+    },
+    {
+      "round": 4,
+      "case": "changed-value",
+      "order": [
+        "netlisp-llvm-safe",
+        "netlisp-llvm-fast",
+        "rust-o3",
+        "mylang-o3-bounded",
+        "mylang-o3-lto",
+        "mylang-o3",
+        "zig-o3",
+        "go-fast"
+      ],
+      "ms": {
+        "netlisp-llvm-safe": 2.831377,
+        "netlisp-llvm-fast": 2.597358,
+        "rust-o3": 1.586905,
+        "mylang-o3-bounded": 45.459362,
+        "mylang-o3-lto": 38.00786,
+        "mylang-o3": 19.025298,
+        "zig-o3": 1.875602,
+        "go-fast": 2.335488
+      }
+    },
+    {
+      "round": 4,
+      "case": "changed-net",
+      "order": [
+        "rust-o3",
+        "zig-o3",
+        "netlisp-llvm-safe",
+        "netlisp-llvm-fast",
+        "mylang-o3-bounded",
+        "go-fast",
+        "mylang-o3-lto",
+        "mylang-o3"
+      ],
+      "ms": {
+        "rust-o3": 1.67342,
+        "zig-o3": 1.4269,
+        "netlisp-llvm-safe": 2.695738,
+        "netlisp-llvm-fast": 2.394271,
+        "mylang-o3-bounded": 46.369742,
+        "go-fast": 2.206284,
+        "mylang-o3-lto": 36.562182,
+        "mylang-o3": 19.756575
+      }
+    },
+    {
+      "round": 4,
+      "case": "fixture",
+      "order": [
+        "mylang-o3",
+        "netlisp-llvm-fast",
+        "zig-o3",
+        "go-fast",
+        "mylang-o3-bounded",
+        "rust-o3",
+        "mylang-o3-lto",
+        "netlisp-llvm-safe"
+      ],
+      "ms": {
+        "mylang-o3": 18.98357,
+        "netlisp-llvm-fast": 2.752173,
+        "zig-o3": 1.385465,
+        "go-fast": 1.944285,
+        "mylang-o3-bounded": 46.29584,
+        "rust-o3": 1.805459,
+        "mylang-o3-lto": 35.886167,
+        "netlisp-llvm-safe": 2.862357
+      }
+    },
+    {
+      "round": 5,
+      "case": "changed-value",
+      "order": [
+        "zig-o3",
+        "mylang-o3-lto",
+        "mylang-o3",
+        "go-fast",
+        "rust-o3",
+        "netlisp-llvm-fast",
+        "mylang-o3-bounded",
+        "netlisp-llvm-safe"
+      ],
+      "ms": {
+        "zig-o3": 1.304361,
+        "mylang-o3-lto": 36.702293,
+        "mylang-o3": 19.567639,
+        "go-fast": 2.221274,
+        "rust-o3": 1.601365,
+        "netlisp-llvm-fast": 2.693562,
+        "mylang-o3-bounded": 47.973256,
+        "netlisp-llvm-safe": 3.235686
+      }
+    },
+    {
+      "round": 5,
+      "case": "changed-net",
+      "order": [
+        "mylang-o3-bounded",
+        "zig-o3",
+        "rust-o3",
+        "mylang-o3-lto",
+        "netlisp-llvm-safe",
+        "mylang-o3",
+        "go-fast",
+        "netlisp-llvm-fast"
+      ],
+      "ms": {
+        "mylang-o3-bounded": 50.383704,
+        "zig-o3": 1.809837,
+        "rust-o3": 1.777602,
+        "mylang-o3-lto": 38.046777,
+        "netlisp-llvm-safe": 2.838421,
+        "mylang-o3": 18.859742,
+        "go-fast": 2.023535,
+        "netlisp-llvm-fast": 2.522952
+      }
+    },
+    {
+      "round": 5,
+      "case": "fixture",
+      "order": [
+        "mylang-o3-bounded",
+        "mylang-o3-lto",
+        "netlisp-llvm-fast",
+        "rust-o3",
+        "go-fast",
+        "mylang-o3",
+        "netlisp-llvm-safe",
+        "zig-o3"
+      ],
+      "ms": {
+        "mylang-o3-bounded": 46.440861,
+        "mylang-o3-lto": 37.863787,
+        "netlisp-llvm-fast": 2.862159,
+        "rust-o3": 1.875476,
+        "go-fast": 2.042099,
+        "mylang-o3": 18.748546,
+        "netlisp-llvm-safe": 2.887898,
+        "zig-o3": 1.643268
+      }
+    },
+    {
+      "round": 6,
+      "case": "changed-value",
+      "order": [
+        "netlisp-llvm-fast",
+        "netlisp-llvm-safe",
+        "mylang-o3-bounded",
+        "mylang-o3",
+        "zig-o3",
+        "mylang-o3-lto",
+        "go-fast",
+        "rust-o3"
+      ],
+      "ms": {
+        "netlisp-llvm-fast": 2.524509,
+        "netlisp-llvm-safe": 2.726007,
+        "mylang-o3-bounded": 46.497647,
+        "mylang-o3": 19.290923,
+        "zig-o3": 1.673319,
+        "mylang-o3-lto": 39.598878,
+        "go-fast": 2.332284,
+        "rust-o3": 1.788384
+      }
+    },
+    {
+      "round": 6,
+      "case": "changed-net",
+      "order": [
+        "mylang-o3",
+        "zig-o3",
+        "netlisp-llvm-safe",
+        "netlisp-llvm-fast",
+        "mylang-o3-bounded",
+        "mylang-o3-lto",
+        "rust-o3",
+        "go-fast"
+      ],
+      "ms": {
+        "mylang-o3": 19.354687,
+        "zig-o3": 1.616806,
+        "netlisp-llvm-safe": 2.761548,
+        "netlisp-llvm-fast": 2.57487,
+        "mylang-o3-bounded": 46.505931,
+        "mylang-o3-lto": 37.703605,
+        "rust-o3": 1.853284,
+        "go-fast": 2.280056
+      }
+    },
+    {
+      "round": 6,
+      "case": "fixture",
+      "order": [
+        "netlisp-llvm-safe",
+        "mylang-o3",
+        "rust-o3",
+        "go-fast",
+        "netlisp-llvm-fast",
+        "zig-o3",
+        "mylang-o3-lto",
+        "mylang-o3-bounded"
+      ],
+      "ms": {
+        "netlisp-llvm-safe": 2.986314,
+        "mylang-o3": 18.561412,
+        "rust-o3": 1.612532,
+        "go-fast": 2.087397,
+        "netlisp-llvm-fast": 2.562574,
+        "zig-o3": 1.435389,
+        "mylang-o3-lto": 35.539806,
+        "mylang-o3-bounded": 46.711965
+      }
+    },
+    {
+      "round": 7,
+      "case": "changed-net",
+      "order": [
+        "mylang-o3-bounded",
+        "rust-o3",
+        "go-fast",
+        "netlisp-llvm-fast",
+        "zig-o3",
+        "mylang-o3-lto",
+        "netlisp-llvm-safe",
+        "mylang-o3"
+      ],
+      "ms": {
+        "mylang-o3-bounded": 46.791063,
+        "rust-o3": 1.722936,
+        "go-fast": 2.204937,
+        "netlisp-llvm-fast": 2.634064,
+        "zig-o3": 1.422473,
+        "mylang-o3-lto": 35.747447,
+        "netlisp-llvm-safe": 2.805753,
+        "mylang-o3": 19.218015
+      }
+    },
+    {
+      "round": 7,
+      "case": "fixture",
+      "order": [
+        "zig-o3",
+        "rust-o3",
+        "mylang-o3-bounded",
+        "netlisp-llvm-fast",
+        "mylang-o3-lto",
+        "go-fast",
+        "netlisp-llvm-safe",
+        "mylang-o3"
+      ],
+      "ms": {
+        "zig-o3": 1.496465,
+        "rust-o3": 1.6553,
+        "mylang-o3-bounded": 45.604749,
+        "netlisp-llvm-fast": 2.644338,
+        "mylang-o3-lto": 36.505548,
+        "go-fast": 2.316541,
+        "netlisp-llvm-safe": 2.93307,
+        "mylang-o3": 20.961748
+      }
+    },
+    {
+      "round": 7,
+      "case": "changed-value",
+      "order": [
+        "mylang-o3-bounded",
+        "zig-o3",
+        "go-fast",
+        "netlisp-llvm-fast",
+        "netlisp-llvm-safe",
+        "mylang-o3",
+        "rust-o3",
+        "mylang-o3-lto"
+      ],
+      "ms": {
+        "mylang-o3-bounded": 49.703108,
+        "zig-o3": 1.586068,
+        "go-fast": 1.9392,
+        "netlisp-llvm-fast": 2.600216,
+        "netlisp-llvm-safe": 2.637424,
+        "mylang-o3": 18.387305,
+        "rust-o3": 1.76575,
+        "mylang-o3-lto": 36.173432
+      }
+    },
+    {
+      "round": 8,
+      "case": "changed-net",
+      "order": [
+        "mylang-o3",
+        "mylang-o3-bounded",
+        "mylang-o3-lto",
+        "netlisp-llvm-safe",
+        "rust-o3",
+        "go-fast",
+        "zig-o3",
+        "netlisp-llvm-fast"
+      ],
+      "ms": {
+        "mylang-o3": 19.73407,
+        "mylang-o3-bounded": 47.231992,
+        "mylang-o3-lto": 39.139141,
+        "netlisp-llvm-safe": 3.080559,
+        "rust-o3": 1.727973,
+        "go-fast": 2.140817,
+        "zig-o3": 1.386556,
+        "netlisp-llvm-fast": 2.701668
+      }
+    },
+    {
+      "round": 8,
+      "case": "changed-value",
+      "order": [
+        "rust-o3",
+        "netlisp-llvm-safe",
+        "go-fast",
+        "mylang-o3-lto",
+        "zig-o3",
+        "netlisp-llvm-fast",
+        "mylang-o3",
+        "mylang-o3-bounded"
+      ],
+      "ms": {
+        "rust-o3": 1.732004,
+        "netlisp-llvm-safe": 2.761787,
+        "go-fast": 2.259471,
+        "mylang-o3-lto": 38.864156,
+        "zig-o3": 1.795926,
+        "netlisp-llvm-fast": 2.905039,
+        "mylang-o3": 20.819109,
+        "mylang-o3-bounded": 50.601179
+      }
+    },
+    {
+      "round": 8,
+      "case": "fixture",
+      "order": [
+        "mylang-o3-lto",
+        "mylang-o3",
+        "mylang-o3-bounded",
+        "netlisp-llvm-fast",
+        "zig-o3",
+        "rust-o3",
+        "netlisp-llvm-safe",
+        "go-fast"
+      ],
+      "ms": {
+        "mylang-o3-lto": 40.128933,
+        "mylang-o3": 18.932416,
+        "mylang-o3-bounded": 45.929336,
+        "netlisp-llvm-fast": 2.896819,
+        "zig-o3": 1.549466,
+        "rust-o3": 1.486676,
+        "netlisp-llvm-safe": 2.507196,
+        "go-fast": 2.069642
+      }
+    },
+    {
+      "round": 9,
+      "case": "changed-value",
+      "order": [
+        "rust-o3",
+        "netlisp-llvm-safe",
+        "zig-o3",
+        "go-fast",
+        "mylang-o3",
+        "mylang-o3-lto",
+        "mylang-o3-bounded",
+        "netlisp-llvm-fast"
+      ],
+      "ms": {
+        "rust-o3": 1.546414,
+        "netlisp-llvm-safe": 2.879792,
+        "zig-o3": 1.632155,
+        "go-fast": 2.04058,
+        "mylang-o3": 18.959911,
+        "mylang-o3-lto": 37.358031,
+        "mylang-o3-bounded": 46.893036,
+        "netlisp-llvm-fast": 2.848886
+      }
+    },
+    {
+      "round": 9,
+      "case": "fixture",
+      "order": [
+        "rust-o3",
+        "netlisp-llvm-safe",
+        "mylang-o3-bounded",
+        "zig-o3",
+        "mylang-o3-lto",
+        "mylang-o3",
+        "go-fast",
+        "netlisp-llvm-fast"
+      ],
+      "ms": {
+        "rust-o3": 1.835942,
+        "netlisp-llvm-safe": 2.72217,
+        "mylang-o3-bounded": 45.750441,
+        "zig-o3": 1.597338,
+        "mylang-o3-lto": 37.228984,
+        "mylang-o3": 18.841685,
+        "go-fast": 2.045866,
+        "netlisp-llvm-fast": 2.779751
+      }
+    },
+    {
+      "round": 9,
+      "case": "changed-net",
+      "order": [
+        "netlisp-llvm-safe",
+        "rust-o3",
+        "netlisp-llvm-fast",
+        "mylang-o3",
+        "go-fast",
+        "zig-o3",
+        "mylang-o3-bounded",
+        "mylang-o3-lto"
+      ],
+      "ms": {
+        "netlisp-llvm-safe": 2.909853,
+        "rust-o3": 1.768012,
+        "netlisp-llvm-fast": 2.390484,
+        "mylang-o3": 19.123892,
+        "go-fast": 2.163094,
+        "zig-o3": 1.557564,
+        "mylang-o3-bounded": 46.585683,
+        "mylang-o3-lto": 37.949194
+      }
+    },
+    {
+      "round": 10,
+      "case": "changed-value",
+      "order": [
+        "mylang-o3",
+        "mylang-o3-bounded",
+        "netlisp-llvm-fast",
+        "mylang-o3-lto",
+        "go-fast",
+        "zig-o3",
+        "rust-o3",
+        "netlisp-llvm-safe"
+      ],
+      "ms": {
+        "mylang-o3": 19.780276,
+        "mylang-o3-bounded": 49.083116,
+        "netlisp-llvm-fast": 2.814511,
+        "mylang-o3-lto": 37.501848,
+        "go-fast": 2.488435,
+        "zig-o3": 1.498499,
+        "rust-o3": 1.690715,
+        "netlisp-llvm-safe": 2.971326
+      }
+    },
+    {
+      "round": 10,
+      "case": "fixture",
+      "order": [
+        "zig-o3",
+        "mylang-o3-bounded",
+        "mylang-o3-lto",
+        "netlisp-llvm-fast",
+        "mylang-o3",
+        "go-fast",
+        "netlisp-llvm-safe",
+        "rust-o3"
+      ],
+      "ms": {
+        "zig-o3": 1.562438,
+        "mylang-o3-bounded": 46.065927,
+        "mylang-o3-lto": 36.402077,
+        "netlisp-llvm-fast": 2.914764,
+        "mylang-o3": 18.902909,
+        "go-fast": 2.236555,
+        "netlisp-llvm-safe": 2.726892,
+        "rust-o3": 1.676459
+      }
+    },
+    {
+      "round": 10,
+      "case": "changed-net",
+      "order": [
+        "zig-o3",
+        "netlisp-llvm-fast",
+        "go-fast",
+        "mylang-o3-bounded",
+        "rust-o3",
+        "mylang-o3-lto",
+        "mylang-o3",
+        "netlisp-llvm-safe"
+      ],
+      "ms": {
+        "zig-o3": 1.583733,
+        "netlisp-llvm-fast": 2.525944,
+        "go-fast": 2.026126,
+        "mylang-o3-bounded": 46.40401,
+        "rust-o3": 1.804306,
+        "mylang-o3-lto": 38.837472,
+        "mylang-o3": 20.390845,
+        "netlisp-llvm-safe": 3.064895
+      }
+    },
+    {
+      "round": 11,
+      "case": "changed-value",
+      "order": [
+        "go-fast",
+        "rust-o3",
+        "netlisp-llvm-safe",
+        "netlisp-llvm-fast",
+        "mylang-o3-bounded",
+        "zig-o3",
+        "mylang-o3",
+        "mylang-o3-lto"
+      ],
+      "ms": {
+        "go-fast": 2.046591,
+        "rust-o3": 1.393493,
+        "netlisp-llvm-safe": 2.619254,
+        "netlisp-llvm-fast": 2.435968,
+        "mylang-o3-bounded": 46.615941,
+        "zig-o3": 1.700068,
+        "mylang-o3": 19.108157,
+        "mylang-o3-lto": 37.148411
+      }
+    },
+    {
+      "round": 11,
+      "case": "fixture",
+      "order": [
+        "go-fast",
+        "netlisp-llvm-fast",
+        "mylang-o3-bounded",
+        "rust-o3",
+        "mylang-o3-lto",
+        "netlisp-llvm-safe",
+        "mylang-o3",
+        "zig-o3"
+      ],
+      "ms": {
+        "go-fast": 2.553636,
+        "netlisp-llvm-fast": 2.6494,
+        "mylang-o3-bounded": 49.062831,
+        "rust-o3": 1.892179,
+        "mylang-o3-lto": 37.072096,
+        "netlisp-llvm-safe": 2.940373,
+        "mylang-o3": 18.917129,
+        "zig-o3": 1.617547
+      }
+    },
+    {
+      "round": 11,
+      "case": "changed-net",
+      "order": [
+        "zig-o3",
+        "mylang-o3",
+        "netlisp-llvm-safe",
+        "mylang-o3-bounded",
+        "rust-o3",
+        "mylang-o3-lto",
+        "go-fast",
+        "netlisp-llvm-fast"
+      ],
+      "ms": {
+        "zig-o3": 1.430674,
+        "mylang-o3": 18.964228,
+        "netlisp-llvm-safe": 2.747955,
+        "mylang-o3-bounded": 48.322638,
+        "rust-o3": 1.889931,
+        "mylang-o3-lto": 38.572432,
+        "go-fast": 2.33907,
+        "netlisp-llvm-fast": 2.637056
+      }
+    },
+    {
+      "round": 12,
+      "case": "changed-value",
+      "order": [
+        "go-fast",
+        "zig-o3",
+        "rust-o3",
+        "mylang-o3-lto",
+        "netlisp-llvm-fast",
+        "netlisp-llvm-safe",
+        "mylang-o3-bounded",
+        "mylang-o3"
+      ],
+      "ms": {
+        "go-fast": 2.006462,
+        "zig-o3": 1.485754,
+        "rust-o3": 1.710361,
+        "mylang-o3-lto": 37.049389,
+        "netlisp-llvm-fast": 2.845037,
+        "netlisp-llvm-safe": 2.743034,
+        "mylang-o3-bounded": 46.588799,
+        "mylang-o3": 19.185038
+      }
+    },
+    {
+      "round": 12,
+      "case": "changed-net",
+      "order": [
+        "go-fast",
+        "mylang-o3",
+        "netlisp-llvm-fast",
+        "zig-o3",
+        "netlisp-llvm-safe",
+        "mylang-o3-lto",
+        "rust-o3",
+        "mylang-o3-bounded"
+      ],
+      "ms": {
+        "go-fast": 2.142446,
+        "mylang-o3": 19.823973,
+        "netlisp-llvm-fast": 2.895902,
+        "zig-o3": 1.650044,
+        "netlisp-llvm-safe": 2.801856,
+        "mylang-o3-lto": 37.634451,
+        "rust-o3": 1.689245,
+        "mylang-o3-bounded": 46.554458
+      }
+    },
+    {
+      "round": 12,
+      "case": "fixture",
+      "order": [
+        "rust-o3",
+        "netlisp-llvm-safe",
+        "go-fast",
+        "mylang-o3-lto",
+        "mylang-o3",
+        "zig-o3",
+        "mylang-o3-bounded",
+        "netlisp-llvm-fast"
+      ],
+      "ms": {
+        "rust-o3": 1.808955,
+        "netlisp-llvm-safe": 2.797395,
+        "go-fast": 2.208617,
+        "mylang-o3-lto": 38.237717,
+        "mylang-o3": 18.801515,
+        "zig-o3": 1.482908,
+        "mylang-o3-bounded": 46.307671,
+        "netlisp-llvm-fast": 2.764253
+      }
+    },
+    {
+      "round": 13,
+      "case": "changed-value",
+      "order": [
+        "zig-o3",
+        "netlisp-llvm-fast",
+        "go-fast",
+        "netlisp-llvm-safe",
+        "mylang-o3-lto",
+        "rust-o3",
+        "mylang-o3",
+        "mylang-o3-bounded"
+      ],
+      "ms": {
+        "zig-o3": 1.530276,
+        "netlisp-llvm-fast": 2.590357,
+        "go-fast": 2.142136,
+        "netlisp-llvm-safe": 2.626617,
+        "mylang-o3-lto": 36.025925,
+        "rust-o3": 1.590667,
+        "mylang-o3": 18.933156,
+        "mylang-o3-bounded": 46.600852
+      }
+    },
+    {
+      "round": 13,
+      "case": "changed-net",
+      "order": [
+        "netlisp-llvm-fast",
+        "netlisp-llvm-safe",
+        "mylang-o3",
+        "mylang-o3-bounded",
+        "mylang-o3-lto",
+        "go-fast",
+        "rust-o3",
+        "zig-o3"
+      ],
+      "ms": {
+        "netlisp-llvm-fast": 2.738293,
+        "netlisp-llvm-safe": 2.607511,
+        "mylang-o3": 19.153319,
+        "mylang-o3-bounded": 46.769797,
+        "mylang-o3-lto": 36.578496,
+        "go-fast": 2.513758,
+        "rust-o3": 1.523741,
+        "zig-o3": 1.314152
+      }
+    },
+    {
+      "round": 13,
+      "case": "fixture",
+      "order": [
+        "mylang-o3-lto",
+        "mylang-o3",
+        "zig-o3",
+        "rust-o3",
+        "mylang-o3-bounded",
+        "netlisp-llvm-safe",
+        "netlisp-llvm-fast",
+        "go-fast"
+      ],
+      "ms": {
+        "mylang-o3-lto": 36.915015,
+        "mylang-o3": 18.648733,
+        "zig-o3": 1.843385,
+        "rust-o3": 1.749726,
+        "mylang-o3-bounded": 46.533534,
+        "netlisp-llvm-safe": 2.872114,
+        "netlisp-llvm-fast": 2.620065,
+        "go-fast": 2.143833
+      }
+    },
+    {
+      "round": 14,
+      "case": "fixture",
+      "order": [
+        "mylang-o3-bounded",
+        "netlisp-llvm-fast",
+        "netlisp-llvm-safe",
+        "mylang-o3",
+        "zig-o3",
+        "mylang-o3-lto",
+        "rust-o3",
+        "go-fast"
+      ],
+      "ms": {
+        "mylang-o3-bounded": 47.498791,
+        "netlisp-llvm-fast": 2.556682,
+        "netlisp-llvm-safe": 2.740941,
+        "mylang-o3": 19.225283,
+        "zig-o3": 1.848415,
+        "mylang-o3-lto": 39.031914,
+        "rust-o3": 1.912351,
+        "go-fast": 2.019587
+      }
+    },
+    {
+      "round": 14,
+      "case": "changed-net",
+      "order": [
+        "go-fast",
+        "mylang-o3-bounded",
+        "netlisp-llvm-safe",
+        "mylang-o3-lto",
+        "rust-o3",
+        "mylang-o3",
+        "netlisp-llvm-fast",
+        "zig-o3"
+      ],
+      "ms": {
+        "go-fast": 1.930747,
+        "mylang-o3-bounded": 46.526199,
+        "netlisp-llvm-safe": 2.857637,
+        "mylang-o3-lto": 36.346557,
+        "rust-o3": 1.6542,
+        "mylang-o3": 19.182928,
+        "netlisp-llvm-fast": 2.809712,
+        "zig-o3": 1.540144
+      }
+    },
+    {
+      "round": 14,
+      "case": "changed-value",
+      "order": [
+        "netlisp-llvm-safe",
+        "mylang-o3-bounded",
+        "mylang-o3",
+        "zig-o3",
+        "netlisp-llvm-fast",
+        "go-fast",
+        "rust-o3",
+        "mylang-o3-lto"
+      ],
+      "ms": {
+        "netlisp-llvm-safe": 2.78814,
+        "mylang-o3-bounded": 46.715458,
+        "mylang-o3": 19.305722,
+        "zig-o3": 1.566376,
+        "netlisp-llvm-fast": 2.674878,
+        "go-fast": 2.164802,
+        "rust-o3": 1.704472,
+        "mylang-o3-lto": 36.447296
+      }
+    },
+    {
+      "round": 15,
+      "case": "fixture",
+      "order": [
+        "rust-o3",
+        "mylang-o3-bounded",
+        "netlisp-llvm-fast",
+        "netlisp-llvm-safe",
+        "mylang-o3",
+        "go-fast",
+        "mylang-o3-lto",
+        "zig-o3"
+      ],
+      "ms": {
+        "rust-o3": 1.811153,
+        "mylang-o3-bounded": 46.249978,
+        "netlisp-llvm-fast": 2.696143,
+        "netlisp-llvm-safe": 2.564494,
+        "mylang-o3": 18.683456,
+        "go-fast": 2.424038,
+        "mylang-o3-lto": 36.682069,
+        "zig-o3": 1.663459
+      }
+    },
+    {
+      "round": 15,
+      "case": "changed-net",
+      "order": [
+        "zig-o3",
+        "netlisp-llvm-safe",
+        "rust-o3",
+        "netlisp-llvm-fast",
+        "mylang-o3-lto",
+        "mylang-o3",
+        "mylang-o3-bounded",
+        "go-fast"
+      ],
+      "ms": {
+        "zig-o3": 1.408451,
+        "netlisp-llvm-safe": 2.791848,
+        "rust-o3": 1.586046,
+        "netlisp-llvm-fast": 2.48626,
+        "mylang-o3-lto": 36.077201,
+        "mylang-o3": 19.630464,
+        "mylang-o3-bounded": 51.414518,
+        "go-fast": 2.371629
+      }
+    },
+    {
+      "round": 15,
+      "case": "changed-value",
+      "order": [
+        "rust-o3",
+        "netlisp-llvm-fast",
+        "go-fast",
+        "zig-o3",
+        "mylang-o3-lto",
+        "netlisp-llvm-safe",
+        "mylang-o3",
+        "mylang-o3-bounded"
+      ],
+      "ms": {
+        "rust-o3": 1.63013,
+        "netlisp-llvm-fast": 2.640835,
+        "go-fast": 2.048774,
+        "zig-o3": 1.482369,
+        "mylang-o3-lto": 36.095635,
+        "netlisp-llvm-safe": 3.105265,
+        "mylang-o3": 18.962448,
+        "mylang-o3-bounded": 46.535924
+      }
+    },
+    {
+      "round": 16,
+      "case": "changed-net",
+      "order": [
+        "netlisp-llvm-safe",
+        "rust-o3",
+        "mylang-o3",
+        "go-fast",
+        "netlisp-llvm-fast",
+        "zig-o3",
+        "mylang-o3-bounded",
+        "mylang-o3-lto"
+      ],
+      "ms": {
+        "netlisp-llvm-safe": 2.857802,
+        "rust-o3": 1.551583,
+        "mylang-o3": 18.847408,
+        "go-fast": 2.367409,
+        "netlisp-llvm-fast": 5.018117,
+        "zig-o3": 1.650314,
+        "mylang-o3-bounded": 46.783013,
+        "mylang-o3-lto": 37.758069
+      }
+    },
+    {
+      "round": 16,
+      "case": "fixture",
+      "order": [
+        "netlisp-llvm-safe",
+        "zig-o3",
+        "mylang-o3",
+        "rust-o3",
+        "mylang-o3-lto",
+        "netlisp-llvm-fast",
+        "go-fast",
+        "mylang-o3-bounded"
+      ],
+      "ms": {
+        "netlisp-llvm-safe": 2.878272,
+        "zig-o3": 1.565608,
+        "mylang-o3": 19.114521,
+        "rust-o3": 1.719956,
+        "mylang-o3-lto": 39.609911,
+        "netlisp-llvm-fast": 2.557966,
+        "go-fast": 2.140414,
+        "mylang-o3-bounded": 46.043032
+      }
+    },
+    {
+      "round": 16,
+      "case": "changed-value",
+      "order": [
+        "rust-o3",
+        "mylang-o3-bounded",
+        "mylang-o3",
+        "netlisp-llvm-safe",
+        "netlisp-llvm-fast",
+        "go-fast",
+        "mylang-o3-lto",
+        "zig-o3"
+      ],
+      "ms": {
+        "rust-o3": 1.790707,
+        "mylang-o3-bounded": 46.370933,
+        "mylang-o3": 19.482405,
+        "netlisp-llvm-safe": 2.990375,
+        "netlisp-llvm-fast": 2.724683,
+        "go-fast": 2.006634,
+        "mylang-o3-lto": 36.05623,
+        "zig-o3": 1.476931
+      }
+    },
+    {
+      "round": 17,
+      "case": "changed-net",
+      "order": [
+        "go-fast",
+        "netlisp-llvm-safe",
+        "zig-o3",
+        "rust-o3",
+        "netlisp-llvm-fast",
+        "mylang-o3",
+        "mylang-o3-bounded",
+        "mylang-o3-lto"
+      ],
+      "ms": {
+        "go-fast": 2.284181,
+        "netlisp-llvm-safe": 2.683235,
+        "zig-o3": 1.401064,
+        "rust-o3": 1.513373,
+        "netlisp-llvm-fast": 2.471719,
+        "mylang-o3": 18.867044,
+        "mylang-o3-bounded": 46.998692,
+        "mylang-o3-lto": 37.172673
+      }
+    },
+    {
+      "round": 17,
+      "case": "fixture",
+      "order": [
+        "mylang-o3",
+        "netlisp-llvm-fast",
+        "netlisp-llvm-safe",
+        "rust-o3",
+        "mylang-o3-lto",
+        "go-fast",
+        "zig-o3",
+        "mylang-o3-bounded"
+      ],
+      "ms": {
+        "mylang-o3": 18.766796,
+        "netlisp-llvm-fast": 3.121303,
+        "netlisp-llvm-safe": 2.931188,
+        "rust-o3": 1.773322,
+        "mylang-o3-lto": 38.662033,
+        "go-fast": 2.369001,
+        "zig-o3": 1.458807,
+        "mylang-o3-bounded": 49.003727
+      }
+    },
+    {
+      "round": 17,
+      "case": "changed-value",
+      "order": [
+        "mylang-o3-bounded",
+        "mylang-o3",
+        "netlisp-llvm-safe",
+        "netlisp-llvm-fast",
+        "go-fast",
+        "mylang-o3-lto",
+        "rust-o3",
+        "zig-o3"
+      ],
+      "ms": {
+        "mylang-o3-bounded": 46.81096,
+        "mylang-o3": 19.217709,
+        "netlisp-llvm-safe": 3.039685,
+        "netlisp-llvm-fast": 2.662455,
+        "go-fast": 2.068666,
+        "mylang-o3-lto": 36.428131,
+        "rust-o3": 1.808501,
+        "zig-o3": 1.538246
+      }
+    },
+    {
+      "round": 18,
+      "case": "changed-value",
+      "order": [
+        "rust-o3",
+        "mylang-o3",
+        "zig-o3",
+        "mylang-o3-bounded",
+        "go-fast",
+        "netlisp-llvm-fast",
+        "mylang-o3-lto",
+        "netlisp-llvm-safe"
+      ],
+      "ms": {
+        "rust-o3": 1.60544,
+        "mylang-o3": 18.047605,
+        "zig-o3": 1.529885,
+        "mylang-o3-bounded": 46.561063,
+        "go-fast": 2.04748,
+        "netlisp-llvm-fast": 2.769111,
+        "mylang-o3-lto": 36.254317,
+        "netlisp-llvm-safe": 3.082062
+      }
+    },
+    {
+      "round": 18,
+      "case": "fixture",
+      "order": [
+        "mylang-o3",
+        "zig-o3",
+        "mylang-o3-lto",
+        "go-fast",
+        "rust-o3",
+        "netlisp-llvm-fast",
+        "netlisp-llvm-safe",
+        "mylang-o3-bounded"
+      ],
+      "ms": {
+        "mylang-o3": 18.883591,
+        "zig-o3": 1.473698,
+        "mylang-o3-lto": 36.863741,
+        "go-fast": 2.422184,
+        "rust-o3": 1.679011,
+        "netlisp-llvm-fast": 2.552241,
+        "netlisp-llvm-safe": 2.711722,
+        "mylang-o3-bounded": 46.141162
+      }
+    },
+    {
+      "round": 18,
+      "case": "changed-net",
+      "order": [
+        "netlisp-llvm-safe",
+        "rust-o3",
+        "mylang-o3-bounded",
+        "go-fast",
+        "zig-o3",
+        "mylang-o3",
+        "netlisp-llvm-fast",
+        "mylang-o3-lto"
+      ],
+      "ms": {
+        "netlisp-llvm-safe": 2.817792,
+        "rust-o3": 1.608463,
+        "mylang-o3-bounded": 46.881678,
+        "go-fast": 2.146048,
+        "zig-o3": 1.395461,
+        "mylang-o3": 19.152272,
+        "netlisp-llvm-fast": 2.678363,
+        "mylang-o3-lto": 36.994714
+      }
+    },
+    {
+      "round": 19,
+      "case": "changed-net",
+      "order": [
+        "zig-o3",
+        "netlisp-llvm-safe",
+        "mylang-o3-lto",
+        "mylang-o3-bounded",
+        "go-fast",
+        "rust-o3",
+        "mylang-o3",
+        "netlisp-llvm-fast"
+      ],
+      "ms": {
+        "zig-o3": 1.692957,
+        "netlisp-llvm-safe": 2.942316,
+        "mylang-o3-lto": 36.612673,
+        "mylang-o3-bounded": 46.727464,
+        "go-fast": 2.240967,
+        "rust-o3": 1.548211,
+        "mylang-o3": 19.146758,
+        "netlisp-llvm-fast": 2.682827
+      }
+    },
+    {
+      "round": 19,
+      "case": "fixture",
+      "order": [
+        "mylang-o3-bounded",
+        "go-fast",
+        "mylang-o3",
+        "mylang-o3-lto",
+        "netlisp-llvm-fast",
+        "zig-o3",
+        "netlisp-llvm-safe",
+        "rust-o3"
+      ],
+      "ms": {
+        "mylang-o3-bounded": 46.559927,
+        "go-fast": 2.371811,
+        "mylang-o3": 18.635016,
+        "mylang-o3-lto": 36.486458,
+        "netlisp-llvm-fast": 2.779998,
+        "zig-o3": 1.579759,
+        "netlisp-llvm-safe": 2.744037,
+        "rust-o3": 1.639368
+      }
+    },
+    {
+      "round": 19,
+      "case": "changed-value",
+      "order": [
+        "mylang-o3-lto",
+        "netlisp-llvm-safe",
+        "zig-o3",
+        "mylang-o3",
+        "mylang-o3-bounded",
+        "rust-o3",
+        "go-fast",
+        "netlisp-llvm-fast"
+      ],
+      "ms": {
+        "mylang-o3-lto": 36.084769,
+        "netlisp-llvm-safe": 2.97412,
+        "zig-o3": 1.546625,
+        "mylang-o3": 19.351174,
+        "mylang-o3-bounded": 50.399143,
+        "rust-o3": 1.954274,
+        "go-fast": 2.449886,
+        "netlisp-llvm-fast": 2.902868
+      }
+    },
+    {
+      "round": 20,
+      "case": "changed-value",
+      "order": [
+        "go-fast",
+        "rust-o3",
+        "mylang-o3",
+        "mylang-o3-lto",
+        "netlisp-llvm-safe",
+        "zig-o3",
+        "mylang-o3-bounded",
+        "netlisp-llvm-fast"
+      ],
+      "ms": {
+        "go-fast": 2.232855,
+        "rust-o3": 1.605692,
+        "mylang-o3": 18.379753,
+        "mylang-o3-lto": 37.120007,
+        "netlisp-llvm-safe": 3.222698,
+        "zig-o3": 1.448372,
+        "mylang-o3-bounded": 46.690021,
+        "netlisp-llvm-fast": 2.644736
+      }
+    },
+    {
+      "round": 20,
+      "case": "changed-net",
+      "order": [
+        "zig-o3",
+        "mylang-o3-bounded",
+        "mylang-o3-lto",
+        "netlisp-llvm-safe",
+        "rust-o3",
+        "mylang-o3",
+        "netlisp-llvm-fast",
+        "go-fast"
+      ],
+      "ms": {
+        "zig-o3": 1.560377,
+        "mylang-o3-bounded": 47.0333,
+        "mylang-o3-lto": 38.63479,
+        "netlisp-llvm-safe": 2.966146,
+        "rust-o3": 1.667805,
+        "mylang-o3": 19.751082,
+        "netlisp-llvm-fast": 2.541434,
+        "go-fast": 1.952558
+      }
+    },
+    {
+      "round": 20,
+      "case": "fixture",
+      "order": [
+        "rust-o3",
+        "mylang-o3",
+        "netlisp-llvm-fast",
+        "netlisp-llvm-safe",
+        "go-fast",
+        "mylang-o3-bounded",
+        "zig-o3",
+        "mylang-o3-lto"
+      ],
+      "ms": {
+        "rust-o3": 1.485378,
+        "mylang-o3": 18.127443,
+        "netlisp-llvm-fast": 2.849133,
+        "netlisp-llvm-safe": 2.725416,
+        "go-fast": 2.019783,
+        "mylang-o3-bounded": 46.308607,
+        "zig-o3": 1.720155,
+        "mylang-o3-lto": 41.687294
+      }
+    },
+    {
+      "round": 21,
+      "case": "fixture",
+      "order": [
+        "mylang-o3-lto",
+        "mylang-o3",
+        "mylang-o3-bounded",
+        "netlisp-llvm-safe",
+        "go-fast",
+        "rust-o3",
+        "netlisp-llvm-fast",
+        "zig-o3"
+      ],
+      "ms": {
+        "mylang-o3-lto": 36.261271,
+        "mylang-o3": 19.313851,
+        "mylang-o3-bounded": 46.761975,
+        "netlisp-llvm-safe": 2.833317,
+        "go-fast": 2.090042,
+        "rust-o3": 1.553397,
+        "netlisp-llvm-fast": 2.528672,
+        "zig-o3": 1.342773
+      }
+    },
+    {
+      "round": 21,
+      "case": "changed-value",
+      "order": [
+        "netlisp-llvm-safe",
+        "mylang-o3-bounded",
+        "rust-o3",
+        "netlisp-llvm-fast",
+        "mylang-o3",
+        "mylang-o3-lto",
+        "zig-o3",
+        "go-fast"
+      ],
+      "ms": {
+        "netlisp-llvm-safe": 2.56571,
+        "mylang-o3-bounded": 46.56563,
+        "rust-o3": 1.831713,
+        "netlisp-llvm-fast": 2.597685,
+        "mylang-o3": 18.785591,
+        "mylang-o3-lto": 37.800836,
+        "zig-o3": 1.579958,
+        "go-fast": 2.073337
+      }
+    },
+    {
+      "round": 21,
+      "case": "changed-net",
+      "order": [
+        "mylang-o3-bounded",
+        "go-fast",
+        "rust-o3",
+        "mylang-o3-lto",
+        "mylang-o3",
+        "netlisp-llvm-safe",
+        "netlisp-llvm-fast",
+        "zig-o3"
+      ],
+      "ms": {
+        "mylang-o3-bounded": 45.664084,
+        "go-fast": 2.204713,
+        "rust-o3": 1.71984,
+        "mylang-o3-lto": 36.177498,
+        "mylang-o3": 19.473341,
+        "netlisp-llvm-safe": 2.866644,
+        "netlisp-llvm-fast": 2.65558,
+        "zig-o3": 1.572825
+      }
+    },
+    {
+      "round": 22,
+      "case": "changed-value",
+      "order": [
+        "zig-o3",
+        "netlisp-llvm-safe",
+        "mylang-o3",
+        "mylang-o3-lto",
+        "netlisp-llvm-fast",
+        "go-fast",
+        "rust-o3",
+        "mylang-o3-bounded"
+      ],
+      "ms": {
+        "zig-o3": 1.332511,
+        "netlisp-llvm-safe": 2.64117,
+        "mylang-o3": 18.914234,
+        "mylang-o3-lto": 36.869535,
+        "netlisp-llvm-fast": 2.756276,
+        "go-fast": 2.173551,
+        "rust-o3": 1.792915,
+        "mylang-o3-bounded": 46.162507
+      }
+    },
+    {
+      "round": 22,
+      "case": "changed-net",
+      "order": [
+        "rust-o3",
+        "mylang-o3-bounded",
+        "netlisp-llvm-fast",
+        "netlisp-llvm-safe",
+        "mylang-o3",
+        "go-fast",
+        "mylang-o3-lto",
+        "zig-o3"
+      ],
+      "ms": {
+        "rust-o3": 1.827339,
+        "mylang-o3-bounded": 48.560503,
+        "netlisp-llvm-fast": 2.800664,
+        "netlisp-llvm-safe": 2.838564,
+        "mylang-o3": 20.354574,
+        "go-fast": 2.234024,
+        "mylang-o3-lto": 37.035541,
+        "zig-o3": 1.567327
+      }
+    },
+    {
+      "round": 22,
+      "case": "fixture",
+      "order": [
+        "netlisp-llvm-fast",
+        "zig-o3",
+        "mylang-o3",
+        "go-fast",
+        "mylang-o3-lto",
+        "mylang-o3-bounded",
+        "netlisp-llvm-safe",
+        "rust-o3"
+      ],
+      "ms": {
+        "netlisp-llvm-fast": 2.694874,
+        "zig-o3": 1.351113,
+        "mylang-o3": 18.396871,
+        "go-fast": 2.183554,
+        "mylang-o3-lto": 38.146664,
+        "mylang-o3-bounded": 46.575259,
+        "netlisp-llvm-safe": 3.086392,
+        "rust-o3": 1.694945
+      }
+    },
+    {
+      "round": 23,
+      "case": "changed-net",
+      "order": [
+        "go-fast",
+        "zig-o3",
+        "netlisp-llvm-fast",
+        "mylang-o3",
+        "mylang-o3-bounded",
+        "netlisp-llvm-safe",
+        "mylang-o3-lto",
+        "rust-o3"
+      ],
+      "ms": {
+        "go-fast": 2.221925,
+        "zig-o3": 1.377041,
+        "netlisp-llvm-fast": 2.660244,
+        "mylang-o3": 20.284144,
+        "mylang-o3-bounded": 49.403996,
+        "netlisp-llvm-safe": 2.864232,
+        "mylang-o3-lto": 37.45563,
+        "rust-o3": 1.765713
+      }
+    },
+    {
+      "round": 23,
+      "case": "changed-value",
+      "order": [
+        "go-fast",
+        "netlisp-llvm-fast",
+        "mylang-o3",
+        "rust-o3",
+        "mylang-o3-lto",
+        "mylang-o3-bounded",
+        "zig-o3",
+        "netlisp-llvm-safe"
+      ],
+      "ms": {
+        "go-fast": 2.094487,
+        "netlisp-llvm-fast": 2.572412,
+        "mylang-o3": 18.437521,
+        "rust-o3": 1.845313,
+        "mylang-o3-lto": 36.768305,
+        "mylang-o3-bounded": 46.914061,
+        "zig-o3": 1.606502,
+        "netlisp-llvm-safe": 2.828462
+      }
+    },
+    {
+      "round": 23,
+      "case": "fixture",
+      "order": [
+        "mylang-o3-bounded",
+        "go-fast",
+        "netlisp-llvm-safe",
+        "mylang-o3-lto",
+        "rust-o3",
+        "netlisp-llvm-fast",
+        "zig-o3",
+        "mylang-o3"
+      ],
+      "ms": {
+        "mylang-o3-bounded": 46.553947,
+        "go-fast": 2.297531,
+        "netlisp-llvm-safe": 2.790257,
+        "mylang-o3-lto": 38.239445,
+        "rust-o3": 1.94295,
+        "netlisp-llvm-fast": 2.859812,
+        "zig-o3": 1.55402,
+        "mylang-o3": 21.129042
+      }
+    },
+    {
+      "round": 24,
+      "case": "fixture",
+      "order": [
+        "mylang-o3",
+        "mylang-o3-lto",
+        "go-fast",
+        "netlisp-llvm-fast",
+        "zig-o3",
+        "mylang-o3-bounded",
+        "netlisp-llvm-safe",
+        "rust-o3"
+      ],
+      "ms": {
+        "mylang-o3": 21.955517,
+        "mylang-o3-lto": 41.768611,
+        "go-fast": 2.300891,
+        "netlisp-llvm-fast": 2.608087,
+        "zig-o3": 1.483132,
+        "mylang-o3-bounded": 47.266978,
+        "netlisp-llvm-safe": 2.998389,
+        "rust-o3": 1.680077
+      }
+    },
+    {
+      "round": 24,
+      "case": "changed-value",
+      "order": [
+        "netlisp-llvm-fast",
+        "go-fast",
+        "mylang-o3",
+        "zig-o3",
+        "mylang-o3-lto",
+        "rust-o3",
+        "netlisp-llvm-safe",
+        "mylang-o3-bounded"
+      ],
+      "ms": {
+        "netlisp-llvm-fast": 2.660742,
+        "go-fast": 2.398428,
+        "mylang-o3": 19.572765,
+        "zig-o3": 1.519552,
+        "mylang-o3-lto": 39.341824,
+        "rust-o3": 1.897092,
+        "netlisp-llvm-safe": 3.016107,
+        "mylang-o3-bounded": 49.740273
+      }
+    },
+    {
+      "round": 24,
+      "case": "changed-net",
+      "order": [
+        "zig-o3",
+        "netlisp-llvm-fast",
+        "mylang-o3-bounded",
+        "mylang-o3",
+        "mylang-o3-lto",
+        "go-fast",
+        "netlisp-llvm-safe",
+        "rust-o3"
+      ],
+      "ms": {
+        "zig-o3": 1.628972,
+        "netlisp-llvm-fast": 2.863371,
+        "mylang-o3-bounded": 45.90542,
+        "mylang-o3": 19.71831,
+        "mylang-o3-lto": 37.572034,
+        "go-fast": 2.474486,
+        "netlisp-llvm-safe": 3.031927,
+        "rust-o3": 1.816496
+      }
+    },
+    {
+      "round": 25,
+      "case": "fixture",
+      "order": [
+        "mylang-o3",
+        "zig-o3",
+        "netlisp-llvm-fast",
+        "rust-o3",
+        "mylang-o3-lto",
+        "mylang-o3-bounded",
+        "go-fast",
+        "netlisp-llvm-safe"
+      ],
+      "ms": {
+        "mylang-o3": 18.966819,
+        "zig-o3": 1.646077,
+        "netlisp-llvm-fast": 2.665893,
+        "rust-o3": 1.777437,
+        "mylang-o3-lto": 37.371012,
+        "mylang-o3-bounded": 46.896222,
+        "go-fast": 2.378212,
+        "netlisp-llvm-safe": 2.931324
+      }
+    },
+    {
+      "round": 25,
+      "case": "changed-value",
+      "order": [
+        "mylang-o3-bounded",
+        "zig-o3",
+        "mylang-o3-lto",
+        "netlisp-llvm-fast",
+        "rust-o3",
+        "netlisp-llvm-safe",
+        "mylang-o3",
+        "go-fast"
+      ],
+      "ms": {
+        "mylang-o3-bounded": 46.680476,
+        "zig-o3": 1.578799,
+        "mylang-o3-lto": 38.122317,
+        "netlisp-llvm-fast": 3.031232,
+        "rust-o3": 1.875057,
+        "netlisp-llvm-safe": 2.891312,
+        "mylang-o3": 19.256885,
+        "go-fast": 2.355657
+      }
+    },
+    {
+      "round": 25,
+      "case": "changed-net",
+      "order": [
+        "mylang-o3",
+        "netlisp-llvm-safe",
+        "go-fast",
+        "netlisp-llvm-fast",
+        "mylang-o3-lto",
+        "rust-o3",
+        "mylang-o3-bounded",
+        "zig-o3"
+      ],
+      "ms": {
+        "mylang-o3": 21.001334,
+        "netlisp-llvm-safe": 2.848627,
+        "go-fast": 2.222571,
+        "netlisp-llvm-fast": 2.712856,
+        "mylang-o3-lto": 38.852598,
+        "rust-o3": 2.013158,
+        "mylang-o3-bounded": 47.107997,
+        "zig-o3": 1.792616
+      }
+    },
+    {
+      "round": 26,
+      "case": "changed-value",
+      "order": [
+        "netlisp-llvm-safe",
+        "mylang-o3-lto",
+        "go-fast",
+        "netlisp-llvm-fast",
+        "mylang-o3",
+        "mylang-o3-bounded",
+        "zig-o3",
+        "rust-o3"
+      ],
+      "ms": {
+        "netlisp-llvm-safe": 2.894977,
+        "mylang-o3-lto": 35.859861,
+        "go-fast": 2.35829,
+        "netlisp-llvm-fast": 2.549662,
+        "mylang-o3": 18.725941,
+        "mylang-o3-bounded": 47.419521,
+        "zig-o3": 1.62732,
+        "rust-o3": 1.659461
+      }
+    },
+    {
+      "round": 26,
+      "case": "fixture",
+      "order": [
+        "mylang-o3-bounded",
+        "netlisp-llvm-safe",
+        "zig-o3",
+        "netlisp-llvm-fast",
+        "rust-o3",
+        "go-fast",
+        "mylang-o3-lto",
+        "mylang-o3"
+      ],
+      "ms": {
+        "mylang-o3-bounded": 46.25599,
+        "netlisp-llvm-safe": 2.950396,
+        "zig-o3": 1.365754,
+        "netlisp-llvm-fast": 2.571462,
+        "rust-o3": 1.441863,
+        "go-fast": 1.87224,
+        "mylang-o3-lto": 37.26891,
+        "mylang-o3": 19.125046
+      }
+    },
+    {
+      "round": 26,
+      "case": "changed-net",
+      "order": [
+        "netlisp-llvm-safe",
+        "mylang-o3",
+        "rust-o3",
+        "go-fast",
+        "zig-o3",
+        "mylang-o3-lto",
+        "mylang-o3-bounded",
+        "netlisp-llvm-fast"
+      ],
+      "ms": {
+        "netlisp-llvm-safe": 2.975297,
+        "mylang-o3": 19.308082,
+        "rust-o3": 1.723227,
+        "go-fast": 2.004007,
+        "zig-o3": 1.373819,
+        "mylang-o3-lto": 39.759903,
+        "mylang-o3-bounded": 48.584647,
+        "netlisp-llvm-fast": 3.109366
+      }
+    },
+    {
+      "round": 27,
+      "case": "changed-value",
+      "order": [
+        "zig-o3",
+        "mylang-o3",
+        "rust-o3",
+        "netlisp-llvm-safe",
+        "netlisp-llvm-fast",
+        "mylang-o3-lto",
+        "go-fast",
+        "mylang-o3-bounded"
+      ],
+      "ms": {
+        "zig-o3": 1.698207,
+        "mylang-o3": 21.047241,
+        "rust-o3": 1.806879,
+        "netlisp-llvm-safe": 2.987423,
+        "netlisp-llvm-fast": 2.809039,
+        "mylang-o3-lto": 40.861589,
+        "go-fast": 2.369136,
+        "mylang-o3-bounded": 47.582133
+      }
+    },
+    {
+      "round": 27,
+      "case": "changed-net",
+      "order": [
+        "mylang-o3",
+        "mylang-o3-lto",
+        "netlisp-llvm-fast",
+        "netlisp-llvm-safe",
+        "rust-o3",
+        "mylang-o3-bounded",
+        "zig-o3",
+        "go-fast"
+      ],
+      "ms": {
+        "mylang-o3": 19.339994,
+        "mylang-o3-lto": 37.830818,
+        "netlisp-llvm-fast": 3.026723,
+        "netlisp-llvm-safe": 2.956755,
+        "rust-o3": 1.61783,
+        "mylang-o3-bounded": 46.717196,
+        "zig-o3": 1.807901,
+        "go-fast": 2.132768
+      }
+    },
+    {
+      "round": 27,
+      "case": "fixture",
+      "order": [
+        "mylang-o3-bounded",
+        "mylang-o3-lto",
+        "zig-o3",
+        "netlisp-llvm-safe",
+        "netlisp-llvm-fast",
+        "mylang-o3",
+        "go-fast",
+        "rust-o3"
+      ],
+      "ms": {
+        "mylang-o3-bounded": 46.326035,
+        "mylang-o3-lto": 37.441267,
+        "zig-o3": 1.59946,
+        "netlisp-llvm-safe": 2.873045,
+        "netlisp-llvm-fast": 2.679379,
+        "mylang-o3": 18.959116,
+        "go-fast": 2.375854,
+        "rust-o3": 1.752384
+      }
+    },
+    {
+      "round": 28,
+      "case": "changed-value",
+      "order": [
+        "zig-o3",
+        "go-fast",
+        "rust-o3",
+        "netlisp-llvm-fast",
+        "netlisp-llvm-safe",
+        "mylang-o3-lto",
+        "mylang-o3-bounded",
+        "mylang-o3"
+      ],
+      "ms": {
+        "zig-o3": 1.467895,
+        "go-fast": 1.971364,
+        "rust-o3": 1.671996,
+        "netlisp-llvm-fast": 2.704892,
+        "netlisp-llvm-safe": 2.872471,
+        "mylang-o3-lto": 39.262105,
+        "mylang-o3-bounded": 48.654019,
+        "mylang-o3": 19.589293
+      }
+    },
+    {
+      "round": 28,
+      "case": "changed-net",
+      "order": [
+        "zig-o3",
+        "netlisp-llvm-fast",
+        "go-fast",
+        "mylang-o3-lto",
+        "mylang-o3",
+        "netlisp-llvm-safe",
+        "mylang-o3-bounded",
+        "rust-o3"
+      ],
+      "ms": {
+        "zig-o3": 1.638993,
+        "netlisp-llvm-fast": 2.652117,
+        "go-fast": 2.164895,
+        "mylang-o3-lto": 36.599738,
+        "mylang-o3": 19.488957,
+        "netlisp-llvm-safe": 2.734439,
+        "mylang-o3-bounded": 46.857798,
+        "rust-o3": 1.920932
+      }
+    },
+    {
+      "round": 28,
+      "case": "fixture",
+      "order": [
+        "mylang-o3-bounded",
+        "rust-o3",
+        "netlisp-llvm-fast",
+        "netlisp-llvm-safe",
+        "mylang-o3",
+        "zig-o3",
+        "go-fast",
+        "mylang-o3-lto"
+      ],
+      "ms": {
+        "mylang-o3-bounded": 46.451501,
+        "rust-o3": 1.83529,
+        "netlisp-llvm-fast": 2.673924,
+        "netlisp-llvm-safe": 2.642486,
+        "mylang-o3": 19.465983,
+        "zig-o3": 1.449376,
+        "go-fast": 2.28234,
+        "mylang-o3-lto": 40.043312
+      }
+    },
+    {
+      "round": 29,
+      "case": "changed-value",
+      "order": [
+        "go-fast",
+        "mylang-o3-lto",
+        "netlisp-llvm-safe",
+        "netlisp-llvm-fast",
+        "rust-o3",
+        "zig-o3",
+        "mylang-o3-bounded",
+        "mylang-o3"
+      ],
+      "ms": {
+        "go-fast": 2.287033,
+        "mylang-o3-lto": 37.84284,
+        "netlisp-llvm-safe": 3.216442,
+        "netlisp-llvm-fast": 2.72502,
+        "rust-o3": 1.688018,
+        "zig-o3": 1.447463,
+        "mylang-o3-bounded": 46.919851,
+        "mylang-o3": 19.194289
+      }
+    },
+    {
+      "round": 29,
+      "case": "changed-net",
+      "order": [
+        "zig-o3",
+        "netlisp-llvm-safe",
+        "rust-o3",
+        "mylang-o3-lto",
+        "mylang-o3-bounded",
+        "netlisp-llvm-fast",
+        "mylang-o3",
+        "go-fast"
+      ],
+      "ms": {
+        "zig-o3": 1.56082,
+        "netlisp-llvm-safe": 2.823425,
+        "rust-o3": 1.612641,
+        "mylang-o3-lto": 36.131757,
+        "mylang-o3-bounded": 46.901032,
+        "netlisp-llvm-fast": 2.936261,
+        "mylang-o3": 19.182701,
+        "go-fast": 2.167569
+      }
+    },
+    {
+      "round": 29,
+      "case": "fixture",
+      "order": [
+        "rust-o3",
+        "mylang-o3-lto",
+        "mylang-o3-bounded",
+        "netlisp-llvm-fast",
+        "netlisp-llvm-safe",
+        "zig-o3",
+        "go-fast",
+        "mylang-o3"
+      ],
+      "ms": {
+        "rust-o3": 1.632564,
+        "mylang-o3-lto": 36.271688,
+        "mylang-o3-bounded": 48.050389,
+        "netlisp-llvm-fast": 2.839791,
+        "netlisp-llvm-safe": 2.833682,
+        "zig-o3": 1.366192,
+        "go-fast": 2.153098,
+        "mylang-o3": 18.719803
+      }
+    },
+    {
+      "round": 30,
+      "case": "changed-net",
+      "order": [
+        "netlisp-llvm-fast",
+        "rust-o3",
+        "netlisp-llvm-safe",
+        "go-fast",
+        "mylang-o3-bounded",
+        "mylang-o3",
+        "zig-o3",
+        "mylang-o3-lto"
+      ],
+      "ms": {
+        "netlisp-llvm-fast": 2.988451,
+        "rust-o3": 2.093427,
+        "netlisp-llvm-safe": 2.776671,
+        "go-fast": 2.056671,
+        "mylang-o3-bounded": 47.963723,
+        "mylang-o3": 22.250647,
+        "zig-o3": 1.570435,
+        "mylang-o3-lto": 38.210606
+      }
+    },
+    {
+      "round": 30,
+      "case": "changed-value",
+      "order": [
+        "netlisp-llvm-fast",
+        "zig-o3",
+        "go-fast",
+        "mylang-o3",
+        "mylang-o3-bounded",
+        "netlisp-llvm-safe",
+        "rust-o3",
+        "mylang-o3-lto"
+      ],
+      "ms": {
+        "netlisp-llvm-fast": 2.706448,
+        "zig-o3": 1.485462,
+        "go-fast": 2.110063,
+        "mylang-o3": 18.863504,
+        "mylang-o3-bounded": 46.405096,
+        "netlisp-llvm-safe": 3.101245,
+        "rust-o3": 1.639566,
+        "mylang-o3-lto": 38.828541
+      }
+    },
+    {
+      "round": 30,
+      "case": "fixture",
+      "order": [
+        "zig-o3",
+        "go-fast",
+        "mylang-o3",
+        "mylang-o3-lto",
+        "netlisp-llvm-safe",
+        "mylang-o3-bounded",
+        "netlisp-llvm-fast",
+        "rust-o3"
+      ],
+      "ms": {
+        "zig-o3": 1.626689,
+        "go-fast": 2.445225,
+        "mylang-o3": 21.798803,
+        "mylang-o3-lto": 36.477298,
+        "netlisp-llvm-safe": 2.886379,
+        "mylang-o3-bounded": 46.260303,
+        "netlisp-llvm-fast": 3.035799,
+        "rust-o3": 1.837351
+      }
+    }
+  ]
+}

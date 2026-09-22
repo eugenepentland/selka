@@ -1,0 +1,3 @@
+Fixed. `pick` referenced the undefined name `reward`; the parameter is `bonus`, so line 6 became `return total + bonus` (10 + 5 = 15).
+
+`./bin/mylang run project/main.my` → prints `15`, exit code 0.

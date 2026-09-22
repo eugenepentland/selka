@@ -1,0 +1,141 @@
+{
+  "binaries": {
+    "aggregate-inline": {
+      "path": ".tmp/svg-gap-audit-20260921/codegen/gc-lto-none-aggregate-inline",
+      "sha256": "21b49ad38327e6925d16c1bd9d9229f28e1c78fa1c7aed15d37cc2769b2b6af0"
+    },
+    "aggregate-inline-bounded": {
+      "path": ".tmp/svg-gap-audit-20260921/codegen/gc-lto-both-aggregate-inline",
+      "sha256": "1159e58ed27d7743dac37eb15af0dca17956f66e3f3b635368cc5ff57d9c1b13"
+    },
+    "combined-control": {
+      "path": ".tmp/svg-gap-audit-20260921/host/aggregate-inline-metadata-control",
+      "sha256": "dd51549a5ee557c7d983f0cc2c0b8278e91dcd2fd03a410e979562ceb8bbc111"
+    },
+    "combined-typed": {
+      "path": ".tmp/svg-gap-audit-20260921/host/aggregate-inline-typed-host",
+      "sha256": "f13c18e5d402b36c9e000c2b588354355b5a9eafcaeabfb56bfb31d5f2129431"
+    },
+    "combined-control-bounded": {
+      "path": ".tmp/svg-gap-audit-20260921/host/aggregate-inline-bounded-metadata-control",
+      "sha256": "5613818494a4bd8e480889e65133b6b0ab641406f6acb2b6bab78a356c0b7848"
+    },
+    "combined-typed-bounded": {
+      "path": ".tmp/svg-gap-audit-20260921/host/aggregate-inline-bounded-typed-host",
+      "sha256": "83a01d8110168eda4ac055ffaf1401726d7d92f3965a2c5e7e3c4ad1f3605377"
+    },
+    "stack-ceiling": {
+      "path": ".tmp/svg-gap-audit-20260921/frames/gc-lto-none-stack-ceiling",
+      "sha256": "bce4cf3d41a11b42c9b8ab34528c6737cac40fa26b17c51dc0f155e7aca652c8"
+    },
+    "stack-ceiling-bounded": {
+      "path": ".tmp/svg-gap-audit-20260921/frames/gc-lto-both-stack-ceiling",
+      "sha256": "8525cccd7acd46f1804f224804ef01ebc6e1950a2fc2382aad95eb3642415e59"
+    }
+  },
+  "cases": {
+    "fixture": {
+      "status": 0,
+      "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+      "issue_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "all_normal_and_stress_match": true
+    },
+    "changed-net": {
+      "status": 0,
+      "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+      "issue_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "all_normal_and_stress_match": true
+    },
+    "changed-value": {
+      "status": 0,
+      "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+      "issue_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "all_normal_and_stress_match": true
+    },
+    "swapped_net_names": {
+      "status": 0,
+      "svg_sha256": "287906e279472b9fde85b74173ee1a2428bf9d8d397e92055cb8214edaff5c72",
+      "issue_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "all_normal_and_stress_match": true
+    },
+    "passive_declaration_order": {
+      "status": 0,
+      "svg_sha256": "1df26380bfb3e830ef57f7231b63d327fe5520fe36ee23bd0de4e59a173b9e80",
+      "issue_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "all_normal_and_stress_match": true
+    },
+    "passive_pin_order": {
+      "status": 0,
+      "svg_sha256": "ac300b4b441e0b83d57be6a4af92d9a968940b42841f847ac646b3038f2324a9",
+      "issue_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "all_normal_and_stress_match": true
+    },
+    "display_raw_namespace": {
+      "status": 0,
+      "svg_sha256": "192774cde3e1aa2088222835e5702d69c1fc0959e33a560c717cb010353a432d",
+      "issue_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "all_normal_and_stress_match": true
+    },
+    "nc_raw_collision": {
+      "status": 0,
+      "svg_sha256": "e0706839a0a88af299d348000a413716dc90cb41976187b00c5c2c46f083a665",
+      "issue_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "all_normal_and_stress_match": true
+    },
+    "nc_only_bridge_collision": {
+      "status": 0,
+      "svg_sha256": "1b82af32778b1919048237a012de1b4514a5d8248d4b0b8f77860a5428cc6b91",
+      "issue_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "all_normal_and_stress_match": true
+    },
+    "empty_net_rejected": {
+      "status": 13,
+      "svg_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issue_sha256": "0f6b44ca3c7db2a865c90464174174f87ed07ca496dc1fbd71169efbfb98efea",
+      "all_normal_and_stress_match": true
+    }
+  },
+  "budget_rejections": {
+    "aggregate-inline-bounded": {
+      "--max-steps=1": {
+        "status": 1,
+        "marker": "R_STEP_LIMIT"
+      },
+      "--max-frames=1": {
+        "status": 1,
+        "marker": "R_FRAME_LIMIT"
+      }
+    },
+    "combined-control-bounded": {
+      "--max-steps=1": {
+        "status": 1,
+        "marker": "R_STEP_LIMIT"
+      },
+      "--max-frames=1": {
+        "status": 1,
+        "marker": "R_FRAME_LIMIT"
+      }
+    },
+    "combined-typed-bounded": {
+      "--max-steps=1": {
+        "status": 1,
+        "marker": "R_STEP_LIMIT"
+      },
+      "--max-frames=1": {
+        "status": 1,
+        "marker": "R_FRAME_LIMIT"
+      }
+    },
+    "stack-ceiling-bounded": {
+      "--max-steps=1": {
+        "status": 1,
+        "marker": "R_STEP_LIMIT"
+      },
+      "--max-frames=1": {
+        "status": 1,
+        "marker": "R_FRAME_LIMIT"
+      }
+    }
+  },
+  "scope": "Ten schematic inputs and GC stress; this is not a general compiler safety proof. The stack ceiling still bypasses correct native stack admission accounting."
+}

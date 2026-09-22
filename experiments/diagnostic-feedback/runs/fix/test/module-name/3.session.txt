@@ -1,0 +1,12 @@
+Done. Both fixes were in the helper module `project/stats.my`; `main.my` was left unchanged.
+
+**What changed:**
+1. `module statistics` → `module stats` — the module header must match the file's path from the project root (was `E_MODULE_NAME`).
+2. `def total()` → `public def total()` — `main.my` calls `stats.total()`, so the declaration must be exported (was `E_PRIVATE_SYMBOL`). `pub def` is not valid syntax; `public def` is.
+
+**Command and result:**
+```
+$ bin/mylang run project/main.my
+7
+```
+Exit code 0, stdout exactly `7\n` (verified with `od -c`); `bin/mylang check project/main.my` also exits 0.

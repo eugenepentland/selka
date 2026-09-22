@@ -1,0 +1,7 @@
+#!/bin/sh
+# Run the planner's own contract suite against the frozen byte-I/O host.
+# Both arms get this identical launcher: the host is named explicitly so a
+# checkout that happens to sit nearby can never be used instead.
+set -eu
+cd "$(dirname "$0")/.."
+MYLANG_IO="$M3_FROZEN_IO" exec /usr/bin/python3 -B test_cli.py

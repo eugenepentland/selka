@@ -1,0 +1,84 @@
+{
+  "none": {
+    "binary_sha256": "21b49ad38327e6925d16c1bd9d9229f28e1c78fa1c7aed15d37cc2769b2b6af0",
+    "cases": {
+      "fixture": [
+        {
+          "gc_stress": false,
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617
+        },
+        {
+          "gc_stress": true,
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617
+        }
+      ],
+      "changed-net": [
+        {
+          "gc_stress": false,
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647
+        },
+        {
+          "gc_stress": true,
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647
+        }
+      ],
+      "changed-value": [
+        {
+          "gc_stress": false,
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617
+        },
+        {
+          "gc_stress": true,
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617
+        }
+      ]
+    }
+  },
+  "both": {
+    "binary_sha256": "1159e58ed27d7743dac37eb15af0dca17956f66e3f3b635368cc5ff57d9c1b13",
+    "cases": {
+      "fixture": [
+        {
+          "gc_stress": false,
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617
+        },
+        {
+          "gc_stress": true,
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "svg_bytes": 49617
+        }
+      ],
+      "changed-net": [
+        {
+          "gc_stress": false,
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647
+        },
+        {
+          "gc_stress": true,
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "svg_bytes": 49647
+        }
+      ],
+      "changed-value": [
+        {
+          "gc_stress": false,
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617
+        },
+        {
+          "gc_stress": true,
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "svg_bytes": 49617
+        }
+      ]
+    }
+  }
+}

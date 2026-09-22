@@ -1,0 +1,17 @@
+**What I changed:** `project/main.my` — the `match` in `describe` only handled the `start` variant, so the checker reported `E_INCOMPLETE_MATCH: match does not handle variant 'stop'; every variant requires an explicit arm`. I added the missing arm:
+
+```python
+case Event.stop(name):
+    return "stopped"
+```
+
+No other changes (the scratch test file I used to probe pattern syntax was removed).
+
+**Command and result:**
+
+```
+$ bin/mylang run project/main.my
+stopped        # exit 0
+```
+
+`bin/mylang check project/main.my` also exits 0. (Two harmless `W_UNUSED_BINDING` warnings for the unused `name` bindings go to stderr; stdout is exactly `stopped\n`.)

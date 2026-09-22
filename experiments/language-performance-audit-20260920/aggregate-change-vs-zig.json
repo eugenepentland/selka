@@ -1,0 +1,1575 @@
+{
+ "work": ".tmp/language-performance-audit-20260920/measure-after",
+ "cpu": 6,
+ "rounds": 21,
+ "input_dir": ".tmp/runtime-audit-20260919",
+ "arms": {
+  "before": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe",
+   "sha256": "c68cc32370d32a75dc92f0666f8d8838b2bf81f8c86f189d51c580f108b379d1",
+   "runtime": {
+    "path": "/home/epentland/ai/canopy/mylang/zig-out/lib/mylang-runtime/827684a97948fbda75d61e0c426f477e80ea90d54da3b360312fd0ac170e7280.a",
+    "sha256": "c5e3d4648016a458b9facc53be8b52b0a8babf43ee42b11228c5e8ee9959a13f"
+   }
+  },
+  "after": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+   "sha256": "73c0760cdfdbdce7d6ba2aaa7c7e931232b800768d894ad54bbb13b23a5ac164",
+   "runtime": {
+    "path": "/home/epentland/ai/canopy/mylang/zig-out/lib/mylang-runtime/827684a97948fbda75d61e0c426f477e80ea90d54da3b360312fd0ac170e7280.a",
+    "sha256": "c5e3d4648016a458b9facc53be8b52b0a8babf43ee42b11228c5e8ee9959a13f"
+   }
+  },
+  "zig": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-streaming-20260919/before/zig",
+   "sha256": "a65cfc5c18757a691c9c57ae76572044147e3b7721be71acf51fdda969896a56"
+  }
+ },
+ "workloads": {
+  "census": {
+   "stdout_bytes": 118,
+   "stdout_sha256": "f4178a68773c1ada93ec1e9051b25a1f77a9f70d688e507783aeee897cc8b137",
+   "arms": {
+    "before": {
+     "wall_ms_median": 5.283382,
+     "wall_ms_iqr": 0.3222139999999989,
+     "wall_ms_min": 5.054266,
+     "wall_samples": 21,
+     "wall_ms": [
+      5.376484,
+      5.065609,
+      5.064409,
+      5.453347,
+      5.449648,
+      5.316548,
+      5.107903,
+      5.360393,
+      5.157385,
+      5.434282,
+      5.463115,
+      5.054266,
+      5.419101,
+      5.502887,
+      5.272682,
+      5.431648,
+      5.080614,
+      5.283277,
+      5.235857,
+      5.283382,
+      5.113599
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "after": {
+     "wall_ms_median": 5.306685,
+     "wall_ms_iqr": 0.29903100000000027,
+     "wall_ms_min": 4.861125,
+     "wall_samples": 21,
+     "wall_ms": [
+      4.873827,
+      6.16137,
+      5.316985,
+      5.335699,
+      5.482234,
+      5.0199,
+      5.487777,
+      5.121332,
+      4.861125,
+      5.310964,
+      5.339035,
+      5.043148,
+      4.881266,
+      5.033524,
+      5.32211,
+      5.308535,
+      5.114753,
+      5.416912,
+      5.306685,
+      5.065371,
+      5.150554
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "zig": {
+     "wall_ms_median": 2.031162,
+     "wall_ms_iqr": 0.16656400000000016,
+     "wall_ms_min": 1.881345,
+     "wall_samples": 21,
+     "wall_ms": [
+      2.158887,
+      2.133991,
+      1.951204,
+      2.144859,
+      2.176452,
+      1.963054,
+      2.081516,
+      2.031162,
+      1.963651,
+      1.930064,
+      2.049316,
+      2.018859,
+      1.928615,
+      2.101217,
+      1.881345,
+      1.949678,
+      1.950876,
+      1.99914,
+      2.153997,
+      2.074649,
+      2.04951
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    }
+   },
+   "ratios": {
+    "after/before": {
+     "median": 1.004410621832758,
+     "low": 0.9450519560347739,
+     "high": 1.029307488194114,
+     "formula": "median(after wall) / median(arm wall)"
+    },
+    "after/zig": {
+     "median": 2.612635033542376,
+     "low": 2.4653582365016926,
+     "high": 2.7054599618757305,
+     "formula": "median(after wall) / median(arm wall)"
+    }
+   }
+  },
+  "render": {
+   "stdout_bytes": 700425,
+   "stdout_sha256": "78a74270e2ec8842471e8e1ec5f94c8a42c631f0addec5ac2ec4bb97870240a7",
+   "arms": {
+    "before": {
+     "wall_ms_median": 11.745787,
+     "wall_ms_iqr": 0.543196,
+     "wall_ms_min": 11.067104,
+     "wall_samples": 21,
+     "wall_ms": [
+      11.959879,
+      11.745787,
+      11.178851,
+      11.393945,
+      11.891473,
+      11.117395,
+      11.881182,
+      11.150009,
+      11.067104,
+      11.98629,
+      11.778667,
+      11.839167,
+      11.854705,
+      16.815578,
+      11.369566,
+      11.56271,
+      11.570268,
+      11.918416,
+      11.316697,
+      11.823636,
+      11.523855
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "after": {
+     "wall_ms_median": 11.234377,
+     "wall_ms_iqr": 0.3022129999999983,
+     "wall_ms_min": 10.834629,
+     "wall_samples": 21,
+     "wall_ms": [
+      10.988983,
+      11.632835,
+      11.358151,
+      11.323139,
+      11.215255,
+      11.09124,
+      11.042033,
+      11.082558,
+      11.291604,
+      11.234377,
+      10.879317,
+      11.30062,
+      11.202352,
+      14.046579,
+      11.142518,
+      10.834629,
+      11.781395,
+      11.277835,
+      11.370866,
+      11.562414,
+      10.90204
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "zig": {
+     "wall_ms_median": 2.615465,
+     "wall_ms_iqr": 0.11634649999999969,
+     "wall_ms_min": 2.319863,
+     "wall_samples": 21,
+     "wall_ms": [
+      2.319863,
+      2.597129,
+      2.504713,
+      2.533994,
+      2.567418,
+      2.650534,
+      2.672893,
+      2.659271,
+      2.66547,
+      2.643162,
+      2.554755,
+      2.662171,
+      2.375429,
+      2.770968,
+      2.615465,
+      2.591271,
+      2.657157,
+      2.613028,
+      2.759398,
+      2.636822,
+      2.394255
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    }
+   },
+   "ratios": {
+    "after/before": {
+     "median": 0.956460133322697,
+     "low": 0.9423935242932039,
+     "high": 0.9898094996947939,
+     "formula": "median(after wall) / median(arm wall)"
+    },
+    "after/zig": {
+     "median": 4.295365068926558,
+     "low": 4.203876652780157,
+     "high": 4.37574909890014,
+     "formula": "median(after wall) / median(arm wall)"
+    }
+   }
+  },
+  "census-7.4MB": {
+   "stdout_bytes": 124,
+   "stdout_sha256": "969242c9729df7567a1e9d236aec504aa7bba8a9356ac8f12205da505696782f",
+   "arms": {
+    "before": {
+     "wall_ms_median": 42.509574,
+     "wall_ms_iqr": 0.7712739999999982,
+     "wall_ms_min": 41.542588,
+     "wall_samples": 21,
+     "wall_ms": [
+      42.291184,
+      45.657801,
+      42.71356,
+      41.542588,
+      43.568704,
+      42.499713,
+      41.930956,
+      42.690327,
+      42.509574,
+      42.112427,
+      42.544133,
+      42.285115,
+      42.793267,
+      42.664733,
+      41.60843,
+      44.340624,
+      42.150437,
+      43.459163,
+      43.012145,
+      42.356985,
+      41.676539
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "after": {
+     "wall_ms_median": 41.445582,
+     "wall_ms_iqr": 0.38376300000000185,
+     "wall_ms_min": 40.735238,
+     "wall_samples": 21,
+     "wall_ms": [
+      41.471223,
+      41.667755,
+      41.05101,
+      43.51432,
+      41.119023,
+      41.022451,
+      41.270344,
+      41.328108,
+      40.735238,
+      41.619357,
+      42.26111,
+      41.248525,
+      41.48494,
+      41.530524,
+      41.327225,
+      41.445582,
+      41.632449,
+      41.505326,
+      41.235755,
+      41.384919,
+      41.678533
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "zig": {
+     "wall_ms_median": 14.063644,
+     "wall_ms_iqr": 0.3429835000000008,
+     "wall_ms_min": 13.556474,
+     "wall_samples": 21,
+     "wall_ms": [
+      14.148335,
+      14.086732,
+      13.722409,
+      14.42523,
+      14.307777,
+      13.92021,
+      14.327226,
+      13.556474,
+      14.278607,
+      14.195109,
+      13.985749,
+      13.973649,
+      13.828335,
+      14.137056,
+      14.054338,
+      14.31806,
+      14.352619,
+      14.020398,
+      14.063644,
+      13.965428,
+      13.934989
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    }
+   },
+   "ratios": {
+    "after/before": {
+     "median": 0.9749705325205094,
+     "low": 0.9675641178117674,
+     "high": 0.9820137454652487,
+     "formula": "median(after wall) / median(arm wall)"
+    },
+    "after/zig": {
+     "median": 2.9470016448084153,
+     "low": 2.9113707404430635,
+     "high": 2.967687036282433,
+     "formula": "median(after wall) / median(arm wall)"
+    }
+   }
+  },
+  "render-7.4MB": {
+   "stdout_bytes": 5603400,
+   "stdout_sha256": "e8c07a29632c947f031988034b44a63effea51fb93754461f5450a5daeb223dc",
+   "arms": {
+    "before": {
+     "wall_ms_median": 99.527172,
+     "wall_ms_iqr": 2.1259625,
+     "wall_ms_min": 98.610218,
+     "wall_samples": 21,
+     "wall_ms": [
+      100.221588,
+      99.0301,
+      99.588502,
+      100.183834,
+      102.555852,
+      99.212405,
+      99.036686,
+      99.303335,
+      98.820216,
+      99.149463,
+      99.221755,
+      98.75551,
+      101.475844,
+      103.728966,
+      99.527172,
+      101.525761,
+      99.32756,
+      100.96223,
+      99.721137,
+      102.477638,
+      98.610218
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "after": {
+     "wall_ms_median": 96.804579,
+     "wall_ms_iqr": 2.4272914999999955,
+     "wall_ms_min": 95.595507,
+     "wall_samples": 21,
+     "wall_ms": [
+      96.586735,
+      97.128741,
+      95.934135,
+      96.369257,
+      102.416918,
+      95.595507,
+      96.429123,
+      100.017666,
+      96.412403,
+      96.094266,
+      99.877853,
+      96.942355,
+      96.804579,
+      96.281397,
+      97.100716,
+      97.993473,
+      99.511764,
+      95.884914,
+      104.383836,
+      97.144352,
+      96.778346
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    },
+    "zig": {
+     "wall_ms_median": 17.914783,
+     "wall_ms_iqr": 0.28736100000000064,
+     "wall_ms_min": 17.568683,
+     "wall_samples": 21,
+     "wall_ms": [
+      17.920417,
+      17.582946,
+      17.931708,
+      17.914783,
+      18.4246,
+      17.673157,
+      17.842784,
+      18.103241,
+      18.17527,
+      17.873578,
+      17.84588,
+      17.939397,
+      17.895402,
+      18.633706,
+      17.933827,
+      18.018736,
+      18.071927,
+      17.631216,
+      17.568683,
+      17.622379,
+      17.85324
+     ],
+     "counter_samples": {},
+     "perf_raw": []
+    }
+   },
+   "ratios": {
+    "after/before": {
+     "median": 0.9726447266079258,
+     "low": 0.9621850864427222,
+     "high": 0.9789056946231197,
+     "formula": "median(after wall) / median(arm wall)"
+    },
+    "after/zig": {
+     "median": 5.40361437813676,
+     "low": 5.377576023432905,
+     "high": 5.442642279338425,
+     "formula": "median(after wall) / median(arm wall)"
+    }
+   }
+  }
+ },
+ "inputs": {
+  "input.sexp": {
+   "bytes": 927415,
+   "sha256": "0a670a08470e5b19d67272bca2186a369f8bc826a724a5d2ffe574a62932ee49"
+  },
+  "input8.sexp": {
+   "bytes": 7419320,
+   "sha256": "368ebdee5164fdba21ef4c0c08bbc6467b54b4b07709ab8d9b1799349a41d797"
+  }
+ },
+ "counters": [
+  "task-clock",
+  "instructions:u",
+  "cycles:u",
+  "branches:u",
+  "branch-misses:u"
+ ],
+ "sink": "null",
+ "reference": "after",
+ "warmups": 3,
+ "wall_round_order": [
+  [
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "census",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "after"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "after"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "census",
+    "after"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "before"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ]
+  ],
+  [
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "census",
+    "after"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "render",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "census",
+    "before"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "census",
+    "after"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "before"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "census",
+    "after"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ]
+  ],
+  [
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "after"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "census",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "census",
+    "before"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "after"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "census",
+    "before"
+   ],
+   [
+    "census",
+    "after"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "census",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "census",
+    "after"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "after"
+   ]
+  ],
+  [
+   [
+    "render",
+    "after"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "census",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "census",
+    "after"
+   ]
+  ],
+  [
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "after"
+   ],
+   [
+    "census",
+    "before"
+   ]
+  ],
+  [
+   [
+    "census",
+    "after"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "census",
+    "before"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "census",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "after"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "before"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "census",
+    "after"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "census",
+    "after"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "census",
+    "before"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "census",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "census",
+    "before"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "after"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "census",
+    "after"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "census",
+    "before"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "census",
+    "after"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "before"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "census",
+    "before"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "after"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "before"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render",
+    "after"
+   ],
+   [
+    "census-7.4MB",
+    "before"
+   ],
+   [
+    "render-7.4MB",
+    "before"
+   ],
+   [
+    "render-7.4MB",
+    "after"
+   ],
+   [
+    "census-7.4MB",
+    "after"
+   ],
+   [
+    "census",
+    "after"
+   ],
+   [
+    "render",
+    "before"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ]
+  ]
+ ],
+ "counter_round_order": [],
+ "toolchain": {
+  "compiler_sha256": "549d13660db96ecd0360520f03418d40e4519cd6a9d44a24e609e02bce98d9eb",
+  "adapter_sources": {
+   "amd64_sysv.py": "1d0252b37ec42904808f879590b9100292720c746efc3d9c85b537c001422919",
+   "inventory.py": "fc112547232c614979eb24cbc100f42830719dc08ce0c1681c9f1b0c371888e6",
+   "llvm_emit.py": "4c329fa77eccbd608e6f8f83c78168e6108405ef3984c40e4524a9a60468870b",
+   "measure.py": "f804d50d5a6b9d648989886e6531bfcf2dafcd04b9db9183434b915a0c9af9cf",
+   "qbe_llvm.py": "e4e717501e74d99ce1f2ac4b78e153860567f29f9330be839a38ceab62262f2c",
+   "resolve_symbols.py": "fedcc6de37e738551604a160274e2ae666ccea49c0df623eb2364a3de2f29ae0",
+   "runtime_signatures.py": "6a5fb82bd3e7ca1ed70c6ecc92b124709fadbd6ed72b4b7c8a7ac2205f066e80",
+   "symbol_census.py": "720c0cc2acf5019936e202c806e6a2e147e9634700b9d6bd5349d51c4597b949",
+   "test_adapter.py": "fab54bc47d00360979ee4b370b66080318e797728ea237237d69e3eab09113b1",
+   "verify_binaries.py": "0a288dc2594f59241cc0372d52cbf3c3055a989b4011e36c8eab2f6f95b7ee00",
+   "verify_semantics.py": "52bf0bccaa5e079601a2282474020cfcc8d44042a0a6b38c2ff2a73ade74e60f",
+   "verify_traps.py": "151ff49b00eb74c0f7fc2bced067b6e3ddeadabedd3d8552f91b737424c4cc26",
+   "verify_units.py": "eb5293554e9dfad296d30e413f9ff69da7d5c6041edcab93052fd9d5ae9362c6"
+  },
+  "zig": "0.17.0-dev.1683+5ceec001b"
+ },
+ "timing_scope": "process launch through completion; timed stdout redirected to /dev/null"
+}

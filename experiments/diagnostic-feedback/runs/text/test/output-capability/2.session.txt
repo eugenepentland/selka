@@ -1,0 +1,16 @@
+Done.
+
+**What I changed** (`project/main.my` only): the checker rejected the bare `print(...)` in `banner` with `E_OUTPUT_CAPABILITY` — printing must go through a `Stream` parameter and the printing function must declare the `output` effect. So I:
+
+- gave `banner` an `out: Stream` parameter and declared `effects(output)`, replacing `print("==", text)` with `out.print("==", text)`;
+- declared `effects(output)` on `main` and threaded its stream through: `banner(out, "ok")`.
+
+**Command run and result:**
+
+```
+$ ./bin/mylang run project/main.my
+== ok
+[exit 0]
+```
+
+(The output is exactly the 6 bytes `== ok\n`; `./bin/mylang check project/main.my` also exits 0.)

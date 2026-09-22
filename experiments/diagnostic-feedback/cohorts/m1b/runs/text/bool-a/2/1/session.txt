@@ -1,0 +1,8 @@
+Fixed `above` in `project/main.my`: it was declared `-> int` but returned the comparison `a > b` (a `bool`), which `mylang check` rejected with `E_TYPE: expected int, found bool`. Replaced that with an explicit `if a > b: return 1` / `return 0`.
+
+Verified commands and results:
+
+- `bin/mylang check project/main.my` → exit 0 (was exit 1 with E_TYPE before).
+- `bin/mylang run project/main.my -- 5 2` → `1`
+- `bin/mylang run project/main.my -- 2 5` → `0`
+- Edge cases: `3 3`→0, `0 0`→0, `-5 -2`→0, `-2 -5`→1, `0 -1`→1, `-1 0`→0, `1000000 999999`→1, `7 8`→0 — 1 exactly when the first argument is larger, 0 otherwise.

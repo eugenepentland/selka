@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "steps": [
+    {
+      "id": "guest-suite",
+      "kind": "test",
+      "timeout": 900,
+      "commands": [
+        [
+          "bin/mylang",
+          "test",
+          "tests"
+        ]
+      ]
+    },
+    {
+      "id": "cli-scaling",
+      "kind": "test",
+      "timeout": 300,
+      "expect_stdout": "forms=4 nodes=11 atoms=4 strings=0 ints=0 floats=1 measures=2 max_depth=2 value_sum=7.754\n",
+      "commands": [
+        [
+          "bin/mylang",
+          "run",
+          "main.my",
+          "--",
+          "fixtures/public/scaling.sexp"
+        ]
+      ]
+    },
+    {
+      "id": "cli-render",
+      "kind": "test",
+      "timeout": 300,
+      "expect_stdout": "(cap-0402 100nF 10% 4.7k 2.5)\n",
+      "commands": [
+        [
+          "bin/mylang",
+          "run",
+          "main.my",
+          "--",
+          "fixtures/public/render.sexp",
+          "--render"
+        ]
+      ]
+    },
+    {
+      "id": "cli-nesting",
+      "kind": "test",
+      "timeout": 300,
+      "expect_stdout": "(a () (b ()))\n",
+      "commands": [
+        [
+          "bin/mylang",
+          "run",
+          "main.my",
+          "--",
+          "fixtures/public/nesting.sexp",
+          "--render"
+        ]
+      ]
+    },
+    {
+      "id": "cli-escapes",
+      "kind": "test",
+      "timeout": 300,
+      "expect_stdout": "(note \"trailing backslash \\\\\")\n",
+      "commands": [
+        [
+          "bin/mylang",
+          "run",
+          "main.my",
+          "--",
+          "fixtures/public/escapes.sexp",
+          "--render"
+        ]
+      ]
+    }
+  ]
+}

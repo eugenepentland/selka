@@ -1,0 +1,26 @@
+dsh: reasoning:
+Let me read the files.
+dsh: reasoning:
+The program has a non-exhaustive match in `area` — a static error (missing square case). Let me run the checker to see the diagnostic.
+
+Let me first check `bin/mylang check project/main.my`. Note the working directory is the root of the task directory. Let me run it.
+dsh: reasoning:
+The only compile error is the incomplete match. I need to add `case Shape.square(side): return side * side`.
+
+That's it. Let me make the edit and verify. Note the union declaration: `circle(radius: int), square(side: int)` — the second variant has no trailing comma, but that seems accepted.
+
+Let me edit.
+dsh: reasoning:
+Now run the expected examples. Also I should verify the general behavior for other inputs (e.g., "circle" with any r, "square"). Note `args[0]` and `args[1]` — what does args contain when running `bin/mylang run project/main.my -- circle 2`? Probably just the args after `--`, i.e. args[0]="circle", args[1]="2". Let's test.
+
+Edge cases: what about negative radius? int(text) returns Some for "-5" presumably. 3*r*r works. What if args are missing? Not our concern — "Change only what the request requires."
+
+Let me run both cases plus a couple of extras.
+dsh: reasoning:
+All outputs match: circle 2 → 12 ✓, square 3 → 9 ✓, circle 5 → 75 ✓ (3*25), square 12 → 144 ✓, circle -3 → 27 ✓.
+
+Let me verify against expected.json programmatically as an exact check. Also verify the final file content.
+
+I've used 3 compiler invocations (check, then 7 runs = 8 total... actually each `run` is a compiler invocation). 1 check + 1 check + 7 runs = 9. Under 20. Fine.
+
+Let me do a programmatic comparison of the two expected cases, using python to avoid more compiler invocations (I already ran both). Actually I can just do a final verification with a script that runs both expected cases and compares to expected.json — that would be 2 more invocations (total 11). Worth it for an exact verification.

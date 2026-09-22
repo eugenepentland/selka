@@ -1,0 +1,14 @@
+Fixed.
+
+**Change:** `project/main.my` — added the required stream capability to `banner`: it now takes `out: Stream`, declares `effects(output)`, prints via `out.print(...)`, and `main` passes its own `out` at the call site.
+
+```python
+def banner(out: Stream, text: str) -> int effects(output):
+    out.print("==", text)
+    return 0
+
+def main(out: Stream) -> int:
+    return banner(out, "ok")
+```
+
+**Command:** `bin/mylang run project/main.my` → exits 0 and prints exactly `== ok` (verified byte-for-byte: `= = space o k \n`).

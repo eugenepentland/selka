@@ -1,0 +1,9 @@
+Done.
+
+**What changed:** In `project/main.my`, the two functions declared an unused generic parameter with an unknown requirement (`[T: Numeric]`), which caused `E_GENERIC_REQUIREMENT` since `Numeric` is not a known requirement and `T` never appears in either signature or body. I removed the spurious `[T: Numeric]` from `maximum` and `maximum_of` (and normalized the blank lines before `main`). The body logic is unchanged — it already returns the largest of the three integers.
+
+**Commands and results:**
+- `bin/mylang check project/main.my` → exit 0 (was exit 1 with `E_GENERIC_REQUIREMENT`)
+- `bin/mylang run project/main.my -- 1 3 2` → `3`
+- `bin/mylang run project/main.my -- 5 5 5` → `5`
+- `bin/mylang run project/main.my -- -7 -2 -9` → `-2`

@@ -1,0 +1,495 @@
+    20.61%  arm.bin  arm.bin               [.] myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+            |
+            ---myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+               |          
+                --20.49%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                          |          
+                          |--19.55%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                          |          |          
+                          |          |--15.96%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                          |          |          |          
+                          |          |          |--9.73%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                          |          |          |          |          
+                          |          |          |          |--6.49%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                          |          |          |          |          launch
+                          |          |          |          |          mylang_qbe_run_grants
+                          |          |          |          |          |          
+                          |          |          |          |          |--0.62%--0x7c507162a5fb
+                          |          |          |          |          |          __libc_start_main
+                          |          |          |          |          |          _start
+                          |          |          |          |          |          execvpe
+                          |          |          |          |          |          0x5e52c219e08f
+                          |          |          |          |          |          
+                          |          |          |          |          |--0.60%--0x78b79362a5fb
+                          |          |          |          |          |          __libc_start_main
+                          |          |          |          |          |          _start
+                          |          |          |          |          |          execvpe
+                          |          |          |          |          |          0x5d080afae08f
+                          |          |          |          |          |          
+                          |          |          |          |          |--0.59%--0x79646062a5fb
+                          |          |          |          |          |          __libc_start_main
+                          |          |          |          |          |          _start
+                          |          |          |          |          |          execvpe
+                          |          |          |          |          |          0x569f097c908f
+                          |          |          |          |          |          
+                          |          |          |          |          |--0.58%--0x7fd9c682a5fb
+                          |          |          |          |          |          __libc_start_main
+                          |          |          |          |          |          _start
+                          |          |          |          |          |          execvpe
+                          |          |          |          |          |          0x581ce1ca108f
+                          |          |          |          |          |          
+                          |          |          |          |          |--0.57%--0x72b70962a5fb
+                          |          |          |          |          |          __libc_start_main
+                          |          |          |          |          |          _start
+                          |          |          |          |          |          execvpe
+                          |          |          |          |          |          0x5d54ff5de08f
+                          |          |          |          |          |          
+                          |          |          |          |          |--0.54%--0x74eaf302a5fb
+                          |          |          |          |          |          __libc_start_main
+                          |          |          |          |          |          _start
+                          |          |          |          |          |          execvpe
+                          |          |          |          |          |          0x5e40651ed08f
+                          |          |          |          |          |          
+                          |          |          |          |           --0.51%--0x70d34be2a5fb
+                          |          |          |          |                     __libc_start_main
+                          |          |          |          |                     _start
+                          |          |          |          |                     execvpe
+                          |          |          |          |                     0x60cf3be2208f
+                          |          |          |          |          
+                          |          |          |           --3.24%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                          |          |          |                     |          
+                          |          |          |                      --3.05%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                          |          |          |                                launch
+                          |          |          |                                mylang_qbe_run_grants
+                          |          |          |          
+                          |          |           --6.24%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                          |          |                     launch
+                          |          |                     mylang_qbe_run_grants
+                          |          |                     |          
+                          |          |                     |--0.67%--0x79646062a5fb
+                          |          |                     |          __libc_start_main
+                          |          |                     |          _start
+                          |          |                     |          execvpe
+                          |          |                     |          0x569f097c908f
+                          |          |                     |          
+                          |          |                     |--0.59%--0x70d34be2a5fb
+                          |          |                     |          __libc_start_main
+                          |          |                     |          _start
+                          |          |                     |          execvpe
+                          |          |                     |          0x60cf3be2208f
+                          |          |                     |          
+                          |          |                     |--0.57%--0x798ea7c2a5fb
+                          |          |                     |          __libc_start_main
+                          |          |                     |          _start
+                          |          |                     |          execvpe
+                          |          |                     |          0x5583a676c08f
+                          |          |                     |          
+                          |          |                     |--0.56%--0x74725ce2a5fb
+                          |          |                     |          __libc_start_main
+                          |          |                     |          _start
+                          |          |                     |          execvpe
+                          |          |                     |          0x5f4e2bbe908f
+                          |          |                     |          
+                          |          |                     |--0.55%--0x72b70962a5fb
+                          |          |                     |          __libc_start_main
+                          |          |                     |          _start
+                          |          |                     |          execvpe
+                          |          |                     |          0x5d54ff5de08f
+                          |          |                     |          
+                          |          |                     |--0.52%--0x74eaf302a5fb
+                          |          |                     |          __libc_start_main
+                          |          |                     |          _start
+                          |          |                     |          execvpe
+                          |          |                     |          0x5e40651ed08f
+                          |          |                     |          
+                          |          |                      --0.52%--0x79a86562a5fb
+                          |          |                                __libc_start_main
+                          |          |                                _start
+                          |          |                                execvpe
+                          |          |                                0x5761902ba08f
+                          |          |          
+                          |           --3.59%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                          |                     launch
+                          |                     mylang_qbe_run_grants
+                          |          
+                           --0.94%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                     launch
+                                     mylang_qbe_run_grants
+    14.50%  arm.bin  [unknown]             [k] 0xffffffff8ce00b90
+            |
+            ---0xffffffff8ce00b90
+               0xffffffff8ce00b90
+               |          
+               |--4.95%--myl_qbe_file_access
+               |          myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+               |          launch
+               |          mylang_qbe_run_grants
+               |          
+               |--3.29%--buffer_grow_rooted
+               |          myl_native_bytes_buffer_append_range
+               |          myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+               |          myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+               |          myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+               |          myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+               |          myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+               |          launch
+               |          mylang_qbe_run_grants
+               |          
+               |--2.21%--myl_qbe_bytes_copy
+               |          myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+               |          launch
+               |          mylang_qbe_run_grants
+               |          
+               |--1.26%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+               |          myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+               |          |          
+               |           --1.24%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+               |                     |          
+               |                      --0.99%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+               |                                |          
+               |                                 --0.57%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+               |                                           launch
+               |                                           mylang_qbe_run_grants
+               |          
+               |--0.74%--myl_native_bytes_buffer_append_range
+               |          myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+               |          myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+               |          |          
+               |           --0.72%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+               |                     |          
+               |                      --0.70%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+               |                                |          
+               |                                 --0.66%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+               |                                           launch
+               |                                           mylang_qbe_run_grants
+               |          
+                --0.62%--myl_native_list_append
+                          myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                          |          
+                           --0.58%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+    11.12%  arm.bin  arm.bin               [.] myl_native_bytes_find_any
+            |
+            ---myl_native_bytes_find_any
+               myl_f_522a0393f0b978ec89dcf0a01ed40fe4c77fd2e0c5e149267c4a06b2be768f98
+               myl_f_59c4bbc7071b8e5740b45acc273a5dd464bfcfe4b67081aa51105d0e1634c116
+               myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+               |          
+                --10.97%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                          |          
+                           --10.95%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                     |          
+                                      --10.85%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                                |          
+                                                |--9.15%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                                |          launch
+                                                |          mylang_qbe_run_grants
+                                                |          |          
+                                                |          |--0.82%--0x74725ce2a5fb
+                                                |          |          __libc_start_main
+                                                |          |          _start
+                                                |          |          execvpe
+                                                |          |          0x5f4e2bbe908f
+                                                |          |          
+                                                |          |--0.82%--0x70d34be2a5fb
+                                                |          |          __libc_start_main
+                                                |          |          _start
+                                                |          |          execvpe
+                                                |          |          0x60cf3be2208f
+                                                |          |          
+                                                |          |--0.81%--0x798ea7c2a5fb
+                                                |          |          __libc_start_main
+                                                |          |          _start
+                                                |          |          execvpe
+                                                |          |          0x5583a676c08f
+                                                |          |          
+                                                |          |--0.81%--0x72b70962a5fb
+                                                |          |          __libc_start_main
+                                                |          |          _start
+                                                |          |          execvpe
+                                                |          |          0x5d54ff5de08f
+                                                |          |          
+                                                |          |--0.78%--0x7c507162a5fb
+                                                |          |          __libc_start_main
+                                                |          |          _start
+                                                |          |          execvpe
+                                                |          |          0x5e52c219e08f
+                                                |          |          
+                                                |          |--0.77%--0x74eaf302a5fb
+                                                |          |          __libc_start_main
+                                                |          |          _start
+                                                |          |          execvpe
+                                                |          |          0x5e40651ed08f
+                                                |          |          
+                                                |          |--0.76%--0x7e6465e2a5fb
+                                                |          |          __libc_start_main
+                                                |          |          _start
+                                                |          |          execvpe
+                                                |          |          0x5e7eea2e808f
+                                                |          |          
+                                                |          |--0.76%--0x7909ad82a5fb
+                                                |          |          __libc_start_main
+                                                |          |          _start
+                                                |          |          execvpe
+                                                |          |          0x5bb2dd14a08f
+                                                |          |          
+                                                |          |--0.75%--0x7fd9c682a5fb
+                                                |          |          __libc_start_main
+                                                |          |          _start
+                                                |          |          execvpe
+                                                |          |          0x581ce1ca108f
+                                                |          |          
+                                                |          |--0.72%--0x79a86562a5fb
+                                                |          |          __libc_start_main
+                                                |          |          _start
+                                                |          |          execvpe
+                                                |          |          0x5761902ba08f
+                                                |          |          
+                                                |          |--0.68%--0x78b79362a5fb
+                                                |          |          __libc_start_main
+                                                |          |          _start
+                                                |          |          execvpe
+                                                |          |          0x5d080afae08f
+                                                |          |          
+                                                |           --0.67%--0x79646062a5fb
+                                                |                     __libc_start_main
+                                                |                     _start
+                                                |                     execvpe
+                                                |                     0x569f097c908f
+                                                |          
+                                                 --1.70%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                                           |          
+                                                           |--0.87%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                                           |          launch
+                                                           |          mylang_qbe_run_grants
+                                                           |          
+                                                            --0.83%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                                                      |          
+                                                                       --0.81%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                                                                 launch
+                                                                                 mylang_qbe_run_grants
+     9.21%  arm.bin  arm.bin               [.] myl_f_522a0393f0b978ec89dcf0a01ed40fe4c77fd2e0c5e149267c4a06b2be768f98
+            |
+            ---myl_f_522a0393f0b978ec89dcf0a01ed40fe4c77fd2e0c5e149267c4a06b2be768f98
+               myl_f_59c4bbc7071b8e5740b45acc273a5dd464bfcfe4b67081aa51105d0e1634c116
+               myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+               |          
+                --8.71%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                          |          
+                           --8.58%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                     |          
+                                     |--7.33%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                     |          |          
+                                     |          |--3.93%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                     |          |          |          
+                                     |          |          |--2.48%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                     |          |          |          launch
+                                     |          |          |          mylang_qbe_run_grants
+                                     |          |          |          
+                                     |          |           --1.45%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                     |          |                     |          
+                                     |          |                      --1.28%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                     |          |                                launch
+                                     |          |                                mylang_qbe_run_grants
+                                     |          |          
+                                     |           --3.40%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                     |                     launch
+                                     |                     mylang_qbe_run_grants
+                                     |          
+                                      --1.25%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                                launch
+                                                mylang_qbe_run_grants
+     4.82%  arm.bin  arm.bin               [.] myl_native_bytes_buffer_append_range
+            |
+            ---myl_native_bytes_buffer_append_range
+               |          
+                --4.78%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                          |          
+                           --4.75%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                                     |          
+                                      --4.48%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                                                |          
+                                                |--3.52%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                                                |          |          
+                                                |          |--2.03%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                                                |          |          |          
+                                                |          |          |--1.48%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                                |          |          |          launch
+                                                |          |          |          mylang_qbe_run_grants
+                                                |          |          |          
+                                                |          |           --0.55%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                                                |          |                     |          
+                                                |          |                      --0.52%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                                |          |                                launch
+                                                |          |                                mylang_qbe_run_grants
+                                                |          |          
+                                                |           --1.49%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                                |                     launch
+                                                |                     mylang_qbe_run_grants
+                                                |          
+                                                 --0.96%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                                           launch
+                                                           mylang_qbe_run_grants
+     4.78%  arm.bin  arm.bin               [.] myl_f_59c4bbc7071b8e5740b45acc273a5dd464bfcfe4b67081aa51105d0e1634c116
+            |
+            ---myl_f_59c4bbc7071b8e5740b45acc273a5dd464bfcfe4b67081aa51105d0e1634c116
+               myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+               |          
+                --4.76%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                          |          
+                           --4.72%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                     |          
+                                      --4.23%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                                |          
+                                                |--2.90%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                                |          |          
+                                                |          |--1.75%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                                |          |          launch
+                                                |          |          mylang_qbe_run_grants
+                                                |          |          
+                                                |           --1.15%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                                |                     |          
+                                                |                      --1.02%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                                |                                launch
+                                                |                                mylang_qbe_run_grants
+                                                |          
+                                                 --1.33%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                                           launch
+                                                           mylang_qbe_run_grants
+     4.15%  arm.bin  arm.bin               [.] myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+            |
+            ---myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+               |          
+                --4.14%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                          |          
+                           --4.00%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                     |          
+                                      --3.52%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                                |          
+                                                |--2.31%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                                |          |          
+                                                |          |--1.32%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                                |          |          launch
+                                                |          |          mylang_qbe_run_grants
+                                                |          |          
+                                                |           --1.00%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                                |                     |          
+                                                |                      --0.87%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                                |                                launch
+                                                |                                mylang_qbe_run_grants
+                                                |          
+                                                 --1.21%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                                           launch
+                                                           mylang_qbe_run_grants
+     3.93%  arm.bin  libc.so.6             [.] 0x0000000000197d07
+     3.62%  arm.bin  libc.so.6             [.] 0x0000000000197a11
+     2.37%  arm.bin  arm.bin               [.] myl_f_0e5340f31bcdf0c4b2fdbb9574ba048b1a3b28d2313f0935cd0144f4b6851fe2
+            |
+            ---myl_f_0e5340f31bcdf0c4b2fdbb9574ba048b1a3b28d2313f0935cd0144f4b6851fe2
+               |          
+               |--1.70%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+               |          |          
+               |           --1.69%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+               |                     |          
+               |                      --1.67%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+               |                                |          
+               |                                 --1.18%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+               |                                           |          
+               |                                           |--0.59%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+               |                                           |          launch
+               |                                           |          mylang_qbe_run_grants
+               |                                           |          
+               |                                            --0.59%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+               |                                                      |          
+               |                                                       --0.52%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+               |                                                                 launch
+               |                                                                 mylang_qbe_run_grants
+               |          
+                --0.67%--myl_f_0e5340f31bcdf0c4b2fdbb9574ba048b1a3b28d2313f0935cd0144f4b6851fe2
+                          |          
+                           --0.61%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                                     myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                                     |          
+                                      --0.60%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+     1.62%  arm.bin  arm.bin               [.] myl_f_c7216ff81b82e9d60b2aefddc873a7cdb611d664b3deb9b17e22a05b9481cf8a
+            |
+            ---myl_f_c7216ff81b82e9d60b2aefddc873a7cdb611d664b3deb9b17e22a05b9481cf8a
+               myl_f_522a0393f0b978ec89dcf0a01ed40fe4c77fd2e0c5e149267c4a06b2be768f98
+               myl_f_59c4bbc7071b8e5740b45acc273a5dd464bfcfe4b67081aa51105d0e1634c116
+               myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+               |          
+                --1.62%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                          |          
+                           --1.51%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                     |          
+                                      --1.27%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                                |          
+                                                 --0.80%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                                           |          
+                                                            --0.52%--myl_f_b5d931620df636deef979a0d59c3f9f39f360f8d212025d8bcb427e874f639a5
+                                                                      launch
+                                                                      mylang_qbe_run_grants
+     1.48%  arm.bin  arm.bin               [.] myl_qbe_heap
+            |
+            ---myl_qbe_heap
+               |          
+                --0.59%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                          myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                          |          
+                           --0.57%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                                     |          
+                                      --0.57%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+     1.37%  arm.bin  libc.so.6             [.] 0x0000000000197a21
+     1.23%  arm.bin  arm.bin               [.] __wrap_myl_native_list_get
+            |
+            ---__wrap_myl_native_list_get
+               |          
+                --1.01%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                          myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                          |          
+                           --0.93%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                                     |          
+                                      --0.60%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+     0.91%  arm.bin  arm.bin               [.] myl_native_list_append
+            |
+            ---myl_native_list_append
+               myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+               |          
+                --0.89%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                          |          
+                           --0.86%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                                     |          
+                                      --0.65%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+     0.86%  arm.bin  libc.so.6             [.] 0x0000000000197a00
+     0.82%  arm.bin  arm.bin               [.] memcpy@plt
+            |
+            ---_fini (inlined)
+     0.79%  arm.bin  arm.bin               [.] buffer_grow_rooted
+            |
+            ---buffer_grow_rooted
+               |          
+                --0.77%--myl_native_bytes_buffer_append_range
+                          |          
+                           --0.77%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                                     |          
+                                      --0.76%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                                                |          
+                                                 --0.72%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+                                                           |          
+                                                            --0.59%--myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee
+     0.71%  arm.bin  arm.bin               [.] myl_native_text_from_utf8_checked
+            |
+            ---myl_native_text_from_utf8_checked
+               myl_native_text_from_utf8
+               myl_native_text_scalar
+               |          
+                --0.51%--myl_f_0e5340f31bcdf0c4b2fdbb9574ba048b1a3b28d2313f0935cd0144f4b6851fe2
+     0.60%  arm.bin  arm.bin               [.] myl_f_998beee1bca4ed98df5239fd3360e93dc7435bf13adf117793e129355f5cd155
+            |
+            ---myl_f_998beee1bca4ed98df5239fd3360e93dc7435bf13adf117793e129355f5cd155
+               myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+               myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+               |          
+                --0.57%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+                          |          
+                           --0.56%--myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959
+     0.60%  arm.bin  libc.so.6             [.] 0x0000000000197a25

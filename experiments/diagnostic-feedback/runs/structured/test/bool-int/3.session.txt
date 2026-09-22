@@ -1,0 +1,12 @@
+Done.
+
+**What I changed:** In `project/main.my`, `above` was declared `-> int` but returned the boolean expression `a > b`, which failed the checker with `E_TYPE: expected int, found bool`. I replaced the body with an explicit conversion: `return 1` when `a > b`, else `return 0`. Nothing else was modified (a temporary scratch file used to confirm the `0` cases was deleted).
+
+**Command and result:**
+```
+$ bin/mylang run project/main.my
+1
+$ echo $?
+0
+```
+`bin/mylang check project/main.my` also exits 0.

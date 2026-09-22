@@ -1,0 +1,35 @@
+--- control/guest/circuit.my
++++ normalize/guest/circuit.my
+@@ -228,7 +228,7 @@
+     trunk = False
+     named_host = False
+     i = 0
+-    while i < len(pins):
++    while i < len(pins) and (not trunk or not named_host):
+         pin = pins[i]
+         if not pin.nc:
+             if text.equal(host, pin.net, base):
+@@ -263,7 +263,7 @@
+             parts[pins[i].part].pin2 = i
+         raw_id = - 1
+         j = 0
+-        while j < i:
++        while j < i and raw_id < 0:
+             if raw_id < 0 and text.equal(host, pins[j].net, pins[i].net):
+                 raw_id = pins[j].net_id
+             j += 1
+@@ -275,12 +275,12 @@
+     while i < len(pins):
+         display_id = - 1
+         j = 0
+-        while j < len(pins):
++        while j < len(pins) and display_id < 0:
+             if display_id < 0 and text.equal(host, pins[j].net, pins[i].display):
+                 display_id = pins[j].net_id
+             j += 1
+         j = 0
+-        while j < i:
++        while j < i and display_id < 0:
+             if display_id < 0 and text.equal(host, pins[j].display, pins[i].display):
+                 display_id = pins[j].display_id
+             j += 1

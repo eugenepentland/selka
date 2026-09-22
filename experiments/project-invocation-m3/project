@@ -1,0 +1,238 @@
+#!/usr/bin/env python3
+"""The M3 project launcher: one frozen workflow, two ways to select the project.
+
+    project verify [--entry PATH] [--manifest PATH] [--query TEXT] [--symbol NAME]
+                   [--only STEP]... [--details] [--label NAME]
+    project describe
+
+`verify` runs the frozen combined project workflow (`scripts/project.py`: checked
+navigation plus the application's declared verification manifest) against the
+active project. Everything except *how the entry and manifest are selected* is
+identical between the two arms:
+
+| arm | command | who names the paths |
+| --- | --- | --- |
+| `manual` | `project verify --entry <path> --manifest <path>` | the agent |
+| `automatic` | `project verify` | the active project's description |
+
+The automatic arm also accepts explicit paths, in which case they are used
+exactly as the manual arm uses them. The active project is a public, read-only
+JSON description named by `MYLANG_M3_PROJECT`; its directory anchors the entry and
+manifest paths, so neither arm depends on the current working directory.
+
+The launcher supplies the frozen compiler, the per-session cache directory and a
+fresh report path identically in both arms, and records one resolution event per
+invocation — including a resolution failure that never reached the compiler.
+
+Participant-facing command; coordinator-owned environment:
+
+    MYLANG_M3_ARM          manual | automatic
+    MYLANG_M3_PROJECT      absolute path to the active project description
+    MYLANG_M3_TOOLS        frozen tools directory (bin/, scripts/)
+    MYLANG_M3_CACHE        verification cache directory (outside the app)
+    MYLANG_M3_REPORTS      directory for fresh full reports (outside the app)
+    MYLANG_M3_RESOLUTION_LOG   ledger for resolution events
+    MYLANG_EVENT_LOG       ledger for compiler processes (written by bin/mylang)
+"""
+
+from __future__ import annotations
+
+from datetime import datetime, timezone
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+USAGE = __doc__.split("Participant-facing command", 1)[0].strip()
+
+
+def now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def record(path: Path | None, event: dict) -> None:
+    """Append one resolution event. A missing ledger is a coordinator incident,
+    not a participant failure, so it is reported and the command still runs."""
+    if path is None:
+        return
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a") as handle:
+            handle.write(json.dumps(event, sort_keys=True) + "\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+    except OSError as error:
+        print(f"project: could not record the resolution event: {error}", file=sys.stderr)
+
+
+def fail(message: str, event: dict, log: Path | None) -> int:
+    event.update(outcome="resolution_failure", error=message, finished_utc=now())
+    record(log, event)
+    print(f"project: {message}", file=sys.stderr)
+    return 2
+
+
+def parse(argv: list[str]) -> tuple[str, dict, list[str] | None]:
+    """Minimal parser: the launcher is an interface, not a second argument framework."""
+    if not argv or argv[0] in ("-h", "--help", "help"):
+        return "help", {}, None
+    command = argv[0]
+    options: dict = {"entry": None, "manifest": None, "query": "", "symbol": None, "only": [],
+                     "details": False, "label": None}
+    index = 1
+    while index < len(argv):
+        name = argv[index]
+        if name in ("--entry", "--manifest", "--query", "--symbol", "--only", "--label"):
+            if index + 1 >= len(argv):
+                return "error", {"error": f"{name} needs a value"}, None
+            value = argv[index + 1]
+            if name == "--only":
+                options["only"].append(value)
+            elif name == "--label":
+                options["label"] = value
+            else:
+                options[name[2:]] = value
+            index += 2
+            continue
+        if name == "--details":
+            options["details"] = True
+            index += 1
+            continue
+        return "error", {"error": f"unknown argument {name!r}"}, None
+    return command, options, []
+
+
+def fresh_report(directory: Path, label: str | None) -> Path:
+    directory.mkdir(parents=True, exist_ok=True)
+    stem = label or "project"
+    index = 1
+    while True:
+        candidate = directory / f"{stem}-{index:03d}.json"
+        if not candidate.exists():
+            return candidate
+        index += 1
+
+
+def main() -> int:
+    command, options, _ = parse(sys.argv[1:])
+    if command == "help":
+        print(USAGE)
+        return 0
+    if command == "error":
+        print(f"project: {options['error']}", file=sys.stderr)
+        print(USAGE, file=sys.stderr)
+        return 2
+    if command != "verify":
+        print(f"project: unknown command {command!r}", file=sys.stderr)
+        print(USAGE, file=sys.stderr)
+        return 2
+
+    arm = os.environ.get("MYLANG_M3_ARM", "manual")
+    log_value = os.environ.get("MYLANG_M3_RESOLUTION_LOG")
+    log = Path(log_value) if log_value else None
+    event = {"schema": "m3-resolution-v1", "arm": arm, "command": command,
+             "cwd": os.getcwd(), "started_utc": now(),
+             "argv": sys.argv[1:], "description": os.environ.get("MYLANG_M3_PROJECT"),
+             "requested": {"entry": options["entry"], "manifest": options["manifest"]},
+             "launched_compiler_processes": 0}
+    if arm not in ("manual", "automatic"):
+        return fail(f"MYLANG_M3_ARM must be manual or automatic, not {arm!r}", event, log)
+
+    description_value = os.environ.get("MYLANG_M3_PROJECT")
+    if not description_value:
+        return fail("the active project description is not set (MYLANG_M3_PROJECT)", event, log)
+    description_path = Path(description_value)
+    if not description_path.is_file():
+        return fail(f"the active project description does not exist: {description_path}", event, log)
+    try:
+        description = json.loads(description_path.read_text())
+        root = description_path.parent
+        declared_entry = description["entry"]
+        declared_manifest = description["manifest"]
+    except (OSError, ValueError, KeyError) as error:
+        return fail(f"the active project description is unreadable: {error}", event, log)
+    event["project"] = {"name": description.get("name"), "root": str(root),
+                        "entry": declared_entry, "manifest": declared_manifest}
+
+    explicit = options["entry"] is not None or options["manifest"] is not None
+    if arm == "manual" and not explicit:
+        return fail("the manual project command needs the entry and manifest paths: "
+                    "`project verify --entry <path> --manifest <path>`", event, log)
+    if explicit and (options["entry"] is None or options["manifest"] is None):
+        return fail("--entry and --manifest are supplied together or not at all", event, log)
+    if explicit:
+        entry = Path(options["entry"]).expanduser()
+        manifest = Path(options["manifest"]).expanduser()
+        entry = (Path.cwd() / entry).resolve() if not entry.is_absolute() else entry.resolve()
+        manifest = (Path.cwd() / manifest).resolve() if not manifest.is_absolute() else manifest.resolve()
+        source = "explicit"
+    else:
+        entry = (root / declared_entry).resolve()
+        manifest = (root / declared_manifest).resolve()
+        source = "description"
+    event["resolved"] = {"entry": str(entry), "manifest": str(manifest), "source": source}
+    if not entry.is_file():
+        return fail(f"no entry file at {entry}", event, log)
+    if not manifest.is_file():
+        return fail(f"no verification manifest at {manifest}", event, log)
+    if manifest.parent != entry.parent:
+        return fail(f"the verification manifest must sit beside the entry: {manifest} is not in "
+                    f"{entry.parent}", event, log)
+
+    tools_value = os.environ.get("MYLANG_M3_TOOLS")
+    if not tools_value:
+        return fail("the frozen tools directory is not set (MYLANG_M3_TOOLS)", event, log)
+    tools = Path(tools_value)
+    # The counting shim sits beside this launcher in the working copy, so every
+    # compiler process the workflow starts — navigation and every manifest step —
+    # is recorded exactly once. The raw frozen compiler is only a fallback.
+    sibling = Path(__file__).resolve().parent / "mylang"
+    compiler = sibling if sibling.is_file() else tools / "bin" / "mylang"
+    workflow = tools / "scripts" / "project.py"
+    if not compiler.is_file() or not workflow.is_file():
+        return fail(f"the frozen tools are incomplete under {tools}", event, log)
+
+    cache_value = os.environ.get("MYLANG_M3_CACHE")
+    cache = Path(cache_value) if cache_value else tools / "cache"
+    reports_value = os.environ.get("MYLANG_M3_REPORTS")
+    reports = Path(reports_value) if reports_value else cache / "reports"
+    try:
+        report = fresh_report(reports, options["label"])
+    except OSError as error:
+        return fail(f"could not choose a fresh report path under {reports}: {error}", event, log)
+
+    argv = [sys.executable, str(workflow), "--compiler", str(compiler),
+            "--entry", str(entry), "--manifest", str(manifest),
+            "--cache-dir", str(cache), "--report", str(report)]
+    if options["query"]:
+        argv += ["--query", options["query"]]
+    if options["symbol"]:
+        argv += ["--symbol", options["symbol"]]
+    for step in options["only"]:
+        argv += ["--only", step]
+    if options["details"]:
+        argv += ["--details"]
+    event["report"] = str(report)
+    event["backend_argv"] = argv
+    event["effective"] = {"compiler": str(compiler), "entry": str(entry), "manifest": str(manifest),
+                          "cache": str(cache), "report": str(report),
+                          "entry_sha256": None, "manifest_sha256": None}
+    import hashlib
+    event["effective"]["entry_sha256"] = hashlib.sha256(entry.read_bytes()).hexdigest()
+    event["effective"]["manifest_sha256"] = hashlib.sha256(manifest.read_bytes()).hexdigest()
+
+    completed = subprocess.run(argv, capture_output=True, text=True)
+    sys.stdout.write(completed.stdout)
+    sys.stdout.flush()
+    sys.stderr.write(completed.stderr)
+    event.update(exit=completed.returncode,
+                 outcome="passed" if completed.returncode == 0 else
+                         ("failed" if completed.returncode == 1 else "infrastructure_failure"),
+                 finished_utc=now())
+    record(log, event)
+    return completed.returncode
+
+
+if __name__ == "__main__":
+    sys.exit(main())

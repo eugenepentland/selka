@@ -1,0 +1,11 @@
+Fixed.
+
+**What changed:** In `project/main.my`, the `pick` function declared an unused generic parameter with an invalid requirement — `def pick[T: Sortable](...)` — which triggered `error[E_GENERIC_REQUIREMENT]: unknown requirement; expected copy, equality, integer, codec, storable, or a declared constraint`. Since `T` is never used in the signature or body, I removed the unused type parameter, leaving `def pick(values: list[int], index: int) -> int:`.
+
+**Command and result:**
+```
+$ bin/mylang run project/main.my
+9
+[run exit: 0]
+```
+`bin/mylang check project/main.my` also exits 0.

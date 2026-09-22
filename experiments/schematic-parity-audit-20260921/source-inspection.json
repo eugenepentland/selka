@@ -1,0 +1,30 @@
+{
+  "object_header": 96,
+  "list_header": 72,
+  "root_record": 32,
+  "records": {
+    "sexpr::Node": 40,
+    "text::Span": 24,
+    "circuit::Part": 88,
+    "circuit::Pin": 48,
+    "layout_graph::Net": 48
+  },
+  "machine": "x86_64",
+  "kernel": "7.0.0-31-generic",
+  "cpu_model": "12th Gen Intel(R) Core(TM) i7-12700H",
+  "inspected_sources": {
+    "src/qbe.zig": "f5fa59a0ea7339b5c334492c039d38576cb7f296f25a226460fd83aa9bb4804f",
+    "src/qbe_build.zig": "79de07d273a48f577068866067d3c344478b5412cf69f41791c75f37dc4e976a",
+    "src/qbe_build_io.zig": "afd11745314d5e28a1740ba5aa6e809e3669db752800df303af8293fcab4ff38",
+    "src/qbe_build_cache.zig": "1a2a29315c44b4a82f5d74746812540a05c3993cdcfcb0b9aa1a3b4bcb8c4a51",
+    "src/host_native.zig": "b33017fcf2b5fba72f29c9bf93f0c4464d296bd9278422d6137a4096680633ce",
+    "src/qbe_host_runtime.c": "3f03c582dc87f72f77fbec6cfedebda67752c5c8f89496b8b0cb4347af965617",
+    "src/native_heap.h": "32ede66aa45e74c51006715d1114f439f6a622159dd00a4d2fbb94315ec28d34",
+    "src/native_collections.c": "aba5262ad38a30c3bb4ba110756834b25f45af10ad5b03832b7e4d9c11db0612",
+    "src/native_bytes.c": "75ce3da1460a27ce346cbdd1a24008ca30f12855cab1be381a6f38f8b0d9b1d6",
+    "src/stdlib/byte_builder.my": "d4a0cd4c6c8ab37542e2d92be77d33b036b9a3c6478adbb67b9c5f78609083ed",
+    "experiments/llvm-backend/qbe_llvm.py": "d3ab8c24eb4e1f23e88531b31adabc3340ef59d3efccc84a6bb86f8e0fc7c8b6",
+    "experiments/llvm-backend/llvm_emit.py": "3ccf0f73e34cccc0e83e5f460587640b62a21b9e31b31d597a9ee6abd1766a2b",
+    "experiments/llvm-backend/runtime_signatures.py": "8d0c48cdc747661daacc9eb776811543c0d24ec2ff53624a5ed4bc8b20fb637c"
+  }
+}

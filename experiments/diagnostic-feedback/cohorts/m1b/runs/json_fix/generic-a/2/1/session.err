@@ -1,0 +1,111 @@
+dsh: reasoning:
+Let me check the checker first with the current program. Let me run the check.
+
+Note: `bin/mylang check project/main.my`. Also `args` — does args include the program name? In many languages args[0] is the program name. Let's check the docs. Let me run the check first.
+
+Also `largest[T: Ordered](values: list[int])` — the generic parameter T is unused, that may be an error. And `largest_of` too. Let me check.
+
+Let's run the compiler.
+dsh: reasoning:
+The error is at line 12: `Ordered` is not a known requirement. Options: `copy`, `equality`, `integer`, `codec`, `storable`, or declared constraint.
+
+The generic `T` is unused, so the simplest is just removing the generic parameter entirely. But "Change only what the request requires" — the function signature is `largest[T: Ordered](values: list[int]) -> int`. Hmm, but the request says `largest` returns the largest of three integers given as arguments. Actually the current `largest` takes a list. Hmm.
+
+Let me think about what the task actually requires: make it compile and print the largest value. The minimal changes: fix `T: Ordered` → `T: integer`? But wait, T is not used anywhere. Let's try `T: integer` — is that valid? "integer" is a requirement. But an unused generic parameter might trigger an error (unused type parameter). Let's just try.
+
+Also there might be more errors after that. Let's also consider the `args` indexing: does `args` include program name? In Python sys.argv[0] is program name. In mylang, `def main(args: list[str], out: Stream)` — probably args are the arguments after `--`. Let me check the docs in... I can't read outside the directory? Constraint says work only inside this directory; do not read or write anything outside it. So docs/ is outside... Actually the working directory is /home/.../generic-a/2/1 which contains project/, public/, bin/. Docs aren't here. So I can test empirically.
+
+Also `int(text)` returns `Option[int]` apparently (Some/None match). Good.
+
+Let me test first with `bin/mylang run project/main.my -- 1 3 2`. But first it must compile. Let me try minimal fix.
+
+Actually, let's think: does the checker reject unused generic parameters? Let me test one change at a time but budget compiler invocations (20 max). Each `check`/`run` counts presumably. Let's be efficient.
+
+Option A: remove `[T: Ordered]` from both functions. That's clean since T is unused.
+
+But "change only what the request requires" — removing the unused generic is a change. Alternatively use `integer` requirement: `[T: integer]`. But T is unused and pointless. Hmm, but maybe the compiler errors on unused generic parameter (probably not; likely just fine). Let's try `T: integer` first since it's the most minimal char change? Actually `Ordered` → `integer`... but then the unused type parameter might cause an "unused generic" diagnostic. Let me check both in one invocation? I can't modify and check two variants simultaneously without two invocations. But I can make a copy of the file and check both? Still 2 invocations.
+
+Let me just do minimal: change `Ordered` to `integer` in both places. Then check. If it complains about unused T, remove the generics.
+
+Actually wait — is the generic even legal syntax with unused param? Let's just try.
+
+Also need to consider whether `args` includes the program path. Let me check by running. If args[0] is program name, then args[1], args[2], args[3] would be needed. The task says "three integers given as arguments" and examples pass 3 args. Let me test empirically after compile.
+
+Let me apply the edit and check.
+dsh: reasoning:
+I need to use the read tool. Let me read the file.
+dsh: reasoning:
+Right — the type parameter `T` is not used in the signature, so inference fails at each call. The cleanest fix: remove the unused generic parameters. That's the real problem: `T` isn't used in the parameters at all. Removing `[T: integer]` from both functions fixes both errors.
+
+Alternatively supply explicit type args: `largest[int](values)` and `largest_of[int]([...])`. But the unused type param is dead weight; removing it is the sensible fix. But "change only what the request requires" — both fix it. Removing the generics is more minimal in terms of semantics? Actually, hmm. Which is more likely the "intended" fix? The task is a generic-based diagnostic-feedback task ("generic-a"). The intended fix might be to supply explicit type arguments. But the cleanest is removal.
+
+Let's think: `largest` is not actually generic — it takes `list[int]` and returns `int`. The `[T: Ordered]` is spurious. Removing it is the right fix. With explicit type args it also works, but keeping a pointless generic is weird.
+
+However, there might be a subtlety: `largest_of` also generic and passes `values` to `largest`. If I remove generics entirely, `largest(values)` works fine.
+
+Let me remove the generics. That also avoids the `integer` requirement question. Let's do it.
+
+Then check: `args[0]`, `args[1]`, `args[2]` — need to determine whether args includes program name.
+
+Let me edit and check.
+dsh: reasoning:
+Check passes. Now run the two examples. Need to determine if args include program name.
+
+Run: `./bin/mylang run project/main.my -- 1 3 2`.
+dsh: reasoning:
+Both examples pass, and args[0..2] are indeed the three arguments (not including program name).
+
+Now, "The same behavior is required for every input, not only the examples in public/." So I need to verify for arbitrary inputs (including negatives, zero, repeated, etc.).
+
+Let me test some edge cases: negative numbers, three where max is first, last, etc.
+
+- `-5 -1 -3` → -1. But wait: does `--` handle negative args? Yes, they come after `--`.
+- `0 0 0` → 0
+- `7 2 9` → 9
+- large values? int is fixed width. `int(text)` returns Option. What about values exceeding range? Not required.
+- What if args has fewer than 3? Task says three integers given as arguments; presumably always 3.
+
+Also potential issue: `int(text)` — does it parse leading `+`? Not important.
+
+Let me test a handful of cases including negatives. That uses more compiler invocations (each `run` compiles?). The cache should make reruns cheap, but does each count against the 20 limit? I've used 3 invocations so far (check, check, run x2 = actually 4 invocations: check #1, check #2, run #1, run #2). Let me count: 1) check (initial diagnostic shown from earlier run — yes that was an invocation), 2) check after integer edit, 3) check after removal, 4) run 1 3 2, 5) run 5 5 5. That's 5. I have 15 left. Let me be efficient and test several inputs in one bash call. Each `mylang run` is one invocation though. Let me do maybe 4-5 edge cases in a single bash call = 5 invocations. That leaves plenty.
+
+Actually, maybe I can build once and run the binary multiple times? Constraint says at most 20 compiler invocations — `bin/mylang build` would be one invocation, then run the resulting binary directly with many inputs. That's efficient. But `build` outputs to... I can write within this directory. However "change only what the request requires" — building an artifact adds files. I could build to /tmp? That's outside the directory — not allowed to write outside. Hmm, .mylang-cache already exists in project/. I could build into project/ dir, then delete. But simpler: just do a few `run` invocations — I have budget.
+
+Let me test negatives and a max-in-last-position case. Use 3-4 runs.
+
+Actually, can I pass multiple arguments in one run? No, the program takes exactly 3.
+
+Let me test:
+1. `-5 -1 -3` → -1
+2. `9 2 4` → 9 (max first)
+3. `2 4 9` → 9 (max last)
+4. `-10 -20 -30` → -10
+5. Also test that int parsing works with negatives — `number` returns 0 on parse failure, so if `int("-5")` returned None, we'd get 0 and wrong answer. This tests parsing.
+
+Let me run those. Also verify `int` handles negatives.
+
+Additionally consider: should `main` fail on non-numeric? Not required.
+
+Let's run these 4 cases in one bash call (4 invocations, total 9).
+dsh: reasoning:
+All edge cases correct.
+
+Let me also consider whether `bin/mylang` is a wrapper that counts invocations... doesn't matter.
+
+Let me review the final file and verify nothing else was changed. Also double-check that args indexing is right (no program name) — confirmed by examples passing.
+
+One more consideration: is `largest_of` needed at all? The task says change only what's required; I kept it.
+
+Let me view the final file.
+
+Total invocations used: 1 (initial check) + 1 (check) + 1 (check) + 2 (runs) + 5 (edge runs) = 10. Under 20. Good.
+
+Final verification: run the exact command from request. I already did `./bin/mylang run project/main.my -- 1 3 2` → 3. Let me do a final `check` plus maybe one combined verification command. That'd be 11-12. Fine.
+
+Let me read final file to report accurately.
+dsh: reasoning:
+Final verification with the exact command. Let me run check + both examples one last time (3 invocations; total 13). Actually I already have results; but a final confirm of check and the exact command is good.
+
+Actually the two example runs were already done and printed 3 and 5. I'll just run the exact command once more for the final answer? That's redundant. I can report the earlier result. But to be safe and precise, I'll do one final combined run: check && run 1 3 2 && run 5 5 5. That's 3 invocations, total 13. Under limit.
+
+Let's do it.

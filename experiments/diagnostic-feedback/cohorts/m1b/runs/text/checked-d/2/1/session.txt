@@ -1,0 +1,29 @@
+## Fixed
+
+**What changed** (`project/main.my`, in `main` only): the body did `out.print(7 + as_count(args[0]))`, which added an `int` to a `Result` (error `E_TYPE`). I unwrapped the `Result` with a `match`:
+
+```python
+def main(args: list[str], out: Stream) -> int:
+    match as_count(args[0]):
+        case Ok(value):
+            out.print(7 + value)
+        case Err(_):
+            out.print(7)
+    return 0
+```
+
+`as_count` is unchanged.
+
+**Command and result:**
+
+```
+$ bin/mylang check project/main.my
+exit: 0        (was: error[E_TYPE]: expected int, found Result[int, str])
+
+$ bin/mylang run project/main.my -- 41
+48
+$ bin/mylang run project/main.my -- 0
+7
+```
+
+Both match `public/expected.json` byte-for-byte (`48\n`, `7\n`). I also verified non-integer inputs print `7` (`abc`, `1.5`, empty string) and that valid integers work (`-5` → `2`).

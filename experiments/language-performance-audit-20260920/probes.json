@@ -1,0 +1,162 @@
+{
+  "aggregate_ir": {
+    "command": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "emit-qbe",
+      "/home/epentland/ai/canopy/mylang/experiments/language-performance-audit-20260920/aggregate_probe.my",
+      "--drop-debug",
+      "--drop-step-checks",
+      "--drop-frame-checks"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "functions": {
+      "first": {
+        "blits_by_bytes": {
+          "64": 2
+        },
+        "static_blit_count": 2,
+        "full_il_sha256": "14229d7c8915cf23616e7bb47de7ac4f36fca45b47e3f41e9acc2d114f7f62ae",
+        "il_excerpt": "type :myl_slice = { l, l }\ntype :t97a07e02507c8c11b11b36703380a29e707c7ee1c699213a27f987fa45c18829 = align 8 { b 64 }\nexport function l $myl_f_a7937b64b8caa58f03721bb6bacf5c78cb235febe0e70b1b84cd99541461a08e(l %ctx, :t97a07e02507c8c11b11b36703380a29e707c7ee1c699213a27f987fa45c18829 %a0) {\n blit %a0, %l0, 64\n blit %l0, %agg0, 64"
+      },
+      "array_first": {
+        "blits_by_bytes": {
+          "512": 2
+        },
+        "static_blit_count": 2,
+        "full_il_sha256": "98d18c7a73ed294bb8b43c2f559aa492c39e614012abdf09b46680acb2ea2594",
+        "il_excerpt": "type :myl_slice = { l, l }\ntype :t2f7a73be5b8f9293642365a6c09b2fb5da08babe732d2ab33312f2843795092a = align 8 { b 512 }\nexport function l $myl_f_03d17cbdb07bd170ddd99866afcf5467dfd18b8412e17c14f8ffd8de62d16b6a(l %ctx, :t2f7a73be5b8f9293642365a6c09b2fb5da08babe732d2ab33312f2843795092a %a0) {\n blit %a0, %l0, 512\n blit %l0, %agg0, 512\n call $myl_qbe_fail_array_bounds(l %ctx, l %v19, l 64)"
+      },
+      "main": {
+        "blits_by_bytes": {},
+        "static_blit_count": 0,
+        "full_il_sha256": "626d565bff536125237ce47b4982db15542f33f252166d4abec4a00ce39299a4",
+        "il_excerpt": "type :myl_slice = { l, l }\ntype :t97a07e02507c8c11b11b36703380a29e707c7ee1c699213a27f987fa45c18829 = align 8 { b 64 }\nexport function l $myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605(l %ctx) {\n call $myl_qbe_fail_frame(l %ctx)\n call $myl_qbe_require_step_accounting(l %ctx)\n call $myl_qbe_require_frame_accounting(l %ctx)\n %v36 =l call $myl_f_a7937b64b8caa58f03721bb6bacf5c78cb235febe0e70b1b84cd99541461a08e(l %ctx, :t97a07e02507c8c11b11b36703380a29e707c7ee1c699213a27f987fa45c18829 %v35)"
+      }
+    }
+  },
+  "parser_ir": {
+    "command": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "emit-project-qbe",
+      "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/port/main.my",
+      "--drop-debug",
+      "--drop-step-checks",
+      "--drop-frame-checks"
+    ],
+    "exit": 0,
+    "stderr": "",
+    "functions": {
+      "sexpr.view::matches": {
+        "blits_by_bytes": {
+          "24": 2
+        },
+        "static_blit_count": 2,
+        "full_il_sha256": "aa5b04fcd2ef8e335d9d383b8cb0224607fbb4334751fd10dc8b771453841f1f",
+        "il_excerpt": "type :myl_slice = { l, l }\ntype :teb7682a3c84b34eb20b8e667661327c07a9a088797f1e1ccfa3cde1117db7408 = align 8 { b 24 }\ntype :teea5a531dd85d6efa65674e3f42af9e3a9349f1f07b9b3d1a78be6c77a08472d = align 8 { b 16 }\nexport function l $myl_f_036313ffbd5bb7098bbb7e9a8f2e59a87f0fb4be6f93cda80ee82a8cf567f7bf(l %ctx, :teb7682a3c84b34eb20b8e667661327c07a9a088797f1e1ccfa3cde1117db7408 %a0, l %a1) {\n blit %a0, %l0, 24\n blit %l0, %agg0, 24"
+      },
+      "sexpr.view::equal": {
+        "blits_by_bytes": {
+          "24": 12
+        },
+        "static_blit_count": 12,
+        "full_il_sha256": "4c43645f4af887e780c78cac09562b8d05034a6225d2ac57834ef03b86200a1e",
+        "il_excerpt": "type :myl_slice = { l, l }\ntype :teb7682a3c84b34eb20b8e667661327c07a9a088797f1e1ccfa3cde1117db7408 = align 8 { b 24 }\nexport function l $myl_f_0fd9e3e82a3259cbf5201156b077680c625678f9c7e724b96c179047e1881341(l %ctx, :teb7682a3c84b34eb20b8e667661327c07a9a088797f1e1ccfa3cde1117db7408 %a0, :teb7682a3c84b34eb20b8e667661327c07a9a088797f1e1ccfa3cde1117db7408 %a1) {\n blit %a0, %l0, 24\n blit %a1, %l1, 24\n blit %l0, %agg0, 24\n blit %v18, %l2, 24\n blit %l2, %agg2, 24\n blit %l2, %agg4, 24\n blit %l1, %agg8, 24\n blit %v32, %l3, 24\n blit %l3, %agg10, 24\n blit %l3, %agg12, 24\n blit %l0, %agg20, 24\n blit %l1, %agg22, 24"
+      },
+      "sexpr.parser::parse_leaf": {
+        "blits_by_bytes": {
+          "64": 21,
+          "24": 11,
+          "48": 1,
+          "72": 3,
+          "32": 5
+        },
+        "static_blit_count": 41,
+        "full_il_sha256": "afdbd0d1bbaa94d2cde2ab428e848226d962ecc1b7f0ce3baae9aa7bd1c1a5b1",
+        "il_excerpt": "type :myl_slice = { l, l }\ntype :t03f63d9a1a213b895a592d5f44a4804ce2a79a0be44ca138053f23212e67a8ff = align 8 { b 32 }\ntype :t16fdd80378e8f5db49f87eec9be63f31da2d64b799334ceec6c4b0dc9bd1ff9c = align 4 { b 4 }\ntype :t2facd3313ca998c23d22e741a67127193fdfd7ca139d8ed9c1260f3a08b9ead0 = align 8 { b 32 }\ntype :t468455de423af450a10aabad72b9c6e6e7217ad31e8c18ec2bcad90f7515e2c0 = align 8 { b 64 }\ntype :t58a57a37ccc3996fdbd3dbe4ed5cc5eb56a0a9b47b95005d2e3ea6952a56cfc7 = align 8 { b 24 }\ntype :t6aebaf2ee305f4fc7072b48af9844633c508b64ebf9566bad7cb5a043d6082d7 = align 8 { b 48 }\ntype :t6ce6091b068c70b6c7f329111dd97e03239f162ff2c0a40c1525e15f54c0a1fe = align 8 { b 16 }\ntype :t7eb6028b6a10dc641826d39b5f9988e56421d3fc7c68cfa0898f5293afe44f76 = align 8 { b 64 }\ntype :tb3fc948402862e7f90bd923bdca8b65b19c4c9737706b902f2419b9e06c84fb6 = align 8 { b 80 }\ntype :tc544e264683cad1a5e37d4b210f9c0bf0e718e6242a3466a8a7283f9703c2228 = align 8 { b 32 }\ntype :tc93d0e21d03b90b220c68caa04f45142cbd37763c758be7aa8151463d221e935 = align 8 { b 16 }\ntype :teb7682a3c84b34eb20b8e667661327c07a9a088797f1e1ccfa3cde1117db7408 = align 8 { b 24 }\ntype :tff0109adfd42fc5c88d705ea3e54f9866e58db2fda60def419846d712d6aab9a = align 8 { b 40 }\ntype :tff7efc018fbf218c264b92d7298f355598e5897311ad4510bc6d07a92851c2ab = align 8 { b 72 }\nexport function :tb3fc948402862e7f90bd923bdca8b65b19c4c9737706b902f2419b9e06c84fb6 $myl_f_998beee1bca4ed98df5239fd3360e93dc7435bf13adf117793e129355f5cd155(l %ctx, l %a0, :t468455de423af450a10aabad72b9c6e6e7217ad31e8c18ec2bcad90f7515e2c0 %a1) {\n blit %a1, %l1, 64\n blit %l1, %agg0, 64\n blit %v22, %l2, 24\n blit %l1, %agg4, 64\n blit %l1, %agg10, 64\n blit %l1, %agg12, 64\n blit %l2, %agg15, 24\n blit %v46, %v45, 24\n blit %v48, %v47, 24\n blit %v51, %v50, 48\n blit %v54, %v53, 72\n blit %l1, %agg20, 64\n blit %l1, %agg26, 64\n blit %l1, %agg28, 64\n blit %l2, %agg35, 24\n blit %v177, %v176, 24\n blit %v180, %v179, 32\n blit %v183, %v182, 72\n blit %l2, %agg40, 24\n blit %v193, %v192, 32\n blit %l1, %agg44, 64\n blit %l1, %agg50, 64\n blit %l1, %agg52, 64\n blit %l2, %agg59, 24\n blit %v317, %v316, 24\n blit %v319, %v318, 32\n blit %v322, %v321, 64\n blit %v325, %v324, 72\n blit %l2, %agg65, 24\n blit %v335, %v334, 32\n blit %l1, %agg69, 64\n blit %l1, %agg75, 64\n blit %l1, %agg77, 64\n blit %l1, %agg119, 64\n blit %v606, %l13, 64\n blit %l13, %agg122, 64\n blit %l1, %agg164, 64\n blit %l1, %agg169, 64\n blit %l1, %agg175, 64\n blit %l2, %agg178, 24\n blit %v810, %v809, 32"
+      },
+      "sexpr.parser::parse_node": {
+        "blits_by_bytes": {
+          "64": 14,
+          "32": 14,
+          "24": 2,
+          "48": 1,
+          "72": 18
+        },
+        "static_blit_count": 49,
+        "full_il_sha256": "b79640c4a73f99aba88f238d0b88899ba2e737cb97ff84c67d00c8717dbfaa2c",
+        "il_excerpt": "type :myl_slice = { l, l }\ntype :t03f63d9a1a213b895a592d5f44a4804ce2a79a0be44ca138053f23212e67a8ff = align 8 { b 32 }\ntype :t16fdd80378e8f5db49f87eec9be63f31da2d64b799334ceec6c4b0dc9bd1ff9c = align 4 { b 4 }\ntype :t468455de423af450a10aabad72b9c6e6e7217ad31e8c18ec2bcad90f7515e2c0 = align 8 { b 64 }\ntype :t58a57a37ccc3996fdbd3dbe4ed5cc5eb56a0a9b47b95005d2e3ea6952a56cfc7 = align 8 { b 24 }\ntype :tb149932d167205f8d9534f852321b0984c7929cf7e4573d1ad1b1775194f400e = align 8 { b 48 }\ntype :tb3fc948402862e7f90bd923bdca8b65b19c4c9737706b902f2419b9e06c84fb6 = align 8 { b 80 }\ntype :te3ac90c238321e4c6517f1f0f4131f06f2eba0f7b74f7ae4a4e90fb6efe4edee = align 8 { b 40 }\ntype :teb7682a3c84b34eb20b8e667661327c07a9a088797f1e1ccfa3cde1117db7408 = align 8 { b 24 }\ntype :tff0109adfd42fc5c88d705ea3e54f9866e58db2fda60def419846d712d6aab9a = align 8 { b 40 }\ntype :tff7efc018fbf218c264b92d7298f355598e5897311ad4510bc6d07a92851c2ab = align 8 { b 72 }\nexport function :tb3fc948402862e7f90bd923bdca8b65b19c4c9737706b902f2419b9e06c84fb6 $myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959(l %ctx, l %a0, l %a1) {\n blit %v20, %v21, 64\n blit %v22, %l2, 64\n blit %l2, %agg3, 64\n blit %v58, %v57, 32\n blit %l2, %agg14, 64\n blit %l2, %agg19, 64\n blit %v105, %v104, 32\n blit %l2, %agg71, 64\n blit %v122, %v121, 32\n blit %l2, %agg128, 64\n blit %l2, %agg130, 64\n blit %l2, %agg133, 64\n blit %v148, %v147, 24\n blit %v150, %v149, 24\n blit %v153, %v152, 48\n blit %v154, %l3, 72\n blit %v177, %v176, 32\n blit %l3, %agg145, 72\n blit %v186, %v185, 72\n blit %l2, %agg150, 64\n blit %v217, %v216, 32\n blit %v223, %l3, 72\n blit %v246, %v245, 32\n blit %l3, %agg162, 72\n blit %v255, %v254, 72\n blit %l2, %agg167, 64\n blit %v286, %v285, 32\n blit %v292, %l3, 72\n blit %v315, %v314, 32\n blit %l3, %agg179, 72\n blit %v324, %v323, 72\n blit %l2, %agg184, 64\n blit %v355, %v354, 32\n blit %v361, %l3, 72\n blit %v384, %v383, 32\n blit %l3, %agg196, 72\n blit %v393, %v392, 72\n blit %l2, %agg201, 64\n blit %v424, %v423, 32\n blit %v430, %l3, 72\n blit %v453, %v452, 32\n blit %l3, %agg213, 72\n blit %v462, %v461, 72\n blit %l2, %agg218, 64\n blit %v493, %v492, 32\n blit %v499, %l3, 72\n blit %v522, %v521, 32\n blit %l3, %agg230, 72\n blit %v531, %v530, 72"
+      },
+      "sexpr.printer::estimate_width": {
+        "blits_by_bytes": {
+          "72": 2,
+          "32": 8,
+          "48": 4,
+          "64": 3,
+          "24": 6
+        },
+        "static_blit_count": 23,
+        "full_il_sha256": "7343d0284e6e3d37261980ed41a2f3cb870da2983d9e0d5d32d866cf1e09bfe2",
+        "il_excerpt": "type :myl_slice = { l, l }\ntype :t2facd3313ca998c23d22e741a67127193fdfd7ca139d8ed9c1260f3a08b9ead0 = align 8 { b 32 }\ntype :t6aebaf2ee305f4fc7072b48af9844633c508b64ebf9566bad7cb5a043d6082d7 = align 8 { b 48 }\ntype :t7eb6028b6a10dc641826d39b5f9988e56421d3fc7c68cfa0898f5293afe44f76 = align 8 { b 64 }\ntype :t8e72338758aaffd00c514d77744e39686909cee2a3d78d16441cf5fd041c771c = align 8 { b 32 }\ntype :tb149932d167205f8d9534f852321b0984c7929cf7e4573d1ad1b1775194f400e = align 8 { b 48 }\ntype :tc544e264683cad1a5e37d4b210f9c0bf0e718e6242a3466a8a7283f9703c2228 = align 8 { b 32 }\ntype :tc93d0e21d03b90b220c68caa04f45142cbd37763c758be7aa8151463d221e935 = align 8 { b 16 }\ntype :te608e51d6619d21f41ec7cf3a0401d7f6db9bc0e99ba219bacc5823d1cbc7780 = align 8 { b 32 }\ntype :teb7682a3c84b34eb20b8e667661327c07a9a088797f1e1ccfa3cde1117db7408 = align 8 { b 24 }\ntype :tff7efc018fbf218c264b92d7298f355598e5897311ad4510bc6d07a92851c2ab = align 8 { b 72 }\nexport function :tc93d0e21d03b90b220c68caa04f45142cbd37763c758be7aa8151463d221e935 $myl_f_0e5340f31bcdf0c4b2fdbb9574ba048b1a3b28d2313f0935cd0144f4b6851fe2(l %ctx, :tff7efc018fbf218c264b92d7298f355598e5897311ad4510bc6d07a92851c2ab %a0, l %a1) {\n blit %a0, %l0, 72\n blit %l0, %agg6, 72\n blit %v31, %l2, 32\n blit %v33, %l10, 48\n blit %v35, %l12, 48\n blit %v37, %l14, 32\n blit %v39, %l16, 64\n blit %v41, %l20, 32\n blit %l2, %agg8, 32\n blit %l10, %agg65, 48\n blit %v186, %l11, 24\n blit %l11, %agg68, 24\n blit %l12, %agg73, 48\n blit %v237, %l13, 24\n blit %l13, %agg76, 24\n blit %l14, %agg83, 32\n blit %l16, %agg90, 64\n blit %l16, %agg93, 64\n blit %v344, %l18, 32\n blit %l18, %agg96, 32\n blit %v349, %l19, 24\n blit %l19, %agg98, 24\n blit %l20, %agg106, 32"
+      },
+      "sexpr.printer::push_node": {
+        "blits_by_bytes": {
+          "72": 2,
+          "32": 8,
+          "48": 4,
+          "64": 3,
+          "24": 6
+        },
+        "static_blit_count": 23,
+        "full_il_sha256": "0e139d3464b973f5e8305ae2c87f9043552d97a69fe2a4d2b9ee3d545564c008",
+        "il_excerpt": "type :myl_slice = { l, l }\ntype :t2facd3313ca998c23d22e741a67127193fdfd7ca139d8ed9c1260f3a08b9ead0 = align 8 { b 32 }\ntype :t6aebaf2ee305f4fc7072b48af9844633c508b64ebf9566bad7cb5a043d6082d7 = align 8 { b 48 }\ntype :t7eb6028b6a10dc641826d39b5f9988e56421d3fc7c68cfa0898f5293afe44f76 = align 8 { b 64 }\ntype :t8e72338758aaffd00c514d77744e39686909cee2a3d78d16441cf5fd041c771c = align 8 { b 32 }\ntype :tb149932d167205f8d9534f852321b0984c7929cf7e4573d1ad1b1775194f400e = align 8 { b 48 }\ntype :tc544e264683cad1a5e37d4b210f9c0bf0e718e6242a3466a8a7283f9703c2228 = align 8 { b 32 }\ntype :te608e51d6619d21f41ec7cf3a0401d7f6db9bc0e99ba219bacc5823d1cbc7780 = align 8 { b 32 }\ntype :teb7682a3c84b34eb20b8e667661327c07a9a088797f1e1ccfa3cde1117db7408 = align 8 { b 24 }\ntype :tff7efc018fbf218c264b92d7298f355598e5897311ad4510bc6d07a92851c2ab = align 8 { b 72 }\nexport function l $myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee(l %ctx, l %a0, :tff7efc018fbf218c264b92d7298f355598e5897311ad4510bc6d07a92851c2ab %a1, l %a2) {\n blit %a1, %l1, 72\n blit %l1, %agg0, 72\n blit %v21, %l3, 32\n blit %v23, %l15, 48\n blit %v25, %l17, 48\n blit %v27, %l19, 32\n blit %v29, %l21, 64\n blit %v31, %l25, 32\n blit %l3, %agg2, 32\n blit %l15, %agg147, 48\n blit %v880, %l16, 24\n blit %l16, %agg151, 24\n blit %l17, %agg156, 48\n blit %v952, %l18, 24\n blit %l18, %agg165, 24\n blit %l19, %agg175, 32\n blit %l21, %agg184, 64\n blit %l21, %agg187, 64\n blit %v1235, %l23, 32\n blit %l23, %agg190, 32\n blit %v1240, %l24, 24\n blit %l24, %agg193, 24\n blit %l25, %agg205, 32"
+      }
+    }
+  },
+  "noalloc_matches": {
+    "source": "module main\nimport sexpr.view as view\n\ndef query(found: view.View) -> bool noalloc:\n    return view.matches(found, \"net\")\n\ndef main() -> int:\n    return 0\n",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "check-project",
+      "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/view-probe/main.my"
+    ],
+    "exit": 1,
+    "stdout": "",
+    "stderr": "main.my:4:37: error[E_EFFECT_BOUND]: effect `managed_allocation` exceeds declared bound: main::query -> sexpr.view::matches -> sexpr.view::text_of; inferred bound is effects(managed_allocation)\n  def query(found: view.View) -> bool noalloc:\n                                      ^\n  note: sexpr/view.my:46:12: effect originates at this operation or owned type\n"
+  },
+  "noalloc_equal": {
+    "source": "module main\nimport sexpr.view as view\n\ndef query(found: view.View) -> bool noalloc:\n    return view.equal(found, found)\n\ndef main() -> int:\n    return 0\n",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "check-project",
+      "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/view-probe/main.my"
+    ],
+    "exit": 1,
+    "stdout": "",
+    "stderr": "main.my:4:37: error[E_EFFECT_BOUND]: effect `managed_allocation` exceeds declared bound: main::query -> sexpr.view::equal -> sexpr.view::bytes_of; inferred bound is effects(managed_allocation)\n  def query(found: view.View) -> bool noalloc:\n                                      ^\n  note: sexpr/view.my:39:16: effect originates at this operation or owned type\n"
+  },
+  "bytes_alias": {
+    "command": [
+      "zig-out/bin/mylang",
+      "run",
+      "experiments/language-performance-audit-20260920/bytes_alias_probe.my"
+    ],
+    "exit": 0,
+    "stdout": "True 2 True False\n",
+    "meaning": "Appending via an alias changes the heap bytes snapshot; equal-content literal refuses append."
+  },
+  "observed_layouts": {
+    "sexpr.ast.Node": {
+      "size": 72,
+      "evidence": "estimate_width parameter %a0 type declaration"
+    },
+    "Result[sexpr.ast.Node,sexpr.parser.ParseError]": {
+      "size": 80,
+      "evidence": "parse_node return type declaration"
+    },
+    "sexpr.tokenizer.RawToken": {
+      "size": 64,
+      "evidence": "parse_leaf parameter %a1 type declaration"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+record Tally:
+    count: int
+    seen: list[int]
+def main() -> int:
+    first = Tally(count=2, seen=[])
+    second = first
+    second.count = 40
+    second.seen.append(7)
+    assert first.count == 2
+    assert len(first.seen) == 1
+    return first.count + second.count

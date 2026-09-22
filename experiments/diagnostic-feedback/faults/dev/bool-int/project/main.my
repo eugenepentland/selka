@@ -1,0 +1,10 @@
+module main
+
+
+def positive(n: int) -> int:
+    return n > 0
+
+
+def main(out: Stream) -> int:
+    out.print(positive(3))
+    return 0

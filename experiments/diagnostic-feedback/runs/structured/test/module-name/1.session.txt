@@ -1,0 +1,14 @@
+Done. Two changes to `project/stats.my`, both required by the checker diagnostics:
+
+1. **`module statistics` → `module stats`** — the declared module name didn't match the file path the importer requested (`E_MODULE_NAME`).
+2. **`def total()` → `public def total()`** — `main` imports `total` across a module boundary, so it must be exported (`E_PRIVATE_SYMBOL`).
+
+`project/main.my` was left unchanged.
+
+Command run:
+
+```
+bin/mylang run project/main.my
+```
+
+Result: exit code `0`, stdout exactly `7`, stderr empty. `bin/mylang check project/main.my` also exits 0.

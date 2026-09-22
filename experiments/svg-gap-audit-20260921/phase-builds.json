@@ -1,0 +1,35 @@
+{
+  "gc-o3": {
+    "control": "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/phases/gc-o3-control",
+    "probe": "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/phases/gc-o3-probe",
+    "control_sha256": "839a9b9a328fd2677d2529bb2f405362c301fbcbaddeb94dd981308aaa8e67c4",
+    "probe_sha256": "2ad251abbb545a9e88b71d90e37abfbd155080b71edf380d634a759fb43337d9",
+    "runtime_sha256": "ae4414337299928829229eb4bd28d95dbab68f2877f684407386ea4010cda2da",
+    "guest_objects_reused_unchanged": 115,
+    "source_sha256": "eb07b2c259a2b22068cfd5beb0315de2ac78af73c7dbb4372e4ec8c6d85e686b",
+    "original_sha256": "0448b9ef55d8bb0402356cdc6bfce8e5bf5a66a38e3e3dd03f84107d4f711279",
+    "exact_svg_and_stress_qualified": true
+  },
+  "gc-bounded": {
+    "control": "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/phases/gc-bounded-control",
+    "probe": "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/phases/gc-bounded-probe",
+    "control_sha256": "f79d53c87cb88f4499e6760b3bb65fbd1322a18cb1fb36e72508d03a55224eea",
+    "probe_sha256": "861c9af4cd82b5bc67c12e55d6ccd647248a5b1d88e8eec88642572eaa9f8f08",
+    "runtime_sha256": "ae4414337299928829229eb4bd28d95dbab68f2877f684407386ea4010cda2da",
+    "guest_objects_reused_unchanged": 115,
+    "source_sha256": "eb07b2c259a2b22068cfd5beb0315de2ac78af73c7dbb4372e4ec8c6d85e686b",
+    "original_sha256": "730eac07a1b508ed34eb85ca5292ae3c2ae3a068055c0fffa16a3783ad029ecf",
+    "exact_svg_and_stress_qualified": true
+  },
+  "arena-o3": {
+    "control": "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/phases/arena-o3-control",
+    "probe": "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/phases/arena-o3-probe",
+    "control_sha256": "2f79b65452fb9048ee32fcb7bda35be23282dbacfdec61ff157c04db010544e8",
+    "probe_sha256": "89e790e749d11b2fdb55300824e956f9d164245e4051bfa373c812d472fd9fb3",
+    "runtime_sha256": "ae4414337299928829229eb4bd28d95dbab68f2877f684407386ea4010cda2da",
+    "guest_objects_reused_unchanged": 115,
+    "source_sha256": "eb07b2c259a2b22068cfd5beb0315de2ac78af73c7dbb4372e4ec8c6d85e686b",
+    "original_sha256": "9c7261c251b730856840a8d675af92e22b778f05b00ca884f6da02e43d47d962",
+    "exact_svg_and_stress_qualified": true
+  }
+}

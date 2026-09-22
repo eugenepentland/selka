@@ -1,0 +1,273 @@
+{
+  "cpu": 6,
+  "rounds": 21,
+  "warmups": 3,
+  "seed": 20260921,
+  "units": "ms",
+  "scope": "process launch, input read, SVG to private file, shutdown; no compilation",
+  "configuration": "same retained compiler/runtime, per-function LLVM O3, step and frame accounting",
+  "compiler": {
+    "path": ".tmp/schematic-implementation-20260921/before-mylang",
+    "sha256": "9dff0b952410129eaf1b3dd51a8acd737b99f26584391a1d52f28a4356ecd9c6"
+  },
+  "runtime_sha256": "9fe72e2b4e62387d8168e2f6531d609514755c0f696f23d22562ca46042a7e5f",
+  "binaries": {
+    "before": {
+      "path": ".tmp/schematic-implementation-20260921/bench-before",
+      "sha256": "11efafa0e15b3314bfa58d945b998564c9253f45f9ae456565278ea5dca58064"
+    },
+    "after": {
+      "path": ".tmp/schematic-implementation-20260921/bench-after",
+      "sha256": "31da623ca216bf0c3f8c0efc9d4089b5f89b6d4d21b705cabb1a97e786ef161c"
+    }
+  },
+  "input_bytes": 25845,
+  "svg_bytes": 49617,
+  "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+  "samples": [
+    {
+      "round": 0,
+      "order": [
+        "after",
+        "before"
+      ],
+      "ms": {
+        "after": 44.831873,
+        "before": 84.672275
+      }
+    },
+    {
+      "round": 1,
+      "order": [
+        "after",
+        "before"
+      ],
+      "ms": {
+        "after": 44.6715,
+        "before": 83.959316
+      }
+    },
+    {
+      "round": 2,
+      "order": [
+        "after",
+        "before"
+      ],
+      "ms": {
+        "after": 44.620408,
+        "before": 84.258626
+      }
+    },
+    {
+      "round": 3,
+      "order": [
+        "before",
+        "after"
+      ],
+      "ms": {
+        "before": 84.650347,
+        "after": 44.873575
+      }
+    },
+    {
+      "round": 4,
+      "order": [
+        "before",
+        "after"
+      ],
+      "ms": {
+        "before": 84.569429,
+        "after": 44.77491
+      }
+    },
+    {
+      "round": 5,
+      "order": [
+        "after",
+        "before"
+      ],
+      "ms": {
+        "after": 44.232014,
+        "before": 84.858964
+      }
+    },
+    {
+      "round": 6,
+      "order": [
+        "before",
+        "after"
+      ],
+      "ms": {
+        "before": 84.519917,
+        "after": 45.327646
+      }
+    },
+    {
+      "round": 7,
+      "order": [
+        "before",
+        "after"
+      ],
+      "ms": {
+        "before": 84.897699,
+        "after": 44.574287
+      }
+    },
+    {
+      "round": 8,
+      "order": [
+        "after",
+        "before"
+      ],
+      "ms": {
+        "after": 44.624196,
+        "before": 84.771801
+      }
+    },
+    {
+      "round": 9,
+      "order": [
+        "before",
+        "after"
+      ],
+      "ms": {
+        "before": 83.637039,
+        "after": 44.700362
+      }
+    },
+    {
+      "round": 10,
+      "order": [
+        "before",
+        "after"
+      ],
+      "ms": {
+        "before": 84.371414,
+        "after": 44.866681
+      }
+    },
+    {
+      "round": 11,
+      "order": [
+        "after",
+        "before"
+      ],
+      "ms": {
+        "after": 45.107263,
+        "before": 84.881598
+      }
+    },
+    {
+      "round": 12,
+      "order": [
+        "before",
+        "after"
+      ],
+      "ms": {
+        "before": 85.345246,
+        "after": 44.799566
+      }
+    },
+    {
+      "round": 13,
+      "order": [
+        "after",
+        "before"
+      ],
+      "ms": {
+        "after": 44.643178,
+        "before": 84.810173
+      }
+    },
+    {
+      "round": 14,
+      "order": [
+        "after",
+        "before"
+      ],
+      "ms": {
+        "after": 44.951122,
+        "before": 84.87476
+      }
+    },
+    {
+      "round": 15,
+      "order": [
+        "after",
+        "before"
+      ],
+      "ms": {
+        "after": 44.887792,
+        "before": 84.744943
+      }
+    },
+    {
+      "round": 16,
+      "order": [
+        "before",
+        "after"
+      ],
+      "ms": {
+        "before": 83.825287,
+        "after": 44.65741
+      }
+    },
+    {
+      "round": 17,
+      "order": [
+        "before",
+        "after"
+      ],
+      "ms": {
+        "before": 85.155256,
+        "after": 45.119067
+      }
+    },
+    {
+      "round": 18,
+      "order": [
+        "before",
+        "after"
+      ],
+      "ms": {
+        "before": 84.997041,
+        "after": 44.90159
+      }
+    },
+    {
+      "round": 19,
+      "order": [
+        "after",
+        "before"
+      ],
+      "ms": {
+        "after": 44.828727,
+        "before": 84.908327
+      }
+    },
+    {
+      "round": 20,
+      "order": [
+        "after",
+        "before"
+      ],
+      "ms": {
+        "after": 44.498546,
+        "before": 84.79481
+      }
+    }
+  ],
+  "median_ms": {
+    "before": 84.771801,
+    "after": 44.799566
+  },
+  "after_to_before": {
+    "ratio": 0.5284725046716892,
+    "reduction": 0.47152749532831084,
+    "paired_bootstrap_95": [
+      0.5265572327036757,
+      0.5299677491835433
+    ]
+  },
+  "snapshot_limitation": "before-guest was reconstructed from HEAD after editing began; every file was verified byte-identical to HEAD, but no independent copy of the initial dirty guest tree exists"
+}

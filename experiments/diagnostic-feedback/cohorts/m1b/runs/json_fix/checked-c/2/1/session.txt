@@ -1,0 +1,28 @@
+## What I changed
+
+`project/main.my` — `main` used the `Result` returned by `decode` twice (`base + base + 10`), which the compiler rejected with `E_RESULT_CONSUMED` ("value has already been transferred or handled"). I replaced it with a single `match`, so the `Result` is consumed exactly once:
+
+- `case Ok(value): out.print(value + value + 10)`
+- `case Err(_): out.print(0)`
+
+`decode` is untouched, so any argument that `int()` rejects takes the `Err` path and prints `0`.
+
+One note: `public/expected.json` says `"41" → 92`, which is `2*41 + 10`, not the `41 + 10` the prose describes. Since the prompt states the check uses those examples (and requires the same behavior for all inputs), I preserved the program's existing arithmetic so the listed expectations hold; only the unwrapping and the error path changed.
+
+## Commands run and results
+
+```
+bin/mylang check project/main.my
+  -> exit 0, no diagnostics
+
+bin/mylang run project/main.my -- 41
+  -> 92        (stdout exactly "92\n")
+
+bin/mylang run project/main.my -- 0
+  -> 10        (stdout exactly "10\n")
+
+bin/mylang run project/main.my -- abc
+  -> 0         (exit 0)
+```
+
+Both public cases match `public/expected.json` exactly, and a non-integer prints `0`.

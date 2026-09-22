@@ -1,0 +1,18 @@
+Fixed. Here's the summary:
+
+**What changed** — `project/main.my`, in `exceeds` only. The original code assigned the boolean `a > b` to `bigger` and returned it, which the checker rejected (`main.my:14:5: error[E_TYPE]: expected int, found bool`) and which would have printed `True`/`False` rather than `1`/`0`. It now returns the integer directly:
+
+```python
+def exceeds(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+**Commands and results**
+
+- `bin/mylang check project/main.my` → exit 0, no diagnostics.
+- `bin/mylang run project/main.my -- 5 2` → `1`
+- `bin/mylang run project/main.my -- 2 5` → `0`
+
+Both match `public/expected.json`. Additional inputs all behave correctly: `5 5` → `0`, `-3 -5` → `1`, `-5 -3` → `0`, `0 -1` → `1`, `abc 5` → `0` (unparseable becomes 0 via `number`), `5 abc` → `1`, `1000000000000 999999999999` → `1`.

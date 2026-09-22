@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "steps": [
+    {
+      "id": "in-0",
+      "kind": "test",
+      "args": [
+        "circle",
+        "2"
+      ],
+      "expect_stdout": "12\n",
+      "timeout": 120
+    },
+    {
+      "id": "in-1",
+      "kind": "test",
+      "args": [
+        "square",
+        "3"
+      ],
+      "expect_stdout": "9\n",
+      "timeout": 120
+    },
+    {
+      "id": "in-2",
+      "kind": "test",
+      "args": [
+        "square",
+        "5"
+      ],
+      "expect_stdout": "25\n",
+      "timeout": 120
+    },
+    {
+      "id": "in-3",
+      "kind": "test",
+      "args": [
+        "circle",
+        "1"
+      ],
+      "expect_stdout": "3\n",
+      "timeout": 120
+    }
+  ]
+}

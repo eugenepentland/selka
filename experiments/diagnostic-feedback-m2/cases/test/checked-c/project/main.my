@@ -1,0 +1,15 @@
+module main
+
+
+def decode(raw: str) -> Result[int, str]:
+    match int(raw):
+        case Some(value):
+            return Ok(value)
+        case None:
+            return Err("not a number")
+
+
+def main(args: list[str], out: Stream) -> int:
+    base = decode(args[0])
+    out.print(base + base + 10)
+    return 0

@@ -1,0 +1,12 @@
+{
+  "command": [
+    "zig",
+    "build-exe",
+    "-O",
+    "ReleaseFast",
+    "/home/epentland/ai/canopy/mylang/experiments/svg-arenas-20260921/zig_allocation_control.zig",
+    "-femit-bin=/home/epentland/ai/canopy/mylang/.tmp/svg-arenas-20260921/zig-allocation-control"
+  ],
+  "binary_sha256": "c18c596cc0e669087500493472486f2eea66186e9c1271d7ae0aaf18d8adfa03",
+  "source_sha256": "9228114b802fcd708a7959dd0da29289a45f717a26aa23091a863f373bb7234f"
+}

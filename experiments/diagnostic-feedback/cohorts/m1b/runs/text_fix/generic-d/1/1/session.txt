@@ -1,0 +1,6 @@
+**What I changed:** In `project/main.my`, removed the invalid, unused type parameters `[T: Numeric]` from `maximum` and `maximum_of` (lines 12 and 22). The compiler rejected `Numeric` with `E_GENERIC_REQUIREMENT` — the supported requirements are `copy`, `equality`, `integer`, `codec`, `storable` — and `T` appeared nowhere in either signature, so dropping it was the minimal fix. The function bodies and behavior are unchanged.
+
+**Commands and results:**
+- `bin/mylang check project/main.my` → no output, exit code 0.
+- `bin/mylang run project/main.my -- 1 3 2` → `3`; `bin/mylang run project/main.my -- 5 5 5` → `5` (both byte-exact against `public/expected.json`).
+- Spot-checked other inputs: `9 2 7`→`9`, `-5 -1 -9`→`-1`, `4 4 7`→`7`, `100 99 98`→`100`.

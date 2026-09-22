@@ -1,0 +1,4640 @@
+{
+  "cohort": "m1b",
+  "identity": {
+    "compiler_sha256": "4a9ad0c17789e422fa90dbb8e91497f007abdc2ef5152f3123889dbdc2cfbcb2",
+    "wrapper_schema": "wrapper-v2-events",
+    "prompt_sha256": "ae2fba8f334fb92a",
+    "remedy_sha256": "449d37b9adee5672",
+    "model": "deepseek-v4-flash",
+    "reasoning_effort": "max",
+    "invocation_limit": 20,
+    "session_deadline_s": 900,
+    "cache_policy": "ZIG_GLOBAL_CACHE_DIR and ZIG_LOCAL_CACHE_DIR per attempt inside the working copy",
+    "corpus_sha256": "7efcd5738e970bb0"
+  },
+  "arms": {
+    "text": {
+      "cells": 28,
+      "recorded": 28,
+      "missing": 0,
+      "hidden_acceptance": 28,
+      "hidden_acceptance_rate": 1.0,
+      "conditional_failed_checks": 0.0,
+      "all_attempt_failed_checks": 10,
+      "median_invocations": 11.5,
+      "median_output_tokens": 3327.0,
+      "timeouts": 0,
+      "public_only": 0
+    },
+    "text_fix": {
+      "cells": 28,
+      "recorded": 28,
+      "missing": 0,
+      "hidden_acceptance": 27,
+      "hidden_acceptance_rate": 0.964,
+      "conditional_failed_checks": 0,
+      "all_attempt_failed_checks": 23,
+      "median_invocations": 11.0,
+      "median_output_tokens": 3189.0,
+      "timeouts": 0,
+      "public_only": 0
+    },
+    "json": {
+      "cells": 28,
+      "recorded": 28,
+      "missing": 0,
+      "hidden_acceptance": 28,
+      "hidden_acceptance_rate": 1.0,
+      "conditional_failed_checks": 0.0,
+      "all_attempt_failed_checks": 5,
+      "median_invocations": 10.0,
+      "median_output_tokens": 2916.5,
+      "timeouts": 0,
+      "public_only": 0
+    },
+    "json_fix": {
+      "cells": 28,
+      "recorded": 28,
+      "missing": 0,
+      "hidden_acceptance": 28,
+      "hidden_acceptance_rate": 1.0,
+      "conditional_failed_checks": 0.0,
+      "all_attempt_failed_checks": 18,
+      "median_invocations": 10.5,
+      "median_output_tokens": 3461.5,
+      "timeouts": 0,
+      "public_only": 0
+    }
+  },
+  "per_case": {
+    "generic-e": {
+      "family": "generic-requirement",
+      "accepted": {
+        "json": 2,
+        "text_fix": 2,
+        "json_fix": 2,
+        "text": 2
+      },
+      "failed_checks": {
+        "json": 0.0,
+        "text_fix": 0.0,
+        "json_fix": 0.0,
+        "text": 0.0
+      }
+    },
+    "bool-b": {
+      "family": "bool-int",
+      "accepted": {
+        "json": 2,
+        "text_fix": 2,
+        "json_fix": 2,
+        "text": 2
+      },
+      "failed_checks": {
+        "json": 0.0,
+        "text_fix": 2.0,
+        "json_fix": 3.5,
+        "text": 0.0
+      }
+    },
+    "checked-e": {
+      "family": "checked-result",
+      "accepted": {
+        "json_fix": 2,
+        "text_fix": 2,
+        "json": 2,
+        "text": 2
+      },
+      "failed_checks": {
+        "json_fix": 0.5,
+        "text_fix": 1.0,
+        "json": 0.0,
+        "text": 0.0
+      }
+    },
+    "variant-b": {
+      "family": "variant-coverage",
+      "accepted": {
+        "json_fix": 2,
+        "text_fix": 2,
+        "json": 2,
+        "text": 2
+      },
+      "failed_checks": {
+        "json_fix": 0.0,
+        "text_fix": 0.0,
+        "json": 0.0,
+        "text": 0.0
+      }
+    },
+    "generic-a": {
+      "family": "generic-requirement",
+      "accepted": {
+        "text_fix": 2,
+        "json": 2,
+        "json_fix": 2,
+        "text": 2
+      },
+      "failed_checks": {
+        "text_fix": 0.5,
+        "json": 0.5,
+        "json_fix": 1.0,
+        "text": 0.0
+      }
+    },
+    "checked-a": {
+      "family": "checked-result",
+      "accepted": {
+        "text_fix": 2,
+        "json": 2,
+        "text": 2,
+        "json_fix": 2
+      },
+      "failed_checks": {
+        "text_fix": 0.5,
+        "json": 0.0,
+        "text": 2.5,
+        "json_fix": 0.0
+      }
+    },
+    "checked-d": {
+      "family": "checked-result",
+      "accepted": {
+        "text_fix": 2,
+        "json": 2,
+        "json_fix": 2,
+        "text": 2
+      },
+      "failed_checks": {
+        "text_fix": 0.0,
+        "json": 1.0,
+        "json_fix": 1.5,
+        "text": 0.5
+      }
+    },
+    "generic-c": {
+      "family": "generic-requirement",
+      "accepted": {
+        "text": 2,
+        "json_fix": 2,
+        "json": 2,
+        "text_fix": 2
+      },
+      "failed_checks": {
+        "text": 0.0,
+        "json_fix": 0.0,
+        "json": 0.5,
+        "text_fix": 0.5
+      }
+    },
+    "variant-a": {
+      "family": "variant-coverage",
+      "accepted": {
+        "text": 2,
+        "text_fix": 2,
+        "json_fix": 2,
+        "json": 2
+      },
+      "failed_checks": {
+        "text": 0.0,
+        "text_fix": 0.0,
+        "json_fix": 0.0,
+        "json": 0.0
+      }
+    },
+    "bool-a": {
+      "family": "bool-int",
+      "accepted": {
+        "json": 2,
+        "json_fix": 2,
+        "text_fix": 2,
+        "text": 2
+      },
+      "failed_checks": {
+        "json": 0.0,
+        "json_fix": 0.0,
+        "text_fix": 5.0,
+        "text": 0.0
+      }
+    },
+    "checked-c": {
+      "family": "checked-result",
+      "accepted": {
+        "text": 2,
+        "json": 2,
+        "json_fix": 2,
+        "text_fix": 1
+      },
+      "failed_checks": {
+        "text": 0.0,
+        "json": 0.0,
+        "json_fix": 0.0,
+        "text_fix": 1.5
+      }
+    },
+    "generic-b": {
+      "family": "generic-requirement",
+      "accepted": {
+        "text_fix": 2,
+        "text": 2,
+        "json": 2,
+        "json_fix": 2
+      },
+      "failed_checks": {
+        "text_fix": 0.5,
+        "text": 0.5,
+        "json": 0.0,
+        "json_fix": 0.5
+      }
+    },
+    "generic-d": {
+      "family": "generic-requirement",
+      "accepted": {
+        "text_fix": 2,
+        "json": 2,
+        "text": 2,
+        "json_fix": 2
+      },
+      "failed_checks": {
+        "text_fix": 0.0,
+        "json": 0.5,
+        "text": 1.0,
+        "json_fix": 1.5
+      }
+    },
+    "checked-b": {
+      "family": "checked-result",
+      "accepted": {
+        "json": 2,
+        "json_fix": 2,
+        "text_fix": 2,
+        "text": 2
+      },
+      "failed_checks": {
+        "json": 0.0,
+        "json_fix": 0.5,
+        "text_fix": 0.0,
+        "text": 0.5
+      }
+    }
+  },
+  "effects": {
+    "suggestion_in_text": {
+      "pairs": 28,
+      "mean": 0.464,
+      "ci": [
+        -0.179,
+        1.179
+      ],
+      "per_case": {
+        "bool-a": 7,
+        "bool-b": 1,
+        "checked-a": 0,
+        "checked-b": -1,
+        "checked-c": 3,
+        "checked-d": -1,
+        "checked-e": 2,
+        "generic-a": 1,
+        "generic-b": 0,
+        "generic-c": 1,
+        "generic-d": -2,
+        "generic-e": 0,
+        "variant-a": 0,
+        "variant-b": 0
+      }
+    },
+    "suggestion_in_json": {
+      "pairs": 28,
+      "mean": 0.464,
+      "ci": [
+        0.071,
+        1.071
+      ],
+      "per_case": {
+        "bool-a": 0,
+        "bool-b": 0,
+        "checked-a": 0,
+        "checked-b": 1,
+        "checked-c": 0,
+        "checked-d": 1,
+        "checked-e": 0,
+        "generic-a": 1,
+        "generic-b": 0,
+        "generic-c": 0,
+        "generic-d": 2,
+        "generic-e": 0,
+        "variant-a": 0,
+        "variant-b": 0
+      }
+    },
+    "format_without_suggestion": {
+      "pairs": 28,
+      "mean": -0.179,
+      "ci": [
+        -0.643,
+        0.179
+      ],
+      "per_case": {
+        "bool-a": 0,
+        "bool-b": 0,
+        "checked-a": 0,
+        "checked-b": -1,
+        "checked-c": 0,
+        "checked-d": -1,
+        "checked-e": 0,
+        "generic-a": 0,
+        "generic-b": 0,
+        "generic-c": 0,
+        "generic-d": -1,
+        "generic-e": 0,
+        "variant-a": 0,
+        "variant-b": 0
+      }
+    },
+    "format_with_suggestion": {
+      "pairs": 28,
+      "mean": -0.179,
+      "ci": [
+        -0.929,
+        0.536
+      ],
+      "per_case": {
+        "bool-a": -7,
+        "bool-b": -1,
+        "checked-a": 0,
+        "checked-b": 1,
+        "checked-c": -3,
+        "checked-d": 1,
+        "checked-e": -2,
+        "generic-a": 0,
+        "generic-b": 0,
+        "generic-c": -1,
+        "generic-d": 3,
+        "generic-e": 0,
+        "variant-a": 0,
+        "variant-b": 0
+      }
+    }
+  },
+  "target": {
+    "state": "fails",
+    "families": {
+      "checked-result": {
+        "state": "fails",
+        "reason": "hidden acceptance regressed",
+        "treatment": "text_fix",
+        "mean": 0.444,
+        "ci": [
+          -0.444,
+          1.556
+        ],
+        "pairs": 9
+      },
+      "generic-requirement": {
+        "state": "inconclusive",
+        "reason": "interval spans meaningful benefit and no benefit",
+        "treatment": "text_fix",
+        "mean": -0.0,
+        "ci": [
+          -0.4,
+          0.5
+        ],
+        "pairs": 10
+      }
+    }
+  },
+  "rows": [
+    {
+      "arm": "json",
+      "case": "generic-e",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 8,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 407968801528404
+      },
+      "usage": {
+        "inputTokens": 11791,
+        "outputTokens": 2378,
+        "reasoningTokens": 1045,
+        "cacheReadTokens": 98048,
+        "totalTokens": 112217,
+        "cost_v1_input_output_reasoning": 15214,
+        "cost_v2_input_output": 14169,
+        "provider_total_tokens": 112217,
+        "reasoning_share_of_cost_v1": 0.0687
+      },
+      "steps": 9,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-e",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 407998146937292
+      },
+      "usage": {
+        "inputTokens": 12028,
+        "outputTokens": 3129,
+        "reasoningTokens": 1801,
+        "cacheReadTokens": 102912,
+        "totalTokens": 118069,
+        "cost_v1_input_output_reasoning": 16958,
+        "cost_v2_input_output": 15157,
+        "provider_total_tokens": 118069,
+        "reasoning_share_of_cost_v1": 0.1062
+      },
+      "steps": 9,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-e",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 408029713602361
+      },
+      "usage": {
+        "inputTokens": 12195,
+        "outputTokens": 2850,
+        "reasoningTokens": 1548,
+        "cacheReadTokens": 113664,
+        "totalTokens": 128709,
+        "cost_v1_input_output_reasoning": 16593,
+        "cost_v2_input_output": 15045,
+        "provider_total_tokens": 128709,
+        "reasoning_share_of_cost_v1": 0.0933
+      },
+      "steps": 10,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text",
+      "case": "generic-e",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 12,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 408058329352112
+      },
+      "usage": {
+        "inputTokens": 11532,
+        "outputTokens": 2189,
+        "reasoningTokens": 802,
+        "cacheReadTokens": 96128,
+        "totalTokens": 109849,
+        "cost_v1_input_output_reasoning": 14523,
+        "cost_v2_input_output": 13721,
+        "provider_total_tokens": 109849,
+        "reasoning_share_of_cost_v1": 0.0552
+      },
+      "steps": 9,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json",
+      "case": "bool-b",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 8,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 408086318919074
+      },
+      "usage": {
+        "inputTokens": 11394,
+        "outputTokens": 1977,
+        "reasoningTokens": 780,
+        "cacheReadTokens": 71296,
+        "totalTokens": 84667,
+        "cost_v1_input_output_reasoning": 14151,
+        "cost_v2_input_output": 13371,
+        "provider_total_tokens": 84667,
+        "reasoning_share_of_cost_v1": 0.0551
+      },
+      "steps": 7,
+      "family": "bool-int"
+    },
+    {
+      "arm": "text_fix",
+      "case": "bool-b",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 12,
+        "failed_compiler_invocations": 4,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 3,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 2,
+        "distinct_diagnostics": 2,
+        "diagnostic_codes": {
+          "E_TYPE": 1,
+          "E_SYNTAX": 3
+        },
+        "first_compiler_green_ns": 408113917876257
+      },
+      "usage": {
+        "inputTokens": 11967,
+        "outputTokens": 2139,
+        "reasoningTokens": 988,
+        "cacheReadTokens": 96768,
+        "totalTokens": 110874,
+        "cost_v1_input_output_reasoning": 15094,
+        "cost_v2_input_output": 14106,
+        "provider_total_tokens": 110874,
+        "reasoning_share_of_cost_v1": 0.0655
+      },
+      "steps": 9,
+      "family": "bool-int"
+    },
+    {
+      "arm": "json_fix",
+      "case": "bool-b",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 16,
+        "failed_compiler_invocations": 8,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 7,
+        "failed_candidate_versions": 3,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 3,
+        "distinct_diagnostics": 5,
+        "diagnostic_codes": {
+          "E_TYPE": 1,
+          "E_SYNTAX": 3,
+          "E_MODULE_NAME": 4
+        },
+        "first_compiler_green_ns": 417126779304221
+      },
+      "usage": {
+        "inputTokens": 13026,
+        "outputTokens": 5630,
+        "reasoningTokens": 3498,
+        "cacheReadTokens": 152192,
+        "totalTokens": 170848,
+        "cost_v1_input_output_reasoning": 22154,
+        "cost_v2_input_output": 18656,
+        "provider_total_tokens": 170848,
+        "reasoning_share_of_cost_v1": 0.1579
+      },
+      "steps": 12,
+      "family": "bool-int"
+    },
+    {
+      "arm": "text",
+      "case": "bool-b",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 11,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 417159336762400
+      },
+      "usage": {
+        "inputTokens": 13425,
+        "outputTokens": 2818,
+        "reasoningTokens": 1710,
+        "cacheReadTokens": 91008,
+        "totalTokens": 107251,
+        "cost_v1_input_output_reasoning": 17953,
+        "cost_v2_input_output": 16243,
+        "provider_total_tokens": 107251,
+        "reasoning_share_of_cost_v1": 0.0952
+      },
+      "steps": 8,
+      "family": "bool-int"
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-e",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 17,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 417187015303678
+      },
+      "usage": {
+        "inputTokens": 12455,
+        "outputTokens": 4303,
+        "reasoningTokens": 2898,
+        "cacheReadTokens": 139136,
+        "totalTokens": 155894,
+        "cost_v1_input_output_reasoning": 19656,
+        "cost_v2_input_output": 16758,
+        "provider_total_tokens": 155894,
+        "reasoning_share_of_cost_v1": 0.1474
+      },
+      "steps": 11,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-e",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 18,
+        "failed_compiler_invocations": 3,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 2,
+        "failed_candidate_versions": 2,
+        "checked_candidate_versions": 3,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 3,
+        "diagnostic_codes": {
+          "E_TYPE": 2,
+          "R_LIST_BOUNDS": 1
+        },
+        "first_compiler_green_ns": 417242371022228
+      },
+      "usage": {
+        "inputTokens": 13271,
+        "outputTokens": 10887,
+        "reasoningTokens": 8700,
+        "cacheReadTokens": 259072,
+        "totalTokens": 283230,
+        "cost_v1_input_output_reasoning": 32858,
+        "cost_v2_input_output": 24158,
+        "provider_total_tokens": 283230,
+        "reasoning_share_of_cost_v1": 0.2648
+      },
+      "steps": 16,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json",
+      "case": "checked-e",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 417309551227599
+      },
+      "usage": {
+        "inputTokens": 14749,
+        "outputTokens": 6064,
+        "reasoningTokens": 4071,
+        "cacheReadTokens": 173696,
+        "totalTokens": 194509,
+        "cost_v1_input_output_reasoning": 24884,
+        "cost_v2_input_output": 20813,
+        "provider_total_tokens": 194509,
+        "reasoning_share_of_cost_v1": 0.1636
+      },
+      "steps": 12,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text",
+      "case": "checked-e",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 13,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 417344460091104
+      },
+      "usage": {
+        "inputTokens": 11904,
+        "outputTokens": 2850,
+        "reasoningTokens": 1485,
+        "cacheReadTokens": 101248,
+        "totalTokens": 116002,
+        "cost_v1_input_output_reasoning": 16239,
+        "cost_v2_input_output": 14754,
+        "provider_total_tokens": 116002,
+        "reasoning_share_of_cost_v1": 0.0914
+      },
+      "steps": 9,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json_fix",
+      "case": "variant-b",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 8,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 417370441519858
+      },
+      "usage": {
+        "inputTokens": 11583,
+        "outputTokens": 1133,
+        "reasoningTokens": 283,
+        "cacheReadTokens": 70272,
+        "totalTokens": 82988,
+        "cost_v1_input_output_reasoning": 12999,
+        "cost_v2_input_output": 12716,
+        "provider_total_tokens": 82988,
+        "reasoning_share_of_cost_v1": 0.0218
+      },
+      "steps": 7,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "text_fix",
+      "case": "variant-b",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 417393264936894
+      },
+      "usage": {
+        "inputTokens": 12163,
+        "outputTokens": 2377,
+        "reasoningTokens": 1116,
+        "cacheReadTokens": 108800,
+        "totalTokens": 123340,
+        "cost_v1_input_output_reasoning": 15656,
+        "cost_v2_input_output": 14540,
+        "provider_total_tokens": 123340,
+        "reasoning_share_of_cost_v1": 0.0713
+      },
+      "steps": 10,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "json",
+      "case": "variant-b",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 12,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 417422134374054
+      },
+      "usage": {
+        "inputTokens": 11468,
+        "outputTokens": 1530,
+        "reasoningTokens": 414,
+        "cacheReadTokens": 69760,
+        "totalTokens": 82758,
+        "cost_v1_input_output_reasoning": 13412,
+        "cost_v2_input_output": 12998,
+        "provider_total_tokens": 82758,
+        "reasoning_share_of_cost_v1": 0.0309
+      },
+      "steps": 7,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "text",
+      "case": "variant-b",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 9,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 417444970856870
+      },
+      "usage": {
+        "inputTokens": 11629,
+        "outputTokens": 1334,
+        "reasoningTokens": 287,
+        "cacheReadTokens": 70272,
+        "totalTokens": 83235,
+        "cost_v1_input_output_reasoning": 13250,
+        "cost_v2_input_output": 12963,
+        "provider_total_tokens": 83235,
+        "reasoning_share_of_cost_v1": 0.0217
+      },
+      "steps": 7,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-a",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 3,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1,
+          "E_GENERIC_INFERENCE": 2
+        },
+        "first_compiler_green_ns": 417528019309127
+      },
+      "usage": {
+        "inputTokens": 18038,
+        "outputTokens": 13225,
+        "reasoningTokens": 10701,
+        "cacheReadTokens": 364032,
+        "totalTokens": 395295,
+        "cost_v1_input_output_reasoning": 41964,
+        "cost_v2_input_output": 31263,
+        "provider_total_tokens": 395295,
+        "reasoning_share_of_cost_v1": 0.255
+      },
+      "steps": 18,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json",
+      "case": "generic-a",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 11,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 417559970578840
+      },
+      "usage": {
+        "inputTokens": 13733,
+        "outputTokens": 2267,
+        "reasoningTokens": 969,
+        "cacheReadTokens": 96000,
+        "totalTokens": 112000,
+        "cost_v1_input_output_reasoning": 16969,
+        "cost_v2_input_output": 16000,
+        "provider_total_tokens": 112000,
+        "reasoning_share_of_cost_v1": 0.0571
+      },
+      "steps": 8,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-a",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 13,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 3,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1,
+          "E_GENERIC_INFERENCE": 2
+        },
+        "first_compiler_green_ns": 417596282760954
+      },
+      "usage": {
+        "inputTokens": 13013,
+        "outputTokens": 4168,
+        "reasoningTokens": 2342,
+        "cacheReadTokens": 165504,
+        "totalTokens": 182685,
+        "cost_v1_input_output_reasoning": 19523,
+        "cost_v2_input_output": 17181,
+        "provider_total_tokens": 182685,
+        "reasoning_share_of_cost_v1": 0.12
+      },
+      "steps": 13,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text",
+      "case": "generic-a",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 9,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 417632959658127
+      },
+      "usage": {
+        "inputTokens": 12021,
+        "outputTokens": 3441,
+        "reasoningTokens": 2266,
+        "cacheReadTokens": 103040,
+        "totalTokens": 118502,
+        "cost_v1_input_output_reasoning": 17728,
+        "cost_v2_input_output": 15462,
+        "provider_total_tokens": 118502,
+        "reasoning_share_of_cost_v1": 0.1278
+      },
+      "steps": 9,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-a",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 14,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 417663827111304
+      },
+      "usage": {
+        "inputTokens": 12042,
+        "outputTokens": 3249,
+        "reasoningTokens": 1612,
+        "cacheReadTokens": 127488,
+        "totalTokens": 142779,
+        "cost_v1_input_output_reasoning": 16903,
+        "cost_v2_input_output": 15291,
+        "provider_total_tokens": 142779,
+        "reasoning_share_of_cost_v1": 0.0954
+      },
+      "steps": 11,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json",
+      "case": "checked-a",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 11,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 417698380813709
+      },
+      "usage": {
+        "inputTokens": 12168,
+        "outputTokens": 3047,
+        "reasoningTokens": 1591,
+        "cacheReadTokens": 115968,
+        "totalTokens": 131183,
+        "cost_v1_input_output_reasoning": 16806,
+        "cost_v2_input_output": 15215,
+        "provider_total_tokens": 131183,
+        "reasoning_share_of_cost_v1": 0.0947
+      },
+      "steps": 10,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text",
+      "case": "checked-a",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 12,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 417732190944048
+      },
+      "usage": {
+        "inputTokens": 12218,
+        "outputTokens": 4725,
+        "reasoningTokens": 2997,
+        "cacheReadTokens": 132608,
+        "totalTokens": 149551,
+        "cost_v1_input_output_reasoning": 19940,
+        "cost_v2_input_output": 16943,
+        "provider_total_tokens": 149551,
+        "reasoning_share_of_cost_v1": 0.1503
+      },
+      "steps": 11,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-a",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 417770587871132
+      },
+      "usage": {
+        "inputTokens": 12183,
+        "outputTokens": 3573,
+        "reasoningTokens": 2140,
+        "cacheReadTokens": 117760,
+        "totalTokens": 133516,
+        "cost_v1_input_output_reasoning": 17896,
+        "cost_v2_input_output": 15756,
+        "provider_total_tokens": 133516,
+        "reasoning_share_of_cost_v1": 0.1196
+      },
+      "steps": 10,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-d",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 7,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 3,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 417811696595071
+      },
+      "usage": {
+        "inputTokens": 13041,
+        "outputTokens": 6980,
+        "reasoningTokens": 5048,
+        "cacheReadTokens": 180352,
+        "totalTokens": 200373,
+        "cost_v1_input_output_reasoning": 25069,
+        "cost_v2_input_output": 20021,
+        "provider_total_tokens": 200373,
+        "reasoning_share_of_cost_v1": 0.2014
+      },
+      "steps": 13,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json",
+      "case": "checked-d",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 17,
+        "failed_compiler_invocations": 3,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 2,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 3,
+        "repeated_diagnostics": 1,
+        "distinct_diagnostics": 2,
+        "diagnostic_codes": {
+          "E_TYPE": 1,
+          "R_LIST_BOUNDS": 2
+        },
+        "first_compiler_green_ns": 417853872457873
+      },
+      "usage": {
+        "inputTokens": 13254,
+        "outputTokens": 4902,
+        "reasoningTokens": 2967,
+        "cacheReadTokens": 180608,
+        "totalTokens": 198764,
+        "cost_v1_input_output_reasoning": 21123,
+        "cost_v2_input_output": 18156,
+        "provider_total_tokens": 198764,
+        "reasoning_share_of_cost_v1": 0.1405
+      },
+      "steps": 14,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-d",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 18,
+        "failed_compiler_invocations": 3,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 2,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 3,
+        "repeated_diagnostics": 1,
+        "distinct_diagnostics": 2,
+        "diagnostic_codes": {
+          "E_TYPE": 1,
+          "R_LIST_BOUNDS": 2
+        },
+        "first_compiler_green_ns": 417899946310346
+      },
+      "usage": {
+        "inputTokens": 15481,
+        "outputTokens": 6479,
+        "reasoningTokens": 4223,
+        "cacheReadTokens": 226176,
+        "totalTokens": 248136,
+        "cost_v1_input_output_reasoning": 26183,
+        "cost_v2_input_output": 21960,
+        "provider_total_tokens": 248136,
+        "reasoning_share_of_cost_v1": 0.1613
+      },
+      "steps": 16,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text",
+      "case": "checked-d",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 14,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 417955080069678
+      },
+      "usage": {
+        "inputTokens": 11499,
+        "outputTokens": 3514,
+        "reasoningTokens": 2167,
+        "cacheReadTokens": 102016,
+        "totalTokens": 117029,
+        "cost_v1_input_output_reasoning": 17180,
+        "cost_v2_input_output": 15013,
+        "provider_total_tokens": 117029,
+        "reasoning_share_of_cost_v1": 0.1261
+      },
+      "steps": 9,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text",
+      "case": "generic-c",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 8,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 417997474168064
+      },
+      "usage": {
+        "inputTokens": 15005,
+        "outputTokens": 4290,
+        "reasoningTokens": 2769,
+        "cacheReadTokens": 162560,
+        "totalTokens": 181855,
+        "cost_v1_input_output_reasoning": 22064,
+        "cost_v2_input_output": 19295,
+        "provider_total_tokens": 181855,
+        "reasoning_share_of_cost_v1": 0.1255
+      },
+      "steps": 12,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-c",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 9,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 418025896436359
+      },
+      "usage": {
+        "inputTokens": 12548,
+        "outputTokens": 4118,
+        "reasoningTokens": 2527,
+        "cacheReadTokens": 120704,
+        "totalTokens": 137370,
+        "cost_v1_input_output_reasoning": 19193,
+        "cost_v2_input_output": 16666,
+        "provider_total_tokens": 137370,
+        "reasoning_share_of_cost_v1": 0.1317
+      },
+      "steps": 10,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json",
+      "case": "generic-c",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 8,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 3,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1,
+          "E_GENERIC_INFERENCE": 2
+        },
+        "first_compiler_green_ns": 418072959449311
+      },
+      "usage": {
+        "inputTokens": 12223,
+        "outputTokens": 5207,
+        "reasoningTokens": 3913,
+        "cacheReadTokens": 124416,
+        "totalTokens": 141846,
+        "cost_v1_input_output_reasoning": 21343,
+        "cost_v2_input_output": 17430,
+        "provider_total_tokens": 141846,
+        "reasoning_share_of_cost_v1": 0.1833
+      },
+      "steps": 10,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-c",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 12,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 418097988777268
+      },
+      "usage": {
+        "inputTokens": 11398,
+        "outputTokens": 2221,
+        "reasoningTokens": 971,
+        "cacheReadTokens": 82944,
+        "totalTokens": 96563,
+        "cost_v1_input_output_reasoning": 14590,
+        "cost_v2_input_output": 13619,
+        "provider_total_tokens": 96563,
+        "reasoning_share_of_cost_v1": 0.0666
+      },
+      "steps": 8,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text",
+      "case": "variant-a",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 9,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 418124171952229
+      },
+      "usage": {
+        "inputTokens": 12178,
+        "outputTokens": 1996,
+        "reasoningTokens": 578,
+        "cacheReadTokens": 109824,
+        "totalTokens": 123998,
+        "cost_v1_input_output_reasoning": 14752,
+        "cost_v2_input_output": 14174,
+        "provider_total_tokens": 123998,
+        "reasoning_share_of_cost_v1": 0.0392
+      },
+      "steps": 10,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "text_fix",
+      "case": "variant-a",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 8,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 418149094786111
+      },
+      "usage": {
+        "inputTokens": 11615,
+        "outputTokens": 1487,
+        "reasoningTokens": 644,
+        "cacheReadTokens": 70016,
+        "totalTokens": 83118,
+        "cost_v1_input_output_reasoning": 13746,
+        "cost_v2_input_output": 13102,
+        "provider_total_tokens": 83118,
+        "reasoning_share_of_cost_v1": 0.0468
+      },
+      "steps": 7,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "json_fix",
+      "case": "variant-a",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 418169697405445
+      },
+      "usage": {
+        "inputTokens": 11286,
+        "outputTokens": 1793,
+        "reasoningTokens": 713,
+        "cacheReadTokens": 81024,
+        "totalTokens": 94103,
+        "cost_v1_input_output_reasoning": 13792,
+        "cost_v2_input_output": 13079,
+        "provider_total_tokens": 94103,
+        "reasoning_share_of_cost_v1": 0.0517
+      },
+      "steps": 8,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "json",
+      "case": "variant-a",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 12,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 418193262250627
+      },
+      "usage": {
+        "inputTokens": 11990,
+        "outputTokens": 1927,
+        "reasoningTokens": 701,
+        "cacheReadTokens": 97280,
+        "totalTokens": 111197,
+        "cost_v1_input_output_reasoning": 14618,
+        "cost_v2_input_output": 13917,
+        "provider_total_tokens": 111197,
+        "reasoning_share_of_cost_v1": 0.048
+      },
+      "steps": 9,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "json",
+      "case": "bool-a",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 8,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 418218208762655
+      },
+      "usage": {
+        "inputTokens": 11430,
+        "outputTokens": 1867,
+        "reasoningTokens": 690,
+        "cacheReadTokens": 71424,
+        "totalTokens": 84721,
+        "cost_v1_input_output_reasoning": 13987,
+        "cost_v2_input_output": 13297,
+        "provider_total_tokens": 84721,
+        "reasoning_share_of_cost_v1": 0.0493
+      },
+      "steps": 7,
+      "family": "bool-int"
+    },
+    {
+      "arm": "json_fix",
+      "case": "bool-a",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 15,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 418245375437279
+      },
+      "usage": {
+        "inputTokens": 12011,
+        "outputTokens": 2891,
+        "reasoningTokens": 1577,
+        "cacheReadTokens": 88576,
+        "totalTokens": 103478,
+        "cost_v1_input_output_reasoning": 16479,
+        "cost_v2_input_output": 14902,
+        "provider_total_tokens": 103478,
+        "reasoning_share_of_cost_v1": 0.0957
+      },
+      "steps": 8,
+      "family": "bool-int"
+    },
+    {
+      "arm": "text_fix",
+      "case": "bool-a",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 13,
+        "failed_compiler_invocations": 4,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 3,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 2,
+        "distinct_diagnostics": 2,
+        "diagnostic_codes": {
+          "E_TYPE": 1,
+          "E_SYNTAX": 3
+        },
+        "first_compiler_green_ns": 418272123071563
+      },
+      "usage": {
+        "inputTokens": 12029,
+        "outputTokens": 2380,
+        "reasoningTokens": 1065,
+        "cacheReadTokens": 109440,
+        "totalTokens": 123849,
+        "cost_v1_input_output_reasoning": 15474,
+        "cost_v2_input_output": 14409,
+        "provider_total_tokens": 123849,
+        "reasoning_share_of_cost_v1": 0.0688
+      },
+      "steps": 10,
+      "family": "bool-int"
+    },
+    {
+      "arm": "text",
+      "case": "bool-a",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 6,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 418297933542299
+      },
+      "usage": {
+        "inputTokens": 12555,
+        "outputTokens": 1526,
+        "reasoningTokens": 531,
+        "cacheReadTokens": 73728,
+        "totalTokens": 87809,
+        "cost_v1_input_output_reasoning": 14612,
+        "cost_v2_input_output": 14081,
+        "provider_total_tokens": 87809,
+        "reasoning_share_of_cost_v1": 0.0363
+      },
+      "steps": 7,
+      "family": "bool-int"
+    },
+    {
+      "arm": "text",
+      "case": "checked-c",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 17,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_RESULT_CONSUMED": 1
+        },
+        "first_compiler_green_ns": 418371759984694
+      },
+      "usage": {
+        "inputTokens": 17370,
+        "outputTokens": 15028,
+        "reasoningTokens": 12221,
+        "cacheReadTokens": 375680,
+        "totalTokens": 408078,
+        "cost_v1_input_output_reasoning": 44619,
+        "cost_v2_input_output": 32398,
+        "provider_total_tokens": 408078,
+        "reasoning_share_of_cost_v1": 0.2739
+      },
+      "steps": 17,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json",
+      "case": "checked-c",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_RESULT_CONSUMED": 1
+        },
+        "first_compiler_green_ns": 418432952656900
+      },
+      "usage": {
+        "inputTokens": 13892,
+        "outputTokens": 7747,
+        "reasoningTokens": 6079,
+        "cacheReadTokens": 162176,
+        "totalTokens": 183815,
+        "cost_v1_input_output_reasoning": 27718,
+        "cost_v2_input_output": 21639,
+        "provider_total_tokens": 183815,
+        "reasoning_share_of_cost_v1": 0.2193
+      },
+      "steps": 11,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-c",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 15,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_RESULT_CONSUMED": 1
+        },
+        "first_compiler_green_ns": 418464028233223
+      },
+      "usage": {
+        "inputTokens": 15133,
+        "outputTokens": 17286,
+        "reasoningTokens": 15170,
+        "cacheReadTokens": 275072,
+        "totalTokens": 307491,
+        "cost_v1_input_output_reasoning": 47589,
+        "cost_v2_input_output": 32419,
+        "provider_total_tokens": 307491,
+        "reasoning_share_of_cost_v1": 0.3188
+      },
+      "steps": 14,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-c",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 11,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_RESULT_CONSUMED": 1
+        },
+        "first_compiler_green_ns": 418664658599539
+      },
+      "usage": {
+        "inputTokens": 17037,
+        "outputTokens": 30841,
+        "reasoningTokens": 28338,
+        "cacheReadTokens": 439424,
+        "totalTokens": 487302,
+        "cost_v1_input_output_reasoning": 76216,
+        "cost_v2_input_output": 47878,
+        "provider_total_tokens": 487302,
+        "reasoning_share_of_cost_v1": 0.3718
+      },
+      "steps": 16,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-d",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 15,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 418725195681763
+      },
+      "usage": {
+        "inputTokens": 12395,
+        "outputTokens": 3834,
+        "reasoningTokens": 2098,
+        "cacheReadTokens": 105344,
+        "totalTokens": 121573,
+        "cost_v1_input_output_reasoning": 18327,
+        "cost_v2_input_output": 16229,
+        "provider_total_tokens": 121573,
+        "reasoning_share_of_cost_v1": 0.1145
+      },
+      "steps": 9,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-d",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 17,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 2,
+        "diagnostic_codes": {
+          "E_TYPE": 1,
+          "R_OVERFLOW": 1
+        },
+        "first_compiler_green_ns": 418753285663284
+      },
+      "usage": {
+        "inputTokens": 12010,
+        "outputTokens": 3755,
+        "reasoningTokens": 2460,
+        "cacheReadTokens": 126336,
+        "totalTokens": 142101,
+        "cost_v1_input_output_reasoning": 18225,
+        "cost_v2_input_output": 15765,
+        "provider_total_tokens": 142101,
+        "reasoning_share_of_cost_v1": 0.135
+      },
+      "steps": 11,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text",
+      "case": "checked-d",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 13,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 2,
+        "diagnostic_codes": {
+          "E_TYPE": 1,
+          "R_OVERFLOW": 1
+        },
+        "first_compiler_green_ns": 418793585947436
+      },
+      "usage": {
+        "inputTokens": 12170,
+        "outputTokens": 3804,
+        "reasoningTokens": 2116,
+        "cacheReadTokens": 117760,
+        "totalTokens": 133734,
+        "cost_v1_input_output_reasoning": 18090,
+        "cost_v2_input_output": 15974,
+        "provider_total_tokens": 133734,
+        "reasoning_share_of_cost_v1": 0.117
+      },
+      "steps": 10,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json",
+      "case": "checked-d",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 13,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 418826090361785
+      },
+      "usage": {
+        "inputTokens": 12184,
+        "outputTokens": 3775,
+        "reasoningTokens": 2467,
+        "cacheReadTokens": 131328,
+        "totalTokens": 147287,
+        "cost_v1_input_output_reasoning": 18426,
+        "cost_v2_input_output": 15959,
+        "provider_total_tokens": 147287,
+        "reasoning_share_of_cost_v1": 0.1339
+      },
+      "steps": 11,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-c",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 13,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 3,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1,
+          "E_GENERIC_INFERENCE": 2
+        },
+        "first_compiler_green_ns": 418865118029914
+      },
+      "usage": {
+        "inputTokens": 12623,
+        "outputTokens": 4204,
+        "reasoningTokens": 2337,
+        "cacheReadTokens": 147840,
+        "totalTokens": 164667,
+        "cost_v1_input_output_reasoning": 19164,
+        "cost_v2_input_output": 16827,
+        "provider_total_tokens": 164667,
+        "reasoning_share_of_cost_v1": 0.1219
+      },
+      "steps": 12,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json",
+      "case": "generic-c",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 9,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 418895496033162
+      },
+      "usage": {
+        "inputTokens": 12223,
+        "outputTokens": 2354,
+        "reasoningTokens": 986,
+        "cacheReadTokens": 100480,
+        "totalTokens": 115057,
+        "cost_v1_input_output_reasoning": 15563,
+        "cost_v2_input_output": 14577,
+        "provider_total_tokens": 115057,
+        "reasoning_share_of_cost_v1": 0.0634
+      },
+      "steps": 9,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text",
+      "case": "generic-c",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 5,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 418927418391598
+      },
+      "usage": {
+        "inputTokens": 13697,
+        "outputTokens": 3595,
+        "reasoningTokens": 2489,
+        "cacheReadTokens": 100736,
+        "totalTokens": 118028,
+        "cost_v1_input_output_reasoning": 19781,
+        "cost_v2_input_output": 17292,
+        "provider_total_tokens": 118028,
+        "reasoning_share_of_cost_v1": 0.1258
+      },
+      "steps": 8,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-c",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 6,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 418952567178562
+      },
+      "usage": {
+        "inputTokens": 11931,
+        "outputTokens": 1829,
+        "reasoningTokens": 843,
+        "cacheReadTokens": 84480,
+        "totalTokens": 98240,
+        "cost_v1_input_output_reasoning": 14603,
+        "cost_v2_input_output": 13760,
+        "provider_total_tokens": 98240,
+        "reasoning_share_of_cost_v1": 0.0577
+      },
+      "steps": 8,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text",
+      "case": "bool-a",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 12,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 418976257546412
+      },
+      "usage": {
+        "inputTokens": 11892,
+        "outputTokens": 2014,
+        "reasoningTokens": 677,
+        "cacheReadTokens": 97408,
+        "totalTokens": 111314,
+        "cost_v1_input_output_reasoning": 14583,
+        "cost_v2_input_output": 13906,
+        "provider_total_tokens": 111314,
+        "reasoning_share_of_cost_v1": 0.0464
+      },
+      "steps": 9,
+      "family": "bool-int"
+    },
+    {
+      "arm": "json_fix",
+      "case": "bool-a",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 8,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 419000259316343
+      },
+      "usage": {
+        "inputTokens": 11756,
+        "outputTokens": 2507,
+        "reasoningTokens": 1146,
+        "cacheReadTokens": 85504,
+        "totalTokens": 99767,
+        "cost_v1_input_output_reasoning": 15409,
+        "cost_v2_input_output": 14263,
+        "provider_total_tokens": 99767,
+        "reasoning_share_of_cost_v1": 0.0744
+      },
+      "steps": 8,
+      "family": "bool-int"
+    },
+    {
+      "arm": "text_fix",
+      "case": "bool-a",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 17,
+        "failed_compiler_invocations": 9,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 7,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 7,
+        "distinct_diagnostics": 2,
+        "diagnostic_codes": {
+          "E_TYPE": 2,
+          "E_SYNTAX": 7
+        },
+        "first_compiler_green_ns": 419031287829901
+      },
+      "usage": {
+        "inputTokens": 11528,
+        "outputTokens": 2053,
+        "reasoningTokens": 765,
+        "cacheReadTokens": 92160,
+        "totalTokens": 105741,
+        "cost_v1_input_output_reasoning": 14346,
+        "cost_v2_input_output": 13581,
+        "provider_total_tokens": 105741,
+        "reasoning_share_of_cost_v1": 0.0533
+      },
+      "steps": 9,
+      "family": "bool-int"
+    },
+    {
+      "arm": "json",
+      "case": "bool-a",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 13,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 419049728932776
+      },
+      "usage": {
+        "inputTokens": 11679,
+        "outputTokens": 1821,
+        "reasoningTokens": 527,
+        "cacheReadTokens": 83712,
+        "totalTokens": 97212,
+        "cost_v1_input_output_reasoning": 14027,
+        "cost_v2_input_output": 13500,
+        "provider_total_tokens": 97212,
+        "reasoning_share_of_cost_v1": 0.0376
+      },
+      "steps": 8,
+      "family": "bool-int"
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-a",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 11,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "R_LIST_BOUNDS": 1
+        },
+        "first_compiler_green_ns": 419076919389747
+      },
+      "usage": {
+        "inputTokens": 11837,
+        "outputTokens": 4949,
+        "reasoningTokens": 3826,
+        "cacheReadTokens": 105984,
+        "totalTokens": 122770,
+        "cost_v1_input_output_reasoning": 20612,
+        "cost_v2_input_output": 16786,
+        "provider_total_tokens": 122770,
+        "reasoning_share_of_cost_v1": 0.1856
+      },
+      "steps": 9,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text",
+      "case": "checked-a",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 19,
+        "failed_compiler_invocations": 6,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 5,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 3,
+        "repeated_diagnostics": 3,
+        "distinct_diagnostics": 3,
+        "diagnostic_codes": {
+          "E_TYPE": 1,
+          "R_LIST_BOUNDS": 1,
+          "E_MODULE_NAME": 4
+        },
+        "first_compiler_green_ns": 419115116043079
+      },
+      "usage": {
+        "inputTokens": 18251,
+        "outputTokens": 15355,
+        "reasoningTokens": 11536,
+        "cacheReadTokens": 484224,
+        "totalTokens": 517830,
+        "cost_v1_input_output_reasoning": 45142,
+        "cost_v2_input_output": 33606,
+        "provider_total_tokens": 517830,
+        "reasoning_share_of_cost_v1": 0.2555
+      },
+      "steps": 24,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-a",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 16,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 419208412044311
+      },
+      "usage": {
+        "inputTokens": 12441,
+        "outputTokens": 3979,
+        "reasoningTokens": 2565,
+        "cacheReadTokens": 132736,
+        "totalTokens": 149156,
+        "cost_v1_input_output_reasoning": 18985,
+        "cost_v2_input_output": 16420,
+        "provider_total_tokens": 149156,
+        "reasoning_share_of_cost_v1": 0.1351
+      },
+      "steps": 11,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json",
+      "case": "checked-a",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 9,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 419248488159881
+      },
+      "usage": {
+        "inputTokens": 12040,
+        "outputTokens": 4105,
+        "reasoningTokens": 2697,
+        "cacheReadTokens": 132480,
+        "totalTokens": 148625,
+        "cost_v1_input_output_reasoning": 18842,
+        "cost_v2_input_output": 16145,
+        "provider_total_tokens": 148625,
+        "reasoning_share_of_cost_v1": 0.1431
+      },
+      "steps": 11,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-a",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 419291560629287
+      },
+      "usage": {
+        "inputTokens": 18617,
+        "outputTokens": 8731,
+        "reasoningTokens": 5327,
+        "cacheReadTokens": 351232,
+        "totalTokens": 378580,
+        "cost_v1_input_output_reasoning": 32675,
+        "cost_v2_input_output": 27348,
+        "provider_total_tokens": 378580,
+        "reasoning_share_of_cost_v1": 0.163
+      },
+      "steps": 20,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text",
+      "case": "generic-a",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 419345307423843
+      },
+      "usage": {
+        "inputTokens": 12277,
+        "outputTokens": 2631,
+        "reasoningTokens": 1141,
+        "cacheReadTokens": 112256,
+        "totalTokens": 127164,
+        "cost_v1_input_output_reasoning": 16049,
+        "cost_v2_input_output": 14908,
+        "provider_total_tokens": 127164,
+        "reasoning_share_of_cost_v1": 0.0711
+      },
+      "steps": 10,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json",
+      "case": "generic-a",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 8,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 3,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1,
+          "E_GENERIC_INFERENCE": 2
+        },
+        "first_compiler_green_ns": 419409056537472
+      },
+      "usage": {
+        "inputTokens": 17460,
+        "outputTokens": 9827,
+        "reasoningTokens": 8103,
+        "cacheReadTokens": 231552,
+        "totalTokens": 258839,
+        "cost_v1_input_output_reasoning": 35390,
+        "cost_v2_input_output": 27287,
+        "provider_total_tokens": 258839,
+        "reasoning_share_of_cost_v1": 0.229
+      },
+      "steps": 13,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-a",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 7,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 3,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1,
+          "E_GENERIC_INFERENCE": 2
+        },
+        "first_compiler_green_ns": 419442791193527
+      },
+      "usage": {
+        "inputTokens": 12976,
+        "outputTokens": 3350,
+        "reasoningTokens": 1562,
+        "cacheReadTokens": 160000,
+        "totalTokens": 176326,
+        "cost_v1_input_output_reasoning": 17888,
+        "cost_v2_input_output": 16326,
+        "provider_total_tokens": 176326,
+        "reasoning_share_of_cost_v1": 0.0873
+      },
+      "steps": 13,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-b",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 6,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 419474676626931
+      },
+      "usage": {
+        "inputTokens": 13085,
+        "outputTokens": 3053,
+        "reasoningTokens": 1876,
+        "cacheReadTokens": 119552,
+        "totalTokens": 135690,
+        "cost_v1_input_output_reasoning": 18014,
+        "cost_v2_input_output": 16138,
+        "provider_total_tokens": 135690,
+        "reasoning_share_of_cost_v1": 0.1041
+      },
+      "steps": 10,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text",
+      "case": "generic-b",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 419508032385972
+      },
+      "usage": {
+        "inputTokens": 14805,
+        "outputTokens": 5318,
+        "reasoningTokens": 3458,
+        "cacheReadTokens": 179328,
+        "totalTokens": 199451,
+        "cost_v1_input_output_reasoning": 23581,
+        "cost_v2_input_output": 20123,
+        "provider_total_tokens": 199451,
+        "reasoning_share_of_cost_v1": 0.1466
+      },
+      "steps": 13,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json",
+      "case": "generic-b",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 8,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 419545532619892
+      },
+      "usage": {
+        "inputTokens": 11644,
+        "outputTokens": 2518,
+        "reasoningTokens": 1207,
+        "cacheReadTokens": 86016,
+        "totalTokens": 100178,
+        "cost_v1_input_output_reasoning": 15369,
+        "cost_v2_input_output": 14162,
+        "provider_total_tokens": 100178,
+        "reasoning_share_of_cost_v1": 0.0785
+      },
+      "steps": 8,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-b",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 7,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 419570228807893
+      },
+      "usage": {
+        "inputTokens": 12327,
+        "outputTokens": 2744,
+        "reasoningTokens": 1221,
+        "cacheReadTokens": 101632,
+        "totalTokens": 116703,
+        "cost_v1_input_output_reasoning": 16292,
+        "cost_v2_input_output": 15071,
+        "provider_total_tokens": 116703,
+        "reasoning_share_of_cost_v1": 0.0749
+      },
+      "steps": 9,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text",
+      "case": "checked-e",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 13,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 419597487919200
+      },
+      "usage": {
+        "inputTokens": 12294,
+        "outputTokens": 3409,
+        "reasoningTokens": 1954,
+        "cacheReadTokens": 113792,
+        "totalTokens": 129495,
+        "cost_v1_input_output_reasoning": 17657,
+        "cost_v2_input_output": 15703,
+        "provider_total_tokens": 129495,
+        "reasoning_share_of_cost_v1": 0.1107
+      },
+      "steps": 10,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json",
+      "case": "checked-e",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 12,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 419641088219249
+      },
+      "usage": {
+        "inputTokens": 12081,
+        "outputTokens": 5588,
+        "reasoningTokens": 4109,
+        "cacheReadTokens": 116736,
+        "totalTokens": 134405,
+        "cost_v1_input_output_reasoning": 21778,
+        "cost_v2_input_output": 17669,
+        "provider_total_tokens": 134405,
+        "reasoning_share_of_cost_v1": 0.1887
+      },
+      "steps": 9,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-e",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 15,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 419671115544911
+      },
+      "usage": {
+        "inputTokens": 11967,
+        "outputTokens": 4796,
+        "reasoningTokens": 3308,
+        "cacheReadTokens": 119168,
+        "totalTokens": 135931,
+        "cost_v1_input_output_reasoning": 20071,
+        "cost_v2_input_output": 16763,
+        "provider_total_tokens": 135931,
+        "reasoning_share_of_cost_v1": 0.1648
+      },
+      "steps": 10,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-e",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 17,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 3,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 2,
+        "diagnostic_codes": {
+          "E_TYPE": 1,
+          "R_LIST_BOUNDS": 1
+        },
+        "first_compiler_green_ns": 419717800536508
+      },
+      "usage": {
+        "inputTokens": 16622,
+        "outputTokens": 9752,
+        "reasoningTokens": 7083,
+        "cacheReadTokens": 335104,
+        "totalTokens": 361478,
+        "cost_v1_input_output_reasoning": 33457,
+        "cost_v2_input_output": 26374,
+        "provider_total_tokens": 361478,
+        "reasoning_share_of_cost_v1": 0.2117
+      },
+      "steps": 19,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-d",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 5,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 419771903390319
+      },
+      "usage": {
+        "inputTokens": 12005,
+        "outputTokens": 2217,
+        "reasoningTokens": 1031,
+        "cacheReadTokens": 98816,
+        "totalTokens": 113038,
+        "cost_v1_input_output_reasoning": 15253,
+        "cost_v2_input_output": 14222,
+        "provider_total_tokens": 113038,
+        "reasoning_share_of_cost_v1": 0.0676
+      },
+      "steps": 9,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json",
+      "case": "generic-d",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 3,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1,
+          "E_GENERIC_INFERENCE": 2
+        },
+        "first_compiler_green_ns": 419805747625777
+      },
+      "usage": {
+        "inputTokens": 14674,
+        "outputTokens": 3904,
+        "reasoningTokens": 2405,
+        "cacheReadTokens": 162432,
+        "totalTokens": 181010,
+        "cost_v1_input_output_reasoning": 20983,
+        "cost_v2_input_output": 18578,
+        "provider_total_tokens": 181010,
+        "reasoning_share_of_cost_v1": 0.1146
+      },
+      "steps": 12,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text",
+      "case": "generic-d",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 12,
+        "failed_compiler_invocations": 3,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 2,
+        "failed_candidate_versions": 2,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 4,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 2,
+          "E_GENERIC_INFERENCE": 2
+        },
+        "first_compiler_green_ns": 419872799540841
+      },
+      "usage": {
+        "inputTokens": 15105,
+        "outputTokens": 10003,
+        "reasoningTokens": 7798,
+        "cacheReadTokens": 275968,
+        "totalTokens": 301076,
+        "cost_v1_input_output_reasoning": 32906,
+        "cost_v2_input_output": 25108,
+        "provider_total_tokens": 301076,
+        "reasoning_share_of_cost_v1": 0.237
+      },
+      "steps": 16,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-d",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 13,
+        "failed_compiler_invocations": 4,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 3,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 3,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 2,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1,
+          "E_SYNTAX": 1
+        },
+        "first_compiler_green_ns": 419905582490764
+      },
+      "usage": {
+        "inputTokens": 15006,
+        "outputTokens": 4954,
+        "reasoningTokens": 3108,
+        "cacheReadTokens": 259968,
+        "totalTokens": 279928,
+        "cost_v1_input_output_reasoning": 23068,
+        "cost_v2_input_output": 19960,
+        "provider_total_tokens": 279928,
+        "reasoning_share_of_cost_v1": 0.1347
+      },
+      "steps": 19,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json",
+      "case": "variant-a",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 11,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 419950338607470
+      },
+      "usage": {
+        "inputTokens": 11844,
+        "outputTokens": 1949,
+        "reasoningTokens": 480,
+        "cacheReadTokens": 84480,
+        "totalTokens": 98273,
+        "cost_v1_input_output_reasoning": 14273,
+        "cost_v2_input_output": 13793,
+        "provider_total_tokens": 98273,
+        "reasoning_share_of_cost_v1": 0.0336
+      },
+      "steps": 8,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "text",
+      "case": "variant-a",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 419975759293961
+      },
+      "usage": {
+        "inputTokens": 12242,
+        "outputTokens": 2268,
+        "reasoningTokens": 1064,
+        "cacheReadTokens": 109312,
+        "totalTokens": 123822,
+        "cost_v1_input_output_reasoning": 15574,
+        "cost_v2_input_output": 14510,
+        "provider_total_tokens": 123822,
+        "reasoning_share_of_cost_v1": 0.0683
+      },
+      "steps": 10,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "json_fix",
+      "case": "variant-a",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 420001301993665
+      },
+      "usage": {
+        "inputTokens": 11919,
+        "outputTokens": 1771,
+        "reasoningTokens": 515,
+        "cacheReadTokens": 84992,
+        "totalTokens": 98682,
+        "cost_v1_input_output_reasoning": 14205,
+        "cost_v2_input_output": 13690,
+        "provider_total_tokens": 98682,
+        "reasoning_share_of_cost_v1": 0.0363
+      },
+      "steps": 8,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "text_fix",
+      "case": "variant-a",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 11,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 420024165874581
+      },
+      "usage": {
+        "inputTokens": 12042,
+        "outputTokens": 1893,
+        "reasoningTokens": 571,
+        "cacheReadTokens": 96896,
+        "totalTokens": 110831,
+        "cost_v1_input_output_reasoning": 14506,
+        "cost_v2_input_output": 13935,
+        "provider_total_tokens": 110831,
+        "reasoning_share_of_cost_v1": 0.0394
+      },
+      "steps": 9,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "json",
+      "case": "checked-b",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 6,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 420052736640550
+      },
+      "usage": {
+        "inputTokens": 15498,
+        "outputTokens": 5810,
+        "reasoningTokens": 3769,
+        "cacheReadTokens": 209536,
+        "totalTokens": 230844,
+        "cost_v1_input_output_reasoning": 25077,
+        "cost_v2_input_output": 21308,
+        "provider_total_tokens": 230844,
+        "reasoning_share_of_cost_v1": 0.1503
+      },
+      "steps": 15,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-b",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 13,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "R_LIST_BOUNDS": 1
+        },
+        "first_compiler_green_ns": 420094457161478
+      },
+      "usage": {
+        "inputTokens": 14998,
+        "outputTokens": 5173,
+        "reasoningTokens": 3647,
+        "cacheReadTokens": 183424,
+        "totalTokens": 203595,
+        "cost_v1_input_output_reasoning": 23818,
+        "cost_v2_input_output": 20171,
+        "provider_total_tokens": 203595,
+        "reasoning_share_of_cost_v1": 0.1531
+      },
+      "steps": 14,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-b",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 12,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 420158746780805
+      },
+      "usage": {
+        "inputTokens": 15503,
+        "outputTokens": 6628,
+        "reasoningTokens": 4452,
+        "cacheReadTokens": 206080,
+        "totalTokens": 228211,
+        "cost_v1_input_output_reasoning": 26583,
+        "cost_v2_input_output": 22131,
+        "provider_total_tokens": 228211,
+        "reasoning_share_of_cost_v1": 0.1675
+      },
+      "steps": 13,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text",
+      "case": "checked-b",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 13,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 2,
+        "diagnostic_codes": {
+          "E_TYPE": 1,
+          "R_LIST_BOUNDS": 1
+        },
+        "first_compiler_green_ns": 420194680557551
+      },
+      "usage": {
+        "inputTokens": 11890,
+        "outputTokens": 5860,
+        "reasoningTokens": 4549,
+        "cacheReadTokens": 121088,
+        "totalTokens": 138838,
+        "cost_v1_input_output_reasoning": 22299,
+        "cost_v2_input_output": 17750,
+        "provider_total_tokens": 138838,
+        "reasoning_share_of_cost_v1": 0.204
+      },
+      "steps": 10,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json",
+      "case": "generic-e",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 8,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 420233917815537
+      },
+      "usage": {
+        "inputTokens": 13602,
+        "outputTokens": 5044,
+        "reasoningTokens": 3051,
+        "cacheReadTokens": 165504,
+        "totalTokens": 184150,
+        "cost_v1_input_output_reasoning": 21697,
+        "cost_v2_input_output": 18646,
+        "provider_total_tokens": 184150,
+        "reasoning_share_of_cost_v1": 0.1406
+      },
+      "steps": 13,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-e",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 9,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 420274696644173
+      },
+      "usage": {
+        "inputTokens": 11992,
+        "outputTokens": 2453,
+        "reasoningTokens": 1232,
+        "cacheReadTokens": 98176,
+        "totalTokens": 112621,
+        "cost_v1_input_output_reasoning": 15677,
+        "cost_v2_input_output": 14445,
+        "provider_total_tokens": 112621,
+        "reasoning_share_of_cost_v1": 0.0786
+      },
+      "steps": 9,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-e",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 420303401104671
+      },
+      "usage": {
+        "inputTokens": 12120,
+        "outputTokens": 2277,
+        "reasoningTokens": 979,
+        "cacheReadTokens": 99328,
+        "totalTokens": 113725,
+        "cost_v1_input_output_reasoning": 15376,
+        "cost_v2_input_output": 14397,
+        "provider_total_tokens": 113725,
+        "reasoning_share_of_cost_v1": 0.0637
+      },
+      "steps": 9,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text",
+      "case": "generic-e",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 9,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 420329402999546
+      },
+      "usage": {
+        "inputTokens": 12127,
+        "outputTokens": 2100,
+        "reasoningTokens": 943,
+        "cacheReadTokens": 98560,
+        "totalTokens": 112787,
+        "cost_v1_input_output_reasoning": 15170,
+        "cost_v2_input_output": 14227,
+        "provider_total_tokens": 112787,
+        "reasoning_share_of_cost_v1": 0.0622
+      },
+      "steps": 9,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-b",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 3,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1,
+          "E_GENERIC_INFERENCE": 2
+        },
+        "first_compiler_green_ns": 420367948246385
+      },
+      "usage": {
+        "inputTokens": 14939,
+        "outputTokens": 5237,
+        "reasoningTokens": 3236,
+        "cacheReadTokens": 168192,
+        "totalTokens": 188368,
+        "cost_v1_input_output_reasoning": 23412,
+        "cost_v2_input_output": 20176,
+        "provider_total_tokens": 188368,
+        "reasoning_share_of_cost_v1": 0.1382
+      },
+      "steps": 12,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json",
+      "case": "generic-b",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 14,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 420394908377469
+      },
+      "usage": {
+        "inputTokens": 12202,
+        "outputTokens": 2303,
+        "reasoningTokens": 675,
+        "cacheReadTokens": 110336,
+        "totalTokens": 124841,
+        "cost_v1_input_output_reasoning": 15180,
+        "cost_v2_input_output": 14505,
+        "provider_total_tokens": 124841,
+        "reasoning_share_of_cost_v1": 0.0445
+      },
+      "steps": 10,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text",
+      "case": "generic-b",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 13,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 3,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1,
+          "E_GENERIC_INFERENCE": 2
+        },
+        "first_compiler_green_ns": 420424758537323
+      },
+      "usage": {
+        "inputTokens": 12305,
+        "outputTokens": 3245,
+        "reasoningTokens": 1703,
+        "cacheReadTokens": 126208,
+        "totalTokens": 141758,
+        "cost_v1_input_output_reasoning": 17253,
+        "cost_v2_input_output": 15550,
+        "provider_total_tokens": 141758,
+        "reasoning_share_of_cost_v1": 0.0987
+      },
+      "steps": 11,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-b",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 11,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 3,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1,
+          "E_GENERIC_INFERENCE": 2
+        },
+        "first_compiler_green_ns": 420467911058684
+      },
+      "usage": {
+        "inputTokens": 15021,
+        "outputTokens": 5743,
+        "reasoningTokens": 4067,
+        "cacheReadTokens": 194944,
+        "totalTokens": 215708,
+        "cost_v1_input_output_reasoning": 24831,
+        "cost_v2_input_output": 20764,
+        "provider_total_tokens": 215708,
+        "reasoning_share_of_cost_v1": 0.1638
+      },
+      "steps": 13,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-c",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": false,
+      "public_acceptance": false,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 20,
+        "failed_compiler_invocations": 4,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 3,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 3,
+        "repeated_diagnostics": 1,
+        "distinct_diagnostics": 2,
+        "diagnostic_codes": {
+          "E_RESULT_CONSUMED": 1,
+          "E_MODULE_NAME": 2
+        },
+        "first_compiler_green_ns": 420502359903204
+      },
+      "usage": {
+        "inputTokens": 53338,
+        "outputTokens": 82040,
+        "reasoningTokens": 76460,
+        "cacheReadTokens": 1837696,
+        "totalTokens": 1973074,
+        "cost_v1_input_output_reasoning": 211838,
+        "cost_v2_input_output": 135378,
+        "provider_total_tokens": 1973074,
+        "reasoning_share_of_cost_v1": 0.3609
+      },
+      "steps": 41,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json",
+      "case": "checked-c",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 7,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_RESULT_CONSUMED": 1
+        },
+        "first_compiler_green_ns": 420956437929413
+      },
+      "usage": {
+        "inputTokens": 14186,
+        "outputTokens": 14794,
+        "reasoningTokens": 13110,
+        "cacheReadTokens": 207616,
+        "totalTokens": 236596,
+        "cost_v1_input_output_reasoning": 42090,
+        "cost_v2_input_output": 28980,
+        "provider_total_tokens": 236596,
+        "reasoning_share_of_cost_v1": 0.3115
+      },
+      "steps": 11,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-c",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 8,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_RESULT_CONSUMED": 1
+        },
+        "first_compiler_green_ns": 421050305290160
+      },
+      "usage": {
+        "inputTokens": 16550,
+        "outputTokens": 20670,
+        "reasoningTokens": 17798,
+        "cacheReadTokens": 412928,
+        "totalTokens": 450148,
+        "cost_v1_input_output_reasoning": 55018,
+        "cost_v2_input_output": 37220,
+        "provider_total_tokens": 450148,
+        "reasoning_share_of_cost_v1": 0.3235
+      },
+      "steps": 18,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text",
+      "case": "checked-c",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 9,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_RESULT_CONSUMED": 1
+        },
+        "first_compiler_green_ns": 421207578284482
+      },
+      "usage": {
+        "inputTokens": 15810,
+        "outputTokens": 24771,
+        "reasoningTokens": 23153,
+        "cacheReadTokens": 224000,
+        "totalTokens": 264581,
+        "cost_v1_input_output_reasoning": 63734,
+        "cost_v2_input_output": 40581,
+        "provider_total_tokens": 264581,
+        "reasoning_share_of_cost_v1": 0.3633
+      },
+      "steps": 10,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-b",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 18,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 421236958604069
+      },
+      "usage": {
+        "inputTokens": 11923,
+        "outputTokens": 4326,
+        "reasoningTokens": 2584,
+        "cacheReadTokens": 127360,
+        "totalTokens": 143609,
+        "cost_v1_input_output_reasoning": 18833,
+        "cost_v2_input_output": 16249,
+        "provider_total_tokens": 143609,
+        "reasoning_share_of_cost_v1": 0.1372
+      },
+      "steps": 11,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text",
+      "case": "checked-b",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 17,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 421294808635556
+      },
+      "usage": {
+        "inputTokens": 15432,
+        "outputTokens": 7938,
+        "reasoningTokens": 5699,
+        "cacheReadTokens": 257664,
+        "totalTokens": 281034,
+        "cost_v1_input_output_reasoning": 29069,
+        "cost_v2_input_output": 23370,
+        "provider_total_tokens": 281034,
+        "reasoning_share_of_cost_v1": 0.1961
+      },
+      "steps": 16,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json",
+      "case": "checked-b",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 7,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 421331329417599
+      },
+      "usage": {
+        "inputTokens": 11900,
+        "outputTokens": 2786,
+        "reasoningTokens": 1429,
+        "cacheReadTokens": 102784,
+        "totalTokens": 117470,
+        "cost_v1_input_output_reasoning": 16115,
+        "cost_v2_input_output": 14686,
+        "provider_total_tokens": 117470,
+        "reasoning_share_of_cost_v1": 0.0887
+      },
+      "steps": 9,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-b",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 12,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 421356548143439
+      },
+      "usage": {
+        "inputTokens": 12396,
+        "outputTokens": 2859,
+        "reasoningTokens": 1390,
+        "cacheReadTokens": 113024,
+        "totalTokens": 128279,
+        "cost_v1_input_output_reasoning": 16645,
+        "cost_v2_input_output": 15255,
+        "provider_total_tokens": 128279,
+        "reasoning_share_of_cost_v1": 0.0835
+      },
+      "steps": 10,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-d",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 421386139502530
+      },
+      "usage": {
+        "inputTokens": 12009,
+        "outputTokens": 2814,
+        "reasoningTokens": 1253,
+        "cacheReadTokens": 99072,
+        "totalTokens": 113895,
+        "cost_v1_input_output_reasoning": 16076,
+        "cost_v2_input_output": 14823,
+        "provider_total_tokens": 113895,
+        "reasoning_share_of_cost_v1": 0.0779
+      },
+      "steps": 9,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-d",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 9,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 421416064325724
+      },
+      "usage": {
+        "inputTokens": 12269,
+        "outputTokens": 2369,
+        "reasoningTokens": 1162,
+        "cacheReadTokens": 112896,
+        "totalTokens": 127534,
+        "cost_v1_input_output_reasoning": 15800,
+        "cost_v2_input_output": 14638,
+        "provider_total_tokens": 127534,
+        "reasoning_share_of_cost_v1": 0.0735
+      },
+      "steps": 10,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text",
+      "case": "generic-d",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 421440003407920
+      },
+      "usage": {
+        "inputTokens": 12274,
+        "outputTokens": 2863,
+        "reasoningTokens": 1533,
+        "cacheReadTokens": 112000,
+        "totalTokens": 127137,
+        "cost_v1_input_output_reasoning": 16670,
+        "cost_v2_input_output": 15137,
+        "provider_total_tokens": 127137,
+        "reasoning_share_of_cost_v1": 0.092
+      },
+      "steps": 10,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json",
+      "case": "generic-d",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 421472093499417
+      },
+      "usage": {
+        "inputTokens": 12336,
+        "outputTokens": 3401,
+        "reasoningTokens": 1819,
+        "cacheReadTokens": 115968,
+        "totalTokens": 131705,
+        "cost_v1_input_output_reasoning": 17556,
+        "cost_v2_input_output": 15737,
+        "provider_total_tokens": 131705,
+        "reasoning_share_of_cost_v1": 0.1036
+      },
+      "steps": 10,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text_fix",
+      "case": "variant-b",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 421499586541519
+      },
+      "usage": {
+        "inputTokens": 11921,
+        "outputTokens": 2169,
+        "reasoningTokens": 853,
+        "cacheReadTokens": 96256,
+        "totalTokens": 110346,
+        "cost_v1_input_output_reasoning": 14943,
+        "cost_v2_input_output": 14090,
+        "provider_total_tokens": 110346,
+        "reasoning_share_of_cost_v1": 0.0571
+      },
+      "steps": 9,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "json",
+      "case": "variant-b",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 421524211573364
+      },
+      "usage": {
+        "inputTokens": 11383,
+        "outputTokens": 1230,
+        "reasoningTokens": 237,
+        "cacheReadTokens": 69632,
+        "totalTokens": 82245,
+        "cost_v1_input_output_reasoning": 12850,
+        "cost_v2_input_output": 12613,
+        "provider_total_tokens": 82245,
+        "reasoning_share_of_cost_v1": 0.0184
+      },
+      "steps": 7,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "text",
+      "case": "variant-b",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 12,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 421544835826514
+      },
+      "usage": {
+        "inputTokens": 11784,
+        "outputTokens": 1976,
+        "reasoningTokens": 736,
+        "cacheReadTokens": 83584,
+        "totalTokens": 97344,
+        "cost_v1_input_output_reasoning": 14496,
+        "cost_v2_input_output": 13760,
+        "provider_total_tokens": 97344,
+        "reasoning_share_of_cost_v1": 0.0508
+      },
+      "steps": 8,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "json_fix",
+      "case": "variant-b",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 11,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 421568750340237
+      },
+      "usage": {
+        "inputTokens": 11862,
+        "outputTokens": 1726,
+        "reasoningTokens": 534,
+        "cacheReadTokens": 84864,
+        "totalTokens": 98452,
+        "cost_v1_input_output_reasoning": 14122,
+        "cost_v2_input_output": 13588,
+        "provider_total_tokens": 98452,
+        "reasoning_share_of_cost_v1": 0.0378
+      },
+      "steps": 8,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "text_fix",
+      "case": "bool-b",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 2,
+        "diagnostic_codes": {
+          "E_TYPE": 1,
+          "E_SYNTAX": 1
+        },
+        "first_compiler_green_ns": 421599916261405
+      },
+      "usage": {
+        "inputTokens": 11826,
+        "outputTokens": 2784,
+        "reasoningTokens": 1145,
+        "cacheReadTokens": 111232,
+        "totalTokens": 125842,
+        "cost_v1_input_output_reasoning": 15755,
+        "cost_v2_input_output": 14610,
+        "provider_total_tokens": 125842,
+        "reasoning_share_of_cost_v1": 0.0727
+      },
+      "steps": 10,
+      "family": "bool-int"
+    },
+    {
+      "arm": "json_fix",
+      "case": "bool-b",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 11,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 421622748240688
+      },
+      "usage": {
+        "inputTokens": 11353,
+        "outputTokens": 2516,
+        "reasoningTokens": 1244,
+        "cacheReadTokens": 74112,
+        "totalTokens": 87981,
+        "cost_v1_input_output_reasoning": 15113,
+        "cost_v2_input_output": 13869,
+        "provider_total_tokens": 87981,
+        "reasoning_share_of_cost_v1": 0.0823
+      },
+      "steps": 7,
+      "family": "bool-int"
+    },
+    {
+      "arm": "json",
+      "case": "bool-b",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 11,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 421643678787278
+      },
+      "usage": {
+        "inputTokens": 11679,
+        "outputTokens": 1969,
+        "reasoningTokens": 519,
+        "cacheReadTokens": 95488,
+        "totalTokens": 109136,
+        "cost_v1_input_output_reasoning": 14167,
+        "cost_v2_input_output": 13648,
+        "provider_total_tokens": 109136,
+        "reasoning_share_of_cost_v1": 0.0366
+      },
+      "steps": 9,
+      "family": "bool-int"
+    },
+    {
+      "arm": "text",
+      "case": "bool-b",
+      "repetition": 2,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 9,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 421668140911788
+      },
+      "usage": {
+        "inputTokens": 11484,
+        "outputTokens": 1606,
+        "reasoningTokens": 678,
+        "cacheReadTokens": 70784,
+        "totalTokens": 83874,
+        "cost_v1_input_output_reasoning": 13768,
+        "cost_v2_input_output": 13090,
+        "provider_total_tokens": 83874,
+        "reasoning_share_of_cost_v1": 0.0492
+      },
+      "steps": 7,
+      "family": "bool-int"
+    }
+  ],
+  "three": {
+    "cohort": "m1b",
+    "identity": {
+      "compiler_sha256": "4a9ad0c17789e422fa90dbb8e91497f007abdc2ef5152f3123889dbdc2cfbcb2",
+      "wrapper_schema": "wrapper-v2-events",
+      "prompt_sha256": "ae2fba8f334fb92a",
+      "remedy_sha256": "449d37b9adee5672",
+      "model": "deepseek-v4-flash",
+      "reasoning_effort": "max",
+      "invocation_limit": 20,
+      "session_deadline_s": 900,
+      "cache_policy": "ZIG_GLOBAL_CACHE_DIR and ZIG_LOCAL_CACHE_DIR per attempt inside the working copy",
+      "corpus_sha256": "7efcd5738e970bb0"
+    },
+    "measurement_validity": {
+      "scheduled": 112,
+      "completed": 112,
+      "missing": 0,
+      "grading_incidents": 0,
+      "identity_mismatches": 0,
+      "delivery_eligible_sessions": 48,
+      "delivery_failures": 2,
+      "sessions_without_an_eligible_diagnostic": 64,
+      "wrapper_source_visible_sessions": 29,
+      "remedy_text_in_control_arms": 0,
+      "json_payload_in_text_arms": 0,
+      "valid": false
+    },
+    "practical_benefit": {
+      "target": "fails",
+      "families": {
+        "checked-result": {
+          "state": "fails",
+          "reason": "hidden acceptance regressed",
+          "treatment": "text_fix",
+          "mean": 0.444,
+          "ci": [
+            -0.444,
+            1.556
+          ],
+          "pairs": 9
+        },
+        "generic-requirement": {
+          "state": "inconclusive",
+          "reason": "interval spans meaningful benefit and no benefit",
+          "treatment": "text_fix",
+          "mean": -0.0,
+          "ci": [
+            -0.4,
+            0.5
+          ],
+          "pairs": 10
+        }
+      }
+    },
+    "uncertainty": {
+      "checked-result": "inconclusive",
+      "generic-requirement": "inconclusive"
+    }
+  }
+}

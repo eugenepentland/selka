@@ -1,0 +1,19 @@
+I made the change and ran the single allowed verification.
+
+**Change made:** `project/main.my` line 3 — `import lib.stats as stats` → `import stats as stats` (the helper is the sibling module `project/stats.my`, which declares `module stats`; `lib.stats` would require `project/lib/stats.my`).
+
+**Command run (once, at the end):**
+```
+bin/mylang run project/main.my
+```
+
+**Result:** exit code 1. The import now resolves, but checking stops on a second, previously hidden defect:
+
+```
+main.my:7:15: error[E_PRIVATE_SYMBOL]: declaration is private to its module
+      out.print(stats.total())
+                ^
+  note: stats.my:4:5: declaration is here
+```
+
+Per the single-attempt rule (“do not revise the code after you have run it”), I stopped here rather than editing again. The program therefore does not yet exit 0 or print `7`; the remaining repair (beyond what the one run was allowed to inform) is exporting `total` in `project/stats.my`, e.g. `public def total() -> int:`.

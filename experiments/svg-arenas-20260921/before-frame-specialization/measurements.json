@@ -1,0 +1,4910 @@
+{
+  "cpu": 6,
+  "seed": 20260921,
+  "rounds": 31,
+  "warmup_rounds": 3,
+  "memory_limit_bytes": 268435456,
+  "scope": "fresh process: input read, model, placement, routing, SVG private-file output, shutdown; excludes compilation and verification",
+  "all_timed_outputs_hash_checked": true,
+  "timed_runs": 837,
+  "binary_sha256": {
+    "netlisp": "6006ae5a1fc4e6a009fd9e5e2c138f885ae6211ffa01fe05731b76566e4e7316",
+    "gc-o3": "3efd39c4b2380d28ea189deca23244f4e310ddd98a2cd8f3c080a2cc4befd89b",
+    "gc-lto": "207186adc3e21f4df5079f7a4aab2ceb857ffb0674303cd64d75f91e30fc8929",
+    "gc-bounded": "5c4eca26a831cbccd188f11c1e43761c74119923fa8c70d21414b1692ca332e5",
+    "gc-lto-bounded": "cc91cb88da46e7b660f91b98de5187fa758655e547b1fb8077d8568b5e544849",
+    "arena-o3": "4bf1fc2e64092f13a3edd8fac99883f1c43442530f539dd70d630a5894697307",
+    "arena-lto": "19d48452a57f0d3eeefc623bff0c6a10babbfc7166d5603f14a1787ce66297e3",
+    "arena-bounded": "3260e541c3c9544e72956f2d6ac992be6666ece1b97166520d8938f02ce23faa",
+    "arena-lto-bounded": "59b23e5832e66f84373428b1aba7b1326cb8b1d9370408e40e662c3f4065ccef"
+  },
+  "summary": {
+    "fixture": {
+      "median_ms": {
+        "netlisp": 3.552089,
+        "gc-o3": 9.028128,
+        "gc-lto": 8.256049,
+        "gc-bounded": 16.610096,
+        "gc-lto-bounded": 15.844599,
+        "arena-o3": 10.054499,
+        "arena-lto": 8.869648,
+        "arena-bounded": 17.736654,
+        "arena-lto-bounded": 16.678685
+      },
+      "comparisons": {
+        "gc-o3/netlisp": {
+          "ratio": 2.5416390186169324,
+          "paired_bootstrap_95": [
+            2.5030584798724433,
+            2.574969696969697
+          ]
+        },
+        "gc-lto/netlisp": {
+          "ratio": 2.324279881500717,
+          "paired_bootstrap_95": [
+            2.285925286916592,
+            2.350760720071937
+          ]
+        },
+        "gc-bounded/netlisp": {
+          "ratio": 4.676148598754141,
+          "paired_bootstrap_95": [
+            4.621020224582711,
+            4.773438907418469
+          ]
+        },
+        "gc-lto-bounded/netlisp": {
+          "ratio": 4.460642455749279,
+          "paired_bootstrap_95": [
+            4.396075502641542,
+            4.568818481127972
+          ]
+        },
+        "arena-o3/netlisp": {
+          "ratio": 2.8305875781828664,
+          "paired_bootstrap_95": [
+            2.79695876837545,
+            2.8766018109293388
+          ]
+        },
+        "arena-lto/netlisp": {
+          "ratio": 2.4970230194119574,
+          "paired_bootstrap_95": [
+            2.4611251074316987,
+            2.5350481153738897
+          ]
+        },
+        "arena-bounded/netlisp": {
+          "ratio": 4.99330225115418,
+          "paired_bootstrap_95": [
+            4.934059001335536,
+            5.060546886590876
+          ]
+        },
+        "arena-lto-bounded/netlisp": {
+          "ratio": 4.695458081146053,
+          "paired_bootstrap_95": [
+            4.619457425767803,
+            4.751933879178085
+          ]
+        },
+        "arena-o3/gc-o3": {
+          "ratio": 1.113685915839917,
+          "paired_bootstrap_95": [
+            1.1046411522678956,
+            1.1275417328453619
+          ]
+        },
+        "arena-lto/gc-lto": {
+          "ratio": 1.0743211432005793,
+          "paired_bootstrap_95": [
+            1.0660312363109314,
+            1.0919375784543057
+          ]
+        },
+        "arena-bounded/gc-bounded": {
+          "ratio": 1.0678236898811424,
+          "paired_bootstrap_95": [
+            1.0497413155157191,
+            1.0804280069267902
+          ]
+        },
+        "arena-lto-bounded/gc-lto-bounded": {
+          "ratio": 1.052641660416903,
+          "paired_bootstrap_95": [
+            1.0266771475058494,
+            1.0659048853264745
+          ]
+        }
+      }
+    },
+    "changed-net": {
+      "median_ms": {
+        "netlisp": 3.567224,
+        "gc-o3": 8.996247,
+        "gc-lto": 8.216797,
+        "gc-bounded": 16.721249,
+        "gc-lto-bounded": 15.824342,
+        "arena-o3": 10.112591,
+        "arena-lto": 8.954153,
+        "arena-bounded": 17.790105,
+        "arena-lto-bounded": 16.671216
+      },
+      "comparisons": {
+        "gc-o3/netlisp": {
+          "ratio": 2.521918163815897,
+          "paired_bootstrap_95": [
+            2.4574692110473495,
+            2.578250375143286
+          ]
+        },
+        "gc-lto/netlisp": {
+          "ratio": 2.303414924322106,
+          "paired_bootstrap_95": [
+            2.2365067270115344,
+            2.3578042360139118
+          ]
+        },
+        "gc-bounded/netlisp": {
+          "ratio": 4.687468182541943,
+          "paired_bootstrap_95": [
+            4.578790959996866,
+            4.777505174291628
+          ]
+        },
+        "gc-lto-bounded/netlisp": {
+          "ratio": 4.436038219074552,
+          "paired_bootstrap_95": [
+            4.329485092258267,
+            4.528567855105742
+          ]
+        },
+        "arena-o3/netlisp": {
+          "ratio": 2.834862907403628,
+          "paired_bootstrap_95": [
+            2.767194610813013,
+            2.8816853796180326
+          ]
+        },
+        "arena-lto/netlisp": {
+          "ratio": 2.510117951662133,
+          "paired_bootstrap_95": [
+            2.442231847864993,
+            2.5677556838086586
+          ]
+        },
+        "arena-bounded/netlisp": {
+          "ratio": 4.987100613810627,
+          "paired_bootstrap_95": [
+            4.832647658471722,
+            5.085322339973332
+          ]
+        },
+        "arena-lto-bounded/netlisp": {
+          "ratio": 4.673442430304349,
+          "paired_bootstrap_95": [
+            4.578235472326368,
+            4.779868738636903
+          ]
+        },
+        "arena-o3/gc-o3": {
+          "ratio": 1.1240899677387692,
+          "paired_bootstrap_95": [
+            1.1088529814183907,
+            1.1392409737790639
+          ]
+        },
+        "arena-lto/gc-lto": {
+          "ratio": 1.0897376435124295,
+          "paired_bootstrap_95": [
+            1.0718550180186222,
+            1.107607097351848
+          ]
+        },
+        "arena-bounded/gc-bounded": {
+          "ratio": 1.063922019222368,
+          "paired_bootstrap_95": [
+            1.0464894810946836,
+            1.0736100514979472
+          ]
+        },
+        "arena-lto-bounded/gc-lto-bounded": {
+          "ratio": 1.0535171699398307,
+          "paired_bootstrap_95": [
+            1.0364976317935808,
+            1.0729244697993066
+          ]
+        }
+      }
+    },
+    "changed-value": {
+      "median_ms": {
+        "netlisp": 3.552909,
+        "gc-o3": 9.01058,
+        "gc-lto": 8.27832,
+        "gc-bounded": 16.77476,
+        "gc-lto-bounded": 15.712987,
+        "arena-o3": 9.971396,
+        "arena-lto": 8.911656,
+        "arena-bounded": 17.60465,
+        "arena-lto-bounded": 16.769504
+      },
+      "comparisons": {
+        "gc-o3/netlisp": {
+          "ratio": 2.5361133651326275,
+          "paired_bootstrap_95": [
+            2.501984051311729,
+            2.589104104242949
+          ]
+        },
+        "gc-lto/netlisp": {
+          "ratio": 2.3300118297428956,
+          "paired_bootstrap_95": [
+            2.302045902639709,
+            2.3707434271839194
+          ]
+        },
+        "gc-bounded/netlisp": {
+          "ratio": 4.721415606197626,
+          "paired_bootstrap_95": [
+            4.650174653900752,
+            4.805526281094125
+          ]
+        },
+        "gc-lto-bounded/netlisp": {
+          "ratio": 4.422569505720523,
+          "paired_bootstrap_95": [
+            4.372780495111166,
+            4.501849653420565
+          ]
+        },
+        "arena-o3/netlisp": {
+          "ratio": 2.8065441586035558,
+          "paired_bootstrap_95": [
+            2.766408655327828,
+            2.8518558451479024
+          ]
+        },
+        "arena-lto/netlisp": {
+          "ratio": 2.5082702652952835,
+          "paired_bootstrap_95": [
+            2.4681984990986208,
+            2.5449638091392184
+          ]
+        },
+        "arena-bounded/netlisp": {
+          "ratio": 4.95499603282831,
+          "paired_bootstrap_95": [
+            4.89288079686834,
+            5.035968167202842
+          ]
+        },
+        "arena-lto-bounded/netlisp": {
+          "ratio": 4.719936255051847,
+          "paired_bootstrap_95": [
+            4.641541377899608,
+            4.816761499720914
+          ]
+        },
+        "arena-o3/gc-o3": {
+          "ratio": 1.1066319815150636,
+          "paired_bootstrap_95": [
+            1.0915931681095854,
+            1.1178960508928597
+          ]
+        },
+        "arena-lto/gc-lto": {
+          "ratio": 1.076505377902763,
+          "paired_bootstrap_95": [
+            1.062585886831427,
+            1.0848286516150019
+          ]
+        },
+        "arena-bounded/gc-bounded": {
+          "ratio": 1.0494725408888115,
+          "paired_bootstrap_95": [
+            1.03858372574953,
+            1.057588740141113
+          ]
+        },
+        "arena-lto-bounded/gc-lto-bounded": {
+          "ratio": 1.067238456952838,
+          "paired_bootstrap_95": [
+            1.0527695648449866,
+            1.0736885170597785
+          ]
+        }
+      }
+    }
+  },
+  "samples": [
+    {
+      "round": 0,
+      "order": [
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-o3": 9.845677,
+          "netlisp": 3.426561,
+          "gc-bounded": 16.704091,
+          "gc-lto": 8.233968,
+          "arena-lto": 8.600012,
+          "gc-o3": 8.848619,
+          "arena-bounded": 17.625637,
+          "gc-lto-bounded": 15.433345,
+          "arena-lto-bounded": 16.149318
+        },
+        "changed-net": {
+          "arena-lto-bounded": 16.323048,
+          "arena-bounded": 17.064636,
+          "netlisp": 3.4951,
+          "gc-bounded": 16.335551,
+          "arena-o3": 9.693146,
+          "gc-lto-bounded": 15.748528,
+          "arena-lto": 8.903046,
+          "gc-lto": 7.977381,
+          "gc-o3": 8.939059
+        },
+        "changed-value": {
+          "arena-lto": 8.560454,
+          "arena-bounded": 17.319676,
+          "netlisp": 3.314138,
+          "gc-lto": 8.051111,
+          "gc-bounded": 16.434119,
+          "arena-lto-bounded": 16.266804,
+          "gc-o3": 8.929918,
+          "arena-o3": 9.886043,
+          "gc-lto-bounded": 15.525504
+        }
+      }
+    },
+    {
+      "round": 1,
+      "order": [
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "netlisp": 3.56862,
+          "gc-lto-bounded": 15.467673,
+          "gc-lto": 8.145793,
+          "gc-bounded": 16.53291,
+          "arena-bounded": 17.724861,
+          "arena-lto-bounded": 16.815255,
+          "arena-lto": 8.888602,
+          "arena-o3": 9.691229,
+          "gc-o3": 8.971291
+        },
+        "changed-net": {
+          "arena-o3": 9.777376,
+          "arena-lto": 8.629989,
+          "gc-o3": 8.86118,
+          "gc-lto": 8.074755,
+          "netlisp": 3.565626,
+          "arena-bounded": 17.552609,
+          "arena-lto-bounded": 16.466422,
+          "gc-lto-bounded": 15.631249,
+          "gc-bounded": 16.672233
+        },
+        "changed-value": {
+          "arena-lto": 8.815688,
+          "gc-o3": 8.928065,
+          "arena-lto-bounded": 16.196581,
+          "netlisp": 3.510741,
+          "gc-lto-bounded": 15.632588,
+          "gc-lto": 8.315251,
+          "arena-o3": 9.848222,
+          "arena-bounded": 17.179894,
+          "gc-bounded": 16.492994
+        }
+      }
+    },
+    {
+      "round": 2,
+      "order": [
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-lto-bounded": 16.23143,
+          "gc-o3": 8.886764,
+          "gc-lto-bounded": 15.650156,
+          "netlisp": 3.746884,
+          "arena-bounded": 17.528453,
+          "arena-lto": 8.766384,
+          "arena-o3": 10.051565,
+          "gc-bounded": 16.456224,
+          "gc-lto": 8.138937
+        },
+        "changed-net": {
+          "gc-lto": 7.961251,
+          "gc-lto-bounded": 15.304393,
+          "gc-o3": 8.97977,
+          "arena-lto": 9.000814,
+          "gc-bounded": 16.500528,
+          "arena-o3": 9.82854,
+          "netlisp": 3.692213,
+          "arena-lto-bounded": 16.671216,
+          "arena-bounded": 18.339262
+        },
+        "changed-value": {
+          "arena-bounded": 17.568441,
+          "arena-lto-bounded": 16.80324,
+          "arena-o3": 9.820476,
+          "gc-bounded": 16.611789,
+          "gc-o3": 8.932675,
+          "gc-lto-bounded": 15.517644,
+          "gc-lto": 7.591602,
+          "netlisp": 3.069876,
+          "arena-lto": 7.857248
+        }
+      }
+    },
+    {
+      "round": 3,
+      "order": [
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-bounded": 17.464837,
+          "arena-lto": 8.761508,
+          "gc-o3": 8.831298,
+          "arena-lto-bounded": 16.054485,
+          "gc-lto": 8.397046,
+          "netlisp": 3.34717,
+          "gc-bounded": 16.565844,
+          "gc-lto-bounded": 15.833404,
+          "arena-o3": 9.989487
+        },
+        "changed-net": {
+          "arena-lto-bounded": 16.416088,
+          "gc-lto-bounded": 15.383237,
+          "gc-bounded": 16.571363,
+          "arena-o3": 10.482964,
+          "gc-lto": 8.174293,
+          "gc-o3": 8.899199,
+          "arena-lto": 8.897129,
+          "arena-bounded": 17.761038,
+          "netlisp": 3.59206
+        },
+        "changed-value": {
+          "gc-lto": 8.287498,
+          "gc-bounded": 16.703483,
+          "gc-o3": 8.935332,
+          "netlisp": 3.565143,
+          "arena-lto-bounded": 16.763071,
+          "arena-bounded": 17.638425,
+          "arena-o3": 10.03759,
+          "gc-lto-bounded": 15.706857,
+          "arena-lto": 8.553355
+        }
+      }
+    },
+    {
+      "round": 4,
+      "order": [
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "netlisp": 3.551156,
+          "arena-o3": 9.734076,
+          "gc-o3": 9.086359,
+          "arena-lto-bounded": 16.262538,
+          "gc-lto": 8.06757,
+          "gc-bounded": 16.239273,
+          "arena-lto": 8.99718,
+          "gc-lto-bounded": 15.052376,
+          "arena-bounded": 17.683697
+        },
+        "changed-net": {
+          "arena-bounded": 17.873695,
+          "gc-lto": 8.347725,
+          "netlisp": 3.502963,
+          "gc-o3": 8.69379,
+          "arena-lto": 9.072899,
+          "arena-o3": 10.086521,
+          "gc-lto-bounded": 16.148719,
+          "arena-lto-bounded": 17.013364,
+          "gc-bounded": 16.772848
+        },
+        "changed-value": {
+          "gc-bounded": 16.476879,
+          "gc-lto-bounded": 15.966044,
+          "gc-lto": 8.27832,
+          "arena-lto": 8.656021,
+          "arena-lto-bounded": 16.757623,
+          "arena-bounded": 17.755389,
+          "gc-o3": 9.188185,
+          "netlisp": 3.588244,
+          "arena-o3": 10.083308
+        }
+      }
+    },
+    {
+      "round": 5,
+      "order": [
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-lto": 8.223434,
+          "gc-lto-bounded": 15.844599,
+          "arena-lto": 9.003282,
+          "arena-lto-bounded": 16.604048,
+          "arena-o3": 10.197383,
+          "gc-bounded": 17.682078,
+          "gc-o3": 8.974176,
+          "arena-bounded": 18.635093,
+          "netlisp": 3.62353
+        },
+        "changed-net": {
+          "arena-bounded": 17.513965,
+          "arena-lto-bounded": 16.738109,
+          "gc-lto-bounded": 15.4718,
+          "arena-lto": 9.039383,
+          "gc-lto": 8.120277,
+          "gc-bounded": 16.788846,
+          "gc-o3": 9.203075,
+          "netlisp": 3.250754,
+          "arena-o3": 9.936165
+        },
+        "changed-value": {
+          "gc-bounded": 16.811284,
+          "gc-lto": 8.14258,
+          "gc-lto-bounded": 15.741172,
+          "arena-lto": 8.660559,
+          "arena-o3": 9.870943,
+          "gc-o3": 9.176613,
+          "arena-lto-bounded": 16.989287,
+          "arena-bounded": 17.695403,
+          "netlisp": 3.44905
+        }
+      }
+    },
+    {
+      "round": 6,
+      "order": [
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-o3": 10.30336,
+          "arena-bounded": 18.715643,
+          "gc-o3": 8.981921,
+          "arena-lto-bounded": 17.085452,
+          "gc-lto-bounded": 16.41937,
+          "gc-lto": 8.282156,
+          "gc-bounded": 16.445738,
+          "netlisp": 3.610529,
+          "arena-lto": 8.839911
+        },
+        "changed-net": {
+          "gc-o3": 9.087111,
+          "arena-o3": 10.386857,
+          "gc-lto": 8.321722,
+          "arena-lto-bounded": 17.906557,
+          "arena-bounded": 17.524624,
+          "netlisp": 3.467308,
+          "gc-lto-bounded": 15.849269,
+          "arena-lto": 8.837391,
+          "gc-bounded": 16.658992
+        },
+        "changed-value": {
+          "gc-o3": 8.941693,
+          "arena-lto-bounded": 17.032066,
+          "gc-bounded": 16.924208,
+          "netlisp": 3.618354,
+          "arena-lto": 9.205206,
+          "gc-lto": 8.358522,
+          "arena-o3": 9.877224,
+          "arena-bounded": 17.679896,
+          "gc-lto-bounded": 15.355251
+        }
+      }
+    },
+    {
+      "round": 7,
+      "order": [
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-bounded": 17.742524,
+          "arena-o3": 10.175973,
+          "netlisp": 3.580484,
+          "gc-bounded": 16.141029,
+          "arena-lto": 8.934404,
+          "gc-lto-bounded": 16.079084,
+          "arena-lto-bounded": 17.550148,
+          "gc-o3": 9.181783,
+          "gc-lto": 8.764109
+        },
+        "changed-net": {
+          "arena-lto-bounded": 16.857983,
+          "netlisp": 3.430464,
+          "arena-o3": 9.841198,
+          "gc-bounded": 16.768855,
+          "arena-lto": 9.267878,
+          "arena-bounded": 18.268006,
+          "gc-o3": 9.266361,
+          "gc-lto-bounded": 16.820653,
+          "gc-lto": 8.947481
+        },
+        "changed-value": {
+          "gc-lto": 8.330202,
+          "arena-bounded": 17.577207,
+          "gc-lto-bounded": 16.422481,
+          "arena-lto": 8.827611,
+          "netlisp": 3.478034,
+          "gc-bounded": 17.36945,
+          "arena-lto-bounded": 16.134635,
+          "gc-o3": 8.985773,
+          "arena-o3": 9.971802
+        }
+      }
+    },
+    {
+      "round": 8,
+      "order": [
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-bounded": 16.259033,
+          "arena-bounded": 17.736654,
+          "gc-lto-bounded": 16.02289,
+          "netlisp": 3.519309,
+          "arena-lto": 8.696097,
+          "gc-lto": 8.134752,
+          "arena-lto-bounded": 16.402445,
+          "arena-o3": 10.157108,
+          "gc-o3": 9.065952
+        },
+        "changed-net": {
+          "gc-lto": 8.375747,
+          "gc-o3": 9.10884,
+          "gc-bounded": 16.711163,
+          "arena-lto": 9.012207,
+          "arena-o3": 10.094421,
+          "arena-lto-bounded": 16.59049,
+          "netlisp": 3.454124,
+          "arena-bounded": 17.952101,
+          "gc-lto-bounded": 16.367655
+        },
+        "changed-value": {
+          "gc-lto-bounded": 15.563077,
+          "gc-o3": 9.152587,
+          "netlisp": 3.553278,
+          "gc-bounded": 16.401342,
+          "arena-lto": 8.898723,
+          "arena-lto-bounded": 16.778719,
+          "arena-o3": 10.303032,
+          "arena-bounded": 18.662618,
+          "gc-lto": 8.526433
+        }
+      }
+    },
+    {
+      "round": 9,
+      "order": [
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-o3": 10.115505,
+          "netlisp": 3.568023,
+          "arena-bounded": 17.862619,
+          "gc-lto-bounded": 15.775568,
+          "gc-o3": 9.013136,
+          "arena-lto": 8.798268,
+          "gc-lto": 8.274637,
+          "arena-lto-bounded": 16.450335,
+          "gc-bounded": 16.507922
+        },
+        "changed-net": {
+          "gc-bounded": 17.50821,
+          "gc-o3": 8.883308,
+          "arena-lto-bounded": 16.265212,
+          "arena-bounded": 17.637661,
+          "arena-lto": 8.883633,
+          "arena-o3": 10.349347,
+          "gc-lto": 8.120719,
+          "gc-lto-bounded": 16.189787,
+          "netlisp": 3.699637
+        },
+        "changed-value": {
+          "arena-lto-bounded": 16.81519,
+          "gc-o3": 9.009124,
+          "arena-lto": 8.764925,
+          "arena-o3": 10.082129,
+          "netlisp": 3.591961,
+          "gc-bounded": 16.703246,
+          "gc-lto-bounded": 16.863683,
+          "gc-lto": 8.562158,
+          "arena-bounded": 17.987002
+        }
+      }
+    },
+    {
+      "round": 10,
+      "order": [
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-lto": 8.256049,
+          "arena-bounded": 17.560585,
+          "arena-lto": 9.115472,
+          "arena-lto-bounded": 17.056584,
+          "gc-bounded": 16.538704,
+          "arena-o3": 9.970009,
+          "gc-lto-bounded": 16.678786,
+          "gc-o3": 9.036857,
+          "netlisp": 3.31612
+        },
+        "changed-net": {
+          "gc-o3": 9.182926,
+          "arena-lto": 8.932602,
+          "gc-bounded": 16.721249,
+          "arena-bounded": 17.529992,
+          "gc-lto-bounded": 16.856432,
+          "arena-lto-bounded": 17.231231,
+          "netlisp": 3.711987,
+          "arena-o3": 9.745443,
+          "gc-lto": 7.982118
+        },
+        "changed-value": {
+          "arena-o3": 10.124113,
+          "gc-bounded": 17.246378,
+          "netlisp": 3.713586,
+          "arena-lto-bounded": 16.864272,
+          "arena-lto": 9.180778,
+          "gc-lto-bounded": 15.397986,
+          "gc-o3": 9.233967,
+          "arena-bounded": 17.539336,
+          "gc-lto": 8.078222
+        }
+      }
+    },
+    {
+      "round": 11,
+      "order": [
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-lto-bounded": 16.82103,
+          "arena-lto": 8.773269,
+          "gc-lto-bounded": 15.416652,
+          "gc-o3": 9.279653,
+          "gc-bounded": 16.38253,
+          "netlisp": 3.557282,
+          "gc-lto": 8.068217,
+          "arena-o3": 9.792716,
+          "arena-bounded": 18.294025
+        },
+        "changed-net": {
+          "gc-bounded": 16.686198,
+          "netlisp": 3.499996,
+          "arena-o3": 10.196598,
+          "arena-bounded": 17.376142,
+          "arena-lto-bounded": 16.653359,
+          "gc-lto": 8.064233,
+          "gc-lto-bounded": 15.454766,
+          "gc-o3": 9.081405,
+          "arena-lto": 9.254982
+        },
+        "changed-value": {
+          "gc-o3": 9.042382,
+          "gc-bounded": 16.803008,
+          "gc-lto": 8.264712,
+          "arena-lto-bounded": 16.876877,
+          "arena-o3": 10.1412,
+          "netlisp": 3.57785,
+          "arena-lto": 8.856267,
+          "arena-bounded": 17.281982,
+          "gc-lto-bounded": 15.894303
+        }
+      }
+    },
+    {
+      "round": 12,
+      "order": [
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-lto": 8.324081,
+          "arena-bounded": 17.722237,
+          "arena-lto-bounded": 17.031615,
+          "arena-o3": 10.23471,
+          "gc-lto-bounded": 16.197245,
+          "gc-bounded": 17.201376,
+          "gc-o3": 9.026661,
+          "netlisp": 3.427438,
+          "arena-lto": 8.594654
+        },
+        "changed-net": {
+          "arena-o3": 10.112591,
+          "gc-lto-bounded": 15.592274,
+          "gc-lto": 8.257631,
+          "arena-lto": 8.873807,
+          "arena-lto-bounded": 16.602526,
+          "gc-o3": 9.228483,
+          "gc-bounded": 16.908611,
+          "arena-bounded": 18.393835,
+          "netlisp": 3.378677
+        },
+        "changed-value": {
+          "arena-bounded": 17.415934,
+          "gc-lto": 8.329617,
+          "arena-lto": 8.931075,
+          "gc-o3": 9.129852,
+          "gc-bounded": 16.603784,
+          "arena-lto-bounded": 16.388986,
+          "gc-lto-bounded": 15.635471,
+          "arena-o3": 10.034975,
+          "netlisp": 3.448673
+        }
+      }
+    },
+    {
+      "round": 13,
+      "order": [
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-bounded": 16.843701,
+          "arena-bounded": 17.621048,
+          "gc-lto": 8.156234,
+          "arena-lto-bounded": 16.917882,
+          "arena-lto": 9.130513,
+          "gc-lto-bounded": 15.740078,
+          "arena-o3": 10.029992,
+          "netlisp": 3.462021,
+          "gc-o3": 9.042399
+        },
+        "changed-net": {
+          "arena-lto-bounded": 16.845445,
+          "gc-bounded": 17.16784,
+          "netlisp": 3.780291,
+          "gc-lto": 8.150988,
+          "arena-lto": 9.182469,
+          "arena-bounded": 17.313669,
+          "arena-o3": 10.065687,
+          "gc-o3": 8.996247,
+          "gc-lto-bounded": 16.552151
+        },
+        "changed-value": {
+          "arena-lto": 8.973431,
+          "gc-bounded": 16.794003,
+          "arena-o3": 9.872678,
+          "arena-lto-bounded": 17.10033,
+          "gc-lto-bounded": 15.668328,
+          "netlisp": 3.460766,
+          "gc-lto": 8.223301,
+          "arena-bounded": 17.898728,
+          "gc-o3": 9.078591
+        }
+      }
+    },
+    {
+      "round": 14,
+      "order": [
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-lto-bounded": 16.184897,
+          "gc-bounded": 17.195381,
+          "gc-o3": 9.089231,
+          "netlisp": 3.446256,
+          "arena-o3": 10.210059,
+          "gc-lto-bounded": 16.313264,
+          "arena-lto": 8.778378,
+          "arena-bounded": 17.873323,
+          "gc-lto": 8.258084
+        },
+        "changed-net": {
+          "gc-lto": 8.60547,
+          "gc-lto-bounded": 16.568369,
+          "arena-o3": 10.343522,
+          "gc-o3": 9.07448,
+          "netlisp": 3.649689,
+          "arena-lto-bounded": 17.171291,
+          "arena-bounded": 17.637138,
+          "gc-bounded": 16.392152,
+          "arena-lto": 9.081496
+        },
+        "changed-value": {
+          "gc-bounded": 16.313814,
+          "arena-lto-bounded": 16.461311,
+          "gc-lto": 8.570498,
+          "arena-lto": 8.932134,
+          "arena-o3": 9.798281,
+          "gc-o3": 8.657391,
+          "gc-lto-bounded": 15.706204,
+          "netlisp": 3.749507,
+          "arena-bounded": 17.60465
+        }
+      }
+    },
+    {
+      "round": 15,
+      "order": [
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-lto-bounded": 15.963642,
+          "gc-bounded": 17.001097,
+          "arena-bounded": 18.063634,
+          "arena-lto": 8.896628,
+          "arena-lto-bounded": 16.759213,
+          "gc-lto": 8.408598,
+          "arena-o3": 9.981283,
+          "netlisp": 3.657613,
+          "gc-o3": 9.028128
+        },
+        "changed-net": {
+          "arena-o3": 10.257345,
+          "arena-bounded": 17.078972,
+          "netlisp": 3.739981,
+          "gc-o3": 8.836631,
+          "gc-bounded": 16.939604,
+          "arena-lto": 9.075265,
+          "gc-lto": 8.162554,
+          "arena-lto-bounded": 16.656629,
+          "gc-lto-bounded": 16.053435
+        },
+        "changed-value": {
+          "gc-o3": 9.217295,
+          "gc-bounded": 16.768317,
+          "gc-lto": 8.422237,
+          "netlisp": 3.625927,
+          "arena-lto-bounded": 16.528544,
+          "arena-bounded": 17.63347,
+          "arena-o3": 10.25005,
+          "arena-lto": 9.04383,
+          "gc-lto-bounded": 15.877811
+        }
+      }
+    },
+    {
+      "round": 16,
+      "order": [
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-lto-bounded": 15.616946,
+          "arena-bounded": 17.12366,
+          "netlisp": 3.665221,
+          "arena-o3": 10.168379,
+          "gc-lto": 8.296496,
+          "gc-bounded": 16.935989,
+          "gc-o3": 8.771363,
+          "arena-lto-bounded": 16.692861,
+          "arena-lto": 8.996631
+        },
+        "changed-net": {
+          "netlisp": 3.731934,
+          "arena-lto": 8.865055,
+          "gc-lto-bounded": 15.919471,
+          "gc-o3": 8.966233,
+          "gc-bounded": 16.53193,
+          "arena-lto-bounded": 16.859293,
+          "gc-lto": 8.327467,
+          "arena-bounded": 17.836041,
+          "arena-o3": 10.068802
+        },
+        "changed-value": {
+          "gc-bounded": 16.459995,
+          "arena-bounded": 17.620751,
+          "gc-lto-bounded": 15.512135,
+          "arena-lto-bounded": 16.733008,
+          "gc-lto": 8.264745,
+          "netlisp": 3.536301,
+          "arena-lto": 8.820977,
+          "gc-o3": 9.137442,
+          "arena-o3": 9.991536
+        }
+      }
+    },
+    {
+      "round": 17,
+      "order": [
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-lto": 8.814243,
+          "netlisp": 3.668651,
+          "arena-bounded": 17.519027,
+          "gc-lto": 8.086701,
+          "gc-lto-bounded": 15.728313,
+          "arena-o3": 10.037979,
+          "gc-o3": 8.900702,
+          "arena-lto-bounded": 16.833449,
+          "gc-bounded": 16.940688
+        },
+        "changed-net": {
+          "arena-o3": 10.466649,
+          "arena-lto": 8.954153,
+          "gc-lto": 7.880968,
+          "arena-lto-bounded": 16.567436,
+          "arena-bounded": 18.023477,
+          "gc-lto-bounded": 15.985876,
+          "gc-o3": 8.720694,
+          "gc-bounded": 17.143143,
+          "netlisp": 3.567224
+        },
+        "changed-value": {
+          "arena-lto-bounded": 16.670284,
+          "gc-o3": 9.053064,
+          "gc-lto": 8.252207,
+          "gc-bounded": 16.942538,
+          "arena-bounded": 17.809881,
+          "arena-o3": 9.936832,
+          "arena-lto": 8.833286,
+          "netlisp": 3.635678,
+          "gc-lto-bounded": 15.954018
+        }
+      }
+    },
+    {
+      "round": 18,
+      "order": [
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-o3": 8.681019,
+          "arena-bounded": 17.663365,
+          "gc-lto": 8.32262,
+          "gc-lto-bounded": 16.206563,
+          "arena-lto-bounded": 17.468811,
+          "arena-o3": 10.402805,
+          "gc-bounded": 16.278402,
+          "arena-lto": 9.092013,
+          "netlisp": 3.538613
+        },
+        "changed-net": {
+          "gc-lto-bounded": 15.726887,
+          "arena-o3": 10.319076,
+          "gc-lto": 8.288092,
+          "gc-o3": 9.090203,
+          "arena-bounded": 18.138993,
+          "arena-lto-bounded": 16.326247,
+          "arena-lto": 8.86444,
+          "gc-bounded": 16.789726,
+          "netlisp": 3.43766
+        },
+        "changed-value": {
+          "gc-lto-bounded": 16.120327,
+          "gc-o3": 8.78509,
+          "arena-lto": 8.945182,
+          "gc-bounded": 16.647669,
+          "gc-lto": 8.470204,
+          "arena-o3": 9.856843,
+          "arena-bounded": 17.511974,
+          "netlisp": 3.649457,
+          "arena-lto-bounded": 16.842214
+        }
+      }
+    },
+    {
+      "round": 19,
+      "order": [
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-bounded": 17.907317,
+          "arena-o3": 9.962027,
+          "gc-bounded": 16.597859,
+          "gc-o3": 9.383313,
+          "gc-lto-bounded": 15.117641,
+          "gc-lto": 6.802896,
+          "netlisp": 3.519298,
+          "arena-lto": 8.764031,
+          "arena-lto-bounded": 16.678685
+        },
+        "changed-net": {
+          "gc-bounded": 16.6872,
+          "arena-lto": 9.122976,
+          "gc-lto": 8.330586,
+          "arena-bounded": 18.213658,
+          "gc-o3": 9.284493,
+          "arena-lto-bounded": 14.162224,
+          "gc-lto-bounded": 15.437906,
+          "netlisp": 3.565966,
+          "arena-o3": 10.146301
+        },
+        "changed-value": {
+          "arena-lto-bounded": 16.769504,
+          "gc-bounded": 16.815858,
+          "gc-lto": 8.340531,
+          "gc-o3": 8.912821,
+          "arena-bounded": 17.694266,
+          "gc-lto-bounded": 15.963447,
+          "arena-lto": 9.258222,
+          "arena-o3": 10.204572,
+          "netlisp": 3.664857
+        }
+      }
+    },
+    {
+      "round": 20,
+      "order": [
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-lto-bounded": 17.059508,
+          "gc-lto": 8.289862,
+          "gc-bounded": 16.500667,
+          "arena-bounded": 17.870465,
+          "gc-o3": 9.26732,
+          "arena-o3": 10.17833,
+          "gc-lto-bounded": 16.202332,
+          "arena-lto": 8.990943,
+          "netlisp": 3.591817
+        },
+        "changed-net": {
+          "netlisp": 3.475062,
+          "gc-lto-bounded": 15.824342,
+          "arena-o3": 9.758873,
+          "gc-bounded": 16.669866,
+          "arena-bounded": 17.807788,
+          "gc-lto": 8.259301,
+          "arena-lto-bounded": 17.097066,
+          "arena-lto": 9.228177,
+          "gc-o3": 9.023866
+        },
+        "changed-value": {
+          "arena-o3": 9.875937,
+          "gc-o3": 8.976662,
+          "gc-lto": 8.124889,
+          "arena-bounded": 18.327046,
+          "gc-bounded": 17.292503,
+          "arena-lto": 8.961111,
+          "netlisp": 3.552909,
+          "gc-lto-bounded": 15.700058,
+          "arena-lto-bounded": 16.274644
+        }
+      }
+    },
+    {
+      "round": 21,
+      "order": [
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-o3": 9.099938,
+          "gc-bounded": 16.898208,
+          "arena-lto": 9.097968,
+          "arena-lto-bounded": 15.997955,
+          "arena-o3": 8.86409,
+          "arena-bounded": 16.927706,
+          "gc-lto-bounded": 16.091225,
+          "netlisp": 3.529864,
+          "gc-lto": 8.129782
+        },
+        "changed-net": {
+          "arena-lto": 8.754347,
+          "gc-o3": 8.482318,
+          "gc-lto": 8.417093,
+          "gc-bounded": 16.902793,
+          "netlisp": 3.725362,
+          "arena-bounded": 17.790105,
+          "gc-lto-bounded": 15.587819,
+          "arena-lto-bounded": 17.089473,
+          "arena-o3": 10.22607
+        },
+        "changed-value": {
+          "arena-lto": 8.412752,
+          "arena-o3": 8.918384,
+          "netlisp": 3.119299,
+          "gc-o3": 7.508776,
+          "arena-bounded": 15.197204,
+          "gc-lto-bounded": 15.72038,
+          "gc-bounded": 16.75942,
+          "gc-lto": 8.007112,
+          "arena-lto-bounded": 17.127724
+        }
+      }
+    },
+    {
+      "round": 22,
+      "order": [
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-o3": 8.990528,
+          "arena-lto-bounded": 16.56945,
+          "gc-lto-bounded": 15.617014,
+          "netlisp": 3.749094,
+          "gc-lto": 8.353837,
+          "gc-bounded": 17.567899,
+          "arena-o3": 10.027286,
+          "arena-lto": 8.912495,
+          "arena-bounded": 17.969655
+        },
+        "changed-net": {
+          "gc-o3": 8.924871,
+          "arena-lto": 8.862112,
+          "arena-bounded": 18.604804,
+          "netlisp": 3.678869,
+          "arena-o3": 10.242158,
+          "arena-lto-bounded": 16.986603,
+          "gc-lto-bounded": 16.20755,
+          "gc-bounded": 17.284339,
+          "gc-lto": 8.216797
+        },
+        "changed-value": {
+          "arena-lto": 8.830844,
+          "gc-lto-bounded": 16.059982,
+          "gc-bounded": 17.210734,
+          "gc-lto": 8.093921,
+          "netlisp": 3.480852,
+          "arena-bounded": 17.4422,
+          "arena-o3": 10.241929,
+          "arena-lto-bounded": 17.220474,
+          "gc-o3": 8.885995
+        }
+      }
+    },
+    {
+      "round": 23,
+      "order": [
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "netlisp": 3.466413,
+          "gc-lto-bounded": 16.20666,
+          "gc-o3": 9.224557,
+          "gc-lto": 8.285012,
+          "arena-lto-bounded": 15.960324,
+          "arena-lto": 8.829037,
+          "gc-bounded": 17.759737,
+          "arena-o3": 10.374797,
+          "arena-bounded": 18.174032
+        },
+        "changed-net": {
+          "arena-o3": 9.854966,
+          "arena-bounded": 17.122426,
+          "gc-bounded": 16.24526,
+          "arena-lto-bounded": 15.882901,
+          "gc-o3": 8.90591,
+          "netlisp": 3.59662,
+          "arena-lto": 8.635955,
+          "gc-lto": 8.38412,
+          "gc-lto-bounded": 16.661038
+        },
+        "changed-value": {
+          "gc-lto-bounded": 15.45407,
+          "arena-o3": 9.956612,
+          "arena-bounded": 17.255151,
+          "gc-o3": 9.056527,
+          "arena-lto": 8.928653,
+          "netlisp": 3.398586,
+          "arena-lto-bounded": 17.324463,
+          "gc-bounded": 17.184334,
+          "gc-lto": 8.467396
+        }
+      }
+    },
+    {
+      "round": 24,
+      "order": [
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-lto-bounded": 16.296188,
+          "arena-lto": 8.813225,
+          "gc-lto": 8.012517,
+          "netlisp": 3.350987,
+          "arena-bounded": 17.172193,
+          "arena-lto-bounded": 15.962546,
+          "arena-o3": 10.151298,
+          "gc-o3": 9.10205,
+          "gc-bounded": 16.843811
+        },
+        "changed-net": {
+          "gc-bounded": 17.119366,
+          "arena-lto": 9.060083,
+          "gc-lto": 7.948188,
+          "netlisp": 3.701712,
+          "arena-bounded": 17.272546,
+          "gc-o3": 8.990335,
+          "gc-lto-bounded": 15.354577,
+          "arena-o3": 10.180908,
+          "arena-lto-bounded": 17.59419
+        },
+        "changed-value": {
+          "arena-lto-bounded": 17.070059,
+          "arena-bounded": 18.078794,
+          "gc-lto-bounded": 16.049844,
+          "gc-bounded": 17.110856,
+          "netlisp": 3.4086,
+          "gc-o3": 9.155672,
+          "arena-o3": 9.859633,
+          "gc-lto": 7.779232,
+          "arena-lto": 8.761096
+        }
+      }
+    },
+    {
+      "round": 25,
+      "order": [
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-lto-bounded": 18.11783,
+          "gc-bounded": 19.967154,
+          "netlisp": 3.708487,
+          "gc-lto": 7.833994,
+          "arena-o3": 10.159003,
+          "gc-lto-bounded": 17.975512,
+          "arena-bounded": 19.568681,
+          "gc-o3": 8.915749,
+          "arena-lto": 8.743442
+        },
+        "changed-net": {
+          "arena-lto": 8.746376,
+          "arena-o3": 10.165706,
+          "gc-lto-bounded": 17.968913,
+          "arena-lto-bounded": 18.951702,
+          "gc-lto": 8.103934,
+          "gc-o3": 8.974095,
+          "arena-bounded": 20.580847,
+          "netlisp": 3.693574,
+          "gc-bounded": 18.811244
+        },
+        "changed-value": {
+          "arena-lto-bounded": 16.849341,
+          "gc-o3": 8.99928,
+          "arena-lto": 8.915327,
+          "gc-lto": 8.017127,
+          "gc-lto-bounded": 17.899523,
+          "netlisp": 3.547664,
+          "arena-bounded": 19.038718,
+          "gc-bounded": 19.734146,
+          "arena-o3": 9.971396
+        }
+      }
+    },
+    {
+      "round": 26,
+      "order": [
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "gc-lto": 8.120592,
+          "arena-bounded": 19.644741,
+          "arena-lto": 9.100567,
+          "arena-o3": 10.09223,
+          "gc-o3": 9.049731,
+          "gc-lto-bounded": 15.838665,
+          "arena-lto-bounded": 16.434608,
+          "gc-bounded": 16.45667,
+          "netlisp": 3.552089
+        },
+        "changed-net": {
+          "gc-bounded": 16.305696,
+          "arena-bounded": 17.957117,
+          "gc-lto": 8.168919,
+          "arena-lto-bounded": 16.486592,
+          "gc-o3": 8.778405,
+          "arena-o3": 9.977317,
+          "arena-lto": 8.910304,
+          "gc-lto-bounded": 15.713598,
+          "netlisp": 3.637506
+        },
+        "changed-value": {
+          "arena-bounded": 17.612031,
+          "netlisp": 3.496601,
+          "arena-lto-bounded": 16.868567,
+          "arena-o3": 9.920707,
+          "arena-lto": 9.010713,
+          "gc-bounded": 16.77476,
+          "gc-o3": 9.178261,
+          "gc-lto-bounded": 15.688931,
+          "gc-lto": 8.260393
+        }
+      }
+    },
+    {
+      "round": 27,
+      "order": [
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-o3": 9.958551,
+          "gc-bounded": 16.799154,
+          "gc-lto": 8.38104,
+          "arena-lto-bounded": 16.705535,
+          "arena-bounded": 18.305177,
+          "gc-o3": 9.395323,
+          "gc-lto-bounded": 16.428634,
+          "netlisp": 3.479376,
+          "arena-lto": 9.270824
+        },
+        "changed-net": {
+          "netlisp": 3.544174,
+          "arena-lto-bounded": 17.106422,
+          "arena-lto": 9.084292,
+          "arena-o3": 10.059806,
+          "arena-bounded": 18.383058,
+          "gc-lto": 8.529988,
+          "gc-bounded": 17.286204,
+          "gc-o3": 9.080376,
+          "gc-lto-bounded": 16.269043
+        },
+        "changed-value": {
+          "arena-bounded": 17.40115,
+          "gc-lto": 8.386763,
+          "gc-bounded": 16.967015,
+          "gc-o3": 9.01058,
+          "arena-lto-bounded": 16.654983,
+          "gc-lto-bounded": 16.81908,
+          "arena-lto": 9.428015,
+          "arena-o3": 10.257075,
+          "netlisp": 3.749084
+        }
+      }
+    },
+    {
+      "round": 28,
+      "order": [
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-lto-bounded": 17.113007,
+          "arena-bounded": 16.830014,
+          "arena-lto": 8.807377,
+          "gc-lto-bounded": 15.49977,
+          "gc-lto": 8.212119,
+          "arena-o3": 10.054499,
+          "gc-o3": 9.200495,
+          "gc-bounded": 16.610096,
+          "netlisp": 3.65887
+        },
+        "changed-net": {
+          "gc-lto": 8.35513,
+          "gc-o3": 9.626309,
+          "netlisp": 3.239702,
+          "arena-lto-bounded": 17.070895,
+          "arena-bounded": 17.813696,
+          "arena-o3": 9.857678,
+          "arena-lto": 9.366268,
+          "gc-bounded": 17.729259,
+          "gc-lto-bounded": 15.794841
+        },
+        "changed-value": {
+          "arena-bounded": 17.575037,
+          "arena-lto-bounded": 14.252878,
+          "arena-o3": 8.851853,
+          "gc-o3": 9.257958,
+          "arena-lto": 8.911656,
+          "gc-lto-bounded": 15.433316,
+          "gc-lto": 8.41964,
+          "netlisp": 3.618365,
+          "gc-bounded": 16.550578
+        }
+      }
+    },
+    {
+      "round": 29,
+      "order": [
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-lto-bounded": 16.39858,
+          "netlisp": 3.5145,
+          "arena-bounded": 17.597442,
+          "gc-lto": 8.435053,
+          "gc-o3": 8.902395,
+          "gc-lto-bounded": 15.638586,
+          "gc-bounded": 16.786086,
+          "arena-lto": 8.970475,
+          "arena-o3": 10.123619
+        },
+        "changed-net": {
+          "gc-lto-bounded": 15.764537,
+          "arena-lto-bounded": 16.490423,
+          "netlisp": 3.553827,
+          "arena-lto": 8.994566,
+          "arena-bounded": 17.552327,
+          "arena-o3": 10.44968,
+          "gc-bounded": 16.575539,
+          "gc-o3": 9.226762,
+          "gc-lto": 8.319802
+        },
+        "changed-value": {
+          "arena-bounded": 17.558611,
+          "arena-o3": 10.386403,
+          "netlisp": 3.666678,
+          "gc-bounded": 16.510896,
+          "arena-lto": 9.020579,
+          "gc-o3": 9.000126,
+          "gc-lto": 8.174608,
+          "gc-lto-bounded": 15.712987,
+          "arena-lto-bounded": 16.601172
+        }
+      }
+    },
+    {
+      "round": 30,
+      "order": [
+        [
+          "gc-o3",
+          "changed-value"
+        ],
+        [
+          "netlisp",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-net"
+        ],
+        [
+          "gc-bounded",
+          "changed-net"
+        ],
+        [
+          "arena-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto-bounded",
+          "fixture"
+        ],
+        [
+          "gc-lto",
+          "changed-value"
+        ],
+        [
+          "gc-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-o3",
+          "changed-net"
+        ],
+        [
+          "netlisp",
+          "changed-net"
+        ],
+        [
+          "arena-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "changed-net"
+        ],
+        [
+          "arena-lto",
+          "fixture"
+        ],
+        [
+          "gc-o3",
+          "fixture"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-lto",
+          "changed-value"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto",
+          "fixture"
+        ],
+        [
+          "arena-o3",
+          "fixture"
+        ],
+        [
+          "arena-bounded",
+          "changed-value"
+        ],
+        [
+          "gc-o3",
+          "changed-net"
+        ],
+        [
+          "arena-o3",
+          "changed-value"
+        ],
+        [
+          "arena-lto-bounded",
+          "changed-net"
+        ],
+        [
+          "gc-lto-bounded",
+          "changed-value"
+        ],
+        [
+          "arena-bounded",
+          "fixture"
+        ],
+        [
+          "netlisp",
+          "fixture"
+        ],
+        [
+          "gc-bounded",
+          "fixture"
+        ]
+      ],
+      "ms": {
+        "fixture": {
+          "arena-lto-bounded": 16.518717,
+          "gc-lto-bounded": 16.001442,
+          "arena-lto": 8.869648,
+          "gc-o3": 8.918618,
+          "gc-lto": 8.261708,
+          "arena-o3": 9.84732,
+          "arena-bounded": 17.780687,
+          "netlisp": 3.760051,
+          "gc-bounded": 16.393932
+        },
+        "changed-net": {
+          "arena-lto": 8.784041,
+          "gc-bounded": 16.537743,
+          "arena-o3": 10.36798,
+          "netlisp": 3.598953,
+          "arena-bounded": 17.410724,
+          "gc-lto": 8.112252,
+          "gc-lto-bounded": 15.548753,
+          "gc-o3": 9.017219,
+          "arena-lto-bounded": 16.502367
+        },
+        "changed-value": {
+          "gc-o3": 9.125644,
+          "netlisp": 3.536473,
+          "gc-lto": 8.634918,
+          "gc-bounded": 17.362261,
+          "arena-lto-bounded": 16.522597,
+          "arena-lto": 8.997129,
+          "arena-bounded": 17.285911,
+          "arena-o3": 10.111213,
+          "gc-lto-bounded": 15.746414
+        }
+      }
+    }
+  ]
+}

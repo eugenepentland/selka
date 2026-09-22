@@ -1,0 +1,7 @@
+import strings
+
+def parse(s: str) -> Option[float]:
+    return strings.to_float(s)
+
+def main() -> int:
+    return 0

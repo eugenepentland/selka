@@ -1,0 +1,9 @@
+**What I changed:** `project/main.my` only. The bug was `E_RESULT_CONSUMED`: `decode(args[0])` returns an affine `Result`, and `base + base + 10` consumed it twice on one path. `decode` is unchanged; `main` now consumes the `Result` exactly once with a `match` — on `Ok(base)` it prints `base + base + 10` (preserving the arithmetic that `public/expected.json` pins down: 41 → 92), and on `Err(_)` it prints `0` for a non-integer argument.
+
+**Command and result:**
+```
+bin/mylang check project/main.my          # exit 0, no diagnostics
+bin/mylang run project/main.my -- 41      # 92   (matches public/expected.json)
+bin/mylang run project/main.my -- 0       # 10   (matches public/expected.json)
+```
+I also verified both public cases programmatically against `public/expected.json` (`ALL PASS`) and checked other inputs: `abc`, `1.5`, `""`, `99999999999999999999` → `0`, and `7` → `24`, `-5` → `0`, `" 41"`/`+41` → `92`. 17 of the 20 compiler invocations were used.

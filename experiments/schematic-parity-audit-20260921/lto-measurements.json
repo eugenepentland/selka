@@ -1,0 +1,563 @@
+{
+  "cpu": 6,
+  "rounds": 21,
+  "warmups": 3,
+  "units": "ms",
+  "scope": "process launch, input read, SVG to private file, shutdown; no compilation",
+  "stdout_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+  "svg_bytes": 49617,
+  "input_bytes": 25845,
+  "samples": [
+    {
+      "round": 0,
+      "order": [
+        "zlink-both",
+        "zlink-plain",
+        "unit-o3",
+        "regenerated",
+        "whole-both",
+        "whole-o3",
+        "lto-both",
+        "lto-plain"
+      ],
+      "ms": {
+        "zlink-both": 78.148808,
+        "zlink-plain": 87.285141,
+        "unit-o3": 89.782912,
+        "regenerated": 88.623382,
+        "whole-both": 77.77832,
+        "whole-o3": 87.710094,
+        "lto-both": 68.324354,
+        "lto-plain": 85.69448
+      }
+    },
+    {
+      "round": 1,
+      "order": [
+        "lto-both",
+        "zlink-both",
+        "lto-plain",
+        "whole-both",
+        "zlink-plain",
+        "regenerated",
+        "whole-o3",
+        "unit-o3"
+      ],
+      "ms": {
+        "lto-both": 66.330634,
+        "zlink-both": 77.283824,
+        "lto-plain": 86.177673,
+        "whole-both": 78.082322,
+        "zlink-plain": 89.329723,
+        "regenerated": 92.764961,
+        "whole-o3": 92.192791,
+        "unit-o3": 93.553782
+      }
+    },
+    {
+      "round": 2,
+      "order": [
+        "zlink-both",
+        "lto-both",
+        "whole-o3",
+        "unit-o3",
+        "lto-plain",
+        "zlink-plain",
+        "regenerated",
+        "whole-both"
+      ],
+      "ms": {
+        "zlink-both": 85.734473,
+        "lto-both": 70.021524,
+        "whole-o3": 94.35553,
+        "unit-o3": 98.505068,
+        "lto-plain": 91.37886,
+        "zlink-plain": 91.097725,
+        "regenerated": 92.008485,
+        "whole-both": 79.326499
+      }
+    },
+    {
+      "round": 3,
+      "order": [
+        "regenerated",
+        "whole-o3",
+        "zlink-plain",
+        "unit-o3",
+        "lto-plain",
+        "lto-both",
+        "whole-both",
+        "zlink-both"
+      ],
+      "ms": {
+        "regenerated": 92.100572,
+        "whole-o3": 91.195049,
+        "zlink-plain": 91.661952,
+        "unit-o3": 92.537072,
+        "lto-plain": 90.988072,
+        "lto-both": 68.577909,
+        "whole-both": 78.99011,
+        "zlink-both": 79.561078
+      }
+    },
+    {
+      "round": 4,
+      "order": [
+        "regenerated",
+        "zlink-plain",
+        "whole-o3",
+        "lto-plain",
+        "lto-both",
+        "zlink-both",
+        "whole-both",
+        "unit-o3"
+      ],
+      "ms": {
+        "regenerated": 92.258083,
+        "zlink-plain": 91.792908,
+        "whole-o3": 91.613651,
+        "lto-plain": 90.43136,
+        "lto-both": 68.804827,
+        "zlink-both": 79.092596,
+        "whole-both": 79.77145,
+        "unit-o3": 92.781693
+      }
+    },
+    {
+      "round": 5,
+      "order": [
+        "zlink-plain",
+        "lto-plain",
+        "unit-o3",
+        "whole-both",
+        "regenerated",
+        "zlink-both",
+        "whole-o3",
+        "lto-both"
+      ],
+      "ms": {
+        "zlink-plain": 91.631255,
+        "lto-plain": 90.943236,
+        "unit-o3": 91.909729,
+        "whole-both": 80.371895,
+        "regenerated": 91.656135,
+        "zlink-both": 79.64613,
+        "whole-o3": 90.926016,
+        "lto-both": 69.079985
+      }
+    },
+    {
+      "round": 6,
+      "order": [
+        "lto-plain",
+        "regenerated",
+        "zlink-both",
+        "zlink-plain",
+        "unit-o3",
+        "whole-both",
+        "lto-both",
+        "whole-o3"
+      ],
+      "ms": {
+        "lto-plain": 89.991796,
+        "regenerated": 92.195618,
+        "zlink-both": 80.002126,
+        "zlink-plain": 91.175219,
+        "unit-o3": 89.357531,
+        "whole-both": 78.786341,
+        "lto-both": 67.000679,
+        "whole-o3": 88.996479
+      }
+    },
+    {
+      "round": 7,
+      "order": [
+        "whole-o3",
+        "zlink-both",
+        "unit-o3",
+        "zlink-plain",
+        "lto-plain",
+        "lto-both",
+        "regenerated",
+        "whole-both"
+      ],
+      "ms": {
+        "whole-o3": 88.673129,
+        "zlink-both": 78.75642,
+        "unit-o3": 90.929597,
+        "zlink-plain": 92.151021,
+        "lto-plain": 88.835919,
+        "lto-both": 67.659353,
+        "regenerated": 91.399869,
+        "whole-both": 78.679997
+      }
+    },
+    {
+      "round": 8,
+      "order": [
+        "unit-o3",
+        "zlink-both",
+        "regenerated",
+        "lto-both",
+        "lto-plain",
+        "whole-both",
+        "zlink-plain",
+        "whole-o3"
+      ],
+      "ms": {
+        "unit-o3": 89.695699,
+        "zlink-both": 78.742416,
+        "regenerated": 91.04258,
+        "lto-both": 69.638417,
+        "lto-plain": 89.712436,
+        "whole-both": 79.49897,
+        "zlink-plain": 91.265012,
+        "whole-o3": 91.4203
+      }
+    },
+    {
+      "round": 9,
+      "order": [
+        "whole-both",
+        "lto-both",
+        "zlink-both",
+        "zlink-plain",
+        "regenerated",
+        "unit-o3",
+        "lto-plain",
+        "whole-o3"
+      ],
+      "ms": {
+        "whole-both": 78.749381,
+        "lto-both": 68.454208,
+        "zlink-both": 79.252479,
+        "zlink-plain": 92.325473,
+        "regenerated": 95.772765,
+        "unit-o3": 95.280107,
+        "lto-plain": 91.308351,
+        "whole-o3": 91.907805
+      }
+    },
+    {
+      "round": 10,
+      "order": [
+        "lto-plain",
+        "whole-both",
+        "regenerated",
+        "whole-o3",
+        "zlink-plain",
+        "lto-both",
+        "unit-o3",
+        "zlink-both"
+      ],
+      "ms": {
+        "lto-plain": 90.764633,
+        "whole-both": 79.462522,
+        "regenerated": 92.183226,
+        "whole-o3": 91.218041,
+        "zlink-plain": 91.538132,
+        "lto-both": 68.051071,
+        "unit-o3": 91.431871,
+        "zlink-both": 79.253596
+      }
+    },
+    {
+      "round": 11,
+      "order": [
+        "regenerated",
+        "unit-o3",
+        "whole-both",
+        "whole-o3",
+        "zlink-both",
+        "zlink-plain",
+        "lto-plain",
+        "lto-both"
+      ],
+      "ms": {
+        "regenerated": 91.534158,
+        "unit-o3": 92.469446,
+        "whole-both": 80.304137,
+        "whole-o3": 90.731292,
+        "zlink-both": 79.196955,
+        "zlink-plain": 91.773151,
+        "lto-plain": 90.194436,
+        "lto-both": 68.909794
+      }
+    },
+    {
+      "round": 12,
+      "order": [
+        "whole-o3",
+        "lto-plain",
+        "regenerated",
+        "zlink-plain",
+        "lto-both",
+        "unit-o3",
+        "zlink-both",
+        "whole-both"
+      ],
+      "ms": {
+        "whole-o3": 91.34696,
+        "lto-plain": 91.0732,
+        "regenerated": 92.380972,
+        "zlink-plain": 92.067485,
+        "lto-both": 69.926361,
+        "unit-o3": 92.040967,
+        "zlink-both": 80.393239,
+        "whole-both": 79.917555
+      }
+    },
+    {
+      "round": 13,
+      "order": [
+        "whole-both",
+        "unit-o3",
+        "zlink-both",
+        "regenerated",
+        "whole-o3",
+        "lto-both",
+        "lto-plain",
+        "zlink-plain"
+      ],
+      "ms": {
+        "whole-both": 79.575282,
+        "unit-o3": 91.328784,
+        "zlink-both": 79.696371,
+        "regenerated": 91.248857,
+        "whole-o3": 91.082065,
+        "lto-both": 68.563415,
+        "lto-plain": 88.417095,
+        "zlink-plain": 89.974571
+      }
+    },
+    {
+      "round": 14,
+      "order": [
+        "whole-o3",
+        "regenerated",
+        "lto-both",
+        "whole-both",
+        "unit-o3",
+        "lto-plain",
+        "zlink-both",
+        "zlink-plain"
+      ],
+      "ms": {
+        "whole-o3": 90.072046,
+        "regenerated": 93.144787,
+        "lto-both": 68.591681,
+        "whole-both": 78.683629,
+        "unit-o3": 90.499388,
+        "lto-plain": 87.743399,
+        "zlink-both": 77.686708,
+        "zlink-plain": 87.015443
+      }
+    },
+    {
+      "round": 15,
+      "order": [
+        "regenerated",
+        "whole-both",
+        "lto-plain",
+        "zlink-plain",
+        "unit-o3",
+        "whole-o3",
+        "zlink-both",
+        "lto-both"
+      ],
+      "ms": {
+        "regenerated": 88.780934,
+        "whole-both": 78.064489,
+        "lto-plain": 85.779834,
+        "zlink-plain": 87.350209,
+        "unit-o3": 88.374713,
+        "whole-o3": 87.839983,
+        "zlink-both": 77.599663,
+        "lto-both": 65.602916
+      }
+    },
+    {
+      "round": 16,
+      "order": [
+        "whole-o3",
+        "whole-both",
+        "lto-both",
+        "zlink-both",
+        "zlink-plain",
+        "regenerated",
+        "lto-plain",
+        "unit-o3"
+      ],
+      "ms": {
+        "whole-o3": 86.9881,
+        "whole-both": 77.944124,
+        "lto-both": 65.79633,
+        "zlink-both": 77.698845,
+        "zlink-plain": 87.126985,
+        "regenerated": 88.142019,
+        "lto-plain": 91.189267,
+        "unit-o3": 87.689527
+      }
+    },
+    {
+      "round": 17,
+      "order": [
+        "lto-plain",
+        "zlink-plain",
+        "regenerated",
+        "whole-o3",
+        "whole-both",
+        "unit-o3",
+        "zlink-both",
+        "lto-both"
+      ],
+      "ms": {
+        "lto-plain": 85.562146,
+        "zlink-plain": 86.794895,
+        "regenerated": 88.260915,
+        "whole-o3": 87.397254,
+        "whole-both": 77.832113,
+        "unit-o3": 87.674137,
+        "zlink-both": 77.675139,
+        "lto-both": 65.960165
+      }
+    },
+    {
+      "round": 18,
+      "order": [
+        "lto-both",
+        "whole-both",
+        "zlink-plain",
+        "lto-plain",
+        "regenerated",
+        "unit-o3",
+        "zlink-both",
+        "whole-o3"
+      ],
+      "ms": {
+        "lto-both": 65.524532,
+        "whole-both": 77.865186,
+        "zlink-plain": 86.957922,
+        "lto-plain": 87.074049,
+        "regenerated": 87.971538,
+        "unit-o3": 87.707495,
+        "zlink-both": 81.989432,
+        "whole-o3": 87.871851
+      }
+    },
+    {
+      "round": 19,
+      "order": [
+        "unit-o3",
+        "zlink-plain",
+        "lto-plain",
+        "whole-o3",
+        "lto-both",
+        "whole-both",
+        "zlink-both",
+        "regenerated"
+      ],
+      "ms": {
+        "unit-o3": 88.313866,
+        "zlink-plain": 87.09396,
+        "lto-plain": 87.619068,
+        "whole-o3": 87.702414,
+        "lto-both": 66.191479,
+        "whole-both": 77.793375,
+        "zlink-both": 77.205386,
+        "regenerated": 87.854335
+      }
+    },
+    {
+      "round": 20,
+      "order": [
+        "unit-o3",
+        "lto-both",
+        "whole-o3",
+        "lto-plain",
+        "regenerated",
+        "whole-both",
+        "zlink-both",
+        "zlink-plain"
+      ],
+      "ms": {
+        "unit-o3": 87.604866,
+        "lto-both": 66.904515,
+        "whole-o3": 87.128672,
+        "lto-plain": 86.117888,
+        "regenerated": 87.459134,
+        "whole-both": 77.770816,
+        "zlink-both": 77.449255,
+        "zlink-plain": 87.028366
+      }
+    }
+  ],
+  "median_ms": {
+    "unit-o3": 90.929597,
+    "regenerated": 91.534158,
+    "whole-o3": 90.731292,
+    "whole-both": 78.749381,
+    "zlink-plain": 91.097725,
+    "zlink-both": 79.092596,
+    "lto-plain": 89.712436,
+    "lto-both": 68.324354
+  },
+  "ratios_to_regenerated": {
+    "unit-o3": {
+      "ratio": 0.9933952415883914,
+      "paired_bootstrap_95": [
+        0.9792728800975555,
+        1.0102179123120354
+      ]
+    },
+    "regenerated": {
+      "ratio": 1.0,
+      "paired_bootstrap_95": [
+        1.0,
+        1.0
+      ]
+    },
+    "whole-o3": {
+      "ratio": 0.9912287825928326,
+      "paired_bootstrap_95": [
+        0.9701669156659295,
+        0.9981721195696731
+      ]
+    },
+    "whole-both": {
+      "ratio": 0.860327802436332,
+      "paired_bootstrap_95": [
+        0.853577035629496,
+        0.8792933964853309
+      ]
+    },
+    "zlink-plain": {
+      "ratio": 0.9952320203786655,
+      "paired_bootstrap_95": [
+        0.9548282341772237,
+        1.001396134544658
+      ]
+    },
+    "zlink-both": {
+      "ratio": 0.8640773862802125,
+      "paired_bootstrap_95": [
+        0.848850819166327,
+        0.8803312882038443
+      ]
+    },
+    "lto-plain": {
+      "ratio": 0.9800978996278088,
+      "paired_bootstrap_95": [
+        0.9572280983892373,
+        0.9927112025834386
+      ]
+    },
+    "lto-both": {
+      "ratio": 0.7464355983915862,
+      "paired_bootstrap_95": [
+        0.7310004834919125,
+        0.7560158220998607
+      ]
+    }
+  }
+}

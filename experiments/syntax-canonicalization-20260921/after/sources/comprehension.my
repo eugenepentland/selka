@@ -1,0 +1,5 @@
+def transform(xs: list[int]) -> list[int]:
+    return [x + 1 for x in xs]
+
+def main() -> int:
+    return 0

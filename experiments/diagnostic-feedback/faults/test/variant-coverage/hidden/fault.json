@@ -1,0 +1,6 @@
+{
+  "id": "variant-coverage",
+  "family": "E_INCOMPLETE_MATCH",
+  "split": "test",
+  "expect": "stopped"
+}

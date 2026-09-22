@@ -1,0 +1,16 @@
+Fixed. Both examples pass and check is clean.
+
+**What I changed:** In `project/main.my`, the `area` function's `match` had only the `Shape.circle` arm, so the compiler rejected it with `E_INCOMPLETE_MATCH` (unhandled variant `square`). I added the missing arm:
+
+```python
+        case Shape.square(side):
+            return side * side
+```
+
+**Command run:**
+
+```
+bin/mylang check project/main.my && bin/mylang run project/main.my -- circle 2 && bin/mylang run project/main.my -- square 3
+```
+
+Result: `check` exit 0; `circle 2` printed `12`; `square 3` printed `9` — matching `public/expected.json` (`"12\n"`, `"9\n"`). The circle arm already returned `3 * radius * radius`, so no other change was needed.

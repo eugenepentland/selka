@@ -1,0 +1,13 @@
+Fixed.
+
+**What I changed** — both edits in `project/stats.my`, the helper module:
+1. `module statistics` → `module stats`: the declared module name didn't match the file's path, which `main.my` imports as `stats` (checker error `E_MODULE_NAME`).
+2. `def total()` → `public def total()`: the helper's function was private to its module, so `main` couldn't call it (`E_PRIVATE_SYMBOL`).
+
+`project/main.my` was left untouched.
+
+**Command run:**
+```
+./bin/mylang run project/main.my
+```
+Result: exit code 0, stdout exactly `7`. (`./bin/mylang check project/main.my` also exits 0 with no diagnostics.)

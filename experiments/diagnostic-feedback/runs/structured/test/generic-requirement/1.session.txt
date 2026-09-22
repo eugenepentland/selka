@@ -1,0 +1,10 @@
+Fixed `project/main.my`: the generic parameter's requirement `Sortable` is not a valid mylang requirement (only `copy`, `equality`, `integer`, `codec`, `storable`, or a declared constraint are). I replaced it with the builtin `copy` requirement and made the type parameter meaningful by using it as the list element type, so no explicit type arguments are needed:
+
+```mylang
+def pick[T: copy](values: list[T], index: int) -> T:
+    return values[index]
+```
+
+Command run: `./bin/mylang run project/main.my`
+
+Result: exit 0, stdout exactly `9` (`./bin/mylang check project/main.my` also passes).

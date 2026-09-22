@@ -1,0 +1,297 @@
+**** Function myl_f_7a6c4fac6c5cd7209ee2eecd9d6ad3673c55315117de1d8daa5aeb3f71bbd7c7 ****
+> Before CFG simplification:
+function $myl_f_7a6c4fac6c5cd7209ee2eecd9d6ad3673c55315117de1d8daa5aeb3f71bbd7c7() {
+@entry
+	%ctx =l par
+	%a0 =l par
+	nop
+	nop
+	%trap =l add %ctx, 32
+	nop
+	%l1 =l alloc8 16
+	nop
+	nop
+	nop
+	nop
+	%v6 =l alloc8 32
+	%v11 =l add %ctx, 64
+	%v12 =l load %v11
+	%v13 =l cultl %v6, %v12
+	jnz %v13, @floorfail3, @stackadmit1
+@floorfail3
+	argl %ctx
+	call $myl_qbe_fail_frame
+	jmp @entry_failure
+@stackadmit1
+	%v5.21 =l add %ctx, 48
+	%v14 =l load %v5.21
+	storel %v14, %v6
+	%v15 =l add %v6, 8
+	storel extern $myl_f_7a6c4fac6c5cd7209ee2eecd9d6ad3673c55315117de1d8daa5aeb3f71bbd7c7_meta, %v15
+	%v16 =l add %v6, 16
+	storel 0, %v16
+	storel %v6, %v5.21
+	nop
+	%agg2.23 =l alloc8 16
+	%agg10.24 =l alloc8 16
+	%agg23.25 =l alloc8 16
+	nop
+@i0
+	nop
+	nop
+	nop
+	nop
+	nop
+	storel 0, %agg2.23
+	%v21 =l add %agg2.23, 8
+	nop
+	storel 1, %v21
+	nop
+	nop
+	blit0 %agg2.23, %l1
+	blit1 16
+	nop
+	nop
+	nop
+@i6
+	%l2.28 =l phi @i0 0, @checked60 %v60.36
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	%v29 =l csltl %l2.28, %a0
+	nop
+	nop
+	jnz %v29, @next31, @i23
+@next31
+	blit0 %l1, %agg10.24
+	blit1 16
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+@nonzero34
+	%v36 =l ceql %l2.28, -9223372036854775808
+	nop
+	%v38 =l and %v36, 0
+	%v39 =l neg %v38
+	nop
+	%v40.18 =l and %v39, 2
+	%v41 =l xor %v40.18, 3
+	%v34.19 =l rem %l2.28, %v41
+	%v42 =l cnel %v34.19, 0
+	%v43 =l xor %v41, %v34.19
+	%v44 =l csltl %v43, 0
+	%v45 =l and %v42, %v44
+	%v46 =l neg %v45
+	%v47 =l and %v41, %v46
+	%v34.20 =l add %v47, %v34.19
+	nop
+	%v48 =l load %trap
+	jnz %v48, @failure, @ok48
+@ok48
+	nop
+	nop
+	nop
+	%v51 =l ceql %v34.20, 0
+	nop
+	storel 16, %v16
+	nop
+	nop
+	argl %ctx
+	argc :t3576dd72b5413d8309e9b3c0ebbd80e1f1d7442f9cb0274e01ea2b805e90a9a3, %agg10.24
+	argl %v51
+	%v54 =l call $myl_f_e40dfff1a71eb7baf65ea49495977ddd33d81611a9c59c5573fc42205baa7e85, :t3576dd72b5413d8309e9b3c0ebbd80e1f1d7442f9cb0274e01ea2b805e90a9a3
+	nop
+	%v55 =l load %trap
+	jnz %v55, @failure, @ok55
+@ok55
+	nop
+	blit0 %v54, %l1
+	blit1 16
+	nop
+	nop
+	nop
+	nop
+	nop
+	%v60.36 =l add %l2.28, 1
+	%v61 =l csgtl %l2.28, 9223372036854775806
+	jnz %v61, @overflow60, @checked60
+@overflow60
+	storel 20, %v16
+	argl %ctx
+	argl 0
+	argl %l2.28
+	argl 1
+	argl 64
+	call $myl_qbe_fail_overflow_op
+	jmp @failure
+@checked60
+	nop
+	nop
+	nop
+	jmp @i6
+@i23
+	blit0 %l1, %agg23.25
+	blit1 16
+	nop
+	nop
+	%v64 =l add %agg23.25, 8
+	%v65 =l load %v64
+	nop
+	nop
+	%v67 =l load %v6
+	storel %v67, %v5.21
+	retl %v65
+@failure
+	%v70 =l load %v6
+	storel %v70, %v5.21
+	retl 0
+@entry_failure
+	retl 0
+}
+
+> After CFG simplification:
+function $myl_f_7a6c4fac6c5cd7209ee2eecd9d6ad3673c55315117de1d8daa5aeb3f71bbd7c7() {
+@entry
+	%ctx =l par
+	%a0 =l par
+	nop
+	nop
+	%trap =l add %ctx, 32
+	nop
+	%l1 =l alloc8 16
+	nop
+	nop
+	nop
+	nop
+	%v6 =l alloc8 32
+	%v11 =l add %ctx, 64
+	%v12 =l load %v11
+	%v13 =l cultl %v6, %v12
+	jnz %v13, @floorfail3, @stackadmit1
+@floorfail3
+	argl %ctx
+	call $myl_qbe_fail_frame
+	retl 0
+@stackadmit1
+	%v5.21 =l add %ctx, 48
+	%v14 =l load %v5.21
+	storel %v14, %v6
+	%v15 =l add %v6, 8
+	storel extern $myl_f_7a6c4fac6c5cd7209ee2eecd9d6ad3673c55315117de1d8daa5aeb3f71bbd7c7_meta, %v15
+	%v16 =l add %v6, 16
+	storel 0, %v16
+	storel %v6, %v5.21
+	nop
+	%agg2.23 =l alloc8 16
+	%agg10.24 =l alloc8 16
+	%agg23.25 =l alloc8 16
+	nop
+	storel 0, %agg2.23
+	%v21 =l add %agg2.23, 8
+	storel 1, %v21
+	blit0 %agg2.23, %l1
+	blit1 16
+@i6
+	%l2.28 =l phi @stackadmit1 0, @checked60 %v60.36
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	%v29 =l csltl %l2.28, %a0
+	nop
+	nop
+	jnz %v29, @next31, @i23
+@next31
+	blit0 %l1, %agg10.24
+	blit1 16
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	%v36 =l ceql %l2.28, -9223372036854775808
+	%v38 =l and %v36, 0
+	%v39 =l neg %v38
+	%v40.18 =l and %v39, 2
+	%v41 =l xor %v40.18, 3
+	%v34.19 =l rem %l2.28, %v41
+	%v42 =l cnel %v34.19, 0
+	%v43 =l xor %v41, %v34.19
+	%v44 =l csltl %v43, 0
+	%v45 =l and %v42, %v44
+	%v46 =l neg %v45
+	%v47 =l and %v41, %v46
+	%v34.20 =l add %v47, %v34.19
+	%v48 =l load %trap
+	jnz %v48, @failure, @ok48
+@ok48
+	nop
+	nop
+	nop
+	%v51 =l ceql %v34.20, 0
+	nop
+	storel 16, %v16
+	nop
+	nop
+	argl %ctx
+	argc :t3576dd72b5413d8309e9b3c0ebbd80e1f1d7442f9cb0274e01ea2b805e90a9a3, %agg10.24
+	argl %v51
+	%v54 =l call $myl_f_e40dfff1a71eb7baf65ea49495977ddd33d81611a9c59c5573fc42205baa7e85, :t3576dd72b5413d8309e9b3c0ebbd80e1f1d7442f9cb0274e01ea2b805e90a9a3
+	nop
+	%v55 =l load %trap
+	jnz %v55, @failure, @ok55
+@ok55
+	nop
+	blit0 %v54, %l1
+	blit1 16
+	nop
+	nop
+	nop
+	nop
+	nop
+	%v60.36 =l add %l2.28, 1
+	%v61 =l csgtl %l2.28, 9223372036854775806
+	jnz %v61, @overflow60, @checked60
+@overflow60
+	storel 20, %v16
+	argl %ctx
+	argl 0
+	argl %l2.28
+	argl 1
+	argl 64
+	call $myl_qbe_fail_overflow_op
+	jmp @failure
+@checked60
+	nop
+	nop
+	nop
+	jmp @i6
+@i23
+	blit0 %l1, %agg23.25
+	blit1 16
+	nop
+	nop
+	%v64 =l add %agg23.25, 8
+	%v65 =l load %v64
+	nop
+	nop
+	%v67 =l load %v6
+	storel %v67, %v5.21
+	retl %v65
+@failure
+	%v70 =l load %v6
+	storel %v70, %v5.21
+	retl 0
+}
+

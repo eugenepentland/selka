@@ -1,0 +1,144 @@
+{
+  "contract": "Diagnostic only: expose oversized frame storage to LLVM as stack allocations.\n\nThis is NOT a production fix: existing native stack admission accounts for the\nold ABI frame, not these enlarged frames. It prices scalarization/liveness work.\nZero initialization, value snapshots, roots and ordinary language checks remain.\n",
+  "compiler_sha256": "fb9b1b7a5ea9f2fff670db0289d5911ab943d95d38244823634ab5edc8a8fcc5",
+  "builds": {
+    "none": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/mylang-audit-compiler",
+        "build",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-arenas-20260921/guest-gc/main.my",
+        "--project",
+        "--provider",
+        "src/schematic/native_schematic.c",
+        "--backend",
+        "llvm",
+        "--llvm-adapter",
+        "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py",
+        "--llvm-opt",
+        "3",
+        "--lto",
+        "--keep-symbols",
+        "--manifest-file=/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/frames/none.json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/frames/cache-none",
+        "--report",
+        "-o",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/frames/gc-lto-none-stack-ceiling"
+      ],
+      "source_manifest_sha256": "f06fee7362c5b2cb42f080d3ea6366bc6e358d90b8b0c129212663e69ed8e6df",
+      "manifest_sha256": "e9a78dcae233d8c612ee6c6590015f99129a7f78b8efc00d512315e154660d3f",
+      "binary": ".tmp/svg-gap-audit-20260921/frames/gc-lto-none-stack-ceiling",
+      "binary_sha256": "bce4cf3d41a11b42c9b8ab34528c6737cac40fa26b17c51dc0f155e7aca652c8",
+      "functions": [
+        {
+          "function": "circuit::normalize",
+          "bytes": 54672,
+          "removed_release_sites": 2
+        },
+        {
+          "function": "svg::render",
+          "bytes": 68928,
+          "removed_release_sites": 2
+        },
+        {
+          "function": "layout::collectRows",
+          "bytes": 46624,
+          "removed_release_sites": 2
+        },
+        {
+          "function": "layout_graph::build",
+          "bytes": 54832,
+          "removed_release_sites": 2
+        },
+        {
+          "function": "layout_routes::build",
+          "bytes": 65344,
+          "removed_release_sites": 2
+        }
+      ],
+      "qualification": {
+        "fixture": {
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "gc_stress": true
+        },
+        "changed-net": {
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "gc_stress": true
+        },
+        "changed-value": {
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "gc_stress": true
+        }
+      }
+    },
+    "both": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/mylang-audit-compiler",
+        "build",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-arenas-20260921/guest-gc/main.my",
+        "--project",
+        "--provider",
+        "src/schematic/native_schematic.c",
+        "--backend",
+        "llvm",
+        "--llvm-adapter",
+        "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py",
+        "--llvm-opt",
+        "3",
+        "--lto",
+        "--keep-symbols",
+        "--manifest-file=/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/frames/both.json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/frames/cache-both",
+        "--report",
+        "-o",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/frames/gc-lto-both-stack-ceiling"
+      ],
+      "source_manifest_sha256": "a763db845914ebf806bc516f04653fc2ce96c2627dffd8963fc9f05b733a82f7",
+      "manifest_sha256": "37ce561d8acca0bd692f19fee2c57fc75790bc3dd9652b4586117fbbb6650a1c",
+      "binary": ".tmp/svg-gap-audit-20260921/frames/gc-lto-both-stack-ceiling",
+      "binary_sha256": "8525cccd7acd46f1804f224804ef01ebc6e1950a2fc2382aad95eb3642415e59",
+      "functions": [
+        {
+          "function": "circuit::normalize",
+          "bytes": 54672,
+          "removed_release_sites": 2
+        },
+        {
+          "function": "svg::render",
+          "bytes": 68928,
+          "removed_release_sites": 2
+        },
+        {
+          "function": "layout::collectRows",
+          "bytes": 46624,
+          "removed_release_sites": 2
+        },
+        {
+          "function": "layout_graph::build",
+          "bytes": 54832,
+          "removed_release_sites": 2
+        },
+        {
+          "function": "layout_routes::build",
+          "bytes": 65344,
+          "removed_release_sites": 2
+        }
+      ],
+      "qualification": {
+        "fixture": {
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "gc_stress": true
+        },
+        "changed-net": {
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "gc_stress": true
+        },
+        "changed-value": {
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "gc_stress": true
+        }
+      }
+    }
+  }
+}

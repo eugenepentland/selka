@@ -1,0 +1,16 @@
+Fixed.
+
+**What I changed:** In `project/main.my`, `exceeds` was declared `-> int` but returned `bigger = a > b`, a `bool` — which `mylang check` rejected with `E_TYPE: expected int, found bool` on line 14. I replaced the body with an explicit branch returning `1` when `a > b` and `0` otherwise (this also yields the correct result for equal and negative arguments, not just the public examples).
+
+**Command and result:**
+
+```
+bin/mylang check project/main.my   → exit 0 (was: exit 1, E_TYPE)
+```
+
+Verification against `public/expected.json` (exact stdout comparison) and extra edge cases:
+
+```
+5 2 -> 1   2 5 -> 0   3 3 -> 0   -1 -5 -> 1   -5 -1 -> 0   0 -1 -> 1   7 0 -> 1
+ALL OK (both public cases match "1\n" and "0\n")
+```

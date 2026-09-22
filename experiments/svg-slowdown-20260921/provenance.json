@@ -1,0 +1,124 @@
+{
+  "date": "2026-09-21",
+  "git_head": "b8f6ec3f1178f12971e7dcb1d2255ab8c055b024",
+  "scope": "diagnostic-only audit; prior dirty production tree preserved; baseline guest/provider/compiler/adapter hashes unchanged",
+  "baseline_provenance": "experiments/full-svg-benchmark/provenance.json",
+  "timed_binaries": {
+    "netlisp": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/netlisp-llvm-fast",
+      "sha256": "6006ae5a1fc4e6a009fd9e5e2c138f885ae6211ffa01fe05731b76566e4e7316",
+      "three_inputs_exact_output": true,
+      "gc_stress": false
+    },
+    "o3": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/mylang-o3",
+      "sha256": "d9eeddfadfaad1509ef828a32afb7fcac9fdbd4a277cc8c670b5324bfb7e54b8",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "lto": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/mylang-o3-lto",
+      "sha256": "84c590c3d7169642a4782d36ca4ec44219d664c461f658089c6b48ebf3c8e077",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "bounded": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/mylang-o3-bounded",
+      "sha256": "f6f43ce5acd5cd7ca3951d3eac2df7f198086a7349beeee357c0d8a3869d0649",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "part-pin-index": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/algorithms/mylang-o3-part-pin",
+      "sha256": "7081e74084e3696ebe653b8cb6036e2bd1e8af1d0b0dfe95678e872fae2db1e0",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "host-control": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/host/control",
+      "sha256": "5d99d15308e4d926083a335481b5e4145f67e6274b45c46b9615b1840d66f285",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "host-scalar": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/host/scalar-fast",
+      "sha256": "d179a48eb3ea6fca72a2dc6ceeebe625b29e5699d7a58f9298cd01094954c0d1",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "guest-lto-runtime-native": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/lto/guest-lto-runtime-native",
+      "sha256": "9dcef8a1a41223ec45a3172c9ae610d65619bb1211757450af011f36a71b81e9",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "guest-native-runtime-lto": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/lto/guest-native-runtime-lto",
+      "sha256": "aa9196f764a507dbdd3cd8457e3bab36f0e5819db91d980912fdd0aed9525aed",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "lto-guest-noinline": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/lto/lto-guest-noinline",
+      "sha256": "b342481b1690587fde88cbf8a10c0583c89dfbe85722a98b0c7e48c819e08117",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "lto-guest-avx2": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/lto/lto-guest-avx2",
+      "sha256": "1e21e79554af5fddf40750811389030a0bc45df4090d2f5cd2c89f0cd3a6abcd",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "lto-partpin-avx2": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/lto/lto-partpin-avx2",
+      "sha256": "723f0e6c5c48f179f9a0755c212eac3b978f19a89fbed01ec8e3ff35d178c7c3",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "part-pin-index-bounded": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/algorithms/mylang-o3-part-pin-bounded",
+      "sha256": "6477cea8ec2536c3665380744b155b4ba5e6d0d89687223b1b2b5176fac4c243",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    }
+  },
+  "raw_pc_samples": {
+    "samples-bounded.txt": {
+      "uncompressed_sha256": "f7ad1f96d24b318f0e9d9808ca5c7124c428ebc02bd3e44da9e2cb82f74531a5",
+      "bytes": 54815,
+      "compressed": "experiments/svg-slowdown-20260921/raw-samples/samples-bounded.txt.gz"
+    },
+    "samples-lto-guest-avx2.txt": {
+      "uncompressed_sha256": "d9a5c78c90ff666210904cbf21985202f8a9ab1da12b6a55e0973c7fb3ca627f",
+      "bytes": 23630,
+      "compressed": "experiments/svg-slowdown-20260921/raw-samples/samples-lto-guest-avx2.txt.gz"
+    },
+    "samples-lto.txt": {
+      "uncompressed_sha256": "11b6d14790dd5be9a8b9e0f80e2ab4c67681b7bc1f9c75d94daa7056b2e7a1a9",
+      "bytes": 25020,
+      "compressed": "experiments/svg-slowdown-20260921/raw-samples/samples-lto.txt.gz"
+    },
+    "samples-o3.txt": {
+      "uncompressed_sha256": "ee66cc1f9c3530f4c74a5503ebbb9ad7e294b3948a189204958063e3d32a4885",
+      "bytes": 31110,
+      "compressed": "experiments/svg-slowdown-20260921/raw-samples/samples-o3.txt.gz"
+    },
+    "samples-part-pin-index.txt": {
+      "uncompressed_sha256": "d5758d03fa90b7f8b90167776e9ae372d7830a3ff0f977e5da41b83999bfdf6a",
+      "bytes": 20400,
+      "compressed": "experiments/svg-slowdown-20260921/raw-samples/samples-part-pin-index.txt.gz"
+    }
+  },
+  "cpu": 6,
+  "governor": "powersave",
+  "perf_event_paranoid": "4",
+  "perf_attempt": "perf stat -e task-clock -- true failed: No supported events found; performance monitoring limited",
+  "gc_evidence_scope": "phase instrumented O3 and bounded O3; no direct LTO collection-count trace",
+  "production_changes": false,
+  "guardian_exercised": false,
+  "audit_source_hashes": {
+    "experiments/svg-slowdown-20260921/audit_run.py": "d63f9cf979687d3cd35183b2deae568cdd88b2557521ffe237824ec24ac53cf4",
+    "experiments/svg-slowdown-20260921/build_phases.py": "126ee1855f9e5e3f81a5af0d2b912d3ce09f4b6f4023a4613788b12ff49b3e79"
+  }
+}

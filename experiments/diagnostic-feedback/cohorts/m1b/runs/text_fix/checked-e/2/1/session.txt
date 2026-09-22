@@ -1,0 +1,27 @@
+## What I changed
+
+`project/main.my` only. The bug was in `main`: it added `-3` to `to_int(...)` directly, but `to_int` returns a `Result[int, str]`, not an `int`. I unwrapped it with a `match`, so:
+
+- `Ok(value)` → prints `-3 + value`
+- `Err(_)` → prints `-1` (argument not an integer)
+- `len(args) == 0` → prints `-1` instead of trapping on `args[0]`
+
+`to_int` was already correct (`int(raw)` yields `Option[int]`, which it maps to `Ok`/`Err`), so I left it unchanged.
+
+## Commands run and results
+
+```
+$ bin/mylang check project/main.my
+(no output, exit 0)
+
+$ bin/mylang run project/main.my -- 41
+38
+
+$ bin/mylang run project/main.my -- 0
+-3
+
+$ bin/mylang run project/main.my -- abc
+-1
+```
+
+Both `public/expected.json` cases match, and extra checks (`3.5`, `12abc`, `""` → `-1`; `-7` → `-10`; `100` → `97`; no args → `-1`) all behave per the stated contract. 18 of the 20 allowed compiler invocations were used.

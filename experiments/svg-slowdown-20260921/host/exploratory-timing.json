@@ -1,0 +1,107 @@
+{
+  "label": "exploratory only; final randomized timing owned by root",
+  "cpu": 6,
+  "rounds": 7,
+  "rows": [
+    {
+      "round": 0,
+      "order": [
+        "control",
+        "scalar-fast",
+        "original-control"
+      ],
+      "ms": {
+        "control": 20.224045,
+        "scalar-fast": 17.285686,
+        "original-control": 19.16428
+      }
+    },
+    {
+      "round": 1,
+      "order": [
+        "original-control",
+        "scalar-fast",
+        "control"
+      ],
+      "ms": {
+        "original-control": 19.260561,
+        "scalar-fast": 17.637528,
+        "control": 19.083293
+      }
+    },
+    {
+      "round": 2,
+      "order": [
+        "scalar-fast",
+        "control",
+        "original-control"
+      ],
+      "ms": {
+        "scalar-fast": 17.266883,
+        "control": 19.01419,
+        "original-control": 19.294372
+      }
+    },
+    {
+      "round": 3,
+      "order": [
+        "scalar-fast",
+        "original-control",
+        "control"
+      ],
+      "ms": {
+        "scalar-fast": 18.252621,
+        "original-control": 19.683424,
+        "control": 19.669411
+      }
+    },
+    {
+      "round": 4,
+      "order": [
+        "original-control",
+        "scalar-fast",
+        "control"
+      ],
+      "ms": {
+        "original-control": 19.312702,
+        "scalar-fast": 17.32771,
+        "control": 18.427853
+      }
+    },
+    {
+      "round": 5,
+      "order": [
+        "control",
+        "original-control",
+        "scalar-fast"
+      ],
+      "ms": {
+        "control": 18.809522,
+        "original-control": 18.875538,
+        "scalar-fast": 17.190491
+      }
+    },
+    {
+      "round": 6,
+      "order": [
+        "scalar-fast",
+        "original-control",
+        "control"
+      ],
+      "ms": {
+        "scalar-fast": 16.777061,
+        "original-control": 18.586788,
+        "control": 20.097162
+      }
+    }
+  ],
+  "median_ms": {
+    "original-control": 19.260561,
+    "control": 19.083293,
+    "scalar-fast": 17.285686
+  },
+  "ratios": {
+    "regenerated_to_original": 0.9907963220801306,
+    "scalar_to_control": 0.9058020541842541
+  }
+}

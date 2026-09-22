@@ -1,0 +1,14 @@
+Command:
+cc -std=c11 -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -Isrc experiments/svg-gap-fixes-20260921/provider_checks.c -o experiments/svg-gap-fixes-20260921/provider-checks-san
+ASAN_OPTIONS=detect_leaks=1 experiments/svg-gap-fixes-20260921/provider-checks-san
+
+Result: PASS (exit 0, no ASan/UBSan diagnostics)
+
+The resulting executable was subsequently moved into the private cache at
+.tmp/svg-gap-fixes-20260921/provider-checks-san; only source and evidence remain here.
+
+Covered contracts:
+- A two-byte write_block_packed call succeeds into fully buffered /dev/full.
+- finish reports HostFailure when fflush publishes those buffered bytes.
+- Invalid count and insufficient work reject before state or file output changes.
+- output_limit consumes its call charge and returns HostWorkLimit without output.

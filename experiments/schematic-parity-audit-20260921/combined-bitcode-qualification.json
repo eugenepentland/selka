@@ -1,0 +1,28 @@
+{
+  "runtime_archive": "/home/epentland/ai/canopy/mylang/.tmp/schematic-implementation-20260921/combined-cache/objects/957a6f701f1b586fcd5b9622450ab1661dc90d12efa4e140c2c3c12286665787/a69ae9d88e9a143e480ec818d1792e0aac6f837a5c1b1b6609197518791e6264.a",
+  "runtime_sha256": "16d8e2bf68f16cd458cd96d5512f5dada7c6370f0b6769b050e3c5c1d258fa17",
+  "runtime_members": {
+    "qbe_runtime.c.o": "4243c0de",
+    "native_heap.c.o": "4243c0de",
+    "native_collections.c.o": "4243c0de",
+    "native_text.c.o": "4243c0de",
+    "native_dictionary.c.o": "4243c0de",
+    "qbe_stack.c.o": "4243c0de",
+    "qbe_providers.c.o": "4243c0de",
+    "qbe_resources.c.o": "4243c0de",
+    "native_equal.c.o": "4243c0de",
+    "native_bytes.c.o": "4243c0de",
+    "qbe_bytes.c.o": "4243c0de",
+    "native_regions.c.o": "4243c0de",
+    "qbe_arena.c.o": "4243c0de",
+    "native_print.c.o": "4243c0de",
+    "qbe_io.c.o": "4243c0de",
+    "native_scoped.c.o": "4243c0de",
+    "qbe_grants.c.o": "4243c0de",
+    "qbe_files.c.o": "4243c0de",
+    "native_text_methods.c.o": "4243c0de"
+  },
+  "guest_functions_checked": 115,
+  "all_guest_objects_bitcode": true,
+  "release_compiler_sha256": "73211569d843a7eb780b77a10644d288996c810fd600f85d93385739f54bd6b3"
+}

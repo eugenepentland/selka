@@ -1,0 +1,13 @@
+Fixed and verified.
+
+**What I changed** (both files under `project/`):
+- `project/main.my` line 3: `import lib.stats as stats` → `import stats as stats` (module paths resolve from the project root, so the sibling `stats.my` is imported directly, not through a nonexistent `lib/` folder).
+- `project/stats.my` line 4: `def total() -> int` → `public def total() -> int` so the helper is visible outside its module.
+
+**Command and result:**
+```
+$ ./bin/mylang run project/main.my
+7
+[run exit code: 0]
+```
+`./bin/mylang check project/main.my` also exits 0.

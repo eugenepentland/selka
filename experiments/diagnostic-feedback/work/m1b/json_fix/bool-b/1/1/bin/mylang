@@ -1,0 +1,119 @@
+#!/usr/bin/env python3
+"""Generated compiler wrapper: treatment 'json_fix', event logging, limits."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import time
+import uuid
+
+sys.path.insert(0, '/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback')
+import events  # the coordinator's schema, parser and identity function
+
+REAL = '/home/epentland/ai/canopy/mylang/experiments/cascade/tools/bin/mylang'
+CONDITION = 'json_fix'
+JSON_ARMS = ('json', 'json_fix')
+REMEDY_ARMS = ('text_fix', 'json_fix')
+REMEDIES = {'E_TYPE': [('expected int, found bool', 'mylang does not treat a boolean as an integer. Convert explicitly, for example `return 1 if condition else 0`, or declare the function `-> bool` if it returns a truth value.'), ('found Result[', 'the call returns a `Result`; unwrap it (`match parse(...): case Ok(value): ... case Err(problem): ...`) or propagate it with `?` from a function that itself returns a compatible `Result`.')], 'E_MODULE_NAME': [('', "the `module` header must equal the file's path from the project root: a file `helper.my` at the root declares `module helper`.")], 'E_MODULE_READ': [('', 'imports are resolved from the project root: a module in `helper.my` at the root is `import helper as helper`, not through a folder that does not exist.')], 'E_OUTPUT_CAPABILITY': [('', "printing goes through a stream: add `out: Stream` to this function, declare `effects(output)` on it, and pass `main`'s `out` at the call site.")], 'E_INCOMPLETE_MATCH': [('', 'add the arm the message names and bind its payload, for example `case Shape.square(side): return side * side`.')], 'E_UNKNOWN_NAME': [('', 'the name is not defined anywhere in scope. Assign it before the point of use, or correct the spelling to an existing binding.')], 'E_GENERIC_REQUIREMENT': [('', '`Ordered` is not a requirement this compiler knows. Use one of `copy`, `equality`, `integer`, `codec`, `storable`, or declare a `constraint` naming the operations you need.')]}
+
+
+def remedy_for(code, message):
+    for needle, remedy in REMEDIES.get(code, []):
+        if needle in message:
+            return remedy
+    return None
+
+
+def render(diagnostics, raw):
+    if CONDITION == "text" or not diagnostics:
+        return raw
+    suggestions = {}
+    for diagnostic in diagnostics:
+        suggestions[id(diagnostic)] = remedy_for(diagnostic["code"], diagnostic["message"]) \
+            if CONDITION in REMEDY_ARMS else None
+    if CONDITION in JSON_ARMS:
+        payload = {"version": "diagnostics-v1", "count": len(diagnostics), "diagnostics": []}
+        for diagnostic in diagnostics:
+            rendered = {key: diagnostic[key] for key in
+                        ("code", "message", "path", "line", "column", "snippet", "notes")}
+            if suggestions[id(diagnostic)]:
+                rendered["suggested_fix"] = suggestions[id(diagnostic)]
+            payload["diagnostics"].append(rendered)
+        return json.dumps(payload, indent=2) + "\n"
+    lines = [raw.rstrip("\n")]
+    for diagnostic in diagnostics:
+        if suggestions[id(diagnostic)]:
+            lines.append(f"{diagnostic['path']}:{diagnostic['line']}:{diagnostic['column']}: "
+                         f"note: {suggestions[id(diagnostic)]}")
+    return "\n".join(lines) + "\n"
+
+
+def main():
+    log_path = os.environ.get("MYLANG_EVENT_LOG", "")
+    project = os.environ.get("MYLANG_PROJECT", "project")
+    limit = int(os.environ.get("MYLANG_LIMIT", "0") or 0)
+    cohort = os.environ.get("MYLANG_COHORT", "")
+    attempt = os.environ.get("MYLANG_ATTEMPT", "")
+    initial = os.environ.get("MYLANG_INITIAL_HASH", "")
+    argv = sys.argv[1:]
+    command = argv[0] if argv else ""
+
+    written = 0
+    if log_path and os.path.isfile(log_path):
+        with open(log_path) as handle:
+            written = sum(1 for line in handle if line.strip())
+    invocation = uuid.uuid4().hex
+    if limit and written >= limit:
+        event = {"schema": events.SCHEMA, "cohort_id": cohort, "attempt_id": attempt,
+                  "invocation_id": invocation, "command": command, "argv": argv,
+                  "cwd": os.getcwd(), "source_sha256": events.inventory(Path(project))[0],
+                  "compiler_sha256": '4a9ad0c17789e422fa90dbb8e91497f007abdc2ef5152f3123889dbdc2cfbcb2', "started_monotonic_ns": time.monotonic_ns(),
+                  "finished_monotonic_ns": time.monotonic_ns(), "exit_code": 66,
+                  "outcome": "limit_reached", "diagnostic_codes": [],
+                  "diagnostic_identities": [], "source_stable": True,
+                  "initial_source_sha256": initial, "stdout_sha256": "", "stderr_sha256": ""}
+        if log_path:
+            _append(log_path, event)
+        sys.stderr.write("mylang: invocation limit reached for this attempt\n")
+        sys.exit(66)
+
+    before = events.inventory(Path(project))[0] if os.path.isdir(project) else ""
+    started = time.monotonic_ns()
+    completed = subprocess.run([REAL] + argv, capture_output=True)
+    finished = time.monotonic_ns()
+    after = events.inventory(Path(project))[0] if os.path.isdir(project) else ""
+
+    stderr = completed.stderr.decode(errors="replace")
+    diagnostics = events.parse_diagnostics(stderr)
+    outcome = events.classify(completed.returncode, stderr, diagnostics, command)
+    event = {"schema": events.SCHEMA, "cohort_id": cohort, "attempt_id": attempt,
+              "invocation_id": invocation, "command": command, "argv": argv, "cwd": os.getcwd(),
+              "source_sha256": before, "compiler_sha256": '4a9ad0c17789e422fa90dbb8e91497f007abdc2ef5152f3123889dbdc2cfbcb2',
+              "started_monotonic_ns": started, "finished_monotonic_ns": finished,
+              "exit_code": completed.returncode, "outcome": outcome,
+              "diagnostic_codes": [diagnostic["code"] for diagnostic in diagnostics],
+              "diagnostic_identities": [events.identity(diagnostic) for diagnostic in diagnostics],
+              "source_stable": before == after, "initial_source_sha256": initial,
+              "stdout_sha256": hashlib.sha256(completed.stdout).hexdigest(),
+              "stderr_sha256": hashlib.sha256(completed.stderr).hexdigest()}
+    if log_path:
+        _append(log_path, event)
+
+    sys.stdout.buffer.write(completed.stdout)
+    sys.stdout.flush()
+    sys.stderr.write(render(diagnostics, stderr))
+    sys.exit(completed.returncode)
+
+
+def _append(path, event):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "a") as handle:
+        handle.write(json.dumps(event) + "\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+
+
+if __name__ == "__main__":
+    main()

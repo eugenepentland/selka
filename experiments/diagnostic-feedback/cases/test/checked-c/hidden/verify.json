@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "steps": [
+    {
+      "id": "in-0",
+      "kind": "test",
+      "args": [
+        "41"
+      ],
+      "expect_stdout": "92\n",
+      "timeout": 120
+    },
+    {
+      "id": "in-1",
+      "kind": "test",
+      "args": [
+        "0"
+      ],
+      "expect_stdout": "10\n",
+      "timeout": 120
+    },
+    {
+      "id": "in-2",
+      "kind": "test",
+      "args": [
+        "7"
+      ],
+      "expect_stdout": "24\n",
+      "timeout": 120
+    },
+    {
+      "id": "in-3",
+      "kind": "test",
+      "args": [
+        "xyz"
+      ],
+      "expect_stdout": "0\n",
+      "timeout": 120
+    }
+  ]
+}

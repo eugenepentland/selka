@@ -1,0 +1,10 @@
+Done. Two edits, both in `project/main.my`:
+
+- `def biggest[T: Sortable](values: list[int]) -> int:` → `def biggest(values: list[int]) -> int:`
+- `def biggest_of[T: Sortable](values: list[int]) -> int:` → `def biggest_of(values: list[int]) -> int:`
+
+The type parameter `T` was the whole problem: `Sortable` isn't a valid requirement (`E_GENERIC_REQUIREMENT`), and once given a valid requirement it was undeterminable because `T` never appears in the signature (`E_GENERIC_INFERENCE`). Since both functions only operate on `list[int]`, removing the unused generic parameter is the minimal fix; the body and the `main` logic are unchanged.
+
+Command run: `bin/mylang check project/main.my && bin/mylang run project/main.my -- 1 3 2 && bin/mylang run project/main.my -- 5 5 5`
+
+Result: `CHECK OK`, then `3` and `5`. I also verified `7 2 9` → `9` and `-5 -1 -3` → `-1`.

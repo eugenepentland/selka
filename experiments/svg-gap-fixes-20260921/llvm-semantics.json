@@ -1,0 +1,67 @@
+{
+  "projection": {
+    "binary_sha256": "0aa23c9ff62c5b6f7f620308d0a809be4510043c2c790ce9aeefed500d4794f4",
+    "runs": [
+      {
+        "gc_stress": false,
+        "exit": 42,
+        "stdout": "42\n",
+        "stderr": ""
+      },
+      {
+        "gc_stress": true,
+        "exit": 42,
+        "stdout": "42\n",
+        "stderr": ""
+      }
+    ]
+  },
+  "projection-bounds--2": {
+    "binary_sha256": "aebf00c3005279f58f25ee56ca11ba58399898485c3082cfc9b6cddfa3e7829e",
+    "runs": [
+      {
+        "gc_stress": false,
+        "exit": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-fixes-20260921/projection-bounds--2.my:5:12: error[R_LIST_BOUNDS]: native execution failed (index -2, length 1)\n  in read at /home/epentland/ai/canopy/mylang/.tmp/svg-gap-fixes-20260921/projection-bounds--2.my:5:12\n  in main at /home/epentland/ai/canopy/mylang/.tmp/svg-gap-fixes-20260921/projection-bounds--2.my:7:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-2,\"length\":1}\n"
+      },
+      {
+        "gc_stress": true,
+        "exit": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-fixes-20260921/projection-bounds--2.my:5:12: error[R_LIST_BOUNDS]: native execution failed (index -2, length 1)\n  in read at /home/epentland/ai/canopy/mylang/.tmp/svg-gap-fixes-20260921/projection-bounds--2.my:5:12\n  in main at /home/epentland/ai/canopy/mylang/.tmp/svg-gap-fixes-20260921/projection-bounds--2.my:7:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-2,\"length\":1}\n"
+      }
+    ]
+  },
+  "projection-bounds-1": {
+    "binary_sha256": "ff73458875c4925b48c334bfd272f3c9e953c8a50799a434f52661d2d81879ff",
+    "runs": [
+      {
+        "gc_stress": false,
+        "exit": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-fixes-20260921/projection-bounds-1.my:5:12: error[R_LIST_BOUNDS]: native execution failed (index 1, length 1)\n  in read at /home/epentland/ai/canopy/mylang/.tmp/svg-gap-fixes-20260921/projection-bounds-1.my:5:12\n  in main at /home/epentland/ai/canopy/mylang/.tmp/svg-gap-fixes-20260921/projection-bounds-1.my:7:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":1,\"length\":1}\n"
+      },
+      {
+        "gc_stress": true,
+        "exit": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-fixes-20260921/projection-bounds-1.my:5:12: error[R_LIST_BOUNDS]: native execution failed (index 1, length 1)\n  in read at /home/epentland/ai/canopy/mylang/.tmp/svg-gap-fixes-20260921/projection-bounds-1.my:5:12\n  in main at /home/epentland/ai/canopy/mylang/.tmp/svg-gap-fixes-20260921/projection-bounds-1.my:7:12\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":1,\"length\":1}\n"
+      }
+    ]
+  },
+  "bulk_boundaries": {
+    "checks": [
+      "test_minimum_integer_decimal",
+      "test_negative_decimal_width_boundaries",
+      "test_output_limit_fails_without_oversized_buffer",
+      "test_decimal_uses_exact_remaining_capacity"
+    ],
+    "normal_and_gc_stress": true,
+    "binary_sha256": "3e57fa871c18ddfc867eecaf6b365f972add1525d086eaefcff95c0804b8ae7a"
+  },
+  "write_failure": {
+    "exit": 1,
+    "stderr": "io.my:132:18: error[R_HOST_FAILURE]: native execution failed\n  in io::flush at io.my:132:18\n  in svg::render at svg.my:255:12\n  in main::main at main.my:13:14\n  in <entry> at main.my:7:5\n"
+  }
+}

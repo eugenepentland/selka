@@ -1,0 +1,18 @@
+{
+  "mylang-o3": {
+    "control": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/phases/mylang-o3-control",
+    "probe": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/phases/mylang-o3-phases",
+    "guest_objects_reused_unchanged": 115,
+    "runtime_archive": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/mylang-cache/objects/955d16ee20c5e267841020ac6ee80cb0002557144b70dc12e9aad422bccdbd13/837f064a1a1e09a4b85181013757e32cb82e13bbc487c83e6907fa7e671b3b79.a",
+    "source_sha256": "47ffa7b45536043709c7c89038f155a9fbc62cdd7c8518151d1eb51b0fa70925",
+    "probe_sha256": "740fdf5b614bee2acc50b3328565f6271dcf3ccd9e1cc380e80f2816c80b89e4"
+  },
+  "mylang-o3-bounded": {
+    "control": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/phases/mylang-o3-bounded-control",
+    "probe": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/phases/mylang-o3-bounded-phases",
+    "guest_objects_reused_unchanged": 115,
+    "runtime_archive": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/mylang-cache-bounded/objects/955d16ee20c5e267841020ac6ee80cb0002557144b70dc12e9aad422bccdbd13/837f064a1a1e09a4b85181013757e32cb82e13bbc487c83e6907fa7e671b3b79.a",
+    "source_sha256": "47ffa7b45536043709c7c89038f155a9fbc62cdd7c8518151d1eb51b0fa70925",
+    "probe_sha256": "06faa253dc368bc0253218669d2656c0e8d225b84ddc8a9033d403a11d2a94b6"
+  }
+}

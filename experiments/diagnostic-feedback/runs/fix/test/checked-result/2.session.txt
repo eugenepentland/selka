@@ -1,0 +1,20 @@
+Done.
+
+**What I changed** — `project/main.my`, in `main` only: the type error was `score = bonus + lookup("five")`, adding an `int` to a `Result[int, str]`. I unwrapped the result with a `match` (as the `E_TYPE` suggested fix indicated; `?` was not an option because `main` returns `int`, not a `Result`):
+
+- predeclared `score = 0` before the `match` (the loop/match rules require definite assignment)
+- `case Ok(value): score = bonus + value`
+- `case Err(_): score = bonus` (wildcard, so no `W_UNUSED_BINDING` warning)
+
+`lookup` and everything else were left untouched.
+
+**Command and result:**
+
+```
+$ bin/mylang check project/main.my
+check exit=0        (no diagnostics)
+
+$ bin/mylang run project/main.my
+5
+run exit=0          (stdout is exactly "5\n")
+```

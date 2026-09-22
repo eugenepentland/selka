@@ -1,0 +1,20 @@
+Done.
+
+**What I changed:** `project/main.my` — `above` was declared `-> int` but returned the `bool` expression `a > b`, which the checker rejected with `error[E_TYPE]: expected int, found bool`. I made it return the required integers instead:
+
+```python
+def above(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+**Command and result:**
+
+```
+$ ./bin/mylang run project/main.my
+1
+[exit 0]
+```
+
+`./bin/mylang check project/main.my` also exits 0. I additionally verified the other branch on a throwaway copy (`above(2, 5)` printed `0`, exit 0) and removed that file, so `project/` contains only `main.my`.

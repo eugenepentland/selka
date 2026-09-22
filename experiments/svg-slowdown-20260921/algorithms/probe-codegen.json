@@ -1,0 +1,13 @@
+{
+  "baseline": {
+    "text_bytes": 653,
+    "instructions": 169,
+    "list_get_sites": 1
+  },
+  "probe": {
+    "text_bytes": 1507,
+    "instructions": 394,
+    "list_get_sites": 6
+  },
+  "interpretation": "Probe adds constant indexed validation before retaining the original scan fallback; successful normalized lookups avoid up to 99 loop iterations. Static size is not a runtime frequency measurement."
+}

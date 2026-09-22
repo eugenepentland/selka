@@ -1,0 +1,9 @@
+**What I changed:** In `project/main.my`, removed the invalid generic requirement clause `[T: Ordered]` from both `largest` and `largest_of` (the checker rejected `Ordered` with `E_GENERIC_REQUIREMENT`; the type parameter wasn't used by either signature). No other changes.
+
+**Command and result:**
+```
+$ bin/mylang check project/main.my && bin/mylang run project/main.my -- 1 3 2
+check: OK
+3
+```
+Both `public/expected.json` cases pass exactly (`1 3 2 → 3\n`, `5 5 5 → 5\n`, exit 0), as do edge cases with negatives and the maximum in first/third position.

@@ -1,0 +1,114 @@
+1492428 execve(".tmp/full-svg-benchmark-20260921/netlisp-llvm-fast", [".tmp/full-svg-benchmark-20260921"..., ".tmp/full-svg-benchmark-20260921"..., "straps-synth-lmx2595", ".tmp/full-svg-benchmark-20260921"...], 0x7ffef21be788 /* 35 vars */) = 0
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/straps-synth-lmx2595.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/modules/straps-synth-lmx2595.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = 3
+1492428 statx(3, "", AT_STATX_SYNC_AS_STAT|AT_EMPTY_PATH, STATX_TYPE|STATX_MODE|STATX_NLINK|STATX_ATIME|STATX_MTIME|STATX_CTIME|STATX_INO|STATX_SIZE|STATX_BLOCKS, {stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFREG|0664, stx_size=24481, ...}) = 0
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/cap-0201.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/modules/cap-0201.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/cap-0402.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = 3
+1492428 statx(3, "", AT_STATX_SYNC_AS_STAT|AT_EMPTY_PATH, STATX_TYPE|STATX_MODE|STATX_NLINK|STATX_ATIME|STATX_MTIME|STATX_CTIME|STATX_INO|STATX_SIZE|STATX_BLOCKS, {stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFREG|0664, stx_size=153, ...}) = 0
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/cap-0603.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = 3
+1492428 statx(3, "", AT_STATX_SYNC_AS_STAT|AT_EMPTY_PATH, STATX_TYPE|STATX_MODE|STATX_NLINK|STATX_ATIME|STATX_MTIME|STATX_CTIME|STATX_INO|STATX_SIZE|STATX_BLOCKS, {stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFREG|0664, stx_size=146, ...}) = 0
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/cap-0805.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/modules/cap-0805.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/res-0201.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/modules/res-0201.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/res-0402.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = 3
+1492428 statx(3, "", AT_STATX_SYNC_AS_STAT|AT_EMPTY_PATH, STATX_TYPE|STATX_MODE|STATX_NLINK|STATX_ATIME|STATX_MTIME|STATX_CTIME|STATX_INO|STATX_SIZE|STATX_BLOCKS, {stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFREG|0664, stx_size=178, ...}) = 0
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/res-0603.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/modules/res-0603.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/res-0805.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/modules/res-0805.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/ind-0201.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/modules/ind-0201.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/ind-0402.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = 3
+1492428 statx(3, "", AT_STATX_SYNC_AS_STAT|AT_EMPTY_PATH, STATX_TYPE|STATX_MODE|STATX_NLINK|STATX_ATIME|STATX_MTIME|STATX_CTIME|STATX_INO|STATX_SIZE|STATX_BLOCKS, {stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFREG|0664, stx_size=152, ...}) = 0
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/ind-0603.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/modules/ind-0603.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/ind-0805.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/modules/ind-0805.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/ind-1616.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/modules/ind-1616.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/ind-2016.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/modules/ind-2016.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/ferrite-0402.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/modules/ferrite-0402.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/led-0402.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/modules/led-0402.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/components/lmx2595rhar.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = 3
+1492428 statx(3, "", AT_STATX_SYNC_AS_STAT|AT_EMPTY_PATH, STATX_TYPE|STATX_MODE|STATX_NLINK|STATX_ATIME|STATX_MTIME|STATX_CTIME|STATX_INO|STATX_SIZE|STATX_BLOCKS, {stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFREG|0664, stx_size=24285, ...}) = 0
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/lmx2595rhar.sexp", F_OK) = 0
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/lmx2595rhar.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = 3
+1492428 statx(3, "", AT_STATX_SYNC_AS_STAT|AT_EMPTY_PATH, STATX_TYPE|STATX_MODE|STATX_NLINK|STATX_ATIME|STATX_MTIME|STATX_CTIME|STATX_INO|STATX_SIZE|STATX_BLOCKS, {stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFREG|0664, stx_size=931, ...}) = 0
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/footprints/c-0402.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/footprints/c-0603.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-res.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/footprints/r-0402.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-res.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-res.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-res.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-res.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-res.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-res.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-res.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-ind.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/footprints/l-0402.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-ind.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-res.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-res.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-res.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-res.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-res.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-res.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 faccessat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", F_OK) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/interfaces/spi.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = 3
+1492428 statx(3, "", AT_STATX_SYNC_AS_STAT|AT_EMPTY_PATH, STATX_TYPE|STATX_MODE|STATX_NLINK|STATX_ATIME|STATX_MTIME|STATX_CTIME|STATX_INO|STATX_SIZE|STATX_BLOCKS, {stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFREG|0664, stx_size=433, ...}) = 0
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/kicad-projects.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-res.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-ind.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/lmx2595rhar.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = 3
+1492428 statx(3, "", AT_STATX_SYNC_AS_STAT|AT_EMPTY_PATH, STATX_TYPE|STATX_MODE|STATX_NLINK|STATX_ATIME|STATX_MTIME|STATX_CTIME|STATX_INO|STATX_SIZE|STATX_BLOCKS, {stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFREG|0664, stx_size=931, ...}) = 0
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/generic-cap.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/projects/fixture/lib/pinouts/lmx2595rhar.sexp", O_RDONLY|O_NOCTTY|O_CLOEXEC) = 3
+1492428 statx(3, "", AT_STATX_SYNC_AS_STAT|AT_EMPTY_PATH, STATX_TYPE|STATX_MODE|STATX_NLINK|STATX_ATIME|STATX_MTIME|STATX_CTIME|STATX_INO|STATX_SIZE|STATX_BLOCKS, {stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFREG|0664, stx_size=931, ...}) = 0
+1492428 openat(AT_FDCWD, ".tmp/full-svg-benchmark-20260921/trace.svg", O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC, 0666) = 3

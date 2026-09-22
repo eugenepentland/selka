@@ -1,0 +1,3 @@
+Change: in `project/main.my`, `above` was declared `-> int` but returned the bool `a > b` (E_TYPE). I replaced the body with an explicit branch — `if a > b: return 1` then `return 0`.
+
+Command: `./bin/mylang run project/main.my` → printed `1`, exit code `0`.

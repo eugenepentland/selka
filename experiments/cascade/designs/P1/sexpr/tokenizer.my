@@ -1,0 +1,361 @@
+module sexpr.tokenizer
+
+# S-expression tokenizer: the lexer feeding sexpr.parser, ported from
+# eda/src/sexpr/tokenizer.zig. Classifies atoms, strings, and numeric
+# literals — including SI-scaled electrical values (`220k`, `100nF`, `3.3V`,
+# `10mA`) and dimension units (`mm`/`mil`) — and every token carries a source
+# Span.
+#
+# One rule, one home: which spellings may follow a numeric prefix, what they
+# multiply by and how they may combine is `ast.suffixes()`. The lexer resolves
+# a numeric literal through that table and mints the token carrying the value
+# it denotes (`Token.number`) and the spelling the source wrote (`Token.text`),
+# so sexpr.parser never re-scans text to find where the number ends or to work
+# out whether the suffix was `mm` or `mil`. A spelling that does not convert —
+# an integer past the i64 range — leaves `number` as None instead of failing
+# here, so `invalid number literal` is still reported by the parser at the
+# token's span and a later lexer error keeps its precedence.
+#
+# Ported faithfully: `(`/`)`, `;` line comments, quoted strings with `\`
+# escapes (UnterminatedString), atoms, the operator atoms `+ - * / % > < = !`
+# including the two-character `>= <= == !=` forms, plain ints and floats,
+# `mm`/`mil` dimension literals, SI-scaled literals for k/M/G/u/n/p (with `m`
+# only when a unit letter follows, so bare `3m`, `mm` and `mil` keep their
+# dimension/atom meanings), an optional single trailing unit letter V/A/F/H/R,
+# and `%`-terminated literals. Also ported: the exact span/line/col bookkeeping
+# and the two error kinds as LexError(message, offset, line, col).
+#
+# Deliberately omitted / adapted:
+#  - `Token.text` for a `string` is the raw source between the quotes, escapes
+#    intact, exactly the slice Zig's tokenizer returns (the parser does not
+#    unescape it either).
+#  - Source bytes are decoded to `str` (the frozen Token.text type); a slice
+#    that is not valid UTF-8 becomes "" rather than being preserved raw.
+#  - The tokenizer no longer stops at a number it cannot convert: the token is
+#    still minted, with no value, so the parser reports the same
+#    `invalid number literal` it always did, at the same span.
+
+import sexpr.ast as ast
+
+
+public enum Kind:
+    lparen,
+    rparen,
+    atom,
+    string,
+    int_val,
+    float_val,
+    unit_val,
+    si_val,
+    eof
+
+
+# The number a numeric token denotes: one case per numeric shape `ast.Node`
+# can hold, so turning a value into a node is a case mapping.
+#   integer - an exact integer (`42`)
+#   decimal - a float, with the source spelling when the literal was written
+#             with a suffix (`100nF`, `10%`); None for a plain float (`3.3`)
+#   measure - a length normalised to `ast.canonical_length()` (`1.0mm`, `10mil`)
+public union Number:
+    integer(value: int),
+    decimal(value: float, spelling: Option[str] = None),
+    measure(value: float)
+
+
+public record Token:
+    kind: Kind
+    text: str
+    span: ast.Span
+    # The decoded value of a numeric token, or None when its spelling does not
+    # convert. Every other kind leaves it None.
+    number: Option[Number] = None
+
+
+public record LexError:
+    message: str
+    offset: int
+    line: int
+    col: int
+
+
+# Mirror of Zig's `Tokenizer` struct: the source, the `pos`/`line`/`col`
+# cursor, and the suffix table every numeric literal is resolved through. A
+# class, so the scan helpers below mutate one shared cursor the way
+# `*Tokenizer` methods do in Zig.
+class Lexer:
+    src: bytes
+    pos: int
+    line: int
+    col: int
+    suffixes: list[ast.Suffix]
+    lookahead: int
+
+
+# A missing peek is reported as -1: bytes index to 0..255, so no real byte can
+# collide with it, and every predicate below treats it as "not this character".
+def peek(lx: Lexer) -> int:
+    if lx.pos >= len(lx.src):
+        return -1
+    return lx.src[lx.pos]
+
+
+def peek_at(lx: Lexer, offset: int) -> int:
+    index = lx.pos + offset
+    if index >= len(lx.src):
+        return -1
+    return lx.src[index]
+
+
+# Zig `Tokenizer.advance`: consuming a newline resets the column and bumps the
+# line; any other byte advances the column. Past the end it is a no-op.
+def advance(lx: Lexer):
+    if lx.pos < len(lx.src):
+        if lx.src[lx.pos] == 10:
+            lx.line = lx.line + 1
+            lx.col = 1
+        else:
+            lx.col = lx.col + 1
+        lx.pos = lx.pos + 1
+
+
+# Consume `count` bytes. Every suffix spelling is ASCII and free of newlines,
+# so this is `advance` repeated.
+def advance_by(lx: Lexer, count: int):
+    step = 0
+    while step < count:
+        advance(lx)
+        step = step + 1
+
+
+def is_space(byte: int) -> bool:
+    return byte == 32 or byte == 10 or byte == 13 or byte == 9
+
+
+def is_digit(byte: int) -> bool:
+    return byte >= 48 and byte <= 57
+
+
+# Atom start, as in Zig: letters, `_`, `~`, `*`.
+def is_atom_start(byte: int) -> bool:
+    return (byte >= 97 and byte <= 122) or (byte >= 65 and byte <= 90) or byte == 95 or byte == 126 or byte == 42
+
+
+# Atom continuation. `+`, `,` and `$` are mid-token only so vendor KiCad
+# exports tokenize as one atom (`PMA3-24323LN+.stp`, `74AHCT1G125GF,132.stp`,
+# `P$1`), while a leading one is still an operator.
+def is_atom_continue(byte: int) -> bool:
+    return is_atom_start(byte) or is_digit(byte) or byte == 45 or byte == 47 or byte == 46 or byte == 42 or byte == 35 or byte == 64 or byte == 58 or byte == 43 or byte == 44 or byte == 36
+
+
+# Standalone operator characters. `*` is absent because it is an atom start.
+def is_operator_char(byte: int) -> bool:
+    return byte == 43 or byte == 45 or byte == 47 or byte == 37 or byte == 62 or byte == 60 or byte == 61 or byte == 33
+
+
+def span_at(line: int, col: int, offset: int) -> ast.Span:
+    return ast.Span(line=line, col=col, offset=offset)
+
+
+def lexeme(src: bytes, start: int, end: int) -> str:
+    match src[start:end].decode():
+        case Ok(text):
+            return text
+        case Err(_):
+            return ""
+
+
+# ── Resolving a suffix through the table ─────────────────────────────
+
+# Whether `role` is a multiplier a unit letter may follow.
+def is_scale(role: ast.SuffixRole) -> bool:
+    return role == ast.SuffixRole.scale or role == ast.SuffixRole.unit_scale
+
+
+# The longest spelling in the table: how many bytes at the cursor the scan
+# decodes once and matches every row against.
+def longest_spelling(rows: list[ast.Suffix]) -> int:
+    longest = 0
+    for row in rows:
+        if len(row.spelling) > longest:
+            longest = len(row.spelling)
+    return longest
+
+
+# Whether `spelling` occurs at the cursor and the byte after it ends the atom,
+# so `mm` in `1.0mmx`, `k` in `100kHz` and `%` in `10%x` never become suffixes.
+def spelled_at(lx: Lexer, window: str, spelling: str) -> bool:
+    if not window.startswith(spelling):
+        return False
+    return not is_atom_continue(peek_at(lx, len(spelling)))
+
+
+# The suffix starting at the cursor, or None. A scale letter followed by a unit
+# letter (`mV`, `kA`, `uF`) is one suffix and is tried first; otherwise a row
+# that may end a literal on its own is. `m` is the only row that may not:
+# without a unit letter after it, `3m`/`mm`/`mil` keep their own meanings.
+def suffix_at(lx: Lexer) -> Option[ast.Suffix]:
+    window = lexeme(lx.src, lx.pos, lx.pos + lx.lookahead)
+    for first in lx.suffixes:
+        if is_scale(first.role) and window.startswith(first.spelling):
+            for second in lx.suffixes:
+                if second.role == ast.SuffixRole.unit:
+                    pair = first.spelling + second.spelling
+                    if spelled_at(lx, window, pair):
+                        return Some(ast.Suffix(spelling=pair, factor=first.factor * second.factor, role=ast.SuffixRole.scale))
+    for row in lx.suffixes:
+        if row.role != ast.SuffixRole.unit_scale and spelled_at(lx, window, row.spelling):
+            return Some(row)
+    return None
+
+
+# The decoded value for a numeric token, or None when the spelling does not
+# convert. `prefix` is the numeric part, `factor` the matched suffix's factor
+# (1 when there is none) and `spelling` what the source wrote — read only for a
+# suffixed decimal, which keeps it so the printer can write the literal back as
+# it was.
+def number_for(kind: Kind, prefix: str, factor: float, spelling: str) -> Option[Number]:
+    if kind == Kind.int_val:
+        match int(prefix):
+            case Some(value):
+                return Some(Number.integer(value))
+            case None:
+                return None
+    match float(prefix):
+        case Some(value):
+            if kind == Kind.unit_val:
+                return Some(Number.measure(value * factor))
+            if kind == Kind.si_val:
+                return Some(Number.decimal(value * factor, Some(spelling)))
+            return Some(Number.decimal(value * factor))
+        case None:
+            return None
+
+
+# ── Readers ──────────────────────────────────────────────────────────
+
+# Quoted string. A `\` swallows the next byte; running off the end of the source
+# reports UnterminatedString at the opening quote, the most actionable location.
+def read_string(lx: Lexer, line: int, col: int, offset: int) -> Result[Token, LexError]:
+    advance(lx)  # skip opening "
+    start = lx.pos
+    closed = False
+    while lx.pos < len(lx.src) and not closed:
+        ch = lx.src[lx.pos]
+        if ch == 92:
+            advance(lx)  # skip backslash
+            advance(lx)  # skip escaped char
+        elif ch == 34:
+            closed = True
+        else:
+            advance(lx)
+    if not closed:
+        return Err(LexError(message="unterminated string", offset=offset, line=line, col=col))
+    text = lexeme(lx.src, start, lx.pos)
+    advance(lx)  # skip closing "
+    return Ok(Token(kind=Kind.string, text=text, span=span_at(line, col, offset)))
+
+
+def read_atom(lx: Lexer, line: int, col: int, offset: int) -> Token:
+    start = lx.pos
+    while is_atom_continue(peek(lx)):
+        advance(lx)
+    return Token(kind=Kind.atom, text=lexeme(lx.src, start, lx.pos), span=span_at(line, col, offset))
+
+
+# An operator atom, allowing the two-character `>= <= == !=` forms.
+def read_operator(lx: Lexer, line: int, col: int, offset: int) -> Token:
+    start = lx.pos
+    advance(lx)
+    if peek(lx) == 61:
+        advance(lx)
+    return Token(kind=Kind.atom, text=lexeme(lx.src, start, lx.pos), span=span_at(line, col, offset))
+
+
+# Number path: optional leading minus, digits, an optional fractional part, then
+# a suffix from the table, or — when more atom characters follow — a fallback to
+# an atom (`204928-0301.stp`, `12.5abc`, `100kHz`, `5V3`). The value is decoded
+# here, where the prefix/suffix split is made, so no caller repeats it.
+def read_number(lx: Lexer, line: int, col: int, offset: int) -> Token:
+    start = lx.pos
+    if peek(lx) == 45:
+        advance(lx)
+    while is_digit(peek(lx)):
+        advance(lx)
+    is_float = False
+    if peek(lx) == 46 and is_digit(peek_at(lx, 1)):
+        is_float = True
+        advance(lx)  # skip .
+        while is_digit(peek(lx)):
+            advance(lx)
+    prefix_end = lx.pos
+    prefix = lexeme(lx.src, start, prefix_end)
+    span = span_at(line, col, offset)
+    match suffix_at(lx):
+        case Some(suffix):
+            advance_by(lx, len(suffix.spelling))
+            if suffix.role == ast.SuffixRole.length:
+                # A dimension: its text stops before the suffix, and its value
+                # is normalised to the canonical length unit.
+                number = number_for(Kind.unit_val, prefix, suffix.factor, "")
+                return Token(kind=Kind.unit_val, text=prefix, span=span, number=number)
+            spelling = lexeme(lx.src, start, lx.pos)
+            number = number_for(Kind.si_val, prefix, suffix.factor, spelling)
+            return Token(kind=Kind.si_val, text=spelling, span=span, number=number)
+        case None:
+            if is_atom_continue(peek(lx)):
+                while is_atom_continue(peek(lx)):
+                    advance(lx)
+                return Token(kind=Kind.atom, text=lexeme(lx.src, start, lx.pos), span=span)
+            if is_float:
+                number = number_for(Kind.float_val, prefix, 1.0, prefix)
+                return Token(kind=Kind.float_val, text=prefix, span=span, number=number)
+            number = number_for(Kind.int_val, prefix, 1.0, prefix)
+            return Token(kind=Kind.int_val, text=prefix, span=span, number=number)
+
+
+# Lex the whole source into a token list ending in `eof`, or stop at the first
+# LexError. `offset`/`line`/`col` in the error point at the offending byte (for
+# an unterminated string, at its opening quote); every error names its failure.
+public def tokenize(src: bytes) -> Result[list[Token], LexError]:
+    rows = ast.suffixes()
+    lx = Lexer(src=src, pos=0, line=1, col=1, suffixes=rows, lookahead=longest_spelling(rows))
+    tokens: list[Token] = []
+    while True:
+        # Skip whitespace and `;` comments to end of line.
+        skipping = True
+        while skipping:
+            byte = peek(lx)
+            if is_space(byte):
+                advance(lx)
+            elif byte == 59:
+                while peek(lx) != -1 and peek(lx) != 10:
+                    advance(lx)
+            else:
+                skipping = False
+        line = lx.line
+        col = lx.col
+        offset = lx.pos
+        byte = peek(lx)
+        if byte == -1:
+            tokens.append(Token(kind=Kind.eof, text="", span=span_at(line, col, offset)))
+            return Ok(tokens)
+        if byte == 40:
+            advance(lx)
+            tokens.append(Token(kind=Kind.lparen, text="(", span=span_at(line, col, offset)))
+        elif byte == 41:
+            advance(lx)
+            tokens.append(Token(kind=Kind.rparen, text=")", span=span_at(line, col, offset)))
+        elif byte == 34:
+            match read_string(lx, line, col, offset):
+                case Ok(token):
+                    tokens.append(token)
+                case Err(problem):
+                    return Err(problem)
+        elif is_digit(byte) or (byte == 45 and is_digit(peek_at(lx, 1))):
+            tokens.append(read_number(lx, line, col, offset))
+        elif is_atom_start(byte):
+            tokens.append(read_atom(lx, line, col, offset))
+        elif is_operator_char(byte):
+            tokens.append(read_operator(lx, line, col, offset))
+        else:
+            return Err(LexError(message="unexpected character", offset=offset, line=line, col=col))

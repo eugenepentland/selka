@@ -1,0 +1,229 @@
+module tests.dialect_test
+
+# Tests for the tokenizer's extension points: comment syntax, the token set,
+# the string escape rule, the character classes and the number tables. Every
+# case supplies a `tk.Dialect` through `tk.tokenize_with`; the default dialect
+# is covered by tests/tokenizer_test.my, which is unchanged.
+
+import sexpr.ast as ast
+import sexpr.tokenizer as tk
+
+
+# ── helpers ───────────────────────────────────────────────────────────
+
+def count_with(src: bytes, dialect: tk.Dialect) -> int:
+    match tk.tokenize_with(src, dialect):
+        case Ok(tokens):
+            return len(tokens)
+        case Err(_):
+            return -1
+
+
+def text_with(src: bytes, dialect: tk.Dialect, index: int) -> str:
+    match tk.tokenize_with(src, dialect):
+        case Ok(tokens):
+            return tokens[index].text
+        case Err(_):
+            return "<err>"
+
+
+def kind_with(src: bytes, dialect: tk.Dialect, index: int) -> tk.Kind:
+    match tk.tokenize_with(src, dialect):
+        case Ok(tokens):
+            return tokens[index].kind
+        case Err(_):
+            return tk.Kind.eof
+
+
+def error_with(src: bytes, dialect: tk.Dialect) -> tk.LexError:
+    match tk.tokenize_with(src, dialect):
+        case Ok(_):
+            return tk.LexError(message="<ok>", offset=0, line=0)
+        case Err(problem):
+            return problem
+
+
+# ── dialects under test ───────────────────────────────────────────────
+
+def slash_comments() -> tk.Dialect:
+    return replace(tk.default_dialect(), syntax=replace(tk.Syntax(), line_comment="//"))
+
+
+def block_comments() -> tk.Dialect:
+    base = tk.default_dialect()
+    return replace(base, syntax=replace(tk.Syntax(), block_comment_open="/*", block_comment_close="*/"))
+
+
+def square_brackets() -> tk.Dialect:
+    return replace(tk.default_dialect(), syntax=replace(tk.Syntax(), open_bracket="[", close_bracket="]"))
+
+
+def single_quotes() -> tk.Dialect:
+    return replace(tk.default_dialect(), syntax=replace(tk.Syntax(), string_quote="'"))
+
+
+def tilde_escapes() -> tk.Dialect:
+    return replace(tk.default_dialect(), syntax=replace(tk.Syntax(), escape="~"))
+
+
+def no_escapes() -> tk.Dialect:
+    return replace(tk.default_dialect(), syntax=replace(tk.Syntax(), escape=""))
+
+
+def bang_percent() -> tk.Dialect:
+    return replace(tk.default_dialect(), syntax=replace(tk.Syntax(), percent="!"))
+
+
+def cr_newlines() -> tk.Dialect:
+    return replace(tk.default_dialect(), syntax=replace(tk.Syntax(), newline="\r"))
+
+
+def question_atom_start(byte: int) -> bool effects():
+    return tk.byte_is_atom_start(byte) or byte == 63
+
+
+def question_atoms() -> tk.Dialect:
+    base = tk.default_dialect()
+    return replace(base, chars=replace(base.chars, is_atom_start=question_atom_start))
+
+
+def arrow_tail(byte: int) -> bool effects():
+    return byte == 62
+
+
+def arrow_operators() -> tk.Dialect:
+    base = tk.default_dialect()
+    return replace(base, chars=replace(base.chars, is_operator_tail=arrow_tail))
+
+
+def tera_policy() -> tk.NumberPolicy:
+    return tk.NumberPolicy(
+        scales=[tk.ScaleRule(letter="T", factor=1e12), tk.ScaleRule(letter="k", factor=1e3), tk.ScaleRule(letter="m", factor=1e-1, requires_unit=True)],
+        unit_letters=["X"],
+        dimensions=[tk.DimensionRule(suffix="in", to_mm=25.4), tk.DimensionRule(suffix="thou", to_mm=0.0254)],
+    )
+
+
+def tera_units() -> tk.Dialect:
+    return replace(tk.default_dialect(), numbers=tera_policy())
+
+
+# ── the default dialect is the ported reader ──────────────────────────
+
+public def test_default_dialect_matches_tokenize() -> bool:
+    src = b"(a 1.5mm 220k \"s\" ; c\n)"
+    match tk.tokenize_with(src, tk.default_dialect()):
+        case Ok(tokens):
+            match tk.tokenize(src):
+                case Ok(baseline):
+                    return len(tokens) == len(baseline) and tokens[1].text == baseline[1].text and tokens[2].text == baseline[2].text and tokens[3].kind == baseline[3].kind
+                case Err(_):
+                    return False
+        case Err(_):
+            return False
+
+
+# ── comment syntax ────────────────────────────────────────────────────
+
+public def test_line_comment_syntax() -> bool:
+    src = b"// comment\n(a b)"
+    return count_with(src, slash_comments()) == 5 and text_with(src, slash_comments(), 1) == "a" and count_with(src, tk.default_dialect()) == 8
+
+
+public def test_block_comment_syntax() -> bool:
+    src = b"(a /* note\nmore */ b)"
+    return count_with(src, block_comments()) == 5 and text_with(src, block_comments(), 2) == "b" and count_with(src, tk.default_dialect()) == 10
+
+
+public def test_block_comment_must_close() -> bool:
+    problem = error_with(b"(a /* note", block_comments())
+    return problem.message == "unterminated block comment" and problem.offset == 3 and problem.line == 1
+
+
+# ── the token set ─────────────────────────────────────────────────────
+
+public def test_bracket_token_set() -> bool:
+    src = b"[a b]"
+    return count_with(src, square_brackets()) == 5 and kind_with(src, square_brackets(), 0) == tk.Kind.lparen and text_with(src, square_brackets(), 0) == "[" and kind_with(src, square_brackets(), 3) == tk.Kind.rparen and text_with(src, square_brackets(), 3) == "]"
+
+
+public def test_string_quote_syntax() -> bool:
+    src = b"'a b' c"
+    return kind_with(src, single_quotes(), 0) == tk.Kind.string and text_with(src, single_quotes(), 0) == "a b" and count_with(src, single_quotes()) == 3
+
+
+public def test_percent_character_is_configurable() -> bool:
+    src = b"(t 10! 5%)"
+    return kind_with(src, bang_percent(), 2) == tk.Kind.si_val and text_with(src, bang_percent(), 2) == "10!" and text_with(src, tk.default_dialect(), 2) == "10"
+
+
+# ── the string escape rule ────────────────────────────────────────────
+
+public def test_escape_character_is_configurable() -> bool:
+    src = b"\"a~\"b\""
+    return text_with(src, tilde_escapes(), 0) == "a~\"b" and count_with(src, tilde_escapes()) == 2 and count_with(src, tk.default_dialect()) == -1
+
+
+public def test_escapes_can_be_switched_off() -> bool:
+    src = b"\"a\\\"b\""
+    return count_with(src, no_escapes()) == -1 and text_with(src, tk.default_dialect(), 0) == "a\\\"b"
+
+
+# ── character classes ─────────────────────────────────────────────────
+
+public def test_atom_alphabet_is_configurable() -> bool:
+    src = b"?flag"
+    return kind_with(src, question_atoms(), 0) == tk.Kind.atom and text_with(src, question_atoms(), 0) == "?flag" and count_with(src, tk.default_dialect()) == -1
+
+
+public def test_operator_set_is_configurable() -> bool:
+    src = b"-> x"
+    return text_with(src, arrow_operators(), 0) == "->" and count_with(src, arrow_operators()) == 3 and text_with(src, tk.default_dialect(), 0) == "-"
+
+
+# ── the newline byte ──────────────────────────────────────────────────
+
+public def test_newline_byte_is_configurable() -> bool:
+    src = b"(a\r\n b)"
+    match tk.tokenize_with(src, cr_newlines()):
+        case Ok(tokens):
+            return tokens[2].span.line == 2 and tokens[2].span.col == 3 and tokens[2].span.offset == 5
+        case Err(_):
+            return False
+
+
+public def test_default_newline_counts_columns_differently() -> bool:
+    src = b"(a\r\n b)"
+    match tk.tokenize_with(src, tk.default_dialect()):
+        case Ok(tokens):
+            return tokens[2].span.line == 2 and tokens[2].span.col == 2
+        case Err(_):
+            return False
+
+
+# ── the number tables ─────────────────────────────────────────────────
+
+public def test_scale_table_is_configurable() -> bool:
+    return kind_with(b"3T", tera_units(), 0) == tk.Kind.si_val and text_with(b"3T", tera_units(), 0) == "3T" and kind_with(b"3T", tk.default_dialect(), 0) == tk.Kind.atom and text_with(b"3T", tk.default_dialect(), 0) == "3T"
+
+
+public def test_unit_letter_table_is_configurable() -> bool:
+    return kind_with(b"4.7X", tera_units(), 0) == tk.Kind.si_val and text_with(b"4.7X", tera_units(), 0) == "4.7X" and kind_with(b"4.7X", tk.default_dialect(), 0) == tk.Kind.atom
+
+
+public def test_dimension_table_is_configurable() -> bool:
+    return kind_with(b"1in", tera_units(), 0) == tk.Kind.unit_val and text_with(b"1in", tera_units(), 0) == "1" and kind_with(b"2thou", tera_units(), 0) == tk.Kind.unit_val and text_with(b"2thou", tera_units(), 0) == "2"
+
+
+public def test_scale_factor_helper() -> bool:
+    return tk.scale_factor(tera_policy(), "T") == 1e12 and tk.scale_factor(tera_policy(), "X") == 1.0 and tk.scale_factor(tk.default_number_policy(), "k") == 1e3 and tk.scale_factor(tk.default_number_policy(), "m") == 1e-3
+
+
+# ── the shared byte helpers ───────────────────────────────────────────
+
+public def test_byte_helpers() -> bool:
+    return tk.char_byte("(") == 40 and tk.char_byte("") == -1 and tk.matches_text(b"hello", 1, "ell") and tk.matches_text(b"hello", 1, "xyz") == False and tk.matches_text(b"hello", 1, "") == False
+
+
+public def test_default_predicates_are_public() -> bool:
+    return tk.byte_is_digit(55) and tk.byte_is_digit(32) == False and tk.byte_is_atom_start(95) and tk.byte_is_atom_continue(43) and tk.byte_is_operator(61) and tk.byte_is_operator_tail(61) and tk.byte_is_space(10)

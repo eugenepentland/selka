@@ -1,0 +1,2 @@
+SVG: 30 components, 95 pads, 4 NC, 9 ports; all 34 nets match independent Netlisp dump; mutation updates output
+SVG: 23 malformed/unsupported/connectivity mutations rejected with located diagnostics and no partial SVG

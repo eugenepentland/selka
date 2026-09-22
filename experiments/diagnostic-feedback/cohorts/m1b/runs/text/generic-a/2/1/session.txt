@@ -1,0 +1,15 @@
+**What I changed:** Removed the invalid generic requirement lists from both helpers in `project/main.my` — `def largest[T: Ordered](values: list[int])` → `def largest(values: list[int])` and the same for `largest_of`. The type parameter `T` was never used in either signature or body, and `Ordered` is not a valid mylang requirement (`E_GENERIC_REQUIREMENT`), so deleting the unused parameter is the minimal fix. The max-finding logic itself was already correct for all inputs (any ordering, duplicates, negatives).
+
+**Command run and result:**
+
+```
+$ bin/mylang check project/main.my
+CHECK EXIT: 0
+
+$ bin/mylang run project/main.my -- 1 3 2
+3
+$ bin/mylang run project/main.my -- 5 5 5
+5
+```
+
+Also verified beyond the public examples: `3 2 1` → `3`, `-5 -1 -10` → `-1`, `10 10 2` → `10`, `0 0 1` → `1`, `1000000 999999 1000001` → `1000001`. All match the expected behavior.

@@ -1,0 +1,6 @@
+{
+  "id": "module-name",
+  "family": "E_MODULE_NAME",
+  "split": "dev",
+  "expect": "42"
+}

@@ -1,0 +1,12 @@
+Fixed.
+
+**Change:** In `project/main.my`, line 6 of `pick`, the undefined name `reward` was replaced with the function's parameter `bonus` — so `return total + bonus` computes `10 + 5`. Nothing else was touched.
+
+**Command and result:**
+
+```
+$ ./bin/mylang run project/main.my
+15
+```
+
+Exit code 0, output exactly `15`. (`./bin/mylang check project/main.my` also now exits 0.)

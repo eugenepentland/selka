@@ -1,0 +1,17 @@
+module main
+
+
+union Event:
+    start(name: str),
+    stop(name: str)
+
+
+def describe(event: Event) -> str:
+    match event:
+        case Event.start(name):
+            return "started"
+
+
+def main(out: Stream) -> int:
+    out.print(describe(Event.stop("job")))
+    return 0

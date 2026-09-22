@@ -1,0 +1,89 @@
+{
+  "schema": "full-svg-native-ports-v1",
+  "passed": true,
+  "toolchains": {
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+    "go": "go version go1.27.0 linux/amd64",
+    "zig": "0.17.0-dev.1683+5ceec001b"
+  },
+  "flags": {
+    "rust-o3": "-C opt-level=3 -C codegen-units=1 -C debug-assertions=off",
+    "go-fast": "go build (default optimization; no -O level exists)",
+    "zig-o3": "build-exe -O ReleaseFast -fllvm"
+  },
+  "expectation": "each binary reproduces the mylang O3 SVG bytes exactly on fixture, changed-net and changed-value",
+  "builds": [
+    {
+      "name": "rust-o3",
+      "argv": [
+        "/home/epentland/.cargo/bin/rustc",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "codegen-units=1",
+        "-C",
+        "debug-assertions=off",
+        "-o",
+        "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/rust-o3",
+        "/home/epentland/ai/canopy/mylang/experiments/full-svg-benchmark/ports/rust/main.rs"
+      ],
+      "source": "experiments/full-svg-benchmark/ports/rust/main.rs",
+      "source_sha256": "e366130c1bfb329ec4b47d8797578329bd8446b3516b62bb4e78e9e38ede4bb0",
+      "binary": ".tmp/full-svg-benchmark-20260921/rust-o3",
+      "binary_bytes": 4591720,
+      "binary_sha256": "57a931f718fd234f54ec8b7775267eff6cac08c628308614d2502d483bccb39d",
+      "check_passed": true,
+      "check_output": [
+        "fixture: OK 49617 bytes 68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net: OK 49647 bytes e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value: OK 49617 bytes 19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      ]
+    },
+    {
+      "name": "go-fast",
+      "argv": [
+        "/home/epentland/.local/bin/go",
+        "build",
+        "-o",
+        "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/go-fast",
+        "/home/epentland/ai/canopy/mylang/experiments/full-svg-benchmark/ports/go/main.go"
+      ],
+      "source": "experiments/full-svg-benchmark/ports/go/main.go",
+      "source_sha256": "b314cc0259aa05dcfec4fc69471e62fe6777d7d297fc3338aecbd1d8a01a5021",
+      "binary": ".tmp/full-svg-benchmark-20260921/go-fast",
+      "binary_bytes": 2376085,
+      "binary_sha256": "6e786ac6174b1996c0120ff0c51e9a7acb8e6de5e663808056558818583ced90",
+      "check_passed": true,
+      "check_output": [
+        "fixture: OK 49617 bytes 68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net: OK 49647 bytes e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value: OK 49617 bytes 19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      ]
+    },
+    {
+      "name": "zig-o3",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang/zigw",
+        "build-exe",
+        "/home/epentland/ai/canopy/mylang/experiments/full-svg-benchmark/ports/zig/main.zig",
+        "-O",
+        "ReleaseFast",
+        "-fllvm",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/zig-cache",
+        "-femit-bin=/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/zig-o3"
+      ],
+      "source": "experiments/full-svg-benchmark/ports/zig/main.zig",
+      "source_sha256": "d7416a2c1ca40822a071f42b4edd32479929f67941aeeca716652aa510e6f500",
+      "binary": ".tmp/full-svg-benchmark-20260921/zig-o3",
+      "binary_bytes": 4553712,
+      "binary_sha256": "0a80f2fa747d033ef979110109a1fbc4155d738d76018c930738847b3f358a63",
+      "check_passed": true,
+      "check_output": [
+        "fixture: OK 49617 bytes 68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "changed-net: OK 49647 bytes e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "changed-value: OK 49617 bytes 19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      ]
+    }
+  ]
+}

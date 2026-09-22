@@ -1,0 +1,318 @@
+{
+  "configuration": "LLVM O3 with ordinary checks, collecting GC, step and frame accounting",
+  "scope": "warm-cache process launch, input read, SVG generation to private file, shutdown; compilation excluded",
+  "cpu": 6,
+  "rounds": 21,
+  "warmups": 3,
+  "seed": 20260921,
+  "binaries": {
+    "before-unit-o3": {
+      "path": ".tmp/schematic-implementation-20260921/before-unit-o3",
+      "sha256": "11efafa0e15b3314bfa58d945b998564c9253f45f9ae456565278ea5dca58064"
+    },
+    "after-o3": {
+      "path": ".tmp/schematic-implementation-20260921/after-o3",
+      "sha256": "f6f43ce5acd5cd7ca3951d3eac2df7f198086a7349beeee357c0d8a3869d0649"
+    },
+    "after-lto": {
+      "path": ".tmp/schematic-implementation-20260921/after-lto",
+      "sha256": "da6e53c4847de6528130b6d9900c94aa46a1d4dca8c42ee732bf75825c38807b"
+    }
+  },
+  "median_ms": {
+    "before-unit-o3": 85.885445,
+    "after-o3": 45.512359,
+    "after-lto": 51.800873
+  },
+  "ratios_to_baseline": {
+    "after-o3": {
+      "ratio": 0.5299193478010156,
+      "paired_bootstrap_95": [
+        0.5287875476797432,
+        0.5312030510134469
+      ]
+    },
+    "after-lto": {
+      "ratio": 0.6031391349255977,
+      "paired_bootstrap_95": [
+        0.6021259918942213,
+        0.604125304730542
+      ]
+    }
+  },
+  "samples": [
+    {
+      "round": 0,
+      "order": [
+        "before-unit-o3",
+        "after-lto",
+        "after-o3"
+      ],
+      "ms": {
+        "before-unit-o3": 85.669576,
+        "after-lto": 51.70226,
+        "after-o3": 45.650933
+      }
+    },
+    {
+      "round": 1,
+      "order": [
+        "after-lto",
+        "after-o3",
+        "before-unit-o3"
+      ],
+      "ms": {
+        "after-lto": 51.629354,
+        "after-o3": 45.37745,
+        "before-unit-o3": 86.370312
+      }
+    },
+    {
+      "round": 2,
+      "order": [
+        "after-lto",
+        "before-unit-o3",
+        "after-o3"
+      ],
+      "ms": {
+        "after-lto": 50.777441,
+        "before-unit-o3": 85.720318,
+        "after-o3": 45.678162
+      }
+    },
+    {
+      "round": 3,
+      "order": [
+        "before-unit-o3",
+        "after-lto",
+        "after-o3"
+      ],
+      "ms": {
+        "before-unit-o3": 85.962632,
+        "after-lto": 51.808466,
+        "after-o3": 45.615236
+      }
+    },
+    {
+      "round": 4,
+      "order": [
+        "after-o3",
+        "before-unit-o3",
+        "after-lto"
+      ],
+      "ms": {
+        "after-o3": 45.60157,
+        "before-unit-o3": 86.277185,
+        "after-lto": 51.823877
+      }
+    },
+    {
+      "round": 5,
+      "order": [
+        "after-lto",
+        "before-unit-o3",
+        "after-o3"
+      ],
+      "ms": {
+        "after-lto": 51.902993,
+        "before-unit-o3": 85.846578,
+        "after-o3": 45.280766
+      }
+    },
+    {
+      "round": 6,
+      "order": [
+        "after-o3",
+        "after-lto",
+        "before-unit-o3"
+      ],
+      "ms": {
+        "after-o3": 45.427125,
+        "after-lto": 51.697133,
+        "before-unit-o3": 85.633561
+      }
+    },
+    {
+      "round": 7,
+      "order": [
+        "before-unit-o3",
+        "after-o3",
+        "after-lto"
+      ],
+      "ms": {
+        "before-unit-o3": 85.833811,
+        "after-o3": 43.652666,
+        "after-lto": 51.172688
+      }
+    },
+    {
+      "round": 8,
+      "order": [
+        "before-unit-o3",
+        "after-lto",
+        "after-o3"
+      ],
+      "ms": {
+        "before-unit-o3": 85.885445,
+        "after-lto": 51.73618,
+        "after-o3": 45.371732
+      }
+    },
+    {
+      "round": 9,
+      "order": [
+        "after-o3",
+        "before-unit-o3",
+        "after-lto"
+      ],
+      "ms": {
+        "after-o3": 45.490718,
+        "before-unit-o3": 85.925931,
+        "after-lto": 51.855252
+      }
+    },
+    {
+      "round": 10,
+      "order": [
+        "after-lto",
+        "after-o3",
+        "before-unit-o3"
+      ],
+      "ms": {
+        "after-lto": 51.274004,
+        "after-o3": 45.279012,
+        "before-unit-o3": 85.845836
+      }
+    },
+    {
+      "round": 11,
+      "order": [
+        "after-lto",
+        "after-o3",
+        "before-unit-o3"
+      ],
+      "ms": {
+        "after-lto": 50.472028,
+        "after-o3": 45.848645,
+        "before-unit-o3": 85.60885
+      }
+    },
+    {
+      "round": 12,
+      "order": [
+        "after-lto",
+        "after-o3",
+        "before-unit-o3"
+      ],
+      "ms": {
+        "after-lto": 51.800811,
+        "after-o3": 45.560091,
+        "before-unit-o3": 86.399996
+      }
+    },
+    {
+      "round": 13,
+      "order": [
+        "before-unit-o3",
+        "after-o3",
+        "after-lto"
+      ],
+      "ms": {
+        "before-unit-o3": 86.042567,
+        "after-o3": 45.498238,
+        "after-lto": 52.169874
+      }
+    },
+    {
+      "round": 14,
+      "order": [
+        "after-o3",
+        "after-lto",
+        "before-unit-o3"
+      ],
+      "ms": {
+        "after-o3": 45.512359,
+        "after-lto": 51.996321,
+        "before-unit-o3": 85.942064
+      }
+    },
+    {
+      "round": 15,
+      "order": [
+        "after-o3",
+        "before-unit-o3",
+        "after-lto"
+      ],
+      "ms": {
+        "after-o3": 45.133794,
+        "before-unit-o3": 85.835259,
+        "after-lto": 51.797509
+      }
+    },
+    {
+      "round": 16,
+      "order": [
+        "after-o3",
+        "before-unit-o3",
+        "after-lto"
+      ],
+      "ms": {
+        "after-o3": 45.528987,
+        "before-unit-o3": 86.014115,
+        "after-lto": 51.800873
+      }
+    },
+    {
+      "round": 17,
+      "order": [
+        "after-o3",
+        "before-unit-o3",
+        "after-lto"
+      ],
+      "ms": {
+        "after-o3": 45.543284,
+        "before-unit-o3": 86.074203,
+        "after-lto": 51.941165
+      }
+    },
+    {
+      "round": 18,
+      "order": [
+        "before-unit-o3",
+        "after-o3",
+        "after-lto"
+      ],
+      "ms": {
+        "before-unit-o3": 85.810404,
+        "after-o3": 45.467028,
+        "after-lto": 51.998964
+      }
+    },
+    {
+      "round": 19,
+      "order": [
+        "before-unit-o3",
+        "after-lto",
+        "after-o3"
+      ],
+      "ms": {
+        "before-unit-o3": 85.806042,
+        "after-lto": 52.092135,
+        "after-o3": 45.718042
+      }
+    },
+    {
+      "round": 20,
+      "order": [
+        "after-o3",
+        "after-lto",
+        "before-unit-o3"
+      ],
+      "ms": {
+        "after-o3": 45.841728,
+        "after-lto": 51.88511,
+        "before-unit-o3": 86.236451
+      }
+    }
+  ]
+}

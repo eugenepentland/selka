@@ -1,0 +1,5 @@
+def order(items: list[str]):
+    items.sort()
+
+def main() -> int:
+    return 0

@@ -1,0 +1,10 @@
+Done.
+
+**What I changed:** `project/main.my` — the `match event:` in `describe` only handled the `start` variant, so the checker reported `E_INCOMPLETE_MATCH`. I added the missing arm:
+
+```python
+case Event.stop(name):
+    return "stopped"
+```
+
+**Command run:** `./bin/mylang run project/main.my` → printed `stopped`, exit code 0 (`check` also exits 0). The two `W_UNUSED_BINDING` warnings on stderr are pre-existing style warnings about the unused `name` payload binding (the `start` arm already had one) and don't affect the exit status or stdout.

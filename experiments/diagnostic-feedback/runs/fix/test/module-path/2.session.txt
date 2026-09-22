@@ -1,0 +1,10 @@
+Fixed two errors flagged by the checker:
+
+- `project/main.my`: changed `import lib.stats as stats` → `import stats as stats` (import paths resolve from the project root; `lib/stats.my` doesn't exist, `stats.my` does).
+- `project/stats.my`: changed `def total()` → `public def total()` so main can call it across the module boundary.
+
+Command: `bin/mylang run project/main.my` → exit code 0, stdout exactly:
+
+```
+7
+```

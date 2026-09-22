@@ -1,0 +1,9 @@
+Done. The program now passes the checker and prints `7`.
+
+**Changes (both in `project/`):**
+- `main.my`: fixed the module path — `import lib.stats as stats` → `import stats as stats` (the helper `stats.my` sits beside `main.my`, not under `lib/`).
+- `stats.my`: made the helper public — `def total()` → `public def total()` (it was private to its module, so `main` couldn't call it).
+
+**Verification:**
+- `./bin/mylang check project/main.my` → exit 0
+- `./bin/mylang run project/main.my` → printed `7`, exit 0

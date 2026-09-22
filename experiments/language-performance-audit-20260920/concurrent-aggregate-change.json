@@ -1,0 +1,91 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang-audit-20260920",
+  "compiler_sha256": "549d13660db96ecd0360520f03418d40e4519cd6a9d44a24e609e02bce98d9eb",
+  "qbe_source_sha256": "d2e76314774bcdc79f26fe2aa23bfa94fdd6945dd8646d69b56a2b39c1759e9f",
+  "description": "Concurrent read-only aggregate parameter change observed after initial measurements",
+  "probes": {
+    "aggregate": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang-audit-20260920",
+        "emit-qbe",
+        "/home/epentland/ai/canopy/mylang/experiments/language-performance-audit-20260920/aggregate_probe.my",
+        "--drop-debug",
+        "--drop-step-checks",
+        "--drop-frame-checks"
+      ],
+      "exit": 0,
+      "functions": {
+        "first": {
+          "blits_by_bytes": {},
+          "static_blit_count": 0,
+          "il_excerpt": "export function l $myl_f_a7937b64b8caa58f03721bb6bacf5c78cb235febe0e70b1b84cd99541461a08e(l %ctx, l %a0) {"
+        },
+        "array_first": {
+          "blits_by_bytes": {},
+          "static_blit_count": 0,
+          "il_excerpt": "export function l $myl_f_03d17cbdb07bd170ddd99866afcf5467dfd18b8412e17c14f8ffd8de62d16b6a(l %ctx, l %a0) {"
+        },
+        "main": {
+          "blits_by_bytes": {},
+          "static_blit_count": 0,
+          "il_excerpt": "export function l $myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605(l %ctx) {"
+        }
+      }
+    },
+    "parser": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang-audit-20260920",
+        "emit-project-qbe",
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/port/main.my",
+        "--drop-debug",
+        "--drop-step-checks",
+        "--drop-frame-checks"
+      ],
+      "exit": 0,
+      "functions": {
+        "sexpr.parser::parse_leaf": {
+          "blits_by_bytes": {
+            "24": 11,
+            "48": 1,
+            "72": 3,
+            "32": 5,
+            "64": 3
+          },
+          "static_blit_count": 23,
+          "il_excerpt": "export function :tb3fc948402862e7f90bd923bdca8b65b19c4c9737706b902f2419b9e06c84fb6 $myl_f_998beee1bca4ed98df5239fd3360e93dc7435bf13adf117793e129355f5cd155(l %ctx, l %a0, l %a1) {\n blit %v23, %l2, 24\n blit %l2, %agg15, 24\n blit %v50, %v49, 24\n blit %v52, %v51, 24\n blit %v55, %v54, 48\n blit %v58, %v57, 72\n blit %l2, %agg35, 24\n blit %v184, %v183, 24\n blit %v187, %v186, 32\n blit %v190, %v189, 72\n blit %l2, %agg40, 24\n blit %v200, %v199, 32\n blit %l2, %agg59, 24\n blit %v327, %v326, 24\n blit %v329, %v328, 32\n blit %v332, %v331, 64\n blit %v335, %v334, 72\n blit %l2, %agg65, 24\n blit %v345, %v344, 32\n blit %v620, %l13, 64\n blit %l13, %agg122, 64\n blit %l2, %agg178, 24\n blit %v827, %v826, 32"
+        },
+        "sexpr.parser::parse_node": {
+          "blits_by_bytes": {
+            "64": 14,
+            "32": 14,
+            "24": 2,
+            "48": 1,
+            "72": 18
+          },
+          "static_blit_count": 49,
+          "il_excerpt": "export function :tb3fc948402862e7f90bd923bdca8b65b19c4c9737706b902f2419b9e06c84fb6 $myl_f_8eb428ca68410fb139af946d6aa6e23c28659cba29e0de3ff744192751629959(l %ctx, l %a0, l %a1) {\n blit %v20, %v21, 64\n blit %v22, %l2, 64\n blit %l2, %agg3, 64\n blit %v58, %v57, 32\n blit %l2, %agg14, 64\n blit %l2, %agg19, 64\n blit %v105, %v104, 32\n blit %l2, %agg71, 64\n blit %v122, %v121, 32\n blit %l2, %agg128, 64\n blit %l2, %agg130, 64\n blit %l2, %agg133, 64\n blit %v148, %v147, 24\n blit %v150, %v149, 24\n blit %v153, %v152, 48\n blit %v154, %l3, 72\n blit %v177, %v176, 32\n blit %l3, %agg145, 72\n blit %v186, %v185, 72\n blit %l2, %agg150, 64\n blit %v217, %v216, 32\n blit %v223, %l3, 72\n blit %v246, %v245, 32\n blit %l3, %agg162, 72\n blit %v255, %v254, 72\n blit %l2, %agg167, 64\n blit %v286, %v285, 32\n blit %v292, %l3, 72\n blit %v315, %v314, 32\n blit %l3, %agg179, 72\n blit %v324, %v323, 72\n blit %l2, %agg184, 64\n blit %v355, %v354, 32\n blit %v361, %l3, 72\n blit %v384, %v383, 32\n blit %l3, %agg196, 72\n blit %v393, %v392, 72\n blit %l2, %agg201, 64\n blit %v424, %v423, 32\n blit %v430, %l3, 72\n blit %v453, %v452, 32\n blit %l3, %agg213, 72\n blit %v462, %v461, 72\n blit %l2, %agg218, 64\n blit %v493, %v492, 32\n blit %v499, %l3, 72\n blit %v522, %v521, 32\n blit %l3, %agg230, 72\n blit %v531, %v530, 72"
+        },
+        "sexpr.printer::estimate_width": {
+          "blits_by_bytes": {
+            "32": 8,
+            "48": 4,
+            "64": 3,
+            "24": 6
+          },
+          "static_blit_count": 21,
+          "il_excerpt": "export function :tc93d0e21d03b90b220c68caa04f45142cbd37763c758be7aa8151463d221e935 $myl_f_0e5340f31bcdf0c4b2fdbb9574ba048b1a3b28d2313f0935cd0144f4b6851fe2(l %ctx, l %a0, l %a1) {\n blit %v32, %l2, 32\n blit %v34, %l10, 48\n blit %v36, %l12, 48\n blit %v38, %l14, 32\n blit %v40, %l16, 64\n blit %v42, %l20, 32\n blit %l2, %agg8, 32\n blit %l10, %agg65, 48\n blit %v188, %l11, 24\n blit %l11, %agg68, 24\n blit %l12, %agg73, 48\n blit %v240, %l13, 24\n blit %l13, %agg76, 24\n blit %l14, %agg83, 32\n blit %l16, %agg90, 64\n blit %l16, %agg93, 64\n blit %v349, %l18, 32\n blit %l18, %agg96, 32\n blit %v354, %l19, 24\n blit %l19, %agg98, 24\n blit %l20, %agg106, 32"
+        },
+        "sexpr.printer::push_node": {
+          "blits_by_bytes": {
+            "32": 8,
+            "48": 4,
+            "64": 3,
+            "24": 6
+          },
+          "static_blit_count": 21,
+          "il_excerpt": "export function l $myl_f_89ad37028d30e1d734776ca5c5ec3f9dff396408cf9a1de8adcedcd9befb25ee(l %ctx, l %a0, l %a1, l %a2) {\n blit %v22, %l3, 32\n blit %v24, %l15, 48\n blit %v26, %l17, 48\n blit %v28, %l19, 32\n blit %v30, %l21, 64\n blit %v32, %l25, 32\n blit %l3, %agg2, 32\n blit %l15, %agg147, 48\n blit %v891, %l16, 24\n blit %l16, %agg151, 24\n blit %l17, %agg156, 48\n blit %v964, %l18, 24\n blit %l18, %agg165, 24\n blit %l19, %agg175, 32\n blit %l21, %agg184, 64\n blit %l21, %agg187, 64\n blit %v1251, %l23, 32\n blit %l23, %agg190, 32\n blit %v1256, %l24, 24\n blit %l24, %agg193, 24\n blit %l25, %agg205, 32"
+        }
+      }
+    }
+  }
+}

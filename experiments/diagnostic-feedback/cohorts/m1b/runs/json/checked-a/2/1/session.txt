@@ -1,0 +1,22 @@
+Done.
+
+**What I changed:** only `project/main.my`. `main` was doing `out.print(1 + parse_count(args[0]))`, which added `1` to a `Result[int, str]` (`E_TYPE`). I replaced that line with a `match` on the result: `case Ok(value)` prints `1 + value`, `case Err(_)` prints `-1`. `parse_count` itself was already correct and is untouched.
+
+**Exact command and result:**
+
+```
+$ ./bin/mylang check project/main.my
+EXIT: 0   (no diagnostics)
+```
+
+Verified end-to-end, including both `public/expected.json` cases and edge cases:
+
+| args | stdout |
+|---|---|
+| `41` | `42` |
+| `0` | `1` |
+| `abc`, `3.5`, `""` | `-1` |
+| `-5` | `-4` |
+| `007`, `" 41"` | `8`, `42` |
+
+All runs exited 0, so both the integer path and the non-integer path now behave as required for arbitrary inputs. (11 of the 20 allowed compiler invocations were used.)

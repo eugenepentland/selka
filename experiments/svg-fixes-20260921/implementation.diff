@@ -1,0 +1,854 @@
+--- before/experiments/llvm-backend/llvm_emit.py
++++ after/experiments/llvm-backend/llvm_emit.py
+@@ -23,11 +23,12 @@
+ 
+ from __future__ import annotations
+ 
++import os
+ import re
+ import sys
+ 
+ from qbe_llvm import (AGGREGATE_NAME, BASE_TYPES, COMPARISONS, CONVERSIONS,
+-                      EXT_WIDTH, INTEGER_OPS, LOADS, STORES, infer_types,
++                      EXT_WIDTH, INTEGER_OPS, LOADS, STORES, ParseError, infer_types,
+                       letter_for)
+ from amd64_sysv import aggregate_abi
+ from runtime_signatures import signature as runtime_signature, ATTRIBUTES as runtime_attributes
+@@ -43,6 +44,14 @@
+ def is_temporary(value):
+     """True for a parsed `%temporary` or `$global`."""
+     return getattr(value, "kind", None) in ("temp", "global") and hasattr(value, "name")
++
++
++def target_attribute(name):
++    """Read one driver-resolved target attribute, rejecting malformed input."""
++    value = os.environ.get(name, "")
++    if value and not re.fullmatch(r"[A-Za-z0-9+._,-]+", value):
++        raise ParseError(f"invalid {name} value")
++    return value
+ 
+ 
+ def is_constant(value):
+@@ -1236,7 +1245,13 @@
+         # says `export`: another unit or the generated C entry point calls it by
+         # name.  `dllexport` reproduces that, and `noinline` keeps a local helper
+         # from inlining the symbol out of existence.
+-        attributes = "" if self.function.export else " #0"
++        target_cpu = target_attribute("MYLANG_QBE_LLVM_TARGET_CPU")
++        target_features = target_attribute("MYLANG_QBE_LLVM_TARGET_FEATURES")
++        if target_cpu:
++            self.attributes.add(f'"target-cpu"="{target_cpu}"')
++        if target_features:
++            self.attributes.add(f'"target-features"="{target_features}"')
++        attributes = " #0" if self.attributes or not self.function.export else ""
+         if not self.function.export:
+             self.attributes.add("noinline")
+         first = self.function.blocks[0].label
+--- before/experiments/llvm-backend/test_adapter.py
++++ after/experiments/llvm-backend/test_adapter.py
+@@ -9,6 +9,7 @@
+ import sys
+ import tempfile
+ import unittest
++from unittest.mock import patch
+ 
+ HERE = Path(__file__).resolve().parent
+ sys.path.insert(0, str(HERE))
+@@ -20,6 +21,34 @@
+ 
+ 
+ class AdapterTests(unittest.TestCase):
++    def test_target_policy_is_attached_to_exported_functions(self):
++        unit = """export function l $test() {
++@entry
++ ret 1
++}
++"""
++        environment = {
++            "MYLANG_QBE_LLVM_TARGET_CPU": "x86-64-v3",
++            "MYLANG_QBE_LLVM_TARGET_FEATURES": "+avx,+avx2,-avx512f",
++        }
++        with patch.dict(os.environ, environment, clear=False):
++            ir = translate_text(unit, "target")
++        self.assertIn("define dllexport i64 @test() #0", ir)
++        self.assertIn('"target-cpu"="x86-64-v3"', ir)
++        self.assertIn('"target-features"="+avx,+avx2,-avx512f"', ir)
++
++    def test_malformed_target_policy_fails_closed(self):
++        unit = """export function l $test() {
++@entry
++ ret 1
++}
++"""
++        with patch.dict(os.environ,
++                        {"MYLANG_QBE_LLVM_TARGET_CPU": 'x86-64" nounwind'},
++                        clear=False):
++            with self.assertRaisesRegex(Exception, "invalid MYLANG_QBE_LLVM_TARGET_CPU"):
++                translate_text(unit, "target")
++
+     def compile_units(self, units, main):
+         with tempfile.TemporaryDirectory() as directory:
+             root = Path(directory)
+--- before/src/qbe_build.zig
++++ after/src/qbe_build.zig
+@@ -98,6 +98,8 @@
+         .zig_version = zig_version,
+         .mode = parsed.mode,
+         .target = parsed.target,
++        .target_cpu = selected.target_cpu,
++        .target_features = selected.target_features,
+     });
+     // Objects live in this driver's generation; opening it evicts every other
+     // one no process still leases.
+@@ -111,7 +113,7 @@
+             .environment = environment,
+             .zig = zig,
+             .mode = parsed.mode,
+-            .codegen = .{ .tool = selected.tool, .llvm = std.mem.eql(u8, selected.name, "llvm"), .optimization = selected.optimization, .lto = selected.lto },
++            .codegen = .{ .tool = selected.tool, .llvm = std.mem.eql(u8, selected.name, "llvm"), .optimization = selected.optimization, .lto = selected.lto, .target_cpu = selected.target_cpu, .target_features = selected.target_features },
+         },
+         .zig_version = zig_version,
+         .root = directory,
+@@ -119,7 +121,18 @@
+ }
+ /// The per-invocation half of an object's build environment: the resolved tool
+ /// stamps and the requested build mode and target.
+-const Environment = struct { zig: []const u8, backend: []const u8, backend_tool: []const u8, optimization: []const u8, lto: bool, zig_version: []const u8, mode: []const u8, target: []const u8 };
++const Environment = struct {
++    zig: []const u8,
++    backend: []const u8,
++    backend_tool: []const u8,
++    optimization: []const u8,
++    lto: bool,
++    zig_version: []const u8,
++    mode: []const u8,
++    target: []const u8,
++    target_cpu: []const u8 = "",
++    target_features: []const u8 = "",
++};
+ /// Encode everything besides a unit's own IL that decides the object bytes. It
+ /// names the *native driver* identity rather than the whole compiler: objects are
+ /// already content addressed by the IL the frontend emitted, the runtime sources
+@@ -140,6 +153,8 @@
+         .zig_version = per_build.zig_version,
+         .mode = per_build.mode,
+         .target = per_build.target,
++        .target_cpu = per_build.target_cpu,
++        .target_features = per_build.target_features,
+     }, .{});
+ }
+ /// Validate one emitted manifest and link it into `output`, reporting whether the file changed.
+@@ -837,7 +852,7 @@
+     try std.testing.expectEqualStrings(text, same);
+ }
+ 
+-test "LLVM optimization and LTO change native object identity" {
++test "LLVM optimization LTO and target policy change native object identity" {
+     const a = std.testing.allocator;
+     const base: Environment = .{ .zig = "zig-stamp", .backend = "llvm", .backend_tool = "adapter-hash", .optimization = "3", .lto = false, .zig_version = bundled.zig_version, .mode = "ReleaseFast", .target = "amd64_sysv" };
+     const o3 = try environmentJson(a, base);
+@@ -850,8 +865,18 @@
+     changed.lto = true;
+     const lto = try environmentJson(a, changed);
+     defer a.free(lto);
++    changed = base;
++    changed.target_cpu = "x86-64-v3";
++    const cpu = try environmentJson(a, changed);
++    defer a.free(cpu);
++    changed = base;
++    changed.target_features = "+avx,+avx2,-avx512f";
++    const features = try environmentJson(a, changed);
++    defer a.free(features);
+     try std.testing.expect(!std.mem.eql(u8, o3, o2));
+     try std.testing.expect(!std.mem.eql(u8, o3, lto));
++    try std.testing.expect(!std.mem.eql(u8, o3, cpu));
++    try std.testing.expect(!std.mem.eql(u8, o3, features));
+ }
+ // spec-case: QBE-3
+ test "a default build shares the runtime root while an explicit cache-dir keeps it local" {
+--- before/src/qbe_build_backend.zig
++++ after/src/qbe_build_backend.zig
+@@ -10,6 +10,8 @@
+     tool_identity: []const u8,
+     optimization: []const u8,
+     lto: bool,
++    target_cpu: []const u8,
++    target_features: []const u8,
+ };
+ 
+ /// Resolve tools and effective optimization before opening an object cache.
+@@ -17,12 +19,13 @@
+     if (parsed.codegen == .qbe) {
+         const qbe = try context.executable(parsed.codegen.qbe);
+         if (std.mem.eql(u8, std.fs.path.basename(qbe), "qbe_llvm.py")) {
++            const target = try llvmTarget(context, zig, parsed.target);
+             const legacy = context.environ.get("MYLANG_QBE_LLVM_OPT") orelse "-O2";
+             const optimization = if (std.mem.startsWith(u8, legacy, "-O")) legacy[2..] else legacy;
+             if (!validOptimization(optimization)) return error.NativeToolFailed;
+-            return .{ .name = "llvm", .tool = qbe, .tool_identity = try adapterIdentity(context, qbe, zig), .optimization = optimization, .lto = false };
++            return .{ .name = "llvm", .tool = qbe, .tool_identity = try adapterIdentity(context, qbe, zig), .optimization = optimization, .lto = false, .target_cpu = target.cpu, .target_features = target.features };
+         }
+-        return .{ .name = "qbe", .tool = qbe, .tool_identity = try context.stamp(qbe), .optimization = "default", .lto = false };
++        return .{ .name = "qbe", .tool = qbe, .tool_identity = try context.stamp(qbe), .optimization = "default", .lto = false, .target_cpu = "", .target_features = "" };
+     }
+     const adapter = if (parsed.codegen.llvm.adapter.len != 0)
+         try context.executable(parsed.codegen.llvm.adapter)
+@@ -31,13 +34,75 @@
+         const candidate = try std.fs.path.resolve(context.allocator, &.{ context.self_directory, "../lib/mylang-llvm/qbe_llvm.py" });
+         break :installed try context.executable(candidate);
+     };
++    const target = try llvmTarget(context, zig, parsed.target);
+     return .{
+         .name = "llvm",
+         .tool = adapter,
+         .tool_identity = try adapterIdentity(context, adapter, zig),
+         .optimization = effectiveOpt(parsed),
+         .lto = parsed.codegen.llvm.lto,
++        .target_cpu = target.cpu,
++        .target_features = target.features,
+     };
++}
++
++const LlvmTarget = struct { cpu: []const u8, features: []const u8 };
++
++/// Ask the selected Zig/Clang driver for the exact CPU policy it already uses.
++/// LLVM IR function attributes must carry this policy because a later LTO link
++/// cannot recover it from the command that originally ingested textual IR.
++fn llvmTarget(context: fs.Context, zig: []const u8, target: []const u8) fs.Error!LlvmTarget {
++    if (!std.mem.eql(u8, target, "amd64_sysv")) return error.NativeToolFailed;
++    const result = try context.captureQuiet(&.{ zig, "cc", "-###", "-S", "-x", "c", "/dev/null", "-o", "/dev/null" });
++    if (fs.exitCode(result.term) != 0) {
++        try std.Io.File.stderr().writeStreamingAll(context.io, "mylang: Zig could not resolve the LLVM target CPU policy\n");
++        return error.NativeToolFailed;
++    }
++    return parseTarget(context.allocator, result.stderr) catch {
++        try std.Io.File.stderr().writeStreamingAll(context.io, "mylang: Zig reported an incompatible or malformed LLVM target CPU policy\n");
++        return error.NativeToolFailed;
++    };
++}
++
++fn parseTarget(allocator: std.mem.Allocator, text: []const u8) error{ OutOfMemory, InvalidTargetProbe }!LlvmTarget {
++    const triple = extractQuotedValue(text, "\"-triple\" \"") orelse return error.InvalidTargetProbe;
++    if (!validTriple(triple)) return error.InvalidTargetProbe;
++    const cpu = extractQuotedValue(text, "\"-target-cpu\" \"") orelse return error.InvalidTargetProbe;
++    if (!validTargetToken(cpu)) return error.InvalidTargetProbe;
++    var features: std.ArrayList(u8) = .empty;
++    errdefer features.deinit(allocator);
++    var rest = text;
++    const marker = "\"-target-feature\" \"";
++    while (std.mem.indexOf(u8, rest, marker)) |at| {
++        rest = rest[at + marker.len ..];
++        const end = std.mem.indexOfScalar(u8, rest, '"') orelse return error.InvalidTargetProbe;
++        const feature = rest[0..end];
++        if (!validTargetToken(feature) or feature.len < 2) return error.InvalidTargetProbe;
++        if (feature[0] != '+' and feature[0] != '-') return error.InvalidTargetProbe;
++        if (features.items.len != 0) try features.append(allocator, ',');
++        try features.appendSlice(allocator, feature);
++        rest = rest[end + 1 ..];
++    }
++    const owned_cpu = try allocator.dupe(u8, cpu);
++    errdefer allocator.free(owned_cpu);
++    return .{ .cpu = owned_cpu, .features = try features.toOwnedSlice(allocator) };
++}
++
++fn validTriple(triple: []const u8) bool {
++    return std.mem.startsWith(u8, triple, "x86_64-unknown-linux") and std.mem.indexOf(u8, triple, "gnu") != null;
++}
++
++fn extractQuotedValue(text: []const u8, marker: []const u8) ?[]const u8 {
++    const at = std.mem.indexOf(u8, text, marker) orelse return null;
++    const rest = text[at + marker.len ..];
++    const end = std.mem.indexOfScalar(u8, rest, '"') orelse return null;
++    return rest[0..end];
++}
++
++fn validTargetToken(value: []const u8) bool {
++    if (value.len == 0) return false;
++    for (value) |byte| if (!std.ascii.isAlphanumeric(byte) and std.mem.indexOfScalar(u8, "+-._", byte) == null) return false;
++    return true;
+ }
+ fn validOptimization(value: []const u8) bool {
+     return value.len == 1 and std.mem.indexOfScalar(u8, "0123sz", value[0]) != null;
+@@ -82,6 +147,20 @@
+     try std.testing.expectEqualStrings("2", effectiveOpt(.{ .codegen = .{ .llvm = .{ .adapter = "adapter", .optimization = "2" } } }));
+ }
+ 
++test "LLVM target probe retains CPU and positive and negative features" {
++    const parsed = try parseTarget(std.testing.allocator, "clang \"-triple\" \"x86_64-unknown-linux-gnu\" \"-target-cpu\" \"x86-64-v3\" \"-target-feature\" \"+avx2\" \"-target-feature\" \"-avx512f\"\n");
++    defer std.testing.allocator.free(parsed.cpu);
++    defer std.testing.allocator.free(parsed.features);
++    try std.testing.expectEqualStrings("x86-64-v3", parsed.cpu);
++    try std.testing.expectEqualStrings("+avx2,-avx512f", parsed.features);
++    const baseline = try parseTarget(std.testing.allocator, "clang \"-triple\" \"x86_64-unknown-linux-gnu\" \"-target-cpu\" \"x86-64\"\n");
++    defer std.testing.allocator.free(baseline.cpu);
++    defer std.testing.allocator.free(baseline.features);
++    try std.testing.expectEqualStrings("x86-64", baseline.cpu);
++    try std.testing.expectEqualStrings("", baseline.features);
++    try std.testing.expectError(error.InvalidTargetProbe, parseTarget(std.testing.allocator, "clang \"-triple\" \"aarch64-unknown-linux-gnu\" \"-target-cpu\" \"generic\"\n"));
++}
++
+ test "LLVM adapter identity changes when an imported sibling changes" {
+     var environment: std.process.Environ.Map = .init(std.testing.allocator);
+     defer environment.deinit();
+--- before/src/qbe_build_cache.zig
++++ after/src/qbe_build_cache.zig
+@@ -187,6 +187,8 @@
+                     try environment.put("MYLANG_QBE_LLVM_ZIG", self.zig);
+                     try environment.put("MYLANG_QBE_LLVM_RUNTIME_SOURCES", self.assets);
+                     try environment.put("MYLANG_QBE_LLVM_SIGNATURES", try std.fs.path.join(a, &.{ self.temporary, "llvm-signatures.json" }));
++                    try environment.put("MYLANG_QBE_LLVM_TARGET_CPU", self.codegen.target_cpu);
++                    try environment.put("MYLANG_QBE_LLVM_TARGET_FEATURES", self.codegen.target_features);
+                     if (self.codegen.lto) try environment.put("MYLANG_QBE_LLVM_EMIT_LTO_OBJECT", "1");
+                 }
+                 const adapter_output = if (self.codegen.lto and self.codegen.llvm) task.candidate else assembly;
+@@ -235,7 +237,14 @@
+     }
+ };
+ /// Resolved native code generator and optimization policy.
+-pub const Codegen = struct { tool: []const u8, llvm: bool = false, optimization: []const u8 = "default", lto: bool = false };
++pub const Codegen = struct {
++    tool: []const u8,
++    llvm: bool = false,
++    optimization: []const u8 = "default",
++    lto: bool = false,
++    target_cpu: []const u8 = "",
++    target_features: []const u8 = "",
++};
+ /// Ways to lower an object without routing a guest function through C.
+ pub const Flavor = enum { qbe, c_text, zig_file };
+ /// One validated object-cache result.
+--- before/src/qbe_build_host.zig
++++ after/src/qbe_build_host.zig
+@@ -102,7 +102,7 @@
+     defer std.testing.allocator.free(result);
+     var digest: [32]u8 = undefined;
+     std.crypto.hash.sha2.Sha256.hash(result, &digest, .{});
+-    // Includes the execution-local binding cache and bounded stack scratch;
++    // Includes cached bindings, bounded scratch and checked scalar marshaling;
+     // tests/qbe_host_bridge.c exercises their runtime checks and cleanup.
+-    try std.testing.expectEqualStrings("92db181b0d094ae8ed6a0c9be1cc1d2b7231908883b304cb84404fe2b758ccec", &std.fmt.bytesToHex(digest, .lower));
++    try std.testing.expectEqualStrings("de39cdfd9b3db5005026917daeaa839a365d2f7725e6ee674d640c3c4666c9e9", &std.fmt.bytesToHex(digest, .lower));
+ }
+--- before/src/qbe_host_runtime.c
++++ after/src/qbe_host_runtime.c
+@@ -163,6 +163,37 @@
+     }
+     return total;
+ }
++static int qbe_host_scalar_call(const QbeHostState *state,const QbeHostDeclaration *declaration) {
++    if (state->depth_limit<1 || declaration->count>=state->value_limit || declaration->count>=8 || qbe_host_types[declaration->result].kind!=1) return 0;
++    for (size_t i=0;i<declaration->count;i++) if (qbe_host_types[declaration->parameters[i]].kind!=1) return 0;
++    return 1;
++}
++static void qbe_host_invoke_scalar(void *ctx,QbeHostState *state,const QbeHostDeclaration *declaration,const MylangHostBinding *binding,const void *const *arguments,void *output) {
++    MylangHostNode nodes[8]={0};
++    for (size_t i=0;i<declaration->count;i++) {
++        const QbeHostType *type=&qbe_host_types[declaration->parameters[i]];
++        nodes[i]=(MylangHostNode){type->name,qbe_host_word(arguments[i],type),0};
++    }
++    state->calls++; state->work--;
++    MylangHostCall call={nodes,declaration->count,nodes+declaration->count,1,0,state->work,0};
++    state->invoking=1;
++    const char *failure=binding->invoke(binding->context,&call);
++    state->invoking=0;
++    if (call.exhausted || call.work_remaining>state->work) qbe_host_error(ctx,"HostWorkLimit");
++    else {
++        state->work=call.work_remaining;
++        if (failure) qbe_host_error(ctx,failure);
++        else if (call.output_nodes>1) qbe_host_error(ctx,"ValueCountLimit");
++        else if (call.output_nodes!=1) qbe_host_error(ctx,"InvalidDataValue");
++        else {
++            const QbeHostType *type=&qbe_host_types[declaration->result];
++            const MylangHostNode *node=&nodes[declaration->count];
++            if (!node->type || strcmp(node->type,type->name)) qbe_host_error(ctx,"ValueTypeMismatch");
++            else if (node->children || !qbe_host_valid(type,node->bits)) qbe_host_error(ctx,"InvalidDataValue");
++            else memcpy(output,&node->bits,type->size);
++        }
++    }
++}
+ static void qbe_host_invoke(void *context,size_t declaration_index,const void *const *arguments,void *output) {
+     MylQbeContext *ctx=context;
+     myl_qbe_host_begin(ctx);
+@@ -173,6 +204,10 @@
+     if (state->invoking) { qbe_host_error(ctx,"HostReentry"); return; }
+     if (state->calls==state->call_limit) { qbe_host_error(ctx,"HostCallLimit"); return; }
+     if (!state->work) { qbe_host_error(ctx,"HostWorkLimit"); return; }
++    if (qbe_host_scalar_call(state,declaration)) {
++        qbe_host_invoke_scalar(ctx,state,declaration,binding,arguments,output);
++        return;
++    }
+     size_t count=0;
+     for (size_t i=0;i<declaration->count;i++) if (!qbe_host_write(ctx,state,declaration->parameters[i],arguments[i],NULL,&count,1)) return;
+     size_t capacity=qbe_host_nodes(declaration->result,1,state->value_limit-count,state->depth_limit);
+--- before/src/schematic/guest/layout.my
++++ after/src/schematic/guest/layout.my
+@@ -29,30 +29,12 @@
+     return nets[id].group
+ 
+ 
+-def rowHeight(host: Host, pin: c.Pin, pins: list[c.Pin], parts: list[c.Part]) -> int:
++def rowHeight(pin: c.Pin, passive_counts: list[int], bridge_nets: list[bool]) -> int:
+     if pin.rail != 0:
+         return 40
+-    count = 0
+-    hasBridge = False
+-    i = 0
+-    while i < len(pins):
+-        other = pins[i]
+-        if parts[other.part].kind != 0 and pin.net_id == other.net_id:
+-            count += 1
+-            j = 0
+-            while j < len(pins):
+-                farPin = pins[j]
+-                if farPin.part == other.part and farPin.number != other.number and farPin.raw_rail == 0:
+-                    k = 0
+-                    while k < len(pins):
+-                        hub = pins[k]
+-                        if parts[hub.part].kind == 0 and hub.net_id == farPin.net_id:
+-                            hasBridge = True
+-                        k += 1
+-                j += 1
+-        i += 1
++    count = passive_counts[pin.net_id]
+     if count > 1:
+-        if not hasBridge:
++        if not bridge_nets[pin.net_id]:
+             return count * 40
+         return 56 +(count - 1) * 40
+     return 56
+@@ -60,38 +42,92 @@
+ 
+ def collectRows(host: Host, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> list[Row]:
+     out: list[Row] = []
++    counts: list[int] = []
++    offsets: list[int] = []
++    cursor: list[int] = []
++    ordered: list[int] = []
++    passive_counts: list[int] = []
++    bridge_nets: list[bool] = []
++    hub_nets: list[bool] = []
++    i = 0
++    while i <= 129:
++        counts.append(0)
++        offsets.append(0)
++        cursor.append(0)
++        i += 1
++    i = 0
++    while i < len(pins):
++        passive_counts.append(0)
++        bridge_nets.append(False)
++        hub_nets.append(False)
++        ordered.append(- 1)
++        i += 1
++    hub_count = 0
++    i = 0
++    while i < len(pins):
++        pin = pins[i]
++        if parts[pin.part].kind == 0:
++            if not pin.nc and pin.number >= 1 and pin.number <= 128:
++                counts[pin.number] = counts[pin.number] + 1
++                hub_count += 1
++            # NC labels participated in the original bridge-presence scan.
++            if pin.net_id >= 0:
++                hub_nets[pin.net_id] = True
++        elif not pin.nc and pin.net_id >= 0:
++            passive_counts[pin.net_id] = passive_counts[pin.net_id] + 1
++        i += 1
+     number = 1
+-    while number <= 128:
+-        i = 0
+-        while i < len(pins):
+-            pin = pins[i]
+-            if parts[pin.part].kind == 0 and not pin.nc and pin.number == number:
+-                group = pinGroup(host, pin, parts, pins, nets)
+-                present = False
+-                n = 0
+-                while n < len(out):
+-                    if out[n].group == group:
+-                        present = True
+-                    n += 1
+-                if not present:
+-                    member = 1
+-                    while member <= 128:
+-                        j = 0
+-                        while j < len(pins):
+-                            other = pins[j]
+-                            if other.part == pin.part and not other.nc and other.number == member and pinGroup(host, other, parts, pins, nets) == group:
+-                                out.append(Row(
+-                                    index=j,
+-                                    group=group,
+-                                    height=rowHeight(host, other, pins, parts),
+-                                    rail=other.rail,
+-                                    side=0,
+-                                    y=0
+-                                ))
+-                            j += 1
+-                        member += 1
+-            i += 1
++    while number <= 129:
++        offsets[number] = offsets[number - 1] + counts[number - 1]
++        cursor[number] = offsets[number]
+         number += 1
++    i = 0
++    while i < len(pins):
++        pin = pins[i]
++        if parts[pin.part].kind == 0 and not pin.nc and pin.number >= 1 and pin.number <= 128:
++            slot = cursor[pin.number]
++            ordered[slot] = i
++            cursor[pin.number] = slot + 1
++        i += 1
++    i = 0
++    while i < len(pins):
++        pin = pins[i]
++        if parts[pin.part].kind != 0 and not pin.nc:
++            far = parts[pin.part].pin1
++            if far == i:
++                far = parts[pin.part].pin2
++            if far >= 0 and pins[far].raw_rail == 0 and pins[far].net_id >= 0 and hub_nets[pins[far].net_id]:
++                bridge_nets[pin.net_id] = True
++        i += 1
++    seen_groups: list[int] = []
++    position = 0
++    while position < hub_count:
++        index = ordered[position]
++        pin = pins[index]
++        group = pinGroup(host, pin, parts, pins, nets)
++        present = False
++        n = 0
++        while n < len(seen_groups):
++            if seen_groups[n] == group:
++                present = True
++            n += 1
++        if not present:
++            seen_groups.append(group)
++            member = 0
++            while member < hub_count:
++                other_index = ordered[member]
++                other = pins[other_index]
++                if other.part == pin.part and pinGroup(host, other, parts, pins, nets) == group:
++                    out.append(Row(
++                        index=other_index,
++                        group=group,
++                        height=rowHeight(other, passive_counts, bridge_nets),
++                        rail=other.rail,
++                        side=0,
++                        y=0
++                    ))
++                member += 1
++        position += 1
+     return out
+ 
+ 
+@@ -188,7 +224,14 @@
+     return fallback
+ 
+ 
+-def partPin(part: int, number: int, pins: list[c.Pin]) -> c.Pin:
++def partPin(part: int, number: int, parts: list[c.Part], pins: list[c.Pin]) -> c.Pin:
++    index = - 1
++    if number == 1:
++        index = parts[part].pin1
++    elif number == 2:
++        index = parts[part].pin2
++    if index >= 0 and index < len(pins) and pins[index].part == part and pins[index].number == number:
++        return pins[index]
+     i = 0
+     while i < len(pins):
+         pin = pins[i]
+@@ -217,8 +260,8 @@
+ 
+ 
+ def innerPin(host: Host, part: int, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> c.Pin:
+-    a = partPin(part, 1, pins)
+-    b = partPin(part, 2, pins)
++    a = partPin(part, 1, parts, pins)
++    b = partPin(part, 2, parts, pins)
+     if a.raw_rail != 0 and b.raw_rail == 0:
+         return b
+     if b.raw_rail == 0 and depth(host, b, parts, pins, nets) < depth(host, a, parts, pins, nets):
+@@ -227,8 +270,8 @@
+ 
+ 
+ def bridge(host: Host, part: int, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net]) -> bool:
+-    a = partPin(part, 1, pins)
+-    b = partPin(part, 2, pins)
++    a = partPin(part, 1, parts, pins)
++    b = partPin(part, 2, parts, pins)
+     if a.raw_rail != 0 or b.raw_rail != 0:
+         return False
+     if depth(host, a, parts, pins, nets) != depth(host, b, parts, pins, nets):
+@@ -240,7 +283,7 @@
+ 
+ def groundBranch(host: Host, part: int, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> bool:
+     inner = innerPin(host, part, parts, pins, nets)
+-    outer = partPin(part, 3 - inner.number, pins)
++    outer = partPin(part, 3 - inner.number, parts, pins)
+     if outer.raw_rail == 1:
+         return True
+     if outer.raw_rail == 2:
+@@ -249,8 +292,8 @@
+     j = 0
+     while j < len(parts):
+         if parts[j].kind != 0 and j != part:
+-            a = partPin(j, 1, pins)
+-            b = partPin(j, 2, pins)
++            a = partPin(j, 1, parts, pins)
++            b = partPin(j, 2, parts, pins)
+             otherRail = 0
+             if a.net_id == outer.net_id:
+                 otherRail = b.raw_rail
+@@ -277,7 +320,7 @@
+             if parts[j].kind != 0 and j != part:
+                 previous = innerPin(host, j, parts, pins, nets)
+                 if depth(host, previous, parts, pins, nets) < level and nearest(host, previous, parts, pins, rows, nets) == owner:
+-                    outer = partPin(j, 3 - previous.number, pins)
++                    outer = partPin(j, 3 - previous.number, parts, pins)
+                     if outer.net_id == inner.net_id:
+                         offset = branch(host, j, parts, pins, rows, nets, remaining - 1)
+                         j = len(parts)
+@@ -290,8 +333,8 @@
+     while j < len(parts):
+         if parts[j].kind != 0:
+             previous = innerPin(host, j, parts, pins, nets)
+-            a = partPin(j, 1, pins)
+-            b = partPin(j, 2, pins)
++            a = partPin(j, 1, parts, pins)
++            b = partPin(j, 2, parts, pins)
+             if bridge(host, j, parts, pins, rows, nets):
+                 if a.net_id == inner.net_id or b.net_id == inner.net_id:
+                     hasBridge = True
+--- before/tests/qbe_host_bridge.c
++++ after/tests/qbe_host_bridge.c
+@@ -23,18 +23,28 @@
+ static const QbeHostType qbe_host_types[]={
+     {"i64",8,0,0,1,64,1,NULL,NULL},
+     {"Nine",72,9,8,3,0,0,array_child,NULL},
++    {"u8",1,0,0,1,8,0,NULL,NULL},
++    {"i8",1,0,0,1,8,1,NULL,NULL},
+ };
+ static const size_t scalar_parameter[]={0};
++static const size_t u8_parameter[]={2},i8_parameter[]={3};
++static const size_t seven_parameters[]={0,0,0,0,0,0,0};
++static const size_t eight_parameters[]={0,0,0,0,0,0,0,0};
+ static const QbeHostDeclaration qbe_host_declarations[]={
+     {"f0",scalar_parameter,1,0,1}, {"f1",scalar_parameter,1,0,1},
+     {"f2",scalar_parameter,1,0,1}, {"f3",scalar_parameter,1,0,1},
+     {"f4",scalar_parameter,1,0,1}, {"f5",scalar_parameter,1,0,1},
+     {"f6",scalar_parameter,1,0,1}, {"f7",scalar_parameter,1,0,1},
+     {"f8",scalar_parameter,1,0,1}, {"f9",NULL,0,1,1},
++    {"f10",NULL,0,0,1},
++    {"f11",u8_parameter,1,2,1}, {"f12",i8_parameter,1,3,1},
++    {"f13",seven_parameters,7,0,1}, {"f14",eight_parameters,8,0,1},
+ };
+ static const size_t qbe_host_declaration_count=sizeof(qbe_host_declarations)/sizeof(qbe_host_declarations[0]);
+ 
+ static const char *failure_code;
++static size_t scalar_invocations;
++static int invalid_u8;
+ void myl_qbe_fail(void *context,const char *code) {
+     MylQbeContext *ctx=context;
+     if (!ctx->trap) ctx->trap=code;
+@@ -42,6 +52,7 @@
+ 
+ static const char *scalar(void *opaque,MylangHostCall *call) {
+     (void)opaque;
++    scalar_invocations++;
+     assert(call->argument_nodes==1 && call->capacity>=1);
+     call->output[0]=(MylangHostNode){"i64",call->arguments[0].bits+1,0};
+     call->output_nodes=1;
+@@ -55,11 +66,81 @@
+     call->output_nodes=10;
+     return failure_code;
+ }
++static const char *zero_scalar(void *opaque,MylangHostCall *call) {
++    (void)opaque;
++    assert(call->argument_nodes==0 && call->capacity==1);
++    call->output[0]=(MylangHostNode){"i64",42,0};
++    call->output_nodes=1;
++    return NULL;
++}
++static const char *narrow_u8(void *opaque,MylangHostCall *call) {
++    (void)opaque;
++    assert(call->argument_nodes==1 && call->arguments[0].bits==255);
++    call->output[0]=(MylangHostNode){"u8",invalid_u8?256:255,0};
++    call->output_nodes=1;
++    return NULL;
++}
++static const char *narrow_i8(void *opaque,MylangHostCall *call) {
++    (void)opaque;
++    assert(call->argument_nodes==1 && call->arguments[0].bits==UINT64_MAX);
++    call->output[0]=(MylangHostNode){"i8",UINT64_MAX-1,0};
++    call->output_nodes=1;
++    return NULL;
++}
++static const char *many_scalars(void *opaque,MylangHostCall *call) {
++    (void)opaque;
++    uint64_t sum=0;
++    for (size_t i=0;i<call->argument_nodes;i++) sum+=call->arguments[i].bits;
++    assert(call->capacity==1);
++    call->output[0]=(MylangHostNode){"i64",sum,0};
++    call->output_nodes=1;
++    return NULL;
++}
+ static const char *malformed(void *opaque,MylangHostCall *call) {
+     (void)opaque;
+     call->output[0]=(MylangHostNode){"i64",0,1};
+     call->output_nodes=1;
+     return NULL;
++}
++static const char *missing_output(void *opaque,MylangHostCall *call) {
++    (void)opaque; (void)call;
++    return NULL;
++}
++static const char *extra_output(void *opaque,MylangHostCall *call) {
++    (void)opaque;
++    call->output[0]=(MylangHostNode){"i64",0,0};
++    call->output_nodes=2;
++    return NULL;
++}
++static const char *wrong_type(void *opaque,MylangHostCall *call) {
++    (void)opaque;
++    call->output[0]=(MylangHostNode){"Nine",0,0};
++    call->output_nodes=1;
++    return NULL;
++}
++static const char *increase_work(void *opaque,MylangHostCall *call) {
++    (void)opaque;
++    call->work_remaining++;
++    call->output[0]=(MylangHostNode){"i64",0,0};
++    call->output_nodes=1;
++    return NULL;
++}
++static const char *exhaust_work(void *opaque,MylangHostCall *call) {
++    (void)opaque;
++    call->exhausted=1;
++    return NULL;
++}
++static const char *no_capacity(void *opaque,MylangHostCall *call) {
++    (void)opaque;
++    (void)call;
++    scalar_invocations++;
++    assert(call->argument_nodes==1 && call->capacity==0);
++    return "HostFailure";
++}
++static const char *no_capacity_many(void *opaque,MylangHostCall *call) {
++    (void)opaque;
++    assert(call->argument_nodes==7 && call->capacity==0);
++    return "HostFailure";
+ }
+ static const char *reenter(void *opaque,MylangHostCall *call) {
+     MylQbeContext *ctx=opaque;
+@@ -72,16 +153,26 @@
+ }
+ 
+ static const char *i64_parameters[]={"i64"};
+-static MylangHostBinding bindings[10];
++static const char *u8_parameters[]={"u8"},*i8_parameters[]={"i8"};
++static const char *seven_i64_parameters[]={"i64","i64","i64","i64","i64","i64","i64"};
++static const char *eight_i64_parameters[]={"i64","i64","i64","i64","i64","i64","i64","i64"};
++static MylangHostBinding bindings[15];
+ static MylangNativeProviders providers;
+ 
+ static void reset_bindings(void) {
+-    static const char *names[]={"f0","f1","f2","f3","f4","f5","f6","f7","f8","f9"};
++    static const char *names[]={"f0","f1","f2","f3","f4","f5","f6","f7","f8","f9","f10","f11","f12","f13","f14"};
+     memset(bindings,0,sizeof(bindings));
+     for (size_t i=0;i<9;i++) bindings[i]=(MylangHostBinding){names[i],i64_parameters,1,"i64",1,1,NULL,scalar};
+     bindings[9]=(MylangHostBinding){names[9],NULL,0,"Nine",1,1,NULL,large};
+-    providers=(MylangNativeProviders){.host={.bindings=bindings,.count=10}};
++    bindings[10]=(MylangHostBinding){names[10],NULL,0,"i64",1,1,NULL,zero_scalar};
++    bindings[11]=(MylangHostBinding){names[11],u8_parameters,1,"u8",1,1,NULL,narrow_u8};
++    bindings[12]=(MylangHostBinding){names[12],i8_parameters,1,"i8",1,1,NULL,narrow_i8};
++    bindings[13]=(MylangHostBinding){names[13],seven_i64_parameters,7,"i64",1,1,NULL,many_scalars};
++    bindings[14]=(MylangHostBinding){names[14],eight_i64_parameters,8,"i64",1,1,NULL,many_scalars};
++    providers=(MylangNativeProviders){.host={.bindings=bindings,.count=15}};
+     failure_code=NULL;
++    scalar_invocations=0;
++    invalid_u8=0;
+ }
+ static void dispose(MylQbeContext *ctx) {
+     tracked_free(ctx->host_state);
+@@ -99,7 +190,7 @@
+     myl_qbe_host_begin(&ctx);
+     assert(!ctx.trap && ctx.host_state);
+     QbeHostState *state=ctx.host_state;
+-    assert(state->bound[8]==&bindings[8] && state->bound[9]==&bindings[9]);
++    assert(state->bound[8]==&bindings[8] && state->bound[9]==&bindings[9] && state->bound[14]==&bindings[14]);
+     size_t after_begin=allocations;
+     for (uint64_t i=0;i<100;i++) {
+         uint64_t output=0;
+@@ -108,9 +199,24 @@
+         assert(!ctx.trap && output==i+1);
+     }
+     assert(allocations==after_begin); /* small scalar calls stay allocation-free */
++    uint64_t zero_output=0;
++    qbe_host_invoke(&ctx,10,NULL,&zero_output);
++    assert(!ctx.trap && zero_output==42 && allocations==after_begin);
++    uint8_t u8_input=255,u8_output=0; const void *u8_arguments[]={&u8_input};
++    qbe_host_invoke(&ctx,11,u8_arguments,&u8_output);
++    assert(!ctx.trap && u8_output==255 && allocations==after_begin);
++    int8_t i8_input=-1,i8_output=0; const void *i8_arguments[]={&i8_input};
++    qbe_host_invoke(&ctx,12,i8_arguments,&i8_output);
++    assert(!ctx.trap && i8_output==-2 && allocations==after_begin);
++    uint64_t many_values[]={1,2,3,4,5,6,7,8},many_output=0;
++    const void *many_arguments[]={&many_values[0],&many_values[1],&many_values[2],&many_values[3],&many_values[4],&many_values[5],&many_values[6],&many_values[7]};
++    qbe_host_invoke(&ctx,13,many_arguments,&many_output);
++    assert(!ctx.trap && many_output==28 && allocations==after_begin);
++    qbe_host_invoke(&ctx,14,many_arguments,&many_output);
++    assert(!ctx.trap && many_output==36 && allocations==after_begin+1 && frees==1);
+     uint64_t output[9]={0};
+     qbe_host_invoke(&ctx,9,NULL,output);
+-    assert(!ctx.trap && allocations==after_begin+1 && frees==1);
++    assert(!ctx.trap && allocations==after_begin+2 && frees==2);
+     for (size_t i=0;i<9;i++) assert(output[i]==i);
+     dispose(&ctx);
+ 
+@@ -120,11 +226,31 @@
+     qbe_host_invoke(&ctx,0,arguments,&result);
+     assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_CONTRACT")); dispose(&ctx);
+ 
++    reset_bindings(); bindings[0].invoke=missing_output; ctx=context(); myl_qbe_host_begin(&ctx);
++    qbe_host_invoke(&ctx,0,arguments,&result);
++    assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_CONTRACT")); dispose(&ctx);
++    reset_bindings(); bindings[0].invoke=extra_output; ctx=context(); myl_qbe_host_begin(&ctx);
++    qbe_host_invoke(&ctx,0,arguments,&result);
++    assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_LIMIT")); dispose(&ctx);
++    reset_bindings(); bindings[0].invoke=wrong_type; ctx=context(); myl_qbe_host_begin(&ctx);
++    qbe_host_invoke(&ctx,0,arguments,&result);
++    assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_CONTRACT")); dispose(&ctx);
++    reset_bindings(); bindings[0].invoke=increase_work; ctx=context(); myl_qbe_host_begin(&ctx);
++    qbe_host_invoke(&ctx,0,arguments,&result);
++    assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_LIMIT")); dispose(&ctx);
++    reset_bindings(); bindings[0].invoke=exhaust_work; ctx=context(); myl_qbe_host_begin(&ctx);
++    qbe_host_invoke(&ctx,0,arguments,&result);
++    assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_LIMIT")); dispose(&ctx);
++
++    reset_bindings(); invalid_u8=1; ctx=context(); myl_qbe_host_begin(&ctx);
++    qbe_host_invoke(&ctx,11,u8_arguments,&u8_output);
++    assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_CONTRACT")); dispose(&ctx);
++
+     reset_bindings(); bindings[0].context=&ctx; bindings[0].invoke=reenter; ctx=context(); bindings[0].context=&ctx;
+     myl_qbe_host_begin(&ctx); qbe_host_invoke(&ctx,0,arguments,&result);
+     assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_CONTRACT")); dispose(&ctx);
+ 
+-    reset_bindings(); providers.host.count=9; ctx=context(); myl_qbe_host_begin(&ctx);
++    reset_bindings(); providers.host.count=14; ctx=context(); myl_qbe_host_begin(&ctx);
+     assert(ctx.trap && !strcmp(ctx.trap,"HostMissingRegistration")); dispose(&ctx);
+     reset_bindings(); bindings[9]=bindings[0]; ctx=context(); myl_qbe_host_begin(&ctx);
+     assert(ctx.trap && !strcmp(ctx.trap,"HostDuplicateRegistration")); dispose(&ctx);
+@@ -134,6 +260,15 @@
+     assert(ctx.trap && !strcmp(ctx.trap,"HostCapabilityDenied")); dispose(&ctx);
+     reset_bindings(); providers.host.max_values=100001; ctx=context(); myl_qbe_host_begin(&ctx);
+     assert(ctx.trap && !strcmp(ctx.trap,"HostInvalidBudget")); dispose(&ctx);
++    reset_bindings(); providers.host.max_values=1; bindings[0].invoke=no_capacity; ctx=context(); myl_qbe_host_begin(&ctx);
++    qbe_host_invoke(&ctx,0,arguments,&result);
++    assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_FAILURE") && scalar_invocations==1); dispose(&ctx);
++    reset_bindings(); providers.host.max_values=8; ctx=context(); myl_qbe_host_begin(&ctx);
++    after_begin=allocations; qbe_host_invoke(&ctx,13,many_arguments,&many_output);
++    assert(!ctx.trap && many_output==28 && allocations==after_begin); dispose(&ctx);
++    reset_bindings(); providers.host.max_values=7; bindings[13].invoke=no_capacity_many; ctx=context(); myl_qbe_host_begin(&ctx);
++    qbe_host_invoke(&ctx,13,many_arguments,&many_output);
++    assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_FAILURE")); dispose(&ctx);
+ 
+     reset_bindings(); providers.host.max_calls=1; ctx=context(); myl_qbe_host_begin(&ctx);
+     qbe_host_invoke(&ctx,0,arguments,&result); qbe_host_invoke(&ctx,0,arguments,&result);

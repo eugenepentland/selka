@@ -1,0 +1,52 @@
+{
+  "version": "mylang-backend-qualification-v1",
+  "date": "2026-09-21",
+  "source": "examples/sum.my",
+  "compiler_sha256": "97d033bfa8c8c75c85a75cce01094e63682b69351f80bbd97f1ada6279546f39",
+  "adapter_package_sha256": {
+    "amd64_sysv.py": "1d0252b37ec42904808f879590b9100292720c746efc3d9c85b537c001422919",
+    "llvm_emit.py": "bdb463c44dd0f883fc5569b03ac82007fcb9acdba8ad8d2b3b64802af1495849",
+    "qbe_llvm.py": "50f9af3582ca21be9471847e8f215af27d6bb180519f0afeb374ab422e6f1773",
+    "runtime_signatures.py": "24760d4f3de48bd5c1a0c5a49eff3b48c2dc9bb44711a1427e8f0b7fd48528c9"
+  },
+  "explicit_optimization_cache": {
+    "o3_function_keys": ["c5c5223d6b3f7d0720b6ab6560a937a02d38ab5fe65014f728b83127e4bef451", "4f6b23ebec71ce5db2b4a20a1b649f5356a7af26a569b8677893300b2e36eb28"],
+    "o2_function_keys": ["71a5873fa02866018dcc408b85943d7c3fb6b896b064a2b98bf2cd3050fbcffc", "716012e882e66044a3939dc37e150d48b64255d526f0d64f6427e6d304244c60"],
+    "o3_to_o2": {"compiled_functions": 2, "reused_functions": 0},
+    "o2_repeat": {"compiled_functions": 0, "reused_functions": 2}
+  },
+  "legacy_environment_cache": {
+    "o3_function_keys": ["53cad9f32bac25a577b717a6c52591ad057fd21fa31c99d8a92a4716012da063", "4ee24ef2c8850914b8b384c262494a3a91bc8fd7c7c3be8e5a57d15327601614"],
+    "o2_function_keys": ["5cf73cfe11a8179c99b1ef7cd116601fa96f2ce5a76e7ba176510d86482f6a99", "f4283d42b0211044c2c7e8419cb61adc0f68a41f6cdf74f4cfcb3e066d622974"],
+    "o3_to_o2": {"compiled_functions": 2, "reused_functions": 0},
+    "receipts_resolved_backend": "llvm"
+  },
+  "adapter_dependency_cache": {
+    "before_function_keys": ["74229013c1309b1f8155a25aba7b3fc985fa48bae8eb39487120a17fb053355f", "116054a30ef02308015b2530fbebfd21eb73a59f502c1df0398eefd9644f9b2a"],
+    "after_function_keys": ["53cad9f32bac25a577b717a6c52591ad057fd21fa31c99d8a92a4716012da063", "4ee24ef2c8850914b8b384c262494a3a91bc8fd7c7c3be8e5a57d15327601614"],
+    "after_edit": {"compiled_functions": 2, "reused_functions": 0},
+    "edit": "comment-only content change in copied llvm_emit.py"
+  },
+  "relocated_install": {
+    "layout": "bin/mylang plus lib/mylang-llvm/*.py",
+    "explicit_adapter_argument": false,
+    "compiled_functions": 2,
+    "result": "success",
+    "scope": "compiler package relocation; schematic host relocation was not separately exercised"
+  },
+  "full_lto": {
+    "backend": "llvm",
+    "optimization": "3",
+    "lto": true,
+    "runtime_installed": false,
+    "function_keys": ["84e55f7cda4d67a9a867468be165125e62e3ff5d18f9b465fb8b7f8d4a2830f0", "e0e90232a574a8934d3cc79323347f6567d3fdd38535960a0e3cf53a3b99ed83"],
+    "guest_object_magic_hex": "4243c0de",
+    "runtime_archive_members": 19,
+    "runtime_archive_bitcode_members": 19,
+    "runtime_archive_non_bitcode_members": 0,
+    "executable_sha256": "a881f370e26d9087f8267737db0ffa78494a18755bbf25bbf4853afc6712d8da",
+    "receipt_sha256": "88ea4d9e7aa0819e48f1eb207d608aee9294bcccd9a3f32d897aaa9e229d8e14",
+    "execution_exit_status": 86,
+    "expected_exit_status": 86
+  }
+}

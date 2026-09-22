@@ -1,0 +1,18 @@
+**What I changed:** In `project/main.my`, `describe` matched `event` with only the `Event.start` arm, so the compiler rejected it with `E_INCOMPLETE_MATCH`. I added the missing arm (lines 13–14):
+
+```mylang
+        case Event.stop(name):
+            return "stopped"
+```
+
+No other edits were made (the existing `Event.start` arm and `main` are untouched).
+
+**Command and result:**
+
+```
+$ ./bin/mylang run project/main.my
+stopped
+[run exit: 0]
+```
+
+`./bin/mylang check project/main.my` also exits 0, and stdout is exactly `stopped\n` (verified with `od -c`). The only remaining output on stderr is the pre-existing `W_UNUSED_BINDING` warnings for the unread payload bindings, which don't affect the checker or the required output.

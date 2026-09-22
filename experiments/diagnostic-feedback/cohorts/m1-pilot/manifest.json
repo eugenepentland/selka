@@ -1,0 +1,155 @@
+{
+  "schema": "cohort-manifest-v1",
+  "cohort_id": "m1-pilot",
+  "created_utc": "2026-09-19T12:45:06.046913+00:00",
+  "purpose": "M1 factorial",
+  "seed": 20260919,
+  "arms": [
+    "text",
+    "text_fix",
+    "json",
+    "json_fix"
+  ],
+  "cases": [
+    "dev-bool",
+    "dev-checked",
+    "dev-generic",
+    "dev-variant"
+  ],
+  "repetitions": 1,
+  "identity": {
+    "compiler_sha256": "4a9ad0c17789e422fa90dbb8e91497f007abdc2ef5152f3123889dbdc2cfbcb2",
+    "wrapper_schema": "wrapper-v2-events",
+    "prompt_sha256": "ae2fba8f334fb92a",
+    "remedy_sha256": "449d37b9adee5672",
+    "model": "deepseek-v4-flash",
+    "reasoning_effort": "max",
+    "invocation_limit": 20,
+    "session_deadline_s": 900,
+    "cache_policy": "ZIG_GLOBAL_CACHE_DIR and ZIG_LOCAL_CACHE_DIR per attempt inside the working copy"
+  },
+  "blocks": [
+    {
+      "case": "dev-checked",
+      "repetition": 1,
+      "order": [
+        "text",
+        "json_fix",
+        "text_fix",
+        "json"
+      ]
+    },
+    {
+      "case": "dev-bool",
+      "repetition": 1,
+      "order": [
+        "json",
+        "json_fix",
+        "text_fix",
+        "text"
+      ]
+    },
+    {
+      "case": "dev-variant",
+      "repetition": 1,
+      "order": [
+        "text_fix",
+        "json_fix",
+        "json",
+        "text"
+      ]
+    },
+    {
+      "case": "dev-generic",
+      "repetition": 1,
+      "order": [
+        "json",
+        "text_fix",
+        "json_fix",
+        "text"
+      ]
+    }
+  ],
+  "schedule": [
+    {
+      "arm": "text",
+      "case": "dev-checked",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "dev-checked",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "dev-checked",
+      "repetition": 1
+    },
+    {
+      "arm": "json",
+      "case": "dev-checked",
+      "repetition": 1
+    },
+    {
+      "arm": "json",
+      "case": "dev-bool",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "dev-bool",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "dev-bool",
+      "repetition": 1
+    },
+    {
+      "arm": "text",
+      "case": "dev-bool",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "dev-variant",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "dev-variant",
+      "repetition": 1
+    },
+    {
+      "arm": "json",
+      "case": "dev-variant",
+      "repetition": 1
+    },
+    {
+      "arm": "text",
+      "case": "dev-variant",
+      "repetition": 1
+    },
+    {
+      "arm": "json",
+      "case": "dev-generic",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "dev-generic",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "dev-generic",
+      "repetition": 1
+    },
+    {
+      "arm": "text",
+      "case": "dev-generic",
+      "repetition": 1
+    }
+  ]
+}

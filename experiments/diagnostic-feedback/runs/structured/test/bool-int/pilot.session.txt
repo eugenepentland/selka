@@ -1,0 +1,4 @@
+Fixed. `above` was declared `-> int` but its body returned the bool `a > b`, so the checker failed with `E_TYPE: expected int, found bool`. I changed the body to return `1` when `a > b` and `0` otherwise, leaving the signature, `main`, and the call untouched.
+
+Command run: `./bin/mylang run project/main.my`
+Result: exit 0, stdout exactly `1` (and `./bin/mylang check project/main.my` now exits 0).

@@ -1,0 +1,2325 @@
+{
+  "compiler_sha256_before": "10ba2f91c1c8e4c7007771526c2ee590f97504d712b59e503d3fd04574bdc4dd",
+  "cases": {
+    "format": {
+      "source_sha256": "4ddf937ded63c4d42969ef421b531d11598db614d439ba89ccc2aeab7da876aa",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/format.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/format.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/format.ssa",
+        "functions": [
+          "format_value",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_list_append",
+          "myl_native_list_new",
+          "myl_native_text_join",
+          "myl_native_text_scalar"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "comprehension": {
+      "source_sha256": "ee0bb3c84dbebdbff24a171992a9a378d841b8eaed478b4804f45a435a6b2f13",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/comprehension.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/comprehension.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/comprehension.ssa",
+        "functions": [
+          "transform",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_list_append",
+          "myl_native_list_new"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "range_comprehension": {
+      "source_sha256": "e0e09b585142bb3bd0e3fba72ece08548d06a60f87b8669d18b88d0bfb06f668",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/range_comprehension.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/range_comprehension.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/range_comprehension.ssa",
+        "functions": [
+          "transform",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_list_append",
+          "myl_native_list_new"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "bytes_slice": {
+      "source_sha256": "397ac0324adc3ce138d766f884161a09e3a53cb0a71aee2cc5d401f33b1e9bd6",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/bytes_slice.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/bytes_slice.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/bytes_slice.ssa",
+        "functions": [
+          "parse",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_bytes_number_parse",
+          "myl_native_bytes_range"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "bytes_view": {
+      "source_sha256": "faf1f409fc6e614831975e8a3d88ff522607578ed147489a6eaff43356a2ae62",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/bytes_view.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/bytes_view.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/bytes_view.ssa",
+        "functions": [
+          "parse",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_bytes_number_parse",
+          "myl_native_bytes_range"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "bytes_range": {
+      "source_sha256": "9f672bde19bf91c751c15c253cf9a36e9def1635b4a9165d5530584d6df63586",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/bytes_range.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/bytes_range.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/bytes_range.ssa",
+        "functions": [
+          "parse",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_bytes_number_parse",
+          "myl_native_bytes_range"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "bytes_slice_noalloc": {
+      "source_sha256": "1d64765aa25687ed6bc9d89943aa797800db97ed29793a7e954c407be4efb9d7",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/bytes_slice_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/bytes_slice_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/bytes_slice_noalloc.ssa",
+        "functions": [
+          "parse",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_bytes_number_parse",
+          "myl_native_bytes_range"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "bytes_view_noalloc": {
+      "source_sha256": "b64ec0fae42fbaf4f8a77d37346f0b1766c898e06a7f8b409c426b97c70304cc",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/bytes_view_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/bytes_view_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/bytes_view_noalloc.ssa",
+        "functions": [
+          "parse",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_bytes_number_parse",
+          "myl_native_bytes_range"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "bytes_range_noalloc": {
+      "source_sha256": "c841272e1527dd0b8a7d2a950d6ed791567d7210cbe861aeb5cf38d6d01bae74",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/bytes_range_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/bytes_range_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/bytes_range_noalloc.ssa",
+        "functions": [
+          "parse",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_bytes_number_parse",
+          "myl_native_bytes_range"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "minimum_text_noalloc": {
+      "source_sha256": "15bffbf242cf1b6bd8edf4db9a77b5c7a683fc553f43eb844924fa9f83086ac3",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/minimum_text_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/minimum_text_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/minimum_text_noalloc.ssa",
+        "functions": [
+          "minimum",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_list_get",
+          "myl_native_text_compare"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "minimum_text": {
+      "source_sha256": "999be2ff6d984bd5721a9048ce8770b9c8530b795c39f1858418571d41edf8e4",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/minimum_text.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/minimum_text.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/minimum_text.ssa",
+        "functions": [
+          "minimum",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_list_get",
+          "myl_native_text_compare"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "minimum_int_noalloc": {
+      "source_sha256": "66ceecebb83edfe03dfc39cbce65f1f1c7d1e8f15564a9ad6e0b457d769d6314",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/minimum_int_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/minimum_int_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/minimum_int_noalloc.ssa",
+        "functions": [
+          "minimum",
+          "main"
+        ],
+        "runtime_calls": [],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "sort_in_place": {
+      "source_sha256": "83a62006c0efb5c3317c0722d9cc6efd46cc7b99e6bd9b0cdf053ff4290108aa",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/sort_in_place.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "experiments/syntax-canonicalization-20260921/after/sources/sort_in_place.my:2:5: warning[W_MUTATES_MISSING]: this function writes `xs` (parameter 1) reachable from the caller; declare `mutates(xs)`\n      xs.sort()\n      ^\n"
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/sort_in_place.my"
+        ],
+        "exit_code": 0,
+        "stderr": "experiments/syntax-canonicalization-20260921/after/sources/sort_in_place.my:2:5: warning[W_MUTATES_MISSING]: this function writes `xs` (parameter 1) reachable from the caller; declare `mutates(xs)`\n      xs.sort()\n      ^\n",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/sort_in_place.ssa",
+        "functions": [
+          "order",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_list_sort"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "sort_copy": {
+      "source_sha256": "a4f5a6d1e645c58bbaa1731481830c77ea93edd2d4bada4b6ea0fb0fd76432f3",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/sort_copy.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/sort_copy.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/sort_copy.ssa",
+        "functions": [
+          "order",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_list_append",
+          "myl_native_list_new",
+          "myl_native_list_sort"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "sort_text": {
+      "source_sha256": "65dc358deb27de8e11e3667aa5b69f81b0d46eea293c5b988ea78f29c0427664",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/sort_text.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/sort_text.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/sort_text.ssa",
+        "functions": [
+          "order",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_list_append",
+          "myl_native_list_get",
+          "myl_native_list_new",
+          "myl_native_list_sort"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "dict_items_direct": {
+      "source_sha256": "640692152e77b4d01e696cddeecd06ad7567c2b6b0629b2d6e5cedfbe61deb04",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/dict_items_direct.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/dict_items_direct.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/dict_items_direct.ssa",
+        "functions": [
+          "total",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_dictionary_key_at",
+          "myl_native_dictionary_length",
+          "myl_native_dictionary_value_at"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 1
+      }
+    },
+    "dict_values_direct": {
+      "source_sha256": "c9c5485bb47c192cbaed58ab1099dcc350be4bb810706547e3bec4f15a249afe",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/dict_values_direct.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/dict_values_direct.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/dict_values_direct.ssa",
+        "functions": [
+          "total",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_dictionary_length",
+          "myl_native_dictionary_value_at"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "record_projection": {
+      "source_sha256": "3f10a13b9d4683505b4ef26cec1909edd425f1d139d5bb75a0d37e74f4ec7ae5",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/record_projection.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/record_projection.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/record_projection.ssa",
+        "functions": [
+          "project",
+          "main"
+        ],
+        "runtime_calls": [],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "prelude_float_noalloc": {
+      "source_sha256": "dcbf829e397a3417bfd015e865704a24dcd170b1385aae21c70e7d83b8e3e9b0",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/prelude_float_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/prelude_float_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/prelude_float_noalloc.ssa",
+        "functions": [
+          "parse",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_number_parse",
+          "myl_native_text_points"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "library_float": {
+      "source_sha256": "3b7faeae979e3ab38432b4f311604759ced7762754ba49c9563ffc53ba40acd7",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/library_float.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-project-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/library_float.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/library_float.ssa",
+        "functions": [
+          "library_float::parse",
+          "library_float::main"
+        ],
+        "runtime_calls": [],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "library_int_noalloc": {
+      "source_sha256": "81c415bcc09aa0942ce3a23a19e87483e6bd049a6cf637ed9cb40d1df112017a",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/library_int_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-project-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/library_int_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/library_int_noalloc.ssa",
+        "functions": [
+          "library_int_noalloc::parse",
+          "library_int_noalloc::main"
+        ],
+        "runtime_calls": [],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "removed_float_intrinsic": {
+      "source_sha256": "1914b34912b7dbd813d9796898e01b3432c8ec8ab85f00f99e4e545ed19cc3b3",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/removed_float_intrinsic.my"
+        ],
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "experiments/syntax-canonicalization-20260921/after/sources/removed_float_intrinsic.my:2:12: error[E_REMOVED_SPELLING]: `f64_sqrt` was removed; use `sqrt` with a `float` value\n      return f64_sqrt(x)\n             ^\n"
+      }
+    },
+    "format_single_text_noalloc": {
+      "source_sha256": "51b31bbe185b3df14da916714354702215b84188d554ba903b2da053a776cb64",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/format_single_text_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/format_single_text_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/format_single_text_noalloc.ssa",
+        "functions": [
+          "identity",
+          "main"
+        ],
+        "runtime_calls": [],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "library_float_noalloc": {
+      "source_sha256": "663dc64d504f0eb6f9536c33344c295f36b9de56664b9bdd97745a2a10440a3a",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/library_float_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-project-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/library_float_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/library_float_noalloc.ssa",
+        "functions": [
+          "library_float_noalloc::parse",
+          "library_float_noalloc::main"
+        ],
+        "runtime_calls": [],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "string_compare_noalloc": {
+      "source_sha256": "7c9d5e4feae24756bd6cf2ac4580f40a2bff71951d95b76eeac3b5f0d8c83c36",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/string_compare_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-project-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/string_compare_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/string_compare_noalloc.ssa",
+        "functions": [
+          "string_compare_noalloc::compare",
+          "string_compare_noalloc::main"
+        ],
+        "runtime_calls": [],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "sort_keyed": {
+      "source_sha256": "db8960a588f31c5a3a70d1a76c7965a7185e16dd045e95ffb08836ce0ae8169f",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/sort_keyed.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/sort_keyed.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/sort_keyed.ssa",
+        "functions": [
+          "item_key",
+          "order",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_list_append",
+          "myl_native_list_clear",
+          "myl_native_list_get",
+          "myl_native_list_new"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 4
+      }
+    },
+    "sort_text_in_place": {
+      "source_sha256": "b73ff4cd4725652c8c987532df4464d0d52d816bdaa7d53121bc011e915ae792",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/sort_text_in_place.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "experiments/syntax-canonicalization-20260921/after/sources/sort_text_in_place.my:2:5: warning[W_MUTATES_MISSING]: this function writes `items` (parameter 1) reachable from the caller; declare `mutates(items)`\n      items.sort()\n      ^\n"
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/sort_text_in_place.my"
+        ],
+        "exit_code": 0,
+        "stderr": "experiments/syntax-canonicalization-20260921/after/sources/sort_text_in_place.my:2:5: warning[W_MUTATES_MISSING]: this function writes `items` (parameter 1) reachable from the caller; declare `mutates(items)`\n      items.sort()\n      ^\n",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/sort_text_in_place.ssa",
+        "functions": [
+          "order",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_list_sort"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "range_list": {
+      "source_sha256": "5c85679279fdf5a3d7dc9b06171be2ea8e8c404059ff6857d49f76413f2d9ce1",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/range_list.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/range_list.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/range_list.ssa",
+        "functions": [
+          "materialize",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_list_append",
+          "myl_native_list_new"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "dict_items_stored": {
+      "source_sha256": "2cd49075519ec6de1e2d74d26511d2d6f13aee286651c49709412c2788e0e4b6",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/dict_items_stored.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/dict_items_stored.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/dict_items_stored.ssa",
+        "functions": [
+          "total",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_dictionary_key_at",
+          "myl_native_dictionary_length",
+          "myl_native_dictionary_value_at"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 1
+      }
+    },
+    "dict_values_stored": {
+      "source_sha256": "3e98ce000783a4881b0c06398957923db3376e2fee4a7fa67a951b9f7c40f90a",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/after/sources/dict_values_stored.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/after/sources/dict_values_stored.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/after/ir/dict_values_stored.ssa",
+        "functions": [
+          "total",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_dictionary_length",
+          "myl_native_dictionary_value_at"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    }
+  },
+  "behavior": {
+    "command": [
+      "zig-out/bin/mylang",
+      "run",
+      "experiments/syntax-canonicalization-20260921/after/sources/behavior.my"
+    ],
+    "exit_code": 0,
+    "stdout": "Some(1.5)\nSome(1.5)\nSome(1000.5)\nSome(1000.5)\nSome(inf)\nSome(inf)\n32\n30\n",
+    "stderr": ""
+  },
+  "compiler_sha256_after": "10ba2f91c1c8e4c7007771526c2ee590f97504d712b59e503d3fd04574bdc4dd",
+  "source_sha256_after": {
+    "src/sema.zig": "7c328d28577c63517c0c5b6867be1cddab65fddc0408ebc82805e5e9745fb443",
+    "src/prelude_builtins.zig": "cf1ddd6422801306dcd240c85d2d1bdaea78a0a07ebaba7996126a400c24d4d2",
+    "src/native_collections.c": "7d7096648b987f2bd7178003751c53e079d2f78be3587b89af278ae3bafe14b5",
+    "src/native_text.c": "719f8920f801c3fe80c79b08407e81430072e097492d9f15802685c83e0ab76b",
+    "src/native_bytes.c": "f1b44fea13181357f38aa5314172bf63647ffcd7efebe208053f284ca4a34ad8",
+    "src/stdlib/strings.my": "23dfb74e70587a03688e2c939ccfbe72e1626c0bf8d9bb57fa6dcb2654114570",
+    "src/stdlib/sort.my": "5472c0e13b019c6525f45b608462cd5244aaa975a99e64e50f91eddf1d3d3cd3",
+    "src/removed_names.zig": "388d67793c1e44ae751798fd8d8d752f457300d2a9db4eac238d9c6518a810ce",
+    "src/collection_lower.zig": "46ebdad34480009d5ab07b70fa59503f41500a155157f8043466d1d11a13df03",
+    "src/generic_bodies.zig": "cd440c4cd56a5a0e18ac0946dd599d8f568de63912fbc00b560c7b25ed26f589",
+    "src/buffer_operations.zig": "4d117e7984d4861cb5dd72900517f9e483868cac314767b7cc4f3e3fa8267dd6",
+    "src/qbe_text.zig": "d4191f0dd9d7d2fd9cbe6bcda83eca86ddfe3dcac396102535baa01a492e8dab",
+    "src/qbe_managed.zig": "b37589323239f9fddfa6ba1500c92923ded0c52f2c065fde54d5469d4eee66dc"
+  },
+  "capture": {
+    "compiler_path": "zig-out/bin/mylang",
+    "compiler_realpath": "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "compiler_sha256": "10ba2f91c1c8e4c7007771526c2ee590f97504d712b59e503d3fd04574bdc4dd",
+    "compiler_size_bytes": 113589258,
+    "baseline_evidence_sha256": "09777fb8f2d440756ee931190dfd5f1ba0eacd857901fbb27bd300dc5246412c",
+    "baseline_probe_sha256": "0698d4d63712c5700af91a5e8e259d722088af1f56e1fd8b6e3efcf4bb174de6",
+    "scope": "static checks, emitted QBE, and one native behavior run; no timing benchmark"
+  },
+  "fixes": {
+    "1_sorting": [
+      "sort_in_place",
+      "sort_copy",
+      "sort_text",
+      "sort_text_in_place",
+      "sort_keyed"
+    ],
+    "2_numeric_parser": [
+      "prelude_float_noalloc",
+      "library_float",
+      "library_float_noalloc"
+    ],
+    "3_immediate_ranges": [
+      "bytes_slice_noalloc",
+      "bytes_view_noalloc",
+      "bytes_range_noalloc"
+    ],
+    "4_f_strings": [
+      "format",
+      "format_single_text_noalloc"
+    ],
+    "5_text_comparison": [
+      "minimum_text_noalloc",
+      "minimum_text",
+      "string_compare_noalloc"
+    ],
+    "6_known_capacity": [
+      "comprehension",
+      "range_comprehension",
+      "range_list"
+    ],
+    "7_dictionary_views": [
+      "dict_items_direct",
+      "dict_values_direct",
+      "dict_items_stored",
+      "dict_values_stored"
+    ]
+  },
+  "comparisons": {
+    "format": {
+      "baseline_check_exit": 0,
+      "after_check_exit": 0,
+      "baseline_metrics": {
+        "ir_bytes": 11958,
+        "runtime_call_sites": {
+          "myl_native_text_concat": 4,
+          "myl_native_text_scalar": 2
+        },
+        "text_concat_sites": 4,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "after_metrics": {
+        "ir_bytes": 20221,
+        "runtime_call_sites": {
+          "myl_native_list_append": 5,
+          "myl_native_list_new": 1,
+          "myl_native_text_join": 1,
+          "myl_native_text_scalar": 2
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 1,
+        "list_append_sites": 5,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": {
+        "bytes_range_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "ir_bytes": 8263,
+        "list_append_sites": 5,
+        "list_clear_sites": 0,
+        "list_new_sites": 1,
+        "list_new_zero_capacity_sites": 0,
+        "list_sort_sites": 0,
+        "text_compare_sites": 0,
+        "text_concat_sites": -4,
+        "text_encode_sites": 0
+      },
+      "runtime_call_site_delta_after_minus_baseline": {
+        "myl_native_list_append": 5,
+        "myl_native_list_new": 1,
+        "myl_native_text_concat": -4,
+        "myl_native_text_join": 1
+      }
+    },
+    "comprehension": {
+      "baseline_check_exit": 0,
+      "after_check_exit": 0,
+      "baseline_metrics": {
+        "ir_bytes": 14136,
+        "runtime_call_sites": {
+          "myl_native_list_append": 1,
+          "myl_native_list_new": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 1,
+        "list_append_sites": 1,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "after_metrics": {
+        "ir_bytes": 14160,
+        "runtime_call_sites": {
+          "myl_native_list_append": 1,
+          "myl_native_list_new": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 1,
+        "list_append_sites": 1,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": {
+        "bytes_range_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "ir_bytes": 24,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_new_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "list_sort_sites": 0,
+        "text_compare_sites": 0,
+        "text_concat_sites": 0,
+        "text_encode_sites": 0
+      },
+      "runtime_call_site_delta_after_minus_baseline": {}
+    },
+    "range_comprehension": {
+      "baseline_check_exit": 0,
+      "after_check_exit": 0,
+      "baseline_metrics": {
+        "ir_bytes": 9445,
+        "runtime_call_sites": {
+          "myl_native_list_append": 1,
+          "myl_native_list_new": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 1,
+        "list_append_sites": 1,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "after_metrics": {
+        "ir_bytes": 19806,
+        "runtime_call_sites": {
+          "myl_native_list_append": 1,
+          "myl_native_list_new": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 1,
+        "list_append_sites": 1,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": {
+        "bytes_range_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "ir_bytes": 10361,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_new_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "list_sort_sites": 0,
+        "text_compare_sites": 0,
+        "text_concat_sites": 0,
+        "text_encode_sites": 0
+      },
+      "runtime_call_site_delta_after_minus_baseline": {}
+    },
+    "bytes_slice": {
+      "baseline_check_exit": 0,
+      "after_check_exit": 0,
+      "baseline_metrics": {
+        "ir_bytes": 6333,
+        "runtime_call_sites": {
+          "myl_native_bytes_number_parse": 1,
+          "myl_native_bytes_slice": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 1,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "after_metrics": {
+        "ir_bytes": 4611,
+        "runtime_call_sites": {
+          "myl_native_bytes_number_parse": 1,
+          "myl_native_bytes_range": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 1
+      },
+      "numeric_delta_after_minus_baseline": {
+        "bytes_range_sites": 1,
+        "bytes_slice_sites": -1,
+        "bytes_view_sites": 0,
+        "ir_bytes": -1722,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_new_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "list_sort_sites": 0,
+        "text_compare_sites": 0,
+        "text_concat_sites": 0,
+        "text_encode_sites": 0
+      },
+      "runtime_call_site_delta_after_minus_baseline": {
+        "myl_native_bytes_range": 1,
+        "myl_native_bytes_slice": -1
+      }
+    },
+    "bytes_view": {
+      "baseline_check_exit": 0,
+      "after_check_exit": 0,
+      "baseline_metrics": {
+        "ir_bytes": 5598,
+        "runtime_call_sites": {
+          "myl_native_bytes_number_parse": 1,
+          "myl_native_bytes_view": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 1,
+        "bytes_range_sites": 0
+      },
+      "after_metrics": {
+        "ir_bytes": 4163,
+        "runtime_call_sites": {
+          "myl_native_bytes_number_parse": 1,
+          "myl_native_bytes_range": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 1
+      },
+      "numeric_delta_after_minus_baseline": {
+        "bytes_range_sites": 1,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": -1,
+        "ir_bytes": -1435,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_new_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "list_sort_sites": 0,
+        "text_compare_sites": 0,
+        "text_concat_sites": 0,
+        "text_encode_sites": 0
+      },
+      "runtime_call_site_delta_after_minus_baseline": {
+        "myl_native_bytes_range": 1,
+        "myl_native_bytes_view": -1
+      }
+    },
+    "bytes_range": {
+      "baseline_check_exit": 0,
+      "after_check_exit": 0,
+      "baseline_metrics": {
+        "ir_bytes": 4163,
+        "runtime_call_sites": {
+          "myl_native_bytes_number_parse": 1,
+          "myl_native_bytes_range": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 1
+      },
+      "after_metrics": {
+        "ir_bytes": 4163,
+        "runtime_call_sites": {
+          "myl_native_bytes_number_parse": 1,
+          "myl_native_bytes_range": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 1
+      },
+      "numeric_delta_after_minus_baseline": {
+        "bytes_range_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "ir_bytes": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_new_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "list_sort_sites": 0,
+        "text_compare_sites": 0,
+        "text_concat_sites": 0,
+        "text_encode_sites": 0
+      },
+      "runtime_call_site_delta_after_minus_baseline": {}
+    },
+    "bytes_slice_noalloc": {
+      "baseline_check_exit": 1,
+      "after_check_exit": 0,
+      "baseline_metrics": null,
+      "after_metrics": {
+        "ir_bytes": 4611,
+        "runtime_call_sites": {
+          "myl_native_bytes_number_parse": 1,
+          "myl_native_bytes_range": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 1
+      },
+      "numeric_delta_after_minus_baseline": null,
+      "runtime_call_site_delta_after_minus_baseline": null
+    },
+    "bytes_view_noalloc": {
+      "baseline_check_exit": 1,
+      "after_check_exit": 0,
+      "baseline_metrics": null,
+      "after_metrics": {
+        "ir_bytes": 4163,
+        "runtime_call_sites": {
+          "myl_native_bytes_number_parse": 1,
+          "myl_native_bytes_range": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 1
+      },
+      "numeric_delta_after_minus_baseline": null,
+      "runtime_call_site_delta_after_minus_baseline": null
+    },
+    "bytes_range_noalloc": {
+      "baseline_check_exit": 0,
+      "after_check_exit": 0,
+      "baseline_metrics": {
+        "ir_bytes": 4163,
+        "runtime_call_sites": {
+          "myl_native_bytes_number_parse": 1,
+          "myl_native_bytes_range": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 1
+      },
+      "after_metrics": {
+        "ir_bytes": 4163,
+        "runtime_call_sites": {
+          "myl_native_bytes_number_parse": 1,
+          "myl_native_bytes_range": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 1
+      },
+      "numeric_delta_after_minus_baseline": {
+        "bytes_range_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "ir_bytes": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_new_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "list_sort_sites": 0,
+        "text_compare_sites": 0,
+        "text_concat_sites": 0,
+        "text_encode_sites": 0
+      },
+      "runtime_call_site_delta_after_minus_baseline": {}
+    },
+    "minimum_text_noalloc": {
+      "baseline_check_exit": 1,
+      "after_check_exit": 0,
+      "baseline_metrics": null,
+      "after_metrics": {
+        "ir_bytes": 12134,
+        "runtime_call_sites": {
+          "myl_native_list_get": 3,
+          "myl_native_text_compare": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 1,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": null,
+      "runtime_call_site_delta_after_minus_baseline": null
+    },
+    "minimum_text": {
+      "baseline_check_exit": 0,
+      "after_check_exit": 0,
+      "baseline_metrics": {
+        "ir_bytes": 34195,
+        "runtime_call_sites": {
+          "myl_native_bytes_encode": 2,
+          "myl_native_list_get": 3
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 2,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "after_metrics": {
+        "ir_bytes": 12134,
+        "runtime_call_sites": {
+          "myl_native_list_get": 3,
+          "myl_native_text_compare": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 1,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": {
+        "bytes_range_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "ir_bytes": -22061,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_new_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "list_sort_sites": 0,
+        "text_compare_sites": 1,
+        "text_concat_sites": 0,
+        "text_encode_sites": -2
+      },
+      "runtime_call_site_delta_after_minus_baseline": {
+        "myl_native_bytes_encode": -2,
+        "myl_native_text_compare": 1
+      }
+    },
+    "minimum_int_noalloc": {
+      "baseline_check_exit": 0,
+      "after_check_exit": 0,
+      "baseline_metrics": {
+        "ir_bytes": 11936,
+        "runtime_call_sites": {},
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "after_metrics": {
+        "ir_bytes": 11936,
+        "runtime_call_sites": {},
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": {
+        "bytes_range_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "ir_bytes": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_new_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "list_sort_sites": 0,
+        "text_compare_sites": 0,
+        "text_concat_sites": 0,
+        "text_encode_sites": 0
+      },
+      "runtime_call_site_delta_after_minus_baseline": {}
+    },
+    "sort_in_place": {
+      "baseline_check_exit": 0,
+      "after_check_exit": 0,
+      "baseline_metrics": {
+        "ir_bytes": 3984,
+        "runtime_call_sites": {
+          "myl_native_list_sort": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 1,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "after_metrics": {
+        "ir_bytes": 3984,
+        "runtime_call_sites": {
+          "myl_native_list_sort": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 1,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": {
+        "bytes_range_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "ir_bytes": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_new_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "list_sort_sites": 0,
+        "text_compare_sites": 0,
+        "text_concat_sites": 0,
+        "text_encode_sites": 0
+      },
+      "runtime_call_site_delta_after_minus_baseline": {}
+    },
+    "sort_copy": {
+      "baseline_check_exit": 0,
+      "after_check_exit": 0,
+      "baseline_metrics": {
+        "ir_bytes": 63829,
+        "runtime_call_sites": {
+          "myl_native_list_append": 5,
+          "myl_native_list_new": 3
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 3,
+        "list_append_sites": 5,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "after_metrics": {
+        "ir_bytes": 14271,
+        "runtime_call_sites": {
+          "myl_native_list_append": 1,
+          "myl_native_list_new": 1,
+          "myl_native_list_sort": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 1,
+        "list_append_sites": 1,
+        "list_clear_sites": 0,
+        "list_sort_sites": 1,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": {
+        "bytes_range_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "ir_bytes": -49558,
+        "list_append_sites": -4,
+        "list_clear_sites": 0,
+        "list_new_sites": -2,
+        "list_new_zero_capacity_sites": 0,
+        "list_sort_sites": 1,
+        "text_compare_sites": 0,
+        "text_concat_sites": 0,
+        "text_encode_sites": 0
+      },
+      "runtime_call_site_delta_after_minus_baseline": {
+        "myl_native_list_append": -4,
+        "myl_native_list_new": -2,
+        "myl_native_list_sort": 1
+      }
+    },
+    "sort_text": {
+      "baseline_check_exit": 0,
+      "after_check_exit": 0,
+      "baseline_metrics": {
+        "ir_bytes": 105539,
+        "runtime_call_sites": {
+          "myl_native_bytes_encode": 2,
+          "myl_native_list_append": 5,
+          "myl_native_list_get": 5,
+          "myl_native_list_new": 3
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 2,
+        "list_new_sites": 3,
+        "list_append_sites": 5,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "after_metrics": {
+        "ir_bytes": 14606,
+        "runtime_call_sites": {
+          "myl_native_list_append": 1,
+          "myl_native_list_get": 1,
+          "myl_native_list_new": 1,
+          "myl_native_list_sort": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 1,
+        "list_append_sites": 1,
+        "list_clear_sites": 0,
+        "list_sort_sites": 1,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": {
+        "bytes_range_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "ir_bytes": -90933,
+        "list_append_sites": -4,
+        "list_clear_sites": 0,
+        "list_new_sites": -2,
+        "list_new_zero_capacity_sites": 0,
+        "list_sort_sites": 1,
+        "text_compare_sites": 0,
+        "text_concat_sites": 0,
+        "text_encode_sites": -2
+      },
+      "runtime_call_site_delta_after_minus_baseline": {
+        "myl_native_bytes_encode": -2,
+        "myl_native_list_append": -4,
+        "myl_native_list_get": -4,
+        "myl_native_list_new": -2,
+        "myl_native_list_sort": 1
+      }
+    },
+    "dict_items_direct": {
+      "baseline_check_exit": 0,
+      "after_check_exit": 0,
+      "baseline_metrics": {
+        "ir_bytes": 17324,
+        "runtime_call_sites": {
+          "myl_native_dictionary_key_at": 1,
+          "myl_native_dictionary_length": 4,
+          "myl_native_dictionary_read": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "after_metrics": {
+        "ir_bytes": 20795,
+        "runtime_call_sites": {
+          "myl_native_dictionary_key_at": 1,
+          "myl_native_dictionary_length": 5,
+          "myl_native_dictionary_value_at": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": {
+        "bytes_range_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "ir_bytes": 3471,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_new_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "list_sort_sites": 0,
+        "text_compare_sites": 0,
+        "text_concat_sites": 0,
+        "text_encode_sites": 0
+      },
+      "runtime_call_site_delta_after_minus_baseline": {
+        "myl_native_dictionary_length": 1,
+        "myl_native_dictionary_read": -1,
+        "myl_native_dictionary_value_at": 1
+      }
+    },
+    "dict_values_direct": {
+      "baseline_check_exit": 1,
+      "after_check_exit": 0,
+      "baseline_metrics": null,
+      "after_metrics": {
+        "ir_bytes": 14631,
+        "runtime_call_sites": {
+          "myl_native_dictionary_length": 4,
+          "myl_native_dictionary_value_at": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": null,
+      "runtime_call_site_delta_after_minus_baseline": null
+    },
+    "record_projection": {
+      "baseline_check_exit": 0,
+      "after_check_exit": 0,
+      "baseline_metrics": {
+        "ir_bytes": 3256,
+        "runtime_call_sites": {},
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "after_metrics": {
+        "ir_bytes": 3256,
+        "runtime_call_sites": {},
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": {
+        "bytes_range_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "ir_bytes": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_new_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "list_sort_sites": 0,
+        "text_compare_sites": 0,
+        "text_concat_sites": 0,
+        "text_encode_sites": 0
+      },
+      "runtime_call_site_delta_after_minus_baseline": {}
+    },
+    "prelude_float_noalloc": {
+      "baseline_check_exit": 0,
+      "after_check_exit": 0,
+      "baseline_metrics": {
+        "ir_bytes": 4830,
+        "runtime_call_sites": {
+          "myl_native_number_parse": 1,
+          "myl_native_text_points": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "after_metrics": {
+        "ir_bytes": 4830,
+        "runtime_call_sites": {
+          "myl_native_number_parse": 1,
+          "myl_native_text_points": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": {
+        "bytes_range_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "ir_bytes": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_new_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "list_sort_sites": 0,
+        "text_compare_sites": 0,
+        "text_concat_sites": 0,
+        "text_encode_sites": 0
+      },
+      "runtime_call_site_delta_after_minus_baseline": {}
+    },
+    "library_float": {
+      "baseline_check_exit": 0,
+      "after_check_exit": 0,
+      "baseline_metrics": {
+        "ir_bytes": 4570,
+        "runtime_call_sites": {},
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "after_metrics": {
+        "ir_bytes": 4570,
+        "runtime_call_sites": {},
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": {
+        "bytes_range_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "ir_bytes": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_new_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "list_sort_sites": 0,
+        "text_compare_sites": 0,
+        "text_concat_sites": 0,
+        "text_encode_sites": 0
+      },
+      "runtime_call_site_delta_after_minus_baseline": {}
+    },
+    "library_int_noalloc": {
+      "baseline_check_exit": 0,
+      "after_check_exit": 0,
+      "baseline_metrics": {
+        "ir_bytes": 4582,
+        "runtime_call_sites": {},
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "after_metrics": {
+        "ir_bytes": 4582,
+        "runtime_call_sites": {},
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": {
+        "bytes_range_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "ir_bytes": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_new_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "list_sort_sites": 0,
+        "text_compare_sites": 0,
+        "text_concat_sites": 0,
+        "text_encode_sites": 0
+      },
+      "runtime_call_site_delta_after_minus_baseline": {}
+    },
+    "removed_float_intrinsic": {
+      "baseline_check_exit": 1,
+      "after_check_exit": 1,
+      "baseline_metrics": null,
+      "after_metrics": null,
+      "numeric_delta_after_minus_baseline": null,
+      "runtime_call_site_delta_after_minus_baseline": null
+    },
+    "format_single_text_noalloc": {
+      "baseline_check_exit": null,
+      "after_check_exit": 0,
+      "baseline_metrics": null,
+      "after_metrics": {
+        "ir_bytes": 2916,
+        "runtime_call_sites": {},
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": null,
+      "runtime_call_site_delta_after_minus_baseline": null
+    },
+    "library_float_noalloc": {
+      "baseline_check_exit": null,
+      "after_check_exit": 0,
+      "baseline_metrics": null,
+      "after_metrics": {
+        "ir_bytes": 4586,
+        "runtime_call_sites": {},
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": null,
+      "runtime_call_site_delta_after_minus_baseline": null
+    },
+    "string_compare_noalloc": {
+      "baseline_check_exit": null,
+      "after_check_exit": 0,
+      "baseline_metrics": null,
+      "after_metrics": {
+        "ir_bytes": 5168,
+        "runtime_call_sites": {},
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": null,
+      "runtime_call_site_delta_after_minus_baseline": null
+    },
+    "sort_keyed": {
+      "baseline_check_exit": null,
+      "after_check_exit": 0,
+      "baseline_metrics": null,
+      "after_metrics": {
+        "ir_bytes": 67012,
+        "runtime_call_sites": {
+          "myl_native_list_append": 5,
+          "myl_native_list_clear": 1,
+          "myl_native_list_get": 5,
+          "myl_native_list_new": 2
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 2,
+        "list_append_sites": 5,
+        "list_clear_sites": 1,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": null,
+      "runtime_call_site_delta_after_minus_baseline": null
+    },
+    "sort_text_in_place": {
+      "baseline_check_exit": null,
+      "after_check_exit": 0,
+      "baseline_metrics": null,
+      "after_metrics": {
+        "ir_bytes": 3984,
+        "runtime_call_sites": {
+          "myl_native_list_sort": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 1,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": null,
+      "runtime_call_site_delta_after_minus_baseline": null
+    },
+    "range_list": {
+      "baseline_check_exit": null,
+      "after_check_exit": 0,
+      "baseline_metrics": null,
+      "after_metrics": {
+        "ir_bytes": 19681,
+        "runtime_call_sites": {
+          "myl_native_list_append": 1,
+          "myl_native_list_new": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 1,
+        "list_append_sites": 1,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": null,
+      "runtime_call_site_delta_after_minus_baseline": null
+    },
+    "dict_items_stored": {
+      "baseline_check_exit": null,
+      "after_check_exit": 0,
+      "baseline_metrics": null,
+      "after_metrics": {
+        "ir_bytes": 23264,
+        "runtime_call_sites": {
+          "myl_native_dictionary_key_at": 1,
+          "myl_native_dictionary_length": 5,
+          "myl_native_dictionary_value_at": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": null,
+      "runtime_call_site_delta_after_minus_baseline": null
+    },
+    "dict_values_stored": {
+      "baseline_check_exit": null,
+      "after_check_exit": 0,
+      "baseline_metrics": null,
+      "after_metrics": {
+        "ir_bytes": 15889,
+        "runtime_call_sites": {
+          "myl_native_dictionary_length": 4,
+          "myl_native_dictionary_value_at": 1
+        },
+        "text_concat_sites": 0,
+        "text_compare_sites": 0,
+        "text_encode_sites": 0,
+        "list_new_sites": 0,
+        "list_append_sites": 0,
+        "list_clear_sites": 0,
+        "list_sort_sites": 0,
+        "list_new_zero_capacity_sites": 0,
+        "bytes_slice_sites": 0,
+        "bytes_view_sites": 0,
+        "bytes_range_sites": 0
+      },
+      "numeric_delta_after_minus_baseline": null,
+      "runtime_call_site_delta_after_minus_baseline": null
+    }
+  },
+  "behavior_comparison": {
+    "baseline": {
+      "command": [
+        "zig-out/bin/mylang",
+        "run",
+        "experiments/syntax-canonicalization-20260921/sources/behavior.my"
+      ],
+      "exit_code": 0,
+      "stdout": "Some(1.5)\nNone\nSome(1000.5)\nNone\nSome(inf)\nNone\n[10, 20]\na\n10\nb\n20\n",
+      "stderr": ""
+    },
+    "after": {
+      "command": [
+        "zig-out/bin/mylang",
+        "run",
+        "experiments/syntax-canonicalization-20260921/after/sources/behavior.my"
+      ],
+      "exit_code": 0,
+      "stdout": "Some(1.5)\nSome(1.5)\nSome(1000.5)\nSome(1000.5)\nSome(inf)\nSome(inf)\n32\n30\n",
+      "stderr": ""
+    },
+    "note": "The after probe prints sums obtained by iterating stored dictionary views; the baseline printed the eagerly materialized items list."
+  },
+  "verification": {
+    "compiler_unchanged_during_capture": true,
+    "expected_rejection_cases": [
+      "removed_float_intrinsic"
+    ],
+    "unexpected_check_results": {},
+    "behavior_exit_zero": true,
+    "behavior_stdout_matches": true,
+    "static_ir_observations": {
+      "non_key_sort_routes_to_native_sort": true,
+      "text_min_uses_compare_without_encode": true,
+      "immediate_slice_and_view_use_range": true,
+      "multi_piece_format_uses_one_join_without_concat": true,
+      "known_size_lists_do_not_pass_literal_zero_capacity": true,
+      "stored_dictionary_views_materialize_no_list": true
+    }
+  }
+}

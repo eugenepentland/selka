@@ -1,0 +1,29 @@
+The fix works for all inputs. Summary:
+
+## What I changed
+
+**`project/main.my`** — added the missing `case Shape.square(side)` arm to `area`, returning `side * side`. The match was non-exhaustive (`E_INCOMPLETE_MATCH`), so the program failed the checker; the new arm makes it compile and gives squares `r*r` while circles keep `3*r*r`.
+
+```python
+def area(shape: Shape) -> int:
+    match shape:
+        case Shape.circle(radius):
+            return 3 * radius * radius
+        case Shape.square(side):
+            return side * side
+```
+
+## Commands and results
+
+```
+$ ./bin/mylang check project/main.my
+check exit: 0
+
+$ ./bin/mylang run project/main.my -- circle 2
+12
+
+$ ./bin/mylang run project/main.my -- square 3
+9
+```
+
+Both match `public/expected.json`. I also spot-checked other inputs — `circle 0 → 0`, `circle 5 → 75`, `circle 1 → 3`, `square 0 → 0`, `square 7 → 49`, `square 1 → 1` — confirming the general formula holds beyond the public examples.

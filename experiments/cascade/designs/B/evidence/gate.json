@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "label": "B",
+  "pinned": true,
+  "arm": "/home/epentland/ai/canopy/mylang/experiments/cascade/designs/B",
+  "captured_utc": "2026-09-19T11:32:54.505385+00:00",
+  "compiler": "/home/epentland/ai/canopy/mylang/experiments/cascade/tools/bin/mylang",
+  "tests": {
+    "passed": 79,
+    "fresh": 79,
+    "cached": 0,
+    "failed": 0,
+    "expected": 79,
+    "pinned": true,
+    "exit": 0,
+    "ok": true,
+    "stderr_tail": []
+  },
+  "goldens": {
+    "passed": 17,
+    "failed": 0,
+    "expected": 17,
+    "ok": true,
+    "failures": []
+  },
+  "reference": {
+    "passed": 6,
+    "rows": [
+      {
+        "fixture": "units.sexp",
+        "status": "ok",
+        "differing": []
+      },
+      {
+        "fixture": "spi.sexp",
+        "status": "ok",
+        "differing": []
+      },
+      {
+        "fixture": "lmx2595rhar.sexp",
+        "status": "ok",
+        "differing": []
+      },
+      {
+        "fixture": "straps-synth-lmx2595.sexp",
+        "status": "ok",
+        "differing": []
+      },
+      {
+        "fixture": "poe-pd-flyback-tps23757.sexp",
+        "status": "ok",
+        "differing": []
+      },
+      {
+        "fixture": "remora-rf.sexp",
+        "status": "ok",
+        "differing": []
+      }
+    ],
+    "ok": true,
+    "missing": []
+  },
+  "passed": true
+}

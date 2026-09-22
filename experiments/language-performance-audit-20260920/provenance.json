@@ -1,0 +1,58 @@
+{
+  "compiler_rebuilt": false,
+  "guardian_exercised": false,
+  "git_head": "4919ea9f0b58528eb60aed60b91376aeb4ca3c15",
+  "sha256": {
+    "zig-out/bin/mylang": "4024b68f1815ba1a29955e6c15a5d52b62fd11a5ba8cd65deb5ab7e4790ced1c",
+    "src/qbe.zig": "62f7913df82ab83db590fd2a300148c93b6b0143d67d0e933256f58bf494db48",
+    "src/qbe_aggregate.zig": "21aa32f671f4cc936a310cf3457a7ee724c759a7e13d4feb0232c61d3d4aa225",
+    "src/qbe_managed.zig": "46a7be7115ac4d24fcc7d07ec225833b47fa6921a7d386892831206b9cd054df",
+    "src/native_bytes.c": "7ddf0f1a05692e3d1dc27627e6aaa1ff63f139c5fdb4562ca0ae27e7846abbdd",
+    "src/stdlib/byte_builder.my": "1d3ca02742dc69608e9f31c60534b002cfa7e7bf529c2790bf60be551efcca60",
+    "src/native_types.zig": "9a26c1f7826856bedac145e59c7281770733b14032fa4ba7baeeae8b4a87c55a",
+    "experiments/sexpr-port/main.my": "758b4848039ebf1d6addc9fa697031e0fb183a548c50a477502f0cf96f1579a8",
+    "experiments/sexpr-port/sexpr/ast.my": "b40f6c81741ada790b5db029f445a44057feebfc2234a19ea763d88f1a77253d",
+    "experiments/sexpr-port/sexpr/parser.my": "27e93c9063d0e79a5b799baa8958340e49f27a43b5104e8efd467d7dc6c0badc",
+    "experiments/sexpr-port/sexpr/printer.my": "7fe4512872a5319b6b7ba4ad961ca866fc6eb23e5137b94a772dc3a2a0dbc742",
+    "experiments/sexpr-port/sexpr/tokenizer.my": "7215da3c560e50e90f118c631a303c9a6d6966b66e7cc81ec9a96418f5f63112",
+    "experiments/sexpr-port/sexpr/view.my": "fb9a0aa01b1273f7e698a837d57f6ae38b02de5f09eac896251914f5dfce0018",
+    "experiments/sexpr-port/tests/ast_test.my": "1779dd1014456d215b63e2cbdaf9ac865e6980b40869925787b68f4b511bc86e",
+    "experiments/sexpr-port/tests/parser_test.my": "79819acf7ba7469a2ce7830faa32a41bcd514467ba755ce39d29c009667db2d7",
+    "experiments/sexpr-port/tests/printer_test.my": "51af9594213b7f3228d9d9f4a953a37833a9003b79015a4070b23af7a0620122",
+    "experiments/sexpr-port/tests/roundtrip_test.my": "93e0a6cdd76c3f9d20c3f5339d1853c84343df1cdc1a07f8e624fe8a9aee1b70",
+    "experiments/sexpr-port/tests/smoke_test.my": "d27044398942790aabbbdf93c6bf79aa355d645909cf48af7a6a1e8ed4cf9673",
+    "experiments/sexpr-port/tests/tokenizer_test.my": "658a9f2528c8adbb496c038ec6c11c5b956d1de65ad5fd63451a3b38e1610a28",
+    "experiments/sexpr-port/tests/view_test.my": "a458318e4fefc685e6b2cb16f5a997092776412285c92e227b766ed1db40a983"
+  },
+  "snapshot": "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/port",
+  "build_command": [
+    "zig-out/bin/mylang",
+    "build",
+    ".tmp/language-performance-audit-20260920/port/main.my",
+    "-o",
+    ".tmp/language-performance-audit-20260920/qbe",
+    "--mode=ReleaseFast",
+    "--keep-symbols",
+    "--cache-dir=.tmp/language-performance-audit-20260920/cache-qbe"
+  ],
+  "historical_data_origin": ".tmp/bench/{findanyused-{census,render,census8,render8},final3-counters}.json",
+  "historical_data_captured_sha256": {
+    "findanyused-census.json": "a49f4e3506d31c45db5603603655ddea104c7c2483241b30fec5dddcf3b1a87f",
+    "findanyused-census8.json": "5868959c1df4829236d7b4084d0ba3e9e26fad919afbef2265bb5e4ca80077d2",
+    "findanyused-render.json": "7c9dc2d4699f3af170d05542f1f555ae103288d9596f0a5e264d58a2cf9a75a2",
+    "findanyused-render8.json": "6ff372ddc00e394b85f69476f923b98d08bc2de8a73a378e4db1ef5040f4e097",
+    "final3-counters.json": "5edb1cea8abcde644ff08a60cfe35957cf833c3729a9ab3d39fd18790e0e8f4f"
+  },
+  "qbe_sha256": "808cce427c310c4ecdcdae6360fade2f5579548f5af3852b1c94e77b22960c5d",
+  "source_hashes_still_match_at_completion": false,
+  "changed_after_snapshot": {
+    "zig-out/bin/mylang": {
+      "before": "4024b68f1815ba1a29955e6c15a5d52b62fd11a5ba8cd65deb5ab7e4790ced1c",
+      "after": "549d13660db96ecd0360520f03418d40e4519cd6a9d44a24e609e02bce98d9eb"
+    },
+    "src/qbe.zig": {
+      "before": "62f7913df82ab83db590fd2a300148c93b6b0143d67d0e933256f58bf494db48",
+      "after": "d2e76314774bcdc79f26fe2aa23bfa94fdd6945dd8646d69b56a2b39c1759e9f"
+    }
+  }
+}

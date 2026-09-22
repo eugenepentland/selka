@@ -1,0 +1,15 @@
+**What I changed:** `project/main.my` only. `main` was adding `1` directly to a `Result[int, str]` (the `E_TYPE` error). I replaced that line with a `match` on `parse_count(args[0])`: `case Ok(value)` prints `1 + value`, and `case Err(_)` prints `-1`. `parse_count` itself is unchanged.
+
+**Exact command and result:**
+
+```
+bin/mylang check project/main.my
+```
+→ exit 0, no diagnostics.
+
+```
+bin/mylang run project/main.my -- 41   → 42
+bin/mylang run project/main.my -- 0    → 1
+```
+
+I also verified extra inputs (`abc`, `3.5`, ``, `1e3` → `-1`; `007` → `8`; `+3` → `4`; `-1` → `0`; `1000000` → `1000001`), all correct, and removed the temporary build artifacts.

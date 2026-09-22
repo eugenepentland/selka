@@ -1,0 +1,29 @@
+{
+  "ir_sha256": "0a04883b472a1820c237b979da842fc25f05e3f396f521d88ed173d04198896a",
+  "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-parity-audit-20260920/probes/root-width.bin",
+  "sha256": "419d315ebc5736df9585be85b6503abea95fa87b12684f5d5ea07153717238dd",
+  "link_command": [
+    "cc",
+    "-O2",
+    "-fPIC",
+    "-no-pie",
+    ".tmp/llvm-parity-audit-20260920/probes/root-width.o",
+    ".tmp/bench/armsset/maxperf/whole-o3/unchecked_runtime.o",
+    ".tmp/llvm-parity-audit-20260920/probes/width_probe.o",
+    "/home/epentland/ai/canopy/mylang/.tmp/bench/armsset/cache/objects/4076e5a5d3179d63adb8aa6647ff27015f156902c29acb0dabe15a08ea869f75/29e2c2ce64ec22618eb20f82e7a6e3c769a1b72d6a9020c894ebfc0a15f485e3.o",
+    "/home/epentland/ai/canopy/mylang/.tmp/bench/armsset/cache/objects/4076e5a5d3179d63adb8aa6647ff27015f156902c29acb0dabe15a08ea869f75/c134f8e6307133b89a520b061fbfdd5a52c41dc7b6d22e0c89c3e146e9bad674.o",
+    "/home/epentland/ai/canopy/mylang/zig-out/lib/mylang-runtime/972215e34446fec419c9728556b9929d7a663348af356a8854e539ffb8ec68e0.o",
+    ".tmp/bench/armsset/maxperf/whole-o3/runtime.a",
+    "-Wl,--wrap=myl_native_list_append",
+    "-Wl,--wrap=myl_native_list_get",
+    "-Wl,--wrap=myl_native_text_at",
+    "-Wl,--wrap=myl_native_text_slice",
+    "-Wl,--wrap=myl_qbe_int_binary",
+    "-Wl,--wrap=myl_qbe_int_cast",
+    "-Wl,--wrap=myl_qbe_int_neg",
+    "-lm",
+    "-Wl,--gc-sections",
+    "-o",
+    ".tmp/llvm-parity-audit-20260920/probes/root-width.bin"
+  ]
+}

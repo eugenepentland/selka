@@ -1,0 +1,26 @@
+{
+  "gc-o3": {
+    "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-arenas-20260921/stats-gc-o3",
+    "sha256": "d310b01be391140163af1223cc84d9130d0b9e1b8c750a4396945751b94e068b",
+    "private_runtime": "/home/epentland/ai/canopy/mylang/.tmp/svg-arenas-20260921/gc-o3-stats-runtime.a",
+    "guest_objects_reused": 115
+  },
+  "arena-o3": {
+    "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-arenas-20260921/stats-arena-o3",
+    "sha256": "ed2595e69053c3c471231b1bbb219008cb8d21432454dcda6a6694d8212a84b4",
+    "private_runtime": "/home/epentland/ai/canopy/mylang/.tmp/svg-arenas-20260921/arena-o3-stats-runtime.a",
+    "guest_objects_reused": 115
+  },
+  "workload-gc": {
+    "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-arenas-20260921/stats-workload-gc",
+    "sha256": "4e4ba455c7393faf0e28e5827976bdbb112e20e6d29de43951452f4c1b081e5e",
+    "private_runtime": "/home/epentland/ai/canopy/mylang/.tmp/svg-arenas-20260921/workload-gc-stats-runtime.a",
+    "guest_objects_reused": 2
+  },
+  "workload-arena": {
+    "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-arenas-20260921/stats-workload-arena",
+    "sha256": "d4a21656b9b78d2437c9e975c48660aa5d9ce8eab6ce7ff751429b79a7f946ed",
+    "private_runtime": "/home/epentland/ai/canopy/mylang/.tmp/svg-arenas-20260921/workload-arena-stats-runtime.a",
+    "guest_objects_reused": 2
+  }
+}

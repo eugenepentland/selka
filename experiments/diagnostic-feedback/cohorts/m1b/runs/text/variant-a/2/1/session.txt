@@ -1,0 +1,15 @@
+**What changed:** `project/main.my` — `area`'s `match shape:` had only the `Shape.circle` arm, so the checker rejected it with `E_INCOMPLETE_MATCH` (unhandled variant `square`). I added the missing arm:
+
+```
+case Shape.square(side):
+    return side * side
+```
+
+The `circle` arm already returned `3 * radius * radius`, so no other change was needed.
+
+**Command and result:**
+- `bin/mylang check project/main.my` → exit 0 (was exit 1 with `E_INCOMPLETE_MATCH` before the fix).
+- `bin/mylang run project/main.my -- circle 2` → `12` (matches `public/expected.json`)
+- `bin/mylang run project/main.my -- square 3` → `9` (matches `public/expected.json`)
+
+Extra general-input checks: `circle 5` → `75`, `square 7` → `49`, `circle 0` / `square 0` → `0`, and a non-numeric size (`circle abc`) → `0` via the existing `number` helper.

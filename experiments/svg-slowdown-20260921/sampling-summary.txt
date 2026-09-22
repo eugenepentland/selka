@@ -1,0 +1,247 @@
+{
+  "o3": {
+    "runs": 200,
+    "samples": 2986,
+    "outside_main_executable": 32,
+    "unmapped_inside": 11,
+    "overflow": 0,
+    "top_functions": [
+      {
+        "name": "layout::partPin",
+        "samples": 1238,
+        "percent_all_samples": 41.46014735432016
+      },
+      {
+        "name": "memcpy",
+        "samples": 595,
+        "percent_all_samples": 19.926322839919624
+      },
+      {
+        "name": "layout::collectRows",
+        "samples": 272,
+        "percent_all_samples": 9.109176155391829
+      },
+      {
+        "name": "qbe_host_write",
+        "samples": 262,
+        "percent_all_samples": 8.774279973208305
+      },
+      {
+        "name": "myl_native_list_get",
+        "samples": 175,
+        "percent_all_samples": 5.860683188211654
+      },
+      {
+        "name": "qbe_host_invoke",
+        "samples": 76,
+        "percent_all_samples": 2.5452109845947755
+      },
+      {
+        "name": "io::put",
+        "samples": 49,
+        "percent_all_samples": 1.6409912926992631
+      },
+      {
+        "name": "qbe_host_read",
+        "samples": 36,
+        "percent_all_samples": 1.2056262558606832
+      }
+    ]
+  },
+  "lto": {
+    "runs": 200,
+    "samples": 6393,
+    "outside_main_executable": 379,
+    "unmapped_inside": 84,
+    "overflow": 0,
+    "top_functions": [
+      {
+        "name": "layout::partPin",
+        "samples": 4685,
+        "percent_all_samples": 73.28327858595338
+      },
+      {
+        "name": "layout::collectRows",
+        "samples": 427,
+        "percent_all_samples": 6.679180353511653
+      },
+      {
+        "name": "myl_native_list_get",
+        "samples": 256,
+        "percent_all_samples": 4.004379790395745
+      },
+      {
+        "name": "qbe_host_write",
+        "samples": 183,
+        "percent_all_samples": 2.8625058657907085
+      },
+      {
+        "name": "qbe_host_invoke",
+        "samples": 87,
+        "percent_all_samples": 1.360863444392304
+      },
+      {
+        "name": "layout::nearest",
+        "samples": 40,
+        "percent_all_samples": 0.6256843422493352
+      },
+      {
+        "name": "layout::innerPin",
+        "samples": 26,
+        "percent_all_samples": 0.4066948224620679
+      },
+      {
+        "name": "circuit::normalize",
+        "samples": 20,
+        "percent_all_samples": 0.3128421711246676
+      }
+    ]
+  },
+  "bounded": {
+    "runs": 200,
+    "samples": 8075,
+    "outside_main_executable": 47,
+    "unmapped_inside": 9,
+    "overflow": 0,
+    "top_functions": [
+      {
+        "name": "layout::partPin",
+        "samples": 4689,
+        "percent_all_samples": 58.06811145510836
+      },
+      {
+        "name": "layout::collectRows",
+        "samples": 1076,
+        "percent_all_samples": 13.325077399380804
+      },
+      {
+        "name": "memcpy",
+        "samples": 497,
+        "percent_all_samples": 6.154798761609907
+      },
+      {
+        "name": "qbe_host_write",
+        "samples": 415,
+        "percent_all_samples": 5.139318885448916
+      },
+      {
+        "name": "myl_native_list_get",
+        "samples": 263,
+        "percent_all_samples": 3.2569659442724457
+      },
+      {
+        "name": "layout_graph::findId",
+        "samples": 148,
+        "percent_all_samples": 1.8328173374613004
+      },
+      {
+        "name": "layout_routes::build",
+        "samples": 117,
+        "percent_all_samples": 1.4489164086687307
+      },
+      {
+        "name": "circuit::normalize",
+        "samples": 85,
+        "percent_all_samples": 1.0526315789473684
+      }
+    ]
+  },
+  "part-pin-index": {
+    "runs": 200,
+    "samples": 1258,
+    "outside_main_executable": 28,
+    "unmapped_inside": 10,
+    "overflow": 0,
+    "top_functions": [
+      {
+        "name": "qbe_host_write",
+        "samples": 279,
+        "percent_all_samples": 22.17806041335453
+      },
+      {
+        "name": "layout::collectRows",
+        "samples": 266,
+        "percent_all_samples": 21.144674085850557
+      },
+      {
+        "name": "memcpy",
+        "samples": 158,
+        "percent_all_samples": 12.559618441971383
+      },
+      {
+        "name": "myl_native_list_get",
+        "samples": 78,
+        "percent_all_samples": 6.200317965023848
+      },
+      {
+        "name": "qbe_host_invoke",
+        "samples": 75,
+        "percent_all_samples": 5.961844197138315
+      },
+      {
+        "name": "layout::nearest",
+        "samples": 39,
+        "percent_all_samples": 3.100158982511924
+      },
+      {
+        "name": "circuit::normalize",
+        "samples": 33,
+        "percent_all_samples": 2.6232114467408585
+      },
+      {
+        "name": "io::put",
+        "samples": 33,
+        "percent_all_samples": 2.6232114467408585
+      }
+    ]
+  },
+  "lto-guest-avx2": {
+    "runs": 200,
+    "samples": 2670,
+    "outside_main_executable": 229,
+    "unmapped_inside": 103,
+    "overflow": 0,
+    "top_functions": [
+      {
+        "name": "layout::partPin",
+        "samples": 1273,
+        "percent_all_samples": 47.67790262172284
+      },
+      {
+        "name": "layout::collectRows",
+        "samples": 290,
+        "percent_all_samples": 10.861423220973784
+      },
+      {
+        "name": "myl_native_list_get",
+        "samples": 259,
+        "percent_all_samples": 9.700374531835205
+      },
+      {
+        "name": "qbe_host_write",
+        "samples": 165,
+        "percent_all_samples": 6.179775280898877
+      },
+      {
+        "name": "qbe_host_invoke",
+        "samples": 86,
+        "percent_all_samples": 3.2209737827715355
+      },
+      {
+        "name": "qbe_host_read",
+        "samples": 32,
+        "percent_all_samples": 1.198501872659176
+      },
+      {
+        "name": "layout_routes::build",
+        "samples": 29,
+        "percent_all_samples": 1.0861423220973783
+      },
+      {
+        "name": "layout::nearest",
+        "samples": 27,
+        "percent_all_samples": 1.0112359550561798
+      }
+    ]
+  }
+}

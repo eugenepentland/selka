@@ -1,0 +1,6 @@
+Fixed in `project/stats.my`, which declared a module name that didn't match its import and kept its function private:
+
+1. `module statistics` → `module stats` (matches the file name and `import stats as stats` in `main.my`).
+2. `def total() -> int` → `public def total() -> int` (exported so `main` can call it).
+
+Command run: `bin/mylang run project/main.my` → stdout `7`, exit code `0`.

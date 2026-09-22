@@ -1,0 +1,19 @@
+record Cursor:
+    index: int
+    line: int
+
+def advance(c: Cursor, newline: bool) -> Cursor:
+    if newline:
+        return Cursor(index=c.index + 1, line=c.line + 1)
+    return Cursor(index=c.index + 1, line=c.line)
+
+def walk(n: int) -> int:
+    c = Cursor(index=0, line=1)
+    i = 0
+    while i < n:
+        c = advance(c, i % 3 == 0)
+        i = i + 1
+    return c.line
+
+def main() -> int:
+    return walk(9)

@@ -1,0 +1,38 @@
+{
+  "gc": {
+    "command": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang/experiments/svg-arenas-20260921/gc.my",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--keep-symbols",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang/.tmp/svg-arenas-20260921/workload-cache-gc",
+      "--report",
+      "-o",
+      "/home/epentland/ai/canopy/mylang/.tmp/svg-arenas-20260921/workload-gc"
+    ],
+    "binary_sha256": "0ede0db034e9572a1b18740f53bc674a0123630dd5ca1ca4f3c24af86fd6cf87"
+  },
+  "arena": {
+    "command": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang/experiments/svg-arenas-20260921/arena.my",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--keep-symbols",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang/.tmp/svg-arenas-20260921/workload-cache-arena",
+      "--report",
+      "-o",
+      "/home/epentland/ai/canopy/mylang/.tmp/svg-arenas-20260921/workload-arena"
+    ],
+    "binary_sha256": "079acbff9ae73588de6e860a1790ebfa6c484b0c5c656bac3232d7c431878a0c"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "arms": {
+    "gc": {
+      "stdout": "31064064\n",
+      "stderr": "",
+      "exit_code": 0,
+      "binary_sha256": "b254d8c93a3ea9df3f0f1ab5b4bc5a028e374e77d4700e202936adc74a52c444"
+    },
+    "arena": {
+      "stdout": "31064064\n",
+      "stderr": "",
+      "exit_code": 0,
+      "binary_sha256": "bab845600e8dea1ec8c66ebcf3c903431fb9123528710e8ff7a9c90c6d8aad3c"
+    }
+  }
+}

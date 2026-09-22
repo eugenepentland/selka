@@ -1,0 +1,723 @@
+{
+  "instances": [
+    {
+      "ref": "U1",
+      "component": "lmx2595rhar"
+    },
+    {
+      "ref": "C1",
+      "component": "cap-0402"
+    },
+    {
+      "ref": "C2",
+      "component": "cap-0402"
+    },
+    {
+      "ref": "C3",
+      "component": "cap-0402"
+    },
+    {
+      "ref": "C4",
+      "component": "cap-0402"
+    },
+    {
+      "ref": "C5",
+      "component": "cap-0603"
+    },
+    {
+      "ref": "C6",
+      "component": "cap-0402"
+    },
+    {
+      "ref": "C7",
+      "component": "cap-0402"
+    },
+    {
+      "ref": "C8",
+      "component": "cap-0402"
+    },
+    {
+      "ref": "C9",
+      "component": "cap-0603"
+    },
+    {
+      "ref": "C10",
+      "component": "cap-0402"
+    },
+    {
+      "ref": "C11",
+      "component": "cap-0603"
+    },
+    {
+      "ref": "C12",
+      "component": "cap-0603"
+    },
+    {
+      "ref": "C13",
+      "component": "cap-0603"
+    },
+    {
+      "ref": "R1",
+      "component": "res-0402"
+    },
+    {
+      "ref": "R2",
+      "component": "res-0402"
+    },
+    {
+      "ref": "C14",
+      "component": "cap-0402"
+    },
+    {
+      "ref": "C15",
+      "component": "cap-0402"
+    },
+    {
+      "ref": "C16",
+      "component": "cap-0402"
+    },
+    {
+      "ref": "C17",
+      "component": "cap-0402"
+    },
+    {
+      "ref": "R3",
+      "component": "res-0402"
+    },
+    {
+      "ref": "R4",
+      "component": "res-0402"
+    },
+    {
+      "ref": "C18",
+      "component": "cap-0402"
+    },
+    {
+      "ref": "L1",
+      "component": "ind-0402"
+    },
+    {
+      "ref": "C19",
+      "component": "cap-0402"
+    },
+    {
+      "ref": "R5",
+      "component": "res-0402"
+    },
+    {
+      "ref": "R6",
+      "component": "res-0402"
+    },
+    {
+      "ref": "C20",
+      "component": "cap-0402"
+    },
+    {
+      "ref": "R7",
+      "component": "res-0402"
+    },
+    {
+      "ref": "C21",
+      "component": "cap-0402"
+    }
+  ],
+  "nets": [
+    {
+      "name": "V_3V3",
+      "pins": [
+        {
+          "ref": "R1",
+          "pin": "1"
+        },
+        {
+          "ref": "L1",
+          "pin": "2"
+        }
+      ]
+    },
+    {
+      "name": "LMX_OSCIN_N",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "9"
+        },
+        {
+          "ref": "C15",
+          "pin": "2"
+        }
+      ]
+    },
+    {
+      "name": "LO_BIAS_A",
+      "pins": [
+        {
+          "ref": "L1",
+          "pin": "1"
+        },
+        {
+          "ref": "C19",
+          "pin": "1"
+        },
+        {
+          "ref": "R5",
+          "pin": "2"
+        },
+        {
+          "ref": "R6",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "V_3V3.U1.7",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "7"
+        },
+        {
+          "ref": "C1",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "LMX_CPOUT",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "12"
+        },
+        {
+          "ref": "C16",
+          "pin": "1"
+        },
+        {
+          "ref": "C17",
+          "pin": "1"
+        },
+        {
+          "ref": "R4",
+          "pin": "2"
+        }
+      ]
+    },
+    {
+      "name": "V_3V3.U1.37",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "37"
+        },
+        {
+          "ref": "C6",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "LMX_VBIASVARAC",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "33"
+        },
+        {
+          "ref": "C11",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "V_3V3.U1.21",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "21"
+        },
+        {
+          "ref": "C4",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "SPI_SCK",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "16"
+        }
+      ]
+    },
+    {
+      "name": "LMX_CE",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "1"
+        },
+        {
+          "ref": "R1",
+          "pin": "2"
+        }
+      ]
+    },
+    {
+      "name": "V_3V3.U1.11",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "11"
+        },
+        {
+          "ref": "C2",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "LMX_VREFVCO2",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "29"
+        },
+        {
+          "ref": "C13",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "SPI_SDO",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "20"
+        }
+      ]
+    },
+    {
+      "name": "GND",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "2"
+        },
+        {
+          "ref": "U1",
+          "pin": "4"
+        },
+        {
+          "ref": "U1",
+          "pin": "6"
+        },
+        {
+          "ref": "U1",
+          "pin": "13"
+        },
+        {
+          "ref": "U1",
+          "pin": "14"
+        },
+        {
+          "ref": "U1",
+          "pin": "25"
+        },
+        {
+          "ref": "U1",
+          "pin": "31"
+        },
+        {
+          "ref": "U1",
+          "pin": "34"
+        },
+        {
+          "ref": "U1",
+          "pin": "39"
+        },
+        {
+          "ref": "U1",
+          "pin": "40"
+        },
+        {
+          "ref": "U1",
+          "pin": "41"
+        },
+        {
+          "ref": "C1",
+          "pin": "2"
+        },
+        {
+          "ref": "C2",
+          "pin": "2"
+        },
+        {
+          "ref": "C3",
+          "pin": "2"
+        },
+        {
+          "ref": "C4",
+          "pin": "2"
+        },
+        {
+          "ref": "C5",
+          "pin": "2"
+        },
+        {
+          "ref": "C6",
+          "pin": "2"
+        },
+        {
+          "ref": "C7",
+          "pin": "2"
+        },
+        {
+          "ref": "C8",
+          "pin": "2"
+        },
+        {
+          "ref": "C9",
+          "pin": "2"
+        },
+        {
+          "ref": "C10",
+          "pin": "2"
+        },
+        {
+          "ref": "C11",
+          "pin": "2"
+        },
+        {
+          "ref": "C12",
+          "pin": "2"
+        },
+        {
+          "ref": "C13",
+          "pin": "2"
+        },
+        {
+          "ref": "C16",
+          "pin": "2"
+        },
+        {
+          "ref": "R3",
+          "pin": "2"
+        },
+        {
+          "ref": "C18",
+          "pin": "2"
+        },
+        {
+          "ref": "C19",
+          "pin": "2"
+        },
+        {
+          "ref": "R7",
+          "pin": "2"
+        }
+      ]
+    },
+    {
+      "name": "LMX_RFOUTAP",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "23"
+        },
+        {
+          "ref": "R5",
+          "pin": "1"
+        },
+        {
+          "ref": "C21",
+          "pin": "2"
+        }
+      ]
+    },
+    {
+      "name": "LMX_LF_ZERO",
+      "pins": [
+        {
+          "ref": "C17",
+          "pin": "2"
+        },
+        {
+          "ref": "R3",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "V_3V3.U1.26",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "26"
+        },
+        {
+          "ref": "C5",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "LMX_VREGIN",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "10"
+        },
+        {
+          "ref": "C7",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "LMX_VBIASVCO2",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "27"
+        },
+        {
+          "ref": "C10",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "LO_OUT",
+      "pins": [
+        {
+          "ref": "C21",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "LMX_RFOUTAM",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "22"
+        },
+        {
+          "ref": "R6",
+          "pin": "2"
+        },
+        {
+          "ref": "C20",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "REF_P",
+      "pins": [
+        {
+          "ref": "R2",
+          "pin": "1"
+        },
+        {
+          "ref": "C14",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "V_3V3.U1.15",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "15"
+        },
+        {
+          "ref": "C3",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "SPI_SDI",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "17"
+        }
+      ]
+    },
+    {
+      "name": "LMX_VREFVCO",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "36"
+        },
+        {
+          "ref": "C12",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "LMX_OSCIN_P",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "8"
+        },
+        {
+          "ref": "C14",
+          "pin": "2"
+        }
+      ]
+    },
+    {
+      "name": "RFOUTAM_TERM",
+      "pins": [
+        {
+          "ref": "C20",
+          "pin": "2"
+        },
+        {
+          "ref": "R7",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "LMX_VREGVCO",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "38"
+        },
+        {
+          "ref": "C8",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "LMX_VTUNE",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "35"
+        },
+        {
+          "ref": "R4",
+          "pin": "1"
+        },
+        {
+          "ref": "C18",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "SPI_CSN",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "24"
+        }
+      ]
+    },
+    {
+      "name": "LMX_VBIASVCO",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "3"
+        },
+        {
+          "ref": "C9",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "LMX_RFOUTBP",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "19"
+        }
+      ]
+    },
+    {
+      "name": "REF_N",
+      "pins": [
+        {
+          "ref": "R2",
+          "pin": "2"
+        },
+        {
+          "ref": "C15",
+          "pin": "1"
+        }
+      ]
+    },
+    {
+      "name": "LMX_RFOUTBM",
+      "pins": [
+        {
+          "ref": "U1",
+          "pin": "18"
+        }
+      ]
+    }
+  ],
+  "ports": [
+    {
+      "name": "REF_P",
+      "net": "REF_P",
+      "direction": "in"
+    },
+    {
+      "name": "REF_N",
+      "net": "REF_N",
+      "direction": "in"
+    },
+    {
+      "name": "LO_OUT",
+      "net": "LO_OUT",
+      "direction": "out"
+    },
+    {
+      "name": "V_3V3",
+      "net": "V_3V3",
+      "direction": "in"
+    },
+    {
+      "name": "SPI_SCK",
+      "net": "SPI_SCK",
+      "direction": "in"
+    },
+    {
+      "name": "SPI_SDI",
+      "net": "SPI_SDI",
+      "direction": "in"
+    },
+    {
+      "name": "SPI_SDO",
+      "net": "SPI_SDO",
+      "direction": "out"
+    },
+    {
+      "name": "SPI_CSN",
+      "net": "SPI_CSN",
+      "direction": "in"
+    },
+    {
+      "name": "GND",
+      "net": "GND",
+      "direction": "bidi"
+    }
+  ]
+}

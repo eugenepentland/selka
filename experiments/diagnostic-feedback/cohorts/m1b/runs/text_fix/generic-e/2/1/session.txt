@@ -1,0 +1,8 @@
+**What I changed:** In `project/main.my`, `top` and `top_of` were declared with a bogus generic parameter `[T: Ordered]`, which the checker rejected (`E_GENERIC_REQUIREMENT`: `Ordered` is not a known requirement). Since both signatures are already concrete (`list[int] -> int`) and `T` was unused, I removed `[T: Ordered]` from both definitions. No other changes.
+
+**Exact commands and results:**
+
+- `./bin/mylang check project/main.my` → exit 0 (no diagnostics, was previously exit 1).
+- `./bin/mylang run project/main.my -- 1 3 2` → stdout `3\n`, exit 0 (matches `public/expected.json`).
+- `./bin/mylang run project/main.my -- 5 5 5` → stdout `5\n`, exit 0 (matches).
+- Edge cases also verified: `3 2 1` → 3, `-5 -3 -9` → -3, `0 0 7` → 7, `9 0 0` → 9 — all exit 0.

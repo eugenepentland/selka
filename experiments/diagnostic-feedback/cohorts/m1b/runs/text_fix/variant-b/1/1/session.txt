@@ -1,0 +1,15 @@
+**What I changed:** Added the missing `case Shape.square(side): return side * side` arm to `area` in `project/main.my` (lines 21–22). The checker reported `E_INCOMPLETE_MATCH` because the `square` variant had no arm; the circle arm (`3 * radius * radius`) was already correct.
+
+**Command and result:**
+
+```
+$ bin/mylang check project/main.my
+[exit: 0]
+
+$ bin/mylang run project/main.my -- circle 2
+12
+$ bin/mylang run project/main.my -- square 3
+9
+```
+
+Both match `public/expected.json`. I also verified additional inputs — circle 1/5/10 → 3/75/300 and square 1/5/10 → 1/25/100 — all satisfying `3*r*r` and `r*r` respectively. Total compiler invocations: 10 of 20.

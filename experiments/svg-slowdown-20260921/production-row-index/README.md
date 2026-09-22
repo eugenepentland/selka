@@ -1,0 +1,7 @@
+# Production layout indexing qualification
+
+The production change uses normalized `Part.pin1`/`pin2` indices with a bounds-checked, identity-checked scan fallback. Hub rows are bucketed by pin number in one source-order pass; prefix offsets preserve number-major/source-order traversal. First-seen display groups and the original owning hub part remain authoritative. Passive counts and raw-net bridge-presence facts are computed once. NC hub raw identities remain included in bridge presence to preserve the former scan semantics.
+
+The LLVM O3 guest was built from the production source with a fresh cache. `fixture-qualification.json` records byte equality for the fixture, changed-net, and changed-value cases plus GC-stress equality. `variant-qualification.json` records equality against the retained pre-change binary for swapped net names, passive declaration order, passive pin order, display/raw namespace separation, an NC/raw collision, and the empty-net rejection, again with GC stress. `layout.diff` is relative to the dirty-tree snapshot taken immediately before this change.
+
+The additional `nc_only_bridge_collision` input labels NC hub pin 5 as `LO_BIAS_A`. That raw net occurs on passive far pins but on no connected hub pin, so it specifically detects accidental exclusion of NC hub identities from the row-height bridge index. The differential runner clears output and issue files before every invocation and compares status, stdout, stderr, SVG bytes, and issue bytes.

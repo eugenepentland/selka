@@ -1,0 +1,10 @@
+test-units
++- run test w
+guardian/test: 14 test(s) selected by filter: "aggregate projections" — 3 match by name, 11 unnamed test block(s) run regardless
+guardian/test: test wall 0.61s; slowest over 50ms:
+guardian/test:   0.36s  qbe_test.test.aggregate projections preserve snapshots and managed fields across mutation growth and GC
+guardian/test:   0.24s  qbe_test.test.aggregate projections reject both negative and positive out of bounds indexes
+guardian/test: PASS — 14 passed
+guardian/test: RESULT {"passed":14,"failed":0,"skipped":0}
+failed command: MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/174c20f0bdf006dee3c0e0abcf13d9d2/test "--guardian-filter=aggregate projections" --cache-dir=./.zig-cache --seed=0xfd0df171 --listen=-
+

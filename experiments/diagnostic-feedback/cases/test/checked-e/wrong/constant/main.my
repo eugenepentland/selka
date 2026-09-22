@@ -1,0 +1,14 @@
+module main
+
+
+def to_int(raw: str) -> Result[int, str]:
+    match int(raw):
+        case Some(value):
+            return Ok(value)
+        case None:
+            return Err("not a number")
+
+
+def main(args: list[str], out: Stream) -> int:
+    out.print(38)
+    return 0

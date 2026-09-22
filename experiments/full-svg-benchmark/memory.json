@@ -1,0 +1,248 @@
+{
+  "fixture": {
+    "netlisp-llvm-fast": {
+      "peak_rss_kib": [
+        3724,
+        3724,
+        3724,
+        3724,
+        3724
+      ],
+      "median_peak_rss_kib": 3724
+    },
+    "netlisp-llvm-safe": {
+      "peak_rss_kib": [
+        3616,
+        3616,
+        3616,
+        3616,
+        3616
+      ],
+      "median_peak_rss_kib": 3616
+    },
+    "mylang-o3": {
+      "peak_rss_kib": [
+        3220,
+        3236,
+        3236,
+        3268,
+        3152
+      ],
+      "median_peak_rss_kib": 3236
+    },
+    "mylang-o3-lto": {
+      "peak_rss_kib": [
+        3144,
+        3316,
+        3132,
+        3236,
+        3268
+      ],
+      "median_peak_rss_kib": 3236
+    },
+    "mylang-o3-bounded": {
+      "peak_rss_kib": [
+        3536,
+        3716,
+        3604,
+        3536,
+        3552
+      ],
+      "median_peak_rss_kib": 3552
+    },
+    "rust-o3": {
+      "peak_rss_kib": [
+        2392,
+        2376,
+        2392,
+        2536,
+        2360
+      ],
+      "median_peak_rss_kib": 2392
+    },
+    "go-fast": {
+      "peak_rss_kib": [
+        2204,
+        2204,
+        2204,
+        2204,
+        2204
+      ],
+      "median_peak_rss_kib": 2204
+    },
+    "zig-o3": {
+      "peak_rss_kib": [
+        2012,
+        2016,
+        2016,
+        2044,
+        2016
+      ],
+      "median_peak_rss_kib": 2016
+    }
+  },
+  "changed-net": {
+    "netlisp-llvm-fast": {
+      "peak_rss_kib": [
+        3884,
+        3724,
+        3724,
+        3884,
+        3724
+      ],
+      "median_peak_rss_kib": 3724
+    },
+    "netlisp-llvm-safe": {
+      "peak_rss_kib": [
+        3616,
+        3616,
+        3616,
+        3616,
+        3616
+      ],
+      "median_peak_rss_kib": 3616
+    },
+    "mylang-o3": {
+      "peak_rss_kib": [
+        3252,
+        3240,
+        3240,
+        3260,
+        3288
+      ],
+      "median_peak_rss_kib": 3252
+    },
+    "mylang-o3-lto": {
+      "peak_rss_kib": [
+        3144,
+        3348,
+        3108,
+        3340,
+        3332
+      ],
+      "median_peak_rss_kib": 3332
+    },
+    "mylang-o3-bounded": {
+      "peak_rss_kib": [
+        3760,
+        3536,
+        3736,
+        3716,
+        3760
+      ],
+      "median_peak_rss_kib": 3736
+    },
+    "rust-o3": {
+      "peak_rss_kib": [
+        2328,
+        2376,
+        2536,
+        2408,
+        2408
+      ],
+      "median_peak_rss_kib": 2408
+    },
+    "go-fast": {
+      "peak_rss_kib": [
+        2204,
+        2204,
+        2204,
+        2204,
+        2204
+      ],
+      "median_peak_rss_kib": 2204
+    },
+    "zig-o3": {
+      "peak_rss_kib": [
+        2016,
+        2016,
+        2016,
+        2016,
+        2016
+      ],
+      "median_peak_rss_kib": 2016
+    }
+  },
+  "changed-value": {
+    "netlisp-llvm-fast": {
+      "peak_rss_kib": [
+        3884,
+        3884,
+        3884,
+        3884,
+        3884
+      ],
+      "median_peak_rss_kib": 3884
+    },
+    "netlisp-llvm-safe": {
+      "peak_rss_kib": [
+        3616,
+        3616,
+        3616,
+        3616,
+        3616
+      ],
+      "median_peak_rss_kib": 3616
+    },
+    "mylang-o3": {
+      "peak_rss_kib": [
+        3152,
+        3288,
+        3264,
+        3248,
+        3252
+      ],
+      "median_peak_rss_kib": 3252
+    },
+    "mylang-o3-lto": {
+      "peak_rss_kib": [
+        3108,
+        3124,
+        3236,
+        3340,
+        3228
+      ],
+      "median_peak_rss_kib": 3228
+    },
+    "mylang-o3-bounded": {
+      "peak_rss_kib": [
+        3728,
+        3760,
+        3544,
+        3736,
+        3760
+      ],
+      "median_peak_rss_kib": 3736
+    },
+    "rust-o3": {
+      "peak_rss_kib": [
+        2392,
+        2376,
+        2408,
+        2520,
+        2536
+      ],
+      "median_peak_rss_kib": 2408
+    },
+    "go-fast": {
+      "peak_rss_kib": [
+        2204,
+        2204,
+        2204,
+        2204,
+        2204
+      ],
+      "median_peak_rss_kib": 2204
+    },
+    "zig-o3": {
+      "peak_rss_kib": [
+        2016,
+        2016,
+        2016,
+        2016,
+        2016
+      ],
+      "median_peak_rss_kib": 2016
+    }
+  }
+}

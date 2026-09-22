@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "steps": [
+    {
+      "id": "cli-contract",
+      "kind": "test",
+      "timeout": 600,
+      "commands": [
+        [
+          "bin/planner-checks"
+        ]
+      ]
+    }
+  ]
+}

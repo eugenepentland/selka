@@ -1,0 +1,1206 @@
+{
+  "scope": "same full-svg fresh-process boundary; baseline and isolated probes interleaved",
+  "cpu": 6,
+  "warmups": 3,
+  "rounds": 31,
+  "seed": 20260922,
+  "qualification": {
+    "netlisp": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/netlisp-llvm-fast",
+      "sha256": "6006ae5a1fc4e6a009fd9e5e2c138f885ae6211ffa01fe05731b76566e4e7316",
+      "three_inputs_exact_output": true,
+      "gc_stress": false
+    },
+    "o3": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/mylang-o3",
+      "sha256": "d9eeddfadfaad1509ef828a32afb7fcac9fdbd4a277cc8c670b5324bfb7e54b8",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "lto": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/mylang-o3-lto",
+      "sha256": "84c590c3d7169642a4782d36ca4ec44219d664c461f658089c6b48ebf3c8e077",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "bounded": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/mylang-o3-bounded",
+      "sha256": "f6f43ce5acd5cd7ca3951d3eac2df7f198086a7349beeee357c0d8a3869d0649",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "part-pin-index": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/algorithms/mylang-o3-part-pin",
+      "sha256": "7081e74084e3696ebe653b8cb6036e2bd1e8af1d0b0dfe95678e872fae2db1e0",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "host-control": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/host/control",
+      "sha256": "5d99d15308e4d926083a335481b5e4145f67e6274b45c46b9615b1840d66f285",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "host-scalar": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/host/scalar-fast",
+      "sha256": "d179a48eb3ea6fca72a2dc6ceeebe625b29e5699d7a58f9298cd01094954c0d1",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "guest-lto-runtime-native": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/lto/guest-lto-runtime-native",
+      "sha256": "9dcef8a1a41223ec45a3172c9ae610d65619bb1211757450af011f36a71b81e9",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "guest-native-runtime-lto": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/lto/guest-native-runtime-lto",
+      "sha256": "aa9196f764a507dbdd3cd8457e3bab36f0e5819db91d980912fdd0aed9525aed",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "lto-guest-noinline": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/lto/lto-guest-noinline",
+      "sha256": "b342481b1690587fde88cbf8a10c0583c89dfbe85722a98b0c7e48c819e08117",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "lto-guest-avx2": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/lto/lto-guest-avx2",
+      "sha256": "1e21e79554af5fddf40750811389030a0bc45df4090d2f5cd2c89f0cd3a6abcd",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "lto-partpin-avx2": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/lto/lto-partpin-avx2",
+      "sha256": "723f0e6c5c48f179f9a0755c212eac3b978f19a89fbed01ec8e3ff35d178c7c3",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    },
+    "part-pin-index-bounded": {
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/algorithms/mylang-o3-part-pin-bounded",
+      "sha256": "6477cea8ec2536c3665380744b155b4ba5e6d0d89687223b1b2b5176fac4c243",
+      "three_inputs_exact_output": true,
+      "gc_stress": true
+    }
+  },
+  "median_ms": {
+    "netlisp": 2.509789,
+    "o3": 17.492021,
+    "lto": 34.470073,
+    "bounded": 42.764322,
+    "part-pin-index": 8.996834,
+    "host-control": 17.509843,
+    "host-scalar": 15.910353,
+    "guest-lto-runtime-native": 35.205753,
+    "guest-native-runtime-lto": 16.181748,
+    "lto-guest-noinline": 36.258646,
+    "lto-guest-avx2": 16.010187,
+    "lto-partpin-avx2": 17.367379,
+    "part-pin-index-bounded": 18.204966
+  },
+  "comparisons": {
+    "part-pin-index/o3": {
+      "ratio": 0.5143393093342387,
+      "paired_bootstrap_95": [
+        0.5114821679434828,
+        0.5172592742181666
+      ]
+    },
+    "host-scalar/host-control": {
+      "ratio": 0.908651950791335,
+      "paired_bootstrap_95": [
+        0.9037212996873144,
+        0.9135813542120045
+      ]
+    },
+    "host-control/o3": {
+      "ratio": 1.0010188645440112,
+      "paired_bootstrap_95": [
+        0.9969696594102574,
+        1.0050143837157512
+      ]
+    },
+    "lto/o3": {
+      "ratio": 1.9706169458634881,
+      "paired_bootstrap_95": [
+        1.9650141067782934,
+        1.9806552340915171
+      ]
+    },
+    "bounded/o3": {
+      "ratio": 2.4447902274985833,
+      "paired_bootstrap_95": [
+        2.436157790497471,
+        2.462876473793394
+      ]
+    },
+    "guest-lto-runtime-native/o3": {
+      "ratio": 2.0126749790661695,
+      "paired_bootstrap_95": [
+        2.0068279714085144,
+        2.0186175886106463
+      ]
+    },
+    "guest-native-runtime-lto/o3": {
+      "ratio": 0.9250931038786198,
+      "paired_bootstrap_95": [
+        0.9206206598817581,
+        0.9344372064236187
+      ]
+    },
+    "lto-guest-noinline/lto": {
+      "ratio": 1.051887705604801,
+      "paired_bootstrap_95": [
+        1.0483479476740742,
+        1.056942056788518
+      ]
+    },
+    "lto-guest-avx2/lto": {
+      "ratio": 0.46446629225299285,
+      "paired_bootstrap_95": [
+        0.461791783633849,
+        0.4659825130829894
+      ]
+    },
+    "lto-partpin-avx2/lto": {
+      "ratio": 0.5038393449297308,
+      "paired_bootstrap_95": [
+        0.5014497614828226,
+        0.5071499138294032
+      ]
+    },
+    "part-pin-index-bounded/bounded": {
+      "ratio": 0.42570453940553526,
+      "paired_bootstrap_95": [
+        0.42139649982130056,
+        0.42790397903866667
+      ]
+    }
+  },
+  "samples": [
+    {
+      "round": 0,
+      "order": [
+        "lto-guest-avx2",
+        "lto-partpin-avx2",
+        "guest-native-runtime-lto",
+        "netlisp",
+        "host-control",
+        "lto",
+        "part-pin-index-bounded",
+        "o3",
+        "lto-guest-noinline",
+        "bounded",
+        "guest-lto-runtime-native",
+        "part-pin-index",
+        "host-scalar"
+      ],
+      "ms": {
+        "lto-guest-avx2": 15.821317,
+        "lto-partpin-avx2": 17.267586,
+        "guest-native-runtime-lto": 16.110882,
+        "netlisp": 2.566741,
+        "host-control": 17.526795,
+        "lto": 34.364029,
+        "part-pin-index-bounded": 17.938709,
+        "o3": 17.503741,
+        "lto-guest-noinline": 36.10875,
+        "bounded": 42.501708,
+        "guest-lto-runtime-native": 34.839594,
+        "part-pin-index": 9.020603,
+        "host-scalar": 15.910353
+      }
+    },
+    {
+      "round": 1,
+      "order": [
+        "bounded",
+        "guest-lto-runtime-native",
+        "host-scalar",
+        "part-pin-index",
+        "o3",
+        "host-control",
+        "part-pin-index-bounded",
+        "lto-guest-avx2",
+        "lto",
+        "netlisp",
+        "guest-native-runtime-lto",
+        "lto-guest-noinline",
+        "lto-partpin-avx2"
+      ],
+      "ms": {
+        "bounded": 42.370551,
+        "guest-lto-runtime-native": 35.332234,
+        "host-scalar": 15.971422,
+        "part-pin-index": 9.032044,
+        "o3": 17.542985,
+        "host-control": 17.306445,
+        "part-pin-index-bounded": 18.131723,
+        "lto-guest-avx2": 16.119175,
+        "lto": 34.295623,
+        "netlisp": 2.593859,
+        "guest-native-runtime-lto": 16.10323,
+        "lto-guest-noinline": 36.222499,
+        "lto-partpin-avx2": 17.256256
+      }
+    },
+    {
+      "round": 2,
+      "order": [
+        "bounded",
+        "host-control",
+        "guest-native-runtime-lto",
+        "lto-guest-noinline",
+        "part-pin-index-bounded",
+        "host-scalar",
+        "lto",
+        "guest-lto-runtime-native",
+        "o3",
+        "part-pin-index",
+        "lto-guest-avx2",
+        "lto-partpin-avx2",
+        "netlisp"
+      ],
+      "ms": {
+        "bounded": 42.764322,
+        "host-control": 17.596648,
+        "guest-native-runtime-lto": 16.104106,
+        "lto-guest-noinline": 35.920169,
+        "part-pin-index-bounded": 17.914627,
+        "host-scalar": 15.837081,
+        "lto": 34.338031,
+        "guest-lto-runtime-native": 35.089472,
+        "o3": 17.492021,
+        "part-pin-index": 8.931476,
+        "lto-guest-avx2": 16.005252,
+        "lto-partpin-avx2": 17.295076,
+        "netlisp": 2.663849
+      }
+    },
+    {
+      "round": 3,
+      "order": [
+        "lto",
+        "lto-guest-avx2",
+        "guest-lto-runtime-native",
+        "host-scalar",
+        "part-pin-index-bounded",
+        "lto-partpin-avx2",
+        "guest-native-runtime-lto",
+        "netlisp",
+        "host-control",
+        "lto-guest-noinline",
+        "bounded",
+        "o3",
+        "part-pin-index"
+      ],
+      "ms": {
+        "lto": 34.419304,
+        "lto-guest-avx2": 15.904891,
+        "guest-lto-runtime-native": 35.016329,
+        "host-scalar": 16.000233,
+        "part-pin-index-bounded": 18.011322,
+        "lto-partpin-avx2": 17.331409,
+        "guest-native-runtime-lto": 15.960205,
+        "netlisp": 2.45456,
+        "host-control": 17.399496,
+        "lto-guest-noinline": 36.0322,
+        "bounded": 42.629121,
+        "o3": 17.309705,
+        "part-pin-index": 9.106106
+      }
+    },
+    {
+      "round": 4,
+      "order": [
+        "o3",
+        "lto-partpin-avx2",
+        "part-pin-index-bounded",
+        "lto-guest-noinline",
+        "host-control",
+        "guest-lto-runtime-native",
+        "lto-guest-avx2",
+        "netlisp",
+        "host-scalar",
+        "bounded",
+        "part-pin-index",
+        "guest-native-runtime-lto",
+        "lto"
+      ],
+      "ms": {
+        "o3": 17.359781,
+        "lto-partpin-avx2": 17.335111,
+        "part-pin-index-bounded": 17.995607,
+        "lto-guest-noinline": 36.353889,
+        "host-control": 17.36154,
+        "guest-lto-runtime-native": 34.816462,
+        "lto-guest-avx2": 15.846319,
+        "netlisp": 2.504915,
+        "host-scalar": 15.756912,
+        "bounded": 42.463203,
+        "part-pin-index": 9.215287,
+        "guest-native-runtime-lto": 16.441999,
+        "lto": 34.592324
+      }
+    },
+    {
+      "round": 5,
+      "order": [
+        "bounded",
+        "netlisp",
+        "lto-partpin-avx2",
+        "part-pin-index",
+        "host-scalar",
+        "part-pin-index-bounded",
+        "guest-lto-runtime-native",
+        "lto",
+        "guest-native-runtime-lto",
+        "lto-guest-avx2",
+        "o3",
+        "lto-guest-noinline",
+        "host-control"
+      ],
+      "ms": {
+        "bounded": 42.669098,
+        "netlisp": 2.488641,
+        "lto-partpin-avx2": 17.583948,
+        "part-pin-index": 8.893201,
+        "host-scalar": 16.011202,
+        "part-pin-index-bounded": 18.237157,
+        "guest-lto-runtime-native": 35.316367,
+        "lto": 34.319881,
+        "guest-native-runtime-lto": 16.084008,
+        "lto-guest-avx2": 15.876369,
+        "o3": 17.456143,
+        "lto-guest-noinline": 36.264253,
+        "host-control": 17.57139
+      }
+    },
+    {
+      "round": 6,
+      "order": [
+        "bounded",
+        "host-control",
+        "lto-partpin-avx2",
+        "lto",
+        "guest-lto-runtime-native",
+        "lto-guest-noinline",
+        "part-pin-index",
+        "netlisp",
+        "o3",
+        "guest-native-runtime-lto",
+        "lto-guest-avx2",
+        "host-scalar",
+        "part-pin-index-bounded"
+      ],
+      "ms": {
+        "bounded": 42.46232,
+        "host-control": 17.670877,
+        "lto-partpin-avx2": 17.450399,
+        "lto": 34.488641,
+        "guest-lto-runtime-native": 34.840275,
+        "lto-guest-noinline": 36.145595,
+        "part-pin-index": 8.996834,
+        "netlisp": 2.393526,
+        "o3": 17.376135,
+        "guest-native-runtime-lto": 16.350251,
+        "lto-guest-avx2": 16.010187,
+        "host-scalar": 15.797623,
+        "part-pin-index-bounded": 18.116654
+      }
+    },
+    {
+      "round": 7,
+      "order": [
+        "guest-native-runtime-lto",
+        "part-pin-index",
+        "host-control",
+        "lto",
+        "lto-partpin-avx2",
+        "lto-guest-noinline",
+        "bounded",
+        "guest-lto-runtime-native",
+        "host-scalar",
+        "part-pin-index-bounded",
+        "lto-guest-avx2",
+        "netlisp",
+        "o3"
+      ],
+      "ms": {
+        "guest-native-runtime-lto": 16.246835,
+        "part-pin-index": 8.775753,
+        "host-control": 17.498631,
+        "lto": 34.411669,
+        "lto-partpin-avx2": 17.221406,
+        "lto-guest-noinline": 36.110808,
+        "bounded": 42.70571,
+        "guest-lto-runtime-native": 35.233724,
+        "host-scalar": 15.788431,
+        "part-pin-index-bounded": 17.904441,
+        "lto-guest-avx2": 16.372579,
+        "netlisp": 2.638736,
+        "o3": 17.492654
+      }
+    },
+    {
+      "round": 8,
+      "order": [
+        "part-pin-index",
+        "netlisp",
+        "host-control",
+        "lto",
+        "lto-partpin-avx2",
+        "o3",
+        "bounded",
+        "part-pin-index-bounded",
+        "lto-guest-noinline",
+        "guest-lto-runtime-native",
+        "guest-native-runtime-lto",
+        "host-scalar",
+        "lto-guest-avx2"
+      ],
+      "ms": {
+        "part-pin-index": 8.937267,
+        "netlisp": 2.509789,
+        "host-control": 17.430988,
+        "lto": 34.353648,
+        "lto-partpin-avx2": 17.199954,
+        "o3": 17.445432,
+        "bounded": 42.43417,
+        "part-pin-index-bounded": 18.27785,
+        "lto-guest-noinline": 36.938542,
+        "guest-lto-runtime-native": 35.206763,
+        "guest-native-runtime-lto": 16.140516,
+        "host-scalar": 15.863151,
+        "lto-guest-avx2": 15.910684
+      }
+    },
+    {
+      "round": 9,
+      "order": [
+        "guest-native-runtime-lto",
+        "host-scalar",
+        "part-pin-index-bounded",
+        "lto",
+        "part-pin-index",
+        "lto-partpin-avx2",
+        "o3",
+        "lto-guest-noinline",
+        "bounded",
+        "lto-guest-avx2",
+        "netlisp",
+        "guest-lto-runtime-native",
+        "host-control"
+      ],
+      "ms": {
+        "guest-native-runtime-lto": 16.083844,
+        "host-scalar": 15.832763,
+        "part-pin-index-bounded": 17.948542,
+        "lto": 34.803996,
+        "part-pin-index": 8.856511,
+        "lto-partpin-avx2": 17.285949,
+        "o3": 17.782196,
+        "lto-guest-noinline": 36.309474,
+        "bounded": 43.54464,
+        "lto-guest-avx2": 16.117879,
+        "netlisp": 2.476295,
+        "guest-lto-runtime-native": 35.215717,
+        "host-control": 17.492576
+      }
+    },
+    {
+      "round": 10,
+      "order": [
+        "lto-partpin-avx2",
+        "part-pin-index",
+        "host-control",
+        "lto-guest-avx2",
+        "guest-lto-runtime-native",
+        "o3",
+        "lto",
+        "host-scalar",
+        "netlisp",
+        "guest-native-runtime-lto",
+        "lto-guest-noinline",
+        "bounded",
+        "part-pin-index-bounded"
+      ],
+      "ms": {
+        "lto-partpin-avx2": 17.325426,
+        "part-pin-index": 9.111679,
+        "host-control": 17.608364,
+        "lto-guest-avx2": 15.974451,
+        "guest-lto-runtime-native": 35.105558,
+        "o3": 17.334247,
+        "lto": 34.738577,
+        "host-scalar": 15.753762,
+        "netlisp": 2.441181,
+        "guest-native-runtime-lto": 16.098648,
+        "lto-guest-noinline": 36.01828,
+        "bounded": 42.603655,
+        "part-pin-index-bounded": 18.29567
+      }
+    },
+    {
+      "round": 11,
+      "order": [
+        "netlisp",
+        "o3",
+        "host-control",
+        "bounded",
+        "lto-guest-avx2",
+        "lto-guest-noinline",
+        "part-pin-index-bounded",
+        "part-pin-index",
+        "guest-lto-runtime-native",
+        "guest-native-runtime-lto",
+        "lto-partpin-avx2",
+        "lto",
+        "host-scalar"
+      ],
+      "ms": {
+        "netlisp": 2.639266,
+        "o3": 17.615807,
+        "host-control": 17.538226,
+        "bounded": 42.641875,
+        "lto-guest-avx2": 16.074254,
+        "lto-guest-noinline": 36.064349,
+        "part-pin-index-bounded": 17.971785,
+        "part-pin-index": 9.008622,
+        "guest-lto-runtime-native": 35.571208,
+        "guest-native-runtime-lto": 16.302785,
+        "lto-partpin-avx2": 17.29438,
+        "lto": 34.459056,
+        "host-scalar": 15.903347
+      }
+    },
+    {
+      "round": 12,
+      "order": [
+        "netlisp",
+        "host-control",
+        "host-scalar",
+        "lto-partpin-avx2",
+        "lto-guest-avx2",
+        "lto-guest-noinline",
+        "bounded",
+        "o3",
+        "part-pin-index-bounded",
+        "guest-native-runtime-lto",
+        "lto",
+        "part-pin-index",
+        "guest-lto-runtime-native"
+      ],
+      "ms": {
+        "netlisp": 2.559218,
+        "host-control": 17.543414,
+        "host-scalar": 15.793487,
+        "lto-partpin-avx2": 17.238919,
+        "lto-guest-avx2": 16.542804,
+        "lto-guest-noinline": 37.37255,
+        "bounded": 42.71484,
+        "o3": 17.644393,
+        "part-pin-index-bounded": 18.459982,
+        "guest-native-runtime-lto": 16.50722,
+        "lto": 34.359573,
+        "part-pin-index": 8.879707,
+        "guest-lto-runtime-native": 35.169323
+      }
+    },
+    {
+      "round": 13,
+      "order": [
+        "netlisp",
+        "guest-lto-runtime-native",
+        "o3",
+        "lto-guest-noinline",
+        "lto",
+        "lto-guest-avx2",
+        "host-control",
+        "host-scalar",
+        "part-pin-index",
+        "lto-partpin-avx2",
+        "part-pin-index-bounded",
+        "guest-native-runtime-lto",
+        "bounded"
+      ],
+      "ms": {
+        "netlisp": 2.618461,
+        "guest-lto-runtime-native": 35.205753,
+        "o3": 17.595604,
+        "lto-guest-noinline": 36.448345,
+        "lto": 34.472213,
+        "lto-guest-avx2": 16.033771,
+        "host-control": 17.540619,
+        "host-scalar": 15.838155,
+        "part-pin-index": 8.878448,
+        "lto-partpin-avx2": 17.31486,
+        "part-pin-index-bounded": 17.991993,
+        "guest-native-runtime-lto": 16.359352,
+        "bounded": 42.443045
+      }
+    },
+    {
+      "round": 14,
+      "order": [
+        "lto",
+        "netlisp",
+        "bounded",
+        "o3",
+        "guest-native-runtime-lto",
+        "guest-lto-runtime-native",
+        "part-pin-index-bounded",
+        "lto-guest-noinline",
+        "host-control",
+        "lto-guest-avx2",
+        "part-pin-index",
+        "host-scalar",
+        "lto-partpin-avx2"
+      ],
+      "ms": {
+        "lto": 34.751465,
+        "netlisp": 2.438594,
+        "bounded": 42.495675,
+        "o3": 17.42248,
+        "guest-native-runtime-lto": 15.985002,
+        "guest-lto-runtime-native": 35.071436,
+        "part-pin-index-bounded": 18.07978,
+        "lto-guest-noinline": 36.381271,
+        "host-control": 17.480881,
+        "lto-guest-avx2": 15.895286,
+        "part-pin-index": 8.985738,
+        "host-scalar": 15.945855,
+        "lto-partpin-avx2": 17.436808
+      }
+    },
+    {
+      "round": 15,
+      "order": [
+        "part-pin-index-bounded",
+        "lto-guest-avx2",
+        "lto",
+        "host-control",
+        "part-pin-index",
+        "lto-guest-noinline",
+        "o3",
+        "guest-lto-runtime-native",
+        "netlisp",
+        "host-scalar",
+        "bounded",
+        "lto-partpin-avx2",
+        "guest-native-runtime-lto"
+      ],
+      "ms": {
+        "part-pin-index-bounded": 18.269132,
+        "lto-guest-avx2": 16.012368,
+        "lto": 34.411412,
+        "host-control": 17.381107,
+        "part-pin-index": 8.997895,
+        "lto-guest-noinline": 36.531383,
+        "o3": 17.440711,
+        "guest-lto-runtime-native": 35.194725,
+        "netlisp": 2.460798,
+        "host-scalar": 15.91642,
+        "bounded": 42.904438,
+        "lto-partpin-avx2": 17.620844,
+        "guest-native-runtime-lto": 16.161134
+      }
+    },
+    {
+      "round": 16,
+      "order": [
+        "lto",
+        "lto-guest-noinline",
+        "guest-native-runtime-lto",
+        "host-control",
+        "netlisp",
+        "lto-guest-avx2",
+        "host-scalar",
+        "o3",
+        "guest-lto-runtime-native",
+        "part-pin-index-bounded",
+        "bounded",
+        "part-pin-index",
+        "lto-partpin-avx2"
+      ],
+      "ms": {
+        "lto": 34.587264,
+        "lto-guest-noinline": 36.247612,
+        "guest-native-runtime-lto": 15.982558,
+        "host-control": 17.509843,
+        "netlisp": 2.449437,
+        "lto-guest-avx2": 16.035236,
+        "host-scalar": 16.217369,
+        "o3": 17.388386,
+        "guest-lto-runtime-native": 35.196638,
+        "part-pin-index-bounded": 18.128924,
+        "bounded": 43.045035,
+        "part-pin-index": 9.361366,
+        "lto-partpin-avx2": 17.723198
+      }
+    },
+    {
+      "round": 17,
+      "order": [
+        "lto",
+        "lto-partpin-avx2",
+        "o3",
+        "guest-lto-runtime-native",
+        "host-scalar",
+        "guest-native-runtime-lto",
+        "netlisp",
+        "lto-guest-noinline",
+        "lto-guest-avx2",
+        "bounded",
+        "host-control",
+        "part-pin-index-bounded",
+        "part-pin-index"
+      ],
+      "ms": {
+        "lto": 34.470073,
+        "lto-partpin-avx2": 17.117645,
+        "o3": 17.486587,
+        "guest-lto-runtime-native": 35.29593,
+        "host-scalar": 15.851831,
+        "guest-native-runtime-lto": 16.133541,
+        "netlisp": 2.402698,
+        "lto-guest-noinline": 36.224005,
+        "lto-guest-avx2": 15.956673,
+        "bounded": 42.612806,
+        "host-control": 17.611379,
+        "part-pin-index-bounded": 18.407939,
+        "part-pin-index": 9.253374
+      }
+    },
+    {
+      "round": 18,
+      "order": [
+        "o3",
+        "lto-guest-avx2",
+        "guest-lto-runtime-native",
+        "host-control",
+        "bounded",
+        "lto-guest-noinline",
+        "host-scalar",
+        "lto-partpin-avx2",
+        "part-pin-index",
+        "part-pin-index-bounded",
+        "guest-native-runtime-lto",
+        "netlisp",
+        "lto"
+      ],
+      "ms": {
+        "o3": 17.904761,
+        "lto-guest-avx2": 15.948472,
+        "guest-lto-runtime-native": 35.191934,
+        "host-control": 17.381574,
+        "bounded": 42.898798,
+        "lto-guest-noinline": 36.509059,
+        "host-scalar": 16.02717,
+        "lto-partpin-avx2": 17.367379,
+        "part-pin-index": 8.972924,
+        "part-pin-index-bounded": 18.345889,
+        "guest-native-runtime-lto": 16.64512,
+        "netlisp": 2.831403,
+        "lto": 36.756127
+      }
+    },
+    {
+      "round": 19,
+      "order": [
+        "netlisp",
+        "part-pin-index",
+        "guest-native-runtime-lto",
+        "o3",
+        "lto",
+        "host-scalar",
+        "host-control",
+        "lto-guest-noinline",
+        "part-pin-index-bounded",
+        "lto-partpin-avx2",
+        "bounded",
+        "lto-guest-avx2",
+        "guest-lto-runtime-native"
+      ],
+      "ms": {
+        "netlisp": 2.773589,
+        "part-pin-index": 9.083291,
+        "guest-native-runtime-lto": 16.181748,
+        "o3": 17.507603,
+        "lto": 35.688186,
+        "host-scalar": 16.87542,
+        "host-control": 17.779961,
+        "lto-guest-noinline": 36.829537,
+        "part-pin-index-bounded": 18.670826,
+        "lto-partpin-avx2": 18.026242,
+        "bounded": 43.175567,
+        "lto-guest-avx2": 16.140644,
+        "guest-lto-runtime-native": 35.216166
+      }
+    },
+    {
+      "round": 20,
+      "order": [
+        "o3",
+        "netlisp",
+        "lto-guest-avx2",
+        "lto",
+        "lto-guest-noinline",
+        "guest-native-runtime-lto",
+        "host-control",
+        "part-pin-index-bounded",
+        "lto-partpin-avx2",
+        "host-scalar",
+        "part-pin-index",
+        "bounded",
+        "guest-lto-runtime-native"
+      ],
+      "ms": {
+        "o3": 17.382147,
+        "netlisp": 2.549921,
+        "lto-guest-avx2": 16.017748,
+        "lto": 34.437867,
+        "lto-guest-noinline": 36.196044,
+        "guest-native-runtime-lto": 16.250754,
+        "host-control": 17.482211,
+        "part-pin-index-bounded": 18.403985,
+        "lto-partpin-avx2": 17.800569,
+        "host-scalar": 16.206319,
+        "part-pin-index": 9.063151,
+        "bounded": 43.221201,
+        "guest-lto-runtime-native": 35.735268
+      }
+    },
+    {
+      "round": 21,
+      "order": [
+        "part-pin-index-bounded",
+        "host-scalar",
+        "host-control",
+        "guest-native-runtime-lto",
+        "guest-lto-runtime-native",
+        "o3",
+        "netlisp",
+        "bounded",
+        "lto",
+        "lto-partpin-avx2",
+        "lto-guest-avx2",
+        "lto-guest-noinline",
+        "part-pin-index"
+      ],
+      "ms": {
+        "part-pin-index-bounded": 18.011873,
+        "host-scalar": 16.383328,
+        "host-control": 17.453914,
+        "guest-native-runtime-lto": 16.468188,
+        "guest-lto-runtime-native": 35.324972,
+        "o3": 17.650776,
+        "netlisp": 2.754254,
+        "bounded": 43.168292,
+        "lto": 34.875936,
+        "lto-partpin-avx2": 17.377551,
+        "lto-guest-avx2": 16.040364,
+        "lto-guest-noinline": 36.116308,
+        "part-pin-index": 8.827844
+      }
+    },
+    {
+      "round": 22,
+      "order": [
+        "part-pin-index-bounded",
+        "lto-partpin-avx2",
+        "lto",
+        "netlisp",
+        "guest-lto-runtime-native",
+        "lto-guest-noinline",
+        "part-pin-index",
+        "host-control",
+        "guest-native-runtime-lto",
+        "host-scalar",
+        "o3",
+        "bounded",
+        "lto-guest-avx2"
+      ],
+      "ms": {
+        "part-pin-index-bounded": 18.085282,
+        "lto-partpin-avx2": 17.511402,
+        "lto": 34.314727,
+        "netlisp": 2.602167,
+        "guest-lto-runtime-native": 35.151543,
+        "lto-guest-noinline": 36.202594,
+        "part-pin-index": 9.194071,
+        "host-control": 17.604225,
+        "guest-native-runtime-lto": 16.375097,
+        "host-scalar": 15.964266,
+        "o3": 17.507202,
+        "bounded": 43.496891,
+        "lto-guest-avx2": 16.464818
+      }
+    },
+    {
+      "round": 23,
+      "order": [
+        "part-pin-index-bounded",
+        "lto-guest-noinline",
+        "o3",
+        "guest-native-runtime-lto",
+        "lto",
+        "bounded",
+        "guest-lto-runtime-native",
+        "netlisp",
+        "part-pin-index",
+        "host-scalar",
+        "lto-guest-avx2",
+        "host-control",
+        "lto-partpin-avx2"
+      ],
+      "ms": {
+        "part-pin-index-bounded": 18.306208,
+        "lto-guest-noinline": 36.625731,
+        "o3": 17.410988,
+        "guest-native-runtime-lto": 16.504083,
+        "lto": 34.408522,
+        "bounded": 42.917336,
+        "guest-lto-runtime-native": 35.594326,
+        "netlisp": 2.461734,
+        "part-pin-index": 8.844469,
+        "host-scalar": 15.855154,
+        "lto-guest-avx2": 15.870737,
+        "host-control": 17.428749,
+        "lto-partpin-avx2": 17.510613
+      }
+    },
+    {
+      "round": 24,
+      "order": [
+        "bounded",
+        "guest-lto-runtime-native",
+        "guest-native-runtime-lto",
+        "part-pin-index",
+        "lto-partpin-avx2",
+        "part-pin-index-bounded",
+        "host-control",
+        "lto-guest-noinline",
+        "host-scalar",
+        "o3",
+        "lto",
+        "netlisp",
+        "lto-guest-avx2"
+      ],
+      "ms": {
+        "bounded": 43.102033,
+        "guest-lto-runtime-native": 35.770091,
+        "guest-native-runtime-lto": 16.483452,
+        "part-pin-index": 8.966198,
+        "lto-partpin-avx2": 17.617073,
+        "part-pin-index-bounded": 18.059139,
+        "host-control": 18.079556,
+        "lto-guest-noinline": 36.221587,
+        "host-scalar": 15.972451,
+        "o3": 17.440975,
+        "lto": 34.514002,
+        "netlisp": 2.417863,
+        "lto-guest-avx2": 16.739175
+      }
+    },
+    {
+      "round": 25,
+      "order": [
+        "lto-partpin-avx2",
+        "part-pin-index",
+        "o3",
+        "part-pin-index-bounded",
+        "lto",
+        "host-scalar",
+        "host-control",
+        "lto-guest-noinline",
+        "bounded",
+        "netlisp",
+        "lto-guest-avx2",
+        "guest-lto-runtime-native",
+        "guest-native-runtime-lto"
+      ],
+      "ms": {
+        "lto-partpin-avx2": 17.414072,
+        "part-pin-index": 9.031439,
+        "o3": 17.38473,
+        "part-pin-index-bounded": 18.224427,
+        "lto": 35.111644,
+        "host-scalar": 15.882712,
+        "host-control": 17.454549,
+        "lto-guest-noinline": 36.665572,
+        "bounded": 43.107944,
+        "netlisp": 2.657991,
+        "lto-guest-avx2": 15.958063,
+        "guest-lto-runtime-native": 34.97803,
+        "guest-native-runtime-lto": 16.054669
+      }
+    },
+    {
+      "round": 26,
+      "order": [
+        "lto-guest-avx2",
+        "netlisp",
+        "o3",
+        "guest-native-runtime-lto",
+        "lto-guest-noinline",
+        "host-control",
+        "lto",
+        "lto-partpin-avx2",
+        "host-scalar",
+        "bounded",
+        "part-pin-index-bounded",
+        "part-pin-index",
+        "guest-lto-runtime-native"
+      ],
+      "ms": {
+        "lto-guest-avx2": 15.823054,
+        "netlisp": 2.373054,
+        "o3": 17.553908,
+        "guest-native-runtime-lto": 16.105391,
+        "lto-guest-noinline": 36.299273,
+        "host-control": 17.639802,
+        "lto": 34.601389,
+        "lto-partpin-avx2": 17.486173,
+        "host-scalar": 16.144643,
+        "bounded": 44.2495,
+        "part-pin-index-bounded": 18.764744,
+        "part-pin-index": 9.165092,
+        "guest-lto-runtime-native": 35.969531
+      }
+    },
+    {
+      "round": 27,
+      "order": [
+        "bounded",
+        "host-scalar",
+        "lto-guest-noinline",
+        "o3",
+        "guest-native-runtime-lto",
+        "guest-lto-runtime-native",
+        "lto",
+        "part-pin-index",
+        "lto-guest-avx2",
+        "netlisp",
+        "host-control",
+        "lto-partpin-avx2",
+        "part-pin-index-bounded"
+      ],
+      "ms": {
+        "bounded": 43.080687,
+        "host-scalar": 16.289581,
+        "lto-guest-noinline": 36.667857,
+        "o3": 17.460178,
+        "guest-native-runtime-lto": 16.489878,
+        "guest-lto-runtime-native": 35.124258,
+        "lto": 34.421254,
+        "part-pin-index": 8.854522,
+        "lto-guest-avx2": 15.978911,
+        "netlisp": 2.541891,
+        "host-control": 17.547506,
+        "lto-partpin-avx2": 17.256805,
+        "part-pin-index-bounded": 18.559109
+      }
+    },
+    {
+      "round": 28,
+      "order": [
+        "lto-guest-avx2",
+        "netlisp",
+        "guest-lto-runtime-native",
+        "lto-guest-noinline",
+        "bounded",
+        "part-pin-index-bounded",
+        "host-control",
+        "o3",
+        "lto",
+        "lto-partpin-avx2",
+        "guest-native-runtime-lto",
+        "host-scalar",
+        "part-pin-index"
+      ],
+      "ms": {
+        "lto-guest-avx2": 16.347649,
+        "netlisp": 2.480573,
+        "guest-lto-runtime-native": 35.074642,
+        "lto-guest-noinline": 36.246212,
+        "bounded": 42.759837,
+        "part-pin-index-bounded": 18.546232,
+        "host-control": 18.376905,
+        "o3": 18.073534,
+        "lto": 35.074593,
+        "lto-partpin-avx2": 17.320197,
+        "guest-native-runtime-lto": 16.1151,
+        "host-scalar": 15.763708,
+        "part-pin-index": 8.980509
+      }
+    },
+    {
+      "round": 29,
+      "order": [
+        "part-pin-index-bounded",
+        "o3",
+        "guest-native-runtime-lto",
+        "lto-guest-avx2",
+        "netlisp",
+        "lto-guest-noinline",
+        "host-control",
+        "host-scalar",
+        "guest-lto-runtime-native",
+        "lto",
+        "bounded",
+        "lto-partpin-avx2",
+        "part-pin-index"
+      ],
+      "ms": {
+        "part-pin-index-bounded": 18.362269,
+        "o3": 17.667722,
+        "guest-native-runtime-lto": 16.215913,
+        "lto-guest-avx2": 15.859319,
+        "netlisp": 2.522914,
+        "lto-guest-noinline": 36.258646,
+        "host-control": 17.327456,
+        "host-scalar": 15.979443,
+        "guest-lto-runtime-native": 35.244378,
+        "lto": 34.574601,
+        "bounded": 42.916015,
+        "lto-partpin-avx2": 17.648347,
+        "part-pin-index": 8.985714
+      }
+    },
+    {
+      "round": 30,
+      "order": [
+        "lto-guest-avx2",
+        "host-control",
+        "host-scalar",
+        "lto",
+        "part-pin-index-bounded",
+        "lto-guest-noinline",
+        "netlisp",
+        "bounded",
+        "guest-lto-runtime-native",
+        "part-pin-index",
+        "o3",
+        "guest-native-runtime-lto",
+        "lto-partpin-avx2"
+      ],
+      "ms": {
+        "lto-guest-avx2": 16.148892,
+        "host-control": 17.392584,
+        "host-scalar": 15.769665,
+        "lto": 34.393553,
+        "part-pin-index-bounded": 18.204966,
+        "lto-guest-noinline": 36.592084,
+        "netlisp": 2.509403,
+        "bounded": 43.167877,
+        "guest-lto-runtime-native": 35.712193,
+        "part-pin-index": 8.99737,
+        "o3": 17.701835,
+        "guest-native-runtime-lto": 16.336062,
+        "lto-partpin-avx2": 17.456736
+      }
+    }
+  ]
+}

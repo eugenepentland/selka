@@ -1,0 +1,7 @@
+import strings
+
+def parse(s: str) -> Option[int] noalloc:
+    return strings.to_int(s)
+
+def main() -> int:
+    return 0

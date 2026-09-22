@@ -1,0 +1,18 @@
+Done.
+
+**What I changed** — in `project/main.my`, only the `pick` signature:
+
+- Before: `def pick[T: Sortable](values: list[int], index: int) -> int:`
+- After: `def pick[T](values: list[T], index: int) -> T:`
+
+Two checker errors had to be cleared. The original failure was `E_GENERIC_REQUIREMENT` (`Sortable` is not a valid requirement — only `copy`, `equality`, `integer`, `codec`, `storable`, or a declared constraint). Simply deleting the constraint exposed a follow-on `E_GENERIC_INFERENCE` error, because `T` appeared nowhere in the signature and so could not be inferred at the call site. Making the function genuinely generic over its element type (`list[T] -> T`) resolves both: `T` is inferred as `int` from the argument, and no requirement is needed for list indexing/return.
+
+**Command and result:**
+
+```
+$ bin/mylang run project/main.my
+9
+[exit 0]
+```
+
+`bin/mylang check project/main.my` also exits 0, and the output is exactly the two bytes `9\n`.

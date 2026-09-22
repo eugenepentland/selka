@@ -1,0 +1,21 @@
+{
+  "timed_runs": 1116,
+  "all_binary_and_svg_checks_passed": true,
+  "all_chart_values_match_measurements": true,
+  "inline_js_syntax_checked": true,
+  "inline_browser_inspected_content_widths": [
+    320,
+    736
+  ],
+  "static_chart_visually_inspected": true,
+  "files_sha256": {
+    "experiments/svg-arenas-20260921/native-measurements.json": "4db00ed55574eb1aa999c5d162aaeb98fdbd418094839e98b17e10253ad3b4fc",
+    "experiments/svg-arenas-20260921/native-qualification.json": "f008d64e810823705de0b3bb190a50603174ade427c87a2c1639f17c104fc5fc",
+    "experiments/svg-arenas-20260921/native-builds.json": "234c0f3e5e46ef71c6fe8a2dd0309bece48f549e0bd0a92830b8f2bebface862",
+    "experiments/svg-arenas-20260921/run.py": "cd1b4903b1bd1413c2c10c57c8e73bcf10d5b893b78cdfcb062b352ab507c709",
+    "experiments/svg-arenas-20260921/charts.py": "c6a6327727bcb975e40d48951000f695746f29cb6cfacd4b1ac9a8f5da1f1af8",
+    "experiments/svg-arenas-20260921/svg-gc-arena-comparison.html": "d9d582e2999b712ada99b59005c10e802283488270ef6ae359fd39f044c3da2d",
+    "docs/audits/figures/full-svg-gc-arena-native-2026-09-21.svg": "57128049a638727a006966b6a4c9bd8c6fdee53a2286ba0d4428971852752b6d",
+    "docs/audits/figures/full-svg-gc-arena-native-2026-09-21.png": "04364fbcd845e11bcea69f71576e61c503dd8910671af575355bbc0684eb88b3"
+  }
+}

@@ -1,0 +1,14 @@
+module main
+
+
+def lookup(key: str) -> Result[int, str]:
+    if key == "five":
+        return Ok(5)
+    return Err("missing")
+
+
+def main(out: Stream) -> int:
+    bonus = 0
+    score = bonus + lookup("five")
+    out.print(score)
+    return 0

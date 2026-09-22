@@ -1,0 +1,9 @@
+def total(d: dict[str, int]) -> int noalloc:
+    values = d.values()
+    result = 0
+    for value in values:
+        result += value
+    return result
+
+def main() -> int:
+    return 0

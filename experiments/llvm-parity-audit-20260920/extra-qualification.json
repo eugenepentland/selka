@@ -1,0 +1,1002 @@
+{
+  "binaries": {
+    "chart": "efdb3c3267a6ad2c52c720c0efec54ffdfac06ec4ecfbf1ad1416acf11b0fce2",
+    "width": "7cf18d2589f093cf07d1fb99c758114214def95e95608c6d706663e776964c48",
+    "root-clean": "6e767430cdffb0e516e72e6343186acc2a45a879fdef3794c8fce8b05e853a2a",
+    "root-width": "419d315ebc5736df9585be85b6503abea95fa87b12684f5d5ea07153717238dd",
+    "heap-effects": "3b11ec68039a0d26ec6d646736f6de2197728823365395c910a85de8ad8bb226"
+  },
+  "cases": [
+    {
+      "fixture": "integer-boundaries",
+      "source": "(0 9 10 99 100 -1 -9 -10 -99 -100 9223372036854775807 -9223372036854775808)",
+      "mode": [],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "d91c11b45203178a546a7b4696d167c50221505b23a60f2f5dde4c5ae933e9d0"
+    },
+    {
+      "fixture": "integer-boundaries",
+      "source": "(0 9 10 99 100 -1 -9 -10 -99 -100 9223372036854775807 -9223372036854775808)",
+      "mode": [],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "d91c11b45203178a546a7b4696d167c50221505b23a60f2f5dde4c5ae933e9d0"
+    },
+    {
+      "fixture": "integer-boundaries",
+      "source": "(0 9 10 99 100 -1 -9 -10 -99 -100 9223372036854775807 -9223372036854775808)",
+      "mode": [],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "d91c11b45203178a546a7b4696d167c50221505b23a60f2f5dde4c5ae933e9d0"
+    },
+    {
+      "fixture": "integer-boundaries",
+      "source": "(0 9 10 99 100 -1 -9 -10 -99 -100 9223372036854775807 -9223372036854775808)",
+      "mode": [],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "d91c11b45203178a546a7b4696d167c50221505b23a60f2f5dde4c5ae933e9d0"
+    },
+    {
+      "fixture": "integer-boundaries",
+      "source": "(0 9 10 99 100 -1 -9 -10 -99 -100 9223372036854775807 -9223372036854775808)",
+      "mode": [],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "d91c11b45203178a546a7b4696d167c50221505b23a60f2f5dde4c5ae933e9d0"
+    },
+    {
+      "fixture": "integer-boundaries",
+      "source": "(0 9 10 99 100 -1 -9 -10 -99 -100 9223372036854775807 -9223372036854775808)",
+      "mode": [
+        "--render"
+      ],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "1143c27920bd7e9831f5a5cb7faf5bf300761d20318f70c0dea82a60aaf1c118"
+    },
+    {
+      "fixture": "integer-boundaries",
+      "source": "(0 9 10 99 100 -1 -9 -10 -99 -100 9223372036854775807 -9223372036854775808)",
+      "mode": [
+        "--render"
+      ],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "1143c27920bd7e9831f5a5cb7faf5bf300761d20318f70c0dea82a60aaf1c118"
+    },
+    {
+      "fixture": "integer-boundaries",
+      "source": "(0 9 10 99 100 -1 -9 -10 -99 -100 9223372036854775807 -9223372036854775808)",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "1143c27920bd7e9831f5a5cb7faf5bf300761d20318f70c0dea82a60aaf1c118"
+    },
+    {
+      "fixture": "integer-boundaries",
+      "source": "(0 9 10 99 100 -1 -9 -10 -99 -100 9223372036854775807 -9223372036854775808)",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "1143c27920bd7e9831f5a5cb7faf5bf300761d20318f70c0dea82a60aaf1c118"
+    },
+    {
+      "fixture": "integer-boundaries",
+      "source": "(0 9 10 99 100 -1 -9 -10 -99 -100 9223372036854775807 -9223372036854775808)",
+      "mode": [
+        "--render"
+      ],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "1143c27920bd7e9831f5a5cb7faf5bf300761d20318f70c0dea82a60aaf1c118"
+    },
+    {
+      "fixture": "empty-text",
+      "source": "(\"\" \"a\" \"\\\"\" 100nF 10% 1mm -10mil)",
+      "mode": [],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "7a2b1f465803551a7da7ce56d7c36340a89140f06ac7b93a170de7571dc1b0ef"
+    },
+    {
+      "fixture": "empty-text",
+      "source": "(\"\" \"a\" \"\\\"\" 100nF 10% 1mm -10mil)",
+      "mode": [],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "7a2b1f465803551a7da7ce56d7c36340a89140f06ac7b93a170de7571dc1b0ef"
+    },
+    {
+      "fixture": "empty-text",
+      "source": "(\"\" \"a\" \"\\\"\" 100nF 10% 1mm -10mil)",
+      "mode": [],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "7a2b1f465803551a7da7ce56d7c36340a89140f06ac7b93a170de7571dc1b0ef"
+    },
+    {
+      "fixture": "empty-text",
+      "source": "(\"\" \"a\" \"\\\"\" 100nF 10% 1mm -10mil)",
+      "mode": [],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "7a2b1f465803551a7da7ce56d7c36340a89140f06ac7b93a170de7571dc1b0ef"
+    },
+    {
+      "fixture": "empty-text",
+      "source": "(\"\" \"a\" \"\\\"\" 100nF 10% 1mm -10mil)",
+      "mode": [],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "7a2b1f465803551a7da7ce56d7c36340a89140f06ac7b93a170de7571dc1b0ef"
+    },
+    {
+      "fixture": "empty-text",
+      "source": "(\"\" \"a\" \"\\\"\" 100nF 10% 1mm -10mil)",
+      "mode": [
+        "--render"
+      ],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "8c150ad3d4665513e10355705438422c3cd998123465a4d9281186aea869eb72"
+    },
+    {
+      "fixture": "empty-text",
+      "source": "(\"\" \"a\" \"\\\"\" 100nF 10% 1mm -10mil)",
+      "mode": [
+        "--render"
+      ],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "8c150ad3d4665513e10355705438422c3cd998123465a4d9281186aea869eb72"
+    },
+    {
+      "fixture": "empty-text",
+      "source": "(\"\" \"a\" \"\\\"\" 100nF 10% 1mm -10mil)",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "8c150ad3d4665513e10355705438422c3cd998123465a4d9281186aea869eb72"
+    },
+    {
+      "fixture": "empty-text",
+      "source": "(\"\" \"a\" \"\\\"\" 100nF 10% 1mm -10mil)",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "8c150ad3d4665513e10355705438422c3cd998123465a4d9281186aea869eb72"
+    },
+    {
+      "fixture": "empty-text",
+      "source": "(\"\" \"a\" \"\\\"\" 100nF 10% 1mm -10mil)",
+      "mode": [
+        "--render"
+      ],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "8c150ad3d4665513e10355705438422c3cd998123465a4d9281186aea869eb72"
+    },
+    {
+      "fixture": "unicode-width-65",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-65",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-65",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-65",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-65",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-65",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "179be6047b458e892c011ba194b9171b4d7d529bad9e7b978382344efd1763c7"
+    },
+    {
+      "fixture": "unicode-width-65",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "179be6047b458e892c011ba194b9171b4d7d529bad9e7b978382344efd1763c7"
+    },
+    {
+      "fixture": "unicode-width-65",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "179be6047b458e892c011ba194b9171b4d7d529bad9e7b978382344efd1763c7"
+    },
+    {
+      "fixture": "unicode-width-65",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "179be6047b458e892c011ba194b9171b4d7d529bad9e7b978382344efd1763c7"
+    },
+    {
+      "fixture": "unicode-width-65",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "179be6047b458e892c011ba194b9171b4d7d529bad9e7b978382344efd1763c7"
+    },
+    {
+      "fixture": "unicode-width-66",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-66",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-66",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-66",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-66",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-66",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "32c803920f199cc2a06a61c599f097af87498ccafd13123bcdaa2663f9b85ca1"
+    },
+    {
+      "fixture": "unicode-width-66",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "32c803920f199cc2a06a61c599f097af87498ccafd13123bcdaa2663f9b85ca1"
+    },
+    {
+      "fixture": "unicode-width-66",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "32c803920f199cc2a06a61c599f097af87498ccafd13123bcdaa2663f9b85ca1"
+    },
+    {
+      "fixture": "unicode-width-66",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "32c803920f199cc2a06a61c599f097af87498ccafd13123bcdaa2663f9b85ca1"
+    },
+    {
+      "fixture": "unicode-width-66",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "32c803920f199cc2a06a61c599f097af87498ccafd13123bcdaa2663f9b85ca1"
+    },
+    {
+      "fixture": "unicode-width-67",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-67",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-67",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-67",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-67",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-67",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "7d4944dd95222ba5550f0217f702fb503a8e0f556223794330b4d46287471c57"
+    },
+    {
+      "fixture": "unicode-width-67",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "7d4944dd95222ba5550f0217f702fb503a8e0f556223794330b4d46287471c57"
+    },
+    {
+      "fixture": "unicode-width-67",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "7d4944dd95222ba5550f0217f702fb503a8e0f556223794330b4d46287471c57"
+    },
+    {
+      "fixture": "unicode-width-67",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "7d4944dd95222ba5550f0217f702fb503a8e0f556223794330b4d46287471c57"
+    },
+    {
+      "fixture": "unicode-width-67",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "7d4944dd95222ba5550f0217f702fb503a8e0f556223794330b4d46287471c57"
+    },
+    {
+      "fixture": "unicode-width-68",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-68",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-68",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-68",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-68",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-68",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "0b58303c7b14c5bbb5c78d35c05e27db8e4849b9bf227c0ae957131b9193b2f7"
+    },
+    {
+      "fixture": "unicode-width-68",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "0b58303c7b14c5bbb5c78d35c05e27db8e4849b9bf227c0ae957131b9193b2f7"
+    },
+    {
+      "fixture": "unicode-width-68",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "0b58303c7b14c5bbb5c78d35c05e27db8e4849b9bf227c0ae957131b9193b2f7"
+    },
+    {
+      "fixture": "unicode-width-68",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "0b58303c7b14c5bbb5c78d35c05e27db8e4849b9bf227c0ae957131b9193b2f7"
+    },
+    {
+      "fixture": "unicode-width-68",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "0b58303c7b14c5bbb5c78d35c05e27db8e4849b9bf227c0ae957131b9193b2f7"
+    },
+    {
+      "fixture": "unicode-width-69",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-69",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-69",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-69",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-69",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-69",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "c48ffcb3de48e794efe42887b5c7d1310cc201c23e06d0e523b8b6383f2f2dd4"
+    },
+    {
+      "fixture": "unicode-width-69",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "c48ffcb3de48e794efe42887b5c7d1310cc201c23e06d0e523b8b6383f2f2dd4"
+    },
+    {
+      "fixture": "unicode-width-69",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "c48ffcb3de48e794efe42887b5c7d1310cc201c23e06d0e523b8b6383f2f2dd4"
+    },
+    {
+      "fixture": "unicode-width-69",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "c48ffcb3de48e794efe42887b5c7d1310cc201c23e06d0e523b8b6383f2f2dd4"
+    },
+    {
+      "fixture": "unicode-width-69",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "c48ffcb3de48e794efe42887b5c7d1310cc201c23e06d0e523b8b6383f2f2dd4"
+    },
+    {
+      "fixture": "unicode-width-70",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-70",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-70",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-70",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-70",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-70",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "164e1c9f56440c4105579b7b3430bd3960740282cbe5b82d1c8986177f8746b9"
+    },
+    {
+      "fixture": "unicode-width-70",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "164e1c9f56440c4105579b7b3430bd3960740282cbe5b82d1c8986177f8746b9"
+    },
+    {
+      "fixture": "unicode-width-70",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "164e1c9f56440c4105579b7b3430bd3960740282cbe5b82d1c8986177f8746b9"
+    },
+    {
+      "fixture": "unicode-width-70",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "164e1c9f56440c4105579b7b3430bd3960740282cbe5b82d1c8986177f8746b9"
+    },
+    {
+      "fixture": "unicode-width-70",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "164e1c9f56440c4105579b7b3430bd3960740282cbe5b82d1c8986177f8746b9"
+    },
+    {
+      "fixture": "unicode-width-71",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-71",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-71",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-71",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-71",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-71",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "c0cc29d0a593ac436a9c51300e13c97773c8f5144a69c7981940387f0f2a72b5"
+    },
+    {
+      "fixture": "unicode-width-71",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "c0cc29d0a593ac436a9c51300e13c97773c8f5144a69c7981940387f0f2a72b5"
+    },
+    {
+      "fixture": "unicode-width-71",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "c0cc29d0a593ac436a9c51300e13c97773c8f5144a69c7981940387f0f2a72b5"
+    },
+    {
+      "fixture": "unicode-width-71",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "c0cc29d0a593ac436a9c51300e13c97773c8f5144a69c7981940387f0f2a72b5"
+    },
+    {
+      "fixture": "unicode-width-71",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "c0cc29d0a593ac436a9c51300e13c97773c8f5144a69c7981940387f0f2a72b5"
+    },
+    {
+      "fixture": "unicode-width-72",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-72",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-72",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-72",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-72",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-72",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "536e73b827b8018a48ced71a64deef5617817f510a38f8f18eaddea49249fd52"
+    },
+    {
+      "fixture": "unicode-width-72",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "536e73b827b8018a48ced71a64deef5617817f510a38f8f18eaddea49249fd52"
+    },
+    {
+      "fixture": "unicode-width-72",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "536e73b827b8018a48ced71a64deef5617817f510a38f8f18eaddea49249fd52"
+    },
+    {
+      "fixture": "unicode-width-72",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "536e73b827b8018a48ced71a64deef5617817f510a38f8f18eaddea49249fd52"
+    },
+    {
+      "fixture": "unicode-width-72",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "536e73b827b8018a48ced71a64deef5617817f510a38f8f18eaddea49249fd52"
+    },
+    {
+      "fixture": "unicode-width-73",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-73",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-73",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-73",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-73",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "15fa1601daf86a114e88420f7f5faf3a327f5baf2a9d585723855af728f4fe0b"
+    },
+    {
+      "fixture": "unicode-width-73",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "chart",
+      "match": true,
+      "stdout_sha256": "c902fc50ca8893b8a09822109f537ef75b1d93a6111467cd8ed027d4b180a34a"
+    },
+    {
+      "fixture": "unicode-width-73",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "width",
+      "match": true,
+      "stdout_sha256": "c902fc50ca8893b8a09822109f537ef75b1d93a6111467cd8ed027d4b180a34a"
+    },
+    {
+      "fixture": "unicode-width-73",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-clean",
+      "match": true,
+      "stdout_sha256": "c902fc50ca8893b8a09822109f537ef75b1d93a6111467cd8ed027d4b180a34a"
+    },
+    {
+      "fixture": "unicode-width-73",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "root-width",
+      "match": true,
+      "stdout_sha256": "c902fc50ca8893b8a09822109f537ef75b1d93a6111467cd8ed027d4b180a34a"
+    },
+    {
+      "fixture": "unicode-width-73",
+      "source": "(a \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u03bb\ud83d\ude00\")",
+      "mode": [
+        "--render"
+      ],
+      "arm": "heap-effects",
+      "match": true,
+      "stdout_sha256": "c902fc50ca8893b8a09822109f537ef75b1d93a6111467cd8ed027d4b180a34a"
+    }
+  ],
+  "passed": 110
+}

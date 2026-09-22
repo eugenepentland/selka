@@ -1,0 +1,161 @@
+dsh: reasoning:
+Let me read the main.my and PROMPT.md, request.md.
+dsh: reasoning:
+Let me analyze the code.
+
+```python
+module main
+
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+def largest[T: Ordered](values: list[int]) -> int:
+    best = values[0]
+    index = 1
+    while index < len(values):
+        if values[index] > best:
+            best = values[index]
+        index = index + 1
+    return best
+
+
+def main(args: list[str], out: Stream) -> int:
+    first = number(args[0])
+    second = number(args[1])
+    third = number(args[2])
+    out.print(largest([first, second, third]))
+    return 0
+```
+
+Issues:
+1. `def largest[T: Ordered](values: list[int]) -> int:` — a generic type parameter `[T: Ordered]` that's unused, and probably the syntax is wrong or unsupported. The task says `largest` returns largest of three integers given as arguments. So probably should take three ints? Actually "returns the largest of three integers given as arguments". Hmm, the current signature takes a list. The request says change only what the request requires. The function takes a list `[first, second, third]`. Probably the generic parameter is the problem. But also `main(args: list[str], out: Stream)` — args likely includes program name? Let's check with the compiler.
+
+Let me run the checker to see the errors. Let's first check `bin/mylang check project/main.my`.
+
+Note constraint: at most 20 compiler invocations. Let me be careful. Each `bin/mylang check` and `bin/mylang run` counts presumably. Let me count carefully.
+
+Let me run check first.
+dsh: reasoning:
+Compiler invocation #1 used.
+
+The issue: `Ordered` is not a known requirement. Options: `integer` maybe? But `list[int]` doesn't need a generic parameter at all. The simplest fix: remove the generic parameter `[T: Ordered]`.
+
+But wait — the task says "`largest` returns the largest of three integers given as arguments." Hmm, the current function takes a list. The task says "given as arguments" perhaps means the program arguments. Changing only what the request requires — the minimal fix is removing the invalid generic parameter. But then, does the rest compile? Let's also think about `main(args: list[str], out: Stream)` — does args include the program name? In many languages, `args[0]` is the program name. The expected.json has 3 args, and the program reads args[0], args[1], args[2]. Need to test run behavior.
+
+Also `out.print(largest([first, second, third]))` — print of int should be fine.
+
+Let me fix the generic and check. Actually, let me think about what the "checker" is. The task says "It does not pass the checker". The checker probably runs `mylang check` plus expected outputs. So I need both compile and correct output.
+
+Let me consider: does `int(text)` return an Option? In mylang, presumably `int(text)` returns `int | None`? Let me check docs. The match on `int(text)` with `Some(value)`/`None` seems reasonable if int() returns an optional. Let me search... Actually I can't read outside the directory. Constraint: "Work only inside this directory; do not read or write anything outside it". So I can only read within the working directory: project/, public/, bin/. Hmm, there's no docs here. Let me check what's in the workspace - maybe there's a docs directory? The listing showed only PROMPT.md, bin, project, public, request.md. So no docs.
+
+So I need to rely on compiler error messages and experimentation.
+
+Let me make the minimal edit: remove `[T: Ordered]`.
+
+Actually wait — maybe the intended fix is to use the declared constraint syntax properly, but the simplest is to remove it since it's unused. The function is `largest(values: list[int]) -> int`. That's not generic. Removing is right.
+
+Let me edit and check.
+
+Compiler invocations budget: 20. Used 1. Let me be efficient.
+
+Also, the function must return the largest of three integers. If fewer than 3 args are given, `args[0]` would panic (index out of bounds). But the checker presumably always gives 3 args. "The same behavior is required for every input" — meaning for all combinations of three ints, not just examples. So handle the 3-arg case.
+
+Potential issue: does `main`'s args include the program name? In many mylang designs, `args` is the arguments after `--`. Let me check with a run.
+
+Also negative numbers: `int("-5")` — does it parse negatives? The match returns `Some(value)` or `None`. If int() only parses non-negative, negative args return 0. Hmm, "The same behavior is required for every input" might include negative numbers. The reference solution probably uses int() too, so behavior consistent.
+
+Let me now edit.
+dsh: reasoning:
+Check passes now (invocation 2). Now run the examples. Let's run:
+
+`bin/mylang run project/main.my -- 1 3 2`
+
+Invocation 3. And `-- 5 5 5` is another invocation = 4.
+
+Let me run the first one and see. Actually, let me run both in one bash command — each `bin/mylang run` is a compiler invocation, so that's 2. Total 4.
+
+But caution: does `mylang run` count as a compiler invocation? Presumably yes. Budget 20, we have room.
+
+Let me run the first example.
+dsh: reasoning:
+Interesting — `args[0]` gives "1", so args does NOT include program name. Good.
+
+Now run the second example 5 5 5, plus edge cases: negative numbers, large numbers, ordering variants.
+
+Let me test:
+- `5 5 5` -> 5
+- `3 1 2` -> 3 (max first)
+- `-5 -1 -3` -> -1 (negatives)
+- `2 3 3` -> 3
+- `1000000 999999 999998` -> 1000000
+- `0 0 0` -> 0
+
+Each run is an invocation. Let me batch a few in one bash call but each is a separate compiler invocation. That's fine, budget 20, used 3.
+
+Actually to save invocations, could use `mylang build` once and run the binary many times? `bin/mylang build project/main.my -o /tmp/...` — but the constraint says work only inside this directory; writing to /tmp is outside. I could build into the project dir. But `bin/mylang build` is one compiler invocation and then the binary can be run many times freely. That's more efficient. But careful — building may write .mylang-cache inside project, fine.
+
+Actually, "At most 20 compiler invocations are available" — so `mylang run` invocations count. Let me use `build` once and run the binary directly for many test cases. That's 1 invocation + free runs.
+
+Let me check build usage: `bin/mylang build prog.my -o prog`. Let me do that: `bin/mylang build project/main.my -o project/largest` (invocation 4). Then run with various args.
+
+Actually wait — would building count as extra risk? It's fine.
+
+Hmm, but does `mylang build` grant capabilities? "A binary from `mylang build` grants every capability too". Fine.
+
+Let me build and test extensively.
+dsh: reasoning:
+Built (invocation 4). Now test many cases with the binary directly (free).
+
+Test cases:
+- 5 5 5 -> 5
+- 1 3 2 -> 3
+- 3 2 1 -> 3
+- 1 2 3 -> 3
+- 2 1 3 -> 3
+- 2 3 1 -> 3
+- 3 1 2 -> 3
+- -5 -1 -3 -> -1
+- -1 -5 -3 -> -1
+- 0 -0 0 -> 0
+- 2147483647 -2147483648 0 -> 2147483647
+- 1000000 999999 999998 -> 1000000
+
+Note: int width — mylang ints are fixed width. Probably 64-bit. Let's test big numbers like 9223372036854775807.
+
+Also test strings that aren't numbers? "The same behavior is required for every input" likely means numeric inputs. int("abc") returns None -> 0 in the helper. That's the program's defined behavior.
+
+Let me run a batch.
+dsh: reasoning:
+All outputs correct. Now let me verify the exact commands requested: `bin/mylang run project/main.my -- 1 3 2` and `-- 5 5 5`. I already ran the first (invocation 3). Let me run the second example to confirm with the actual `run` command (invocation 5).
+
+Also should I clean up the built binary `project/largest`? The task says "Change only what the request requires." Leaving a build artifact might be untidy. The checker probably runs `bin/mylang check` and `bin/mylang run`. A stray `largest` binary in project/ might confuse nothing, but better to remove it to keep the workspace clean. However, removing it is fine since it's inside the directory.
+
+Wait — is `project/largest` a compiled binary? Let me check the size. Also, the .mylang-cache is in project/ already. Let me remove the binary at the end.
+
+Let me run the second example via mylang run (invocation 5). Then delete the binary, and do a final check (invocation 6) plus final run of both examples? Final check maybe unnecessary — already passing. But a final verification after cleanup is good. Let me plan:
+
+Invocation 5: `bin/mylang run project/main.my -- 5 5 5`
+Then rm project/largest.
+Then maybe invocation 6: final `bin/mylang check project/main.my` and run of 1 3 2 (invocation 7) to confirm final state. That's 7 total, well within 20.
+
+Actually, let me also consider edge case: fewer than 3 arguments. The checker uses public/expected.json with exactly 3 args. "Same behavior required for every input" = every 3-int input. If 0 args, `args[0]` would trap. The original program has that behavior; the request says change only what's required, so I shouldn't add arg-count handling. But hmm — could the checker test with wrong number of args? "the examples this task will be checked against" - expected.json has two cases with 3 args. The hidden tests likely also use 3 args (different values). Adding arg validation isn't required and would change behavior. Actually, would it be safer? If hidden tests expect no crash for fewer args... unlikely. The spec: "`largest` returns the largest of three integers given as arguments." So 3 args always.
+
+Also what about `int()` parsing on non-numeric? Converting to 0 is what the original code does; keep it.
+
+Let me also double check: does `mylang run` print with a trailing newline? Output "3\n" matches expected. `stream.print` adds newline presumably. Yes, since expected stdout is "3\n".
+
+Let me finish up.
+dsh: reasoning:
+Now clean up the built binary and do a final verification. Let me remove project/largest and check the final file.
+dsh: reasoning:
+There's a leftover `largest.qbe-manifest.json` from the build. Should I remove it? It's a build artifact created by my build. The original project dir had only .mylang-cache and main.my. To leave the workspace as clean as possible, remove `project/largest.qbe-manifest.json`. But wait — does removing it break anything? No, it's a manifest for the deleted binary. Let me remove it. That's not a compiler invocation.
+
+Also check .mylang-cache — is there new stuff there? It existed before (created 12:43). My build may have added to it. That's a cache, acceptable. I won't mess with it.
+
+Let me remove the manifest and view the final main.my.

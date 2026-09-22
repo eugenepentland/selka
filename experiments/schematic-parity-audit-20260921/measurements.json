@@ -1,0 +1,563 @@
+{
+  "cpu": 6,
+  "rounds": 21,
+  "warmups": 3,
+  "units": "ms",
+  "scope": "process launch, input read, SVG to private file, shutdown; no compilation",
+  "stdout_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+  "svg_bytes": 49617,
+  "input_bytes": 25845,
+  "samples": [
+    {
+      "round": 0,
+      "order": [
+        "both",
+        "prebind",
+        "unit-o3",
+        "relinked",
+        "stack",
+        "regenerated",
+        "whole-both",
+        "whole-o3"
+      ],
+      "ms": {
+        "both": 78.484761,
+        "prebind": 79.86136,
+        "unit-o3": 89.649344,
+        "relinked": 89.914443,
+        "stack": 87.770222,
+        "regenerated": 89.337355,
+        "whole-both": 78.667979,
+        "whole-o3": 89.032197
+      }
+    },
+    {
+      "round": 1,
+      "order": [
+        "whole-both",
+        "both",
+        "whole-o3",
+        "stack",
+        "prebind",
+        "relinked",
+        "regenerated",
+        "unit-o3"
+      ],
+      "ms": {
+        "whole-both": 78.476672,
+        "both": 78.419485,
+        "whole-o3": 89.442535,
+        "stack": 87.152929,
+        "prebind": 80.302317,
+        "relinked": 89.246596,
+        "regenerated": 89.458049,
+        "unit-o3": 90.988034
+      }
+    },
+    {
+      "round": 2,
+      "order": [
+        "both",
+        "whole-both",
+        "regenerated",
+        "unit-o3",
+        "whole-o3",
+        "prebind",
+        "relinked",
+        "stack"
+      ],
+      "ms": {
+        "both": 82.317604,
+        "whole-both": 78.162261,
+        "regenerated": 90.058987,
+        "unit-o3": 90.037196,
+        "whole-o3": 88.761213,
+        "prebind": 80.062241,
+        "relinked": 89.788447,
+        "stack": 88.554917
+      }
+    },
+    {
+      "round": 3,
+      "order": [
+        "relinked",
+        "regenerated",
+        "prebind",
+        "unit-o3",
+        "whole-o3",
+        "whole-both",
+        "stack",
+        "both"
+      ],
+      "ms": {
+        "relinked": 91.85153,
+        "regenerated": 91.650429,
+        "prebind": 79.531062,
+        "unit-o3": 88.827278,
+        "whole-o3": 88.263104,
+        "whole-both": 78.065049,
+        "stack": 87.043529,
+        "both": 78.274896
+      }
+    },
+    {
+      "round": 4,
+      "order": [
+        "relinked",
+        "prebind",
+        "regenerated",
+        "whole-o3",
+        "whole-both",
+        "both",
+        "stack",
+        "unit-o3"
+      ],
+      "ms": {
+        "relinked": 88.212897,
+        "prebind": 79.195451,
+        "regenerated": 88.149559,
+        "whole-o3": 87.697112,
+        "whole-both": 77.736088,
+        "both": 77.299041,
+        "stack": 87.393706,
+        "unit-o3": 88.284873
+      }
+    },
+    {
+      "round": 5,
+      "order": [
+        "prebind",
+        "whole-o3",
+        "unit-o3",
+        "stack",
+        "relinked",
+        "both",
+        "regenerated",
+        "whole-both"
+      ],
+      "ms": {
+        "prebind": 79.300492,
+        "whole-o3": 87.397456,
+        "unit-o3": 88.314028,
+        "stack": 86.514106,
+        "relinked": 88.279605,
+        "both": 77.82678,
+        "regenerated": 87.914519,
+        "whole-both": 77.980119
+      }
+    },
+    {
+      "round": 6,
+      "order": [
+        "whole-o3",
+        "relinked",
+        "both",
+        "prebind",
+        "unit-o3",
+        "stack",
+        "whole-both",
+        "regenerated"
+      ],
+      "ms": {
+        "whole-o3": 87.81352,
+        "relinked": 90.705453,
+        "both": 77.667276,
+        "prebind": 78.869279,
+        "unit-o3": 87.652461,
+        "stack": 86.307588,
+        "whole-both": 78.014259,
+        "regenerated": 88.132617
+      }
+    },
+    {
+      "round": 7,
+      "order": [
+        "regenerated",
+        "both",
+        "unit-o3",
+        "prebind",
+        "whole-o3",
+        "whole-both",
+        "relinked",
+        "stack"
+      ],
+      "ms": {
+        "regenerated": 88.039059,
+        "both": 77.937575,
+        "unit-o3": 87.805546,
+        "prebind": 81.64971,
+        "whole-o3": 87.490734,
+        "whole-both": 77.847588,
+        "relinked": 88.032738,
+        "stack": 85.830773
+      }
+    },
+    {
+      "round": 8,
+      "order": [
+        "unit-o3",
+        "both",
+        "relinked",
+        "whole-both",
+        "whole-o3",
+        "stack",
+        "prebind",
+        "regenerated"
+      ],
+      "ms": {
+        "unit-o3": 88.116817,
+        "both": 77.910959,
+        "relinked": 87.542216,
+        "whole-both": 77.711304,
+        "whole-o3": 87.044671,
+        "stack": 85.751262,
+        "prebind": 79.182069,
+        "regenerated": 87.592937
+      }
+    },
+    {
+      "round": 9,
+      "order": [
+        "stack",
+        "whole-both",
+        "both",
+        "prebind",
+        "relinked",
+        "unit-o3",
+        "whole-o3",
+        "regenerated"
+      ],
+      "ms": {
+        "stack": 86.193238,
+        "whole-both": 78.04367,
+        "both": 77.491158,
+        "prebind": 79.011838,
+        "relinked": 94.680502,
+        "unit-o3": 88.088853,
+        "whole-o3": 87.241869,
+        "regenerated": 88.021312
+      }
+    },
+    {
+      "round": 10,
+      "order": [
+        "whole-o3",
+        "stack",
+        "relinked",
+        "regenerated",
+        "prebind",
+        "whole-both",
+        "unit-o3",
+        "both"
+      ],
+      "ms": {
+        "whole-o3": 86.666578,
+        "stack": 85.758619,
+        "relinked": 90.041444,
+        "regenerated": 87.968667,
+        "prebind": 79.202289,
+        "whole-both": 78.280389,
+        "unit-o3": 108.101226,
+        "both": 101.810768
+      }
+    },
+    {
+      "round": 11,
+      "order": [
+        "relinked",
+        "unit-o3",
+        "stack",
+        "regenerated",
+        "both",
+        "prebind",
+        "whole-o3",
+        "whole-both"
+      ],
+      "ms": {
+        "relinked": 123.461322,
+        "unit-o3": 119.348979,
+        "stack": 118.763215,
+        "regenerated": 119.415254,
+        "both": 110.597983,
+        "prebind": 107.344181,
+        "whole-o3": 118.494151,
+        "whole-both": 104.980414
+      }
+    },
+    {
+      "round": 12,
+      "order": [
+        "regenerated",
+        "whole-o3",
+        "relinked",
+        "prebind",
+        "whole-both",
+        "unit-o3",
+        "both",
+        "stack"
+      ],
+      "ms": {
+        "regenerated": 125.639046,
+        "whole-o3": 123.631717,
+        "relinked": 120.435908,
+        "prebind": 115.114991,
+        "whole-both": 106.301698,
+        "unit-o3": 122.209152,
+        "both": 112.30783,
+        "stack": 116.760931
+      }
+    },
+    {
+      "round": 13,
+      "order": [
+        "stack",
+        "unit-o3",
+        "both",
+        "relinked",
+        "regenerated",
+        "whole-both",
+        "whole-o3",
+        "prebind"
+      ],
+      "ms": {
+        "stack": 127.437692,
+        "unit-o3": 129.825064,
+        "both": 104.504885,
+        "relinked": 121.737489,
+        "regenerated": 127.464325,
+        "whole-both": 110.961767,
+        "whole-o3": 120.071911,
+        "prebind": 107.19539
+      }
+    },
+    {
+      "round": 14,
+      "order": [
+        "regenerated",
+        "relinked",
+        "whole-both",
+        "stack",
+        "unit-o3",
+        "whole-o3",
+        "both",
+        "prebind"
+      ],
+      "ms": {
+        "regenerated": 121.762437,
+        "relinked": 129.957244,
+        "whole-both": 103.897664,
+        "stack": 124.570613,
+        "unit-o3": 130.563112,
+        "whole-o3": 122.086257,
+        "both": 108.642601,
+        "prebind": 110.913253
+      }
+    },
+    {
+      "round": 15,
+      "order": [
+        "relinked",
+        "stack",
+        "whole-o3",
+        "prebind",
+        "unit-o3",
+        "regenerated",
+        "both",
+        "whole-both"
+      ],
+      "ms": {
+        "relinked": 126.007284,
+        "stack": 119.53257,
+        "whole-o3": 121.802755,
+        "prebind": 113.517118,
+        "unit-o3": 89.663934,
+        "regenerated": 91.948119,
+        "both": 79.291022,
+        "whole-both": 82.041936
+      }
+    },
+    {
+      "round": 16,
+      "order": [
+        "regenerated",
+        "stack",
+        "whole-both",
+        "both",
+        "prebind",
+        "relinked",
+        "whole-o3",
+        "unit-o3"
+      ],
+      "ms": {
+        "regenerated": 90.779381,
+        "stack": 87.799829,
+        "whole-both": 78.526188,
+        "both": 77.925253,
+        "prebind": 79.141636,
+        "relinked": 89.195397,
+        "whole-o3": 89.111817,
+        "unit-o3": 89.259232
+      }
+    },
+    {
+      "round": 17,
+      "order": [
+        "whole-o3",
+        "prebind",
+        "relinked",
+        "regenerated",
+        "stack",
+        "unit-o3",
+        "both",
+        "whole-both"
+      ],
+      "ms": {
+        "whole-o3": 88.852617,
+        "prebind": 79.526474,
+        "relinked": 88.716938,
+        "regenerated": 89.33552,
+        "stack": 87.096098,
+        "unit-o3": 90.278136,
+        "both": 78.345159,
+        "whole-both": 77.884643
+      }
+    },
+    {
+      "round": 18,
+      "order": [
+        "whole-both",
+        "stack",
+        "prebind",
+        "whole-o3",
+        "relinked",
+        "unit-o3",
+        "both",
+        "regenerated"
+      ],
+      "ms": {
+        "whole-both": 77.560164,
+        "stack": 86.364668,
+        "prebind": 79.906562,
+        "whole-o3": 88.157344,
+        "relinked": 88.846744,
+        "unit-o3": 88.880183,
+        "both": 78.148615,
+        "regenerated": 88.341246
+      }
+    },
+    {
+      "round": 19,
+      "order": [
+        "unit-o3",
+        "prebind",
+        "whole-o3",
+        "regenerated",
+        "whole-both",
+        "stack",
+        "both",
+        "relinked"
+      ],
+      "ms": {
+        "unit-o3": 90.584549,
+        "prebind": 79.033109,
+        "whole-o3": 87.865829,
+        "regenerated": 88.881931,
+        "whole-both": 78.411847,
+        "stack": 86.352834,
+        "both": 77.950039,
+        "relinked": 88.689475
+      }
+    },
+    {
+      "round": 20,
+      "order": [
+        "unit-o3",
+        "whole-both",
+        "regenerated",
+        "whole-o3",
+        "relinked",
+        "stack",
+        "both",
+        "prebind"
+      ],
+      "ms": {
+        "unit-o3": 89.458802,
+        "whole-both": 81.223475,
+        "regenerated": 88.765257,
+        "whole-o3": 88.344984,
+        "relinked": 92.437224,
+        "stack": 87.058065,
+        "both": 77.972189,
+        "prebind": 78.920028
+      }
+    }
+  ],
+  "median_ms": {
+    "unit-o3": 89.649344,
+    "relinked": 89.914443,
+    "regenerated": 89.33552,
+    "stack": 87.096098,
+    "prebind": 79.531062,
+    "both": 78.274896,
+    "whole-o3": 88.344984,
+    "whole-both": 78.280389
+  },
+  "ratios_to_regenerated": {
+    "unit-o3": {
+      "ratio": 1.0035128692372306,
+      "paired_bootstrap_95": [
+        0.9875518318416381,
+        1.017209599029608
+      ]
+    },
+    "relinked": {
+      "ratio": 1.0064803227204588,
+      "paired_bootstrap_95": [
+        0.9969959688753772,
+        1.0400001773138796
+      ]
+    },
+    "regenerated": {
+      "ratio": 1.0,
+      "paired_bootstrap_95": [
+        1.0,
+        1.0
+      ]
+    },
+    "stack": {
+      "ratio": 0.9749324568771749,
+      "paired_bootstrap_95": [
+        0.9662247953034677,
+        0.9874528016640447
+      ]
+    },
+    "prebind": {
+      "ratio": 0.8902512908639252,
+      "paired_bootstrap_95": [
+        0.8797301669197326,
+        0.9045215640268419
+      ]
+    },
+    "both": {
+      "ratio": 0.8761900753474093,
+      "paired_bootstrap_95": [
+        0.863028125296426,
+        0.8887753936466092
+      ]
+    },
+    "whole-o3": {
+      "ratio": 0.988912181851071,
+      "paired_bootstrap_95": [
+        0.9800588141192393,
+        0.9979182770412814
+      ]
+    },
+    "whole-both": {
+      "ratio": 0.8762515626483173,
+      "paired_bootstrap_95": [
+        0.8650222895879848,
+        0.8867005335783926
+      ]
+    }
+  }
+}

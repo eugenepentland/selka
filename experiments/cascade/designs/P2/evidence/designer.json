@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "arm": "P2",
+  "finished_utc": "2026-09-19T02:06:17.375313+00:00",
+  "session": {
+    "command": [
+      "dsh",
+      "--profile",
+      "headless",
+      "# Designer brief \u2014 generalised reuse (arm P2, the control)\n\nYou are designing a small S-expression reader written in mylang. `project/` holds\nthe current implementation, its guest tests and its `CONTRACT.md`; `bin/mylang`\nis the installed compiler; `docs/` is the language documentation.\n\nYour job is to make the reader **maximally reusable**: turn the assumptions it\nhappens to bake in into parameters, hooks and policies, so that the same code can\nserve readers and printers that differ from this one in as many ways as possible.\n\nDirections to work in \u2014 take them as far as the code allows:\n\n- dialect parameters, so a caller can select comment syntax, atom characters and\n  number conventions rather than editing the lexer;\n- pluggable number policies, so the scale table, the unit table and the\n  normalisation rule are supplied rather than compiled in;\n- a callback-driven printer, so a caller can choose the layout policy, the\n  indentation, the number formatting and the line-ending behaviour;\n- whatever else generalisation suggests: configuration for the depth cap, for\n  the string escape rule, for the token set.\n\nBreadth is the point of this arm. Where a default keeps the current behaviour,\nsupply the current behaviour as the default.\n\n## Invariants\n\n- The public surface stays: `main.my`, the modules `sexpr.ast`, `sexpr.tokenizer`,\n  `sexpr.parser`, `sexpr.printer`, and the public names they export today. Other\n  code \u2014 and the tests you were given \u2014 import those names.\n- The reader's observable behaviour stays: the same tokens, the same AST values,\n  the same canonical renderings, the same diagnostics, with the defaults in\n  place.\n- `project/tests` \u2014 all 79 tests \u2014 must pass unchanged. If a test would have to\n  change, the default behaviour changed and the design is wrong.\n\n## Deliverables\n\n1. The generalised `project/` in place: it must pass\n\n   ```sh\n   ../bin/mylang test project/tests\n   ../bin/mylang run project/main.my -- <file.sexp> --render\n   ```\n\n2. `DESIGN.md` at the top of this working copy: the extension points the design\n   adds, what a caller can now vary without touching the reader, and what each\n   new parameter defaults to. Keep it to a page; say what is true of the code as\n   it now stands, not what you intended.\n3. A short final message: what you changed, and the exact commands you ran with\n   their results.\n\nWork only inside this working copy: do not read or write anything outside it \u2014\nnothing else is needed and nothing else is part of the task. Do not spawn\nsubagents.\n"
+    ],
+    "started_utc": "2026-09-19T01:45:35.849027+00:00",
+    "finished_utc": "2026-09-19T02:06:17.374743+00:00",
+    "seconds": 1241.525721,
+    "timed_out": false,
+    "exit": 0,
+    "logs": [
+      "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-cascade-work-design-P2--/session-47996e62-4db0-405e-acbb-172347a28fb9/session.v3.jsonl.zstd"
+    ],
+    "session_dirs": [
+      "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-cascade-work-design-P2--/session-47996e62-4db0-405e-acbb-172347a28fb9"
+    ],
+    "sessions": 1,
+    "usage": {
+      "inputTokens": 110631,
+      "outputTokens": 143613,
+      "reasoningTokens": 91982,
+      "cacheReadTokens": 19620224,
+      "totalTokens": 19874468,
+      "cost_v1_input_output_reasoning": 346226,
+      "cost_v2_input_output": 254244,
+      "provider_total_tokens": 19874468
+    },
+    "models": {
+      "deepseek-v4-flash": 124
+    },
+    "efforts": {
+      "max": 1
+    },
+    "delegation_depth": 0,
+    "turns": 1,
+    "steps": 123,
+    "tool_calls": {
+      "bash": 68,
+      "read": 26,
+      "grep": 1,
+      "todo_write": 2,
+      "write": 8,
+      "edit": 29
+    },
+    "first_event_ms": 1789782338265,
+    "last_event_ms": 1789783577298,
+    "log_seconds": 1239.033
+  }
+}

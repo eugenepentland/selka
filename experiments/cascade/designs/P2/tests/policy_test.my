@@ -1,0 +1,215 @@
+module tests.policy_test
+
+# Tests for the parser's extension points: the number policy (scale table,
+# unit-letter table, dimension suffixes and their normalisation factors), the
+# nesting-cap option and the dialect-derived diagnostics. The default path is
+# covered by tests/parser_test.my, which is unchanged.
+
+import sexpr.ast as ast
+import sexpr.parser as parser
+import sexpr.tokenizer as tk
+
+
+# ── helpers ───────────────────────────────────────────────────────────
+
+def parse_with_options(src: bytes, options: parser.ParseOptions) -> list[ast.Node]:
+    match parser.parse_with(src, options):
+        case Ok(nodes):
+            return nodes
+        case Err(_):
+            empty: list[ast.Node] = []
+            return empty
+
+
+def parse_default(src: bytes) -> list[ast.Node]:
+    match parser.parse(src):
+        case Ok(nodes):
+            return nodes
+        case Err(_):
+            empty: list[ast.Node] = []
+            return empty
+
+
+def error_with(src: bytes, options: parser.ParseOptions) -> parser.ParseError:
+    match parser.parse_with(src, options):
+        case Ok(_):
+            return parser.ParseError(message="<ok>", line=0, col=0, offset=0)
+        case Err(problem):
+            return problem
+
+
+def child_kind(nodes: list[ast.Node], index: int) -> int:
+    match ast.children(nodes[0])[index]:
+        case ast.Node.form(_, _):
+            return 0
+        case ast.Node.atom(_, _):
+            return 1
+        case ast.Node.string(_, _):
+            return 2
+        case ast.Node.integer(_, _):
+            return 3
+        case ast.Node.decimal(_, _, _):
+            return 4
+        case ast.Node.measure(_, _):
+            return 5
+
+
+def child_number(nodes: list[ast.Node], index: int) -> float:
+    match ast.as_number(ast.children(nodes[0])[index]):
+        case Some(value):
+            return value
+        case None:
+            return -1.0
+
+
+def child_value_text(nodes: list[ast.Node], index: int) -> str:
+    match ast.value_text(ast.children(nodes[0])[index]):
+        case Some(value):
+            return value
+        case None:
+            return "<none>"
+
+
+def child_text(nodes: list[ast.Node], index: int) -> str:
+    match ast.as_text(ast.children(nodes[0])[index]):
+        case Some(value):
+            return value
+        case None:
+            return "<none>"
+
+
+def close(actual: float, expected: float) -> bool:
+    difference = actual - expected
+    if difference < 0.0:
+        difference = -difference
+    magnitude = expected
+    if magnitude < 0.0:
+        magnitude = -magnitude
+    return difference <= 0.000001 + 0.000000001 * magnitude
+
+
+def deep_source(depth: int) -> bytes:
+    out: bytes = b"("
+    while len(out) < depth:
+        out = out + out
+    return out[0:depth]
+
+
+# ── options under test ────────────────────────────────────────────────
+
+def tera_policy() -> tk.NumberPolicy:
+    return tk.NumberPolicy(
+        scales=[tk.ScaleRule(letter="T", factor=1e12), tk.ScaleRule(letter="k", factor=1e3), tk.ScaleRule(letter="m", factor=1e-1, requires_unit=True)],
+        unit_letters=["X"],
+        dimensions=[tk.DimensionRule(suffix="in", to_mm=25.4), tk.DimensionRule(suffix="thou", to_mm=0.0254)],
+    )
+
+
+def tera_options() -> parser.ParseOptions:
+    return replace(parser.default_parse_options(), dialect=replace(tk.default_dialect(), numbers=tera_policy()))
+
+
+def mil_as_mm_options() -> parser.ParseOptions:
+    base = tk.default_number_policy()
+    dimensions = [tk.DimensionRule(suffix="mm", to_mm=1.0), tk.DimensionRule(suffix="mil", to_mm=1.0)]
+    return replace(parser.default_parse_options(), dialect=replace(tk.default_dialect(), numbers=replace(base, dimensions=dimensions)))
+
+
+def small_cap(cap: int) -> parser.ParseOptions:
+    return replace(parser.default_parse_options(), max_depth=cap)
+
+
+def square_options() -> parser.ParseOptions:
+    return replace(parser.default_parse_options(), dialect=replace(tk.default_dialect(), syntax=replace(tk.Syntax(), open_bracket="[", close_bracket="]")))
+
+
+def cr_options() -> parser.ParseOptions:
+    return replace(parser.default_parse_options(), dialect=replace(tk.default_dialect(), syntax=replace(tk.Syntax(), newline="\r")))
+
+
+# ── number policy ─────────────────────────────────────────────────────
+
+public def test_custom_scale_is_applied() -> bool:
+    nodes = parse_with_options(b"(r 2T)", tera_options())
+    return len(nodes) == 1 and child_kind(nodes, 1) == 4 and close(child_number(nodes, 1), 2e12) and child_value_text(nodes, 1) == "2T"
+
+
+public def test_custom_scale_defaults_to_an_atom() -> bool:
+    nodes = parse_default(b"(r 2T)")
+    return child_kind(nodes, 1) == 1 and child_value_text(nodes, 1) == "2T"
+
+
+public def test_custom_unit_letter_is_scaled() -> bool:
+    # tera policy: `m` requires a unit letter and `X` is one, so `10mX` is 1.0.
+    nodes = parse_with_options(b"(v 10mX)", tera_options())
+    return child_kind(nodes, 1) == 4 and close(child_number(nodes, 1), 1.0) and child_value_text(nodes, 1) == "10mX"
+
+
+public def test_custom_dimension_normalises() -> bool:
+    nodes = parse_with_options(b"(d 1in)", tera_options())
+    return child_kind(nodes, 1) == 5 and close(child_number(nodes, 1), 25.4)
+
+
+public def test_custom_dimension_thou() -> bool:
+    nodes = parse_with_options(b"(d 2thou)", tera_options())
+    return child_kind(nodes, 1) == 5 and close(child_number(nodes, 1), 0.0508)
+
+
+public def test_normalisation_rule_is_the_callers() -> bool:
+    # The same source normalises to 10.0 under a caller's table and 0.254 under
+    # the ported one: `mil` carries no built-in meaning any more.
+    custom = parse_with_options(b"(d 10mil)", mil_as_mm_options())
+    baseline = parse_default(b"(d 10mil)")
+    return child_kind(custom, 1) == 5 and close(child_number(custom, 1), 10.0) and close(child_number(baseline, 1), 0.254)
+
+
+# ── the nesting cap ───────────────────────────────────────────────────
+
+public def test_depth_cap_is_an_option() -> bool:
+    # The k-th `(` enters parse_list at depth k-1, so 8 parens under cap 8
+    # reach EOF while the 9th trips the cap at depth 8, located at 1:9.
+    too_deep = error_with(deep_source(9), small_cap(8))
+    unclosed = error_with(deep_source(8), small_cap(8))
+    return too_deep.message.find("too deep") >= 0 and too_deep.line == 1 and too_deep.col == 9 and too_deep.offset == 8 and unclosed.message.find("never closed") >= 0
+
+
+public def test_default_cap_leaves_a_nine_deep_run_alone() -> bool:
+    return error_with(deep_source(9), parser.default_parse_options()).message.find("never closed") >= 0
+
+
+# ── dialect-driven parsing and diagnostics ────────────────────────────
+
+public def test_square_brackets_parse_as_forms() -> bool:
+    nodes = parse_with_options(b"[a b]", square_options())
+    return len(nodes) == 1 and len(ast.children(nodes[0])) == 2 and child_text(nodes, 0) == "a"
+
+
+public def test_unclosed_bracket_names_the_dialect() -> bool:
+    problem = error_with(b"[a b", square_options())
+    return problem.message.find("a '[' was never closed") >= 0 and problem.line == 1 and problem.col == 1 and problem.offset == 0
+
+
+public def test_stray_close_bracket_names_the_dialect() -> bool:
+    problem = error_with(b"[a] ]", square_options())
+    return problem.message.find("unexpected ']'") >= 0 and problem.message.find("no matching '[' is open here") >= 0 and problem.line == 1 and problem.col == 5
+
+
+public def test_default_diagnostics_are_unchanged() -> bool:
+    problem = error_with(b"(a) )", parser.default_parse_options())
+    return problem.message.find("unexpected ')'") >= 0 and problem.message.find("no matching '(' is open here") >= 0
+
+
+public def test_newline_byte_shapes_diagnostics() -> bool:
+    src = b"(a\r\n ]"
+    custom = error_with(src, cr_options())
+    baseline = error_with(src, parser.default_parse_options())
+    return custom.line == 2 and custom.col == 3 and baseline.line == 2 and baseline.col == 2
+
+
+# ── the default options are the ported parser ─────────────────────────
+
+public def test_default_options_match_parse() -> bool:
+    src = b"(a 220k 1.5mm)"
+    explicit = parse_with_options(src, parser.default_parse_options())
+    baseline = parse_default(src)
+    return len(explicit) == 1 and len(baseline) == 1 and child_kind(explicit, 1) == child_kind(baseline, 1) and close(child_number(explicit, 1), child_number(baseline, 1))

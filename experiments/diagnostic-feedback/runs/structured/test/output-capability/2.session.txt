@@ -1,0 +1,5 @@
+Fixed.
+
+**What changed** (`project/main.my`): `banner` was calling bare `print(...)`, which the checker rejects with `E_OUTPUT_CAPABILITY`. Printing must go through a `Stream` parameter, so the helper now takes `out: Stream` and calls `out.print("==", text)`, and `main` threads its own `out` stream into the call: `banner(out, "ok")`.
+
+**Command run:** `./bin/mylang run project/main.my` → exit 0, stdout is exactly `== ok\n` (verified with `od -c`). `./bin/mylang check project/main.my` also exits 0.

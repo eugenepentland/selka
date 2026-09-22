@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "backend": "llvm",
+  "opt": "3",
+  "lto": true,
+  "source": "examples/arena-managed/main.my",
+  "binary_sha256": "bd24f7cebb964e34f17ee5e9c1dfe300bf8544a16deb64358c941732920f31e4",
+  "runs": [
+    {
+      "flags": [],
+      "returncode": 38,
+      "stdout": "38\n",
+      "stderr": ""
+    },
+    {
+      "flags": [
+        "--gc-stress"
+      ],
+      "returncode": 38,
+      "stdout": "38\n",
+      "stderr": ""
+    }
+  ]
+}

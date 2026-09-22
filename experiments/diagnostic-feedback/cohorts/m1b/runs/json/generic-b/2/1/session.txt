@@ -1,0 +1,14 @@
+**What I changed:** In `project/main.my`, the generic parameter `[T: Sortable]` on `biggest` and `biggest_of` was invalid ("Sortable" is not one of the accepted requirements: copy, equality, integer, codec, storable). Since `T` was unused — both signatures already take `list[int]` and return `int` — I removed the bogus parameter from both definitions. Nothing else was touched.
+
+**Command and result:**
+```
+$ bin/mylang check project/main.my
+[exit: 0]
+```
+```
+$ bin/mylang run project/main.my -- 1 3 2
+3
+$ bin/mylang run project/main.my -- 5 5 5
+5
+```
+Also verified `-7 -9 -8 → -7`, `10 -3 4 → 10`, `-1 -2 -3 → -1`, `3 2 1 → 3`; all exit 0 and match `public/expected.json` (including the trailing newline).

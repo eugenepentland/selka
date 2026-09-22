@@ -1,0 +1,21 @@
+Fixed `project/main.my`. The bug was a type error: `lookup("five")` returns `Result[int, str]`, but it was added directly to the `int` bonus. I unwrapped the result with a `match` (the language has no `unwrap` method or tuple-style access) and added the `Ok` payload to `bonus`.
+
+```mylang
+    bonus = 0
+    value = 0
+    match lookup("five"):
+        case Ok(n):
+            value = n
+        case Err(_):
+            value = 0
+    score = bonus + value
+    out.print(score)
+```
+
+Verified command:
+
+```
+$ bin/mylang run project/main.my
+5
+```
+exit code 0 (`bin/mylang check project/main.my` also exits 0), and the temporary scratch files I used to probe the `Result` API were removed.

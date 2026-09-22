@@ -1,0 +1,23 @@
+Fixed.
+
+**What changed:** `project/main.my` — `exceeds` declared `-> int` but returned the raw `bool` from `a > b` (`E_TYPE: expected int, found bool`). Replaced the body with an explicit integer result:
+
+```python
+def exceeds(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+**Command and result:** `bin/mylang check project/main.my` → exit 0, no diagnostics. Then, for every input tried:
+
+```
+bin/mylang run project/main.my -- 5 2   -> 1
+bin/mylang run project/main.my -- 2 5   -> 0
+bin/mylang run project/main.my -- 0 0   -> 0
+bin/mylang run project/main.my -- 9 9   -> 0
+bin/mylang run project/main.my -- 100 12 -> 1
+bin/mylang run project/main.my -- -5 -9 -> 1
+```
+
+Both `public/expected.json` cases match exactly (`"1\n"`, `"0\n"`); 10 of 20 compiler invocations used.

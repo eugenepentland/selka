@@ -1,0 +1,7 @@
+**What I changed:** Added the missing `case Shape.square(side): return side * side` arm to `area` in `project/main.my`. The checker rejected the match as non-exhaustive (`E_INCOMPLETE_MATCH`: variant `square` unhandled); the circle arm was already correct (`3 * radius * radius`).
+
+**Commands and results:**
+- `bin/mylang check project/main.my` → exit 0 (was exit 1 with `E_INCOMPLETE_MATCH` before the fix)
+- `bin/mylang run project/main.my -- circle 2` → `12`
+- `bin/mylang run project/main.my -- square 3` → `9`
+- Also verified general behavior across `0, 1, 2, 5, 10, 123, -4` for both shapes against `3*r*r` / `r*r` — all matched, no mismatches.

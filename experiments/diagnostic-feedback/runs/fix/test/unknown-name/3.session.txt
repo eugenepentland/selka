@@ -1,0 +1,3 @@
+Fixed the `E_UNKNOWN_NAME` in `project/main.my`: the `pick` function's parameter is `bonus`, so `return total + reward` became `return total + bonus` (unchanged logic: 10 + 5 = 15).
+
+Command: `bin/mylang run project/main.my` → printed `15`, exit 0.

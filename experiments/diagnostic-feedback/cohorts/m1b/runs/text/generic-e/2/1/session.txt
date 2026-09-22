@@ -1,0 +1,10 @@
+Done.
+
+**What I changed:** In `project/main.my`, the two functions declared generic parameters constrained by `Ordered`, which is not a valid requirement in mylang (valid: `copy`, `equality`, `integer`, `codec`, `storable`). Since `T` was unused — both functions operate on `list[int]` — I removed the spurious clauses: `def top[T: Ordered](...)` → `def top(...)` and `def top_of[T: Ordered](...)` → `def top_of(...)`. No other logic changed.
+
+**Command and result:**
+- `bin/mylang check project/main.my` → exit 0 (was `error[E_GENERIC_REQUIREMENT]` before)
+- `bin/mylang run project/main.my -- 1 3 2` → `3` (exit 0)
+- `bin/mylang run project/main.my -- 5 5 5` → `5` (exit 0)
+
+Also spot-checked variations (`-1 -3 -2`→`-1`, `7 7 2`→`7`, `2 9 9`→`9`, `0 -5 3`→`3`, `100 100 100`→`100`), all correct.

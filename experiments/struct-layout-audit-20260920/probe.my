@@ -1,0 +1,60 @@
+record Example:
+    a: u8
+    b: float
+    c: u8
+    d: u32
+
+
+# A separate source type, used to measure the proposed physical order.
+record ReorderedExample:
+    b: float
+    d: u32
+    a: u8
+    c: u8
+
+
+record Pair:
+    used: int
+    unused: int
+
+
+class Counter:
+    n: int
+
+
+def bump(counter: Counter) -> int:
+    counter.n = counter.n + 1
+    return counter.n
+
+
+public def first(value: Example) -> u8:
+    return value.a
+
+
+public def local_projection(value: int) -> int:
+    p = Pair(used=value, unused=42)
+    return p.used
+
+
+public def dead_initializer(value: int) -> int:
+    p = Pair(used=7, unused=10 // value)
+    return p.used
+
+
+def main() -> int:
+    original = Example(a=u8(1), b=2.0, c=u8(3), d=u32(4))
+    reordered = ReorderedExample(a=u8(1), b=2.0, c=u8(3), d=u32(4))
+    copied = original
+    copied.a = u8(9)
+    items = [original, copied]
+    counter = Counter(0)
+    ordered = Pair(unused=bump(counter), used=bump(counter))
+    if original.a != u8(1) or items[1].a != u8(9):
+        return 1
+    if reordered.b != original.b or reordered.d != original.d:
+        return 2
+    if ordered.used != 2 or ordered.unused != 1 or counter.n != 2:
+        return 3
+    if first(original) != u8(1) or local_projection(13) != 13:
+        return 4
+    return 0

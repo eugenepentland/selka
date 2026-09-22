@@ -1,0 +1,14 @@
+module main
+
+
+def largest[T: Ordered](items: list[int]) -> int:
+    best = items[0]
+    for item in items:
+        if item > best:
+            best = item
+    return best
+
+
+def main(out: Stream) -> int:
+    out.print(largest([1, 3, 2]))
+    return 0

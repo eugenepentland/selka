@@ -1,0 +1,13 @@
+{
+  "id": "dev-variant",
+  "split": "dev",
+  "family": "variant-coverage",
+  "code": "E_INCOMPLETE_MATCH",
+  "observed_codes": [
+    "E_INCOMPLETE_MATCH"
+  ],
+  "version": 1,
+  "public_inputs": 2,
+  "hidden_inputs": 4,
+  "structural": ""
+}

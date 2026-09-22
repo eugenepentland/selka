@@ -1,0 +1,10 @@
+module main
+
+
+def above(a: int, b: int) -> int:
+    return a > b
+
+
+def main(out: Stream) -> int:
+    out.print(above(5, 2))
+    return 0

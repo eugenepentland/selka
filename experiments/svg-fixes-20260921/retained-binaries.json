@@ -1,0 +1,6 @@
+{
+  ".tmp/full-svg-benchmark-20260921/mylang-o3": "d9eeddfadfaad1509ef828a32afb7fcac9fdbd4a277cc8c670b5324bfb7e54b8",
+  ".tmp/full-svg-benchmark-20260921/mylang-o3-lto": "84c590c3d7169642a4782d36ca4ec44219d664c461f658089c6b48ebf3c8e077",
+  ".tmp/full-svg-benchmark-20260921/mylang-o3-bounded": "f6f43ce5acd5cd7ca3951d3eac2df7f198086a7349beeee357c0d8a3869d0649",
+  ".tmp/full-svg-benchmark-20260921/netlisp-llvm-fast": "6006ae5a1fc4e6a009fd9e5e2c138f885ae6211ffa01fe05731b76566e4e7316"
+}

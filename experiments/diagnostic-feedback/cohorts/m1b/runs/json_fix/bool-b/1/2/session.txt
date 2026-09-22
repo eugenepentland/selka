@@ -1,0 +1,17 @@
+**What I changed:** In `project/main.my`, `exceeds` returned a `bool` (`bigger = a > b`) from a function declared `-> int`, which failed to compile with `E_TYPE` ("expected int, found bool"). The compiler's suggested fix (`return 1 if condition else 0`) is not actually parseable by this language (`E_SYNTAX`), so I replaced the body with an explicit branch:
+
+```python
+def exceeds(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+`number` and `main` were left untouched.
+
+**Exact command and result:** the public cases were run programmatically and all passed:
+
+- `bin/mylang run project/main.my -- 5 2` → stdout `1`, exit 0 ✅
+- `bin/mylang run project/main.my -- 2 5` → stdout `0`, exit 0 ✅
+
+Extra edge cases also gave correct results: `5 5` → `0`, `10 -2` → `1`, `-3 -5` → `1`, `abc 5` → `0`, `0 0` → `0`. `bin/mylang check project/main.my` exits 0. All scratch files were removed; `project/` contains only `main.my`.

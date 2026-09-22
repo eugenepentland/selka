@@ -1,0 +1,19 @@
+Fixed `project/main.my`: `main` was adding `-3` to the `Result` itself (the `E_TYPE` error). I now match on the result — `Ok(value)` prints `-3 + value`, `Err(_)` prints `-1` — leaving `to_int` unchanged.
+
+Command and result:
+
+```
+./bin/mylang check project/main.my && for a in 41 0 abc -5 3.5 ""; do ./bin/mylang run project/main.my -- "$a"; done
+```
+
+```
+check exit=0
+[41] -> 38 (exit=0)
+[0] -> -3 (exit=0)
+[abc] -> -1 (exit=0)
+[-5] -> -8 (exit=0)
+[3.5] -> -1 (exit=0)
+[] -> -1 (exit=0)
+```
+
+Both `public/expected.json` cases match, and every non-integer argument prints `-1` with a clean, warning-free check (12 of 20 compiler invocations used).

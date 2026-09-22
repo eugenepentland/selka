@@ -1,0 +1,8 @@
+module main
+
+import utils.helper as helper
+
+
+def main(out: Stream) -> int:
+    out.print(helper.answer())
+    return 0

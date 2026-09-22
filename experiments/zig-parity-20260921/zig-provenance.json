@@ -1,0 +1,53 @@
+{
+  "version": "zig-sexpr-comparators-v1",
+  "date": "2026-09-21",
+  "scope": "matched S-expression census and canonical width-72 rendering; not schematic SVG",
+  "toolchain": {
+    "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "version": "0.17.0-dev.1683+5ceec001b",
+    "target": "native default",
+    "explicit_cpu_flags": []
+  },
+  "source": {
+    "directory": "experiments/sexpr-port/zig-bench",
+    "eda_revision": "2a8d901174255ff8fa3e4840acd35a041e39c9a8",
+    "matches_read_only_sibling_worktree": true,
+    "driver_sha256": "574ddb8528c695bb089e091f6041f8a5e5b77dcc1f3b6602abdbc9002a5e345f",
+    "build_zig_sha256": "f7f49c78118d053bd58e5adbee99288745be1492cd52fd738fcc8955c390ad1c",
+    "closure_sha256": {
+      "src/sexpr/ast.zig": "fe4bdeba43a9e08b8df0816f0dacc2e7d91899a7b86237a6d8604818e5d95cb4",
+      "src/sexpr/tokenizer.zig": "c8a2b4e9091dc57b750f1b4114b223cab547376a90d29bf28fdd64e589ed1565",
+      "src/sexpr/parser.zig": "fdc9d75eda7dc356f070322f753415a409238034e9ec1d682d7a8ad21ee68185",
+      "src/sexpr/printer.zig": "099143bd3d37b90e805e8afdaf1b9fe0889b3909da67a4bfb978946c6882663e",
+      "src/infra/fs.zig": "573e43be7a2e2bcc711d8bc524d2b0ec0d9b96324da9a9a653b1f8709f43bcf4"
+    }
+  },
+  "comparators": {
+    "release_fast": {
+      "artifact": ".tmp/zig-parity-20260921/install/bin/zig-bench",
+      "bytes": 4251432,
+      "sha256": "8b41730e5680b4b5c6e778262932b0aa26e25b41decea66b15766ebba3a9ec48",
+      "build_command": "ZIG_LOCAL_CACHE_DIR=/home/epentland/ai/canopy/mylang/.tmp/zig-parity-20260921/local-cache ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/mylang/.tmp/zig-parity-20260921/global-cache /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build -Doptimize=ReleaseFast -p /home/epentland/ai/canopy/mylang/.tmp/zig-parity-20260921/install"
+    },
+    "release_safe": {
+      "artifact": ".tmp/zig-parity-20260921/install-safe/bin/zig-bench",
+      "bytes": 3957912,
+      "sha256": "9d8f00cfa39fc816e18aaa780e8cd93cffb3a8fccf2748ba0e0075fa583ffac9",
+      "build_command": "ZIG_LOCAL_CACHE_DIR=/home/epentland/ai/canopy/mylang/.tmp/zig-parity-20260921/local-cache-safe ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/mylang/.tmp/zig-parity-20260921/global-cache-safe /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build -Doptimize=ReleaseSafe -p /home/epentland/ai/canopy/mylang/.tmp/zig-parity-20260921/install-safe"
+    }
+  },
+  "inputs": {
+    "input.sexp": {"bytes": 927415, "sha256": "0a670a08470e5b19d67272bca2186a369f8bc826a724a5d2ffe574a62932ee49"},
+    "input8.sexp": {"bytes": 7419320, "sha256": "368ebdee5164fdba21ef4c0c08bbc6467b54b4b07709ab8d9b1799349a41d797"}
+  },
+  "correctness_both_modes": {
+    "input.sexp_census": "forms=4050 nodes=15105 atoms=4775 strings=5010 ints=660 floats=610 measures=0 max_depth=6 value_sum=6544.652350000007",
+    "input8.sexp_census": "forms=32400 nodes=120840 atoms=38200 strings=40080 ints=5280 floats=4880 measures=0 max_depth=6 value_sum=52357.21879999973",
+    "input.sexp_render_sha256": "78a74270e2ec8842471e8e1ec5f94c8a42c631f0addec5ac2ec4bb97870240a7",
+    "input8.sexp_render_sha256": "e8c07a29632c947f031988034b44a63effea51fb93754461f5450a5daeb223dc"
+  },
+  "full_svg_reference": {
+    "exists": false,
+    "note": "The sibling EDA renderer uses a different model and SVG contract."
+  }
+}

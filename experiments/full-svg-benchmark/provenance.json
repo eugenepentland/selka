@@ -1,0 +1,375 @@
+{
+  "date": "2026-09-21",
+  "mylang_head": "b8f6ec3f1178f12971e7dcb1d2255ab8c055b024",
+  "mylang_working_tree": "preexisting dirty workspace; guest/provider/compiler/adapter hashes below identify measured inputs",
+  "files": {
+    "src/schematic/guest/circuit.my": {
+      "bytes": 10211,
+      "sha256": "15fb89234a2a0130aa4f1d76304c63b8723dda3c33521601196a0de90fd55083"
+    },
+    "src/schematic/guest/draw.my": {
+      "bytes": 2211,
+      "sha256": "cc93575469d5869d5d010f5375b792f880d7b59e9c1fde0ab7f8bdb9c27aff39"
+    },
+    "src/schematic/guest/io.my": {
+      "bytes": 1282,
+      "sha256": "b30320cff9c1b8e2af86b0027a7c9c4d8ceaa6cea75840a3882b80b99dcd0c8b"
+    },
+    "src/schematic/guest/layout.my": {
+      "bytes": 12231,
+      "sha256": "180ce7b111b2334935d1a2cf6070e7cf3edb0fb309adfaf8d293c2b2b34fb549"
+    },
+    "src/schematic/guest/layout_graph.my": {
+      "bytes": 4173,
+      "sha256": "3b58233831261d8fdd415b42000e91d4e9e2baae9cc4c59e0f903e49cf0518b2"
+    },
+    "src/schematic/guest/layout_routes.my": {
+      "bytes": 11838,
+      "sha256": "562fb4143354da0e50b81376c09240c9bf15d8248ffed23f15cb70287b0d900f"
+    },
+    "src/schematic/guest/main.my": {
+      "bytes": 426,
+      "sha256": "2ce7ad379f1affa24a3350bf6926a261c686be830272e853f0cb51fc65ad68f5"
+    },
+    "src/schematic/guest/ports.my": {
+      "bytes": 5900,
+      "sha256": "33af913725014537942feb1fd6f533328aed02a04ddd39a03c9fc33526d6e74a"
+    },
+    "src/schematic/guest/schematic.my": {
+      "bytes": 1234,
+      "sha256": "99fd4f3ab0bdbfc5efe85717e3498d9d7918d1ab4b1763ae0ee59b824811ac70"
+    },
+    "src/schematic/guest/schematic_inputs.my": {
+      "bytes": 179,
+      "sha256": "1ee50b10f9ca81dbc9733bacecba7c92e94bbc00e4c0ea9b4a8f68c38eb378b0"
+    },
+    "src/schematic/guest/sexpr.my": {
+      "bytes": 3942,
+      "sha256": "12ce2fe2008edceea05ec7e7d466eae32ff0545059c4fb7770edd530117958f6"
+    },
+    "src/schematic/guest/svg.my": {
+      "bytes": 8844,
+      "sha256": "373f897e38c1da3aed32fdb96df742ab1bb8b2b6e811c2be1e473b88dfd6a53e"
+    },
+    "src/schematic/guest/text.my": {
+      "bytes": 3313,
+      "sha256": "94588bbf7e8230c35b427e2617f2f2bb2c6f7d076412957016565ce31ba4076a"
+    },
+    "src/schematic/guest/validate.my": {
+      "bytes": 7032,
+      "sha256": "b611d8ce0ba381fbe781a8f6ce99723b79f39d50fb346bfb02a62897c34701cb"
+    },
+    "src/schematic/native_schematic.c": {
+      "bytes": 7583,
+      "sha256": "bb294b0060993df79e2814c562307fb2eaffd5df957f850960ab190edea10fc0"
+    },
+    "zig-out/bin/mylang": {
+      "bytes": 36889600,
+      "sha256": "73211569d843a7eb780b77a10644d288996c810fd600f85d93385739f54bd6b3"
+    },
+    "zig-out/lib/mylang-llvm/amd64_sysv.py": {
+      "bytes": 1051,
+      "sha256": "1d0252b37ec42904808f879590b9100292720c746efc3d9c85b537c001422919"
+    },
+    "zig-out/lib/mylang-llvm/llvm_emit.py": {
+      "bytes": 63332,
+      "sha256": "bdb463c44dd0f883fc5569b03ac82007fcb9acdba8ad8d2b3b64802af1495849"
+    },
+    "zig-out/lib/mylang-llvm/qbe_llvm.py": {
+      "bytes": 34518,
+      "sha256": "50f9af3582ca21be9471847e8f215af27d6bb180519f0afeb374ab422e6f1773"
+    },
+    "zig-out/lib/mylang-llvm/runtime_signatures.py": {
+      "bytes": 12044,
+      "sha256": "24760d4f3de48bd5c1a0c5a49eff3b48c2dc9bb44711a1427e8f0b7fd48528c9"
+    }
+  },
+  "zig": "0.17.0-dev.1683+5ceec001b",
+  "host": {
+    "lscpu": [
+      {
+        "field": "Architecture:",
+        "data": "x86_64"
+      },
+      {
+        "field": "CPU op-mode(s):",
+        "data": "32-bit, 64-bit"
+      },
+      {
+        "field": "Address sizes:",
+        "data": "39 bits physical, 48 bits virtual"
+      },
+      {
+        "field": "Byte Order:",
+        "data": "Little Endian"
+      },
+      {
+        "field": "CPU(s):",
+        "data": "20"
+      },
+      {
+        "field": "On-line CPU(s) list:",
+        "data": "0-19"
+      },
+      {
+        "field": "Vendor ID:",
+        "data": "GenuineIntel"
+      },
+      {
+        "field": "Model name:",
+        "data": "12th Gen Intel(R) Core(TM) i7-12700H"
+      },
+      {
+        "field": "CPU family:",
+        "data": "6"
+      },
+      {
+        "field": "Model:",
+        "data": "154"
+      },
+      {
+        "field": "Thread(s) per core:",
+        "data": "2"
+      },
+      {
+        "field": "Core(s) per socket:",
+        "data": "14"
+      },
+      {
+        "field": "Socket(s):",
+        "data": "1"
+      },
+      {
+        "field": "Stepping:",
+        "data": "3"
+      },
+      {
+        "field": "CPU(s) scaling MHz:",
+        "data": "21%"
+      },
+      {
+        "field": "CPU max MHz:",
+        "data": "4700.0000"
+      },
+      {
+        "field": "CPU min MHz:",
+        "data": "400.0000"
+      },
+      {
+        "field": "BogoMIPS:",
+        "data": "5376.00"
+      },
+      {
+        "field": "Flags:",
+        "data": "fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities"
+      },
+      {
+        "field": "Virtualization:",
+        "data": "VT-x"
+      },
+      {
+        "field": "L1d cache:",
+        "data": "544 KiB (14 instances)"
+      },
+      {
+        "field": "L1i cache:",
+        "data": "704 KiB (14 instances)"
+      },
+      {
+        "field": "L2 cache:",
+        "data": "11.5 MiB (8 instances)"
+      },
+      {
+        "field": "L3 cache:",
+        "data": "24 MiB (1 instance)"
+      },
+      {
+        "field": "NUMA node(s):",
+        "data": "1"
+      },
+      {
+        "field": "NUMA node0 CPU(s):",
+        "data": "0-19"
+      },
+      {
+        "field": "Vulnerability Gather data sampling:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Ghostwrite:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Indirect target selection:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Itlb multihit:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability L1tf:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Mds:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Meltdown:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Mmio stale data:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Old microcode:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Reg file data sampling:",
+        "data": "Mitigation; Clear Register File"
+      },
+      {
+        "field": "Vulnerability Retbleed:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Spec rstack overflow:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Spec store bypass:",
+        "data": "Mitigation; Speculative Store Bypass disabled via prctl"
+      },
+      {
+        "field": "Vulnerability Spectre v1:",
+        "data": "Mitigation; usercopy/swapgs barriers and __user pointer sanitization"
+      },
+      {
+        "field": "Vulnerability Spectre v2:",
+        "data": "Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI BHI_DIS_S"
+      },
+      {
+        "field": "Vulnerability Srbds:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Tsa:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Tsx async abort:",
+        "data": "Not affected"
+      },
+      {
+        "field": "Vulnerability Vmscape:",
+        "data": "Mitigation; IBPB before exit to userspace"
+      }
+    ]
+  },
+  "uname": [
+    "Linux",
+    "linuxserver",
+    "7.0.0-31-generic",
+    "#31-Ubuntu SMP PREEMPT_DYNAMIC Sat Aug  1 04:26:38 UTC 2026",
+    "x86_64"
+  ],
+  "cpu_affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "timed_cpu": 6,
+  "cpu6_governor": "powersave",
+  "perf_event_paranoid": "4",
+  "mylang_arms": {
+    "mylang-o3": "ReleaseFast LLVM O3, normal collecting GC/checks, step/frame accounting omitted by release default",
+    "mylang-o3-lto": "same plus full LLVM LTO",
+    "mylang-o3-bounded": "ReleaseFast LLVM O3, normal collecting GC/checks, explicit step/frame accounting enabled; schematic host policy"
+  },
+  "mylang_all_arms_host_boundary": "ordinary checked copied host byte access/output, capability validation and 4M host-call/work budgets retained",
+  "guardian": "No Guardian gate used: standalone benchmark harness compiled directly; no production EDA source changes",
+  "mylang_build_commands": {
+    "mylang-o3": [
+      "zig-out/bin/mylang",
+      "build",
+      "src/schematic/guest/main.my",
+      "--project",
+      "--provider",
+      "src/schematic/native_schematic.c",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--keep-symbols",
+      "--cache-dir",
+      ".tmp/full-svg-benchmark-20260921/mylang-cache",
+      "--report",
+      "-o",
+      ".tmp/full-svg-benchmark-20260921/mylang-o3"
+    ],
+    "mylang-o3-lto": [
+      "zig-out/bin/mylang",
+      "build",
+      "src/schematic/guest/main.my",
+      "--project",
+      "--provider",
+      "src/schematic/native_schematic.c",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--lto",
+      "--keep-symbols",
+      "--cache-dir",
+      ".tmp/full-svg-benchmark-20260921/mylang-cache-lto",
+      "--report",
+      "-o",
+      ".tmp/full-svg-benchmark-20260921/mylang-o3-lto"
+    ],
+    "mylang-o3-bounded": [
+      "zig-out/bin/mylang",
+      "build",
+      "src/schematic/guest/main.my",
+      "--project",
+      "--provider",
+      "src/schematic/native_schematic.c",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--step-accounting",
+      "--keep-symbols",
+      "--cache-dir",
+      ".tmp/full-svg-benchmark-20260921/mylang-cache-bounded",
+      "--report",
+      "-o",
+      ".tmp/full-svg-benchmark-20260921/mylang-o3-bounded"
+    ]
+  },
+  "peak_rss_tool": "/usr/bin/time -f %M (GNU time); peak resident KiB, separate untimed runs",
+  "eda_worktree": {
+    "path": "/home/epentland/ai/canopy/eda/.claude/worktrees/mylang-svg-benchmark-20260921",
+    "branch": "codex/mylang-svg-benchmark-20260921",
+    "state": "unmerged; only untracked src/netlisp_bench.zig harness; no engine edits; main checkout clean"
+  }
+}

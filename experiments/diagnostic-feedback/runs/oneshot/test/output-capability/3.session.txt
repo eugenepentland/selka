@@ -1,0 +1,5 @@
+**Change made** (in `project/main.my`): restored the output capability by threading the `Stream` through the call chain — `banner` now takes `out: Stream` and prints via `out.print("==", text)` instead of the rejected bare `print(...)`, `main` passes its `out` stream into the call, and the `output` effect is declared on both functions per the project's rules.
+
+**Command run:** `bin/mylang run project/main.my`
+
+**Result:** printed `== ok` and exited `0`.

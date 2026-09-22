@@ -1,0 +1,20 @@
+Done. Invocations used: 9 of 20.
+
+**What I changed** (`project/main.my` only): the bug was `E_RESULT_CONSUMED` — `base` (a `Result`) was used twice. `main` now consumes the `Result` exactly once with a `match`: `Ok(value)` prints `value + value + 10`, `Err` prints `0`. `decode` is untouched.
+
+Note: `public/expected.json` pins `"41"` → `92` (i.e. the original `base + base + 10`, 41+41+10), while the prose "10 plus that number" alone would give 51. Since the examples are what the task is checked against, I preserved the program's existing arithmetic and added the `0` fallback for non-integers.
+
+**Commands and results**
+
+```
+$ bin/mylang check project/main.my          # exit 0, clean
+$ bin/mylang run project/main.my -- 41      # 92   (expected 92)
+$ bin/mylang run project/main.my -- 0       # 10   (expected 10)
+$ bin/mylang run project/main.my -- abc     # 0
+$ bin/mylang run project/main.my -- 5       # 20
+$ bin/mylang run project/main.my -- -3      # 4
+$ bin/mylang run project/main.my -- 41.5    # 0
+$ bin/mylang run project/main.my -- ""      # 0
+```
+
+Both public cases match `expected.json`, and every non-integer input prints `0`.

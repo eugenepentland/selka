@@ -1,0 +1,19 @@
+## Done
+
+**What I changed** (`project/main.my`, `main` only):
+
+- `main` was passing a `Result[int, str]` into `0 + value`, which failed type-check with `E_TYPE`.
+- Replaced that with a `match` on `read_number(args[0])`: `case Ok(value)` prints `0 + value`, `case Err(_)` prints `-99`, then `return 0`.
+
+`read_number` itself was already correct and is unchanged.
+
+**Command and result:**
+
+```
+$ ./bin/mylang check project/main.my   → exit 0 (no diagnostics)
+$ ./bin/mylang run project/main.my -- 41   → 41
+$ ./bin/mylang run project/main.my -- 0    → 0
+$ ./bin/mylang run project/main.my -- abc  → -99
+```
+
+Also verified `-5` → `-5` and `7.5` → `-99`; all 12 compiler invocations used, under the limit of 20.

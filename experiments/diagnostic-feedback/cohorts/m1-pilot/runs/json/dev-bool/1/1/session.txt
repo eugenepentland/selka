@@ -1,0 +1,13 @@
+Fixed. `above` was declared `-> int` but returned the `bool` expression `a > b`, which the checker rejected with `E_TYPE: expected int, found bool`. I replaced it with an explicit `if a > b: return 1 / return 0` (the only change to `project/main.my`).
+
+Exact command and result:
+
+```
+$ bin/mylang check project/main.my && bin/mylang run project/main.my -- 5 2
+CHECK OK
+1
+$ bin/mylang run project/main.my -- 2 5
+0
+```
+
+Both `public/expected.json` cases match (`1\n` and `0\n`), and extra checks confirm correct behavior for equality (`3 3 -> 0`, `0 0 -> 0`) and negatives (`-2 -5 -> 1`, `-5 -2 -> 0`).

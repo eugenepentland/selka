@@ -1,0 +1,5 @@
+def materialize(start: int, end: int) -> list[int]:
+    return list(range(start, end))
+
+def main() -> int:
+    return 0

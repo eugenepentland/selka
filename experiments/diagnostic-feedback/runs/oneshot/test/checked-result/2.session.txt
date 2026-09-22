@@ -1,0 +1,7 @@
+Done.
+
+**Change made** in `project/main.my`: `lookup("five")` returns `Result[int, str]`, so `bonus + lookup("five")` was adding an `int` to a `Result` (the static error). I replaced that line with a `match` on the result — `case Ok(value): score = bonus + value` and `case Err(message):` printing the error and returning 1 — with `score` predeclared as `0`, then printed after the match.
+
+**Command run:** `bin/mylang run project/main.my`
+
+**Result:** printed `5` and exited `0`.

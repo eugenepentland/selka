@@ -1,0 +1,30 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: file-size: 10 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 17 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 4399 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (bool-ops-per-condition)
+guardian: failures grouped by check (1):
+  bool-ops-per-condition (1 finding)
+    - src/qbe_build_backend.zig:74: condition has 4 boolean ops (cap 3)
+      fix: split into nested/sequential ifs, or extract into a named bool.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+install
++- install mylang-io
+   +- run ../guardian-zig/zig-out/bin/guardian-check failure
+error: process exited with code 1
+failed command: ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+
+Build Summary: 15/22 steps succeeded (1 failed)
+install transitive failure
++- install mylang transitive failure
+|  +- run ../guardian-zig/zig-out/bin/guardian-check failure
++- install qbe transitive failure
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install board-trial transitive failure
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install schematic-svg transitive failure
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install mylang-io transitive failure
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+

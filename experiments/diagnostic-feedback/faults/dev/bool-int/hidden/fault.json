@@ -1,0 +1,6 @@
+{
+  "id": "bool-int",
+  "family": "E_TYPE",
+  "split": "dev",
+  "expect": "1"
+}

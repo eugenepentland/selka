@@ -1,0 +1,23 @@
+{
+  "passed": true,
+  "cases": {
+    "fixture": {
+      "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+      "svg_bytes": 49617,
+      "equals_baseline": true,
+      "gc_stress_equals_normal": true
+    },
+    "changed-net": {
+      "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+      "svg_bytes": 49647,
+      "equals_baseline": true,
+      "gc_stress_equals_normal": true
+    },
+    "changed-value": {
+      "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+      "svg_bytes": 49617,
+      "equals_baseline": true,
+      "gc_stress_equals_normal": true
+    }
+  }
+}

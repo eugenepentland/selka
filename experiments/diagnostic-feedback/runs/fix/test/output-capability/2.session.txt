@@ -1,0 +1,3 @@
+Fixed `project/main.my`: `banner` now takes a `Stream` (`out`) instead of calling bare `print`, declares `effects(output)`, and prints via `out.print`; `main` passes its `out` to `banner(out, "ok")`.
+
+Command run: `./bin/mylang run project/main.my` → printed `== ok`, exit code 0.

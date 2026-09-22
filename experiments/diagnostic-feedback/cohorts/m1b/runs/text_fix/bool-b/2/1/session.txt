@@ -1,0 +1,20 @@
+Fixed.
+
+**What changed:** In `project/main.my`, `exceeds` was assigning the boolean `a > b` to `bigger` and returning it from an `int`-typed function, which failed to compile with `E_TYPE: expected int, found bool`. I replaced the body so the comparison produces the required integer:
+
+```python
+def exceeds(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+(A ternary `1 if a > b else 0` was rejected by the parser with `E_SYNTAX`, so I used an `if` statement.)
+
+**Command run:**
+
+```
+bin/mylang check project/main.my && for c in "5 2" "2 5" ...; do bin/mylang run project/main.my -- $c; done
+```
+
+**Result:** `CHECK OK`, and both public examples match `expected.json` — `5 2` → `1`, `2 5` → `0`. Additional cases also behave correctly: `3 3` → 0, `0 -1` → 1, `-1 0` → 0, `100 99` → 1, `7 8` → 0 (all exit 0).

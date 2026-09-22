@@ -1,0 +1,43 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/mylang-audit-compiler",
+  "compiler_sha256": "fb9b1b7a5ea9f2fff670db0289d5911ab943d95d38244823634ab5edc8a8fcc5",
+  "adapter_sha256": "50f9af3582ca21be9471847e8f215af27d6bb180519f0afeb374ab422e6f1773",
+  "guest_sources": {
+    "circuit.my": "15fb89234a2a0130aa4f1d76304c63b8723dda3c33521601196a0de90fd55083",
+    "draw.my": "cc93575469d5869d5d010f5375b792f880d7b59e9c1fde0ab7f8bdb9c27aff39",
+    "io.my": "b30320cff9c1b8e2af86b0027a7c9c4d8ceaa6cea75840a3882b80b99dcd0c8b",
+    "layout.my": "829a89969114932505a4b9182fb7af4cdc926d8946ad9ac898a8d41effba6f21",
+    "layout_graph.my": "3b58233831261d8fdd415b42000e91d4e9e2baae9cc4c59e0f903e49cf0518b2",
+    "layout_routes.my": "562fb4143354da0e50b81376c09240c9bf15d8248ffed23f15cb70287b0d900f",
+    "main.my": "2ce7ad379f1affa24a3350bf6926a261c686be830272e853f0cb51fc65ad68f5",
+    "ports.my": "33af913725014537942feb1fd6f533328aed02a04ddd39a03c9fc33526d6e74a",
+    "schematic.my": "99fd4f3ab0bdbfc5efe85717e3498d9d7918d1ab4b1763ae0ee59b824811ac70",
+    "schematic_inputs.my": "1ee50b10f9ca81dbc9733bacecba7c92e94bbc00e4c0ea9b4a8f68c38eb378b0",
+    "sexpr.my": "12ce2fe2008edceea05ec7e7d466eae32ff0545059c4fb7770edd530117958f6",
+    "svg.my": "373f897e38c1da3aed32fdb96df742ab1bb8b2b6e811c2be1e473b88dfd6a53e",
+    "text.my": "94588bbf7e8230c35b427e2617f2f2bb2c6f7d076412957016565ce31ba4076a",
+    "validate.my": "b611d8ce0ba381fbe781a8f6ce99723b79f39d50fb346bfb02a62897c34701cb"
+  },
+  "arms": {
+    "control": {
+      "provider_sha256": "bb294b0060993df79e2814c562307fb2eaffd5df957f850960ab190edea10fc0",
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/control",
+      "binary_sha256": "de1733408c0e3a9c69129bb166c122acb0ab572e201dff45c37bdd43a4a23210"
+    },
+    "counts": {
+      "provider_sha256": "232c7b0fdf420f28bb6b71553a34713c27c21fe9e7ba7300f3479938bcae08c8",
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/counts",
+      "binary_sha256": "d4140de9731ddc748bccb510c1102fd3a3dc44319e48b9c1b7d691ef0f2e53fb"
+    },
+    "unchecked": {
+      "provider_sha256": "737acb4561e66e1eb7ef6829f4a61a9981944af9a4ab5a4d356c7d8a9c0ae371",
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/unchecked",
+      "binary_sha256": "5b630d9dfb84a718159ab96380b3d01d795b0990cd138663c543cb3201167d63"
+    },
+    "memory-output": {
+      "provider_sha256": "d3674f967a0bc1aac83392ed8066c00546871cc82feacb084f3d698fc9a68a5d",
+      "binary": "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/host/memory-output",
+      "binary_sha256": "f5ff5d5b93ad4957fde6eb8c8026ea85a586056e78c92dd260abd38602ae3e97"
+    }
+  }
+}

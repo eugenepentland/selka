@@ -1,0 +1,3 @@
+Fixed the type error in `project/main.my`: `above` is declared `-> int`, but `return a > b` returned a `bool` (`E_TYPE`). I replaced it with an explicit `if a > b: return 1` / `return 0`. (The checker's suggested `1 if a > b else 0` is not accepted by the parser — it raises `E_SYNTAX` — so a plain `if` statement is the valid form.)
+
+Command run: `bin/mylang run project/main.my` → printed `1`, exit code 0. I also confirmed the false branch prints `0` via a temporary file, which I then deleted.

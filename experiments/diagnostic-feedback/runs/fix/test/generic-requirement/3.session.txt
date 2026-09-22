@@ -1,0 +1,7 @@
+**What I changed:** In `project/main.my` line 4, the generic parameter `[T: Sortable]` on `pick` used an unsupported requirement (`E_GENERIC_REQUIREMENT`), and `T` was unused in the body — keeping it with a valid requirement instead fails with `E_GENERIC_INFERENCE` since `T` isn't inferable from the call. I removed the unused type parameter, leaving `def pick(values: list[int], index: int) -> int:`; no other changes.
+
+**Command run:**
+```
+bin/mylang run project/main.my
+```
+Result: exit code 0, stdout exactly `9`. (`bin/mylang check project/main.my` also exits 0.)

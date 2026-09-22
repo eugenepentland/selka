@@ -1,0 +1,11 @@
+Fixed `project/main.my`: `above` was declared `-> int` but returned a `bool` (`E_TYPE`). Since mylang doesn't allow implicit bool→int conversion (and the diagnostic's suggested ternary isn't accepted by this parser, nor is `int(bool)`), I replaced the return with an `if a > b: return 1` / `return 0` body.
+
+Command run and result:
+
+```
+$ bin/mylang run project/main.my
+1
+exit=0
+```
+
+I also verified `above(2, 5)` prints `0`, and removed the temporary scratch files (only `project/main.my` remains).

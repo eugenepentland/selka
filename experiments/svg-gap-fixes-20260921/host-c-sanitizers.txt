@@ -1,0 +1,5 @@
+Command:
+cc -std=c11 -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -Isrc tests/qbe_host_bridge.c -o .tmp/svg-gap-fixes-20260921/qbe-host-bridge-san
+ASAN_OPTIONS=detect_leaks=1 .tmp/svg-gap-fixes-20260921/qbe-host-bridge-san
+
+Result: PASS (exit 0, no ASan/UBSan diagnostics)

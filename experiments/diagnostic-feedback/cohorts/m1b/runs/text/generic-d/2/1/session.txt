@@ -1,0 +1,16 @@
+Fix verified. Here's the summary:
+
+**What I changed** (`project/main.my`, 3 lines):
+
+1. Replaced the invalid generic constraint `Numeric` with the builtin requirement `integer` in both `maximum` and `maximum_of` — the checker rejected `Numeric` with `E_GENERIC_REQUIREMENT`.
+2. Supplied explicit type arguments where `T` isn't determined by the call arguments (the compiler's own remedy for `E_GENERIC_INFERENCE`): `maximum[int](values)` inside `maximum_of`, and `maximum_of[int]([...])` in `main`.
+
+No logic was changed — `maximum` still scans the list and returns the largest element.
+
+**Commands and results:**
+
+- `bin/mylang check project/main.my` → exit 0 (clean).
+- `bin/mylang run project/main.my -- 1 3 2` → `3`
+- `bin/mylang run project/main.my -- 5 5 5` → `5`
+- Extra inputs checked: `3 1 2`→`3`, `1 2 3`→`3`, `-7 -3 -9`→`-3`, `0 -1 0`→`0`.
+- Byte-exact comparison against both cases in `public/expected.json` via a Python harness → `ALL PASS`.

@@ -1,0 +1,3 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+native heap tests passed

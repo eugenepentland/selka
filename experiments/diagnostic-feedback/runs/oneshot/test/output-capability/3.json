@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "experiment": "diagnostic-feedback",
+  "condition": "oneshot",
+  "split": "test",
+  "fault": "output-capability",
+  "run": 3,
+  "expect": "== ok",
+  "toolchain": {
+    "compiler": "/home/epentland/ai/canopy/mylang/experiments/cascade/tools/bin/mylang",
+    "qbe": "/home/epentland/ai/canopy/mylang/experiments/cascade/tools/bin/qbe",
+    "compiler_sha256": "4a9ad0c17789e422fa90dbb8e91497f007abdc2ef5152f3123889dbdc2cfbcb2",
+    "qbe_sha256": "e8556667871eff58a795be26f9937a6778aaeef7a0a8ff6c885ce28061101fc4"
+  },
+  "work_dir": "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback/work/oneshot/test/output-capability/3",
+  "session_launch": {
+    "command": [
+      "dsh",
+      "--profile",
+      "headless",
+      "# Fix the program, in one attempt\n\nThe program must print `== ok`. It does not pass the checker; make it compile and print `== ok`.\n\nThe working copy holds `project/` and `bin/mylang`. Work in `project/`; you may create, edit and run files there. When you are done, `bin/mylang run project/main.my` must exit 0 and print exactly the required output.\n\nThis is a single-attempt task. Read what you need, make the change, and stop: do not iterate on the result and do\nnot revise the code after you have run it. You may run `bin/mylang` once at the end to report what happened.\n\nConstraints:\n\n- Work only inside this directory; do not read or write anything outside it and do not spawn subagents.\n- Change only what the request requires.\n\nWhen you are done, reply with a short final message: the change you made and the exact command you ran with its\nresult.\n"
+    ],
+    "env": {
+      "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback/work/oneshot/test/output-capability/3/.cache/zig-global",
+      "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback/work/oneshot/test/output-capability/3/.cache/zig-local"
+    },
+    "started_utc": "2026-09-19T12:00:46.553084+00:00",
+    "finished_utc": "2026-09-19T12:05:33.310400+00:00",
+    "seconds": 286.757321,
+    "timed_out": false,
+    "exit": 0
+  },
+  "session": {
+    "logs": [
+      "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-work-oneshot-test-output-capability-3--/session-f95c7266-a07c-4bfd-ab4b-7534ad914992/session.v3.jsonl.zstd"
+    ],
+    "session_dirs": [
+      "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-work-oneshot-test-output-capability-3--/session-f95c7266-a07c-4bfd-ab4b-7534ad914992"
+    ],
+    "sessions": 1,
+    "usage": {
+      "inputTokens": 11852,
+      "outputTokens": 56727,
+      "reasoningTokens": 55788,
+      "cacheReadTokens": 174720,
+      "totalTokens": 243299,
+      "cost_v1_input_output_reasoning": 124367,
+      "cost_v2_input_output": 68579,
+      "provider_total_tokens": 243299,
+      "reasoning_share_of_cost_v1": 0.4486
+    },
+    "models": {
+      "deepseek-v4-flash": 7
+    },
+    "efforts": {
+      "max": 1
+    },
+    "delegation_depth": 0,
+    "turns": 1,
+    "steps": 6,
+    "tool_calls": {
+      "bash": 3,
+      "read": 4,
+      "grep": 1,
+      "edit": 1
+    },
+    "tool_seconds": {
+      "bash": 3.712,
+      "edit": 0.066,
+      "grep": 0.095,
+      "read": 0.059
+    },
+    "compiler_seconds": 3.561,
+    "compiler_calls": 6,
+    "bytes_read": 4210,
+    "failure_results": 1,
+    "edits": 1,
+    "first_edit_ms": 1789819525924,
+    "baseline_green_ms": null,
+    "first_green_ms": null,
+    "first_candidate_green_step": null,
+    "check_events": [
+      {
+        "step": 1,
+        "phase": "candidate",
+        "outcome": "unknown",
+        "ms": 1789819531124
+      }
+    ],
+    "phases": {
+      "read": 67987,
+      "edit": 592,
+      "verify": null
+    },
+    "phase_ms": {
+      "read": 276775,
+      "edit": null,
+      "verify": null
+    },
+    "first_event_ms": 1789819249149,
+    "last_event_ms": 1789819533244,
+    "log_seconds": 284.095
+  },
+  "diagnostics": {
+    "codes": {
+      "E_OUTPUT_CAPABILITY": 2,
+      "E_EFFECT_ESCAPE": 2
+    },
+    "total": 4,
+    "repeated": 2,
+    "distinct": 2,
+    "failed_checks": 4,
+    "clean_checks": 0
+  },
+  "diff": {
+    "files_changed": [
+      "main.my"
+    ],
+    "added": 4,
+    "removed": 4,
+    "new_bool_params": 0
+  },
+  "verify": {
+    "passed": true,
+    "exit": 0,
+    "steps": [
+      {
+        "id": "fixed",
+        "status": "passed"
+      }
+    ],
+    "report": "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback/work/oneshot/test/output-capability/3/_verify/report.json"
+  },
+  "solved": true,
+  "repair_rounds": 4,
+  "edited": true,
+  "finished_utc": "2026-09-19T12:05:34.040520+00:00"
+}

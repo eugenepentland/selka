@@ -1,0 +1,75 @@
+{
+  "version": "m3-app-snapshot-v1",
+  "app": "sexpr-port",
+  "captured_utc": "2026-09-20T11:30:51.868370+00:00",
+  "source": "/home/epentland/ai/canopy/mylang/experiments/sexpr-port",
+  "files": {
+    "CONTRACT.md": {
+      "sha256": "2d21d459c3e4d3d82c4ea5d44c1e9cfbe1136dbb594b37392b97ba151dd637fa"
+    },
+    "README.md": {
+      "sha256": "e53af2fa460370afaf7a4d5e36dde55e566035fd7b7141a885dece802d78be65"
+    },
+    "fixtures/public/escapes.sexp": {
+      "sha256": "2dd0b0be82725baa48f69585c3390f0a6d4961f6314c48e5d041f9e975e9df79"
+    },
+    "fixtures/public/nesting.sexp": {
+      "sha256": "b41582fe2198f6934ec1f71c099effc7e7ff3b811970fe897d8ee253a74d3023"
+    },
+    "fixtures/public/render.sexp": {
+      "sha256": "7f575ca29e2b3ddeeed3ec3f12a2b45156cd9fb6969d75d76bded8c94ba84358"
+    },
+    "fixtures/public/scaling.sexp": {
+      "sha256": "98f5a0e77a97763363fa788601f27d538763cb0937d97036e06a62ae0b4ae224"
+    },
+    "main.my": {
+      "sha256": "758b4848039ebf1d6addc9fa697031e0fb183a548c50a477502f0cf96f1579a8"
+    },
+    "project.json": {
+      "sha256": "5527af01058ef04f382da15ce91049ddd0146a47004f5984299eecd1f546a001"
+    },
+    "sexpr/ast.my": {
+      "sha256": "b40f6c81741ada790b5db029f445a44057feebfc2234a19ea763d88f1a77253d"
+    },
+    "sexpr/parser.my": {
+      "sha256": "27e93c9063d0e79a5b799baa8958340e49f27a43b5104e8efd467d7dc6c0badc"
+    },
+    "sexpr/printer.my": {
+      "sha256": "7fe4512872a5319b6b7ba4ad961ca866fc6eb23e5137b94a772dc3a2a0dbc742"
+    },
+    "sexpr/tokenizer.my": {
+      "sha256": "7215da3c560e50e90f118c631a303c9a6d6966b66e7cc81ec9a96418f5f63112"
+    },
+    "sexpr/view.my": {
+      "sha256": "fb9a0aa01b1273f7e698a837d57f6ae38b02de5f09eac896251914f5dfce0018"
+    },
+    "tests/ast_test.my": {
+      "sha256": "1779dd1014456d215b63e2cbdaf9ac865e6980b40869925787b68f4b511bc86e"
+    },
+    "tests/parser_test.my": {
+      "sha256": "79819acf7ba7469a2ce7830faa32a41bcd514467ba755ce39d29c009667db2d7"
+    },
+    "tests/printer_test.my": {
+      "sha256": "51af9594213b7f3228d9d9f4a953a37833a9003b79015a4070b23af7a0620122"
+    },
+    "tests/roundtrip_test.my": {
+      "sha256": "93e0a6cdd76c3f9d20c3f5339d1853c84343df1cdc1a07f8e624fe8a9aee1b70"
+    },
+    "tests/smoke_test.my": {
+      "sha256": "d27044398942790aabbbdf93c6bf79aa355d645909cf48af7a6a1e8ed4cf9673"
+    },
+    "tests/tokenizer_test.my": {
+      "sha256": "658a9f2528c8adbb496c038ec6c11c5b956d1de65ad5fd63451a3b38e1610a28"
+    },
+    "tests/view_test.my": {
+      "sha256": "a458318e4fefc685e6b2cb16f5a997092776412285c92e227b766ed1db40a983"
+    },
+    "verify.json": {
+      "sha256": "86637b4138b8f36e0a935d0e32b0c2fb5a7111a3d6a3708ef4d2afd4112effde"
+    }
+  },
+  "digest": "c7b43e6be85e387e38db05a04bd12cf640d32f39d87e2e3cb2ba6bce6e2d0ca3",
+  "entry": "main.my",
+  "manifest": "verify.json",
+  "host": null
+}

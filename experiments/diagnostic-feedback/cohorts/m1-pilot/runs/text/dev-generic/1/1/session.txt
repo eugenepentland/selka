@@ -1,0 +1,29 @@
+Done. The workspace is back to just `main.my` (plus the pre-existing cache).
+
+## What I changed
+
+One line in `project/main.my`: removed the unused, invalid generic requirement from `largest`:
+
+```diff
+-def largest[T: Ordered](values: list[int]) -> int:
++def largest(values: list[int]) -> int:
+```
+
+The compiler rejected `Ordered` (`E_GENERIC_REQUIREMENT`: expected `copy, equality, integer, codec, storable, or a declared constraint`). Since the parameter was unused — the function is concretely `list[int] -> int` — deleting it is the minimal fix. No other logic changed.
+
+## Command and result
+
+```
+$ bin/mylang check project/main.my
+CHECK_EXIT=0
+
+$ bin/mylang run project/main.my -- 1 3 2
+3
+RUN_EXIT=0
+
+$ bin/mylang run project/main.my -- 5 5 5
+5
+RUN_EXIT=0
+```
+
+I also verified against a native build (then deleted it) across 16 inputs — all six orderings, ties, negatives, zeros, and 64-bit extremes — and every case returned the true maximum (e.g. `-5 -1 -3 → -1`, `-9223372036854775808 1 2 → 2`). Total compiler invocations used: 7 of 20.

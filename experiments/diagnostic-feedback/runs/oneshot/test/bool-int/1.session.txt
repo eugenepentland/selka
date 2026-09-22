@@ -1,0 +1,20 @@
+**Change:** In `project/main.my`, `above` was declared `-> int` but returned the `bool` result of `a > b`. I replaced the body with an explicit branch so the function returns the required integers:
+
+```python
+def above(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+`main` is unchanged, so `above(5, 2)` prints `1`.
+
+**Command and result:**
+
+```
+$ bin/mylang run project/main.my
+1
+[exit code: 0]
+```
+
+It compiles, exits 0, and prints exactly `1`.

@@ -1,0 +1,96 @@
+{
+  "median_ms": {
+    "netlisp": 2.509789,
+    "o3": 17.492021,
+    "lto": 34.470073,
+    "bounded": 42.764322,
+    "part-pin-index": 8.996834,
+    "host-control": 17.509843,
+    "host-scalar": 15.910353,
+    "guest-lto-runtime-native": 35.205753,
+    "guest-native-runtime-lto": 16.181748,
+    "lto-guest-noinline": 36.258646,
+    "lto-guest-avx2": 16.010187,
+    "lto-partpin-avx2": 17.367379,
+    "part-pin-index-bounded": 18.204966
+  },
+  "comparisons": {
+    "part-pin-index/o3": {
+      "ratio": 0.5143393093342387,
+      "paired_bootstrap_95": [
+        0.5114821679434828,
+        0.5172592742181666
+      ]
+    },
+    "host-scalar/host-control": {
+      "ratio": 0.908651950791335,
+      "paired_bootstrap_95": [
+        0.9037212996873144,
+        0.9135813542120045
+      ]
+    },
+    "host-control/o3": {
+      "ratio": 1.0010188645440112,
+      "paired_bootstrap_95": [
+        0.9969696594102574,
+        1.0050143837157512
+      ]
+    },
+    "lto/o3": {
+      "ratio": 1.9706169458634881,
+      "paired_bootstrap_95": [
+        1.9650141067782934,
+        1.9806552340915171
+      ]
+    },
+    "bounded/o3": {
+      "ratio": 2.4447902274985833,
+      "paired_bootstrap_95": [
+        2.436157790497471,
+        2.462876473793394
+      ]
+    },
+    "guest-lto-runtime-native/o3": {
+      "ratio": 2.0126749790661695,
+      "paired_bootstrap_95": [
+        2.0068279714085144,
+        2.0186175886106463
+      ]
+    },
+    "guest-native-runtime-lto/o3": {
+      "ratio": 0.9250931038786198,
+      "paired_bootstrap_95": [
+        0.9206206598817581,
+        0.9344372064236187
+      ]
+    },
+    "lto-guest-noinline/lto": {
+      "ratio": 1.051887705604801,
+      "paired_bootstrap_95": [
+        1.0483479476740742,
+        1.056942056788518
+      ]
+    },
+    "lto-guest-avx2/lto": {
+      "ratio": 0.46446629225299285,
+      "paired_bootstrap_95": [
+        0.461791783633849,
+        0.4659825130829894
+      ]
+    },
+    "lto-partpin-avx2/lto": {
+      "ratio": 0.5038393449297308,
+      "paired_bootstrap_95": [
+        0.5014497614828226,
+        0.5071499138294032
+      ]
+    },
+    "part-pin-index-bounded/bounded": {
+      "ratio": 0.42570453940553526,
+      "paired_bootstrap_95": [
+        0.42139649982130056,
+        0.42790397903866667
+      ]
+    }
+  }
+}

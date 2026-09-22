@@ -1,0 +1,6 @@
+Fixed. Final state:
+
+- `project/main.my:3` — changed `import lib.stats as stats` to `import stats as stats` (the helper is a sibling `project/stats.my`, not under `lib/`).
+- `project/stats.my:4` — changed `def total()` to `public def total()`, since it is called across the module boundary.
+
+Command run: `bin/mylang run project/main.my` → prints `7`, exit 0 (`check` also exits 0).

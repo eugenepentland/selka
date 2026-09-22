@@ -1,0 +1,5 @@
+module stats
+
+
+def total() -> int:
+    return 7

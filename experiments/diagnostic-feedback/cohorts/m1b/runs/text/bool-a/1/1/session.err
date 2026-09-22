@@ -1,0 +1,42 @@
+dsh: reasoning:
+Let me look at the structure more carefully. The `public/` is at the top level, not inside `project/`.
+dsh: reasoning:
+Now let me look at the program.
+dsh: reasoning:
+The program: `above(a, b) -> int: return a > b`. In mylang, `a > b` yields bool, and returning bool where int expected should be a type error. Also `out.print(above(...))` prints the return value. The intent: print 1 when a > b, 0 otherwise.
+
+Let me check the check output. The type error would be `return a > b` in a function declared `-> int`. The fix: `return 1 if a > b else 0` — but does mylang support conditional expressions? Let me check docs. Or use an if statement:
+
+```python
+def above(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+That's the safest. But wait — maybe the actual bug is something else, e.g., arguments order or `int(text)` parse. The expected behavior: print 1 when first arg > second. The code looks right except the bool/int mismatch. Let me run check first (counts as an invocation).
+
+Let me be careful with the 20-invocation limit. Invocations are counted via the event log. Running `bin/mylang check` and `bin/mylang run` count. Let me check if there's an event log env var set. Probably set by the caller. Let me just be economical: run check once.
+
+Actually, wait: does `out.print(bool)` matter? We return int, so fine.
+
+Let me run `bin/mylang check project/main.my` first.
+dsh: reasoning:
+As expected. Fix with an if statement returning 1/0. Check whether mylang supports `if/else` expression? Rules say statements; safest is:
+
+```python
+def above(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+Let me edit.
+dsh: reasoning:
+All good. Both public examples pass: `5 2` → `1\n`, `2 5` → `0\n`. Ties and negatives also correct.
+
+Total compiler invocations: check (1) + check (2) + 4 runs = 6. Fine.
+
+Let me quickly verify against expected.json programmatically? I already manually matched. Output shows "1" then newline; stdout is "1\n". Confirmed.
+
+Done. Final message.

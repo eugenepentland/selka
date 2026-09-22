@@ -1,0 +1,5 @@
+def format_value(x: int, y: int) -> str:
+    return f"x={x}; y={y}!"
+
+def main() -> int:
+    return 0

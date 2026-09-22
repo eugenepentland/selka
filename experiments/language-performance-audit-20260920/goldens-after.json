@@ -1,0 +1,244 @@
+{
+  "binary_sha256": "73c0760cdfdbdce7d6ba2aaa7c7e931232b800768d894ad54bbb13b23a5ac164",
+  "passed": 17,
+  "comparisons": [
+    {
+      "name": "all_wide_children",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+        "/home/epentland/ai/canopy/mylang/experiments/sexpr-port/fixtures/layout/all_wide_children.sexp",
+        "--render"
+      ],
+      "ok": true,
+      "exit": 0,
+      "stdout_bytes": 252,
+      "stdout_sha256": "e53efb6bcf6a5d631a18a0212207e01d868c6010c89e49c1035a3ab0f4853d52",
+      "golden_sha256": "096e2d6e3b376d8b742b3552b35b1b754226a375713165045c1fdf7a2737263b",
+      "stderr": ""
+    },
+    {
+      "name": "deeply_nested",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+        "/home/epentland/ai/canopy/mylang/experiments/sexpr-port/fixtures/layout/deeply_nested.sexp",
+        "--render"
+      ],
+      "ok": true,
+      "exit": 0,
+      "stdout_bytes": 437,
+      "stdout_sha256": "47140814cc756cf2235b399450caa21f0334689552fda0b003f687d3e4d30a26",
+      "golden_sha256": "da39ac1cf6e32594188f49acc43b04f9db09afd35368de7a06d2b90688890578",
+      "stderr": ""
+    },
+    {
+      "name": "empty_lists",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+        "/home/epentland/ai/canopy/mylang/experiments/sexpr-port/fixtures/layout/empty_lists.sexp",
+        "--render"
+      ],
+      "ok": true,
+      "exit": 0,
+      "stdout_bytes": 97,
+      "stdout_sha256": "5202c3eb6d2ef83bd277f9d39af13f78e2a3555f10370705e18b1130b803a42c",
+      "golden_sha256": "a038753192f1482a8974a975aeb4924cca326b49ea887836c23d054a56237900",
+      "stderr": ""
+    },
+    {
+      "name": "fits_exactly",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+        "/home/epentland/ai/canopy/mylang/experiments/sexpr-port/fixtures/layout/fits_exactly.sexp",
+        "--render"
+      ],
+      "ok": true,
+      "exit": 0,
+      "stdout_bytes": 73,
+      "stdout_sha256": "a34869a18b421817831d7214379fd5de3f83c5ba87bccae92d49831db0d6883b",
+      "golden_sha256": "7ada937ece4ff35c233d2d51a0461569f39db0772682d9efd21f8fc44c88f4a7",
+      "stderr": ""
+    },
+    {
+      "name": "long_atom",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+        "/home/epentland/ai/canopy/mylang/experiments/sexpr-port/fixtures/layout/long_atom.sexp",
+        "--render"
+      ],
+      "ok": true,
+      "exit": 0,
+      "stdout_bytes": 152,
+      "stdout_sha256": "3b340c5f127921cd84148b67e3adec8a0026c3b1d64b065d3a1ed4470970ad0c",
+      "golden_sha256": "5c745a739be9dfd76edc4c2732632579b55285664f0bd876bd86187e92f0127e",
+      "stderr": ""
+    },
+    {
+      "name": "many_toplevel",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+        "/home/epentland/ai/canopy/mylang/experiments/sexpr-port/fixtures/layout/many_toplevel.sexp",
+        "--render"
+      ],
+      "ok": true,
+      "exit": 0,
+      "stdout_bytes": 420,
+      "stdout_sha256": "f4bdfe101b72e1a9569eeef957760f111ff84635fe308f7108cd8c5647adc76c",
+      "golden_sha256": "bda93648a4254519ae4b3907fd8e8db66bfd48bbc943de519691798434e7839a",
+      "stderr": ""
+    },
+    {
+      "name": "mixed_widths",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+        "/home/epentland/ai/canopy/mylang/experiments/sexpr-port/fixtures/layout/mixed_widths.sexp",
+        "--render"
+      ],
+      "ok": true,
+      "exit": 0,
+      "stdout_bytes": 156,
+      "stdout_sha256": "ed97bf126d03d11ae875cca05a73695d002d9bad8da6a94d201d4c0b085a56d4",
+      "golden_sha256": "f126edaf062a7c32ff456f388d90d47a7269bed6d6f21ebc428e74f8cbd97101",
+      "stderr": ""
+    },
+    {
+      "name": "numbers_and_units",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+        "/home/epentland/ai/canopy/mylang/experiments/sexpr-port/fixtures/layout/numbers_and_units.sexp",
+        "--render"
+      ],
+      "ok": true,
+      "exit": 0,
+      "stdout_bytes": 377,
+      "stdout_sha256": "ce2d888d13c94b5ac06be230670aa1102dce426d1c73ffa50e184c747125c198",
+      "golden_sha256": "2c1ddc69190f11556b6a258f9248a8357a6caf01c7653cc027e18f1b1712c0b2",
+      "stderr": ""
+    },
+    {
+      "name": "one_over",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+        "/home/epentland/ai/canopy/mylang/experiments/sexpr-port/fixtures/layout/one_over.sexp",
+        "--render"
+      ],
+      "ok": true,
+      "exit": 0,
+      "stdout_bytes": 94,
+      "stdout_sha256": "bed8a04fb0a6d5491c8571048d9ad17f43ccc5e257e4451e7737b533adb0f9c3",
+      "golden_sha256": "132d7156e5aa16bce5e625aec97b17cc7ed6f8ef8b049f4c331f62dd447c0f76",
+      "stderr": ""
+    },
+    {
+      "name": "single_element",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+        "/home/epentland/ai/canopy/mylang/experiments/sexpr-port/fixtures/layout/single_element.sexp",
+        "--render"
+      ],
+      "ok": true,
+      "exit": 0,
+      "stdout_bytes": 82,
+      "stdout_sha256": "fa971cc3b478b2ee0d8ac350012b5a5301d45a61983ba116840ffd43720ef1c0",
+      "golden_sha256": "972ba9ff04c72c47c59f02873a8f69160660d44aec04756a068a4cde27c27f82",
+      "stderr": ""
+    },
+    {
+      "name": "string_escapes",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+        "/home/epentland/ai/canopy/mylang/experiments/sexpr-port/fixtures/layout/string_escapes.sexp",
+        "--render"
+      ],
+      "ok": true,
+      "exit": 0,
+      "stdout_bytes": 142,
+      "stdout_sha256": "dcc8cd1902a30be5ecd632d5235f4ea0359691aa2e2a37e8fc49e0521a50f2ff",
+      "golden_sha256": "2e16cda1efe2b07d7a8b0097f642a1c6ebd3b24da45ebe10e81e2b4097d3879c",
+      "stderr": ""
+    },
+    {
+      "name": "units",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+        "/home/epentland/ai/canopy/mylang/experiments/sexpr-port/fixtures/units.sexp",
+        "--render"
+      ],
+      "ok": true,
+      "exit": 0,
+      "stdout_bytes": 358,
+      "stdout_sha256": "3a079c1a4d9a315f2bee79f77184f62d63e12724cf98b9b8421baa5a5752fbf5",
+      "golden_sha256": "c5eb6fa1af161a3167d6c39c3eb642b578d39bbc0ab0cb8f2afcb7d0f9e7cc28",
+      "stderr": ""
+    },
+    {
+      "name": "spi",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+        "/home/epentland/ai/canopy/mylang/experiments/schematic/fixtures/spi.sexp",
+        "--render"
+      ],
+      "ok": true,
+      "exit": 0,
+      "stdout_bytes": 174,
+      "stdout_sha256": "0feb05e3a62ba72d26b85a1a1742676dae3dd3b1d872b367c362035e398f19d4",
+      "golden_sha256": "e4d8d04af5b9a754503cbb13762876324c5cb9265121ea0b0451a22f1105e045",
+      "stderr": ""
+    },
+    {
+      "name": "lmx2595rhar",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+        "/home/epentland/ai/canopy/mylang/experiments/schematic/fixtures/lmx2595rhar.sexp",
+        "--render"
+      ],
+      "ok": true,
+      "exit": 0,
+      "stdout_bytes": 835,
+      "stdout_sha256": "07b63ce5432739d6b4d449d4aea6318307124171f632a7d14aa1957064330833",
+      "golden_sha256": "b51b96fd301a568a4e160ee21a3ac9e48720c3ec8fba57edccc563ed7222c014",
+      "stderr": ""
+    },
+    {
+      "name": "straps-synth-lmx2595",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+        "/home/epentland/ai/canopy/mylang/experiments/schematic/fixtures/straps-synth-lmx2595.sexp",
+        "--render"
+      ],
+      "ok": true,
+      "exit": 0,
+      "stdout_bytes": 14829,
+      "stdout_sha256": "2dfcbcc469f741e8a5a91974960b5226e488f7697170ae9acf6d14dff41e261d",
+      "golden_sha256": "0138bc0c8e9a5a4cc375930de9f5aa3d42462bd3e31f6bb94bf71f93ed19fb60",
+      "stderr": ""
+    },
+    {
+      "name": "poe-pd-flyback-tps23757",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+        "/home/epentland/ai/canopy/eda/projects/designs/lib/modules/poe-pd-flyback-tps23757.sexp",
+        "--render"
+      ],
+      "ok": true,
+      "exit": 0,
+      "stdout_bytes": 140085,
+      "stdout_sha256": "196bb0d1889684a9b40c76a192bda46fbab8eb8f9d9ad91fa6bd0a5e99dd3b11",
+      "golden_sha256": "958014976dab6e6fbb029f54fdc156da154ae8d60eb6cf7abd5ed5233aa2e006",
+      "stderr": ""
+    },
+    {
+      "name": "remora-rf",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/language-performance-audit-20260920/qbe-after",
+        "/home/epentland/ai/canopy/eda/projects/designs/src/boards/remora-rf/remora-rf.sexp",
+        "--render"
+      ],
+      "ok": true,
+      "exit": 0,
+      "stdout_bytes": 109470,
+      "stdout_sha256": "efc9f07ec74d525db7986b2a7c6412c51ee3cc100b0960e446ee31cc12821881",
+      "golden_sha256": "6dd6aaf0856f35f18786720246385ba9fbc5cdcd2414f27b5ef843dcc52fb122",
+      "stderr": ""
+    }
+  ]
+}

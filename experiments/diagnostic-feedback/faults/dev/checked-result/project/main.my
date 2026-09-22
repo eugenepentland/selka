@@ -1,0 +1,16 @@
+module main
+
+
+def parse_count(raw: str) -> Result[int, str]:
+    match int(raw):
+        case Some(value):
+            return Ok(value)
+        case None:
+            return Err("not a number")
+
+
+def main(out: Stream) -> int:
+    seed = 1
+    total = seed + parse_count("40")
+    out.print(total)
+    return 0

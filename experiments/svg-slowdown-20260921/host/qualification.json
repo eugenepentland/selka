@@ -1,0 +1,60 @@
+{
+  "passed": true,
+  "cases": {
+    "fixture": {
+      "original-control": {
+        "svg_bytes": 49617,
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388"
+      },
+      "control": {
+        "svg_bytes": 49617,
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388"
+      },
+      "scalar-fast": {
+        "svg_bytes": 49617,
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388"
+      }
+    },
+    "changed-net": {
+      "original-control": {
+        "svg_bytes": 49647,
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90"
+      },
+      "control": {
+        "svg_bytes": 49647,
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90"
+      },
+      "scalar-fast": {
+        "svg_bytes": 49647,
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90"
+      }
+    },
+    "changed-value": {
+      "original-control": {
+        "svg_bytes": 49617,
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "control": {
+        "svg_bytes": 49617,
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      },
+      "scalar-fast": {
+        "svg_bytes": 49617,
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+      }
+    }
+  },
+  "call_counts": {
+    "io::circuit_input": 1,
+    "io::pinout_input": 1,
+    "io::interface_input": 1,
+    "io::length": 3,
+    "io::byte": 55437,
+    "io::put": 49617,
+    "io::issue": 0
+  },
+  "total_calls": 105060,
+  "gc_stress_scalar_fast_equals_control": true,
+  "semantics": "scalar-fast retains production registry/signature/capability initialization, call/work budgets, no-reentry and scalar output validation; only scalar node sizing and generic recursive traversal are replaced; non-scalar declarations use the unchanged generic path",
+  "limitation": "Diagnostic scalar fast path assumes this provider default node budget. It does not yet preserve unusually restrictive max_values settings; generic production eligibility/fallback and adversarial budget tests remain required. All measured cases use unchanged provider defaults."
+}

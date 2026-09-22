@@ -1,0 +1,80 @@
+--- src/schematic/guest/layout.my	2026-09-21 02:28:23.697702567 +0000
++++ .tmp/svg-slowdown-20260921/algorithms/guest/layout.my	2026-09-21 03:36:21.437027491 +0000
+@@ -188,7 +188,14 @@
+     return fallback
+ 
+ 
+-def partPin(part: int, number: int, pins: list[c.Pin]) -> c.Pin:
++def partPin(part: int, number: int, parts: list[c.Part], pins: list[c.Pin]) -> c.Pin:
++    index = - 1
++    if number == 1:
++        index = parts[part].pin1
++    elif number == 2:
++        index = parts[part].pin2
++    if index >= 0 and pins[index].part == part and pins[index].number == number:
++        return pins[index]
+     i = 0
+     while i < len(pins):
+         pin = pins[i]
+@@ -217,8 +224,8 @@
+ 
+ 
+ def innerPin(host: Host, part: int, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> c.Pin:
+-    a = partPin(part, 1, pins)
+-    b = partPin(part, 2, pins)
++    a = partPin(part, 1, parts, pins)
++    b = partPin(part, 2, parts, pins)
+     if a.raw_rail != 0 and b.raw_rail == 0:
+         return b
+     if b.raw_rail == 0 and depth(host, b, parts, pins, nets) < depth(host, a, parts, pins, nets):
+@@ -227,8 +234,8 @@
+ 
+ 
+ def bridge(host: Host, part: int, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net]) -> bool:
+-    a = partPin(part, 1, pins)
+-    b = partPin(part, 2, pins)
++    a = partPin(part, 1, parts, pins)
++    b = partPin(part, 2, parts, pins)
+     if a.raw_rail != 0 or b.raw_rail != 0:
+         return False
+     if depth(host, a, parts, pins, nets) != depth(host, b, parts, pins, nets):
+@@ -240,7 +247,7 @@
+ 
+ def groundBranch(host: Host, part: int, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> bool:
+     inner = innerPin(host, part, parts, pins, nets)
+-    outer = partPin(part, 3 - inner.number, pins)
++    outer = partPin(part, 3 - inner.number, parts, pins)
+     if outer.raw_rail == 1:
+         return True
+     if outer.raw_rail == 2:
+@@ -249,8 +256,8 @@
+     j = 0
+     while j < len(parts):
+         if parts[j].kind != 0 and j != part:
+-            a = partPin(j, 1, pins)
+-            b = partPin(j, 2, pins)
++            a = partPin(j, 1, parts, pins)
++            b = partPin(j, 2, parts, pins)
+             otherRail = 0
+             if a.net_id == outer.net_id:
+                 otherRail = b.raw_rail
+@@ -277,7 +284,7 @@
+             if parts[j].kind != 0 and j != part:
+                 previous = innerPin(host, j, parts, pins, nets)
+                 if depth(host, previous, parts, pins, nets) < level and nearest(host, previous, parts, pins, rows, nets) == owner:
+-                    outer = partPin(j, 3 - previous.number, pins)
++                    outer = partPin(j, 3 - previous.number, parts, pins)
+                     if outer.net_id == inner.net_id:
+                         offset = branch(host, j, parts, pins, rows, nets, remaining - 1)
+                         j = len(parts)
+@@ -290,8 +297,8 @@
+     while j < len(parts):
+         if parts[j].kind != 0:
+             previous = innerPin(host, j, parts, pins, nets)
+-            a = partPin(j, 1, pins)
+-            b = partPin(j, 2, pins)
++            a = partPin(j, 1, parts, pins)
++            b = partPin(j, 2, parts, pins)
+             if bridge(host, j, parts, pins, rows, nets):
+                 if a.net_id == inner.net_id or b.net_id == inner.net_id:
+                     hasBridge = True

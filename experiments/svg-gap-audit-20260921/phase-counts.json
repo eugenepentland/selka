@@ -1,0 +1,200 @@
+{
+  "gc-o3": [
+    {
+      "phase": "sexpr::parse",
+      "allocations": 14,
+      "collections": 0,
+      "steps": 0,
+      "heap_bytes": 165264,
+      "objects_live": 14
+    },
+    {
+      "phase": "sexpr::parse",
+      "allocations": 10,
+      "collections": 0,
+      "steps": 0,
+      "heap_bytes": 186720,
+      "objects_live": 24
+    },
+    {
+      "phase": "sexpr::parse",
+      "allocations": 7,
+      "collections": 0,
+      "steps": 0,
+      "heap_bytes": 189968,
+      "objects_live": 31
+    },
+    {
+      "phase": "schematic::build",
+      "allocations": 16,
+      "collections": 0,
+      "steps": 0,
+      "heap_bytes": 228200,
+      "objects_live": 47
+    },
+    {
+      "phase": "layout::build",
+      "allocations": 79,
+      "collections": 0,
+      "steps": 0,
+      "heap_bytes": 267648,
+      "objects_live": 126
+    },
+    {
+      "phase": "layout_routes::build",
+      "allocations": 8,
+      "collections": 0,
+      "steps": 0,
+      "heap_bytes": 301000,
+      "objects_live": 134
+    },
+    {
+      "phase": "svg::render",
+      "allocations": 87,
+      "collections": 0,
+      "steps": 0,
+      "heap_bytes": 301000,
+      "objects_live": 134
+    },
+    {
+      "phase": "main::main",
+      "allocations": 134,
+      "collections": 0,
+      "steps": 0,
+      "heap_bytes": 301000,
+      "objects_live": 134
+    }
+  ],
+  "gc-bounded": [
+    {
+      "phase": "sexpr::parse",
+      "allocations": 14,
+      "collections": 0,
+      "steps": 724934,
+      "heap_bytes": 165264,
+      "objects_live": 14
+    },
+    {
+      "phase": "sexpr::parse",
+      "allocations": 10,
+      "collections": 0,
+      "steps": 47751,
+      "heap_bytes": 186720,
+      "objects_live": 24
+    },
+    {
+      "phase": "sexpr::parse",
+      "allocations": 7,
+      "collections": 0,
+      "steps": 13478,
+      "heap_bytes": 189968,
+      "objects_live": 31
+    },
+    {
+      "phase": "schematic::build",
+      "allocations": 16,
+      "collections": 0,
+      "steps": 2183137,
+      "heap_bytes": 228200,
+      "objects_live": 47
+    },
+    {
+      "phase": "layout::build",
+      "allocations": 79,
+      "collections": 0,
+      "steps": 5349021,
+      "heap_bytes": 267648,
+      "objects_live": 126
+    },
+    {
+      "phase": "layout_routes::build",
+      "allocations": 8,
+      "collections": 0,
+      "steps": 816620,
+      "heap_bytes": 301000,
+      "objects_live": 134
+    },
+    {
+      "phase": "svg::render",
+      "allocations": 87,
+      "collections": 0,
+      "steps": 7974343,
+      "heap_bytes": 301000,
+      "objects_live": 134
+    },
+    {
+      "phase": "main::main",
+      "allocations": 134,
+      "collections": 0,
+      "steps": 10943705,
+      "heap_bytes": 301000,
+      "objects_live": 134
+    }
+  ],
+  "arena-o3": [
+    {
+      "phase": "sexpr::parse",
+      "allocations": 14,
+      "collections": 0,
+      "steps": 0,
+      "heap_bytes": 196608,
+      "objects_live": 14
+    },
+    {
+      "phase": "sexpr::parse",
+      "allocations": 10,
+      "collections": 0,
+      "steps": 0,
+      "heap_bytes": 458752,
+      "objects_live": 24
+    },
+    {
+      "phase": "sexpr::parse",
+      "allocations": 7,
+      "collections": 0,
+      "steps": 0,
+      "heap_bytes": 458752,
+      "objects_live": 31
+    },
+    {
+      "phase": "schematic::build",
+      "allocations": 16,
+      "collections": 0,
+      "steps": 0,
+      "heap_bytes": 458752,
+      "objects_live": 47
+    },
+    {
+      "phase": "layout::build",
+      "allocations": 79,
+      "collections": 0,
+      "steps": 0,
+      "heap_bytes": 458752,
+      "objects_live": 126
+    },
+    {
+      "phase": "layout_routes::build",
+      "allocations": 8,
+      "collections": 0,
+      "steps": 0,
+      "heap_bytes": 458752,
+      "objects_live": 134
+    },
+    {
+      "phase": "svg::render",
+      "allocations": 87,
+      "collections": 0,
+      "steps": 0,
+      "heap_bytes": 458752,
+      "objects_live": 134
+    },
+    {
+      "phase": "main::main",
+      "allocations": 134,
+      "collections": 0,
+      "steps": 0,
+      "heap_bytes": 0,
+      "objects_live": 0
+    }
+  ]
+}

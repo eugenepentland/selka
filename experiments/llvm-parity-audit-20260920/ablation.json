@@ -1,0 +1,5140 @@
+{
+ "work": ".tmp/llvm-parity-audit-20260920/ablation",
+ "cpu": 6,
+ "rounds": 21,
+ "input_dir": ".tmp/runtime-audit-20260919",
+ "arms": {
+  "chart-o3": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/bench/armsset/maxperf/whole-o3.bin",
+   "sha256": "efdb3c3267a6ad2c52c720c0efec54ffdfac06ec4ecfbf1ad1416acf11b0fce2"
+  },
+  "rebuilt": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-parity-audit-20260920/probes/rebuilt.bin",
+   "sha256": "80d9a8b3cc79fc4e5bf6052ff3b9a721d9e80b40333a0ff2f4a5f0a298c03772"
+  },
+  "internal": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-parity-audit-20260920/probes/internal.bin",
+   "sha256": "7c1dd3afba0054409ab0b9f88d1d8acf7354c54c98949b4bb2f446b329673b25"
+  },
+  "width": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-parity-audit-20260920/probes/width.bin",
+   "sha256": "7cf18d2589f093cf07d1fb99c758114214def95e95608c6d706663e776964c48"
+  },
+  "combined": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-parity-audit-20260920/probes/combined.bin",
+   "sha256": "86ca378a7acc1946943285da5a420efa0d010827f6e9a4ee97f86ce0f2c33bfa"
+  },
+  "zig": {
+   "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-streaming-20260919/before/zig",
+   "sha256": "a65cfc5c18757a691c9c57ae76572044147e3b7721be71acf51fdda969896a56"
+  }
+ },
+ "workloads": {
+  "census": {
+   "stdout_bytes": 118,
+   "stdout_sha256": "f4178a68773c1ada93ec1e9051b25a1f77a9f70d688e507783aeee897cc8b137",
+   "arms": {
+    "chart-o3": {
+     "wall_ms_median": 3.109038,
+     "wall_ms_iqr": 0.3887075000000002,
+     "wall_ms_min": 2.810903,
+     "wall_samples": 21,
+     "wall_ms": [
+      2.90445,
+      2.951333,
+      3.144669,
+      2.969212,
+      3.067399,
+      3.554268,
+      3.125093,
+      3.109038,
+      2.934508,
+      2.959041,
+      3.125459,
+      3.031327,
+      3.434017,
+      2.868749,
+      3.314931,
+      2.810903,
+      3.407591,
+      2.939063,
+      3.181207,
+      3.392854,
+      3.35288
+     ],
+     "counter_samples": {
+      "task-clock": [
+       3.24,
+       2.96,
+       2.87,
+       2.97,
+       2.92,
+       2.98,
+       3.07
+      ],
+      "instructions": [
+       19578502.0,
+       19578499.0,
+       19578500.0,
+       19578501.0,
+       19578499.0,
+       19578499.0,
+       19578499.0
+      ],
+      "cycles": [
+       7963071.0,
+       7984267.0,
+       7915664.0,
+       7930272.0,
+       7973619.0,
+       8004555.0,
+       7956923.0
+      ],
+      "branches": [
+       3138324.0,
+       3138323.0,
+       3138322.0,
+       3138323.0,
+       3138321.0,
+       3138321.0,
+       3138321.0
+      ],
+      "branch-misses": [
+       28681.0,
+       29295.0,
+       28858.0,
+       28552.0,
+       28850.0,
+       28630.0,
+       28678.0
+      ]
+     },
+     "perf_raw": [
+      "3.24,msec,task-clock,3240722,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578502,,cpu_core/instructions/u,3240722,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7963071,,cpu_core/cycles/u,3240722,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138324,,cpu_core/branches/u,3240722,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28681,,cpu_core/branch-misses/u,3240722,100.00,,\n",
+      "2.96,msec,task-clock,2961623,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578499,,cpu_core/instructions/u,2961623,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7984267,,cpu_core/cycles/u,2961623,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138323,,cpu_core/branches/u,2961623,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n29295,,cpu_core/branch-misses/u,2961623,100.00,,\n",
+      "2.87,msec,task-clock,2871640,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578500,,cpu_core/instructions/u,2871640,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7915664,,cpu_core/cycles/u,2871640,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138322,,cpu_core/branches/u,2871640,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28858,,cpu_core/branch-misses/u,2871640,100.00,,\n",
+      "2.97,msec,task-clock,2973015,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578501,,cpu_core/instructions/u,2973015,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7930272,,cpu_core/cycles/u,2973015,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138323,,cpu_core/branches/u,2973015,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28552,,cpu_core/branch-misses/u,2973015,100.00,,\n",
+      "2.92,msec,task-clock,2915401,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578499,,cpu_core/instructions/u,2915401,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7973619,,cpu_core/cycles/u,2915401,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138321,,cpu_core/branches/u,2915401,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28850,,cpu_core/branch-misses/u,2915401,100.00,,\n",
+      "2.98,msec,task-clock,2980750,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578499,,cpu_core/instructions/u,2980750,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n8004555,,cpu_core/cycles/u,2980750,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138321,,cpu_core/branches/u,2980750,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28630,,cpu_core/branch-misses/u,2980750,100.00,,\n",
+      "3.07,msec,task-clock,3074497,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578499,,cpu_core/instructions/u,3074497,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7956923,,cpu_core/cycles/u,3074497,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138321,,cpu_core/branches/u,3074497,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28678,,cpu_core/branch-misses/u,3074497,100.00,,\n"
+     ],
+     "task-clock_median": 2.97,
+     "instructions_median": 19578499.0,
+     "cycles_median": 7963071.0,
+     "branches_median": 3138322.0,
+     "branch-misses_median": 28681.0
+    },
+    "rebuilt": {
+     "wall_ms_median": 3.281971,
+     "wall_ms_iqr": 0.31270549999999986,
+     "wall_ms_min": 2.901573,
+     "wall_samples": 21,
+     "wall_ms": [
+      3.244221,
+      3.208746,
+      2.982324,
+      3.206388,
+      3.320723,
+      3.664305,
+      3.10771,
+      3.309787,
+      3.50667,
+      2.901573,
+      3.365783,
+      3.312486,
+      2.974701,
+      3.281971,
+      3.018556,
+      3.022469,
+      3.13082,
+      3.389807,
+      3.330313,
+      3.572592,
+      3.410577
+     ],
+     "counter_samples": {
+      "task-clock": [
+       2.96,
+       2.94,
+       3.03,
+       3.76,
+       2.98,
+       3.05,
+       3.07
+      ],
+      "instructions": [
+       19578501.0,
+       19578500.0,
+       19578502.0,
+       19578503.0,
+       19578502.0,
+       19578502.0,
+       19578502.0
+      ],
+      "cycles": [
+       7966566.0,
+       7916786.0,
+       8076061.0,
+       8848377.0,
+       8016099.0,
+       8146542.0,
+       7928497.0
+      ],
+      "branches": [
+       3138323.0,
+       3138320.0,
+       3138322.0,
+       3138323.0,
+       3138324.0,
+       3138322.0,
+       3138322.0
+      ],
+      "branch-misses": [
+       29122.0,
+       28727.0,
+       28547.0,
+       28934.0,
+       28412.0,
+       28572.0,
+       28686.0
+      ]
+     },
+     "perf_raw": [
+      "2.96,msec,task-clock,2962908,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578501,,cpu_core/instructions/u,2962908,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7966566,,cpu_core/cycles/u,2962908,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138323,,cpu_core/branches/u,2962908,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n29122,,cpu_core/branch-misses/u,2962908,100.00,,\n",
+      "2.94,msec,task-clock,2935453,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578500,,cpu_core/instructions/u,2935453,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7916786,,cpu_core/cycles/u,2935453,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138320,,cpu_core/branches/u,2935453,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28727,,cpu_core/branch-misses/u,2935453,100.00,,\n",
+      "3.03,msec,task-clock,3030569,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578502,,cpu_core/instructions/u,3030569,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n8076061,,cpu_core/cycles/u,3030569,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138322,,cpu_core/branches/u,3030569,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28547,,cpu_core/branch-misses/u,3030569,100.00,,\n",
+      "3.76,msec,task-clock,3762161,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578503,,cpu_core/instructions/u,3762161,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n8848377,,cpu_core/cycles/u,3762161,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138323,,cpu_core/branches/u,3762161,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28934,,cpu_core/branch-misses/u,3762161,100.00,,\n",
+      "2.98,msec,task-clock,2984712,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578502,,cpu_core/instructions/u,2984712,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n8016099,,cpu_core/cycles/u,2984712,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138324,,cpu_core/branches/u,2984712,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28412,,cpu_core/branch-misses/u,2984712,100.00,,\n",
+      "3.05,msec,task-clock,3045184,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578502,,cpu_core/instructions/u,3045184,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n8146542,,cpu_core/cycles/u,3045184,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138322,,cpu_core/branches/u,3045184,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28572,,cpu_core/branch-misses/u,3045184,100.00,,\n",
+      "3.07,msec,task-clock,3065702,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578502,,cpu_core/instructions/u,3065702,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7928497,,cpu_core/cycles/u,3065702,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138322,,cpu_core/branches/u,3065702,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28686,,cpu_core/branch-misses/u,3065702,100.00,,\n"
+     ],
+     "task-clock_median": 3.03,
+     "instructions_median": 19578502.0,
+     "cycles_median": 8016099.0,
+     "branches_median": 3138322.0,
+     "branch-misses_median": 28686.0
+    },
+    "internal": {
+     "wall_ms_median": 3.181741,
+     "wall_ms_iqr": 0.4309765000000003,
+     "wall_ms_min": 2.825297,
+     "wall_samples": 21,
+     "wall_ms": [
+      3.330956,
+      2.897908,
+      2.825297,
+      2.829024,
+      2.844419,
+      3.472099,
+      3.211385,
+      3.488063,
+      2.849479,
+      3.196865,
+      2.909677,
+      3.181741,
+      3.312035,
+      3.063131,
+      3.003779,
+      3.113289,
+      3.497285,
+      3.338582,
+      2.954892,
+      3.232064,
+      3.546881
+     ],
+     "counter_samples": {
+      "task-clock": [
+       2.95,
+       2.99,
+       2.88,
+       3.0,
+       2.91,
+       2.88,
+       3.09
+      ],
+      "instructions": [
+       19302366.0,
+       19302367.0,
+       19302365.0,
+       19302366.0,
+       19302364.0,
+       19302364.0,
+       19302365.0
+      ],
+      "cycles": [
+       7696809.0,
+       7811458.0,
+       7820258.0,
+       7732147.0,
+       7749044.0,
+       7742622.0,
+       7733950.0
+      ],
+      "branches": [
+       3101722.0,
+       3101723.0,
+       3101721.0,
+       3101722.0,
+       3101720.0,
+       3101720.0,
+       3101721.0
+      ],
+      "branch-misses": [
+       27663.0,
+       28426.0,
+       28042.0,
+       28275.0,
+       27771.0,
+       27924.0,
+       27492.0
+      ]
+     },
+     "perf_raw": [
+      "2.95,msec,task-clock,2945749,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19302366,,cpu_core/instructions/u,2945749,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7696809,,cpu_core/cycles/u,2945749,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3101722,,cpu_core/branches/u,2945749,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n27663,,cpu_core/branch-misses/u,2945749,100.00,,\n",
+      "2.99,msec,task-clock,2990890,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19302367,,cpu_core/instructions/u,2990890,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7811458,,cpu_core/cycles/u,2990890,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3101723,,cpu_core/branches/u,2990890,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28426,,cpu_core/branch-misses/u,2990890,100.00,,\n",
+      "2.88,msec,task-clock,2875574,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19302365,,cpu_core/instructions/u,2875574,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7820258,,cpu_core/cycles/u,2875574,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3101721,,cpu_core/branches/u,2875574,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28042,,cpu_core/branch-misses/u,2875574,100.00,,\n",
+      "3.00,msec,task-clock,3000245,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19302366,,cpu_core/instructions/u,3000245,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7732147,,cpu_core/cycles/u,3000245,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3101722,,cpu_core/branches/u,3000245,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28275,,cpu_core/branch-misses/u,3000245,100.00,,\n",
+      "2.91,msec,task-clock,2910179,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19302364,,cpu_core/instructions/u,2910179,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7749044,,cpu_core/cycles/u,2910179,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3101720,,cpu_core/branches/u,2910179,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n27771,,cpu_core/branch-misses/u,2910179,100.00,,\n",
+      "2.88,msec,task-clock,2881670,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19302364,,cpu_core/instructions/u,2881670,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7742622,,cpu_core/cycles/u,2881670,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3101720,,cpu_core/branches/u,2881670,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n27924,,cpu_core/branch-misses/u,2881670,100.00,,\n",
+      "3.09,msec,task-clock,3092680,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19302365,,cpu_core/instructions/u,3092680,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7733950,,cpu_core/cycles/u,3092680,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3101721,,cpu_core/branches/u,3092680,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n27492,,cpu_core/branch-misses/u,3092680,100.00,,\n"
+     ],
+     "task-clock_median": 2.95,
+     "instructions_median": 19302365.0,
+     "cycles_median": 7742622.0,
+     "branches_median": 3101721.0,
+     "branch-misses_median": 27924.0
+    },
+    "width": {
+     "wall_ms_median": 3.270633,
+     "wall_ms_iqr": 0.18535699999999977,
+     "wall_ms_min": 2.8156,
+     "wall_samples": 21,
+     "wall_ms": [
+      2.891865,
+      3.375689,
+      2.8156,
+      3.19482,
+      3.260471,
+      3.1977,
+      3.324174,
+      3.391908,
+      3.270633,
+      3.287962,
+      3.291882,
+      2.939313,
+      3.406936,
+      3.387545,
+      3.402304,
+      3.325621,
+      3.216699,
+      3.254101,
+      3.251032,
+      3.481286,
+      3.113522
+     ],
+     "counter_samples": {
+      "task-clock": [
+       2.92,
+       2.94,
+       2.99,
+       2.98,
+       3.04,
+       3.76,
+       2.93
+      ],
+      "instructions": [
+       19578545.0,
+       19578545.0,
+       19578545.0,
+       19578546.0,
+       19578547.0,
+       19578545.0,
+       19578544.0
+      ],
+      "cycles": [
+       8110354.0,
+       8020000.0,
+       8164961.0,
+       7980298.0,
+       8147431.0,
+       8820369.0,
+       8044649.0
+      ],
+      "branches": [
+       3138325.0,
+       3138325.0,
+       3138325.0,
+       3138326.0,
+       3138327.0,
+       3138325.0,
+       3138324.0
+      ],
+      "branch-misses": [
+       29102.0,
+       28825.0,
+       29349.0,
+       29043.0,
+       28349.0,
+       29312.0,
+       29032.0
+      ]
+     },
+     "perf_raw": [
+      "2.92,msec,task-clock,2920982,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578545,,cpu_core/instructions/u,2920982,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n8110354,,cpu_core/cycles/u,2920982,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138325,,cpu_core/branches/u,2920982,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n29102,,cpu_core/branch-misses/u,2920982,100.00,,\n",
+      "2.94,msec,task-clock,2938020,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578545,,cpu_core/instructions/u,2938020,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n8020000,,cpu_core/cycles/u,2938020,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138325,,cpu_core/branches/u,2938020,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28825,,cpu_core/branch-misses/u,2938020,100.00,,\n",
+      "2.99,msec,task-clock,2988700,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578545,,cpu_core/instructions/u,2988700,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n8164961,,cpu_core/cycles/u,2988700,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138325,,cpu_core/branches/u,2988700,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n29349,,cpu_core/branch-misses/u,2988700,100.00,,\n",
+      "2.98,msec,task-clock,2981564,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578546,,cpu_core/instructions/u,2981564,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7980298,,cpu_core/cycles/u,2981564,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138326,,cpu_core/branches/u,2981564,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n29043,,cpu_core/branch-misses/u,2981564,100.00,,\n",
+      "3.04,msec,task-clock,3038302,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578547,,cpu_core/instructions/u,3038302,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n8147431,,cpu_core/cycles/u,3038302,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138327,,cpu_core/branches/u,3038302,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28349,,cpu_core/branch-misses/u,3038302,100.00,,\n",
+      "3.76,msec,task-clock,3757836,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578545,,cpu_core/instructions/u,3757836,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n8820369,,cpu_core/cycles/u,3757836,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138325,,cpu_core/branches/u,3757836,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n29312,,cpu_core/branch-misses/u,3757836,100.00,,\n",
+      "2.93,msec,task-clock,2933262,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19578544,,cpu_core/instructions/u,2933262,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n8044649,,cpu_core/cycles/u,2933262,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3138324,,cpu_core/branches/u,2933262,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n29032,,cpu_core/branch-misses/u,2933262,100.00,,\n"
+     ],
+     "task-clock_median": 2.98,
+     "instructions_median": 19578545.0,
+     "cycles_median": 8110354.0,
+     "branches_median": 3138325.0,
+     "branch-misses_median": 29043.0
+    },
+    "combined": {
+     "wall_ms_median": 2.996411,
+     "wall_ms_iqr": 0.3792005000000005,
+     "wall_ms_min": 2.757481,
+     "wall_samples": 21,
+     "wall_ms": [
+      2.878437,
+      2.996411,
+      2.823684,
+      2.867288,
+      2.875196,
+      3.464165,
+      2.888642,
+      3.278385,
+      2.794028,
+      2.757481,
+      3.162773,
+      3.2855,
+      2.957847,
+      3.228388,
+      3.156755,
+      2.923415,
+      2.999001,
+      3.272497,
+      2.844458,
+      3.069384,
+      3.308463
+     ],
+     "counter_samples": {
+      "task-clock": [
+       2.84,
+       2.9,
+       2.77,
+       2.98,
+       2.85,
+       2.88,
+       3.0
+      ],
+      "instructions": [
+       19302360.0,
+       19302364.0,
+       19302360.0,
+       19302365.0,
+       19302361.0,
+       19302362.0,
+       19302364.0
+      ],
+      "cycles": [
+       7686243.0,
+       7770326.0,
+       7635756.0,
+       7779221.0,
+       7622236.0,
+       7768595.0,
+       7756378.0
+      ],
+      "branches": [
+       3101717.0,
+       3101720.0,
+       3101718.0,
+       3101721.0,
+       3101717.0,
+       3101718.0,
+       3101720.0
+      ],
+      "branch-misses": [
+       28039.0,
+       27685.0,
+       27439.0,
+       27583.0,
+       27124.0,
+       27332.0,
+       27212.0
+      ]
+     },
+     "perf_raw": [
+      "2.84,msec,task-clock,2835964,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19302360,,cpu_core/instructions/u,2835964,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7686243,,cpu_core/cycles/u,2835964,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3101717,,cpu_core/branches/u,2835964,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28039,,cpu_core/branch-misses/u,2835964,100.00,,\n",
+      "2.90,msec,task-clock,2899215,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19302364,,cpu_core/instructions/u,2899215,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7770326,,cpu_core/cycles/u,2899215,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3101720,,cpu_core/branches/u,2899215,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n27685,,cpu_core/branch-misses/u,2899215,100.00,,\n",
+      "2.77,msec,task-clock,2771765,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19302360,,cpu_core/instructions/u,2771765,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7635756,,cpu_core/cycles/u,2771765,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3101718,,cpu_core/branches/u,2771765,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n27439,,cpu_core/branch-misses/u,2771765,100.00,,\n",
+      "2.98,msec,task-clock,2978819,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19302365,,cpu_core/instructions/u,2978819,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7779221,,cpu_core/cycles/u,2978819,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3101721,,cpu_core/branches/u,2978819,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n27583,,cpu_core/branch-misses/u,2978819,100.00,,\n",
+      "2.85,msec,task-clock,2849653,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19302361,,cpu_core/instructions/u,2849653,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7622236,,cpu_core/cycles/u,2849653,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3101717,,cpu_core/branches/u,2849653,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n27124,,cpu_core/branch-misses/u,2849653,100.00,,\n",
+      "2.88,msec,task-clock,2882058,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19302362,,cpu_core/instructions/u,2882058,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7768595,,cpu_core/cycles/u,2882058,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3101718,,cpu_core/branches/u,2882058,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n27332,,cpu_core/branch-misses/u,2882058,100.00,,\n",
+      "3.00,msec,task-clock,2997764,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19302364,,cpu_core/instructions/u,2997764,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n7756378,,cpu_core/cycles/u,2997764,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n3101720,,cpu_core/branches/u,2997764,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n27212,,cpu_core/branch-misses/u,2997764,100.00,,\n"
+     ],
+     "task-clock_median": 2.88,
+     "instructions_median": 19302362.0,
+     "cycles_median": 7756378.0,
+     "branches_median": 3101718.0,
+     "branch-misses_median": 27439.0
+    },
+    "zig": {
+     "wall_ms_median": 1.946609,
+     "wall_ms_iqr": 0.23820600000000036,
+     "wall_ms_min": 1.791365,
+     "wall_samples": 21,
+     "wall_ms": [
+      1.946609,
+      1.823877,
+      1.945649,
+      2.136014,
+      1.791365,
+      2.074309,
+      2.070908,
+      1.801238,
+      1.834485,
+      1.88456,
+      1.83432,
+      2.047104,
+      2.04905,
+      2.167923,
+      1.863276,
+      1.994886,
+      1.967896,
+      1.90403,
+      2.128707,
+      1.823369,
+      2.097971
+     ],
+     "counter_samples": {
+      "task-clock": [
+       1.83,
+       1.83,
+       1.77,
+       1.86,
+       1.78,
+       2.01,
+       1.82
+      ],
+      "instructions": [
+       19423492.0,
+       19423494.0,
+       19423493.0,
+       19423491.0,
+       19423490.0,
+       19423491.0,
+       19423493.0
+      ],
+      "cycles": [
+       5190049.0,
+       5427486.0,
+       5278518.0,
+       5345927.0,
+       5215315.0,
+       5618691.0,
+       5247553.0
+      ],
+      "branches": [
+       4504026.0,
+       4504028.0,
+       4504027.0,
+       4504026.0,
+       4504025.0,
+       4504026.0,
+       4504027.0
+      ],
+      "branch-misses": [
+       21203.0,
+       21260.0,
+       21283.0,
+       22301.0,
+       22058.0,
+       21542.0,
+       21563.0
+      ]
+     },
+     "perf_raw": [
+      "1.83,msec,task-clock,1826768,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19423492,,cpu_core/instructions/u,1826768,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n5190049,,cpu_core/cycles/u,1826768,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n4504026,,cpu_core/branches/u,1826768,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n21203,,cpu_core/branch-misses/u,1826768,100.00,,\n",
+      "1.83,msec,task-clock,1826541,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19423494,,cpu_core/instructions/u,1826541,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n5427486,,cpu_core/cycles/u,1826541,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n4504028,,cpu_core/branches/u,1826541,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n21260,,cpu_core/branch-misses/u,1826541,100.00,,\n",
+      "1.77,msec,task-clock,1774696,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19423493,,cpu_core/instructions/u,1774696,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n5278518,,cpu_core/cycles/u,1774696,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n4504027,,cpu_core/branches/u,1774696,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n21283,,cpu_core/branch-misses/u,1774696,100.00,,\n",
+      "1.86,msec,task-clock,1856257,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19423491,,cpu_core/instructions/u,1856257,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n5345927,,cpu_core/cycles/u,1856257,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n4504026,,cpu_core/branches/u,1856257,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n22301,,cpu_core/branch-misses/u,1856257,100.00,,\n",
+      "1.78,msec,task-clock,1782440,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19423490,,cpu_core/instructions/u,1782440,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n5215315,,cpu_core/cycles/u,1782440,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n4504025,,cpu_core/branches/u,1782440,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n22058,,cpu_core/branch-misses/u,1782440,100.00,,\n",
+      "2.01,msec,task-clock,2014629,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19423491,,cpu_core/instructions/u,2014629,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n5618691,,cpu_core/cycles/u,2014629,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n4504026,,cpu_core/branches/u,2014629,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n21542,,cpu_core/branch-misses/u,2014629,100.00,,\n",
+      "1.82,msec,task-clock,1817635,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n19423493,,cpu_core/instructions/u,1817635,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n5247553,,cpu_core/cycles/u,1817635,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n4504027,,cpu_core/branches/u,1817635,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n21563,,cpu_core/branch-misses/u,1817635,100.00,,\n"
+     ],
+     "task-clock_median": 1.83,
+     "instructions_median": 19423492.0,
+     "cycles_median": 5278518.0,
+     "branches_median": 4504026.0,
+     "branch-misses_median": 21542.0
+    }
+   },
+   "ratios": {
+    "rebuilt/chart-o3": {
+     "median": 1.0556226717074542,
+     "low": 0.9944376055368592,
+     "high": 1.1147021499306886,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    },
+    "rebuilt/internal": {
+     "median": 1.0315016212821848,
+     "low": 0.9739609289345161,
+     "high": 1.1210176209485827,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    },
+    "rebuilt/width": {
+     "median": 1.0034666072286311,
+     "low": 0.9451781985314915,
+     "high": 1.0297780426455816,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    },
+    "rebuilt/combined": {
+     "median": 1.0953006780445005,
+     "low": 1.026049533079667,
+     "high": 1.1467277703502199,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    },
+    "rebuilt/zig": {
+     "median": 1.6859939515331532,
+     "low": 1.5663043987994747,
+     "high": 1.782195981701047,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    }
+   }
+  },
+  "render": {
+   "stdout_bytes": 700425,
+   "stdout_sha256": "78a74270e2ec8842471e8e1ec5f94c8a42c631f0addec5ac2ec4bb97870240a7",
+   "arms": {
+    "chart-o3": {
+     "wall_ms_median": 6.495511,
+     "wall_ms_iqr": 0.3838739999999987,
+     "wall_ms_min": 6.107861,
+     "wall_samples": 21,
+     "wall_ms": [
+      6.371999,
+      6.477612,
+      6.479222,
+      6.325364,
+      7.103701,
+      6.440272,
+      6.52431,
+      6.228106,
+      6.107861,
+      6.5176,
+      6.154803,
+      6.639311,
+      6.264699,
+      6.495511,
+      6.603329,
+      7.038427,
+      7.280792,
+      7.242466,
+      6.317281,
+      6.771082,
+      6.609191
+     ],
+     "counter_samples": {
+      "task-clock": [
+       6.17,
+       6.08,
+       6.27,
+       6.27,
+       6.14,
+       6.08,
+       6.28
+      ],
+      "instructions": [
+       45215771.0,
+       45215770.0,
+       45215772.0,
+       45215773.0,
+       45215774.0,
+       45215771.0,
+       45215773.0
+      ],
+      "cycles": [
+       17421821.0,
+       17301064.0,
+       17644111.0,
+       17642922.0,
+       17293152.0,
+       17412211.0,
+       17390363.0
+      ],
+      "branches": [
+       5952290.0,
+       5952289.0,
+       5952293.0,
+       5952292.0,
+       5952293.0,
+       5952290.0,
+       5952292.0
+      ],
+      "branch-misses": [
+       54548.0,
+       53391.0,
+       54249.0,
+       53701.0,
+       53679.0,
+       54514.0,
+       53617.0
+      ]
+     },
+     "perf_raw": [
+      "6.17,msec,task-clock,6173624,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n45215771,,cpu_core/instructions/u,6173624,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n17421821,,cpu_core/cycles/u,6173624,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5952290,,cpu_core/branches/u,6173624,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n54548,,cpu_core/branch-misses/u,6173624,100.00,,\n",
+      "6.08,msec,task-clock,6079665,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n45215770,,cpu_core/instructions/u,6079665,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n17301064,,cpu_core/cycles/u,6079665,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5952289,,cpu_core/branches/u,6079665,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n53391,,cpu_core/branch-misses/u,6079665,100.00,,\n",
+      "6.27,msec,task-clock,6271306,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n45215772,,cpu_core/instructions/u,6271306,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n17644111,,cpu_core/cycles/u,6271306,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5952293,,cpu_core/branches/u,6271306,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n54249,,cpu_core/branch-misses/u,6271306,100.00,,\n",
+      "6.27,msec,task-clock,6273323,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n45215773,,cpu_core/instructions/u,6273323,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n17642922,,cpu_core/cycles/u,6273323,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5952292,,cpu_core/branches/u,6273323,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n53701,,cpu_core/branch-misses/u,6273323,100.00,,\n",
+      "6.14,msec,task-clock,6143367,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n45215774,,cpu_core/instructions/u,6143367,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n17293152,,cpu_core/cycles/u,6143367,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5952293,,cpu_core/branches/u,6143367,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n53679,,cpu_core/branch-misses/u,6143367,100.00,,\n",
+      "6.08,msec,task-clock,6078993,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n45215771,,cpu_core/instructions/u,6078993,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n17412211,,cpu_core/cycles/u,6078993,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5952290,,cpu_core/branches/u,6078993,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n54514,,cpu_core/branch-misses/u,6078993,100.00,,\n",
+      "6.28,msec,task-clock,6284477,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n45215773,,cpu_core/instructions/u,6284477,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n17390363,,cpu_core/cycles/u,6284477,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5952292,,cpu_core/branches/u,6284477,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n53617,,cpu_core/branch-misses/u,6284477,100.00,,\n"
+     ],
+     "task-clock_median": 6.17,
+     "instructions_median": 45215772.0,
+     "cycles_median": 17412211.0,
+     "branches_median": 5952292.0,
+     "branch-misses_median": 53701.0
+    },
+    "rebuilt": {
+     "wall_ms_median": 6.478067,
+     "wall_ms_iqr": 0.453665,
+     "wall_ms_min": 5.887758,
+     "wall_samples": 21,
+     "wall_ms": [
+      7.072026,
+      6.541458,
+      6.037141,
+      6.31554,
+      5.887758,
+      6.208837,
+      7.078016,
+      6.537037,
+      6.49873,
+      6.088745,
+      6.211335,
+      6.553757,
+      6.68829,
+      6.41729,
+      6.478067,
+      6.795733,
+      6.321484,
+      6.776517,
+      6.356119,
+      6.359961,
+      6.745915
+     ],
+     "counter_samples": {
+      "task-clock": [
+       6.23,
+       6.23,
+       6.19,
+       6.25,
+       6.26,
+       6.07,
+       6.43
+      ],
+      "instructions": [
+       45215722.0,
+       45215721.0,
+       45215721.0,
+       45215748.0,
+       45215720.0,
+       45215721.0,
+       45215722.0
+      ],
+      "cycles": [
+       17501024.0,
+       17285907.0,
+       17335840.0,
+       17334915.0,
+       17233927.0,
+       17305727.0,
+       17570805.0
+      ],
+      "branches": [
+       5952287.0,
+       5952286.0,
+       5952288.0,
+       5952286.0,
+       5952285.0,
+       5952286.0,
+       5952287.0
+      ],
+      "branch-misses": [
+       54304.0,
+       54705.0,
+       54335.0,
+       53265.0,
+       53662.0,
+       54364.0,
+       54550.0
+      ]
+     },
+     "perf_raw": [
+      "6.23,msec,task-clock,6227198,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n45215722,,cpu_core/instructions/u,6227198,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n17501024,,cpu_core/cycles/u,6227198,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5952287,,cpu_core/branches/u,6227198,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n54304,,cpu_core/branch-misses/u,6227198,100.00,,\n",
+      "6.23,msec,task-clock,6231182,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n45215721,,cpu_core/instructions/u,6231182,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n17285907,,cpu_core/cycles/u,6231182,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5952286,,cpu_core/branches/u,6231182,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n54705,,cpu_core/branch-misses/u,6231182,100.00,,\n",
+      "6.19,msec,task-clock,6193888,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n45215721,,cpu_core/instructions/u,6193888,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n17335840,,cpu_core/cycles/u,6193888,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5952288,,cpu_core/branches/u,6193888,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n54335,,cpu_core/branch-misses/u,6193888,100.00,,\n",
+      "6.25,msec,task-clock,6249925,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n45215748,,cpu_core/instructions/u,6249925,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n17334915,,cpu_core/cycles/u,6249925,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5952286,,cpu_core/branches/u,6249925,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n53265,,cpu_core/branch-misses/u,6249925,100.00,,\n",
+      "6.26,msec,task-clock,6259038,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n45215720,,cpu_core/instructions/u,6259038,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n17233927,,cpu_core/cycles/u,6259038,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5952285,,cpu_core/branches/u,6259038,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n53662,,cpu_core/branch-misses/u,6259038,100.00,,\n",
+      "6.07,msec,task-clock,6065050,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n45215721,,cpu_core/instructions/u,6065050,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n17305727,,cpu_core/cycles/u,6065050,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5952286,,cpu_core/branches/u,6065050,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n54364,,cpu_core/branch-misses/u,6065050,100.00,,\n",
+      "6.43,msec,task-clock,6426848,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n45215722,,cpu_core/instructions/u,6426848,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n17570805,,cpu_core/cycles/u,6426848,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5952287,,cpu_core/branches/u,6426848,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n54550,,cpu_core/branch-misses/u,6426848,100.00,,\n"
+     ],
+     "task-clock_median": 6.23,
+     "instructions_median": 45215721.0,
+     "cycles_median": 17334915.0,
+     "branches_median": 5952286.0,
+     "branch-misses_median": 54335.0
+    },
+    "internal": {
+     "wall_ms_median": 6.305066,
+     "wall_ms_iqr": 0.33762449999999955,
+     "wall_ms_min": 5.807152,
+     "wall_samples": 21,
+     "wall_ms": [
+      6.090989,
+      6.192273,
+      5.949978,
+      5.807152,
+      6.198047,
+      6.646179,
+      5.865495,
+      6.43375,
+      5.962885,
+      6.305066,
+      6.117563,
+      6.530887,
+      6.242528,
+      6.043265,
+      6.309897,
+      6.752238,
+      6.356826,
+      6.584029,
+      6.375753,
+      6.369466,
+      6.33064
+     ],
+     "counter_samples": {
+      "task-clock": [
+       6.09,
+       6.25,
+       6.12,
+       6.12,
+       6.04,
+       6.45,
+       6.12
+      ],
+      "instructions": [
+       44637349.0,
+       44637344.0,
+       44637347.0,
+       44637345.0,
+       44637348.0,
+       44637344.0,
+       44637347.0
+      ],
+      "cycles": [
+       16953607.0,
+       16972323.0,
+       17096499.0,
+       16965392.0,
+       16948569.0,
+       17043395.0,
+       16887568.0
+      ],
+      "branches": [
+       5891238.0,
+       5891233.0,
+       5891236.0,
+       5891234.0,
+       5891237.0,
+       5891233.0,
+       5891236.0
+      ],
+      "branch-misses": [
+       51748.0,
+       52634.0,
+       52997.0,
+       52450.0,
+       52631.0,
+       53022.0,
+       52056.0
+      ]
+     },
+     "perf_raw": [
+      "6.09,msec,task-clock,6087958,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n44637349,,cpu_core/instructions/u,6087958,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n16953607,,cpu_core/cycles/u,6087958,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5891238,,cpu_core/branches/u,6087958,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n51748,,cpu_core/branch-misses/u,6087958,100.00,,\n",
+      "6.25,msec,task-clock,6252595,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n44637344,,cpu_core/instructions/u,6252595,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n16972323,,cpu_core/cycles/u,6252595,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5891233,,cpu_core/branches/u,6252595,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n52634,,cpu_core/branch-misses/u,6252595,100.00,,\n",
+      "6.12,msec,task-clock,6118867,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n44637347,,cpu_core/instructions/u,6118867,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n17096499,,cpu_core/cycles/u,6118867,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5891236,,cpu_core/branches/u,6118867,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n52997,,cpu_core/branch-misses/u,6118867,100.00,,\n",
+      "6.12,msec,task-clock,6115049,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n44637345,,cpu_core/instructions/u,6115049,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n16965392,,cpu_core/cycles/u,6115049,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5891234,,cpu_core/branches/u,6115049,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n52450,,cpu_core/branch-misses/u,6115049,100.00,,\n",
+      "6.04,msec,task-clock,6036288,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n44637348,,cpu_core/instructions/u,6036288,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n16948569,,cpu_core/cycles/u,6036288,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5891237,,cpu_core/branches/u,6036288,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n52631,,cpu_core/branch-misses/u,6036288,100.00,,\n",
+      "6.45,msec,task-clock,6451452,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n44637344,,cpu_core/instructions/u,6451452,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n17043395,,cpu_core/cycles/u,6451452,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5891233,,cpu_core/branches/u,6451452,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n53022,,cpu_core/branch-misses/u,6451452,100.00,,\n",
+      "6.12,msec,task-clock,6115032,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n44637347,,cpu_core/instructions/u,6115032,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n16887568,,cpu_core/cycles/u,6115032,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5891236,,cpu_core/branches/u,6115032,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n52056,,cpu_core/branch-misses/u,6115032,100.00,,\n"
+     ],
+     "task-clock_median": 6.12,
+     "instructions_median": 44637347.0,
+     "cycles_median": 16965392.0,
+     "branches_median": 5891236.0,
+     "branch-misses_median": 52631.0
+    },
+    "width": {
+     "wall_ms_median": 5.598868,
+     "wall_ms_iqr": 0.4550049999999999,
+     "wall_ms_min": 5.057516,
+     "wall_samples": 21,
+     "wall_ms": [
+      5.756444,
+      5.685991,
+      5.66173,
+      5.445925,
+      5.207326,
+      6.608989,
+      5.704162,
+      5.598868,
+      5.77242,
+      5.243576,
+      5.636294,
+      5.605482,
+      5.669377,
+      5.227748,
+      5.359359,
+      5.166511,
+      6.041953,
+      5.529135,
+      5.486104,
+      5.236567,
+      5.057516
+     ],
+     "counter_samples": {
+      "task-clock": [
+       5.36,
+       5.42,
+       5.38,
+       5.46,
+       5.36,
+       5.38,
+       5.31
+      ],
+      "instructions": [
+       41403009.0,
+       41403011.0,
+       41403010.0,
+       41403009.0,
+       41403010.0,
+       41403010.0,
+       41403010.0
+      ],
+      "cycles": [
+       15887343.0,
+       15976345.0,
+       16015835.0,
+       15986047.0,
+       16239785.0,
+       15992131.0,
+       15934521.0
+      ],
+      "branches": [
+       5465201.0,
+       5465203.0,
+       5465202.0,
+       5465201.0,
+       5465202.0,
+       5465202.0,
+       5465202.0
+      ],
+      "branch-misses": [
+       48506.0,
+       47884.0,
+       48065.0,
+       48006.0,
+       47989.0,
+       49146.0,
+       48181.0
+      ]
+     },
+     "perf_raw": [
+      "5.36,msec,task-clock,5364498,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n41403009,,cpu_core/instructions/u,5364498,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n15887343,,cpu_core/cycles/u,5364498,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5465201,,cpu_core/branches/u,5364498,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n48506,,cpu_core/branch-misses/u,5364498,100.00,,\n",
+      "5.42,msec,task-clock,5417085,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n41403011,,cpu_core/instructions/u,5417085,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n15976345,,cpu_core/cycles/u,5417085,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5465203,,cpu_core/branches/u,5417085,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n47884,,cpu_core/branch-misses/u,5417085,100.00,,\n",
+      "5.38,msec,task-clock,5381660,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n41403010,,cpu_core/instructions/u,5381660,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n16015835,,cpu_core/cycles/u,5381660,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5465202,,cpu_core/branches/u,5381660,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n48065,,cpu_core/branch-misses/u,5381660,100.00,,\n",
+      "5.46,msec,task-clock,5464192,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n41403009,,cpu_core/instructions/u,5464192,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n15986047,,cpu_core/cycles/u,5464192,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5465201,,cpu_core/branches/u,5464192,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n48006,,cpu_core/branch-misses/u,5464192,100.00,,\n",
+      "5.36,msec,task-clock,5356175,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n41403010,,cpu_core/instructions/u,5356175,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n16239785,,cpu_core/cycles/u,5356175,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5465202,,cpu_core/branches/u,5356175,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n47989,,cpu_core/branch-misses/u,5356175,100.00,,\n",
+      "5.38,msec,task-clock,5377312,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n41403010,,cpu_core/instructions/u,5377312,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n15992131,,cpu_core/cycles/u,5377312,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5465202,,cpu_core/branches/u,5377312,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n49146,,cpu_core/branch-misses/u,5377312,100.00,,\n",
+      "5.31,msec,task-clock,5314879,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n41403010,,cpu_core/instructions/u,5314879,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n15934521,,cpu_core/cycles/u,5314879,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5465202,,cpu_core/branches/u,5314879,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n48181,,cpu_core/branch-misses/u,5314879,100.00,,\n"
+     ],
+     "task-clock_median": 5.38,
+     "instructions_median": 41403010.0,
+     "cycles_median": 15986047.0,
+     "branches_median": 5465202.0,
+     "branch-misses_median": 48065.0
+    },
+    "combined": {
+     "wall_ms_median": 5.480068,
+     "wall_ms_iqr": 0.35752949999999917,
+     "wall_ms_min": 4.996741,
+     "wall_samples": 21,
+     "wall_ms": [
+      5.531896,
+      5.468215,
+      5.401151,
+      4.996741,
+      5.212379,
+      6.001478,
+      5.480068,
+      5.597497,
+      5.163291,
+      5.082655,
+      5.553825,
+      5.680567,
+      5.055277,
+      5.438833,
+      5.486166,
+      5.619723,
+      5.778599,
+      5.296562,
+      5.586916,
+      5.808423,
+      5.289782
+     ],
+     "counter_samples": {
+      "task-clock": [
+       6.45,
+       5.25,
+       5.21,
+       5.23,
+       5.2,
+       5.29,
+       5.2
+      ],
+      "instructions": [
+       40824483.0,
+       40824480.0,
+       40824482.0,
+       40824483.0,
+       40824481.0,
+       40824480.0,
+       40824481.0
+      ],
+      "cycles": [
+       17520944.0,
+       15586635.0,
+       15468535.0,
+       15746316.0,
+       15464963.0,
+       15729021.0,
+       15542533.0
+      ],
+      "branches": [
+       5403957.0,
+       5403956.0,
+       5403956.0,
+       5403957.0,
+       5403955.0,
+       5403954.0,
+       5403955.0
+      ],
+      "branch-misses": [
+       49271.0,
+       47571.0,
+       46945.0,
+       48397.0,
+       47709.0,
+       47178.0,
+       47241.0
+      ]
+     },
+     "perf_raw": [
+      "6.45,msec,task-clock,6449876,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n40824483,,cpu_core/instructions/u,6449876,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n17520944,,cpu_core/cycles/u,6449876,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5403957,,cpu_core/branches/u,6449876,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n49271,,cpu_core/branch-misses/u,6449876,100.00,,\n",
+      "5.25,msec,task-clock,5248245,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n40824480,,cpu_core/instructions/u,5248245,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n15586635,,cpu_core/cycles/u,5248245,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5403956,,cpu_core/branches/u,5248245,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n47571,,cpu_core/branch-misses/u,5248245,100.00,,\n",
+      "5.21,msec,task-clock,5208561,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n40824482,,cpu_core/instructions/u,5208561,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n15468535,,cpu_core/cycles/u,5208561,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5403956,,cpu_core/branches/u,5208561,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n46945,,cpu_core/branch-misses/u,5208561,100.00,,\n",
+      "5.23,msec,task-clock,5230083,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n40824483,,cpu_core/instructions/u,5230083,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n15746316,,cpu_core/cycles/u,5230083,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5403957,,cpu_core/branches/u,5230083,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n48397,,cpu_core/branch-misses/u,5230083,100.00,,\n",
+      "5.20,msec,task-clock,5203776,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n40824481,,cpu_core/instructions/u,5203776,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n15464963,,cpu_core/cycles/u,5203776,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5403955,,cpu_core/branches/u,5203776,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n47709,,cpu_core/branch-misses/u,5203776,100.00,,\n",
+      "5.29,msec,task-clock,5287251,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n40824480,,cpu_core/instructions/u,5287251,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n15729021,,cpu_core/cycles/u,5287251,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5403954,,cpu_core/branches/u,5287251,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n47178,,cpu_core/branch-misses/u,5287251,100.00,,\n",
+      "5.20,msec,task-clock,5201417,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n40824481,,cpu_core/instructions/u,5201417,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n15542533,,cpu_core/cycles/u,5201417,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5403955,,cpu_core/branches/u,5201417,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n47241,,cpu_core/branch-misses/u,5201417,100.00,,\n"
+     ],
+     "task-clock_median": 5.23,
+     "instructions_median": 40824481.0,
+     "cycles_median": 15586635.0,
+     "branches_median": 5403956.0,
+     "branch-misses_median": 47571.0
+    },
+    "zig": {
+     "wall_ms_median": 2.499063,
+     "wall_ms_iqr": 0.23524949999999967,
+     "wall_ms_min": 2.176556,
+     "wall_samples": 21,
+     "wall_ms": [
+      2.191712,
+      2.495165,
+      2.176556,
+      2.223348,
+      2.474273,
+      2.493292,
+      2.518463,
+      2.707962,
+      2.306286,
+      2.205521,
+      2.521803,
+      2.594779,
+      2.499063,
+      2.558711,
+      2.332738,
+      2.553247,
+      2.499864,
+      2.556276,
+      2.405256,
+      2.541313,
+      2.643956
+     ],
+     "counter_samples": {
+      "task-clock": [
+       2.47,
+       2.36,
+       2.34,
+       2.37,
+       2.34,
+       2.36,
+       2.49
+      ],
+      "instructions": [
+       22748499.0,
+       22748498.0,
+       22748496.0,
+       22748497.0,
+       22748496.0,
+       22748497.0,
+       22748499.0
+      ],
+      "cycles": [
+       6666069.0,
+       6746474.0,
+       6709598.0,
+       6655784.0,
+       6674269.0,
+       6644397.0,
+       6949737.0
+      ],
+      "branches": [
+       5035519.0,
+       5035518.0,
+       5035516.0,
+       5035517.0,
+       5035516.0,
+       5035517.0,
+       5035519.0
+      ],
+      "branch-misses": [
+       28641.0,
+       27467.0,
+       28318.0,
+       27637.0,
+       27799.0,
+       28010.0,
+       28069.0
+      ]
+     },
+     "perf_raw": [
+      "2.47,msec,task-clock,2474434,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n22748499,,cpu_core/instructions/u,2474434,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n6666069,,cpu_core/cycles/u,2474434,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5035519,,cpu_core/branches/u,2474434,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28641,,cpu_core/branch-misses/u,2474434,100.00,,\n",
+      "2.36,msec,task-clock,2357373,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n22748498,,cpu_core/instructions/u,2357373,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n6746474,,cpu_core/cycles/u,2357373,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5035518,,cpu_core/branches/u,2357373,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n27467,,cpu_core/branch-misses/u,2357373,100.00,,\n",
+      "2.34,msec,task-clock,2336844,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n22748496,,cpu_core/instructions/u,2336844,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n6709598,,cpu_core/cycles/u,2336844,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5035516,,cpu_core/branches/u,2336844,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28318,,cpu_core/branch-misses/u,2336844,100.00,,\n",
+      "2.37,msec,task-clock,2371978,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n22748497,,cpu_core/instructions/u,2371978,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n6655784,,cpu_core/cycles/u,2371978,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5035517,,cpu_core/branches/u,2371978,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n27637,,cpu_core/branch-misses/u,2371978,100.00,,\n",
+      "2.34,msec,task-clock,2343387,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n22748496,,cpu_core/instructions/u,2343387,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n6674269,,cpu_core/cycles/u,2343387,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5035516,,cpu_core/branches/u,2343387,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n27799,,cpu_core/branch-misses/u,2343387,100.00,,\n",
+      "2.36,msec,task-clock,2357232,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n22748497,,cpu_core/instructions/u,2357232,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n6644397,,cpu_core/cycles/u,2357232,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5035517,,cpu_core/branches/u,2357232,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28010,,cpu_core/branch-misses/u,2357232,100.00,,\n",
+      "2.49,msec,task-clock,2490821,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n22748499,,cpu_core/instructions/u,2490821,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n6949737,,cpu_core/cycles/u,2490821,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n5035519,,cpu_core/branches/u,2490821,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n28069,,cpu_core/branch-misses/u,2490821,100.00,,\n"
+     ],
+     "task-clock_median": 2.36,
+     "instructions_median": 22748497.0,
+     "cycles_median": 6674269.0,
+     "branches_median": 5035517.0,
+     "branch-misses_median": 28010.0
+    }
+   },
+   "ratios": {
+    "rebuilt/chart-o3": {
+     "median": 0.997314453012242,
+     "low": 0.9625628224793888,
+     "high": 1.0259005062618498,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    },
+    "rebuilt/internal": {
+     "median": 1.0274384122228062,
+     "low": 0.9985537007316796,
+     "high": 1.0623070003529185,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    },
+    "rebuilt/width": {
+     "median": 1.157031564237628,
+     "low": 1.1215674696884157,
+     "high": 1.2096449082903564,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    },
+    "rebuilt/combined": {
+     "median": 1.1821143460263632,
+     "low": 1.1382216760520902,
+     "high": 1.2269713825685418,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    },
+    "rebuilt/zig": {
+     "median": 2.592198355943808,
+     "low": 2.5251867833674955,
+     "high": 2.7018870340620706,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    }
+   }
+  },
+  "census-7.4MB": {
+   "stdout_bytes": 124,
+   "stdout_sha256": "969242c9729df7567a1e9d236aec504aa7bba8a9356ac8f12205da505696782f",
+   "arms": {
+    "chart-o3": {
+     "wall_ms_median": 23.139965,
+     "wall_ms_iqr": 1.802879500000003,
+     "wall_ms_min": 21.773415,
+     "wall_samples": 21,
+     "wall_ms": [
+      22.389122,
+      23.380849,
+      21.773415,
+      21.889627,
+      22.655514,
+      24.010866,
+      23.139965,
+      22.266285,
+      22.151212,
+      26.234599,
+      22.208306,
+      22.460904,
+      24.165832,
+      23.256939,
+      24.293745,
+      22.304654,
+      25.220456,
+      23.182228,
+      22.713976,
+      24.500272,
+      23.216635
+     ],
+     "counter_samples": {
+      "task-clock": [
+       21.92,
+       21.83,
+       21.64,
+       21.87,
+       21.92,
+       21.85,
+       21.97
+      ],
+      "instructions": [
+       155276520.0,
+       155276524.0,
+       155276522.0,
+       155276523.0,
+       155276518.0,
+       155276526.0,
+       155276522.0
+      ],
+      "cycles": [
+       62068326.0,
+       61954104.0,
+       61910820.0,
+       62310643.0,
+       62185583.0,
+       62165915.0,
+       61798592.0
+      ],
+      "branches": [
+       24833921.0,
+       24833925.0,
+       24833923.0,
+       24833924.0,
+       24833921.0,
+       24833927.0,
+       24833923.0
+      ],
+      "branch-misses": [
+       159495.0,
+       158854.0,
+       158906.0,
+       159510.0,
+       157711.0,
+       159039.0,
+       158334.0
+      ]
+     },
+     "perf_raw": [
+      "21.92,msec,task-clock,21923022,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276520,,cpu_core/instructions/u,21923022,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n62068326,,cpu_core/cycles/u,21923022,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833921,,cpu_core/branches/u,21923022,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n159495,,cpu_core/branch-misses/u,21923022,100.00,,\n",
+      "21.83,msec,task-clock,21825463,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276524,,cpu_core/instructions/u,21825463,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n61954104,,cpu_core/cycles/u,21825463,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833925,,cpu_core/branches/u,21825463,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n158854,,cpu_core/branch-misses/u,21825463,100.00,,\n",
+      "21.64,msec,task-clock,21640393,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276522,,cpu_core/instructions/u,21640393,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n61910820,,cpu_core/cycles/u,21640393,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833923,,cpu_core/branches/u,21640393,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n158906,,cpu_core/branch-misses/u,21640393,100.00,,\n",
+      "21.87,msec,task-clock,21869665,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276523,,cpu_core/instructions/u,21869665,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n62310643,,cpu_core/cycles/u,21869665,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833924,,cpu_core/branches/u,21869665,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n159510,,cpu_core/branch-misses/u,21869665,100.00,,\n",
+      "21.92,msec,task-clock,21923911,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276518,,cpu_core/instructions/u,21923911,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n62185583,,cpu_core/cycles/u,21923911,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833921,,cpu_core/branches/u,21923911,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n157711,,cpu_core/branch-misses/u,21923911,100.00,,\n",
+      "21.85,msec,task-clock,21853259,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276526,,cpu_core/instructions/u,21853259,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n62165915,,cpu_core/cycles/u,21853259,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833927,,cpu_core/branches/u,21853259,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n159039,,cpu_core/branch-misses/u,21853259,100.00,,\n",
+      "21.97,msec,task-clock,21971778,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276522,,cpu_core/instructions/u,21971778,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n61798592,,cpu_core/cycles/u,21971778,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833923,,cpu_core/branches/u,21971778,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n158334,,cpu_core/branch-misses/u,21971778,100.00,,\n"
+     ],
+     "task-clock_median": 21.87,
+     "instructions_median": 155276522.0,
+     "cycles_median": 62068326.0,
+     "branches_median": 24833923.0,
+     "branch-misses_median": 158906.0
+    },
+    "rebuilt": {
+     "wall_ms_median": 23.422669,
+     "wall_ms_iqr": 1.2620700000000014,
+     "wall_ms_min": 22.142663,
+     "wall_samples": 21,
+     "wall_ms": [
+      23.842105,
+      24.247992,
+      24.075194,
+      22.440147,
+      22.142663,
+      24.395047,
+      23.641712,
+      22.265661,
+      22.917361,
+      23.65023,
+      22.526611,
+      22.811241,
+      22.485393,
+      23.753732,
+      23.422669,
+      23.076706,
+      23.560502,
+      23.374029,
+      22.545086,
+      23.665758,
+      24.521322
+     ],
+     "counter_samples": {
+      "task-clock": [
+       22.15,
+       21.7,
+       21.69,
+       22.07,
+       22.2,
+       21.7,
+       21.78
+      ],
+      "instructions": [
+       155276526.0,
+       155276527.0,
+       155276525.0,
+       155276530.0,
+       155276528.0,
+       155276528.0,
+       155276524.0
+      ],
+      "cycles": [
+       62120585.0,
+       62168526.0,
+       62242945.0,
+       62893675.0,
+       63523546.0,
+       61849342.0,
+       62150364.0
+      ],
+      "branches": [
+       24833925.0,
+       24833926.0,
+       24833924.0,
+       24833929.0,
+       24833927.0,
+       24833927.0,
+       24833923.0
+      ],
+      "branch-misses": [
+       157534.0,
+       159185.0,
+       159876.0,
+       159466.0,
+       159896.0,
+       158520.0,
+       158049.0
+      ]
+     },
+     "perf_raw": [
+      "22.15,msec,task-clock,22151079,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276526,,cpu_core/instructions/u,22151079,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n62120585,,cpu_core/cycles/u,22151079,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833925,,cpu_core/branches/u,22151079,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n157534,,cpu_core/branch-misses/u,22151079,100.00,,\n",
+      "21.70,msec,task-clock,21696584,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276527,,cpu_core/instructions/u,21696584,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n62168526,,cpu_core/cycles/u,21696584,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833926,,cpu_core/branches/u,21696584,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n159185,,cpu_core/branch-misses/u,21696584,100.00,,\n",
+      "21.69,msec,task-clock,21689360,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276525,,cpu_core/instructions/u,21689360,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n62242945,,cpu_core/cycles/u,21689360,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833924,,cpu_core/branches/u,21689360,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n159876,,cpu_core/branch-misses/u,21689360,100.00,,\n",
+      "22.07,msec,task-clock,22067283,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276530,,cpu_core/instructions/u,22067283,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n62893675,,cpu_core/cycles/u,22067283,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833929,,cpu_core/branches/u,22067283,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n159466,,cpu_core/branch-misses/u,22067283,100.00,,\n",
+      "22.20,msec,task-clock,22196977,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276528,,cpu_core/instructions/u,22196977,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n63523546,,cpu_core/cycles/u,22196977,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833927,,cpu_core/branches/u,22196977,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n159896,,cpu_core/branch-misses/u,22196977,100.00,,\n",
+      "21.70,msec,task-clock,21698525,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276528,,cpu_core/instructions/u,21698525,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n61849342,,cpu_core/cycles/u,21698525,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833927,,cpu_core/branches/u,21698525,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n158520,,cpu_core/branch-misses/u,21698525,100.00,,\n",
+      "21.78,msec,task-clock,21778030,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276524,,cpu_core/instructions/u,21778030,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n62150364,,cpu_core/cycles/u,21778030,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833923,,cpu_core/branches/u,21778030,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n158049,,cpu_core/branch-misses/u,21778030,100.00,,\n"
+     ],
+     "task-clock_median": 21.78,
+     "instructions_median": 155276527.0,
+     "cycles_median": 62168526.0,
+     "branches_median": 24833926.0,
+     "branch-misses_median": 159185.0
+    },
+    "internal": {
+     "wall_ms_median": 22.704655,
+     "wall_ms_iqr": 0.5898094999999977,
+     "wall_ms_min": 21.841775,
+     "wall_samples": 21,
+     "wall_ms": [
+      22.929163,
+      23.11587,
+      22.600078,
+      22.228407,
+      22.488102,
+      23.811267,
+      22.750383,
+      22.314785,
+      21.841775,
+      22.999475,
+      22.267034,
+      21.95943,
+      22.736719,
+      22.9783,
+      22.698552,
+      22.704655,
+      23.758318,
+      23.118877,
+      22.483371,
+      22.531343,
+      22.924887
+     ],
+     "counter_samples": {
+      "task-clock": [
+       21.55,
+       21.57,
+       22.19,
+       21.38,
+       21.46,
+       23.88,
+       21.6
+      ],
+      "instructions": [
+       153067546.0,
+       153067545.0,
+       153067575.0,
+       153067573.0,
+       153067575.0,
+       153067546.0,
+       153067551.0
+      ],
+      "cycles": [
+       60402542.0,
+       60134749.0,
+       60383593.0,
+       59951183.0,
+       59976088.0,
+       68604007.0,
+       60333769.0
+      ],
+      "branches": [
+       24541123.0,
+       24541122.0,
+       24541122.0,
+       24541120.0,
+       24541122.0,
+       24541121.0,
+       24541126.0
+      ],
+      "branch-misses": [
+       155358.0,
+       155245.0,
+       155687.0,
+       155308.0,
+       156699.0,
+       153145.0,
+       156265.0
+      ]
+     },
+     "perf_raw": [
+      "21.55,msec,task-clock,21551829,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n153067546,,cpu_core/instructions/u,21551829,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n60402542,,cpu_core/cycles/u,21551829,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24541123,,cpu_core/branches/u,21551829,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n155358,,cpu_core/branch-misses/u,21551829,100.00,,\n",
+      "21.57,msec,task-clock,21571178,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n153067545,,cpu_core/instructions/u,21571178,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n60134749,,cpu_core/cycles/u,21571178,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24541122,,cpu_core/branches/u,21571178,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n155245,,cpu_core/branch-misses/u,21571178,100.00,,\n",
+      "22.19,msec,task-clock,22189441,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n153067575,,cpu_core/instructions/u,22189441,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n60383593,,cpu_core/cycles/u,22189441,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24541122,,cpu_core/branches/u,22189441,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n155687,,cpu_core/branch-misses/u,22189441,100.00,,\n",
+      "21.38,msec,task-clock,21377806,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n153067573,,cpu_core/instructions/u,21377806,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n59951183,,cpu_core/cycles/u,21377806,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24541120,,cpu_core/branches/u,21377806,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n155308,,cpu_core/branch-misses/u,21377806,100.00,,\n",
+      "21.46,msec,task-clock,21456537,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n153067575,,cpu_core/instructions/u,21456537,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n59976088,,cpu_core/cycles/u,21456537,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24541122,,cpu_core/branches/u,21456537,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n156699,,cpu_core/branch-misses/u,21456537,100.00,,\n",
+      "23.88,msec,task-clock,23882306,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n153067546,,cpu_core/instructions/u,23882306,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n68604007,,cpu_core/cycles/u,23882306,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24541121,,cpu_core/branches/u,23882306,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n153145,,cpu_core/branch-misses/u,23882306,100.00,,\n",
+      "21.60,msec,task-clock,21598724,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n153067551,,cpu_core/instructions/u,21598724,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n60333769,,cpu_core/cycles/u,21598724,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24541126,,cpu_core/branches/u,21598724,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n156265,,cpu_core/branch-misses/u,21598724,100.00,,\n"
+     ],
+     "task-clock_median": 21.57,
+     "instructions_median": 153067551.0,
+     "cycles_median": 60333769.0,
+     "branches_median": 24541122.0,
+     "branch-misses_median": 155358.0
+    },
+    "width": {
+     "wall_ms_median": 23.022164,
+     "wall_ms_iqr": 0.9403439999999996,
+     "wall_ms_min": 22.316798,
+     "wall_samples": 21,
+     "wall_ms": [
+      22.523123,
+      23.175159,
+      22.316798,
+      22.359069,
+      24.814638,
+      24.329235,
+      23.629993,
+      22.764091,
+      22.821051,
+      22.750293,
+      23.022164,
+      22.611196,
+      23.523596,
+      22.751865,
+      23.988963,
+      22.77902,
+      23.538812,
+      23.529701,
+      22.482023,
+      23.873809,
+      23.612184
+     ],
+     "counter_samples": {
+      "task-clock": [
+       22.66,
+       22.04,
+       21.99,
+       21.85,
+       22.01,
+       21.48,
+       22.07
+      ],
+      "instructions": [
+       155276523.0,
+       155276523.0,
+       155276518.0,
+       155276516.0,
+       155276521.0,
+       155276518.0,
+       155276520.0
+      ],
+      "cycles": [
+       63482978.0,
+       63503701.0,
+       62922418.0,
+       62339738.0,
+       62422653.0,
+       62108735.0,
+       63868342.0
+      ],
+      "branches": [
+       24833928.0,
+       24833930.0,
+       24833923.0,
+       24833921.0,
+       24833926.0,
+       24833923.0,
+       24833925.0
+      ],
+      "branch-misses": [
+       159556.0,
+       160464.0,
+       160434.0,
+       159851.0,
+       160444.0,
+       159704.0,
+       161084.0
+      ]
+     },
+     "perf_raw": [
+      "22.66,msec,task-clock,22663034,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276523,,cpu_core/instructions/u,22663034,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n63482978,,cpu_core/cycles/u,22663034,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833928,,cpu_core/branches/u,22663034,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n159556,,cpu_core/branch-misses/u,22663034,100.00,,\n",
+      "22.04,msec,task-clock,22038402,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276523,,cpu_core/instructions/u,22038402,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n63503701,,cpu_core/cycles/u,22038402,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833930,,cpu_core/branches/u,22038402,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n160464,,cpu_core/branch-misses/u,22038402,100.00,,\n",
+      "21.99,msec,task-clock,21994920,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276518,,cpu_core/instructions/u,21994920,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n62922418,,cpu_core/cycles/u,21994920,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833923,,cpu_core/branches/u,21994920,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n160434,,cpu_core/branch-misses/u,21994920,100.00,,\n",
+      "21.85,msec,task-clock,21852597,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276516,,cpu_core/instructions/u,21852597,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n62339738,,cpu_core/cycles/u,21852597,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833921,,cpu_core/branches/u,21852597,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n159851,,cpu_core/branch-misses/u,21852597,100.00,,\n",
+      "22.01,msec,task-clock,22008563,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276521,,cpu_core/instructions/u,22008563,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n62422653,,cpu_core/cycles/u,22008563,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833926,,cpu_core/branches/u,22008563,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n160444,,cpu_core/branch-misses/u,22008563,100.00,,\n",
+      "21.48,msec,task-clock,21481384,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276518,,cpu_core/instructions/u,21481384,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n62108735,,cpu_core/cycles/u,21481384,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833923,,cpu_core/branches/u,21481384,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n159704,,cpu_core/branch-misses/u,21481384,100.00,,\n",
+      "22.07,msec,task-clock,22072875,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155276520,,cpu_core/instructions/u,22072875,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n63868342,,cpu_core/cycles/u,22072875,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24833925,,cpu_core/branches/u,22072875,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n161084,,cpu_core/branch-misses/u,22072875,100.00,,\n"
+     ],
+     "task-clock_median": 22.01,
+     "instructions_median": 155276520.0,
+     "cycles_median": 62922418.0,
+     "branches_median": 24833925.0,
+     "branch-misses_median": 160434.0
+    },
+    "combined": {
+     "wall_ms_median": 22.646463,
+     "wall_ms_iqr": 1.3985105000000004,
+     "wall_ms_min": 21.582919,
+     "wall_samples": 21,
+     "wall_ms": [
+      21.696264,
+      22.657511,
+      22.713109,
+      22.140982,
+      21.990007,
+      23.017277,
+      21.937887,
+      23.976987,
+      21.986077,
+      21.923885,
+      22.780538,
+      25.710829,
+      22.252928,
+      22.99006,
+      22.646463,
+      22.541207,
+      22.145613,
+      23.756327,
+      26.235578,
+      21.582919,
+      23.755828
+     ],
+     "counter_samples": {
+      "task-clock": [
+       21.49,
+       21.0,
+       21.14,
+       21.37,
+       21.25,
+       21.27,
+       21.2
+      ],
+      "instructions": [
+       153067550.0,
+       153067549.0,
+       153067551.0,
+       153067545.0,
+       153067550.0,
+       153067551.0,
+       153067547.0
+      ],
+      "cycles": [
+       59663514.0,
+       58695626.0,
+       59421326.0,
+       59948514.0,
+       59334981.0,
+       59893177.0,
+       59337785.0
+      ],
+      "branches": [
+       24541125.0,
+       24541124.0,
+       24541126.0,
+       24541120.0,
+       24541125.0,
+       24541126.0,
+       24541122.0
+      ],
+      "branch-misses": [
+       149081.0,
+       148691.0,
+       149155.0,
+       148246.0,
+       149109.0,
+       148855.0,
+       149992.0
+      ]
+     },
+     "perf_raw": [
+      "21.49,msec,task-clock,21488420,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n153067550,,cpu_core/instructions/u,21488420,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n59663514,,cpu_core/cycles/u,21488420,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24541125,,cpu_core/branches/u,21488420,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n149081,,cpu_core/branch-misses/u,21488420,100.00,,\n",
+      "21.00,msec,task-clock,20998211,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n153067549,,cpu_core/instructions/u,20998211,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n58695626,,cpu_core/cycles/u,20998211,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24541124,,cpu_core/branches/u,20998211,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n148691,,cpu_core/branch-misses/u,20998211,100.00,,\n",
+      "21.14,msec,task-clock,21144115,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n153067551,,cpu_core/instructions/u,21144115,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n59421326,,cpu_core/cycles/u,21144115,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24541126,,cpu_core/branches/u,21144115,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n149155,,cpu_core/branch-misses/u,21144115,100.00,,\n",
+      "21.37,msec,task-clock,21365567,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n153067545,,cpu_core/instructions/u,21365567,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n59948514,,cpu_core/cycles/u,21365567,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24541120,,cpu_core/branches/u,21365567,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n148246,,cpu_core/branch-misses/u,21365567,100.00,,\n",
+      "21.25,msec,task-clock,21246303,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n153067550,,cpu_core/instructions/u,21246303,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n59334981,,cpu_core/cycles/u,21246303,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24541125,,cpu_core/branches/u,21246303,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n149109,,cpu_core/branch-misses/u,21246303,100.00,,\n",
+      "21.27,msec,task-clock,21269486,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n153067551,,cpu_core/instructions/u,21269486,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n59893177,,cpu_core/cycles/u,21269486,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24541126,,cpu_core/branches/u,21269486,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n148855,,cpu_core/branch-misses/u,21269486,100.00,,\n",
+      "21.20,msec,task-clock,21203389,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n153067547,,cpu_core/instructions/u,21203389,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n59337785,,cpu_core/cycles/u,21203389,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n24541122,,cpu_core/branches/u,21203389,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n149992,,cpu_core/branch-misses/u,21203389,100.00,,\n"
+     ],
+     "task-clock_median": 21.25,
+     "instructions_median": 153067550.0,
+     "cycles_median": 59421326.0,
+     "branches_median": 24541125.0,
+     "branch-misses_median": 149081.0
+    },
+    "zig": {
+     "wall_ms_median": 13.289911,
+     "wall_ms_iqr": 0.5737735000000015,
+     "wall_ms_min": 12.796321,
+     "wall_samples": 21,
+     "wall_ms": [
+      12.796321,
+      12.942439,
+      13.025763,
+      13.01404,
+      13.206035,
+      14.226091,
+      13.289911,
+      15.748041,
+      13.268703,
+      13.028996,
+      13.365805,
+      15.92199,
+      13.292706,
+      13.650097,
+      13.207472,
+      13.209677,
+      14.278007,
+      13.317694,
+      13.307685,
+      13.552209,
+      12.988378
+     ],
+     "counter_samples": {
+      "task-clock": [
+       13.55,
+       13.34,
+       14.11,
+       13.26,
+       13.22,
+       13.27,
+       13.23
+      ],
+      "instructions": [
+       155017589.0,
+       155017587.0,
+       155017590.0,
+       155017588.0,
+       155017587.0,
+       155017586.0,
+       155017588.0
+      ],
+      "cycles": [
+       40959339.0,
+       41399637.0,
+       41211474.0,
+       41024550.0,
+       40689213.0,
+       40630363.0,
+       40863395.0
+      ],
+      "branches": [
+       35964963.0,
+       35964961.0,
+       35964964.0,
+       35964962.0,
+       35964962.0,
+       35964960.0,
+       35964962.0
+      ],
+      "branch-misses": [
+       117776.0,
+       116735.0,
+       117205.0,
+       118443.0,
+       117959.0,
+       116599.0,
+       117529.0
+      ]
+     },
+     "perf_raw": [
+      "13.55,msec,task-clock,13548976,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155017589,,cpu_core/instructions/u,13548976,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n40959339,,cpu_core/cycles/u,13548976,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n35964963,,cpu_core/branches/u,13548976,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n117776,,cpu_core/branch-misses/u,13548976,100.00,,\n",
+      "13.34,msec,task-clock,13338243,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155017587,,cpu_core/instructions/u,13338243,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n41399637,,cpu_core/cycles/u,13338243,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n35964961,,cpu_core/branches/u,13338243,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n116735,,cpu_core/branch-misses/u,13338243,100.00,,\n",
+      "14.11,msec,task-clock,14109582,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155017590,,cpu_core/instructions/u,14109582,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n41211474,,cpu_core/cycles/u,14109582,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n35964964,,cpu_core/branches/u,14109582,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n117205,,cpu_core/branch-misses/u,14109582,100.00,,\n",
+      "13.26,msec,task-clock,13264588,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155017588,,cpu_core/instructions/u,13264588,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n41024550,,cpu_core/cycles/u,13264588,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n35964962,,cpu_core/branches/u,13264588,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n118443,,cpu_core/branch-misses/u,13264588,100.00,,\n",
+      "13.22,msec,task-clock,13219327,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155017587,,cpu_core/instructions/u,13219327,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n40689213,,cpu_core/cycles/u,13219327,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n35964962,,cpu_core/branches/u,13219327,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n117959,,cpu_core/branch-misses/u,13219327,100.00,,\n",
+      "13.27,msec,task-clock,13272698,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155017586,,cpu_core/instructions/u,13272698,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n40630363,,cpu_core/cycles/u,13272698,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n35964960,,cpu_core/branches/u,13272698,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n116599,,cpu_core/branch-misses/u,13272698,100.00,,\n",
+      "13.23,msec,task-clock,13231609,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n155017588,,cpu_core/instructions/u,13231609,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n40863395,,cpu_core/cycles/u,13231609,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n35964962,,cpu_core/branches/u,13231609,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n117529,,cpu_core/branch-misses/u,13231609,100.00,,\n"
+     ],
+     "task-clock_median": 13.27,
+     "instructions_median": 155017588.0,
+     "cycles_median": 40959339.0,
+     "branches_median": 35964962.0,
+     "branch-misses_median": 117529.0
+    }
+   },
+   "ratios": {
+    "rebuilt/chart-o3": {
+     "median": 1.0122171317026625,
+     "low": 0.985794101244319,
+     "high": 1.0489560883212894,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    },
+    "rebuilt/internal": {
+     "median": 1.031624087659557,
+     "low": 1.0079449457945098,
+     "high": 1.0460898409288675,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    },
+    "rebuilt/width": {
+     "median": 1.017396496697704,
+     "low": 0.981002479382829,
+     "high": 1.0389278379842504,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    },
+    "rebuilt/combined": {
+     "median": 1.034274932911157,
+     "low": 0.9968378072958487,
+     "high": 1.0677806431530452,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    },
+    "rebuilt/zig": {
+     "median": 1.7624398688599192,
+     "low": 1.7123709084265115,
+     "high": 1.792041138767238,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    }
+   }
+  },
+  "render-7.4MB": {
+   "stdout_bytes": 5603400,
+   "stdout_sha256": "e8c07a29632c947f031988034b44a63effea51fb93754461f5450a5daeb223dc",
+   "arms": {
+    "chart-o3": {
+     "wall_ms_median": 49.962988,
+     "wall_ms_iqr": 1.9198020000000042,
+     "wall_ms_min": 48.472794,
+     "wall_samples": 21,
+     "wall_ms": [
+      49.487426,
+      49.357648,
+      49.680577,
+      49.1307,
+      48.472794,
+      50.228296,
+      52.483689,
+      49.866651,
+      50.135619,
+      50.183317,
+      49.950548,
+      49.618275,
+      49.962988,
+      52.246406,
+      54.225329,
+      51.306917,
+      62.300548,
+      49.984336,
+      49.509509,
+      51.660471,
+      49.786374
+     ],
+     "counter_samples": {
+      "task-clock": [
+       50.29,
+       49.79,
+       48.19,
+       48.73,
+       48.58,
+       48.82,
+       49.83
+      ],
+      "instructions": [
+       360406894.0,
+       360406899.0,
+       360406894.0,
+       360406900.0,
+       360406895.0,
+       360406892.0,
+       360406892.0
+      ],
+      "cycles": [
+       139674469.0,
+       138563323.0,
+       137263572.0,
+       137767031.0,
+       138029496.0,
+       137487547.0,
+       138387722.0
+      ],
+      "branches": [
+       47352318.0,
+       47352323.0,
+       47352318.0,
+       47352326.0,
+       47352319.0,
+       47352316.0,
+       47352316.0
+      ],
+      "branch-misses": [
+       320456.0,
+       315156.0,
+       315190.0,
+       316417.0,
+       317164.0,
+       313515.0,
+       316358.0
+      ]
+     },
+     "perf_raw": [
+      "50.29,msec,task-clock,50289936,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n360406894,,cpu_core/instructions/u,50289936,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n139674469,,cpu_core/cycles/u,50289936,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n47352318,,cpu_core/branches/u,50289936,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n320456,,cpu_core/branch-misses/u,50289936,100.00,,\n",
+      "49.79,msec,task-clock,49790266,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n360406899,,cpu_core/instructions/u,49790266,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n138563323,,cpu_core/cycles/u,49790266,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n47352323,,cpu_core/branches/u,49790266,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n315156,,cpu_core/branch-misses/u,49790266,100.00,,\n",
+      "48.19,msec,task-clock,48186507,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n360406894,,cpu_core/instructions/u,48186507,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n137263572,,cpu_core/cycles/u,48186507,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n47352318,,cpu_core/branches/u,48186507,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n315190,,cpu_core/branch-misses/u,48186507,100.00,,\n",
+      "48.73,msec,task-clock,48727604,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n360406900,,cpu_core/instructions/u,48727604,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n137767031,,cpu_core/cycles/u,48727604,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n47352326,,cpu_core/branches/u,48727604,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n316417,,cpu_core/branch-misses/u,48727604,100.00,,\n",
+      "48.58,msec,task-clock,48582059,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n360406895,,cpu_core/instructions/u,48582059,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n138029496,,cpu_core/cycles/u,48582059,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n47352319,,cpu_core/branches/u,48582059,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n317164,,cpu_core/branch-misses/u,48582059,100.00,,\n",
+      "48.82,msec,task-clock,48824695,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n360406892,,cpu_core/instructions/u,48824695,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n137487547,,cpu_core/cycles/u,48824695,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n47352316,,cpu_core/branches/u,48824695,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n313515,,cpu_core/branch-misses/u,48824695,100.00,,\n",
+      "49.83,msec,task-clock,49828560,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n360406892,,cpu_core/instructions/u,49828560,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n138387722,,cpu_core/cycles/u,49828560,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n47352316,,cpu_core/branches/u,49828560,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n316358,,cpu_core/branch-misses/u,49828560,100.00,,\n"
+     ],
+     "task-clock_median": 48.82,
+     "instructions_median": 360406894.0,
+     "cycles_median": 138029496.0,
+     "branches_median": 47352318.0,
+     "branch-misses_median": 316358.0
+    },
+    "rebuilt": {
+     "wall_ms_median": 50.472488,
+     "wall_ms_iqr": 1.6823729999999983,
+     "wall_ms_min": 48.944411,
+     "wall_samples": 21,
+     "wall_ms": [
+      52.876944,
+      50.26832,
+      49.636319,
+      48.944411,
+      49.709453,
+      51.197418,
+      49.655765,
+      50.097971,
+      50.118607,
+      49.853774,
+      49.944114,
+      50.472488,
+      49.348048,
+      51.617915,
+      51.508156,
+      51.334687,
+      52.280272,
+      50.762595,
+      51.27445,
+      51.419817,
+      52.19835
+     ],
+     "counter_samples": {
+      "task-clock": [
+       48.38,
+       48.4,
+       48.71,
+       48.86,
+       48.94,
+       48.75,
+       52.03
+      ],
+      "instructions": [
+       360406898.0,
+       360406900.0,
+       360406890.0,
+       360406895.0,
+       360406901.0,
+       360406896.0,
+       360406890.0
+      ],
+      "cycles": [
+       137154798.0,
+       137167136.0,
+       139029312.0,
+       137928581.0,
+       138147293.0,
+       137797939.0,
+       138871242.0
+      ],
+      "branches": [
+       47352322.0,
+       47352324.0,
+       47352314.0,
+       47352319.0,
+       47352325.0,
+       47352320.0,
+       47352316.0
+      ],
+      "branch-misses": [
+       314771.0,
+       317726.0,
+       313925.0,
+       315189.0,
+       315102.0,
+       313776.0,
+       314641.0
+      ]
+     },
+     "perf_raw": [
+      "48.38,msec,task-clock,48384122,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n360406898,,cpu_core/instructions/u,48384122,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n137154798,,cpu_core/cycles/u,48384122,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n47352322,,cpu_core/branches/u,48384122,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n314771,,cpu_core/branch-misses/u,48384122,100.00,,\n",
+      "48.40,msec,task-clock,48400190,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n360406900,,cpu_core/instructions/u,48400190,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n137167136,,cpu_core/cycles/u,48400190,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n47352324,,cpu_core/branches/u,48400190,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n317726,,cpu_core/branch-misses/u,48400190,100.00,,\n",
+      "48.71,msec,task-clock,48708557,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n360406890,,cpu_core/instructions/u,48708557,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n139029312,,cpu_core/cycles/u,48708557,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n47352314,,cpu_core/branches/u,48708557,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n313925,,cpu_core/branch-misses/u,48708557,100.00,,\n",
+      "48.86,msec,task-clock,48863431,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n360406895,,cpu_core/instructions/u,48863431,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n137928581,,cpu_core/cycles/u,48863431,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n47352319,,cpu_core/branches/u,48863431,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n315189,,cpu_core/branch-misses/u,48863431,100.00,,\n",
+      "48.94,msec,task-clock,48935991,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n360406901,,cpu_core/instructions/u,48935991,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n138147293,,cpu_core/cycles/u,48935991,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n47352325,,cpu_core/branches/u,48935991,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n315102,,cpu_core/branch-misses/u,48935991,100.00,,\n",
+      "48.75,msec,task-clock,48747862,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n360406896,,cpu_core/instructions/u,48747862,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n137797939,,cpu_core/cycles/u,48747862,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n47352320,,cpu_core/branches/u,48747862,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n313776,,cpu_core/branch-misses/u,48747862,100.00,,\n",
+      "52.03,msec,task-clock,52027150,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n360406890,,cpu_core/instructions/u,52027150,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n138871242,,cpu_core/cycles/u,52027150,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n47352316,,cpu_core/branches/u,52027150,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n314641,,cpu_core/branch-misses/u,52027150,100.00,,\n"
+     ],
+     "task-clock_median": 48.75,
+     "instructions_median": 360406896.0,
+     "cycles_median": 137928581.0,
+     "branches_median": 47352320.0,
+     "branch-misses_median": 314771.0
+    },
+    "internal": {
+     "wall_ms_median": 49.690934,
+     "wall_ms_iqr": 0.981024000000005,
+     "wall_ms_min": 48.260192,
+     "wall_samples": 21,
+     "wall_ms": [
+      48.523917,
+      50.318155,
+      50.419677,
+      49.470284,
+      48.260192,
+      49.936797,
+      49.485846,
+      49.405405,
+      48.942652,
+      50.591664,
+      49.609984,
+      48.769885,
+      49.613445,
+      50.191515,
+      50.769086,
+      50.979831,
+      50.081424,
+      51.356812,
+      49.540421,
+      49.690934,
+      50.41806
+     ],
+     "counter_samples": {
+      "task-clock": [
+       49.23,
+       47.88,
+       46.96,
+       47.81,
+       47.99,
+       48.42,
+       48.97
+      ],
+      "instructions": [
+       355780167.0,
+       355780169.0,
+       355780156.0,
+       355780169.0,
+       355780174.0,
+       355780170.0,
+       355780175.0
+      ],
+      "cycles": [
+       136328033.0,
+       135735377.0,
+       134678099.0,
+       136533346.0,
+       134543600.0,
+       135557667.0,
+       136668009.0
+      ],
+      "branches": [
+       46863920.0,
+       46863922.0,
+       46863909.0,
+       46863922.0,
+       46863927.0,
+       46863923.0,
+       46863928.0
+      ],
+      "branch-misses": [
+       306491.0,
+       307121.0,
+       307489.0,
+       309446.0,
+       308543.0,
+       306982.0,
+       307157.0
+      ]
+     },
+     "perf_raw": [
+      "49.23,msec,task-clock,49232399,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n355780167,,cpu_core/instructions/u,49232399,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n136328033,,cpu_core/cycles/u,49232399,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n46863920,,cpu_core/branches/u,49232399,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n306491,,cpu_core/branch-misses/u,49232399,100.00,,\n",
+      "47.88,msec,task-clock,47880702,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n355780169,,cpu_core/instructions/u,47880702,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n135735377,,cpu_core/cycles/u,47880702,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n46863922,,cpu_core/branches/u,47880702,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n307121,,cpu_core/branch-misses/u,47880702,100.00,,\n",
+      "46.96,msec,task-clock,46960118,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n355780156,,cpu_core/instructions/u,46960118,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n134678099,,cpu_core/cycles/u,46960118,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n46863909,,cpu_core/branches/u,46960118,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n307489,,cpu_core/branch-misses/u,46960118,100.00,,\n",
+      "47.81,msec,task-clock,47809811,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n355780169,,cpu_core/instructions/u,47809811,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n136533346,,cpu_core/cycles/u,47809811,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n46863922,,cpu_core/branches/u,47809811,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n309446,,cpu_core/branch-misses/u,47809811,100.00,,\n",
+      "47.99,msec,task-clock,47993937,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n355780174,,cpu_core/instructions/u,47993937,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n134543600,,cpu_core/cycles/u,47993937,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n46863927,,cpu_core/branches/u,47993937,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n308543,,cpu_core/branch-misses/u,47993937,100.00,,\n",
+      "48.42,msec,task-clock,48420794,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n355780170,,cpu_core/instructions/u,48420794,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n135557667,,cpu_core/cycles/u,48420794,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n46863923,,cpu_core/branches/u,48420794,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n306982,,cpu_core/branch-misses/u,48420794,100.00,,\n",
+      "48.97,msec,task-clock,48965504,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n355780175,,cpu_core/instructions/u,48965504,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n136668009,,cpu_core/cycles/u,48965504,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n46863928,,cpu_core/branches/u,48965504,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n307157,,cpu_core/branch-misses/u,48965504,100.00,,\n"
+     ],
+     "task-clock_median": 47.99,
+     "instructions_median": 355780169.0,
+     "cycles_median": 135735377.0,
+     "branches_median": 46863922.0,
+     "branch-misses_median": 307157.0
+    },
+    "width": {
+     "wall_ms_median": 43.16901,
+     "wall_ms_iqr": 1.8323469999999986,
+     "wall_ms_min": 41.369674,
+     "wall_samples": 21,
+     "wall_ms": [
+      42.24121,
+      43.191112,
+      42.11444,
+      41.369674,
+      43.16901,
+      44.83822,
+      41.674119,
+      42.865155,
+      41.938789,
+      44.403686,
+      41.845963,
+      42.290278,
+      42.741623,
+      43.55683,
+      45.497318,
+      43.732406,
+      43.846666,
+      43.703245,
+      41.697641,
+      43.871257,
+      43.919691
+     ],
+     "counter_samples": {
+      "task-clock": [
+       42.72,
+       41.28,
+       41.09,
+       41.2,
+       41.68,
+       41.33,
+       42.42
+      ],
+      "instructions": [
+       329905692.0,
+       329905691.0,
+       329905682.0,
+       329905689.0,
+       329905687.0,
+       329905684.0,
+       329905682.0
+      ],
+      "cycles": [
+       126451117.0,
+       126527569.0,
+       125865213.0,
+       126152472.0,
+       126908695.0,
+       126608743.0,
+       127442176.0
+      ],
+      "branches": [
+       43456011.0,
+       43456010.0,
+       43456001.0,
+       43456008.0,
+       43456006.0,
+       43456003.0,
+       43456001.0
+      ],
+      "branch-misses": [
+       264857.0,
+       264638.0,
+       264861.0,
+       264672.0,
+       267084.0,
+       265153.0,
+       266490.0
+      ]
+     },
+     "perf_raw": [
+      "42.72,msec,task-clock,42720175,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n329905692,,cpu_core/instructions/u,42720175,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n126451117,,cpu_core/cycles/u,42720175,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n43456011,,cpu_core/branches/u,42720175,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n264857,,cpu_core/branch-misses/u,42720175,100.00,,\n",
+      "41.28,msec,task-clock,41281186,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n329905691,,cpu_core/instructions/u,41281186,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n126527569,,cpu_core/cycles/u,41281186,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n43456010,,cpu_core/branches/u,41281186,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n264638,,cpu_core/branch-misses/u,41281186,100.00,,\n",
+      "41.09,msec,task-clock,41093758,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n329905682,,cpu_core/instructions/u,41093758,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n125865213,,cpu_core/cycles/u,41093758,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n43456001,,cpu_core/branches/u,41093758,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n264861,,cpu_core/branch-misses/u,41093758,100.00,,\n",
+      "41.20,msec,task-clock,41197547,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n329905689,,cpu_core/instructions/u,41197547,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n126152472,,cpu_core/cycles/u,41197547,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n43456008,,cpu_core/branches/u,41197547,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n264672,,cpu_core/branch-misses/u,41197547,100.00,,\n",
+      "41.68,msec,task-clock,41677715,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n329905687,,cpu_core/instructions/u,41677715,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n126908695,,cpu_core/cycles/u,41677715,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n43456006,,cpu_core/branches/u,41677715,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n267084,,cpu_core/branch-misses/u,41677715,100.00,,\n",
+      "41.33,msec,task-clock,41330285,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n329905684,,cpu_core/instructions/u,41330285,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n126608743,,cpu_core/cycles/u,41330285,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n43456003,,cpu_core/branches/u,41330285,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n265153,,cpu_core/branch-misses/u,41330285,100.00,,\n",
+      "42.42,msec,task-clock,42418861,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n329905682,,cpu_core/instructions/u,42418861,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n127442176,,cpu_core/cycles/u,42418861,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n43456001,,cpu_core/branches/u,42418861,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n266490,,cpu_core/branch-misses/u,42418861,100.00,,\n"
+     ],
+     "task-clock_median": 41.33,
+     "instructions_median": 329905687.0,
+     "cycles_median": 126527569.0,
+     "branches_median": 43456006.0,
+     "branch-misses_median": 264861.0
+    },
+    "combined": {
+     "wall_ms_median": 42.127937,
+     "wall_ms_iqr": 1.5454955000000012,
+     "wall_ms_min": 40.595819,
+     "wall_samples": 21,
+     "wall_ms": [
+      40.595819,
+      42.342133,
+      43.804384,
+      42.374403,
+      40.849307,
+      43.138722,
+      41.481762,
+      41.809608,
+      42.14659,
+      42.127937,
+      41.305212,
+      41.893259,
+      41.583527,
+      43.345404,
+      43.407782,
+      41.92814,
+      45.084927,
+      41.911982,
+      42.517534,
+      41.917519,
+      43.485028
+     ],
+     "counter_samples": {
+      "task-clock": [
+       39.72,
+       41.5,
+       41.17,
+       41.07,
+       41.14,
+       41.54,
+       42.31
+      ],
+      "instructions": [
+       325277584.0,
+       325277586.0,
+       325277591.0,
+       325277593.0,
+       325277594.0,
+       325277590.0,
+       325277587.0
+      ],
+      "cycles": [
+       122198910.0,
+       124539801.0,
+       123101283.0,
+       123082065.0,
+       123358243.0,
+       124458128.0,
+       125279315.0
+      ],
+      "branches": [
+       42966253.0,
+       42966255.0,
+       42966260.0,
+       42966262.0,
+       42966263.0,
+       42966259.0,
+       42966256.0
+      ],
+      "branch-misses": [
+       259389.0,
+       260587.0,
+       259193.0,
+       261486.0,
+       259384.0,
+       259219.0,
+       258871.0
+      ]
+     },
+     "perf_raw": [
+      "39.72,msec,task-clock,39715047,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n325277584,,cpu_core/instructions/u,39715047,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n122198910,,cpu_core/cycles/u,39715047,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n42966253,,cpu_core/branches/u,39715047,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n259389,,cpu_core/branch-misses/u,39715047,100.00,,\n",
+      "41.50,msec,task-clock,41498784,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n325277586,,cpu_core/instructions/u,41498784,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n124539801,,cpu_core/cycles/u,41498784,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n42966255,,cpu_core/branches/u,41498784,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n260587,,cpu_core/branch-misses/u,41498784,100.00,,\n",
+      "41.17,msec,task-clock,41165993,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n325277591,,cpu_core/instructions/u,41165993,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n123101283,,cpu_core/cycles/u,41165993,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n42966260,,cpu_core/branches/u,41165993,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n259193,,cpu_core/branch-misses/u,41165993,100.00,,\n",
+      "41.07,msec,task-clock,41073331,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n325277593,,cpu_core/instructions/u,41073331,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n123082065,,cpu_core/cycles/u,41073331,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n42966262,,cpu_core/branches/u,41073331,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n261486,,cpu_core/branch-misses/u,41073331,100.00,,\n",
+      "41.14,msec,task-clock,41141560,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n325277594,,cpu_core/instructions/u,41141560,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n123358243,,cpu_core/cycles/u,41141560,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n42966263,,cpu_core/branches/u,41141560,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n259384,,cpu_core/branch-misses/u,41141560,100.00,,\n",
+      "41.54,msec,task-clock,41538058,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n325277590,,cpu_core/instructions/u,41538058,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n124458128,,cpu_core/cycles/u,41538058,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n42966259,,cpu_core/branches/u,41538058,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n259219,,cpu_core/branch-misses/u,41538058,100.00,,\n",
+      "42.31,msec,task-clock,42305359,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n325277587,,cpu_core/instructions/u,42305359,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n125279315,,cpu_core/cycles/u,42305359,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n42966256,,cpu_core/branches/u,42305359,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n258871,,cpu_core/branch-misses/u,42305359,100.00,,\n"
+     ],
+     "task-clock_median": 41.17,
+     "instructions_median": 325277590.0,
+     "cycles_median": 123358243.0,
+     "branches_median": 42966259.0,
+     "branch-misses_median": 259384.0
+    },
+    "zig": {
+     "wall_ms_median": 16.885577,
+     "wall_ms_iqr": 0.5385559999999998,
+     "wall_ms_min": 16.6588,
+     "wall_samples": 21,
+     "wall_ms": [
+      17.372937,
+      16.841501,
+      16.885577,
+      16.6588,
+      16.799172,
+      19.839546,
+      16.797951,
+      16.947251,
+      16.862984,
+      16.903134,
+      16.685797,
+      16.861444,
+      17.088203,
+      17.127739,
+      17.339662,
+      18.032912,
+      17.350236,
+      17.693664,
+      16.813614,
+      16.857117,
+      16.675525
+     ],
+     "counter_samples": {
+      "task-clock": [
+       18.6,
+       17.66,
+       18.48,
+       17.96,
+       17.63,
+       17.64,
+       18.85
+      ],
+      "instructions": [
+       181603369.0,
+       181603370.0,
+       181603366.0,
+       181603370.0,
+       181603365.0,
+       181603368.0,
+       181603368.0
+      ],
+      "cycles": [
+       52164274.0,
+       51828982.0,
+       52171332.0,
+       53100797.0,
+       52163893.0,
+       51942688.0,
+       53304000.0
+      ],
+      "branches": [
+       40214733.0,
+       40214734.0,
+       40214730.0,
+       40214734.0,
+       40214729.0,
+       40214732.0,
+       40214732.0
+      ],
+      "branch-misses": [
+       143363.0,
+       143149.0,
+       143074.0,
+       145978.0,
+       143812.0,
+       143148.0,
+       145478.0
+      ]
+     },
+     "perf_raw": [
+      "18.60,msec,task-clock,18601276,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n181603369,,cpu_core/instructions/u,18601276,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n52164274,,cpu_core/cycles/u,18601276,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n40214733,,cpu_core/branches/u,18601276,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n143363,,cpu_core/branch-misses/u,18601276,100.00,,\n",
+      "17.66,msec,task-clock,17663138,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n181603370,,cpu_core/instructions/u,17663138,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n51828982,,cpu_core/cycles/u,17663138,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n40214734,,cpu_core/branches/u,17663138,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n143149,,cpu_core/branch-misses/u,17663138,100.00,,\n",
+      "18.48,msec,task-clock,18478146,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n181603366,,cpu_core/instructions/u,18478146,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n52171332,,cpu_core/cycles/u,18478146,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n40214730,,cpu_core/branches/u,18478146,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n143074,,cpu_core/branch-misses/u,18478146,100.00,,\n",
+      "17.96,msec,task-clock,17961952,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n181603370,,cpu_core/instructions/u,17961952,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n53100797,,cpu_core/cycles/u,17961952,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n40214734,,cpu_core/branches/u,17961952,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n145978,,cpu_core/branch-misses/u,17961952,100.00,,\n",
+      "17.63,msec,task-clock,17627813,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n181603365,,cpu_core/instructions/u,17627813,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n52163893,,cpu_core/cycles/u,17627813,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n40214729,,cpu_core/branches/u,17627813,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n143812,,cpu_core/branch-misses/u,17627813,100.00,,\n",
+      "17.64,msec,task-clock,17642661,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n181603368,,cpu_core/instructions/u,17642661,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n51942688,,cpu_core/cycles/u,17642661,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n40214732,,cpu_core/branches/u,17642661,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n143148,,cpu_core/branch-misses/u,17642661,100.00,,\n",
+      "18.85,msec,task-clock,18847057,100.00,,\n<not counted>,,cpu_atom/instructions/u,0,0.00,,\n181603368,,cpu_core/instructions/u,18847057,100.00,,\n<not counted>,,cpu_atom/cycles/u,0,0.00,,\n53304000,,cpu_core/cycles/u,18847057,100.00,,\n<not counted>,,cpu_atom/branches/u,0,0.00,,\n40214732,,cpu_core/branches/u,18847057,100.00,,\n<not counted>,,cpu_atom/branch-misses/u,0,0.00,,\n145478,,cpu_core/branch-misses/u,18847057,100.00,,\n"
+     ],
+     "task-clock_median": 17.96,
+     "instructions_median": 181603368.0,
+     "cycles_median": 52164274.0,
+     "branches_median": 40214732.0,
+     "branch-misses_median": 143363.0
+    }
+   },
+   "ratios": {
+    "rebuilt/chart-o3": {
+     "median": 1.0101975486334003,
+     "low": 0.9978161910967475,
+     "high": 1.028341971640674,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    },
+    "rebuilt/internal": {
+     "median": 1.015728301665652,
+     "low": 0.9990096020015043,
+     "high": 1.0334789289475868,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    },
+    "rebuilt/width": {
+     "median": 1.1691833563011984,
+     "low": 1.1541209966814998,
+     "high": 1.2003372264424461,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    },
+    "rebuilt/combined": {
+     "median": 1.198076421354314,
+     "low": 1.1831706966675488,
+     "high": 1.222912583291317,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    },
+    "rebuilt/zig": {
+     "median": 2.989088735315352,
+     "low": 2.95244716837334,
+     "high": 3.0417093266897304,
+     "formula": "median(rebuilt wall) / median(arm wall)"
+    }
+   }
+  }
+ },
+ "inputs": {
+  "input.sexp": {
+   "bytes": 927415,
+   "sha256": "0a670a08470e5b19d67272bca2186a369f8bc826a724a5d2ffe574a62932ee49"
+  },
+  "input8.sexp": {
+   "bytes": 7419320,
+   "sha256": "368ebdee5164fdba21ef4c0c08bbc6467b54b4b07709ab8d9b1799349a41d797"
+  }
+ },
+ "counters": [
+  "task-clock",
+  "instructions:u",
+  "cycles:u",
+  "branches:u",
+  "branch-misses:u"
+ ],
+ "sink": "null",
+ "reference": "rebuilt",
+ "warmups": 3,
+ "wall_round_order": [
+  [
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ]
+  ],
+  [
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "internal"
+   ]
+  ],
+  [
+   [
+    "render",
+    "width"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ]
+  ],
+  [
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "width"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ]
+  ],
+  [
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ]
+  ],
+  [
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ]
+  ],
+  [
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ]
+  ],
+  [
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "render",
+    "zig"
+   ]
+  ],
+  [
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ]
+  ],
+  [
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "width"
+   ]
+  ],
+  [
+   [
+    "render",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ]
+  ]
+ ],
+ "counter_round_order": [
+  [
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "width"
+   ]
+  ],
+  [
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ]
+  ],
+  [
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "render",
+    "combined"
+   ]
+  ],
+  [
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "internal"
+   ]
+  ],
+  [
+   [
+    "census",
+    "rebuilt"
+   ],
+   [
+    "render-7.4MB",
+    "combined"
+   ],
+   [
+    "render-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "internal"
+   ],
+   [
+    "render-7.4MB",
+    "width"
+   ],
+   [
+    "render-7.4MB",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "internal"
+   ],
+   [
+    "render",
+    "internal"
+   ],
+   [
+    "render",
+    "width"
+   ],
+   [
+    "census-7.4MB",
+    "internal"
+   ],
+   [
+    "census",
+    "chart-o3"
+   ],
+   [
+    "census",
+    "combined"
+   ],
+   [
+    "render",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "width"
+   ],
+   [
+    "census",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "chart-o3"
+   ],
+   [
+    "render",
+    "rebuilt"
+   ],
+   [
+    "census",
+    "width"
+   ],
+   [
+    "render",
+    "chart-o3"
+   ],
+   [
+    "render-7.4MB",
+    "zig"
+   ],
+   [
+    "census-7.4MB",
+    "zig"
+   ],
+   [
+    "render",
+    "combined"
+   ],
+   [
+    "census-7.4MB",
+    "rebuilt"
+   ]
+  ]
+ ],
+ "toolchain": {
+  "compiler_sha256": "2c2ed027cb810836101474ba91f929f0a710f6b34b9f19842eccd4bc659acd21",
+  "adapter_sources": {
+   "amd64_sysv.py": "1d0252b37ec42904808f879590b9100292720c746efc3d9c85b537c001422919",
+   "inventory.py": "fc112547232c614979eb24cbc100f42830719dc08ce0c1681c9f1b0c371888e6",
+   "llvm_emit.py": "3ccf0f73e34cccc0e83e5f460587640b62a21b9e31b31d597a9ee6abd1766a2b",
+   "measure.py": "f804d50d5a6b9d648989886e6531bfcf2dafcd04b9db9183434b915a0c9af9cf",
+   "qbe_llvm.py": "d3ab8c24eb4e1f23e88531b31adabc3340ef59d3efccc84a6bb86f8e0fc7c8b6",
+   "qualify_affected.py": "eecf6f5325e9a58707815b5f056153c578fad86c86a19ac982fb84910a6fd83b",
+   "qualify_cost.py": "1771820b695f46f14356543550bee50d59034258e6ecff13b8a1b3f35955085c",
+   "qualify_equiv.py": "a1a4af6138e75f203bd4a64b0326c62422b330112c9c4b3e7cc1d35be0453407",
+   "qualify_identity.py": "112c0a1aceda46e4ad250caef492cf459123b2560f1ba6411ae1b2cdafa01d4d",
+   "qualify_sweep.py": "2a53168ab7a63d5a61eaa32c579aaf09282f9e7a08031a300693bd729f5ec3e0",
+   "qualify_traps.py": "9ddcecf97e3ac7212d0e14018cbe1149253dffd4972b555431abe069bfa19372",
+   "resolve_symbols.py": "fedcc6de37e738551604a160274e2ae666ccea49c0df623eb2364a3de2f29ae0",
+   "runtime_signatures.py": "8d0c48cdc747661daacc9eb776811543c0d24ec2ff53624a5ed4bc8b20fb637c",
+   "symbol_census.py": "720c0cc2acf5019936e202c806e6a2e147e9634700b9d6bd5349d51c4597b949",
+   "test_adapter.py": "973f7d2ab36e027744b78d094aebde1e81da01bf9fe2d47c9b2aa170fa11d0de",
+   "verify_binaries.py": "0a288dc2594f59241cc0372d52cbf3c3055a989b4011e36c8eab2f6f95b7ee00",
+   "verify_semantics.py": "52bf0bccaa5e079601a2282474020cfcc8d44042a0a6b38c2ff2a73ade74e60f",
+   "verify_traps.py": "151ff49b00eb74c0f7fc2bced067b6e3ddeadabedd3d8552f91b737424c4cc26",
+   "verify_units.py": "eb5293554e9dfad296d30e413f9ff69da7d5c6041edcab93052fd9d5ae9362c6"
+  },
+  "zig": "0.17.0-dev.1683+5ceec001b"
+ },
+ "timing_scope": "process launch through completion; timed stdout redirected to /dev/null"
+}

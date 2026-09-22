@@ -1,0 +1,21 @@
+import strings
+
+def main(out: Stream) -> int:
+    out.print(float(" 1.5 "))
+    out.print(strings.to_float(" 1.5 "))
+    out.print(float("1_000.5"))
+    out.print(strings.to_float("1_000.5"))
+    out.print(float("inf"))
+    out.print(strings.to_float("inf"))
+    d = {"a": 10, "b": 20}
+    items = d.items()
+    item_total = 0
+    for key, value in items:
+        item_total += len(key) + value
+    out.print(item_total)
+    values = d.values()
+    value_total = 0
+    for value in values:
+        value_total += value
+    out.print(value_total)
+    return 0

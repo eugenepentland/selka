@@ -1,0 +1,24 @@
+Done. The bug was in `main`: it added `7` directly to a `Result[int, str]`, which the type checker rejected (`E_TYPE`).
+
+**Change** (`project/main.my`, `main` only — `as_count` untouched):
+
+```python
+def main(args: list[str], out: Stream) -> int:
+    match as_count(args[0]):
+        case Ok(value):
+            out.print(7 + value)
+        case Err(_):
+            out.print(7)
+    return 0
+```
+
+The `Ok` branch prints 7 plus the parsed integer; the `Err` branch prints 7 for any non-integer argument.
+
+**Commands and results** (7 of 20 compiler invocations used):
+
+- `./bin/mylang check project/main.my` → exit 0, no diagnostics
+- `./bin/mylang run project/main.my -- 41` → `48` (exit 0)
+- `./bin/mylang run project/main.my -- 0` → `7` (exit 0)
+- `./bin/mylang run project/main.my -- abc` → `7` (exit 0)
+
+I also built a native binary once and exercised extra inputs before deleting the artifacts: `-5`→`2`, `3.5`→`7`, ``""``→`7`, `007`→`14`, `+5`→`12`, `1e3`→`7`, `0x10`→`7`, `99999999999999999999`→`7`. Only `project/main.my` differs from the original state; the temporary `prog`/manifest were removed.

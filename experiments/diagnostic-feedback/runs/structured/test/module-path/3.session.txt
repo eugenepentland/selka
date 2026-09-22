@@ -1,0 +1,7 @@
+Done.
+
+**Changes made** (both in `project/`):
+- `project/main.my:3` — changed `import lib.stats as stats` to `import stats`, since the helper module lives at `project/stats.my`, not `project/lib/stats.my`.
+- `project/stats.my:4` — made the helper exported: `public def total() -> int:`, since cross-module access required it.
+
+**Command run:** `bin/mylang run project/main.my` → printed `7`, exit code `0`. (`bin/mylang check project/main.my` also exits 0.)

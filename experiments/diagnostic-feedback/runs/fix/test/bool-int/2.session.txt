@@ -1,0 +1,22 @@
+Fixed.
+
+**What changed:** `project/main.my` — `above` declared `-> int` but returned the `bool` expression `a > b` (`E_TYPE: expected int, found bool`). Replaced that single return with an explicit conversion:
+
+```python
+def above(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+(The checker's suggested `1 if a > b else 0` is not accepted syntax by this compiler, so an `if` statement is used; behavior is the same.)
+
+**Command and result:**
+
+```
+$ bin/mylang run project/main.my
+1
+exit: 0
+```
+
+Also verified `above(2, 5)` prints `0` via a temporary scratch file (since removed), and `bin/mylang check project/main.my` exits 0.

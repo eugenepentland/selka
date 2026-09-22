@@ -1,0 +1,79 @@
+{
+  "compiler": ".tmp/svg-gap-audit-20260921/mylang-audit-compiler",
+  "compiler_sha256": "fb9b1b7a5ea9f2fff670db0289d5911ab943d95d38244823634ab5edc8a8fcc5",
+  "llvm_adapter": "experiments/llvm-backend/qbe_llvm.py",
+  "llvm_adapter_sha256": "50f9af3582ca21be9471847e8f215af27d6bb180519f0afeb374ab422e6f1773",
+  "sources": {
+    ".tmp/svg-gap-audit-20260921/algorithm/normalize/guest/circuit.my": "4f273fb155fe3f6b8fb2ef9e23db0a89973eb32e35ff1a900319a5e07f437242",
+    ".tmp/svg-gap-audit-20260921/algorithm/normalize/guest/draw.my": "cc93575469d5869d5d010f5375b792f880d7b59e9c1fde0ab7f8bdb9c27aff39",
+    ".tmp/svg-gap-audit-20260921/algorithm/normalize/guest/io.my": "b30320cff9c1b8e2af86b0027a7c9c4d8ceaa6cea75840a3882b80b99dcd0c8b",
+    ".tmp/svg-gap-audit-20260921/algorithm/normalize/guest/layout.my": "829a89969114932505a4b9182fb7af4cdc926d8946ad9ac898a8d41effba6f21",
+    ".tmp/svg-gap-audit-20260921/algorithm/normalize/guest/layout_graph.my": "3b58233831261d8fdd415b42000e91d4e9e2baae9cc4c59e0f903e49cf0518b2",
+    ".tmp/svg-gap-audit-20260921/algorithm/normalize/guest/layout_routes.my": "562fb4143354da0e50b81376c09240c9bf15d8248ffed23f15cb70287b0d900f",
+    ".tmp/svg-gap-audit-20260921/algorithm/normalize/guest/main.my": "2ce7ad379f1affa24a3350bf6926a261c686be830272e853f0cb51fc65ad68f5",
+    ".tmp/svg-gap-audit-20260921/algorithm/normalize/guest/ports.my": "33af913725014537942feb1fd6f533328aed02a04ddd39a03c9fc33526d6e74a",
+    ".tmp/svg-gap-audit-20260921/algorithm/normalize/guest/schematic.my": "99fd4f3ab0bdbfc5efe85717e3498d9d7918d1ab4b1763ae0ee59b824811ac70",
+    ".tmp/svg-gap-audit-20260921/algorithm/normalize/guest/schematic_inputs.my": "1ee50b10f9ca81dbc9733bacecba7c92e94bbc00e4c0ea9b4a8f68c38eb378b0",
+    ".tmp/svg-gap-audit-20260921/algorithm/normalize/guest/sexpr.my": "12ce2fe2008edceea05ec7e7d466eae32ff0545059c4fb7770edd530117958f6",
+    ".tmp/svg-gap-audit-20260921/algorithm/normalize/guest/svg.my": "373f897e38c1da3aed32fdb96df742ab1bb8b2b6e811c2be1e473b88dfd6a53e",
+    ".tmp/svg-gap-audit-20260921/algorithm/normalize/guest/text.my": "94588bbf7e8230c35b427e2617f2f2bb2c6f7d076412957016565ce31ba4076a",
+    ".tmp/svg-gap-audit-20260921/algorithm/normalize/guest/validate.my": "b611d8ce0ba381fbe781a8f6ce99723b79f39d50fb346bfb02a62897c34701cb"
+  },
+  "builds": [
+    {
+      "name": "normalize-lto",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/mylang-audit-compiler",
+        "build",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/algorithm/normalize/guest/main.my",
+        "--project",
+        "--provider",
+        "src/schematic/native_schematic.c",
+        "--backend",
+        "llvm",
+        "--llvm-adapter",
+        "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py",
+        "--llvm-opt",
+        "3",
+        "--lto",
+        "--keep-symbols",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/algorithm/cache-normalize-lto",
+        "--report",
+        "-o",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/algorithm/normalize-lto"
+      ],
+      "binary": ".tmp/svg-gap-audit-20260921/algorithm/normalize-lto",
+      "binary_sha256": "87e6d429b1e212ab14f04951777bb17818c77d6fd44bcf9115c65d13c43eb676",
+      "manifest_sha256": "804e45ff9f036fe4ac11d3e0c230913d448f8ef26828cebeee3dbf7e23fe3669"
+    },
+    {
+      "name": "normalize-lto-bounded",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/mylang-audit-compiler",
+        "build",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/algorithm/normalize/guest/main.my",
+        "--project",
+        "--provider",
+        "src/schematic/native_schematic.c",
+        "--backend",
+        "llvm",
+        "--llvm-adapter",
+        "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py",
+        "--llvm-opt",
+        "3",
+        "--lto",
+        "--step-accounting",
+        "--keep-symbols",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/algorithm/cache-normalize-lto-bounded",
+        "--report",
+        "-o",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/algorithm/normalize-lto-bounded"
+      ],
+      "binary": ".tmp/svg-gap-audit-20260921/algorithm/normalize-lto-bounded",
+      "binary_sha256": "66921b645ed3ac15251c6c447fb0c6e12e1fb11d4cfce185c97df1b5d015896a",
+      "manifest_sha256": "a63dab5ae8146bfe1865d700cdb3a25a8075dd07d6e1cdcc17a84d1bc8a42eec"
+    }
+  ]
+}

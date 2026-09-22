@@ -1,0 +1,13 @@
+Fixed `project/main.my`: the bug was in `main`, which assigned `to_int(...)` (a `Result[int, str]`) to `value` and then did arithmetic on it (`E_TYPE: expected int, found Result[int, str]`). I left `to_int` untouched and instead matched on its result, mirroring the language's `Ok`/`Err` patterns:
+
+```python
+def main(args: list[str], out: Stream) -> int:
+    match to_int(args[0]):
+        case Ok(value):
+            out.print(-3 + value)
+        case Err(_):
+            out.print(-1)
+    return 0
+```
+
+Verified: `./bin/mylang check project/main.my` → exit 0 with no diagnostics, and a script running every case in `public/expected.json` through `./bin/mylang run project/main.my -- <args>` printed `PASS args=['41'] expected='38\n' got='38\n' exit=0` and `PASS args=['0'] expected='-3\n' got='-3\n' exit=0` → `ALL PASS`. Ad-hoc cases `abc`, empty string, `3.5` → `-1`; `-5` → `-8`.

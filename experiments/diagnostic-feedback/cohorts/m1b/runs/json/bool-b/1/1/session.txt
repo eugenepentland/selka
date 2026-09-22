@@ -1,0 +1,21 @@
+Fixed.
+
+**What changed:** In `project/main.my`, `exceeds` was returning the raw comparison result (`bigger = a > b; return bigger`), which is a `bool`, while the function is declared `-> int` — `bin/mylang check` rejected it with `E_TYPE: expected int, found bool`. I replaced the body with an `if a > b: return 1` / `return 0` so the function returns the required integer. Nothing else was touched.
+
+**Command run and result:**
+
+```
+./bin/mylang check project/main.my
+```
+→ exit 0 (no diagnostics)
+
+```
+./bin/mylang run project/main.my -- 5 2   # 1
+./bin/mylang run project/main.my -- 2 5   # 0
+./bin/mylang run project/main.my -- 3 3   # 0
+./bin/mylang run project/main.my -- -1 -5 # 1
+./bin/mylang run project/main.my -- -5 -1 # 0
+./bin/mylang run project/main.my -- 0 0   # 0
+```
+
+Both `public/expected.json` cases match (`5 2` → `1\n`, `2 5` → `0\n`), and equal/negative/zero inputs behave correctly too.

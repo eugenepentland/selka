@@ -1,0 +1,3058 @@
+{
+  "arms": {
+    "regenerated": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-parity-audit-20260920/probes/regenerated.bin",
+      "sha256": "6d3459618e433cf4267f8e031aab418d849d81afcdd41632b10bd1fa590de571",
+      "ir_sha256": "139aae02f44fbd5abba532e7102db607b5b43c73f4ca7a3e75dde8d87a988fd5",
+      "inventory": {
+        "sexpr.printer::append_float": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 15,
+          "frame_floor": 1,
+          "sticky_trap": 3,
+          "allocation": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.view::matches": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 12,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "allocation": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 9
+        },
+        "sexpr.tokenizer::is_operator_char": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "byte_builder::append_float": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::read_operator": {
+          "frame_floor": 1,
+          "overflow": 4,
+          "bounds": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 12
+        },
+        "sexpr.parser::spelling_ends_with": {
+          "overflow": 3,
+          "bounds": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 11
+        },
+        "sexpr.printer::estimate_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 96,
+          "frame_floor": 1,
+          "cast": 2,
+          "overflow": 6,
+          "bounds": 1,
+          "sticky_trap": 8,
+          "trace_frame_load": 11,
+          "trace_frame_store": 30
+        },
+        "sexpr.view::equal": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 21,
+          "frame_floor": 1,
+          "overflow": 2,
+          "sticky_trap": 2,
+          "allocation": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 12
+        },
+        "sexpr.printer::measure_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 17,
+          "allocation": 2,
+          "sticky_trap": 3,
+          "overflow": 3,
+          "trace_frame_load": 4,
+          "trace_frame_store": 13
+        },
+        "sexpr.ast::as_string": {
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "sexpr.view::bytes_of": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.tokenizer::is_space": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::spelling_ends_with_mil": {
+          "overflow": 4,
+          "bounds": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 13
+        },
+        "sexpr.ast::as_atom": {
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "sexpr.tokenizer::read_string": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 7,
+          "frame_floor": 1,
+          "overflow": 14,
+          "sticky_trap": 2,
+          "bounds": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 25
+        },
+        "byte_builder::append_byte": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::render_node_bytes": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 13,
+          "frame_floor": 1,
+          "sticky_trap": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.printer::append_view": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::is_scale_letter": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "byte_builder::create": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 12,
+          "capacity": 1,
+          "allocation": 2,
+          "sticky_trap": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.parser::parse_list": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 20,
+          "frame_floor": 1,
+          "sticky_trap": 6,
+          "capacity": 1,
+          "allocation": 2,
+          "overflow": 1,
+          "trace_frame_load": 7,
+          "trace_frame_store": 17
+        },
+        "byte_builder::append_range": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::si_suffix_len": {
+          "frame_floor": 1,
+          "bounds": 6,
+          "overflow": 5,
+          "sticky_trap": 4,
+          "trace_frame_load": 9,
+          "trace_frame_store": 27
+        },
+        "sexpr.ast::max_source_bytes": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::source_has_mil_suffix": {
+          "overflow": 3,
+          "bounds": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 12
+        },
+        "main::tally": {
+          "frame_floor": 1,
+          "overflow": 9,
+          "sticky_trap": 3,
+          "cast": 1,
+          "iteration": 2,
+          "bounds": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 21
+        },
+        "sexpr.ast::span_of": {
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "sexpr.view::first_byte": {
+          "bounds": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.ast::children": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 31,
+          "capacity": 5,
+          "allocation": 5,
+          "sticky_trap": 5,
+          "trace_frame_load": 8,
+          "trace_frame_store": 16
+        },
+        "sexpr.tokenizer::span_at": {
+          "bounds": 1,
+          "overflow": 3,
+          "cast": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 13
+        },
+        "sexpr.view::through": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "allocation": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.view::skip": {
+          "overflow": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.parser::parse_unit": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "main::render_to": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "frame_floor": 1,
+          "sticky_trap": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.tokenizer::is_atom_start": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::lex_failure": {
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::fallback_unit_val_width": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.printer::literal_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 5,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::is_short_list": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "frame_floor": 1,
+          "cast": 2,
+          "overflow": 4,
+          "bounds": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 5,
+          "trace_frame_store": 16
+        },
+        "sexpr.parser::mil_to_mm": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::next_raw": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 23,
+          "frame_floor": 1,
+          "bounds": 3,
+          "overflow": 14,
+          "sticky_trap": 8,
+          "trace_frame_load": 10,
+          "trace_frame_store": 38
+        },
+        "sexpr.view::at": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::tokenize": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 40,
+          "frame_floor": 1,
+          "sticky_trap": 5,
+          "capacity": 1,
+          "allocation": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 12
+        },
+        "sexpr.tokenizer::is_unit_required_scale": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::advance": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 5,
+          "frame_floor": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 9
+        },
+        "sexpr.printer::fallback_int_width": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::finish_after_syntax_error": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "frame_floor": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 9
+        },
+        "sexpr.ast::zero_span": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.ast::as_number": {
+          "sticky_trap": 1,
+          "trace_frame_load": 8,
+          "trace_frame_store": 12
+        },
+        "sexpr.ast::is_form": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 10,
+          "frame_floor": 1,
+          "cast": 2,
+          "overflow": 1,
+          "bounds": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 9,
+          "trace_frame_store": 17
+        },
+        "sexpr.printer::render_node": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 7,
+          "frame_floor": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 8
+        },
+        "sexpr.parser::is_si_number_char": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::read_number": {
+          "frame_floor": 1,
+          "bounds": 15,
+          "overflow": 25,
+          "sticky_trap": 13,
+          "trace_frame_load": 9,
+          "trace_frame_store": 65
+        },
+        "sexpr.parser::parse_with_depth_cap": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 72,
+          "frame_floor": 1,
+          "sticky_trap": 7,
+          "allocation": 3,
+          "capacity": 1,
+          "trace_frame_load": 6,
+          "trace_frame_store": 17
+        },
+        "sexpr.ast::as_text": {
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "byte_builder::append": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "main::summarise": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 179,
+          "frame_floor": 1,
+          "allocation": 27,
+          "cast": 1,
+          "iteration": 2,
+          "bounds": 1,
+          "sticky_trap": 11,
+          "overflow": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 39
+        },
+        "sexpr.tokenizer::peek": {
+          "bounds": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "byte_builder::append_int": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::render": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 7,
+          "frame_floor": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 8
+        },
+        "sexpr.parser::si_number_end": {
+          "overflow": 3,
+          "bounds": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 10
+        },
+        "sexpr.printer::scalar_len": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 9,
+          "allocation": 1,
+          "sticky_trap": 3,
+          "trace_frame_load": 4,
+          "trace_frame_store": 9
+        },
+        "sexpr.printer::push_node": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 376,
+          "frame_floor": 1,
+          "cast": 6,
+          "sticky_trap": 22,
+          "overflow": 9,
+          "bounds": 3,
+          "trace_frame_load": 9,
+          "trace_frame_store": 49
+        },
+        "sexpr.parser::si_scale": {
+          "trace_frame_load": 10,
+          "trace_frame_store": 13
+        },
+        "sexpr.printer::int_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 3,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.parser::parse_node": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 53,
+          "frame_floor": 1,
+          "sticky_trap": 16,
+          "trace_frame_load": 23,
+          "trace_frame_store": 42
+        },
+        "byte_builder::append_spaces": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 13,
+          "allocation": 2,
+          "sticky_trap": 2,
+          "overflow": 1,
+          "trace_frame_load": 6,
+          "trace_frame_store": 12
+        },
+        "sexpr.view::text_of": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 5,
+          "sticky_trap": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.ast::value_text": {
+          "trace_frame_load": 9,
+          "trace_frame_store": 12
+        },
+        "sexpr.parser::parse_leaf": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 34,
+          "frame_floor": 1,
+          "sticky_trap": 13,
+          "allocation": 3,
+          "overflow": 12,
+          "bounds": 8,
+          "trace_frame_load": 11,
+          "trace_frame_store": 47
+        },
+        "sexpr.printer::text_of": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 5,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.view::take": {
+          "overflow": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.printer::fallback_float_width": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.ast::is_atom_named": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 8,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 8,
+          "trace_frame_store": 12
+        },
+        "sexpr.printer::decode": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "sticky_trap": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.parser::parse": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.view::view_len": {
+          "overflow": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::is_unit_letter": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.printer::render_bytes": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 26,
+          "frame_floor": 1,
+          "sticky_trap": 5,
+          "cast": 2,
+          "overflow": 2,
+          "bounds": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 15
+        },
+        "sexpr.parser::view_of": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::located": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "main::main": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 216,
+          "frame_floor": 1,
+          "cast": 4,
+          "sticky_trap": 16,
+          "overflow": 2,
+          "bounds": 2,
+          "allocation": 8,
+          "trace_frame_load": 7,
+          "trace_frame_store": 34
+        },
+        "sexpr.tokenizer::lexeme": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "sticky_trap": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "byte_builder::reserve": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::materialize": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.parser::parse_si": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "frame_floor": 1,
+          "sticky_trap": 7,
+          "overflow": 3,
+          "allocation": 1,
+          "bounds": 1,
+          "trace_frame_load": 5,
+          "trace_frame_store": 19
+        },
+        "sexpr.tokenizer::lexer": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "allocation": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::read_atom": {
+          "frame_floor": 1,
+          "bounds": 1,
+          "sticky_trap": 2,
+          "overflow": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 11
+        },
+        "sexpr.tokenizer::is_atom_continue": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "byte_builder::append_text": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "byte_builder::finish": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "sticky_trap": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.ast::as_items": {
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "sexpr.parser::max_parse_depth": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::is_digit": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::store_cursor": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::raw": {
+          "cast": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.printer::decimal_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 17,
+          "allocation": 2,
+          "sticky_trap": 3,
+          "overflow": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 11
+        },
+        "sexpr.printer::render_float": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 16,
+          "allocation": 2,
+          "sticky_trap": 7,
+          "trace_frame_load": 4,
+          "trace_frame_store": 15
+        },
+        "sexpr.printer::short_list_max_width": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::invalid_number": {
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::measured_width": {
+          "trace_frame_load": 4,
+          "trace_frame_store": 7
+        }
+      },
+      "ir_matches_chart": true
+    },
+    "root-clean": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-parity-audit-20260920/probes/root-clean.bin",
+      "sha256": "6e767430cdffb0e516e72e6343186acc2a45a879fdef3794c8fce8b05e853a2a",
+      "ir_sha256": "c94dea19e9e23cdf7096faf1ae352f87c88174bd01ced402b79f8a22481da694",
+      "inventory": {
+        "sexpr.printer::append_float": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 15,
+          "private_root_record_store": 44,
+          "frame_floor": 1,
+          "sticky_trap": 3,
+          "allocation": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.view::matches": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 12,
+          "private_root_record_store": 33,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "allocation": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 9
+        },
+        "sexpr.tokenizer::is_operator_char": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "byte_builder::append_float": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::read_operator": {
+          "private_root_record_store": 0,
+          "frame_floor": 1,
+          "overflow": 4,
+          "bounds": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 12
+        },
+        "sexpr.parser::spelling_ends_with": {
+          "private_root_record_store": 0,
+          "overflow": 3,
+          "bounds": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 11
+        },
+        "sexpr.printer::estimate_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 96,
+          "private_root_record_store": 285,
+          "frame_floor": 1,
+          "cast": 2,
+          "overflow": 6,
+          "bounds": 1,
+          "sticky_trap": 8,
+          "trace_frame_load": 11,
+          "trace_frame_store": 30
+        },
+        "sexpr.view::equal": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 21,
+          "private_root_record_store": 54,
+          "frame_floor": 1,
+          "overflow": 2,
+          "sticky_trap": 2,
+          "allocation": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 12
+        },
+        "sexpr.printer::measure_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 17,
+          "private_root_record_store": 52,
+          "allocation": 2,
+          "sticky_trap": 3,
+          "overflow": 3,
+          "trace_frame_load": 4,
+          "trace_frame_store": 13
+        },
+        "sexpr.ast::as_string": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "sexpr.view::bytes_of": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 7,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.tokenizer::is_space": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::spelling_ends_with_mil": {
+          "private_root_record_store": 0,
+          "overflow": 4,
+          "bounds": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 13
+        },
+        "sexpr.ast::as_atom": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "sexpr.tokenizer::read_string": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 7,
+          "private_root_record_store": 20,
+          "frame_floor": 1,
+          "overflow": 14,
+          "sticky_trap": 2,
+          "bounds": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 25
+        },
+        "byte_builder::append_byte": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::render_node_bytes": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 13,
+          "private_root_record_store": 32,
+          "frame_floor": 1,
+          "sticky_trap": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.printer::append_view": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "private_root_record_store": 15,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::is_scale_letter": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "byte_builder::create": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 12,
+          "private_root_record_store": 32,
+          "capacity": 1,
+          "allocation": 2,
+          "sticky_trap": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.parser::parse_list": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 20,
+          "private_root_record_store": 59,
+          "frame_floor": 1,
+          "sticky_trap": 6,
+          "capacity": 1,
+          "allocation": 2,
+          "overflow": 1,
+          "trace_frame_load": 7,
+          "trace_frame_store": 17
+        },
+        "byte_builder::append_range": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "private_root_record_store": 16,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::si_suffix_len": {
+          "private_root_record_store": 0,
+          "frame_floor": 1,
+          "bounds": 6,
+          "overflow": 5,
+          "sticky_trap": 4,
+          "trace_frame_load": 9,
+          "trace_frame_store": 27
+        },
+        "sexpr.ast::max_source_bytes": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::source_has_mil_suffix": {
+          "private_root_record_store": 0,
+          "overflow": 3,
+          "bounds": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 12
+        },
+        "main::tally": {
+          "private_root_record_store": 0,
+          "frame_floor": 1,
+          "overflow": 9,
+          "sticky_trap": 3,
+          "cast": 1,
+          "iteration": 2,
+          "bounds": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 21
+        },
+        "sexpr.ast::span_of": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "sexpr.view::first_byte": {
+          "private_root_record_store": 0,
+          "bounds": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.ast::children": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 31,
+          "private_root_record_store": 90,
+          "capacity": 5,
+          "allocation": 5,
+          "sticky_trap": 5,
+          "trace_frame_load": 8,
+          "trace_frame_store": 16
+        },
+        "sexpr.tokenizer::span_at": {
+          "private_root_record_store": 0,
+          "bounds": 1,
+          "overflow": 3,
+          "cast": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 13
+        },
+        "sexpr.view::through": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "private_root_record_store": 14,
+          "allocation": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.view::skip": {
+          "private_root_record_store": 0,
+          "overflow": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.parser::parse_unit": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "main::render_to": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "frame_floor": 1,
+          "sticky_trap": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.tokenizer::is_atom_start": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::lex_failure": {
+          "private_root_record_store": 0,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::fallback_unit_val_width": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.printer::literal_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 5,
+          "private_root_record_store": 10,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::is_short_list": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "private_root_record_store": 15,
+          "frame_floor": 1,
+          "cast": 2,
+          "overflow": 4,
+          "bounds": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 5,
+          "trace_frame_store": 16
+        },
+        "sexpr.parser::mil_to_mm": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::next_raw": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 23,
+          "private_root_record_store": 80,
+          "frame_floor": 1,
+          "bounds": 3,
+          "overflow": 14,
+          "sticky_trap": 8,
+          "trace_frame_load": 10,
+          "trace_frame_store": 38
+        },
+        "sexpr.view::at": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::tokenize": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 40,
+          "private_root_record_store": 125,
+          "frame_floor": 1,
+          "sticky_trap": 5,
+          "capacity": 1,
+          "allocation": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 12
+        },
+        "sexpr.tokenizer::is_unit_required_scale": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::advance": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 5,
+          "private_root_record_store": 11,
+          "frame_floor": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 9
+        },
+        "sexpr.printer::fallback_int_width": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::finish_after_syntax_error": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "private_root_record_store": 14,
+          "frame_floor": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 9
+        },
+        "sexpr.ast::zero_span": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.ast::as_number": {
+          "private_root_record_store": 0,
+          "sticky_trap": 1,
+          "trace_frame_load": 8,
+          "trace_frame_store": 12
+        },
+        "sexpr.ast::is_form": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 10,
+          "private_root_record_store": 29,
+          "frame_floor": 1,
+          "cast": 2,
+          "overflow": 1,
+          "bounds": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 9,
+          "trace_frame_store": 17
+        },
+        "sexpr.printer::render_node": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 7,
+          "private_root_record_store": 13,
+          "frame_floor": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 8
+        },
+        "sexpr.parser::is_si_number_char": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::read_number": {
+          "private_root_record_store": 0,
+          "frame_floor": 1,
+          "bounds": 15,
+          "overflow": 25,
+          "sticky_trap": 13,
+          "trace_frame_load": 9,
+          "trace_frame_store": 65
+        },
+        "sexpr.parser::parse_with_depth_cap": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 72,
+          "private_root_record_store": 233,
+          "frame_floor": 1,
+          "sticky_trap": 7,
+          "allocation": 3,
+          "capacity": 1,
+          "trace_frame_load": 6,
+          "trace_frame_store": 17
+        },
+        "sexpr.ast::as_text": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "byte_builder::append": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "private_root_record_store": 16,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "main::summarise": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 179,
+          "private_root_record_store": 577,
+          "frame_floor": 1,
+          "allocation": 27,
+          "cast": 1,
+          "iteration": 2,
+          "bounds": 1,
+          "sticky_trap": 11,
+          "overflow": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 39
+        },
+        "sexpr.tokenizer::peek": {
+          "private_root_record_store": 0,
+          "bounds": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "byte_builder::append_int": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::render": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 7,
+          "private_root_record_store": 16,
+          "frame_floor": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 8
+        },
+        "sexpr.parser::si_number_end": {
+          "private_root_record_store": 0,
+          "overflow": 3,
+          "bounds": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 10
+        },
+        "sexpr.printer::scalar_len": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 9,
+          "private_root_record_store": 22,
+          "allocation": 1,
+          "sticky_trap": 3,
+          "trace_frame_load": 4,
+          "trace_frame_store": 9
+        },
+        "sexpr.printer::push_node": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 376,
+          "private_root_record_store": 1247,
+          "frame_floor": 1,
+          "cast": 6,
+          "sticky_trap": 22,
+          "overflow": 9,
+          "bounds": 3,
+          "trace_frame_load": 9,
+          "trace_frame_store": 49
+        },
+        "sexpr.parser::si_scale": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 10,
+          "trace_frame_store": 13
+        },
+        "sexpr.printer::int_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 3,
+          "private_root_record_store": 4,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.parser::parse_node": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 53,
+          "private_root_record_store": 143,
+          "frame_floor": 1,
+          "sticky_trap": 16,
+          "trace_frame_load": 23,
+          "trace_frame_store": 42
+        },
+        "byte_builder::append_spaces": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 13,
+          "private_root_record_store": 40,
+          "allocation": 2,
+          "sticky_trap": 2,
+          "overflow": 1,
+          "trace_frame_load": 6,
+          "trace_frame_store": 12
+        },
+        "sexpr.view::text_of": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 5,
+          "private_root_record_store": 11,
+          "sticky_trap": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.ast::value_text": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 9,
+          "trace_frame_store": 12
+        },
+        "sexpr.parser::parse_leaf": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 34,
+          "private_root_record_store": 116,
+          "frame_floor": 1,
+          "sticky_trap": 13,
+          "allocation": 3,
+          "overflow": 12,
+          "bounds": 8,
+          "trace_frame_load": 11,
+          "trace_frame_store": 47
+        },
+        "sexpr.printer::text_of": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 5,
+          "private_root_record_store": 10,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.view::take": {
+          "private_root_record_store": 0,
+          "overflow": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.printer::fallback_float_width": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.ast::is_atom_named": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 8,
+          "private_root_record_store": 20,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 8,
+          "trace_frame_store": 12
+        },
+        "sexpr.printer::decode": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "sticky_trap": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.parser::parse": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.view::view_len": {
+          "private_root_record_store": 0,
+          "overflow": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::is_unit_letter": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.printer::render_bytes": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 26,
+          "private_root_record_store": 83,
+          "frame_floor": 1,
+          "sticky_trap": 5,
+          "cast": 2,
+          "overflow": 2,
+          "bounds": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 15
+        },
+        "sexpr.parser::view_of": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::located": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "main::main": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 216,
+          "private_root_record_store": 780,
+          "frame_floor": 1,
+          "cast": 4,
+          "sticky_trap": 16,
+          "overflow": 2,
+          "bounds": 2,
+          "allocation": 8,
+          "trace_frame_load": 7,
+          "trace_frame_store": 34
+        },
+        "sexpr.tokenizer::lexeme": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "private_root_record_store": 16,
+          "sticky_trap": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "byte_builder::reserve": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::materialize": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.parser::parse_si": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "frame_floor": 1,
+          "sticky_trap": 7,
+          "overflow": 3,
+          "allocation": 1,
+          "bounds": 1,
+          "trace_frame_load": 5,
+          "trace_frame_store": 19
+        },
+        "sexpr.tokenizer::lexer": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "allocation": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::read_atom": {
+          "private_root_record_store": 0,
+          "frame_floor": 1,
+          "bounds": 1,
+          "sticky_trap": 2,
+          "overflow": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 11
+        },
+        "sexpr.tokenizer::is_atom_continue": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "byte_builder::append_text": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "private_root_record_store": 16,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "byte_builder::finish": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "sticky_trap": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.ast::as_items": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "sexpr.parser::max_parse_depth": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::is_digit": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::store_cursor": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::raw": {
+          "private_root_record_store": 0,
+          "cast": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.printer::decimal_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 17,
+          "private_root_record_store": 52,
+          "allocation": 2,
+          "sticky_trap": 3,
+          "overflow": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 11
+        },
+        "sexpr.printer::render_float": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 16,
+          "private_root_record_store": 40,
+          "allocation": 2,
+          "sticky_trap": 7,
+          "trace_frame_load": 4,
+          "trace_frame_store": 15
+        },
+        "sexpr.printer::short_list_max_width": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::invalid_number": {
+          "private_root_record_store": 0,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::measured_width": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 4,
+          "trace_frame_store": 7
+        }
+      },
+      "ir_matches_chart": false
+    },
+    "root-width": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-parity-audit-20260920/probes/root-width.bin",
+      "sha256": "419d315ebc5736df9585be85b6503abea95fa87b12684f5d5ea07153717238dd",
+      "ir_sha256": "0a04883b472a1820c237b979da842fc25f05e3f396f521d88ed173d04198896a",
+      "inventory": {
+        "sexpr.printer::append_float": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 15,
+          "private_root_record_store": 44,
+          "frame_floor": 1,
+          "sticky_trap": 3,
+          "allocation": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.view::matches": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 12,
+          "private_root_record_store": 33,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "allocation": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 9
+        },
+        "sexpr.tokenizer::is_operator_char": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "byte_builder::append_float": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::read_operator": {
+          "private_root_record_store": 0,
+          "frame_floor": 1,
+          "overflow": 4,
+          "bounds": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 12
+        },
+        "sexpr.parser::spelling_ends_with": {
+          "private_root_record_store": 0,
+          "overflow": 3,
+          "bounds": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 11
+        },
+        "sexpr.printer::estimate_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 96,
+          "private_root_record_store": 285,
+          "frame_floor": 1,
+          "cast": 2,
+          "overflow": 6,
+          "bounds": 1,
+          "sticky_trap": 8,
+          "trace_frame_load": 11,
+          "trace_frame_store": 30
+        },
+        "sexpr.view::equal": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 21,
+          "private_root_record_store": 54,
+          "frame_floor": 1,
+          "overflow": 2,
+          "sticky_trap": 2,
+          "allocation": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 12
+        },
+        "sexpr.printer::measure_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 17,
+          "private_root_record_store": 52,
+          "allocation": 2,
+          "sticky_trap": 3,
+          "overflow": 3,
+          "trace_frame_load": 4,
+          "trace_frame_store": 13
+        },
+        "sexpr.ast::as_string": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "sexpr.view::bytes_of": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 7,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.tokenizer::is_space": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::spelling_ends_with_mil": {
+          "private_root_record_store": 0,
+          "overflow": 4,
+          "bounds": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 13
+        },
+        "sexpr.ast::as_atom": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "sexpr.tokenizer::read_string": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 7,
+          "private_root_record_store": 20,
+          "frame_floor": 1,
+          "overflow": 14,
+          "sticky_trap": 2,
+          "bounds": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 25
+        },
+        "byte_builder::append_byte": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::render_node_bytes": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 13,
+          "private_root_record_store": 32,
+          "frame_floor": 1,
+          "sticky_trap": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.printer::append_view": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "private_root_record_store": 15,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::is_scale_letter": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "byte_builder::create": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 12,
+          "private_root_record_store": 32,
+          "capacity": 1,
+          "allocation": 2,
+          "sticky_trap": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.parser::parse_list": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 20,
+          "private_root_record_store": 59,
+          "frame_floor": 1,
+          "sticky_trap": 6,
+          "capacity": 1,
+          "allocation": 2,
+          "overflow": 1,
+          "trace_frame_load": 7,
+          "trace_frame_store": 17
+        },
+        "byte_builder::append_range": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "private_root_record_store": 16,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::si_suffix_len": {
+          "private_root_record_store": 0,
+          "frame_floor": 1,
+          "bounds": 6,
+          "overflow": 5,
+          "sticky_trap": 4,
+          "trace_frame_load": 9,
+          "trace_frame_store": 27
+        },
+        "sexpr.ast::max_source_bytes": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::source_has_mil_suffix": {
+          "private_root_record_store": 0,
+          "overflow": 3,
+          "bounds": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 12
+        },
+        "main::tally": {
+          "private_root_record_store": 0,
+          "frame_floor": 1,
+          "overflow": 9,
+          "sticky_trap": 3,
+          "cast": 1,
+          "iteration": 2,
+          "bounds": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 21
+        },
+        "sexpr.ast::span_of": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "sexpr.view::first_byte": {
+          "private_root_record_store": 0,
+          "bounds": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.ast::children": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 31,
+          "private_root_record_store": 90,
+          "capacity": 5,
+          "allocation": 5,
+          "sticky_trap": 5,
+          "trace_frame_load": 8,
+          "trace_frame_store": 16
+        },
+        "sexpr.tokenizer::span_at": {
+          "private_root_record_store": 0,
+          "bounds": 1,
+          "overflow": 3,
+          "cast": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 13
+        },
+        "sexpr.view::through": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "private_root_record_store": 14,
+          "allocation": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.view::skip": {
+          "private_root_record_store": 0,
+          "overflow": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.parser::parse_unit": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "main::render_to": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "frame_floor": 1,
+          "sticky_trap": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.tokenizer::is_atom_start": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::lex_failure": {
+          "private_root_record_store": 0,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::fallback_unit_val_width": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.printer::literal_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 5,
+          "private_root_record_store": 10,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::is_short_list": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "private_root_record_store": 15,
+          "frame_floor": 1,
+          "cast": 2,
+          "overflow": 4,
+          "bounds": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 5,
+          "trace_frame_store": 16
+        },
+        "sexpr.parser::mil_to_mm": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::next_raw": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 23,
+          "private_root_record_store": 80,
+          "frame_floor": 1,
+          "bounds": 3,
+          "overflow": 14,
+          "sticky_trap": 8,
+          "trace_frame_load": 10,
+          "trace_frame_store": 38
+        },
+        "sexpr.view::at": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::tokenize": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 40,
+          "private_root_record_store": 125,
+          "frame_floor": 1,
+          "sticky_trap": 5,
+          "capacity": 1,
+          "allocation": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 12
+        },
+        "sexpr.tokenizer::is_unit_required_scale": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::advance": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 5,
+          "private_root_record_store": 11,
+          "frame_floor": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 9
+        },
+        "sexpr.printer::fallback_int_width": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::finish_after_syntax_error": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "private_root_record_store": 14,
+          "frame_floor": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 9
+        },
+        "sexpr.ast::zero_span": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.ast::as_number": {
+          "private_root_record_store": 0,
+          "sticky_trap": 1,
+          "trace_frame_load": 8,
+          "trace_frame_store": 12
+        },
+        "sexpr.ast::is_form": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 10,
+          "private_root_record_store": 29,
+          "frame_floor": 1,
+          "cast": 2,
+          "overflow": 1,
+          "bounds": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 9,
+          "trace_frame_store": 17
+        },
+        "sexpr.printer::render_node": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 7,
+          "private_root_record_store": 13,
+          "frame_floor": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 8
+        },
+        "sexpr.parser::is_si_number_char": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::read_number": {
+          "private_root_record_store": 0,
+          "frame_floor": 1,
+          "bounds": 15,
+          "overflow": 25,
+          "sticky_trap": 13,
+          "trace_frame_load": 9,
+          "trace_frame_store": 65
+        },
+        "sexpr.parser::parse_with_depth_cap": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 72,
+          "private_root_record_store": 233,
+          "frame_floor": 1,
+          "sticky_trap": 7,
+          "allocation": 3,
+          "capacity": 1,
+          "trace_frame_load": 6,
+          "trace_frame_store": 17
+        },
+        "sexpr.ast::as_text": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "byte_builder::append": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "private_root_record_store": 16,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "main::summarise": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 179,
+          "private_root_record_store": 577,
+          "frame_floor": 1,
+          "allocation": 27,
+          "cast": 1,
+          "iteration": 2,
+          "bounds": 1,
+          "sticky_trap": 11,
+          "overflow": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 39
+        },
+        "sexpr.tokenizer::peek": {
+          "private_root_record_store": 0,
+          "bounds": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "byte_builder::append_int": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::render": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 7,
+          "private_root_record_store": 16,
+          "frame_floor": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 8
+        },
+        "sexpr.parser::si_number_end": {
+          "private_root_record_store": 0,
+          "overflow": 3,
+          "bounds": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 10
+        },
+        "sexpr.printer::scalar_len": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 9,
+          "private_root_record_store": 22,
+          "allocation": 1,
+          "sticky_trap": 3,
+          "trace_frame_load": 4,
+          "trace_frame_store": 9
+        },
+        "sexpr.printer::push_node": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 376,
+          "private_root_record_store": 1247,
+          "frame_floor": 1,
+          "cast": 6,
+          "sticky_trap": 22,
+          "overflow": 9,
+          "bounds": 3,
+          "trace_frame_load": 9,
+          "trace_frame_store": 49
+        },
+        "sexpr.parser::si_scale": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 10,
+          "trace_frame_store": 13
+        },
+        "sexpr.printer::int_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 3,
+          "private_root_record_store": 4,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.parser::parse_node": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 53,
+          "private_root_record_store": 143,
+          "frame_floor": 1,
+          "sticky_trap": 16,
+          "trace_frame_load": 23,
+          "trace_frame_store": 42
+        },
+        "byte_builder::append_spaces": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 13,
+          "private_root_record_store": 40,
+          "allocation": 2,
+          "sticky_trap": 2,
+          "overflow": 1,
+          "trace_frame_load": 6,
+          "trace_frame_store": 12
+        },
+        "sexpr.view::text_of": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 5,
+          "private_root_record_store": 11,
+          "sticky_trap": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.ast::value_text": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 9,
+          "trace_frame_store": 12
+        },
+        "sexpr.parser::parse_leaf": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 34,
+          "private_root_record_store": 116,
+          "frame_floor": 1,
+          "sticky_trap": 13,
+          "allocation": 3,
+          "overflow": 12,
+          "bounds": 8,
+          "trace_frame_load": 11,
+          "trace_frame_store": 47
+        },
+        "sexpr.printer::text_of": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 5,
+          "private_root_record_store": 10,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.view::take": {
+          "private_root_record_store": 0,
+          "overflow": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.printer::fallback_float_width": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.ast::is_atom_named": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 8,
+          "private_root_record_store": 20,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 8,
+          "trace_frame_store": 12
+        },
+        "sexpr.printer::decode": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "sticky_trap": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.parser::parse": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.view::view_len": {
+          "private_root_record_store": 0,
+          "overflow": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::is_unit_letter": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.printer::render_bytes": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 26,
+          "private_root_record_store": 83,
+          "frame_floor": 1,
+          "sticky_trap": 5,
+          "cast": 2,
+          "overflow": 2,
+          "bounds": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 15
+        },
+        "sexpr.parser::view_of": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::located": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "main::main": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 216,
+          "private_root_record_store": 780,
+          "frame_floor": 1,
+          "cast": 4,
+          "sticky_trap": 16,
+          "overflow": 2,
+          "bounds": 2,
+          "allocation": 8,
+          "trace_frame_load": 7,
+          "trace_frame_store": 34
+        },
+        "sexpr.tokenizer::lexeme": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "private_root_record_store": 16,
+          "sticky_trap": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "byte_builder::reserve": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::materialize": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.parser::parse_si": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "frame_floor": 1,
+          "sticky_trap": 7,
+          "overflow": 3,
+          "allocation": 1,
+          "bounds": 1,
+          "trace_frame_load": 5,
+          "trace_frame_store": 19
+        },
+        "sexpr.tokenizer::lexer": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "allocation": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::read_atom": {
+          "private_root_record_store": 0,
+          "frame_floor": 1,
+          "bounds": 1,
+          "sticky_trap": 2,
+          "overflow": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 11
+        },
+        "sexpr.tokenizer::is_atom_continue": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "byte_builder::append_text": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "private_root_record_store": 16,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "byte_builder::finish": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "private_root_record_store": 8,
+          "sticky_trap": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.ast::as_items": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "sexpr.parser::max_parse_depth": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::is_digit": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::store_cursor": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::raw": {
+          "private_root_record_store": 0,
+          "cast": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.printer::decimal_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 17,
+          "private_root_record_store": 52,
+          "allocation": 2,
+          "sticky_trap": 3,
+          "overflow": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 11
+        },
+        "sexpr.printer::render_float": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 16,
+          "private_root_record_store": 40,
+          "allocation": 2,
+          "sticky_trap": 7,
+          "trace_frame_load": 4,
+          "trace_frame_store": 15
+        },
+        "sexpr.printer::short_list_max_width": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::invalid_number": {
+          "private_root_record_store": 0,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::measured_width": {
+          "private_root_record_store": 0,
+          "trace_frame_load": 4,
+          "trace_frame_store": 7
+        }
+      },
+      "ir_matches_chart": false
+    },
+    "heap-effects": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/llvm-parity-audit-20260920/probes/heap-effects.bin",
+      "sha256": "3b11ec68039a0d26ec6d646736f6de2197728823365395c910a85de8ad8bb226",
+      "ir_sha256": "b0a9370b139bf839471e8212c109eb44aae1311303fd5b5f21e8b66b23313df2",
+      "inventory": {
+        "sexpr.printer::append_float": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 15,
+          "frame_floor": 1,
+          "sticky_trap": 3,
+          "allocation": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.view::matches": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 12,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "allocation": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 9
+        },
+        "sexpr.tokenizer::is_operator_char": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "byte_builder::append_float": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::read_operator": {
+          "frame_floor": 1,
+          "overflow": 4,
+          "bounds": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 12
+        },
+        "sexpr.parser::spelling_ends_with": {
+          "overflow": 3,
+          "bounds": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 11
+        },
+        "sexpr.printer::estimate_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 96,
+          "frame_floor": 1,
+          "cast": 2,
+          "overflow": 6,
+          "bounds": 1,
+          "sticky_trap": 8,
+          "trace_frame_load": 11,
+          "trace_frame_store": 30
+        },
+        "sexpr.view::equal": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 21,
+          "frame_floor": 1,
+          "overflow": 2,
+          "sticky_trap": 2,
+          "allocation": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 12
+        },
+        "sexpr.printer::measure_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 17,
+          "allocation": 2,
+          "sticky_trap": 3,
+          "overflow": 3,
+          "trace_frame_load": 4,
+          "trace_frame_store": 13
+        },
+        "sexpr.ast::as_string": {
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "sexpr.view::bytes_of": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.tokenizer::is_space": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::spelling_ends_with_mil": {
+          "overflow": 4,
+          "bounds": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 13
+        },
+        "sexpr.ast::as_atom": {
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "sexpr.tokenizer::read_string": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 7,
+          "frame_floor": 1,
+          "overflow": 14,
+          "sticky_trap": 2,
+          "bounds": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 25
+        },
+        "byte_builder::append_byte": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::render_node_bytes": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 13,
+          "frame_floor": 1,
+          "sticky_trap": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.printer::append_view": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::is_scale_letter": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "byte_builder::create": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 12,
+          "capacity": 1,
+          "allocation": 2,
+          "sticky_trap": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.parser::parse_list": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 20,
+          "frame_floor": 1,
+          "sticky_trap": 6,
+          "capacity": 1,
+          "allocation": 2,
+          "overflow": 1,
+          "trace_frame_load": 7,
+          "trace_frame_store": 17
+        },
+        "byte_builder::append_range": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::si_suffix_len": {
+          "frame_floor": 1,
+          "bounds": 6,
+          "overflow": 5,
+          "sticky_trap": 4,
+          "trace_frame_load": 9,
+          "trace_frame_store": 27
+        },
+        "sexpr.ast::max_source_bytes": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::source_has_mil_suffix": {
+          "overflow": 3,
+          "bounds": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 12
+        },
+        "main::tally": {
+          "frame_floor": 1,
+          "overflow": 9,
+          "sticky_trap": 3,
+          "cast": 1,
+          "iteration": 2,
+          "bounds": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 21
+        },
+        "sexpr.ast::span_of": {
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "sexpr.view::first_byte": {
+          "bounds": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.ast::children": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 31,
+          "capacity": 5,
+          "allocation": 5,
+          "sticky_trap": 5,
+          "trace_frame_load": 8,
+          "trace_frame_store": 16
+        },
+        "sexpr.tokenizer::span_at": {
+          "bounds": 1,
+          "overflow": 3,
+          "cast": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 13
+        },
+        "sexpr.view::through": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "allocation": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.view::skip": {
+          "overflow": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.parser::parse_unit": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "main::render_to": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "frame_floor": 1,
+          "sticky_trap": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.tokenizer::is_atom_start": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::lex_failure": {
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::fallback_unit_val_width": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.printer::literal_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 5,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::is_short_list": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "frame_floor": 1,
+          "cast": 2,
+          "overflow": 4,
+          "bounds": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 5,
+          "trace_frame_store": 16
+        },
+        "sexpr.parser::mil_to_mm": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::next_raw": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 23,
+          "frame_floor": 1,
+          "bounds": 3,
+          "overflow": 14,
+          "sticky_trap": 8,
+          "trace_frame_load": 10,
+          "trace_frame_store": 38
+        },
+        "sexpr.view::at": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::tokenize": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 40,
+          "frame_floor": 1,
+          "sticky_trap": 5,
+          "capacity": 1,
+          "allocation": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 12
+        },
+        "sexpr.tokenizer::is_unit_required_scale": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::advance": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 5,
+          "frame_floor": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 9
+        },
+        "sexpr.printer::fallback_int_width": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::finish_after_syntax_error": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "frame_floor": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 9
+        },
+        "sexpr.ast::zero_span": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.ast::as_number": {
+          "sticky_trap": 1,
+          "trace_frame_load": 8,
+          "trace_frame_store": 12
+        },
+        "sexpr.ast::is_form": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 10,
+          "frame_floor": 1,
+          "cast": 2,
+          "overflow": 1,
+          "bounds": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 9,
+          "trace_frame_store": 17
+        },
+        "sexpr.printer::render_node": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 7,
+          "frame_floor": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 8
+        },
+        "sexpr.parser::is_si_number_char": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::read_number": {
+          "frame_floor": 1,
+          "bounds": 15,
+          "overflow": 25,
+          "sticky_trap": 13,
+          "trace_frame_load": 9,
+          "trace_frame_store": 65
+        },
+        "sexpr.parser::parse_with_depth_cap": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 72,
+          "frame_floor": 1,
+          "sticky_trap": 7,
+          "allocation": 3,
+          "capacity": 1,
+          "trace_frame_load": 6,
+          "trace_frame_store": 17
+        },
+        "sexpr.ast::as_text": {
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "byte_builder::append": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "main::summarise": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 179,
+          "frame_floor": 1,
+          "allocation": 27,
+          "cast": 1,
+          "iteration": 2,
+          "bounds": 1,
+          "sticky_trap": 11,
+          "overflow": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 39
+        },
+        "sexpr.tokenizer::peek": {
+          "bounds": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "byte_builder::append_int": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::render": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 7,
+          "frame_floor": 1,
+          "sticky_trap": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 8
+        },
+        "sexpr.parser::si_number_end": {
+          "overflow": 3,
+          "bounds": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 10
+        },
+        "sexpr.printer::scalar_len": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 9,
+          "allocation": 1,
+          "sticky_trap": 3,
+          "trace_frame_load": 4,
+          "trace_frame_store": 9
+        },
+        "sexpr.printer::push_node": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 376,
+          "frame_floor": 1,
+          "cast": 6,
+          "sticky_trap": 22,
+          "overflow": 9,
+          "bounds": 3,
+          "trace_frame_load": 9,
+          "trace_frame_store": 49
+        },
+        "sexpr.parser::si_scale": {
+          "trace_frame_load": 10,
+          "trace_frame_store": 13
+        },
+        "sexpr.printer::int_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 3,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.parser::parse_node": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 53,
+          "frame_floor": 1,
+          "sticky_trap": 16,
+          "trace_frame_load": 23,
+          "trace_frame_store": 42
+        },
+        "byte_builder::append_spaces": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 13,
+          "allocation": 2,
+          "sticky_trap": 2,
+          "overflow": 1,
+          "trace_frame_load": 6,
+          "trace_frame_store": 12
+        },
+        "sexpr.view::text_of": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 5,
+          "sticky_trap": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.ast::value_text": {
+          "trace_frame_load": 9,
+          "trace_frame_store": 12
+        },
+        "sexpr.parser::parse_leaf": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 34,
+          "frame_floor": 1,
+          "sticky_trap": 13,
+          "allocation": 3,
+          "overflow": 12,
+          "bounds": 8,
+          "trace_frame_load": 11,
+          "trace_frame_store": 47
+        },
+        "sexpr.printer::text_of": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 5,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.view::take": {
+          "overflow": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.printer::fallback_float_width": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.ast::is_atom_named": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 8,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 8,
+          "trace_frame_store": 12
+        },
+        "sexpr.printer::decode": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "sticky_trap": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "sexpr.parser::parse": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.view::view_len": {
+          "overflow": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::is_unit_letter": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.printer::render_bytes": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 26,
+          "frame_floor": 1,
+          "sticky_trap": 5,
+          "cast": 2,
+          "overflow": 2,
+          "bounds": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 15
+        },
+        "sexpr.parser::view_of": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::located": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "main::main": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 216,
+          "frame_floor": 1,
+          "cast": 4,
+          "sticky_trap": 16,
+          "overflow": 2,
+          "bounds": 2,
+          "allocation": 8,
+          "trace_frame_load": 7,
+          "trace_frame_store": 34
+        },
+        "sexpr.tokenizer::lexeme": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "sticky_trap": 2,
+          "trace_frame_load": 4,
+          "trace_frame_store": 8
+        },
+        "byte_builder::reserve": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::materialize": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.parser::parse_si": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "frame_floor": 1,
+          "sticky_trap": 7,
+          "overflow": 3,
+          "allocation": 1,
+          "bounds": 1,
+          "trace_frame_load": 5,
+          "trace_frame_store": 19
+        },
+        "sexpr.tokenizer::lexer": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "allocation": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.tokenizer::read_atom": {
+          "frame_floor": 1,
+          "bounds": 1,
+          "sticky_trap": 2,
+          "overflow": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 11
+        },
+        "sexpr.tokenizer::is_atom_continue": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "byte_builder::append_text": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 6,
+          "allocation": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "byte_builder::finish": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 4,
+          "sticky_trap": 2,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.ast::as_items": {
+          "trace_frame_load": 8,
+          "trace_frame_store": 11
+        },
+        "sexpr.parser::max_parse_depth": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::is_digit": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::store_cursor": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.tokenizer::raw": {
+          "cast": 3,
+          "trace_frame_load": 3,
+          "trace_frame_store": 9
+        },
+        "sexpr.printer::decimal_width": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 17,
+          "allocation": 2,
+          "sticky_trap": 3,
+          "overflow": 1,
+          "trace_frame_load": 4,
+          "trace_frame_store": 11
+        },
+        "sexpr.printer::render_float": {
+          "arena_root_mark": 1,
+          "arena_root_head_store": 16,
+          "allocation": 2,
+          "sticky_trap": 7,
+          "trace_frame_load": 4,
+          "trace_frame_store": 15
+        },
+        "sexpr.printer::short_list_max_width": {
+          "trace_frame_load": 3,
+          "trace_frame_store": 6
+        },
+        "sexpr.parser::invalid_number": {
+          "frame_floor": 1,
+          "sticky_trap": 1,
+          "trace_frame_load": 3,
+          "trace_frame_store": 7
+        },
+        "sexpr.printer::measured_width": {
+          "trace_frame_load": 4,
+          "trace_frame_store": 7
+        }
+      },
+      "ir_matches_chart": false
+    }
+  },
+  "inputs": {
+    "/home/epentland/ai/canopy/mylang/.tmp/bench/armsset/manifest.json": "402b8176bf2c397ff6137c20206f14c24432bd17efcc8f47a71984a9f8a7f5b5",
+    "/home/epentland/ai/canopy/mylang/.tmp/bench/armsset/maxperf/builds.json": "b33b4a1247b8dcdaebbac59840e2ad1b878f29d889555992c7a871d04f976150",
+    "/home/epentland/ai/canopy/mylang/.tmp/bench/armsset/maxperf/whole-o3/000.ll": "139aae02f44fbd5abba532e7102db607b5b43c73f4ca7a3e75dde8d87a988fd5",
+    "/home/epentland/ai/canopy/mylang/.tmp/bench/armsset/maxperf/whole-o3/runtime.a": "fde58fcdaeb7f0a7c39fbbd6090354ffb7cd6a228b939c070a9c4b8bcec127e9",
+    "/home/epentland/ai/canopy/mylang/.tmp/bench/armsset/maxperf/whole-o3/unchecked_runtime.o": "5a0c1a55e6e0e701e77265a8b72cd021085bd29e3f777225ae958824c6e05fc1",
+    "/home/epentland/ai/canopy/mylang/.tmp/llvm-parity-audit-20260920/probes/width_probe.o": "042d978fda57d017cbd9fa59d6d632f58b95f55ac9913713b743952f9338ca3a",
+    "/home/epentland/ai/canopy/mylang/.tmp/bench/armsset/cache/objects/4076e5a5d3179d63adb8aa6647ff27015f156902c29acb0dabe15a08ea869f75/29e2c2ce64ec22618eb20f82e7a6e3c769a1b72d6a9020c894ebfc0a15f485e3.o": "5402f4b165f519e50f085bcc6c2c451a14f1a06559572b4dbd078d5452d881ce",
+    "/home/epentland/ai/canopy/mylang/.tmp/bench/armsset/cache/objects/4076e5a5d3179d63adb8aa6647ff27015f156902c29acb0dabe15a08ea869f75/c134f8e6307133b89a520b061fbfdd5a52c41dc7b6d22e0c89c3e146e9bad674.o": "964ff5f9d7fb1471f80872bfee6088827777e1d79ad46c2402d587d88c05e9fa",
+    "/home/epentland/ai/canopy/mylang/zig-out/lib/mylang-runtime/972215e34446fec419c9728556b9929d7a663348af356a8854e539ffb8ec68e0.o": "9276557f176de20ff6ca03589d6ab8c70a79001d73c7c1e0dfc323b527a49a50"
+  },
+  "translator_hashes": {
+    "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/llvm_emit.py": "3ccf0f73e34cccc0e83e5f460587640b62a21b9e31b31d597a9ee6abd1766a2b",
+    "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py": "d3ab8c24eb4e1f23e88531b31adabc3340ef59d3efccc84a6bb86f8e0fc7c8b6",
+    "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/runtime_signatures.py": "8d0c48cdc747661daacc9eb776811543c0d24ec2ff53624a5ed4bc8b20fb637c",
+    "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/amd64_sysv.py": "1d0252b37ec42904808f879590b9100292720c746efc3d9c85b537c001422919",
+    "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/maxperf/unchecked.py": "cd9a08c9007e471a91449315f515d9a3bc66fea165c2f63a0ac64787d635742b",
+    "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/maxperf/build.py": "d67d151a52a8c82417686b28fa9263695c296a8b17f60654059b8667afa45bbe",
+    "/home/epentland/ai/canopy/mylang/experiments/llvm-parity-audit-20260920/build_root_probe.py": "1445596f3f7ac19e3b30052e30cedd45c9b8528155e24f9d112223f7325d6417"
+  }
+}

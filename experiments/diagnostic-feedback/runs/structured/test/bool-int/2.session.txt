@@ -1,0 +1,20 @@
+Fixed `project/main.my`.
+
+**What changed:** `above` was declared `-> int` but returned `a > b` (a `bool`), which the checker rejected with `E_TYPE: expected int, found bool`. This language has no ternary expression, so I replaced that line with an `if`/`return` that returns the int `1` when `a > b` and `0` otherwise. Nothing else was modified (temp verification files were removed).
+
+```python
+def above(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+**Command and result:**
+
+```
+$ bin/mylang run project/main.my
+1
+exit: 0
+```
+
+`bin/mylang check project/main.my` also exits 0, and I confirmed the other branch (`above(2, 5)`) prints `0`.

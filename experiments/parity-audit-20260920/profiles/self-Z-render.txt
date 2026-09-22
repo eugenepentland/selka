@@ -1,0 +1,10 @@
+    45.29%  zig      zig               [.] src.sexpr.tokenizer.Tokenizer.next
+    17.52%  zig      zig               [.] src.sexpr.parser.parseNode
+     9.70%  zig      zig               [.] src.sexpr.printer.printNode__anon_29595
+     9.50%  zig      zig               [.] src.sexpr.printer.estimateWidth
+     3.90%  zig      zig               [.] compiler_rt.memcpy.memcpyFast
+     3.77%  zig      [unknown]         [k] 0xffffffff8ce00b90
+     3.60%  zig      zig               [.] heap.ArenaAllocator.alloc
+     3.38%  zig      zig               [.] Io.Writer.printValue__anon_26031
+     0.99%  zig      zig               [.] heap.ArenaAllocator.remap
+     0.72%  zig      zig               [.] array_list.Aligned(src.sexpr.ast.Node,null).toOwnedSlice

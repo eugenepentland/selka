@@ -1,0 +1,642 @@
+{
+  "compiler_sha256_before": "2dc07d5f71e5bd9d0c8b780536895113b8c04f11724a919a2de277ec1605157d",
+  "cases": {
+    "format": {
+      "source_sha256": "4ddf937ded63c4d42969ef421b531d11598db614d439ba89ccc2aeab7da876aa",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/format.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/sources/format.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/ir/format.ssa",
+        "functions": [
+          "format_value",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_text_concat",
+          "myl_native_text_scalar"
+        ],
+        "text_concat_sites": 4,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "comprehension": {
+      "source_sha256": "ee0bb3c84dbebdbff24a171992a9a378d841b8eaed478b4804f45a435a6b2f13",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/comprehension.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/sources/comprehension.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/ir/comprehension.ssa",
+        "functions": [
+          "transform",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_list_append",
+          "myl_native_list_new"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "range_comprehension": {
+      "source_sha256": "e0e09b585142bb3bd0e3fba72ece08548d06a60f87b8669d18b88d0bfb06f668",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/range_comprehension.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/sources/range_comprehension.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/ir/range_comprehension.ssa",
+        "functions": [
+          "transform",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_list_append",
+          "myl_native_list_new"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "bytes_slice": {
+      "source_sha256": "397ac0324adc3ce138d766f884161a09e3a53cb0a71aee2cc5d401f33b1e9bd6",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/bytes_slice.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/sources/bytes_slice.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/ir/bytes_slice.ssa",
+        "functions": [
+          "parse",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_bytes_number_parse",
+          "myl_native_bytes_slice"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "bytes_view": {
+      "source_sha256": "faf1f409fc6e614831975e8a3d88ff522607578ed147489a6eaff43356a2ae62",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/bytes_view.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/sources/bytes_view.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/ir/bytes_view.ssa",
+        "functions": [
+          "parse",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_bytes_number_parse",
+          "myl_native_bytes_view"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "bytes_range": {
+      "source_sha256": "9f672bde19bf91c751c15c253cf9a36e9def1635b4a9165d5530584d6df63586",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/bytes_range.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/sources/bytes_range.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/ir/bytes_range.ssa",
+        "functions": [
+          "parse",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_bytes_number_parse",
+          "myl_native_bytes_range"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "bytes_slice_noalloc": {
+      "source_sha256": "1d64765aa25687ed6bc9d89943aa797800db97ed29793a7e954c407be4efb9d7",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/bytes_slice_noalloc.my"
+        ],
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "experiments/syntax-canonicalization-20260921/sources/bytes_slice_noalloc.my:1:58: error[E_EFFECT_BOUND]: effect `managed_allocation` exceeds declared bound: parse; inferred bound is effects(managed_allocation)\n  def parse(b: bytes, start: int, end: int) -> Option[int] noalloc:\n                                                           ^\n  note: experiments/syntax-canonicalization-20260921/sources/bytes_slice_noalloc.my:2:12: effect originates at this operation or owned type\n"
+      }
+    },
+    "bytes_view_noalloc": {
+      "source_sha256": "b64ec0fae42fbaf4f8a77d37346f0b1766c898e06a7f8b409c426b97c70304cc",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/bytes_view_noalloc.my"
+        ],
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "experiments/syntax-canonicalization-20260921/sources/bytes_view_noalloc.my:1:58: error[E_EFFECT_BOUND]: effect `managed_allocation` exceeds declared bound: parse; inferred bound is effects(managed_allocation)\n  def parse(b: bytes, start: int, end: int) -> Option[int] noalloc:\n                                                           ^\n  note: experiments/syntax-canonicalization-20260921/sources/bytes_view_noalloc.my:2:12: effect originates at this operation or owned type\n"
+      }
+    },
+    "bytes_range_noalloc": {
+      "source_sha256": "c841272e1527dd0b8a7d2a950d6ed791567d7210cbe861aeb5cf38d6d01bae74",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/bytes_range_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/sources/bytes_range_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/ir/bytes_range_noalloc.ssa",
+        "functions": [
+          "parse",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_bytes_number_parse",
+          "myl_native_bytes_range"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "minimum_text_noalloc": {
+      "source_sha256": "15bffbf242cf1b6bd8edf4db9a77b5c7a683fc553f43eb844924fa9f83086ac3",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/minimum_text_noalloc.my"
+        ],
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "experiments/syntax-canonicalization-20260921/sources/minimum_text_noalloc.my:1:35: error[E_EFFECT_BOUND]: effect `managed_allocation` exceeds declared bound: minimum; inferred bound is effects(managed_allocation)\n  def minimum(xs: list[str]) -> str noalloc:\n                                    ^\n  note: experiments/syntax-canonicalization-20260921/sources/minimum_text_noalloc.my:2:12: effect originates at this operation or owned type\n"
+      }
+    },
+    "minimum_text": {
+      "source_sha256": "999be2ff6d984bd5721a9048ce8770b9c8530b795c39f1858418571d41edf8e4",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/minimum_text.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/sources/minimum_text.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/ir/minimum_text.ssa",
+        "functions": [
+          "minimum",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_bytes_encode",
+          "myl_native_list_get"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "minimum_int_noalloc": {
+      "source_sha256": "66ceecebb83edfe03dfc39cbce65f1f1c7d1e8f15564a9ad6e0b457d769d6314",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/minimum_int_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/sources/minimum_int_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/ir/minimum_int_noalloc.ssa",
+        "functions": [
+          "minimum",
+          "main"
+        ],
+        "runtime_calls": [],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "sort_in_place": {
+      "source_sha256": "83a62006c0efb5c3317c0722d9cc6efd46cc7b99e6bd9b0cdf053ff4290108aa",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/sort_in_place.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "experiments/syntax-canonicalization-20260921/sources/sort_in_place.my:2:5: warning[W_MUTATES_MISSING]: this function writes `xs` (parameter 1) reachable from the caller; declare `mutates(xs)`\n      xs.sort()\n      ^\n"
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/sources/sort_in_place.my"
+        ],
+        "exit_code": 0,
+        "stderr": "experiments/syntax-canonicalization-20260921/sources/sort_in_place.my:2:5: warning[W_MUTATES_MISSING]: this function writes `xs` (parameter 1) reachable from the caller; declare `mutates(xs)`\n      xs.sort()\n      ^\n",
+        "ir_path": "experiments/syntax-canonicalization-20260921/ir/sort_in_place.ssa",
+        "functions": [
+          "order",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_list_sort"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "sort_copy": {
+      "source_sha256": "a4f5a6d1e645c58bbaa1731481830c77ea93edd2d4bada4b6ea0fb0fd76432f3",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/sort_copy.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/sources/sort_copy.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/ir/sort_copy.ssa",
+        "functions": [
+          "order",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_list_append",
+          "myl_native_list_new"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "sort_text": {
+      "source_sha256": "65dc358deb27de8e11e3667aa5b69f81b0d46eea293c5b988ea78f29c0427664",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/sort_text.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/sources/sort_text.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/ir/sort_text.ssa",
+        "functions": [
+          "order",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_bytes_encode",
+          "myl_native_list_append",
+          "myl_native_list_get",
+          "myl_native_list_new"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "dict_items_direct": {
+      "source_sha256": "640692152e77b4d01e696cddeecd06ad7567c2b6b0629b2d6e5cedfbe61deb04",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/dict_items_direct.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/sources/dict_items_direct.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/ir/dict_items_direct.ssa",
+        "functions": [
+          "total",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_dictionary_key_at",
+          "myl_native_dictionary_length",
+          "myl_native_dictionary_read"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "dict_values_direct": {
+      "source_sha256": "c9c5485bb47c192cbaed58ab1099dcc350be4bb810706547e3bec4f15a249afe",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/dict_values_direct.my"
+        ],
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "experiments/syntax-canonicalization-20260921/sources/dict_values_direct.my:1:37: error[E_EFFECT_BOUND]: effect `managed_allocation` exceeds declared bound: total; inferred bound is effects(managed_allocation)\n  def total(d: dict[str, int]) -> int noalloc:\n                                      ^\n  note: experiments/syntax-canonicalization-20260921/sources/dict_values_direct.my:3:18: effect originates at this operation or owned type\n"
+      }
+    },
+    "record_projection": {
+      "source_sha256": "3f10a13b9d4683505b4ef26cec1909edd425f1d139d5bb75a0d37e74f4ec7ae5",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/record_projection.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/sources/record_projection.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/ir/record_projection.ssa",
+        "functions": [
+          "project",
+          "main"
+        ],
+        "runtime_calls": [],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "prelude_float_noalloc": {
+      "source_sha256": "dcbf829e397a3417bfd015e865704a24dcd170b1385aae21c70e7d83b8e3e9b0",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/prelude_float_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-qbe",
+          "experiments/syntax-canonicalization-20260921/sources/prelude_float_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/ir/prelude_float_noalloc.ssa",
+        "functions": [
+          "parse",
+          "main"
+        ],
+        "runtime_calls": [
+          "myl_native_number_parse",
+          "myl_native_text_points"
+        ],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "library_float": {
+      "source_sha256": "3b7faeae979e3ab38432b4f311604759ced7762754ba49c9563ffc53ba40acd7",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/library_float.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-project-qbe",
+          "experiments/syntax-canonicalization-20260921/sources/library_float.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/ir/library_float.ssa",
+        "functions": [
+          "library_float::parse",
+          "library_float::main"
+        ],
+        "runtime_calls": [],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "library_int_noalloc": {
+      "source_sha256": "81c415bcc09aa0942ce3a23a19e87483e6bd049a6cf637ed9cb40d1df112017a",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/library_int_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "emit": {
+        "command": [
+          "zig-out/bin/mylang",
+          "emit-project-qbe",
+          "experiments/syntax-canonicalization-20260921/sources/library_int_noalloc.my"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "ir_path": "experiments/syntax-canonicalization-20260921/ir/library_int_noalloc.ssa",
+        "functions": [
+          "library_int_noalloc::parse",
+          "library_int_noalloc::main"
+        ],
+        "runtime_calls": [],
+        "text_concat_sites": 0,
+        "aggregate_blit_sites": 0
+      }
+    },
+    "removed_float_intrinsic": {
+      "source_sha256": "1914b34912b7dbd813d9796898e01b3432c8ec8ab85f00f99e4e545ed19cc3b3",
+      "check": {
+        "command": [
+          "zig-out/bin/mylang",
+          "check",
+          "experiments/syntax-canonicalization-20260921/sources/removed_float_intrinsic.my"
+        ],
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "experiments/syntax-canonicalization-20260921/sources/removed_float_intrinsic.my:2:12: error[E_REMOVED_SPELLING]: `f64_sqrt` was removed; use `sqrt` with a `float` value\n      return f64_sqrt(x)\n             ^\n"
+      }
+    }
+  },
+  "behavior": {
+    "command": [
+      "zig-out/bin/mylang",
+      "run",
+      "experiments/syntax-canonicalization-20260921/sources/behavior.my"
+    ],
+    "exit_code": 0,
+    "stdout": "Some(1.5)\nNone\nSome(1000.5)\nNone\nSome(inf)\nNone\n[10, 20]\na\n10\nb\n20\n",
+    "stderr": ""
+  },
+  "compiler_sha256_after": "2dc07d5f71e5bd9d0c8b780536895113b8c04f11724a919a2de277ec1605157d",
+  "source_sha256_after": {
+    "src/sema.zig": "51f9094264d821d67fdbd3635771fc5698ca85aa59f70190147ba3378efd11a0",
+    "src/prelude_builtins.zig": "0b125d0cb8bdc9d6ce45e91275ca3d631884ebb7de855ff42abe16bdff4da6f3",
+    "src/native_collections.c": "d42096e475c94eb633c232cbab99dc67eac9bebee2fb2915152bcb3d6febd08a",
+    "src/native_text.c": "3771b8ee764523698cc9d4b6894c2f2c1dcfa560d41f64d2a071acdf187ea6e9",
+    "src/native_bytes.c": "f1b44fea13181357f38aa5314172bf63647ffcd7efebe208053f284ca4a34ad8",
+    "src/stdlib/strings.my": "ab88d459a7389fba0d0af816dbe9d86283c535d4c656fa387e0c6d5f920a485a",
+    "src/stdlib/sort.my": "cc586f3d05ddc36e940b292b02848a8b0f2a58c39c7f9f176d46451a7b6701bd",
+    "src/removed_names.zig": "388d67793c1e44ae751798fd8d8d752f457300d2a9db4eac238d9c6518a810ce"
+  }
+}

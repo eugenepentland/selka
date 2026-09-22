@@ -1,0 +1,5 @@
+def root(x: float) -> float:
+    return f64_sqrt(x)
+
+def main() -> int:
+    return 0

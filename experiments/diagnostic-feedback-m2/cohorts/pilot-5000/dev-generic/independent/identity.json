@@ -1,0 +1,8 @@
+{
+  "case": "dev-generic",
+  "policy": "independent",
+  "cap": 5000,
+  "prompt_sha256": "fd2d1435c03a4147a67227e014b252a98ab6e9da45cf639bcca0f4254a6b3096",
+  "prompt": "# Fix the program\n\n`largest` returns the largest of three integers given as arguments. It does not pass the checker; make it compile and print the largest value.\n\nYou are working in `project/`. `bin/mylang` is the installed compiler:\n`bin/mylang check project/main.my`, `bin/mylang run project/main.my -- <arguments>`.\n\nThe same behavior is required for every input, not only the examples in `public/`.\nRead `public/expected.json` for the examples this task will be checked against, and run them however you like.\n\nConstraints:\n\n- Work only inside this directory; do not read or write anything outside it and do not spawn subagents.\n- At most 20 compiler invocations are available for this attempt.\n- You have 5000 generated (output) tokens for this task, reasoning included; the harness reads this session's log while it runs and terminates the attempt as soon as that budget is exceeded.\n- Change only what the request requires.\n\nWhen you are done, reply with a short final message: what you changed and the exact command you ran with its result.\n",
+  "frozen_utc": "2026-09-19T18:03:26.083055+00:00"
+}

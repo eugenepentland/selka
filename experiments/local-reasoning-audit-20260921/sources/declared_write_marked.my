@@ -1,0 +1,6 @@
+def touch(values: list[int]) mutates(values):
+    values[0] = 42
+def main() -> int:
+    values = [1]
+    touch(&values)
+    return values[0]

@@ -1,0 +1,20 @@
+[
+  {
+    "arm": "text_fix",
+    "case": "generic-a",
+    "repetition": 2,
+    "eligible_rules": [
+      "E_TYPE:found Result["
+    ],
+    "reason": "eligible but no remedy rendered"
+  },
+  {
+    "arm": "json_fix",
+    "case": "checked-c",
+    "repetition": 2,
+    "eligible_rules": [
+      "E_TYPE:found Result["
+    ],
+    "reason": "eligible but no remedy rendered"
+  }
+]

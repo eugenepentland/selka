@@ -1,0 +1,52 @@
+{
+  "date": "2026-09-21",
+  "mylang_revision": "b8f6ec3f1178f12971e7dcb1d2255ab8c055b024",
+  "dirty_tree": true,
+  "compiler_sha256": "73211569d843a7eb780b77a10644d288996c810fd600f85d93385739f54bd6b3",
+  "zig_version": "0.17.0-dev.1683+5ceec001b",
+  "sources": {
+    "experiments/sexpr-port/sexpr/tokenizer.my": "9b8ee20faa508084cc331ba7675d2c6e7410f5a1723dd98593e5b2e22cb0fb77",
+    "experiments/sexpr-port/sexpr/printer.my": "89ce60f3e88002fe699e0b6f05b46a2908599a22050bfed3b2f260bb666507ab",
+    "experiments/sexpr-port/sexpr/parser.my": "969a40c4e6c30cbf732c65d71239d47324e2b3c3b1185f943231cd5cd864e147",
+    "experiments/sexpr-port/sexpr/ast.my": "f78509fbb8e06f4f9614fcada73e85910b0970fb0f323cab3313519591e15e1a",
+    "experiments/sexpr-port/sexpr/view.my": "fb9a0aa01b1273f7e698a837d57f6ae38b02de5f09eac896251914f5dfce0018",
+    "experiments/sexpr-port/main.my": "758b4848039ebf1d6addc9fa697031e0fb183a548c50a477502f0cf96f1579a8",
+    "zig-out/lib/mylang-llvm/amd64_sysv.py": "1d0252b37ec42904808f879590b9100292720c746efc3d9c85b537c001422919",
+    "zig-out/lib/mylang-llvm/llvm_emit.py": "bdb463c44dd0f883fc5569b03ac82007fcb9acdba8ad8d2b3b64802af1495849",
+    "zig-out/lib/mylang-llvm/runtime_signatures.py": "24760d4f3de48bd5c1a0c5a49eff3b48c2dc9bb44711a1427e8f0b7fd48528c9",
+    "zig-out/lib/mylang-llvm/qbe_llvm.py": "50f9af3582ca21be9471847e8f215af27d6bb180519f0afeb374ab422e6f1773"
+  },
+  "cpu_affinity_available": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "cpu6_governor": "powersave",
+  "perf_event_paranoid": "4",
+  "memory_contract": "mylang ordinary collecting GC, default ReleaseFast bounds/overflow checks; step and frame accounting omitted by default. Zig ReleaseFast arena with safety checks disabled; ReleaseSafe also measured when available.",
+  "input_generation": {
+    "source": "/home/epentland/ai/canopy/eda/projects/designs/lib/modules/poe-pd-flyback-tps23757.sexp",
+    "source_bytes": 185482,
+    "source_sha256": "49e99d2f3045a156aa6da642657066dbcd5ab03e43b1914a68202da021828bdb",
+    "input.sexp": "(source + newline) repeated 5 times",
+    "input8.sexp": "input.sexp repeated 8 times"
+  },
+  "guardian_exercised": false
+}

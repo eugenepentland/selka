@@ -1,0 +1,41 @@
+dsh: reasoning:
+The bug: `bigger = a > b` produces a `bool`, and `return bigger` in a function declared `-> int`. Presumably the compiler allows implicit bool->int? Let me check what happens. Let's run the compiler.
+
+Actually let me first check the behavior by running. Let me count compiler invocations — at most 20.
+
+Let me run the check first.
+dsh: reasoning:
+So `exceeds` returns bool but declared int. Need to return 1 when a > b else 0.
+
+Fix: straightforward.
+
+```python
+def exceeds(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+Note function-scoped locals. That's fine.
+
+Also need to consider: "The same behavior is required for every input, not only the examples in public/." So it must handle everything. `number` returns 0 for non-int; fine. What about negative ints? `int(text)` presumably parses negatives. Fine.
+
+Also blank line formatting — probably there's a formatter. Let's just edit and check.
+
+Let me write the fix.
+dsh: reasoning:
+Now run the examples. And also test extra inputs to make sure behavior is right for all inputs (equal, negatives).
+
+Careful about argument passing: `exceeds(number(args[0]), number(args[1]))` — args[0] and args[1] are the first two arguments. If no args, would trap, but presumably harness always passes 2.
+
+Let me run the public cases plus edge cases.
+dsh: reasoning:
+All correct. Both public cases match expected.json ("5 2" -> "1\n", "2 5" -> "0\n").
+
+Let me verify exactly with a script that compares against expected.json. Actually, that's another compiler invocation per case, but I've used 1 (check fail) + 1 (check) + 7 (runs) = 9 so far. Wait — actually the runs via `mylang run` build the program; each counts as a compiler invocation? Hmm, the limit is 20 compiler invocations. I've used ~9. Let me do a final verification running exactly the two public cases, comparing stdout to expected.json.
+
+Actually I already ran exactly those cases. But let me do a precise check anyway with two more runs — that's fine within budget.
+
+Actually I can do it in one bash command, which runs the compiler twice. Total 11. Fine.
+
+Let me also check the file content is clean.

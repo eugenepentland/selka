@@ -1,0 +1,13 @@
+**Change:** In `project/main.my`, threaded the `Stream` capability through the call chain instead of calling bare `print` in `banner` (which is rejected with `E_OUTPUT_CAPABILITY`):
+
+```python
+def banner(out: Stream, text: str) -> int:
+    out.print(text)
+    return 0
+
+
+def main(out: Stream) -> int:
+    return banner(out, "== ok")
+```
+
+**Command run:** `./bin/mylang run project/main.my` → printed `== ok`, exited 0.

@@ -1,0 +1,223 @@
+{
+  "version": 2,
+  "cohort_id": "m1b",
+  "arm": "text_fix",
+  "case": "checked-c",
+  "repetition": 2,
+  "attempt": 1,
+  "attempt_reason": null,
+  "predecessor": null,
+  "work_dir": "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback/work/m1b/text_fix/checked-c/2/1",
+  "initial_source_sha256": "0023b02c240e354e6012494844df04ca997f21dd69fbbfa8309050fccf398a2c",
+  "sealed_source_sha256": "62a5c95e77bffe1c4cdc078db6cdd62616154b71c20454a02adc79711c49f722",
+  "termination": "completed",
+  "session_launch": {
+    "command": [
+      "dsh",
+      "--profile",
+      "headless",
+      "# Fix the program\n\n`decode` reads one numeric argument and returns it as a `Result`. The program must print 10 plus that number; if the argument is not an integer it must print 0.\n\nYou are working in `project/`. `bin/mylang` is the installed compiler:\n`bin/mylang check project/main.my`, `bin/mylang run project/main.my -- <arguments>`.\n\nThe same behavior is required for every input, not only the examples in `public/`.\nRead `public/expected.json` for the examples this task will be checked against, and run them however you like.\n\nConstraints:\n\n- Work only inside this directory; do not read or write anything outside it and do not spawn subagents.\n- At most 20 compiler invocations are available for this attempt.\n- Change only what the request requires.\n\nWhen you are done, reply with a short final message: what you changed and the exact command you ran with its result.\n"
+    ],
+    "env": {
+      "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback/work/m1b/text_fix/checked-c/2/1/.cache/zig-global",
+      "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback/work/m1b/text_fix/checked-c/2/1/.cache/zig-local"
+    },
+    "started_utc": "2026-09-19T16:32:28.456123+00:00",
+    "finished_utc": "2026-09-19T16:39:23.358091+00:00",
+    "seconds": 414.901972,
+    "timed_out": false,
+    "exit": 0
+  },
+  "session": {
+    "logs": [
+      "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-work-m1b-text_fix-checked-c-2-1--/session-5a1c8887-0126-41b6-ad40-f9cb2c0e42d1/session.v3.jsonl.zstd"
+    ],
+    "session_dirs": [
+      "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-work-m1b-text_fix-checked-c-2-1--/session-5a1c8887-0126-41b6-ad40-f9cb2c0e42d1"
+    ],
+    "sessions": 1,
+    "usage": {
+      "inputTokens": 53338,
+      "outputTokens": 82040,
+      "reasoningTokens": 76460,
+      "cacheReadTokens": 1837696,
+      "totalTokens": 1973074,
+      "cost_v1_input_output_reasoning": 211838,
+      "cost_v2_input_output": 135378,
+      "provider_total_tokens": 1973074,
+      "reasoning_share_of_cost_v1": 0.3609
+    },
+    "models": {
+      "deepseek-v4-flash": 42
+    },
+    "efforts": {
+      "max": 1
+    },
+    "delegation_depth": 0,
+    "turns": 1,
+    "steps": 41,
+    "tool_calls": {
+      "bash": 31,
+      "write": 2,
+      "read": 4,
+      "edit": 3
+    },
+    "tool_seconds": {
+      "bash": 8.164,
+      "edit": 0.058,
+      "read": 0.058,
+      "write": 0.032
+    },
+    "compiler_seconds": 7.471,
+    "compiler_calls": 33,
+    "bytes_read": 8951,
+    "failure_results": 3,
+    "edits": 5,
+    "first_edit_ms": 1789835560347,
+    "baseline_green_ms": null,
+    "first_green_ms": null,
+    "first_candidate_green_step": null,
+    "check_events": [
+      {
+        "step": 1,
+        "phase": "baseline",
+        "outcome": "red",
+        "ms": 1789835555482
+      },
+      {
+        "step": 2,
+        "phase": "candidate",
+        "outcome": "unknown",
+        "ms": 1789835564308
+      },
+      {
+        "step": 3,
+        "phase": "candidate",
+        "outcome": "unknown",
+        "ms": 1789835569295
+      },
+      {
+        "step": 4,
+        "phase": "candidate",
+        "outcome": "unknown",
+        "ms": 1789835574493
+      },
+      {
+        "step": 5,
+        "phase": "candidate",
+        "outcome": "unknown",
+        "ms": 1789835646541
+      },
+      {
+        "step": 6,
+        "phase": "candidate",
+        "outcome": "red",
+        "ms": 1789835650035
+      },
+      {
+        "step": 7,
+        "phase": "candidate",
+        "outcome": "unknown",
+        "ms": 1789835656025
+      },
+      {
+        "step": 8,
+        "phase": "candidate",
+        "outcome": "unknown",
+        "ms": 1789835703360
+      },
+      {
+        "step": 9,
+        "phase": "candidate",
+        "outcome": "unknown",
+        "ms": 1789835722072
+      },
+      {
+        "step": 10,
+        "phase": "candidate",
+        "outcome": "red",
+        "ms": 1789835895891
+      },
+      {
+        "step": 11,
+        "phase": "candidate",
+        "outcome": "unknown",
+        "ms": 1789835952459
+      }
+    ],
+    "phases": {
+      "read": 11828,
+      "edit": 123550,
+      "verify": null
+    },
+    "phase_ms": {
+      "read": 8692,
+      "edit": null,
+      "verify": null
+    },
+    "first_event_ms": 1789835551655,
+    "last_event_ms": 1789835963290,
+    "log_seconds": 411.635
+  },
+  "events": {
+    "coverage": {
+      "missing": false,
+      "duplicates": 0,
+      "truncated": 0,
+      "invalid": 0,
+      "problems": []
+    },
+    "metrics": {
+      "invocations": 20,
+      "failed_compiler_invocations": 4,
+      "infrastructure_failures": 0,
+      "failed_checks_on_changed_source": 3,
+      "failed_candidate_versions": 1,
+      "checked_candidate_versions": 3,
+      "repeated_diagnostics": 1,
+      "distinct_diagnostics": 2,
+      "diagnostic_codes": {
+        "E_RESULT_CONSUMED": 1,
+        "E_MODULE_NAME": 2
+      },
+      "first_compiler_green_ns": 420502359903204
+    }
+  },
+  "grading": {
+    "public_acceptance": false,
+    "public_failures": [
+      {
+        "args": [
+          "41"
+        ],
+        "exit": 0,
+        "expected": "92\n",
+        "actual": "51\n"
+      }
+    ],
+    "hidden_acceptance": false,
+    "grader_ok": true,
+    "grader_stderr": "",
+    "hidden_steps": [
+      {
+        "id": "in-0",
+        "status": "failed"
+      },
+      {
+        "id": "in-1",
+        "status": "passed"
+      },
+      {
+        "id": "in-2",
+        "status": "failed"
+      },
+      {
+        "id": "in-3",
+        "status": "passed"
+      }
+    ]
+  },
+  "hidden_acceptance": false,
+  "public_acceptance": false,
+  "finished_utc": "2026-09-19T16:39:25.453514+00:00"
+}

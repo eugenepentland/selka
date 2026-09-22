@@ -1,0 +1,20 @@
+I stopped as instructed rather than revising after my one run. Here is the outcome.
+
+**Change made:** In `project/stats.my`, line 1: `module statistics` → `module stats`, so the declared module matches its file name and `main.my`'s `import stats as stats`.
+
+**Command run (once, from the workspace root):**
+
+```
+bin/mylang run project/main.my
+```
+
+**Result:** did not succeed — `exit=1`, with:
+
+```
+main.my:7:15: error[E_PRIVATE_SYMBOL]: declaration is private to its module
+      out.print(stats.total())
+                ^
+  note: stats.my:4:5: declaration is here
+```
+
+So the seeded program had a second defect beyond the module name: `total` is private to its module, and the cross-module call from `main` needs it exported. The remaining change would be `public def total() -> int:` in `project/stats.my` (line 4). I did not apply it, because the task states not to revise the code after the single verification run; if you want, I can make that edit and re-run.

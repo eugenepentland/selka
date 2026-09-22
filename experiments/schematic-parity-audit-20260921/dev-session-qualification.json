@@ -1,0 +1,10 @@
+{
+  "backend": "llvm",
+  "optimization": "3",
+  "statuses": [
+    "prepared",
+    "active"
+  ],
+  "svg_bytes": 49617,
+  "fixture_byte_equal": true
+}

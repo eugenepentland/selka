@@ -1,0 +1,10 @@
+Change: in `project/main.my`, `above` was declared `-> int` but returned the `bool` expression `a > b`. I kept the `int` return type the printing contract needs and returned integer literals instead:
+
+```python
+def above(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+Command run: `bin/mylang run project/main.my` → printed `1`, exit code 0.

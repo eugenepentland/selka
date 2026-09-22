@@ -1,0 +1,7 @@
+    58.54%  zig      zig                   [.] src.sexpr.tokenizer.Tokenizer.next
+    23.79%  zig      zig                   [.] src.sexpr.parser.parseNode
+     6.12%  zig      zig                   [.] main.tally
+     4.99%  zig      zig                   [.] heap.ArenaAllocator.alloc
+     2.76%  zig      [unknown]             [k] 0xffffffff8ce00b90
+     1.49%  zig      zig                   [.] heap.ArenaAllocator.remap
+     0.88%  zig      zig                   [.] array_list.Aligned(src.sexpr.ast.Node,null).toOwnedSlice

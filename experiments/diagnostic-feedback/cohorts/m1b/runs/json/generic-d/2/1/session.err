@@ -1,0 +1,94 @@
+dsh: reasoning:
+Let me run the checker to see the errors. Note the constraint: at most 20 compiler invocations. Let me be careful.
+
+Let me first run `bin/mylang check project/main.my`.
+
+Also read the mylang wrapper script to understand what it does.
+dsh: reasoning:
+The error: `unknown requirement; expected copy, equality, integer, codec, storable, or a declared constraint` at line 12 col 16 — `Numeric`.
+
+So I need to find the correct requirement. The generic parameter `[T: Numeric]` is used but `T` isn't actually used in the signature (`values: list[int]`)... Hmm. The function is generic over T but the parameter is `list[int]`. That's weird but maybe allowed.
+
+Wait, the task is "maximum returns the largest of three integers given as arguments." So the simplest fix is to remove the bogus generic parameter entirely: `def maximum(values: list[int]) -> int:` and same for `maximum_of`. But "Change only what the request requires." The minimal change to make it compile could be to change `Numeric` to a valid requirement, e.g. `integer`. But then `maximum` has an unused type parameter T — may or may not be an error.
+
+Let me think about what the intended fix is. The task title: "Fix the program". The error says `Numeric` is an unknown requirement; expected copy, equality, integer, codec, storable, or a declared constraint. So the fix is to replace `Numeric` with `integer`. But also `maximum_of[T: Numeric]` at line 22 has the same issue — it probably isn't reported because checking stops at first error? Actually diagnostic counts often only report the first error, or maybe check reports all. It reported count 1, so it likely stopped early.
+
+But wait — is `T` even used? `maximum[T: Numeric](values: list[int]) -> int` — T is a type parameter that appears nowhere in the signature. That may be an error "unused type parameter" — E_GENERIC_UNUSED or something. Also, calling `maximum(values)` without specifying T from `maximum_of` — type inference may fail. Hmm.
+
+Maybe the actual intended fix is to make the generic meaningful: `def maximum[T: integer](values: list[T]) -> T:` — but that changes more.
+
+Let me check the language docs... but we can't read outside this directory. Constraint: "Work only inside this directory; do not read or write anything outside it". So I can't read docs/ or src/. I only know from CLAUDE.md the rules.
+
+Hmm, but the generic requirements list: copy, equality, integer, codec, storable, or a declared constraint. So `integer` is a valid requirement. The minimal edit: replace `Numeric` with `integer` in both places (line 12 and line 22). But is `[T: integer]` valid syntax? Yes.
+
+But the deeper question: does an unused type parameter cause an error? Let me just try. I have 20 invocations; I used 1. Let's be efficient.
+
+Actually, let's think about what the "correct" program should look like. The task says "maximum returns the largest of three integers given as arguments." The program splits into `maximum` (list -> int) and `maximum_of` (list -> int) calling it. Weird, but whatever. The requirement is just that it compiles and prints the largest value.
+
+The minimal fix that makes it compile: change `Numeric` to `integer`. But T is unused. Possibly the compiler allows unused type parameters. Yet `maximum_of[T: Numeric](values: list[int]) -> int: return maximum(values)` calls `maximum` without type args — if T is unused, no inference needed, so it's fine.
+
+Alternatively, maybe the intended design is `def maximum(values: list[int]) -> int:` with no generics at all. Removing the generic parameter is also a fix but arguably "more change". Hmm.
+
+Let me check git history or any hints. There's `.mylang-cache` in project. Let me look at it. Also check if there's a git repo.
+
+Let me just try the minimal edit: replace `Numeric` with `integer`.
+
+Actually wait — maybe the diagnostic has a "notes" field empty. The diagnostic mentions expected ... or a declared constraint. Perhaps the right fix is `T: integer`.
+
+Let me try editing both occurrences of `Numeric` -> `integer` and run check. Actually, first maybe I should try only changing line 12 to see if line 22 then errors. But each invocation costs. Let's just change both since both are identical bogus usages — that's clearly required to make it compile.
+
+Let me do the edit with replace_all.
+dsh: reasoning:
+As predicted: the type parameter T is undetermined at call sites. So the generic parameters serve no purpose since T doesn't appear in the signature. The clean fix: remove the generics entirely.
+
+`def maximum(values: list[int]) -> int:` and `def maximum_of(values: list[int]) -> int:`.
+
+Alternatively, make T used: `def maximum[T: integer](values: list[T]) -> T:` — but then `maximum_of` would need `[T: integer](values: list[T]) -> T` and `maximum(values)` would infer T from the list argument. That would work. But it changes semantics more? Actually it's arguably the "intended" generic design. But the request says "Change only what the request requires" — the program is about three integers, and `list[int]` is already there. The minimal, simplest fix is to drop the unused type parameters.
+
+Hmm, which one is intended by the task author? The task is from a diagnostic-feedback experiment ("generic-d" directory). It seems designed to test generic-requirement diagnostics. The program has `[T: Numeric]` which is an invalid requirement. Two candidate fixes:
+1. `Numeric` → valid requirement + keep generic → then inference errors.
+2. Remove generics.
+
+The task says "make it compile and print the largest value". Either works if it compiles. But also consider: is `T` unused a problem? Apparently not reported as unused; the issue is inference.
+
+Actually wait: with `[T: integer]`, calling `maximum(values)` — T can't be inferred, thus error. So the generic form must be used properly or removed. Removing is cleaner and correct given the parameter types are concrete `list[int]`.
+
+Alternatively, keeping generics and making them used: `def maximum[T: integer](values: list[T]) -> T` — but then comparisons `values[index] > best` need `equality`? No, `>` for ordering... requirement "integer" gives integer ops. Also `values[0]` for empty list would trap, but caller passes 3 elements; for every input though args always 3. Fine.
+
+But then `out.print(maximum_of([first, second, third]))` — inference: `maximum_of[T: integer](values: list[T]) -> T` called with `list[int]` infers T=int. That works.
+
+However, is printing a generic T allowed? `out.print` presumably takes a value of some type... might need constraints. Risky.
+
+The simplest and most robust: remove the generic parameters. The functions operate on `list[int]`. That is a minimal change (deleting the useless `[T: integer]` clauses) and makes all call sites inference-free.
+
+"Change only what the request requires" — removing lines that cannot work is required to compile.
+
+Let me do that. Two edits: line 12 and line 22.
+
+Actually, should I keep `[T: integer]` on `maximum` and make it `values: list[T]`? The task's spirit: "maximum returns the largest of three integers". The concrete list[int] version is simplest. I'll remove the generics.
+
+Let me edit.
+dsh: reasoning:
+Check passes. Now run the examples. Also test extra inputs for robustness: negative numbers, max in first/second/third position, single-digit etc. Note `number` returns 0 on parse failure; args must exist though. If fewer than 3 args given, `args[0]` would trap — but the checker presumably always gives 3 args. Requirement: "The same behavior is required for every input". Hmm, what about inputs like "-5 -3 -8"? int(text) parse of negative should work.
+
+Let me run the two expected cases and a few extras in one bash call (each run counts as a compiler invocation? "compiler invocations" — each `bin/mylang` invocation counts. I've used 3 so far; runs will add more). Let me batch runs in a single bash command but each `bin/mylang run` is a separate invocation. I have 20 total, so let me be economical but thorough: run maybe 5 cases.
+
+Actually, do I even need to run? "make it compile and print the largest value" — the checker will run them. I should verify at least the two public examples plus a couple of edge cases. Let's do 4 runs: (1,3,2), (5,5,5), (-7,-2,-9), (10,4,10)? Let me also consider parsing: does `int` return an Option? `match int(text): case Some(value)... case None`. Hmm, in mylang, `int(text)` — is that returning an Option? The code uses match with Some/None, so yes apparently there's a fallible int parse.
+
+Also note main signature: `def main(args: list[str], out: Stream) -> int:` — does main get args with the program name or without? The examples pass args "1","3","2" and program reads args[0..2]. Presumably `-- args` gives exactly those. We'll see.
+
+Let me run the two examples first in one bash call.
+dsh: reasoning:
+Both examples pass. Now test edge cases: negative numbers, largest first, largest third, duplicates mid, zeros.
+
+Let me run: "-7 -2 -9" → -2; "9 2 3" → 9; "1 2 9" → 9; "0 0 -1" → 0; "-1 -2 -3" → -1. That's 5 more invocations, total 3 + 2 + 5 = 10. Fine within 20.
+
+Actually, is `bin/mylang run ... -- -7 -2 -9` going to treat -7 as an option flag? The wrapper passes after `--` to the program. Let me use `-- -7 -2 -9`. Might be safe. Alternatively test with values without leading dashes... but negative handling matters for "every input". The examples only test positive. Behavior for negatives is inherent to the comparison code, which is unchanged from the original intent. Still, a quick check is cheap.
+
+Let me batch them.
+dsh: reasoning:
+All pass. Let me view the final file to confirm the content.
+
+Also verify the exact final state. Total invocations: check (1) + check (2) + check (3) + run (4) + run (5) + 5 runs = 10. Fine.
+
+Let me read final file for the report.

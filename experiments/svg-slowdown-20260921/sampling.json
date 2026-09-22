@@ -1,0 +1,1876 @@
+{
+  "method": "LD_PRELOAD SIGPROF ITIMER_PROF userspace PC sampling, 500us requested, kernel tick limited; exact PCs, no stack attribution; CPU samples including outside executable; all SVG outputs verified; not hardware cycles",
+  "sampler_sha256": "f0558acb250170b5870cce28554b3a92e9d62ea8999329fa3e2065a5dba8f76c",
+  "summary": {
+    "o3": {
+      "runs": 200,
+      "samples": 2986,
+      "outside_main_executable": 32,
+      "unmapped_inside": 11,
+      "overflow": 0,
+      "functions": [
+        {
+          "name": "layout::partPin",
+          "samples": 1238,
+          "percent_all_samples": 41.46014735432016
+        },
+        {
+          "name": "memcpy",
+          "samples": 595,
+          "percent_all_samples": 19.926322839919624
+        },
+        {
+          "name": "layout::collectRows",
+          "samples": 272,
+          "percent_all_samples": 9.109176155391829
+        },
+        {
+          "name": "qbe_host_write",
+          "samples": 262,
+          "percent_all_samples": 8.774279973208305
+        },
+        {
+          "name": "myl_native_list_get",
+          "samples": 175,
+          "percent_all_samples": 5.860683188211654
+        },
+        {
+          "name": "qbe_host_invoke",
+          "samples": 76,
+          "percent_all_samples": 2.5452109845947755
+        },
+        {
+          "name": "io::put",
+          "samples": 49,
+          "percent_all_samples": 1.6409912926992631
+        },
+        {
+          "name": "qbe_host_read",
+          "samples": 36,
+          "percent_all_samples": 1.2056262558606832
+        },
+        {
+          "name": "circuit::normalize",
+          "samples": 29,
+          "percent_all_samples": 0.971198928332217
+        },
+        {
+          "name": "layout::nearest",
+          "samples": 27,
+          "percent_all_samples": 0.9042196918955124
+        },
+        {
+          "name": "layout_graph::findId",
+          "samples": 22,
+          "percent_all_samples": 0.7367716008037508
+        },
+        {
+          "name": "layout_routes::build",
+          "samples": 21,
+          "percent_all_samples": 0.7032819825853985
+        },
+        {
+          "name": "byte",
+          "samples": 12,
+          "percent_all_samples": 0.40187541862022774
+        },
+        {
+          "name": "put",
+          "samples": 12,
+          "percent_all_samples": 0.40187541862022774
+        },
+        {
+          "name": "qbe_host_nodes",
+          "samples": 11,
+          "percent_all_samples": 0.3683858004018754
+        },
+        {
+          "name": "layout::rowHeight",
+          "samples": 8,
+          "percent_all_samples": 0.2679169457468185
+        },
+        {
+          "name": "text::equal",
+          "samples": 7,
+          "percent_all_samples": 0.23442732752846618
+        },
+        {
+          "name": "sexpr::at",
+          "samples": 7,
+          "percent_all_samples": 0.23442732752846618
+        },
+        {
+          "name": "myl_qbe_host_begin",
+          "samples": 6,
+          "percent_all_samples": 0.20093770931011387
+        },
+        {
+          "name": "io::byte",
+          "samples": 6,
+          "percent_all_samples": 0.20093770931011387
+        },
+        {
+          "name": "layout::branch",
+          "samples": 6,
+          "percent_all_samples": 0.20093770931011387
+        },
+        {
+          "name": "layout_graph::build",
+          "samples": 6,
+          "percent_all_samples": 0.20093770931011387
+        },
+        {
+          "name": "svg::passive",
+          "samples": 5,
+          "percent_all_samples": 0.16744809109176156
+        },
+        {
+          "name": "text::decimal",
+          "samples": 5,
+          "percent_all_samples": 0.16744809109176156
+        },
+        {
+          "name": "layout::innerPin",
+          "samples": 5,
+          "percent_all_samples": 0.16744809109176156
+        },
+        {
+          "name": "sexpr::form",
+          "samples": 4,
+          "percent_all_samples": 0.13395847287340926
+        },
+        {
+          "name": "layout::groundBranch",
+          "samples": 4,
+          "percent_all_samples": 0.13395847287340926
+        },
+        {
+          "name": "text::number",
+          "samples": 3,
+          "percent_all_samples": 0.10046885465505694
+        },
+        {
+          "name": "layout::endpoint",
+          "samples": 3,
+          "percent_all_samples": 0.10046885465505694
+        },
+        {
+          "name": "text::write",
+          "samples": 3,
+          "percent_all_samples": 0.10046885465505694
+        },
+        {
+          "name": "myl_f_aa8218f0a48c2e2e03dc11d4ad4c25e8cbdbd945f1cfd28f1f06e66db3fd4fe8_host",
+          "samples": 3,
+          "percent_all_samples": 0.10046885465505694
+        },
+        {
+          "name": "layout::depth",
+          "samples": 3,
+          "percent_all_samples": 0.10046885465505694
+        },
+        {
+          "name": "myl_qbe_heap",
+          "samples": 2,
+          "percent_all_samples": 0.06697923643670463
+        },
+        {
+          "name": "validate::model",
+          "samples": 2,
+          "percent_all_samples": 0.06697923643670463
+        },
+        {
+          "name": "ports::equal",
+          "samples": 2,
+          "percent_all_samples": 0.06697923643670463
+        },
+        {
+          "name": "text::matches",
+          "samples": 2,
+          "percent_all_samples": 0.06697923643670463
+        },
+        {
+          "name": "myl_qbe_root_mark",
+          "samples": 2,
+          "percent_all_samples": 0.06697923643670463
+        },
+        {
+          "name": "layout::bridge",
+          "samples": 1,
+          "percent_all_samples": 0.033489618218352314
+        },
+        {
+          "name": "myl_native_list_append",
+          "samples": 1,
+          "percent_all_samples": 0.033489618218352314
+        },
+        {
+          "name": "layout::build",
+          "samples": 1,
+          "percent_all_samples": 0.033489618218352314
+        },
+        {
+          "name": "myl_f_5ba24e5e60c98e55fdd73ca79bec6030086123c18b1211ba777b1a205d67d96c_host",
+          "samples": 1,
+          "percent_all_samples": 0.033489618218352314
+        },
+        {
+          "name": "circuit::displayNet",
+          "samples": 1,
+          "percent_all_samples": 0.033489618218352314
+        },
+        {
+          "name": "draw::labelEnd",
+          "samples": 1,
+          "percent_all_samples": 0.033489618218352314
+        },
+        {
+          "name": "myl_native_list_set",
+          "samples": 1,
+          "percent_all_samples": 0.033489618218352314
+        },
+        {
+          "name": "sexpr::parse",
+          "samples": 1,
+          "percent_all_samples": 0.033489618218352314
+        },
+        {
+          "name": "circuit::collectPins",
+          "samples": 1,
+          "percent_all_samples": 0.033489618218352314
+        },
+        {
+          "name": "ports::collect",
+          "samples": 1,
+          "percent_all_samples": 0.033489618218352314
+        },
+        {
+          "name": "layout::height",
+          "samples": 1,
+          "percent_all_samples": 0.033489618218352314
+        },
+        {
+          "name": "layout::placeRows",
+          "samples": 1,
+          "percent_all_samples": 0.033489618218352314
+        }
+      ],
+      "top_pcs": [
+        {
+          "address": "0x104a1ba",
+          "samples": 476
+        },
+        {
+          "address": "0x104a1ae",
+          "samples": 414
+        },
+        {
+          "address": "0x104a1d8",
+          "samples": 139
+        },
+        {
+          "address": "0x10582ac",
+          "samples": 130
+        },
+        {
+          "address": "0x1051b71",
+          "samples": 96
+        },
+        {
+          "address": "0x1051be5",
+          "samples": 91
+        },
+        {
+          "address": "0x1031297",
+          "samples": 90
+        },
+        {
+          "address": "0x105819a",
+          "samples": 88
+        },
+        {
+          "address": "0x10580f0",
+          "samples": 74
+        },
+        {
+          "address": "0x1055560",
+          "samples": 73
+        },
+        {
+          "address": "0x1031292",
+          "samples": 68
+        },
+        {
+          "address": "0x10581b9",
+          "samples": 67
+        },
+        {
+          "address": "0x10555e4",
+          "samples": 65
+        },
+        {
+          "address": "0x1058290",
+          "samples": 61
+        },
+        {
+          "address": "0x10582a6",
+          "samples": 58
+        },
+        {
+          "address": "0x104a1b4",
+          "samples": 50
+        },
+        {
+          "address": "0x10260fc",
+          "samples": 45
+        },
+        {
+          "address": "0x104a160",
+          "samples": 42
+        },
+        {
+          "address": "0x10312b4",
+          "samples": 37
+        },
+        {
+          "address": "0x10582c5",
+          "samples": 37
+        },
+        {
+          "address": "0x104a181",
+          "samples": 32
+        },
+        {
+          "address": "0x10582bb",
+          "samples": 27
+        },
+        {
+          "address": "0x104a196",
+          "samples": 23
+        },
+        {
+          "address": "0x104a1c8",
+          "samples": 21
+        },
+        {
+          "address": "0x10312c8",
+          "samples": 18
+        }
+      ]
+    },
+    "lto": {
+      "runs": 200,
+      "samples": 6393,
+      "outside_main_executable": 379,
+      "unmapped_inside": 84,
+      "overflow": 0,
+      "functions": [
+        {
+          "name": "layout::partPin",
+          "samples": 4685,
+          "percent_all_samples": 73.28327858595338
+        },
+        {
+          "name": "layout::collectRows",
+          "samples": 427,
+          "percent_all_samples": 6.679180353511653
+        },
+        {
+          "name": "myl_native_list_get",
+          "samples": 256,
+          "percent_all_samples": 4.004379790395745
+        },
+        {
+          "name": "qbe_host_write",
+          "samples": 183,
+          "percent_all_samples": 2.8625058657907085
+        },
+        {
+          "name": "qbe_host_invoke",
+          "samples": 87,
+          "percent_all_samples": 1.360863444392304
+        },
+        {
+          "name": "layout::nearest",
+          "samples": 40,
+          "percent_all_samples": 0.6256843422493352
+        },
+        {
+          "name": "layout::innerPin",
+          "samples": 26,
+          "percent_all_samples": 0.4066948224620679
+        },
+        {
+          "name": "circuit::normalize",
+          "samples": 20,
+          "percent_all_samples": 0.3128421711246676
+        },
+        {
+          "name": "layout::depth",
+          "samples": 19,
+          "percent_all_samples": 0.29720006256843423
+        },
+        {
+          "name": "qbe_host_read",
+          "samples": 19,
+          "percent_all_samples": 0.29720006256843423
+        },
+        {
+          "name": "layout::rowHeight",
+          "samples": 14,
+          "percent_all_samples": 0.21898951978726733
+        },
+        {
+          "name": "qbe_host_nodes",
+          "samples": 14,
+          "percent_all_samples": 0.21898951978726733
+        },
+        {
+          "name": "put",
+          "samples": 13,
+          "percent_all_samples": 0.20334741123103395
+        },
+        {
+          "name": "layout::branch",
+          "samples": 12,
+          "percent_all_samples": 0.18770530267480057
+        },
+        {
+          "name": "svg::passive",
+          "samples": 10,
+          "percent_all_samples": 0.1564210855623338
+        },
+        {
+          "name": "layout_routes::build",
+          "samples": 9,
+          "percent_all_samples": 0.14077897700610043
+        },
+        {
+          "name": "byte",
+          "samples": 8,
+          "percent_all_samples": 0.12513686844986704
+        },
+        {
+          "name": "ports::validate",
+          "samples": 8,
+          "percent_all_samples": 0.12513686844986704
+        },
+        {
+          "name": "sexpr::at",
+          "samples": 7,
+          "percent_all_samples": 0.10949475989363366
+        },
+        {
+          "name": "layout::groundBranch",
+          "samples": 6,
+          "percent_all_samples": 0.09385265133740028
+        },
+        {
+          "name": "text::write",
+          "samples": 6,
+          "percent_all_samples": 0.09385265133740028
+        },
+        {
+          "name": "myl_qbe_host_begin",
+          "samples": 5,
+          "percent_all_samples": 0.0782105427811669
+        },
+        {
+          "name": "layout::endpoint",
+          "samples": 4,
+          "percent_all_samples": 0.06256843422493352
+        },
+        {
+          "name": "text::equal",
+          "samples": 4,
+          "percent_all_samples": 0.06256843422493352
+        },
+        {
+          "name": "layout_graph::build",
+          "samples": 4,
+          "percent_all_samples": 0.06256843422493352
+        },
+        {
+          "name": "layout::bridge",
+          "samples": 4,
+          "percent_all_samples": 0.06256843422493352
+        },
+        {
+          "name": "circuit::collectPins",
+          "samples": 4,
+          "percent_all_samples": 0.06256843422493352
+        },
+        {
+          "name": "circuit::pinForm",
+          "samples": 4,
+          "percent_all_samples": 0.06256843422493352
+        },
+        {
+          "name": "circuit::displayNet",
+          "samples": 4,
+          "percent_all_samples": 0.06256843422493352
+        },
+        {
+          "name": "text::matches",
+          "samples": 3,
+          "percent_all_samples": 0.04692632566870014
+        },
+        {
+          "name": "myl_f_5ba24e5e60c98e55fdd73ca79bec6030086123c18b1211ba777b1a205d67d96c_host",
+          "samples": 3,
+          "percent_all_samples": 0.04692632566870014
+        },
+        {
+          "name": "layout::pinGroup",
+          "samples": 2,
+          "percent_all_samples": 0.03128421711246676
+        },
+        {
+          "name": "text::decimal",
+          "samples": 2,
+          "percent_all_samples": 0.03128421711246676
+        },
+        {
+          "name": "layout::build",
+          "samples": 2,
+          "percent_all_samples": 0.03128421711246676
+        },
+        {
+          "name": "circuit::label",
+          "samples": 2,
+          "percent_all_samples": 0.03128421711246676
+        },
+        {
+          "name": "myl_qbe_root_mark",
+          "samples": 2,
+          "percent_all_samples": 0.03128421711246676
+        },
+        {
+          "name": "ports::equal",
+          "samples": 2,
+          "percent_all_samples": 0.03128421711246676
+        },
+        {
+          "name": "svg::routes",
+          "samples": 1,
+          "percent_all_samples": 0.01564210855623338
+        },
+        {
+          "name": "svg::ports",
+          "samples": 1,
+          "percent_all_samples": 0.01564210855623338
+        },
+        {
+          "name": "svg::displayRef",
+          "samples": 1,
+          "percent_all_samples": 0.01564210855623338
+        },
+        {
+          "name": "schematic::build",
+          "samples": 1,
+          "percent_all_samples": 0.01564210855623338
+        },
+        {
+          "name": "text::number",
+          "samples": 1,
+          "percent_all_samples": 0.01564210855623338
+        },
+        {
+          "name": "layout::placeRows",
+          "samples": 1,
+          "percent_all_samples": 0.01564210855623338
+        },
+        {
+          "name": "sexpr::form",
+          "samples": 1,
+          "percent_all_samples": 0.01564210855623338
+        },
+        {
+          "name": "sexpr::parse",
+          "samples": 1,
+          "percent_all_samples": 0.01564210855623338
+        },
+        {
+          "name": "svg::pinStart",
+          "samples": 1,
+          "percent_all_samples": 0.01564210855623338
+        },
+        {
+          "name": "layout_routes::blocked",
+          "samples": 1,
+          "percent_all_samples": 0.01564210855623338
+        }
+      ],
+      "top_pcs": [
+        {
+          "address": "0x1097a3b",
+          "samples": 4420
+        },
+        {
+          "address": "0x107c59f",
+          "samples": 256
+        },
+        {
+          "address": "0x109f9bb",
+          "samples": 90
+        },
+        {
+          "address": "0x10a5c20",
+          "samples": 80
+        },
+        {
+          "address": "0x10a3ac0",
+          "samples": 78
+        },
+        {
+          "address": "0x10979e0",
+          "samples": 66
+        },
+        {
+          "address": "0x10a3b3b",
+          "samples": 60
+        },
+        {
+          "address": "0x10a3b50",
+          "samples": 56
+        },
+        {
+          "address": "0x10979f9",
+          "samples": 53
+        },
+        {
+          "address": "0x1097a0b",
+          "samples": 51
+        },
+        {
+          "address": "0x107c380",
+          "samples": 47
+        },
+        {
+          "address": "0x1097a38",
+          "samples": 46
+        },
+        {
+          "address": "0x107c5b6",
+          "samples": 45
+        },
+        {
+          "address": "0x1098c91",
+          "samples": 34
+        },
+        {
+          "address": "0x107c5a6",
+          "samples": 28
+        },
+        {
+          "address": "0x1097a70",
+          "samples": 16
+        },
+        {
+          "address": "0x109f890",
+          "samples": 15
+        },
+        {
+          "address": "0x10a3ad6",
+          "samples": 14
+        },
+        {
+          "address": "0x10a3ada",
+          "samples": 13
+        },
+        {
+          "address": "0x106317a",
+          "samples": 10
+        },
+        {
+          "address": "0x109f925",
+          "samples": 10
+        },
+        {
+          "address": "0x10a3ad2",
+          "samples": 10
+        },
+        {
+          "address": "0x1088c01",
+          "samples": 8
+        },
+        {
+          "address": "0x109f8c3",
+          "samples": 8
+        },
+        {
+          "address": "0x109f8a1",
+          "samples": 8
+        }
+      ]
+    },
+    "bounded": {
+      "runs": 200,
+      "samples": 8075,
+      "outside_main_executable": 47,
+      "unmapped_inside": 9,
+      "overflow": 0,
+      "functions": [
+        {
+          "name": "layout::partPin",
+          "samples": 4689,
+          "percent_all_samples": 58.06811145510836
+        },
+        {
+          "name": "layout::collectRows",
+          "samples": 1076,
+          "percent_all_samples": 13.325077399380804
+        },
+        {
+          "name": "memcpy",
+          "samples": 497,
+          "percent_all_samples": 6.154798761609907
+        },
+        {
+          "name": "qbe_host_write",
+          "samples": 415,
+          "percent_all_samples": 5.139318885448916
+        },
+        {
+          "name": "myl_native_list_get",
+          "samples": 263,
+          "percent_all_samples": 3.2569659442724457
+        },
+        {
+          "name": "layout_graph::findId",
+          "samples": 148,
+          "percent_all_samples": 1.8328173374613004
+        },
+        {
+          "name": "layout_routes::build",
+          "samples": 117,
+          "percent_all_samples": 1.4489164086687307
+        },
+        {
+          "name": "circuit::normalize",
+          "samples": 85,
+          "percent_all_samples": 1.0526315789473684
+        },
+        {
+          "name": "qbe_host_invoke",
+          "samples": 77,
+          "percent_all_samples": 0.9535603715170279
+        },
+        {
+          "name": "layout::nearest",
+          "samples": 74,
+          "percent_all_samples": 0.9164086687306502
+        },
+        {
+          "name": "sexpr::at",
+          "samples": 62,
+          "percent_all_samples": 0.7678018575851393
+        },
+        {
+          "name": "text::write",
+          "samples": 38,
+          "percent_all_samples": 0.47058823529411764
+        },
+        {
+          "name": "io::put",
+          "samples": 36,
+          "percent_all_samples": 0.4458204334365325
+        },
+        {
+          "name": "layout::rowHeight",
+          "samples": 31,
+          "percent_all_samples": 0.38390092879256965
+        },
+        {
+          "name": "text::matches",
+          "samples": 22,
+          "percent_all_samples": 0.2724458204334365
+        },
+        {
+          "name": "svg::passive",
+          "samples": 22,
+          "percent_all_samples": 0.2724458204334365
+        },
+        {
+          "name": "text::equal",
+          "samples": 20,
+          "percent_all_samples": 0.2476780185758514
+        },
+        {
+          "name": "layout::innerPin",
+          "samples": 19,
+          "percent_all_samples": 0.23529411764705882
+        },
+        {
+          "name": "sexpr::form",
+          "samples": 19,
+          "percent_all_samples": 0.23529411764705882
+        },
+        {
+          "name": "circuit::collectPins",
+          "samples": 18,
+          "percent_all_samples": 0.22291021671826625
+        },
+        {
+          "name": "qbe_host_read",
+          "samples": 18,
+          "percent_all_samples": 0.22291021671826625
+        },
+        {
+          "name": "myl_qbe_host_begin",
+          "samples": 17,
+          "percent_all_samples": 0.21052631578947367
+        },
+        {
+          "name": "qbe_host_nodes",
+          "samples": 16,
+          "percent_all_samples": 0.19814241486068113
+        },
+        {
+          "name": "sexpr::parse",
+          "samples": 16,
+          "percent_all_samples": 0.19814241486068113
+        },
+        {
+          "name": "circuit::pinForm",
+          "samples": 14,
+          "percent_all_samples": 0.17337461300309598
+        },
+        {
+          "name": "text::number",
+          "samples": 14,
+          "percent_all_samples": 0.17337461300309598
+        },
+        {
+          "name": "byte",
+          "samples": 13,
+          "percent_all_samples": 0.1609907120743034
+        },
+        {
+          "name": "layout::bridge",
+          "samples": 13,
+          "percent_all_samples": 0.1609907120743034
+        },
+        {
+          "name": "layout::groundBranch",
+          "samples": 13,
+          "percent_all_samples": 0.1609907120743034
+        },
+        {
+          "name": "layout_graph::build",
+          "samples": 11,
+          "percent_all_samples": 0.13622291021671826
+        },
+        {
+          "name": "layout::branch",
+          "samples": 10,
+          "percent_all_samples": 0.1238390092879257
+        },
+        {
+          "name": "text::decimal",
+          "samples": 9,
+          "percent_all_samples": 0.11145510835913312
+        },
+        {
+          "name": "circuit::displayNet",
+          "samples": 9,
+          "percent_all_samples": 0.11145510835913312
+        },
+        {
+          "name": "layout::depth",
+          "samples": 9,
+          "percent_all_samples": 0.11145510835913312
+        },
+        {
+          "name": "layout::build",
+          "samples": 9,
+          "percent_all_samples": 0.11145510835913312
+        },
+        {
+          "name": "validate::model",
+          "samples": 8,
+          "percent_all_samples": 0.09907120743034056
+        },
+        {
+          "name": "layout::endpoint",
+          "samples": 8,
+          "percent_all_samples": 0.09907120743034056
+        },
+        {
+          "name": "put",
+          "samples": 6,
+          "percent_all_samples": 0.07430340557275542
+        },
+        {
+          "name": "myl_qbe_heap",
+          "samples": 6,
+          "percent_all_samples": 0.07430340557275542
+        },
+        {
+          "name": "svg::displayRef",
+          "samples": 6,
+          "percent_all_samples": 0.07430340557275542
+        },
+        {
+          "name": "ports::validate",
+          "samples": 6,
+          "percent_all_samples": 0.07430340557275542
+        },
+        {
+          "name": "validate::pinoutCheck",
+          "samples": 5,
+          "percent_all_samples": 0.06191950464396285
+        },
+        {
+          "name": "layout_routes::blocked",
+          "samples": 5,
+          "percent_all_samples": 0.06191950464396285
+        },
+        {
+          "name": "text::escaped",
+          "samples": 5,
+          "percent_all_samples": 0.06191950464396285
+        },
+        {
+          "name": "circuit::label",
+          "samples": 4,
+          "percent_all_samples": 0.04953560371517028
+        },
+        {
+          "name": "myl_f_5ba24e5e60c98e55fdd73ca79bec6030086123c18b1211ba777b1a205d67d96c_host",
+          "samples": 4,
+          "percent_all_samples": 0.04953560371517028
+        },
+        {
+          "name": "io::byte",
+          "samples": 3,
+          "percent_all_samples": 0.03715170278637771
+        },
+        {
+          "name": "text::empty",
+          "samples": 3,
+          "percent_all_samples": 0.03715170278637771
+        },
+        {
+          "name": "ports::equal",
+          "samples": 3,
+          "percent_all_samples": 0.03715170278637771
+        },
+        {
+          "name": "layout::pinGroup",
+          "samples": 3,
+          "percent_all_samples": 0.03715170278637771
+        },
+        {
+          "name": "layout::placeRows",
+          "samples": 2,
+          "percent_all_samples": 0.02476780185758514
+        },
+        {
+          "name": "layout::height",
+          "samples": 2,
+          "percent_all_samples": 0.02476780185758514
+        },
+        {
+          "name": "myl_qbe_root_mark",
+          "samples": 2,
+          "percent_all_samples": 0.02476780185758514
+        },
+        {
+          "name": "myl_f_aa8218f0a48c2e2e03dc11d4ad4c25e8cbdbd945f1cfd28f1f06e66db3fd4fe8_host",
+          "samples": 2,
+          "percent_all_samples": 0.02476780185758514
+        },
+        {
+          "name": "layout_routes::external",
+          "samples": 2,
+          "percent_all_samples": 0.02476780185758514
+        },
+        {
+          "name": "validate::idForm",
+          "samples": 2,
+          "percent_all_samples": 0.02476780185758514
+        },
+        {
+          "name": "circuit::collectParts",
+          "samples": 2,
+          "percent_all_samples": 0.02476780185758514
+        },
+        {
+          "name": "text::identifier",
+          "samples": 1,
+          "percent_all_samples": 0.01238390092879257
+        },
+        {
+          "name": "svg::instanceStart",
+          "samples": 1,
+          "percent_all_samples": 0.01238390092879257
+        },
+        {
+          "name": "draw::line",
+          "samples": 1,
+          "percent_all_samples": 0.01238390092879257
+        },
+        {
+          "name": "myl_native_list_set",
+          "samples": 1,
+          "percent_all_samples": 0.01238390092879257
+        },
+        {
+          "name": "myl_native_list_append",
+          "samples": 1,
+          "percent_all_samples": 0.01238390092879257
+        },
+        {
+          "name": "validate::pinForm",
+          "samples": 1,
+          "percent_all_samples": 0.01238390092879257
+        },
+        {
+          "name": "execute_config_args",
+          "samples": 1,
+          "percent_all_samples": 0.01238390092879257
+        },
+        {
+          "name": "svg::pinStart",
+          "samples": 1,
+          "percent_all_samples": 0.01238390092879257
+        },
+        {
+          "name": "validate::metadata",
+          "samples": 1,
+          "percent_all_samples": 0.01238390092879257
+        },
+        {
+          "name": "main::main",
+          "samples": 1,
+          "percent_all_samples": 0.01238390092879257
+        },
+        {
+          "name": "text::folded",
+          "samples": 1,
+          "percent_all_samples": 0.01238390092879257
+        }
+      ],
+      "top_pcs": [
+        {
+          "address": "0x1098010",
+          "samples": 1598
+        },
+        {
+          "address": "0x1098004",
+          "samples": 1529
+        },
+        {
+          "address": "0x1061525",
+          "samples": 351
+        },
+        {
+          "address": "0x106151b",
+          "samples": 339
+        },
+        {
+          "address": "0x1098026",
+          "samples": 168
+        },
+        {
+          "address": "0x10ac441",
+          "samples": 168
+        },
+        {
+          "address": "0x10ac4b5",
+          "samples": 159
+        },
+        {
+          "address": "0x10afef0",
+          "samples": 83
+        },
+        {
+          "address": "0x10b2a80",
+          "samples": 81
+        },
+        {
+          "address": "0x10b2c36",
+          "samples": 70
+        },
+        {
+          "address": "0x10b2b49",
+          "samples": 70
+        },
+        {
+          "address": "0x10b2b2a",
+          "samples": 69
+        },
+        {
+          "address": "0x10aff74",
+          "samples": 68
+        },
+        {
+          "address": "0x10b2c20",
+          "samples": 65
+        },
+        {
+          "address": "0x109805b",
+          "samples": 56
+        },
+        {
+          "address": "0x10981cb",
+          "samples": 54
+        },
+        {
+          "address": "0x1097dbd",
+          "samples": 53
+        },
+        {
+          "address": "0x10980b6",
+          "samples": 52
+        },
+        {
+          "address": "0x1097e71",
+          "samples": 52
+        },
+        {
+          "address": "0x10981fd",
+          "samples": 51
+        },
+        {
+          "address": "0x1098176",
+          "samples": 50
+        },
+        {
+          "address": "0x109808b",
+          "samples": 50
+        },
+        {
+          "address": "0x1097e9c",
+          "samples": 48
+        },
+        {
+          "address": "0x10981a1",
+          "samples": 47
+        },
+        {
+          "address": "0x1097fa0",
+          "samples": 43
+        }
+      ]
+    },
+    "part-pin-index": {
+      "runs": 200,
+      "samples": 1258,
+      "outside_main_executable": 28,
+      "unmapped_inside": 10,
+      "overflow": 0,
+      "functions": [
+        {
+          "name": "qbe_host_write",
+          "samples": 279,
+          "percent_all_samples": 22.17806041335453
+        },
+        {
+          "name": "layout::collectRows",
+          "samples": 266,
+          "percent_all_samples": 21.144674085850557
+        },
+        {
+          "name": "memcpy",
+          "samples": 158,
+          "percent_all_samples": 12.559618441971383
+        },
+        {
+          "name": "myl_native_list_get",
+          "samples": 78,
+          "percent_all_samples": 6.200317965023848
+        },
+        {
+          "name": "qbe_host_invoke",
+          "samples": 75,
+          "percent_all_samples": 5.961844197138315
+        },
+        {
+          "name": "layout::nearest",
+          "samples": 39,
+          "percent_all_samples": 3.100158982511924
+        },
+        {
+          "name": "circuit::normalize",
+          "samples": 33,
+          "percent_all_samples": 2.6232114467408585
+        },
+        {
+          "name": "io::put",
+          "samples": 33,
+          "percent_all_samples": 2.6232114467408585
+        },
+        {
+          "name": "qbe_host_read",
+          "samples": 31,
+          "percent_all_samples": 2.46422893481717
+        },
+        {
+          "name": "layout_routes::build",
+          "samples": 27,
+          "percent_all_samples": 2.146263910969793
+        },
+        {
+          "name": "layout::partPin",
+          "samples": 26,
+          "percent_all_samples": 2.066772655007949
+        },
+        {
+          "name": "layout_graph::findId",
+          "samples": 20,
+          "percent_all_samples": 1.589825119236884
+        },
+        {
+          "name": "qbe_host_nodes",
+          "samples": 17,
+          "percent_all_samples": 1.3513513513513513
+        },
+        {
+          "name": "put",
+          "samples": 14,
+          "percent_all_samples": 1.1128775834658187
+        },
+        {
+          "name": "byte",
+          "samples": 13,
+          "percent_all_samples": 1.0333863275039745
+        },
+        {
+          "name": "myl_qbe_host_begin",
+          "samples": 10,
+          "percent_all_samples": 0.794912559618442
+        },
+        {
+          "name": "text::write",
+          "samples": 9,
+          "percent_all_samples": 0.7154213036565977
+        },
+        {
+          "name": "layout::innerPin",
+          "samples": 7,
+          "percent_all_samples": 0.5564387917329093
+        },
+        {
+          "name": "svg::passive",
+          "samples": 6,
+          "percent_all_samples": 0.4769475357710652
+        },
+        {
+          "name": "sexpr::at",
+          "samples": 6,
+          "percent_all_samples": 0.4769475357710652
+        },
+        {
+          "name": "layout::rowHeight",
+          "samples": 5,
+          "percent_all_samples": 0.397456279809221
+        },
+        {
+          "name": "layout::branch",
+          "samples": 5,
+          "percent_all_samples": 0.397456279809221
+        },
+        {
+          "name": "io::byte",
+          "samples": 4,
+          "percent_all_samples": 0.3179650238473768
+        },
+        {
+          "name": "text::equal",
+          "samples": 4,
+          "percent_all_samples": 0.3179650238473768
+        },
+        {
+          "name": "ports::validate",
+          "samples": 4,
+          "percent_all_samples": 0.3179650238473768
+        },
+        {
+          "name": "layout::bridge",
+          "samples": 4,
+          "percent_all_samples": 0.3179650238473768
+        },
+        {
+          "name": "myl_qbe_root_mark",
+          "samples": 3,
+          "percent_all_samples": 0.2384737678855326
+        },
+        {
+          "name": "circuit::displayNet",
+          "samples": 3,
+          "percent_all_samples": 0.2384737678855326
+        },
+        {
+          "name": "sexpr::form",
+          "samples": 3,
+          "percent_all_samples": 0.2384737678855326
+        },
+        {
+          "name": "text::decimal",
+          "samples": 3,
+          "percent_all_samples": 0.2384737678855326
+        },
+        {
+          "name": "sexpr::parse",
+          "samples": 3,
+          "percent_all_samples": 0.2384737678855326
+        },
+        {
+          "name": "circuit::label",
+          "samples": 3,
+          "percent_all_samples": 0.2384737678855326
+        },
+        {
+          "name": "layout_routes::blocked",
+          "samples": 3,
+          "percent_all_samples": 0.2384737678855326
+        },
+        {
+          "name": "ports::equal",
+          "samples": 3,
+          "percent_all_samples": 0.2384737678855326
+        },
+        {
+          "name": "myl_f_5ba24e5e60c98e55fdd73ca79bec6030086123c18b1211ba777b1a205d67d96c_host",
+          "samples": 2,
+          "percent_all_samples": 0.1589825119236884
+        },
+        {
+          "name": "layout::endpoint",
+          "samples": 2,
+          "percent_all_samples": 0.1589825119236884
+        },
+        {
+          "name": "layout::groundBranch",
+          "samples": 2,
+          "percent_all_samples": 0.1589825119236884
+        },
+        {
+          "name": "myl_f_aa8218f0a48c2e2e03dc11d4ad4c25e8cbdbd945f1cfd28f1f06e66db3fd4fe8_host",
+          "samples": 2,
+          "percent_all_samples": 0.1589825119236884
+        },
+        {
+          "name": "myl_qbe_heap",
+          "samples": 2,
+          "percent_all_samples": 0.1589825119236884
+        },
+        {
+          "name": "layout_graph::build",
+          "samples": 2,
+          "percent_all_samples": 0.1589825119236884
+        },
+        {
+          "name": "circuit::collectPins",
+          "samples": 2,
+          "percent_all_samples": 0.1589825119236884
+        },
+        {
+          "name": "text::matches",
+          "samples": 1,
+          "percent_all_samples": 0.0794912559618442
+        },
+        {
+          "name": "main::main",
+          "samples": 1,
+          "percent_all_samples": 0.0794912559618442
+        },
+        {
+          "name": "circuit::pinForm",
+          "samples": 1,
+          "percent_all_samples": 0.0794912559618442
+        },
+        {
+          "name": "layout::placeRows",
+          "samples": 1,
+          "percent_all_samples": 0.0794912559618442
+        },
+        {
+          "name": "layout::height",
+          "samples": 1,
+          "percent_all_samples": 0.0794912559618442
+        },
+        {
+          "name": "layout::build",
+          "samples": 1,
+          "percent_all_samples": 0.0794912559618442
+        },
+        {
+          "name": "layout::depth",
+          "samples": 1,
+          "percent_all_samples": 0.0794912559618442
+        },
+        {
+          "name": "text::number",
+          "samples": 1,
+          "percent_all_samples": 0.0794912559618442
+        },
+        {
+          "name": "svg::routes",
+          "samples": 1,
+          "percent_all_samples": 0.0794912559618442
+        }
+      ],
+      "top_pcs": [
+        {
+          "address": "0x10312a7",
+          "samples": 107
+        },
+        {
+          "address": "0x1051ef1",
+          "samples": 94
+        },
+        {
+          "address": "0x1051f65",
+          "samples": 91
+        },
+        {
+          "address": "0x10312a2",
+          "samples": 62
+        },
+        {
+          "address": "0x10260fc",
+          "samples": 32
+        },
+        {
+          "address": "0x10558e0",
+          "samples": 30
+        },
+        {
+          "address": "0x1058470",
+          "samples": 30
+        },
+        {
+          "address": "0x10312c4",
+          "samples": 28
+        },
+        {
+          "address": "0x1051e40",
+          "samples": 23
+        },
+        {
+          "address": "0x1058626",
+          "samples": 21
+        },
+        {
+          "address": "0x1055964",
+          "samples": 20
+        },
+        {
+          "address": "0x1058539",
+          "samples": 15
+        },
+        {
+          "address": "0x1058514",
+          "samples": 15
+        },
+        {
+          "address": "0x104b6b0",
+          "samples": 15
+        },
+        {
+          "address": "0x1051ebd",
+          "samples": 11
+        },
+        {
+          "address": "0x105851a",
+          "samples": 11
+        },
+        {
+          "address": "0x1051e51",
+          "samples": 9
+        },
+        {
+          "address": "0x1058645",
+          "samples": 9
+        },
+        {
+          "address": "0x1055904",
+          "samples": 9
+        },
+        {
+          "address": "0x1058518",
+          "samples": 9
+        },
+        {
+          "address": "0x10193fb",
+          "samples": 8
+        },
+        {
+          "address": "0x103104b",
+          "samples": 8
+        },
+        {
+          "address": "0x1051ee3",
+          "samples": 8
+        },
+        {
+          "address": "0x1031041",
+          "samples": 8
+        },
+        {
+          "address": "0x10584eb",
+          "samples": 8
+        }
+      ]
+    },
+    "lto-guest-avx2": {
+      "runs": 200,
+      "samples": 2670,
+      "outside_main_executable": 229,
+      "unmapped_inside": 103,
+      "overflow": 0,
+      "functions": [
+        {
+          "name": "layout::partPin",
+          "samples": 1273,
+          "percent_all_samples": 47.67790262172284
+        },
+        {
+          "name": "layout::collectRows",
+          "samples": 290,
+          "percent_all_samples": 10.861423220973784
+        },
+        {
+          "name": "myl_native_list_get",
+          "samples": 259,
+          "percent_all_samples": 9.700374531835205
+        },
+        {
+          "name": "qbe_host_write",
+          "samples": 165,
+          "percent_all_samples": 6.179775280898877
+        },
+        {
+          "name": "qbe_host_invoke",
+          "samples": 86,
+          "percent_all_samples": 3.2209737827715355
+        },
+        {
+          "name": "qbe_host_read",
+          "samples": 32,
+          "percent_all_samples": 1.198501872659176
+        },
+        {
+          "name": "layout_routes::build",
+          "samples": 29,
+          "percent_all_samples": 1.0861423220973783
+        },
+        {
+          "name": "layout::nearest",
+          "samples": 27,
+          "percent_all_samples": 1.0112359550561798
+        },
+        {
+          "name": "circuit::normalize",
+          "samples": 25,
+          "percent_all_samples": 0.9363295880149812
+        },
+        {
+          "name": "layout::depth",
+          "samples": 11,
+          "percent_all_samples": 0.41198501872659177
+        },
+        {
+          "name": "qbe_host_nodes",
+          "samples": 10,
+          "percent_all_samples": 0.37453183520599254
+        },
+        {
+          "name": "sexpr::form",
+          "samples": 10,
+          "percent_all_samples": 0.37453183520599254
+        },
+        {
+          "name": "svg::passive",
+          "samples": 9,
+          "percent_all_samples": 0.33707865168539325
+        },
+        {
+          "name": "layout::innerPin",
+          "samples": 9,
+          "percent_all_samples": 0.33707865168539325
+        },
+        {
+          "name": "layout::branch",
+          "samples": 8,
+          "percent_all_samples": 0.299625468164794
+        },
+        {
+          "name": "sexpr::at",
+          "samples": 8,
+          "percent_all_samples": 0.299625468164794
+        },
+        {
+          "name": "put",
+          "samples": 8,
+          "percent_all_samples": 0.299625468164794
+        },
+        {
+          "name": "byte",
+          "samples": 8,
+          "percent_all_samples": 0.299625468164794
+        },
+        {
+          "name": "text::write",
+          "samples": 6,
+          "percent_all_samples": 0.2247191011235955
+        },
+        {
+          "name": "myl_qbe_host_begin",
+          "samples": 6,
+          "percent_all_samples": 0.2247191011235955
+        },
+        {
+          "name": "ports::validate",
+          "samples": 5,
+          "percent_all_samples": 0.18726591760299627
+        },
+        {
+          "name": "layout::bridge",
+          "samples": 4,
+          "percent_all_samples": 0.149812734082397
+        },
+        {
+          "name": "text::equal",
+          "samples": 4,
+          "percent_all_samples": 0.149812734082397
+        },
+        {
+          "name": "layout::rowHeight",
+          "samples": 4,
+          "percent_all_samples": 0.149812734082397
+        },
+        {
+          "name": "text::matches",
+          "samples": 4,
+          "percent_all_samples": 0.149812734082397
+        },
+        {
+          "name": "layout::build",
+          "samples": 3,
+          "percent_all_samples": 0.11235955056179775
+        },
+        {
+          "name": "myl_qbe_root_mark",
+          "samples": 3,
+          "percent_all_samples": 0.11235955056179775
+        },
+        {
+          "name": "myl_f_5ba24e5e60c98e55fdd73ca79bec6030086123c18b1211ba777b1a205d67d96c_host",
+          "samples": 3,
+          "percent_all_samples": 0.11235955056179775
+        },
+        {
+          "name": "layout::endpoint",
+          "samples": 3,
+          "percent_all_samples": 0.11235955056179775
+        },
+        {
+          "name": "text::number",
+          "samples": 2,
+          "percent_all_samples": 0.0749063670411985
+        },
+        {
+          "name": "circuit::label",
+          "samples": 2,
+          "percent_all_samples": 0.0749063670411985
+        },
+        {
+          "name": "layout::placeRows",
+          "samples": 2,
+          "percent_all_samples": 0.0749063670411985
+        },
+        {
+          "name": "text::decimal",
+          "samples": 2,
+          "percent_all_samples": 0.0749063670411985
+        },
+        {
+          "name": "myl_qbe_heap",
+          "samples": 2,
+          "percent_all_samples": 0.0749063670411985
+        },
+        {
+          "name": "circuit::collectPins",
+          "samples": 2,
+          "percent_all_samples": 0.0749063670411985
+        },
+        {
+          "name": "ports::equal",
+          "samples": 1,
+          "percent_all_samples": 0.03745318352059925
+        },
+        {
+          "name": "svg::routes",
+          "samples": 1,
+          "percent_all_samples": 0.03745318352059925
+        },
+        {
+          "name": "myl_native_list_set",
+          "samples": 1,
+          "percent_all_samples": 0.03745318352059925
+        },
+        {
+          "name": "schematic::build",
+          "samples": 1,
+          "percent_all_samples": 0.03745318352059925
+        },
+        {
+          "name": "text::escaped",
+          "samples": 1,
+          "percent_all_samples": 0.03745318352059925
+        },
+        {
+          "name": "svg::instanceStart",
+          "samples": 1,
+          "percent_all_samples": 0.03745318352059925
+        },
+        {
+          "name": "text::identifier",
+          "samples": 1,
+          "percent_all_samples": 0.03745318352059925
+        },
+        {
+          "name": "sexpr::parse",
+          "samples": 1,
+          "percent_all_samples": 0.03745318352059925
+        },
+        {
+          "name": "circuit::displayNet",
+          "samples": 1,
+          "percent_all_samples": 0.03745318352059925
+        },
+        {
+          "name": "circuit::pinForm",
+          "samples": 1,
+          "percent_all_samples": 0.03745318352059925
+        },
+        {
+          "name": "layout::groundBranch",
+          "samples": 1,
+          "percent_all_samples": 0.03745318352059925
+        },
+        {
+          "name": "layout_graph::build",
+          "samples": 1,
+          "percent_all_samples": 0.03745318352059925
+        },
+        {
+          "name": "layout_routes::blocked",
+          "samples": 1,
+          "percent_all_samples": 0.03745318352059925
+        },
+        {
+          "name": "layout::pinGroup",
+          "samples": 1,
+          "percent_all_samples": 0.03745318352059925
+        }
+      ],
+      "top_pcs": [
+        {
+          "address": "0x1098174",
+          "samples": 1006
+        },
+        {
+          "address": "0x107cf2e",
+          "samples": 204
+        },
+        {
+          "address": "0x1098198",
+          "samples": 154
+        },
+        {
+          "address": "0x10a5970",
+          "samples": 99
+        },
+        {
+          "address": "0x109f71b",
+          "samples": 86
+        },
+        {
+          "address": "0x10a3820",
+          "samples": 83
+        },
+        {
+          "address": "0x10a38b0",
+          "samples": 75
+        },
+        {
+          "address": "0x10a389b",
+          "samples": 67
+        },
+        {
+          "address": "0x1098141",
+          "samples": 47
+        },
+        {
+          "address": "0x107cf50",
+          "samples": 30
+        },
+        {
+          "address": "0x107cf73",
+          "samples": 22
+        },
+        {
+          "address": "0x109817a",
+          "samples": 18
+        },
+        {
+          "address": "0x10981a0",
+          "samples": 13
+        },
+        {
+          "address": "0x1065474",
+          "samples": 13
+        },
+        {
+          "address": "0x1098145",
+          "samples": 12
+        },
+        {
+          "address": "0x109f5f0",
+          "samples": 11
+        },
+        {
+          "address": "0x10981ea",
+          "samples": 11
+        },
+        {
+          "address": "0x109f69c",
+          "samples": 11
+        },
+        {
+          "address": "0x109f601",
+          "samples": 9
+        },
+        {
+          "address": "0x109f1f3",
+          "samples": 8
+        },
+        {
+          "address": "0x107cccb",
+          "samples": 8
+        },
+        {
+          "address": "0x107cef2",
+          "samples": 7
+        },
+        {
+          "address": "0x10993df",
+          "samples": 6
+        },
+        {
+          "address": "0x10a3844",
+          "samples": 6
+        },
+        {
+          "address": "0x10a38dc",
+          "samples": 6
+        }
+      ]
+    }
+  }
+}

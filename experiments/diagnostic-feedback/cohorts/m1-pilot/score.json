@@ -1,0 +1,950 @@
+{
+  "version": 1,
+  "captured_utc": "2026-09-19T12:56:41.779772+00:00",
+  "cohort": "m1-pilot",
+  "identity": {
+    "compiler_sha256": "4a9ad0c17789e422fa90dbb8e91497f007abdc2ef5152f3123889dbdc2cfbcb2",
+    "wrapper_schema": "wrapper-v2-events",
+    "prompt_sha256": "ae2fba8f334fb92a",
+    "remedy_sha256": "449d37b9adee5672",
+    "model": "deepseek-v4-flash",
+    "reasoning_effort": "max",
+    "invocation_limit": 20,
+    "session_deadline_s": 900,
+    "cache_policy": "ZIG_GLOBAL_CACHE_DIR and ZIG_LOCAL_CACHE_DIR per attempt inside the working copy"
+  },
+  "arms": [
+    "text",
+    "text_fix",
+    "json",
+    "json_fix"
+  ],
+  "by_arm": {
+    "text": {
+      "cells": 4,
+      "recorded": 4,
+      "missing": 0,
+      "hidden_acceptance": 4,
+      "hidden_acceptance_rate": 1.0,
+      "conditional_failed_checks": 0.0,
+      "all_attempt_failed_checks": 1,
+      "median_invocations": 11.5,
+      "median_output_tokens": 3025.5,
+      "timeouts": 0,
+      "public_only": 0
+    },
+    "text_fix": {
+      "cells": 4,
+      "recorded": 4,
+      "missing": 0,
+      "hidden_acceptance": 4,
+      "hidden_acceptance_rate": 1.0,
+      "conditional_failed_checks": 0.0,
+      "all_attempt_failed_checks": 1,
+      "median_invocations": 14.0,
+      "median_output_tokens": 2057.0,
+      "timeouts": 0,
+      "public_only": 0
+    },
+    "json": {
+      "cells": 4,
+      "recorded": 4,
+      "missing": 0,
+      "hidden_acceptance": 4,
+      "hidden_acceptance_rate": 1.0,
+      "conditional_failed_checks": 0.0,
+      "all_attempt_failed_checks": 0,
+      "median_invocations": 10.0,
+      "median_output_tokens": 2081.0,
+      "timeouts": 0,
+      "public_only": 0
+    },
+    "json_fix": {
+      "cells": 4,
+      "recorded": 4,
+      "missing": 0,
+      "hidden_acceptance": 4,
+      "hidden_acceptance_rate": 1.0,
+      "conditional_failed_checks": 0.5,
+      "all_attempt_failed_checks": 7,
+      "median_invocations": 13.5,
+      "median_output_tokens": 3037.5,
+      "timeouts": 0,
+      "public_only": 0
+    }
+  },
+  "by_family": {
+    "bool-int": {
+      "text": {
+        "cells": 1,
+        "recorded": 1,
+        "missing": 0,
+        "hidden_acceptance": 1,
+        "hidden_acceptance_rate": 1.0,
+        "conditional_failed_checks": 0,
+        "all_attempt_failed_checks": 0,
+        "median_invocations": 14,
+        "median_output_tokens": 1651,
+        "timeouts": 0,
+        "public_only": 0
+      },
+      "text_fix": {
+        "cells": 1,
+        "recorded": 1,
+        "missing": 0,
+        "hidden_acceptance": 1,
+        "hidden_acceptance_rate": 1.0,
+        "conditional_failed_checks": 1,
+        "all_attempt_failed_checks": 1,
+        "median_invocations": 8,
+        "median_output_tokens": 2200,
+        "timeouts": 0,
+        "public_only": 0
+      },
+      "json": {
+        "cells": 1,
+        "recorded": 1,
+        "missing": 0,
+        "hidden_acceptance": 1,
+        "hidden_acceptance_rate": 1.0,
+        "conditional_failed_checks": 0,
+        "all_attempt_failed_checks": 0,
+        "median_invocations": 10,
+        "median_output_tokens": 1474,
+        "timeouts": 0,
+        "public_only": 0
+      },
+      "json_fix": {
+        "cells": 1,
+        "recorded": 1,
+        "missing": 0,
+        "hidden_acceptance": 1,
+        "hidden_acceptance_rate": 1.0,
+        "conditional_failed_checks": 6,
+        "all_attempt_failed_checks": 6,
+        "median_invocations": 15,
+        "median_output_tokens": 1901,
+        "timeouts": 0,
+        "public_only": 0
+      }
+    },
+    "checked-result": {
+      "text": {
+        "cells": 1,
+        "recorded": 1,
+        "missing": 0,
+        "hidden_acceptance": 1,
+        "hidden_acceptance_rate": 1.0,
+        "conditional_failed_checks": 1,
+        "all_attempt_failed_checks": 1,
+        "median_invocations": 13,
+        "median_output_tokens": 6537,
+        "timeouts": 0,
+        "public_only": 0
+      },
+      "text_fix": {
+        "cells": 1,
+        "recorded": 1,
+        "missing": 0,
+        "hidden_acceptance": 1,
+        "hidden_acceptance_rate": 1.0,
+        "conditional_failed_checks": 0,
+        "all_attempt_failed_checks": 0,
+        "median_invocations": 17,
+        "median_output_tokens": 2467,
+        "timeouts": 0,
+        "public_only": 0
+      },
+      "json": {
+        "cells": 1,
+        "recorded": 1,
+        "missing": 0,
+        "hidden_acceptance": 1,
+        "hidden_acceptance_rate": 1.0,
+        "conditional_failed_checks": 0,
+        "all_attempt_failed_checks": 0,
+        "median_invocations": 10,
+        "median_output_tokens": 9121,
+        "timeouts": 0,
+        "public_only": 0
+      },
+      "json_fix": {
+        "cells": 1,
+        "recorded": 1,
+        "missing": 0,
+        "hidden_acceptance": 1,
+        "hidden_acceptance_rate": 1.0,
+        "conditional_failed_checks": 1,
+        "all_attempt_failed_checks": 1,
+        "median_invocations": 18,
+        "median_output_tokens": 6654,
+        "timeouts": 0,
+        "public_only": 0
+      }
+    },
+    "generic-requirement": {
+      "text": {
+        "cells": 1,
+        "recorded": 1,
+        "missing": 0,
+        "hidden_acceptance": 1,
+        "hidden_acceptance_rate": 1.0,
+        "conditional_failed_checks": 0,
+        "all_attempt_failed_checks": 0,
+        "median_invocations": 7,
+        "median_output_tokens": 4400,
+        "timeouts": 0,
+        "public_only": 0
+      },
+      "text_fix": {
+        "cells": 1,
+        "recorded": 1,
+        "missing": 0,
+        "hidden_acceptance": 1,
+        "hidden_acceptance_rate": 1.0,
+        "conditional_failed_checks": 0,
+        "all_attempt_failed_checks": 0,
+        "median_invocations": 11,
+        "median_output_tokens": 1845,
+        "timeouts": 0,
+        "public_only": 0
+      },
+      "json": {
+        "cells": 1,
+        "recorded": 1,
+        "missing": 0,
+        "hidden_acceptance": 1,
+        "hidden_acceptance_rate": 1.0,
+        "conditional_failed_checks": 0,
+        "all_attempt_failed_checks": 0,
+        "median_invocations": 12,
+        "median_output_tokens": 2321,
+        "timeouts": 0,
+        "public_only": 0
+      },
+      "json_fix": {
+        "cells": 1,
+        "recorded": 1,
+        "missing": 0,
+        "hidden_acceptance": 1,
+        "hidden_acceptance_rate": 1.0,
+        "conditional_failed_checks": 0,
+        "all_attempt_failed_checks": 0,
+        "median_invocations": 9,
+        "median_output_tokens": 4174,
+        "timeouts": 0,
+        "public_only": 0
+      }
+    },
+    "variant-coverage": {
+      "text": {
+        "cells": 1,
+        "recorded": 1,
+        "missing": 0,
+        "hidden_acceptance": 1,
+        "hidden_acceptance_rate": 1.0,
+        "conditional_failed_checks": 0,
+        "all_attempt_failed_checks": 0,
+        "median_invocations": 10,
+        "median_output_tokens": 1584,
+        "timeouts": 0,
+        "public_only": 0
+      },
+      "text_fix": {
+        "cells": 1,
+        "recorded": 1,
+        "missing": 0,
+        "hidden_acceptance": 1,
+        "hidden_acceptance_rate": 1.0,
+        "conditional_failed_checks": 0,
+        "all_attempt_failed_checks": 0,
+        "median_invocations": 18,
+        "median_output_tokens": 1914,
+        "timeouts": 0,
+        "public_only": 0
+      },
+      "json": {
+        "cells": 1,
+        "recorded": 1,
+        "missing": 0,
+        "hidden_acceptance": 1,
+        "hidden_acceptance_rate": 1.0,
+        "conditional_failed_checks": 0,
+        "all_attempt_failed_checks": 0,
+        "median_invocations": 10,
+        "median_output_tokens": 1841,
+        "timeouts": 0,
+        "public_only": 0
+      },
+      "json_fix": {
+        "cells": 1,
+        "recorded": 1,
+        "missing": 0,
+        "hidden_acceptance": 1,
+        "hidden_acceptance_rate": 1.0,
+        "conditional_failed_checks": 0,
+        "all_attempt_failed_checks": 0,
+        "median_invocations": 12,
+        "median_output_tokens": 1385,
+        "timeouts": 0,
+        "public_only": 0
+      }
+    }
+  },
+  "effects": {
+    "suggestion_in_text": {
+      "pairs": 4,
+      "mean": 0.0,
+      "ci": [
+        -0.75,
+        0.75
+      ],
+      "per_case": {
+        "dev-bool": 1,
+        "dev-checked": -1,
+        "dev-generic": 0,
+        "dev-variant": 0
+      }
+    },
+    "suggestion_in_json": {
+      "pairs": 4,
+      "mean": 1.75,
+      "ci": [
+        0.0,
+        4.5
+      ],
+      "per_case": {
+        "dev-bool": 6,
+        "dev-checked": 1,
+        "dev-generic": 0,
+        "dev-variant": 0
+      }
+    },
+    "format_without_suggestion": {
+      "pairs": 4,
+      "mean": -0.25,
+      "ci": [
+        -0.75,
+        0.0
+      ],
+      "per_case": {
+        "dev-bool": 0,
+        "dev-checked": -1,
+        "dev-generic": 0,
+        "dev-variant": 0
+      }
+    },
+    "format_with_suggestion": {
+      "pairs": 4,
+      "mean": 1.5,
+      "ci": [
+        0.0,
+        3.75
+      ],
+      "per_case": {
+        "dev-bool": 5,
+        "dev-checked": 1,
+        "dev-generic": 0,
+        "dev-variant": 0
+      }
+    }
+  },
+  "rows": [
+    {
+      "arm": "text",
+      "case": "dev-checked",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 13,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 2,
+        "diagnostic_codes": {
+          "E_TYPE": 1,
+          "R_LIST_BOUNDS": 1
+        },
+        "first_compiler_green_ns": 406872264202762
+      },
+      "usage": {
+        "inputTokens": 14593,
+        "outputTokens": 6537,
+        "reasoningTokens": 4835,
+        "cacheReadTokens": 175744,
+        "totalTokens": 196874,
+        "cost_v1_input_output_reasoning": 25965,
+        "cost_v2_input_output": 21130,
+        "provider_total_tokens": 196874,
+        "reasoning_share_of_cost_v1": 0.1862
+      },
+      "steps": 12,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json_fix",
+      "case": "dev-checked",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 18,
+        "failed_compiler_invocations": 3,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 2,
+        "diagnostic_codes": {
+          "E_TYPE": 1,
+          "R_LIST_BOUNDS": 1
+        },
+        "first_compiler_green_ns": 406910368324851
+      },
+      "usage": {
+        "inputTokens": 13649,
+        "outputTokens": 6654,
+        "reasoningTokens": 5198,
+        "cacheReadTokens": 136704,
+        "totalTokens": 157007,
+        "cost_v1_input_output_reasoning": 25501,
+        "cost_v2_input_output": 20303,
+        "provider_total_tokens": 157007,
+        "reasoning_share_of_cost_v1": 0.2038
+      },
+      "steps": 10,
+      "family": "checked-result"
+    },
+    {
+      "arm": "text_fix",
+      "case": "dev-checked",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 17,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 2,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 406954323917667
+      },
+      "usage": {
+        "inputTokens": 12448,
+        "outputTokens": 2467,
+        "reasoningTokens": 1190,
+        "cacheReadTokens": 100096,
+        "totalTokens": 115011,
+        "cost_v1_input_output_reasoning": 16105,
+        "cost_v2_input_output": 14915,
+        "provider_total_tokens": 115011,
+        "reasoning_share_of_cost_v1": 0.0739
+      },
+      "steps": 9,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json",
+      "case": "dev-checked",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 3,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 406983427013078
+      },
+      "usage": {
+        "inputTokens": 14339,
+        "outputTokens": 9121,
+        "reasoningTokens": 6889,
+        "cacheReadTokens": 168960,
+        "totalTokens": 192420,
+        "cost_v1_input_output_reasoning": 30349,
+        "cost_v2_input_output": 23460,
+        "provider_total_tokens": 192420,
+        "reasoning_share_of_cost_v1": 0.227
+      },
+      "steps": 12,
+      "family": "checked-result"
+    },
+    {
+      "arm": "json",
+      "case": "dev-bool",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 407038551169739
+      },
+      "usage": {
+        "inputTokens": 10656,
+        "outputTokens": 1474,
+        "reasoningTokens": 473,
+        "cacheReadTokens": 67712,
+        "totalTokens": 79842,
+        "cost_v1_input_output_reasoning": 12603,
+        "cost_v2_input_output": 12130,
+        "provider_total_tokens": 79842,
+        "reasoning_share_of_cost_v1": 0.0375
+      },
+      "steps": 7,
+      "family": "bool-int"
+    },
+    {
+      "arm": "json_fix",
+      "case": "dev-bool",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 15,
+        "failed_compiler_invocations": 7,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 6,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 5,
+        "distinct_diagnostics": 2,
+        "diagnostic_codes": {
+          "E_TYPE": 1,
+          "E_SYNTAX": 6
+        },
+        "first_compiler_green_ns": 407062430645126
+      },
+      "usage": {
+        "inputTokens": 12834,
+        "outputTokens": 1901,
+        "reasoningTokens": 654,
+        "cacheReadTokens": 98560,
+        "totalTokens": 113295,
+        "cost_v1_input_output_reasoning": 15389,
+        "cost_v2_input_output": 14735,
+        "provider_total_tokens": 113295,
+        "reasoning_share_of_cost_v1": 0.0425
+      },
+      "steps": 9,
+      "family": "bool-int"
+    },
+    {
+      "arm": "text_fix",
+      "case": "dev-bool",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 8,
+        "failed_compiler_invocations": 2,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 1,
+        "failed_candidate_versions": 1,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 2,
+        "diagnostic_codes": {
+          "E_TYPE": 1,
+          "E_SYNTAX": 1
+        },
+        "first_compiler_green_ns": 407086483716119
+      },
+      "usage": {
+        "inputTokens": 11785,
+        "outputTokens": 2200,
+        "reasoningTokens": 841,
+        "cacheReadTokens": 108544,
+        "totalTokens": 122529,
+        "cost_v1_input_output_reasoning": 14826,
+        "cost_v2_input_output": 13985,
+        "provider_total_tokens": 122529,
+        "reasoning_share_of_cost_v1": 0.0567
+      },
+      "steps": 10,
+      "family": "bool-int"
+    },
+    {
+      "arm": "text",
+      "case": "dev-bool",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 14,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_TYPE": 1
+        },
+        "first_compiler_green_ns": 407106985825321
+      },
+      "usage": {
+        "inputTokens": 11421,
+        "outputTokens": 1651,
+        "reasoningTokens": 501,
+        "cacheReadTokens": 93952,
+        "totalTokens": 107024,
+        "cost_v1_input_output_reasoning": 13573,
+        "cost_v2_input_output": 13072,
+        "provider_total_tokens": 107024,
+        "reasoning_share_of_cost_v1": 0.0369
+      },
+      "steps": 9,
+      "family": "bool-int"
+    },
+    {
+      "arm": "text_fix",
+      "case": "dev-variant",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 18,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 407128520549461
+      },
+      "usage": {
+        "inputTokens": 12150,
+        "outputTokens": 1914,
+        "reasoningTokens": 751,
+        "cacheReadTokens": 97920,
+        "totalTokens": 111984,
+        "cost_v1_input_output_reasoning": 14815,
+        "cost_v2_input_output": 14064,
+        "provider_total_tokens": 111984,
+        "reasoning_share_of_cost_v1": 0.0507
+      },
+      "steps": 9,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "json_fix",
+      "case": "dev-variant",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 12,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 407152831731586
+      },
+      "usage": {
+        "inputTokens": 12045,
+        "outputTokens": 1385,
+        "reasoningTokens": 355,
+        "cacheReadTokens": 83712,
+        "totalTokens": 97142,
+        "cost_v1_input_output_reasoning": 13785,
+        "cost_v2_input_output": 13430,
+        "provider_total_tokens": 97142,
+        "reasoning_share_of_cost_v1": 0.0258
+      },
+      "steps": 8,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "json",
+      "case": "dev-variant",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 407174370556450
+      },
+      "usage": {
+        "inputTokens": 11796,
+        "outputTokens": 1841,
+        "reasoningTokens": 638,
+        "cacheReadTokens": 83712,
+        "totalTokens": 97349,
+        "cost_v1_input_output_reasoning": 14275,
+        "cost_v2_input_output": 13637,
+        "provider_total_tokens": 97349,
+        "reasoning_share_of_cost_v1": 0.0447
+      },
+      "steps": 8,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "text",
+      "case": "dev-variant",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 10,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_INCOMPLETE_MATCH": 1
+        },
+        "first_compiler_green_ns": 407197696550705
+      },
+      "usage": {
+        "inputTokens": 11489,
+        "outputTokens": 1584,
+        "reasoningTokens": 392,
+        "cacheReadTokens": 70272,
+        "totalTokens": 83345,
+        "cost_v1_input_output_reasoning": 13465,
+        "cost_v2_input_output": 13073,
+        "provider_total_tokens": 83345,
+        "reasoning_share_of_cost_v1": 0.0291
+      },
+      "steps": 7,
+      "family": "variant-coverage"
+    },
+    {
+      "arm": "json",
+      "case": "dev-generic",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 12,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 407219502430056
+      },
+      "usage": {
+        "inputTokens": 12384,
+        "outputTokens": 2321,
+        "reasoningTokens": 998,
+        "cacheReadTokens": 110208,
+        "totalTokens": 124913,
+        "cost_v1_input_output_reasoning": 15703,
+        "cost_v2_input_output": 14705,
+        "provider_total_tokens": 124913,
+        "reasoning_share_of_cost_v1": 0.0636
+      },
+      "steps": 10,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text_fix",
+      "case": "dev-generic",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 11,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 407245528099810
+      },
+      "usage": {
+        "inputTokens": 12083,
+        "outputTokens": 1845,
+        "reasoningTokens": 579,
+        "cacheReadTokens": 97408,
+        "totalTokens": 111336,
+        "cost_v1_input_output_reasoning": 14507,
+        "cost_v2_input_output": 13928,
+        "provider_total_tokens": 111336,
+        "reasoning_share_of_cost_v1": 0.0399
+      },
+      "steps": 9,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "json_fix",
+      "case": "dev-generic",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 9,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 1,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 407269804228522
+      },
+      "usage": {
+        "inputTokens": 15886,
+        "outputTokens": 4174,
+        "reasoningTokens": 2428,
+        "cacheReadTokens": 181504,
+        "totalTokens": 201564,
+        "cost_v1_input_output_reasoning": 22488,
+        "cost_v2_input_output": 20060,
+        "provider_total_tokens": 201564,
+        "reasoning_share_of_cost_v1": 0.108
+      },
+      "steps": 13,
+      "family": "generic-requirement"
+    },
+    {
+      "arm": "text",
+      "case": "dev-generic",
+      "repetition": 1,
+      "attempts": 1,
+      "present": true,
+      "hidden_acceptance": true,
+      "public_acceptance": true,
+      "termination": "completed",
+      "metrics": {
+        "invocations": 7,
+        "failed_compiler_invocations": 1,
+        "infrastructure_failures": 0,
+        "failed_checks_on_changed_source": 0,
+        "failed_candidate_versions": 0,
+        "checked_candidate_versions": 3,
+        "repeated_diagnostics": 0,
+        "distinct_diagnostics": 1,
+        "diagnostic_codes": {
+          "E_GENERIC_REQUIREMENT": 1
+        },
+        "first_compiler_green_ns": 407310022823784
+      },
+      "usage": {
+        "inputTokens": 12699,
+        "outputTokens": 4400,
+        "reasoningTokens": 2723,
+        "cacheReadTokens": 146944,
+        "totalTokens": 164043,
+        "cost_v1_input_output_reasoning": 19822,
+        "cost_v2_input_output": 17099,
+        "provider_total_tokens": 164043,
+        "reasoning_share_of_cost_v1": 0.1374
+      },
+      "steps": 12,
+      "family": "generic-requirement"
+    }
+  ]
+}

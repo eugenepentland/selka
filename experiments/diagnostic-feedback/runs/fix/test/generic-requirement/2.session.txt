@@ -1,0 +1,12 @@
+Fixed.
+
+**What changed:** `project/main.my` line 4 — the checker rejected `def pick[T: Sortable](...)` with `E_GENERIC_REQUIREMENT` because `Sortable` is not a requirement this compiler knows (`copy`, `equality`, `integer`, `codec`, `storable`, or a declared `constraint`). The type parameter `T` was never used in the function body or signature, so I removed the unused generic clause, leaving `def pick(values: list[int], index: int) -> int:`. Nothing else was touched.
+
+**Command run:**
+```
+bin/mylang run project/main.my
+```
+**Result:** exit 0 and printed exactly:
+```
+9
+```

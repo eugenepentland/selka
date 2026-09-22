@@ -1,0 +1,19 @@
+I made the change and ran the single verification, then stopped as required.
+
+**Change made:** in `project/stats.my`, the declaration `module statistics` → `module stats`, so the module name matches both its file name (`stats.my`) and the `import stats as stats` in `project/main.my`.
+
+**Command run (once, at the end):**
+```
+bin/mylang run project/main.my
+```
+
+**Result:** exit 1. The module-name mismatch is gone, and the checker then reported a second, previously hidden problem:
+
+```
+main.my:7:15: error[E_PRIVATE_SYMBOL]: declaration is private to its module
+      out.print(stats.total())
+                ^
+  note: stats.my:4:5: declaration is here
+```
+
+So the program still does not compile: `total` in `stats.my` is private and would need to be `public def total() -> int:`. Per the single-attempt rule ("do not revise the code after you have run it"), I did not edit the files again after this run — reporting the outcome as-is rather than iterating. Note that both defects were present from the start and both are required for the target to compile and print `7`.

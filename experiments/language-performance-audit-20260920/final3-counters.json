@@ -1,0 +1,82 @@
+{
+ "frozen-census": {
+  "instructions": 33664897,
+  "cycles": 18358813,
+  "LLC-load-misses": 11451
+ },
+ "frozen-render": {
+  "instructions": 69846485,
+  "cycles": 36269032,
+  "LLC-load-misses": 44883
+ },
+ "frozen-census8": {
+  "instructions": 268252591,
+  "cycles": 146062045,
+  "LLC-load-misses": 110461
+ },
+ "frozen-render8": {
+  "instructions": 558053245,
+  "cycles": 280284672,
+  "LLC-load-misses": 388013
+ },
+ "prev-census": {
+  "instructions": 22351331,
+  "cycles": 13078375,
+  "LLC-load-misses": 5632
+ },
+ "prev-render": {
+  "instructions": 50600797,
+  "cycles": 30352470,
+  "LLC-load-misses": 18623
+ },
+ "prev-census8": {
+  "instructions": 176195760,
+  "cycles": 94982069,
+  "LLC-load-misses": 69765
+ },
+ "prev-render8": {
+  "instructions": 402228177,
+  "cycles": 236192452,
+  "LLC-load-misses": 166729
+ },
+ "now-census": {
+  "instructions": 21731082,
+  "cycles": 13839576,
+  "LLC-load-misses": 5752
+ },
+ "now-render": {
+  "instructions": 50244143,
+  "cycles": 30048185,
+  "LLC-load-misses": 15417
+ },
+ "now-census8": {
+  "instructions": 160927176,
+  "cycles": 95480233,
+  "LLC-load-misses": 70473
+ },
+ "now-render8": {
+  "instructions": 386958968,
+  "cycles": 228264064,
+  "LLC-load-misses": 166697
+ },
+ "zig-census": {
+  "instructions": 21476197,
+  "cycles": 9394941,
+  "LLC-load-misses": 1101
+ },
+ "zig-render": {
+  "instructions": 22921393,
+  "cycles": 10727802,
+  "LLC-load-misses": 1525
+ },
+ "zig-census8": {
+  "instructions": 155190492,
+  "cycles": 65153325,
+  "LLC-load-misses": 13443
+ },
+ "zig-render8": {
+  "instructions": 181776275,
+  "cycles": 80437040,
+  "LLC-load-misses": 16024
+ }
+}

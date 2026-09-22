@@ -1,0 +1,3 @@
+**Change:** In `project/main.my`, replaced the invalid `score = bonus + lookup("five")` (adding an `int` to a `Result[int, str]`) with a `match` on the result — the `Ok` arm prints `bonus + score` (5 + 0), the `Err` arm prints the error message. `lookup` was left unchanged.
+
+**Command run (once):** `bin/mylang run project/main.my` → printed `5`, exit code `0`.

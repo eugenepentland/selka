@@ -1,0 +1,38 @@
+Done. Here's my final report.
+
+## What I changed
+
+`project/main.my` — only `main`; `decode` is untouched:
+
+```mylang
+def main(args: list[str], out: Stream) -> int:
+    base = decode(args[0])
+    match base:
+        case Ok(value):
+            out.print(value + value + 10)
+        case Err(_):
+            out.print(0)
+    return 0
+```
+
+The old body reused the `Result` twice (`base + base + 10`), which the compiler rejects with `E_RESULT_CONSUMED`, and it never handled `Err`. The fix consumes the `Result` exactly once with a `match`: the `Ok` payload is printed, and a non-integer argument (which `int()` returns `None` for, i.e. `Err`) prints `0`.
+
+Note on the arithmetic: the checked example `41 → 92` pins it to `value + value + 10` (the expression the original body already had), not `value + 10`; the other checked example `0 → 10` agrees with both.
+
+## Commands and results
+
+```
+$ bin/mylang check project/main.my
+(exit 0, no diagnostics; previously: error[E_RESULT_CONSUMED])
+
+$ bin/mylang run project/main.my -- 41
+92                      # matches public/expected.json "92\n" (verified byte-exact)
+
+$ bin/mylang run project/main.my -- 0
+10                      # matches public/expected.json "10\n"
+
+$ bin/mylang run project/main.my -- abc
+0                       # non-integer -> 0
+```
+
+Also verified `3.5 → 0`, `"" → 0`, and `-7 → -4` (same rule), all exit code 0. 11 of the 20 compiler invocations used.

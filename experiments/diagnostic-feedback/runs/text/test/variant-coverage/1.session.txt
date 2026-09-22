@@ -1,0 +1,3 @@
+Fixed `project/main.my`: added the missing `case Event.stop(name): return "stopped"` arm to `describe` (the match was rejected with `E_INCOMPLETE_MATCH` because every union variant requires an explicit arm).
+
+Ran `bin/mylang run project/main.my` → stdout `stopped`, exit 0 (only pre-existing unused-binding warnings on stderr).

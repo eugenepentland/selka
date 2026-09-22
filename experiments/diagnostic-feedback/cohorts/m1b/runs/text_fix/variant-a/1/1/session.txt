@@ -1,0 +1,12 @@
+**What I changed:** Added the missing `square` arm to `area` in `project/main.my` (lines 21–22). The checker rejected the `match` with `E_INCOMPLETE_MATCH` because the `square` variant had no arm; the `circle` arm already computed `3 * radius * radius`. No other changes were needed — `main` already constructed both variants.
+
+**Exact command and result:**
+```
+$ bin/mylang check project/main.my
+[exit code: 0]
+$ bin/mylang run project/main.my -- circle 2
+12
+$ bin/mylang run project/main.my -- square 3
+9
+```
+I also verified additional inputs (`circle 0/4/7`, `square 0/5`) and byte-exact stdout (including trailing newline) against `public/expected.json` — all matched.

@@ -1,0 +1,5 @@
+Fixed.
+
+**Changed:** `project/main.my` line 4 — removed the unknown generic requirement from `pick`: `def pick[T: Sortable](values: list[int], index: int) -> int:` → `def pick(values: list[int], index: int) -> int:`. The type parameter `T` was unused (the parameter is `list[int]`), so dropping it was the minimal fix; `Sortable` is not a requirement the compiler knows (`copy`, `equality`, `integer`, `codec`, `storable`, or a declared `constraint`).
+
+**Command:** `bin/mylang run project/main.my` → printed `9`, exit code 0. (`bin/mylang check project/main.my` also exits 0.)

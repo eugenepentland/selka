@@ -1,0 +1,93 @@
+{
+  "schema": 1,
+  "eda": {
+    "worktree": "/home/epentland/ai/canopy/eda/.claude/worktrees/mylang-svg-benchmark-20260921",
+    "revision": "2a8d901174255ff8fa3e4840acd35a041e39c9a8",
+    "engine_source_tree": {
+      "sha256": "6f39ddec6e35ae89d8a73c0b9293bba85fd0727ce6ea3e7b557f987cb321e81d",
+      "files": 674,
+      "bytes": 25985289,
+      "excludes": "src/netlisp_bench.zig benchmark harness"
+    },
+    "stdlib_tree": {
+      "sha256": "8473a9f6c494b7e2a443dd42858303d02dc820c1144b76769cf7382a96ae00f2",
+      "files": 52,
+      "bytes": 26748
+    }
+  },
+  "harness": {
+    "path": "experiments/full-svg-benchmark/netlisp_bench.zig",
+    "sha256": "b723d2d34c39344831422936aed7b4be5cfd3b09ea445666bdadac3752e2a481"
+  },
+  "reproduction_script": {
+    "path": "experiments/full-svg-benchmark/build_netlisp_llvm.sh",
+    "sha256": "ca29ef522820fa38d4c1d2e3c370818c6de2f3bb8577d6dc73784707cdef884b"
+  },
+  "toolchain": {
+    "zig_path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "zig_version": "0.17.0-dev.1683+5ceec001b",
+    "zig_env_target": "x86_64-linux.7.0...7.0-gnu.2.43",
+    "backend_flag": "-fllvm",
+    "target_flags": [],
+    "target_note": "No -target or -mcpu was passed; Zig direct-build host defaults apply."
+  },
+  "modes": {
+    "fast": "-OReleaseFast",
+    "safe": "-OReleaseSafe"
+  },
+  "artifacts": {
+    "netlisp-llvm-fast": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/netlisp-llvm-fast",
+      "sha256": "6006ae5a1fc4e6a009fd9e5e2c138f885ae6211ffa01fe05731b76566e4e7316",
+      "bytes": 13910120
+    },
+    "netlisp-llvm-safe": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/netlisp-llvm-safe",
+      "sha256": "4be86f4754a74070e3ae39b02f566bf2def78a4b927901d8c7a6c2074de33105",
+      "bytes": 11197432
+    }
+  },
+  "qualification_outputs": {
+    "netlisp-fast-fixture.svg": {
+      "sha256": "8a78de19c4c4121855904c2d5e4f0397d6ce24ab901e4f037a3735d671f7081f",
+      "bytes": 70549
+    },
+    "netlisp-safe-fixture.svg": {
+      "sha256": "8a78de19c4c4121855904c2d5e4f0397d6ce24ab901e4f037a3735d671f7081f",
+      "bytes": 70549
+    },
+    "netlisp-fast-changed-net.svg": {
+      "sha256": "58c6092f80c09e854e58cea5acd540d4c683817cf858051522b95701dc70968f",
+      "bytes": 70555
+    },
+    "netlisp-fast-changed-value.svg": {
+      "sha256": "3a25ab638c02888f0efae5015a0a93bcdbb7b6aad8071d5f92f0ce5af4f69a58",
+      "bytes": 70549
+    },
+    "netlisp-fast-model.json": {
+      "sha256": "cfa0fbf75121f364fcb0e6c5babb781f3f618db1b92b3a0a3c37ac571687adea",
+      "bytes": 4854
+    },
+    "netlisp-safe-model.json": {
+      "sha256": "cfa0fbf75121f364fcb0e6c5babb781f3f618db1b92b3a0a3c37ac571687adea",
+      "bytes": 4854
+    }
+  },
+  "fixture_oracle": {
+    "module": "straps-synth-lmx2595",
+    "instances": 30,
+    "nets": 34,
+    "ports": 9,
+    "net_pins": 95,
+    "fast_safe_svg_equal": true,
+    "fast_safe_model_equal": true,
+    "changed_net_svg_distinct": true,
+    "changed_value_svg_distinct": true
+  },
+  "qualification_commands": [
+    "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/netlisp-llvm-fast /home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/fixture straps-synth-lmx2595 /home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/netlisp-fast-fixture.svg --verify /home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/netlisp-fast-model.json",
+    "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/netlisp-llvm-safe /home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/fixture straps-synth-lmx2595 /home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/netlisp-safe-fixture.svg --verify /home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/netlisp-safe-model.json",
+    "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/netlisp-llvm-fast /home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/changed-net straps-synth-lmx2595 /home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/netlisp-fast-changed-net.svg --verify /home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/netlisp-fast-changed-net-model.json",
+    "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/netlisp-llvm-fast /home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/projects/changed-value straps-synth-lmx2595 /home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/netlisp-fast-changed-value.svg --verify /home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/netlisp-fast-changed-value-model.json"
+  ]
+}

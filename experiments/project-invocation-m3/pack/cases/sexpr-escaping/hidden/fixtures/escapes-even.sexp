@@ -1,0 +1,1 @@
+(pin "pad \\" (net "GND"))

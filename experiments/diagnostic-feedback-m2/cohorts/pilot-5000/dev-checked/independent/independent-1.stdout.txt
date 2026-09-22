@@ -1,0 +1,3 @@
+Fixed. `main` was trying to add `1` to a `Result[int, str]` value directly (error `E_TYPE`); I unwrapped it with a `match` so `Ok(value)` prints `1 + value` and `Err(_)` prints `-1`. `parse_count` itself was left unchanged.
+
+Command run: `bin/mylang run project/main.my -- 41 && bin/mylang run project/main.my -- 0 && bin/mylang run project/main.my -- notanumber` → output `42`, `1`, `-1`. `bin/mylang check project/main.my` passes cleanly (no warnings).

@@ -1,0 +1,9 @@
+Change: removed the unused generic parameter and its unsatisfiable requirement from `pick` — `def pick[T: Sortable](values: list[int], index: int) -> int:` became `def pick(values: list[int], index: int) -> int:` in `project/main.my`. The body already returns an `int`, so no other change was needed.
+
+Command run (once, from the working directory):
+
+```
+./bin/mylang run project/main.my
+```
+
+Result: stdout `9`, exit code `0`.

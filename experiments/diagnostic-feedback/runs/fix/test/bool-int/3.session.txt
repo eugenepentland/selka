@@ -1,0 +1,12 @@
+Done.
+
+**What I changed** — `project/main.my`, only the `above` function body. It returned the `bool` expression `a > b` from a function declared `-> int`, which the checker rejected with `E_TYPE: expected int, found bool`. The diagnostic's suggested ternary (`1 if a > b else 0`) turned out not to be valid syntax in this language (`E_SYNTAX`), so I used a plain `if` statement instead:
+
+```python
+def above(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+**Command and result** — `bin/mylang run project/main.my` prints exactly `1` and exits 0. I also confirmed the other branch (`above(2, 5)`, run from a temporary scratch file that I then deleted) prints `0`, and `bin/mylang check project/main.my` exits 0. `project/` is back to containing only `main.my`.

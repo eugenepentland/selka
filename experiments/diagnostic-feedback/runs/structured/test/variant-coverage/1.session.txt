@@ -1,0 +1,10 @@
+Done.
+
+**What I changed:** In `project/main.my`, the `match event:` in `describe` handled only the `Event.start` variant, so the checker rejected it with `E_INCOMPLETE_MATCH`. I added the missing arm `case Event.stop(name): return "stopped"` — no other changes.
+
+**Command and result:**
+```
+$ bin/mylang run project/main.my
+stopped
+```
+Exit code 0 (stdout is exactly `stopped\n`). `bin/mylang check project/main.my` also exits 0; the only remaining stderr output is the pre-existing unused-binding warnings for the case payloads.

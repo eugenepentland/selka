@@ -1,0 +1,18 @@
+Done.
+
+**What I changed:** `project/main.my` — added the missing `case Shape.square(side): return side * side` arm to `area`'s `match`. That was the sole checker error (`E_INCOMPLETE_MATCH`: the `square` variant had no arm); no other changes were needed.
+
+**Exact command and result:**
+
+```
+$ bin/mylang check project/main.my
+[exit: 0]   (was E_INCOMPLETE_MATCH before the fix)
+
+$ bin/mylang run project/main.my -- circle 2
+12
+
+$ bin/mylang run project/main.my -- square 3
+9
+```
+
+Both `public/expected.json` cases match exactly, and extra spot checks (circle 5→75, square 7→49, circle 0→0, square 0→0, circle 1→3, square 10→100) confirm 3·r·r for circles and r·r for squares generally.

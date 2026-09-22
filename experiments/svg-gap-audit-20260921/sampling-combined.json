@@ -1,0 +1,398 @@
+{
+  "method": "Unmodified binaries with LD_PRELOAD SIGPROF CPU-time sampling; requested 500us, kernel tick limited; self-PC only, no stack attribution or hardware cycles. Actual counts include outside/unmapped samples. Every output hash checked. No wall-time claims from profiled runs.",
+  "sampler_source_sha256": "52abe6322fd3e120d1c10067d735333d0e397bce36d3736a8c63d253606d0aa8",
+  "sampler_sha256": "f0558acb250170b5870cce28554b3a92e9d62ea8999329fa3e2065a5dba8f76c",
+  "summary": {
+    "combined-typed": {
+      "binary_sha256": "f13c18e5d402b36c9e000c2b588354355b5a9eafcaeabfb56bfb31d5f2129431",
+      "runs": 1200,
+      "samples": 1470,
+      "outside_main_executable": 233,
+      "unmapped_inside": 15,
+      "functions": [
+        {
+          "name": "qbe_host_invoke",
+          "samples": 193,
+          "percent_all_samples": 13.129251700680273
+        },
+        {
+          "name": "layout::partPin",
+          "samples": 142,
+          "percent_all_samples": 9.65986394557823
+        },
+        {
+          "name": "layout_routes::build",
+          "samples": 124,
+          "percent_all_samples": 8.435374149659864
+        },
+        {
+          "name": "text::write",
+          "samples": 86,
+          "percent_all_samples": 5.850340136054422
+        },
+        {
+          "name": "layout::nearest",
+          "samples": 81,
+          "percent_all_samples": 5.510204081632653
+        },
+        {
+          "name": "myl_svg_put_typed",
+          "samples": 73,
+          "percent_all_samples": 4.965986394557823
+        },
+        {
+          "name": "svg::passive",
+          "samples": 56,
+          "percent_all_samples": 3.8095238095238093
+        },
+        {
+          "name": "layout_graph::findId",
+          "samples": 48,
+          "percent_all_samples": 3.2653061224489797
+        },
+        {
+          "name": "circuit::normalize",
+          "samples": 40,
+          "percent_all_samples": 2.7210884353741496
+        },
+        {
+          "name": "sexpr::at",
+          "samples": 36,
+          "percent_all_samples": 2.4489795918367347
+        },
+        {
+          "name": "myl_native_list_get",
+          "samples": 31,
+          "percent_all_samples": 2.108843537414966
+        },
+        {
+          "name": "text::decimal",
+          "samples": 30,
+          "percent_all_samples": 2.0408163265306123
+        },
+        {
+          "name": "layout::collectRows",
+          "samples": 23,
+          "percent_all_samples": 1.564625850340136
+        },
+        {
+          "name": "layout::branch",
+          "samples": 23,
+          "percent_all_samples": 1.564625850340136
+        },
+        {
+          "name": "myl_qbe_host_begin",
+          "samples": 22,
+          "percent_all_samples": 1.4965986394557824
+        },
+        {
+          "name": "layout::innerPin",
+          "samples": 21,
+          "percent_all_samples": 1.4285714285714286
+        },
+        {
+          "name": "layout::groundBranch",
+          "samples": 14,
+          "percent_all_samples": 0.9523809523809523
+        },
+        {
+          "name": "sexpr::form",
+          "samples": 13,
+          "percent_all_samples": 0.8843537414965986
+        },
+        {
+          "name": "layout_routes::blocked",
+          "samples": 12,
+          "percent_all_samples": 0.8163265306122449
+        },
+        {
+          "name": "layout::bridge",
+          "samples": 11,
+          "percent_all_samples": 0.7482993197278912
+        },
+        {
+          "name": "ports::validate",
+          "samples": 11,
+          "percent_all_samples": 0.7482993197278912
+        },
+        {
+          "name": "text::escaped",
+          "samples": 10,
+          "percent_all_samples": 0.6802721088435374
+        },
+        {
+          "name": "layout::endpoint",
+          "samples": 9,
+          "percent_all_samples": 0.6122448979591837
+        },
+        {
+          "name": "svg::pinStart",
+          "samples": 8,
+          "percent_all_samples": 0.54421768707483
+        },
+        {
+          "name": "circuit::label",
+          "samples": 8,
+          "percent_all_samples": 0.54421768707483
+        },
+        {
+          "name": "text::matches",
+          "samples": 7,
+          "percent_all_samples": 0.47619047619047616
+        },
+        {
+          "name": "circuit::pinForm",
+          "samples": 7,
+          "percent_all_samples": 0.47619047619047616
+        },
+        {
+          "name": "draw::line",
+          "samples": 7,
+          "percent_all_samples": 0.47619047619047616
+        },
+        {
+          "name": "text::number",
+          "samples": 7,
+          "percent_all_samples": 0.47619047619047616
+        },
+        {
+          "name": "layout::depth",
+          "samples": 7,
+          "percent_all_samples": 0.47619047619047616
+        },
+        {
+          "name": "svg::routes",
+          "samples": 6,
+          "percent_all_samples": 0.40816326530612246
+        },
+        {
+          "name": "layout_graph::build",
+          "samples": 6,
+          "percent_all_samples": 0.40816326530612246
+        },
+        {
+          "name": "text::equal",
+          "samples": 6,
+          "percent_all_samples": 0.40816326530612246
+        },
+        {
+          "name": "myl_native_list_append",
+          "samples": 5,
+          "percent_all_samples": 0.3401360544217687
+        },
+        {
+          "name": "svg::displayRef",
+          "samples": 5,
+          "percent_all_samples": 0.3401360544217687
+        },
+        {
+          "name": "svg::chip",
+          "samples": 5,
+          "percent_all_samples": 0.3401360544217687
+        },
+        {
+          "name": "ports::equal",
+          "samples": 4,
+          "percent_all_samples": 0.272108843537415
+        },
+        {
+          "name": "svg::ports",
+          "samples": 3,
+          "percent_all_samples": 0.20408163265306123
+        },
+        {
+          "name": "svg::instanceStart",
+          "samples": 2,
+          "percent_all_samples": 0.1360544217687075
+        },
+        {
+          "name": "myl_native_heap_alloc_at",
+          "samples": 2,
+          "percent_all_samples": 0.1360544217687075
+        },
+        {
+          "name": "draw::labelStart",
+          "samples": 2,
+          "percent_all_samples": 0.1360544217687075
+        },
+        {
+          "name": "layout::pinGroup",
+          "samples": 2,
+          "percent_all_samples": 0.1360544217687075
+        },
+        {
+          "name": "ports::byteAt",
+          "samples": 2,
+          "percent_all_samples": 0.1360544217687075
+        },
+        {
+          "name": "svg::render",
+          "samples": 2,
+          "percent_all_samples": 0.1360544217687075
+        },
+        {
+          "name": "layout::build",
+          "samples": 2,
+          "percent_all_samples": 0.1360544217687075
+        },
+        {
+          "name": "layout_routes::external",
+          "samples": 2,
+          "percent_all_samples": 0.1360544217687075
+        },
+        {
+          "name": "layout::placeRows",
+          "samples": 1,
+          "percent_all_samples": 0.06802721088435375
+        },
+        {
+          "name": "layout::height",
+          "samples": 1,
+          "percent_all_samples": 0.06802721088435375
+        },
+        {
+          "name": "ports::collect",
+          "samples": 1,
+          "percent_all_samples": 0.06802721088435375
+        },
+        {
+          "name": "circuit::displayNet",
+          "samples": 1,
+          "percent_all_samples": 0.06802721088435375
+        },
+        {
+          "name": "circuit::body",
+          "samples": 1,
+          "percent_all_samples": 0.06802721088435375
+        },
+        {
+          "name": "draw::symbol",
+          "samples": 1,
+          "percent_all_samples": 0.06802721088435375
+        }
+      ],
+      "top_pcs": [
+        {
+          "address": "0x10b8ccc",
+          "samples": 69
+        },
+        {
+          "address": "0x106aa77",
+          "samples": 56
+        },
+        {
+          "address": "0x10ba17f",
+          "samples": 26
+        },
+        {
+          "address": "0x10c04d5",
+          "samples": 25
+        },
+        {
+          "address": "0x10c04c4",
+          "samples": 19
+        },
+        {
+          "address": "0x10bff70",
+          "samples": 18
+        },
+        {
+          "address": "0x10b8397",
+          "samples": 17
+        },
+        {
+          "address": "0x10c05dc",
+          "samples": 17
+        },
+        {
+          "address": "0x1082976",
+          "samples": 17
+        },
+        {
+          "address": "0x10ba280",
+          "samples": 17
+        },
+        {
+          "address": "0x10c42f0",
+          "samples": 16
+        },
+        {
+          "address": "0x10c0503",
+          "samples": 16
+        },
+        {
+          "address": "0x10c04b0",
+          "samples": 14
+        },
+        {
+          "address": "0x107bbd9",
+          "samples": 13
+        },
+        {
+          "address": "0x10c4308",
+          "samples": 13
+        },
+        {
+          "address": "0x107bc17",
+          "samples": 13
+        },
+        {
+          "address": "0x10c5d10",
+          "samples": 13
+        },
+        {
+          "address": "0x107f43b",
+          "samples": 12
+        },
+        {
+          "address": "0x106aa7c",
+          "samples": 11
+        },
+        {
+          "address": "0x10c433c",
+          "samples": 11
+        },
+        {
+          "address": "0x10add51",
+          "samples": 10
+        },
+        {
+          "address": "0x10c04ec",
+          "samples": 8
+        },
+        {
+          "address": "0x10c7a80",
+          "samples": 8
+        },
+        {
+          "address": "0x107bbe9",
+          "samples": 8
+        },
+        {
+          "address": "0x10c7e70",
+          "samples": 7
+        },
+        {
+          "address": "0x10c073f",
+          "samples": 7
+        },
+        {
+          "address": "0x10694e0",
+          "samples": 7
+        },
+        {
+          "address": "0x10c05eb",
+          "samples": 7
+        },
+        {
+          "address": "0x10c04e4",
+          "samples": 7
+        },
+        {
+          "address": "0x10c432e",
+          "samples": 7
+        }
+      ]
+    }
+  }
+}

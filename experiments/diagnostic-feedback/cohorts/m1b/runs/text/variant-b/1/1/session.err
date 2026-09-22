@@ -1,0 +1,47 @@
+dsh: reasoning:
+Let me read the files.
+dsh: reasoning:
+The `area` function is incomplete — the match only handles the circle case. It needs a square case. Let me check the compiler first.
+
+The fix: add `case Shape.square(side): return side * side`.
+
+Let me first run the check to see the error. That's one compiler invocation. Let's be efficient with at most 20.
+
+Let me look at bin/mylang and maybe docs for match exhaustiveness. Actually, let me just fix it and check.
+
+Actually first let me run `bin/mylang check project/main.my` to see the actual error (useful diagnostic context, 1 invocation).
+dsh: reasoning:
+The fix is clear: add the missing `square` arm. The payload binding is `side`, return `side * side`.
+
+Let me edit.
+dsh: reasoning:
+Check passes. Now run the examples and additional inputs to verify behavior for every input.
+
+Let me test:
+- circle 2 -> 12
+- square 3 -> 9
+- circle 0 -> 0
+- square 0 -> 0
+- circle 5 -> 75
+- square 7 -> 49
+- maybe negative? "The same behavior is required for every input". The `number` parses int; if args[1] isn't an int, returns 0. Behavior for non-"circle" first arg → square. Should we handle missing args? args[0] and args[1] would be out of range — but that's pre-existing behavior; the request says change only what the request requires.
+
+Let me run all these in one bash command (each run is a compiler invocation though — "at most 20 compiler invocations"). I've used 2 so far. Let me batch several runs. Actually each `mylang run` is a compiler invocation. Let me be judicious: run the two public examples plus a couple more. Say 6 runs total = 8 invocations. That's fine.
+
+Actually, maybe I can run several arguments in a single shell loop — each still counts as one invocation. Let me do the public examples plus edge cases in one command; count them as invocations: circle2, square3, square0, circle5, square7 = 5 → total 7. Fine.
+
+Let me also verify with a script that reads expected.json. Constraint: work only inside this directory. Fine.
+
+Let me run.
+dsh: reasoning:
+All outputs match expected: circle 2 -> 12, square 3 -> 9. All extra cases correct (3*r*r and r*r).
+
+Let me verify against public/expected.json programmatically — but that would be more invocations. Actually I can just compare manually; I already did. Let me do a quick automated comparison using the already-run values... Actually, let me do a final verification run driven by expected.json to be thorough, using python to invoke mylang per case (2 invocations). Total would be 9-10. That's within budget.
+
+Actually the run above already covers the exact public cases. But an automated checker-style run is nice. Let me do it cleanly with the cache — the binary is cached, so it's fast.
+
+Let me write a small check that reads expected.json and compares. I'll use python3 with subprocess. Keep it in this directory (write nothing outside). Actually I can do it inline with bash without writing files.
+
+Let me do: python3 - <<'EOF' ... which reads public/expected.json and runs bin/mylang run. That's 2 invocations.
+
+Also verify the final file content.

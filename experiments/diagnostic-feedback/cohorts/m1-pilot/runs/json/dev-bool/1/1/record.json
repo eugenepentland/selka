@@ -1,0 +1,162 @@
+{
+  "version": 2,
+  "cohort_id": "m1-pilot",
+  "arm": "json",
+  "case": "dev-bool",
+  "repetition": 1,
+  "attempt": 1,
+  "attempt_reason": null,
+  "predecessor": null,
+  "work_dir": "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback/work/m1-pilot/json/dev-bool/1/1",
+  "initial_source_sha256": "fcc27f8d49216eee76c9ca755c2a6c72a28360eb73c55170ef1281dd1ce456e1",
+  "sealed_source_sha256": "b3d5513393ed586dc14527701a53bff8ab1ffb2cd2fb9cac02245adaf33817d1",
+  "termination": "completed",
+  "session_launch": {
+    "command": [
+      "dsh",
+      "--profile",
+      "headless",
+      "# Fix the program\n\n`above` must print 1 when the first argument is larger than the second, and 0 otherwise.\n\nYou are working in `project/`. `bin/mylang` is the installed compiler:\n`bin/mylang check project/main.my`, `bin/mylang run project/main.my -- <arguments>`.\n\nThe same behavior is required for every input, not only the examples in `public/`.\nRead `public/expected.json` for the examples this task will be checked against, and run them however you like.\n\nConstraints:\n\n- Work only inside this directory; do not read or write anything outside it and do not spawn subagents.\n- At most 20 compiler invocations are available for this attempt.\n- Change only what the request requires.\n\nWhen you are done, reply with a short final message: what you changed and the exact command you ran with its result.\n"
+    ],
+    "env": {
+      "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback/work/m1-pilot/json/dev-bool/1/1/.cache/zig-global",
+      "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang/experiments/diagnostic-feedback/work/m1-pilot/json/dev-bool/1/1/.cache/zig-local"
+    },
+    "started_utc": "2026-09-19T12:48:10.143452+00:00",
+    "finished_utc": "2026-09-19T12:48:28.300896+00:00",
+    "seconds": 18.157448,
+    "timed_out": false,
+    "exit": 0
+  },
+  "session": {
+    "logs": [
+      "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-work-m1-pilot-json-dev-bool-1-1--/session-9a2e305d-e255-45fd-93e4-75a93e5e1d3a/session.v3.jsonl.zstd"
+    ],
+    "session_dirs": [
+      "/home/epentland/.dsh/sessions/--home-epentland-ai-canopy-mylang-experiments-diagnostic-feedback-work-m1-pilot-json-dev-bool-1-1--/session-9a2e305d-e255-45fd-93e4-75a93e5e1d3a"
+    ],
+    "sessions": 1,
+    "usage": {
+      "inputTokens": 10656,
+      "outputTokens": 1474,
+      "reasoningTokens": 473,
+      "cacheReadTokens": 67712,
+      "totalTokens": 79842,
+      "cost_v1_input_output_reasoning": 12603,
+      "cost_v2_input_output": 12130,
+      "provider_total_tokens": 79842,
+      "reasoning_share_of_cost_v1": 0.0375
+    },
+    "models": {
+      "deepseek-v4-flash": 8
+    },
+    "efforts": {
+      "max": 1
+    },
+    "delegation_depth": 0,
+    "turns": 1,
+    "steps": 7,
+    "tool_calls": {
+      "bash": 4,
+      "read": 3,
+      "edit": 1
+    },
+    "tool_seconds": {
+      "bash": 4.508,
+      "edit": 0.023,
+      "read": 0.037
+    },
+    "compiler_seconds": 4.424,
+    "compiler_calls": 7,
+    "bytes_read": 1346,
+    "failure_results": 0,
+    "edits": 1,
+    "first_edit_ms": 1789822099004,
+    "baseline_green_ms": null,
+    "first_green_ms": null,
+    "first_candidate_green_step": null,
+    "check_events": [
+      {
+        "step": 1,
+        "phase": "baseline",
+        "outcome": "unknown",
+        "ms": 1789822095994
+      },
+      {
+        "step": 2,
+        "phase": "candidate",
+        "outcome": "unknown",
+        "ms": 1789822103935
+      },
+      {
+        "step": 3,
+        "phase": "candidate",
+        "outcome": "unknown",
+        "ms": 1789822106248
+      }
+    ],
+    "phases": {
+      "read": 10940,
+      "edit": 1190,
+      "verify": null
+    },
+    "phase_ms": {
+      "read": 6072,
+      "edit": null,
+      "verify": null
+    },
+    "first_event_ms": 1789822092932,
+    "last_event_ms": 1789822108239,
+    "log_seconds": 15.307
+  },
+  "events": {
+    "coverage": {
+      "missing": false,
+      "duplicates": 0,
+      "truncated": 0,
+      "invalid": 0,
+      "problems": []
+    },
+    "metrics": {
+      "invocations": 10,
+      "failed_compiler_invocations": 1,
+      "infrastructure_failures": 0,
+      "failed_checks_on_changed_source": 0,
+      "failed_candidate_versions": 0,
+      "checked_candidate_versions": 1,
+      "repeated_diagnostics": 0,
+      "distinct_diagnostics": 1,
+      "diagnostic_codes": {
+        "E_TYPE": 1
+      },
+      "first_compiler_green_ns": 407038551169739
+    }
+  },
+  "grading": {
+    "public_acceptance": true,
+    "public_failures": [],
+    "hidden_acceptance": true,
+    "hidden_steps": [
+      {
+        "id": "in-0",
+        "status": "passed"
+      },
+      {
+        "id": "in-1",
+        "status": "passed"
+      },
+      {
+        "id": "in-2",
+        "status": "passed"
+      },
+      {
+        "id": "in-3",
+        "status": "passed"
+      }
+    ]
+  },
+  "hidden_acceptance": true,
+  "public_acceptance": true,
+  "finished_utc": "2026-09-19T12:48:29.313582+00:00",
+  "regraded_utc": "2026-09-19T12:55:37.205260+00:00"
+}

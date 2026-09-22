@@ -1,0 +1,11 @@
+**Changed:** `project/main.my` — the body of `main` previously did `out.print(1 + parse_count(args[0]))`, which added an `int` to a `Result[int, str]` (compile error `E_TYPE`). I replaced it with a `match` on the result: `case Ok(value): out.print(value + 1)` and `case Err(_): out.print(-1)`. `parse_count` itself is unchanged.
+
+**Command and result:**
+```
+bin/mylang run project/main.my -- 41   → 42
+bin/mylang run project/main.my -- 0    → 1
+bin/mylang run project/main.my -- abc  → -1
+bin/mylang run project/main.my -- 3.5  → -1
+bin/mylang run project/main.my -- -5   → -4
+```
+`bin/mylang check project/main.my` also exits 0 with no diagnostics.

@@ -1,0 +1,820 @@
+{
+  "version": 1,
+  "captured_utc": "2026-09-19T05:17:19.684638+00:00",
+  "tasks": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6",
+    "T7"
+  ],
+  "arms": [
+    "B",
+    "P1",
+    "P2"
+  ],
+  "cohort_models": {
+    "T1": "deepseek-v4-flash",
+    "T2": "deepseek-v4-flash",
+    "T3": "deepseek-v4-flash",
+    "T4": "deepseek-v4-flash",
+    "T5": "deepseek-v4-flash",
+    "T6": "deepseek-v4-flash",
+    "T7": "deepseek-v4-flash"
+  },
+  "runs_off_cohort": [],
+  "summaries": {
+    "B": {
+      "T1": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          162803,
+          190990,
+          135819
+        ],
+        "median_cost": 162803,
+        "min_cost": 135819,
+        "max_cost": 190990,
+        "spread": 55171,
+        "usage_totals": {
+          "inputTokens": 252702,
+          "outputTokens": 136993,
+          "reasoningTokens": 99917,
+          "cacheReadTokens": 13446270
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T2": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          117702,
+          193521,
+          108484
+        ],
+        "median_cost": 117702,
+        "min_cost": 108484,
+        "max_cost": 193521,
+        "spread": 85037,
+        "usage_totals": {
+          "inputTokens": 237736,
+          "outputTokens": 106314,
+          "reasoningTokens": 75657,
+          "cacheReadTokens": 10056574
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T3": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          182926,
+          188531,
+          188929
+        ],
+        "median_cost": 188531,
+        "min_cost": 182926,
+        "max_cost": 188929,
+        "spread": 6003,
+        "usage_totals": {
+          "inputTokens": 278204,
+          "outputTokens": 167998,
+          "reasoningTokens": 114184,
+          "cacheReadTokens": 21765760
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T4": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          161888,
+          99297,
+          116760
+        ],
+        "median_cost": 116760,
+        "min_cost": 99297,
+        "max_cost": 161888,
+        "spread": 62591,
+        "usage_totals": {
+          "inputTokens": 198549,
+          "outputTokens": 109160,
+          "reasoningTokens": 70236,
+          "cacheReadTokens": 9226624
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T5": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          114388,
+          112418,
+          94322
+        ],
+        "median_cost": 112418,
+        "min_cost": 94322,
+        "max_cost": 114388,
+        "spread": 20066,
+        "usage_totals": {
+          "inputTokens": 154915,
+          "outputTokens": 94233,
+          "reasoningTokens": 71980,
+          "cacheReadTokens": 4441600
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T6": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          153563,
+          142285,
+          171020
+        ],
+        "median_cost": 153563,
+        "min_cost": 142285,
+        "max_cost": 171020,
+        "spread": 28735,
+        "usage_totals": {
+          "inputTokens": 253711,
+          "outputTokens": 129866,
+          "reasoningTokens": 83291,
+          "cacheReadTokens": 14891008
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T7": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          120892,
+          74350,
+          101345
+        ],
+        "median_cost": 101345,
+        "min_cost": 74350,
+        "max_cost": 120892,
+        "spread": 46542,
+        "usage_totals": {
+          "inputTokens": 184298,
+          "outputTokens": 68004,
+          "reasoningTokens": 44285,
+          "cacheReadTokens": 6297600
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      }
+    },
+    "P1": {
+      "T1": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          185459,
+          124075,
+          154163
+        ],
+        "median_cost": 154163,
+        "min_cost": 124075,
+        "max_cost": 185459,
+        "spread": 61384,
+        "usage_totals": {
+          "inputTokens": 198111,
+          "outputTokens": 152816,
+          "reasoningTokens": 112770,
+          "cacheReadTokens": 10593792
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T2": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          109182,
+          136560,
+          130156
+        ],
+        "median_cost": 130156,
+        "min_cost": 109182,
+        "max_cost": 136560,
+        "spread": 27378,
+        "usage_totals": {
+          "inputTokens": 214871,
+          "outputTokens": 96037,
+          "reasoningTokens": 64990,
+          "cacheReadTokens": 8042880
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T3": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          169817,
+          188448,
+          174094
+        ],
+        "median_cost": 174094,
+        "min_cost": 169817,
+        "max_cost": 188448,
+        "spread": 18631,
+        "usage_totals": {
+          "inputTokens": 258387,
+          "outputTokens": 162128,
+          "reasoningTokens": 111844,
+          "cacheReadTokens": 19824128
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T4": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          150497,
+          116451,
+          75502
+        ],
+        "median_cost": 116451,
+        "min_cost": 75502,
+        "max_cost": 150497,
+        "spread": 74995,
+        "usage_totals": {
+          "inputTokens": 178736,
+          "outputTokens": 99905,
+          "reasoningTokens": 63809,
+          "cacheReadTokens": 6646784
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T5": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          145218,
+          168238,
+          128749
+        ],
+        "median_cost": 145218,
+        "min_cost": 128749,
+        "max_cost": 168238,
+        "spread": 39489,
+        "usage_totals": {
+          "inputTokens": 226069,
+          "outputTokens": 122095,
+          "reasoningTokens": 94041,
+          "cacheReadTokens": 9211648
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T6": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          131908,
+          110452,
+          132839
+        ],
+        "median_cost": 131908,
+        "min_cost": 110452,
+        "max_cost": 132839,
+        "spread": 22387,
+        "usage_totals": {
+          "inputTokens": 191590,
+          "outputTokens": 112413,
+          "reasoningTokens": 71196,
+          "cacheReadTokens": 8663424
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T7": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          149690,
+          129948,
+          104769
+        ],
+        "median_cost": 129948,
+        "min_cost": 104769,
+        "max_cost": 149690,
+        "spread": 44921,
+        "usage_totals": {
+          "inputTokens": 231506,
+          "outputTokens": 85004,
+          "reasoningTokens": 67897,
+          "cacheReadTokens": 5089920
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      }
+    },
+    "P2": {
+      "T1": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          156363,
+          192396,
+          167026
+        ],
+        "median_cost": 167026,
+        "min_cost": 156363,
+        "max_cost": 192396,
+        "spread": 36033,
+        "usage_totals": {
+          "inputTokens": 258723,
+          "outputTokens": 149090,
+          "reasoningTokens": 107972,
+          "cacheReadTokens": 13214080
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T2": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          159370,
+          154098,
+          165448
+        ],
+        "median_cost": 159370,
+        "min_cost": 154098,
+        "max_cost": 165448,
+        "spread": 11350,
+        "usage_totals": {
+          "inputTokens": 241541,
+          "outputTokens": 137509,
+          "reasoningTokens": 99866,
+          "cacheReadTokens": 12588928
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T3": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          234963,
+          205991,
+          205067
+        ],
+        "median_cost": 205991,
+        "min_cost": 205067,
+        "max_cost": 234963,
+        "spread": 29896,
+        "usage_totals": {
+          "inputTokens": 311624,
+          "outputTokens": 192210,
+          "reasoningTokens": 142187,
+          "cacheReadTokens": 25434112
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T4": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          121350,
+          165895,
+          105880
+        ],
+        "median_cost": 121350,
+        "min_cost": 105880,
+        "max_cost": 165895,
+        "spread": 60015,
+        "usage_totals": {
+          "inputTokens": 196468,
+          "outputTokens": 120030,
+          "reasoningTokens": 76627,
+          "cacheReadTokens": 8128384
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T5": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          125471,
+          127031,
+          133847
+        ],
+        "median_cost": 127031,
+        "min_cost": 125471,
+        "max_cost": 133847,
+        "spread": 8376,
+        "usage_totals": {
+          "inputTokens": 188108,
+          "outputTokens": 111627,
+          "reasoningTokens": 86614,
+          "cacheReadTokens": 6565504
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T6": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          153739,
+          135072,
+          150809
+        ],
+        "median_cost": 150809,
+        "min_cost": 135072,
+        "max_cost": 153739,
+        "spread": 18667,
+        "usage_totals": {
+          "inputTokens": 182647,
+          "outputTokens": 147435,
+          "reasoningTokens": 109538,
+          "cacheReadTokens": 13439744
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "T7": {
+        "runs": 3,
+        "scored": 3,
+        "passed": 3,
+        "failed": [],
+        "solved": true,
+        "discarded": [],
+        "costs": [
+          91701,
+          104628,
+          164232
+        ],
+        "median_cost": 104628,
+        "min_cost": 91701,
+        "max_cost": 164232,
+        "spread": 72531,
+        "usage_totals": {
+          "inputTokens": 237319,
+          "outputTokens": 75912,
+          "reasoningTokens": 47330,
+          "cacheReadTokens": 9409152
+        },
+        "models": [
+          "deepseek-v4-flash"
+        ]
+      }
+    }
+  },
+  "upfront": {
+    "B": {
+      "cost": null,
+      "source": null
+    },
+    "P1": {
+      "cost": 327308,
+      "source": "/home/epentland/ai/canopy/mylang/experiments/cascade/designs/P1/evidence/designer.json",
+      "tokens": {
+        "inputTokens": 79896,
+        "outputTokens": 139466,
+        "reasoningTokens": 107946,
+        "cacheReadTokens": 12026752,
+        "totalTokens": 12246114,
+        "cost": 327308
+      }
+    },
+    "P2": {
+      "cost": 346226,
+      "source": "/home/epentland/ai/canopy/mylang/experiments/cascade/designs/P2/evidence/designer.json",
+      "tokens": {
+        "inputTokens": 110631,
+        "outputTokens": 143613,
+        "reasoningTokens": 91982,
+        "cacheReadTokens": 19620224,
+        "totalTokens": 19874468,
+        "cost": 346226
+      }
+    }
+  },
+  "gains": {
+    "P1": {
+      "per_task": {
+        "T1": 8640,
+        "T2": -12454,
+        "T3": 14437,
+        "T4": 309,
+        "T5": -32800,
+        "T6": 21655,
+        "T7": -28603
+      },
+      "pack_gain": -28816,
+      "upfront": 327308,
+      "upfront_source": "/home/epentland/ai/canopy/mylang/experiments/cascade/designs/P1/evidence/designer.json",
+      "R": -356124
+    },
+    "P2": {
+      "per_task": {
+        "T1": -4223,
+        "T2": -41668,
+        "T3": -17460,
+        "T4": -4590,
+        "T5": -14613,
+        "T6": 2754,
+        "T7": -3283
+      },
+      "pack_gain": -83083,
+      "upfront": 346226,
+      "upfront_source": "/home/epentland/ai/canopy/mylang/experiments/cascade/designs/P2/evidence/designer.json",
+      "R": -429309
+    }
+  },
+  "coupling": {
+    "B": {
+      "t4_files_outside_printer": [
+        "tests/printer_test.my",
+        "tests/printer_test.my",
+        "tests/printer_test.my"
+      ],
+      "t4_runs_touching_other_files": 3,
+      "t6_new_bool_params": [
+        0,
+        0,
+        0
+      ]
+    },
+    "P1": {
+      "t4_files_outside_printer": [
+        "tests/printer_test.my",
+        "tests/printer_test.my",
+        "tests/printer_test.my"
+      ],
+      "t4_runs_touching_other_files": 3,
+      "t6_new_bool_params": [
+        0,
+        0,
+        0
+      ]
+    },
+    "P2": {
+      "t4_files_outside_printer": [
+        "tests/printer_test.my",
+        "tests/style_test.my",
+        "tests/printer_test.my",
+        "tests/style_test.my",
+        "tests/printer_test.my",
+        "tests/style_test.my"
+      ],
+      "t4_runs_touching_other_files": 3,
+      "t6_new_bool_params": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "transfer": {
+    "B": {
+      "probes": 2,
+      "correct": 17,
+      "total": 20,
+      "bytes_read": 88025,
+      "score": 0.85
+    },
+    "P1": {
+      "probes": 2,
+      "correct": 16,
+      "total": 20,
+      "bytes_read": 90981,
+      "score": 0.8
+    },
+    "P2": {
+      "probes": 2,
+      "correct": 18,
+      "total": 20,
+      "bytes_read": 174664,
+      "score": 0.9
+    }
+  },
+  "chains": {
+    "B": {
+      "1": {
+        "task": "T2",
+        "median_cost": 145281,
+        "verdicts": [
+          "passed"
+        ]
+      },
+      "2": {
+        "task": "T3",
+        "median_cost": 223359,
+        "verdicts": [
+          "passed"
+        ]
+      },
+      "3": {
+        "task": "T7",
+        "median_cost": 112895,
+        "verdicts": [
+          "passed"
+        ]
+      }
+    },
+    "P1": {
+      "1": {
+        "task": "T2",
+        "median_cost": 131664,
+        "verdicts": [
+          "passed"
+        ]
+      },
+      "2": {
+        "task": "T3",
+        "median_cost": 182855,
+        "verdicts": [
+          "passed"
+        ]
+      },
+      "3": {
+        "task": "T7",
+        "median_cost": 99190,
+        "verdicts": [
+          "passed"
+        ]
+      }
+    },
+    "P2": {
+      "1": {
+        "task": "T2",
+        "median_cost": 145238,
+        "verdicts": [
+          "passed"
+        ]
+      },
+      "2": {
+        "task": "T3",
+        "median_cost": 205624,
+        "verdicts": [
+          "passed"
+        ]
+      },
+      "3": {
+        "task": "T7",
+        "median_cost": 131678,
+        "verdicts": [
+          "passed"
+        ]
+      }
+    }
+  },
+  "decision": {
+    "rule_1_treatment_beats_baseline": {
+      "wins": 0,
+      "losses": 0,
+      "holds": false,
+      "detail": {
+        "T1": "within spread (+8640, spread 61384)",
+        "T2": "within spread (-12454, spread 85037)",
+        "T3": "within spread (+14437, spread 18631)",
+        "T4": "within spread (+309, spread 74995)",
+        "T5": "within spread (-32800, spread 39489)",
+        "T6": "within spread (+21655, spread 28735)",
+        "T7": "within spread (-28603, spread 46542)"
+      }
+    },
+    "rule_2_upfront_recovered": {
+      "R": -356124,
+      "holds": false
+    },
+    "rule_3_control_does_not_win": {
+      "control": {
+        "wins": 0,
+        "losses": 0,
+        "holds": false,
+        "detail": {
+          "T1": "within spread (-4223, spread 55171)",
+          "T2": "within spread (-41668, spread 85037)",
+          "T3": "within spread (-17460, spread 29896)",
+          "T4": "within spread (-4590, spread 62591)",
+          "T5": "within spread (-14613, spread 20066)",
+          "T6": "within spread (+2754, spread 28735)",
+          "T7": "within spread (-3283, spread 72531)"
+        }
+      },
+      "holds": true
+    },
+    "justified": false
+  }
+}

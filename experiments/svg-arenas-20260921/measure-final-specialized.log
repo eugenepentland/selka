@@ -1,0 +1,299 @@
+{
+  "fixture": {
+    "median_ms": {
+      "netlisp": 2.481276,
+      "gc-o3": 5.846361,
+      "gc-lto": 5.132685,
+      "gc-bounded": 10.997386,
+      "gc-lto-bounded": 10.295584,
+      "arena-o3": 5.899697,
+      "arena-lto": 5.159627,
+      "arena-bounded": 11.144317,
+      "arena-lto-bounded": 10.242014
+    },
+    "comparisons": {
+      "gc-o3/netlisp": {
+        "ratio": 2.356191330589584,
+        "paired_bootstrap_95": [
+          2.2912869563082827,
+          2.394805252895741
+        ]
+      },
+      "gc-lto/netlisp": {
+        "ratio": 2.068566737436706,
+        "paired_bootstrap_95": [
+          1.9953836803001397,
+          2.134724230597483
+        ]
+      },
+      "gc-bounded/netlisp": {
+        "ratio": 4.4321494263435435,
+        "paired_bootstrap_95": [
+          4.325905637914907,
+          4.496328823746199
+        ]
+      },
+      "gc-lto-bounded/netlisp": {
+        "ratio": 4.149310274229872,
+        "paired_bootstrap_95": [
+          4.02500797527976,
+          4.2236944974661395
+        ]
+      },
+      "arena-o3/netlisp": {
+        "ratio": 2.3776867224766614,
+        "paired_bootstrap_95": [
+          2.3101868911628256,
+          2.423204559178437
+        ]
+      },
+      "arena-lto/netlisp": {
+        "ratio": 2.0794248604347123,
+        "paired_bootstrap_95": [
+          2.0139976563421342,
+          2.12161801206252
+        ]
+      },
+      "arena-bounded/netlisp": {
+        "ratio": 4.491365329773874,
+        "paired_bootstrap_95": [
+          4.33623638165707,
+          4.564153133429687
+        ]
+      },
+      "arena-lto-bounded/netlisp": {
+        "ratio": 4.1277205760262055,
+        "paired_bootstrap_95": [
+          4.0317427198500555,
+          4.187204749542495
+        ]
+      },
+      "arena-o3/gc-o3": {
+        "ratio": 1.0091229398937218,
+        "paired_bootstrap_95": [
+          0.9937951978127041,
+          1.0262066825938814
+        ]
+      },
+      "arena-lto/gc-lto": {
+        "ratio": 1.0052491045135246,
+        "paired_bootstrap_95": [
+          0.9758029941156336,
+          1.0306451746806977
+        ]
+      },
+      "arena-bounded/gc-bounded": {
+        "ratio": 1.0133605385861693,
+        "paired_bootstrap_95": [
+          0.9962392324182526,
+          1.024098913686698
+        ]
+      },
+      "arena-lto-bounded/gc-lto-bounded": {
+        "ratio": 0.9947967983166375,
+        "paired_bootstrap_95": [
+          0.9849132126629061,
+          1.0096087778505545
+        ]
+      }
+    }
+  },
+  "changed-net": {
+    "median_ms": {
+      "netlisp": 2.485122,
+      "gc-o3": 5.80152,
+      "gc-lto": 5.18047,
+      "gc-bounded": 11.006711,
+      "gc-lto-bounded": 10.319897,
+      "arena-o3": 5.926964,
+      "arena-lto": 5.303808,
+      "arena-bounded": 10.914289,
+      "arena-lto-bounded": 10.158331
+    },
+    "comparisons": {
+      "gc-o3/netlisp": {
+        "ratio": 2.3345010828442225,
+        "paired_bootstrap_95": [
+          2.282211979167488,
+          2.4275097012183746
+        ]
+      },
+      "gc-lto/netlisp": {
+        "ratio": 2.084593834829839,
+        "paired_bootstrap_95": [
+          2.0429529298142843,
+          2.1683230622341814
+        ]
+      },
+      "gc-bounded/netlisp": {
+        "ratio": 4.429042517832122,
+        "paired_bootstrap_95": [
+          4.3246000028399365,
+          4.605499546844102
+        ]
+      },
+      "gc-lto-bounded/netlisp": {
+        "ratio": 4.152672182693646,
+        "paired_bootstrap_95": [
+          4.073306704105495,
+          4.304358289684535
+        ]
+      },
+      "arena-o3/netlisp": {
+        "ratio": 2.3849790875458026,
+        "paired_bootstrap_95": [
+          2.3415836116734012,
+          2.4760909696831677
+        ]
+      },
+      "arena-lto/netlisp": {
+        "ratio": 2.1342243962268252,
+        "paired_bootstrap_95": [
+          2.08319988261596,
+          2.219002256748546
+        ]
+      },
+      "arena-bounded/netlisp": {
+        "ratio": 4.391852391955003,
+        "paired_bootstrap_95": [
+          4.304946766366239,
+          4.556685493069602
+        ]
+      },
+      "arena-lto-bounded/netlisp": {
+        "ratio": 4.087658875499875,
+        "paired_bootstrap_95": [
+          4.007522488746752,
+          4.244789880986642
+        ]
+      },
+      "arena-o3/gc-o3": {
+        "ratio": 1.0216226092472318,
+        "paired_bootstrap_95": [
+          1.0029568260395183,
+          1.0367261147164062
+        ]
+      },
+      "arena-lto/gc-lto": {
+        "ratio": 1.0238082645010975,
+        "paired_bootstrap_95": [
+          1.0059927461388802,
+          1.0357733883564089
+        ]
+      },
+      "arena-bounded/gc-bounded": {
+        "ratio": 0.9916031228584089,
+        "paired_bootstrap_95": [
+          0.9803681364947264,
+          1.00711457840378
+        ]
+      },
+      "arena-lto-bounded/gc-lto-bounded": {
+        "ratio": 0.9843442235906038,
+        "paired_bootstrap_95": [
+          0.9781188896642162,
+          1.0017311780621834
+        ]
+      }
+    }
+  },
+  "changed-value": {
+    "median_ms": {
+      "netlisp": 2.44829,
+      "gc-o3": 5.888435,
+      "gc-lto": 5.261009,
+      "gc-bounded": 11.001785,
+      "gc-lto-bounded": 10.349477,
+      "arena-o3": 5.823632,
+      "arena-lto": 5.155489,
+      "arena-bounded": 11.133399,
+      "arena-lto-bounded": 10.266568
+    },
+    "comparisons": {
+      "gc-o3/netlisp": {
+        "ratio": 2.4051215338052274,
+        "paired_bootstrap_95": [
+          2.347497852168244,
+          2.4748438270495337
+        ]
+      },
+      "gc-lto/netlisp": {
+        "ratio": 2.148850422131365,
+        "paired_bootstrap_95": [
+          2.1028952213344017,
+          2.221106626487278
+        ]
+      },
+      "gc-bounded/netlisp": {
+        "ratio": 4.493660881676599,
+        "paired_bootstrap_95": [
+          4.4189216709056165,
+          4.623118945585596
+        ]
+      },
+      "gc-lto-bounded/netlisp": {
+        "ratio": 4.227226758268015,
+        "paired_bootstrap_95": [
+          4.121491860628838,
+          4.360040037459798
+        ]
+      },
+      "arena-o3/netlisp": {
+        "ratio": 2.378652855666608,
+        "paired_bootstrap_95": [
+          2.3343680874548567,
+          2.453215562558633
+        ]
+      },
+      "arena-lto/netlisp": {
+        "ratio": 2.1057509527057663,
+        "paired_bootstrap_95": [
+          2.0616099329904114,
+          2.1737781084853167
+        ]
+      },
+      "arena-bounded/netlisp": {
+        "ratio": 4.547418402231762,
+        "paired_bootstrap_95": [
+          4.436341007229596,
+          4.694666361923822
+        ]
+      },
+      "arena-lto-bounded/netlisp": {
+        "ratio": 4.193362714384325,
+        "paired_bootstrap_95": [
+          4.117553181946436,
+          4.3325262131823274
+        ]
+      },
+      "arena-o3/gc-o3": {
+        "ratio": 0.9889948687554503,
+        "paired_bootstrap_95": [
+          0.9796753302657744,
+          1.009714078561559
+        ]
+      },
+      "arena-lto/gc-lto": {
+        "ratio": 0.9799430109319335,
+        "paired_bootstrap_95": [
+          0.9637094329243687,
+          1.0018803529754816
+        ]
+      },
+      "arena-bounded/gc-bounded": {
+        "ratio": 1.0119629678274935,
+        "paired_bootstrap_95": [
+          0.9895859626415168,
+          1.0249802928611333
+        ]
+      },
+      "arena-lto-bounded/gc-lto-bounded": {
+        "ratio": 0.9919890637952042,
+        "paired_bootstrap_95": [
+          0.9806971812470594,
+          1.0096684220314258
+        ]
+      }
+    }
+  }
+}

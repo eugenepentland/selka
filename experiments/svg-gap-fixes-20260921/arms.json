@@ -1,0 +1,134 @@
+{
+  "arms": {
+    "gc-lto": {
+      "binary": ".tmp/svg-gap-fixes-20260921/gc-lto",
+      "sha256": "17e8697563d750cb8418142fc6aff3744a0c2a9e9474c7d55439ef1b4beebed8",
+      "bounded": false
+    },
+    "arena-lto": {
+      "binary": ".tmp/svg-gap-fixes-20260921/arena-lto",
+      "sha256": "bc0ea2b3f8ddf17a01ad3960a941c991f7a8eec7bc0442ed8824a0c20d69142f",
+      "bounded": false
+    },
+    "gc-lto-bounded": {
+      "binary": ".tmp/svg-gap-fixes-20260921/gc-lto-bounded",
+      "sha256": "0d381b7b50f8ad073d097a93eee2167180b15a90640f72631cd11754ca252690",
+      "bounded": true
+    },
+    "arena-lto-bounded": {
+      "binary": ".tmp/svg-gap-fixes-20260921/arena-lto-bounded",
+      "sha256": "3533d535fe796a781e5cb99b8fda6fa913a0e87aea0c52e86738b010f939dbe2",
+      "bounded": true
+    },
+    "before-gc-lto": {
+      "binary": ".tmp/svg-arenas-20260921/gc-lto",
+      "sha256": "de1733408c0e3a9c69129bb166c122acb0ab572e201dff45c37bdd43a4a23210",
+      "bounded": false
+    },
+    "before-arena-lto": {
+      "binary": ".tmp/svg-arenas-20260921/arena-lto",
+      "sha256": "8cb40e6f5a6627d929c39b360c8f895c4fc66e1e78363f1125f009c07bb61572",
+      "bounded": false
+    },
+    "before-gc-lto-bounded": {
+      "binary": ".tmp/svg-arenas-20260921/gc-lto-bounded",
+      "sha256": "e5bbd804057112c9bd4b7c100b9aab09072e525b7dcc611d0321dc7c794c79c0",
+      "bounded": true
+    },
+    "before-arena-lto-bounded": {
+      "binary": ".tmp/svg-arenas-20260921/arena-lto-bounded",
+      "sha256": "40f2d407f411f30116305f00703b4d0fcf3c8eb8c3d4e915534d766ee1f29b21",
+      "bounded": true
+    },
+    "rust-o3": {
+      "binary": ".tmp/full-svg-benchmark-20260921/rust-o3",
+      "sha256": "57a931f718fd234f54ec8b7775267eff6cac08c628308614d2502d483bccb39d",
+      "native": true
+    },
+    "go-fast": {
+      "binary": ".tmp/full-svg-benchmark-20260921/go-fast",
+      "sha256": "6e786ac6174b1996c0120ff0c51e9a7acb8e6de5e663808056558818583ced90",
+      "native": true
+    },
+    "zig-o3": {
+      "binary": ".tmp/full-svg-benchmark-20260921/zig-o3",
+      "sha256": "0a80f2fa747d033ef979110109a1fbc4155d738d76018c930738847b3f358a63",
+      "native": true
+    }
+  },
+  "pairs": [
+    [
+      "gc-lto",
+      "before-gc-lto"
+    ],
+    [
+      "arena-lto",
+      "before-arena-lto"
+    ],
+    [
+      "gc-lto-bounded",
+      "before-gc-lto-bounded"
+    ],
+    [
+      "arena-lto-bounded",
+      "before-arena-lto-bounded"
+    ],
+    [
+      "gc-lto",
+      "rust-o3"
+    ],
+    [
+      "gc-lto",
+      "go-fast"
+    ],
+    [
+      "gc-lto",
+      "zig-o3"
+    ],
+    [
+      "arena-lto",
+      "rust-o3"
+    ],
+    [
+      "arena-lto",
+      "go-fast"
+    ],
+    [
+      "arena-lto",
+      "zig-o3"
+    ],
+    [
+      "gc-lto-bounded",
+      "rust-o3"
+    ],
+    [
+      "gc-lto-bounded",
+      "go-fast"
+    ],
+    [
+      "gc-lto-bounded",
+      "zig-o3"
+    ],
+    [
+      "arena-lto-bounded",
+      "rust-o3"
+    ],
+    [
+      "arena-lto-bounded",
+      "go-fast"
+    ],
+    [
+      "arena-lto-bounded",
+      "zig-o3"
+    ],
+    [
+      "arena-lto",
+      "gc-lto"
+    ],
+    [
+      "arena-lto-bounded",
+      "gc-lto-bounded"
+    ]
+  ],
+  "output": "measurements.json"
+}

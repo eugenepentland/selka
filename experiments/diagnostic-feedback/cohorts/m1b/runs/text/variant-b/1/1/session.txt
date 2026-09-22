@@ -1,0 +1,16 @@
+Done.
+
+**What I changed:** `project/main.my` — the `match shape:` inside `area` had no arm for the `square` variant (the compiler reported `E_INCOMPLETE_MATCH`). I added the missing arm:
+
+```python
+case Shape.square(side):
+    return side * side
+```
+
+The existing circle arm already returned `3 * radius * radius`, so `area` now returns `3*r*r` for a circle and `r*r` for a square. Nothing else was modified.
+
+**Commands and results:**
+
+- `bin/mylang check project/main.my` → exit 0 (previously exit 1 with `E_INCOMPLETE_MATCH` on `square`).
+- `python3 - <<'EOF' …` (driver that runs each case from `public/expected.json` via `bin/mylang run project/main.my -- <args>`) → both cases PASS (`circle 2` → `12`, `square 3` → `9`).
+- Extra spot checks beyond the public examples all correct: `circle 0`→0, `square 0`→0, `circle 5`→75, `square 7`→49, `square 100`→10000, `circle 13`→507.

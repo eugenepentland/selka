@@ -1,0 +1,16 @@
+Fixed.
+
+**What changed** (`project/main.my`): `exceeds` returned the `bool` result of `a > b` where the signature promises `int`. I replaced that with an explicit conversion using an `if` statement — `return 1` when `a > b`, otherwise `return 0`. (The compiler's own hint suggested a conditional expression `1 if cond else 0`, but the parser rejects that form with `E_SYNTAX`, so I used a plain `if`.)
+
+```python
+def exceeds(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+**Command and result:** `./bin/mylang check project/main.my` → clean (no output, exit 0). Running the expected cases and edge cases:
+
+- `./bin/mylang run project/main.my -- 5 2` → `1`
+- `./bin/mylang run project/main.my -- 2 5` → `0`
+- also verified `7 7` → `0`, `-3 -8` → `1`, `-8 -3` → `0`, `100 99` → `1`

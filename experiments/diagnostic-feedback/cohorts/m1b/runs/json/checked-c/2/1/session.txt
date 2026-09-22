@@ -1,0 +1,7 @@
+Fixed. The bug was in `project/main.my`: `main` treated the `Result[int, str]` returned by `decode` as a number (`base + base + 10`), which the compiler rejected with `E_RESULT_CONSUMED`. I changed only `main` to consume the `Result` with a `match` — `Ok(value)` prints `value + value + 10` (preserving the arithmetic evidenced by `public/expected.json`: `41 → 92`) and `Err(_)` prints `0` — leaving `decode` untouched.
+
+Exact commands and results:
+
+- `./bin/mylang check project/main.my` → exit 0, no diagnostics.
+- `./bin/mylang run project/main.my -- 41` → `92` (exit 0); `-- 0` → `10` (exit 0); `-- abc` → `0` (exit 0).
+- Automated comparison against `public/expected.json`: both cases `PASS` (`41 → "92\n"`, `0 → "10\n"`), exit 0.

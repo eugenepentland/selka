@@ -1,0 +1,5519 @@
+{
+  "method": "low-frequency linker wrappers; unchanged per-function guest/runtime objects; system linker control; CPU clock; nested times subtracted; calibration sampled phase then control then original in each round",
+  "summary": {
+    "mylang-o3-phases": {
+      "median_cpu_ms": {
+        "parse": 1.085885,
+        "model": 1.182892,
+        "placement": 10.819047,
+        "routing": 0.168592,
+        "svg_emission": 1.857341,
+        "guest_total": 15.133274
+      },
+      "allocation_collection_step_counts": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1037610,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 53499,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 20384,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1166591,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10846288,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 170305,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12904216,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15193817,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ],
+      "median_wall_calibration_ms": {
+        "phase_ms": 16.486093,
+        "relinked_control_ms": 16.088831,
+        "original_ms": 17.44513
+      }
+    },
+    "mylang-o3-bounded-phases": {
+      "median_cpu_ms": {
+        "parse": 1.453766,
+        "model": 2.12948,
+        "placement": 32.137462,
+        "routing": 0.679355,
+        "svg_emission": 2.584505,
+        "guest_total": 39.007911
+      },
+      "allocation_collection_step_counts": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1355034,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 76861,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 24940,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2132728,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32131119,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 679166,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35375420,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 38980359,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ],
+      "median_wall_calibration_ms": {
+        "phase_ms": 40.347584,
+        "relinked_control_ms": 41.175953,
+        "original_ms": 42.587499
+      }
+    }
+  },
+  "samples": [
+    {
+      "round": 0,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.509739,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1380939,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 86313,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 26857,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2158640,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32208405,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 688997,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35495574,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 39165279,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 0,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.36463,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1001029,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 50857,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 19213,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1182892,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10755200,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 167355,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12766910,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15035564,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.473938,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1334021,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 76842,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 27420,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2125531,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32174906,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 676762,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35493864,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 39074656,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.491131,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1067553,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 51175,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 18831,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1202875,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10785271,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 168625,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12833370,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15187163,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.237417,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1332454,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 93947,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 24878,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2102668,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32076860,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 675473,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35334537,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 38904990,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.897853,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1093128,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 58162,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 21877,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1232575,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10909319,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 169494,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12926136,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15360403,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.404486,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1000989,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 51547,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 19147,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1187766,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10797052,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 166758,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12810055,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15080567,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 41.934542,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1373868,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 82104,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 26402,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2258004,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 33540108,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 695395,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 36846099,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 40604246,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.646938,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1007164,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 50882,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 19250,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1183495,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10848967,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 197668,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12903956,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15178498,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.731269,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1348750,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 76758,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 25038,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2095791,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32403717,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 698369,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35696723,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 39262539,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.247762,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1365170,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 82377,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 26618,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2103991,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32081213,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 673419,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35332338,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 38951971,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.405399,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1047235,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 50316,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 18927,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1150720,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10924406,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 169237,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12961872,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15244694,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.215917,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1346290,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 76281,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 25076,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2121662,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32045862,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 683239,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35300236,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 38886427,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.320714,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 999435,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 51596,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 18986,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1168461,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10828789,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 168592,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12839635,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15089536,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.589668,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1336045,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 77650,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 24802,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2089054,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32351123,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 729767,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35677723,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 39220173,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.49855,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 999512,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 54180,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 19070,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1204482,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10833147,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 167097,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12844012,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15133274,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.265066,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1332180,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 79407,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 24897,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2121918,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32097983,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 676550,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35368189,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 38941693,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.37193,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1028544,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 54451,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 18996,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1146520,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10792272,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 192658,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12807074,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15067960,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.210212,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1320980,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 77164,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 24723,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2109153,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32190082,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 680117,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35466380,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 39014346,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.486093,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1062921,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 52962,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 18883,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1170498,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10751918,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 168159,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12818862,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15136421,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.453169,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1009494,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 50542,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 18998,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1174939,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10819047,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 177804,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12860825,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15126778,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.574764,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1335906,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 80561,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 26275,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2122997,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32363484,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 676495,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35618953,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 39204417,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.347584,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1323609,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 78777,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 25000,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2115214,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32119686,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 676022,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35373755,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 38932480,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.550693,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1011478,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 51552,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 20372,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1197643,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10792934,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 168261,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12800566,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15094707,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.368614,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1008633,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 50338,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 18645,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1167146,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10788966,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 169969,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12776172,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15032253,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.06833,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1341686,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 77924,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 25260,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2104531,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 31995041,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 675308,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35247117,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 38812550,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.434556,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1003983,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 54517,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 20082,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1180140,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10761217,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 173524,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12783424,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15062549,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.248054,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1330874,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 76531,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 24992,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2090966,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32120368,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 673189,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35388838,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 38928171,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.508764,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 995476,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 50657,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 19446,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1171352,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10843012,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 167148,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12837320,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15085680,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.294423,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1338298,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 76712,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 24716,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2139727,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32086689,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 679368,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35348396,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 38944231,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.301662,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1332605,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 107839,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 26740,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2137760,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32115411,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 672826,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35386603,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 39006492,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 17.685607,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1082612,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 60095,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 22109,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1271874,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 11713886,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 174485,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 13733257,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 16185011,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.621486,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1062763,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 56479,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 20234,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1217054,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10883923,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 167590,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12910121,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15278524,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.513916,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1360456,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 76541,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 24772,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2138897,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32234602,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 690675,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35537678,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 39158608,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.63121,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1042985,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 52354,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 21513,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1203080,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10911493,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 167878,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12938300,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15270175,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.405064,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1324724,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 84670,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 25322,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2179197,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32131972,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 680519,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35396132,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 39027720,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 18,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.559266,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1347427,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 76890,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 24705,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2169646,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32047637,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 672112,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35346576,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 38980436,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 18,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.396255,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1016187,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 51412,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 18951,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1187997,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10785740,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 178078,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12789087,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15076967,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.095503,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1343613,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 76633,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 25029,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2087047,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32137462,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 673892,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35385718,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 38933239,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.342353,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1000963,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 50372,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 18992,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1173908,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10810623,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 168274,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12845726,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15101366,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.308018,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1351762,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 76677,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 25327,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2089980,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32160388,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 683915,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35420728,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 38981891,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.548964,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1050220,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 55658,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 20080,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1194038,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10799237,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 167425,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12808885,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15142065,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 21,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.325392,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1007945,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 51252,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 18927,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1168418,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10760816,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 166223,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12784380,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15041739,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 21,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.341898,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1329320,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 102213,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 24898,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2164538,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32159851,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 686049,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35464184,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 39101051,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 22,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.406154,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1030036,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 55297,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 19089,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1143802,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10792771,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 171803,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12828214,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15088905,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 22,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.466757,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1371067,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 77228,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 25307,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2143493,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32137589,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 675850,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35373653,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 39007911,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 23,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.624234,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1010034,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 52389,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 19059,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1144518,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10863694,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 167879,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12896382,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15155172,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 23,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.289849,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1350532,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 80406,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 25015,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2144383,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32075527,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 672122,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35322051,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 38938061,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 24,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.674239,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1378750,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 76919,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 25442,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2162984,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32230286,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 685336,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35499427,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 39158424,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 24,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.360192,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1016241,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 50908,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 18736,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1184428,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10804654,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 168484,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12848947,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15132774,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 25,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.368055,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1353960,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 78946,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 24852,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2123628,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32160118,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 684081,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35449729,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 39046516,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 25,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.826459,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1068342,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 53336,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 21572,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1213059,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10848037,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 178098,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12893678,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15264853,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 26,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.300229,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1352200,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 80777,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 26387,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2129480,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32129342,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 679355,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35393202,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 38998999,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 26,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.460816,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1063037,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 51643,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 19014,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1183640,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10857251,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 167702,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12907510,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15236368,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 27,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.439576,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 998851,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 56625,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 20639,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1185229,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10818898,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 165817,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12847471,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15120279,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 27,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.844549,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1383043,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 79865,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 26796,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2160384,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32455749,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 728518,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35756049,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 39424263,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 28,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.569291,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1025753,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 51017,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 19407,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1144655,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10903709,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 198932,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12947754,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15202332,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 28,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.429801,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1340424,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 85673,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 28621,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2171795,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32181641,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 669600,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35437674,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 39080400,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 29,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.523527,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1356910,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 81437,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 24664,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2162677,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32083713,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 680883,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35374366,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 39017428,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 29,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.591068,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 995057,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 50654,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 19085,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1171552,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10858033,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 168772,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12899343,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15149455,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 30,
+      "arm": "mylang-o3-bounded-phases",
+      "wall_ms": 40.240368,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1355034,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 724934,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 76861,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 47751,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 24940,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 13478,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 2132728,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 2183137,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 32131119,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 52647621,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 679166,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 816620,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 35375420,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 55272943,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 38980359,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 58242305,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    },
+    {
+      "round": 30,
+      "arm": "mylang-o3-phases",
+      "wall_ms": 16.573989,
+      "phases": [
+        {
+          "name": "sexpr::parse",
+          "ns": 1037610,
+          "allocations": 14,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 165264,
+          "objects_live": 14
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 53499,
+          "allocations": 10,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 186720,
+          "objects_live": 24
+        },
+        {
+          "name": "sexpr::parse",
+          "ns": 20384,
+          "allocations": 7,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 189968,
+          "objects_live": 31
+        },
+        {
+          "name": "schematic::build",
+          "ns": 1166591,
+          "allocations": 16,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 228200,
+          "objects_live": 47
+        },
+        {
+          "name": "layout::build",
+          "ns": 10846288,
+          "allocations": 22,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 244392,
+          "objects_live": 69
+        },
+        {
+          "name": "layout_routes::build",
+          "ns": 170305,
+          "allocations": 8,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "svg::render",
+          "ns": 12904216,
+          "allocations": 30,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        },
+        {
+          "name": "main::main",
+          "ns": 15193817,
+          "allocations": 77,
+          "collections": 0,
+          "steps": 0,
+          "heap_bytes": 277744,
+          "objects_live": 77
+        }
+      ]
+    }
+  ],
+  "calibration": [
+    {
+      "round": 0,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.509739,
+      "relinked_control_ms": 41.299373,
+      "original_ms": 42.290187
+    },
+    {
+      "round": 0,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.36463,
+      "relinked_control_ms": 16.051869,
+      "original_ms": 17.457627
+    },
+    {
+      "round": 1,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.473938,
+      "relinked_control_ms": 41.031352,
+      "original_ms": 42.641465
+    },
+    {
+      "round": 1,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.491131,
+      "relinked_control_ms": 16.111533,
+      "original_ms": 17.353748
+    },
+    {
+      "round": 2,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.237417,
+      "relinked_control_ms": 41.018407,
+      "original_ms": 42.359315
+    },
+    {
+      "round": 2,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.897853,
+      "relinked_control_ms": 16.123458,
+      "original_ms": 17.382132
+    },
+    {
+      "round": 3,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.404486,
+      "relinked_control_ms": 15.979743,
+      "original_ms": 17.531521
+    },
+    {
+      "round": 3,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 41.934542,
+      "relinked_control_ms": 41.363289,
+      "original_ms": 43.554399
+    },
+    {
+      "round": 4,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.646938,
+      "relinked_control_ms": 16.0635,
+      "original_ms": 17.465979
+    },
+    {
+      "round": 4,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.731269,
+      "relinked_control_ms": 41.642333,
+      "original_ms": 42.432603
+    },
+    {
+      "round": 5,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.247762,
+      "relinked_control_ms": 41.396202,
+      "original_ms": 42.536976
+    },
+    {
+      "round": 5,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.405399,
+      "relinked_control_ms": 16.085283,
+      "original_ms": 17.44513
+    },
+    {
+      "round": 6,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.215917,
+      "relinked_control_ms": 41.131795,
+      "original_ms": 42.583462
+    },
+    {
+      "round": 6,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.320714,
+      "relinked_control_ms": 15.96532,
+      "original_ms": 17.351955
+    },
+    {
+      "round": 7,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.589668,
+      "relinked_control_ms": 41.147597,
+      "original_ms": 42.329211
+    },
+    {
+      "round": 7,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.49855,
+      "relinked_control_ms": 16.095002,
+      "original_ms": 17.498699
+    },
+    {
+      "round": 8,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.265066,
+      "relinked_control_ms": 40.983355,
+      "original_ms": 42.521315
+    },
+    {
+      "round": 8,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.37193,
+      "relinked_control_ms": 16.005615,
+      "original_ms": 17.461078
+    },
+    {
+      "round": 9,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.210212,
+      "relinked_control_ms": 41.175953,
+      "original_ms": 42.746676
+    },
+    {
+      "round": 9,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.486093,
+      "relinked_control_ms": 16.142404,
+      "original_ms": 17.377871
+    },
+    {
+      "round": 10,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.453169,
+      "relinked_control_ms": 16.022309,
+      "original_ms": 18.007023
+    },
+    {
+      "round": 10,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.574764,
+      "relinked_control_ms": 41.19934,
+      "original_ms": 42.340537
+    },
+    {
+      "round": 11,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.347584,
+      "relinked_control_ms": 41.159817,
+      "original_ms": 42.815642
+    },
+    {
+      "round": 11,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.550693,
+      "relinked_control_ms": 15.994221,
+      "original_ms": 17.537924
+    },
+    {
+      "round": 12,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.368614,
+      "relinked_control_ms": 15.96131,
+      "original_ms": 17.317481
+    },
+    {
+      "round": 12,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.06833,
+      "relinked_control_ms": 41.338909,
+      "original_ms": 42.437877
+    },
+    {
+      "round": 13,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.434556,
+      "relinked_control_ms": 16.065045,
+      "original_ms": 17.35628
+    },
+    {
+      "round": 13,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.248054,
+      "relinked_control_ms": 40.945877,
+      "original_ms": 42.363224
+    },
+    {
+      "round": 14,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.508764,
+      "relinked_control_ms": 16.172974,
+      "original_ms": 17.387564
+    },
+    {
+      "round": 14,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.294423,
+      "relinked_control_ms": 41.091473,
+      "original_ms": 42.704473
+    },
+    {
+      "round": 15,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.301662,
+      "relinked_control_ms": 41.321478,
+      "original_ms": 42.785737
+    },
+    {
+      "round": 15,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 17.685607,
+      "relinked_control_ms": 17.163416,
+      "original_ms": 17.86835
+    },
+    {
+      "round": 16,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.621486,
+      "relinked_control_ms": 16.507387,
+      "original_ms": 17.464661
+    },
+    {
+      "round": 16,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.513916,
+      "relinked_control_ms": 41.313381,
+      "original_ms": 42.633579
+    },
+    {
+      "round": 17,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.63121,
+      "relinked_control_ms": 16.153579,
+      "original_ms": 17.332065
+    },
+    {
+      "round": 17,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.405064,
+      "relinked_control_ms": 41.156269,
+      "original_ms": 42.445794
+    },
+    {
+      "round": 18,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.559266,
+      "relinked_control_ms": 41.113387,
+      "original_ms": 42.503783
+    },
+    {
+      "round": 18,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.396255,
+      "relinked_control_ms": 16.057479,
+      "original_ms": 17.448948
+    },
+    {
+      "round": 19,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.095503,
+      "relinked_control_ms": 41.103423,
+      "original_ms": 42.617287
+    },
+    {
+      "round": 19,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.342353,
+      "relinked_control_ms": 16.339638,
+      "original_ms": 17.463374
+    },
+    {
+      "round": 20,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.308018,
+      "relinked_control_ms": 41.2053,
+      "original_ms": 42.456589
+    },
+    {
+      "round": 20,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.548964,
+      "relinked_control_ms": 16.011208,
+      "original_ms": 17.462484
+    },
+    {
+      "round": 21,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.325392,
+      "relinked_control_ms": 16.026825,
+      "original_ms": 17.42896
+    },
+    {
+      "round": 21,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.341898,
+      "relinked_control_ms": 41.575369,
+      "original_ms": 42.925395
+    },
+    {
+      "round": 22,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.406154,
+      "relinked_control_ms": 16.291665,
+      "original_ms": 17.426168
+    },
+    {
+      "round": 22,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.466757,
+      "relinked_control_ms": 41.131006,
+      "original_ms": 43.000792
+    },
+    {
+      "round": 23,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.624234,
+      "relinked_control_ms": 16.183839,
+      "original_ms": 17.437543
+    },
+    {
+      "round": 23,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.289849,
+      "relinked_control_ms": 41.074129,
+      "original_ms": 42.484454
+    },
+    {
+      "round": 24,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.674239,
+      "relinked_control_ms": 41.630214,
+      "original_ms": 42.579154
+    },
+    {
+      "round": 24,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.360192,
+      "relinked_control_ms": 16.069427,
+      "original_ms": 17.331687
+    },
+    {
+      "round": 25,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.368055,
+      "relinked_control_ms": 41.293441,
+      "original_ms": 42.8704
+    },
+    {
+      "round": 25,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.826459,
+      "relinked_control_ms": 16.167502,
+      "original_ms": 17.454763
+    },
+    {
+      "round": 26,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.300229,
+      "relinked_control_ms": 41.087773,
+      "original_ms": 42.587499
+    },
+    {
+      "round": 26,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.460816,
+      "relinked_control_ms": 16.240894,
+      "original_ms": 17.319682
+    },
+    {
+      "round": 27,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.439576,
+      "relinked_control_ms": 16.067876,
+      "original_ms": 17.650193
+    },
+    {
+      "round": 27,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.844549,
+      "relinked_control_ms": 41.386118,
+      "original_ms": 42.614427
+    },
+    {
+      "round": 28,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.569291,
+      "relinked_control_ms": 16.27161,
+      "original_ms": 17.266591
+    },
+    {
+      "round": 28,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.429801,
+      "relinked_control_ms": 41.430004,
+      "original_ms": 42.673278
+    },
+    {
+      "round": 29,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.523527,
+      "relinked_control_ms": 41.142331,
+      "original_ms": 42.834527
+    },
+    {
+      "round": 29,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.591068,
+      "relinked_control_ms": 16.185751,
+      "original_ms": 17.46874
+    },
+    {
+      "round": 30,
+      "arm": "mylang-o3-bounded-phases",
+      "phase_ms": 40.240368,
+      "relinked_control_ms": 41.217848,
+      "original_ms": 42.863232
+    },
+    {
+      "round": 30,
+      "arm": "mylang-o3-phases",
+      "phase_ms": 16.573989,
+      "relinked_control_ms": 16.088831,
+      "original_ms": 17.380042
+    }
+  ]
+}

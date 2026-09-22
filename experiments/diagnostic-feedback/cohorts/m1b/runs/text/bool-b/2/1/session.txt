@@ -1,0 +1,12 @@
+Fixed `project/main.my`: `exceeds` declared `-> int` but returned the `bool` `a > b` (E_TYPE). It now returns `1` when `a > b` and `0` otherwise via an explicit `if`.
+
+Verification commands and results:
+
+```
+$ bin/mylang check project/main.my && bin/mylang run project/main.my -- 5 2
+1
+$ bin/mylang run project/main.my -- 2 5
+0
+```
+
+Also verified edge cases `5 5 → 0`, `-3 -5 → 1`, `1000000 999999 → 1`, `0 -1 → 1`.

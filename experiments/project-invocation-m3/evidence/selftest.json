@@ -1,0 +1,191 @@
+{
+  "version": "m3-selftest-v1",
+  "captured_utc": "2026-09-20T12:45:40.196250+00:00",
+  "passed": true,
+  "checks": [
+    {
+      "name": "resolution-equivalence",
+      "passed": true,
+      "failures": [],
+      "checks": {
+        "working_directories": [
+          {
+            "cwd": "app",
+            "automatic_exit": 0,
+            "explicit_exit": 0,
+            "agreement": {
+              "identical": true,
+              "fields": {
+                "effective": true,
+                "status": true,
+                "exit": true,
+                "feedback": true
+              }
+            },
+            "effective": {
+              "cache": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/work/selftest/resolution/ws/.m3/cache",
+              "compiler": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/work/selftest/resolution/ws/bin/mylang",
+              "entry": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/work/selftest/resolution/ws/app/main.my",
+              "entry_sha256": "104323835722e433005291e1341e0bb233e2427bb2c52c5581387463910d7a33",
+              "manifest": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/work/selftest/resolution/ws/app/verify.json",
+              "manifest_sha256": "6ecc3e703fc3b80db84c965fea9541252173b813b0e8192310c3a8a74c9b849f"
+            }
+          },
+          {
+            "cwd": "app/tests",
+            "automatic_exit": 0,
+            "explicit_exit": 0,
+            "agreement": {
+              "identical": true,
+              "fields": {
+                "effective": true,
+                "status": true,
+                "exit": true,
+                "feedback": true
+              }
+            },
+            "effective": {
+              "cache": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/work/selftest/resolution/ws/.m3/cache",
+              "compiler": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/work/selftest/resolution/ws/bin/mylang",
+              "entry": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/work/selftest/resolution/ws/app/main.my",
+              "entry_sha256": "104323835722e433005291e1341e0bb233e2427bb2c52c5581387463910d7a33",
+              "manifest": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/work/selftest/resolution/ws/app/verify.json",
+              "manifest_sha256": "6ecc3e703fc3b80db84c965fea9541252173b813b0e8192310c3a8a74c9b849f"
+            }
+          },
+          {
+            "cwd": "app/sexpr",
+            "automatic_exit": 0,
+            "explicit_exit": 0,
+            "agreement": {
+              "identical": true,
+              "fields": {
+                "effective": true,
+                "status": true,
+                "exit": true,
+                "feedback": true
+              }
+            },
+            "effective": {
+              "cache": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/work/selftest/resolution/ws/.m3/cache",
+              "compiler": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/work/selftest/resolution/ws/bin/mylang",
+              "entry": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/work/selftest/resolution/ws/app/main.my",
+              "entry_sha256": "104323835722e433005291e1341e0bb233e2427bb2c52c5581387463910d7a33",
+              "manifest": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/work/selftest/resolution/ws/app/verify.json",
+              "manifest_sha256": "6ecc3e703fc3b80db84c965fea9541252173b813b0e8192310c3a8a74c9b849f"
+            }
+          },
+          {
+            "cwd": ".",
+            "automatic_exit": 0,
+            "explicit_exit": 0,
+            "agreement": {
+              "identical": true,
+              "fields": {
+                "effective": true,
+                "status": true,
+                "exit": true,
+                "feedback": true
+              }
+            },
+            "effective": {
+              "cache": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/work/selftest/resolution/ws/.m3/cache",
+              "compiler": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/work/selftest/resolution/ws/bin/mylang",
+              "entry": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/work/selftest/resolution/ws/app/main.my",
+              "entry_sha256": "104323835722e433005291e1341e0bb233e2427bb2c52c5581387463910d7a33",
+              "manifest": "/home/epentland/ai/canopy/mylang/experiments/project-invocation-m3/work/selftest/resolution/ws/app/verify.json",
+              "manifest_sha256": "6ecc3e703fc3b80db84c965fea9541252173b813b0e8192310c3a8a74c9b849f"
+            }
+          }
+        ],
+        "resolution_events": 9,
+        "distinct_effective": 1,
+        "frozen_application_agreement": {
+          "identical": true,
+          "fields": {
+            "effective": true,
+            "status": true,
+            "exit": true,
+            "feedback": true
+          }
+        },
+        "seeded_public_exit": 1
+      }
+    },
+    {
+      "name": "negative-controls",
+      "passed": true,
+      "failures": [],
+      "observed": {
+        "good": {
+          "manual": {
+            "exit": 0,
+            "status": "passed",
+            "diagnostic": "{}"
+          },
+          "automatic": {
+            "exit": 0,
+            "status": "passed",
+            "diagnostic": "{}"
+          }
+        },
+        "bad-header": {
+          "manual": {
+            "exit": 1,
+            "status": "failed",
+            "diagnostic": "{\"exit\": 1, \"timed_out\": false, \"output_truncated\": false, \"stderr\": \"{\\\"version\\\":\\\"diagnostic-v1\\\",\\\"kind\\\":\\\"diagnostic\\\",\\\"diagnostic\\\":{\\\"code\\\":\\\"E_MODULE_NAME\\\",\\\"severity\\\":\\\"error\\\",\\\"message\\\":\\\"declared module name does not match its requested path\\\",\\\"location\\\":{\\\"path\\\":\\\"main.my\\\",\\\"start\\\":{\\\"line\\\":1,\\\"column\\\":8},\\\"end\\\":{\\\"line\\\":1,\\\"column\\\":21},\\\"bytes\\\":{\\\"start\\\":7,\\\"end\\\":20}},\\\"notes\\\":[],\\\"stack\\\":{\\\"frames\\\":[],\\\"omitted\\\":0}}}\\n\"}"
+          },
+          "automatic": {
+            "exit": 1,
+            "status": "failed",
+            "diagnostic": "{\"exit\": 1, \"timed_out\": false, \"output_truncated\": false, \"stderr\": \"{\\\"version\\\":\\\"diagnostic-v1\\\",\\\"kind\\\":\\\"diagnostic\\\",\\\"diagnostic\\\":{\\\"code\\\":\\\"E_MODULE_NAME\\\",\\\"severity\\\":\\\"error\\\",\\\"message\\\":\\\"declared module name does not match its requested path\\\",\\\"location\\\":{\\\"path\\\":\\\"main.my\\\",\\\"start\\\":{\\\"line\\\":1,\\\"column\\\":8},\\\"end\\\":{\\\"line\\\":1,\\\"column\\\":21},\\\"bytes\\\":{\\\"start\\\":7,\\\"end\\\":20}},\\\"notes\\\":[],\\\"stack\\\":{\\\"frames\\\":[],\\\"omitted\\\":0}}}\\n\"}"
+          }
+        },
+        "missing-import": {
+          "manual": {
+            "exit": 1,
+            "status": "failed",
+            "diagnostic": "{\"exit\": 1, \"timed_out\": false, \"output_truncated\": false, \"stderr\": \"{\\\"version\\\":\\\"diagnostic-v1\\\",\\\"kind\\\":\\\"diagnostic\\\",\\\"diagnostic\\\":{\\\"code\\\":\\\"E_MODULE_READ\\\",\\\"severity\\\":\\\"error\\\",\\\"message\\\":\\\"cannot load absent/module.my: NotFound\\\",\\\"location\\\":{\\\"path\\\":\\\"main.my\\\",\\\"start\\\":{\\\"line\\\":2,\\\"column\\\":8},\\\"end\\\":{\\\"line\\\":2,\\\"column\\\":21},\\\"bytes\\\":{\\\"start\\\":19,\\\"end\\\":32}},\\\"notes\\\":[],\\\"stack\\\":{\\\"frames\\\":[],\\\"omitted\\\":0}}}\\n\"}"
+          },
+          "automatic": {
+            "exit": 1,
+            "status": "failed",
+            "diagnostic": "{\"exit\": 1, \"timed_out\": false, \"output_truncated\": false, \"stderr\": \"{\\\"version\\\":\\\"diagnostic-v1\\\",\\\"kind\\\":\\\"diagnostic\\\",\\\"diagnostic\\\":{\\\"code\\\":\\\"E_MODULE_READ\\\",\\\"severity\\\":\\\"error\\\",\\\"message\\\":\\\"cannot load absent/module.my: NotFound\\\",\\\"location\\\":{\\\"path\\\":\\\"main.my\\\",\\\"start\\\":{\\\"line\\\":2,\\\"column\\\":8},\\\"end\\\":{\\\"line\\\":2,\\\"column\\\":21},\\\"bytes\\\":{\\\"start\\\":19,\\\"end\\\":32}},\\\"notes\\\":[],\\\"stack\\\":{\\\"frames\\\":[],\\\"omitted\\\":0}}}\\n\"}"
+          }
+        }
+      }
+    },
+    {
+      "name": "invocation-counting",
+      "passed": true,
+      "failures": [],
+      "events": 4,
+      "grouped_expectation": 3,
+      "resolution_failures": 1
+    },
+    {
+      "name": "evidence-integrity",
+      "passed": true,
+      "failures": [],
+      "sealed_digest": "b1afd31af4762efb156312a6b653d2a9851fce65c5c4bbf431420d5d9b5183db",
+      "survived_cleanup": true,
+      "stale_receipt_status": "stale"
+    },
+    {
+      "name": "attempt-immutability",
+      "passed": true,
+      "failures": [],
+      "attempts": 0
+    },
+    {
+      "name": "scoring-synthetic",
+      "passed": true,
+      "failures": [],
+      "saving": 0.18181818181818177,
+      "interval": [
+        0.1739,
+        0.1905
+      ]
+    }
+  ]
+}

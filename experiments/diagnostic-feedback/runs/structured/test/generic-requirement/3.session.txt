@@ -1,0 +1,9 @@
+Done.
+
+**What I changed:** In `project/main.my`, `pick` was declared `def pick[T: Sortable](values: list[int], index: int) -> int:`. The requirement `Sortable` isn't a valid generic requirement (`E_GENERIC_REQUIREMENT`), and the type parameter `T` appears nowhere in the signature, so even with a valid requirement it could never be inferred (`E_GENERIC_INFERENCE`). I removed the unused generic clause, leaving `def pick(values: list[int], index: int) -> int:` — the smallest fix; nothing else was touched.
+
+**Command and result:**
+```
+bin/mylang run project/main.my
+```
+→ prints `9` (exactly `9\n`) and exits `0`; `bin/mylang check project/main.my` also exits 0.

@@ -1,0 +1,10 @@
+dsh: reasoning:
+The bug: missing `case Shape.square(side)` branch. Add it returning side*side. Also main uses args[1] and args[0] — presumably args includes program name? Let's check with a run. Note main signature `def main(args: list[str], out: Stream) -> int`. args likely excludes program name... The examples pass "circle 2". Let me just add the square case and test.
+
+Let me make the edit.
+dsh: reasoning:
+All pass. Note: check produced no output (success). Expected outputs match: circle 2 -> 12, square 3 -> 9. Also verified other inputs (square 0 -> 0, circle 5 -> 75).
+
+Compiler invocations used: check (1) + run (4) = 5. Fine.
+
+Done.

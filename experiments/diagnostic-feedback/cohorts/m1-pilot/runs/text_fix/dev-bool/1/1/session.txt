@@ -1,0 +1,7 @@
+**Changed:** `project/main.my` — `above` returned the `bool` expression `a > b` from an `int` function (`E_TYPE: expected int, found bool`). Replaced it with explicit returns: `if a > b: return 1` / `return 0`. Nothing else touched.
+
+**Command run:**
+```
+for a in "5 2" "2 5" "5 5" "-3 -7" "0 1"; do ./bin/mylang run project/main.my -- $a; done
+```
+**Result:** `1`, `0`, `0`, `1`, `0` — matching `public/expected.json` (5 2 → 1, 2 5 → 0) and handling ties, negatives, and zero correctly. `bin/mylang check project/main.my` passes.

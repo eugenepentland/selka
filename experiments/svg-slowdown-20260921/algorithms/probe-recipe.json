@@ -1,0 +1,51 @@
+{
+  "schema": "schematic-part-pin-index-probe-v1",
+  "change": "Use normalized Part.pin1/pin2 for pin 1/2 lookup, retaining original scan fallback and all topology/tie loops.",
+  "build_argv": [
+    "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/algorithms/guest/main.my",
+    "--project",
+    "--provider",
+    "/home/epentland/ai/canopy/mylang/src/schematic/native_schematic.c",
+    "--backend",
+    "llvm",
+    "--llvm-opt",
+    "3",
+    "--keep-symbols",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/algorithms/cache",
+    "--report",
+    "-o",
+    "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/algorithms/mylang-o3-part-pin"
+  ],
+  "binary_sha256": "7081e74084e3696ebe653b8cb6036e2bd1e8af1d0b0dfe95678e872fae2db1e0",
+  "source_snapshot": "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/algorithms/guest",
+  "diff": "part-pin-index.diff",
+  "qualification": "probe-qualification.json",
+  "bounded": {
+    "build_argv": [
+      "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/algorithms/guest/main.my",
+      "--project",
+      "--provider",
+      "/home/epentland/ai/canopy/mylang/src/schematic/native_schematic.c",
+      "--backend",
+      "llvm",
+      "--llvm-opt",
+      "3",
+      "--step-accounting",
+      "--keep-symbols",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/algorithms/cache-bounded",
+      "--report",
+      "-o",
+      "/home/epentland/ai/canopy/mylang/.tmp/svg-slowdown-20260921/algorithms/mylang-o3-part-pin-bounded"
+    ],
+    "binary_sha256": "6477cea8ec2536c3665380744b155b4ba5e6d0d89687223b1b2b5176fac4c243",
+    "qualification": "probe-bounded-qualification.json",
+    "build_report": "build-bounded.json",
+    "build_stderr": "build-bounded.stderr"
+  }
+}

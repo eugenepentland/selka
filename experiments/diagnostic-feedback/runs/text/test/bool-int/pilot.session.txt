@@ -1,0 +1,19 @@
+**What I changed** — `project/main.my`: the `above` function is declared `-> int` but returned the boolean `a > b`, which the checker rejected with `E_TYPE: expected int, found bool` (and a `bool` would print `True`, not `1`). I kept the declared `int` signature and made the comparison produce an integer:
+
+```python
+def above(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+Nothing else was touched (temporary probe files were removed).
+
+**Command and result** — `bin/mylang run project/main.my`:
+
+```
+1
+exit: 0
+```
+
+`bin/mylang check project/main.my` also exits 0.

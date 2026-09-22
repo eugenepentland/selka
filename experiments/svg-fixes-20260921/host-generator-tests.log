@@ -1,0 +1,5 @@
+1/4 qbe_build_host.test.host metadata rejects missing and duplicate canonical identities...OK
+2/4 qbe_build_host.test.empty host metadata embeds preflight and produces valid sentinel tables...OK
+3/4 qbe_build_host.test.native host generator preserves the checked copied-value bridge snapshot...OK
+4/4 qbe_build_value.test.manifest defaults and C byte escaping...OK
+All 4 tests passed.

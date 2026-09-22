@@ -1,0 +1,8 @@
+{
+  "version": "m3-project-description-v1",
+  "name": "sexpr-port",
+  "entry": "main.my",
+  "manifest": "verify.json",
+  "host": null,
+  "note": "The mylang port of the EDA S-expression reader: `sexpr/` holds the tokenizer, parser, printer and AST, `tests/` holds the guest suite and `main.my` is the CLI."
+}

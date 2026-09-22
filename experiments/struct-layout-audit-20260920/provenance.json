@@ -1,0 +1,79 @@
+{
+  "date": "2026-09-20",
+  "head": "4919ea9f0b58528eb60aed60b91376aeb4ca3c15",
+  "compiler_frozen_path": ".tmp/struct-layout-audit-20260920/mylang",
+  "compiler_sha256": "3c6cfb568da2175499d332b246058d4c744a371f27dc3ebccc022041d01fb706",
+  "qbe_sha256": "808cce427c310c4ecdcdae6360fade2f5579548f5af3852b1c94e77b22960c5d",
+  "zig": "0.17.0-dev.1683+5ceec001b",
+  "scope": "Live dirty source inspection; executable probes use a frozen installed compiler. No assertion that installed binary exactly matches the concurrent working tree.",
+  "source_hashes_after_inspection": {
+    "src/native_types.zig": "9a26c1f7826856bedac145e59c7281770733b14032fa4ba7baeeae8b4a87c55a",
+    "src/native_descriptors.zig": "5a1f9e4e472fb6af16b3d0e1f64480e8e0c0068bd089cd9d1d20817dde5d04cb",
+    "src/qbe.zig": "7fc0cb45b32b68cfdc72acb63f4ed7823ae218ceef9357733f6d7e8c4d282bab",
+    "src/qbe_aggregate.zig": "21aa32f671f4cc936a310cf3457a7ee724c759a7e13d4feb0232c61d3d4aa225",
+    "src/qbe_managed.zig": "d3b48f1a4fdddf27aea292f6d947907a7027bca90dfd9a2c0881aeb9791b5cf0",
+    "src/native_render.zig": "09681a138e11127b77c05b9a68a7ee644787eb41c0116079c0f36af53f52d18f",
+    "src/qbe_wire.zig": "0bd9346787841ab22577d81d88bf96015218c2ff4a234c2f62b13e5b3fd6b6ae",
+    "src/native_test_facts.zig": "21b4b706db952dbc07e08cffe260670acd5b8c2bfa9f42dafdf9c768ea675e63",
+    "src/native_test_dependencies.zig": "69a8a592c94ac359165fc6b7d69a9d0c2e4ffeb86a09ee93c3074eb74bfb2111",
+    "src/bytecode_model.zig": "755821664a69ee23e9af09446806f25619a9b06b3bed4437b2bf92fe8ab3fe04",
+    "src/bytecode_inline.zig": "c9250b052de0ece8345095b230d77a34c35b4baa8d86f5e05e977c1426570e9a",
+    "src/c_abi.zig": "659d9f7bdcb2d0fe7409319f6761993204b3ca921d65b3fab043ddd9123d2681",
+    "src/native_heap.c": "9819dc103b69c656b3fe0d63a84cf9c8010fc68bb1610192f3ba0289fd6f6d97",
+    "src/native_heap.h": "32ede66aa45e74c51006715d1114f439f6a622159dd00a4d2fbb94315ec28d34",
+    "src/native_collections.c": "aba5262ad38a30c3bb4ba110756834b25f45af10ad5b03832b7e4d9c11db0612",
+    "src/native_equal.c": "4e420d6e4810467ec97cd4042a03fb2a73b8064d56b9a34409e1730b30aeb907",
+    "SPEC.md": "bc7df321b3902442c98b4541c42fcfa0390cd2baa37ac60d2d29aa2cd5f131f6",
+    "src/schematic/guest/circuit.my": "a65904e502a6124b44afebb29aa7790d401763d648bf55f7b47d93c2fc09d347",
+    "src/schematic/guest/draw.my": "cc93575469d5869d5d010f5375b792f880d7b59e9c1fde0ab7f8bdb9c27aff39",
+    "src/schematic/guest/io.my": "b30320cff9c1b8e2af86b0027a7c9c4d8ceaa6cea75840a3882b80b99dcd0c8b",
+    "src/schematic/guest/layout.my": "1bfa68822a6cda93560cad3c4b1e1baddc00097e524442a7c7ccaaa0e093264d",
+    "src/schematic/guest/layout_graph.my": "ea27612d4b7711af91670e2f1b60947b529af26a203adeb8d76fe0fb887dc0b6",
+    "src/schematic/guest/layout_routes.my": "455f07a7eda921a14357384d8b0baa2c9dc7a0d4938418569e83602b65008837",
+    "src/schematic/guest/main.my": "2ce7ad379f1affa24a3350bf6926a261c686be830272e853f0cb51fc65ad68f5",
+    "src/schematic/guest/ports.my": "33af913725014537942feb1fd6f533328aed02a04ddd39a03c9fc33526d6e74a",
+    "src/schematic/guest/schematic.my": "673b41cf0c239d2ee4ab98c110d5187fa43036d4bdcbe0524c8c76cd47c6c979",
+    "src/schematic/guest/schematic_inputs.my": "1ee50b10f9ca81dbc9733bacecba7c92e94bbc00e4c0ea9b4a8f68c38eb378b0",
+    "src/schematic/guest/sexpr.my": "12ce2fe2008edceea05ec7e7d466eae32ff0545059c4fb7770edd530117958f6",
+    "src/schematic/guest/svg.my": "0d5f63bad11a284c6d42288854ad5af83aaf579978cfc878310c4465af558937",
+    "src/schematic/guest/text.my": "94588bbf7e8230c35b427e2617f2f2bb2c6f7d076412957016565ce31ba4076a",
+    "src/schematic/guest/validate.my": "b611d8ce0ba381fbe781a8f6ce99723b79f39d50fb346bfb02a62897c34701cb"
+  },
+  "tokenizer_snapshot_hashes": {
+    "sexpr/ast.my": "b40f6c81741ada790b5db029f445a44057feebfc2234a19ea763d88f1a77253d",
+    "sexpr/parser.my": "27e93c9063d0e79a5b799baa8958340e49f27a43b5104e8efd467d7dc6c0badc",
+    "sexpr/printer.my": "7fe4512872a5319b6b7ba4ad961ca866fc6eb23e5137b94a772dc3a2a0dbc742",
+    "sexpr/tokenizer.my": "7215da3c560e50e90f118c631a303c9a6d6966b66e7cc81ec9a96418f5f63112",
+    "sexpr/view.my": "fb9a0aa01b1273f7e698a837d57f6ae38b02de5f09eac896251914f5dfce0018"
+  },
+  "commands": [
+    [
+      "mylang",
+      "emit-qbe",
+      "experiments/struct-layout-audit-20260920/probe.my",
+      "--drop-debug",
+      "--drop-step-checks",
+      "--drop-frame-checks"
+    ],
+    [
+      "mylang",
+      "emit-project-qbe",
+      ".tmp/struct-layout-audit-20260920/tokenizer/main.my"
+    ],
+    [
+      "mylang",
+      "emit-project-qbe",
+      "src/schematic/guest/main.my"
+    ]
+  ],
+  "failed_full_parser_emission": "@stdlib/byte_builder.my:11:13: error[E_UNKNOWN_SYMBOL]: declaration is not present in the resolved module\n      buffer: byte_buffer\n              ^\n",
+  "guardian_exercised": false,
+  "notes": [
+    "No compiler rebuild or Guardian gate was run. Guest native compilation does not run Guardian.",
+    "Tokenizer/AST sources were copied before emission. Schematic was emitted from live source; its source hashes were recorded after emission.",
+    "The reordering results are a recursive size model validated against emitted baseline offsets/sizes/strides, not execution of a modified layout algorithm.",
+    "Assembly-only probes disable step/frame checks and debug-only statements; guest execution probes use ordinary run defaults. No timing or speedup is claimed."
+  ],
+  "repeat_probe_emission_sha256": "3154b0d064e68a2b65cafad6b93a7ccd94ac5897a391d879bb197c3a1eec141f",
+  "repeat_probe_emission_identical": true
+}

@@ -1,0 +1,46 @@
+{
+  "binaries": {
+    "zlink-plain": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/schematic-parity-20260921/zlink-plain",
+      "sha256": "848ebdb79bb61460004c632ce54b2c810ea223f3c33007682d67706e258f47c1",
+      "bytes": 2131968
+    },
+    "zlink-both": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/schematic-parity-20260921/zlink-both",
+      "sha256": "7a69d20f7eb734429e47921773251b3c77f733af0a55adcc000b847e49123ec6",
+      "bytes": 2131792
+    },
+    "lto-plain": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/schematic-parity-20260921/lto-plain",
+      "sha256": "8f5c5f73cbb69997f8c3be02b48c485651240ba09a178d51196a984aa1494e51",
+      "bytes": 1227968
+    },
+    "lto-both": {
+      "path": "/home/epentland/ai/canopy/mylang/.tmp/schematic-parity-20260921/lto-both",
+      "sha256": "5bf6ddf4ca1b002486ca06d063c1c375f850f22d3fe2e3c5b1347e629836e71f",
+      "bytes": 1227784
+    }
+  },
+  "runtime_sources": {
+    "qbe_runtime.c": "622ea8beaddbf05c21e0a33fee3cb7e51743a3b8791d850922016037800ce50e",
+    "native_heap.c": "9819dc103b69c656b3fe0d63a84cf9c8010fc68bb1610192f3ba0289fd6f6d97",
+    "native_collections.c": "aba5262ad38a30c3bb4ba110756834b25f45af10ad5b03832b7e4d9c11db0612",
+    "native_text.c": "3771b8ee764523698cc9d4b6894c2f2c1dcfa560d41f64d2a071acdf187ea6e9",
+    "native_dictionary.c": "241c7d8c155d188297fcdd3a43e25df30f6b62be842d8b38ae6bff722dbbf63a",
+    "qbe_stack.c": "a6ec3ac8befc62c32f849c62c36675949b5ffbfd8ddf02f964737f0b3e8494ea",
+    "qbe_providers.c": "2fc662beac5c6c3804788885e5136d4f31f2f3843b8c15a8326a8d15cb1dc049",
+    "qbe_resources.c": "8616e2fe5fe513ae1e0c7dbe1d500e2d9386d06274c838d58581bea4cd2730c8",
+    "native_equal.c": "4e420d6e4810467ec97cd4042a03fb2a73b8064d56b9a34409e1730b30aeb907",
+    "native_bytes.c": "75ce3da1460a27ce346cbdd1a24008ca30f12855cab1be381a6f38f8b0d9b1d6",
+    "qbe_bytes.c": "79ebe82c60a964abb85ae6777039048adafdd99cd30204bb4991275fba35749a",
+    "native_regions.c": "cd826cfba12a653c4bca86a1f7f8a13192bad6fa341a0472ffa7a9cc69b87d36",
+    "qbe_arena.c": "ea5b871a73de2875b4f435bff968adb8aa9affe6385526e24c4575c2619bd69c",
+    "native_print.c": "a2eaa448ef1a9642d78809584e51f2a897ee39adae87b83dc79bc24c436c299a",
+    "qbe_io.c": "0f706db28c146456fb07c08fbcb540974dd4c3569f9acec334e4b7df7bd2c803",
+    "native_scoped.c": "93b71f4e0d28f514916a3729787d94aa99f781519643efa4fcc822b27a7594eb",
+    "qbe_grants.c": "72e3c1894999b22557d38ce1a3dda46fc822990a3556dfde66653291a1d4c637",
+    "qbe_files.c": "afe847dbc25f9b854e42314501922e693d17da81e40e0f1c4a4ba0b68fc90c45",
+    "native_text_methods.c": "4371bc14f7a31eaf72e8dd26a7f44da9de1d28e890aed79ce5af7c7e0a59d4e6"
+  },
+  "scope": "same checked guest IR, C sources and O2 flags; -flto and O3 at link; original native entry object"
+}

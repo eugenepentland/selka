@@ -1,0 +1,639 @@
+{
+  "probe": {
+    "manifest_sha256": "3154b0d064e68a2b65cafad6b93a7ccd94ac5897a391d879bb197c3a1eec141f",
+    "verified_descriptors": 28,
+    "changed_descriptors": 1,
+    "types": [
+      {
+        "name": "Counter (heap body)",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 8,
+        "alignment": 8,
+        "projected_size": 8,
+        "saved": 0
+      },
+      {
+        "name": "Example",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 24,
+        "alignment": 8,
+        "projected_size": 16,
+        "saved": 8
+      },
+      {
+        "name": "Pair",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 16,
+        "alignment": 8,
+        "projected_size": 16,
+        "saved": 0
+      },
+      {
+        "name": "ReorderedExample",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 16,
+        "alignment": 8,
+        "projected_size": 16,
+        "saved": 0
+      }
+    ]
+  },
+  "tokenizer": {
+    "manifest_sha256": "0fd50546c87fedb043b7473c18e78b4d24e9d5d88f73daf0dd1cd069bbc6cf6f",
+    "verified_descriptors": 49,
+    "changed_descriptors": 0,
+    "types": [
+      {
+        "name": "Node.atom",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 48,
+        "alignment": 8,
+        "projected_size": 48,
+        "saved": 0
+      },
+      {
+        "name": "Node.decimal",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 64,
+        "alignment": 8,
+        "projected_size": 64,
+        "saved": 0
+      },
+      {
+        "name": "Node.form",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 32,
+        "alignment": 8,
+        "projected_size": 32,
+        "saved": 0
+      },
+      {
+        "name": "Node.integer",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 32,
+        "alignment": 8,
+        "projected_size": 32,
+        "saved": 0
+      },
+      {
+        "name": "Node.measure",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 32,
+        "alignment": 8,
+        "projected_size": 32,
+        "saved": 0
+      },
+      {
+        "name": "Node.string",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 48,
+        "alignment": 8,
+        "projected_size": 48,
+        "saved": 0
+      },
+      {
+        "name": "Option<List<sexpr.ast::Node>>",
+        "kind": "MYL_NATIVE_VARIANT",
+        "size": 16,
+        "alignment": 8,
+        "projected_size": 16,
+        "saved": 0
+      },
+      {
+        "name": "Option<float>",
+        "kind": "MYL_NATIVE_VARIANT",
+        "size": 16,
+        "alignment": 8,
+        "projected_size": 16,
+        "saved": 0
+      },
+      {
+        "name": "Option<sexpr.view::View>",
+        "kind": "MYL_NATIVE_VARIANT",
+        "size": 32,
+        "alignment": 8,
+        "projected_size": 32,
+        "saved": 0
+      },
+      {
+        "name": "Result<List<sexpr.tokenizer::Token>,sexpr.tokenizer::LexError>",
+        "kind": "MYL_NATIVE_VARIANT",
+        "size": 32,
+        "alignment": 8,
+        "projected_size": 32,
+        "saved": 0
+      },
+      {
+        "name": "Result<sexpr.tokenizer::RawToken,sexpr.tokenizer::LexError>",
+        "kind": "MYL_NATIVE_VARIANT",
+        "size": 72,
+        "alignment": 8,
+        "projected_size": 72,
+        "saved": 0
+      },
+      {
+        "name": "Result<str,str>",
+        "kind": "MYL_NATIVE_VARIANT",
+        "size": 16,
+        "alignment": 8,
+        "projected_size": 16,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_0e19558734a08717a5a91dd63ee49f48a94b1426324b9efa347380badb9c8f4f",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 2,
+        "alignment": 1,
+        "projected_size": 2,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_3e06307ab551c4aabb093114a51d021c9dfa241ea47eb239a33579cb635d1fa8",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 1,
+        "alignment": 1,
+        "projected_size": 1,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_4b365533efec1af60cf35f8eda19dbed8a954217e9a4de5b8aabcad3bff271b3",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 0,
+        "alignment": 1,
+        "projected_size": 0,
+        "saved": 0
+      },
+      {
+        "name": "sexpr.ast::Node",
+        "kind": "MYL_NATIVE_VARIANT",
+        "size": 72,
+        "alignment": 8,
+        "projected_size": 72,
+        "saved": 0
+      },
+      {
+        "name": "sexpr.ast::Span",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 24,
+        "alignment": 8,
+        "projected_size": 24,
+        "saved": 0
+      },
+      {
+        "name": "sexpr.tokenizer::Kind",
+        "kind": "MYL_NATIVE_VARIANT",
+        "size": 4,
+        "alignment": 4,
+        "projected_size": 4,
+        "saved": 0
+      },
+      {
+        "name": "sexpr.tokenizer::LexError",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 24,
+        "alignment": 8,
+        "projected_size": 24,
+        "saved": 0
+      },
+      {
+        "name": "sexpr.tokenizer::Lexer (heap body)",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 32,
+        "alignment": 8,
+        "projected_size": 32,
+        "saved": 0
+      },
+      {
+        "name": "sexpr.tokenizer::RawToken",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 64,
+        "alignment": 8,
+        "projected_size": 64,
+        "saved": 0
+      },
+      {
+        "name": "sexpr.tokenizer::SpanToken",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 40,
+        "alignment": 8,
+        "projected_size": 40,
+        "saved": 0
+      },
+      {
+        "name": "sexpr.tokenizer::Token",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 40,
+        "alignment": 8,
+        "projected_size": 40,
+        "saved": 0
+      },
+      {
+        "name": "sexpr.view::View",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 24,
+        "alignment": 8,
+        "projected_size": 24,
+        "saved": 0
+      }
+    ]
+  },
+  "schematic": {
+    "manifest_sha256": "3f58be4c9914a8970ea2774d7864f68ff3608bb0c78ab365e6c3a62d0ae0a2dc",
+    "verified_descriptors": 81,
+    "changed_descriptors": 0,
+    "types": [
+      {
+        "name": "Result<List<circuit::Part>,i64>",
+        "kind": "MYL_NATIVE_VARIANT",
+        "size": 16,
+        "alignment": 8,
+        "projected_size": 16,
+        "saved": 0
+      },
+      {
+        "name": "Result<List<circuit::Pin>,i64>",
+        "kind": "MYL_NATIVE_VARIANT",
+        "size": 16,
+        "alignment": 8,
+        "projected_size": 16,
+        "saved": 0
+      },
+      {
+        "name": "Result<List<ports::Port>,i64>",
+        "kind": "MYL_NATIVE_VARIANT",
+        "size": 16,
+        "alignment": 8,
+        "projected_size": 16,
+        "saved": 0
+      },
+      {
+        "name": "Result<List<sexpr::Node>,i64>",
+        "kind": "MYL_NATIVE_VARIANT",
+        "size": 16,
+        "alignment": 8,
+        "projected_size": 16,
+        "saved": 0
+      },
+      {
+        "name": "Result<schematic::Schematic,i64>",
+        "kind": "MYL_NATIVE_VARIANT",
+        "size": 48,
+        "alignment": 8,
+        "projected_size": 48,
+        "saved": 0
+      },
+      {
+        "name": "circuit::Part",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 88,
+        "alignment": 8,
+        "projected_size": 88,
+        "saved": 0
+      },
+      {
+        "name": "circuit::Pin",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 48,
+        "alignment": 8,
+        "projected_size": 48,
+        "saved": 0
+      },
+      {
+        "name": "io::Document",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 8,
+        "alignment": 8,
+        "projected_size": 8,
+        "saved": 0
+      },
+      {
+        "name": "io::Inputs",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 24,
+        "alignment": 8,
+        "projected_size": 24,
+        "saved": 0
+      },
+      {
+        "name": "layout::Point",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 16,
+        "alignment": 8,
+        "projected_size": 16,
+        "saved": 0
+      },
+      {
+        "name": "layout_graph::Net",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 48,
+        "alignment": 8,
+        "projected_size": 48,
+        "saved": 0
+      },
+      {
+        "name": "layout_routes::Segment",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 64,
+        "alignment": 8,
+        "projected_size": 64,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_0129f903976b499a2aa65e1a751c24cbe39309ef3e5673e44af4525cbf09f40d",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 6,
+        "alignment": 1,
+        "projected_size": 6,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_03802537e0925d911e4f38a1ff146460fae10ea4a4bf83fd5dbc9b18b8093cce",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 57,
+        "alignment": 1,
+        "projected_size": 57,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_06dbb57424ff8aaf5f65bf80aaa9262b19a1345c99898aea0a173d934cb815de",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 3,
+        "alignment": 1,
+        "projected_size": 3,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_0e19558734a08717a5a91dd63ee49f48a94b1426324b9efa347380badb9c8f4f",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 2,
+        "alignment": 1,
+        "projected_size": 2,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_0fabc69d4d180c5723bdfc451d8a7c1ace4e554ff04f6e0a994782f07bdb7cbb",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 10,
+        "alignment": 1,
+        "projected_size": 10,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_1eb3510fc9c778b3bdadba067f8b319a8a3d2c7b01a55ccf5b832fc87daedb69",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 21,
+        "alignment": 1,
+        "projected_size": 21,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_1fecb17af222998fe62b430cc9fbdf04cbdd2742d83b639eb8b73797454c41df",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 20,
+        "alignment": 1,
+        "projected_size": 20,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_2031689708572f229605f43bde9494611c2952203e1ec565f3737824619e5a96",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 48,
+        "alignment": 8,
+        "projected_size": 48,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_328a3073a4b8908745071a8bb2de8b018067b982ab5697696ea1ec53059879ae",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 5,
+        "alignment": 1,
+        "projected_size": 5,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_39ae167f280b77fabb397b85001525968ac187652917c33aee5b717601fe6612",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 45,
+        "alignment": 1,
+        "projected_size": 45,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_3e06307ab551c4aabb093114a51d021c9dfa241ea47eb239a33579cb635d1fa8",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 1,
+        "alignment": 1,
+        "projected_size": 1,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_40c390026cfaf2268450d3f3e1a27361e406e1f82f77f01e3c2474f3d7487f41",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 31,
+        "alignment": 1,
+        "projected_size": 31,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_540788131f3ab59248219c65b793d2650faa7ec207d5c5ede8f912e33647e92e",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 13,
+        "alignment": 1,
+        "projected_size": 13,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_57a57c2b64ed9de2fb83171b0cbb77b474d2d0fd7972e5a244a5d641d054304e",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 24,
+        "alignment": 1,
+        "projected_size": 24,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_59e743c396960d6b34d41cf5047e2831346278db814eeb52242721a2772cdc79",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 16,
+        "alignment": 8,
+        "projected_size": 16,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_5b61a98a45e53b17902438b5b1a4ad85a5f6ca6e7a44e66059fe80ab573e2026",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 9,
+        "alignment": 1,
+        "projected_size": 9,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_5c3147f9ef225359bb2798724ded69a52d66cc7ee2ed7da86075c036e7b0dd1e",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 15,
+        "alignment": 1,
+        "projected_size": 15,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_635ea63b64bd9ddd3210fe22937a76a47662bafa86561ce16fc1ebfecb803915",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 27,
+        "alignment": 1,
+        "projected_size": 27,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_7a33b165f5881f9603bb5f977e4dcd9592c10d09d7a89fbca7b0c8e2945719b2",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 4,
+        "alignment": 1,
+        "projected_size": 4,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_7d363fb8e83061f93a03db74a09dafb7ba7f7ad391891fe91e51b6f3ab53d6d8",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 14,
+        "alignment": 1,
+        "projected_size": 14,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_82b3c4edd976f1c65f8aaa59f1b060ef2f28cb82c703f71d6387ff1bf44556af",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 26,
+        "alignment": 1,
+        "projected_size": 26,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_bb5f93b5991f66c5c741ff360c6aa4bba274300798b6786ee92e757c22db333c",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 22,
+        "alignment": 1,
+        "projected_size": 22,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_c884c5b2c68ac5a6f951629613e03afca9c25c714ff2691905d9c1e1dd4a2254",
+        "kind": "MYL_NATIVE_VARIANT",
+        "size": 16,
+        "alignment": 8,
+        "projected_size": 16,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_d0bd12fb03c0d0f54075269f7757945048def7201a8edd1afae6a5dca5330d65",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 7,
+        "alignment": 1,
+        "projected_size": 7,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_da65a0b971147630ebae1d4df2d9a216d3ec9f78bf3c82531fc3270f5f26aedb",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 23,
+        "alignment": 1,
+        "projected_size": 23,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_dcf7af69ef044d62b4ba4dfb18a577f9032f47f673fe02e536a3c8946eb9536d",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 68,
+        "alignment": 1,
+        "projected_size": 68,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_ebb9d1ea18b3aecabca5aed274b636376a98ceb719a551ddfb6baa1dbbf2410a",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 83,
+        "alignment": 1,
+        "projected_size": 83,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_f294d5e7e2ad17a743f3902b05c4b5acce0b5f140b1a60bdf0c84e7ace86619f",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 11,
+        "alignment": 1,
+        "projected_size": 11,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_f2baf798e8055acd92189e345c1585de042388a45113577629b557106ed3b8b3",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 12,
+        "alignment": 1,
+        "projected_size": 12,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_f5becfda3259ea70a9f9f86ff0238a7e1be467ca08dcacbbfc304c18b41db97e",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 18,
+        "alignment": 1,
+        "projected_size": 18,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_ff869ca32488d8e53bf2404e471007bd606fe62aa67840d96924ff08e4716f77",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 796,
+        "alignment": 1,
+        "projected_size": 796,
+        "saved": 0
+      },
+      {
+        "name": "myl_t_fff2a16547a9c82e31f0711c298d7094bb8cffcb06c210f1342929a1fbb65649",
+        "kind": "MYL_NATIVE_ARRAY",
+        "size": 8,
+        "alignment": 1,
+        "projected_size": 8,
+        "saved": 0
+      },
+      {
+        "name": "ports::Port",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 72,
+        "alignment": 8,
+        "projected_size": 72,
+        "saved": 0
+      },
+      {
+        "name": "schematic::Schematic",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 40,
+        "alignment": 8,
+        "projected_size": 40,
+        "saved": 0
+      },
+      {
+        "name": "sexpr::Kind",
+        "kind": "MYL_NATIVE_VARIANT",
+        "size": 4,
+        "alignment": 4,
+        "projected_size": 4,
+        "saved": 0
+      },
+      {
+        "name": "sexpr::Node",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 40,
+        "alignment": 8,
+        "projected_size": 40,
+        "saved": 0
+      },
+      {
+        "name": "text::Span",
+        "kind": "MYL_NATIVE_RECORD",
+        "size": 24,
+        "alignment": 8,
+        "projected_size": 24,
+        "saved": 0
+      }
+    ]
+  }
+}

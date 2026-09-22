@@ -1,0 +1,19 @@
+Done.
+
+**What changed:** `project/main.my` — `above` was declared `-> int` but returned the boolean expression `a > b` (`E_TYPE: expected int, found bool`). I replaced that one line with an explicit `if a > b: return 1` / `return 0`, leaving everything else untouched.
+
+```python
+def above(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+**Verification:** `./bin/mylang check project/main.my` exits 0. Both `public/expected.json` cases pass, plus extra checks (`7 7` → `0`, `10 9` → `1`):
+
+```
+$ ./bin/mylang run project/main.my -- 5 2   →  1
+$ ./bin/mylang run project/main.my -- 2 5   →  0
+```
+
+An automated run of both cases against `public/expected.json` reported `args=['5','2'] got='1\n' OK`, `args=['2','5'] got='0\n' OK`, **ALL PASS** (8 of 20 compiler invocations used).

@@ -1,0 +1,9 @@
+Fixed.
+
+**Change:** In `project/main.my`, line 6, the undefined name `reward` was corrected to the parameter `bonus` (`return total + bonus`), so the function returns the running total `10` plus the argument `5`.
+
+**Command run:**
+```
+./bin/mylang run project/main.my
+```
+**Result:** printed `15` and exited 0 (also verified `./bin/mylang check project/main.my` exits 0).

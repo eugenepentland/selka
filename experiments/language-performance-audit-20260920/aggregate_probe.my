@@ -1,0 +1,21 @@
+record Wide:
+    a: int
+    b: int
+    c: int
+    d: int
+    e: int
+    f: int
+    g: int
+    h: int
+
+
+public def first(value: Wide) -> int noalloc:
+    return value.a
+
+
+public def array_first(values: [64]int) -> int noalloc:
+    return values[0]
+
+
+def main() -> int:
+    return first(Wide(a=42, b=0, c=0, d=0, e=0, f=0, g=0, h=0))

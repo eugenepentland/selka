@@ -1,0 +1,16 @@
+dsh: reasoning:
+The bug: `area` has a match with only the circle case (non-exhaustive), and doesn't handle square. Need to add the square case. Also possibly `args[0]` could be out of bounds, but the task says change only what's required. Let's check the checker first.
+
+Let me run the checker to see the error.
+dsh: reasoning:
+The fix is to add the square case to the match. Let me edit.
+dsh: reasoning:
+Both examples pass. Let me also test other inputs to make sure behavior is general — e.g. circle 0, circle 5, square 4, square 0.
+
+Compiler invocations so far: check (1), check+2 runs (2 more) = 3. Plenty left.
+dsh: reasoning:
+All correct: circle r -> 3r², square r -> r². The edit is minimal and only adds the required arm.
+
+Compiler invocations: 1 check + 2 runs + 1 more (the loop just does runs, but it might be one invocation of bin/mylang run 6 times). Total under 20. Done.
+
+Final answer: summary of change and exact commands with results.

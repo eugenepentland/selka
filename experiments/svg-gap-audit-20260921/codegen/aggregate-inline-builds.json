@@ -1,0 +1,3275 @@
+{
+  "compiler_sha256": "fb9b1b7a5ea9f2fff670db0289d5911ab943d95d38244823634ab5edc8a8fcc5",
+  "builds": {
+    "none": {
+      "source_manifest_sha256": "f06fee7362c5b2cb42f080d3ea6366bc6e358d90b8b0c129212663e69ed8e6df",
+      "rewritten_manifest_sha256": "589540fc66b321aeb3c9849d17fa063c277c4d1d035d98fb184310e001579d5d",
+      "binary_sha256": "21b49ad38327e6925d16c1bd9d9229f28e1c78fa1c7aed15d37cc2769b2b6af0",
+      "rewritten_sites": 178,
+      "remaining_list_get_calls": 179,
+      "sites": [
+        {
+          "function": "sexpr::at",
+          "output": 84,
+          "receiver": 83,
+          "index": 85,
+          "length": 86,
+          "scratch": 35,
+          "size": 40
+        },
+        {
+          "function": "sexpr::parse",
+          "output": 605,
+          "receiver": 604,
+          "index": 606,
+          "length": 607,
+          "scratch": 147,
+          "size": 40
+        },
+        {
+          "function": "sexpr::parse",
+          "output": 614,
+          "receiver": 613,
+          "index": 615,
+          "length": 616,
+          "scratch": 150,
+          "size": 40
+        },
+        {
+          "function": "sexpr::parse",
+          "output": 1759,
+          "receiver": 1758,
+          "index": 1760,
+          "length": 1761,
+          "scratch": 502,
+          "size": 40
+        },
+        {
+          "function": "sexpr::parse",
+          "output": 1768,
+          "receiver": 1767,
+          "index": 1769,
+          "length": 1770,
+          "scratch": 505,
+          "size": 40
+        },
+        {
+          "function": "circuit::collectParts",
+          "output": 516,
+          "receiver": 515,
+          "index": 517,
+          "length": 518,
+          "scratch": 160,
+          "size": 104
+        },
+        {
+          "function": "circuit::collectPins",
+          "output": 110,
+          "receiver": 109,
+          "index": 111,
+          "length": 112,
+          "scratch": 28,
+          "size": 104
+        },
+        {
+          "function": "circuit::collectPins",
+          "output": 798,
+          "receiver": 797,
+          "index": 799,
+          "length": 800,
+          "scratch": 227,
+          "size": 112
+        },
+        {
+          "function": "circuit::displayNet",
+          "output": 252,
+          "receiver": 251,
+          "index": 253,
+          "length": 254,
+          "scratch": 144,
+          "size": 112
+        },
+        {
+          "function": "circuit::displayNet",
+          "output": 368,
+          "receiver": 367,
+          "index": 369,
+          "length": 370,
+          "scratch": 187,
+          "size": 104
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 60,
+          "receiver": 59,
+          "index": 61,
+          "length": 62,
+          "scratch": 24,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 260,
+          "receiver": 259,
+          "index": 261,
+          "length": 262,
+          "scratch": 46,
+          "size": 224
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 269,
+          "receiver": 268,
+          "index": 270,
+          "length": 271,
+          "scratch": 49,
+          "size": 672
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 462,
+          "receiver": 461,
+          "index": 463,
+          "length": 464,
+          "scratch": 74,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 650,
+          "receiver": 649,
+          "index": 651,
+          "length": 652,
+          "scratch": 94,
+          "size": 224
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 659,
+          "receiver": 658,
+          "index": 660,
+          "length": 661,
+          "scratch": 97,
+          "size": 448
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 853,
+          "receiver": 852,
+          "index": 854,
+          "length": 855,
+          "scratch": 122,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1041,
+          "receiver": 1040,
+          "index": 1042,
+          "length": 1043,
+          "scratch": 142,
+          "size": 224
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1050,
+          "receiver": 1049,
+          "index": 1051,
+          "length": 1052,
+          "scratch": 145,
+          "size": 448
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1243,
+          "receiver": 1242,
+          "index": 1244,
+          "length": 1245,
+          "scratch": 169,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1286,
+          "receiver": 1285,
+          "index": 1287,
+          "length": 1288,
+          "scratch": 192,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1320,
+          "receiver": 1319,
+          "index": 1321,
+          "length": 1322,
+          "scratch": 207,
+          "size": 208
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1329,
+          "receiver": 1328,
+          "index": 1330,
+          "length": 1331,
+          "scratch": 210,
+          "size": 416
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1522,
+          "receiver": 1521,
+          "index": 1523,
+          "length": 1524,
+          "scratch": 234,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1565,
+          "receiver": 1564,
+          "index": 1566,
+          "length": 1567,
+          "scratch": 257,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1599,
+          "receiver": 1598,
+          "index": 1600,
+          "length": 1601,
+          "scratch": 272,
+          "size": 208
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1608,
+          "receiver": 1607,
+          "index": 1609,
+          "length": 1610,
+          "scratch": 275,
+          "size": 416
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1819,
+          "receiver": 1818,
+          "index": 1820,
+          "length": 1821,
+          "scratch": 313,
+          "size": 496
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1853,
+          "receiver": 1852,
+          "index": 1854,
+          "length": 1855,
+          "scratch": 329,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2040,
+          "receiver": 2039,
+          "index": 2041,
+          "length": 2042,
+          "scratch": 349,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2093,
+          "receiver": 2092,
+          "index": 2094,
+          "length": 2095,
+          "scratch": 381,
+          "size": 224
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2102,
+          "receiver": 2101,
+          "index": 2103,
+          "length": 2104,
+          "scratch": 384,
+          "size": 448
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2340,
+          "receiver": 2339,
+          "index": 2341,
+          "length": 2342,
+          "scratch": 439,
+          "size": 496
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2374,
+          "receiver": 2373,
+          "index": 2375,
+          "length": 2376,
+          "scratch": 455,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2561,
+          "receiver": 2560,
+          "index": 2562,
+          "length": 2563,
+          "scratch": 475,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2616,
+          "receiver": 2615,
+          "index": 2617,
+          "length": 2618,
+          "scratch": 508,
+          "size": 496
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2650,
+          "receiver": 2649,
+          "index": 2651,
+          "length": 2652,
+          "scratch": 524,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2837,
+          "receiver": 2836,
+          "index": 2838,
+          "length": 2839,
+          "scratch": 544,
+          "size": 480
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2905,
+          "receiver": 2904,
+          "index": 2906,
+          "length": 2907,
+          "scratch": 581,
+          "size": 224
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2914,
+          "receiver": 2913,
+          "index": 2915,
+          "length": 2916,
+          "scratch": 584,
+          "size": 448
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 3127,
+          "receiver": 3126,
+          "index": 3128,
+          "length": 3129,
+          "scratch": 622,
+          "size": 1136
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 3169,
+          "receiver": 3168,
+          "index": 3170,
+          "length": 3171,
+          "scratch": 644,
+          "size": 880
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 3210,
+          "receiver": 3209,
+          "index": 3211,
+          "length": 3212,
+          "scratch": 666,
+          "size": 880
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 3254,
+          "receiver": 3253,
+          "index": 3255,
+          "length": 3256,
+          "scratch": 688,
+          "size": 432
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 3295,
+          "receiver": 3294,
+          "index": 3296,
+          "length": 3297,
+          "scratch": 709,
+          "size": 2032
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 3354,
+          "receiver": 3353,
+          "index": 3355,
+          "length": 3356,
+          "scratch": 747,
+          "size": 224
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 3363,
+          "receiver": 3362,
+          "index": 3364,
+          "length": 3365,
+          "scratch": 750,
+          "size": 448
+        },
+        {
+          "function": "validate::model",
+          "output": 115,
+          "receiver": 114,
+          "index": 116,
+          "length": 117,
+          "scratch": 35,
+          "size": 104
+        },
+        {
+          "function": "validate::model",
+          "output": 333,
+          "receiver": 332,
+          "index": 334,
+          "length": 335,
+          "scratch": 98,
+          "size": 112
+        },
+        {
+          "function": "ports::validate",
+          "output": 58,
+          "receiver": 57,
+          "index": 59,
+          "length": 60,
+          "scratch": 23,
+          "size": 72
+        },
+        {
+          "function": "ports::validate",
+          "output": 99,
+          "receiver": 98,
+          "index": 100,
+          "length": 101,
+          "scratch": 47,
+          "size": 72
+        },
+        {
+          "function": "ports::validate",
+          "output": 241,
+          "receiver": 240,
+          "index": 242,
+          "length": 243,
+          "scratch": 92,
+          "size": 112
+        },
+        {
+          "function": "svg::displayRef",
+          "output": 44,
+          "receiver": 43,
+          "index": 45,
+          "length": 46,
+          "scratch": 14,
+          "size": 104
+        },
+        {
+          "function": "svg::displayRef",
+          "output": 85,
+          "receiver": 84,
+          "index": 86,
+          "length": 87,
+          "scratch": 38,
+          "size": 104
+        },
+        {
+          "function": "svg::passive",
+          "output": 44,
+          "receiver": 43,
+          "index": 45,
+          "length": 46,
+          "scratch": 14,
+          "size": 104
+        },
+        {
+          "function": "svg::passive",
+          "output": 97,
+          "receiver": 96,
+          "index": 98,
+          "length": 99,
+          "scratch": 45,
+          "size": 112
+        },
+        {
+          "function": "svg::passive",
+          "output": 145,
+          "receiver": 144,
+          "index": 146,
+          "length": 147,
+          "scratch": 71,
+          "size": 16
+        },
+        {
+          "function": "svg::passive",
+          "output": 178,
+          "receiver": 177,
+          "index": 179,
+          "length": 180,
+          "scratch": 88,
+          "size": 16
+        },
+        {
+          "function": "svg::passive",
+          "output": 1503,
+          "receiver": 1502,
+          "index": 1504,
+          "length": 1505,
+          "scratch": 396,
+          "size": 112
+        },
+        {
+          "function": "svg::passive",
+          "output": 1547,
+          "receiver": 1546,
+          "index": 1548,
+          "length": 1549,
+          "scratch": 421,
+          "size": 112
+        },
+        {
+          "function": "svg::chip",
+          "output": 45,
+          "receiver": 44,
+          "index": 46,
+          "length": 47,
+          "scratch": 15,
+          "size": 104
+        },
+        {
+          "function": "svg::chip",
+          "output": 343,
+          "receiver": 342,
+          "index": 344,
+          "length": 345,
+          "scratch": 59,
+          "size": 104
+        },
+        {
+          "function": "svg::chip",
+          "output": 485,
+          "receiver": 484,
+          "index": 486,
+          "length": 487,
+          "scratch": 89,
+          "size": 112
+        },
+        {
+          "function": "svg::chip",
+          "output": 526,
+          "receiver": 525,
+          "index": 527,
+          "length": 528,
+          "scratch": 110,
+          "size": 16
+        },
+        {
+          "function": "svg::chip",
+          "output": 562,
+          "receiver": 561,
+          "index": 563,
+          "length": 564,
+          "scratch": 130,
+          "size": 112
+        },
+        {
+          "function": "svg::ports",
+          "output": 58,
+          "receiver": 57,
+          "index": 59,
+          "length": 60,
+          "scratch": 23,
+          "size": 72
+        },
+        {
+          "function": "svg::routes",
+          "output": 58,
+          "receiver": 57,
+          "index": 59,
+          "length": 60,
+          "scratch": 23,
+          "size": 64
+        },
+        {
+          "function": "svg::render",
+          "output": 773,
+          "receiver": 772,
+          "index": 774,
+          "length": 775,
+          "scratch": 982,
+          "size": 448
+        },
+        {
+          "function": "layout::pinGroup",
+          "output": 63,
+          "receiver": 62,
+          "index": 64,
+          "length": 65,
+          "scratch": 25,
+          "size": 56
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 3668,
+          "receiver": 3667,
+          "index": 3669,
+          "length": 3670,
+          "scratch": 112,
+          "size": 688
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 3703,
+          "receiver": 3702,
+          "index": 3704,
+          "length": 3705,
+          "scratch": 129,
+          "size": 5696
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 5358,
+          "receiver": 5357,
+          "index": 5359,
+          "length": 5360,
+          "scratch": 392,
+          "size": 688
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 5393,
+          "receiver": 5392,
+          "index": 5394,
+          "length": 5395,
+          "scratch": 409,
+          "size": 2784
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 6049,
+          "receiver": 6048,
+          "index": 6050,
+          "length": 6051,
+          "scratch": 520,
+          "size": 688
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 6084,
+          "receiver": 6083,
+          "index": 6085,
+          "length": 6086,
+          "scratch": 537,
+          "size": 1328
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 6131,
+          "receiver": 6130,
+          "index": 6132,
+          "length": 6133,
+          "scratch": 563,
+          "size": 880
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 6175,
+          "receiver": 6174,
+          "index": 6176,
+          "length": 6177,
+          "scratch": 585,
+          "size": 432
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 6216,
+          "receiver": 6215,
+          "index": 6217,
+          "length": 6218,
+          "scratch": 606,
+          "size": 464
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 6255,
+          "receiver": 6254,
+          "index": 6256,
+          "length": 6257,
+          "scratch": 627,
+          "size": 464
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 6296,
+          "receiver": 6295,
+          "index": 6297,
+          "length": 6298,
+          "scratch": 650,
+          "size": 1024
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 6922,
+          "receiver": 6921,
+          "index": 6923,
+          "length": 6924,
+          "scratch": 733,
+          "size": 560
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 7315,
+          "receiver": 7314,
+          "index": 7316,
+          "length": 7317,
+          "scratch": 820,
+          "size": 2016
+        },
+        {
+          "function": "layout::height",
+          "output": 59,
+          "receiver": 58,
+          "index": 60,
+          "length": 61,
+          "scratch": 25,
+          "size": 16
+        },
+        {
+          "function": "layout::height",
+          "output": 103,
+          "receiver": 102,
+          "index": 104,
+          "length": 105,
+          "scratch": 46,
+          "size": 16
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 59,
+          "receiver": 58,
+          "index": 60,
+          "length": 61,
+          "scratch": 25,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 113,
+          "receiver": 112,
+          "index": 114,
+          "length": 115,
+          "scratch": 54,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 245,
+          "receiver": 244,
+          "index": 246,
+          "length": 247,
+          "scratch": 119,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 299,
+          "receiver": 298,
+          "index": 300,
+          "length": 301,
+          "scratch": 148,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 367,
+          "receiver": 366,
+          "index": 368,
+          "length": 369,
+          "scratch": 186,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 406,
+          "receiver": 405,
+          "index": 407,
+          "length": 408,
+          "scratch": 204,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 564,
+          "receiver": 563,
+          "index": 565,
+          "length": 566,
+          "scratch": 269,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 612,
+          "receiver": 611,
+          "index": 613,
+          "length": 614,
+          "scratch": 297,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 658,
+          "receiver": 657,
+          "index": 659,
+          "length": 660,
+          "scratch": 321,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 707,
+          "receiver": 706,
+          "index": 708,
+          "length": 709,
+          "scratch": 346,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 756,
+          "receiver": 755,
+          "index": 757,
+          "length": 758,
+          "scratch": 371,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 823,
+          "receiver": 822,
+          "index": 824,
+          "length": 825,
+          "scratch": 413,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 925,
+          "receiver": 924,
+          "index": 926,
+          "length": 927,
+          "scratch": 473,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 934,
+          "receiver": 933,
+          "index": 935,
+          "length": 936,
+          "scratch": 476,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 1071,
+          "receiver": 1070,
+          "index": 1072,
+          "length": 1073,
+          "scratch": 506,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 1080,
+          "receiver": 1079,
+          "index": 1081,
+          "length": 1082,
+          "scratch": 509,
+          "size": 48
+        },
+        {
+          "function": "layout::nearest",
+          "output": 77,
+          "receiver": 76,
+          "index": 78,
+          "length": 79,
+          "scratch": 33,
+          "size": 56
+        },
+        {
+          "function": "layout::nearest",
+          "output": 132,
+          "receiver": 131,
+          "index": 133,
+          "length": 134,
+          "scratch": 62,
+          "size": 48
+        },
+        {
+          "function": "layout::nearest",
+          "output": 167,
+          "receiver": 166,
+          "index": 168,
+          "length": 169,
+          "scratch": 79,
+          "size": 112
+        },
+        {
+          "function": "layout::partPin",
+          "output": 54,
+          "receiver": 53,
+          "index": 55,
+          "length": 56,
+          "scratch": 21,
+          "size": 104
+        },
+        {
+          "function": "layout::partPin",
+          "output": 95,
+          "receiver": 94,
+          "index": 96,
+          "length": 97,
+          "scratch": 43,
+          "size": 104
+        },
+        {
+          "function": "layout::partPin",
+          "output": 149,
+          "receiver": 148,
+          "index": 150,
+          "length": 151,
+          "scratch": 73,
+          "size": 112
+        },
+        {
+          "function": "layout::partPin",
+          "output": 189,
+          "receiver": 188,
+          "index": 190,
+          "length": 191,
+          "scratch": 94,
+          "size": 112
+        },
+        {
+          "function": "layout::partPin",
+          "output": 229,
+          "receiver": 228,
+          "index": 230,
+          "length": 231,
+          "scratch": 115,
+          "size": 112
+        },
+        {
+          "function": "layout::partPin",
+          "output": 279,
+          "receiver": 278,
+          "index": 280,
+          "length": 281,
+          "scratch": 140,
+          "size": 112
+        },
+        {
+          "function": "layout::depth",
+          "output": 63,
+          "receiver": 62,
+          "index": 64,
+          "length": 65,
+          "scratch": 25,
+          "size": 56
+        },
+        {
+          "function": "layout::groundBranch",
+          "output": 114,
+          "receiver": 113,
+          "index": 115,
+          "length": 116,
+          "scratch": 55,
+          "size": 104
+        },
+        {
+          "function": "layout::branch",
+          "output": 112,
+          "receiver": 111,
+          "index": 113,
+          "length": 114,
+          "scratch": 57,
+          "size": 104
+        },
+        {
+          "function": "layout::branch",
+          "output": 300,
+          "receiver": 299,
+          "index": 301,
+          "length": 302,
+          "scratch": 168,
+          "size": 104
+        },
+        {
+          "function": "layout::endpoint",
+          "output": 166,
+          "receiver": 165,
+          "index": 167,
+          "length": 168,
+          "scratch": 48,
+          "size": 48
+        },
+        {
+          "function": "layout::endpoint",
+          "output": 253,
+          "receiver": 252,
+          "index": 254,
+          "length": 255,
+          "scratch": 97,
+          "size": 48
+        },
+        {
+          "function": "layout::endpoint",
+          "output": 347,
+          "receiver": 346,
+          "index": 348,
+          "length": 349,
+          "scratch": 132,
+          "size": 112
+        },
+        {
+          "function": "layout::endpoint",
+          "output": 395,
+          "receiver": 394,
+          "index": 396,
+          "length": 397,
+          "scratch": 159,
+          "size": 104
+        },
+        {
+          "function": "layout::build",
+          "output": 303,
+          "receiver": 302,
+          "index": 304,
+          "length": 305,
+          "scratch": 42,
+          "size": 112
+        },
+        {
+          "function": "layout::build",
+          "output": 344,
+          "receiver": 343,
+          "index": 345,
+          "length": 346,
+          "scratch": 63,
+          "size": 104
+        },
+        {
+          "function": "layout::build",
+          "output": 397,
+          "receiver": 396,
+          "index": 398,
+          "length": 399,
+          "scratch": 91,
+          "size": 48
+        },
+        {
+          "function": "layout_graph::find",
+          "output": 59,
+          "receiver": 58,
+          "index": 60,
+          "length": 61,
+          "scratch": 24,
+          "size": 56
+        },
+        {
+          "function": "layout_graph::findId",
+          "output": 58,
+          "receiver": 57,
+          "index": 59,
+          "length": 60,
+          "scratch": 23,
+          "size": 56
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 443,
+          "receiver": 442,
+          "index": 444,
+          "length": 445,
+          "scratch": 33,
+          "size": 1152
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 500,
+          "receiver": 499,
+          "index": 501,
+          "length": 502,
+          "scratch": 67,
+          "size": 672
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 783,
+          "receiver": 782,
+          "index": 784,
+          "length": 785,
+          "scratch": 123,
+          "size": 432
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 822,
+          "receiver": 821,
+          "index": 823,
+          "length": 824,
+          "scratch": 142,
+          "size": 432
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 858,
+          "receiver": 857,
+          "index": 859,
+          "length": 860,
+          "scratch": 159,
+          "size": 432
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 904,
+          "receiver": 903,
+          "index": 905,
+          "length": 906,
+          "scratch": 186,
+          "size": 464
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 942,
+          "receiver": 941,
+          "index": 943,
+          "length": 944,
+          "scratch": 206,
+          "size": 464
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 980,
+          "receiver": 979,
+          "index": 981,
+          "length": 982,
+          "scratch": 226,
+          "size": 464
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1019,
+          "receiver": 1018,
+          "index": 1020,
+          "length": 1021,
+          "scratch": 247,
+          "size": 480
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1092,
+          "receiver": 1091,
+          "index": 1093,
+          "length": 1094,
+          "scratch": 289,
+          "size": 352
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1128,
+          "receiver": 1127,
+          "index": 1129,
+          "length": 1130,
+          "scratch": 307,
+          "size": 912
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1176,
+          "receiver": 1175,
+          "index": 1177,
+          "length": 1178,
+          "scratch": 332,
+          "size": 672
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1462,
+          "receiver": 1461,
+          "index": 1463,
+          "length": 1464,
+          "scratch": 400,
+          "size": 352
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1507,
+          "receiver": 1506,
+          "index": 1508,
+          "length": 1509,
+          "scratch": 425,
+          "size": 112
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1516,
+          "receiver": 1515,
+          "index": 1517,
+          "length": 1518,
+          "scratch": 428,
+          "size": 224
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1771,
+          "receiver": 1770,
+          "index": 1772,
+          "length": 1773,
+          "scratch": 471,
+          "size": 1136
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1812,
+          "receiver": 1811,
+          "index": 1813,
+          "length": 1814,
+          "scratch": 492,
+          "size": 448
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1865,
+          "receiver": 1864,
+          "index": 1866,
+          "length": 1867,
+          "scratch": 522,
+          "size": 1024
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1919,
+          "receiver": 1918,
+          "index": 1920,
+          "length": 1921,
+          "scratch": 555,
+          "size": 112
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1928,
+          "receiver": 1927,
+          "index": 1929,
+          "length": 1930,
+          "scratch": 558,
+          "size": 224
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 2160,
+          "receiver": 2159,
+          "index": 2161,
+          "length": 2162,
+          "scratch": 586,
+          "size": 112
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 2169,
+          "receiver": 2168,
+          "index": 2170,
+          "length": 2171,
+          "scratch": 589,
+          "size": 224
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 2434,
+          "receiver": 2433,
+          "index": 2435,
+          "length": 2436,
+          "scratch": 646,
+          "size": 112
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 2469,
+          "receiver": 2468,
+          "index": 2470,
+          "length": 2471,
+          "scratch": 663,
+          "size": 192
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 2504,
+          "receiver": 2503,
+          "index": 2505,
+          "length": 2506,
+          "scratch": 680,
+          "size": 1696
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 2581,
+          "receiver": 2580,
+          "index": 2582,
+          "length": 2583,
+          "scratch": 729,
+          "size": 688
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 2618,
+          "receiver": 2617,
+          "index": 2619,
+          "length": 2620,
+          "scratch": 746,
+          "size": 752
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 2665,
+          "receiver": 2664,
+          "index": 2666,
+          "length": 2667,
+          "scratch": 772,
+          "size": 112
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 2674,
+          "receiver": 2673,
+          "index": 2675,
+          "length": 2676,
+          "scratch": 775,
+          "size": 224
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 2915,
+          "receiver": 2914,
+          "index": 2916,
+          "length": 2917,
+          "scratch": 807,
+          "size": 112
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 2924,
+          "receiver": 2923,
+          "index": 2925,
+          "length": 2926,
+          "scratch": 810,
+          "size": 224
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 3198,
+          "receiver": 3197,
+          "index": 3199,
+          "length": 3200,
+          "scratch": 869,
+          "size": 688
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 3235,
+          "receiver": 3234,
+          "index": 3236,
+          "length": 3237,
+          "scratch": 886,
+          "size": 752
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 3282,
+          "receiver": 3281,
+          "index": 3283,
+          "length": 3284,
+          "scratch": 912,
+          "size": 112
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 3291,
+          "receiver": 3290,
+          "index": 3292,
+          "length": 3293,
+          "scratch": 915,
+          "size": 224
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 3532,
+          "receiver": 3531,
+          "index": 3533,
+          "length": 3534,
+          "scratch": 947,
+          "size": 112
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 3541,
+          "receiver": 3540,
+          "index": 3542,
+          "length": 3543,
+          "scratch": 950,
+          "size": 224
+        },
+        {
+          "function": "layout_routes::external",
+          "output": 71,
+          "receiver": 70,
+          "index": 72,
+          "length": 73,
+          "scratch": 30,
+          "size": 72
+        },
+        {
+          "function": "layout_routes::blocked",
+          "output": 58,
+          "receiver": 57,
+          "index": 59,
+          "length": 60,
+          "scratch": 23,
+          "size": 112
+        },
+        {
+          "function": "layout_routes::blocked",
+          "output": 91,
+          "receiver": 90,
+          "index": 92,
+          "length": 93,
+          "scratch": 39,
+          "size": 16
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 171,
+          "receiver": 170,
+          "index": 172,
+          "length": 173,
+          "scratch": 28,
+          "size": 240
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 204,
+          "receiver": 203,
+          "index": 205,
+          "length": 206,
+          "scratch": 44,
+          "size": 2288
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 261,
+          "receiver": 260,
+          "index": 262,
+          "length": 263,
+          "scratch": 78,
+          "size": 1328
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 319,
+          "receiver": 318,
+          "index": 320,
+          "length": 321,
+          "scratch": 117,
+          "size": 1344
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 389,
+          "receiver": 388,
+          "index": 390,
+          "length": 391,
+          "scratch": 162,
+          "size": 240
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 422,
+          "receiver": 421,
+          "index": 423,
+          "length": 424,
+          "scratch": 178,
+          "size": 496
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 459,
+          "receiver": 458,
+          "index": 460,
+          "length": 461,
+          "scratch": 197,
+          "size": 2224
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 524,
+          "receiver": 523,
+          "index": 525,
+          "length": 526,
+          "scratch": 244,
+          "size": 2560
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 777,
+          "receiver": 776,
+          "index": 778,
+          "length": 779,
+          "scratch": 418,
+          "size": 1584
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 828,
+          "receiver": 827,
+          "index": 829,
+          "length": 830,
+          "scratch": 451,
+          "size": 1328
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 877,
+          "receiver": 876,
+          "index": 878,
+          "length": 879,
+          "scratch": 482,
+          "size": 544
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 1665,
+          "receiver": 1664,
+          "index": 1666,
+          "length": 1667,
+          "scratch": 659,
+          "size": 784
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 1992,
+          "receiver": 1991,
+          "index": 1993,
+          "length": 1994,
+          "scratch": 727,
+          "size": 864
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 2500,
+          "receiver": 2499,
+          "index": 2501,
+          "length": 2502,
+          "scratch": 841,
+          "size": 672
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 2947,
+          "receiver": 2946,
+          "index": 2948,
+          "length": 2949,
+          "scratch": 912,
+          "size": 464
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 2979,
+          "receiver": 2978,
+          "index": 2980,
+          "length": 2981,
+          "scratch": 925,
+          "size": 864
+        }
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/mylang-audit-compiler",
+        "build",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-arenas-20260921/guest-gc/main.my",
+        "--project",
+        "--provider",
+        "src/schematic/native_schematic.c",
+        "--backend",
+        "llvm",
+        "--llvm-adapter",
+        "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py",
+        "--zig",
+        "/home/epentland/.local/bin/zig",
+        "--llvm-opt",
+        "3",
+        "--lto",
+        "--keep-symbols",
+        "--manifest-file=/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/codegen/emitted-none-aggregate-inline.json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/codegen/cache-none-aggregate-inline",
+        "--report",
+        "-o",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/codegen/gc-lto-none-aggregate-inline"
+      ]
+    },
+    "both": {
+      "source_manifest_sha256": "a763db845914ebf806bc516f04653fc2ce96c2627dffd8963fc9f05b733a82f7",
+      "rewritten_manifest_sha256": "8ad96743861ea73413655bab48e5f059edb0ba860b41ff2bbec11642ed4f4560",
+      "binary_sha256": "1159e58ed27d7743dac37eb15af0dca17956f66e3f3b635368cc5ff57d9c1b13",
+      "rewritten_sites": 178,
+      "remaining_list_get_calls": 179,
+      "sites": [
+        {
+          "function": "sexpr::at",
+          "output": 228,
+          "receiver": 227,
+          "index": 229,
+          "length": 230,
+          "scratch": 35,
+          "size": 40
+        },
+        {
+          "function": "sexpr::parse",
+          "output": 1197,
+          "receiver": 1196,
+          "index": 1198,
+          "length": 1199,
+          "scratch": 147,
+          "size": 40
+        },
+        {
+          "function": "sexpr::parse",
+          "output": 1218,
+          "receiver": 1217,
+          "index": 1219,
+          "length": 1220,
+          "scratch": 150,
+          "size": 40
+        },
+        {
+          "function": "sexpr::parse",
+          "output": 3771,
+          "receiver": 3770,
+          "index": 3772,
+          "length": 3773,
+          "scratch": 502,
+          "size": 40
+        },
+        {
+          "function": "sexpr::parse",
+          "output": 3792,
+          "receiver": 3791,
+          "index": 3793,
+          "length": 3794,
+          "scratch": 505,
+          "size": 40
+        },
+        {
+          "function": "circuit::collectParts",
+          "output": 1160,
+          "receiver": 1159,
+          "index": 1161,
+          "length": 1162,
+          "scratch": 160,
+          "size": 104
+        },
+        {
+          "function": "circuit::collectPins",
+          "output": 226,
+          "receiver": 225,
+          "index": 227,
+          "length": 228,
+          "scratch": 28,
+          "size": 104
+        },
+        {
+          "function": "circuit::collectPins",
+          "output": 1710,
+          "receiver": 1709,
+          "index": 1711,
+          "length": 1712,
+          "scratch": 227,
+          "size": 112
+        },
+        {
+          "function": "circuit::displayNet",
+          "output": 832,
+          "receiver": 831,
+          "index": 833,
+          "length": 834,
+          "scratch": 144,
+          "size": 112
+        },
+        {
+          "function": "circuit::displayNet",
+          "output": 1120,
+          "receiver": 1119,
+          "index": 1121,
+          "length": 1122,
+          "scratch": 187,
+          "size": 104
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 160,
+          "receiver": 159,
+          "index": 161,
+          "length": 162,
+          "scratch": 24,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 448,
+          "receiver": 447,
+          "index": 449,
+          "length": 450,
+          "scratch": 46,
+          "size": 224
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 469,
+          "receiver": 468,
+          "index": 470,
+          "length": 471,
+          "scratch": 49,
+          "size": 672
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 762,
+          "receiver": 761,
+          "index": 763,
+          "length": 764,
+          "scratch": 74,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1030,
+          "receiver": 1029,
+          "index": 1031,
+          "length": 1032,
+          "scratch": 94,
+          "size": 224
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1051,
+          "receiver": 1050,
+          "index": 1052,
+          "length": 1053,
+          "scratch": 97,
+          "size": 448
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1345,
+          "receiver": 1344,
+          "index": 1346,
+          "length": 1347,
+          "scratch": 122,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1613,
+          "receiver": 1612,
+          "index": 1614,
+          "length": 1615,
+          "scratch": 142,
+          "size": 224
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1634,
+          "receiver": 1633,
+          "index": 1635,
+          "length": 1636,
+          "scratch": 145,
+          "size": 448
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 1923,
+          "receiver": 1922,
+          "index": 1924,
+          "length": 1925,
+          "scratch": 169,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2058,
+          "receiver": 2057,
+          "index": 2059,
+          "length": 2060,
+          "scratch": 192,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2152,
+          "receiver": 2151,
+          "index": 2153,
+          "length": 2154,
+          "scratch": 207,
+          "size": 208
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2173,
+          "receiver": 2172,
+          "index": 2174,
+          "length": 2175,
+          "scratch": 210,
+          "size": 416
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2462,
+          "receiver": 2461,
+          "index": 2463,
+          "length": 2464,
+          "scratch": 234,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2597,
+          "receiver": 2596,
+          "index": 2598,
+          "length": 2599,
+          "scratch": 257,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2691,
+          "receiver": 2690,
+          "index": 2692,
+          "length": 2693,
+          "scratch": 272,
+          "size": 208
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 2712,
+          "receiver": 2711,
+          "index": 2713,
+          "length": 2714,
+          "scratch": 275,
+          "size": 416
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 3075,
+          "receiver": 3074,
+          "index": 3076,
+          "length": 3077,
+          "scratch": 313,
+          "size": 496
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 3173,
+          "receiver": 3172,
+          "index": 3174,
+          "length": 3175,
+          "scratch": 329,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 3440,
+          "receiver": 3439,
+          "index": 3441,
+          "length": 3442,
+          "scratch": 349,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 3621,
+          "receiver": 3620,
+          "index": 3622,
+          "length": 3623,
+          "scratch": 381,
+          "size": 224
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 3642,
+          "receiver": 3641,
+          "index": 3643,
+          "length": 3644,
+          "scratch": 384,
+          "size": 448
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 4100,
+          "receiver": 4099,
+          "index": 4101,
+          "length": 4102,
+          "scratch": 439,
+          "size": 496
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 4198,
+          "receiver": 4197,
+          "index": 4199,
+          "length": 4200,
+          "scratch": 455,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 4465,
+          "receiver": 4464,
+          "index": 4466,
+          "length": 4467,
+          "scratch": 475,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 4652,
+          "receiver": 4651,
+          "index": 4653,
+          "length": 4654,
+          "scratch": 508,
+          "size": 496
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 4750,
+          "receiver": 4749,
+          "index": 4751,
+          "length": 4752,
+          "scratch": 524,
+          "size": 464
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 5017,
+          "receiver": 5016,
+          "index": 5018,
+          "length": 5019,
+          "scratch": 544,
+          "size": 480
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 5233,
+          "receiver": 5232,
+          "index": 5234,
+          "length": 5235,
+          "scratch": 581,
+          "size": 224
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 5254,
+          "receiver": 5253,
+          "index": 5255,
+          "length": 5256,
+          "scratch": 584,
+          "size": 448
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 5619,
+          "receiver": 5618,
+          "index": 5620,
+          "length": 5621,
+          "scratch": 622,
+          "size": 1136
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 5749,
+          "receiver": 5748,
+          "index": 5750,
+          "length": 5751,
+          "scratch": 644,
+          "size": 880
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 5878,
+          "receiver": 5877,
+          "index": 5879,
+          "length": 5880,
+          "scratch": 666,
+          "size": 880
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 6010,
+          "receiver": 6009,
+          "index": 6011,
+          "length": 6012,
+          "scratch": 688,
+          "size": 432
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 6135,
+          "receiver": 6134,
+          "index": 6136,
+          "length": 6137,
+          "scratch": 709,
+          "size": 2032
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 6346,
+          "receiver": 6345,
+          "index": 6347,
+          "length": 6348,
+          "scratch": 747,
+          "size": 224
+        },
+        {
+          "function": "circuit::normalize",
+          "output": 6367,
+          "receiver": 6366,
+          "index": 6368,
+          "length": 6369,
+          "scratch": 750,
+          "size": 448
+        },
+        {
+          "function": "validate::model",
+          "output": 259,
+          "receiver": 258,
+          "index": 260,
+          "length": 261,
+          "scratch": 35,
+          "size": 104
+        },
+        {
+          "function": "validate::model",
+          "output": 729,
+          "receiver": 728,
+          "index": 730,
+          "length": 731,
+          "scratch": 98,
+          "size": 112
+        },
+        {
+          "function": "ports::validate",
+          "output": 154,
+          "receiver": 153,
+          "index": 155,
+          "length": 156,
+          "scratch": 23,
+          "size": 72
+        },
+        {
+          "function": "ports::validate",
+          "output": 291,
+          "receiver": 290,
+          "index": 292,
+          "length": 293,
+          "scratch": 47,
+          "size": 72
+        },
+        {
+          "function": "ports::validate",
+          "output": 613,
+          "receiver": 612,
+          "index": 614,
+          "length": 615,
+          "scratch": 92,
+          "size": 112
+        },
+        {
+          "function": "svg::displayRef",
+          "output": 104,
+          "receiver": 103,
+          "index": 105,
+          "length": 106,
+          "scratch": 14,
+          "size": 104
+        },
+        {
+          "function": "svg::displayRef",
+          "output": 241,
+          "receiver": 240,
+          "index": 242,
+          "length": 243,
+          "scratch": 38,
+          "size": 104
+        },
+        {
+          "function": "svg::passive",
+          "output": 104,
+          "receiver": 103,
+          "index": 105,
+          "length": 106,
+          "scratch": 14,
+          "size": 104
+        },
+        {
+          "function": "svg::passive",
+          "output": 281,
+          "receiver": 280,
+          "index": 282,
+          "length": 283,
+          "scratch": 45,
+          "size": 112
+        },
+        {
+          "function": "svg::passive",
+          "output": 433,
+          "receiver": 432,
+          "index": 434,
+          "length": 435,
+          "scratch": 71,
+          "size": 16
+        },
+        {
+          "function": "svg::passive",
+          "output": 534,
+          "receiver": 533,
+          "index": 535,
+          "length": 536,
+          "scratch": 88,
+          "size": 16
+        },
+        {
+          "function": "svg::passive",
+          "output": 3091,
+          "receiver": 3090,
+          "index": 3092,
+          "length": 3093,
+          "scratch": 396,
+          "size": 112
+        },
+        {
+          "function": "svg::passive",
+          "output": 3235,
+          "receiver": 3234,
+          "index": 3236,
+          "length": 3237,
+          "scratch": 421,
+          "size": 112
+        },
+        {
+          "function": "svg::chip",
+          "output": 109,
+          "receiver": 108,
+          "index": 110,
+          "length": 111,
+          "scratch": 15,
+          "size": 104
+        },
+        {
+          "function": "svg::chip",
+          "output": 583,
+          "receiver": 582,
+          "index": 584,
+          "length": 585,
+          "scratch": 59,
+          "size": 104
+        },
+        {
+          "function": "svg::chip",
+          "output": 845,
+          "receiver": 844,
+          "index": 846,
+          "length": 847,
+          "scratch": 89,
+          "size": 112
+        },
+        {
+          "function": "svg::chip",
+          "output": 970,
+          "receiver": 969,
+          "index": 971,
+          "length": 972,
+          "scratch": 110,
+          "size": 16
+        },
+        {
+          "function": "svg::chip",
+          "output": 1086,
+          "receiver": 1085,
+          "index": 1087,
+          "length": 1088,
+          "scratch": 130,
+          "size": 112
+        },
+        {
+          "function": "svg::ports",
+          "output": 154,
+          "receiver": 153,
+          "index": 155,
+          "length": 156,
+          "scratch": 23,
+          "size": 72
+        },
+        {
+          "function": "svg::routes",
+          "output": 154,
+          "receiver": 153,
+          "index": 155,
+          "length": 156,
+          "scratch": 23,
+          "size": 64
+        },
+        {
+          "function": "svg::render",
+          "output": 4705,
+          "receiver": 4704,
+          "index": 4706,
+          "length": 4707,
+          "scratch": 982,
+          "size": 448
+        },
+        {
+          "function": "layout::pinGroup",
+          "output": 167,
+          "receiver": 166,
+          "index": 168,
+          "length": 169,
+          "scratch": 25,
+          "size": 56
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 4120,
+          "receiver": 4119,
+          "index": 4121,
+          "length": 4122,
+          "scratch": 112,
+          "size": 688
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 4223,
+          "receiver": 4222,
+          "index": 4224,
+          "length": 4225,
+          "scratch": 129,
+          "size": 5696
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 6930,
+          "receiver": 6929,
+          "index": 6931,
+          "length": 6932,
+          "scratch": 392,
+          "size": 688
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 7033,
+          "receiver": 7032,
+          "index": 7034,
+          "length": 7035,
+          "scratch": 409,
+          "size": 2784
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 8133,
+          "receiver": 8132,
+          "index": 8134,
+          "length": 8135,
+          "scratch": 520,
+          "size": 688
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 8236,
+          "receiver": 8235,
+          "index": 8237,
+          "length": 8238,
+          "scratch": 537,
+          "size": 1328
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 8387,
+          "receiver": 8386,
+          "index": 8388,
+          "length": 8389,
+          "scratch": 563,
+          "size": 880
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 8519,
+          "receiver": 8518,
+          "index": 8520,
+          "length": 8521,
+          "scratch": 585,
+          "size": 432
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 8644,
+          "receiver": 8643,
+          "index": 8645,
+          "length": 8646,
+          "scratch": 606,
+          "size": 464
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 8767,
+          "receiver": 8766,
+          "index": 8768,
+          "length": 8769,
+          "scratch": 627,
+          "size": 464
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 8900,
+          "receiver": 8899,
+          "index": 8901,
+          "length": 8902,
+          "scratch": 650,
+          "size": 1024
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 9858,
+          "receiver": 9857,
+          "index": 9859,
+          "length": 9860,
+          "scratch": 733,
+          "size": 560
+        },
+        {
+          "function": "layout::collectRows",
+          "output": 10599,
+          "receiver": 10598,
+          "index": 10600,
+          "length": 10601,
+          "scratch": 820,
+          "size": 2016
+        },
+        {
+          "function": "layout::height",
+          "output": 163,
+          "receiver": 162,
+          "index": 164,
+          "length": 165,
+          "scratch": 25,
+          "size": 16
+        },
+        {
+          "function": "layout::height",
+          "output": 291,
+          "receiver": 290,
+          "index": 292,
+          "length": 293,
+          "scratch": 46,
+          "size": 16
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 163,
+          "receiver": 162,
+          "index": 164,
+          "length": 165,
+          "scratch": 25,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 333,
+          "receiver": 332,
+          "index": 334,
+          "length": 335,
+          "scratch": 54,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 725,
+          "receiver": 724,
+          "index": 726,
+          "length": 727,
+          "scratch": 119,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 895,
+          "receiver": 894,
+          "index": 896,
+          "length": 897,
+          "scratch": 148,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 1115,
+          "receiver": 1114,
+          "index": 1116,
+          "length": 1117,
+          "scratch": 186,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 1226,
+          "receiver": 1225,
+          "index": 1227,
+          "length": 1228,
+          "scratch": 204,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 1644,
+          "receiver": 1643,
+          "index": 1645,
+          "length": 1646,
+          "scratch": 269,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 1804,
+          "receiver": 1803,
+          "index": 1805,
+          "length": 1806,
+          "scratch": 297,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 1946,
+          "receiver": 1945,
+          "index": 1947,
+          "length": 1948,
+          "scratch": 321,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 2095,
+          "receiver": 2094,
+          "index": 2096,
+          "length": 2097,
+          "scratch": 346,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 2244,
+          "receiver": 2243,
+          "index": 2245,
+          "length": 2246,
+          "scratch": 371,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 2479,
+          "receiver": 2478,
+          "index": 2480,
+          "length": 2481,
+          "scratch": 413,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 2821,
+          "receiver": 2820,
+          "index": 2822,
+          "length": 2823,
+          "scratch": 473,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 2842,
+          "receiver": 2841,
+          "index": 2843,
+          "length": 2844,
+          "scratch": 476,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 3099,
+          "receiver": 3098,
+          "index": 3100,
+          "length": 3101,
+          "scratch": 506,
+          "size": 48
+        },
+        {
+          "function": "layout::placeRows",
+          "output": 3120,
+          "receiver": 3119,
+          "index": 3121,
+          "length": 3122,
+          "scratch": 509,
+          "size": 48
+        },
+        {
+          "function": "layout::nearest",
+          "output": 213,
+          "receiver": 212,
+          "index": 214,
+          "length": 215,
+          "scratch": 33,
+          "size": 56
+        },
+        {
+          "function": "layout::nearest",
+          "output": 384,
+          "receiver": 383,
+          "index": 385,
+          "length": 386,
+          "scratch": 62,
+          "size": 48
+        },
+        {
+          "function": "layout::nearest",
+          "output": 487,
+          "receiver": 486,
+          "index": 488,
+          "length": 489,
+          "scratch": 79,
+          "size": 112
+        },
+        {
+          "function": "layout::partPin",
+          "output": 142,
+          "receiver": 141,
+          "index": 143,
+          "length": 144,
+          "scratch": 21,
+          "size": 104
+        },
+        {
+          "function": "layout::partPin",
+          "output": 271,
+          "receiver": 270,
+          "index": 272,
+          "length": 273,
+          "scratch": 43,
+          "size": 104
+        },
+        {
+          "function": "layout::partPin",
+          "output": 445,
+          "receiver": 444,
+          "index": 446,
+          "length": 447,
+          "scratch": 73,
+          "size": 112
+        },
+        {
+          "function": "layout::partPin",
+          "output": 569,
+          "receiver": 568,
+          "index": 570,
+          "length": 571,
+          "scratch": 94,
+          "size": 112
+        },
+        {
+          "function": "layout::partPin",
+          "output": 693,
+          "receiver": 692,
+          "index": 694,
+          "length": 695,
+          "scratch": 115,
+          "size": 112
+        },
+        {
+          "function": "layout::partPin",
+          "output": 843,
+          "receiver": 842,
+          "index": 844,
+          "length": 845,
+          "scratch": 140,
+          "size": 112
+        },
+        {
+          "function": "layout::depth",
+          "output": 167,
+          "receiver": 166,
+          "index": 168,
+          "length": 169,
+          "scratch": 25,
+          "size": 56
+        },
+        {
+          "function": "layout::groundBranch",
+          "output": 338,
+          "receiver": 337,
+          "index": 339,
+          "length": 340,
+          "scratch": 55,
+          "size": 104
+        },
+        {
+          "function": "layout::branch",
+          "output": 344,
+          "receiver": 343,
+          "index": 345,
+          "length": 346,
+          "scratch": 57,
+          "size": 104
+        },
+        {
+          "function": "layout::branch",
+          "output": 976,
+          "receiver": 975,
+          "index": 977,
+          "length": 978,
+          "scratch": 168,
+          "size": 104
+        },
+        {
+          "function": "layout::endpoint",
+          "output": 362,
+          "receiver": 361,
+          "index": 363,
+          "length": 364,
+          "scratch": 48,
+          "size": 48
+        },
+        {
+          "function": "layout::endpoint",
+          "output": 645,
+          "receiver": 644,
+          "index": 646,
+          "length": 647,
+          "scratch": 97,
+          "size": 48
+        },
+        {
+          "function": "layout::endpoint",
+          "output": 879,
+          "receiver": 878,
+          "index": 880,
+          "length": 881,
+          "scratch": 132,
+          "size": 112
+        },
+        {
+          "function": "layout::endpoint",
+          "output": 1035,
+          "receiver": 1034,
+          "index": 1036,
+          "length": 1037,
+          "scratch": 159,
+          "size": 104
+        },
+        {
+          "function": "layout::build",
+          "output": 475,
+          "receiver": 474,
+          "index": 476,
+          "length": 477,
+          "scratch": 42,
+          "size": 112
+        },
+        {
+          "function": "layout::build",
+          "output": 600,
+          "receiver": 599,
+          "index": 601,
+          "length": 602,
+          "scratch": 63,
+          "size": 104
+        },
+        {
+          "function": "layout::build",
+          "output": 765,
+          "receiver": 764,
+          "index": 766,
+          "length": 767,
+          "scratch": 91,
+          "size": 48
+        },
+        {
+          "function": "layout_graph::find",
+          "output": 159,
+          "receiver": 158,
+          "index": 160,
+          "length": 161,
+          "scratch": 24,
+          "size": 56
+        },
+        {
+          "function": "layout_graph::findId",
+          "output": 154,
+          "receiver": 153,
+          "index": 155,
+          "length": 156,
+          "scratch": 23,
+          "size": 56
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 579,
+          "receiver": 578,
+          "index": 580,
+          "length": 581,
+          "scratch": 33,
+          "size": 1152
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 772,
+          "receiver": 771,
+          "index": 773,
+          "length": 774,
+          "scratch": 67,
+          "size": 672
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1279,
+          "receiver": 1278,
+          "index": 1280,
+          "length": 1281,
+          "scratch": 123,
+          "size": 432
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1394,
+          "receiver": 1393,
+          "index": 1395,
+          "length": 1396,
+          "scratch": 142,
+          "size": 432
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1498,
+          "receiver": 1497,
+          "index": 1499,
+          "length": 1500,
+          "scratch": 159,
+          "size": 432
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1652,
+          "receiver": 1651,
+          "index": 1653,
+          "length": 1654,
+          "scratch": 186,
+          "size": 464
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1770,
+          "receiver": 1769,
+          "index": 1771,
+          "length": 1772,
+          "scratch": 206,
+          "size": 464
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 1888,
+          "receiver": 1887,
+          "index": 1889,
+          "length": 1890,
+          "scratch": 226,
+          "size": 464
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 2011,
+          "receiver": 2010,
+          "index": 2012,
+          "length": 2013,
+          "scratch": 247,
+          "size": 480
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 2252,
+          "receiver": 2251,
+          "index": 2253,
+          "length": 2254,
+          "scratch": 289,
+          "size": 352
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 2360,
+          "receiver": 2359,
+          "index": 2361,
+          "length": 2362,
+          "scratch": 307,
+          "size": 912
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 2508,
+          "receiver": 2507,
+          "index": 2509,
+          "length": 2510,
+          "scratch": 332,
+          "size": 672
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 3066,
+          "receiver": 3065,
+          "index": 3067,
+          "length": 3068,
+          "scratch": 400,
+          "size": 352
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 3211,
+          "receiver": 3210,
+          "index": 3212,
+          "length": 3213,
+          "scratch": 425,
+          "size": 112
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 3232,
+          "receiver": 3231,
+          "index": 3233,
+          "length": 3234,
+          "scratch": 428,
+          "size": 224
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 3659,
+          "receiver": 3658,
+          "index": 3660,
+          "length": 3661,
+          "scratch": 471,
+          "size": 1136
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 3784,
+          "receiver": 3783,
+          "index": 3785,
+          "length": 3786,
+          "scratch": 492,
+          "size": 448
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 3957,
+          "receiver": 3956,
+          "index": 3958,
+          "length": 3959,
+          "scratch": 522,
+          "size": 1024
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 4143,
+          "receiver": 4142,
+          "index": 4144,
+          "length": 4145,
+          "scratch": 555,
+          "size": 112
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 4164,
+          "receiver": 4163,
+          "index": 4165,
+          "length": 4166,
+          "scratch": 558,
+          "size": 224
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 4508,
+          "receiver": 4507,
+          "index": 4509,
+          "length": 4510,
+          "scratch": 586,
+          "size": 112
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 4529,
+          "receiver": 4528,
+          "index": 4530,
+          "length": 4531,
+          "scratch": 589,
+          "size": 224
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 5022,
+          "receiver": 5021,
+          "index": 5023,
+          "length": 5024,
+          "scratch": 646,
+          "size": 112
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 5125,
+          "receiver": 5124,
+          "index": 5126,
+          "length": 5127,
+          "scratch": 663,
+          "size": 192
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 5228,
+          "receiver": 5227,
+          "index": 5229,
+          "length": 5230,
+          "scratch": 680,
+          "size": 1696
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 5501,
+          "receiver": 5500,
+          "index": 5502,
+          "length": 5503,
+          "scratch": 729,
+          "size": 688
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 5606,
+          "receiver": 5605,
+          "index": 5607,
+          "length": 5608,
+          "scratch": 746,
+          "size": 752
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 5757,
+          "receiver": 5756,
+          "index": 5758,
+          "length": 5759,
+          "scratch": 772,
+          "size": 112
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 5778,
+          "receiver": 5777,
+          "index": 5779,
+          "length": 5780,
+          "scratch": 775,
+          "size": 224
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 6147,
+          "receiver": 6146,
+          "index": 6148,
+          "length": 6149,
+          "scratch": 807,
+          "size": 112
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 6168,
+          "receiver": 6167,
+          "index": 6169,
+          "length": 6170,
+          "scratch": 810,
+          "size": 224
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 6678,
+          "receiver": 6677,
+          "index": 6679,
+          "length": 6680,
+          "scratch": 869,
+          "size": 688
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 6783,
+          "receiver": 6782,
+          "index": 6784,
+          "length": 6785,
+          "scratch": 886,
+          "size": 752
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 6934,
+          "receiver": 6933,
+          "index": 6935,
+          "length": 6936,
+          "scratch": 912,
+          "size": 112
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 6955,
+          "receiver": 6954,
+          "index": 6956,
+          "length": 6957,
+          "scratch": 915,
+          "size": 224
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 7324,
+          "receiver": 7323,
+          "index": 7325,
+          "length": 7326,
+          "scratch": 947,
+          "size": 112
+        },
+        {
+          "function": "layout_graph::build",
+          "output": 7345,
+          "receiver": 7344,
+          "index": 7346,
+          "length": 7347,
+          "scratch": 950,
+          "size": 224
+        },
+        {
+          "function": "layout_routes::external",
+          "output": 195,
+          "receiver": 194,
+          "index": 196,
+          "length": 197,
+          "scratch": 30,
+          "size": 72
+        },
+        {
+          "function": "layout_routes::blocked",
+          "output": 154,
+          "receiver": 153,
+          "index": 155,
+          "length": 156,
+          "scratch": 23,
+          "size": 112
+        },
+        {
+          "function": "layout_routes::blocked",
+          "output": 251,
+          "receiver": 250,
+          "index": 252,
+          "length": 253,
+          "scratch": 39,
+          "size": 16
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 287,
+          "receiver": 286,
+          "index": 288,
+          "length": 289,
+          "scratch": 28,
+          "size": 240
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 384,
+          "receiver": 383,
+          "index": 385,
+          "length": 386,
+          "scratch": 44,
+          "size": 2288
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 577,
+          "receiver": 576,
+          "index": 578,
+          "length": 579,
+          "scratch": 78,
+          "size": 1328
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 791,
+          "receiver": 790,
+          "index": 792,
+          "length": 793,
+          "scratch": 117,
+          "size": 1344
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 1041,
+          "receiver": 1040,
+          "index": 1042,
+          "length": 1043,
+          "scratch": 162,
+          "size": 240
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 1138,
+          "receiver": 1137,
+          "index": 1139,
+          "length": 1140,
+          "scratch": 178,
+          "size": 496
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 1251,
+          "receiver": 1250,
+          "index": 1252,
+          "length": 1253,
+          "scratch": 197,
+          "size": 2224
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 1504,
+          "receiver": 1503,
+          "index": 1505,
+          "length": 1506,
+          "scratch": 244,
+          "size": 2560
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 2453,
+          "receiver": 2452,
+          "index": 2454,
+          "length": 2455,
+          "scratch": 418,
+          "size": 1584
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 2636,
+          "receiver": 2635,
+          "index": 2637,
+          "length": 2638,
+          "scratch": 451,
+          "size": 1328
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 2809,
+          "receiver": 2808,
+          "index": 2810,
+          "length": 2811,
+          "scratch": 482,
+          "size": 544
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 4305,
+          "receiver": 4304,
+          "index": 4306,
+          "length": 4307,
+          "scratch": 659,
+          "size": 784
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 4904,
+          "receiver": 4903,
+          "index": 4905,
+          "length": 4906,
+          "scratch": 727,
+          "size": 864
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 5868,
+          "receiver": 5867,
+          "index": 5869,
+          "length": 5870,
+          "scratch": 841,
+          "size": 672
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 6599,
+          "receiver": 6598,
+          "index": 6600,
+          "length": 6601,
+          "scratch": 912,
+          "size": 464
+        },
+        {
+          "function": "layout_routes::build",
+          "output": 6683,
+          "receiver": 6682,
+          "index": 6684,
+          "length": 6685,
+          "scratch": 925,
+          "size": 864
+        }
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/mylang-audit-compiler",
+        "build",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-arenas-20260921/guest-gc/main.my",
+        "--project",
+        "--provider",
+        "src/schematic/native_schematic.c",
+        "--backend",
+        "llvm",
+        "--llvm-adapter",
+        "/home/epentland/ai/canopy/mylang/experiments/llvm-backend/qbe_llvm.py",
+        "--zig",
+        "/home/epentland/.local/bin/zig",
+        "--llvm-opt",
+        "3",
+        "--lto",
+        "--keep-symbols",
+        "--manifest-file=/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/codegen/emitted-both-aggregate-inline.json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/codegen/cache-both-aggregate-inline",
+        "--report",
+        "-o",
+        "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/codegen/gc-lto-both-aggregate-inline"
+      ]
+    }
+  }
+}

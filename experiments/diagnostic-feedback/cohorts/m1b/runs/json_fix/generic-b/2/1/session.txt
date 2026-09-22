@@ -1,0 +1,10 @@
+Done.
+
+**What I changed:** In `project/main.my`, the two functions `biggest` and `biggest_of` declared an unused generic parameter `[T: Sortable]` — `Sortable` is not a requirement this compiler knows (the checker reported `E_GENERIC_REQUIREMENT`). Since both signatures already use the concrete type `list[int]` and `T` appeared nowhere else, I removed the unused type parameter from both declarations (and normalized the blank lines around `main`). No logic changed.
+
+**Exact command and result:**
+- `./bin/mylang check project/main.my` → exit 0, no diagnostics.
+- `./bin/mylang run project/main.my -- 1 3 2` → prints `3`
+- `./bin/mylang run project/main.my -- 5 5 5` → prints `5`
+
+Also verified beyond the public examples: `-5 -1 -3` → `-1`, `10 2 3` → `10`, `7 9 2` → `9` (all exit 0).

@@ -1,0 +1,10 @@
+Done.
+
+**Change:** In `project/main.my`, line 6, the undefined name `reward` was replaced with the function's parameter `bonus` (`return total + bonus`), so `pick(5)` returns `10 + 5 = 15`.
+
+**Command and result:**
+```
+$ ./bin/mylang run project/main.my
+15
+(exit 0)
+```

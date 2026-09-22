@@ -1,0 +1,5 @@
+def minimum(xs: list[str]) -> str noalloc:
+    return min(xs)
+
+def main() -> int:
+    return 0

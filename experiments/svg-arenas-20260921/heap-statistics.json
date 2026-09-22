@@ -1,0 +1,347 @@
+{
+  "memory_limit_bytes": 268435456,
+  "svg": {
+    "gc-o3": {
+      "fixture": {
+        "normal": {
+          "stdout": "0\n",
+          "issue": "",
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "heap": {
+            "total_allocations": 134,
+            "gc_allocations": 134,
+            "collections": 0,
+            "charged_bytes_final": 301000,
+            "peak_charged_bytes": 301000,
+            "objects_live": 134,
+            "arena_scopes": 0,
+            "arena_released": 0,
+            "arena_allocations": 0,
+            "arena_chunks": 0,
+            "arena_chunks_live": 0,
+            "arena_reserved_bytes": 0,
+            "arena_peak_reserved_bytes": 0
+          }
+        },
+        "gc_stress": {
+          "stdout": "0\n",
+          "issue": "",
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "heap": {
+            "total_allocations": 134,
+            "gc_allocations": 134,
+            "collections": 134,
+            "charged_bytes_final": 141088,
+            "peak_charged_bytes": 141088,
+            "objects_live": 17,
+            "arena_scopes": 0,
+            "arena_released": 0,
+            "arena_allocations": 0,
+            "arena_chunks": 0,
+            "arena_chunks_live": 0,
+            "arena_reserved_bytes": 0,
+            "arena_peak_reserved_bytes": 0
+          }
+        }
+      },
+      "changed-net": {
+        "normal": {
+          "stdout": "0\n",
+          "issue": "",
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "heap": {
+            "total_allocations": 134,
+            "gc_allocations": 134,
+            "collections": 0,
+            "charged_bytes_final": 301000,
+            "peak_charged_bytes": 301000,
+            "objects_live": 134,
+            "arena_scopes": 0,
+            "arena_released": 0,
+            "arena_allocations": 0,
+            "arena_chunks": 0,
+            "arena_chunks_live": 0,
+            "arena_reserved_bytes": 0,
+            "arena_peak_reserved_bytes": 0
+          }
+        },
+        "gc_stress": {
+          "stdout": "0\n",
+          "issue": "",
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "heap": {
+            "total_allocations": 134,
+            "gc_allocations": 134,
+            "collections": 134,
+            "charged_bytes_final": 141088,
+            "peak_charged_bytes": 141088,
+            "objects_live": 17,
+            "arena_scopes": 0,
+            "arena_released": 0,
+            "arena_allocations": 0,
+            "arena_chunks": 0,
+            "arena_chunks_live": 0,
+            "arena_reserved_bytes": 0,
+            "arena_peak_reserved_bytes": 0
+          }
+        }
+      },
+      "changed-value": {
+        "normal": {
+          "stdout": "0\n",
+          "issue": "",
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "heap": {
+            "total_allocations": 134,
+            "gc_allocations": 134,
+            "collections": 0,
+            "charged_bytes_final": 301000,
+            "peak_charged_bytes": 301000,
+            "objects_live": 134,
+            "arena_scopes": 0,
+            "arena_released": 0,
+            "arena_allocations": 0,
+            "arena_chunks": 0,
+            "arena_chunks_live": 0,
+            "arena_reserved_bytes": 0,
+            "arena_peak_reserved_bytes": 0
+          }
+        },
+        "gc_stress": {
+          "stdout": "0\n",
+          "issue": "",
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "heap": {
+            "total_allocations": 134,
+            "gc_allocations": 134,
+            "collections": 134,
+            "charged_bytes_final": 141088,
+            "peak_charged_bytes": 141088,
+            "objects_live": 17,
+            "arena_scopes": 0,
+            "arena_released": 0,
+            "arena_allocations": 0,
+            "arena_chunks": 0,
+            "arena_chunks_live": 0,
+            "arena_reserved_bytes": 0,
+            "arena_peak_reserved_bytes": 0
+          }
+        }
+      }
+    },
+    "arena-o3": {
+      "fixture": {
+        "normal": {
+          "stdout": "0\n",
+          "issue": "",
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "heap": {
+            "total_allocations": 134,
+            "gc_allocations": 0,
+            "collections": 0,
+            "charged_bytes_final": 0,
+            "peak_charged_bytes": 458752,
+            "objects_live": 0,
+            "arena_scopes": 1,
+            "arena_released": 134,
+            "arena_allocations": 134,
+            "arena_chunks": 3,
+            "arena_chunks_live": 0,
+            "arena_reserved_bytes": 0,
+            "arena_peak_reserved_bytes": 458752
+          }
+        },
+        "gc_stress": {
+          "stdout": "0\n",
+          "issue": "",
+          "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+          "heap": {
+            "total_allocations": 134,
+            "gc_allocations": 0,
+            "collections": 134,
+            "charged_bytes_final": 0,
+            "peak_charged_bytes": 458752,
+            "objects_live": 0,
+            "arena_scopes": 1,
+            "arena_released": 134,
+            "arena_allocations": 134,
+            "arena_chunks": 3,
+            "arena_chunks_live": 0,
+            "arena_reserved_bytes": 0,
+            "arena_peak_reserved_bytes": 458752
+          }
+        }
+      },
+      "changed-net": {
+        "normal": {
+          "stdout": "0\n",
+          "issue": "",
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "heap": {
+            "total_allocations": 134,
+            "gc_allocations": 0,
+            "collections": 0,
+            "charged_bytes_final": 0,
+            "peak_charged_bytes": 458752,
+            "objects_live": 0,
+            "arena_scopes": 1,
+            "arena_released": 134,
+            "arena_allocations": 134,
+            "arena_chunks": 3,
+            "arena_chunks_live": 0,
+            "arena_reserved_bytes": 0,
+            "arena_peak_reserved_bytes": 458752
+          }
+        },
+        "gc_stress": {
+          "stdout": "0\n",
+          "issue": "",
+          "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+          "heap": {
+            "total_allocations": 134,
+            "gc_allocations": 0,
+            "collections": 134,
+            "charged_bytes_final": 0,
+            "peak_charged_bytes": 458752,
+            "objects_live": 0,
+            "arena_scopes": 1,
+            "arena_released": 134,
+            "arena_allocations": 134,
+            "arena_chunks": 3,
+            "arena_chunks_live": 0,
+            "arena_reserved_bytes": 0,
+            "arena_peak_reserved_bytes": 458752
+          }
+        }
+      },
+      "changed-value": {
+        "normal": {
+          "stdout": "0\n",
+          "issue": "",
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "heap": {
+            "total_allocations": 134,
+            "gc_allocations": 0,
+            "collections": 0,
+            "charged_bytes_final": 0,
+            "peak_charged_bytes": 458752,
+            "objects_live": 0,
+            "arena_scopes": 1,
+            "arena_released": 134,
+            "arena_allocations": 134,
+            "arena_chunks": 3,
+            "arena_chunks_live": 0,
+            "arena_reserved_bytes": 0,
+            "arena_peak_reserved_bytes": 458752
+          }
+        },
+        "gc_stress": {
+          "stdout": "0\n",
+          "issue": "",
+          "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+          "heap": {
+            "total_allocations": 134,
+            "gc_allocations": 0,
+            "collections": 134,
+            "charged_bytes_final": 0,
+            "peak_charged_bytes": 458752,
+            "objects_live": 0,
+            "arena_scopes": 1,
+            "arena_released": 134,
+            "arena_allocations": 134,
+            "arena_chunks": 3,
+            "arena_chunks_live": 0,
+            "arena_reserved_bytes": 0,
+            "arena_peak_reserved_bytes": 458752
+          }
+        }
+      }
+    }
+  },
+  "allocation_workload": {
+    "gc": {
+      "normal": {
+        "stdout": "31064064\n",
+        "issue": "",
+        "svg_sha256": null,
+        "heap": {
+          "total_allocations": 37312,
+          "gc_allocations": 37312,
+          "collections": 3,
+          "charged_bytes_final": 745576,
+          "peak_charged_bytes": 4318528,
+          "objects_live": 2658,
+          "arena_scopes": 0,
+          "arena_released": 0,
+          "arena_allocations": 0,
+          "arena_chunks": 0,
+          "arena_chunks_live": 0,
+          "arena_reserved_bytes": 0,
+          "arena_peak_reserved_bytes": 0
+        }
+      },
+      "gc_stress": {
+        "stdout": "31064064\n",
+        "issue": "",
+        "svg_sha256": null,
+        "heap": {
+          "total_allocations": 37312,
+          "gc_allocations": 37312,
+          "collections": 37312,
+          "charged_bytes_final": 76136,
+          "peak_charged_bytes": 76136,
+          "objects_live": 195,
+          "arena_scopes": 0,
+          "arena_released": 0,
+          "arena_allocations": 0,
+          "arena_chunks": 0,
+          "arena_chunks_live": 0,
+          "arena_reserved_bytes": 0,
+          "arena_peak_reserved_bytes": 0
+        }
+      }
+    },
+    "arena": {
+      "normal": {
+        "stdout": "31064064\n",
+        "issue": "",
+        "svg_sha256": null,
+        "heap": {
+          "total_allocations": 37312,
+          "gc_allocations": 0,
+          "collections": 0,
+          "charged_bytes_final": 0,
+          "peak_charged_bytes": 196608,
+          "objects_live": 0,
+          "arena_scopes": 64,
+          "arena_released": 37312,
+          "arena_allocations": 37312,
+          "arena_chunks": 128,
+          "arena_chunks_live": 0,
+          "arena_reserved_bytes": 0,
+          "arena_peak_reserved_bytes": 196608
+        }
+      },
+      "gc_stress": {
+        "stdout": "31064064\n",
+        "issue": "",
+        "svg_sha256": null,
+        "heap": {
+          "total_allocations": 37312,
+          "gc_allocations": 0,
+          "collections": 37312,
+          "charged_bytes_final": 0,
+          "peak_charged_bytes": 196608,
+          "objects_live": 0,
+          "arena_scopes": 64,
+          "arena_released": 37312,
+          "arena_allocations": 37312,
+          "arena_chunks": 128,
+          "arena_chunks_live": 0,
+          "arena_reserved_bytes": 0,
+          "arena_peak_reserved_bytes": 196608
+        }
+      }
+    }
+  }
+}

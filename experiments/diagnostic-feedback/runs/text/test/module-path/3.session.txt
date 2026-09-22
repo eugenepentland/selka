@@ -1,0 +1,14 @@
+Fixed both issues in `project/`:
+
+- `project/main.my`: the import path `lib.stats` pointed at a non-existent `lib/stats.my`; changed it to `stats` (the module sits next to `main.my`).
+- `project/stats.my`: `total` was module-private; made it `public def total() -> int:` so `main` can call it.
+
+Command run and result:
+
+```
+$ ./bin/mylang run project/main.my
+7
+[run exit: 0]
+```
+
+`bin/mylang check project/main.my` also exits 0.

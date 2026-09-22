@@ -1,0 +1,15 @@
+module bytes_alias_probe
+
+import byte_builder
+
+
+def main(out: Stream) -> int:
+    builder = byte_builder.create()
+    byte_builder.append(builder, b"a")
+    snapshot = byte_builder.finish(builder)
+    alias = snapshot
+    accepted = alias.append_byte(98)
+    literal = b"a"
+    literal_accepted = literal.append_byte(98)
+    out.print(accepted, len(snapshot), snapshot == b"ab", literal_accepted)
+    return 0

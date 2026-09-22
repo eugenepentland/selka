@@ -1,0 +1,11 @@
+Done.
+
+**What I changed:** `project/main.my` — the only error was in `main`, which added `1` directly to the `Result[int, str]` from `parse_count` (E_TYPE). I unwrapped it with a match: `Ok(value)` prints `1 + value`, `Err(_)` prints `-1`. `parse_count` is unchanged.
+
+**Command and result:**
+```
+$ bin/mylang check project/main.my          # exit 0, no diagnostics
+$ bin/mylang run project/main.my -- 41      # 42
+$ bin/mylang run project/main.my -- 0       # 1
+```
+Also verified both `public/expected.json` cases match exactly (stdout and exit 0), plus edge cases: `abc`→-1, ``→-1, `3.5`→-1, `-5`→-4, `+7`→8, `007`→8, out-of-range literal→-1.

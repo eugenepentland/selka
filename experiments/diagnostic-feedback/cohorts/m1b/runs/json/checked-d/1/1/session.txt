@@ -1,0 +1,7 @@
+**What I changed:** In `project/main.my`, `main` was adding the `Result` directly (`7 + as_count(args[0])`), which failed to type-check. I made it unwrap the `Result`: `Ok(value)` prints `7 + value`, `Err(_)` prints `7`, and (since `args[0]` would trap on an empty argument list) a missing argument also prints `7`. `as_count` itself was left unchanged.
+
+**Exact commands and results:**
+- `./bin/mylang check project/main.my` → exit 0, no diagnostics.
+- `./bin/mylang run project/main.my -- 41` → `48`
+- `./bin/mylang run project/main.my -- 0` → `7`
+- Also verified: `abc` → `7`, `-5` → `2`, no arguments → `7`. (Both public cases match `public/expected.json`.)

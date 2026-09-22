@@ -1,0 +1,1058 @@
+{
+  "passed": true,
+  "comparison": "first-issue code and process status for malformed documents; complete SVG bytes for valid documents",
+  "cases": [
+    "fixture",
+    "interface-missing-lane",
+    "interface-truncated",
+    "module-bad-escape",
+    "module-block-name-not-string",
+    "module-duplicate-ref",
+    "module-extended-string",
+    "module-instance-ref-not-string",
+    "module-passive-missing-pin",
+    "module-pin-number-three",
+    "module-pin-without-net",
+    "module-repeated-pin-number",
+    "module-stray-close",
+    "module-truncated",
+    "module-unclosed-list",
+    "module-unexpected-form",
+    "module-unknown-family",
+    "pinout-pin-zero",
+    "pinout-truncated"
+  ],
+  "arms": [
+    "rust-o3",
+    "go-fast",
+    "zig-o3"
+  ],
+  "records": [
+    {
+      "case": "fixture",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "svg",
+      "mylang": {
+        "status": 0,
+        "stdout": "0",
+        "stderr": "",
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388"
+      },
+      "native": {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388"
+      }
+    },
+    {
+      "case": "fixture",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "svg",
+      "mylang": {
+        "status": 0,
+        "stdout": "0",
+        "stderr": "",
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388"
+      },
+      "native": {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388"
+      }
+    },
+    {
+      "case": "fixture",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "svg",
+      "mylang": {
+        "status": 0,
+        "stdout": "0",
+        "stderr": "",
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388"
+      },
+      "native": {
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388"
+      }
+    },
+    {
+      "case": "module-truncated",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 4,
+        "stdout": "4",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 4,
+        "stdout": "4",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-truncated",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 4,
+        "stdout": "4",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 4,
+        "stdout": "4",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-truncated",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 4,
+        "stdout": "4",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 4,
+        "stdout": "4",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-unclosed-list",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 3,
+        "stdout": "3",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 3,
+        "stdout": "3",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-unclosed-list",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 3,
+        "stdout": "3",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 3,
+        "stdout": "3",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-unclosed-list",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 3,
+        "stdout": "3",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 3,
+        "stdout": "3",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-stray-close",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 1,
+        "stdout": "1",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 1,
+        "stdout": "1",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-stray-close",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 1,
+        "stdout": "1",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 1,
+        "stdout": "1",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-stray-close",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 1,
+        "stdout": "1",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 1,
+        "stdout": "1",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-extended-string",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-extended-string",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-extended-string",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-bad-escape",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 6,
+        "stdout": "6",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 6,
+        "stdout": "6",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-bad-escape",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 6,
+        "stdout": "6",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 6,
+        "stdout": "6",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-bad-escape",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 6,
+        "stdout": "6",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 6,
+        "stdout": "6",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-unexpected-form",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 17,
+        "stdout": "17",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 17,
+        "stdout": "17",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-unexpected-form",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 17,
+        "stdout": "17",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 17,
+        "stdout": "17",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-unexpected-form",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 17,
+        "stdout": "17",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 17,
+        "stdout": "17",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-block-name-not-string",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 1,
+        "stdout": "1",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 1,
+        "stdout": "1",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-block-name-not-string",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 1,
+        "stdout": "1",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 1,
+        "stdout": "1",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-block-name-not-string",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 1,
+        "stdout": "1",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 1,
+        "stdout": "1",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-instance-ref-not-string",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 11,
+        "stdout": "11",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 11,
+        "stdout": "11",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-instance-ref-not-string",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 11,
+        "stdout": "11",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 11,
+        "stdout": "11",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-instance-ref-not-string",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 11,
+        "stdout": "11",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 11,
+        "stdout": "11",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-duplicate-ref",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 12,
+        "stdout": "12",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 12,
+        "stdout": "12",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-duplicate-ref",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 12,
+        "stdout": "12",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 12,
+        "stdout": "12",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-duplicate-ref",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 12,
+        "stdout": "12",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 12,
+        "stdout": "12",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-unknown-family",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 19,
+        "stdout": "19",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 19,
+        "stdout": "19",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-unknown-family",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 19,
+        "stdout": "19",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 19,
+        "stdout": "19",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-unknown-family",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 19,
+        "stdout": "19",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 19,
+        "stdout": "19",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-pin-without-net",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 13,
+        "stdout": "13",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 13,
+        "stdout": "13",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-pin-without-net",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 13,
+        "stdout": "13",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 13,
+        "stdout": "13",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-pin-without-net",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 13,
+        "stdout": "13",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 13,
+        "stdout": "13",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-pin-number-three",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 14,
+        "stdout": "14",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 14,
+        "stdout": "14",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-pin-number-three",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 14,
+        "stdout": "14",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 14,
+        "stdout": "14",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-pin-number-three",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 14,
+        "stdout": "14",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 14,
+        "stdout": "14",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-repeated-pin-number",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 15,
+        "stdout": "15",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 15,
+        "stdout": "15",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-repeated-pin-number",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 15,
+        "stdout": "15",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 15,
+        "stdout": "15",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-repeated-pin-number",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 15,
+        "stdout": "15",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 15,
+        "stdout": "15",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-passive-missing-pin",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 20,
+        "stdout": "20",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 20,
+        "stdout": "20",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-passive-missing-pin",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 20,
+        "stdout": "20",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 20,
+        "stdout": "20",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "module-passive-missing-pin",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 20,
+        "stdout": "20",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 20,
+        "stdout": "20",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "pinout-truncated",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 4,
+        "stdout": "4",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 4,
+        "stdout": "4",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "pinout-truncated",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 4,
+        "stdout": "4",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 4,
+        "stdout": "4",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "pinout-truncated",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 4,
+        "stdout": "4",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 4,
+        "stdout": "4",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "pinout-pin-zero",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 18,
+        "stdout": "18",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 18,
+        "stdout": "18",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "pinout-pin-zero",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 18,
+        "stdout": "18",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 18,
+        "stdout": "18",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "pinout-pin-zero",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 18,
+        "stdout": "18",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 18,
+        "stdout": "18",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "interface-truncated",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "interface-truncated",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "interface-truncated",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "interface-missing-lane",
+      "arm": "rust-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "interface-missing-lane",
+      "arm": "go-fast",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    },
+    {
+      "case": "interface-missing-lane",
+      "arm": "zig-o3",
+      "agrees": true,
+      "kind": "issue",
+      "mylang": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      },
+      "native": {
+        "status": 21,
+        "stdout": "21",
+        "stderr": "",
+        "svg_sha256": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+def payload(value: int) -> int:
+    return value
+def wrapper(value: Option[int]) -> int:
+    match value:
+        case Some(number):
+            return number
+        case None:
+            return 0
+def main() -> int:
+    candidate: Option[int] = Some(21)
+    if candidate is None:
+        return 0
+    return payload(candidate) + wrapper(candidate)

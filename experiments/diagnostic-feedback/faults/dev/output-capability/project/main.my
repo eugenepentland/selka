@@ -1,0 +1,10 @@
+module main
+
+
+def shout(text: str) -> int:
+    print(text)
+    return 0
+
+
+def main(out: Stream) -> int:
+    return shout("hi")

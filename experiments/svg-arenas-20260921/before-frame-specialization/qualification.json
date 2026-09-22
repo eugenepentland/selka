@@ -1,0 +1,258 @@
+{
+  "netlisp": {
+    "binary": ".tmp/full-svg-benchmark-20260921/netlisp-llvm-fast",
+    "binary_sha256": "6006ae5a1fc4e6a009fd9e5e2c138f885ae6211ffa01fe05731b76566e4e7316",
+    "cases": {
+      "fixture": {
+        "svg_sha256": "8a78de19c4c4121855904c2d5e4f0397d6ce24ab901e4f037a3735d671f7081f",
+        "svg_bytes": 70549,
+        "matches_retained_reference": true,
+        "gc_stress_checked": false
+      },
+      "changed-net": {
+        "svg_sha256": "58c6092f80c09e854e58cea5acd540d4c683817cf858051522b95701dc70968f",
+        "svg_bytes": 70555,
+        "matches_retained_reference": true,
+        "gc_stress_checked": false
+      },
+      "changed-value": {
+        "svg_sha256": "3a25ab638c02888f0efae5015a0a93bcdbb7b6aad8071d5f92f0ce5af4f69a58",
+        "svg_bytes": 70549,
+        "matches_retained_reference": true,
+        "gc_stress_checked": false
+      }
+    }
+  },
+  "gc-o3": {
+    "binary": ".tmp/svg-arenas-20260921/gc-o3",
+    "binary_sha256": "3efd39c4b2380d28ea189deca23244f4e310ddd98a2cd8f3c080a2cc4befd89b",
+    "cases": {
+      "fixture": {
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "svg_bytes": 49617,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      },
+      "changed-net": {
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "svg_bytes": 49647,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      },
+      "changed-value": {
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+        "svg_bytes": 49617,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      }
+    }
+  },
+  "gc-lto": {
+    "binary": ".tmp/svg-arenas-20260921/gc-lto",
+    "binary_sha256": "207186adc3e21f4df5079f7a4aab2ceb857ffb0674303cd64d75f91e30fc8929",
+    "cases": {
+      "fixture": {
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "svg_bytes": 49617,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      },
+      "changed-net": {
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "svg_bytes": 49647,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      },
+      "changed-value": {
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+        "svg_bytes": 49617,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      }
+    }
+  },
+  "gc-bounded": {
+    "binary": ".tmp/svg-arenas-20260921/gc-bounded",
+    "binary_sha256": "5c4eca26a831cbccd188f11c1e43761c74119923fa8c70d21414b1692ca332e5",
+    "cases": {
+      "fixture": {
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "svg_bytes": 49617,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      },
+      "changed-net": {
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "svg_bytes": 49647,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      },
+      "changed-value": {
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+        "svg_bytes": 49617,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      }
+    },
+    "budget_rejection": {
+      "--max-steps=1": {
+        "exit_code": 1,
+        "stderr": "main.my:7:5: error[R_STEP_LIMIT]: instruction budget exhausted; raise it with --max-steps=N\n  in <entry> at main.my:7:5\n"
+      },
+      "--max-frames=1": {
+        "exit_code": 1,
+        "stderr": "main.my:7:5: error[R_FRAME_LIMIT]: call-depth budget exhausted; raise it with --max-frames=N\n  in <entry> at main.my:7:5\n"
+      }
+    }
+  },
+  "gc-lto-bounded": {
+    "binary": ".tmp/svg-arenas-20260921/gc-lto-bounded",
+    "binary_sha256": "cc91cb88da46e7b660f91b98de5187fa758655e547b1fb8077d8568b5e544849",
+    "cases": {
+      "fixture": {
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "svg_bytes": 49617,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      },
+      "changed-net": {
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "svg_bytes": 49647,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      },
+      "changed-value": {
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+        "svg_bytes": 49617,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      }
+    },
+    "budget_rejection": {
+      "--max-steps=1": {
+        "exit_code": 1,
+        "stderr": "main.my:7:5: error[R_STEP_LIMIT]: instruction budget exhausted; raise it with --max-steps=N\n  in <entry> at main.my:7:5\n"
+      },
+      "--max-frames=1": {
+        "exit_code": 1,
+        "stderr": "main.my:7:5: error[R_FRAME_LIMIT]: call-depth budget exhausted; raise it with --max-frames=N\n  in <entry> at main.my:7:5\n"
+      }
+    }
+  },
+  "arena-o3": {
+    "binary": ".tmp/svg-arenas-20260921/arena-o3",
+    "binary_sha256": "4bf1fc2e64092f13a3edd8fac99883f1c43442530f539dd70d630a5894697307",
+    "cases": {
+      "fixture": {
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "svg_bytes": 49617,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      },
+      "changed-net": {
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "svg_bytes": 49647,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      },
+      "changed-value": {
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+        "svg_bytes": 49617,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      }
+    }
+  },
+  "arena-lto": {
+    "binary": ".tmp/svg-arenas-20260921/arena-lto",
+    "binary_sha256": "19d48452a57f0d3eeefc623bff0c6a10babbfc7166d5603f14a1787ce66297e3",
+    "cases": {
+      "fixture": {
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "svg_bytes": 49617,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      },
+      "changed-net": {
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "svg_bytes": 49647,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      },
+      "changed-value": {
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+        "svg_bytes": 49617,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      }
+    }
+  },
+  "arena-bounded": {
+    "binary": ".tmp/svg-arenas-20260921/arena-bounded",
+    "binary_sha256": "3260e541c3c9544e72956f2d6ac992be6666ece1b97166520d8938f02ce23faa",
+    "cases": {
+      "fixture": {
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "svg_bytes": 49617,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      },
+      "changed-net": {
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "svg_bytes": 49647,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      },
+      "changed-value": {
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+        "svg_bytes": 49617,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      }
+    },
+    "budget_rejection": {
+      "--max-steps=1": {
+        "exit_code": 1,
+        "stderr": "main.my:7:5: error[R_STEP_LIMIT]: instruction budget exhausted; raise it with --max-steps=N\n  in <entry> at main.my:7:5\n"
+      },
+      "--max-frames=1": {
+        "exit_code": 1,
+        "stderr": "main.my:7:5: error[R_FRAME_LIMIT]: call-depth budget exhausted; raise it with --max-frames=N\n  in <entry> at main.my:7:5\n"
+      }
+    }
+  },
+  "arena-lto-bounded": {
+    "binary": ".tmp/svg-arenas-20260921/arena-lto-bounded",
+    "binary_sha256": "59b23e5832e66f84373428b1aba7b1326cb8b1d9370408e40e662c3f4065ccef",
+    "cases": {
+      "fixture": {
+        "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+        "svg_bytes": 49617,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      },
+      "changed-net": {
+        "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+        "svg_bytes": 49647,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      },
+      "changed-value": {
+        "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+        "svg_bytes": 49617,
+        "matches_retained_reference": true,
+        "gc_stress_checked": true
+      }
+    },
+    "budget_rejection": {
+      "--max-steps=1": {
+        "exit_code": 1,
+        "stderr": "main.my:7:5: error[R_STEP_LIMIT]: instruction budget exhausted; raise it with --max-steps=N\n  in <entry> at main.my:7:5\n"
+      },
+      "--max-frames=1": {
+        "exit_code": 1,
+        "stderr": "main.my:7:5: error[R_FRAME_LIMIT]: call-depth budget exhausted; raise it with --max-frames=N\n  in <entry> at main.my:7:5\n"
+      }
+    }
+  }
+}

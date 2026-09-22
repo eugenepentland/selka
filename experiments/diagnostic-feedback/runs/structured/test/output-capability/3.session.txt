@@ -1,0 +1,7 @@
+Fixed.
+
+**What changed** (`project/main.my`): `banner` was calling bare `print(...)`, which is rejected with `E_OUTPUT_CAPABILITY` (printing requires a `Stream`). I added an `out: Stream` parameter to `banner`, changed the call to `out.print("==", text)`, and passed the stream from `main` as `banner(out, "ok")`.
+
+**Commands run:**
+- `bin/mylang check project/main.my` → exit 0 (no diagnostics)
+- `bin/mylang run project/main.my` → exit 0, stdout exactly `== ok\n`

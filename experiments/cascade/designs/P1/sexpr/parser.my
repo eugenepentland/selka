@@ -1,0 +1,173 @@
+module sexpr.parser
+
+# Recursive-descent parser over sexpr.tokenizer's token list, ported from
+# eda/src/sexpr/parser.zig. Faithful behaviours:
+#   * every top-level form becomes one ast.Node, in source order
+#   * nested lists become ast.Node.form, however deep
+#   * numeric tokens arrive already decoded (`tk.Token.number`): int_val ->
+#     ast.Node.integer; float_val and si_val -> ast.Node.decimal, with the
+#     source spelling kept in `decimal.literal` for a suffixed literal;
+#     unit_val -> ast.Node.measure, normalised to the canonical length unit
+#   * nesting past max_parse_depth() is rejected before the native stack
+#     overflows, and every rejection carries message + line + col + offset
+#
+# The parser reads tokens, never source text. Where a number ends, what its
+# suffix multiplies by and whether that suffix was `mm` or `mil` are fixed once
+# by the lexer, so this module owns no boundary rule and no multiplier table;
+# `Cursor` no longer carries the source at all. The one numeric diagnostic left
+# here is a token whose spelling did not convert, reported at the token's span.
+#
+# Omissions vs. the Zig parser, noted per CONTRACT.md:
+#   * the Zig parser owns no allocator-freeing code (mylang is garbage
+#     collected), and its `OutOfMemory` case has no mylang analogue
+#   * lexer failures arrive as tk.LexError, which carries the position its
+#     cursor had, so it is copied into ParseError without a second source walk
+#   * `parse_with_depth_cap` is an added seam so a test can exercise the
+#     nesting guard without the runner's 1,000,000-step test budget, which
+#     cannot even tokenize a 10_016-byte run of `(`
+
+import sexpr.ast as ast
+import sexpr.tokenizer as tk
+
+
+public record ParseError:
+    message: str
+    line: int
+    col: int
+    offset: int
+
+
+# Maximum S-expression nesting depth, mirroring parser.zig's `max_parse_depth`.
+# Real files nest well under 100 deep, so this cap only stops hostile
+# `(((…` input before the native stack overflows.
+def max_parse_depth() -> int:
+    return 10000
+
+
+# A token-index cursor handed to parse_node. The token list is shared by
+# reference, so threading `pos` keeps the parser free of mutable traversal
+# state; `cap` is the nesting cap in force for this parse.
+record Cursor:
+    tokens: list[tk.Token]
+    pos: int
+    cap: int
+
+
+# One parsed node plus the index of the first token after it, so a caller can
+# resume the walk without mutable state.
+record Step:
+    node: ast.Node
+    next: int
+
+
+def located(span: ast.Span, message: str) -> ParseError:
+    return ParseError(message=message, line=span.line, col=span.col, offset=span.offset)
+
+
+def invalid_number(token: tk.Token) -> ParseError:
+    return located(token.span, "invalid number literal")
+
+
+# A tokenizer rejection already carries the position its cursor had, so it
+# becomes a located ParseError unchanged.
+def lex_failure(problem: tk.LexError) -> ParseError:
+    return ParseError(message=problem.message, line=problem.line, col=problem.col, offset=problem.offset)
+
+
+# A decoded token becomes its AST leaf; a token the lexer could not decode is
+# the `invalid number literal` diagnostic.
+def parse_number(token: tk.Token, next_pos: int) -> Result[Step, ParseError]:
+    match token.number:
+        case Some(number):
+            return Ok(Step(node=number_node(number, token.span), next=next_pos))
+        case None:
+            return Err(invalid_number(token))
+
+
+# One AST leaf per tk.Number case; the spellings travel with the value.
+def number_node(number: tk.Number, span: ast.Span) -> ast.Node:
+    match number:
+        case tk.Number.integer(value):
+            return ast.Node.integer(value, span)
+        case tk.Number.decimal(value, spelling):
+            return ast.Node.decimal(value, span, spelling)
+        case tk.Number.measure(value):
+            return ast.Node.measure(value, span)
+
+
+# Parse one node starting at `cursor.pos`, returning it and the first index
+# after it. `depth` is the enclosing list nesting (0 at top level).
+def parse_node(cursor: Cursor, depth: int) -> Result[Step, ParseError]:
+    token = cursor.tokens[cursor.pos]
+    next_pos = cursor.pos + 1
+    match token.kind:
+        case tk.Kind.lparen:
+            return parse_list(cursor, next_pos, depth, token.span)
+        case tk.Kind.rparen:
+            return Err(located(token.span, "unexpected ')' — no matching '(' is open here"))
+        case tk.Kind.atom:
+            return Ok(Step(node=ast.Node.atom(token.text, token.span), next=next_pos))
+        case tk.Kind.string:
+            return Ok(Step(node=ast.Node.string(token.text, token.span), next=next_pos))
+        case tk.Kind.int_val:
+            return parse_number(token, next_pos)
+        case tk.Kind.float_val:
+            return parse_number(token, next_pos)
+        case tk.Kind.unit_val:
+            return parse_number(token, next_pos)
+        case tk.Kind.si_val:
+            return parse_number(token, next_pos)
+        case tk.Kind.eof:
+            return Err(located(token.span, "unexpected end of input — a '(' was never closed"))
+
+
+# Parse the children of a list whose `(` was consumed, stopping at its `)`.
+# `pos` is the index of the first child token; the returned Step points just
+# past the closing `)`.
+def parse_list(cursor: Cursor, pos: int, depth: int, open_span: ast.Span) -> Result[Step, ParseError]:
+    if depth >= cursor.cap:
+        return Err(located(open_span, "s-expression nesting is too deep"))
+    entries: list[ast.Node] = []
+    cursor_pos = pos
+    while True:
+        token = cursor.tokens[cursor_pos]
+        # Point an unterminated list at the `(` that was never closed — the
+        # actionable location, not the end of the file where scanning stopped.
+        if token.kind == tk.Kind.eof:
+            return Err(located(open_span, "unexpected end of input — a '(' was never closed"))
+        if token.kind == tk.Kind.rparen:
+            cursor_pos = cursor_pos + 1
+            break
+        child = parse_node(Cursor(tokens=cursor.tokens, pos=cursor_pos, cap=cursor.cap), depth + 1)?
+        entries.append(child.node)
+        cursor_pos = child.next
+    return Ok(Step(node=ast.Node.form(entries, open_span), next=cursor_pos))
+
+
+# Parse S-expression source into its top-level nodes under the default nesting
+# cap. Every tokenizer or parser rejection comes back as a located ParseError.
+public def parse(src: bytes) -> Result[list[ast.Node], ParseError]:
+    return parse_with_depth_cap(src, max_parse_depth())
+
+
+# `parse` with an explicit nesting cap. Kept public so a test can exercise the
+# guard on a small document: the default test process gets 1,000,000 steps and
+# 1,024 frames, so a 10_016-deep document cannot even be tokenized there. The
+# public `parse` always passes max_parse_depth().
+public def parse_with_depth_cap(src: bytes, cap: int) -> Result[list[ast.Node], ParseError]:
+    tokens: list[tk.Token] = []
+    match tk.tokenize(src):
+        case Ok(lexed):
+            tokens = lexed
+        case Err(problem):
+            return Err(lex_failure(problem))
+    nodes: list[ast.Node] = []
+    pos = 0
+    while True:
+        token = tokens[pos]
+        if token.kind == tk.Kind.eof:
+            break
+        parsed = parse_node(Cursor(tokens=tokens, pos=pos, cap=cap), 0)?
+        nodes.append(parsed.node)
+        pos = parsed.next
+    return Ok(nodes)

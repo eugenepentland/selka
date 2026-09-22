@@ -1,0 +1,18 @@
+module main
+
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+def exceeds(a: int, b: int) -> int:
+    return 0
+
+
+def main(args: list[str], out: Stream) -> int:
+    out.print(exceeds(number(args[0]), number(args[1])))
+    return 0

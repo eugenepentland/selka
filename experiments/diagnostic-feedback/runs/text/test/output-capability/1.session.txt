@@ -1,0 +1,17 @@
+Fixed.
+
+**What changed** in `project/main.my`: `banner` was calling bare `print(...)`, which is rejected with `E_OUTPUT_CAPABILITY` — printing must go through a `Stream` parameter. I gave `banner` an `out: Stream` first parameter, changed the call to `out.print("==", text)`, and threaded the stream from `main` with `banner(out, "ok")`.
+
+```python
+def banner(out: Stream, text: str) -> int:
+    out.print("==", text)
+    return 0
+
+
+def main(out: Stream) -> int:
+    return banner(out, "ok")
+```
+
+**Commands run:**
+- `bin/mylang check project/main.my` → exit 0, no diagnostics
+- `bin/mylang run project/main.my` → exit 0, stdout exactly `== ok`, empty stderr

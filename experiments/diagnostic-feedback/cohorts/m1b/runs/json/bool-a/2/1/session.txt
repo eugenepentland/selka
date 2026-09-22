@@ -1,0 +1,6 @@
+**What changed:** In `project/main.my`, `above` returned the `bool` expression `a > b` from a function declared `-> int`, which the checker rejected with `E_TYPE: expected int, found bool`. I replaced that body with explicit integer returns — `if a > b: return 1` / `return 0` — so it prints `1` when the first argument is larger and `0` otherwise. Nothing else was touched.
+
+**Commands and results:**
+- `bin/mylang check project/main.my` → exit 0, no diagnostics.
+- `bin/mylang run project/main.my -- 5 2` → `1` (exit 0); `bin/mylang run project/main.my -- 2 5` → `0` (exit 0), matching both cases in `public/expected.json`.
+- Additional edge cases all correct: `3 3`→0, `-1 -5`→1, `-5 -1`→0, `0 0`→0, `abc 5`→0, `5 abc`→1, `abc def`→0, `1000000000000 999999999999`→1, `007 8`→0.

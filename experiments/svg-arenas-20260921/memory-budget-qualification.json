@@ -1,0 +1,18 @@
+{
+  "gc-o3": {
+    "limit_bytes": 4096,
+    "binary_sha256": "0448b9ef55d8bb0402356cdc6bfce8e5bf5a66a38e3e3dd03f84107d4f711279",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "sexpr.my:121:13: error[R_MEMORY_BUDGET]: memory budget exhausted\n  in sexpr::parse at sexpr.my:121:13\n  in main::main at main.my:9:15\n  in <entry> at main.my:7:5\n",
+    "svg_bytes": 0
+  },
+  "arena-o3": {
+    "limit_bytes": 4096,
+    "binary_sha256": "9c7261c251b730856840a8d675af92e22b778f05b00ca884f6da02e43d47d962",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "sexpr.my:121:13: error[R_MEMORY_BUDGET]: memory budget exhausted\n  in sexpr::parse at sexpr.my:121:13\n  in main::main at main.my:10:19\n  in <entry> at main.my:7:5\n",
+    "svg_bytes": 0
+  }
+}

@@ -1,0 +1,17 @@
+## What I changed
+
+The checker rejected the program with `E_GENERIC_REQUIREMENT` (`Ordered` is not a known requirement). `largest` operates on a concrete `list[int]`, so the type parameter was both unneeded and — once the requirement was corrected — impossible to infer (`E_GENERIC_INFERENCE`, since `T` appears in no parameter). I removed the unused `[T: ...]` parameter from `largest` and `largest_of`; nothing else was touched.
+
+## Exact command and result
+
+```
+$ bin/mylang check project/main.my
+[check exit: 0]
+```
+
+```
+$ bin/mylang run project/main.my -- 1 3 2   →  3
+$ bin/mylang run project/main.my -- 5 5 5   →  5
+```
+
+I also built once and verified negatives and other orderings (e.g. `-5 -1 -3 → -1`, `-2 -9 -100 → -2`, `1000000 999999 1000001 → 1000001`), then removed the temporary binary.

@@ -1,0 +1,14 @@
+Done.
+
+**What I changed:** In `project/main.my`, the old `main` bound `decode(args[0])` (a `Result`) to `base` and then used it twice in `base + base + 10`, which is both a type error and an affine-value violation (`E_RESULT_CONSUMED`). I replaced it with a single `match` that consumes the `Result` once: `Ok(value)` prints `value + value + 10`, and `Err(_)` prints `0` for non-integers. This matches `public/expected.json` (41 → 92, 0 → 10) for every input.
+
+**Verified with:**
+```
+bin/mylang check project/main.my
+```
+→ `CHECK_CLEAN` (exit 0, no diagnostics).
+
+```
+for a in 41 0 abc -7 007 +5 " 3"; do bin/mylang run project/main.my -- "$a"; done
+```
+→ `41`→`92`, `0`→`10`, `abc`→`0`, `-7`→`-4`, `007`→`24`, `+5`→`20`, `" 3"`→`16` (all exit 0).

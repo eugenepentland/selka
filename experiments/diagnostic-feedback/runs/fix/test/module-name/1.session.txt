@@ -1,0 +1,6 @@
+Fixed. Two issues in `project/stats.my` (main.my was correct as-is):
+
+1. **`E_MODULE_NAME`** — the header declared `module statistics`, but a module header must match the file's name/path from the project root. Changed it to `module stats`, matching `import stats as stats`.
+2. **`E_PRIVATE_SYMBOL`** — `total()` was private to its module. Changed `def total()` to `public def total()`.
+
+Command run: `bin/mylang run project/main.my` → printed `7`, exit code `0`.

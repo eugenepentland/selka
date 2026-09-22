@@ -1,0 +1,9 @@
+**What I changed:** In `project/main.my`, removed the two invalid, unused generic parameters `[T: Ordered]` from `top` and `top_of`. `Ordered` is not a mylang constraint (`E_GENERIC_REQUIREMENT`), and neither function used `T` — both already operate on `list[int]`. No other lines were touched.
+
+**Command run and result:**
+```
+$ ./bin/mylang check project/main.my          # exit 0, no errors
+$ ./bin/mylang run project/main.my -- 1 3 2   # stdout: 3
+$ ./bin/mylang run project/main.my -- 5 5 5   # stdout: 5
+```
+Both match `public/expected.json`. I also verified permutations, ties, negatives, large values, and non-numeric args (e.g. `-5 -1 -3 → -1`, `x 5 2 → 5`); the largest value is printed in every case.

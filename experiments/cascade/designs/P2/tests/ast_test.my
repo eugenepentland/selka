@@ -1,0 +1,32 @@
+module tests.ast_test
+
+import sexpr.ast as ast
+
+
+def text_of(node: ast.Node) -> str:
+    match ast.as_text(node):
+        case Some(text):
+            return text
+        case None:
+            return ""
+
+
+def number_of(node: ast.Node) -> float:
+    match ast.as_number(node):
+        case Some(value):
+            return value
+        case None:
+            return -1.0
+
+
+public def test_form_and_helpers() -> bool:
+    node = ast.Node.form([ast.Node.atom("net", ast.zero_span()), ast.Node.integer(1, ast.zero_span())], ast.zero_span())
+    return ast.is_form(node, "net") and len(ast.children(node)) == 2
+
+
+public def test_text_and_number() -> bool:
+    return text_of(ast.Node.atom("GND", ast.zero_span())) == "GND" and number_of(ast.Node.integer(7, ast.zero_span())) == 7.0
+
+
+public def test_form_is_not_atom() -> bool:
+    return ast.is_form(ast.Node.atom("net", ast.zero_span()), "net") == False

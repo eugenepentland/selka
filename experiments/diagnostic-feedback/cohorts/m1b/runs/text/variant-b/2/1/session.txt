@@ -1,0 +1,18 @@
+Done. The fix was a single missing match arm.
+
+**What changed** in `project/main.my`: added the `square` case to `area`'s `match` on `Shape` (lines 21–22):
+
+```python
+        case Shape.square(side):
+            return side * side
+```
+
+The checker was rejecting the program with `E_INCOMPLETE_MATCH: match does not handle variant 'square'`; the `circle` arm (`3 * radius * radius`) was already correct and unchanged.
+
+**Exact commands and results:**
+
+- `bin/mylang check project/main.my` → exit 0, no diagnostics.
+- `bin/mylang run project/main.my -- circle 2` → `12`
+- `bin/mylang run project/main.my -- square 3` → `9`
+
+Also verified beyond the examples: `circle 5` → `75`, `square 4` → `16`, `circle 0` → `0`, `square 0` → `0`, `circle abc` → `0` (unparseable input preserves the existing `number` fallback). Both shapes are now handled for every input.

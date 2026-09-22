@@ -1,0 +1,11 @@
+**What changed:** Added the missing `case Event.stop(name): return "stopped"` arm to the `match` in `project/main.my`. The checker rejected the match with `E_INCOMPLETE_MATCH` because the `stop` variant of `union Event` had no arm; `Event.stop("job")` now maps to `"stopped"`.
+
+**Command and result:**
+
+```
+$ ./bin/mylang run project/main.my
+stopped
+run exit: 0
+```
+
+`bin/mylang check project/main.my` also exits 0 (only pre-existing style warnings about unused match payload bindings remain on stderr; nothing is printed to stdout besides `stopped`).

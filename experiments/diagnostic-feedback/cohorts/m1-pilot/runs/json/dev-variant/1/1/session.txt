@@ -1,0 +1,15 @@
+**What I changed:** Added the missing `Shape.square` arm to `area` in `project/main.my` (the checker reported `E_INCOMPLETE_MATCH` on the `match shape:` at line 18). The new arm returns `side * side`; the existing circle arm already returned `3 * radius * radius`.
+
+```mylang
+def area(shape: Shape) -> int:
+    match shape:
+        case Shape.circle(radius):
+            return 3 * radius * radius
+        case Shape.square(side):
+            return side * side
+```
+
+**Commands and results:**
+- `./bin/mylang check project/main.my` → exit 0 (no diagnostics)
+- `./bin/mylang run project/main.my -- circle 2` → `12` (exit 0); `./bin/mylang run project/main.my -- square 3` → `9` (exit 0)
+- A harness over `public/expected.json` (`circle 2`→`12`, `square 3`→`9`) reported `ALL PASS`; extra probes `circle 5`→75, `square 4`→16, `circle 0`/`square 0`→0 also follow the required formulas.

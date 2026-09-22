@@ -1,0 +1,6 @@
+def main() -> int:
+    values = [40]
+    alias = values
+    alias += [2]
+    assert len(values) == 2
+    return values[0] + values[1]

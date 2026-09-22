@@ -1,0 +1,62 @@
+{
+  "purpose": "ReleaseSafe build of the unchanged direct Zig SVG port to permit a separate bounds/arithmetic-check cost comparison; this record contains no timing.",
+  "source": "experiments/full-svg-benchmark/ports/zig/main.zig",
+  "source_sha256": "d7416a2c1ca40822a071f42b4edd32479929f67941aeeca716652aa510e6f500",
+  "retained_native_provenance": "experiments/full-svg-benchmark/native-provenance.json",
+  "retained_native_provenance_sha256": "234c0f3e5e46ef71c6fe8a2dd0309bece48f549e0bd0a92830b8f2bebface862",
+  "source_matches_retained_zig_o3_source": true,
+  "toolchain": {
+    "executable": "zigw",
+    "executable_sha256": "8826bfe7568082951a6960c4172370d5c8fc839e62596efefcd87717c7bc4a4c",
+    "version": "0.17.0-dev.1683+5ceec001b"
+  },
+  "argv": [
+    "/home/epentland/ai/canopy/mylang/zigw",
+    "build-exe",
+    "/home/epentland/ai/canopy/mylang/experiments/full-svg-benchmark/ports/zig/main.zig",
+    "-O",
+    "ReleaseSafe",
+    "-fllvm",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/algorithm/zig-safe-cache",
+    "-femit-bin=/home/epentland/ai/canopy/mylang/.tmp/svg-gap-audit-20260921/algorithm/zig-safe"
+  ],
+  "binary": ".tmp/svg-gap-audit-20260921/algorithm/zig-safe",
+  "binary_sha256": "a7e1b534e336d45b434bd7674ca647038ee86d9f0c8c6000b750a5e2ff9c36a1",
+  "binary_bytes": 4022552,
+  "qualification": {
+    "fixture": {
+      "exit_code": 0,
+      "svg_bytes": 49617,
+      "svg_sha256": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+      "matches_frozen_native_reference": true,
+      "stderr": ".tmp/svg-gap-audit-20260921/algorithm/zig-safe-fixture.stderr",
+      "stderr_sha256": "1e294085eaef5d0953717eb7ba942d9c97acc75d6163b8465db1430c27b67642"
+    },
+    "changed-net": {
+      "exit_code": 0,
+      "svg_bytes": 49647,
+      "svg_sha256": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+      "matches_frozen_native_reference": true,
+      "stderr": ".tmp/svg-gap-audit-20260921/algorithm/zig-safe-changed-net.stderr",
+      "stderr_sha256": "ae268e43c8f601a88f9faed9e9b7f8dcd28e7457d7ee7d24de4b1ada6ae21ebb"
+    },
+    "changed-value": {
+      "exit_code": 0,
+      "svg_bytes": 49617,
+      "svg_sha256": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+      "matches_frozen_native_reference": true,
+      "stderr": ".tmp/svg-gap-audit-20260921/algorithm/zig-safe-changed-value.stderr",
+      "stderr_sha256": "0a1cdb7034cba929b4b21e57afbd20e2563d30ba8afc5e007fc5ebfc378a133a"
+    }
+  },
+  "qualification_note": "ReleaseSafe's SafeAllocator reports retained allocations on stderr at normal process exit. All three executions return zero and write the exact frozen SVG bytes; the diagnostics are retained rather than suppressed.",
+  "allocator_policy": {
+    "zig_std_start_source": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig",
+    "zig_std_start_source_sha256": "a776de125174d91ee81bc8a56d63a5ffd794c2b5e5920fc594d68d0e8878195d",
+    "evidence_lines": "744-770",
+    "release_safe": "std.start selects SafeAllocator backed by page_allocator for .safe mode and deinitializes it at exit.",
+    "comparison_limit": "The port assigns init.gpa to global_alloc. std.start chooses allocator policy by build mode, so ReleaseSafe versus retained ReleaseFast is an application-level comparator combining safety checks, arithmetic policy, optimizer mode, and allocator behavior. It is not a pure bounds-check overhead experiment."
+  },
+  "wall_timing_performed": false
+}

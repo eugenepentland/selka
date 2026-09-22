@@ -1,0 +1,180 @@
+{
+  "mylang-o3-phases": {
+    "median_cpu_ms": {
+      "parse": 1.085885,
+      "model": 1.182892,
+      "placement": 10.819047,
+      "routing": 0.168592,
+      "svg_emission": 1.857341,
+      "guest_total": 15.133274
+    },
+    "allocation_collection_step_counts": [
+      {
+        "name": "sexpr::parse",
+        "ns": 1037610,
+        "allocations": 14,
+        "collections": 0,
+        "steps": 0,
+        "heap_bytes": 165264,
+        "objects_live": 14
+      },
+      {
+        "name": "sexpr::parse",
+        "ns": 53499,
+        "allocations": 10,
+        "collections": 0,
+        "steps": 0,
+        "heap_bytes": 186720,
+        "objects_live": 24
+      },
+      {
+        "name": "sexpr::parse",
+        "ns": 20384,
+        "allocations": 7,
+        "collections": 0,
+        "steps": 0,
+        "heap_bytes": 189968,
+        "objects_live": 31
+      },
+      {
+        "name": "schematic::build",
+        "ns": 1166591,
+        "allocations": 16,
+        "collections": 0,
+        "steps": 0,
+        "heap_bytes": 228200,
+        "objects_live": 47
+      },
+      {
+        "name": "layout::build",
+        "ns": 10846288,
+        "allocations": 22,
+        "collections": 0,
+        "steps": 0,
+        "heap_bytes": 244392,
+        "objects_live": 69
+      },
+      {
+        "name": "layout_routes::build",
+        "ns": 170305,
+        "allocations": 8,
+        "collections": 0,
+        "steps": 0,
+        "heap_bytes": 277744,
+        "objects_live": 77
+      },
+      {
+        "name": "svg::render",
+        "ns": 12904216,
+        "allocations": 30,
+        "collections": 0,
+        "steps": 0,
+        "heap_bytes": 277744,
+        "objects_live": 77
+      },
+      {
+        "name": "main::main",
+        "ns": 15193817,
+        "allocations": 77,
+        "collections": 0,
+        "steps": 0,
+        "heap_bytes": 277744,
+        "objects_live": 77
+      }
+    ],
+    "median_wall_calibration_ms": {
+      "phase_ms": 16.486093,
+      "relinked_control_ms": 16.088831,
+      "original_ms": 17.44513
+    }
+  },
+  "mylang-o3-bounded-phases": {
+    "median_cpu_ms": {
+      "parse": 1.453766,
+      "model": 2.12948,
+      "placement": 32.137462,
+      "routing": 0.679355,
+      "svg_emission": 2.584505,
+      "guest_total": 39.007911
+    },
+    "allocation_collection_step_counts": [
+      {
+        "name": "sexpr::parse",
+        "ns": 1355034,
+        "allocations": 14,
+        "collections": 0,
+        "steps": 724934,
+        "heap_bytes": 165264,
+        "objects_live": 14
+      },
+      {
+        "name": "sexpr::parse",
+        "ns": 76861,
+        "allocations": 10,
+        "collections": 0,
+        "steps": 47751,
+        "heap_bytes": 186720,
+        "objects_live": 24
+      },
+      {
+        "name": "sexpr::parse",
+        "ns": 24940,
+        "allocations": 7,
+        "collections": 0,
+        "steps": 13478,
+        "heap_bytes": 189968,
+        "objects_live": 31
+      },
+      {
+        "name": "schematic::build",
+        "ns": 2132728,
+        "allocations": 16,
+        "collections": 0,
+        "steps": 2183137,
+        "heap_bytes": 228200,
+        "objects_live": 47
+      },
+      {
+        "name": "layout::build",
+        "ns": 32131119,
+        "allocations": 22,
+        "collections": 0,
+        "steps": 52647621,
+        "heap_bytes": 244392,
+        "objects_live": 69
+      },
+      {
+        "name": "layout_routes::build",
+        "ns": 679166,
+        "allocations": 8,
+        "collections": 0,
+        "steps": 816620,
+        "heap_bytes": 277744,
+        "objects_live": 77
+      },
+      {
+        "name": "svg::render",
+        "ns": 35375420,
+        "allocations": 30,
+        "collections": 0,
+        "steps": 55272943,
+        "heap_bytes": 277744,
+        "objects_live": 77
+      },
+      {
+        "name": "main::main",
+        "ns": 38980359,
+        "allocations": 77,
+        "collections": 0,
+        "steps": 58242305,
+        "heap_bytes": 277744,
+        "objects_live": 77
+      }
+    ],
+    "median_wall_calibration_ms": {
+      "phase_ms": 40.347584,
+      "relinked_control_ms": 41.175953,
+      "original_ms": 42.587499
+    }
+  }
+}

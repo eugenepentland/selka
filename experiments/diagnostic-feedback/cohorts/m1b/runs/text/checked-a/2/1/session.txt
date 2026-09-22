@@ -1,0 +1,9 @@
+Done.
+
+**What changed** (`project/main.my`, only `main`): the old body did `out.print(1 + parse_count(args[0]))`, which added `1` to a `Result[int, str]` (`E_TYPE`) and never handled the error case. `main` now matches on the result: `Ok(value)` prints `1 + value`, and `Err(_)` prints `-1`. `parse_count` is unchanged.
+
+**Commands and results** (12 of 20 compiler invocations used):
+- `bin/mylang check project/main.my` → exit 0, no diagnostics
+- `bin/mylang run project/main.my -- 41` → `42`
+- `bin/mylang run project/main.my -- 0` → `1` (both match `public/expected.json`)
+- Extra inputs: `-- 4.5` → `-1`, `-- -3` → `-2`, `-- 007` → `8`, `-- ""` → `-1`, `-- +5` → `6`, `-- 999999999` → `1000000000`, all exit 0

@@ -1,0 +1,181 @@
+module tests.style_test
+
+# Tests for the printer's extension points: the layout policy, the indentation,
+# the number formatting, the line-ending behaviour and the remaining layout
+# spellings. The default style is covered by tests/printer_test.my, which is
+# unchanged.
+
+import sexpr.ast as ast
+import sexpr.parser as parser
+import sexpr.printer as printer
+
+
+# ── helpers ───────────────────────────────────────────────────────────
+
+def parse_ok(src: bytes) -> list[ast.Node]:
+    match parser.parse(src):
+        case Ok(nodes):
+            return nodes
+        case Err(_):
+            empty: list[ast.Node] = []
+            return empty
+
+
+def style_with(layout: printer.Layout) -> printer.Style:
+    return replace(printer.default_style(), layout=layout)
+
+
+def narrow(width: int) -> printer.Style:
+    base = printer.default_style()
+    return replace(base, layout=replace(base.layout, max_width=width))
+
+
+def atoms(names: list[str]) -> list[ast.Node]:
+    out: list[ast.Node] = []
+    for name in names:
+        out.append(ast.Node.atom(name, ast.zero_span()))
+    return out
+
+
+# ── policies and spellings under test ─────────────────────────────────
+
+def dot_indent(columns: int) -> str effects(managed_allocation):
+    out = ""
+    index = 0
+    while index < columns:
+        out = out + "."
+        index = index + 1
+    return out
+
+
+def dotted() -> printer.Style:
+    base = printer.default_style()
+    return replace(base, layout=replace(base.layout, indent_step=1, max_width=4), indent_text=dot_indent)
+
+
+def crlf() -> printer.Style:
+    base = printer.default_style()
+    return replace(base, layout=replace(base.layout, line_ending="\r\n", max_width=4))
+
+
+def tagged_number(value: float) -> str effects(managed_allocation):
+    return "n" + str(value)
+
+
+def tagged() -> printer.Style:
+    return replace(printer.default_style(), number_text=tagged_number)
+
+
+def upper_text(text: str) -> str effects(managed_allocation):
+    return text.upper()
+
+
+def lower_atom(text: str) -> str effects(managed_allocation):
+    return text.lower()
+
+
+def one_per_line(entries: list[ast.Node], layout: printer.Layout) -> bool effects():
+    # Inline only a list with at most one child, whatever the width budget is.
+    return len(entries) <= 1 and layout.max_width > 0
+
+
+def inline_by_child_count(entries: list[ast.Node], layout: printer.Layout) -> bool effects():
+    # Inline whenever the child count fits the width budget, ignoring the
+    # width of the children themselves.
+    return len(entries) <= layout.max_width
+
+
+# ── the default style is the ported printer ───────────────────────────
+
+public def test_default_style_matches_render() -> bool:
+    src = b"(footprint (pad 1 smd (pos -1.25 1.75)) (pad 2))"
+    return printer.render_with(parse_ok(src), printer.default_style()) == printer.render(parse_ok(src)) and printer.render_node_with(ast.Node.integer(42, ast.zero_span()), printer.default_style()) == "42"
+
+
+# ── layout policy and width ───────────────────────────────────────────
+
+public def test_max_width_is_a_parameter() -> bool:
+    src = b"(a b c)"
+    return printer.render_with(parse_ok(src), narrow(72)) == "(a b c)" and printer.render_with(parse_ok(src), narrow(4)) == "(a\n  b\n  c)"
+
+
+public def test_layout_policy_is_a_callback() -> bool:
+    long_src = b"(aaaa bbbb cccc dddd eeee ffff gggg hhhh iiii jjjj kkkk llll mmmm nnnn oooo pppp)"
+    inline_style = replace(printer.default_style(), fits_inline=inline_by_child_count)
+    broken_style = replace(printer.default_style(), fits_inline=one_per_line)
+    return printer.render_with(parse_ok(long_src), printer.default_style()).find("\n") >= 0 and printer.render_with(parse_ok(long_src), inline_style).find("\n") == -1 and printer.render_with(parse_ok(b"(a b c)"), broken_style) == "(a\n  b\n  c)"
+
+
+public def test_first_child_placement_is_a_parameter() -> bool:
+    base = printer.default_style()
+    broken = replace(base, fits_inline=one_per_line)
+    first_down = replace(broken, layout=replace(base.layout, first_on_open=False))
+    return printer.render_with(parse_ok(b"(a b c)"), broken) == "(a\n  b\n  c)" and printer.render_with(parse_ok(b"(a b c)"), first_down) == "(\n  a\n  b\n  c)"
+
+
+# ── indentation ───────────────────────────────────────────────────────
+
+public def test_indent_step_is_a_parameter() -> bool:
+    base = printer.default_style()
+    return printer.render_with(parse_ok(b"(a b c)"), replace(base, layout=replace(base.layout, indent_step=4, max_width=4))) == "(a\n    b\n    c)"
+
+
+public def test_indent_text_is_a_callback() -> bool:
+    return printer.render_with(parse_ok(b"(a b c)"), dotted()) == "(a\n.b\n.c)" and printer.space_indent(3) == "   " and printer.space_indent(0) == ""
+
+
+# ── line endings ──────────────────────────────────────────────────────
+
+public def test_line_ending_is_a_parameter() -> bool:
+    return printer.render_with(parse_ok(b"(a b c)"), crlf()) == "(a\r\n  b\r\n  c)" and printer.render_with(atoms(["x", "y"]), crlf()) == "x\r\ny"
+
+
+public def test_top_level_gap_is_a_parameter() -> bool:
+    base = printer.default_style()
+    spaced = replace(base, layout=replace(base.layout, top_level_gap="\n"))
+    top = atoms(["x", "y"])
+    return printer.render_with(top, spaced) == "x\n\ny" and printer.render_with(top, base) == "x\ny"
+
+
+public def test_trailing_newline_is_a_parameter() -> bool:
+    base = printer.default_style()
+    trailing = replace(base, layout=replace(base.layout, trailing_newline=True))
+    top = atoms(["x", "y"])
+    return printer.render_with(top, trailing) == "x\ny\n" and printer.render_with([], trailing) == "" and printer.render_with(top, base) == "x\ny"
+
+
+# ── number formatting ─────────────────────────────────────────────────
+
+public def test_number_formatting_is_a_callback() -> bool:
+    return printer.render_node_with(ast.Node.decimal(1.5, ast.zero_span()), tagged()) == "n1.5" and printer.render_node_with(ast.Node.measure(0.7, ast.zero_span()), tagged()) == "n0.7mm" and printer.render_node_with(ast.Node.decimal(100.0, ast.zero_span(), Some("100nF")), tagged()) == "100nF"
+
+
+public def test_render_float_is_the_default_policy() -> bool:
+    return printer.render_float(100.0) == "100.0" and printer.render_float(3.3) == "3.3" and printer.render_float(0.0000001) == "0.0000001"
+
+
+public def test_measure_suffix_is_a_parameter() -> bool:
+    base = printer.default_style()
+    inches = replace(base, layout=replace(base.layout, measure_suffix="in"))
+    return printer.render_node_with(ast.Node.measure(0.7, ast.zero_span()), inches) == "0.7in" and printer.render_node_with(ast.Node.measure(0.7, ast.zero_span()), base) == "0.7mm"
+
+
+# ── text spellings ────────────────────────────────────────────────────
+
+public def test_string_policies() -> bool:
+    base = printer.default_style()
+    quoted = replace(base, layout=replace(base.layout, string_quote="'"))
+    shouted = replace(base, string_text=upper_text)
+    node = ast.Node.string("vin", ast.zero_span())
+    return printer.render_node_with(node, quoted) == "'vin'" and printer.render_node_with(node, shouted) == "\"VIN\"" and printer.verbatim("x") == "x"
+
+
+public def test_atom_policy() -> bool:
+    style = replace(printer.default_style(), atom_text=lower_atom)
+    return printer.render_node_with(ast.Node.atom("VIN", ast.zero_span()), style) == "vin"
+
+
+public def test_empty_form_and_inline_separator() -> bool:
+    bracketed = style_with(replace(printer.Layout(), empty_form="[]"))
+    comma = style_with(replace(printer.Layout(), inline_separator=", "))
+    return printer.render_node_with(ast.Node.form([], ast.zero_span()), bracketed) == "[]" and printer.render_node_with(ast.Node.form([], ast.zero_span()), printer.default_style()) == "()" and printer.render_with(parse_ok(b"(a b c)"), comma) == "(a, b, c)"

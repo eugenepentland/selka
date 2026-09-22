@@ -1,0 +1,14 @@
+Fixed `project/main.my`.
+
+**Change:** `main` was adding the `Result` itself (`0 + value`), which is a type error and never inspected the `Err` case. I matched on the result instead: `case Ok(number): out.print(0 + number)` and `case Err(_): out.print(-99)`. `read_number` and everything else are unchanged.
+
+**Commands and results:**
+- `bin/mylang check project/main.my` → no diagnostics (clean).
+- `bin/mylang run project/main.my -- 41` → `41`; `-- 0` → `0`; `-- abc` → `-99`; `-- -5` → `-5`; `-- 3.5` → `-99`; `-- 007` → `7`; `-- ""` → `-99`.
+
+Verification against `public/expected.json`:
+```
+args=['41'] expected='41\n' got='41\n' exit=0 PASS
+args=['0']  expected='0\n'  got='0\n'  exit=0 PASS
+ALL PASS
+```

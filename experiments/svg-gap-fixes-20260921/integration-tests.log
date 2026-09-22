@@ -1,0 +1,143 @@
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 1b6c13222675)
+guardian: file-size: 10 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 17 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 4447 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+test-qbe-build
++- run test w
+guardian/test: 2 test(s) selected
+guardian/test: test wall 0.00s
+guardian/test: PASS — 2 passed
+guardian/test: RESULT {"passed":2,"failed":0,"skipped":0}
+failed command: MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/f9a9c80a468d8ea73a505dd9094c2f97/test --cache-dir=./.zig-cache --seed=0xde6d629f --listen=-
+
+test-qbe-build
++- run test w
+guardian/test: 62 test(s) selected
+guardian/test: test wall 4.73s; slowest over 50ms:
+guardian/test:   2.34s  qbe_build_test.test.a prebuilt runtime installed beside the compiler links directly, and damage falls back to source
+guardian/test:   1.57s  qbe_build_io.test.concurrent staging in one destination never loses a child to another build's reclaim
+guardian/test:   0.50s  qbe_build_test.test.a default build shares its runtime tree under XDG while an explicit cache-dir stays hermetic
+guardian/test:   0.29s  qbe_build_test.test.a native executable exits with its entry int result truncated to a byte
+guardian/test: PASS — 62 passed
+guardian/test: RESULT {"passed":62,"failed":0,"skipped":0}
+failed command: MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/fc6a54e070855e9eb49509d1caf14244/test --cache-dir=./.zig-cache --seed=0xde6d629f --listen=-
+
+test-schematic
++- run test w
+guardian/test: 16 test(s) selected
+main.my:7:9: error[R_HOST_FAILURE]: native execution failed
+  in main::main at main.my:7:9
+main.my:6:9: error[R_HOST_FAILURE]: native execution failed
+  in main::main at main.my:6:9
+main.my:2:8: warning[W_UNUSED_IMPORT]: import `io` is never referenced in this module; remove it or use it
+  import io
+         ^
+main.my:5:10: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def main(host: Host) -> i64:
+           ^
+main.my:7:9: error[R_HOST_LIMIT]: native execution failed
+  in main::main at main.my:7:9
+main.my:6:9: error[R_HOST_FAILURE]: native execution failed
+  in main::main at main.my:6:9
+main.my:6:12: error[R_HOST_LIMIT]: native execution failed
+  in main::main at main.my:6:12
+main.my:1:1: error[E_MODULE_READ]: cannot load main.my: NotFound
+  
+  ^
+main.my:5:5: error[E_TYPE]: expected int, found bool
+      return True
+      ^
+main.my:5:5: error[E_TYPE]: expected int, found bool
+      return True
+      ^
+text.my:21:18: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def equal(host: Host, a: Span, b: Span) -> bool effects(host):
+                   ^
+text.my:32:20: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def matches(host: Host, a: Span, b: bytes) -> bool effects(host):
+                     ^
+text.my:43:19: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def number(host: Host, a: Span) -> int effects(host):
+                    ^
+text.my:100:23: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def identifier(host: Host, a: Span) -> bool effects(host):
+                        ^
+text.my:118:19: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def folded(host: Host, a: Span, b: Span) -> bool effects(host):
+                    ^
+ports.my:121:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def byteAt(host: Host, item: Port, index: int) -> u8:
+             ^
+svg.my:74:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def passive(host: Host, out: io.Output, index: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]):
+              ^
+layout.my:60:17: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def collectRows(host: Host, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> list[Row]:
+                  ^
+layout.my:216:9: warning[W_MUTATES_MISSING]: this function writes `rows` (parameter 1) reachable from the caller; declare `mutates(rows)`
+          rows[i].side = side
+          ^
+layout.my:223:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def nearest(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net], lookup: list[int]) -> int:
+              ^
+layout.my:223:37: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def nearest(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net], lookup: list[int]) -> int:
+                                      ^
+layout.my:274:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def depth(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:
+            ^
+layout.my:274:35: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def depth(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:
+                                    ^
+layout.my:274:56: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def depth(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:
+                                                         ^
+layout_graph.my:43:18: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def build(host: Host, parts: list[c.Part], pins: list[c.Pin]) -> list[Net] effects(host, managed_allocation):
+                   ^
+layout_routes.my:42:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def blocked(host: Host, a: l.Point, b: l.Point, net_id: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:
+              ^
+layout_routes.my:42:62: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def blocked(host: Host, a: l.Point, b: l.Point, net_id: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:
+                                                               ^
+guardian/test: SLOW  8.90s  tests.test.schematic renders the whole fixture identically, normally and under collection stress
+main.my:7:9: error[R_HOST_FAILURE]: native execution failed
+  in main::main at main.my:7:9
+  in <entry> at main.my:5:5
+main.my:5:10: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def main(host: Host) -> int:
+           ^
+text.my:21:18: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def equal(host: Host, a: Span, b: Span) -> bool effects(host):
+                   ^
+text.my:32:20: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def matches(host: Host, a: Span, b: bytes) -> bool effects(host):
+                     ^
+text.my:43:19: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def number(host: Host, a: Span) -> int effects(host):
+                    ^
+text.my:100:23: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def identifier(host: Host, a: Span) -> bool effects(host):
+                        ^
+text.my:118:19: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def folded(host: Host, a: Span, b: Span) -> bool effects(host):
+                    ^
+guardian/test: test wall 14.65s; slowest over 50ms:
+guardian/test:   8.90s  tests.test.schematic renders the whole fixture identically, normally and under collection stress
+guardian/test:   1.44s  tests.test.schematic byte callbacks publish only on success and keep the first located issue
+guardian/test:   0.84s  tests.test.schematic byte callbacks reject positions and documents the host never supplied
+guardian/test:   0.82s  tests.test.schematic packed callbacks reject invalid ranges and preserve output-limit traps
+guardian/test:   0.63s  tests.test.schematic bulk buffer boundaries hold normally and under collection stress
+guardian/test:   0.45s  tests.test.Python schematic decimal output preserves negative numbers and minimum integer
+guardian/test:   0.41s  tests.test.invalid documents are rejected before the guest executable is given any bytes
+guardian/test:   0.39s  tests.test.named schematic input providers reject documents the host never supplied
+guardian/test:   0.34s  tests.test.named schematic input handles select their host documents
+guardian/test:   0.27s  tests.test.schematic packed blocks zero fill input tails and flush exact output counts
+guardian/test: PASS — 16 passed
+guardian/test: RESULT {"passed":16,"failed":0,"skipped":0}
+failed command: MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/bin/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/1c166392d2ddaf8ac57ade0dd7de104e/test --cache-dir=./.zig-cache --seed=0xde6d629f --listen=-
+

@@ -1,0 +1,56 @@
+{
+  "chart-recheck.json": {
+    "chart-o3": true,
+    "zig": true
+  },
+  "ablation.json": {
+    "chart-o3": true,
+    "rebuilt": true,
+    "internal": true,
+    "width": true,
+    "combined": true,
+    "zig": true
+  },
+  "root-ablation.json": {
+    "regenerated": true,
+    "root-clean": true,
+    "root-width": true,
+    "heap-effects": true,
+    "zig": true
+  },
+  "qualification.json": {
+    "passed": 584,
+    "identities_match": true
+  },
+  "root-qualification.json": {
+    "passed": 438,
+    "identities_match": true
+  },
+  "heap-qualification.json": {
+    "passed": 146,
+    "identities_match": true
+  },
+  "source_hashes_unchanged": {
+    "src/qbe.zig": true,
+    "src/qbe_aggregate.zig": true,
+    "src/qbe_bytes.zig": true,
+    "src/qbe_bytes.c": true,
+    "src/native_bytes.c": true,
+    "src/native_bytes.h": true,
+    "src/native_heap.h": true,
+    "src/native_format.zig": true,
+    "src/stdlib/byte_builder.my": true,
+    "src/qbe_build.zig": true,
+    "experiments/llvm-backend/llvm_emit.py": true,
+    "experiments/llvm-backend/amd64_sysv.py": true,
+    "experiments/llvm-backend/maxperf/unchecked.py": true,
+    "experiments/sexpr-port/sexpr/printer.my": true,
+    "experiments/sexpr-port/sexpr/parser.my": true,
+    "experiments/sexpr-port/sexpr/ast.my": true,
+    "experiments/sexpr-port/sexpr/tokenizer.my": true,
+    "experiments/sexpr-port/zig-bench/main.zig": true,
+    ".tmp/bench/plot-data-after.json": true,
+    ".tmp/bench/armsset/manifest.json": true
+  },
+  "push_node_optimized_descriptor_stores": 414
+}

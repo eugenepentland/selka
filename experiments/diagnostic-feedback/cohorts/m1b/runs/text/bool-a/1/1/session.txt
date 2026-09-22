@@ -1,0 +1,19 @@
+Fixed. The bug was a type error in `project/main.my`: `above` is declared `-> int` but returned the boolean expression `a > b`.
+
+**Change made** — replaced the boolean return with explicit integer returns:
+```python
+def above(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+**Command run and result:**
+```
+bin/mylang check project/main.my          → exit 0 (no diagnostics)
+bin/mylang run project/main.my -- 5 2     → 1
+bin/mylang run project/main.my -- 2 5     → 0
+bin/mylang run project/main.my -- 5 5     → 0
+bin/mylang run project/main.my -- -3 -7   → 1
+```
+Both `public/expected.json` cases (`5 2` → `"1\n"`, `2 5` → `"0\n"`) match, and ties/negatives behave correctly.

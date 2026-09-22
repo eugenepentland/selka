@@ -1,0 +1,886 @@
+{
+  "schema": "cohort-manifest-v1",
+  "cohort_id": "m1b",
+  "created_utc": "2026-09-19T13:03:35.508726+00:00",
+  "purpose": "M1 main, revised cases",
+  "seed": 20260919,
+  "arms": [
+    "text",
+    "text_fix",
+    "json",
+    "json_fix"
+  ],
+  "cases": [
+    "bool-a",
+    "bool-b",
+    "checked-a",
+    "checked-b",
+    "checked-c",
+    "checked-d",
+    "checked-e",
+    "generic-a",
+    "generic-b",
+    "generic-c",
+    "generic-d",
+    "generic-e",
+    "variant-a",
+    "variant-b"
+  ],
+  "repetitions": 2,
+  "identity": {
+    "compiler_sha256": "4a9ad0c17789e422fa90dbb8e91497f007abdc2ef5152f3123889dbdc2cfbcb2",
+    "wrapper_schema": "wrapper-v2-events",
+    "prompt_sha256": "ae2fba8f334fb92a",
+    "remedy_sha256": "449d37b9adee5672",
+    "model": "deepseek-v4-flash",
+    "reasoning_effort": "max",
+    "invocation_limit": 20,
+    "session_deadline_s": 900,
+    "cache_policy": "ZIG_GLOBAL_CACHE_DIR and ZIG_LOCAL_CACHE_DIR per attempt inside the working copy",
+    "corpus_sha256": "7efcd5738e970bb0"
+  },
+  "blocks": [
+    {
+      "case": "generic-e",
+      "repetition": 1,
+      "order": [
+        "json",
+        "text_fix",
+        "json_fix",
+        "text"
+      ]
+    },
+    {
+      "case": "bool-b",
+      "repetition": 1,
+      "order": [
+        "json",
+        "text_fix",
+        "json_fix",
+        "text"
+      ]
+    },
+    {
+      "case": "checked-e",
+      "repetition": 2,
+      "order": [
+        "json_fix",
+        "text_fix",
+        "json",
+        "text"
+      ]
+    },
+    {
+      "case": "variant-b",
+      "repetition": 2,
+      "order": [
+        "json_fix",
+        "text_fix",
+        "json",
+        "text"
+      ]
+    },
+    {
+      "case": "generic-a",
+      "repetition": 2,
+      "order": [
+        "text_fix",
+        "json",
+        "json_fix",
+        "text"
+      ]
+    },
+    {
+      "case": "checked-a",
+      "repetition": 2,
+      "order": [
+        "text_fix",
+        "json",
+        "text",
+        "json_fix"
+      ]
+    },
+    {
+      "case": "checked-d",
+      "repetition": 1,
+      "order": [
+        "text_fix",
+        "json",
+        "json_fix",
+        "text"
+      ]
+    },
+    {
+      "case": "generic-c",
+      "repetition": 1,
+      "order": [
+        "text",
+        "json_fix",
+        "json",
+        "text_fix"
+      ]
+    },
+    {
+      "case": "variant-a",
+      "repetition": 2,
+      "order": [
+        "text",
+        "text_fix",
+        "json_fix",
+        "json"
+      ]
+    },
+    {
+      "case": "bool-a",
+      "repetition": 1,
+      "order": [
+        "json",
+        "json_fix",
+        "text_fix",
+        "text"
+      ]
+    },
+    {
+      "case": "checked-c",
+      "repetition": 1,
+      "order": [
+        "text",
+        "json",
+        "json_fix",
+        "text_fix"
+      ]
+    },
+    {
+      "case": "checked-d",
+      "repetition": 2,
+      "order": [
+        "text_fix",
+        "json_fix",
+        "text",
+        "json"
+      ]
+    },
+    {
+      "case": "generic-c",
+      "repetition": 2,
+      "order": [
+        "text_fix",
+        "json",
+        "text",
+        "json_fix"
+      ]
+    },
+    {
+      "case": "bool-a",
+      "repetition": 2,
+      "order": [
+        "text",
+        "json_fix",
+        "text_fix",
+        "json"
+      ]
+    },
+    {
+      "case": "checked-a",
+      "repetition": 1,
+      "order": [
+        "text_fix",
+        "text",
+        "json_fix",
+        "json"
+      ]
+    },
+    {
+      "case": "generic-a",
+      "repetition": 1,
+      "order": [
+        "text_fix",
+        "text",
+        "json",
+        "json_fix"
+      ]
+    },
+    {
+      "case": "generic-b",
+      "repetition": 2,
+      "order": [
+        "text_fix",
+        "text",
+        "json",
+        "json_fix"
+      ]
+    },
+    {
+      "case": "checked-e",
+      "repetition": 1,
+      "order": [
+        "text",
+        "json",
+        "text_fix",
+        "json_fix"
+      ]
+    },
+    {
+      "case": "generic-d",
+      "repetition": 2,
+      "order": [
+        "text_fix",
+        "json",
+        "text",
+        "json_fix"
+      ]
+    },
+    {
+      "case": "variant-a",
+      "repetition": 1,
+      "order": [
+        "json",
+        "text",
+        "json_fix",
+        "text_fix"
+      ]
+    },
+    {
+      "case": "checked-b",
+      "repetition": 2,
+      "order": [
+        "json",
+        "json_fix",
+        "text_fix",
+        "text"
+      ]
+    },
+    {
+      "case": "generic-e",
+      "repetition": 2,
+      "order": [
+        "json",
+        "json_fix",
+        "text_fix",
+        "text"
+      ]
+    },
+    {
+      "case": "generic-b",
+      "repetition": 1,
+      "order": [
+        "json_fix",
+        "json",
+        "text",
+        "text_fix"
+      ]
+    },
+    {
+      "case": "checked-c",
+      "repetition": 2,
+      "order": [
+        "text_fix",
+        "json",
+        "json_fix",
+        "text"
+      ]
+    },
+    {
+      "case": "checked-b",
+      "repetition": 1,
+      "order": [
+        "text_fix",
+        "text",
+        "json",
+        "json_fix"
+      ]
+    },
+    {
+      "case": "generic-d",
+      "repetition": 1,
+      "order": [
+        "text_fix",
+        "json_fix",
+        "text",
+        "json"
+      ]
+    },
+    {
+      "case": "variant-b",
+      "repetition": 1,
+      "order": [
+        "text_fix",
+        "json",
+        "text",
+        "json_fix"
+      ]
+    },
+    {
+      "case": "bool-b",
+      "repetition": 2,
+      "order": [
+        "text_fix",
+        "json_fix",
+        "json",
+        "text"
+      ]
+    }
+  ],
+  "schedule": [
+    {
+      "arm": "json",
+      "case": "generic-e",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-e",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-e",
+      "repetition": 1
+    },
+    {
+      "arm": "text",
+      "case": "generic-e",
+      "repetition": 1
+    },
+    {
+      "arm": "json",
+      "case": "bool-b",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "bool-b",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "bool-b",
+      "repetition": 1
+    },
+    {
+      "arm": "text",
+      "case": "bool-b",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-e",
+      "repetition": 2
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-e",
+      "repetition": 2
+    },
+    {
+      "arm": "json",
+      "case": "checked-e",
+      "repetition": 2
+    },
+    {
+      "arm": "text",
+      "case": "checked-e",
+      "repetition": 2
+    },
+    {
+      "arm": "json_fix",
+      "case": "variant-b",
+      "repetition": 2
+    },
+    {
+      "arm": "text_fix",
+      "case": "variant-b",
+      "repetition": 2
+    },
+    {
+      "arm": "json",
+      "case": "variant-b",
+      "repetition": 2
+    },
+    {
+      "arm": "text",
+      "case": "variant-b",
+      "repetition": 2
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-a",
+      "repetition": 2
+    },
+    {
+      "arm": "json",
+      "case": "generic-a",
+      "repetition": 2
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-a",
+      "repetition": 2
+    },
+    {
+      "arm": "text",
+      "case": "generic-a",
+      "repetition": 2
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-a",
+      "repetition": 2
+    },
+    {
+      "arm": "json",
+      "case": "checked-a",
+      "repetition": 2
+    },
+    {
+      "arm": "text",
+      "case": "checked-a",
+      "repetition": 2
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-a",
+      "repetition": 2
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-d",
+      "repetition": 1
+    },
+    {
+      "arm": "json",
+      "case": "checked-d",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-d",
+      "repetition": 1
+    },
+    {
+      "arm": "text",
+      "case": "checked-d",
+      "repetition": 1
+    },
+    {
+      "arm": "text",
+      "case": "generic-c",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-c",
+      "repetition": 1
+    },
+    {
+      "arm": "json",
+      "case": "generic-c",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-c",
+      "repetition": 1
+    },
+    {
+      "arm": "text",
+      "case": "variant-a",
+      "repetition": 2
+    },
+    {
+      "arm": "text_fix",
+      "case": "variant-a",
+      "repetition": 2
+    },
+    {
+      "arm": "json_fix",
+      "case": "variant-a",
+      "repetition": 2
+    },
+    {
+      "arm": "json",
+      "case": "variant-a",
+      "repetition": 2
+    },
+    {
+      "arm": "json",
+      "case": "bool-a",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "bool-a",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "bool-a",
+      "repetition": 1
+    },
+    {
+      "arm": "text",
+      "case": "bool-a",
+      "repetition": 1
+    },
+    {
+      "arm": "text",
+      "case": "checked-c",
+      "repetition": 1
+    },
+    {
+      "arm": "json",
+      "case": "checked-c",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-c",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-c",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-d",
+      "repetition": 2
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-d",
+      "repetition": 2
+    },
+    {
+      "arm": "text",
+      "case": "checked-d",
+      "repetition": 2
+    },
+    {
+      "arm": "json",
+      "case": "checked-d",
+      "repetition": 2
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-c",
+      "repetition": 2
+    },
+    {
+      "arm": "json",
+      "case": "generic-c",
+      "repetition": 2
+    },
+    {
+      "arm": "text",
+      "case": "generic-c",
+      "repetition": 2
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-c",
+      "repetition": 2
+    },
+    {
+      "arm": "text",
+      "case": "bool-a",
+      "repetition": 2
+    },
+    {
+      "arm": "json_fix",
+      "case": "bool-a",
+      "repetition": 2
+    },
+    {
+      "arm": "text_fix",
+      "case": "bool-a",
+      "repetition": 2
+    },
+    {
+      "arm": "json",
+      "case": "bool-a",
+      "repetition": 2
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-a",
+      "repetition": 1
+    },
+    {
+      "arm": "text",
+      "case": "checked-a",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-a",
+      "repetition": 1
+    },
+    {
+      "arm": "json",
+      "case": "checked-a",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-a",
+      "repetition": 1
+    },
+    {
+      "arm": "text",
+      "case": "generic-a",
+      "repetition": 1
+    },
+    {
+      "arm": "json",
+      "case": "generic-a",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-a",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-b",
+      "repetition": 2
+    },
+    {
+      "arm": "text",
+      "case": "generic-b",
+      "repetition": 2
+    },
+    {
+      "arm": "json",
+      "case": "generic-b",
+      "repetition": 2
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-b",
+      "repetition": 2
+    },
+    {
+      "arm": "text",
+      "case": "checked-e",
+      "repetition": 1
+    },
+    {
+      "arm": "json",
+      "case": "checked-e",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-e",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-e",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-d",
+      "repetition": 2
+    },
+    {
+      "arm": "json",
+      "case": "generic-d",
+      "repetition": 2
+    },
+    {
+      "arm": "text",
+      "case": "generic-d",
+      "repetition": 2
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-d",
+      "repetition": 2
+    },
+    {
+      "arm": "json",
+      "case": "variant-a",
+      "repetition": 1
+    },
+    {
+      "arm": "text",
+      "case": "variant-a",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "variant-a",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "variant-a",
+      "repetition": 1
+    },
+    {
+      "arm": "json",
+      "case": "checked-b",
+      "repetition": 2
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-b",
+      "repetition": 2
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-b",
+      "repetition": 2
+    },
+    {
+      "arm": "text",
+      "case": "checked-b",
+      "repetition": 2
+    },
+    {
+      "arm": "json",
+      "case": "generic-e",
+      "repetition": 2
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-e",
+      "repetition": 2
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-e",
+      "repetition": 2
+    },
+    {
+      "arm": "text",
+      "case": "generic-e",
+      "repetition": 2
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-b",
+      "repetition": 1
+    },
+    {
+      "arm": "json",
+      "case": "generic-b",
+      "repetition": 1
+    },
+    {
+      "arm": "text",
+      "case": "generic-b",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-b",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-c",
+      "repetition": 2
+    },
+    {
+      "arm": "json",
+      "case": "checked-c",
+      "repetition": 2
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-c",
+      "repetition": 2
+    },
+    {
+      "arm": "text",
+      "case": "checked-c",
+      "repetition": 2
+    },
+    {
+      "arm": "text_fix",
+      "case": "checked-b",
+      "repetition": 1
+    },
+    {
+      "arm": "text",
+      "case": "checked-b",
+      "repetition": 1
+    },
+    {
+      "arm": "json",
+      "case": "checked-b",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "checked-b",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "generic-d",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "generic-d",
+      "repetition": 1
+    },
+    {
+      "arm": "text",
+      "case": "generic-d",
+      "repetition": 1
+    },
+    {
+      "arm": "json",
+      "case": "generic-d",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "variant-b",
+      "repetition": 1
+    },
+    {
+      "arm": "json",
+      "case": "variant-b",
+      "repetition": 1
+    },
+    {
+      "arm": "text",
+      "case": "variant-b",
+      "repetition": 1
+    },
+    {
+      "arm": "json_fix",
+      "case": "variant-b",
+      "repetition": 1
+    },
+    {
+      "arm": "text_fix",
+      "case": "bool-b",
+      "repetition": 2
+    },
+    {
+      "arm": "json_fix",
+      "case": "bool-b",
+      "repetition": 2
+    },
+    {
+      "arm": "json",
+      "case": "bool-b",
+      "repetition": 2
+    },
+    {
+      "arm": "text",
+      "case": "bool-b",
+      "repetition": 2
+    }
+  ]
+}

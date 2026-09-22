@@ -1,0 +1,19 @@
+Done.
+
+**What changed:** `project/main.my` — `area`'s `match` on `Shape` only had the `case Shape.circle(radius)` arm, so the checker rejected it with `E_INCOMPLETE_MATCH` (unhandled variant `square`). I added the missing arm, exactly as the diagnostic's note suggested:
+
+```python
+case Shape.square(side):
+    return side * side
+```
+
+No other changes were needed; the existing `main` already dispatches both shapes and the circle arm already returns `3 * radius * radius`.
+
+**Verification:** 8 of the 20 allowed compiler invocations used.
+
+- `./bin/mylang check project/main.my` → exit 0, no output (was exit 1 with `E_INCOMPLETE_MATCH` before the fix).
+- `./bin/mylang run project/main.my -- circle 2` → `12` (matches `public/expected.json`)
+- `./bin/mylang run project/main.my -- square 3` → `9` (matches `public/expected.json`)
+- Extra inputs beyond the public examples: `circle 5` → 75, `square 4` → 16, `circle 0` → 0, `square 1` → 1, `circle -2` → 12, `square 7` → 49.
+
+All results match the required `3*r*r` (circle) and `r*r` (square) behavior.

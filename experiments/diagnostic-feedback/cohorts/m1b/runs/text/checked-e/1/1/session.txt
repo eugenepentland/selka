@@ -1,0 +1,15 @@
+## What I changed
+
+`project/main.my` — only `main` (the `to_int` helper was already correct):
+
+- **Before:** `value = to_int(args[0])` then `out.print(-3 + value)` — a type error (`-3 + Result[int, str]`), so the program didn't even compile.
+- **After:** `main` matches on the `Result`: `case Ok(value)` prints `-3 + value`, `case Err(_)` prints `-1`. `to_int` is untouched, and `bin/mylang check project/main.my` is now clean (no errors or warnings).
+
+## Exact command and result
+
+```
+$ ./bin/mylang check project/main.my
+exit: 0   (no output)
+```
+
+Verified behavior, including the two `public/expected.json` cases byte-for-byte (both PASS), plus `abc` → `-1`, `-5` → `-8`, `3.5` → `-1`, `+7` → `4`, `999999` → `999996`, all exit 0. Used 13 of the 20 allowed compiler invocations.

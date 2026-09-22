@@ -1,0 +1,8 @@
+Done.
+
+**What I changed:** In `project/main.my`, `main` was adding an `int` directly to a `Result` (`7 + as_count(args[0])`), which failed with `E_TYPE`. I unwrapped the `Result` with a `match`: `Ok(value)` sets `total = 7 + value`, `Err(_)` leaves `total = 7`. I also guarded against an empty `args` list (`if len(args) > 0`), which prints `7` rather than trapping, and used `_` for the unused error payload to keep `check` warning-free. `as_count` itself is unchanged.
+
+**Command and result:**
+- `bin/mylang check project/main.my` → exit 0, no warnings.
+- `bin/mylang run project/main.my -- 41` → `48`; `bin/mylang run project/main.my -- 0` → `7` (both match `public/expected.json`).
+- Edge cases also verified: `abc` → `7`, `""` → `7`, `-5` → `2`, `3.5` → `7`, and no argument → `7`.

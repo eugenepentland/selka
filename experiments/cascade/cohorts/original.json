@@ -1,0 +1,676 @@
+{
+  "version": 1,
+  "name": "original",
+  "captured_utc": "2026-09-19T11:26:45.098922+00:00",
+  "description": "The cascade experiment as published: 63 independent maintainer runs (three per arm per task) and nine chained runs (T2 -> T3 -> T7 per arm, repetition 1), on the frozen toolchain.",
+  "policy": {
+    "compiler_sha256": "4a9ad0c17789e422fa90dbb8e91497f007abdc2ef5152f3123889dbdc2cfbcb2",
+    "runner": "experiments/cascade/run.py",
+    "prompt": "experiments/cascade/maintainer_prompt.md",
+    "model": "deepseek-v4-flash",
+    "reasoning_effort": "max",
+    "delegation": "forbidden and verified zero",
+    "env_policy": "compiler symlinked from the frozen toolchain; ZIG_GLOBAL_CACHE_DIR pinned per run; ZIG_LOCAL_CACHE_DIR NOT pinned, so every run also fought a read-only cache path (see findings-2026-09-19-toolchain-noise.md)",
+    "cost_terms": {
+      "v1_input_output_reasoning": "what this cohort published; double-counts reasoning, which the provider reports inside output",
+      "v2_input_output": "corrected non-cache total",
+      "total": "provider total, cache reads included"
+    },
+    "cohort_digest": "sha256 of the measurement projection: identity, verdict, raw token fields and cost terms, toolchain, launch env, files changed, verification step statuses",
+    "record_revision": "records were later enriched with corrected cost terms and separated baseline/candidate green signals; the projection keeps the frozen measurement comparable"
+  },
+  "runs": [
+    {
+      "arm": "B",
+      "task": "T1",
+      "run": "1",
+      "record": "runs/B/T1/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "5a08445fdbf26f5642ec9da181e4c7ad01040b042e37dc8cba22e734ced83672"
+    },
+    {
+      "arm": "B",
+      "task": "T1",
+      "run": "2",
+      "record": "runs/B/T1/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "6b99f3952be09b1fa680951f057b5f9042d9d738c8276bcf4a389ea9e97ec200"
+    },
+    {
+      "arm": "B",
+      "task": "T1",
+      "run": "3",
+      "record": "runs/B/T1/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "ad549cdb4f8327ae00813a9e54aa61b2a9e3eabbe09abf5f9a9afba3cef37498"
+    },
+    {
+      "arm": "B",
+      "task": "T2",
+      "run": "1",
+      "record": "runs/B/T2/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "af0a1e0240e88b0c53c617d4297e4dff3104c155201ae994b0192a9164fc513d"
+    },
+    {
+      "arm": "B",
+      "task": "T2",
+      "run": "2",
+      "record": "runs/B/T2/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "d7b4c07abd67f1a05b00e22974fbedeec9d26c10d2baba8337e8d33dad200a1c"
+    },
+    {
+      "arm": "B",
+      "task": "T2",
+      "run": "3",
+      "record": "runs/B/T2/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "210cb93df5cb260f82457fc43f65c7c148bc6ea7db7b1d91461610799fe63cb2"
+    },
+    {
+      "arm": "B",
+      "task": "T2",
+      "run": "chain-r1-s1-a1",
+      "record": "runs/B/T2/chain-r1-s1-a1.json",
+      "verdict": "passed",
+      "sequence": "chained",
+      "digest": "4f68862c221e28d7f131ed41f0cb58bfbf2201a85dde688d6e453ab2cbe06f8f"
+    },
+    {
+      "arm": "B",
+      "task": "T3",
+      "run": "1",
+      "record": "runs/B/T3/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "cc5c260efbe2d54225efd90b0d6ef9d5ce25f99c06c88bd1782721fcecb336e7"
+    },
+    {
+      "arm": "B",
+      "task": "T3",
+      "run": "2",
+      "record": "runs/B/T3/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "4354c6af062a02371941011f1275f6ac6c6c5155302957716e9ee328787a856f"
+    },
+    {
+      "arm": "B",
+      "task": "T3",
+      "run": "3",
+      "record": "runs/B/T3/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "768fd4e2527e4da1851257a468f5825682bcfbeceedc38f72edd0facad6fa75f"
+    },
+    {
+      "arm": "B",
+      "task": "T3",
+      "run": "chain-r1-s2-a1",
+      "record": "runs/B/T3/chain-r1-s2-a1.json",
+      "verdict": "passed",
+      "sequence": "chained",
+      "digest": "3f50420fc44a7275ca18b504bddf16c423c8b7a76f2660b77f2cfb352fff640a"
+    },
+    {
+      "arm": "B",
+      "task": "T4",
+      "run": "1",
+      "record": "runs/B/T4/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "9f0b21b7b7eac3fbe7a28a4d45a6955dc4844051396e6e65c5af01ca9dd57bf6"
+    },
+    {
+      "arm": "B",
+      "task": "T4",
+      "run": "2",
+      "record": "runs/B/T4/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "23a3ff4cf8707031d2f8267353758733aed75af2a9ff4be7d1be4fc7f63c6025"
+    },
+    {
+      "arm": "B",
+      "task": "T4",
+      "run": "3",
+      "record": "runs/B/T4/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "dbd29382c3e09995436585f3888d1f7ff11d9cefadb41af7cea6d077b224bbbc"
+    },
+    {
+      "arm": "B",
+      "task": "T5",
+      "run": "1",
+      "record": "runs/B/T5/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "52c07748cfbad1790fe4cb9611d34dbb3c1a0146dbc84d21ca36554ad6050e2b"
+    },
+    {
+      "arm": "B",
+      "task": "T5",
+      "run": "2",
+      "record": "runs/B/T5/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "ab466592229d448d8e5cde522ac817c69602653b6e49c86c8da58f19bc5a8abc"
+    },
+    {
+      "arm": "B",
+      "task": "T5",
+      "run": "3",
+      "record": "runs/B/T5/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "5aebf1b30ec71f5f0ce62e0a32b6a9d34ee867c6fdd1458885b97ff65a2f72f6"
+    },
+    {
+      "arm": "B",
+      "task": "T6",
+      "run": "1",
+      "record": "runs/B/T6/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "abd9d08c7b463989855e208af0e6ef775cf2dff897926b3e6f41b2bb04f90289"
+    },
+    {
+      "arm": "B",
+      "task": "T6",
+      "run": "2",
+      "record": "runs/B/T6/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "fe89323be5a3f6296b10f45c20d6a9d91dc9bc351b1466982eb627b7f8c339e1"
+    },
+    {
+      "arm": "B",
+      "task": "T6",
+      "run": "3",
+      "record": "runs/B/T6/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "d6f314a7fef0f09a7b7f5fd73041f3f414e8aeffa49ad257517c330e7c413e7d"
+    },
+    {
+      "arm": "B",
+      "task": "T7",
+      "run": "1",
+      "record": "runs/B/T7/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "744cb873830b6a9876768950fc027352bcb2e7f8ac25e9328d9ba5d78cc88828"
+    },
+    {
+      "arm": "B",
+      "task": "T7",
+      "run": "2",
+      "record": "runs/B/T7/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "4486a6aad9d00511d8d430c750771147c871e6e239c1996b4aaa75bbef8b11f3"
+    },
+    {
+      "arm": "B",
+      "task": "T7",
+      "run": "3",
+      "record": "runs/B/T7/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "10ddafbbf5d3746e1e9f5e285eefce490dee209d4b52bc8d5e02f254f5d68e2d"
+    },
+    {
+      "arm": "B",
+      "task": "T7",
+      "run": "chain-r1-s3-a1",
+      "record": "runs/B/T7/chain-r1-s3-a1.json",
+      "verdict": "passed",
+      "sequence": "chained",
+      "digest": "bfafa200110ec4a3da803a4c7ee19acec12a8c681e330171653fe2609421e61f"
+    },
+    {
+      "arm": "P1",
+      "task": "T1",
+      "run": "1",
+      "record": "runs/P1/T1/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "ab52fc4e14a83a609ebea26a59e98180f28bcaa442212adabe58a0d25106bbf0"
+    },
+    {
+      "arm": "P1",
+      "task": "T1",
+      "run": "2",
+      "record": "runs/P1/T1/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "161d670bbd37a6faf58af557b99e843f90e96a576e826ed5470299a9e159e0f6"
+    },
+    {
+      "arm": "P1",
+      "task": "T1",
+      "run": "3",
+      "record": "runs/P1/T1/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "3b07667a1d7a7621560fb2c110578ad06686dec6f27fb49ef197715cf5303e46"
+    },
+    {
+      "arm": "P1",
+      "task": "T2",
+      "run": "1",
+      "record": "runs/P1/T2/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "bb7202565ee3044e5d948b24f4c15403d5eb2354eb643cac7753ff1c095523e3"
+    },
+    {
+      "arm": "P1",
+      "task": "T2",
+      "run": "2",
+      "record": "runs/P1/T2/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "b49056d4968882e051a03895a100c5f59e63572eafb0569be273d40ff451cf8f"
+    },
+    {
+      "arm": "P1",
+      "task": "T2",
+      "run": "3",
+      "record": "runs/P1/T2/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "999cacc75fadb8a94f4a869e7d97b355acab586a0a235f52b886b68c05ca52f7"
+    },
+    {
+      "arm": "P1",
+      "task": "T2",
+      "run": "chain-r1-s1-a1",
+      "record": "runs/P1/T2/chain-r1-s1-a1.json",
+      "verdict": "passed",
+      "sequence": "chained",
+      "digest": "0c5af1c95dacebdfeade00594f4a45cf81fd8b7d3aa8c75336ea1a4fc32fa090"
+    },
+    {
+      "arm": "P1",
+      "task": "T3",
+      "run": "1",
+      "record": "runs/P1/T3/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "e96a496df0bd6d9e4216e02a17820a2f59146e90d39b7f36550e21ff6848120f"
+    },
+    {
+      "arm": "P1",
+      "task": "T3",
+      "run": "2",
+      "record": "runs/P1/T3/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "5bcd2e569f86e0842c3ed6a3ccf40bd98216946bb9ffc1ba0de13a58a83cadc0"
+    },
+    {
+      "arm": "P1",
+      "task": "T3",
+      "run": "3",
+      "record": "runs/P1/T3/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "511362e7840f74dcf03c6b5395d5a0a09e2eed8c5ae83571a0c1c154735a9a21"
+    },
+    {
+      "arm": "P1",
+      "task": "T3",
+      "run": "chain-r1-s2-a1",
+      "record": "runs/P1/T3/chain-r1-s2-a1.json",
+      "verdict": "passed",
+      "sequence": "chained",
+      "digest": "292e868a25bc50f4318de66dcdb4a7075a725768b0cf45d01ce4725525b1551e"
+    },
+    {
+      "arm": "P1",
+      "task": "T4",
+      "run": "1",
+      "record": "runs/P1/T4/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "25d085d7a320616b2050aae159fa7b6af6228b676d09de8f28d00256b7e7f813"
+    },
+    {
+      "arm": "P1",
+      "task": "T4",
+      "run": "2",
+      "record": "runs/P1/T4/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "1641c86e7fc54273791ed87103c03efbbd23a657fce55d96dc09cb3c3cfe5a1a"
+    },
+    {
+      "arm": "P1",
+      "task": "T4",
+      "run": "3",
+      "record": "runs/P1/T4/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "1e9eb694bfad0b562c45e9daafe5a596eeda2586276f7328272bc680521382ef"
+    },
+    {
+      "arm": "P1",
+      "task": "T5",
+      "run": "1",
+      "record": "runs/P1/T5/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "0c300f72cbb089d48ac15e31d24499d6461fd92ada3b19abdb095da1bc9c4068"
+    },
+    {
+      "arm": "P1",
+      "task": "T5",
+      "run": "2",
+      "record": "runs/P1/T5/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "3094a6390ae7d34735e69c9c8a18774b54dcc5db07966451b12585a89d94e1da"
+    },
+    {
+      "arm": "P1",
+      "task": "T5",
+      "run": "3",
+      "record": "runs/P1/T5/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "a3fe2caaf8f8e18176f8ab6d0bc3be6f274ac4126d94a0cb0fd4a31551753c99"
+    },
+    {
+      "arm": "P1",
+      "task": "T6",
+      "run": "1",
+      "record": "runs/P1/T6/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "e08ad10f4c99a20b9e598131274bcf6f6884114f819793d5c95e1f03d7a01bc8"
+    },
+    {
+      "arm": "P1",
+      "task": "T6",
+      "run": "2",
+      "record": "runs/P1/T6/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "c1468ca6f5e1be9732338ff3a78febb5a557f00784dc6be528d1b83832ff52af"
+    },
+    {
+      "arm": "P1",
+      "task": "T6",
+      "run": "3",
+      "record": "runs/P1/T6/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "c2fdb6f78b00396db7585b40e34a773d77f55e39b9a6ad8aa56235d68a6b85c3"
+    },
+    {
+      "arm": "P1",
+      "task": "T7",
+      "run": "1",
+      "record": "runs/P1/T7/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "39c65321902fcce17e408095b26f8f9b7f60c21f6728153a1727a960f4a2ff30"
+    },
+    {
+      "arm": "P1",
+      "task": "T7",
+      "run": "2",
+      "record": "runs/P1/T7/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "317edf60de1602e6055c1341403666d884d7d9856964032a72b0dea7d4208ac3"
+    },
+    {
+      "arm": "P1",
+      "task": "T7",
+      "run": "3",
+      "record": "runs/P1/T7/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "a728018d56d60a3924d6b966c28c7fc34def2db28a913c8aacb6d990458cc3ca"
+    },
+    {
+      "arm": "P1",
+      "task": "T7",
+      "run": "chain-r1-s3-a1",
+      "record": "runs/P1/T7/chain-r1-s3-a1.json",
+      "verdict": "passed",
+      "sequence": "chained",
+      "digest": "7c0077a1baf9a17b51c0b10777e1fcd4c183ddbfd555153a978a6f5f1678e2a1"
+    },
+    {
+      "arm": "P2",
+      "task": "T1",
+      "run": "1",
+      "record": "runs/P2/T1/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "376a5e22c75f4f3ab43d0454767c8744c669b0593bf5b190ce2d2af32db99f08"
+    },
+    {
+      "arm": "P2",
+      "task": "T1",
+      "run": "2",
+      "record": "runs/P2/T1/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "7c257ce7c02f1b2599ec8c166b054d51712c6c5c700b55bf3f99533a92ae9ee3"
+    },
+    {
+      "arm": "P2",
+      "task": "T1",
+      "run": "3",
+      "record": "runs/P2/T1/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "ed1fadc716d4d212137bdffcdcfbdaa74f7fae8bcd111072470f3ea2fd9809a9"
+    },
+    {
+      "arm": "P2",
+      "task": "T2",
+      "run": "1",
+      "record": "runs/P2/T2/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "f9a46e975bb58468710db1c90f6892c47699f72030fd3ae56b50bd708338495b"
+    },
+    {
+      "arm": "P2",
+      "task": "T2",
+      "run": "2",
+      "record": "runs/P2/T2/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "8c40b07c5e776b3e81ecb40d3609f8c25033dc833cf6220192e629b92ee7d91f"
+    },
+    {
+      "arm": "P2",
+      "task": "T2",
+      "run": "3",
+      "record": "runs/P2/T2/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "eb0427ec036a66d8ce4a49345c513c53e7a7272f5475d1cbca92a7f5daaa7b85"
+    },
+    {
+      "arm": "P2",
+      "task": "T2",
+      "run": "chain-r1-s1-a1",
+      "record": "runs/P2/T2/chain-r1-s1-a1.json",
+      "verdict": "passed",
+      "sequence": "chained",
+      "digest": "e0e786b75b6fdd74654fa8a8324248649bbc1f60c38aa50d5b5a8d071c4757d3"
+    },
+    {
+      "arm": "P2",
+      "task": "T3",
+      "run": "1",
+      "record": "runs/P2/T3/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "91e397b154838bd28da52511ee384b3bc31ec612c236dfaf054cd4a146002b20"
+    },
+    {
+      "arm": "P2",
+      "task": "T3",
+      "run": "2",
+      "record": "runs/P2/T3/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "084fb89f8a579cda7ce3d374b1ae64ddd7f7e70d94717ef1c0c87a8c7103e10b"
+    },
+    {
+      "arm": "P2",
+      "task": "T3",
+      "run": "3",
+      "record": "runs/P2/T3/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "e4c22b2e24231879459bd298c5477abc3afb1c3bb17c7fd173565bf8cad0a584"
+    },
+    {
+      "arm": "P2",
+      "task": "T3",
+      "run": "chain-r1-s2-a1",
+      "record": "runs/P2/T3/chain-r1-s2-a1.json",
+      "verdict": "passed",
+      "sequence": "chained",
+      "digest": "a90ca83527d4b499b73ce351bf1c32c8307aa67098693332b129ed251a454f78"
+    },
+    {
+      "arm": "P2",
+      "task": "T4",
+      "run": "1",
+      "record": "runs/P2/T4/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "7bfefea31184229be63c0e6ae7f7f983eed15d33f61004ce247f277715b7b856"
+    },
+    {
+      "arm": "P2",
+      "task": "T4",
+      "run": "2",
+      "record": "runs/P2/T4/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "6c5df0dd54a3b61fa963e224f7b77a034803e30b809838947ca4675f62cb6a47"
+    },
+    {
+      "arm": "P2",
+      "task": "T4",
+      "run": "3",
+      "record": "runs/P2/T4/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "04e64d9d90136bc53b9621d3e115381e57162ae6cedb400a2ad974b2bafa68ac"
+    },
+    {
+      "arm": "P2",
+      "task": "T5",
+      "run": "1",
+      "record": "runs/P2/T5/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "26b8d32905d31c3c4015185af25c1448514db70fc585150e52cc14a3fcc811e8"
+    },
+    {
+      "arm": "P2",
+      "task": "T5",
+      "run": "2",
+      "record": "runs/P2/T5/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "d4f1f338062bc5891b4b1be39527f8cf64410ad0da1f393e9d4cc4b12e096163"
+    },
+    {
+      "arm": "P2",
+      "task": "T5",
+      "run": "3",
+      "record": "runs/P2/T5/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "9499c8dc8ca4a369ee593c8f617552cf035b81d5ed8c3c318c09fde80370d0ab"
+    },
+    {
+      "arm": "P2",
+      "task": "T6",
+      "run": "1",
+      "record": "runs/P2/T6/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "132181497a049cfdf691a1e9e4864805aba193ae83dd31591a2299ccc7b711a0"
+    },
+    {
+      "arm": "P2",
+      "task": "T6",
+      "run": "2",
+      "record": "runs/P2/T6/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "0cac76ded511925674f40cc9f8354d67fef47df0c906d5ba3f4bed5d1ac06b7d"
+    },
+    {
+      "arm": "P2",
+      "task": "T6",
+      "run": "3",
+      "record": "runs/P2/T6/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "c60d4e97334ede3ea4c06fe5f3fcba0e810e2c5f5d20008f39f564962d12adbd"
+    },
+    {
+      "arm": "P2",
+      "task": "T7",
+      "run": "1",
+      "record": "runs/P2/T7/1.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "d6865d681452a6cd081578951b2f46c59f4cb41246144fe26ea69975d485cd53"
+    },
+    {
+      "arm": "P2",
+      "task": "T7",
+      "run": "2",
+      "record": "runs/P2/T7/2.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "f3179151a9dd314ee86b981eedaeed17d08f4f32eeecb31756dfc59be6df95fe"
+    },
+    {
+      "arm": "P2",
+      "task": "T7",
+      "run": "3",
+      "record": "runs/P2/T7/3.json",
+      "verdict": "passed",
+      "sequence": "independent",
+      "digest": "2d08281940b3bd341c157dca38ba614e811a108f726e598bcd8654df5a6e90d8"
+    },
+    {
+      "arm": "P2",
+      "task": "T7",
+      "run": "chain-r1-s3-a1",
+      "record": "runs/P2/T7/chain-r1-s3-a1.json",
+      "verdict": "passed",
+      "sequence": "chained",
+      "digest": "7f99b4e88f0b402e3d5ecc783d3003fec16ed44ebaedc681512f7b16b9d542d8"
+    }
+  ],
+  "excluded": {
+    "B/T2/4": "cache-fixed follow-up: both cache variables pinned, run after the published cohort; a different environment and therefore a different cohort",
+    "chain repetitions > 1": "none exist yet; the keyed naming reserves them"
+  }
+}

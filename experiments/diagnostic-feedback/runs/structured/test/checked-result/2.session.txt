@@ -1,0 +1,18 @@
+Fixed.
+
+**Change** (`project/main.my`, only `main`): `score = bonus + lookup("five")` added an `int` to a `Result[int, str]` (`E_TYPE`). I unwrapped the result with a `match` (there's no std `unwrap`, and `?` would force `main` off its `-> int` contract): `Ok(value)` computes `bonus + value`, `Err(_)` falls back to `bonus`. `lookup` and the rest are untouched, and all scratch files were removed.
+
+```python
+def main(out: Stream) -> int:
+    bonus = 0
+    score = 0
+    match lookup("five"):
+        case Ok(value):
+            score = bonus + value
+        case Err(_):
+            score = bonus
+    out.print(score)
+    return 0
+```
+
+**Command and result:** `bin/mylang run project/main.my` → stdout `5`, exit code 0 (and `bin/mylang check project/main.my` exits 0 with no diagnostics).

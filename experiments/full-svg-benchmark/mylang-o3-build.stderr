@@ -1,0 +1,33 @@
+layout.my:25:14: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def pinGroup(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
+               ^
+layout.my:25:38: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def pinGroup(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
+                                       ^
+layout.my:25:59: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def pinGroup(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
+                                                            ^
+layout.my:32:15: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def rowHeight(host: Host, pin: c.Pin, pins: list[c.Pin], parts: list[c.Part]) -> int:
+                ^
+layout.my:163:9: warning[W_MUTATES_MISSING]: this function writes `rows` (parameter 1) reachable from the caller; declare `mutates(rows)`
+          rows[i].side = side
+          ^
+layout.my:212:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def depth(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
+            ^
+layout.my:212:35: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def depth(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
+                                    ^
+layout.my:212:56: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def depth(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
+                                                         ^
+layout_graph.my:44:18: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def build(host: Host, parts: list[c.Part], pins: list[c.Pin]) -> list[Net] effects(host, managed_allocation):
+                   ^
+layout_routes.my:42:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def blocked(host: Host, a: l.Point, b: l.Point, net_id: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:
+              ^
+layout_routes.my:42:62: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def blocked(host: Host, a: l.Point, b: l.Point, net_id: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:
+                                                               ^

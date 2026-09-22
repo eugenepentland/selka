@@ -1,0 +1,23 @@
+{
+  "regenerated": {
+    "function_size": 19380,
+    "stack_reservation_hex": [
+      "4e8"
+    ],
+    "heap_calls": 15
+  },
+  "root-clean": {
+    "function_size": 1338,
+    "stack_reservation_hex": [
+      "1a8"
+    ],
+    "heap_calls": 18
+  },
+  "root-width": {
+    "function_size": 1338,
+    "stack_reservation_hex": [
+      "1a8"
+    ],
+    "heap_calls": 18
+  }
+}

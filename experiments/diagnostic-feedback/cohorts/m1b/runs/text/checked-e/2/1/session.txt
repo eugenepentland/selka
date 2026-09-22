@@ -1,0 +1,12 @@
+Fixed `project/main.my`: `main` was adding an `int` to the `Result` returned by `to_int`, which failed type checking. I replaced that with a `match` on the result — `Ok(value)` prints `-3 + value`, `Err(_)` prints `-1` (wildcard avoids an unused-binding warning).
+
+Verified with the two `public/expected.json` cases:
+
+```
+$ ./bin/mylang check project/main.my   → exit 0, clean
+$ ./bin/mylang run project/main.my -- 41   → 38   (exit 0)
+$ ./bin/mylang run project/main.my -- 0    → -3   (exit 0)
+$ ./bin/mylang run project/main.my -- abc  → -1   (exit 0)
+```
+
+Also spot-checked `-5 → -8`, `100 → 97`, `007 → 4`, `4.5 → -1`, `""` → `-1`.

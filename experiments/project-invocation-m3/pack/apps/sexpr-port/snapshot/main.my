@@ -1,0 +1,92 @@
+module main
+
+# sexpr-port CLI: parse an S-expression file and summarise it.
+#
+#   mylang run experiments/sexpr-port/main.my -- <file.sexp> [--render]
+#
+# The default output is one statistics line with the same field names as
+# experiments/sexpr-port/reference_parse.py, which `compare.py` diffs against
+# an independent reader. `--render` prints the canonical single-line form
+# instead. Exit status: 0 ok, 1 parse error, 2 usage or I/O error.
+
+import sexpr.ast as ast
+import sexpr.parser as parser
+import sexpr.printer as printer
+
+
+class Tally:
+    forms: int
+    nodes: int
+    atoms: int
+    strings: int
+    ints: int
+    floats: int
+    measures: int
+    depth: int
+    values: float
+
+
+def tally(counts: Tally, node: ast.Node, depth: int) mutates(counts):
+    counts.nodes = counts.nodes + 1
+    if depth > counts.depth:
+        counts.depth = depth
+    match node:
+        case ast.Node.atom(_, _):
+            counts.atoms = counts.atoms + 1
+        case ast.Node.string(_, _):
+            counts.strings = counts.strings + 1
+        case ast.Node.integer(value, _):
+            counts.ints = counts.ints + 1
+            counts.values = counts.values + float(value)
+        case ast.Node.decimal(value, _, _):
+            counts.floats = counts.floats + 1
+            counts.values = counts.values + value
+        case ast.Node.measure(value, _):
+            counts.measures = counts.measures + 1
+            counts.values = counts.values + value
+        case ast.Node.form(entries, _):
+            counts.forms = counts.forms + 1
+            for child in entries:
+                tally(counts, child, depth + 1)
+
+
+def summarise(nodes: list[ast.Node]) -> str:
+    counts = Tally(forms=0, nodes=0, atoms=0, strings=0, ints=0, floats=0, measures=0, depth=0, values=0.0)
+    for node in nodes:
+        tally(counts, node, 0)
+    return f"forms={counts.forms} nodes={counts.nodes} atoms={counts.atoms} strings={counts.strings} ints={counts.ints} floats={counts.floats} measures={counts.measures} max_depth={counts.depth} value_sum={counts.values}"
+
+
+def render_to(out: Stream, nodes: list[ast.Node]) -> bool:
+    # `render_bytes` already produced one canonical byte snapshot, so writing it
+    # with a terminating newline avoids decoding those bytes to scalars and
+    # re-encoding them for `print`. The written bytes are identical, including
+    # the single trailing '\n' that `print` adds.
+    written = out.write(printer.render_bytes(nodes))
+    return written >= 0 and out.write(b"\n") == 1
+
+
+def main(args: list[str], fs: Filesystem, out: Stream, err: Stream) -> int:
+    if len(args) == 0:
+        err.print("usage: main <file.sexp> [--render]")
+        return 2
+    path = args[0]
+    render_only = len(args) > 1 and args[1] == "--render"
+    source = b""
+    match read_file(fs, path):
+        case Ok(data):
+            source = data
+        case Err(problem):
+            err.print("read failed:", problem)
+            return 2
+    match parser.parse(source):
+        case Ok(nodes):
+            if render_only:
+                if not render_to(out, nodes):
+                    return 2
+            else:
+                out.print(summarise(nodes))
+            return 0
+        case Err(problem):
+            err.print(f"parse error: {problem.message} at {problem.line}:{problem.col}")
+            return 1

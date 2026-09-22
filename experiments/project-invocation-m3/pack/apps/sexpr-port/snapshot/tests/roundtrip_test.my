@@ -1,0 +1,121 @@
+module tests.roundtrip_test
+
+# End-to-end checks for the ported reader: real-shaped source through
+# tokenizer -> parser -> printer, plus the numeric semantics and located errors
+# that the per-module suites exercise in isolation.
+
+import sexpr.ast as ast
+import sexpr.parser as parser
+import sexpr.printer as printer
+
+import sexpr.view as view
+
+# A node built by hand carries a view of its own spelling, exactly as a parsed
+# node carries a view of the document it came from. These helpers produce that
+# view for a literal in a test body, so a hand-built tree looks the way it did
+# before text became a source range.
+def view_of_text(text: str) -> view.View:
+    data = text.encode()
+    return view.View(source=data, start=0, end=len(data))
+
+
+def text_in(found: view.View) -> str:
+    match view.text_of(found):
+        case Ok(text):
+            return text
+        case Err(_):
+            return "<none>"
+
+
+
+# A comment, two top-level forms, nested lists, escaped strings, an SI value,
+# a percent tolerance and mm/mil measures.
+def sample() -> bytes:
+    return b"; a comment\n(design-block \"buck\" (instance \"R1\" (res-0402 \"10k\"))\n  (pos 1.5mm 2mil) (tol 5%) (cap 100nF) (note \"a \\\"quoted\\\" note\"))\n(kicad_pcb (version 20240108) (net 0 \"\"))\n"
+
+
+def parse_ok(src: bytes) -> list[ast.Node]:
+    match parser.parse(src):
+        case Ok(nodes):
+            return nodes
+        case Err(_):
+            empty: list[ast.Node] = []
+            return empty
+
+
+def render(src: bytes) -> str:
+    return printer.render(parse_ok(src))
+
+
+def error_text(src: bytes) -> str:
+    match parser.parse(src):
+        case Ok(_):
+            return ""
+        case Err(problem):
+            return f"{problem.message} at {problem.line}:{problem.col}"
+
+
+def child(src: bytes, form_index: int, child_index: int) -> ast.Node:
+    return ast.children(parse_ok(src)[form_index])[child_index]
+
+
+def number_of(node: ast.Node) -> float:
+    match ast.as_number(node):
+        case Some(value):
+            return value
+        case None:
+            return -1.0
+
+
+def text_of(node: ast.Node) -> str:
+    match ast.as_text(node):
+        case Some(value):
+            return text_in(value)
+        case None:
+            return ""
+
+
+def near(value: float, target: float) -> bool:
+    return value > target - 0.000000001 and value < target + 0.000000001
+
+
+public def test_render_is_a_fixed_point() -> bool:
+    text = render(sample())
+    return len(parse_ok(sample())) == 2 and render(text.encode()) == text
+
+
+public def test_comment_only_source_is_empty() -> bool:
+    return len(parse_ok(b"; nothing here\n; nor here\n")) == 0
+
+
+public def test_numeric_kinds_parse() -> bool:
+    src = b"(a 1 1.5 220k 100nF 10% 1.5mm 2mil)"
+    return (
+        near(number_of(child(src, 0, 1)), 1.0)
+        and near(number_of(child(src, 0, 2)), 1.5)
+        and near(number_of(child(src, 0, 3)), 220000.0)
+        and near(number_of(child(src, 0, 4)), 0.0000001)
+        and near(number_of(child(src, 0, 5)), 10.0)
+        and near(number_of(child(src, 0, 6)), 1.5)
+        and near(number_of(child(src, 0, 7)), 0.0508)
+    )
+
+
+public def test_string_keeps_its_escapes() -> bool:
+    return text_of(child(b"(note \"a \\\"quoted\\\" note\")", 0, 1)) == "a \\\"quoted\\\" note"
+
+
+public def test_stray_close_paren_is_located() -> bool:
+    return error_text(b"(a\n  (b c)\n  ))").find("3:4") >= 0
+
+
+public def test_unclosed_list_points_at_its_open_paren() -> bool:
+    return error_text(b"(outer\n  (inner 1 2\n").find("2:3") >= 0 and error_text(b"(outer\n  (inner 1 2\n").find("never closed") >= 0
+
+
+public def test_unterminated_string_is_located() -> bool:
+    return error_text(b"(a \"open)").find("1:4") >= 0
+
+
+public def test_unexpected_character_is_located() -> bool:
+    return error_text(b"(bad ]x)").find("1:6") >= 0

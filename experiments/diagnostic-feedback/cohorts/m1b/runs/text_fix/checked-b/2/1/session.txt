@@ -1,0 +1,22 @@
+Fixed. The bug was in `main`: `read_number` returns a `Result[int, str]`, but `main` used it directly as an `int`, causing `E_TYPE: expected int, found Result[int, str]`.
+
+**Change** (`project/main.my`, only `main`): unwrap the `Result` with a `match` — `Ok(value)` prints `0 + value`, `Err(_)` prints `-99`. I also print `-99` when no argument is supplied instead of trapping on `args[0]`, since a missing argument is likewise "not an integer". `read_number` is unchanged.
+
+```python
+def main(args: list[str], out: Stream) -> int:
+    if len(args) == 0:
+        out.print(-99)
+        return 0
+    match read_number(args[0]):
+        case Ok(value):
+            out.print(0 + value)
+        case Err(_):
+            out.print(-99)
+    return 0
+```
+
+**Verification** (12 of 20 invocations used; compiler log shows all `success`):
+- `bin/mylang check project/main.my` → exit 0, no diagnostics.
+- `bin/mylang run project/main.my -- 41` → `41` (exit 0) — matches `public/expected.json`.
+- `bin/mylang run project/main.my -- 0` → `0` (exit 0) — matches `public/expected.json`.
+- `-- abc`, `-- ""`, `-- 4.5`, `-- 99999999999999999999999999`, and no arguments → all `-99` (exit 0); `-- -7` → `-7`; `-- 41 42` → `41`.

@@ -1,0 +1,19 @@
+Fixed. `above` was returning the `bool` result of `a > b` from a function declared `-> int`, which failed type-checking with `E_TYPE: expected int, found bool`.
+
+**Change:** replaced `return a > b` in `project/main.my` with an explicit conversion to the integer the interface requires:
+
+```python
+def above(a: int, b: int) -> int:
+    if a > b:
+        return 1
+    return 0
+```
+
+(The compiler's suggested ternary `1 if a > b else 0` is not accepted by this parser — it reports `E_SYNTAX` — so I used the equivalent statement form.)
+
+**Commands and results:**
+
+- `bin/mylang check project/main.my` → exit 0, no diagnostics.
+- `bin/mylang run project/main.my -- 5 2` → stdout `1`, exit 0 (matches `public/expected.json`).
+- `bin/mylang run project/main.my -- 2 5` → stdout `0`, exit 0 (matches `public/expected.json`).
+- Extra inputs, all correct: `5 5`→`0`, `10 3`→`1`, `-3 -7`→`1`, `0 -1`→`1`, `999999999 999999998`→`1`, `-1 0`→`0`.

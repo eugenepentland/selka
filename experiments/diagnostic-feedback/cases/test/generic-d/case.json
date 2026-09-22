@@ -1,0 +1,13 @@
+{
+  "id": "generic-d",
+  "split": "test",
+  "family": "generic-requirement",
+  "code": "E_GENERIC_REQUIREMENT",
+  "observed_codes": [
+    "E_GENERIC_REQUIREMENT"
+  ],
+  "version": 1,
+  "public_inputs": 2,
+  "hidden_inputs": 4,
+  "structural": ""
+}

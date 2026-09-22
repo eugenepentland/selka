@@ -1,0 +1,20 @@
+Done.
+
+**What I changed** — in `project/main.my`, `lookup("five")` returns `Result[int, str]`, so it can't be added directly to `bonus` (the compiler's diagnostic `E_TYPE` suggested unwrapping it). I replaced the direct addition in `main` with a `match` on the result:
+
+- predeclared `score = 0`,
+- `case Ok(value): score = bonus + value` (the required path, giving `0 + 5`),
+- `case Err(problem): print the message and return 1`,
+- then `out.print(score)`.
+
+`lookup` itself was left unchanged.
+
+**Command and result**:
+
+```
+$ ./bin/mylang run project/main.my
+5
+exit code: 0
+```
+
+`./bin/mylang check project/main.my` also passes with exit 0.

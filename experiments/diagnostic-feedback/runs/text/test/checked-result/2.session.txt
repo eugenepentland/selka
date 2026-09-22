@@ -1,0 +1,17 @@
+**What I changed** (`project/main.my`, `main` only): the checker rejected `bonus + lookup("five")` with `E_TYPE: expected int, found Result[int, str]`. Since mylang has no Result unwrap helper and matches must be exhaustive, I unwrapped the `Result` with a two-arm `match`:
+
+- `score = bonus` initializes the binding before the match.
+- `case Ok(value)` assigns `score = bonus + value`.
+- `case Err(_)` keeps `score = bonus`.
+
+Nothing else in the file changed; probe files were scratch-only and removed.
+
+**Command and result:**
+
+```
+$ bin/mylang run project/main.my
+5
+exit=0
+```
+
+`bin/mylang check project/main.my` also exits 0 with no diagnostics.

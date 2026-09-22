@@ -1,0 +1,5 @@
+def identity(value: str) -> str noalloc:
+    return f"{value}"
+
+def main() -> int:
+    return 0

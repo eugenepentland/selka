@@ -1,0 +1,11 @@
+test-units
++- run test w
+guardian/test: 60 test(s) selected by filter: "qbe_test" — 49 match by name, 11 unnamed test block(s) run regardless
+guardian/test: test wall 0.47s; slowest over 50ms:
+guardian/test:   0.18s  qbe_test.test.large fixed scratch recursion reaches a structured frame trap
+guardian/test:   0.13s  qbe_test.test.QBE lowers stack joins loops casts and calls independently
+guardian/test:   0.10s  qbe_test.test.QBE keeps every branch label a loop or conditional reaches
+guardian/test: PASS — 60 passed
+guardian/test: RESULT {"passed":60,"failed":0,"skipped":0}
+failed command: MYLANG_QBE=/home/epentland/ai/canopy/mylang/zig-out/focus/qbe MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig ./.zig-cache/o/db976f4be825df46dcf87e15380f2c25/test --guardian-filter=qbe_test --cache-dir=./.zig-cache --seed=0x23f95173 --listen=-
+

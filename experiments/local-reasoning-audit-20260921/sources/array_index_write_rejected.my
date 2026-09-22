@@ -1,0 +1,10 @@
+def main() -> int:
+    fixed: [2]int = [1, 2]
+    fixed_copy = fixed
+    fixed_copy[0] = 9
+    shared: list[int] = [1, 2]
+    shared_alias = shared
+    shared_alias[0] = 9
+    assert fixed[0] == 1 and fixed_copy[0] == 9
+    assert shared[0] == 9
+    return 42

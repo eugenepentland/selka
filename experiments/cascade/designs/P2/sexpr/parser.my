@@ -1,0 +1,310 @@
+module sexpr.parser
+
+# Recursive-descent parser over sexpr.tokenizer's token list, ported from
+# eda/src/sexpr/parser.zig and generalised so that the lexical dialect, the
+# numeric tables and the nesting cap are supplied rather than compiled in.
+#
+# Default behaviour is the port's, unchanged:
+#   * every top-level form becomes one ast.Node, in source order
+#   * nested lists become ast.Node.form, however deep
+#   * int_val -> ast.Node.integer; float_val -> ast.Node.decimal
+#   * unit_val -> ast.Node.measure, normalised to millimetres
+#     (1 mil = 0.0254 mm); the suffix comes from the token text when it is
+#     still there and from the source bytes when the tokenizer stripped it
+#   * si_val -> ast.Node.decimal with the SI scale applied from the suffix's
+#     first letter; a trailing unit letter (V/A/F/H/R) or `%` carries no scale
+#   * nesting past the cap is rejected before the native stack overflows, and
+#     every rejection carries message + line + col + offset
+#
+# A caller can now vary, without touching this file:
+#   * `ParseOptions.max_depth` - the nesting cap (default 10000).
+#   * `ParseOptions.dialect` - the same `tk.Dialect` the tokenizer takes, so
+#     the scale table, the unit-letter table, the dimension-suffix table and
+#     their normalisation factors are the caller's. The bracket characters also
+#     supply the wording of the located diagnostics, so a reader of `[...]`
+#     reports `unexpected ']' — no matching '[' is open here`.
+# `parse(src)` is `parse_with(src, default_parse_options())`.
+#
+# Differences vs. the Zig parser, noted per CONTRACT.md:
+#   * the Zig `Node.literal` source spelling is carried on the decimal case
+#   * the Zig parser owns no allocator-freeing code (mylang is garbage
+#     collected), and its `OutOfMemory` case has no mylang analogue
+#   * lexer failures arrive as tk.LexError, which carries no column; the
+#     column is derived from the reported offset so line and column agree
+#   * `parse_with_depth_cap` is kept as the small-cap seam a test can drive
+#     without the runner's step budget, and now builds an explicit
+#     `ParseOptions`
+
+import sexpr.ast as ast
+import sexpr.tokenizer as tk
+
+
+public record ParseError:
+    message: str
+    line: int
+    col: int
+    offset: int
+
+
+# Maximum S-expression nesting depth, mirroring parser.zig's `max_parse_depth`.
+# Real files nest well under 100 deep, so this cap only stops hostile
+# `(((…` input before the native stack overflows.
+def max_parse_depth() -> int:
+    return 10000
+
+
+# Everything one parse depends on: the lexical dialect in force (shared with
+# the tokenizer, so classification and scaling agree) and the nesting cap.
+public record ParseOptions:
+    dialect: tk.Dialect
+    max_depth: int = 10000
+
+
+public def default_parse_options() -> ParseOptions:
+    return ParseOptions(dialect=tk.default_dialect(), max_depth=max_parse_depth())
+
+
+# A token-index cursor handed to parse_node. The token list, the raw source
+# (needed for the `mil` suffix, which the tokenizer strips) and the options are
+# shared by reference, so threading `pos` keeps the parser free of mutable
+# traversal state.
+record Cursor:
+    src: bytes
+    tokens: list[tk.Token]
+    pos: int
+    options: ParseOptions
+
+
+# One parsed node plus the index of the first token after it, so a caller can
+# resume the walk without mutable state.
+record Step:
+    node: ast.Node
+    next: int
+
+
+def located(span: ast.Span, message: str) -> ParseError:
+    return ParseError(message=message, line=span.line, col=span.col, offset=span.offset)
+
+
+def invalid_number(token: tk.Token) -> ParseError:
+    return located(token.span, "invalid number literal")
+
+
+def open_text(options: ParseOptions) -> str:
+    return options.dialect.syntax.open_bracket
+
+
+# The dialect's opening and closing bracket spellings decide the two
+# diagnostics that name one, so a reader of another token set stays readable.
+def unexpected_close(options: ParseOptions, token: tk.Token) -> str:
+    return "unexpected '" + token.text + "' — no matching '" + open_text(options) + "' is open here"
+
+
+def unclosed_list(options: ParseOptions) -> str:
+    return "unexpected end of input — a '" + open_text(options) + "' was never closed"
+
+
+# Line/column of a byte offset, derived the way the tokenizer advances: the
+# dialect's newline byte resets the column, every other byte advances it by one.
+def span_at(src: bytes, offset: int, options: ParseOptions) -> ast.Span:
+    line = 1
+    col = 1
+    index = 0
+    size = len(src)
+    stop = offset
+    if stop > size:
+        stop = size
+    newline = tk.char_byte(options.dialect.syntax.newline)
+    while index < stop:
+        if src[index] == newline:
+            line = line + 1
+            col = 1
+        else:
+            col = col + 1
+        index = index + 1
+    return ast.Span(line=line, col=col, offset=offset)
+
+
+# Translate a tokenizer rejection into a located ParseError. LexError carries
+# no column, so the column is recovered from the offset.
+def lex_failure(src: bytes, problem: tk.LexError, options: ParseOptions) -> ParseError:
+    span = span_at(src, problem.offset, options)
+    message = problem.message
+    if len(message) == 0:
+        message = "unexpected character"
+    return ParseError(message=message, line=span.line, col=span.col, offset=problem.offset)
+
+
+def parse_int(token: tk.Token, next_pos: int) -> Result[Step, ParseError]:
+    match int(token.text):
+        case Some(value):
+            return Ok(Step(node=ast.Node.integer(value, token.span), next=next_pos))
+        case None:
+            return Err(invalid_number(token))
+
+
+def parse_float(token: tk.Token, next_pos: int) -> Result[Step, ParseError]:
+    match float(token.text):
+        case Some(value):
+            return Ok(Step(node=ast.Node.decimal(value, token.span), next=next_pos))
+        case None:
+            return Err(invalid_number(token))
+
+
+# The normalisation factor of a dimension suffix written in the source right
+# after the token text. The landed tokenizer strips `mm`/`mil` from the token,
+# so the bytes are the only place left to look, exactly the check parser.zig
+# makes; 1.0 means "no suffix seen".
+def source_dimension_factor(src: bytes, token: tk.Token, options: ParseOptions) -> float:
+    after = token.span.offset + len(token.text)
+    for rule in options.dialect.numbers.dimensions:
+        if tk.matches_text(src, after, rule.suffix):
+            return rule.to_mm
+    return 1.0
+
+
+# A unit token is either `1.0mm`/`10mil` verbatim (the contract convention) or
+# bare `1.0`/`10` with the suffix consumed (the landed tokenizer's convention);
+# both decode to the same normalised measure. The table is the dialect's, so
+# `in`/`cm` or a redefined `mil` are a configuration change, not a code change.
+def parse_unit(src: bytes, token: tk.Token, next_pos: int, options: ParseOptions) -> Result[Step, ParseError]:
+    text = token.text
+    number_text = text
+    factor = 1.0
+    matched = False
+    for rule in options.dialect.numbers.dimensions:
+        if text.endswith(rule.suffix):
+            number_text = text[0:len(text) - len(rule.suffix)]
+            factor = rule.to_mm
+            matched = True
+            break
+    if not matched:
+        factor = source_dimension_factor(src, token, options)
+    match float(number_text):
+        case Some(value):
+            return Ok(Step(node=ast.Node.measure(value * factor, token.span), next=next_pos))
+        case None:
+            return Err(invalid_number(token))
+
+
+# One byte of an SI literal's numeric prefix, mirroring parseSiValue's scan:
+# digits, the decimal point, and a leading sign — each as the dialect spells it.
+def is_si_number_char(options: ParseOptions, byte: int, index: int) -> bool:
+    predicate = options.dialect.chars.is_digit
+    if predicate(byte):
+        return True
+    if byte == tk.char_byte(options.dialect.syntax.decimal_point):
+        return True
+    if byte == tk.char_byte(options.dialect.syntax.minus) and index == 0:
+        return True
+    return False
+
+
+def si_number_end(text: str, options: ParseOptions) -> int:
+    chars = text.encode()
+    end = 0
+    size = len(chars)
+    while end < size and is_si_number_char(options, chars[end], end):
+        end = end + 1
+    return end
+
+
+def parse_si(token: tk.Token, next_pos: int, options: ParseOptions) -> Result[Step, ParseError]:
+    text = token.text
+    end = si_number_end(text, options)
+    # A missing prefix or a suffixless text cannot be scaled; the tokenizer's
+    # suffix rules make this unreachable for a real si_val token.
+    if end == 0 or end == len(text):
+        return Err(invalid_number(token))
+    match float(text[0:end]):
+        case Some(value):
+            scaled = value * tk.scale_factor(options.dialect.numbers, text[end])
+            # Keep the source spelling alongside the decoded value, exactly as
+            # Zig's `Node.suffixedFloat` does: `100nF` and `100n` are the same
+            # number, but only the first says which physical quantity it is.
+            return Ok(Step(node=ast.Node.decimal(scaled, token.span, Some(text)), next=next_pos))
+        case None:
+            return Err(invalid_number(token))
+
+
+# Parse one node starting at `cursor.pos`, returning it and the first index
+# after it. `depth` is the enclosing list nesting (0 at top level).
+def parse_node(cursor: Cursor, depth: int) -> Result[Step, ParseError]:
+    token = cursor.tokens[cursor.pos]
+    next_pos = cursor.pos + 1
+    match token.kind:
+        case tk.Kind.lparen:
+            return parse_list(cursor, next_pos, depth, token)
+        case tk.Kind.rparen:
+            return Err(located(token.span, unexpected_close(cursor.options, token)))
+        case tk.Kind.atom:
+            return Ok(Step(node=ast.Node.atom(token.text, token.span), next=next_pos))
+        case tk.Kind.string:
+            return Ok(Step(node=ast.Node.string(token.text, token.span), next=next_pos))
+        case tk.Kind.int_val:
+            return parse_int(token, next_pos)
+        case tk.Kind.float_val:
+            return parse_float(token, next_pos)
+        case tk.Kind.unit_val:
+            return parse_unit(cursor.src, token, next_pos, cursor.options)
+        case tk.Kind.si_val:
+            return parse_si(token, next_pos, cursor.options)
+        case tk.Kind.eof:
+            return Err(located(token.span, unclosed_list(cursor.options)))
+
+
+# Parse the children of a list whose `(` was consumed, stopping at its `)`.
+# `pos` is the index of the first child token; the returned Step points just
+# past the closing `)`. `open_token` supplies both the form's span and the
+# bracket character the diagnostics name.
+def parse_list(cursor: Cursor, pos: int, depth: int, open_token: tk.Token) -> Result[Step, ParseError]:
+    if depth >= cursor.options.max_depth:
+        return Err(located(open_token.span, "s-expression nesting is too deep"))
+    entries: list[ast.Node] = []
+    cursor_pos = pos
+    while True:
+        token = cursor.tokens[cursor_pos]
+        # Point an unterminated list at the `(` that was never closed — the
+        # actionable location, not the end of the file where scanning stopped.
+        if token.kind == tk.Kind.eof:
+            return Err(located(open_token.span, unclosed_list(cursor.options)))
+        if token.kind == tk.Kind.rparen:
+            cursor_pos = cursor_pos + 1
+            break
+        child = parse_node(Cursor(src=cursor.src, tokens=cursor.tokens, pos=cursor_pos, options=cursor.options), depth + 1)?
+        entries.append(child.node)
+        cursor_pos = child.next
+    return Ok(Step(node=ast.Node.form(entries, open_token.span), next=cursor_pos))
+
+
+# Parse S-expression source into its top-level nodes under the default nesting
+# cap and dialect. Every tokenizer or parser rejection comes back as a located
+# ParseError.
+public def parse(src: bytes) -> Result[list[ast.Node], ParseError]:
+    return parse_with(src, default_parse_options())
+
+
+# `parse` with an explicit dialect and nesting cap.
+public def parse_with(src: bytes, options: ParseOptions) -> Result[list[ast.Node], ParseError]:
+    tokens: list[tk.Token] = []
+    match tk.tokenize_with(src, options.dialect):
+        case Ok(lexed):
+            tokens = lexed
+        case Err(problem):
+            return Err(lex_failure(src, problem, options))
+    nodes: list[ast.Node] = []
+    pos = 0
+    while True:
+        token = tokens[pos]
+        if token.kind == tk.Kind.eof:
+            break
+        parsed = parse_node(Cursor(src=src, tokens=tokens, pos=pos, options=options), 0)?
+        nodes.append(parsed.node)
+        pos = parsed.next
+    return Ok(nodes)
+
+
+# `parse` with an explicit nesting cap, kept for the reduced-cap test seam.
+# The public `parse` passes max_parse_depth(); this is the same code at any cap.
+public def parse_with_depth_cap(src: bytes, cap: int) -> Result[list[ast.Node], ParseError]:
+    return parse_with(src, replace(default_parse_options(), max_depth=cap))

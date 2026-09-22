@@ -1,0 +1,28 @@
+module main
+
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+def largest[T: Ordered](values: list[int]) -> int:
+    best = values[0]
+    index = 1
+    while index < len(values):
+        if values[index] > best:
+            best = values[index]
+        index = index + 1
+    return best
+
+
+
+def main(args: list[str], out: Stream) -> int:
+    first = number(args[0])
+    second = number(args[1])
+    third = number(args[2])
+    out.print(largest([first, second, third]))
+    return 0

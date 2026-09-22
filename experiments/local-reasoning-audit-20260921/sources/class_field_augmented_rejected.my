@@ -1,0 +1,8 @@
+class Cursor:
+    pos: int
+def advance(cursor: Cursor):
+    cursor.pos += 1
+def main() -> int:
+    cursor = Cursor(pos=41)
+    advance(cursor)
+    return cursor.pos

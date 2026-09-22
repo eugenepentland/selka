@@ -1,0 +1,24 @@
+def allocate(groups: int, width: int) -> int:
+    rows: list[list[int]] = []
+    group = 0
+    while group < groups:
+        row: list[int] = []
+        item = 0
+        while item < width:
+            row.append(group + item)
+            item += 1
+        rows.append(row)
+        group += 1
+    checksum = 0
+    for current_row in rows:
+        for current_item in current_row:
+            checksum = (checksum + current_item) % 1000000007
+    return checksum
+
+def main() -> int:
+    total = 0
+    round = 0
+    while round < 64:
+        total = (total + allocate(96, 64)) % 1000000007
+        round += 1
+    return total

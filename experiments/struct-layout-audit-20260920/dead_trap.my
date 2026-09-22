@@ -1,0 +1,10 @@
+record Pair:
+    used: int
+    unused: int
+
+def project(value: int) -> int:
+    p = Pair(used=7, unused=10 // value)
+    return p.used
+
+def main() -> int:
+    return project(0)

@@ -1,0 +1,347 @@
+module sexpr.printer
+
+# Pretty-printer for the S-expression AST: renders a tree back to canonical
+# source text, the inverse of sexpr.parser, ported from
+# eda/src/sexpr/printer.zig (426 lines) and generalised so that the layout
+# policy, the indentation, the number formatting and the line-ending behaviour
+# are supplied rather than compiled in.
+#
+# Default behaviour is the port's, unchanged:
+#   * top-level nodes are separated by exactly one '\n', with no trailing
+#     newline (Zig's `print`).
+#   * an empty list prints "()".
+#   * the default `max_width` (72): a list whose direct children are all
+#     measurable and whose estimated width is <= 72 prints on one line.
+#   * otherwise the list prints "(" + first child, then one child per line,
+#     each preceded by '\n' and `indent_step` (2) spaces, then ")".
+#   * `estimateWidth`'s measure, including its `depth > 3` cutoff.
+#   * the number rendering (Zig's `printFloat`): the shortest round-trip
+#     decimal, with ".0" appended to a whole value whose spelling has no
+#     '.', 'e' or 'n'.
+#   * a string node is bracketed verbatim, so escapes survive round trips.
+#   * a measure node prints its normalised value followed by "mm".
+#
+# A caller can now vary, without touching this file (see `Style`/`Layout`):
+#   * `Layout.max_width` / `depth_cutoff` - the width and depth the default
+#     layout policy measures against.
+#   * `Layout.indent_step` plus the `indent_text` callback - what one level of
+#     indentation is (spaces, tabs, dots) and how wide it is.
+#   * `Layout.line_ending` / `top_level_gap` / `trailing_newline` - '\n',
+#     "\r\n", or anything else; what sits between two top-level forms; and
+#     whether the document ends with a line ending.
+#   * `Layout.inline_separator`, `first_on_open`, `empty_form`, `string_quote`
+#     and `measure_suffix` - the remaining layout spellings.
+#   * the `fits_inline` callback - the layout policy itself, given the children
+#     and the layout to measure against.
+#   * the `number_text`, `string_text` and `atom_text` callbacks - how a float,
+#     a string body and an atom are spelled. `render_float` is the default
+#     number policy and stays exported for callers that want to wrap it.
+# `render(nodes)` is `render_with(nodes, default_style())`.
+#
+# AST deviations from printer.zig (see CONTRACT.md):
+#   * `estimateWidth`'s `node.literal` branch is reachable here because the
+#     decimal case carries the source spelling; a literal-less float uses
+#     Zig's own literal-less branch, the length of the `{d}` spelling.
+#   * printer.zig imports `../infra/fs.zig` only to feed a file-writing helper
+#     that is not part of `print`; the guest library has no filesystem, so
+#     that helper and the import are omitted entirely.
+#   * Zig appends into an allocating writer; this port appends into a
+#     `list[str]` and joins once. The output bytes are identical.
+
+import sexpr.ast as ast
+
+
+# ── Constants (mirrored from printer.zig) ─────────────────────────────
+
+# Zig formats an integer into a 24-byte buffer and falls back to this width
+# when that fails. Every i64 spelling fits, so the fallback is unreachable.
+const fallback_int_width: int = 12
+
+# The same guard for a float formatted into a 64-byte buffer, and for a unit
+# value. Both are unreachable here because `str` cannot fail.
+const fallback_float_width: int = 12
+const fallback_unit_val_width: int = 14
+
+
+# ── Style: the layout and spelling policies ──────────────────────────
+
+# The measurable half of the printer's configuration: everything the default
+# layout policy needs to decide whether a list fits on one line, plus the
+# spellings a caller may want to change. No callbacks here, so the `fits_inline`
+# hook can take a `Layout` without the record referring to itself.
+public record Layout:
+    max_width: int = 72
+    depth_cutoff: int = 3
+    indent_step: int = 2
+    inline_separator: str = " "
+    measure_suffix: str = "mm"
+    string_quote: str = "\""
+    line_ending: str = "\n"
+    top_level_gap: str = ""
+    trailing_newline: bool = False
+    first_on_open: bool = True
+    empty_form: str = "()"
+
+
+# The whole printer configuration. `layout` carries the data; the callbacks are
+# the policies:
+#   * `fits_inline(entries, layout)` decides one line vs one child per line.
+#   * `indent_text(columns)` renders one indentation level.
+#   * `number_text(value)` spells a float (a literal keeps its source spelling).
+#   * `string_text(content)` is the string escape rule on output.
+#   * `atom_text(text)` is the atom rule on output.
+public record Style:
+    layout: Layout
+    fits_inline: def(list[ast.Node], Layout) -> bool effects(managed_allocation)
+    indent_text: def(int) -> str effects(managed_allocation)
+    number_text: def(float) -> str effects(managed_allocation)
+    string_text: def(str) -> str effects(managed_allocation)
+    atom_text: def(str) -> str effects(managed_allocation)
+
+
+# ── Default policies ─────────────────────────────────────────────────
+
+# One indentation level is this many spaces; `Layout.indent_step` says how many.
+public def space_indent(columns: int) -> str effects(managed_allocation):
+    parts: list[str] = []
+    printed = 0
+    while printed < columns:
+        parts.append(" ")
+        printed = printed + 1
+    return "".join(parts)
+
+
+# The identity policy: a string body or atom is written exactly as it stands.
+public def verbatim(text: str) -> str effects():
+    return text
+
+
+# The text of a number: Zig's printFloat, i.e. the shortest round-trip decimal
+# plus ".0" when the spelling has no '.', 'e' or 'n' (so a whole value keeps
+# its float/int distinction and nan/inf gain no ".0").
+public def render_float(value: float) -> str effects(managed_allocation):
+    text = str(value)
+    if text.find(".") == -1 and text.find("e") == -1 and text.find("n") == -1:
+        return text + ".0"
+    return text
+
+
+# ── Width measurement (Zig's estimateWidth / isShortList) ─────────────
+
+# The length of `text`, or `fallback` when there is no text at all. This is
+# the mylang analogue of Zig's `bufPrint(...) catch fallback_*_width`: `str`
+# never fails, so only an empty spelling reaches the guard.
+def measured_width(text: str, fallback: int) -> int:
+    if len(text) == 0:
+        return fallback
+    return len(text)
+
+
+# Zig's estimateWidth for `.int`: the length of the `{d}` spelling.
+def int_width(value: int) -> int:
+    return measured_width(str(value), fallback_int_width)
+
+
+# Zig's estimateWidth for `.float`. Zig prefers `node.literal.len` when the
+# node carries a source spelling and otherwise formats `{d}` and takes its
+# length. `str` appends ".0" to a whole value, and Zig's raw `{d}` does not, so
+# that suffix is stripped back off before measuring.
+def decimal_width(value: float) -> int:
+    text = str(value)
+    if text.endswith(".0"):
+        return measured_width(text[0:len(text) - 2], fallback_float_width)
+    return measured_width(text, fallback_float_width)
+
+
+# Zig's estimateWidth for a suffixed literal: the length of the source
+# spelling, which is what the printer writes back.
+def literal_width(literal: str) -> int:
+    return measured_width(literal, fallback_float_width)
+
+
+# Zig's estimateWidth for `.unit_val`: the `{d}` length plus the measure
+# suffix, which is "mm" unless the layout says otherwise.
+def measure_width(value: float, layout: Layout) -> int:
+    text = str(value)
+    if text.endswith(".0"):
+        return measured_width(text[0:len(text) - 2], fallback_unit_val_width) + len(layout.measure_suffix)
+    return measured_width(text, fallback_unit_val_width) + len(layout.measure_suffix)
+
+
+# The width this node would occupy on one line, or None when the estimate
+# gives up: past `depth_cutoff` levels of nesting the measure is unknown, and
+# one unknown child makes its whole parent unknown. Mirrors
+# `estimateWidth(node, depth)`; the `depth` of a direct child of the list being
+# measured is 0.
+def estimate_width(node: ast.Node, depth: int, layout: Layout) -> Option[int]:
+    if depth > layout.depth_cutoff:
+        return None
+    match node:
+        case ast.Node.form(entries, _):
+            total = 2
+            gap = len(layout.inline_separator)
+            index = 0
+            while index < len(entries):
+                if index > 0:
+                    total = total + gap
+                match estimate_width(entries[index], depth + 1, layout):
+                    case Some(width):
+                        total = total + width
+                    case None:
+                        return None
+                index = index + 1
+            return Some(total)
+        case ast.Node.atom(text, _):
+            return Some(len(text))
+        case ast.Node.string(content, _):
+            return Some(len(content) + len(layout.string_quote) * 2)
+        case ast.Node.integer(value, _):
+            return Some(int_width(value))
+        case ast.Node.decimal(value, _, literal):
+            match literal:
+                case Some(text):
+                    return Some(literal_width(text))
+                case None:
+                    return Some(decimal_width(value))
+        case ast.Node.measure(value, _):
+            return Some(measure_width(value, layout))
+
+
+# Whether every child can be measured and the running total stays at or below
+# `layout.max_width`. The total is checked after each child, as in Zig, so a
+# long list stops measuring early. This is the default `fits_inline` policy;
+# a caller may replace it with any other rule over the same children.
+public def default_fits_inline(entries: list[ast.Node], layout: Layout) -> bool effects(managed_allocation):
+    total = 2
+    gap = len(layout.inline_separator)
+    index = 0
+    while index < len(entries):
+        if index > 0:
+            total = total + gap
+        match estimate_width(entries[index], 0, layout):
+            case Some(width):
+                total = total + width
+            case None:
+                return False
+        if total > layout.max_width:
+            return False
+        index = index + 1
+    return True
+
+
+public def default_style() -> Style:
+    return Style(
+        layout=Layout(),
+        fits_inline=default_fits_inline,
+        indent_text=space_indent,
+        number_text=render_float,
+        string_text=verbatim,
+        atom_text=verbatim,
+    )
+
+
+# ── Rendering (Zig's printNode) ──────────────────────────────────────
+
+def indent_text_of(style: Style, columns: int) -> str:
+    spell_indent = style.indent_text
+    return spell_indent(columns)
+
+
+# Append the canonical text of `node` to `parts` at the given indentation.
+# Mirrors `printNode(writer, node, indent)`: `indent` is where this node's
+# children would be indented if it lays out over several lines.
+def push_node(parts: list[str], node: ast.Node, indent: int, style: Style) mutates(parts):
+    match node:
+        case ast.Node.form(entries, _):
+            if len(entries) == 0:
+                parts.append(style.layout.empty_form)
+                return
+            fits = style.fits_inline
+            if fits(entries, style.layout):
+                # Short enough (and shallow enough) for one line.
+                parts.append("(")
+                index = 0
+                while index < len(entries):
+                    if index > 0:
+                        parts.append(style.layout.inline_separator)
+                    push_node(parts, entries[index], indent + style.layout.indent_step, style)
+                    index = index + 1
+                parts.append(")")
+                return
+            # Too wide or too deep: by default the first child stays on the "("
+            # line and every later child starts an indented line of its own.
+            parts.append("(")
+            step = style.layout.indent_step
+            index = 0
+            if style.layout.first_on_open:
+                push_node(parts, entries[0], indent + step, style)
+                index = 1
+            while index < len(entries):
+                parts.append(style.layout.line_ending)
+                parts.append(indent_text_of(style, indent + step))
+                push_node(parts, entries[index], indent + step, style)
+                index = index + 1
+            parts.append(")")
+            return
+        case ast.Node.atom(text, _):
+            spell_atom = style.atom_text
+            parts.append(spell_atom(text))
+            return
+        case ast.Node.string(content, _):
+            escape_text = style.string_text
+            parts.append(style.layout.string_quote)
+            parts.append(escape_text(content))
+            parts.append(style.layout.string_quote)
+            return
+        case ast.Node.integer(value, _):
+            parts.append(str(value))
+            return
+        case ast.Node.decimal(value, _, literal):
+            # A suffixed literal prints as it was written; re-deriving the text
+            # from the f64 would rewrite `100nF` as `0.0000001`.
+            match literal:
+                case Some(text):
+                    parts.append(text)
+                case None:
+                    spell_number = style.number_text
+                    parts.append(spell_number(value))
+            return
+        case ast.Node.measure(value, _):
+            spell_number = style.number_text
+            parts.append(spell_number(value))
+            parts.append(style.layout.measure_suffix)
+            return
+
+
+# Canonical text for a single node, laid out at indent 0 under `style`.
+public def render_node_with(node: ast.Node, style: Style) -> str:
+    parts: list[str] = []
+    push_node(parts, node, 0, style)
+    return "".join(parts)
+
+
+# Canonical text for a whole document under `style`: top-level nodes separated
+# by `line_ending` plus `top_level_gap`, plus a trailing `line_ending` when the
+# layout asks for one. An empty node list renders to "".
+public def render_with(nodes: list[ast.Node], style: Style) -> str:
+    parts: list[str] = []
+    index = 0
+    while index < len(nodes):
+        if index > 0:
+            parts.append(style.layout.line_ending)
+            parts.append(style.layout.top_level_gap)
+        push_node(parts, nodes[index], 0, style)
+        index = index + 1
+    if style.layout.trailing_newline and len(nodes) > 0:
+        parts.append(style.layout.line_ending)
+    return "".join(parts)
+
+
+# Canonical text for a single node under the default style.
+public def render_node(node: ast.Node) -> str:
+    return render_node_with(node, default_style())
+
+
+# Canonical text for a whole document under the default style.
+public def render(nodes: list[ast.Node]) -> str:
+    return render_with(nodes, default_style())

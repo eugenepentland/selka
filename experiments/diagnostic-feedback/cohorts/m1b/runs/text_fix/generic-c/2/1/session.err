@@ -1,0 +1,117 @@
+dsh: reasoning:
+Let me read the main.my, request.md, PROMPT.md.
+dsh: reasoning:
+Let me run the checker to see the diagnostics.
+
+The program has `highest[T: Comparable](values: list[int]) -> int` — a generic function with a type parameter T that isn't used. That may be an error. And `highest_of` calls `highest(values)` without type args.
+
+Let me check with the compiler.
+dsh: reasoning:
+The error is about `Comparable` not being a requirement. The compiler supports `copy`, `equality`, `integer`, `codec`, `storable`, or a declared constraint.
+
+But wait — the goal is: "`highest` returns the largest of three integers given as arguments. It does not pass the checker; make it compile and print the largest value." Change only what the request requires.
+
+The generic type parameter T isn't used at all in the signature (values: list[int]). The minimal fix might be `T: integer` or `T: equality`? Actually since T isn't used in the signature, we could just remove the `[T: Comparable]` entirely. But "change only what the request requires" — we need it to compile and print the largest value.
+
+Let me check what generic requirements exist. The list values are `list[int]`, and comparisons use `>`. `integer` requirement probably supports comparison. Let's try `T: integer` first? But T isn't used in params... The compiler may complain about unused type parameter. Let's check.
+
+Actually, the simplest fix that preserves structure: change `Comparable` to `integer`. Let me test.
+
+But also, `highest_of[T: Comparable]` is unused too and calling `highest(values)` without type argument may fail. Let's see what errors appear after fixing the first.
+
+Let me first look for docs on generics in this repo? The repo root is outside this directory — constraint says do not read anything outside this directory. So I can only use bin/mylang and the files here. I can maybe use `./bin/mylang --help` — that's within the directory (bin/mylang). That's fine.
+
+Let me make the minimal change: replace `Comparable` with `integer` on both functions. Actually let me think: `highest` doesn't use T at all. `highest_of` doesn't either. The simplest is to remove the generic parameters entirely: `def highest(values: list[int]) -> int:` and `def highest_of(values: list[int]) -> int:` and call `highest(values)`.
+
+But "change only what the request requires" — the request requires the program to compile and print the largest value. Removing the unused generic parameters changes the generic intent... The task name is "text_fix/generic-c" so probably it's about fixing generic requirement spelling. The intended fix is likely `T: integer` (or maybe the constraint declared). Hmm, but the spirit: `highest` takes three integers and returns the largest. The generic machinery is irrelevant cruft. But the task generator likely introduced a bug: `Comparable` instead of a real requirement.
+
+I think the minimal fix is changing `Comparable` → `integer`. Let's try it and see if the rest compiles.
+
+Wait, but there's also the missing blank line before `def main` — that's fine syntactically.
+
+Also `highest_of[T: Comparable](values: list[int])` calls `highest(values)` — with inference it should infer T from... nothing, since T doesn't appear in the params. That may be an inference error. Let's test.
+
+Also main: `def main(args: list[str], out: Stream) -> int` — args indexing. Is `args` the argument list including program name? Probably just args. Let's check `mylang run` docs... The examples: `bin/mylang run project/main.my -- 1 3 2` should print 3.
+
+Let me try the edit first.
+
+Compiler invocation count: check used 1. Let's be efficient. Try `T: integer` for both and run.
+
+Actually, thinking more: maybe the cleanest minimal fix given the constraints: the generic parameters are entirely unused, and the compiler apparently has a rule that a type parameter must be used? Not sure. Let's just try.
+
+Let me edit both occurrences of `Comparable` to `integer`.
+dsh: reasoning:
+Now, the type parameter T is unused in the signature, so it can't be inferred. Options:
+
+1. Remove the generic parameter entirely from both functions: `def highest(values: list[int]) -> int:` and `def highest_of(values: list[int]) -> int:`.
+2. Supply explicit type arguments: `highest[int](values)` and `highest_of[int]([...])`.
+
+The request: "make it compile and print the largest value" and "Change only what the request requires."
+
+Option 2 is the more minimal textual change (2 call sites) preserving the generic signature. But is `integer` requirement valid with T unused? Presumably yes, given the error moved on to inference. Let's try adding explicit type args.
+
+Actually wait — is `T: integer` even the right requirement? T is unused, so any requirement works syntactically. `integer` is a plausible fit for comparing ints.
+
+Hmm, but which is more "required"? The program's spec: `highest` returns largest of three integers given as args. The generic stuff is unnecessary complexity. The simplest robust fix is to drop the generics entirely. But the "generic-c" in the path suggests the task family involves generic fixes — the bug was the unknown requirement name. The minimal change preserving the author's intent is to keep generics and pass explicit type args.
+
+Both compile presumably. Let me try explicit type args first (smaller diff from current state). If it works, then run tests.
+
+Actually, there's a consideration: with `T: integer` and explicit `highest[int](values)`, does the compiler accept a requirement-satisfying argument? `int` satisfies `integer` requirement presumably. Let's test.
+
+Also main signature: `def main(args: list[str], out: Stream) -> int`. Does run pass args[0] as first user arg? Let's see. In the examples args are "1","3","2". If args includes program name at index 0, then args[0]="1" would need args[1]. Let's check by running.
+
+Let me apply explicit type args.
+dsh: reasoning:
+Check passes. Now run the examples.
+
+Command: `./bin/mylang run project/main.my -- 1 3 2`.
+
+Note the constraint of ≤20 compiler invocations; we've used 3 checks so far. Running uses invocations too presumably. Let's run both examples.
+
+Let me run them.
+dsh: reasoning:
+Both pass. Let me consider edge cases, since "The same behavior is required for every input, not only the examples".
+
+Potential issues:
+1. Negative numbers: `number` uses `int(text)` which handles negatives presumably.
+2. Missing/extra arguments: `args[0..2]` — if fewer than 3 args given, out-of-bounds trap. But the task says "three integers given as arguments", so presumably always 3.
+3. Are `args` the user args only, or does args[0] include program path? We saw with `-- 1 3 2` printing 3, so args[0]="1". Good.
+4. `int(text)` for non-integer text returns None → 0. Fine.
+
+Test more inputs: negative numbers, order variations. E.g. `-5 -1 -3` should print -1. Also `7 2 9` → 9, `9 2 7` → 9, `3 9 2` → 9.
+
+Can negative numbers be passed after `--`? `-- -5 -1 -3` might be parsed as flags. Let's try. Maybe `--` handles it.
+
+Let me run a few cases. Each run is a compiler invocation... The limit is 20 total invocations. We've used 3 (checks) + 2 (runs) = 5. Let's do a handful more runs.
+
+Actually, let me think about whether the checker might do weird things with `len(values)` when values is non-empty (always 3). Fine.
+
+One concern: the `highest` function signature `def highest[T: integer](values: list[int]) -> int` — the requirement `integer` may impose operation requirements; it's fine.
+
+Let me verify with a batch of inputs in one command (multiple runs = multiple invocations). Let me do maybe 4 runs: `-5 -1 -3`, `9 2 7`, `2 7 9`, `0 -1 1`.
+
+Actually could I reduce invocation usage by building once and running the binary? `bin/mylang build project/main.my -o /tmp/...` — writing outside directory is not allowed. Could build into project/ dir. But that adds invocation + artifact files that would need cleanup. Simpler: just run a few.
+
+Let me test negative args.
+dsh: reasoning:
+All correct. Now let me review the final file and make sure it's clean, and consider whether "change only what the request requires" is satisfied.
+
+One issue: line 23-24: `def highest_of...` and `def main` have no blank lines between them (was originally like that too — line 23 `return highest(values)` then line 24 `def main`). That was pre-existing; not required to change. Actually adding blank lines would be cosmetic; leave as is.
+
+Let me read the final file.
+
+Also let me double-check: is `highest` supposed to take three integers as arguments? "highest returns the largest of three integers given as arguments" — well, it takes a list of ints; the program passes three. The behavior is what matters.
+
+Let me count compiler invocations: 3 checks + 2 runs + 5 runs = 10. Under 20. Fine.
+
+Should I consider the case where user passes fewer than 3 args? Not required — "three integers given as arguments".
+
+Let me view final file.
+dsh: reasoning:
+The file is good. One small thing: line 23/24 missing a blank line — pre-existing cosmetic, but adding a blank line between two top-level defs is arguably a formatting requirement? The checker passed, so not required. "Change only what the request requires" — leave it.
+
+Let me do a final combined verification: exact command with its result. Run check + the two public examples in one final confirmation. That's 3 more invocations (total ~13). Fine.
+
+Actually I already have results. But a final clean confirmation is nice. Let's run `./bin/mylang check project/main.my && ./bin/mylang run project/main.my -- 1 3 2 && ./bin/mylang run project/main.my -- 5 5 5`.
+
+Hmm, that's 3 invocations. We have budget. Let's do it to report exact command and result.

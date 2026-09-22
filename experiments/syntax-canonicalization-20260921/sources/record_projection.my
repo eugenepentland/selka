@@ -1,0 +1,11 @@
+record Point:
+    a: int
+    b: int
+    c: int
+    d: int
+
+def project(p: Point) -> int:
+    return p.a
+
+def main() -> int:
+    return 0

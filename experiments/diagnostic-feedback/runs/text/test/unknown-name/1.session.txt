@@ -1,0 +1,9 @@
+Fixed and verified.
+
+**What changed:** In `project/main.my`, `pick` referenced an undefined name `reward`. The parameter holding the argument is `bonus`, so line 6 now reads `return total + bonus` — total `10` plus argument `5` gives `15`.
+
+**Command run:**
+```
+bin/mylang run project/main.my
+```
+**Result:** printed `15`, exit code `0` (`bin/mylang check project/main.my` also passes with exit 0).

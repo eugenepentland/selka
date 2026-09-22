@@ -1,0 +1,21 @@
+Done.
+
+**What I changed** (`project/main.my` only, lines 12–18): `main` was doing `value = read_number(args[0])` and then `0 + value`, which is a type error (`E_TYPE: expected int, found Result[int, str]`). I replaced it with a `match` that unwraps the `Result`: `case Ok(number)` prints `0 + number`, and `case Err(_)` prints `-99`. `read_number` itself was left untouched.
+
+**Command and result:**
+
+```
+$ ./bin/mylang check project/main.my
+exit: 0   (no diagnostics)
+
+$ ./bin/mylang run project/main.my -- 41   → 41
+$ ./bin/mylang run project/main.my -- 0    → 0
+$ ./bin/mylang run project/main.my -- abc  → -99
+$ ./bin/mylang run project/main.my -- -7   → -7
+$ ./bin/mylang run project/main.my -- 3.5  → -99
+$ ./bin/mylang run project/main.my -- ""   → -99
+$ ./bin/mylang run project/main.my -- +5   → 5
+$ ./bin/mylang run project/main.my -- 007  → 7
+```
+
+Both examples from `public/expected.json` match exactly (`41\n`, `0\n`), and non-integer arguments print `-99` as required.

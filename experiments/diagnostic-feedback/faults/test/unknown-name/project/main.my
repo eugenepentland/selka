@@ -1,0 +1,11 @@
+module main
+
+
+def pick(bonus: int) -> int:
+    total = 10
+    return total + reward
+
+
+def main(out: Stream) -> int:
+    out.print(pick(5))
+    return 0

@@ -1,0 +1,22 @@
+**What I changed** — `project/main.my`, only `main`:
+
+- `base = decode(args[0])` followed by `out.print(base + base + 10)` used the `Result` twice (the compiler rejected it with `E_RESULT_CONSUMED`; a `Result` is consumed exactly once).
+- I now `match` on `decode(args[0])` once: `case Ok(number)` prints the value, `case Err(_)` prints `0`. `decode` itself is unchanged.
+
+**One thing worth flagging:** the prose says "print 10 plus that number" (which for `41` would be `51`), but `public/expected.json` — which the prompt says the task is checked against — requires `92` for `41` (`0 → 10`), i.e. `number + number + 10`, the expression the original code already had. I preserved that expression while unwrapping the `Result`, so the fixture is satisfied.
+
+**Exact command and result:**
+
+```
+$ bin/mylang check project/main.my
+[exit code: 0]   (no diagnostics)
+
+$ bin/mylang run project/main.my -- 41
+92
+$ bin/mylang run project/main.my -- 0
+10
+$ bin/mylang run project/main.my -- abc
+0
+```
+
+(`41` and `0` match `public/expected.json` exactly, including the trailing newline; non-integer input prints `0`.)

@@ -1,0 +1,70 @@
+dsh: reasoning:
+Let me check the checker errors first. Let me run the compiler.
+
+Note: the constraints say at most 20 compiler invocations. Let me be careful.
+
+Let me first inspect the project structure more, and try running check.
+
+Let me think: `highest[T: Comparable](values: list[int]) -> int` — a generic function with a type parameter T that isn't used in the signature. Probably the issue. Also `int(text)` returning Option? Let me check.
+
+Let's run `bin/mylang check project/main.my` first.
+
+Also note: main signature — args are strings? `def main(args: list[str], out: Stream) -> int`. And args passed as arguments. But `args[0]` — does args include program name? Probably args are the arguments after `--`. Let's test.
+
+Let's run the check.
+dsh: reasoning:
+The compiler says `Ordered` is not a requirement... interesting, the error message says `Ordered` though source says `Comparable`. Maybe there's a mapping. Anyway, `Comparable` is unknown.
+
+Now the request: "highest returns the largest of three integers given as arguments. It does not pass the checker; make it compile and print the largest value."
+
+So I need to fix the program. Options:
+1. Remove the generic parameter `[T: Comparable]` since it's unused and ints anyway.
+
+Also check `highest_of[T: Comparable]` — same issue.
+
+Also check whether `int(text)` returns Option — let me look at docs, or just fix and check.
+
+Change only what the request requires. The minimal fix: remove the generic type parameter lists. But wait — maybe there are more errors after that. Let me fix and re-check.
+
+Also potentially `main` signature: args parsing. Let's see what errors come after.
+
+Let me make the edit: 
+```
+def highest(values: list[int]) -> int:
+```
+and
+```
+def highest_of(values: list[int]) -> int:
+```
+
+Actually, maybe `highest_of` is unnecessary; but change only what's required. Let's remove type params from both.
+
+Let me check what `int(text)` does — in mylang, `int("3")` returns Option maybe. Let's just check compile after fixing generics.
+
+Also, could the checker prefer `integer` requirement? Since `highest` works on list[int] and compares ints, the requirement for `>` on ints is the `integer` requirement maybe? Actually the generic parameter T is entirely unused, so it could be `[T: integer]`. But minimal change: drop the type parameter. However, `def highest_of[T: Comparable]` calls `highest(values)` where values: list[int] — if `highest` were generic with unused T, calling `highest(values)` without explicit type argument would be an error. So dropping the parameter is the cleanest.
+
+Let me apply the edit.
+dsh: reasoning:
+Check passes now. Let's run the examples.
+dsh: reasoning:
+Both pass. Now, "The same behavior is required for every input, not only the examples in public/." Let me consider edge cases:
+
+- Negative numbers: e.g. `-5 -1 -3` → -1. Does number() parse negative ints through `int(text)`? Let's test.
+- args must be present. If fewer than 3 args, args[0] would be out of bounds → trap. Probably checker only gives 3 args.
+- Large ints within range.
+
+Let me test a few: negatives, duplicates, ordering, zeros, leading/maybe whitespace.
+
+Actually, wait — `int(text)` returns an Option? The check passed, and `match int(text): case Some(value)` compiled. But what is `int` here? Possibly `int(text)` converts string to int returning Option. Let's test negative numbers.
+
+Also important: how does the checker pass arguments? `bin/mylang run project/main.my -- <arguments>`. args includes just the arguments as strings presumably (args[0]="1"). The test passed, so args indexing works.
+
+Let me test a batch of edge cases and also consider whether `number` returning 0 for non-numeric matters — not required.
+
+Let me run several cases in one compiler invocation batch (each run is a compiler invocation). I have used 4 invocations (2 checks + 2 runs). Actually check counts too? "At most 20 compiler invocations" — I have plenty.
+
+Let me test negatives and other permutations.
+dsh: reasoning:
+All correct. The only change was removing the unknown generic requirement parameters. Let me view the final file to confirm the change is minimal and clean.
+
+Let me also double check the final file.

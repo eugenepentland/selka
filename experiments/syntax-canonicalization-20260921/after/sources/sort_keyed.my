@@ -1,0 +1,12 @@
+record Item:
+    key: int
+    position: int
+
+def item_key(item: Item) -> int effects():
+    return item.key
+
+def order(items: list[Item]) -> list[Item]:
+    return sorted(items, key=item_key)
+
+def main() -> int:
+    return 0

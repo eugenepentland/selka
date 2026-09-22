@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "steps": [
+    {
+      "id": "fixed",
+      "kind": "test",
+      "commands": [
+        [
+          "../../bin/mylang",
+          "run",
+          "../../project/main.my"
+        ]
+      ],
+      "expect_stdout": "1\n",
+      "timeout": 120
+    }
+  ]
+}

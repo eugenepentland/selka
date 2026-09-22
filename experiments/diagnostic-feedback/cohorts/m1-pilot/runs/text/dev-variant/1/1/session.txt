@@ -1,0 +1,19 @@
+Fixed. The `area` function's `match` was missing the `square` arm, which caused `E_INCOMPLETE_MATCH`. I added the square case alongside the existing circle case, changing nothing else:
+
+```python
+def area(shape: Shape) -> int:
+    match shape:
+        case Shape.circle(radius):
+            return 3 * radius * radius
+        case Shape.square(side):
+            return side * side
+```
+
+Verification — `./bin/mylang check project/main.my` exits 0, and both expected cases pass:
+
+```
+$ ./bin/mylang run project/main.my -- circle 2   → 12   (expected "12\n")
+$ ./bin/mylang run project/main.my -- square 3   → 9    (expected "9\n")
+```
+
+Extra spot checks (`circle 0→0`, `square 0→0`, `circle 5→75`, `square 7→49`, `circle 100→30000`, `square 12→144`) all match `3*r*r` / `r*r`.

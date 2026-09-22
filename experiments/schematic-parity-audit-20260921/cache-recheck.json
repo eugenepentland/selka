@@ -1,0 +1,9 @@
+{
+  "first_requested_optimization": "-O3",
+  "second_requested_optimization": "-O2",
+  "compiled_first": 115,
+  "compiled_second": 0,
+  "reused_second": 115,
+  "all_function_keys_identical": true,
+  "adapter_sha256": "d3ab8c24eb4e1f23e88531b31adabc3340ef59d3efccc84a6bb86f8e0fc7c8b6"
+}

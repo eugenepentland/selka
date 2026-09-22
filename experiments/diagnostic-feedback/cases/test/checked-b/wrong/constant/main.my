@@ -1,0 +1,14 @@
+module main
+
+
+def read_number(raw: str) -> Result[int, str]:
+    match int(raw):
+        case Some(value):
+            return Ok(value)
+        case None:
+            return Err("not a number")
+
+
+def main(args: list[str], out: Stream) -> int:
+    out.print(41)
+    return 0

@@ -1,0 +1,19 @@
+The fix is complete.
+
+**What I changed:** In `project/main.my`, `main` was adding `7 + as_count(args[0])` directly, but `as_count` returns `Result[int, str]` (compiler error `E_TYPE: expected int, found Result[int, str]`). I unwrapped the result with a `match`: `Ok(value)` prints `7 + value`, `Err(_)` prints `7`. `as_count` itself was left unchanged.
+
+**Exact commands and results:**
+
+```
+$ bin/mylang check project/main.my
+[exit 0, no diagnostics]
+
+$ bin/mylang run project/main.my -- 41
+48
+$ bin/mylang run project/main.my -- 0
+7
+$ bin/mylang run project/main.my -- abc
+7
+```
+
+Both `public/expected.json` cases verified byte-for-byte (`41 → "48\n"`, `0 → "7\n"`, exit 0), and non-integers like `abc`, `3.7`, and `""` print `7` as required.

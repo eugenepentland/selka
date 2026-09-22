@@ -1,0 +1,44 @@
+Done. Workspace is clean (only `project/main.my` changed).
+
+## What I changed
+
+`project/main.my` — only `main` (the bug: it added an `int` to a `Result[int, str]`, which was a type error, and it never handled the failure case):
+
+```python
+def main(args: list[str], out: Stream) -> int:
+    if len(args) == 0:
+        out.print(-1)
+        return 0
+    match parse_count(args[0]):
+        case Ok(value):
+            out.print(1 + value)
+        case Err(_):
+            out.print(-1)
+    return 0
+```
+
+`parse_count` was left unchanged — it already returned `Ok(value)` / `Err("not a number")` correctly. The `Result` is now matched: `Ok` prints the number plus 1, `Err` prints `-1`. The `len(args) == 0` guard makes a missing argument behave like a non-integer (prints `-1`) instead of trapping on `args[0]`.
+
+## Verification
+
+Exact command and result (matches `public/expected.json` — `41` → `"42\n"`, `0` → `"1\n"`):
+
+```
+$ bin/mylang run project/main.my -- 41
+42
+$ bin/mylang run project/main.my -- 0
+1
+```
+
+I also built the program once (`bin/mylang build project/main.my -o prog`) and exercised the binary directly (no extra compiler invocations), then deleted the binary:
+
+| input | output |
+|---|---|
+| `41` | `42` |
+| `0` | `1` |
+| `abc`, `3.5`, `12abc`, `` (empty), `9223372036854775808` | `-1` |
+| `-5` | `-4` |
+| `+7`, `007`, `" 7"` | `8`, `8`, `8` |
+| *(no argument)* | `-1` |
+
+All exit status 0. One inherent limit: `1 + 9223372036854775807` traps with `R_OVERFLOW`, since mylang integers are fixed-width i64 — the language's arithmetic semantics, not the parse logic. 19 of 20 compiler invocations were used; scratch files were removed.

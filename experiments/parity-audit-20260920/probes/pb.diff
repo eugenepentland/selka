@@ -1,0 +1,56 @@
+diff -ru /tmp/claude-1000/-home-epentland-ai-canopy-mylang/6108061e-40b0-485a-852b-53c35cd1760e/scratchpad/probes/ctl/sexpr/parser.my /tmp/claude-1000/-home-epentland-ai-canopy-mylang/6108061e-40b0-485a-852b-53c35cd1760e/scratchpad/probes/pb/sexpr/parser.my
+--- /tmp/claude-1000/-home-epentland-ai-canopy-mylang/6108061e-40b0-485a-852b-53c35cd1760e/scratchpad/probes/ctl/sexpr/parser.my	2026-09-20 16:01:26.500973870 +0000
++++ /tmp/claude-1000/-home-epentland-ai-canopy-mylang/6108061e-40b0-485a-852b-53c35cd1760e/scratchpad/probes/pb/sexpr/parser.my	2026-09-20 15:58:54.356251051 +0000
+@@ -22,6 +22,7 @@
+     src: bytes
+     lexer: tk.Lexer
+     current: tk.RawToken
++    kind: tk.Kind
+     cap: int
+ 
+ def located(span: ast.Span, message: str) -> ParseError:
+@@ -41,6 +42,7 @@
+     match tk.next_raw(cursor.lexer):
+         case Ok(token):
+             cursor.current = token
++            cursor.kind = token.kind
+             return Ok(True)
+         case Err(problem):
+             return Err(lex_failure(cursor.src, problem))
+@@ -190,9 +192,9 @@
+         return Err(located(open_span, "s-expression nesting is too deep"))
+     entries: list[ast.Node] = []
+     while True:
+-        if cursor.current.kind == tk.Kind.eof:
++        if cursor.kind == tk.Kind.eof:
+             return Err(located(open_span, "unexpected end of input — a '(' was never closed"))
+-        if cursor.current.kind == tk.Kind.rparen:
++        if cursor.kind == tk.Kind.rparen:
+             _ = advance(cursor)?
+             return Ok(ast.Node.form(entries, open_span))
+         entries.append(parse_node(cursor, depth + 1)?)
+@@ -200,10 +202,11 @@
+ # The old parser tokenized all input first. Drain only the syntax-error path so
+ # a later lexical failure retains its historical precedence.
+ def finish_after_syntax_error(cursor: Cursor, syntax: ParseError) -> Result[list[ast.Node], ParseError]:
+-    while cursor.current.kind != tk.Kind.eof:
++    while cursor.kind != tk.Kind.eof:
+         match tk.next_raw(cursor.lexer):
+             case Ok(token):
+                 cursor.current = token
++                cursor.kind = token.kind
+             case Err(problem):
+                 return Err(lex_failure(cursor.src, problem))
+     return Err(syntax)
+@@ -225,9 +228,9 @@
+             first = token
+         case Err(problem):
+             return Err(lex_failure(src, problem))
+-    cursor = Cursor(src=src, lexer=lx, current=first, cap=cap)
++    cursor = Cursor(src=src, lexer=lx, current=first, kind=first.kind, cap=cap)
+     nodes: list[ast.Node] = []
+-    while cursor.current.kind != tk.Kind.eof:
++    while cursor.kind != tk.Kind.eof:
+         match parse_node(cursor, 0):
+             case Ok(node):
+                 nodes.append(node)
