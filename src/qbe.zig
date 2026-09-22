@@ -3,6 +3,7 @@ const slice_abi = ":myl_slice";
 const scalar_lower = @import("qbe_scalar.zig");
 const zero_local = @import("qbe_format.zig").zero_local;
 const arena_lower = @import("qbe_arena.zig");
+const borrow_lower = @import("qbe_borrow.zig");
 const managed_lower = @import("qbe_managed.zig");
 const std = @import("std");
 const bytecode = @import("bytecode.zig");
@@ -1118,7 +1119,7 @@ const Emitter = struct {
     /// elsewhere — a parameter this function only reads, or a match arm's payload
     /// binding that names the payload inside a scrutinee this function never
     /// writes — rather than a private copy of its value.
-    by_reference: []bool = &.{},
+    by_reference: []const borrow_lower.Borrow = &.{},
     /// The payload bindings whose address is stored once at entry, with the
     /// local and offset that address is derived from.
     arm_addresses: []const ArmAddress = &.{},
@@ -1444,6 +1445,10 @@ const Emitter = struct {
             const placeholder = try self.placeholderBytes(i, local.ty);
             if (placeholder != 0) {
                 try self.print(" call $memset(l %lz{d}, w 0, l {d})\n storel %lz{d}, %l{d}\n", .{ i, placeholder, i, i });
+            } else if (self.byReference(i)) {
+                // A borrowed element's slot is one word and is never a root, so
+                // clearing the word is all an unset slot needs.
+                if ((try self.layout(local.ty)).trace) try self.print(" storel 0, %l{d}\n", .{i});
             } else if ((try self.layout(local.ty)).trace) try self.zeroTracedLocal(i, local.ty);
         }
         const packed_args = try self.packedParameters(f);
@@ -1471,7 +1476,14 @@ const Emitter = struct {
     /// Whether local `index` holds the address of a parameter this function
     /// only reads. Every other local holds its value.
     pub fn byReference(self: *Emitter, index: usize) bool {
-        return index < self.by_reference.len and self.by_reference[index];
+        return index < self.by_reference.len and self.by_reference[index] != .none;
+    }
+    /// Whether local `index` holds an address into a managed list's backing
+    /// storage rather than storage the frame itself owns. Such a slot is only
+    /// meaningful across the inert run the borrow was proved over, so the root
+    /// protocol never reads it.
+    fn borrowsElement(self: *Emitter, index: usize) bool {
+        return index < self.by_reference.len and self.by_reference[index] == .element;
     }
     /// Push the value of local `index` onto the operand stack at `slot`.
     ///
@@ -1541,10 +1553,10 @@ const Emitter = struct {
     /// keeps its private slot and its entry copy, so value semantics are
     /// untouched. A move-only value is never addressed: its single owner stays
     /// the callee's copy, which `cleanupLocals` releases exactly once.
-    fn addressLocals(self: *Emitter) GenerateError![]bool {
+    fn addressLocals(self: *Emitter) GenerateError![]borrow_lower.Borrow {
         const f = self.function;
-        const flags = try self.allocator.alloc(bool, f.scope.locals.len);
-        @memset(flags, false);
+        const flags = try self.allocator.alloc(borrow_lower.Borrow, f.scope.locals.len);
+        @memset(flags, .none);
         for (f.scope.locals[0..f.signature.parameter_count], 0..) |local, index| {
             if (self.isScalar(local.ty)) continue;
             const value = try self.layout(local.ty);
@@ -1554,14 +1566,14 @@ const Emitter = struct {
             // is what stops QBE folding a null-like address into the load.
             if (value.size == 0) continue;
             if (writtenLocal(f, index)) continue;
-            flags[index] = true;
+            flags[index] = .value;
         }
         self.arm_addresses = try self.payloadAddresses(f, flags);
         // QBE-ELEMREF-2 and QBE-CALLREF-1: the ordinary locals one instruction
         // fills from storage this frame can name — a list element, a
         // record-returning call's result buffer — hold that address instead of
         // a copy of the value.
-        try @import("qbe_borrow.zig").Lower(Emitter).claim(self, flags);
+        try borrow_lower.Lower(Emitter).claim(self, flags);
         return flags;
     }
     /// The match payload bindings that may name the payload where it lives.
@@ -1584,7 +1596,7 @@ const Emitter = struct {
     /// must never be written either. A payload that owns nothing and is never
     /// stored through is therefore safe to name in place, and the tracing
     /// protocol already reads an address-holding local through its address.
-    fn payloadAddresses(self: *Emitter, f: bytecode.Function, flags: []bool) GenerateError![]const ArmAddress {
+    fn payloadAddresses(self: *Emitter, f: bytecode.Function, flags: []borrow_lower.Borrow) GenerateError![]const ArmAddress {
         var projected: std.ArrayList(ArmAddress) = .empty;
         for (f.scope.instructions, 0..) |instruction, pc| switch (instruction.op) {
             .switch_variant => |dispatch| {
@@ -1599,17 +1611,17 @@ const Emitter = struct {
                 // function only reads, or another projected binding) keeps the
                 // scrutinee at the caller's storage, so the payload address is
                 // one load deeper but just as constant.
-                const indirect = flags[source];
+                const indirect = flags[source] != .none;
                 const union_layout = try self.layout(dispatch.ty);
                 for (dispatch.arms) |arm| {
                     const target = @backingInt(arm.slot orelse continue);
-                    if (target >= flags.len or flags[target]) continue;
+                    if (target >= flags.len or flags[target] != .none) continue;
                     const local = f.scope.locals[target];
                     if (self.isScalar(local.ty)) continue;
                     const value = try self.layout(local.ty);
                     if (value.drop or value.size == 0) continue;
                     if (writtenOutsideBindings(f, target)) continue;
-                    flags[target] = true;
+                    flags[target] = .value;
                     try projected.append(self.allocator, .{ .slot = target, .source = source, .offset = union_layout.payload_offset, .indirect = indirect });
                 }
             },
@@ -2086,7 +2098,8 @@ const Emitter = struct {
     /// any instruction runs, and a local whose type traces nothing is never
     /// read by a root push.
     fn placeholderBytes(self: *Emitter, index: usize, ty: typed.Type) GenerateError!u64 {
-        if (!self.byReference(index) or index < self.function.signature.parameter_count) return 0;
+        if (!self.byReference(index) or self.borrowsElement(index)) return 0;
+        if (index < self.function.signature.parameter_count) return 0;
         const value = try self.layout(ty);
         if (!value.trace) return 0;
         return @max(8, value.size);
@@ -2274,9 +2287,17 @@ const Emitter = struct {
     /// With none there is nothing to link, and the push and its restore are
     /// omitted, exactly as the former per-root call sequence omitted them.
     fn liveRoots(self: *Emitter, stack: []const typed.Type) GenerateError!bool {
-        for (self.function.scope.locals) |local| if ((try self.layout(local.ty)).trace) return true;
+        for (self.function.scope.locals, 0..) |local, i| if (try self.tracedRoot(i, local.ty)) return true;
         for (stack) |ty| if ((try self.layout(ty)).trace) return true;
         return false;
+    }
+    /// Whether local `index` is one the root protocol reads. A borrowed element
+    /// is not: no collection can run while its borrow is live, and once the
+    /// borrow is dead the address it holds could name storage the receiver has
+    /// since reallocated or the sweep has freed.
+    fn tracedRoot(self: *Emitter, index: usize, ty: typed.Type) GenerateError!bool {
+        if (self.borrowsElement(index)) return false;
+        return (try self.layout(ty)).trace;
     }
     /// Whether this function keeps the root protocol at all: it has a live
     /// traced local or operand and at least one instruction that can collect.
@@ -2299,7 +2320,7 @@ const Emitter = struct {
         try self.print(" %v{d} =l loadl %v{d}\n", .{ head, base });
         var count: usize = 0;
         var previous = try std.fmt.allocPrint(self.allocator, "%v{d}", .{head});
-        for (self.function.scope.locals, 0..) |local, i| if ((try self.layout(local.ty)).trace) {
+        for (self.function.scope.locals, 0..) |local, i| if (try self.tracedRoot(i, local.ty)) {
             // A parameter read through the caller's address is traced where it
             // lives; every other aggregate local is traced at its own slot.
             const traced = if (self.byReference(i))

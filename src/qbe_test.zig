@@ -1899,6 +1899,60 @@ test "QBE-ELEMREF-2 an indexed element local is named in place across branches" 
 }
 
 // spec-case: QBE-ELEMREF-2
+test "QBE-ELEMREF-2 a borrowed element that traces is never pushed as a root" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    name: str
+        \\    count: i64
+        \\
+        \\
+        \\def find(rows: list[Row], key: i64) -> i64:
+        \\    i = 0
+        \\    while i < len(rows):
+        \\        row = rows[i]
+        \\        if row.count == key:
+        \\            return len(row.name)
+        \\        i += 1
+        \\    return - 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return find([Row(name="a", count=1)], 1)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "find").?.il;
+    // The element's `str` is reachable through the receiver, and the inert run
+    // admits no collection, so the borrow costs neither a copy nor a root.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "=l add %root"));
+}
+
+// spec-case: QBE-ELEMREF-2
+test "QBE-ELEMREF-2 a frame that opens an arena scope keeps the element copy" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def find(rows: list[Row], key: i64) -> i64:
+        \\    with arena():
+        \\        _ = len(rows)
+        \\    row = rows[0]
+        \\    return row.a + key
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return find([Row(a=1, b=2)], 1)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "find").?.il;
+    // Closing the scope scans every local declared before it through its slot,
+    // which a borrowed element's one-word slot cannot answer.
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit ") != null);
+}
+
+// spec-case: QBE-ELEMREF-2
 test "QBE-ELEMREF-2 a call inside the live range keeps the element copy" {
     var parsed = try emitted(std.testing.allocator,
         \\record Row:

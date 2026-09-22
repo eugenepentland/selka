@@ -33,6 +33,20 @@ const arena_lower = @import("qbe_arena.zig");
 /// Failures raised while deciding which locals name their value in place.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 
+/// What a local's slot holds.
+///
+/// `value` — the value itself, or an address into storage that stays valid and
+/// stays this local's value for as long as the local lives: a caller's argument,
+/// a payload inside a scrutinee, a call's own result buffer. The collector reads
+/// such a slot as a root exactly as it reads a by-value one.
+///
+/// `element` — an address into a managed list's backing storage, valid only
+/// across the inert run the borrow was proved over. The collector never reads
+/// it: nothing can collect inside that run, and outside it the local is dead,
+/// so rooting it would only risk tracing storage that has since been
+/// reallocated or swept.
+pub const Borrow = enum { none, value, element };
+
 /// Bind the borrow analysis to the concrete emitter without an import cycle.
 pub fn Lower(comptime E: type) type {
     return struct {
@@ -40,7 +54,7 @@ pub fn Lower(comptime E: type) type {
         /// `flags` is the emitter's per-local by-reference table, already
         /// carrying the parameters and match bindings claimed before this runs;
         /// a slot another rule claimed is left alone.
-        pub fn claim(self: *E, flags: []bool) Error!void {
+        pub fn claim(self: *E, flags: []Borrow) Error!void {
             return claimLocals(E, self, flags);
         }
     };
@@ -57,9 +71,9 @@ const Source = struct {
 
 /// One claim in flight: the emitter's flag table, the pc of the instruction
 /// that produced the address, and what that address names.
-const Candidate = struct { flags: []bool, pc: usize, source: Source };
+const Candidate = struct { flags: []Borrow, pc: usize, source: Source };
 
-fn claimLocals(comptime E: type, self: *E, flags: []bool) Error!void {
+fn claimLocals(comptime E: type, self: *E, flags: []Borrow) Error!void {
     for (self.function.scope.instructions, 0..) |_, pc| {
         const source = try addressSource(E, self, pc) orelse continue;
         try claimOne(E, self, .{ .flags = flags, .pc = pc, .source = source });
@@ -131,7 +145,7 @@ fn claimOne(comptime E: type, self: *E, candidate: Candidate) Error!void {
         .store_local => |target| @backingInt(target),
         else => return,
     };
-    if (slot >= candidate.flags.len or candidate.flags[slot]) return;
+    if (slot >= candidate.flags.len or candidate.flags[slot] != .none) return;
     // A parameter's slot is written by the prologue as well, so this store is
     // never its only write.
     if (slot < f.signature.parameter_count) return;
@@ -142,14 +156,13 @@ fn claimOne(comptime E: type, self: *E, candidate: Candidate) Error!void {
     // and a zero-length aggregate keeps the scratch that stops QBE folding a
     // null-like address into the load.
     if (value.drop or value.size == 0) return;
-    // A borrowed element that holds managed references would be pushed as a
-    // root at every later safepoint, long after the borrow died, and the
-    // receiver's backing can be reallocated or swept by then. The frame's own
-    // result buffer cannot, so only a borrow of it may trace.
-    if (value.trace and !candidate.source.stable) return;
+    // Closing an arena scope scans every local declared before it through its
+    // slot. A borrowed element's slot is meaningful only inside its own inert
+    // run, so a frame that can reach that scan keeps the copy.
+    if (!candidate.source.stable and arena_lower.releasesOnReturn(self.arenas, f)) return;
     for (code, 0..) |_, at| if (at != at_store and writesLocalAt(f, at, slot)) return;
     if (!candidate.source.stable and !try inertWhileLive(E, self, at_store, slot)) return;
-    candidate.flags[slot] = true;
+    candidate.flags[slot] = if (candidate.source.stable) .value else .element;
 }
 
 /// Whether every instruction that can run while local `slot` holds a borrowed
@@ -355,7 +368,6 @@ fn inert(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"),
         .push_unit,
         .get_field,
         .array_length,
-        .binary_integer,
         .add_i64_checked,
         .sub_i64_checked,
         .mul_i64_checked,
@@ -378,6 +390,10 @@ fn inert(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"),
         // The result leaves through a copy the epilogue makes, so the borrow
         // must still name live storage when the epilogue runs.
         .ret => returns,
+        // Scalar arithmetic and comparison allocate nothing; the same opcode
+        // over a managed type is string concatenation or a content comparison,
+        // which calls the runtime and can collect.
+        .binary_integer => |operation| !operation.ty.isAggregate(),
         // A whole-value store can drop the value it replaces, which is a
         // release the run must not contain; a drop-free destination cannot.
         .store_local => |target| !(try self.layout(self.function.scope.locals[@backingInt(target)].ty)).drop,
