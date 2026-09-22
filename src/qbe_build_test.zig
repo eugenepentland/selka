@@ -232,6 +232,44 @@ test "a native executable exits with its entry int result truncated to a byte" {
     try std.testing.expectEqual(std.process.Child.Term{ .exited = 0 }, wrapped.term);
 }
 
+/// QBE IL for one loop whose header carries `count` phis, each live around the
+/// loop and summed after it, so the edge into the header is one parallel move
+/// of `count` copies plus the counter's.
+fn widePhiLoop(allocator: std.mem.Allocator, count: usize) ![]const u8 {
+    var il: std.Io.Writer.Allocating = .init(allocator);
+    const w = &il.writer;
+    try w.writeAll("export function l $wide(l %n) {\n@start\n");
+    for (0..count) |i| try w.print(" %a{d}.0 =l copy {d}\n", .{ i, i });
+    try w.writeAll(" %i.0 =l copy 0\n@loop\n");
+    for (0..count) |i| try w.print(" %a{d} =l phi @start %a{d}.0, @body %a{d}.1\n", .{ i, i, i });
+    try w.writeAll(" %i =l phi @start %i.0, @body %i.1\n %c =w csltl %i, %n\n jnz %c, @body, @done\n@body\n");
+    for (0..count) |i| try w.print(" %a{d}.1 =l add %a{d}, 1\n", .{ i, (i + 1) % count });
+    try w.writeAll(" %i.1 =l add %i, 1\n jmp @loop\n@done\n %s0 =l copy %a0\n");
+    for (1..count) |i| try w.print(" %s{d} =l add %s{d}, %a{d}\n", .{ i, i - 1, i });
+    try w.print(" ret %s{d}\n}}\n", .{count - 1});
+    return il.written();
+}
+
+// Upstream QBE 1.3 keeps a block edge's parallel move in a fixed 64-entry table
+// and dies with `no more pm slots` beyond it; the vendored copy grows the table.
+// spec: QBE-PARALLEL-MOVE-1
+test "the vendored QBE allocates a parallel move wider than its initial table" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const a = context.allocator;
+    const resolved = try tools(a);
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const source = try join(a, &.{ root, "wide.ssa" });
+    try context.write(source, try widePhiLoop(a, 200));
+    const assembly = try join(a, &.{ root, "wide.s" });
+    _ = try spawnOk(context, &.{ resolved.qbe, "-o", assembly, source }, .inherit, null);
+    try std.testing.expect(std.mem.indexOf(u8, try context.read(assembly), "wide:") != null);
+}
+
 // spec-case: QBE-3
 test "a default build shares its runtime tree under XDG while an explicit cache-dir stays hermetic" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
