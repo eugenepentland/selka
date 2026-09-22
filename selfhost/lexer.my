@@ -117,6 +117,8 @@ def classify_word(src: source.Source, word: bytes, start: int, end: int) -> Resu
             return Ok(token.TokenKind.kw_if)
         if word == b"in":
             return Ok(token.TokenKind.kw_in)
+        if word == b"is":
+            return Ok(token.TokenKind.kw_is)
         if word == b"i8":
             return Ok(token.TokenKind.kw_i8)
         if word == b"u8":

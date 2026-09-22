@@ -596,7 +596,9 @@ pub const Index = struct {
             mask |= try self.resourceTypeEffect(module, parameter.ty);
             for (self.units[module].syntax.types.expressions.callbacks) |callback| {
                 if (callback.span.start != parameter.ty.start or callback.span.end != parameter.ty.end) continue;
-                mask |= callback.effect_bound.allowed;
+                // An omitted callback ceiling is the unbounded `all` mask, which
+                // declares nothing and therefore contributes nothing.
+                if (callback.effect_bound.allowed != effect_set.all) mask |= callback.effect_bound.allowed;
             }
         }
         return mask;

@@ -333,6 +333,15 @@ pub fn ownershipMask(records: []const typed.Record, ty: typed.Type, depth: usize
     return mask;
 }
 
+/// Effect a callback parameter's contract contributes. A bounded ceiling is a
+/// declared promise and is honoured; an omitted ceiling is the unbounded `all`
+/// mask, which is not a declaration at all, so it contributes nothing and an
+/// invoke through the value contributes nothing either. The value's own
+/// signature is where that authority is declared.
+fn callbackContribution(contract: typed.Callable) sets.Mask {
+    return if (contract.effects == sets.all) 0 else contract.effects;
+}
+
 /// Effect ceiling a signature implies by construction: one effect per capability
 /// parameter, `mutation` for every `mut` parameter, the declared ceiling of every
 /// callback parameter, `managed_allocation`, which is always permitted, and the
@@ -346,7 +355,7 @@ pub fn derivedCeiling(records: []const typed.Record, function: typed.Function) s
     mask |= ownershipMask(records, signature.return_type, 0);
     for (function.scope.locals[0..signature.parameter_count]) |parameter| {
         if (capabilityEffect(parameter.ty)) |effect| mask |= sets.bit(effect);
-        if (callables.signature(parameter.ty, records)) |contract| mask |= contract.effects;
+        if (callables.signature(parameter.ty, records)) |contract| mask |= callbackContribution(contract);
         mask |= ownershipMask(records, parameter.ty, 0);
     }
     for (signature.declared_mutates) |position| {
@@ -571,7 +580,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, request: Requ
                 },
                 .invoke => |call| {
                     const contract = callables.signature(program.nodes[@backingInt(call.callee)].ty, program.records).?;
-                    inline for (std.meta.tags(sets.Effect)) |effect| if (effect != .mutation and contract.effects & sets.bit(effect) != 0) graph.direct(index, effect, node.span);
+                    inline for (std.meta.tags(sets.Effect)) |effect| if (effect != .mutation and callbackContribution(contract) & sets.bit(effect) != 0) graph.direct(index, effect, node.span);
                 },
                 .call => |call| graph.call(index, @backingInt(call.function), node.span) catch |err| switch (err) {
                     error.OutOfMemory => return error.OutOfMemory,
@@ -804,7 +813,7 @@ fn seedInstructionEffects(
         },
         .invoke => |ty| {
             const contract = callables.signature(ty, program.records) orelse return error.InternalError;
-            inline for (std.meta.tags(sets.Effect)) |effect| if (effect != .mutation and contract.effects & sets.bit(effect) != 0) graph.direct(index, effect, instruction.span);
+            inline for (std.meta.tags(sets.Effect)) |effect| if (effect != .mutation and callbackContribution(contract) & sets.bit(effect) != 0) graph.direct(index, effect, instruction.span);
         },
         .call => |callee| try graph.call(index, @backingInt(callee), instruction.span),
         .arena_escape => graph.direct(index, .managed_allocation, instruction.span),

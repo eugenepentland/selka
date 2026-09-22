@@ -23,7 +23,7 @@ public def test_output_limit_fails_without_oversized_buffer() -> bool:
         i += 1
     if out.failed or len(out.buffer) != 4194304:
         return False
-    io.appendByte(out, 120u8)
+    io.appendByte(mut out, 120u8)
     return out.failed and len(out.buffer) == 4194304
 
 

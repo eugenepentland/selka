@@ -93,6 +93,7 @@ public enum TokenKind:
     kw_const,
     kw_for,
     kw_in,
+    kw_is,
     kw_type,
     lparen,
     rparen,
@@ -206,6 +207,8 @@ public def kind_name(kind: TokenKind) -> str:
         return "kw_for"
     if kind == TokenKind.kw_in:
         return "kw_in"
+    if kind == TokenKind.kw_is:
+        return "kw_is"
     if kind == TokenKind.kw_len:
         return "kw_len"
     if kind == TokenKind.kw_elif:

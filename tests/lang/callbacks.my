@@ -89,14 +89,19 @@ public def test_callbacks_return_from_a_chooser_and_invoke() -> bool:
 
 
 # spec-case: CALLBACK-1
-public def test_stored_and_returned_callbacks_retain_the_destination_effect_contract() -> bool:
+public def test_stored_and_returned_callbacks_retain_the_destination_effect_contract(out: Stream) -> bool:
+    # `invoke_sink`'s `Sink` parameter declares `effects(output)`, so calling it
+    # is an output of this body's signature too. The runner supplies `out`; the
+    # assertion itself never prints.
+    _ = out
     stored = pure_cb
     returned = stash_sink()
     return invoke_sink(stored, 10) + invoke_sink(returned, 31) == 43
 
 
 # spec-case: CALLBACK-1
-public def test_generic_callback_parameters_use_the_same_directional_relation() -> bool:
+public def test_generic_callback_parameters_use_the_same_directional_relation(out: Stream) -> bool:
+    _ = out
     return apply_generic[int](pure_cb, 41) == 42
 
 
