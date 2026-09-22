@@ -740,14 +740,14 @@ test "QBE-PURE-READ-1 a read-only collection probe pushes no roots" {
         \\    return counts.get(key, 0)
         \\
         \\
-        \\def bump(counts: dict[str, i64], key: str) -> i64:
+        \\def bump(counts: mut dict[str, i64], key: str) -> i64:
         \\    counts[key] = 1
         \\    return len(counts)
         \\
         \\
         \\def main() -> i64:
         \\    counts: dict[str, i64] = {}
-        \\    return probe(counts, "k") + bump(counts, "k")
+        \\    return probe(counts, "k") + bump(mut counts, "k")
     );
     defer parsed.deinit();
     const probe = named(parsed.value, "probe").?.il;
@@ -1132,6 +1132,46 @@ test "QBE-BUFFER-APPEND-1 a byte-buffer append lowers its fitting path inline an
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "=w call $myl_native_bytes_buffer_append_range("));
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "=w call $myl_native_bytes_buffer_append_byte("));
     try std.testing.expect(std.mem.indexOf(u8, body, "%root0") != null);
+}
+
+// spec: QBE-ALIAS-CLASS-1
+test "QBE-ALIAS-CLASS-1 a managed receiver and its element storage are marked as memory outside the frame" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def total(values: list[i64]) -> i64:
+        \\    sum = 0
+        \\    i = 0
+        \\    while i < len(values):
+        \\        sum = sum + values[i]
+        \\        i = i + 1
+        \\    return sum
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return total([1, 2, 3])
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "total").?.il;
+    // Each `len` receiver, the element read's receiver and the storage word
+    // that read loads are marked, and nothing else is.
+    try std.testing.expectEqual(@as(usize, 6), std.mem.count(u8, body, "myl-obj"));
+    // Every marker is its own comment line, which QBE's lexer drops whole, so
+    // the QBE backend's assembly is byte-identical with and without them.
+    try std.testing.expectEqual(@as(usize, 6), std.mem.count(u8, body, "\n # myl-obj %v"));
+}
+
+// spec-case: QBE-ALIAS-CLASS-1
+test "QBE-ALIAS-CLASS-1 a function that touches no managed container is marked nowhere" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def twice(value: i64) -> i64:
+        \\    return value + value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return twice(21)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "twice").?.il;
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl-obj"));
 }
 
 // spec: QBE-APPEND-FAST-1

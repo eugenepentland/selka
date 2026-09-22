@@ -2482,6 +2482,16 @@ const Emitter = struct {
         try self.print(" %v{d} =l add %v{d}, {d}\n", .{ result, base, offset });
         return result;
     }
+    /// Record that `%v{value}` addresses memory outside this function's stack
+    /// frame: a managed object header, or the element storage its header names.
+    /// Both come from the managed heap, so neither can be one of this frame's
+    /// `alloc*` slots, and the LLVM adapter turns that into scoped alias
+    /// metadata that lets a loop keep a container header in registers. QBE's
+    /// lexer drops `#` to end of line, so its assembly is byte-identical with
+    /// or without the marker. See `docs/tooling/native-build.md`.
+    pub fn markObject(self: *Emitter, value: usize) GenerateError!void {
+        try self.print(" # myl-obj %v{d}\n", .{value});
+    }
     /// Store one variant case tag at the start of a record pointer.
     pub fn writeTag(self: *Emitter, tag: usize, pointer: usize) GenerateError!void {
         try self.print(" storew {d}, %v{d}\n", .{ tag, pointer });
