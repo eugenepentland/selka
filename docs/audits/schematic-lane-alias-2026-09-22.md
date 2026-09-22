@@ -27,14 +27,14 @@ Branch `perf/schematic-3-adapter-alias`, base `base/schematic-20260922`
    arm), and in the LTO arm `io::flush` no longer survives as a symbol at all:
    the shorter body now fits the inliner's budget. `svg::render`'s loop set
    shrinks from nine loops to five as its frame block stops aliasing everything.
-4. **It does not buy measurable time on this workload.** Fresh-process wall
-   clock over 251 interleaved rounds puts the metadata arm at 0.984 of its own
-   byte-identical control, with a 95% interval of [0.888, 1.015]; a 201-round
-   interleaved CPU-clock batch inside the guest finds no difference at all. The
-   honest number is *at most about 2%, and not separable from this machine's
-   noise.* Every measurement here was taken with a load average between 27 and
-   49 on 20 cores, because other lanes were building throughout; the integrator
-   should re-measure on a quiet machine.
+4. **The time it buys is real but small: 1.4%.** On the quietest batch this
+   machine allowed (251 interleaved rounds, load average 14), the metadata arm
+   runs at **0.986 [0.977, 0.994]** of its own byte-identical control, against a
+   noise floor of ±0.8% measured by timing that control against the identical
+   audit binary in the same batch. Against Zig the fixture goes 2.016 → 1.989.
+   Batches taken while the machine carried a load average of 27–49 could not
+   resolve the effect at all. The integrator should re-measure on a quiet
+   machine.
 5. `io::load`'s per-byte append loop is **unchanged at 13 instructions**, and no
    aliasing fact can change it: the loop body contains the grow call, so LLVM
    cannot promote the header across it. That loop is audit item 4 (bulk I/O),
@@ -210,37 +210,44 @@ every iteration no matter what the metadata says. That is audit item 4 — one
 
 ## 4. Timing
 
-Every number below was taken with a load average between 27 and 49 on 20 cores,
-because other lanes were building throughout. The reference arm is inflated
-against the audit's own measurement of it (Zig's fixture median 2.29 ms here
-against 1.31 ms in the audit), so these are ratios between arms measured in the
-same interleaved batch and nothing else.
+Other lanes were building on this machine throughout, so every batch carries a
+load average well above idle and the reference arm is inflated against the
+audit's own measurement of it (Zig's fixture median 2.92 ms in the best batch
+here against 1.31 ms in the audit). These are therefore ratios between arms
+measured in the same interleaved batch and nothing else. Because `lane3-off` is
+byte-for-byte `base-gc-lto`, every batch also measures its own noise floor: the
+`lane3-off / base-gc-lto` row is what "no difference" looks like in that batch.
 
 ### Fresh-process wall clock
 
 `bench_svg.py`, CPU 8, 251 interleaved rounds, three warmups, every run's SVG
-hash checked against the reference arm's.
+hash checked against the reference arm's; taken at load average 14, the quietest
+window available.
 
 | arm | fixture, ms | min | × zig-o3 |
 |---|---:|---:|---:|
-| `zig-o3` | 2.289 | 1.257 | 1.00 |
-| `base-gc-lto` (the audit's binary) | 4.909 | 2.825 | 2.15 [1.96, 2.23] |
-| `lane3-off` (this tree, metadata off) | 4.911 | 2.799 | 2.15 [1.96, 2.23] |
-| `lane3-on` | 4.830 | 2.783 | **2.11 [1.82, 2.17]** |
+| `zig-o3` | 2.918 | 1.960 | 1.00 |
+| `base-gc-lto` (the audit's binary) | 5.882 | 4.003 | 2.02 [2.00, 2.03] |
+| `lane3-off` (this tree, metadata off) | 5.883 | 3.993 | 2.02 [2.00, 2.03] |
+| `lane3-on` | 5.803 | 3.995 | **1.99 [1.97, 2.01]** |
 
 Paired bootstraps over the same rounds:
 
 | comparison | ratio | 95% |
 |---|---:|---|
-| `lane3-on` / `lane3-off` | 0.984 | [0.888, 1.015] |
-| `lane3-on` / `base-gc-lto` | 0.984 | [0.900, 1.046] |
-| `lane3-off` / `base-gc-lto` | 1.0005 | [0.953, 1.088] |
+| `lane3-on` / `lane3-off` | **0.9864** | **[0.9771, 0.9945]** |
+| `lane3-on` / `base-gc-lto` | 0.9865 | [0.9779, 0.9947] |
+| `lane3-off` / `base-gc-lto` | 1.0001 | [0.9935, 1.0085] |
 
-`lane3-off` and `base-gc-lto` are the *same bytes*, so the third row is this
-batch's pure noise estimate: about ±7% at 95%. The metadata's own effect, 1.6%,
-is well inside it. An earlier 101-round batch of the same arms gave 0.978
-[0.948, 1.003] for `lane3-on / lane3-off` with a ±3% noise floor — the same
-verdict from a different draw.
+The third row is this batch's noise floor — two identical binaries, ±0.8% at
+95% — so the 1.4% the metadata buys is outside it, if not by much. About 40% of
+the fixture's wall time is process floor (§3.1 of the audit), so 1.4% of wall is
+roughly 2.3% of the guest's own work.
+
+Two earlier batches of the same arms, taken while the machine carried a load
+average of 27–49, could not resolve it: 251 rounds gave 0.984 [0.888, 1.015]
+against a ±7% noise floor, and 101 rounds gave 0.978 [0.948, 1.003] against
+±3%. Load, not the change, is what moved between them.
 
 ### Guest CPU clock, per phase
 
@@ -262,9 +269,11 @@ interleaved inside one batch so machine load lands on both, CPU 8,
 
 An earlier 61-round batch of the same two arms, taken while the machine was
 about twice as loaded, put `main::main` at 0.979 [0.930, 1.023] and its minimum
-at 0.905. The two batches disagree by more than the effect, which is the
-measurement's verdict: **on this machine, at this load, the metadata's
-end-to-end effect on a 1 ms workload is under 2% and not separable from noise.**
+at 0.905. Both batches ran at a load this probe cannot see through: its p10..p90
+spread is ±10% or worse on every phase, an order of magnitude wider than the
+1.4% the wall-clock batch resolves. The per-phase attribution of this change is
+therefore **not measured**; §3's loop sizes are what the phase numbers would
+have to confirm, and a quiet machine is what it would take.
 
 ### Micro kernels
 
@@ -411,5 +420,7 @@ reports `myl_native_text_points` missing from `runtime_signatures.py`.
   `perf_event_paranoid` is 4 and there is no `valgrind` on this host, so there
   are no instruction or cycle counts; the deterministic evidence in §3 is static
   loop size from `objdump`, and the timing is wall and CPU clock only.
-- One machine (i7-12700H), one circuit, one input case for the long batches, and
-  a load average that never fell below 27 while they ran.
+- One machine (i7-12700H), one circuit, one input case for the long batches. The
+  headline batch ran at load average 14; the phase batches ran at 27–49, which
+  is why they resolve nothing. Every batch reports its own noise floor by timing
+  two identical binaries in it.
