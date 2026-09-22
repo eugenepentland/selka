@@ -1,0 +1,128 @@
+module text_scanning
+
+
+# `times` copies of `piece` by doubling, so a long input costs a logarithmic
+# number of guest steps and stays inside a test's instruction budget.
+def repeated(piece: str, times: int) -> str:
+    out = ""
+    chunk = piece
+    remaining = times
+    while remaining > 0:
+        if remaining % 2 == 1:
+            out = out + chunk
+        remaining = remaining // 2
+        if remaining > 0:
+            chunk = chunk + chunk
+    return out
+
+
+# `count` is non-overlapping and left to right wherever the matches sit: at
+# either end, next to each other, or behind candidates whose first octet
+# matches and whose rest does not.
+# spec: TEXT-SCAN-1
+public def test_count_is_non_overlapping_at_every_position() -> bool:
+    ok = "aaa".count("aa") == 1 and "aaaa".count("aa") == 2 and "abababa".count("aba") == 2
+    ok = ok and "abcab".count("ab") == 2 and "xab".count("ab") == 1 and "abx".count("ab") == 1
+    ok = ok and "abc".count("abc") == 1 and "abc".count("z") == 0 and "".count("a") == 0
+    ok = ok and "ab".count("abc") == 0 and "a,b,,c,".count(",") == 4
+    ok = ok and "aaaaaaaaaaaaaaaaaaaaaabaab".count("aab") == 2
+    return ok and "aaaaaaaaaaaaaaaaaaaaaaaa".count("aab") == 0
+
+
+# A valid UTF-8 needle can only match where a scalar starts, so counting and
+# finding by octets answers the scalar question exactly; `find` still answers a
+# scalar index.
+# spec-case: TEXT-SCAN-1
+public def test_count_and_find_multibyte_needles_and_haystacks() -> bool:
+    ok = "héllo wörld é".count("é") == 2 and "日本日本日".count("日本") == 2
+    ok = ok and "😀😀😀".count("😀😀") == 1 and "ééééééééééééx".count("éx") == 1
+    ok = ok and "ééééééééééééé".count("éx") == 0 and "é".count("e") == 0
+    ok = ok and "日本語テキスト".find("テ") == 3 and "ééééééééééééx".find("éx") == 11
+    return ok and "aé".find("é") == 1 and "ééx".find("x") == 2
+
+
+# Long inputs: the scan is linear however dense the matches or the false
+# candidates are.
+# spec-case: TEXT-SCAN-1
+public def test_count_and_find_over_long_inputs() -> bool:
+    lines = repeated("item,1\n", 100000)
+    ok = len(lines) == 700000 and lines.count("item") == 100000 and lines.count(",1") == 100000
+    ok = ok and lines.count("\n") == 100000 and lines.count("1\ni") == 99999
+    run = repeated("a", 100000) + "b"
+    ok = ok and run.count("ab") == 1 and run.count("aab") == 1 and run.count("aa") == 50000
+    ok = ok and run.find("ab") == 99999 and run.find("aab") == 99998 and run.count("ba") == 0
+    return ok and repeated("ab", 500000).count("ba") == 499999
+
+
+# `replace` sizes its result in one scan and copies the unchanged runs between
+# matches whole; matches at either end, adjacent matches and removals keep
+# Python's answers, and the result's length counts scalars.
+# spec: TEXT-SCAN-2
+public def test_replace_copies_runs_between_non_overlapping_matches() -> bool:
+    ok = "aaa".replace("aa", "b") == "ba" and "aaaa".replace("aa", "b") == "bb"
+    ok = ok and "abcab".replace("ab", "") == "c" and "abxab".replace("ab", "YZ") == "YZxYZ"
+    ok = ok and "abc".replace("z", "y") == "abc" and "ab".replace("abc", "x") == "ab"
+    ok = ok and "".replace("a", "b") == "" and "aaaaaaaaaaaaaaaaaaaaaab".replace("ab", "X") == "aaaaaaaaaaaaaaaaaaaaaX"
+    plain = "héllo été".replace("é", "e")
+    ok = ok and plain == "hello ete" and len(plain) == 9 and plain.find("t") == 7
+    wide = "a-b-c".replace("-", "😀")
+    ok = ok and wide == "a😀b😀c" and len(wide) == 5 and wide[3] == "😀" and wide.find("c") == 4
+    return ok and "日本日本".replace("日本", "x") == "xx"
+
+
+# spec-case: TEXT-SCAN-2
+public def test_replace_over_long_inputs() -> bool:
+    text = repeated("item,1\n", 100000)
+    rewritten = text.replace("item", "it")
+    ok = len(rewritten) == 500000 and rewritten.count("it,1\n") == 100000
+    ok = ok and rewritten.startswith("it,1\nit,1") and rewritten.endswith("it,1\n")
+    run = repeated("a", 100001)
+    halved = run.replace("aa", "b")
+    ok = ok and len(halved) == 50001 and halved.endswith("bba") and halved.count("b") == 50000
+    return ok and text.replace("\n", "").count("item,1item") == 50000
+
+
+# `split(separator)` keeps every empty piece, cuts non-overlapping left to
+# right, and a piece of a non-ASCII text measures and indexes its own scalars.
+# spec: TEXT-SCAN-3
+public def test_split_keeps_empty_pieces_and_measures_each_piece() -> bool:
+    parts = "a,b,,c,".split(",")
+    ok = len(parts) == 5 and parts[0] == "a" and parts[1] == "b" and parts[2] == ""
+    ok = ok and parts[3] == "c" and parts[4] == ""
+    edges = ",".split(",")
+    ok = ok and len(edges) == 2 and edges[0] == "" and edges[1] == ""
+    whole = "abc".split("abcd")
+    ok = ok and len(whole) == 1 and whole[0] == "abc" and len("".split(",")) == 1
+    pair = "aaa".split("aa")
+    ok = ok and len(pair) == 2 and pair[0] == "" and pair[1] == "a"
+    dashed = "a--b--c".split("--")
+    ok = ok and len(dashed) == 3 and dashed[2] == "c"
+    mixed = "é|😀é|x".split("|")
+    ok = ok and len(mixed) == 3 and len(mixed[0]) == 1 and len(mixed[1]) == 2 and len(mixed[2]) == 1
+    ok = ok and mixed[1][1] == "é" and mixed[1][-2] == "😀" and mixed[2] == "x"
+    arrows = "a→b→c".split("→")
+    return ok and len(arrows) == 3 and arrows[1] == "b" and arrows[2] == "c"
+
+
+# spec-case: TEXT-SCAN-3
+public def test_split_over_long_inputs() -> bool:
+    halves = (repeated("x", 200000) + "|" + repeated("é", 100000)).split("|")
+    ok = len(halves) == 2 and len(halves[0]) == 200000 and len(halves[1]) == 100000
+    ok = ok and halves[1].find("é") == 0 and halves[1][99999] == "é"
+    words = repeated("é,", 2000).split(",")
+    ok = ok and len(words) == 2001 and len(words[0]) == 1 and words[1999] == "é" and words[2000] == ""
+    fields = repeated("ab--", 2000).split("--")
+    return ok and len(fields) == 2001 and fields[1000] == "ab" and fields[2000] == ""
+
+
+# A byte string splits through the same search.
+# spec-case: TEXT-SCAN-3
+public def test_byte_string_separator_split_uses_the_same_cuts() -> bool:
+    parts = b",aaaaaaaaaaaaaaaaaaaab--c,,--".split(b"--")
+    ok = len(parts) == 3 and parts[0] == b",aaaaaaaaaaaaaaaaaaaab" and parts[1] == b"c,," and parts[2] == b""
+    pair = b"aaa".split(b"aa")
+    return ok and len(pair) == 2 and pair[0] == b"" and pair[1] == b"a"
+
+
+def main() -> int:
+    return 0

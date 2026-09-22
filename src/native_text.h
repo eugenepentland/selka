@@ -57,11 +57,22 @@ size_t myl_native_text_index(const myl_native_text *, size_t at);
 /* The Unicode scalar value at scalar `index`, which must be in range. */
 uint32_t myl_native_text_point_at(const myl_native_text *, size_t index);
 /* Fresh text holding the octets of `input` in `[from, to)`, both of which must
- * begin a scalar. The scalar count is measured, never carried. */
+ * begin a scalar. The scalar count is measured over the piece alone, never
+ * carried, so cutting a text into pieces costs one pass over it in total. */
 myl_native_text *myl_native_text_substring(myl_native_heap *, myl_native_text *, size_t from, size_t to);
 /* Octet offset of the first occurrence of a nonempty `needle`, or SIZE_MAX. Both
  * payloads are valid UTF-8, so an octet match begins a scalar in both. */
 size_t myl_native_text_find_bytes(const myl_native_text *, const myl_native_text *needle);
+/* Offset of the first occurrence of the `count` octets at `needle` inside the
+ * `length` octets at `haystack`, or SIZE_MAX; an empty needle occurs at 0. The
+ * scan runs in libc's bulk primitives — `memchr` for the first octet, `memmem`
+ * once that octet keeps recurring without a match — so a candidate costs no
+ * call of its own. Text and byte strings search through this one routine. */
+size_t myl_native_octets_find(const unsigned char *haystack, size_t length, const unsigned char *needle, size_t count);
+/* Non-overlapping occurrences of a nonempty `needle`, scanned left to right, so
+ * `aaa` holds one `aa`; an empty needle or one longer than the haystack has
+ * none. It is exactly the number of cuts a separator split makes. */
+size_t myl_native_octets_count(const unsigned char *haystack, size_t length, const unsigned char *needle, size_t count);
 /* Fresh text holding the scalar values of a temporary list a constructor filled,
  * which is rooted across the allocation: a text's payload is UTF-8, so the
  * construction cannot write scalars in place. NULL for a value that is not a

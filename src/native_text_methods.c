@@ -33,13 +33,11 @@ static int matches_at(const myl_native_text *input, size_t at, const myl_native_
 }
 /* Non-overlapping occurrences in octets, scanning left to right exactly as the
    VM does. Both payloads are valid UTF-8, so an octet match starts a scalar in
-   both and advancing by the needle's octets cannot land inside a scalar. */
+   both and advancing by the needle's octets cannot land inside a scalar. The
+   scan is the shared bulk search, so an offset that cannot start a match costs
+   no comparison call. */
 static size_t occurrences(const myl_native_text *input, const myl_native_text *needle) {
-    size_t found=0, at=0;
-    while (needle->bytes && at+needle->bytes<=input->bytes) {
-        if (matches_at(input,at,needle)) { found++; at+=needle->bytes; } else at++;
-    }
-    return found;
+    return myl_native_octets_count(myl_native_text_storage(input),input->bytes,myl_native_text_storage(needle),needle->bytes);
 }
 /* An empty needle answers -1 here; the emitted call traps R_EMPTY_SEPARATOR
    before this runs. A needle longer than the receiver is absent as before, and
@@ -114,6 +112,9 @@ myl_native_text *myl_native_text_zfill(myl_native_heap *heap, myl_native_text *i
     myl_native_root_pop(heap,&root);
     return result;
 }
+/* One counting scan sizes the result exactly; the copying scan then finds the
+   same matches again and moves each unchanged run between them with one
+   `memcpy`, instead of testing every offset and copying octet by octet. */
 myl_native_text *myl_native_text_replace(myl_native_heap *heap, myl_native_text *input, myl_native_text *needle, myl_native_text *insert) {
     if (!needle->length) return NULL;
     size_t hits=occurrences(input,needle);
@@ -132,13 +133,16 @@ myl_native_text *myl_native_text_replace(myl_native_heap *heap, myl_native_text 
         const unsigned char *insert_bytes=myl_native_text_storage(insert);
         unsigned char *out=(unsigned char *)myl_native_text_storage(result);
         size_t at=0, cursor=0;
-        while (cursor<input->bytes) {
-            if (cursor+needle->bytes<=input->bytes && !memcmp(source+cursor,needle_bytes,needle->bytes)) {
-                if (insert->bytes) memcpy(out+at,insert_bytes,insert->bytes);
-                at+=insert->bytes;
-                cursor+=needle->bytes;
-            } else out[at++]=source[cursor++];
+        for (size_t left=hits; left; left--) {
+            size_t hit=myl_native_octets_find(source+cursor,input->bytes-cursor,needle_bytes,needle->bytes);
+            if (hit==SIZE_MAX) break;
+            if (hit) memcpy(out+at,source+cursor,hit);
+            at+=hit;
+            if (insert->bytes) memcpy(out+at,insert_bytes,insert->bytes);
+            at+=insert->bytes;
+            cursor+=hit+needle->bytes;
         }
+        if (cursor<input->bytes) memcpy(out+at,source+cursor,input->bytes-cursor);
         myl_native_text_publish(result,input->length-hits*needle->length+hits*insert->length,
                                 input->flags&insert->flags&MYL_TEXT_ASCII);
     }

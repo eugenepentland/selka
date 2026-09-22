@@ -178,11 +178,22 @@ size_t myl_native_text_index(const myl_native_text *text, size_t at) {
     for (size_t i=0;i<at;i++) if ((bytes[i]&0xc0u)!=0x80u) scalars++;
     return scalars;
 }
+/* Scalars that begin in `count` octets of valid UTF-8: one per octet that is not
+ * a continuation octet `10xxxxxx`. */
+static size_t scalars_in(const unsigned char *bytes, size_t count) {
+    size_t scalars=0;
+    for (size_t i=0;i<count;i++) scalars+=(bytes[i]&0xc0u)!=0x80u;
+    return scalars;
+}
+/* A piece of non-ASCII text counts only its own octets: counting from the start
+ * of the receiver at both ends made every split, splitlines and word split of a
+ * non-ASCII text quadratic in its length. A piece whose every octet begins a
+ * scalar is ASCII, and says so, so later operations on it index by octet. */
 myl_native_text *myl_native_text_substring(myl_native_heap *heap, myl_native_text *input, size_t from, size_t to) {
     const unsigned char *bytes=myl_native_text_storage(input);
     int plain=input->flags&MYL_TEXT_ASCII;
-    size_t scalars=plain ? to-from : myl_native_text_index(input,to)-myl_native_text_index(input,from);
-    return build(heap,bytes+from,to-from,scalars,plain);
+    size_t scalars=plain ? to-from : scalars_in(bytes+from,to-from);
+    return build(heap,bytes+from,to-from,scalars,plain || scalars==to-from);
 }
 uint32_t myl_native_text_point_at(const myl_native_text *text, size_t index) {
     size_t at=myl_native_text_offset(text,index);
@@ -345,34 +356,97 @@ int myl_native_text_compare(const myl_native_text *a, const myl_native_text *b) 
     if (order) return order<0?-1:1;
     return a->bytes<b->bytes?-1:a->bytes>b->bytes?1:0;
 }
-size_t myl_native_text_find_bytes(const myl_native_text *input, const myl_native_text *needle) {
-    if (!needle->bytes) return 0;
-    if (needle->bytes>input->bytes) return SIZE_MAX;
-    const unsigned char *haystack=myl_native_text_storage(input);
-    const unsigned char *found=memmem(haystack,input->bytes,myl_native_text_storage(needle),needle->bytes);
+/* Whether `count` octets agree. The rest of a needle whose first octet already
+ * matched is short in every search this runtime makes, so a loop that stops at
+ * the first difference costs less than a `memcmp` call per candidate. */
+static int same_octets(const unsigned char *left, const unsigned char *right, size_t count) {
+    for (size_t i=0;i<count;i++) if (left[i]!=right[i]) return 0;
+    return 1;
+}
+/* Candidates one search confirms in place before it hands the rest of the
+ * haystack to `memmem`. A first octet that keeps recurring without a match (a
+ * needle `ab` in a run of `a`) would otherwise cost one `memchr` call per octet;
+ * `memmem`'s own scan stays linear however the octets repeat, and a search that
+ * finds its match within this many candidates never pays `memmem`'s setup. */
+enum { SCAN_CANDIDATES = 8 };
+size_t myl_native_octets_find(const unsigned char *haystack, size_t length, const unsigned char *needle, size_t count) {
+    if (!count) return 0;
+    if (count>length) return SIZE_MAX;
+    if (count==1) {
+        const unsigned char *found=memchr(haystack,needle[0],length);
+        return found ? (size_t)(found-haystack) : SIZE_MAX;
+    }
+    /* A match can begin no later than `last`, so every candidate the loop
+       confirms has `count` octets behind it. */
+    const unsigned char *at=haystack, *last=haystack+(length-count);
+    for (int tried=0; tried<SCAN_CANDIDATES; tried++) {
+        const unsigned char *candidate=memchr(at,needle[0],(size_t)(last-at)+1);
+        if (!candidate) return SIZE_MAX;
+        if (same_octets(candidate+1,needle+1,count-1)) return (size_t)(candidate-haystack);
+        if (candidate==last) return SIZE_MAX;
+        at=candidate+1;
+    }
+    const unsigned char *found=memmem(at,(size_t)(haystack+length-at),needle,count);
     return found ? (size_t)(found-haystack) : SIZE_MAX;
+}
+size_t myl_native_octets_count(const unsigned char *haystack, size_t length, const unsigned char *needle, size_t count) {
+    if (!count || count>length) return 0;
+    size_t found=0;
+    if (count==1) {
+        /* One octet cannot overlap itself, so its count is a plain tally, which
+           the compiler vectorizes; a 32-bit block sum keeps the lanes wide. */
+        const unsigned char octet=needle[0];
+        for (size_t at=0; at<length;) {
+            size_t block=length-at<65536 ? length-at : 65536;
+            uint32_t tally=0;
+            for (size_t i=0;i<block;i++) tally+=haystack[at+i]==octet;
+            found+=tally;
+            at+=block;
+        }
+        return found;
+    }
+    for (size_t at=0;;) {
+        size_t hit=myl_native_octets_find(haystack+at,length-at,needle,count);
+        if (hit==SIZE_MAX) return found;
+        found++;
+        at+=hit+count;
+    }
+}
+size_t myl_native_text_find_bytes(const myl_native_text *input, const myl_native_text *needle) {
+    return myl_native_octets_find(myl_native_text_storage(input),input->bytes,myl_native_text_storage(needle),needle->bytes);
 }
 int myl_native_text_contains(const myl_native_text *input, const myl_native_text *needle) {
     return myl_native_text_find_bytes(input,needle)!=SIZE_MAX;
 }
+/* The separator is found by the bulk search, never by a comparison at every
+ * octet, and the cuts are counted first so the result list is allocated once at
+ * its final length: filling it never grows it, so no piece needs a root of its
+ * own between its allocation and its store. */
 myl_native_list *myl_native_text_split(myl_native_heap *heap, myl_native_text *input, myl_native_text *separator) {
     if (!separator->length) return NULL;
+    const size_t width=separator->bytes;
+    size_t pieces=myl_native_octets_count(myl_native_text_storage(input),input->bytes,myl_native_text_storage(separator),width)+1;
     myl_native_root a,b,c;
     myl_native_root_push(heap,&a,&input,&pointer_type);
     myl_native_root_push(heap,&b,&separator,&pointer_type);
-    myl_native_list *result=myl_native_list_new(heap,&pointer_type,0);
+    myl_native_list *result=myl_native_list_new(heap,&pointer_type,pieces);
     myl_native_root_push(heap,&c,&result,&pointer_type);
     if (result) {
         const unsigned char *haystack=myl_native_text_storage(input);
         const unsigned char *needle=myl_native_text_storage(separator);
-        size_t start=0, cursor=0;
-        while (cursor<=input->bytes) {
-            if (cursor==input->bytes || (separator->bytes<=input->bytes-cursor && !memcmp(haystack+cursor,needle,separator->bytes))) {
-                myl_native_text *piece=myl_native_text_substring(heap,input,start,cursor);
-                if (!piece || !myl_native_list_append(heap,result,&piece)) { result=NULL; break; }
-                if (cursor==input->bytes) break;
-                cursor+=separator->bytes; start=cursor;
-            } else cursor++;
+        size_t start=0;
+        for (size_t left=pieces; left; left--) {
+            size_t hit=left>1 ? myl_native_octets_find(haystack+start,input->bytes-start,needle,width) : SIZE_MAX;
+            size_t end=hit==SIZE_MAX ? input->bytes : start+hit;
+            myl_native_text *piece=myl_native_text_substring(heap,input,start,end);
+            if (!piece) { result=NULL; break; }
+            /* The reserved slot is written in place, exactly as an append that
+               finds room writes it: the collector traces the whole reservation,
+               so the piece is reachable from here on. */
+            ((myl_native_text **)result->storage)[result->length++]=piece;
+            result->generation++;
+            if (end==input->bytes) break;
+            start=end+width;
         }
     }
     myl_native_root_pop(heap,&c); myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);

@@ -50,8 +50,50 @@ static void growth_keeps_octets(void) {
     myl_native_root_pop(&heap,&root);
     myl_native_heap_destroy(&heap);
 }
+/* spec-case: TEXT-SCAN-3. A separator split finds each separator by the shared
+   bulk search and sizes its list once: every empty piece is kept, a multi-octet
+   separator cuts non-overlapping left to right, and a first octet that recurs
+   without matching stays inside its piece. The heap collects on every
+   allocation, so a piece that were not reachable from the list would be swept
+   before the next one. */
+static void separator_split_keeps_every_piece(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,1<<20); heap.stress=1;
+    myl_native_root roots[3];
+    myl_native_bytes *input=raw(&heap,",aaaaaaaaaaaaaaaaaaaab--c,,--");
+    myl_native_root_push(&heap,&roots[0],&input,&pointer);
+    myl_native_bytes *separator=raw(&heap,"--");
+    myl_native_root_push(&heap,&roots[1],&separator,&pointer);
+    myl_native_list *parts=myl_native_bytes_split(&heap,input,separator);
+    assert(parts && parts->length==3 && parts->capacity==3);
+    myl_native_root_push(&heap,&roots[2],&parts,&pointer);
+    myl_native_bytes **items=parts->storage;
+    equals(items[0],",aaaaaaaaaaaaaaaaaaaab"); equals(items[1],"c,,"); equals(items[2],"");
+    myl_native_root_pop(&heap,&roots[2]);
+    separator=raw(&heap,",");
+    parts=myl_native_bytes_split(&heap,input,separator);
+    assert(parts && parts->length==4);
+    myl_native_root_push(&heap,&roots[2],&parts,&pointer);
+    items=parts->storage;
+    equals(items[0],""); equals(items[1],"aaaaaaaaaaaaaaaaaaaab--c"); equals(items[2],""); equals(items[3],"--");
+    myl_native_root_pop(&heap,&roots[2]);
+    myl_native_bytes *empty=raw(&heap,"");
+    parts=myl_native_bytes_split(&heap,empty,separator);
+    assert(parts && parts->length==1 && !((myl_native_bytes **)parts->storage)[0]->length);
+    input=raw(&heap,"aaa");
+    separator=raw(&heap,"aa");
+    parts=myl_native_bytes_split(&heap,input,separator);
+    assert(parts && parts->length==2);
+    myl_native_root_push(&heap,&roots[2],&parts,&pointer);
+    equals(((myl_native_bytes **)parts->storage)[0],""); equals(((myl_native_bytes **)parts->storage)[1],"a");
+    for (int i=2;i>=0;--i) assert(myl_native_root_pop(&heap,&roots[i]));
+    myl_native_heap_collect(&heap);
+    assert(heap.objects_live==0);
+    myl_native_heap_destroy(&heap);
+}
 int main(void) {
     growth_keeps_octets();
+    separator_split_keeps_every_piece();
     myl_native_heap heap;
     myl_native_heap_init(&heap,1<<20); heap.stress=1;
     myl_native_root roots[8];
