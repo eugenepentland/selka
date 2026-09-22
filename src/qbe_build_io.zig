@@ -157,6 +157,13 @@ pub const Context = struct {
     pub fn mkdir(self: Context, path: []const u8) Error!void {
         try std.Io.Dir.cwd().createDirPath(self.io, path);
     }
+    /// The host scratch root: `TMPDIR` from this context's environment when it is
+    /// set and non-empty, else `/tmp`. A host whose `/tmp` is a small quota-bound
+    /// tmpfs points `TMPDIR` at disk, and per-run scratch must follow it there.
+    pub fn scratchRoot(self: Context) []const u8 {
+        const configured = self.environ.get("TMPDIR") orelse "";
+        return if (configured.len == 0) "/tmp" else configured;
+    }
     /// Private directories isolate concurrent compilers and failed tool output.
     /// Every invocation in one parent shares a single `.pending/` folder, and
     /// each gets a unique child, so many concurrent builders leave one folder
@@ -381,6 +388,26 @@ test "a build context reclaims its scratch on deinit, so repeated builds do not 
     try buildRound(std.testing.allocator, &environment);
     try buildRound(std.testing.allocator, &environment);
     try buildRound(std.testing.allocator, &environment);
+}
+// spec: NATIVE-SCRATCH-ROOT-1
+test "scratch staging follows a non-empty TMPDIR and falls back to /tmp" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    try std.testing.expectEqualStrings("/tmp", context.scratchRoot());
+    // An exported but empty TMPDIR names no directory, so it keeps the default.
+    try environment.put("TMPDIR", "");
+    try std.testing.expectEqualStrings("/tmp", context.scratchRoot());
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const configured = try temporary.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    try environment.put("TMPDIR", configured);
+    try std.testing.expectEqualStrings(configured, context.scratchRoot());
+    // Staging beneath the resolved root lands under TMPDIR, not under /tmp.
+    const staged = try context.temporary(context.scratchRoot());
+    defer context.remove(staged);
+    try std.testing.expectEqualStrings(try std.fs.path.join(context.allocator, &.{ configured, staging_name }), std.fs.path.dirname(staged).?);
 }
 // spec: NATIVE-STAGING-1
 test "one staging folder per directory contains concurrent and abandoned scratch" {
