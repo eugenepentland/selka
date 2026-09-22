@@ -60,6 +60,18 @@ test "a tuple type is one interned record with positional fields and a source sp
     try t.expect(std.mem.indexOf(u8, found, "expected tuple[int, str], found int") != null);
 }
 
+test "scratch probe" {
+    try rejects(
+        \\def g(p: tuple[int, str]) -> int:
+        \\    return 0
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+        \\
+    , "E_UNKNOWN_TYPE");
+}
+
 // spec-case: TUPLE-1
 test "a tuple spelling outside two to eight elements is E_TUPLE_ARITY at the spelling" {
     try rejects(
