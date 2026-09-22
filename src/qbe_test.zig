@@ -695,27 +695,27 @@ fn emittedUnder(a: std.mem.Allocator, source: []const u8, policy: language.nativ
     defer parsed.deinit();
     return a.dupe(u8, (named(parsed.value, name) orelse return error.TestUnexpectedResult).il);
 }
-const halting_source =
-    \\def grow(x: int, step: int) -> int:
-    \\    return x + step
-    \\
-    \\
-    \\def poke(xs: mut list[int], at: int) -> None:
-    \\    xs[at] = 7
-    \\
-    \\
-    \\def flip(x: int, s: int) -> int:
-    \\    return -(x << s)
-    \\
-    \\
-    \\def main() -> int:
-    \\    xs: list[int] = [1, 2, 3]
-    \\    poke(mut xs, 1)
-    \\    return grow(1, flip(2, 1))
-;
 // spec: QBE-NORETURN-1
 test "the fast protocol ends each fail helper's path in hlt and accounting keeps the sticky exit" {
     const a = std.testing.allocator;
+    const halting_source =
+        \\def grow(x: int, step: int) -> int:
+        \\    return x + step
+        \\
+        \\
+        \\def poke(xs: mut list[int], at: int) -> None:
+        \\    xs[at] = 7
+        \\
+        \\
+        \\def flip(x: int, s: int) -> int:
+        \\    return -shift_left(x, s)
+        \\
+        \\
+        \\def main() -> int:
+        \\    xs: list[int] = [1, 2, 3]
+        \\    poke(mut xs, 1)
+        \\    return grow(1, flip(2, 1))
+    ;
     // Neither accounting: the overflow and the list-bounds failure paths end in
     // `hlt` right after their helper, and no fail call is followed by the jump
     // into the shared exit.
