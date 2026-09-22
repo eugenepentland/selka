@@ -237,22 +237,31 @@ int myl_native_bytes_has_byte(const myl_native_bytes *input, int64_t value) {
     for (size_t i=0;i<input->length;i++) if (bytes[i]==(unsigned char)value) return 1;
     return 0;
 }
+/* The same cut as the text split: the shared bulk search finds each separator,
+   and counting the cuts first allocates the result list once at its final
+   length, so filling it never grows it. */
 myl_native_list *myl_native_bytes_split(myl_native_heap *heap, myl_native_bytes *input, myl_native_bytes *separator) {
     if (!separator->length) return NULL;
+    const size_t width=separator->length;
+    size_t pieces=myl_native_octets_count(input->storage,input->length,separator->storage,width)+1;
     myl_native_root a,b,c;
     myl_native_root_push(heap,&a,&input,&pointer_type);
     myl_native_root_push(heap,&b,&separator,&pointer_type);
-    myl_native_list *result=myl_native_list_new(heap,&pointer_type,0);
+    myl_native_list *result=myl_native_list_new(heap,&pointer_type,pieces);
     myl_native_root_push(heap,&c,&result,&pointer_type);
     if (result) {
-        size_t start=0,cursor=0;
-        while (cursor<=input->length) {
-            if (cursor==input->length || matches(input,cursor,separator)) {
-                myl_native_bytes *piece=copy_range(heap,input,start,cursor-start);
-                if (!piece || !myl_native_list_append(heap,result,&piece)) { result=NULL; break; }
-                if (cursor==input->length) break;
-                cursor+=separator->length; start=cursor;
-            } else cursor++;
+        size_t start=0;
+        for (size_t left=pieces; left; left--) {
+            size_t hit=left>1 ? myl_native_octets_find((const unsigned char *)input->storage+start,input->length-start,separator->storage,width) : SIZE_MAX;
+            size_t end=hit==SIZE_MAX ? input->length : start+hit;
+            myl_native_bytes *piece=copy_range(heap,input,start,end-start);
+            if (!piece) { result=NULL; break; }
+            /* The reserved slot is written in place, as an append that finds
+               room writes it; the collector traces the whole reservation. */
+            ((myl_native_bytes **)result->storage)[result->length++]=piece;
+            result->generation++;
+            if (end==input->length) break;
+            start=end+width;
         }
     }
     myl_native_root_pop(heap,&c); myl_native_root_pop(heap,&b); myl_native_root_pop(heap,&a);

@@ -1,0 +1,195 @@
+{
+ "binary": ".tmp/prof/text_ops.after.sym",
+ "runs": 10,
+ "samples": 1854,
+ "outside": 375,
+ "functions": [
+  {
+   "function": "<outside: shared libraries>",
+   "samples": 375,
+   "share": 0.2022653721682848
+  },
+  {
+   "function": "myl_native_heap_alloc_at",
+   "samples": 295,
+   "share": 0.15911542610571736
+  },
+  {
+   "function": "myl_native_heap_collect",
+   "samples": 259,
+   "share": 0.13969795037756202
+  },
+  {
+   "function": "myl_f_71cb497ea7ce5a4e45e1e14bf1169eb2f17412a032c1b901ef4cb867f563b743",
+   "samples": 207,
+   "share": 0.11165048543689321
+  },
+  {
+   "function": "trace",
+   "samples": 202,
+   "share": 0.10895361380798274
+  },
+  {
+   "function": "slot_take",
+   "samples": 115,
+   "share": 0.06202804746494067
+  },
+  {
+   "function": "myl_native_text_split",
+   "samples": 103,
+   "share": 0.05555555555555555
+  },
+  {
+   "function": "myl_native_text_join",
+   "samples": 81,
+   "share": 0.043689320388349516
+  },
+  {
+   "function": "myl_native_bytes_buffer_append_float",
+   "samples": 61,
+   "share": 0.03290183387270766
+  },
+  {
+   "function": "myl_native_text_concat",
+   "samples": 43,
+   "share": 0.02319309600862999
+  },
+  {
+   "function": "myl_native_octets_find",
+   "samples": 36,
+   "share": 0.019417475728155338
+  },
+  {
+   "function": "_fini",
+   "samples": 24,
+   "share": 0.012944983818770227
+  },
+  {
+   "function": "myl_native_bytes_number_parse",
+   "samples": 16,
+   "share": 0.008629989212513484
+  },
+  {
+   "function": "myl_native_text_from_utf8",
+   "samples": 15,
+   "share": 0.008090614886731391
+  },
+  {
+   "function": "myl_native_text_scalar",
+   "samples": 8,
+   "share": 0.004314994606256742
+  },
+  {
+   "function": "myl_native_text_replace",
+   "samples": 8,
+   "share": 0.004314994606256742
+  },
+  {
+   "function": "myl_native_text_edge",
+   "samples": 6,
+   "share": 0.003236245954692557
+  }
+ ],
+ "hot_pcs": [
+  {
+   "pc": "0x10206c8",
+   "samples": 142,
+   "share": 0.07659115426105717
+  },
+  {
+   "pc": "0x1020562",
+   "samples": 118,
+   "share": 0.06364617044228695
+  },
+  {
+   "pc": "0x1020436",
+   "samples": 57,
+   "share": 0.030744336569579287
+  },
+  {
+   "pc": "0x1020de9",
+   "samples": 55,
+   "share": 0.0296655879180151
+  },
+  {
+   "pc": "0x10208e0",
+   "samples": 29,
+   "share": 0.01564185544768069
+  },
+  {
+   "pc": "0x10208ff",
+   "samples": 29,
+   "share": 0.01564185544768069
+  },
+  {
+   "pc": "0x1020836",
+   "samples": 27,
+   "share": 0.014563106796116505
+  },
+  {
+   "pc": "0x1020c56",
+   "samples": 25,
+   "share": 0.01348435814455232
+  },
+  {
+   "pc": "0x1022600",
+   "samples": 25,
+   "share": 0.01348435814455232
+  },
+  {
+   "pc": "0x100d678",
+   "samples": 17,
+   "share": 0.009169363538295576
+  },
+  {
+   "pc": "0x102246e",
+   "samples": 16,
+   "share": 0.008629989212513484
+  },
+  {
+   "pc": "0x10205d8",
+   "samples": 15,
+   "share": 0.008090614886731391
+  },
+  {
+   "pc": "0x1020df1",
+   "samples": 15,
+   "share": 0.008090614886731391
+  },
+  {
+   "pc": "0x10207df",
+   "samples": 13,
+   "share": 0.007011866235167206
+  },
+  {
+   "pc": "0x10208cc",
+   "samples": 13,
+   "share": 0.007011866235167206
+  },
+  {
+   "pc": "0x100d44f",
+   "samples": 12,
+   "share": 0.006472491909385114
+  },
+  {
+   "pc": "0x10208f5",
+   "samples": 12,
+   "share": 0.006472491909385114
+  },
+  {
+   "pc": "0x1020bde",
+   "samples": 12,
+   "share": 0.006472491909385114
+  },
+  {
+   "pc": "0x10207c0",
+   "samples": 12,
+   "share": 0.006472491909385114
+  },
+  {
+   "pc": "0x10208e8",
+   "samples": 11,
+   "share": 0.005933117583603021
+  }
+ ]
+}
