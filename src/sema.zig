@@ -116,6 +116,12 @@ const eTextOperator = "E_TEXT_OPERATOR";
 /// expression, and the `mut` argument marker. Every use carries a `// lane:`
 /// comment and is deleted by that lane.
 const eNotImplemented = "E_NOT_IMPLEMENTED";
+const eTupleArity = "E_TUPLE_ARITY";
+/// The accepted spelling beside a rejected tuple arity.
+const tuple_arity_alternative = "a tuple has between 2 and 8 elements; declare a record for a larger group";
+/// The accepted spelling beside a rejected tuple index, which is the only way
+/// to reach a tuple's values.
+const tuple_index_alternative = "a tuple has no elements to index; bind its values with `head, rest = ...`";
 const unsupported_collection = "operation is not supported by this collection";
 const unsupported_list = "operation is not supported by lists";
 const method_arity = "collection method argument count differs from its signature";
@@ -186,6 +192,7 @@ const typed = @import("typed.zig");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const records = @import("records.zig");
+const record_layouts = @import("record_layouts.zig");
 const Error = diagnostic.Error;
 const instances = @import("generic_instances.zig");
 const semantic_cache = @import("semantic_cache.zig");
@@ -1731,7 +1738,8 @@ const Checker = struct {
                             .arguments = call.arguments.len,
                         });
                     node.data = .{ .buffer_operation = .{ .kind = kind, .owner = owner, .arguments = call.arguments } };
-                }
+                } else if (record_layouts.tupleRecord(self.catalog.records, value_type) != null)
+                    return self.sink.fail("E_TYPE", call.name, "a tuple has no methods; take it apart with `head, rest = value`");
             };
         }
         if (node.data == .field) {
@@ -1753,13 +1761,122 @@ const Checker = struct {
     fn requiresCellEquality(self: *Checker, ty_value: typed.Type) bool {
         return ty_value.isAggregate() and self.catalog.records[ty_value.recordIndex()].collection.contains_cell;
     }
+    /// Check one `(a, b)` tuple value. The expected-type rule reaches literals:
+    /// a destination that already demands a tuple type checks each element
+    /// against its positional type, and any other context infers the element
+    /// types and interns their tuple.
+    fn checkTuple(self: *Checker, node: ast.Node, inputs: []const ast.NodeId, temporaries: []const typed.Type, out: *typed.Node) Error!void {
+        if (inputs.len < 2 or inputs.len > 8) return self.sink.fail(eTupleArity, node.span, tuple_arity_alternative);
+        const expected = if (self.expected_types.get(node.span)) |demanded| record_layouts.tupleRecord(self.catalog.records, demanded) else null;
+        if (expected) |schema| if (schema.fields.len != inputs.len) return self.sink.fail(
+            eTupleArity,
+            node.span,
+            try std.fmt.allocPrint(self.allocator, "this tuple has {d} elements but {s} has {d}; write {d} elements", .{
+                inputs.len,
+                try typed.surfaceTypeName(self.allocator, schema.id, self.catalog.records),
+                schema.fields.len,
+                schema.fields.len,
+            }),
+        );
+        const values = try self.allocator.alloc(typed.NodeId, inputs.len);
+        const types = try self.allocator.alloc(typed.Type, inputs.len);
+        for (inputs, 0..) |input, index| {
+            if (expected) |schema| try self.hint(input, schema.fields[index].ty);
+            const value = try self.expressionWithTemporaries(input, temporaries);
+            const actual = self.nodes.items[@backingInt(value)].ty;
+            if (expected) |schema| try self.require(actual, schema.fields[index].ty, self.syntax.nodes.items[@backingInt(input)].span);
+            values[index] = value;
+            types[index] = if (expected) |schema| schema.fields[index].ty else actual;
+        }
+        out.ty = if (expected) |schema| schema.id else try self.catalog.tupleType(types);
+        const initializers = try self.allocator.alloc(typed.FieldInit, values.len);
+        for (initializers, values, 0..) |*initializer, value, index| initializer.* = .{ .index = index, .value = value };
+        out.data = .{ .record = initializers };
+    }
+    /// Bind the names of a `x, y = value` target list to the positional fields of
+    /// one tuple value. The value is evaluated once into its own slot before any
+    /// name is written, which is what makes `a, b = b, a` swap.
+    fn checkTupleAssignment(self: *Checker, assignment: @FieldType(@FieldType(ast.Node, "data"), "field_assignment"), temporaries: []const typed.Type) Error!typed.Node {
+        const target = self.syntax.nodes.items[@backingInt(assignment.target)];
+        const names = target.data.tuple;
+        const checked = try self.expressionWithTemporaries(assignment.value, temporaries);
+        const value_type = self.nodes.items[@backingInt(checked)].ty;
+        const schema = record_layouts.tupleRecord(self.catalog.records, value_type) orelse {
+            const found = try typed.surfaceTypeName(self.allocator, value_type, self.catalog.records);
+            const message = try std.fmt.allocPrint(self.allocator, "a destructuring assignment binds the values of a tuple; `{s}` is not one — bind it with one name instead", .{found});
+            return self.sink.fail("E_TYPE", self.nodes.items[@backingInt(checked)].span, message);
+        };
+        if (schema.fields.len != names.len) return self.sink.fail(eTupleArity, target.span, try self.destructuringMessage(assignment.value, schema.fields.len));
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = target.span };
+        var statements: std.ArrayList(typed.StatementId) = .empty;
+        const value_slot = try b.local(value_type);
+        try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = value_slot, .value = checked } }));
+        for (names, 0..) |name_id, index| {
+            const name = self.syntax.nodes.items[@backingInt(name_id)].data.name;
+            const element = try b.node(schema.fields[index].ty, .{ .field = .{ .base = try b.read(value_slot), .index = index } });
+            try self.bindDestructured(name, element, &statements);
+        }
+        return b.block(statements.items, try b.node(.unit, .unit));
+    }
+    /// The accepted arity a destructuring names, naming the value's source when
+    /// it is a call so the message tells the reader what returned that many.
+    fn destructuringMessage(self: *Checker, value: ast.NodeId, elements: usize) Error![]const u8 {
+        const node = self.syntax.nodes.items[@backingInt(value)];
+        const origin = if (node.data == .call and node.data.call.owner == null)
+            try std.fmt.allocPrint(self.allocator, "`{s}` returns {d} values", .{ self.src.text(node.data.call.name), elements })
+        else
+            try std.fmt.allocPrint(self.allocator, "the value has {d} values", .{elements});
+        return std.fmt.allocPrint(self.allocator, "{s}; bind {d} names, or `_` for one you do not need", .{ origin, elements });
+    }
+    /// The accepted arity a two-name `for` needs, naming the one-name loop.
+    fn twoNameLoopMessage(self: *Checker, elements: usize) Error![]const u8 {
+        return std.fmt.allocPrint(
+            self.allocator,
+            "a two-name `for` destructures a two-value tuple; this one has {d} values — bind it with one name and destructure it in the body",
+            .{elements},
+        );
+    }
+    /// Bind one destructuring target: a fresh function-scoped local for a name
+    /// that is not bound yet, an assignment into the existing binding otherwise,
+    /// and nothing at all for `_`, which needs no slot and reads no element.
+    fn bindDestructured(self: *Checker, name: source.Span, value: typed.NodeId, statements: *std.ArrayList(typed.StatementId)) Error!void {
+        const text = self.src.text(name);
+        if (std.mem.eql(u8, text, "_")) return;
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = name };
+        const value_type = self.nodes.items[@backingInt(value)].ty;
+        if (self.active.get(text)) |slot| {
+            if (!self.locals.items[@backingInt(slot)].mutable) return self.sink.fail(eImmutable, name, "this binding cannot be assigned");
+            try self.requireArenaAssignment(slot, value);
+            if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
+                if (self.pendingObligation(self.locals.items[@backingInt(slot)])) return self.sink.fail("E_RESULT_OVERWRITE", name, "assignment would overwrite an unhandled result-bearing value");
+                self.locals.items[@backingInt(slot)].ownership.transfer_available = true;
+                self.locals.items[@backingInt(slot)].ownership.transfer_span = null;
+            }
+            self.locals.items[@backingInt(slot)].usage.writes += 1;
+            self.locals.items[@backingInt(slot)].ownership.initialized = true;
+            self.locals.items[@backingInt(slot)].ownership.arena_confined = false;
+            self.option_facts.forget(@backingInt(slot));
+            try statements.append(self.allocator, try b.stmt(.{ .assign = .{ .slot = slot, .value = value } }));
+            return;
+        }
+        if (try self.topLevel(name)) return self.sink.fail(eShadowing, name, "binding shadows an active local or top-level function");
+        for (self.arenas.items) |scope| if (std.mem.eql(u8, scope.name, text)) return self.sink.fail(eShadowing, name, "binding shadows an active arena name");
+        const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
+        try self.locals.append(self.allocator, .{
+            .ownership = .{ .initialized = true, .transfer_available = self.transfers(value_type) },
+            .name = text,
+            .declaration = name,
+            .ty = value_type,
+            .mutable = true,
+        });
+        try self.active.put(self.allocator, text, slot);
+        try self.requireArenaStore(slot, value);
+        try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = slot, .value = value } }));
+    }
     fn checkFieldAssignment(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
         const assignment = node.data.field_assignment;
-        // lane: tuples (item 4): a multi-target assignment parses to a `.tuple`
-        // target here, and this arm is replaced by the binding check the tuple
-        // lane adds.
         if (self.syntax.nodes.items[@backingInt(assignment.target)].data == .tuple)
-            return self.sink.fail(eNotImplemented, node.span, "tuple destructuring parses but is not checked yet");
+            return self.checkTupleAssignment(assignment, temporaries);
         const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
         var path_fields: std.ArrayList(source.Span) = .empty;
         var root = assignment.target;
@@ -3905,6 +4022,8 @@ const Checker = struct {
             out.* = try (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, .read, &.{index_value}, false);
             return;
         }
+        if (record_layouts.tupleRecord(self.catalog.records, receiver_type) != null)
+            return self.sink.fail("E_TUPLE_INDEX", node.span, tuple_index_alternative);
         const schema = try self.catalog.array(receiver_type, node.span, self.sink);
         try self.requireIndex(schema, self.nodes.items[@backingInt(index_value)].ty, self.syntax.nodes.items[@backingInt(access.index)].span);
         if (self.requiresHandling(schema.element) and schema.length != 1) return self.sink.fail(eResultOperation, node.span, "indexing would drop other result-bearing elements; handle or transfer the entire array");
@@ -4091,9 +4210,7 @@ const Checker = struct {
             },
             .unary => |u| return self.checkUnary(node, u),
             .binary => |b| try self.checkValueBinary(b, &out),
-            // lane: tuples (item 4): this arm is replaced by the record-backed
-            // tuple check the tuple lane adds.
-            .tuple => return self.sink.fail(eNotImplemented, node.span, "tuple values parse but are not checked yet"),
+            .tuple => |elements| try self.checkTuple(node, elements, temporaries, &out),
             // lane: conditional expression (item 6): this arm is replaced by the
             // two-branch check the simple lane adds.
             .conditional => return self.sink.fail(eNotImplemented, node.span, "conditional expressions parse but are not checked yet"),
@@ -4112,6 +4229,8 @@ const Checker = struct {
             const mapping = try dictionary_views.owner(Checker, self, node.span, base);
             return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(mapping, .length, &.{}, false);
         };
+        if (record_layouts.tupleRecord(self.catalog.records, receiver_type) != null)
+            return self.sink.fail("E_TYPE", node.span, "a tuple has no length; take it apart with `head, rest = value`");
         if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].collection.kind != .list) {
             return .{ .span = node.span, .ty = .i64, .data = .{ .length = base } };
         }
@@ -4189,7 +4308,9 @@ const Checker = struct {
                 (if (variant.value) |record_node| self.nodes.items[@backingInt(record_node)].data.record.len else 0)
             else if (variant.value != null) 1 else 0,
             .array => |values| values.len,
-            .record => |initializers| initializers.len,
+            // A tuple's elements are checked in place and consume no temporary;
+            // only a named construction draws on sorted-argument temporaries.
+            .record => |initializers| if (node.data == .tuple) 0 else initializers.len,
             .update => |update| update.fields.len + 1,
             .invoke => |call| call.arguments.len,
             .call => |call| call.arguments.len,
@@ -4771,7 +4892,11 @@ const Checker = struct {
             .dictionary => schema.collection.key.?,
         };
         const unpack = each.index_name != null and !each.enumerated;
-        if (unpack and dictionary_views.identify(self.catalog, element) != .item) return self.sink.fail("E_ITERATION", stmt.span, "two iteration names require dictionary items, enumerate or zip");
+        if (unpack and dictionary_views.identify(self.catalog, element) != .item) {
+            const pair = record_layouts.tupleRecord(self.catalog.records, element) orelse
+                return self.sink.fail("E_ITERATION", stmt.span, "two iteration names require dictionary items, enumerate, zip or a list of two-value tuples");
+            if (pair.fields.len != 2) return self.sink.fail(eTupleArity, stmt.span, try self.twoNameLoopMessage(pair.fields.len));
+        }
         const first_type = if (unpack) self.catalog.records[element.recordIndex()].fields[0].ty else element;
         const owner = try b.local(iterable_type);
         const index = try b.local(.i64);

@@ -138,3 +138,12 @@ fn recordCarries(schema: typed.Record, flags: []const bool, capability: bool) bo
 pub fn managedTypes(allocator: std.mem.Allocator, records: []const typed.Record) std.mem.Allocator.Error![]bool {
     return dependencies(allocator, records, false);
 }
+
+/// The schema of a tuple type, or null for any other type. A tuple's element
+/// types are its fields in positional order, which is what keeps every consumer
+/// reading one marker instead of a spelling.
+pub fn tupleRecord(records: []const typed.Record, ty: typed.Type) ?typed.Record {
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return null;
+    const schema = records[ty.recordIndex()];
+    return if (schema.shape.tuple) schema else null;
+}
