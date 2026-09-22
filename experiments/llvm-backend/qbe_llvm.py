@@ -13,9 +13,18 @@ driver expects.
 Design rules, in the order they constrain the code:
 
 * Correctness first.  No `nsw`/`nuw`/`exact`/fast-math flags, no `inbounds`, no
-  `noalias`, no TBAA: the frontend already emits every overflow, bounds, cast and
-  allocation check as explicit code, and this translator must not introduce
-  undefined behaviour ahead of a guard.
+  TBAA, and no `noalias` on any pointer: the frontend already emits every
+  overflow, bounds, cast and allocation check as explicit code, and this
+  translator must not introduce undefined behaviour ahead of a guard.  An
+  arithmetic flag is the sharpest case — the emitted IL computes the wrapped
+  result *and then* tests it, so `nsw` would make the test that follows dead.
+  The one aliasing fact this translator does state is the one it can prove
+  without looking at a guard at all: a load or store it can place in the running
+  activation's own stack storage, and one it can place outside it, carry scoped
+  `!alias.scope`/`!noalias` metadata saying so (`llvm_emit.MemoryClasses`).  The
+  classification is deliberately partial — an address it cannot place carries no
+  metadata and keeps aliasing everything — and it never depends on a check having
+  run, so no guard can become dead because of it.
 * QBE temporaries are mutable cells. Each gets a private entry-block slot;
   LLVM's promotion and SROA passes recover SSA where possible. Address arithmetic
   uses GEP only when conservative provenance checks establish an object origin.
@@ -247,6 +256,9 @@ class Function:
         self.blocks = blocks            # list of Block, in source order
         self.export = export
         self.line = line
+        # Temporaries the frontend marked `# myl-obj`: addresses it knows name
+        # memory outside this function's stack frame.
+        self.object_hints = set()
 
 
 class Unit:
@@ -337,7 +349,7 @@ def parse_unit(text, unit="unit"):
         raise ParseError("unit contains no function", unit)
     header = lines[index].strip()
     function, index = parse_header(header, lines, index, unit)
-    function.blocks = parse_blocks(lines, index, unit)
+    function.blocks = parse_blocks(lines, index, unit, function.object_hints)
     if not function.blocks:
         raise ParseError("function contains no blocks", unit, function.line, header)
     return Unit(function, aggregates, alignments)
@@ -374,12 +386,30 @@ def parse_header(header, lines, index, unit):
                     line_number), index
 
 
-def parse_blocks(lines, index, unit):
-    """Parse the block list of one function body."""
+#: Marker line the frontend writes before an address it knows names memory
+#: outside the running function's stack frame — a managed object's header or its
+#: element storage.  QBE's lexer drops `#` to end of line, so the marker leaves
+#: its assembly byte-identical; this translator reads it to classify memory (see
+#: `llvm_emit.classify_memory`).  Format: `# myl-obj %temp`.
+OBJECT_MARKER = "# myl-obj "
+
+
+def parse_blocks(lines, index, unit, object_hints=None):
+    """Parse the block list of one function body.
+
+    `object_hints`, when given, collects the temporaries the frontend marked as
+    holding an address outside this function's stack frame.
+    """
     blocks, current = [], None
     while index < len(lines):
         raw = lines[index]
         index += 1
+        stripped = raw.strip()
+        if object_hints is not None and stripped.startswith(OBJECT_MARKER):
+            marked = stripped[len(OBJECT_MARKER):].strip()
+            if marked.startswith("%"):
+                object_hints.add(marked[1:])
+            continue
         line = strip_comment(raw)
         if not line:
             continue

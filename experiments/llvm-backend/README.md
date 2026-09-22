@@ -55,7 +55,8 @@ exposed QBE miscompilations in resource cleanup and generic arrays.
 | every aggregate (`:tN = align 8 { b N }`, `:myl_slice`) is the **address** of its storage within the body | call boundaries use AMD64 SysV integer coercions or `byval`/`sret`; callees receive independent aggregate storage |
 | aggregate register assignment depends on the whole signature | the adapter accounts for hidden result pointers and rolls an entire aggregate onto the stack when its registers are unavailable |
 | a block that runs off its end continues at the next one | the implicit fall-through is emitted as an explicit branch |
-| the frontend emits every overflow/bounds/cast/allocation check itself | no `nsw`/`nuw`/`exact`/fast-math, no `inbounds`, no `noalias`, no TBAA |
+| the frontend emits every overflow/bounds/cast/allocation check itself | no `nsw`/`nuw`/`exact`/fast-math, no `inbounds`, no `noalias` pointer attribute, no TBAA |
+| every `alloc*` is this activation's own stack storage, and the frontend marks the managed addresses it knows are not (`# myl-obj %temp`) | a load or store either side places carries scoped `!alias.scope`/`!noalias`; one neither side places carries none |
 
 ## Layout
 

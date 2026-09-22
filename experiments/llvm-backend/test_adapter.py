@@ -464,6 +464,85 @@ export function l $test(l %ctx) {
             f'void {symbol}(void *ctx,void *args,long *out){{*out=42;}}\n'
             'int main(void){printf("%ld\\n",test());}\n'), "42\n")
 
+    #: A unit whose object pointer arrives through memory, so nothing but the
+    #: frontend's `# myl-obj` marker can place the header load it then does.
+    OBJECT_PROBE = """export function l $test(l %ctx, l %handle) {
+@entry
+ %scratch =l alloc8 8
+ %obj =l loadl %handle
+MARKER
+ %len =l loadl %obj
+ storel %len, %scratch
+ %answer =l loadl %scratch
+ ret %answer
+}
+"""
+
+    def test_marked_object_address_is_not_this_frame(self):
+        ir = translate_text(self.OBJECT_PROBE.replace("MARKER", " # myl-obj %obj"), "obj")
+        # Both the parameter-derived load and the marked header load are foreign;
+        # the scratch slot's store and load are frame.
+        self.assertEqual(2, ir.count("!alias.scope !4, !noalias !3"))
+        self.assertIn("!alias.scope !3, !noalias !4", ir)
+        self.assertIn('!0 = distinct !{!0, !"mylang memory classes"}', ir)
+        self.assertEqual(1, ir.count('!1 = distinct !{!1, !0, !"frame"}'))
+        self.assertEqual(self.compile_units({"obj": self.OBJECT_PROBE.replace("MARKER", " # myl-obj %obj")},
+            '#include <stdio.h>\nextern long test(void *, void *);\n'
+            'int main(void){long v=77;long *p=&v;printf("%ld\\n",test(0,&p));}\n'), "77\n")
+
+    def test_unmarked_address_from_memory_carries_no_class(self):
+        ir = translate_text(self.OBJECT_PROBE.replace("MARKER\n", ""), "obj")
+        # `%obj` came out of memory, so the load through it is left unplaced and
+        # only the load of `%handle`, which the parameter itself places, is foreign.
+        self.assertEqual(1, ir.count("!alias.scope !4, !noalias !3"))
+        self.assertIn("!alias.scope !3, !noalias !4", ir)
+
+    def test_alias_metadata_is_switched_off_by_environment(self):
+        with patch.dict(os.environ, {"MYLANG_QBE_LLVM_ALIAS": "0"}):
+            ir = translate_text(self.OBJECT_PROBE.replace("MARKER", " # myl-obj %obj"), "obj")
+        self.assertNotIn("alias.scope", ir)
+        self.assertNotIn("noalias", ir)
+
+    def test_helper_results_carry_the_class_their_definition_fixes(self):
+        # A unit whose frame is too large for the stack keeps its slots in a
+        # block `myl_qbe_frame_allocate` obtained on entry: that block is this
+        # activation's own, while `myl_qbe_heap` answers the caller's context.
+        unit = """export function l $test(l %ctx) {
+@entry
+ %frame_memory =l call $myl_qbe_frame_allocate(l %ctx, l 64)
+ %heap =l call $myl_qbe_heap(l %ctx)
+ %l0 =l add %frame_memory, 24
+ storel 7, %l0
+ %roots =l add %heap, 16
+ %held =l loadl %roots
+ %answer =l loadl %l0
+ ret %answer
+}
+"""
+        ir = translate_text(unit, "frames")
+        self.assertIn("store i64 7, ptr %p", ir.split("!alias.scope !3, !noalias !4")[0])
+        self.assertEqual(1, ir.count("!alias.scope !4, !noalias !3"))
+        self.assertEqual(2, ir.count("!alias.scope !3, !noalias !4"))
+
+    def test_a_slot_no_store_dominates_is_left_unplaced(self):
+        # `%slot` is written only on one arm, so a load that runs on the other
+        # answers whatever the frame held: nothing about it may be claimed.
+        unit = """export function l $test(l %ctx, l %flag, l %obj) {
+@entry
+ %slot =l alloc8 8
+ jnz %flag, @set, @read
+@set
+ storel %obj, %slot
+ jmp @read
+@read
+ %held =l loadl %slot
+ %value =l loadl %held
+ ret %value
+}
+"""
+        ir = translate_text(unit, "partial")
+        self.assertNotIn("!alias.scope !4", ir)
+
     def test_heap_getter_has_only_proven_memory_effects(self):
         unit = """export function l $test(l %ctx) {
 @entry

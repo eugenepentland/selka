@@ -18,7 +18,11 @@ Two properties matter for correctness:
   touches memory converts it with `inttoptr`.
 * No `nsw`/`nuw`/`exact`/fast-math flags and no `inbounds`: the frontend emits its
   own checks, and a flag this translator cannot prove would introduce undefined
-  behaviour ahead of them.
+  behaviour ahead of them.  Scoped alias metadata is the one exception, because
+  it states a fact about *where* memory lives rather than about a value a check
+  is about to test: `MemoryClasses` below places an access in this activation's
+  own stack storage or outside it, and an access it cannot place carries no
+  metadata at all.
 """
 
 from __future__ import annotations
@@ -166,6 +170,317 @@ def aggregate_bytes(letter, sizes):
     return sizes.get(letter)
 
 
+# ---------------------------------------------------------------------------
+# Memory classes
+# ---------------------------------------------------------------------------
+# Two classes carry the whole model.  `frame` is storage this activation itself
+# obtained: every `alloc4/8/16` of the unit — the local slots, the operand
+# scratch, the aggregate scratch, the root records and the frame record — the
+# private copy an aggregate parameter arrives in, and, for a unit whose frame is
+# too large for the stack, the block `myl_qbe_frame_allocate` freshly allocated
+# for it on entry and releases on exit.  `foreign` is storage some other
+# allocation owns: a value the caller computed (a scalar parameter such as
+# `%ctx`), a global's address, the context's embedded heap record, and every
+# address the frontend marked `# myl-obj` — a managed container's header or the
+# element storage that header points at, both of which came from
+# `myl_native_heap_alloc`.
+#
+# The two are disjoint because everything in `frame` is an allocation this
+# activation made after it was entered: no value that existed before the call can
+# point into it, no managed object is allocated inside it, and it is released
+# before the activation returns.  So an access of one class never aliases an
+# access of the other.  Anything the analysis cannot place stays untagged and
+# keeps aliasing both, which is what makes the classification safe to be
+# incomplete.
+
+FRAME = "frame"
+FOREIGN = "foreign"
+
+#: Runtime helpers whose C definition fixes the class of the address they answer.
+#: `myl_qbe_frame_allocate` returns a fresh `calloc` block that holds only this
+#: activation's slots and that `myl_qbe_frame_release` frees on the way out;
+#: `myl_qbe_heap` computes the address of the context's embedded heap record,
+#: which is the caller's storage and never one of this unit's allocations.
+HELPER_CLASSES = {"myl_qbe_frame_allocate": FRAME, "myl_qbe_heap": FOREIGN}
+
+#: Metadata identifiers of the two scopes and of the one-element scope lists a
+#: tagged access names.  The domain and both scopes are `distinct`, so the IR
+#: linker cannot unify one unit's classes with another's during LTO.
+ALIAS_METADATA = """
+!0 = distinct !{!0, !"mylang memory classes"}
+!1 = distinct !{!1, !0, !"frame"}
+!2 = distinct !{!2, !0, !"foreign"}
+!3 = !{!1}
+!4 = !{!2}
+"""
+
+#: What one class names as its own scope list and as the list it cannot alias.
+ALIAS_SUFFIX = {FRAME: ", !alias.scope !3, !noalias !4",
+                FOREIGN: ", !alias.scope !4, !noalias !3"}
+
+
+class MemoryClasses:
+    """Which memory class each temporary of one unit addresses.
+
+    The result is deliberately partial: `of(name)` answers `None` for every
+    temporary the unit does not place beyond doubt, and an unplaced address is
+    emitted without metadata.  A contradiction anywhere — one temporary reached
+    as both classes — discards the whole unit's classification rather than
+    emitting a fact the analysis just disproved.
+    """
+
+    def __init__(self, function, sizes):
+        self.function = function
+        self.sizes = sizes
+        self.classes = {}
+        self.conflict = False
+        self.dominator_sets = None
+        self.counts = self._definition_counts()
+        self.slots = self._simple_slots()
+        self._classify()
+        if self.conflict:
+            self.classes = {}
+
+    def of(self, name):
+        """The class of one temporary, or None when the unit does not place it."""
+        return self.classes.get(name)
+
+    def _definition_counts(self):
+        """How many times each temporary of this unit is defined."""
+        counts = {temp.name: 1 for _letter, temp in self.function.parameters}
+        for block in self.function.blocks:
+            for instruction in block.instructions:
+                if instruction.dest is not None:
+                    counts[instruction.dest.name] = counts.get(instruction.dest.name, 0) + 1
+        return counts
+
+    def _note(self, name, klass):
+        """Place one singly-defined temporary, reporting whether that is new."""
+        if klass is None or self.counts.get(name) != 1:
+            return False
+        previous = self.classes.get(name)
+        if previous is None:
+            self.classes[name] = klass
+            return True
+        if previous != klass:
+            self.conflict = True
+        return False
+
+    def _simple_slots(self):
+        """Stack slots whose address the unit never lets out of its own hands.
+
+        A slot qualifies when it is one `alloc*` whose every appearance is as the
+        address of a `loadl` or a `storel`: nothing else can read or write it, so
+        the value a load answers is one the unit itself stored.
+        """
+        allocated = {instruction.dest.name
+                     for block in self.function.blocks
+                     for instruction in block.instructions
+                     if instruction.dest is not None and instruction.opcode.startswith("alloc")}
+        escaped = set()
+        for block in self.function.blocks:
+            for instruction in block.instructions:
+                for index, argument in enumerate(instruction.args):
+                    if not is_temporary(argument) or argument.kind != "temp":
+                        continue
+                    if argument.name not in allocated:
+                        continue
+                    if instruction.opcode == "loadl" and index == 0:
+                        continue
+                    if instruction.opcode == "storel" and index == 1:
+                        continue
+                    escaped.add(argument.name)
+                if instruction.opcode == "phi":
+                    for _predecessor, argument in instruction.extra:
+                        if is_temporary(argument) and argument.name in allocated:
+                            escaped.add(argument.name)
+        return {name for name in allocated
+                if name not in escaped and self.counts.get(name) == 1}
+
+    def _classify(self):
+        """Seed the two classes and run the derivation to a fixed point."""
+        for letter, temp in self.function.parameters:
+            self._note(temp.name,
+                       FRAME if aggregate_bytes(letter, self.sizes) is not None else FOREIGN)
+        for block in self.function.blocks:
+            for instruction in block.instructions:
+                if instruction.dest is None:
+                    continue
+                if instruction.opcode.startswith("alloc"):
+                    self._note(instruction.dest.name, FRAME)
+                elif instruction.opcode == "call" and isinstance(instruction.extra, str):
+                    self._note(instruction.dest.name, HELPER_CLASSES.get(instruction.extra))
+        for name in self.function.object_hints:
+            self._note(name, FOREIGN)
+        for _round in range(8):
+            changed = self._derive()
+            changed = self._through_slots() or changed
+            if not changed or self.conflict:
+                break
+
+    def operand_class(self, argument):
+        """The class of one operand, or None when it is not an address this unit places."""
+        if is_temporary(argument):
+            if argument.kind == "global":
+                return FOREIGN
+            return self.classes.get(argument.name)
+        return None
+
+    def _derive(self):
+        """Carry a class through `copy` and through offsetting `add`."""
+        changed = False
+        for block in self.function.blocks:
+            for instruction in block.instructions:
+                if instruction.dest is None or instruction.opcode not in ("copy", "add"):
+                    continue
+                if instruction.dest.name in self.classes:
+                    continue
+                seen = {self.operand_class(argument) for argument in instruction.args}
+                seen.discard(None)
+                if len(seen) == 1:
+                    changed = self._note(instruction.dest.name, seen.pop()) or changed
+        return changed
+
+    def _through_slots(self):
+        """Carry a class through a simple slot, two ways.
+
+        A slot every store of which agrees on one class, and which the entry
+        block stores before any other block can read it, answers that class from
+        every load.  Within one block a load also answers the class of the last
+        value stored to the slot above it, which is what carries a class across
+        the push and pop the frontend's operand stack writes around every value.
+        """
+        uniform = self._uniform_slots()
+        changed = False
+        for block in self.function.blocks:
+            held = {}
+            for instruction in block.instructions:
+                target = self._slot_store_target(instruction)
+                if target is not None:
+                    held[target] = self.operand_class(instruction.args[0])
+                    continue
+                source = self._slot_load_source(instruction)
+                if source is None:
+                    continue
+                klass = held[source] if source in held else uniform.get(source)
+                changed = self._note(instruction.dest.name, klass) or changed
+        return changed
+
+    def _uniform_slots(self):
+        """Slots whose every store agrees on a class, established before every read.
+
+        Agreement alone would say nothing about a load that no store reaches: the
+        slot is fresh stack storage and its contents before the first store are
+        whatever the frame held.  So one of the stores must also dominate every
+        load, which is what makes the answer a value this unit put there.
+        """
+        stored, writes, reads = {}, {}, {}
+        for block in self.function.blocks:
+            for index, instruction in enumerate(block.instructions):
+                target = self._slot_store_target(instruction)
+                if target is not None:
+                    stored.setdefault(target, set()).add(self.operand_class(instruction.args[0]))
+                    writes.setdefault(target, []).append((block.label, index))
+                    continue
+                source = self._slot_load_source(instruction)
+                if source is not None:
+                    reads.setdefault(source, []).append((block.label, index))
+        dominators = self._dominators()
+        uniform = {}
+        for name, seen in stored.items():
+            if len(seen) != 1 or None in seen:
+                continue
+            if self._established(writes.get(name, ()), reads.get(name, ()), dominators):
+                uniform[name] = next(iter(seen))
+        return uniform
+
+    @staticmethod
+    def _established(writes, reads, dominators):
+        """Whether one of `writes` runs before every one of `reads`, on every path."""
+        for label, index in writes:
+            if all(label in dominators.get(read_label, ()) and
+                   (label != read_label or index < read_index)
+                   for read_label, read_index in reads):
+                return True
+        return not reads
+
+    def _successors(self, block, following):
+        """The labels control can reach from one block, fall-through included."""
+        terminator = block.terminator()
+        if terminator is None:
+            return [following] if following else []
+        if terminator.opcode == "jmp":
+            return [terminator.extra]
+        if terminator.opcode == "jnz":
+            return list(terminator.extra)
+        if terminator.opcode in ("ret", "hlt"):
+            return []
+        return [following] if following else []
+
+    def _dominators(self):
+        """The dominator set of every reachable block, by label.
+
+        A QBE block is entered only at its label and runs straight through, so a
+        block that dominates a load's block has run its own instructions before
+        that load.  Unreachable blocks are left out and dominate nothing.
+        """
+        if self.dominator_sets is not None:
+            return self.dominator_sets
+        blocks = self.function.blocks
+        order = [block.label for block in blocks]
+        edges = {}
+        for index, block in enumerate(blocks):
+            following = blocks[index + 1].label if index + 1 < len(blocks) else None
+            edges[block.label] = [label for label in self._successors(block, following)
+                                  if label in set(order)]
+        entry = order[0]
+        reachable, pending = {entry}, [entry]
+        while pending:
+            for successor in edges[pending.pop()]:
+                if successor not in reachable:
+                    reachable.add(successor)
+                    pending.append(successor)
+        predecessors = {label: [] for label in order}
+        for label in order:
+            for successor in edges[label]:
+                predecessors[successor].append(label)
+        universe = set(label for label in order if label in reachable)
+        dominators = {label: (set([entry]) if label == entry else set(universe))
+                      for label in universe}
+        changed = True
+        while changed:
+            changed = False
+            for label in order:
+                if label not in universe or label == entry:
+                    continue
+                incoming = [dominators[p] for p in predecessors[label] if p in universe]
+                merged = set.intersection(*incoming) if incoming else set()
+                merged.add(label)
+                if merged != dominators[label]:
+                    dominators[label] = merged
+                    changed = True
+        self.dominator_sets = dominators
+        return dominators
+
+    def _slot_store_target(self, instruction):
+        """The simple slot one `storel` writes, or None."""
+        if instruction.opcode != "storel" or len(instruction.args) != 2:
+            return None
+        target = instruction.args[1]
+        if is_temporary(target) and target.kind == "temp" and target.name in self.slots:
+            return target.name
+        return None
+
+    def _slot_load_source(self, instruction):
+        """The simple slot one `loadl` reads into a singly-defined temporary, or None."""
+        if instruction.opcode != "loadl" or instruction.dest is None or not instruction.args:
+            return None
+        source = instruction.args[0]
+        if is_temporary(source) and source.kind == "temp" and source.name in self.slots:
+            return source.name
+        return None
+
+
 class Emitter:
     """Translates one parsed QBE unit into a self-contained LLVM module."""
 
@@ -188,6 +503,33 @@ class Emitter:
         self.stack_guard_compare = self.find_stack_guard_compare()
         self.assign_slots()
         self.phi_stores = self.collect_phi_stores()
+        self.memory = (MemoryClasses(self.function, self.sizes)
+                       if os.environ.get("MYLANG_QBE_LLVM_ALIAS", "1") != "0" else None)
+        self.alias_metadata = False
+
+    def alias_of(self, argument):
+        """The alias metadata one access through this address operand carries.
+
+        An address the unit does not place beyond doubt carries none, which
+        leaves it aliasing every class, the way every access behaved before any
+        of this metadata existed.
+        """
+        if self.memory is None:
+            return ""
+        suffix = ALIAS_SUFFIX.get(self.memory.operand_class(argument), "")
+        if suffix:
+            self.alias_metadata = True
+        return suffix
+
+    def alias_of_both(self, first, second):
+        """The metadata a two-address copy carries, when both ends agree."""
+        if self.memory is None:
+            return ""
+        klass = self.memory.operand_class(first)
+        if klass is None or klass != self.memory.operand_class(second):
+            return ""
+        self.alias_metadata = True
+        return ALIAS_SUFFIX[klass]
 
     def aggregate_abi(self, letter, force_memory=False):
         size = aggregate_bytes(letter, self.sizes)
@@ -546,7 +888,8 @@ class Emitter:
                 fill = self.render(lines, arguments[1], "int", 8, "i8")
                 length = self.render(lines, arguments[2], "int", 64, "i64")
                 lines.append(f"  call void @llvm.memset.p0.i64(ptr {pointer}, "
-                             f"i8 {fill}, i64 {length}, i1 false)")
+                             f"i8 {fill}, i64 {length}, i1 false)"
+                             f"{self.alias_of(arguments[0])}")
                 return "0", None
         if name == self.function.name:
             self.declare_undefined(name)
@@ -855,7 +1198,8 @@ class Emitter:
         source_pointer = self.address(lines, source)
         destination_pointer = self.address(lines, destination)
         lines.append(f"  call void @llvm.memmove.p0.p0.i64(ptr {destination_pointer}, "
-                     f"ptr {source_pointer}, i64 {size}, i1 false)")
+                     f"ptr {source_pointer}, i64 {size}, i1 false)"
+                     f"{self.alias_of_both(instruction.args[0], instruction.args[1])}")
         return lines
 
     def on_load(self, instruction):
@@ -869,7 +1213,7 @@ class Emitter:
         loaded_type = ("double" if instruction.opcode == "loadd"
                        else "float" if instruction.opcode == "loads" else f"i{bits}")
         lines.append(f"  %{loaded} = load {loaded_type}, ptr {pointer}, "
-                     f"align {max(1, bits // 8)}")
+                     f"align {max(1, bits // 8)}{self.alias_of(instruction.args[0])}")
         value = f"%{loaded}"
         if loaded_type in ("float", "double"):
             pass
@@ -902,7 +1246,7 @@ class Emitter:
         address = self.render(lines, instruction.args[1], "int", 64, "i64")
         pointer = self.address(lines, address)
         lines.append(f"  store {stored_type} {value}, ptr {pointer}, "
-                     f"align {max(1, bits // 8)}")
+                     f"align {max(1, bits // 8)}{self.alias_of(instruction.args[1])}")
         return lines
 
     # -- values ------------------------------------------------------------
@@ -1206,6 +1550,8 @@ class Emitter:
         if self.attributes:
             out.append("")
             out.append("attributes #0 = { " + " ".join(sorted(self.attributes)) + " }")
+        if self.alias_metadata:
+            out.append(ALIAS_METADATA.rstrip("\n"))
         return "\n".join(out) + "\n"
 
     def parameter_shapes(self):

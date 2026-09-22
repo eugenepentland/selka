@@ -106,6 +106,7 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
     const h = stack.len;
     const base = h - op.kind.arity();
     const list = try self.load("l", @backingInt(op.owner));
+    try self.markObject(list);
     const output = self.temp();
     switch (op.kind) {
         .length, .capacity => {
@@ -291,6 +292,7 @@ fn requirePopBounds(comptime E: type, self: *E, result: usize, length: usize) Er
 /// Load one native list-like header word (length for lists, text and bytes).
 fn receiverLength(comptime E: type, self: *E, receiver: usize) Error!usize {
     const length = self.temp();
+    try self.markObject(receiver);
     try self.print(load_word, .{ length, receiver });
     return length;
 }
@@ -451,6 +453,7 @@ fn inlineAppend(comptime E: type, self: *E, list: usize, element: typed.Type, va
     // keep the pointer the runtime copies from.
     const scalar = self.isScalar(element) and width != 0 and width <= 8;
     const held = if (scalar) try self.readValue(value_pointer, element) else value_pointer;
+    try self.markObject(list);
     const generation = try self.address(list, list_generation_offset);
     const current = self.temp();
     try self.print(load_pointer, .{ current, generation });
@@ -472,6 +475,7 @@ fn inlineAppend(comptime E: type, self: *E, list: usize, element: typed.Type, va
     const storage = try self.address(list, list_storage_offset);
     const backing = self.temp();
     try self.print(load_pointer, .{ backing, storage });
+    try self.markObject(backing);
     const destination = self.temp();
     if (width == 1) {
         try self.print(" %v{d} =l add %v{d}, %v{d}\n", .{ destination, backing, length });
@@ -494,6 +498,7 @@ fn emitLength(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.T
     if (self.program.records[ty.recordIndex()].collection.kind == .dictionary) {
         try self.print(dictionary_length, .{ result, input });
     } else {
+        try self.markObject(input);
         try self.print(load_word, .{ result, input });
     }
     try self.store(base, result);
@@ -638,7 +643,9 @@ fn elementAddress(comptime E: type, self: *E, list: usize, index: usize, element
     const storage = self.temp();
     const offset = self.temp();
     const address = self.temp();
+    try self.markObject(list);
     try self.print(" %v{d} =l add %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ header, list, list_storage_offset, storage, header });
+    try self.markObject(storage);
     const stride = (try self.layout(element)).size;
     if (stride == 1) {
         try self.print(" %v{d} =l add %v{d}, %v{d}\n", .{ address, storage, index });

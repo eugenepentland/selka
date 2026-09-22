@@ -55,6 +55,48 @@ $ mylang build examples/factorial.my --mode Debug -o /tmp/factorial-debug --cach
 $ mylang build examples/factorial.my --backend qbe -o /tmp/factorial-qbe --cache-dir /tmp/cache
 ```
 
+### What the LLVM backend is allowed to assume
+
+The adapter states no fact that a check the frontend emitted is about to
+establish. It emits no `nsw`/`nuw`/`exact`/fast-math flag, no `inbounds`, no
+TBAA and no `noalias` pointer attribute, because every overflow, bounds, cast
+and allocation check is explicit code in the IL: the emitted sequence computes
+the wrapped result and *then* tests it, so an arithmetic flag would make the
+test that follows dead.
+
+It does state one aliasing fact, and that fact never depends on a check having
+run. Memory an emitted unit touches falls into two classes the adapter can place
+without looking at a guard:
+
+- **frame** — storage this activation itself obtained: every `alloc4/8/16` of
+  the unit (the local slots, the operand scratch, the aggregate scratch, the root
+  records and the frame record), the private copy an aggregate parameter arrives
+  in, and, for a unit whose frame is too large for the stack, the block
+  `myl_qbe_frame_allocate` freshly allocates on entry and releases on exit;
+- **foreign** — storage some other allocation owns: a value the caller computed
+  (a scalar parameter such as `%ctx`), a global's address, the context's embedded
+  heap record that `myl_qbe_heap` answers, and every address the emitter marked
+  `# myl-obj %temp` — a managed container's header and the element storage that
+  header points at, both from `myl_native_heap_alloc`.
+
+The two are disjoint because everything in **frame** is an allocation this
+activation made after it was entered: no value that existed before the call can
+point into it, no managed object is allocated inside it, and it is released
+before the activation returns. So the adapter gives each placed access
+`!alias.scope`/`!noalias` saying the two classes never meet. It carries a class
+through `copy` and offsetting `add`, and
+through a stack slot whose address never leaves the unit — either because every
+store to it agrees on one class and one of those stores dominates every load, or,
+inside one block, from the last value stored above the load. Everything else is
+left unplaced and carries no metadata, which keeps it aliasing both classes the
+way every access behaved before. This is what lets a loop keep a container's
+length and storage pointer in registers instead of reloading the header on every
+element; `MYLANG_QBE_LLVM_ALIAS=0` turns the metadata off for an A/B run.
+
+The `# myl-obj` markers are comment lines of their own. QBE's lexer drops a `#`
+comment to end of line, so the QBE backend's assembly is byte-identical with and
+without them.
+
 ## `mylang build`
 
 `mylang build <file.my> -o <output>` checks the program, lowers it, compiles one
