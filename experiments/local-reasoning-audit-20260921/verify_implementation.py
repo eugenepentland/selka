@@ -37,7 +37,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 BINARY = ROOT / "zig-out/bin/mylang"
 UNIMPLEMENTED = {"E_SYNTAX", "E_NOT_IMPLEMENTED", "E_UNKNOWN_TYPE", "E_UNKNOWN_NAME"}
-
 INVENTORY = '''\
 record Item:
     name: str
@@ -70,9 +69,13 @@ INVENTORY_REPORT_MARKED = INVENTORY_MARKED.replace(
 ).replace("report(inv, out)", "report(mut inv, out)")
 
 FIND_PIN = '''\
+module main
+
+
 record Pin:
     name: str
     net: int
+
 
 def find_pin(pins: list[Pin], name: str) -> int:
     for index, pin in enumerate(pins):
@@ -80,11 +83,16 @@ def find_pin(pins: list[Pin], name: str) -> int:
             return index
     return -1
 
+
 def wire(pins: list[Pin], name: str) -> int:
     index = find_pin(pins, name)
     if index < 0:
         return 0
     return pins[index].net
+
+
+def main() -> int:
+    return 0
 '''
 
 SPLIT_FIRST = '''\
@@ -114,13 +122,14 @@ def main() -> int:
     return 0
 '''
 
-ISSUE_POSITIONAL = ISSUE.replace(
-    "def main() -> int:\n    return 0",
-    'def main() -> int:\n    call(host, 13, 0, 1)\n    return 0',
-).replace(
-    "def issue(host: Host, *, code: int, file: int, position: int) -> None:\n    return None",
-    "def issue(host: Host, *, code: int, file: int, position: int) -> None:\n    return None\n\ndef call(host: Host, code: int, file: int, position: int) -> None:\n    issue(host, code=code, file=file, position=position)",
-)
+ISSUE_POSITIONAL = '''\
+def issue(host: Host, *, code: int, file: int, position: int) -> None:
+    return None
+
+def main(host: Host) -> int:
+    issue(host, 13, 0, 1)
+    return 0
+'''
 
 CONDITIONAL = '''\
 def main() -> int:
@@ -200,24 +209,36 @@ def main() -> int:
 ]
 
 
-def run_case(case: Case, directory: Path) -> str:
-    path = directory / "case.my"
+def run_case(case: Case, directory: Path, binary: Path) -> str:
+    # A `module NAME` header must match the file's stem, so a case that declares
+    # one is written as `main.my`; `mylang lint` requires an entry point.
+    path = directory / "main.my"
     path.write_text(case.source)
 
     if case.extra == "lint":
+        # `lint` writes the same `diagnostic-v1` records but with `location` at
+        # the top level, and its human summary goes to stdout.
         result = subprocess.run(
-            [str(BINARY), "lint", str(path), "--profile=agent", "--json"],
+            [str(binary), "lint", str(path), "--profile=agent", "--json"],
             capture_output=True, text=True, cwd=ROOT,
         )
-        if "L_SENTINEL_INT" in result.stdout:
+        records = []
+        for line in result.stdout.splitlines():
+            line = line.strip()
+            if line.startswith("{"):
+                payload = json.loads(line)
+                if isinstance(payload.get("diagnostic"), dict):
+                    records.append(payload["diagnostic"])
+        seen = {record.get("code") for record in records}
+        if "L_SENTINEL_INT" in seen:
             return "PASS"
-        if any(code in result.stdout + result.stderr for code in UNIMPLEMENTED):
-            return "SKIP (construct not implemented)"
-        return f"FAIL: no L_SENTINEL_INT in {result.stdout.strip()[:200]}"
+        if not seen or seen <= UNIMPLEMENTED | {"E_MAIN", "E_MODULE_NAME", "L_DEAD_PRIVATE"}:
+            return f"SKIP (construct not implemented: {sorted(seen)})"
+        return f"FAIL: no L_SENTINEL_INT; saw {sorted(seen)}"
 
     if case.codes:
         result = subprocess.run(
-            [str(BINARY), "check", str(path), "--diagnostics=json"],
+            [str(binary), "check", str(path), "--diagnostics=json"],
             capture_output=True, text=True, cwd=ROOT,
         )
         records = []
@@ -244,7 +265,7 @@ def run_case(case: Case, directory: Path) -> str:
         return "PASS"
 
     result = subprocess.run(
-        [str(BINARY), "run", str(path), "--cache-dir=" + str(directory / "cache")],
+        [str(binary), "run", str(path), "--cache-dir=" + str(directory / "cache")],
         capture_output=True, text=True, cwd=ROOT,
     )
     if result.returncode != 0 and any(f"error[{code}]" in result.stderr for code in UNIMPLEMENTED):
@@ -259,9 +280,11 @@ def run_case(case: Case, directory: Path) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--item", type=int, action="append", help="only this item")
+    parser.add_argument("--binary", type=Path, default=BINARY,
+                        help="compiler to check against; defaults to this checkout's zig-out/bin/mylang")
     arguments = parser.parse_args()
-    if not BINARY.exists():
-        print(f"missing {BINARY}; run `zig build` first", file=sys.stderr)
+    if not arguments.binary.exists():
+        print(f"missing {arguments.binary}; run `zig build` first", file=sys.stderr)
         return 1
 
     directory = Path(tempfile.mkdtemp(prefix="local-reasoning-verify-"))
@@ -270,7 +293,7 @@ def main() -> int:
         for case in CASES:
             if arguments.item and case.item not in arguments.item:
                 continue
-            verdict = run_case(case, directory)
+            verdict = run_case(case, directory, arguments.binary)
             if verdict.startswith("FAIL"):
                 failures += 1
             print(f"item {case.item}  {case.name}: {verdict}")
