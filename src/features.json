@@ -282,6 +282,11 @@
       "summary": "`float` is IEEE binary64 with ordinary literals, operators, comparisons and integer conversions.",
       "doc": "docs/floating-point.md#binary64-floating-point"
     },
+    "float-nan-when-observed": {
+      "kind": "language",
+      "summary": "A NaN's payload and sign are never observable: arithmetic propagates NaNs as IEEE does, and text, foreign-call arguments, equality and sorting see the canonical quiet NaN.",
+      "doc": "docs/floating-point.md#nan-payloads"
+    },
     "contextual-option-constructors": {
       "kind": "language",
       "summary": "`Some(value)` and a bare `None` take their `Option[T]` type from the surrounding context.",

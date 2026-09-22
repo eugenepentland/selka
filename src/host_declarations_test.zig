@@ -198,3 +198,27 @@ test "host source declarations require explicit value signatures effects and gue
         \\host def main(host: Host) -> i64 effects(host)
     , "E_MAIN");
 }
+
+// spec: FLOAT-NAN-OBSERVED-6
+test "host metadata marks the builtin float domain so the bridge canonicalizes its NaNs" {
+    var c = try language.Compilation.init(t.allocator, "host-float.my",
+        \\domain Code: u64:
+        \\    def of(value: u64) -> Code:
+        \\        return wrap[Code](value)
+        \\
+        \\
+        \\host def scale(host: Host, x: float, code: Code) -> float effects(host)
+        \\
+        \\
+        \\def main(host: Host) -> i64:
+        \\    return int(scale(host, 1.5, Code.of(3u64)))
+    );
+    defer c.deinit();
+    try c.emit();
+    const manifest = try c.emitQbe(t.allocator);
+    defer t.allocator.free(manifest);
+    // The float domain is the one domain with a width; a user integer domain
+    // keeps width zero, so its NaN-shaped words cross unchanged.
+    try t.expect(std.mem.indexOf(u8, manifest, "{\"name\":\"float\",\"kind\":\"domain\",\"size\":8,\"alignment\":8,\"bits\":64,") != null);
+    try t.expect(std.mem.indexOf(u8, manifest, "{\"name\":\"Code\",\"kind\":\"domain\",\"size\":8,\"alignment\":8,\"bits\":0,") != null);
+}

@@ -474,9 +474,11 @@ static double float_value(uint64_t bits) {
     memcpy(&value, &bits, sizeof value);
     return value;
 }
+/* FLOAT-NAN-OBSERVED-1: a result keeps the bits the operation produced, NaN
+   payload and sign included; a NaN is canonicalized only where its bits can be
+   observed (formatting, hashing, the host and wire boundaries). */
 static uint64_t float_bits(double value) {
     uint64_t bits;
-    if (isnan(value)) return UINT64_C(0x7ff8000000000000);
     memcpy(&bits, &value, sizeof bits);
     return bits;
 }
@@ -492,22 +494,6 @@ static uint64_t float_environment(void *context) {
    helpers below no longer re-check it on each call. */
 void myl_qbe_float_check(void *context) {
     (void)float_environment(context);
-}
-/* QBE-FLOAT-CANON-1: the canonical binary64 NaN an arithmetic result is
-   replaced with. It is fetched through a call rather than written as a literal
-   beside the result, so an inlined float operation keeps its compare and
-   predicted branch on the finite path: the volatile read below is an access no
-   optimizer may move, duplicate or speculate, so the call stays on the branch
-   that produced the NaN instead of being folded into a select that would sit on
-   the operation's critical path. */
-static volatile uint64_t float_canonical_probe;
-#if defined(__GNUC__) || defined(__clang__)
-__attribute__((noinline))
-#endif
-uint64_t myl_qbe_float_canonical(void *context) {
-    (void)context;
-    (void)float_canonical_probe;
-    return UINT64_C(0x7ff8000000000000);
 }
 uint64_t myl_qbe_float_binary(void *context, uint64_t op, uint64_t left, uint64_t right) {
     double a = float_value(left), b = float_value(right);
