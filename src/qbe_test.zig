@@ -1763,6 +1763,36 @@ test "a list element the loop variable copies is read through its own address" {
     try std.testing.expect(std.mem.indexOf(u8, body, "myl_qbe_fail_normalized_index_bounds") != null);
 }
 
+// spec: QBE-CTORREAD-1
+test "QBE-CTORREAD-1 a constructor field read out of a local names the local" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Point:
+        \\    x: i64
+        \\    y: i64
+        \\
+        \\
+        \\record Pair:
+        \\    tag: i64
+        \\    left: Point
+        \\    right: Point
+        \\
+        \\
+        \\def pack(a: Point, b: Point, tag: i64) -> i64:
+        \\    made = Pair(tag=tag, left=a, right=b)
+        \\    return made.left.x + made.right.y
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return pack(Point(x=1, y=2), Point(x=3, y=4), 5)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "pack").?.il;
+    // Both field operands name their own slot, so the only copies left are the
+    // two the constructor makes into the record it is building.
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, body, "blit "));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%agg"));
+}
+
 // spec: QBE-RETFWD-1
 test "QBE-RETFWD-1 an element returned straight back crosses the boundary once" {
     var parsed = try emitted(std.testing.allocator,

@@ -309,13 +309,22 @@ fn writtenOutsideBindings(f: bytecode.Function, slot: usize) bool {
 /// Whether one instruction ends the life of the operand it reads: it pops the
 /// operand, overwrites the operand slot with its own result, or reads it as an
 /// argument or a returned value. Instructions that leave the operand on the
-/// stack — a load, a move, a push, a record or variant constructor, a domain
-/// wrap, a jump, or an arena boundary — are not on this list, and neither are
-/// the provider and resource operations, whose stack effects are not worth
-/// re-deriving for a case that never reads an aggregate operand by address.
+/// stack — a load, a move, a push, a domain wrap, a jump, or an arena boundary
+/// — are not on this list, and neither are the provider and resource
+/// operations, whose stack effects are not worth re-deriving for a case that
+/// never reads an aggregate operand by address.
+///
+/// QBE-CTORREAD-1: a record or variant constructor reads each field operand
+/// once, writes it into the destination and pops it, so it ends that operand's
+/// life like any other reader. The destination is either this pc's own scratch
+/// or a local `constructorDestination` already proved no reachable instruction
+/// reads, so a field read out of a named local's slot can never be the region
+/// the constructor is writing.
 fn consumesOperand(op: @FieldType(bytecode.Instruction, "op")) bool {
     return switch (op) {
         .get_field,
+        .make_record,
+        .make_variant,
         .switch_variant,
         .array_length,
         .get_index,
