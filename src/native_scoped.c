@@ -71,11 +71,25 @@ failure:
     if (parent != root) close(parent);
     return -1;
 }
+/* A scoped root opens its leaf without blocking, so a FIFO it is about to
+   refuse cannot stall the guest waiting for a writer; the flag is cleared
+   again once the leaf is known to be a regular file. The direct root blocks
+   exactly as an ordinary `open` does. */
 static int open_leaf(int parent, const char *name, unsigned char mode, int follow) {
-    if (mode == 'c') return openat(parent, name, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0666);
-    if (mode == 'a') return openat(parent, name, O_WRONLY | O_CREAT | O_CLOEXEC, 0666);
+    int waiting = follow ? 0 : O_NONBLOCK;
+    if (mode == 'c') return openat(parent, name, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | waiting, 0666);
+    if (mode == 'a') return openat(parent, name, O_WRONLY | O_CREAT | O_CLOEXEC | waiting, 0666);
     int flags = mode == 'r' ? O_RDONLY : O_WRONLY;
-    return openat(parent, name, flags | (follow ? 0 : O_NOFOLLOW) | O_CLOEXEC);
+    return openat(parent, name, flags | (follow ? 0 : O_NOFOLLOW) | O_CLOEXEC | waiting);
+}
+/* Whether a root may use the file `fd` opened. A scoped `--restrict` root serves
+   regular files only. The default direct root carries the whole process's
+   authority, so like C's `fopen` it also reads and writes a FIFO, a character
+   device such as `/dev/null`, or a shell's process substitution `/dev/fd/N`; a
+   directory is still refused there because it has no bytes to transfer. */
+static int usable(MylangScopedRoot entry, int fd, const struct stat *info) {
+    if (!entry.direct) return S_ISREG(info->st_mode) && fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK) == 0;
+    return !S_ISDIR(info->st_mode);
 }
 static unsigned char kind_of(mode_t value) {
     if (S_ISREG(value)) return 1;
@@ -181,8 +195,9 @@ static MylangResourceResult acquire_in(MylangScoped *scoped, MylangScopedRoot en
     if (fd < 0) { result.status = from_errno(); return result; }
     struct stat info;
     if (fstat(fd, &info)) { result.status = from_errno(); close(fd); return result; }
-    if (!S_ISREG(info.st_mode)) { result.status = MYLANG_PROVIDER_DENIED; close(fd); return result; }
-    if (mode == 't' && ftruncate(fd, 0)) { result.status = from_errno(); close(fd); return result; }
+    if (!usable(entry, fd, &info)) { result.status = MYLANG_PROVIDER_DENIED; close(fd); return result; }
+    /* Only a regular file has contents to truncate; a FIFO or device has none. */
+    if (mode == 't' && S_ISREG(info.st_mode) && ftruncate(fd, 0)) { result.status = from_errno(); close(fd); return result; }
     scoped->handles[slot] = (MylangScopedHandle){fd, NULL, 0, 0, mode};
     result.status = MYLANG_PROVIDER_OK;
     result.handle = slot;
