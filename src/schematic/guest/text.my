@@ -9,7 +9,7 @@ public record Span:
     end: int
 
 
-public def empty() -> Span effects(managed_allocation):
+public def empty() -> Span:
     return Span(
         file=0,
         source=b"",
@@ -56,11 +56,11 @@ public def number(host: Host, a: Span) -> int effects(host):
     return value
 
 
-public def write(out: mut io.Output, value: bytes) effects(managed_allocation, mutation):
+public def write(out: mut io.Output, value: bytes):
     return io.append(mut out, value)
 
 
-public def escaped(out: mut io.Output, a: Span) effects(managed_allocation, mutation):
+public def escaped(out: mut io.Output, a: Span):
     i = a.start
     while i < a.end:
         c = u8(a.source[i])
@@ -93,7 +93,7 @@ public def escaped(out: mut io.Output, a: Span) effects(managed_allocation, muta
     return
 
 
-public def decimal(out: mut io.Output, value: int) effects(managed_allocation, mutation):
+public def decimal(out: mut io.Output, value: int):
     return io.appendInt(mut out, value)
 
 

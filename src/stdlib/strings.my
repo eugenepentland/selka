@@ -3,7 +3,7 @@ import math
 
 
 # The ten decimal digits, in value order.
-public def digits() -> str effects(managed_allocation):
+public def digits() -> str:
     return "0123456789"
 
 
@@ -28,12 +28,12 @@ def base_digits() -> str:
 
 
 # The twenty-six lowercase ASCII letters followed by the uppercase ones.
-public def letters() -> str effects(managed_allocation):
+public def letters() -> str:
     return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
 # The ASCII characters treated as whitespace by this module.
-public def whitespace() -> str effects(managed_allocation):
+public def whitespace() -> str:
     return " \t\n\r"
 
 
@@ -66,7 +66,7 @@ public def is_alpha(text: str) -> bool effects():
 
 
 # Whether the text is nonempty and made only of ASCII letters and digits.
-public def is_alnum(text: str) -> bool effects(managed_allocation):
+public def is_alnum(text: str) -> bool:
     return all_in(letters() + digits(), text)
 
 
@@ -101,22 +101,22 @@ public def count(text: str, needle: str) -> int effects():
 
 
 # Text without leading whitespace.
-public def lstrip(text: str) -> str effects(managed_allocation):
+public def lstrip(text: str) -> str:
     return text.lstrip()
 
 
 # Text without trailing whitespace.
-public def rstrip(text: str) -> str effects(managed_allocation):
+public def rstrip(text: str) -> str:
     return text.rstrip()
 
 
 # Text without leading or trailing whitespace.
-public def strip(text: str) -> str effects(managed_allocation):
+public def strip(text: str) -> str:
     return text.strip()
 
 
 # Text split on line feeds, with one trailing carriage return removed per line.
-public def lines(text: str) -> list[str] effects(managed_allocation):
+public def lines(text: str) -> list[str]:
     out: list[str] = []
     if len(text) == 0:
         return out
@@ -129,7 +129,7 @@ public def lines(text: str) -> list[str] effects(managed_allocation):
 
 
 # Text repeated a nonnegative number of times.
-public def repeat(text: str, times: int) -> Result[str, Error] effects(managed_allocation):
+public def repeat(text: str, times: int) -> Result[str, Error]:
     if times < 0:
         return Err(Error.Invalid("repeat count must not be negative"))
     out = ""
@@ -141,7 +141,7 @@ public def repeat(text: str, times: int) -> Result[str, Error] effects(managed_a
 
 
 # Text padded on the left with a single fill character up to a width.
-public def pad_left(text: str, width: int, fill: str) -> Result[str, Error] effects(managed_allocation):
+public def pad_left(text: str, width: int, fill: str) -> Result[str, Error]:
     if len(fill) != 1:
         return Err(Error.Invalid("pad fill must be exactly one character"))
     if len(text) >= width:
@@ -150,7 +150,7 @@ public def pad_left(text: str, width: int, fill: str) -> Result[str, Error] effe
 
 
 # Text padded on the right with a single fill character up to a width.
-public def pad_right(text: str, width: int, fill: str) -> Result[str, Error] effects(managed_allocation):
+public def pad_right(text: str, width: int, fill: str) -> Result[str, Error]:
     if len(fill) != 1:
         return Err(Error.Invalid("pad fill must be exactly one character"))
     if len(text) >= width:
@@ -159,34 +159,34 @@ public def pad_right(text: str, width: int, fill: str) -> Result[str, Error] eff
 
 
 # Text with ASCII lowercase letters replaced by their uppercase forms.
-public def upper(text: str) -> str effects(managed_allocation):
+public def upper(text: str) -> str:
     return text.upper()
 
 
 # Text with ASCII uppercase letters replaced by their lowercase forms.
-public def lower(text: str) -> str effects(managed_allocation):
+public def lower(text: str) -> str:
     return text.lower()
 
 
 # Every nonoverlapping occurrence of a nonempty needle replaced by a substitute.
-public def substitute(text: str, needle: str, insertion: str) -> Result[str, Error] effects(managed_allocation):
+public def substitute(text: str, needle: str, insertion: str) -> Result[str, Error]:
     if len(needle) == 0:
         return Err(Error.Invalid("replacement needle must not be empty"))
     return Ok(text.replace(needle, insertion))
 
 
 # Signed decimal text converted to an integer, rejecting overflow and junk.
-public def to_int(text: str) -> Option[int] effects(managed_allocation):
+public def to_int(text: str) -> Option[int]:
     return int(text)
 
 
 # Text converted through the pinned float grammar shared with byte parsing.
-public def to_float(text: str) -> Option[float] effects(managed_allocation):
+public def to_float(text: str) -> Option[float]:
     return float(text)
 
 
 # Integer rendered in a base between 2 and 36 using lowercase digits.
-public def format_int(value: int, base: int) -> Result[str, Error] effects(managed_allocation):
+public def format_int(value: int, base: int) -> Result[str, Error]:
     if base < 2 or base > 36:
         return Err(Error.Invalid("integer base must be between 2 and 36"))
     if value == 0:
@@ -207,7 +207,7 @@ public def format_int(value: int, base: int) -> Result[str, Error] effects(manag
 
 
 # Float rendered with a fixed number of decimals, rounding halves away from zero.
-public def format_float(value: float, decimals: int) -> Result[str, Error] effects(managed_allocation):
+public def format_float(value: float, decimals: int) -> Result[str, Error]:
     if decimals < 0 or decimals > 17:
         return Err(Error.Invalid("decimal count must be between 0 and 17"))
     if math.is_nan(value):
@@ -235,7 +235,7 @@ public def format_float(value: float, decimals: int) -> Result[str, Error] effec
 
 
 # Unicode scalar value of a single-character text, or `Err` for any other length.
-public def ord(text: str) -> Result[int, Error] effects(managed_allocation):
+public def ord(text: str) -> Result[int, Error]:
     if len(text) != 1:
         return Err(Error.Invalid("ord requires exactly one character"))
     encoded = text.encode()
@@ -263,7 +263,7 @@ public def ord(text: str) -> Result[int, Error] effects(managed_allocation):
 
 # One-character text for a Unicode scalar value. Surrogates and code points past
 # `0x10FFFF` are rejected rather than encoded as replacement bytes.
-public def chr(code: int) -> Result[str, Error] effects(managed_allocation):
+public def chr(code: int) -> Result[str, Error]:
     if code < 0:
         return Err(Error.Invalid("chr requires a non-negative code point"))
     if code > 1114111:

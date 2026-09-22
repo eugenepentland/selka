@@ -23,7 +23,7 @@ def sum_values(values: list[int]) -> int effects():
     return total
 
 
-public def bench_list_sum(size: int) -> int effects(managed_allocation):
+public def bench_list_sum(size: int) -> int:
     values: list[int] = []
     for index in range(size):
         values.append(index)

@@ -21,19 +21,19 @@ def to_word(value: int) -> u64:
 
 
 # A reproducible generator for a raw 64-bit state word.
-public def from_word(word: u64) -> Random effects(managed_allocation):
+public def from_word(word: u64) -> Random:
     cells: list[u64] = []
     cells.append(word)
     return Random(state=cells)
 
 
 # A reproducible generator for a signed seed; equal seeds give equal streams.
-public def seeded(seed: int) -> Random effects(managed_allocation):
+public def seeded(seed: int) -> Random:
     return from_word(to_word(seed))
 
 
 # A generator seeded from the host entropy capability.
-public def from_entropy(capability: Entropy) -> Result[Random, str] effects(random, managed_allocation):
+public def from_entropy(capability: Entropy) -> Result[Random, str]:
     match random_u64[EntropyReading](capability):
         case EntropyReading.ok(word):
             return Ok(from_word(word))

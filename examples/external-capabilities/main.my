@@ -3,7 +3,7 @@ import random
 import time
 
 
-def sample(clock: Clock, rng: Entropy) -> Result[int, str] effects(clock, random, managed_allocation):
+def sample(clock: Clock, rng: Entropy) -> Result[int, str]:
     match time.now(clock):
         case Ok(instant):
             match random.from_entropy(rng):

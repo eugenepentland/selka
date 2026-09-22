@@ -51,7 +51,7 @@ def groupForm(host: Host, nodes: list[s.Node], index: int) -> bool:
     return s.form(host, nodes, index, b"group")
 
 
-public def body(host: Host, nodes: list[s.Node]) -> int effects(host, managed_allocation):
+public def body(host: Host, nodes: list[s.Node]) -> int:
     i = 1
     while i < len(nodes):
         if blockForm(host, nodes, i):
@@ -63,7 +63,7 @@ public def body(host: Host, nodes: list[s.Node]) -> int effects(host, managed_al
     return - 1
 
 
-public def title(host: Host, nodes: list[s.Node]) -> text.Span effects(host, managed_allocation):
+public def title(host: Host, nodes: list[s.Node]) -> text.Span:
     b = body(host, nodes)
     if b < 0:
         return text.empty()
@@ -82,7 +82,7 @@ def kind(host: Host, family: text.Span) -> int:
     return 0
 
 
-public def collectParts(host: Host, nodes: list[s.Node]) -> Result[list[Part], int] effects(host, managed_allocation):
+public def collectParts(host: Host, nodes: list[s.Node]) -> Result[list[Part], int]:
     out: list[Part] = []
     b = body(host, nodes)
     if b < 0:
@@ -126,7 +126,7 @@ public def collectParts(host: Host, nodes: list[s.Node]) -> Result[list[Part], i
     return Ok(out)
 
 
-public def label(host: Host, pinout: list[s.Node], number: int) -> text.Span effects(host, managed_allocation):
+public def label(host: Host, pinout: list[s.Node], number: int) -> text.Span:
     i = 1
     while i < len(pinout):
         if pinForm(host, pinout, i) and text.number(host, s.at(pinout, i + 2).span) == number:
@@ -135,7 +135,7 @@ public def label(host: Host, pinout: list[s.Node], number: int) -> text.Span eff
     return text.empty()
 
 
-public def collectPins(host: Host, nodes: list[s.Node], parts: list[Part], pinout: list[s.Node]) -> Result[list[Pin], int] effects(host, managed_allocation):
+public def collectPins(host: Host, nodes: list[s.Node], parts: list[Part], pinout: list[s.Node]) -> Result[list[Pin], int]:
     out: list[Pin] = []
     part = 0
     while part < len(parts):
@@ -192,7 +192,7 @@ public def collectPins(host: Host, nodes: list[s.Node], parts: list[Part], pinou
     return Ok(out)
 
 
-public def group(host: Host, nodes: list[s.Node], reference: text.Span) -> text.Span effects(host, managed_allocation):
+public def group(host: Host, nodes: list[s.Node], reference: text.Span) -> text.Span:
     i = 1
     while i < len(nodes):
         if groupForm(host, nodes, i):
@@ -251,7 +251,7 @@ def railKind(host: Host, span: text.Span) -> int:
 
 # Resolve textual identities and topology facts once. Layout and routing retain
 # the original source spans for metadata, but compare these compact identities.
-public def normalize(host: Host, parts: mut list[Part], pins: mut list[Pin]) effects(host, managed_allocation, mutation):
+public def normalize(host: Host, parts: mut list[Part], pins: mut list[Pin]):
     i = 0
     while i < len(pins):
         pins[i].display = displayNet(host, pins[i].net, parts, pins)

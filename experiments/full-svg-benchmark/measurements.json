@@ -24,18 +24,18 @@
     },
     "mylang-o3": {
       "path": ".tmp/full-svg-benchmark-20260921/mylang-o3",
-      "bytes": 1776560,
-      "sha256": "d9eeddfadfaad1509ef828a32afb7fcac9fdbd4a277cc8c670b5324bfb7e54b8"
+      "bytes": 1970544,
+      "sha256": "557c2c2f429e87b2771060b44cedfe37346f557046b315ad125df2a677a8a195"
     },
     "mylang-o3-lto": {
       "path": ".tmp/full-svg-benchmark-20260921/mylang-o3-lto",
-      "bytes": 872440,
-      "sha256": "84c590c3d7169642a4782d36ca4ec44219d664c461f658089c6b48ebf3c8e077"
+      "bytes": 1109416,
+      "sha256": "c9601369ba4b23ac2e5368030fe1f6e25d00afc11304e41295570efb54f004f2"
     },
     "mylang-o3-bounded": {
       "path": ".tmp/full-svg-benchmark-20260921/mylang-o3-bounded",
-      "bytes": 2148640,
-      "sha256": "f6f43ce5acd5cd7ca3951d3eac2df7f198086a7349beeee357c0d8a3869d0649"
+      "bytes": 2382024,
+      "sha256": "142c11032c06d7b6de7c1b7b232376a410a7bcea830ceb8bbdf818e8adc32a9c"
     },
     "rust-o3": {
       "path": ".tmp/full-svg-benchmark-20260921/rust-o3",
@@ -56,444 +56,444 @@
   "summary": {
     "fixture": {
       "median_ms": {
-        "netlisp-llvm-fast": 2.694874,
-        "netlisp-llvm-safe": 2.862357,
-        "mylang-o3": 18.902909,
-        "mylang-o3-lto": 37.228984,
-        "mylang-o3-bounded": 46.451501,
-        "rust-o3": 1.719956,
-        "go-fast": 2.208617,
-        "zig-o3": 1.55402
+        "netlisp-llvm-fast": 2.933812,
+        "netlisp-llvm-safe": 3.18385,
+        "mylang-o3": 3.065137,
+        "mylang-o3-lto": 3.11134,
+        "mylang-o3-bounded": 9.292983,
+        "rust-o3": 1.781262,
+        "go-fast": 2.323836,
+        "zig-o3": 1.568202
       },
       "p10_p90_ms": {
         "netlisp-llvm-fast": [
-          2.556682,
-          2.896819
+          2.770696,
+          3.668879
         ],
         "netlisp-llvm-safe": [
-          2.676949,
-          2.978203
+          2.929732,
+          4.081932
         ],
         "mylang-o3": [
-          18.523805,
-          20.961748
+          2.839996,
+          3.997019
         ],
         "mylang-o3-lto": [
-          36.271688,
-          40.043312
+          2.93698,
+          4.131445
         ],
         "mylang-o3-bounded": [
-          46.043032,
-          48.050389
+          8.897671,
+          15.027346
         ],
         "rust-o3": [
-          1.553397,
-          1.878372
+          1.627628,
+          1.953315
         ],
         "go-fast": [
-          2.019783,
-          2.422184
+          2.191401,
+          2.761865
         ],
         "zig-o3": [
-          1.366192,
-          1.720155
+          1.396624,
+          1.753373
         ]
       },
       "ratios_to_netlisp_fast": {
         "netlisp-llvm-safe": {
-          "ratio": 1.0621487312579363,
+          "ratio": 1.0852263198868912,
           "paired_bootstrap_95": [
-            0.9970437904884614,
-            1.0894462897259756
+            1.064307119883619,
+            1.1141795118907687
           ]
         },
         "mylang-o3": {
-          "ratio": 7.014394365005563,
+          "ratio": 1.0447625819241315,
           "paired_bootstrap_95": [
-            6.778191643783921,
-            7.178949892184736
+            1.0247681542540397,
+            1.0921036095351269
           ]
         },
         "mylang-o3-lto": {
-          "ratio": 13.814740132562783,
+          "ratio": 1.060511034790232,
           "paired_bootstrap_95": [
-            13.28263993873239,
-            14.224739586047876
+            1.0383489776675359,
+            1.0991130938527842
           ]
         },
         "mylang-o3-bounded": {
-          "ratio": 17.23698436364743,
+          "ratio": 3.167545500529686,
           "paired_bootstrap_95": [
-            16.706842087654614,
-            17.653949573488337
+            3.109735537895977,
+            3.329900305710647
           ]
         },
         "rust-o3": {
-          "ratio": 0.638232436841203,
+          "ratio": 0.6071493333587836,
           "paired_bootstrap_95": [
-            0.6043446793846614,
-            0.6667323107116452
+            0.5873702882120599,
+            0.6339574781127139
           ]
         },
         "go-fast": {
-          "ratio": 0.8195622504057704,
+          "ratio": 0.7920875638929828,
           "paired_bootstrap_95": [
-            0.7759180588477168,
-            0.8614554238695554
+            0.7782952548035468,
+            0.8349013837746296
           ]
         },
         "zig-o3": {
-          "ratio": 0.5766577583961253,
+          "ratio": 0.5345270930789021,
           "paired_bootstrap_95": [
-            0.541872536576799,
-            0.5983031889105648
+            0.5236238187083291,
+            0.5516300714727395
           ]
         }
       },
       "ratios_to_zig_o3": {
         "netlisp-llvm-fast": {
-          "ratio": 1.7341308348669902,
+          "ratio": 1.8708125611368942,
           "paired_bootstrap_95": [
-            1.671766721268428,
-            1.845452449606239
+            1.811888703131977,
+            1.912507478921272
           ]
         },
         "netlisp-llvm-safe": {
-          "ratio": 1.8419048660892394,
+          "ratio": 2.0302550309207614,
           "paired_bootstrap_95": [
-            1.7512855763776984,
-            1.9303144883571877
+            1.9767169116125796,
+            2.0751669638912977
           ]
         },
         "mylang-o3": {
-          "ratio": 12.163877556273409,
+          "ratio": 1.9545549616694786,
           "paired_bootstrap_95": [
-            11.754914158528502,
-            12.754851894504332
+            1.912508210765031,
+            2.0281621882895187
           ]
         },
         "mylang-o3-lto": {
-          "ratio": 23.956566839551613,
+          "ratio": 1.9840173651098518,
           "paired_bootstrap_95": [
-            23.177882535355682,
-            25.19736072042138
+            1.9367217998701696,
+            2.0497760699151923
           ]
         },
         "mylang-o3-bounded": {
-          "ratio": 29.89118608512117,
+          "ratio": 5.925883910363588,
           "paired_bootstrap_95": [
-            28.991113339819126,
-            31.38014532723184
+            5.819857343118141,
+            6.200309982245057
           ]
         },
         "rust-o3": {
-          "ratio": 1.106778548538629,
+          "ratio": 1.135862599333504,
           "paired_bootstrap_95": [
-            1.058021279589226,
-            1.1873030561683464
+            1.094620481064606,
+            1.1805697633981718
           ]
         },
         "go-fast": {
-          "ratio": 1.4212281695216278,
+          "ratio": 1.4818473640513148,
           "paired_bootstrap_95": [
-            1.3502742458040462,
-            1.5180359851867
+            1.4483079721235759,
+            1.5599332308154024
           ]
         }
       }
     },
     "changed-net": {
       "median_ms": {
-        "netlisp-llvm-fast": 2.678363,
-        "netlisp-llvm-safe": 2.823425,
-        "mylang-o3": 19.354687,
-        "mylang-o3-lto": 37.45563,
-        "mylang-o3-bounded": 46.791063,
-        "rust-o3": 1.722936,
-        "go-fast": 2.204713,
-        "zig-o3": 1.56082
+        "netlisp-llvm-fast": 2.899818,
+        "netlisp-llvm-safe": 3.159508,
+        "mylang-o3": 3.043658,
+        "mylang-o3-lto": 3.071814,
+        "mylang-o3-bounded": 9.19004,
+        "rust-o3": 1.751534,
+        "go-fast": 2.38585,
+        "zig-o3": 1.575123
       },
       "p10_p90_ms": {
         "netlisp-llvm-fast": [
-          2.48626,
-          2.988451
+          2.742996,
+          3.65639
         ],
         "netlisp-llvm-safe": [
-          2.695738,
-          2.975297
+          2.89726,
+          3.936996
         ],
         "mylang-o3": [
-          18.964228,
-          20.354574
+          2.862735,
+          4.016737
         ],
         "mylang-o3-lto": [
-          36.177498,
-          38.837472
+          2.777372,
+          3.890337
         ],
         "mylang-o3-bounded": [
-          46.172068,
-          48.584647
+          8.800506,
+          15.251829
         ],
         "rust-o3": [
-          1.551583,
-          1.891093
+          1.611771,
+          1.905442
         ],
         "go-fast": [
-          2.023535,
-          2.371629
+          2.148763,
+          3.075992
         ],
         "zig-o3": [
-          1.386556,
-          1.692957
+          1.414667,
+          1.706936
         ]
       },
       "ratios_to_netlisp_fast": {
         "netlisp-llvm-safe": {
-          "ratio": 1.0541606944241688,
+          "ratio": 1.0895538961410682,
           "paired_bootstrap_95": [
-            1.0190686061015783,
-            1.0764206556467537
+            1.0623349448012123,
+            1.1193620367615775
           ]
         },
         "mylang-o3": {
-          "ratio": 7.226312116766845,
+          "ratio": 1.0496031130229553,
           "paired_bootstrap_95": [
-            6.9843325554503455,
-            7.40206943075676
+            1.017735250970923,
+            1.080468253395593
           ]
         },
         "mylang-o3-lto": {
-          "ratio": 13.98452338237946,
+          "ratio": 1.0593126878997234,
           "paired_bootstrap_95": [
-            13.394415868957386,
-            14.297612564920884
+            1.0235651184852408,
+            1.1037688325390198
           ]
         },
         "mylang-o3-bounded": {
-          "ratio": 17.470022920716872,
+          "ratio": 3.169178203597605,
           "paired_bootstrap_95": [
-            16.874883624515807,
-            17.76077308675871
+            3.0962265282456163,
+            3.2309961647115006
           ]
         },
         "rust-o3": {
-          "ratio": 0.6432794957218271,
+          "ratio": 0.6040151485369082,
           "paired_bootstrap_95": [
-            0.6090674007492989,
-            0.669249566295626
+            0.5870318994220586,
+            0.6304681527025832
           ]
         },
         "go-fast": {
-          "ratio": 0.823156905916039,
+          "ratio": 0.822758531742337,
           "paired_bootstrap_95": [
-            0.782402029293432,
-            0.8407783693934062
+            0.7887947004448478,
+            0.8430522884339549
           ]
         },
         "zig-o3": {
-          "ratio": 0.5827514791684324,
+          "ratio": 0.5431799512934951,
           "paired_bootstrap_95": [
-            0.5363793697119512,
-            0.6060065459615437
+            0.5196074374322802,
+            0.5559752508354189
           ]
         }
       },
       "ratios_to_zig_o3": {
         "netlisp-llvm-fast": {
-          "ratio": 1.715997360361861,
+          "ratio": 1.8410105115600495,
           "paired_bootstrap_95": [
-            1.653064626927101,
-            1.8701543016985207
+            1.7967968062425725,
+            1.9245298045417771
           ]
         },
         "netlisp-llvm-safe": {
-          "ratio": 1.8089369690291,
+          "ratio": 2.005880175706913,
           "paired_bootstrap_95": [
-            1.745327516102736,
-            1.9723962272327589
+            1.9471551003213048,
+            2.1094105210102736
           ]
         },
         "mylang-o3": {
-          "ratio": 12.40033251752284,
+          "ratio": 1.9323303640414113,
           "paired_bootstrap_95": [
-            11.970939617987563,
-            13.528369845261743
+            1.874550267544439,
+            2.019883744447917
           ]
         },
         "mylang-o3-lto": {
-          "ratio": 23.99740521008188,
+          "ratio": 1.9502057934523207,
           "paired_bootstrap_95": [
-            23.144951253038922,
-            25.98262986536416
+            1.8811499066266766,
+            2.0733308292598362
           ]
         },
         "mylang-o3-bounded": {
-          "ratio": 29.97851321741136,
+          "ratio": 5.834490385830185,
           "paired_bootstrap_95": [
-            28.894744329251626,
-            32.85073468868519
+            5.6802352782653935,
+            6.103464238684287
           ]
         },
         "rust-o3": {
-          "ratio": 1.1038659166335643,
+          "ratio": 1.1119982375979527,
           "paired_bootstrap_95": [
-            1.055192150697375,
-            1.2044861373031173
+            1.0765748276224811,
+            1.1839180114887273
           ]
         },
         "go-fast": {
-          "ratio": 1.4125350777155596,
+          "ratio": 1.514707105413355,
           "paired_bootstrap_95": [
-            1.3538209233629506,
-            1.542129094398864
+            1.4729204918488843,
+            1.5834233162791593
           ]
         }
       }
     },
     "changed-value": {
       "median_ms": {
-        "netlisp-llvm-fast": 2.704892,
-        "netlisp-llvm-safe": 2.879792,
-        "mylang-o3": 19.108157,
-        "mylang-o3-lto": 36.869535,
-        "mylang-o3-bounded": 46.715458,
-        "rust-o3": 1.704472,
-        "go-fast": 2.164802,
-        "zig-o3": 1.538246
+        "netlisp-llvm-fast": 2.868863,
+        "netlisp-llvm-safe": 3.06395,
+        "mylang-o3": 3.058947,
+        "mylang-o3-lto": 3.031219,
+        "mylang-o3-bounded": 9.196538,
+        "rust-o3": 1.723907,
+        "go-fast": 2.300388,
+        "zig-o3": 1.539568
       },
       "p10_p90_ms": {
         "netlisp-llvm-fast": [
-          2.549662,
-          2.902868
+          2.660277,
+          3.550294
         ],
         "netlisp-llvm-safe": [
-          2.626617,
-          3.105265
+          2.832158,
+          4.069353
         ],
         "mylang-o3": [
-          18.437521,
-          19.589293
+          2.856587,
+          3.985604
         ],
         "mylang-o3-lto": [
-          35.859861,
-          39.262105
+          2.887061,
+          3.972694
         ],
         "mylang-o3-bounded": [
-          46.370933,
-          49.703108
+          8.852653,
+          15.5574
         ],
         "rust-o3": [
-          1.586905,
-          1.845313
+          1.561058,
+          1.95692
         ],
         "go-fast": [
-          2.006634,
-          2.398428
+          2.077332,
+          2.980199
         ],
         "zig-o3": [
-          1.448372,
-          1.700068
+          1.419467,
+          1.748855
         ]
       },
       "ratios_to_netlisp_fast": {
         "netlisp-llvm-safe": {
-          "ratio": 1.0646606223095045,
+          "ratio": 1.068001504428758,
           "paired_bootstrap_95": [
-            1.0136177309433794,
-            1.1144152778845187
+            1.0295866048841036,
+            1.1098679212543543
           ]
         },
         "mylang-o3": {
-          "ratio": 7.06429572788858,
+          "ratio": 1.0662576079791888,
           "paired_bootstrap_95": [
-            6.855328459305834,
-            7.217421504831248
+            1.0312768647634785,
+            1.101543581399741
           ]
         },
         "mylang-o3-lto": {
-          "ratio": 13.630686548668116,
+          "ratio": 1.056592454920294,
           "paired_bootstrap_95": [
-            13.216430792852384,
-            14.035430001330946
+            1.019772476915189,
+            1.1283722143032189
           ]
         },
         "mylang-o3-bounded": {
-          "ratio": 17.2707294782934,
+          "ratio": 3.205638610139278,
           "paired_bootstrap_95": [
-            16.857567645356216,
-            17.68002203848404
+            3.066536142664177,
+            3.298844684699778
           ]
         },
         "rust-o3": {
-          "ratio": 0.630144197993857,
+          "ratio": 0.6009025178267487,
           "paired_bootstrap_95": [
-            0.6075705045503424,
-            0.6631296833740362
+            0.5653385083215812,
+            0.6155577417211677
           ]
         },
         "go-fast": {
-          "ratio": 0.8003284419488836,
+          "ratio": 0.8018465852151182,
           "paired_bootstrap_95": [
-            0.7611001988398904,
-            0.8490766906451894
+            0.7672847401846716,
+            0.8308012201612434
           ]
         },
         "zig-o3": {
-          "ratio": 0.5686903580623551,
+          "ratio": 0.5366474453468151,
           "paired_bootstrap_95": [
-            0.547506627376469,
-            0.5957163595253253
+            0.5145280303085762,
+            0.5634514440041228
           ]
         }
       },
       "ratios_to_zig_o3": {
         "netlisp-llvm-fast": {
-          "ratio": 1.7584261555043863,
+          "ratio": 1.8634207777766232,
           "paired_bootstrap_95": [
-            1.6786512305903656,
-            1.8266395622026645
+            1.7731333496240251,
+            1.9459004936994095
           ]
         },
         "netlisp-llvm-safe": {
-          "ratio": 1.8721270850046092,
+          "ratio": 1.99013619404924,
           "paired_bootstrap_95": [
-            1.7631698902434665,
-            1.982868190102229
+            1.9021498259563323,
+            2.094514439798873
           ]
         },
         "mylang-o3": {
-          "ratio": 12.422042378137176,
+          "ratio": 1.9868865811708218,
           "paired_bootstrap_95": [
-            12.010679003470358,
-            12.850782683204994
+            1.8923682232525911,
+            2.077556545244881
           ]
         },
         "mylang-o3-lto": {
-          "ratio": 23.968555744659827,
+          "ratio": 1.9688763341404862,
           "paired_bootstrap_95": [
-            23.186681136543015,
-            24.835658963575106
+            1.8761873873115515,
+            2.113203938005144
           ]
         },
         "mylang-o3-bounded": {
-          "ratio": 30.369302439271742,
+          "ratio": 5.973453592176507,
           "paired_bootstrap_95": [
-            29.52675577452059,
-            31.35700728384376
+            5.661605572429882,
+            6.230763237395401
           ]
         },
         "rust-o3": {
-          "ratio": 1.1080620394917329,
+          "ratio": 1.1197342371366514,
           "paired_bootstrap_95": [
-            1.0650321163621335,
-            1.1533004114688359
+            1.0461647397573821,
+            1.1605802109347754
           ]
         },
         "go-fast": {
-          "ratio": 1.4073184653169908,
+          "ratio": 1.494177587479085,
           "paired_bootstrap_95": [
-            1.3318686673002886,
-            1.4950922169239473
+            1.4213303210430974,
+            1.5622854878410417
           ]
         }
       }
@@ -514,14 +514,14 @@
         "mylang-o3"
       ],
       "ms": {
-        "zig-o3": 1.418071,
-        "go-fast": 2.091334,
-        "mylang-o3-bounded": 48.064959,
-        "netlisp-llvm-fast": 2.96595,
-        "rust-o3": 1.891093,
-        "netlisp-llvm-safe": 2.821856,
-        "mylang-o3-lto": 36.288124,
-        "mylang-o3": 19.572999
+        "zig-o3": 1.346467,
+        "go-fast": 2.156819,
+        "mylang-o3-bounded": 8.863206,
+        "netlisp-llvm-fast": 2.769395,
+        "rust-o3": 1.663837,
+        "netlisp-llvm-safe": 2.881133,
+        "mylang-o3-lto": 2.81768,
+        "mylang-o3": 2.804435
       }
     },
     {
@@ -538,14 +538,14 @@
         "go-fast"
       ],
       "ms": {
-        "netlisp-llvm-safe": 2.978203,
-        "zig-o3": 1.520634,
-        "netlisp-llvm-fast": 2.600914,
-        "rust-o3": 1.622585,
-        "mylang-o3-lto": 37.049244,
-        "mylang-o3": 19.760663,
-        "mylang-o3-bounded": 53.689572,
-        "go-fast": 2.238087
+        "netlisp-llvm-safe": 2.828456,
+        "zig-o3": 1.426392,
+        "netlisp-llvm-fast": 2.950366,
+        "rust-o3": 1.757074,
+        "mylang-o3-lto": 3.037171,
+        "mylang-o3": 3.043383,
+        "mylang-o3-bounded": 9.174858,
+        "go-fast": 2.173811
       }
     },
     {
@@ -562,14 +562,14 @@
         "mylang-o3"
       ],
       "ms": {
-        "zig-o3": 1.491782,
-        "rust-o3": 1.526527,
-        "mylang-o3-lto": 35.818468,
-        "go-fast": 2.312347,
-        "mylang-o3-bounded": 46.651034,
-        "netlisp-llvm-fast": 2.811713,
-        "netlisp-llvm-safe": 2.600877,
-        "mylang-o3": 18.496409
+        "zig-o3": 1.350476,
+        "rust-o3": 1.616436,
+        "mylang-o3-lto": 6.2244,
+        "go-fast": 4.10055,
+        "mylang-o3-bounded": 15.252551,
+        "netlisp-llvm-fast": 3.616157,
+        "netlisp-llvm-safe": 4.125862,
+        "mylang-o3": 3.789864
       }
     },
     {
@@ -586,14 +586,14 @@
         "mylang-o3-bounded"
       ],
       "ms": {
-        "netlisp-llvm-safe": 2.867662,
-        "netlisp-llvm-fast": 2.372875,
-        "rust-o3": 1.570594,
-        "mylang-o3": 18.433136,
-        "zig-o3": 1.722692,
-        "go-fast": 2.156859,
-        "mylang-o3-lto": 38.110667,
-        "mylang-o3-bounded": 47.021762
+        "netlisp-llvm-safe": 4.026517,
+        "netlisp-llvm-fast": 3.668879,
+        "rust-o3": 1.953315,
+        "mylang-o3": 3.865401,
+        "zig-o3": 1.823786,
+        "go-fast": 2.911913,
+        "mylang-o3-lto": 3.925729,
+        "mylang-o3-bounded": 13.617732
       }
     },
     {
@@ -610,14 +610,14 @@
         "mylang-o3-lto"
       ],
       "ms": {
-        "mylang-o3": 19.859264,
-        "go-fast": 2.29787,
-        "netlisp-llvm-safe": 2.801374,
-        "mylang-o3-bounded": 46.128518,
-        "zig-o3": 1.628677,
-        "netlisp-llvm-fast": 2.769054,
-        "rust-o3": 1.641966,
-        "mylang-o3-lto": 36.680349
+        "mylang-o3": 4.097455,
+        "go-fast": 3.102503,
+        "netlisp-llvm-safe": 4.421249,
+        "mylang-o3-bounded": 14.990832,
+        "zig-o3": 1.734852,
+        "netlisp-llvm-fast": 3.619534,
+        "rust-o3": 2.045982,
+        "mylang-o3-lto": 3.890337
       }
     },
     {
@@ -634,14 +634,14 @@
         "mylang-o3-bounded"
       ],
       "ms": {
-        "mylang-o3-lto": 36.250077,
-        "netlisp-llvm-fast": 2.951358,
-        "rust-o3": 1.710992,
-        "netlisp-llvm-safe": 2.713822,
-        "mylang-o3": 18.5963,
-        "zig-o3": 1.469759,
-        "go-fast": 2.106798,
-        "mylang-o3-bounded": 46.003632
+        "mylang-o3-lto": 3.837471,
+        "netlisp-llvm-fast": 3.550294,
+        "rust-o3": 2.150849,
+        "netlisp-llvm-safe": 4.220227,
+        "mylang-o3": 4.140999,
+        "zig-o3": 1.861904,
+        "go-fast": 3.13662,
+        "mylang-o3-bounded": 15.002514
       }
     },
     {
@@ -658,14 +658,14 @@
         "zig-o3"
       ],
       "ms": {
-        "netlisp-llvm-fast": 2.809821,
-        "go-fast": 2.015447,
-        "rust-o3": 1.674632,
-        "mylang-o3-lto": 35.820255,
-        "mylang-o3": 19.414291,
-        "mylang-o3-bounded": 47.47593,
-        "netlisp-llvm-safe": 3.047648,
-        "zig-o3": 1.57108
+        "netlisp-llvm-fast": 3.641949,
+        "go-fast": 2.891934,
+        "rust-o3": 1.873231,
+        "mylang-o3-lto": 3.832805,
+        "mylang-o3": 4.280992,
+        "mylang-o3-bounded": 15.610657,
+        "netlisp-llvm-safe": 4.998601,
+        "zig-o3": 1.748855
       }
     },
     {
@@ -682,14 +682,14 @@
         "netlisp-llvm-safe"
       ],
       "ms": {
-        "zig-o3": 1.491345,
-        "mylang-o3-lto": 36.346972,
-        "mylang-o3": 18.523805,
-        "netlisp-llvm-fast": 2.798841,
-        "mylang-o3-bounded": 46.1749,
-        "rust-o3": 1.878372,
-        "go-fast": 2.155952,
-        "netlisp-llvm-safe": 2.676949
+        "zig-o3": 1.725397,
+        "mylang-o3-lto": 3.783282,
+        "mylang-o3": 3.997019,
+        "netlisp-llvm-fast": 3.628701,
+        "mylang-o3-bounded": 15.219915,
+        "rust-o3": 1.972826,
+        "go-fast": 2.761865,
+        "netlisp-llvm-safe": 4.94048
       }
     },
     {
@@ -706,14 +706,14 @@
         "netlisp-llvm-fast"
       ],
       "ms": {
-        "mylang-o3": 19.159719,
-        "mylang-o3-lto": 38.079946,
-        "zig-o3": 1.671146,
-        "rust-o3": 1.775074,
-        "mylang-o3-bounded": 46.578034,
-        "netlisp-llvm-safe": 2.773717,
-        "go-fast": 2.130164,
-        "netlisp-llvm-fast": 2.546507
+        "mylang-o3": 3.889065,
+        "mylang-o3-lto": 3.854247,
+        "zig-o3": 1.694508,
+        "rust-o3": 1.863287,
+        "mylang-o3-bounded": 15.644335,
+        "netlisp-llvm-safe": 4.024281,
+        "go-fast": 2.922154,
+        "netlisp-llvm-fast": 3.537488
       }
     },
     {
@@ -730,14 +730,14 @@
         "go-fast"
       ],
       "ms": {
-        "netlisp-llvm-safe": 2.74235,
-        "rust-o3": 1.764417,
-        "netlisp-llvm-fast": 2.35625,
-        "mylang-o3-lto": 35.737162,
-        "mylang-o3-bounded": 46.847275,
-        "zig-o3": 1.723532,
-        "mylang-o3": 18.980145,
-        "go-fast": 2.462112
+        "netlisp-llvm-safe": 3.99761,
+        "rust-o3": 1.887104,
+        "netlisp-llvm-fast": 3.462404,
+        "mylang-o3-lto": 3.972694,
+        "mylang-o3-bounded": 15.5574,
+        "zig-o3": 1.707466,
+        "mylang-o3": 3.862157,
+        "go-fast": 2.729347
       }
     },
     {
@@ -754,14 +754,14 @@
         "mylang-o3-lto"
       ],
       "ms": {
-        "rust-o3": 1.571875,
-        "netlisp-llvm-safe": 2.704917,
-        "mylang-o3": 18.53161,
-        "mylang-o3-bounded": 46.772374,
-        "go-fast": 2.398832,
-        "zig-o3": 1.603081,
-        "netlisp-llvm-fast": 2.761655,
-        "mylang-o3-lto": 36.559819
+        "rust-o3": 1.740094,
+        "netlisp-llvm-safe": 4.624703,
+        "mylang-o3": 5.126151,
+        "mylang-o3-bounded": 11.741231,
+        "go-fast": 2.285434,
+        "zig-o3": 1.638454,
+        "netlisp-llvm-fast": 2.88181,
+        "mylang-o3-lto": 3.04765
       }
     },
     {
@@ -778,14 +778,14 @@
         "mylang-o3-lto"
       ],
       "ms": {
-        "netlisp-llvm-fast": 2.660233,
-        "rust-o3": 1.659669,
-        "netlisp-llvm-safe": 2.680307,
-        "zig-o3": 1.495764,
-        "mylang-o3-bounded": 46.172068,
-        "mylang-o3": 19.276061,
-        "go-fast": 2.402667,
-        "mylang-o3-lto": 36.56283
+        "netlisp-llvm-fast": 2.786465,
+        "rust-o3": 1.818283,
+        "netlisp-llvm-safe": 2.885205,
+        "zig-o3": 1.522852,
+        "mylang-o3-bounded": 7.643015,
+        "mylang-o3": 2.690043,
+        "go-fast": 1.997077,
+        "mylang-o3-lto": 2.593569
       }
     },
     {
@@ -802,14 +802,14 @@
         "go-fast"
       ],
       "ms": {
-        "netlisp-llvm-safe": 2.831377,
-        "netlisp-llvm-fast": 2.597358,
-        "rust-o3": 1.586905,
-        "mylang-o3-bounded": 45.459362,
-        "mylang-o3-lto": 38.00786,
-        "mylang-o3": 19.025298,
-        "zig-o3": 1.875602,
-        "go-fast": 2.335488
+        "netlisp-llvm-safe": 2.725168,
+        "netlisp-llvm-fast": 2.660277,
+        "rust-o3": 1.656805,
+        "mylang-o3-bounded": 14.369632,
+        "mylang-o3-lto": 3.789526,
+        "mylang-o3": 3.985604,
+        "zig-o3": 1.943818,
+        "go-fast": 3.037545
       }
     },
     {
@@ -826,14 +826,14 @@
         "mylang-o3"
       ],
       "ms": {
-        "rust-o3": 1.67342,
-        "zig-o3": 1.4269,
-        "netlisp-llvm-safe": 2.695738,
-        "netlisp-llvm-fast": 2.394271,
-        "mylang-o3-bounded": 46.369742,
-        "go-fast": 2.206284,
-        "mylang-o3-lto": 36.562182,
-        "mylang-o3": 19.756575
+        "rust-o3": 1.820095,
+        "zig-o3": 1.597636,
+        "netlisp-llvm-safe": 3.936996,
+        "netlisp-llvm-fast": 3.702021,
+        "mylang-o3-bounded": 15.458307,
+        "go-fast": 3.075992,
+        "mylang-o3-lto": 3.846557,
+        "mylang-o3": 3.824171
       }
     },
     {
@@ -850,14 +850,14 @@
         "netlisp-llvm-safe"
       ],
       "ms": {
-        "mylang-o3": 18.98357,
-        "netlisp-llvm-fast": 2.752173,
-        "zig-o3": 1.385465,
-        "go-fast": 1.944285,
-        "mylang-o3-bounded": 46.29584,
-        "rust-o3": 1.805459,
-        "mylang-o3-lto": 35.886167,
-        "netlisp-llvm-safe": 2.862357
+        "mylang-o3": 3.905434,
+        "netlisp-llvm-fast": 3.551438,
+        "zig-o3": 1.848822,
+        "go-fast": 2.713773,
+        "mylang-o3-bounded": 15.349148,
+        "rust-o3": 1.897695,
+        "mylang-o3-lto": 3.780706,
+        "netlisp-llvm-safe": 3.878917
       }
     },
     {
@@ -874,14 +874,14 @@
         "netlisp-llvm-safe"
       ],
       "ms": {
-        "zig-o3": 1.304361,
-        "mylang-o3-lto": 36.702293,
-        "mylang-o3": 19.567639,
-        "go-fast": 2.221274,
-        "rust-o3": 1.601365,
-        "netlisp-llvm-fast": 2.693562,
-        "mylang-o3-bounded": 47.973256,
-        "netlisp-llvm-safe": 3.235686
+        "zig-o3": 1.681951,
+        "mylang-o3-lto": 3.80609,
+        "mylang-o3": 3.860183,
+        "go-fast": 2.802121,
+        "rust-o3": 1.993525,
+        "netlisp-llvm-fast": 3.401385,
+        "mylang-o3-bounded": 15.697887,
+        "netlisp-llvm-safe": 4.069353
       }
     },
     {
@@ -898,14 +898,14 @@
         "netlisp-llvm-fast"
       ],
       "ms": {
-        "mylang-o3-bounded": 50.383704,
-        "zig-o3": 1.809837,
-        "rust-o3": 1.777602,
-        "mylang-o3-lto": 38.046777,
-        "netlisp-llvm-safe": 2.838421,
-        "mylang-o3": 18.859742,
-        "go-fast": 2.023535,
-        "netlisp-llvm-fast": 2.522952
+        "mylang-o3-bounded": 14.658422,
+        "zig-o3": 1.855628,
+        "rust-o3": 2.063115,
+        "mylang-o3-lto": 3.951167,
+        "netlisp-llvm-safe": 4.059077,
+        "mylang-o3": 4.419837,
+        "go-fast": 3.279391,
+        "netlisp-llvm-fast": 4.176719
       }
     },
     {
@@ -922,14 +922,14 @@
         "zig-o3"
       ],
       "ms": {
-        "mylang-o3-bounded": 46.440861,
-        "mylang-o3-lto": 37.863787,
-        "netlisp-llvm-fast": 2.862159,
-        "rust-o3": 1.875476,
-        "go-fast": 2.042099,
-        "mylang-o3": 18.748546,
-        "netlisp-llvm-safe": 2.887898,
-        "zig-o3": 1.643268
+        "mylang-o3-bounded": 15.027346,
+        "mylang-o3-lto": 4.399941,
+        "netlisp-llvm-fast": 3.735994,
+        "rust-o3": 2.096612,
+        "go-fast": 3.13607,
+        "mylang-o3": 4.194815,
+        "netlisp-llvm-safe": 4.081932,
+        "zig-o3": 1.670667
       }
     },
     {
@@ -946,14 +946,14 @@
         "rust-o3"
       ],
       "ms": {
-        "netlisp-llvm-fast": 2.524509,
-        "netlisp-llvm-safe": 2.726007,
-        "mylang-o3-bounded": 46.497647,
-        "mylang-o3": 19.290923,
-        "zig-o3": 1.673319,
-        "mylang-o3-lto": 39.598878,
-        "go-fast": 2.332284,
-        "rust-o3": 1.788384
+        "netlisp-llvm-fast": 3.625923,
+        "netlisp-llvm-safe": 3.861638,
+        "mylang-o3-bounded": 15.73253,
+        "mylang-o3": 4.14632,
+        "zig-o3": 1.868868,
+        "mylang-o3-lto": 3.961796,
+        "go-fast": 2.980199,
+        "rust-o3": 1.962449
       }
     },
     {
@@ -970,14 +970,14 @@
         "go-fast"
       ],
       "ms": {
-        "mylang-o3": 19.354687,
-        "zig-o3": 1.616806,
-        "netlisp-llvm-safe": 2.761548,
-        "netlisp-llvm-fast": 2.57487,
-        "mylang-o3-bounded": 46.505931,
-        "mylang-o3-lto": 37.703605,
-        "rust-o3": 1.853284,
-        "go-fast": 2.280056
+        "mylang-o3": 4.057299,
+        "zig-o3": 1.706936,
+        "netlisp-llvm-safe": 3.854616,
+        "netlisp-llvm-fast": 3.65639,
+        "mylang-o3-bounded": 16.296336,
+        "mylang-o3-lto": 4.22305,
+        "rust-o3": 1.87775,
+        "go-fast": 2.944135
       }
     },
     {
@@ -994,14 +994,14 @@
         "mylang-o3-bounded"
       ],
       "ms": {
-        "netlisp-llvm-safe": 2.986314,
-        "mylang-o3": 18.561412,
-        "rust-o3": 1.612532,
-        "go-fast": 2.087397,
-        "netlisp-llvm-fast": 2.562574,
-        "zig-o3": 1.435389,
-        "mylang-o3-lto": 35.539806,
-        "mylang-o3-bounded": 46.711965
+        "netlisp-llvm-safe": 4.164924,
+        "mylang-o3": 4.332925,
+        "rust-o3": 1.948189,
+        "go-fast": 2.976767,
+        "netlisp-llvm-fast": 3.783087,
+        "zig-o3": 1.842716,
+        "mylang-o3-lto": 4.170406,
+        "mylang-o3-bounded": 16.401584
       }
     },
     {
@@ -1018,14 +1018,14 @@
         "mylang-o3"
       ],
       "ms": {
-        "mylang-o3-bounded": 46.791063,
-        "rust-o3": 1.722936,
-        "go-fast": 2.204937,
-        "netlisp-llvm-fast": 2.634064,
-        "zig-o3": 1.422473,
-        "mylang-o3-lto": 35.747447,
-        "netlisp-llvm-safe": 2.805753,
-        "mylang-o3": 19.218015
+        "mylang-o3-bounded": 15.251829,
+        "rust-o3": 2.355831,
+        "go-fast": 3.318622,
+        "netlisp-llvm-fast": 4.207046,
+        "zig-o3": 1.805588,
+        "mylang-o3-lto": 3.405193,
+        "netlisp-llvm-safe": 3.280404,
+        "mylang-o3": 3.247515
       }
     },
     {
@@ -1042,14 +1042,14 @@
         "mylang-o3"
       ],
       "ms": {
-        "zig-o3": 1.496465,
-        "rust-o3": 1.6553,
-        "mylang-o3-bounded": 45.604749,
-        "netlisp-llvm-fast": 2.644338,
-        "mylang-o3-lto": 36.505548,
-        "go-fast": 2.316541,
-        "netlisp-llvm-safe": 2.93307,
-        "mylang-o3": 20.961748
+        "zig-o3": 1.753373,
+        "rust-o3": 1.687331,
+        "mylang-o3-bounded": 8.484008,
+        "netlisp-llvm-fast": 2.832645,
+        "mylang-o3-lto": 2.785397,
+        "go-fast": 2.201762,
+        "netlisp-llvm-safe": 2.828882,
+        "mylang-o3": 2.664117
       }
     },
     {
@@ -1066,14 +1066,14 @@
         "mylang-o3-lto"
       ],
       "ms": {
-        "mylang-o3-bounded": 49.703108,
-        "zig-o3": 1.586068,
-        "go-fast": 1.9392,
-        "netlisp-llvm-fast": 2.600216,
-        "netlisp-llvm-safe": 2.637424,
-        "mylang-o3": 18.387305,
-        "rust-o3": 1.76575,
-        "mylang-o3-lto": 36.173432
+        "mylang-o3-bounded": 7.909463,
+        "zig-o3": 1.408891,
+        "go-fast": 2.072647,
+        "netlisp-llvm-fast": 2.596652,
+        "netlisp-llvm-safe": 2.938108,
+        "mylang-o3": 2.923123,
+        "rust-o3": 1.737117,
+        "mylang-o3-lto": 2.932005
       }
     },
     {
@@ -1090,14 +1090,14 @@
         "netlisp-llvm-fast"
       ],
       "ms": {
-        "mylang-o3": 19.73407,
-        "mylang-o3-bounded": 47.231992,
-        "mylang-o3-lto": 39.139141,
-        "netlisp-llvm-safe": 3.080559,
-        "rust-o3": 1.727973,
-        "go-fast": 2.140817,
-        "zig-o3": 1.386556,
-        "netlisp-llvm-fast": 2.701668
+        "mylang-o3": 3.009483,
+        "mylang-o3-bounded": 9.19004,
+        "mylang-o3-lto": 2.999252,
+        "netlisp-llvm-safe": 3.030743,
+        "rust-o3": 1.723924,
+        "go-fast": 2.397356,
+        "zig-o3": 1.612025,
+        "netlisp-llvm-fast": 3.013418
       }
     },
     {
@@ -1114,14 +1114,14 @@
         "mylang-o3-bounded"
       ],
       "ms": {
-        "rust-o3": 1.732004,
-        "netlisp-llvm-safe": 2.761787,
-        "go-fast": 2.259471,
-        "mylang-o3-lto": 38.864156,
-        "zig-o3": 1.795926,
-        "netlisp-llvm-fast": 2.905039,
-        "mylang-o3": 20.819109,
-        "mylang-o3-bounded": 50.601179
+        "rust-o3": 1.76325,
+        "netlisp-llvm-safe": 3.167197,
+        "go-fast": 2.349668,
+        "mylang-o3-lto": 3.031219,
+        "zig-o3": 1.652238,
+        "netlisp-llvm-fast": 2.915405,
+        "mylang-o3": 3.109616,
+        "mylang-o3-bounded": 9.254043
       }
     },
     {
@@ -1138,14 +1138,14 @@
         "go-fast"
       ],
       "ms": {
-        "mylang-o3-lto": 40.128933,
-        "mylang-o3": 18.932416,
-        "mylang-o3-bounded": 45.929336,
-        "netlisp-llvm-fast": 2.896819,
-        "zig-o3": 1.549466,
-        "rust-o3": 1.486676,
-        "netlisp-llvm-safe": 2.507196,
-        "go-fast": 2.069642
+        "mylang-o3-lto": 3.11134,
+        "mylang-o3": 3.128357,
+        "mylang-o3-bounded": 9.174116,
+        "netlisp-llvm-fast": 2.853064,
+        "zig-o3": 1.601556,
+        "rust-o3": 1.783457,
+        "netlisp-llvm-safe": 3.118807,
+        "go-fast": 2.323836
       }
     },
     {
@@ -1162,14 +1162,14 @@
         "netlisp-llvm-fast"
       ],
       "ms": {
-        "rust-o3": 1.546414,
-        "netlisp-llvm-safe": 2.879792,
-        "zig-o3": 1.632155,
-        "go-fast": 2.04058,
-        "mylang-o3": 18.959911,
-        "mylang-o3-lto": 37.358031,
-        "mylang-o3-bounded": 46.893036,
-        "netlisp-llvm-fast": 2.848886
+        "rust-o3": 1.739631,
+        "netlisp-llvm-safe": 3.148001,
+        "zig-o3": 1.616465,
+        "go-fast": 2.300388,
+        "mylang-o3": 3.058947,
+        "mylang-o3-lto": 3.082535,
+        "mylang-o3-bounded": 9.728891,
+        "netlisp-llvm-fast": 3.380827
       }
     },
     {
@@ -1186,14 +1186,14 @@
         "netlisp-llvm-fast"
       ],
       "ms": {
-        "rust-o3": 1.835942,
-        "netlisp-llvm-safe": 2.72217,
-        "mylang-o3-bounded": 45.750441,
-        "zig-o3": 1.597338,
-        "mylang-o3-lto": 37.228984,
-        "mylang-o3": 18.841685,
-        "go-fast": 2.045866,
-        "netlisp-llvm-fast": 2.779751
+        "rust-o3": 1.826945,
+        "netlisp-llvm-safe": 3.393129,
+        "mylang-o3-bounded": 9.861566,
+        "zig-o3": 1.69768,
+        "mylang-o3-lto": 3.178432,
+        "mylang-o3": 2.979876,
+        "go-fast": 2.318863,
+        "netlisp-llvm-fast": 3.072375
       }
     },
     {
@@ -1210,14 +1210,14 @@
         "mylang-o3-lto"
       ],
       "ms": {
-        "netlisp-llvm-safe": 2.909853,
-        "rust-o3": 1.768012,
-        "netlisp-llvm-fast": 2.390484,
-        "mylang-o3": 19.123892,
-        "go-fast": 2.163094,
-        "zig-o3": 1.557564,
-        "mylang-o3-bounded": 46.585683,
-        "mylang-o3-lto": 37.949194
+        "netlisp-llvm-safe": 2.89726,
+        "rust-o3": 1.456787,
+        "netlisp-llvm-fast": 2.626676,
+        "mylang-o3": 2.862735,
+        "go-fast": 2.104931,
+        "zig-o3": 1.354087,
+        "mylang-o3-bounded": 9.048565,
+        "mylang-o3-lto": 3.431508
       }
     },
     {
@@ -1234,14 +1234,14 @@
         "netlisp-llvm-safe"
       ],
       "ms": {
-        "mylang-o3": 19.780276,
-        "mylang-o3-bounded": 49.083116,
-        "netlisp-llvm-fast": 2.814511,
-        "mylang-o3-lto": 37.501848,
-        "go-fast": 2.488435,
-        "zig-o3": 1.498499,
-        "rust-o3": 1.690715,
-        "netlisp-llvm-safe": 2.971326
+        "mylang-o3": 3.044553,
+        "mylang-o3-bounded": 8.811881,
+        "netlisp-llvm-fast": 2.684117,
+        "mylang-o3-lto": 2.838402,
+        "go-fast": 2.296249,
+        "zig-o3": 1.419467,
+        "rust-o3": 1.636919,
+        "netlisp-llvm-safe": 2.9359
       }
     },
     {
@@ -1258,14 +1258,14 @@
         "rust-o3"
       ],
       "ms": {
-        "zig-o3": 1.562438,
-        "mylang-o3-bounded": 46.065927,
-        "mylang-o3-lto": 36.402077,
-        "netlisp-llvm-fast": 2.914764,
-        "mylang-o3": 18.902909,
-        "go-fast": 2.236555,
-        "netlisp-llvm-safe": 2.726892,
-        "rust-o3": 1.676459
+        "zig-o3": 1.418979,
+        "mylang-o3-bounded": 8.851409,
+        "mylang-o3-lto": 3.00873,
+        "netlisp-llvm-fast": 2.725712,
+        "mylang-o3": 2.839996,
+        "go-fast": 2.191401,
+        "netlisp-llvm-safe": 2.900309,
+        "rust-o3": 2.516146
       }
     },
     {
@@ -1282,14 +1282,14 @@
         "netlisp-llvm-safe"
       ],
       "ms": {
-        "zig-o3": 1.583733,
-        "netlisp-llvm-fast": 2.525944,
-        "go-fast": 2.026126,
-        "mylang-o3-bounded": 46.40401,
-        "rust-o3": 1.804306,
-        "mylang-o3-lto": 38.837472,
-        "mylang-o3": 20.390845,
-        "netlisp-llvm-safe": 3.064895
+        "zig-o3": 1.461146,
+        "netlisp-llvm-fast": 2.675813,
+        "go-fast": 2.120989,
+        "mylang-o3-bounded": 8.791824,
+        "rust-o3": 1.436383,
+        "mylang-o3-lto": 2.76855,
+        "mylang-o3": 2.749973,
+        "netlisp-llvm-safe": 2.817096
       }
     },
     {
@@ -1306,14 +1306,14 @@
         "mylang-o3-lto"
       ],
       "ms": {
-        "go-fast": 2.046591,
-        "rust-o3": 1.393493,
-        "netlisp-llvm-safe": 2.619254,
-        "netlisp-llvm-fast": 2.435968,
-        "mylang-o3-bounded": 46.615941,
-        "zig-o3": 1.700068,
-        "mylang-o3": 19.108157,
-        "mylang-o3-lto": 37.148411
+        "go-fast": 2.047597,
+        "rust-o3": 1.443126,
+        "netlisp-llvm-safe": 2.825461,
+        "netlisp-llvm-fast": 2.647735,
+        "mylang-o3-bounded": 8.873845,
+        "zig-o3": 1.503994,
+        "mylang-o3": 2.815738,
+        "mylang-o3-lto": 2.947579
       }
     },
     {
@@ -1330,14 +1330,14 @@
         "zig-o3"
       ],
       "ms": {
-        "go-fast": 2.553636,
-        "netlisp-llvm-fast": 2.6494,
-        "mylang-o3-bounded": 49.062831,
-        "rust-o3": 1.892179,
-        "mylang-o3-lto": 37.072096,
-        "netlisp-llvm-safe": 2.940373,
-        "mylang-o3": 18.917129,
-        "zig-o3": 1.617547
+        "go-fast": 2.4447,
+        "netlisp-llvm-fast": 2.943025,
+        "mylang-o3-bounded": 8.897671,
+        "rust-o3": 1.701156,
+        "mylang-o3-lto": 2.948953,
+        "netlisp-llvm-safe": 3.247322,
+        "mylang-o3": 2.838844,
+        "zig-o3": 1.542669
       }
     },
     {
@@ -1354,14 +1354,14 @@
         "netlisp-llvm-fast"
       ],
       "ms": {
-        "zig-o3": 1.430674,
-        "mylang-o3": 18.964228,
-        "netlisp-llvm-safe": 2.747955,
-        "mylang-o3-bounded": 48.322638,
-        "rust-o3": 1.889931,
-        "mylang-o3-lto": 38.572432,
-        "go-fast": 2.33907,
-        "netlisp-llvm-fast": 2.637056
+        "zig-o3": 1.524799,
+        "mylang-o3": 2.872531,
+        "netlisp-llvm-safe": 2.925596,
+        "mylang-o3-bounded": 8.805743,
+        "rust-o3": 1.905442,
+        "mylang-o3-lto": 2.776302,
+        "go-fast": 2.250188,
+        "netlisp-llvm-fast": 2.968142
       }
     },
     {
@@ -1378,14 +1378,14 @@
         "mylang-o3"
       ],
       "ms": {
-        "go-fast": 2.006462,
-        "zig-o3": 1.485754,
-        "rust-o3": 1.710361,
-        "mylang-o3-lto": 37.049389,
-        "netlisp-llvm-fast": 2.845037,
-        "netlisp-llvm-safe": 2.743034,
-        "mylang-o3-bounded": 46.588799,
-        "mylang-o3": 19.185038
+        "go-fast": 2.256346,
+        "zig-o3": 1.496766,
+        "rust-o3": 1.77775,
+        "mylang-o3-lto": 3.035706,
+        "netlisp-llvm-fast": 2.954865,
+        "netlisp-llvm-safe": 3.130621,
+        "mylang-o3-bounded": 9.70208,
+        "mylang-o3": 3.361901
       }
     },
     {
@@ -1402,14 +1402,14 @@
         "mylang-o3-bounded"
       ],
       "ms": {
-        "go-fast": 2.142446,
-        "mylang-o3": 19.823973,
-        "netlisp-llvm-fast": 2.895902,
-        "zig-o3": 1.650044,
-        "netlisp-llvm-safe": 2.801856,
-        "mylang-o3-lto": 37.634451,
-        "rust-o3": 1.689245,
-        "mylang-o3-bounded": 46.554458
+        "go-fast": 2.394663,
+        "mylang-o3": 4.016737,
+        "netlisp-llvm-fast": 3.088311,
+        "zig-o3": 1.484331,
+        "netlisp-llvm-safe": 3.171136,
+        "mylang-o3-lto": 3.174363,
+        "rust-o3": 1.805237,
+        "mylang-o3-bounded": 9.584602
       }
     },
     {
@@ -1426,14 +1426,14 @@
         "netlisp-llvm-fast"
       ],
       "ms": {
-        "rust-o3": 1.808955,
-        "netlisp-llvm-safe": 2.797395,
-        "go-fast": 2.208617,
-        "mylang-o3-lto": 38.237717,
-        "mylang-o3": 18.801515,
-        "zig-o3": 1.482908,
-        "mylang-o3-bounded": 46.307671,
-        "netlisp-llvm-fast": 2.764253
+        "rust-o3": 1.781262,
+        "netlisp-llvm-safe": 3.49201,
+        "go-fast": 2.381101,
+        "mylang-o3-lto": 3.097705,
+        "mylang-o3": 3.014476,
+        "zig-o3": 1.517975,
+        "mylang-o3-bounded": 9.565026,
+        "netlisp-llvm-fast": 2.792204
       }
     },
     {
@@ -1450,14 +1450,14 @@
         "mylang-o3-bounded"
       ],
       "ms": {
-        "zig-o3": 1.530276,
-        "netlisp-llvm-fast": 2.590357,
-        "go-fast": 2.142136,
-        "netlisp-llvm-safe": 2.626617,
-        "mylang-o3-lto": 36.025925,
-        "rust-o3": 1.590667,
-        "mylang-o3": 18.933156,
-        "mylang-o3-bounded": 46.600852
+        "zig-o3": 1.596779,
+        "netlisp-llvm-fast": 2.734107,
+        "go-fast": 2.180166,
+        "netlisp-llvm-safe": 3.039014,
+        "mylang-o3-lto": 2.99146,
+        "rust-o3": 1.672459,
+        "mylang-o3": 3.00173,
+        "mylang-o3-bounded": 9.04896
       }
     },
     {
@@ -1474,14 +1474,14 @@
         "zig-o3"
       ],
       "ms": {
-        "netlisp-llvm-fast": 2.738293,
-        "netlisp-llvm-safe": 2.607511,
-        "mylang-o3": 19.153319,
-        "mylang-o3-bounded": 46.769797,
-        "mylang-o3-lto": 36.578496,
-        "go-fast": 2.513758,
-        "rust-o3": 1.523741,
-        "zig-o3": 1.314152
+        "netlisp-llvm-fast": 2.899818,
+        "netlisp-llvm-safe": 3.231303,
+        "mylang-o3": 3.101022,
+        "mylang-o3-bounded": 9.688944,
+        "mylang-o3-lto": 3.276504,
+        "go-fast": 2.499657,
+        "rust-o3": 1.70419,
+        "zig-o3": 1.606387
       }
     },
     {
@@ -1498,14 +1498,14 @@
         "go-fast"
       ],
       "ms": {
-        "mylang-o3-lto": 36.915015,
-        "mylang-o3": 18.648733,
-        "zig-o3": 1.843385,
-        "rust-o3": 1.749726,
-        "mylang-o3-bounded": 46.533534,
-        "netlisp-llvm-safe": 2.872114,
-        "netlisp-llvm-fast": 2.620065,
-        "go-fast": 2.143833
+        "mylang-o3-lto": 3.067371,
+        "mylang-o3": 3.193115,
+        "zig-o3": 1.559402,
+        "rust-o3": 1.875762,
+        "mylang-o3-bounded": 9.666975,
+        "netlisp-llvm-safe": 3.200084,
+        "netlisp-llvm-fast": 2.978096,
+        "go-fast": 2.432563
       }
     },
     {
@@ -1522,14 +1522,14 @@
         "go-fast"
       ],
       "ms": {
-        "mylang-o3-bounded": 47.498791,
-        "netlisp-llvm-fast": 2.556682,
-        "netlisp-llvm-safe": 2.740941,
-        "mylang-o3": 19.225283,
-        "zig-o3": 1.848415,
-        "mylang-o3-lto": 39.031914,
-        "rust-o3": 1.912351,
-        "go-fast": 2.019587
+        "mylang-o3-bounded": 9.027344,
+        "netlisp-llvm-fast": 2.872144,
+        "netlisp-llvm-safe": 3.122477,
+        "mylang-o3": 3.180568,
+        "zig-o3": 1.550598,
+        "mylang-o3-lto": 3.055887,
+        "rust-o3": 1.723234,
+        "go-fast": 2.397957
       }
     },
     {
@@ -1546,14 +1546,14 @@
         "zig-o3"
       ],
       "ms": {
-        "go-fast": 1.930747,
-        "mylang-o3-bounded": 46.526199,
-        "netlisp-llvm-safe": 2.857637,
-        "mylang-o3-lto": 36.346557,
-        "rust-o3": 1.6542,
-        "mylang-o3": 19.182928,
-        "netlisp-llvm-fast": 2.809712,
-        "zig-o3": 1.540144
+        "go-fast": 2.371512,
+        "mylang-o3-bounded": 8.900898,
+        "netlisp-llvm-safe": 3.126958,
+        "mylang-o3-lto": 2.991762,
+        "rust-o3": 1.562636,
+        "mylang-o3": 2.98112,
+        "netlisp-llvm-fast": 2.911369,
+        "zig-o3": 1.414667
       }
     },
     {
@@ -1570,14 +1570,14 @@
         "mylang-o3-lto"
       ],
       "ms": {
-        "netlisp-llvm-safe": 2.78814,
-        "mylang-o3-bounded": 46.715458,
-        "mylang-o3": 19.305722,
-        "zig-o3": 1.566376,
-        "netlisp-llvm-fast": 2.674878,
-        "go-fast": 2.164802,
-        "rust-o3": 1.704472,
-        "mylang-o3-lto": 36.447296
+        "netlisp-llvm-safe": 2.849657,
+        "mylang-o3-bounded": 8.881712,
+        "mylang-o3": 2.924859,
+        "zig-o3": 1.46347,
+        "netlisp-llvm-fast": 2.763897,
+        "go-fast": 2.325273,
+        "rust-o3": 1.502758,
+        "mylang-o3-lto": 2.92474
       }
     },
     {
@@ -1594,14 +1594,14 @@
         "zig-o3"
       ],
       "ms": {
-        "rust-o3": 1.811153,
-        "mylang-o3-bounded": 46.249978,
-        "netlisp-llvm-fast": 2.696143,
-        "netlisp-llvm-safe": 2.564494,
-        "mylang-o3": 18.683456,
-        "go-fast": 2.424038,
-        "mylang-o3-lto": 36.682069,
-        "zig-o3": 1.663459
+        "rust-o3": 1.734274,
+        "mylang-o3-bounded": 9.051409,
+        "netlisp-llvm-fast": 2.770696,
+        "netlisp-llvm-safe": 3.034866,
+        "mylang-o3": 2.80616,
+        "go-fast": 2.23113,
+        "mylang-o3-lto": 4.039625,
+        "zig-o3": 1.385398
       }
     },
     {
@@ -1618,14 +1618,14 @@
         "go-fast"
       ],
       "ms": {
-        "zig-o3": 1.408451,
-        "netlisp-llvm-safe": 2.791848,
-        "rust-o3": 1.586046,
-        "netlisp-llvm-fast": 2.48626,
-        "mylang-o3-lto": 36.077201,
-        "mylang-o3": 19.630464,
-        "mylang-o3-bounded": 51.414518,
-        "go-fast": 2.371629
+        "zig-o3": 1.603038,
+        "netlisp-llvm-safe": 2.99917,
+        "rust-o3": 1.651193,
+        "netlisp-llvm-fast": 2.862986,
+        "mylang-o3-lto": 2.943577,
+        "mylang-o3": 2.9411,
+        "mylang-o3-bounded": 8.868453,
+        "go-fast": 2.148763
       }
     },
     {
@@ -1642,14 +1642,14 @@
         "mylang-o3-bounded"
       ],
       "ms": {
-        "rust-o3": 1.63013,
-        "netlisp-llvm-fast": 2.640835,
-        "go-fast": 2.048774,
-        "zig-o3": 1.482369,
-        "mylang-o3-lto": 36.095635,
-        "netlisp-llvm-safe": 3.105265,
-        "mylang-o3": 18.962448,
-        "mylang-o3-bounded": 46.535924
+        "rust-o3": 1.667772,
+        "netlisp-llvm-fast": 2.743212,
+        "go-fast": 2.050174,
+        "zig-o3": 1.389287,
+        "mylang-o3-lto": 2.945795,
+        "netlisp-llvm-safe": 3.045859,
+        "mylang-o3": 2.802736,
+        "mylang-o3-bounded": 9.262391
       }
     },
     {
@@ -1666,14 +1666,14 @@
         "mylang-o3-lto"
       ],
       "ms": {
-        "netlisp-llvm-safe": 2.857802,
-        "rust-o3": 1.551583,
-        "mylang-o3": 18.847408,
-        "go-fast": 2.367409,
-        "netlisp-llvm-fast": 5.018117,
-        "zig-o3": 1.650314,
-        "mylang-o3-bounded": 46.783013,
-        "mylang-o3-lto": 37.758069
+        "netlisp-llvm-safe": 3.125761,
+        "rust-o3": 1.639694,
+        "mylang-o3": 2.931891,
+        "go-fast": 2.240768,
+        "netlisp-llvm-fast": 2.903062,
+        "zig-o3": 1.440206,
+        "mylang-o3-bounded": 9.275509,
+        "mylang-o3-lto": 3.072419
       }
     },
     {
@@ -1690,14 +1690,14 @@
         "mylang-o3-bounded"
       ],
       "ms": {
-        "netlisp-llvm-safe": 2.878272,
-        "zig-o3": 1.565608,
-        "mylang-o3": 19.114521,
-        "rust-o3": 1.719956,
-        "mylang-o3-lto": 39.609911,
-        "netlisp-llvm-fast": 2.557966,
-        "go-fast": 2.140414,
-        "mylang-o3-bounded": 46.043032
+        "netlisp-llvm-safe": 3.18385,
+        "zig-o3": 1.575812,
+        "mylang-o3": 3.195053,
+        "rust-o3": 1.8924,
+        "mylang-o3-lto": 4.136379,
+        "netlisp-llvm-fast": 3.006259,
+        "go-fast": 2.309174,
+        "mylang-o3-bounded": 9.220755
       }
     },
     {
@@ -1714,14 +1714,14 @@
         "zig-o3"
       ],
       "ms": {
-        "rust-o3": 1.790707,
-        "mylang-o3-bounded": 46.370933,
-        "mylang-o3": 19.482405,
-        "netlisp-llvm-safe": 2.990375,
-        "netlisp-llvm-fast": 2.724683,
-        "go-fast": 2.006634,
-        "mylang-o3-lto": 36.05623,
-        "zig-o3": 1.476931
+        "rust-o3": 1.845842,
+        "mylang-o3-bounded": 9.935395,
+        "mylang-o3": 3.583579,
+        "netlisp-llvm-safe": 3.481015,
+        "netlisp-llvm-fast": 3.126964,
+        "go-fast": 2.519912,
+        "mylang-o3-lto": 4.29304,
+        "zig-o3": 1.615627
       }
     },
     {
@@ -1738,14 +1738,14 @@
         "mylang-o3-lto"
       ],
       "ms": {
-        "go-fast": 2.284181,
-        "netlisp-llvm-safe": 2.683235,
-        "zig-o3": 1.401064,
-        "rust-o3": 1.513373,
-        "netlisp-llvm-fast": 2.471719,
-        "mylang-o3": 18.867044,
-        "mylang-o3-bounded": 46.998692,
-        "mylang-o3-lto": 37.172673
+        "go-fast": 2.384537,
+        "netlisp-llvm-safe": 3.154532,
+        "zig-o3": 1.575123,
+        "rust-o3": 1.753677,
+        "netlisp-llvm-fast": 2.743765,
+        "mylang-o3": 2.942246,
+        "mylang-o3-bounded": 8.800506,
+        "mylang-o3-lto": 2.895704
       }
     },
     {
@@ -1762,14 +1762,14 @@
         "mylang-o3-bounded"
       ],
       "ms": {
-        "mylang-o3": 18.766796,
-        "netlisp-llvm-fast": 3.121303,
-        "netlisp-llvm-safe": 2.931188,
-        "rust-o3": 1.773322,
-        "mylang-o3-lto": 38.662033,
-        "go-fast": 2.369001,
-        "zig-o3": 1.458807,
-        "mylang-o3-bounded": 49.003727
+        "mylang-o3": 2.886419,
+        "netlisp-llvm-fast": 2.643968,
+        "netlisp-llvm-safe": 2.929732,
+        "rust-o3": 1.645506,
+        "mylang-o3-lto": 2.928586,
+        "go-fast": 2.29466,
+        "zig-o3": 1.388949,
+        "mylang-o3-bounded": 9.019623
       }
     },
     {
@@ -1786,14 +1786,14 @@
         "zig-o3"
       ],
       "ms": {
-        "mylang-o3-bounded": 46.81096,
-        "mylang-o3": 19.217709,
-        "netlisp-llvm-safe": 3.039685,
-        "netlisp-llvm-fast": 2.662455,
-        "go-fast": 2.068666,
-        "mylang-o3-lto": 36.428131,
-        "rust-o3": 1.808501,
-        "zig-o3": 1.538246
+        "mylang-o3-bounded": 8.913323,
+        "mylang-o3": 2.956368,
+        "netlisp-llvm-safe": 2.964225,
+        "netlisp-llvm-fast": 2.868863,
+        "go-fast": 2.253008,
+        "mylang-o3-lto": 2.948559,
+        "rust-o3": 1.561058,
+        "zig-o3": 1.542586
       }
     },
     {
@@ -1810,14 +1810,14 @@
         "netlisp-llvm-safe"
       ],
       "ms": {
-        "rust-o3": 1.60544,
-        "mylang-o3": 18.047605,
-        "zig-o3": 1.529885,
-        "mylang-o3-bounded": 46.561063,
-        "go-fast": 2.04748,
-        "netlisp-llvm-fast": 2.769111,
-        "mylang-o3-lto": 36.254317,
-        "netlisp-llvm-safe": 3.082062
+        "rust-o3": 1.637301,
+        "mylang-o3": 2.970507,
+        "zig-o3": 1.483703,
+        "mylang-o3-bounded": 8.948125,
+        "go-fast": 2.210384,
+        "netlisp-llvm-fast": 2.733147,
+        "mylang-o3-lto": 2.887061,
+        "netlisp-llvm-safe": 3.134998
       }
     },
     {
@@ -1834,14 +1834,14 @@
         "mylang-o3-bounded"
       ],
       "ms": {
-        "mylang-o3": 18.883591,
-        "zig-o3": 1.473698,
-        "mylang-o3-lto": 36.863741,
-        "go-fast": 2.422184,
-        "rust-o3": 1.679011,
-        "netlisp-llvm-fast": 2.552241,
-        "netlisp-llvm-safe": 2.711722,
-        "mylang-o3-bounded": 46.141162
+        "mylang-o3": 3.021702,
+        "zig-o3": 1.570044,
+        "mylang-o3-lto": 2.952261,
+        "go-fast": 2.261402,
+        "rust-o3": 1.627628,
+        "netlisp-llvm-fast": 2.933812,
+        "netlisp-llvm-safe": 3.188828,
+        "mylang-o3-bounded": 9.49496
       }
     },
     {
@@ -1858,14 +1858,14 @@
         "mylang-o3-lto"
       ],
       "ms": {
-        "netlisp-llvm-safe": 2.817792,
-        "rust-o3": 1.608463,
-        "mylang-o3-bounded": 46.881678,
-        "go-fast": 2.146048,
-        "zig-o3": 1.395461,
-        "mylang-o3": 19.152272,
-        "netlisp-llvm-fast": 2.678363,
-        "mylang-o3-lto": 36.994714
+        "netlisp-llvm-safe": 3.201981,
+        "rust-o3": 1.838038,
+        "mylang-o3-bounded": 9.242397,
+        "go-fast": 2.312498,
+        "zig-o3": 1.402172,
+        "mylang-o3": 3.144584,
+        "netlisp-llvm-fast": 2.85055,
+        "mylang-o3-lto": 4.166224
       }
     },
     {
@@ -1882,14 +1882,14 @@
         "netlisp-llvm-fast"
       ],
       "ms": {
-        "zig-o3": 1.692957,
-        "netlisp-llvm-safe": 2.942316,
-        "mylang-o3-lto": 36.612673,
-        "mylang-o3-bounded": 46.727464,
-        "go-fast": 2.240967,
-        "rust-o3": 1.548211,
-        "mylang-o3": 19.146758,
-        "netlisp-llvm-fast": 2.682827
+        "zig-o3": 1.622552,
+        "netlisp-llvm-safe": 3.096736,
+        "mylang-o3-lto": 2.971473,
+        "mylang-o3-bounded": 9.326228,
+        "go-fast": 2.38585,
+        "rust-o3": 1.80348,
+        "mylang-o3": 3.271918,
+        "netlisp-llvm-fast": 3.085978
       }
     },
     {
@@ -1906,14 +1906,14 @@
         "rust-o3"
       ],
       "ms": {
-        "mylang-o3-bounded": 46.559927,
-        "go-fast": 2.371811,
-        "mylang-o3": 18.635016,
-        "mylang-o3-lto": 36.486458,
-        "netlisp-llvm-fast": 2.779998,
-        "zig-o3": 1.579759,
-        "netlisp-llvm-safe": 2.744037,
-        "rust-o3": 1.639368
+        "mylang-o3-bounded": 9.826207,
+        "go-fast": 2.24974,
+        "mylang-o3": 3.065137,
+        "mylang-o3-lto": 2.955086,
+        "netlisp-llvm-fast": 2.818197,
+        "zig-o3": 1.473285,
+        "netlisp-llvm-safe": 3.048282,
+        "rust-o3": 1.65525
       }
     },
     {
@@ -1930,14 +1930,14 @@
         "netlisp-llvm-fast"
       ],
       "ms": {
-        "mylang-o3-lto": 36.084769,
-        "netlisp-llvm-safe": 2.97412,
-        "zig-o3": 1.546625,
-        "mylang-o3": 19.351174,
-        "mylang-o3-bounded": 50.399143,
-        "rust-o3": 1.954274,
-        "go-fast": 2.449886,
-        "netlisp-llvm-fast": 2.902868
+        "mylang-o3-lto": 2.881544,
+        "netlisp-llvm-safe": 2.989388,
+        "zig-o3": 1.531303,
+        "mylang-o3": 2.955854,
+        "mylang-o3-bounded": 8.942282,
+        "rust-o3": 1.744192,
+        "go-fast": 2.32674,
+        "netlisp-llvm-fast": 2.721802
       }
     },
     {
@@ -1954,14 +1954,14 @@
         "netlisp-llvm-fast"
       ],
       "ms": {
-        "go-fast": 2.232855,
-        "rust-o3": 1.605692,
-        "mylang-o3": 18.379753,
-        "mylang-o3-lto": 37.120007,
-        "netlisp-llvm-safe": 3.222698,
-        "zig-o3": 1.448372,
-        "mylang-o3-bounded": 46.690021,
-        "netlisp-llvm-fast": 2.644736
+        "go-fast": 2.192523,
+        "rust-o3": 1.661235,
+        "mylang-o3": 2.896922,
+        "mylang-o3-lto": 4.020705,
+        "netlisp-llvm-safe": 3.037758,
+        "zig-o3": 1.662504,
+        "mylang-o3-bounded": 8.867332,
+        "netlisp-llvm-fast": 2.866208
       }
     },
     {
@@ -1978,14 +1978,14 @@
         "go-fast"
       ],
       "ms": {
-        "zig-o3": 1.560377,
-        "mylang-o3-bounded": 47.0333,
-        "mylang-o3-lto": 38.63479,
-        "netlisp-llvm-safe": 2.966146,
-        "rust-o3": 1.667805,
-        "mylang-o3": 19.751082,
-        "netlisp-llvm-fast": 2.541434,
-        "go-fast": 1.952558
+        "zig-o3": 1.527705,
+        "mylang-o3-bounded": 8.894237,
+        "mylang-o3-lto": 2.954162,
+        "netlisp-llvm-safe": 3.091809,
+        "rust-o3": 1.718986,
+        "mylang-o3": 2.951247,
+        "netlisp-llvm-fast": 2.91039,
+        "go-fast": 2.245266
       }
     },
     {
@@ -2002,14 +2002,14 @@
         "mylang-o3-lto"
       ],
       "ms": {
-        "rust-o3": 1.485378,
-        "mylang-o3": 18.127443,
-        "netlisp-llvm-fast": 2.849133,
-        "netlisp-llvm-safe": 2.725416,
-        "go-fast": 2.019783,
-        "mylang-o3-bounded": 46.308607,
-        "zig-o3": 1.720155,
-        "mylang-o3-lto": 41.687294
+        "rust-o3": 1.59814,
+        "mylang-o3": 2.982068,
+        "netlisp-llvm-fast": 2.979413,
+        "netlisp-llvm-safe": 3.194344,
+        "go-fast": 2.387933,
+        "mylang-o3-bounded": 10.037349,
+        "zig-o3": 1.531298,
+        "mylang-o3-lto": 3.151079
       }
     },
     {
@@ -2026,14 +2026,14 @@
         "zig-o3"
       ],
       "ms": {
-        "mylang-o3-lto": 36.261271,
-        "mylang-o3": 19.313851,
-        "mylang-o3-bounded": 46.761975,
-        "netlisp-llvm-safe": 2.833317,
-        "go-fast": 2.090042,
-        "rust-o3": 1.553397,
-        "netlisp-llvm-fast": 2.528672,
-        "zig-o3": 1.342773
+        "mylang-o3-lto": 3.13584,
+        "mylang-o3": 3.077912,
+        "mylang-o3-bounded": 9.292983,
+        "netlisp-llvm-safe": 3.170907,
+        "go-fast": 2.146398,
+        "rust-o3": 1.604979,
+        "netlisp-llvm-fast": 2.819499,
+        "zig-o3": 1.396624
       }
     },
     {
@@ -2050,14 +2050,14 @@
         "go-fast"
       ],
       "ms": {
-        "netlisp-llvm-safe": 2.56571,
-        "mylang-o3-bounded": 46.56563,
-        "rust-o3": 1.831713,
-        "netlisp-llvm-fast": 2.597685,
-        "mylang-o3": 18.785591,
-        "mylang-o3-lto": 37.800836,
-        "zig-o3": 1.579958,
-        "go-fast": 2.073337
+        "netlisp-llvm-safe": 2.754165,
+        "mylang-o3-bounded": 9.071832,
+        "rust-o3": 1.95692,
+        "netlisp-llvm-fast": 2.958332,
+        "mylang-o3": 3.096507,
+        "mylang-o3-lto": 3.01329,
+        "zig-o3": 1.597013,
+        "go-fast": 2.269883
       }
     },
     {
@@ -2074,14 +2074,14 @@
         "zig-o3"
       ],
       "ms": {
-        "mylang-o3-bounded": 45.664084,
-        "go-fast": 2.204713,
-        "rust-o3": 1.71984,
-        "mylang-o3-lto": 36.177498,
-        "mylang-o3": 19.473341,
-        "netlisp-llvm-safe": 2.866644,
-        "netlisp-llvm-fast": 2.65558,
-        "zig-o3": 1.572825
+        "mylang-o3-bounded": 9.093692,
+        "go-fast": 2.570755,
+        "rust-o3": 1.611771,
+        "mylang-o3-lto": 2.89306,
+        "mylang-o3": 2.981266,
+        "netlisp-llvm-safe": 3.045647,
+        "netlisp-llvm-fast": 2.875875,
+        "zig-o3": 1.445194
       }
     },
     {
@@ -2098,14 +2098,14 @@
         "mylang-o3-bounded"
       ],
       "ms": {
-        "zig-o3": 1.332511,
-        "netlisp-llvm-safe": 2.64117,
-        "mylang-o3": 18.914234,
-        "mylang-o3-lto": 36.869535,
-        "netlisp-llvm-fast": 2.756276,
-        "go-fast": 2.173551,
-        "rust-o3": 1.792915,
-        "mylang-o3-bounded": 46.162507
+        "zig-o3": 1.475989,
+        "netlisp-llvm-safe": 2.832158,
+        "mylang-o3": 2.811781,
+        "mylang-o3-lto": 3.775688,
+        "netlisp-llvm-fast": 2.686468,
+        "go-fast": 2.077332,
+        "rust-o3": 1.690212,
+        "mylang-o3-bounded": 8.78418
       }
     },
     {
@@ -2122,14 +2122,14 @@
         "zig-o3"
       ],
       "ms": {
-        "rust-o3": 1.827339,
-        "mylang-o3-bounded": 48.560503,
-        "netlisp-llvm-fast": 2.800664,
-        "netlisp-llvm-safe": 2.838564,
-        "mylang-o3": 20.354574,
-        "go-fast": 2.234024,
-        "mylang-o3-lto": 37.035541,
-        "zig-o3": 1.567327
+        "rust-o3": 1.721927,
+        "mylang-o3-bounded": 8.509874,
+        "netlisp-llvm-fast": 2.85619,
+        "netlisp-llvm-safe": 3.049229,
+        "mylang-o3": 3.081798,
+        "go-fast": 2.437054,
+        "mylang-o3-lto": 3.071814,
+        "zig-o3": 1.59039
       }
     },
     {
@@ -2146,14 +2146,14 @@
         "rust-o3"
       ],
       "ms": {
-        "netlisp-llvm-fast": 2.694874,
-        "zig-o3": 1.351113,
-        "mylang-o3": 18.396871,
-        "go-fast": 2.183554,
-        "mylang-o3-lto": 38.146664,
-        "mylang-o3-bounded": 46.575259,
-        "netlisp-llvm-safe": 3.086392,
-        "rust-o3": 1.694945
+        "netlisp-llvm-fast": 3.981186,
+        "zig-o3": 1.584361,
+        "mylang-o3": 3.148662,
+        "go-fast": 2.263111,
+        "mylang-o3-lto": 3.090298,
+        "mylang-o3-bounded": 9.257817,
+        "netlisp-llvm-safe": 3.148161,
+        "rust-o3": 1.679336
       }
     },
     {
@@ -2170,14 +2170,14 @@
         "rust-o3"
       ],
       "ms": {
-        "go-fast": 2.221925,
-        "zig-o3": 1.377041,
-        "netlisp-llvm-fast": 2.660244,
-        "mylang-o3": 20.284144,
-        "mylang-o3-bounded": 49.403996,
-        "netlisp-llvm-safe": 2.864232,
-        "mylang-o3-lto": 37.45563,
-        "rust-o3": 1.765713
+        "go-fast": 2.385868,
+        "zig-o3": 1.446564,
+        "netlisp-llvm-fast": 2.823782,
+        "mylang-o3": 2.871877,
+        "mylang-o3-bounded": 9.172502,
+        "netlisp-llvm-safe": 3.222557,
+        "mylang-o3-lto": 3.157376,
+        "rust-o3": 1.89925
       }
     },
     {
@@ -2194,14 +2194,14 @@
         "netlisp-llvm-safe"
       ],
       "ms": {
-        "go-fast": 2.094487,
-        "netlisp-llvm-fast": 2.572412,
-        "mylang-o3": 18.437521,
-        "rust-o3": 1.845313,
-        "mylang-o3-lto": 36.768305,
-        "mylang-o3-bounded": 46.914061,
-        "zig-o3": 1.606502,
-        "netlisp-llvm-safe": 2.828462
+        "go-fast": 2.527823,
+        "netlisp-llvm-fast": 3.107617,
+        "mylang-o3": 3.138476,
+        "rust-o3": 1.645102,
+        "mylang-o3-lto": 3.094188,
+        "mylang-o3-bounded": 9.583254,
+        "zig-o3": 1.680787,
+        "netlisp-llvm-safe": 3.352055
       }
     },
     {
@@ -2218,14 +2218,14 @@
         "mylang-o3"
       ],
       "ms": {
-        "mylang-o3-bounded": 46.553947,
-        "go-fast": 2.297531,
-        "netlisp-llvm-safe": 2.790257,
-        "mylang-o3-lto": 38.239445,
-        "rust-o3": 1.94295,
-        "netlisp-llvm-fast": 2.859812,
-        "zig-o3": 1.55402,
-        "mylang-o3": 21.129042
+        "mylang-o3-bounded": 9.596073,
+        "go-fast": 2.541264,
+        "netlisp-llvm-safe": 3.200702,
+        "mylang-o3-lto": 3.209888,
+        "rust-o3": 1.896353,
+        "netlisp-llvm-fast": 3.159442,
+        "zig-o3": 1.619201,
+        "mylang-o3": 3.062989
       }
     },
     {
@@ -2242,14 +2242,14 @@
         "rust-o3"
       ],
       "ms": {
-        "mylang-o3": 21.955517,
-        "mylang-o3-lto": 41.768611,
-        "go-fast": 2.300891,
-        "netlisp-llvm-fast": 2.608087,
-        "zig-o3": 1.483132,
-        "mylang-o3-bounded": 47.266978,
-        "netlisp-llvm-safe": 2.998389,
-        "rust-o3": 1.680077
+        "mylang-o3": 3.20946,
+        "mylang-o3-lto": 3.234291,
+        "go-fast": 2.422103,
+        "netlisp-llvm-fast": 2.864524,
+        "zig-o3": 1.435974,
+        "mylang-o3-bounded": 9.59614,
+        "netlisp-llvm-safe": 3.328993,
+        "rust-o3": 1.860356
       }
     },
     {
@@ -2266,14 +2266,14 @@
         "mylang-o3-bounded"
       ],
       "ms": {
-        "netlisp-llvm-fast": 2.660742,
-        "go-fast": 2.398428,
-        "mylang-o3": 19.572765,
-        "zig-o3": 1.519552,
-        "mylang-o3-lto": 39.341824,
-        "rust-o3": 1.897092,
-        "netlisp-llvm-safe": 3.016107,
-        "mylang-o3-bounded": 49.740273
+        "netlisp-llvm-fast": 2.868627,
+        "go-fast": 2.358617,
+        "mylang-o3": 3.16056,
+        "zig-o3": 1.451171,
+        "mylang-o3-lto": 2.960918,
+        "rust-o3": 1.740674,
+        "netlisp-llvm-safe": 3.06395,
+        "mylang-o3-bounded": 9.415628
       }
     },
     {
@@ -2290,14 +2290,14 @@
         "rust-o3"
       ],
       "ms": {
-        "zig-o3": 1.628972,
-        "netlisp-llvm-fast": 2.863371,
-        "mylang-o3-bounded": 45.90542,
-        "mylang-o3": 19.71831,
-        "mylang-o3-lto": 37.572034,
-        "go-fast": 2.474486,
-        "netlisp-llvm-safe": 3.031927,
-        "rust-o3": 1.816496
+        "zig-o3": 1.654856,
+        "netlisp-llvm-fast": 2.994321,
+        "mylang-o3-bounded": 9.807283,
+        "mylang-o3": 3.209061,
+        "mylang-o3-lto": 3.175964,
+        "go-fast": 2.47598,
+        "netlisp-llvm-safe": 3.355469,
+        "rust-o3": 1.701436
       }
     },
     {
@@ -2314,14 +2314,14 @@
         "netlisp-llvm-safe"
       ],
       "ms": {
-        "mylang-o3": 18.966819,
-        "zig-o3": 1.646077,
-        "netlisp-llvm-fast": 2.665893,
-        "rust-o3": 1.777437,
-        "mylang-o3-lto": 37.371012,
-        "mylang-o3-bounded": 46.896222,
-        "go-fast": 2.378212,
-        "netlisp-llvm-safe": 2.931324
+        "mylang-o3": 3.053245,
+        "zig-o3": 1.622846,
+        "netlisp-llvm-fast": 2.915872,
+        "rust-o3": 1.738847,
+        "mylang-o3-lto": 4.131445,
+        "mylang-o3-bounded": 9.663758,
+        "go-fast": 2.557705,
+        "netlisp-llvm-safe": 3.14776
       }
     },
     {
@@ -2338,14 +2338,14 @@
         "go-fast"
       ],
       "ms": {
-        "mylang-o3-bounded": 46.680476,
-        "zig-o3": 1.578799,
-        "mylang-o3-lto": 38.122317,
-        "netlisp-llvm-fast": 3.031232,
-        "rust-o3": 1.875057,
-        "netlisp-llvm-safe": 2.891312,
-        "mylang-o3": 19.256885,
-        "go-fast": 2.355657
+        "mylang-o3-bounded": 8.967375,
+        "zig-o3": 1.539568,
+        "mylang-o3-lto": 2.791665,
+        "netlisp-llvm-fast": 2.799563,
+        "rust-o3": 1.655974,
+        "netlisp-llvm-safe": 3.048025,
+        "mylang-o3": 2.932308,
+        "go-fast": 2.213872
       }
     },
     {
@@ -2362,14 +2362,14 @@
         "zig-o3"
       ],
       "ms": {
-        "mylang-o3": 21.001334,
-        "netlisp-llvm-safe": 2.848627,
-        "go-fast": 2.222571,
-        "netlisp-llvm-fast": 2.712856,
-        "mylang-o3-lto": 38.852598,
-        "rust-o3": 2.013158,
-        "mylang-o3-bounded": 47.107997,
-        "zig-o3": 1.792616
+        "mylang-o3": 3.067967,
+        "netlisp-llvm-safe": 3.066448,
+        "go-fast": 2.227498,
+        "netlisp-llvm-fast": 2.737899,
+        "mylang-o3-lto": 2.994327,
+        "rust-o3": 1.629118,
+        "mylang-o3-bounded": 8.942768,
+        "zig-o3": 1.568505
       }
     },
     {
@@ -2386,14 +2386,14 @@
         "rust-o3"
       ],
       "ms": {
-        "netlisp-llvm-safe": 2.894977,
-        "mylang-o3-lto": 35.859861,
-        "go-fast": 2.35829,
-        "netlisp-llvm-fast": 2.549662,
-        "mylang-o3": 18.725941,
-        "mylang-o3-bounded": 47.419521,
-        "zig-o3": 1.62732,
-        "rust-o3": 1.659461
+        "netlisp-llvm-safe": 3.044603,
+        "mylang-o3-lto": 2.936847,
+        "go-fast": 2.107661,
+        "netlisp-llvm-fast": 2.96706,
+        "mylang-o3": 3.182233,
+        "mylang-o3-bounded": 8.852653,
+        "zig-o3": 1.53174,
+        "rust-o3": 1.723907
       }
     },
     {
@@ -2410,14 +2410,14 @@
         "mylang-o3"
       ],
       "ms": {
-        "mylang-o3-bounded": 46.25599,
-        "netlisp-llvm-safe": 2.950396,
-        "zig-o3": 1.365754,
-        "netlisp-llvm-fast": 2.571462,
-        "rust-o3": 1.441863,
-        "go-fast": 1.87224,
-        "mylang-o3-lto": 37.26891,
-        "mylang-o3": 19.125046
+        "mylang-o3-bounded": 8.864864,
+        "netlisp-llvm-safe": 3.032734,
+        "zig-o3": 1.551569,
+        "netlisp-llvm-fast": 2.814144,
+        "rust-o3": 1.825192,
+        "go-fast": 2.447972,
+        "mylang-o3-lto": 3.162126,
+        "mylang-o3": 3.200921
       }
     },
     {
@@ -2434,14 +2434,14 @@
         "netlisp-llvm-fast"
       ],
       "ms": {
-        "netlisp-llvm-safe": 2.975297,
-        "mylang-o3": 19.308082,
-        "rust-o3": 1.723227,
-        "go-fast": 2.004007,
-        "zig-o3": 1.373819,
-        "mylang-o3-lto": 39.759903,
-        "mylang-o3-bounded": 48.584647,
-        "netlisp-llvm-fast": 3.109366
+        "netlisp-llvm-safe": 3.236517,
+        "mylang-o3": 2.959237,
+        "rust-o3": 1.688613,
+        "go-fast": 2.22313,
+        "zig-o3": 1.491927,
+        "mylang-o3-lto": 2.879167,
+        "mylang-o3-bounded": 8.893302,
+        "netlisp-llvm-fast": 2.830906
       }
     },
     {
@@ -2458,14 +2458,14 @@
         "mylang-o3-bounded"
       ],
       "ms": {
-        "zig-o3": 1.698207,
-        "mylang-o3": 21.047241,
-        "rust-o3": 1.806879,
-        "netlisp-llvm-safe": 2.987423,
-        "netlisp-llvm-fast": 2.809039,
-        "mylang-o3-lto": 40.861589,
-        "go-fast": 2.369136,
-        "mylang-o3-bounded": 47.582133
+        "zig-o3": 1.456897,
+        "mylang-o3": 3.035845,
+        "rust-o3": 1.740266,
+        "netlisp-llvm-safe": 3.196622,
+        "netlisp-llvm-fast": 2.920279,
+        "mylang-o3-lto": 3.017235,
+        "go-fast": 2.357342,
+        "mylang-o3-bounded": 9.227789
       }
     },
     {
@@ -2482,14 +2482,14 @@
         "go-fast"
       ],
       "ms": {
-        "mylang-o3": 19.339994,
-        "mylang-o3-lto": 37.830818,
-        "netlisp-llvm-fast": 3.026723,
-        "netlisp-llvm-safe": 2.956755,
-        "rust-o3": 1.61783,
-        "mylang-o3-bounded": 46.717196,
-        "zig-o3": 1.807901,
-        "go-fast": 2.132768
+        "mylang-o3": 3.075984,
+        "mylang-o3-lto": 2.777372,
+        "netlisp-llvm-fast": 2.869071,
+        "netlisp-llvm-safe": 3.414243,
+        "rust-o3": 1.736424,
+        "mylang-o3-bounded": 9.2208,
+        "zig-o3": 1.506767,
+        "go-fast": 2.263108
       }
     },
     {
@@ -2506,14 +2506,14 @@
         "rust-o3"
       ],
       "ms": {
-        "mylang-o3-bounded": 46.326035,
-        "mylang-o3-lto": 37.441267,
-        "zig-o3": 1.59946,
-        "netlisp-llvm-safe": 2.873045,
-        "netlisp-llvm-fast": 2.679379,
-        "mylang-o3": 18.959116,
-        "go-fast": 2.375854,
-        "rust-o3": 1.752384
+        "mylang-o3-bounded": 9.165203,
+        "mylang-o3-lto": 3.190866,
+        "zig-o3": 1.528025,
+        "netlisp-llvm-safe": 3.094107,
+        "netlisp-llvm-fast": 2.990816,
+        "mylang-o3": 3.097376,
+        "go-fast": 2.480191,
+        "rust-o3": 1.828549
       }
     },
     {
@@ -2530,14 +2530,14 @@
         "mylang-o3"
       ],
       "ms": {
-        "zig-o3": 1.467895,
-        "go-fast": 1.971364,
-        "rust-o3": 1.671996,
-        "netlisp-llvm-fast": 2.704892,
-        "netlisp-llvm-safe": 2.872471,
-        "mylang-o3-lto": 39.262105,
-        "mylang-o3-bounded": 48.654019,
-        "mylang-o3": 19.589293
+        "zig-o3": 1.701078,
+        "go-fast": 2.357181,
+        "rust-o3": 1.738089,
+        "netlisp-llvm-fast": 3.115357,
+        "netlisp-llvm-safe": 3.188921,
+        "mylang-o3-lto": 3.084417,
+        "mylang-o3-bounded": 9.040366,
+        "mylang-o3": 3.155636
       }
     },
     {
@@ -2554,14 +2554,14 @@
         "rust-o3"
       ],
       "ms": {
-        "zig-o3": 1.638993,
-        "netlisp-llvm-fast": 2.652117,
-        "go-fast": 2.164895,
-        "mylang-o3-lto": 36.599738,
-        "mylang-o3": 19.488957,
-        "netlisp-llvm-safe": 2.734439,
-        "mylang-o3-bounded": 46.857798,
-        "rust-o3": 1.920932
+        "zig-o3": 1.664731,
+        "netlisp-llvm-fast": 2.961307,
+        "go-fast": 2.424513,
+        "mylang-o3-lto": 3.255306,
+        "mylang-o3": 3.043658,
+        "netlisp-llvm-safe": 3.276946,
+        "mylang-o3-bounded": 9.318119,
+        "rust-o3": 1.751534
       }
     },
     {
@@ -2578,14 +2578,14 @@
         "mylang-o3-lto"
       ],
       "ms": {
-        "mylang-o3-bounded": 46.451501,
-        "rust-o3": 1.83529,
-        "netlisp-llvm-fast": 2.673924,
-        "netlisp-llvm-safe": 2.642486,
-        "mylang-o3": 19.465983,
-        "zig-o3": 1.449376,
-        "go-fast": 2.28234,
-        "mylang-o3-lto": 40.043312
+        "mylang-o3-bounded": 9.211278,
+        "rust-o3": 1.689012,
+        "netlisp-llvm-fast": 2.831207,
+        "netlisp-llvm-safe": 3.067328,
+        "mylang-o3": 2.985238,
+        "zig-o3": 1.587294,
+        "go-fast": 2.215625,
+        "mylang-o3-lto": 2.93698
       }
     },
     {
@@ -2602,14 +2602,14 @@
         "mylang-o3"
       ],
       "ms": {
-        "go-fast": 2.287033,
-        "mylang-o3-lto": 37.84284,
-        "netlisp-llvm-safe": 3.216442,
-        "netlisp-llvm-fast": 2.72502,
-        "rust-o3": 1.688018,
-        "zig-o3": 1.447463,
-        "mylang-o3-bounded": 46.919851,
-        "mylang-o3": 19.194289
+        "go-fast": 2.163134,
+        "mylang-o3-lto": 2.936614,
+        "netlisp-llvm-safe": 2.935705,
+        "netlisp-llvm-fast": 2.600382,
+        "rust-o3": 1.545981,
+        "zig-o3": 1.436004,
+        "mylang-o3-bounded": 9.196538,
+        "mylang-o3": 2.856587
       }
     },
     {
@@ -2626,14 +2626,14 @@
         "go-fast"
       ],
       "ms": {
-        "zig-o3": 1.56082,
-        "netlisp-llvm-safe": 2.823425,
-        "rust-o3": 1.612641,
-        "mylang-o3-lto": 36.131757,
-        "mylang-o3-bounded": 46.901032,
-        "netlisp-llvm-fast": 2.936261,
-        "mylang-o3": 19.182701,
-        "go-fast": 2.167569
+        "zig-o3": 1.620603,
+        "netlisp-llvm-safe": 3.192428,
+        "rust-o3": 1.889918,
+        "mylang-o3-lto": 3.087382,
+        "mylang-o3-bounded": 9.105633,
+        "netlisp-llvm-fast": 2.860541,
+        "mylang-o3": 3.159772,
+        "go-fast": 2.346515
       }
     },
     {
@@ -2650,14 +2650,14 @@
         "mylang-o3"
       ],
       "ms": {
-        "rust-o3": 1.632564,
-        "mylang-o3-lto": 36.271688,
-        "mylang-o3-bounded": 48.050389,
-        "netlisp-llvm-fast": 2.839791,
-        "netlisp-llvm-safe": 2.833682,
-        "zig-o3": 1.366192,
-        "go-fast": 2.153098,
-        "mylang-o3": 18.719803
+        "rust-o3": 1.837534,
+        "mylang-o3-lto": 3.04692,
+        "mylang-o3-bounded": 9.015243,
+        "netlisp-llvm-fast": 2.945167,
+        "netlisp-llvm-safe": 3.233197,
+        "zig-o3": 1.568202,
+        "go-fast": 2.311615,
+        "mylang-o3": 2.964091
       }
     },
     {
@@ -2674,14 +2674,14 @@
         "mylang-o3-lto"
       ],
       "ms": {
-        "netlisp-llvm-fast": 2.988451,
-        "rust-o3": 2.093427,
-        "netlisp-llvm-safe": 2.776671,
-        "go-fast": 2.056671,
-        "mylang-o3-bounded": 47.963723,
-        "mylang-o3": 22.250647,
-        "zig-o3": 1.570435,
-        "mylang-o3-lto": 38.210606
+        "netlisp-llvm-fast": 2.742996,
+        "rust-o3": 1.758606,
+        "netlisp-llvm-safe": 3.159508,
+        "go-fast": 2.483185,
+        "mylang-o3-bounded": 10.140394,
+        "mylang-o3": 2.943664,
+        "zig-o3": 1.589601,
+        "mylang-o3-lto": 3.066329
       }
     },
     {
@@ -2698,14 +2698,14 @@
         "mylang-o3-lto"
       ],
       "ms": {
-        "netlisp-llvm-fast": 2.706448,
-        "zig-o3": 1.485462,
-        "go-fast": 2.110063,
-        "mylang-o3": 18.863504,
-        "mylang-o3-bounded": 46.405096,
-        "netlisp-llvm-safe": 3.101245,
-        "rust-o3": 1.639566,
-        "mylang-o3-lto": 38.828541
+        "netlisp-llvm-fast": 2.822047,
+        "zig-o3": 1.463095,
+        "go-fast": 2.261515,
+        "mylang-o3": 2.879929,
+        "mylang-o3-bounded": 8.972363,
+        "netlisp-llvm-safe": 3.187152,
+        "rust-o3": 1.684306,
+        "mylang-o3-lto": 3.236879
       }
     },
     {
@@ -2722,14 +2722,14 @@
         "rust-o3"
       ],
       "ms": {
-        "zig-o3": 1.626689,
-        "go-fast": 2.445225,
-        "mylang-o3": 21.798803,
-        "mylang-o3-lto": 36.477298,
-        "netlisp-llvm-safe": 2.886379,
-        "mylang-o3-bounded": 46.260303,
-        "netlisp-llvm-fast": 3.035799,
-        "rust-o3": 1.837351
+        "zig-o3": 1.379966,
+        "go-fast": 2.17742,
+        "mylang-o3": 2.856076,
+        "mylang-o3-lto": 2.85651,
+        "netlisp-llvm-safe": 2.953874,
+        "mylang-o3-bounded": 8.996058,
+        "netlisp-llvm-fast": 2.669271,
+        "rust-o3": 1.529087
       }
     }
   ]

@@ -16,7 +16,7 @@ record Edge:
     b: int
 
 
-public def rail(host: Host, span: text.Span) -> bool effects(host, managed_allocation):
+public def rail(host: Host, span: text.Span) -> bool:
     if text.matches(host, span, b"GND"):
         return True
     return span.end - span.start >= 2 and span.source[span.start] == 86 and span.source[span.start + 1] == 95
@@ -40,7 +40,7 @@ public def findId(nets: list[Net], identity: int) -> int:
     return - 1
 
 
-public def build(host: Host, parts: list[c.Part], pins: list[c.Pin]) -> list[Net] effects(host, managed_allocation):
+public def build(host: Host, parts: list[c.Part], pins: list[c.Pin]) -> list[Net]:
     nets: list[Net] = []
     edges: list[Edge] = []
     i = 0

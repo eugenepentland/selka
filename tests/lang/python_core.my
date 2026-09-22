@@ -5,22 +5,22 @@ def float_add(x: float, y: float) -> float:
     return x + y
 
 
-def operand(log: mut list[int], value: int) -> float effects(mutation, managed_allocation):
+def operand(log: mut list[int], value: int) -> float:
     log.append(value)
     return float(value)
 
 
-def receiver(log: mut list[int], values: list[int]) -> list[int] effects(mutation, managed_allocation):
+def receiver(log: mut list[int], values: list[int]) -> list[int]:
     log.append(2)
     return values
 
 
-def log_index(log: mut list[int]) -> int effects(mutation, managed_allocation):
+def log_index(log: mut list[int]) -> int:
     log.append(3)
     return 0
 
 
-def emit_value(log: mut list[int]) -> int effects(mutation, managed_allocation):
+def emit_value(log: mut list[int]) -> int:
     log.append(1)
     return 42
 

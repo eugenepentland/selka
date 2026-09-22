@@ -1,7 +1,7 @@
 module effects_case_3
 
 
-def build() -> list[int] effects(managed_allocation):
+def build() -> list[int]:
     values: list[int] = []
     values.append(1)
     values.append(2)

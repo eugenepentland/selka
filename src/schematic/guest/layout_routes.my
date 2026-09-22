@@ -25,7 +25,7 @@ def distance(a: l.Point, b: l.Point) -> int:
     return x + y
 
 
-public def external(host: Host, net: text.Span, connections: list[p.Port]) -> bool effects(host, managed_allocation):
+public def external(host: Host, net: text.Span, connections: list[p.Port]) -> bool:
     target = p.Port(
         prefix=text.empty(),
         name=net,
@@ -58,7 +58,7 @@ def blocked(host: Host, a: l.Point, b: l.Point, net_id: int, parts: list[c.Part]
     return False
 
 
-public def build(host: Host, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], connections: list[p.Port]) -> list[Segment] effects(host, managed_allocation):
+public def build(host: Host, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], connections: list[p.Port]) -> list[Segment]:
     out: list[Segment] = []
     i = 0
     while i < len(pins):

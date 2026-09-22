@@ -16,7 +16,7 @@ public class Output:
     failed: bool
 
 
-def load(host: Host, identity: int) -> Result[Document, int] effects(host, managed_allocation):
+def load(host: Host, identity: int) -> Result[Document, int]:
     size = length(host, identity)
     values: list[int] = []
     buffer = byte_buffer(values)
@@ -39,12 +39,12 @@ def load(host: Host, identity: int) -> Result[Document, int] effects(host, manag
     return Ok(Document(identity=identity, source=bytes(buffer)))
 
 
-public def output() -> Output effects(managed_allocation):
+public def output() -> Output:
     values: list[int] = []
     return Output(buffer=byte_buffer(values), failed=False)
 
 
-public def append(out: mut Output, value: bytes) effects(managed_allocation, mutation):
+public def append(out: mut Output, value: bytes):
     if out.failed:
         return
     if len(out.buffer) > 4194304 - len(value):
@@ -55,7 +55,7 @@ public def append(out: mut Output, value: bytes) effects(managed_allocation, mut
     return
 
 
-public def appendByte(out: mut Output, value: u8) effects(managed_allocation, mutation):
+public def appendByte(out: mut Output, value: u8):
     if out.failed:
         return
     if len(out.buffer) == 4194304:
@@ -66,7 +66,7 @@ public def appendByte(out: mut Output, value: u8) effects(managed_allocation, mu
     return
 
 
-public def appendInt(out: mut Output, value: int) effects(managed_allocation, mutation):
+public def appendInt(out: mut Output, value: int):
     if out.failed:
         return
     width = decimalWidth(value)
@@ -98,7 +98,7 @@ public def decimalWidth(value: int) -> int:
     return width
 
 
-public def flush(host: Host, out: Output) -> int effects(host, managed_allocation):
+public def flush(host: Host, out: Output) -> int:
     if out.failed:
         _ = output_limit(host)
         return 5
@@ -142,7 +142,7 @@ public record Inputs:
     interface: Document
 
 
-public def inputs(host: Host) -> Result[Inputs, int] effects(host, managed_allocation):
+public def inputs(host: Host) -> Result[Inputs, int]:
     circuit = load(host, circuit_input(host))?
     pinout = load(host, pinout_input(host))?
     interface = load(host, interface_input(host))?

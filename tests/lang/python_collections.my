@@ -17,17 +17,17 @@ class ReceiverPoint:
     x: i64
 
 
-def logged_receiver(log: mut list[i64], rows: list[ReceiverPoint]) -> list[ReceiverPoint] effects(mutation, managed_allocation):
+def logged_receiver(log: mut list[i64], rows: list[ReceiverPoint]) -> list[ReceiverPoint]:
     log.append(1)
     return rows
 
 
-def log_index(log: mut list[i64]) -> i64 effects(mutation, managed_allocation):
+def log_index(log: mut list[i64]) -> i64:
     log.append(2)
     return 0
 
 
-def emit_value(log: mut list[i64]) -> i64 effects(mutation, managed_allocation):
+def emit_value(log: mut list[i64]) -> i64:
     log.append(3)
     return 42
 

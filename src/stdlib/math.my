@@ -186,7 +186,7 @@ public def clamp[T: integer](value: T, low: T, high: T) -> T noalloc:
 
 
 # Magnitude of an integer; the most negative value has no positive counterpart.
-public def abs(value: int) -> Result[int, str] effects(managed_allocation):
+public def abs(value: int) -> Result[int, str]:
     if value == 0 - 9223372036854775807 - 1:
         return Err("absolute value of -9223372036854775808 is not representable")
     if value < 0:
@@ -195,7 +195,7 @@ public def abs(value: int) -> Result[int, str] effects(managed_allocation):
 
 
 # Greatest common divisor, reported as a nonnegative integer.
-public def gcd(a: int, b: int) -> Result[int, str] effects(managed_allocation):
+public def gcd(a: int, b: int) -> Result[int, str]:
     left = a
     right = b
     while right != 0:
@@ -206,7 +206,7 @@ public def gcd(a: int, b: int) -> Result[int, str] effects(managed_allocation):
 
 
 # Least common multiple of two integers, reported as a nonnegative integer.
-public def lcm(a: int, b: int) -> Result[int, str] effects(managed_allocation):
+public def lcm(a: int, b: int) -> Result[int, str]:
     if a == 0 or b == 0:
         return Ok(0)
     left = abs(a)?
@@ -219,7 +219,7 @@ public def lcm(a: int, b: int) -> Result[int, str] effects(managed_allocation):
 
 
 # Integer square root: the largest whole number whose square is not larger.
-public def isqrt(value: int) -> Result[int, str] effects(managed_allocation):
+public def isqrt(value: int) -> Result[int, str]:
     if value < 0:
         return Err("integer square root of a negative value is undefined")
     if value < 2:

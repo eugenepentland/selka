@@ -46,7 +46,7 @@ def direction(host: Host, span: text.Span) -> bool:
     return False
 
 
-public def collect(host: Host, nodes: list[s.Node], lanes: list[s.Node]) -> Result[list[Port], int] effects(host, managed_allocation):
+public def collect(host: Host, nodes: list[s.Node], lanes: list[s.Node]) -> Result[list[Port], int]:
     out: list[Port] = []
     if not interfaceForm(host, lanes, 1) or s.at(lanes, 1).next != len(lanes):
         return fail(host, s.at(lanes, 1).span)
@@ -140,7 +140,7 @@ public def equal(host: Host, a: Port, b: Port) -> bool effects(host):
     return True
 
 
-public def validate(host: Host, connections: list[Port], pins: list[c.Pin]) -> int effects(host, managed_allocation):
+public def validate(host: Host, connections: list[Port], pins: list[c.Pin]) -> int:
     i = 0
     while i < len(connections):
         item = connections[i]

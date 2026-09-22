@@ -3,7 +3,7 @@ import text
 import io
 
 
-public def rect(out: mut io.Output, x: int, y: int, w: int, h: int) effects(managed_allocation, mutation):
+public def rect(out: mut io.Output, x: int, y: int, w: int, h: int):
     text.write(mut out, b"<rect class=\"chip\" x=\"")
     text.decimal(mut out, x)
     text.write(mut out, b"\" y=\"")
@@ -16,7 +16,7 @@ public def rect(out: mut io.Output, x: int, y: int, w: int, h: int) effects(mana
     return
 
 
-public def line(out: mut io.Output, x1: int, y1: int, x2: int, y2: int) effects(managed_allocation, mutation):
+public def line(out: mut io.Output, x1: int, y1: int, x2: int, y2: int):
     text.write(mut out, b"<line x1=\"")
     text.decimal(mut out, x1)
     text.write(mut out, b"\" y1=\"")
@@ -29,7 +29,7 @@ public def line(out: mut io.Output, x1: int, y1: int, x2: int, y2: int) effects(
     return
 
 
-public def labelStart(out: mut io.Output, x: int, y: int, anchor: int) effects(managed_allocation, mutation):
+public def labelStart(out: mut io.Output, x: int, y: int, anchor: int):
     text.write(mut out, b"<text x=\"")
     text.decimal(mut out, x)
     text.write(mut out, b"\" y=\"")
@@ -45,18 +45,18 @@ public def labelStart(out: mut io.Output, x: int, y: int, anchor: int) effects(m
     return
 
 
-public def labelEnd(out: mut io.Output) effects(managed_allocation, mutation):
+public def labelEnd(out: mut io.Output):
     text.write(mut out, b"</text>")
     return
 
 
-public def label(out: mut io.Output, x: int, y: int, anchor: int, value: text.Span) effects(managed_allocation, mutation):
+public def label(out: mut io.Output, x: int, y: int, anchor: int, value: text.Span):
     labelStart(mut out, x, y, anchor)
     text.escaped(mut out, value)
     return labelEnd(mut out)
 
 
-public def symbol(out: mut io.Output, kind: int) effects(managed_allocation, mutation):
+public def symbol(out: mut io.Output, kind: int):
     text.write(mut out, b"<g class=\"symbol\">")
     line(mut out, - 20, 0, - 12, 0)
     line(mut out, 12, 0, 20, 0)

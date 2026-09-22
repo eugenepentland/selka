@@ -18,7 +18,7 @@ record Row:
     y: int
 
 
-public def rail(host: Host, span: text.Span) -> bool effects(host, managed_allocation):
+public def rail(host: Host, span: text.Span) -> bool:
     return g.rail(host, span)
 
 
@@ -427,7 +427,7 @@ def endpoint(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], row
     )
 
 
-public def build(host: Host, parts: list[c.Part], pins: list[c.Pin]) -> list[Point] effects(host, managed_allocation):
+public def build(host: Host, parts: list[c.Part], pins: list[c.Pin]) -> list[Point]:
     nets = g.build(host, parts, pins)
     lookup = netLookup(pins, nets)
     out: list[Point] = []

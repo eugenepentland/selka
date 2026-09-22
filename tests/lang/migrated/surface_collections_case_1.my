@@ -1,7 +1,7 @@
 module surface_collections_case_1
 
 
-def add[T](values: mut list[T], value: T) effects(mutation, managed_allocation):
+def add[T](values: mut list[T], value: T):
     values.append(value)
 
 

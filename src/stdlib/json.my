@@ -72,7 +72,7 @@ public def object(fields: dict[str, Json]) -> Json effects():
 
 
 # The RFC 8259 name of a value's kind.
-public def type_name(value: Json) -> str effects(managed_allocation):
+public def type_name(value: Json) -> str:
     match value:
         case Json.null:
             return "null"
@@ -591,7 +591,7 @@ def read_value(scanner: mut Scanner, depth: int) -> Result[Json, str]:
 
 
 # One complete RFC 8259 document, rejecting anything after the top-level value.
-public def loads(source: str) -> Result[Json, Error] effects(managed_allocation):
+public def loads(source: str) -> Result[Json, Error]:
     scanner = scanner_of(source.encode())
     value = read_value(mut scanner, 1)?
     skip_whitespace(mut scanner)
@@ -705,7 +705,7 @@ def write_object(pieces: mut list[str], fields: dict[str, Json]):
 
 
 # A value rendered as compact RFC 8259 text without added whitespace.
-public def dumps(value: Json) -> str effects(managed_allocation):
+public def dumps(value: Json) -> str:
     pieces: list[str] = []
     write_value(mut pieces, value)
     return "".join(pieces)

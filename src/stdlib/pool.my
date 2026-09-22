@@ -24,7 +24,7 @@ def next_generation(current: int) -> int:
 
 
 # A pool holding the given values, in order, with one live handle each.
-public def create[T: copy + storable](values: list[T]) -> Pool[T] effects(managed_allocation):
+public def create[T: copy + storable](values: list[T]) -> Pool[T]:
     slots: list[T] = []
     generations: list[int] = []
     live: list[bool] = []
@@ -48,7 +48,7 @@ public def occupied[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bo
 
 
 # Add a value and return the handle that names it.
-public def insert[T: copy + storable](store: mut Pool[T], value: T) -> Handle[T] effects(mutation, managed_allocation):
+public def insert[T: copy + storable](store: mut Pool[T], value: T) -> Handle[T]:
     store.counters[1] = store.counters[1] + 1
     top = store.counters[0]
     if top > 0:
@@ -79,7 +79,7 @@ public def set[T: copy + storable](store: mut Pool[T], handle: Handle[T], value:
 
 
 # Release the slot a handle names, reporting whether the handle was live.
-public def remove[T: copy + storable](store: mut Pool[T], handle: Handle[T]) -> bool effects(mutation, managed_allocation):
+public def remove[T: copy + storable](store: mut Pool[T], handle: Handle[T]) -> bool:
     if not occupied(store, handle):
         return False
     slot = handle.index
@@ -106,7 +106,7 @@ public def capacity[T: copy + storable](store: Pool[T]) -> int effects():
 
 
 # Every live handle, in slot order.
-public def handles[T: copy + storable](store: Pool[T]) -> list[Handle[T]] effects(managed_allocation):
+public def handles[T: copy + storable](store: Pool[T]) -> list[Handle[T]]:
     out: list[Handle[T]] = []
     for index, alive in enumerate(store.live):
         if alive:

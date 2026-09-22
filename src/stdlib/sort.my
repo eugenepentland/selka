@@ -11,17 +11,17 @@ public def compare_strs(a: str, b: str) -> int effects():
 
 
 # A new ascending list of integers; the input list is not modified.
-public def sort_ints(values: list[int]) -> list[int] effects(managed_allocation):
+public def sort_ints(values: list[int]) -> list[int]:
     return sorted(values)
 
 
 # A new ascending list of floats; NaNs follow ordered values and the input is unchanged.
-public def sort_floats(values: list[float]) -> list[float] effects(managed_allocation):
+public def sort_floats(values: list[float]) -> list[float]:
     return sorted(values)
 
 
 # A new list of texts in Unicode code point order; the input is not modified.
-public def sort_strs(values: list[str]) -> list[str] effects(managed_allocation):
+public def sort_strs(values: list[str]) -> list[str]:
     return sorted(values)
 
 
@@ -47,7 +47,7 @@ def merge_by_key[T: copy + storable](left: list[T], right: list[T], key: def(T) 
 
 
 # A new list ordered by an integer key function; the ordering is stable.
-public def sort_by_key[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[T] effects(managed_allocation):
+public def sort_by_key[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[T]:
     if len(values) <= 1:
         return values[:]
     middle = len(values) // 2
@@ -115,7 +115,7 @@ public def min_str(values: list[str]) -> Option[str] effects():
 
 
 # Integers with later duplicates removed, keeping first-occurrence order.
-public def unique_ints(values: list[int]) -> list[int] effects(managed_allocation):
+public def unique_ints(values: list[int]) -> list[int]:
     seen: dict[int, bool] = {}
     out: list[int] = []
     for value in values:
@@ -126,7 +126,7 @@ public def unique_ints(values: list[int]) -> list[int] effects(managed_allocatio
 
 
 # Texts with later duplicates removed, keeping first-occurrence order.
-public def unique_strs(values: list[str]) -> list[str] effects(managed_allocation):
+public def unique_strs(values: list[str]) -> list[str]:
     seen: dict[str, bool] = {}
     out: list[str] = []
     for value in values:
