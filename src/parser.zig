@@ -1737,15 +1737,11 @@ pub const Parser = struct {
         if (self.current().tag == .kw_unwrap) return self.hintHere(.option_unwrap);
         const name: lex.Token = .{ .tag = .ident, .span = try self.declaredName() };
         if (self.take(.lparen)) {
-            var arguments: std.ArrayList(ast.NodeId) = .empty;
-            if (self.current().tag != .rparen) while (true) {
-                try arguments.append(self.arena.allocator(), try self.argumentValue());
-                if (!self.take(.comma) or self.current().tag == .rparen) break;
-            };
+            const arguments = try self.callArguments();
             const close = try self.callClose();
             return self.append(.{
                 .span = .join(self.syntax.nodes.items[@backingInt(left)].span, close.span),
-                .data = .{ .method_call = .{ .base = left, .name = name.span, .arguments = try arguments.toOwnedSlice(self.arena.allocator()) } },
+                .data = .{ .method_call = .{ .base = left, .name = name.span, .arguments = arguments.values, .argument_names = arguments.names } },
             });
         } else return self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, name.span), .data = .{ .field = .{ .base = left, .name = name.span } } });
     }

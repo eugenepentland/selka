@@ -1,0 +1,252 @@
+module keyed_sorting
+
+import sort
+
+# Python's keyed sorting: `values.sort(key=..., reverse=...)` in place and
+# `sorted(values, key=..., reverse=...)` on a copy, with int, float, str, bool,
+# narrower integer and tuple keys (SPEC.md LIST-SORT-KEY-1..3, GENERIC-BODY-4,
+# SYNTAX-METHOD-KEYWORDS-1). Every test states its expected order in full.
+
+
+record Entry:
+    rank: int
+    id: int
+
+
+record Named:
+    name: str
+    group: int
+    id: int
+
+
+record Weighed:
+    weight: float
+    id: int
+
+
+record Holder:
+    items: list[Entry]
+
+
+def by_rank(e: Entry) -> int:
+    return e.rank
+
+
+# The same key with its ceiling written out: an unannotated function does not
+# yet fill a generic callback parameter (`key: def(T) -> int effects()`).
+def pure_rank(e: Entry) -> int effects():
+    return e.rank
+
+
+def by_value(v: int) -> int effects():
+    return v
+
+
+def by_name(n: Named) -> str:
+    return n.name
+
+
+def ids(entries: list[Entry]) -> list[int]:
+    return [e.id for e in entries]
+
+
+def named_ids(entries: list[Named]) -> list[int]:
+    return [n.id for n in entries]
+
+
+def weighed_ids(entries: list[Weighed]) -> list[int]:
+    return [w.id for w in entries]
+
+
+# A key that costs about 1500 runner steps per call. Called once per
+# element, the two sorts below take about a third of the test runner's
+# default budget of one million steps; called twice per comparison, as the
+# old keyed `sorted` did, they would take several times the budget.
+def slow_rank(e: Entry) -> int:
+    total = 0
+    for step in range(150):
+        total += step % 3
+    return e.rank + total - total
+
+
+def narrow(e: Entry) -> i32:
+    return i32(e.rank)
+
+
+def small(e: Entry) -> u8:
+    return u8(e.rank)
+
+
+def wide(e: Entry) -> u64:
+    return u64(e.rank) * 4611686018427387904u64
+
+
+def odd(e: Entry) -> bool:
+    return e.rank % 2 == 1
+
+
+def spread_entries() -> list[Entry]:
+    return [Entry(rank=2, id=0), Entry(rank=1, id=1), Entry(rank=2, id=2), Entry(rank=0, id=3), Entry(rank=1, id=4)]
+
+
+# A generic caller of the keyword form, the shape `sort.sort_by_key` has.
+def descending_by[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[T]:
+    ordered = values.copy()
+    ordered.sort(key=key, reverse=True)
+    return ordered
+
+
+# spec: LIST-SORT-KEY-1
+public def test_sort_key_orders_in_place_and_keeps_equal_keys_in_input_order() -> bool:
+    entries = spread_entries()
+    alias = entries
+    entries.sort(key=lambda e: e.rank)
+    return ids(entries) == [3, 1, 4, 0, 2] and ids(alias) == [3, 1, 4, 0, 2]
+
+
+# spec-case: LIST-SORT-KEY-1
+public def test_reverse_orders_descending_and_keeps_equal_keys_in_input_order() -> bool:
+    entries = spread_entries()
+    entries.sort(key=by_rank, reverse=True)
+    copied = sorted(spread_entries(), key=by_rank, reverse=True)
+    return ids(entries) == [0, 2, 1, 4, 3] and ids(copied) == [0, 2, 1, 4, 3]
+
+
+# spec-case: LIST-SORT-KEY-1
+public def test_reverse_false_and_reverse_first_are_the_ascending_sort() -> bool:
+    entries = spread_entries()
+    entries.sort(reverse=False, key=by_rank)
+    flag = False
+    copied = sorted(spread_entries(), key=by_rank, reverse=flag)
+    return ids(entries) == [3, 1, 4, 0, 2] and ids(copied) == [3, 1, 4, 0, 2]
+
+
+# spec-case: LIST-SORT-KEY-1
+public def test_reverse_without_a_key_sorts_elements_descending() -> bool:
+    values = [3, 1, 4, 1, 5, 9, 2, 6]
+    values.sort(reverse=True)
+    words = sorted(["pear", "apple", "fig"], reverse=True)
+    return values == [9, 6, 5, 4, 3, 2, 1, 1] and words == ["pear", "fig", "apple"]
+
+
+# spec-case: LIST-SORT-KEY-1
+public def test_reverse_keeps_signed_zeros_in_input_order() -> bool:
+    negative_zero = (0.0 - 1.0) * 0.0
+    values = [0.0, 1.0, negative_zero, 0.0 - 1.0]
+    values.sort(reverse=True)
+    return str(values[1]) == "0.0" and str(values[2]) == "-0.0" and values[0] == 1.0 and values[3] == 0.0 - 1.0
+
+
+# spec-case: LIST-SORT-KEY-1
+public def test_float_keys_put_nans_last_and_first_in_reverse() -> bool:
+    nan = 0.0 / 0.0
+    entries = [Weighed(weight=nan, id=0), Weighed(weight=2.5, id=1), Weighed(weight=0.0 - 1.0, id=2), Weighed(weight=nan, id=3), Weighed(weight=2.5, id=4)]
+    ascending = sorted(entries, key=lambda w: w.weight)
+    entries.sort(key=lambda w: w.weight, reverse=True)
+    return weighed_ids(ascending) == [2, 1, 4, 0, 3] and weighed_ids(entries) == [0, 3, 1, 4, 2]
+
+
+# spec-case: LIST-SORT-KEY-1
+public def test_str_keys_order_by_unicode_scalar_value() -> bool:
+    people = [Named(name="émile", group=1, id=0), Named(name="bob", group=0, id=1), Named(name="Zoë", group=1, id=2), Named(name="bob", group=2, id=3)]
+    people.sort(key=by_name)
+    descending = sorted(people, key=lambda n: n.name, reverse=True)
+    return named_ids(people) == [2, 1, 3, 0] and named_ids(descending) == [0, 1, 3, 2]
+
+
+# spec-case: LIST-SORT-KEY-1
+public def test_tuple_keys_compare_field_by_field() -> bool:
+    people = [Named(name="c", group=1, id=0), Named(name="a", group=2, id=1), Named(name="b", group=1, id=2), Named(name="a", group=1, id=3), Named(name="c", group=1, id=4)]
+    people.sort(key=lambda n: (n.group, n.name))
+    descending = sorted(people, key=lambda n: (n.group, n.name), reverse=True)
+    mixed = sorted(people, key=lambda n: (n.name, 0 - n.group))
+    return named_ids(people) == [3, 2, 0, 4, 1] and named_ids(descending) == [1, 0, 4, 2, 3] and named_ids(mixed) == [1, 3, 2, 0, 4]
+
+
+# spec-case: LIST-SORT-KEY-1
+public def test_narrow_unsigned_wide_and_bool_keys_order_by_value() -> bool:
+    a = spread_entries()
+    a.sort(key=narrow)
+    b = spread_entries()
+    b.sort(key=small, reverse=True)
+    c = spread_entries()
+    c.sort(key=wide)
+    d = spread_entries()
+    d.sort(key=odd)
+    return ids(a) == [3, 1, 4, 0, 2] and ids(b) == [0, 2, 1, 4, 3] and ids(c) == [3, 1, 4, 0, 2] and ids(d) == [0, 2, 3, 1, 4]
+
+
+# spec-case: LIST-SORT-KEY-1
+public def test_keys_spread_over_the_whole_int_range_take_the_wide_path() -> bool:
+    values = [9223372036854775807, 0 - 9223372036854775807 - 1, 0, 5, 0 - 5, 9223372036854775807, 1]
+    ascending = sorted(values, key=lambda v: v)
+    values.sort(key=lambda v: v, reverse=True)
+    low = 0 - 9223372036854775807 - 1
+    return ascending == [low, 0 - 5, 0, 1, 5, 9223372036854775807, 9223372036854775807] and values == [9223372036854775807, 9223372036854775807, 5, 1, 0, 0 - 5, low]
+
+
+# spec-case: LIST-SORT-KEY-1
+public def test_empty_and_one_element_lists_sort_to_themselves() -> bool:
+    empty: list[Entry] = []
+    empty.sort(key=by_rank, reverse=True)
+    one = [Entry(rank=7, id=9)]
+    one.sort(key=by_rank)
+    copied = sorted(one, key=by_rank, reverse=True)
+    return len(empty) == 0 and ids(one) == [9] and ids(copied) == [9]
+
+
+# spec-case: LIST-SORT-KEY-1
+public def test_key_is_called_once_per_element() -> bool:
+    entries: list[Entry] = []
+    for i in range(100):
+        entries.append(Entry(rank=(i * 37) % 11, id=i))
+    entries.sort(key=slow_rank)
+    copied = sorted(entries, key=slow_rank, reverse=True)
+    return entries[0].rank == 0 and entries[99].rank == 10 and copied[0].rank == 10 and copied[99].rank == 0
+
+
+# spec-case: LIST-SORT-KEY-1
+public def test_long_lists_match_a_stable_count_order() -> bool:
+    entries: list[Entry] = []
+    for i in range(3000):
+        entries.append(Entry(rank=(i * 7919) % 97, id=i))
+    entries.sort(key=lambda e: e.rank)
+    ordered = True
+    for i in range(1, len(entries)):
+        before = entries[i - 1]
+        after = entries[i]
+        if before.rank > after.rank or (before.rank == after.rank and before.id > after.id):
+            ordered = False
+    return ordered and len(entries) == 3000
+
+
+# spec-case: LIST-SORT-KEY-1
+public def test_sorted_copy_leaves_its_input_unchanged() -> bool:
+    entries = spread_entries()
+    copied = sorted(entries, key=lambda e: e.rank, reverse=True)
+    return ids(entries) == [0, 1, 2, 3, 4] and ids(copied) == [0, 2, 1, 4, 3]
+
+
+# spec-case: STANDARD-SORT-KEY-1
+public def test_sort_by_key_forwards_to_the_keyed_sort() -> bool:
+    entries = spread_entries()
+    ordered = sort.sort_by_key(entries, pure_rank)
+    return ids(ordered) == [3, 1, 4, 0, 2] and ids(entries) == [0, 1, 2, 3, 4]
+
+
+# spec: GENERIC-BODY-4
+public def test_a_generic_body_sorts_with_key_and_reverse() -> bool:
+    ordered = descending_by(spread_entries(), pure_rank)
+    numbers = descending_by([4, 8, 1], by_value)
+    return ids(ordered) == [0, 2, 1, 4, 3] and numbers == [8, 4, 1]
+
+
+# spec: SYNTAX-METHOD-KEYWORDS-1
+public def test_an_expression_receiver_takes_key_and_reverse() -> bool:
+    holder = Holder(items=spread_entries())
+    holder.items.sort(key=lambda e: e.rank, reverse=True)
+    return ids(holder.items) == [0, 2, 1, 4, 3]
+
+
+def main() -> int:
+    return 0

@@ -33,6 +33,14 @@ int myl_native_list_remove(myl_native_list *, const void *value);
 int myl_native_list_index(const myl_native_list *, const void *value, int64_t *output);
 void myl_native_list_reverse(myl_native_list *);
 int myl_native_list_sort(myl_native_list *, unsigned order);
+/* Stable sort of `source` by the key at the same position of `keys` (one
+   scalar or a flat tuple of scalars, described by `shape` and `offsets` as
+   native_collections.c documents), descending when `reverse` is nonzero:
+   in place when `values` is `source`, else gathered into the empty list
+   `values`, which has room for every element. Returns 0, with no element
+   moved, when the lengths or the target do not fit or scratch memory is
+   refused; the key list's contents are consumed either way. */
+int myl_native_list_sort_keyed(myl_native_list *values, myl_native_list *source, myl_native_list *keys, uint64_t shape, uint64_t offsets, uint64_t reverse);
 myl_native_list *myl_native_list_copy(myl_native_heap *, const myl_native_list *input);
 /* `values[start:stop:step]` endpoints. An omitted endpoint arrives as one of
  * these sentinels, which no source expression can spell. */

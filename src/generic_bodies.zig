@@ -30,6 +30,8 @@ const eTryReturn = "E_TRY_RETURN";
 const eArgument = diagnostic.generic_argument;
 const eListType = @import("collection_lower.zig").list_type_error;
 const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
+/// A misplaced or unknown call operand, the concrete checker's code for it.
+const eCallArgument = "E_CALL_ARGUMENT";
 const eTupleArity = diagnostic.tuple_arity;
 /// The accepted arity beside a rejected tuple in a template body.
 const tuple_arity_message = symbolic_shapes.tuple_arity_message;
@@ -40,6 +42,11 @@ const provider_shapes = @import("symbolic_providers.zig");
 const generic_cache = @import("generic_cache.zig");
 const Symbolic = symbolic.Value;
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
+/// Whether a call on a named receiver is a list's `sort` with operands, the
+/// Python keyword form whose operands are named rather than positional.
+fn keywordSort(self: anytype, input_call: Call) bool {
+    return input_call.owner != null and input_call.arguments.len != 0 and std.mem.eql(u8, self.src.text(input_call.name), "sort");
+}
 /// Reject a literal `dir()` path that could leave a scoped root, mirroring `scopedPath`.
 fn scopedDirectoryPath(bytes: []const u8) bool {
     if (bytes.len == 0) return true;
@@ -750,6 +757,7 @@ const Checker = struct {
             .append, .write => .{ .concrete = .unit },
             .keys, .values, .split => try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{if (kind == .keys) key else if (kind == .split) owner else element}),
             .join => owner,
+            .copy => if (family == .list) owner else return self.sink.fail(eUnsupported, operation.span, "unsupported collection operation in generic body"),
             .sort => sorted: {
                 if (family != .list or !self.sortable(element)) return self.sink.fail("E_COLLECTION_METHOD", operation.span, "sort requires an integer, float or str element type");
                 break :sorted .{ .concrete = .unit };
@@ -811,6 +819,9 @@ const Checker = struct {
             return value;
         }
         if (std.mem.eql(u8, name, "push")) return self.sink.fail("E_REMOVED_SPELLING", method.name, "`push` was removed; use `append(value)`");
+        if (std.mem.eql(u8, name, "sort") and method.arguments.len != 0)
+            return self.keyedSort(try self.expression(method.base), .{ .arguments = method.arguments, .names = method.argument_names, .span = node.span, .owner_node = method.base });
+        if (method.argument_names.len != 0) return self.sink.fail(eCallArgument, method.name, "collection methods take their arguments by position; only a list's sort takes key= and reverse=");
         const kind = buffer_operations.method(name) orelse return self.sink.fail("E_LIST_METHOD", method.name, "unknown collection method");
         if (method.arguments.len == 0 and (kind == .parse_int or kind == .parse_float))
             if (try self.immediateNumericRange(method.base, kind, node.span)) |output| return output;
@@ -933,6 +944,10 @@ const Checker = struct {
         if (input_call.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
             const receiver = if (self.option_facts.has(slot)) try self.optionElement(self.locals.items[slot].ty, owner) else self.locals.items[slot].ty;
             if (self.shapes().managed(receiver)) {
+                if (keywordSort(self, input_call)) {
+                    const sorted = try self.keyedSort(receiver, .{ .arguments = input_call.arguments, .names = input_call.argument_names, .span = span });
+                    return sorted;
+                }
                 const kind = buffer_operations.method(self.src.text(input_call.name)) orelse return self.sink.fail("E_LIST_METHOD", input_call.name, "unknown collection method");
                 if (input_call.type_arguments.len != 0) return self.sink.fail("E_ARITY", span, "collection methods do not take explicit type arguments");
                 const result = try self.collectionOperation(receiver, .{ .kind = kind, .inputs = input_call.arguments, .span = span });
@@ -940,6 +955,46 @@ const Checker = struct {
             }
         };
         return null;
+    }
+    /// `sorted(values, key=..., reverse=...)` in a generic body, when no
+    /// binding or declaration claims the name: a new list of the argument's
+    /// type, its named operands checked as `values.sort(...)` checks them.
+    fn sortedCall(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
+        if (input_call.owner != null or input_call.type_arguments.len != 0) return null;
+        if (!std.mem.eql(u8, self.src.text(input_call.name), "sorted")) return null;
+        if (self.active.contains("sorted") or try self.topLevel(input_call.name)) return null;
+        if (input_call.arguments.len == 0) return self.sink.fail("E_ARITY", span, "sorted requires a list");
+        const names = input_call.argument_names;
+        if (names.len != 0 and names[0] != null) return self.sink.fail(eCallArgument, names[0].?, "the sorted list is positional");
+        const receiver = try self.expression(input_call.arguments[0]);
+        _ = try self.keyedSort(receiver, .{ .arguments = input_call.arguments[1..], .names = if (names.len == 0) names else names[1..], .span = span });
+        return receiver;
+    }
+    /// The operands of one `values.sort(key=..., reverse=...)` in a generic body.
+    const SortOperands = struct { arguments: []const ast.NodeId, names: []const ?source.Span, span: source.Span, owner_node: ?ast.NodeId = null };
+    /// `values.sort(key=..., reverse=...)` in a generic body: the operands are
+    /// checked in source order, `reverse` as a `bool`, and the receiver is
+    /// written. Each specialization checks the key against its concrete
+    /// element type; without a key the element needs a native order.
+    fn keyedSort(self: *Checker, receiver: Symbolic, sort: SortOperands) Error!Symbolic {
+        if (self.shapes().collectionKind(receiver) != .list) return self.sink.fail(eListType, sort.span, "sort requires a list receiver");
+        var keyed = false;
+        for (sort.arguments, 0..) |argument, index| {
+            const keyword = if (sort.names.len == 0) null else sort.names[index];
+            const text = if (keyword) |name| self.src.text(name) else "";
+            if (std.mem.eql(u8, text, "reverse")) {
+                const flag: Symbolic = .{ .concrete = .bool };
+                try self.compatible(try self.expressionExpected(argument, flag), flag, sort.span);
+            } else if (std.mem.eql(u8, text, "key")) {
+                _ = try self.expression(argument);
+                keyed = true;
+            } else return self.sink.fail(eCallArgument, keyword orelse sort.span, "sort takes only key= and reverse=, by keyword");
+        }
+        if (!keyed and !self.sortable(try self.collectionElement(receiver, sort.span)))
+            return self.sink.fail("E_COLLECTION_METHOD", sort.span, "sort requires an integer, float or str element type");
+        self.seedEffect(.managed_allocation);
+        self.seedCollectionWrite(.sort, false, if (sort.owner_node) |node_id| self.parameterIndex(node_id, 0) else null);
+        return .{ .concrete = .unit };
     }
     fn floatType(self: *Checker) Symbolic {
         return .{ .concrete = self.catalog.names.get("float").? };
@@ -1171,6 +1226,7 @@ const Checker = struct {
         if (try self.variantConstruction(input_call, span)) |value| return value;
         if (try self.optionReceiverCall(input_call, span)) |value| return value;
         if (try self.managedMethod(input_call, span)) |value| return value;
+        if (try self.sortedCall(input_call, span)) |value| return value;
         if (try self.cellConstructor(input_call, span)) |value| return value;
         if (try self.contextualResult(input_call, span)) |value| return value;
         if (try self.contextualOption(input_call, span)) |value| return value;
@@ -1294,7 +1350,8 @@ const Checker = struct {
     }
     fn call(self: *Checker, input_call: Call, span: source.Span) Error!Symbolic {
         if (try self.specialCall(input_call, span)) |value| {
-            if (!std.mem.eql(u8, self.src.text(input_call.name), "Cell")) try call_arguments.positional(input_call, self.sink);
+            const named = std.mem.eql(u8, self.src.text(input_call.name), "Cell") or keywordSort(self, input_call) or std.mem.eql(u8, self.src.text(input_call.name), "sorted");
+            if (!named) try call_arguments.positional(input_call, self.sink);
             return value;
         }
         const resolved = try self.resolveCall(input_call);

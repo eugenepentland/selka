@@ -1,0 +1,5 @@
+sort_records: 10 qualified arms: my my-unchecked my-keyed my-sorted zig-fast zig-safe rust rust-checked before sorted:before
+sort_builtin: 7 qualified arms: my my-unchecked zig-fast zig-safe rust rust-checked before
+sort_records: ref 148.1 ms | my=0.31x  my-unchecked=0.30x  my-keyed=0.56x  my-sorted=0.33x  zig-fast=1.00x  zig-safe=1.16x  rust=0.41x  rust-checked=0.41x  before=0.69x  sorted:before=1.48x
+sort_builtin: ref 279.1 ms | my=0.52x  my-unchecked=0.52x  zig-fast=1.00x  zig-safe=1.17x  rust=0.31x  rust-checked=0.31x  before=0.50x
+rc=0

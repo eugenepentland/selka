@@ -483,6 +483,8 @@ their input order. `reversed(xs)` copies a list or string from last to first
 and, like `zip(a, b)`, is also a `for` source; `zip` stops at the shorter list and the
 Boolean folds stop as soon as their answer is known.
 `list(range(end))` and `list(range(start, end))` materialize their range.
+`sorted` and `values.sort()` also take Python's `key=` and `reverse=`; see
+[keyed sorting](#keyed-sorting).
 
 `round(value)` answers the nearest integral `float`, with halves away from zero
 and NaN or infinities unchanged. `abs` is total for `int` except the signed
@@ -498,6 +500,72 @@ def main() -> int:
 
 Byte-oriented code uses the managed `bytes` type; see
 [managed byte strings](bytes.md) for its literals, operations and conversions.
+
+## Keyed sorting
+
+`values.sort(key=f, reverse=b)` sorts a list in place and
+`sorted(values, key=f, reverse=b)` returns a sorted copy, spelled as in Python:
+both keywords are optional and keyword-only. The key maps one element to the
+value it is ordered by — any integer type, `bool`, `float`, `str`, or a tuple of
+those, compared field by field.
+
+```mylang
+# doc: expect 42
+record Player:
+    name: str
+    team: int
+    score: float
+
+def by_name(player: Player) -> str:
+    return player.name
+
+def main() -> int:
+    players = [Player(name="cy", team=2, score=7.5), Player(name="al", team=1, score=9.0), Player(name="bo", team=2, score=9.0)]
+    players.sort(key=lambda p: p.score, reverse=True)
+    if players[0].name != "al" or players[1].name != "bo":
+        return 1
+    by_team = sorted(players, key=lambda p: (p.team, p.name))
+    if by_team[0].name != "al" or by_team[2].name != "cy":
+        return 2
+    alphabetical = sorted(players, key=by_name)
+    return len(alphabetical[2].name) * 21
+```
+
+The rules, which match Python's wherever Python defines them:
+
+- **The key is called exactly once per element, in list order**, before any
+  element moves. A key that traps stops the program with that trap, raised by the
+  first element in list order whose key traps, and the list has not changed.
+- **The sort is stable, with and without `reverse`.** Elements whose keys are
+  equal keep their original order. `reverse=True` orders the keys descending and
+  still keeps equal keys in their original order, so it is not the same as
+  sorting and then calling `reverse()`: `[(1, "a"), (1, "b")]` stays in that
+  order under either direction.
+- **Floats** order as `values.sort()` orders them: `-0.0` equals `0.0`, and
+  every NaN sorts after every other value, so `reverse=True` puts the NaNs first.
+  Python leaves NaN ordering undefined; this is the one total order the language
+  uses everywhere.
+- **Without a key**, `values.sort(reverse=True)` and `sorted(values, reverse=True)`
+  order an `int`, `float` or `str` list by its elements, stably.
+- **In place means in place**: the list keeps its identity, so every alias of it
+  sees the new order, and no second list of the elements is built. The extra
+  memory is one key per element plus the sort's scratch. `sorted` builds its
+  new list directly in sorted order rather than copying and then sorting.
+
+A lambda key gets its key type from its body when the body is the element itself,
+a field path from it (`lambda p: p.score`), arithmetic or a negation of one, `len`
+of one, or a tuple of those; for any other body write a named function whose
+return type says what the key is. The checker rejects a key that does not take
+one element of the list's type, one that declares its argument `mut`, and one
+whose result has no order (`E_SORT_KEY`), a `reverse=` that is not a `bool`
+(`E_TYPE`), and a positional or unknown argument (`E_CALL_ARGUMENT`). There is
+no `cmp=`: map each element to a tuple instead.
+
+`sort.sort_by_key(values, key)` is the same keyed sort on a copy. Because keys
+are now computed in list order, a key function that traps on several elements
+reports the first of them in list order; the module's earlier recursive merge
+asked for keys in a different order.
+
 
 A brace dialect — `fn`, `let`, `struct`, `new T { … }`, `alias::name`,
 `f::<T>(x)`, `cast<T>(x)`, `//` comments — was accepted until 2026-09-13 and is

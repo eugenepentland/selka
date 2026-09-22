@@ -56,7 +56,10 @@ pub const Node = struct {
         field_assignment: struct { target: NodeId, value: NodeId },
         index_assignment: struct { target: NodeId, op: AssignmentOp, value: NodeId },
         list_literal: []const NodeId,
-        method_call: struct { base: NodeId, name: Span, arguments: []const NodeId },
+        /// `receiver.name(arguments)` on an expression receiver, with the keyword
+        /// of each named argument (null for a positional one; empty when none is
+        /// named).
+        method_call: struct { base: NodeId, name: Span, arguments: []const NodeId, argument_names: []const ?Span = &.{} },
         list_operation: struct { base: NodeId, kind: @import("buffer_operations.zig").Kind, arguments: []const NodeId },
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: Span, arguments: []const NodeId },
         file_operation: struct { kind: @import("file_operations.zig").Method, owner: Span, argument: ?NodeId },

@@ -112,13 +112,14 @@ one element or copy another list's elements to the end; `insert(index, value)`
 inserts at a position, counting a negative index from the end and clamping to the
 bounds; `pop()` removes and returns the final element and `pop(index)` removes and
 returns an indexed element; `remove(value)` deletes the first equal element;
-`reverse()` reverses in place; `sort()` orders integer or `float` elements
-ascending; `copy()` returns a fresh shallow list; `clear()` empties the list; and
+`reverse()` reverses in place; `sort()` orders integer, `float` or `str`
+elements ascending, and `sort(key=f, reverse=True)` orders any list by a key, in
+place and stably ([keyed sorting](python-syntax.md#keyed-sorting)); `copy()` returns a fresh shallow list; `clear()` empties the list; and
 `index(value)` returns the first equal position. Length stays the free function
 `len(values)`. Every mutating method returns unit, so a discarded `pop` or `index`
 result needs its own binding or `_ =`. An absent `remove` or `index` traps with
 `R_LIST_VALUE`, `pop` on an empty list traps with `R_LIST_BOUNDS`, and `sort`
-rejects an element type that is not an integer or `float`. The legacy `push` is
+without a key rejects an element type that is not an integer, `float` or `str`. The legacy `push` is
 gone: it reports `E_REMOVED_SPELLING` and names `append`.
 
 `values[index]` reads a slot and `values[index] = value` overwrites one, so an

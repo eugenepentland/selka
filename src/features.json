@@ -227,6 +227,11 @@
       "summary": "Bare Python `sum`, `min`, `max`, `sorted`, `abs`, `round`, `any`, `all`, `reversed`, `list` and `zip` work without an import.",
       "doc": "docs/python-syntax.md#prelude-builtins"
     },
+    "keyed-sorting": {
+      "kind": "language",
+      "summary": "`values.sort(key=..., reverse=...)` sorts in place and `sorted(values, key=..., reverse=...)` sorts a copy, stably, with `int`, `float`, `str`, `bool` or tuple keys computed once per element.",
+      "doc": "docs/python-syntax.md#keyed-sorting"
+    },
     "string-to-number-parsing": {
       "kind": "language",
       "summary": "`int(text)` and `float(text)` answer `Option` rather than raising on text that is not a number.",

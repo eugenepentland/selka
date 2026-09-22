@@ -328,7 +328,7 @@ fn validateManagedListOperation(local: typed.Local, schema: typed.Record, operat
         .index_of => .i64,
         .copy => local.ty,
         .append, .write, .iteration_check => .unit,
-        .extend, .insert, .remove, .reverse, .sort, .clear => .unit,
+        .extend, .insert, .remove, .reverse, .sort, .sort_keyed, .clear => .unit,
         .contains => .bool,
         .slice_step => local.ty,
         else => return error.InternalError,
