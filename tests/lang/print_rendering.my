@@ -1,0 +1,50 @@
+module print_rendering
+
+
+class RenderBox:
+    n: int
+
+
+class RenderPair:
+    left: RenderBox
+    right: RenderBox
+
+
+record RenderHolder:
+    box: RenderBox
+    k: int
+
+
+union RenderItem:
+    empty,
+    box: RenderBox
+
+
+# A class reached through any slot renders its own fields: every renderer is
+# handed the slot, and a class slot holds the body pointer, so the payload of a
+# union, an option, a record or class field, an array element, and a
+# list or dictionary element all read the class body rather than the pointer.
+# spec: IO-13
+public def test_a_class_renders_its_fields_wherever_it_is_nested() -> bool:
+    box = RenderBox(n=1)
+    if f"{RenderItem.box(box)}" != "RenderItem.box(RenderBox(n=1))":
+        return False
+    if f"{RenderPair(left=RenderBox(n=2), right=RenderBox(n=3))}" != "RenderPair(left=RenderBox(n=2), right=RenderBox(n=3))":
+        return False
+    if f"{RenderHolder(box=RenderBox(n=4), k=5)}" != "RenderHolder(box=RenderBox(n=4), k=5)":
+        return False
+    found: Option[RenderBox] = Some(RenderBox(n=6))
+    if f"{found}" != "Some(RenderBox(n=6))":
+        return False
+    items = [RenderItem.box(RenderBox(n=7)), RenderItem.empty]
+    if f"{items}" != "[RenderItem.box(RenderBox(n=7)), RenderItem.empty]":
+        return False
+    fixed: [2]RenderBox = [RenderBox(n=10), RenderBox(n=11)]
+    if f"{fixed}" != "[RenderBox(n=10), RenderBox(n=11)]":
+        return False
+    table = {"a": RenderItem.box(RenderBox(n=12))}
+    return f"{table}" == "{'a': RenderItem.box(RenderBox(n=12))}" and f"{[box]}" == "[RenderBox(n=1)]"
+
+
+def main() -> int:
+    return 0

@@ -83,14 +83,13 @@ fn beginStream(comptime E: type, self: *E, stream: usize) Error!usize {
     return sink;
 }
 
-/// Render the value in `slot` through the generated renderer for its type. A
-/// managed record (`class`) is one word holding the body pointer; its renderer
-/// reads fields at that pointer, so it needs the loaded pointer, not the
-/// operand-slot address that scalar and collection renderers take.
+/// Render the value in `slot` through the generated renderer for its type.
+/// Every renderer takes the address of its value's slot: a one-word value
+/// (scalar, collection, `class` reference) lives in the operand slot itself,
+/// and an inline aggregate's slot holds the address of its bytes.
 fn operand(comptime E: type, self: *E, sink: usize, ty: typed.Type, slot: usize) Error!void {
     const value = self.temp();
-    const managed_record = ty.isAggregate() and self.program.records[ty.recordIndex()].isManagedRecord();
-    if (self.isScalar(ty) and !managed_record) try self.print(" %v{d} =l copy %s{d}\n", .{ value, slot }) else try self.print(" %v{d} =l loadl %s{d}\n", .{ value, slot });
+    if (self.isScalar(ty)) try self.print(" %v{d} =l copy %s{d}\n", .{ value, slot }) else try self.print(" %v{d} =l loadl %s{d}\n", .{ value, slot });
     const symbol = render.symbol(self.allocator, self.layouts, ty) catch return error.InternalError;
     try self.print(" call ${s}(l %v{d}, l %v{d}, w 0)\n", .{ symbol, sink, value });
 }
