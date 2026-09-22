@@ -53,7 +53,10 @@ pub fn Lower(comptime E: type) type {
             const operand = try self.load("s", height - 1);
             const source = extremes(from);
             const target = extremes(to);
-            if (source.min >= target.min and source.max <= target.max) {
+            // QBE-UNCHECKED-1: an unchecked build narrows exactly as one whose
+            // source range already fits — the operand travels on untouched —
+            // so the two range compares and the cold `myl_qbe_fail_cast` go.
+            if (!self.checks or (source.min >= target.min and source.max <= target.max)) {
                 try self.store(height - 1, operand);
                 return;
             }
@@ -113,6 +116,9 @@ pub fn Lower(comptime E: type) type {
             const result = self.temp();
             const flag = self.temp();
             try self.print(neg_instruction, .{ result, operand });
+            // QBE-UNCHECKED-1: the negate is the whole operation; only the test
+            // for the one value that cannot be negated is dropped.
+            if (!self.checks) return self.store(height - 1, result);
             const minimum: i64 = if (info.signed) @intCast(-(@as(i128, 1) << @intCast(info.bits - 1))) else 0;
             try self.print(immediate_instruction, .{ flag, if (info.signed) "ceql" else "cnel", operand, minimum });
             try self.print(" jnz %v{d}, @neg_overflow{d}, @neg_checked{d}\n@neg_overflow{d}\n", .{ flag, result, result, result });
@@ -183,6 +189,10 @@ fn checkedAddSub(comptime E: type, self: *E, op: typed.BinaryOp, signed: bool, b
     const right = values.right;
     const result = values.result;
     try self.print(binary_instruction, .{ result, if (op == .add) "add" else "sub", left, right });
+    // QBE-UNCHECKED-1: the sum is the whole operation. A narrower width relies
+    // on operands already inside its range, exactly as the checked lowering
+    // does on the path where the range test passes, so nothing is normalized.
+    if (!self.checks) return;
     if (bits == 64 and signed) if (self.pushedLiteral(self.pc)) |literal| {
         try constantAddSub(E, self, op, literal, values);
         return;
@@ -269,6 +279,9 @@ fn unsignedHigh(comptime E: type, self: *E, left: usize, right: usize) Error!usi
 /// Lower checked multiplication; only 64-bit needs a true 128-bit test.
 fn checkedMul(comptime E: type, self: *E, op: typed.BinaryOp, info: typed.Type.Integer, values: Operands) Error!void {
     try self.print(binary_instruction, .{ values.result, "mul", values.left, values.right });
+    // QBE-UNCHECKED-1: the product is the whole operation; the width test and,
+    // at 64 bits, the four-limb high half that feeds it are both dropped.
+    if (!self.checks) return;
     if (info.bits < 64) return rangeCheck(E, self, op, info, values);
     const high = try unsignedHigh(E, self, values.left, values.right);
     if (!info.signed) {
@@ -298,6 +311,12 @@ fn checkedMul(comptime E: type, self: *E, op: typed.BinaryOp, info: typed.Type.I
     try overflowTrap(E, self, op, values, info.bits, flag);
 }
 /// Lower truncating or flooring division and remainder with exact traps.
+///
+/// QBE-UNCHECKED-1 keeps both tests here even in an unchecked build. A zero
+/// divisor and a signed `MIN // -1` both fault the hardware divider, so
+/// dropping them would turn a reported trap into SIGFPE rather than into the
+/// fast path an unchecked build is asking for; they are four static sites in
+/// the schematic render and cost nothing measurable.
 fn checkedDivRem(comptime E: type, self: *E, op: typed.BinaryOp, info: typed.Type.Integer, values: Operands) Error!void {
     const zero = self.temp();
     try self.print(" %v{d} =l ceql %v{d}, 0\n", .{ zero, values.right });

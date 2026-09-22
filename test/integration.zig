@@ -7891,3 +7891,79 @@ fn expectNoCapturedOutput(outcome: std.json.Value) !void {
     const captured: []const u8 = outcomeOutput(outcome) orelse "";
     try testing.expectEqual(@as(usize, 0), captured.len);
 }
+
+// spec-case: QBE-UNCHECKED-1
+test "an unchecked executable computes the same results and refuses a runtime ceiling" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "unchecked.my", .data =
+        \\def scale(xs: list[i64], at: i64, factor: i64) -> u8:
+        \\    return u8(xs[at] * factor + 1)
+        \\
+        \\def main() -> i64:
+        \\    fixed: [3]i64 = [10, 20, 30]
+        \\    xs: list[i64] = []
+        \\    xs.append(fixed[1])
+        \\    return i64(scale(xs, 0, 2)) + len(xs)
+    });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "unchecked.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const checked = try std.fs.path.join(testing.allocator, &.{ directory, "checked-bin" });
+    defer testing.allocator.free(checked);
+    const bare = try std.fs.path.join(testing.allocator, &.{ directory, "unchecked-bin" });
+    defer testing.allocator.free(bare);
+    const cache = try std.fs.path.join(testing.allocator, &.{ directory, "cache" });
+    defer testing.allocator.free(cache);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_argument);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", checked, cache_argument, tools[0], tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", bare, cache_argument, tools[0], tools[1], "--unchecked" }, "");
+    // Valid input reaches the same answer under both policies: 20 * 2 + 1 = 41,
+    // plus the one appended element, returned as the process status too.
+    const guarded = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ checked, "--print-result" } });
+    defer testing.allocator.free(guarded.stdout);
+    defer testing.allocator.free(guarded.stderr);
+    const unguarded = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ bare, "--print-result" } });
+    defer testing.allocator.free(unguarded.stdout);
+    defer testing.allocator.free(unguarded.stderr);
+    try testing.expectEqualStrings("42\n", guarded.stdout);
+    try testing.expectEqualStrings(guarded.stdout, unguarded.stdout);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 42 }, guarded.term);
+    try testing.expectEqual(guarded.term, unguarded.term);
+    try testing.expectEqualStrings("", unguarded.stderr);
+    // The unchecked build is unbounded, so a ceiling it cannot enforce is
+    // refused loudly rather than silently ignored.
+    const refused = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ bare, "--max-steps=1" } });
+    defer testing.allocator.free(refused.stdout);
+    defer testing.allocator.free(refused.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, refused.term);
+    try testing.expect(std.mem.indexOf(u8, refused.stderr, "R_NO_STEP_ACCOUNTING") != null);
+}
+
+// spec-case: QBE-UNCHECKED-1
+test "the unchecked policy is refused where its traps are still needed" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "refused.my", .data =
+        \\def main() -> i64:
+        \\    return 0
+    });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "refused.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const output = try std.fs.path.join(testing.allocator, &.{ directory, "refused-bin" });
+    defer testing.allocator.free(output);
+    // `mylang test` names the refusal instead of reporting an unknown flag.
+    const tested = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", entry, "--unchecked" } });
+    defer testing.allocator.free(tested.stdout);
+    defer testing.allocator.free(tested.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, tested.term);
+    try testing.expect(std.mem.indexOf(u8, tested.stderr, "--unchecked is refused") != null);
+    // A Debug build exists to report failures, so it does not accept the policy.
+    const debug = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "build", entry, "-o", output, "--unchecked", "--mode=Debug" } });
+    defer testing.allocator.free(debug.stdout);
+    defer testing.allocator.free(debug.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, debug.term);
+    try testing.expect(std.mem.indexOf(u8, debug.stderr, "--unchecked") != null);
+}

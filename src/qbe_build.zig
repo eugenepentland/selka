@@ -222,6 +222,11 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         // refuses one at run time. A library always keeps it.
         const frame_accounted = frameAccounting(parsed.link_arguments);
         if (fast_executable and !frame_accounted) try arguments.append(a, "--drop-frame-checks");
+        // QBE-UNCHECKED-1: `--unchecked` drops the overflow, cast and
+        // index-bounds guards. It composes with the two lines above rather
+        // than replacing them: a build that also asked for a ceiling keeps the
+        // frame protocol that enforces it and gives up only the value guards.
+        if (options.unchecked(parsed.link_arguments)) try arguments.append(a, "--drop-safety-checks");
         if (selectFile(parsed.link_arguments)) |path| {
             try arguments.append(a, try std.fmt.allocPrint(a, "--select-file={s}", .{path}));
             // Forward the work-report request for selective test builds so native-test

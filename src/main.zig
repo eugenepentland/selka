@@ -537,7 +537,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"report-project-quality",
         => unreachable,
         .@"emit-qbe" => {
-            const generated = emitMeasuredNative(init, &compilation, parsed.drop_debug, !parsed.drop_step_checks, !parsed.drop_frame_checks) catch |err| switch (err) {
+            const generated = emitMeasuredNative(init, &compilation, parsed.emissionPolicy()) catch |err| switch (err) {
                 error.SourceError => {
                     try report(init, &compilation);
                     return 1;
@@ -621,7 +621,7 @@ fn executeRun(init: Context, compilation: *language.Compilation, parsed: Parsed)
     };
     if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
     if (grants.ungranted(compilation.code.?, parsed.grants)) |flag| return reportUngranted(init, flag);
-    const manifest = emitMeasuredNative(init, compilation, false, parsed.saw_steps, parsed.saw_frames) catch |err| switch (err) {
+    const manifest = emitMeasuredNative(init, compilation, parsed.runPolicy(parsed.saw_frames)) catch |err| switch (err) {
         error.SourceError => {
             try report(init, compilation);
             return 1;
@@ -778,6 +778,10 @@ const Parsed = struct {
     drop_step_checks: bool,
     /// Internal `--drop-frame-checks`: this build carries no call-depth ceiling.
     drop_frame_checks: bool,
+    /// `--unchecked` (`run`) and internal `--drop-safety-checks` (the emitters):
+    /// omit the overflow, narrowing-cast and index-bounds guards, and with no
+    /// ceiling also the frame record and its position stores.
+    unchecked: bool,
     /// True when the command was asked for a runtime instruction ceiling, so the
     /// program it compiles must carry the accounting that enforces it.
     saw_steps: bool,
@@ -797,6 +801,32 @@ const Parsed = struct {
     /// `--friction-log=PATH` as typed, or null when the flag was not passed.
     /// `MYLANG_FRICTION_LOG` names the same destination when the flag is absent.
     friction_path: ?[]const u8 = null,
+
+    /// The policy the `emit-qbe`/`emit-project-qbe` switches spell out. Each
+    /// `--drop-…` names one thing the emitted units stop carrying, so a command
+    /// that passes none emits the fully checked, fully accounted program.
+    fn emissionPolicy(self: *const Parsed) language.native_interface.Policy {
+        return .{
+            .drop_debug = self.drop_debug,
+            .step_checks = !self.drop_step_checks,
+            .frame_checks = !self.drop_frame_checks,
+            .checks = !self.unchecked,
+        };
+    }
+
+    /// The policy `run`/`run-project` build under. Step accounting is emitted
+    /// only where a ceiling was asked for. `frames` is the caller's own default
+    /// for depth accounting — the single-file path emits it only under a
+    /// ceiling, a project keeps it — and `--unchecked` narrows it to exactly
+    /// the ceilings that were asked for, which is what removes the frame record
+    /// and its position stores when there are none (`QBE-UNCHECKED-1`).
+    fn runPolicy(self: *const Parsed, frames: bool) language.native_interface.Policy {
+        return .{
+            .step_checks = self.saw_steps,
+            .frame_checks = if (self.unchecked) self.saw_frames else frames,
+            .checks = !self.unchecked,
+        };
+    }
 };
 /// Whether any argument names the retired `--mutation-markers` switch. Every
 /// command rejects it before its own parser sees it, because no command selects
@@ -904,6 +934,7 @@ const ArgumentParser = struct {
     drop_debug: bool = false,
     drop_step_checks: bool = false,
     drop_frame_checks: bool = false,
+    unchecked: bool = false,
     saw_min: bool = false,
     saw_population: bool = false,
     saw_work: bool = false,
@@ -1067,7 +1098,26 @@ const ArgumentParser = struct {
         } else if (std.mem.eql(u8, arg, "--drop-frame-checks")) {
             if ((self.command != .@"emit-qbe" and self.command != .@"emit-project-qbe") or self.drop_frame_checks) return error.Usage;
             self.drop_frame_checks = true;
+        } else if (try self.uncheckedOption(arg)) {
+            return true;
         } else return false;
+        return true;
+    }
+
+    /// `--unchecked` on `run`/`run-project` and the internal
+    /// `--drop-safety-checks` the native build driver hands the emitters: both
+    /// select `native_interface.Policy.checks = false`. They are one switch
+    /// under two spellings because the user-facing name states a guarantee the
+    /// program gives up, while the emitter name matches `--drop-step-checks`
+    /// and `--drop-frame-checks` beside it.
+    fn uncheckedOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        const emitter = self.command == .@"emit-qbe" or self.command == .@"emit-project-qbe";
+        if (std.mem.eql(u8, arg, "--drop-safety-checks")) {
+            if (!emitter or self.unchecked) return error.Usage;
+        } else if (std.mem.eql(u8, arg, "--unchecked")) {
+            if (!self.executes() or self.unchecked) return error.Usage;
+        } else return false;
+        self.unchecked = true;
         return true;
     }
 
@@ -1247,6 +1297,7 @@ const ArgumentParser = struct {
             .drop_debug = self.drop_debug,
             .drop_step_checks = self.drop_step_checks,
             .drop_frame_checks = self.drop_frame_checks,
+            .unchecked = self.unchecked,
             .saw_steps = self.saw_steps,
             .saw_frames = self.saw_frames,
             .friction_path = self.friction_path,
@@ -1960,6 +2011,8 @@ fn runProjectProgram(init: Context, compilation: *language.project_compile.Compi
         .sources = sources,
         .policy = if (configured.identity) |*value| value else null,
         .step_checks = parsed.saw_steps,
+        .frame_checks = parsed.runPolicy(true).frame_checks,
+        .checks = !parsed.unchecked,
     };
     if (!parsed.no_cache) {
         if (try native_run.manifest_cache.load(init.gpa, init.io, init.environ, parsed.native, identity)) |entry| {
@@ -1972,7 +2025,7 @@ fn runProjectProgram(init: Context, compilation: *language.project_compile.Compi
             return runNative(init, parsed, entry.manifest);
         }
     }
-    const manifest = emitMeasuredNative(init, compilation, false, parsed.saw_steps, true) catch |err| switch (err) {
+    const manifest = emitMeasuredNative(init, compilation, parsed.runPolicy(true)) catch |err| switch (err) {
         error.SourceError => {
             try reportProject(init, compilation);
             return 1;
@@ -1984,8 +2037,8 @@ fn runProjectProgram(init: Context, compilation: *language.project_compile.Compi
     return runNative(init, parsed, manifest);
 }
 
-fn emitProjectNative(init: Context, compilation: *language.project_compile.Compilation, select_file: ?[]const u8, drop_debug: bool, step_checks: bool, frame_checks: bool) !?[]u8 {
-    const generated = (if (select_file) |path| emitMeasuredSelectedNative(init, compilation, path) else emitMeasuredNative(init, compilation, drop_debug, step_checks, frame_checks)) catch |err| switch (err) {
+fn emitProjectNative(init: Context, compilation: *language.project_compile.Compilation, select_file: ?[]const u8, policy: language.native_interface.Policy) !?[]u8 {
+    const generated = (if (select_file) |path| emitMeasuredSelectedNative(init, compilation, path) else emitMeasuredNative(init, compilation, policy)) catch |err| switch (err) {
         error.SourceError => {
             try reportProject(init, compilation);
             return null;
@@ -2091,7 +2144,7 @@ fn nativeTestCompileReply(init: Context, action: []const u8, status: u8, failure
 fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Compilation, parsed: Parsed) !?[]u8 {
     return switch (parsed.command) {
         .@"native-test-graph" => try emitNativeTestFacts(init, compilation),
-        .@"emit-project-qbe" => (try emitProjectNative(init, compilation, parsed.select_file, parsed.drop_debug, !parsed.drop_step_checks, !parsed.drop_frame_checks)) orelse error.SourceError,
+        .@"emit-project-qbe" => (try emitProjectNative(init, compilation, parsed.select_file, parsed.emissionPolicy())) orelse error.SourceError,
         .@"schema-project" => blk: {
             try reportProject(init, compilation);
             break :blk if (parsed.schema_report)
@@ -2987,12 +3040,12 @@ fn featureReport(init: std.process.Init) !void {
     try std.Io.File.stdout().writeStreamingAll(init.io, "\n");
 }
 
-fn emitMeasuredNative(init: Context, compilation: anytype, drop_debug: bool, step_checks: bool, frame_checks: bool) ![]u8 {
+fn emitMeasuredNative(init: Context, compilation: anytype, policy: language.native_interface.Policy) ![]u8 {
     init.timings.begin(lowering_phase, false);
-    try compilation.emitWithOptions(drop_debug);
+    try compilation.emitWithOptions(policy.drop_debug);
     if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
     init.timings.begin("native_emission", false);
-    const generated = try compilation.emitQbeWithOptions(init.gpa, drop_debug, step_checks, frame_checks);
+    const generated = try compilation.emitQbeWithOptions(init.gpa, policy);
     // `qbe-units-v1` emits one independently linkable fragment per lowered
     // function, so the fragment count is observed at the emission site.
     if (compilation.code) |code| setWork(init, .emitted_fragments, code.functions.len, 0);

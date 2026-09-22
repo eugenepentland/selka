@@ -28,6 +28,8 @@ pub const embedded_project = @import("embedded_project.zig");
 pub const dependency_report = @import("dependency_report.zig");
 pub const project_files = @import("project_files.zig");
 pub const project_compile = @import("project_compile.zig");
+/// Export snapshot and the safety/accounting policy one native emission runs under.
+pub const native_interface = @import("native_interface.zig");
 const project_syntax = @import("project_syntax.zig");
 pub const interfaces = @import("interfaces.zig");
 pub const check_cache = @import("check_cache.zig");
@@ -190,15 +192,15 @@ pub const Compilation = struct {
 
     /// Allocate independently compilable scalar QBE units after full checking.
     pub fn emitQbe(self: *Compilation, allocator: std.mem.Allocator) EmitNativeError![]u8 {
-        return self.emitQbeWithOptions(allocator, false, true, true);
+        return self.emitQbeWithOptions(allocator, .{});
     }
 
-    /// Emit QBE units under an explicit `debug` policy and step-accounting choice.
-    pub fn emitQbeWithOptions(self: *Compilation, allocator: std.mem.Allocator, drop_debug: bool, step_checks: bool, frame_checks: bool) EmitNativeError![]u8 {
-        try self.emitWithOptions(drop_debug);
+    /// Emit QBE units under an explicit debug, accounting and safety policy.
+    pub fn emitQbeWithOptions(self: *Compilation, allocator: std.mem.Allocator, policy: @import("native_interface.zig").Policy) EmitNativeError![]u8 {
+        try self.emitWithOptions(policy.drop_debug);
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        return @import("qbe.zig").generateWithInterface(allocator, self.code.?, self.src, &sink, .{ .step_checks = step_checks, .frame_checks = frame_checks });
+        return @import("qbe.zig").generateWithInterface(allocator, self.code.?, self.src, &sink, .{ .policy = policy });
     }
 
     /// Allocate a source-annotated disassembly of the lowered program.

@@ -74,9 +74,13 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
                 try self.print(" %v{d} =l loaduw %v{d}\n", .{ tag, index });
                 index = tag;
             }
-            const invalid = self.temp();
-            try self.print(" %v{d} =l cugel %v{d}, {d}\n jnz %v{d}, @bounds{d}, @index{d}\n", .{ invalid, index, layout_value.count, invalid, invalid, invalid });
-            try self.print("@bounds{d}\n call $myl_qbe_fail_array_bounds(l %ctx, l %v{d}, l {d})\n jmp @failure\n@index{d}\n", .{ invalid, index, layout_value.count, invalid });
+            // QBE-UNCHECKED-1: the element address below is the operation; the
+            // unsigned range test and its cold trap block are what go away.
+            if (self.checks) {
+                const invalid = self.temp();
+                try self.print(" %v{d} =l cugel %v{d}, {d}\n jnz %v{d}, @bounds{d}, @index{d}\n", .{ invalid, index, layout_value.count, invalid, invalid, invalid });
+                try self.print("@bounds{d}\n call $myl_qbe_fail_array_bounds(l %ctx, l %v{d}, l {d})\n jmp @failure\n@index{d}\n", .{ invalid, index, layout_value.count, invalid });
+            }
             if (replacing and destination == null) {
                 const copy = try self.aggregatePointer();
                 try self.print(" blit %v{d}, %v{d}, {d}\n", .{ source, copy, layout_value.size });

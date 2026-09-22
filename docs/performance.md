@@ -197,6 +197,41 @@ cap how much a guest may hold; the collector enforces the cap. Measured on twent
 set fits. At `MYLANG_MEMORY_LIMIT=4M`, below the live set, the same program traps
 `R_MEMORY_BUDGET` rather than merely slowing down.
 
+## What safety costs, and how to stop paying it
+
+The language's traps are code the emitter generates: a comparison and a cold
+branch per checked arithmetic operation, per narrowing cast and per container
+index, plus a 32-byte frame record linked on every call and one store of the
+current instruction position. The
+[schematic parity audit](audits/schematic-parity-gap-2026-09-22.md#2-what-safety-costs-the-strip-ladder)
+priced each class separately on a 2.4 ms SVG render, by rewriting the emitted IL
+and rebuilding — every arm produced the byte-identical 49,617-byte output:
+
+| removed from the render | static sites | render, ms | vs default |
+|---|---:|---:|---:|
+| nothing (the default build) | — | 2.390 | — |
+| add/sub/neg/div overflow guards | 736 | 2.385 | −0.2% |
+| narrowing-cast guards | 290 | 2.348 | −1.8% |
+| list and array index guards | 313 | 2.354 | −1.5% |
+| allocation and capacity guards | 86 | 2.395 | +0.2% |
+| all four check classes | 1,425 | 2.288 | **−4.3%** |
+| frame record, floor test, 1,909 position stores | 3,872 IL lines | 2.083 | **−12.8%** |
+| both | — | 2.030 | **−15.1%** |
+
+Two things follow. The value checks are cheap — a correctly predicted branch on
+a path the optimizer already knows is cold — so removing them is not where a
+slow program gets fast. The per-call frame protocol is three times as expensive
+as all of them together, because it is unconditional work on every call and it
+inflates every function body past the inliner's threshold.
+
+`mylang build --unchecked` takes both omissions at emission time; see
+[unchecked release builds](tooling/native-build.md#unchecked-release-builds) for
+exactly what stops being detected. It is a policy for a program whose tests
+already pass, not a debugging tool: under it an overflow, an out-of-range cast
+or an out-of-bounds index is undefined behaviour instead of a named trap.
+Allocation failure, the memory ceiling, the collector and capability validation
+are unaffected, so a program that runs out of memory still exits cleanly.
+
 ## Fixed arrays are values you can write in place
 
 `[N]T` is a value type, but an element access no longer pays for the value: a read

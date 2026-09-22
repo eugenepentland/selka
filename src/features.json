@@ -57,6 +57,11 @@
       "summary": "`mylang build` drives QBE, the assembler and the linker itself, with no Python installer in the loop.",
       "doc": "docs/tooling/native-build.md#mylang-build"
     },
+    "unchecked-release-builds": {
+      "kind": "tooling",
+      "summary": "`mylang build --unchecked` omits the integer-overflow, narrowing-cast and index-bounds guards and, when the build carries no step or frame ceiling, the per-call frame record and its position stores; allocation failure, the memory budget, the collector and host-call validation are kept, and the policy is refused for `mylang test`, `--mode Debug` and `--library`.",
+      "doc": "docs/tooling/native-build.md#unchecked-release-builds"
+    },
     "python-free-native-guest-tests": {
       "kind": "tooling",
       "summary": "`mylang test` discovers exported `test_` functions and runs them as fresh native processes.",

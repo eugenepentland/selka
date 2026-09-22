@@ -116,8 +116,9 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
         .sink = sink,
         .arenas = arenas,
         .selected = selected,
-        .step_checks = interface.step_checks,
-        .frame_checks = interface.frame_checks,
+        .step_checks = interface.policy.step_checks,
+        .frame_checks = interface.policy.frame_checks,
+        .checks = interface.policy.checks,
         .pure = &.{},
     };
     try emitPass(pass);
@@ -666,6 +667,9 @@ const EmitPass = struct {
     step_checks: bool,
     /// Whether generated code enforces the `--max-frames` ceiling itself.
     frame_checks: bool,
+    /// Whether generated code carries the overflow, cast and bounds guards
+    /// (`--unchecked` turns them off; see `native_interface.Policy.checks`).
+    checks: bool,
     pure: []const bool,
 };
 
@@ -685,6 +689,7 @@ fn emitPass(pass: EmitPass) GenerateError!void {
             .arenas = pass.arenas,
             .step_checks = pass.step_checks,
             .frame_checks = pass.frame_checks,
+            .checks = pass.checks,
             .entry = index == @backingInt(pass.program.main),
             .pure = pass.pure,
         };
@@ -1095,6 +1100,10 @@ const Emitter = struct {
     /// a frame ceiling omits both and refuses one at run time instead, exactly as
     /// instruction-budget accounting does.
     frame_checks: bool = true,
+    /// Emit the value guards: integer overflow, narrowing casts and index
+    /// bounds. `--unchecked` clears it, which also removes the frame record
+    /// and its position stores when nothing is accounted (`QBE-UNCHECKED-1`).
+    checks: bool = true,
     /// True for the function the runtime calls first, the only place the
     /// missing-accounting guard has to run.
     entry: bool = false,
@@ -1715,12 +1724,23 @@ const Emitter = struct {
         };
         return projected.toOwnedSlice(self.allocator);
     }
+    /// Whether this function links a frame record at all. QBE-UNCHECKED-1: a
+    /// build that carries neither ceiling and was asked to drop its value
+    /// guards has nothing left that reads the record — no step check, no depth
+    /// counter, and no guard whose trap would want a trace — so the record, the
+    /// stack-floor test, the `_meta` store, the link/unlink pair and every
+    /// `storel N, %position` go away together. Every other policy keeps them.
+    fn framesLinked(self: *const Emitter) bool {
+        return self.checks or self.step_checks or self.frame_checks;
+    }
     /// Link this function's native-stack frame record and enforce the logical
     /// depth ceiling and the execution-stack floor without a runtime call. The
     /// record is `{prev, function, position, native_bytes}`; generated code owns
     /// the first three words and reads `ctx->frames`/`ctx->frame_limit`/
-    /// `ctx->frame_floor` at their frozen offsets.
+    /// `ctx->frame_floor` at their frozen offsets. A build that links no record
+    /// at all emits nothing here (see `framesLinked`).
     fn enterFrame(self: *Emitter, name: []const u8) GenerateError!void {
+        if (!self.framesLinked()) return;
         const admit = self.temp();
         const stack = self.temp();
         const limit_fail = self.temp();
@@ -1843,7 +1863,7 @@ const Emitter = struct {
             // The position marker is not budget metadata: trap traces and
             // `assert` messages read the frame's current pc, so it is emitted
             // even where the step check is not.
-            try self.print("@i{d}\n storel {d}, %position\n", .{ pc, pc });
+            if (self.framesLinked()) try self.print("@i{d}\n storel {d}, %position\n", .{ pc, pc }) else try self.print("@i{d}\n", .{pc});
             if (self.step_checks) try self.step();
             self.pc = pc;
             self.expireFusedDecode(pc);
