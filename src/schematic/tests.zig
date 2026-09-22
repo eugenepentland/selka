@@ -31,7 +31,11 @@ const declarations =
     \\public host def issue(host: Host, code: i64, file: i64, position: i64) -> i64 effects(host)
 ;
 const empty: [3][]const u8 = .{ "", "", "" };
-const budget = [_][]const u8{@import("host_native").step_budget};
+/// The build policy the staged single-file guests below use. They exercise the
+/// trusted boundary, not the generated code, and the debug assembler links them
+/// in a fraction of the release path's time; the whole-fixture test and the
+/// runner itself keep `application.release`.
+const staging: @import("host_native").BuildOptions = .{};
 /// Give the host's `zig cc` children the parent's warm global cache. This
 /// hand-built environment carries no `HOME`, so without it every guest link
 /// would start from an empty Zig cache and rebuild compiler-rt.
@@ -92,16 +96,16 @@ const Harness = struct {
     /// Build the staged project and render one set of documents through it.
     fn render(self: *Harness, documents: [3][]const u8) ![]const u8 {
         var app: application.App = undefined;
-        try app.initDisk(self.process(), self.root);
+        try app.initDiskWithOptions(self.process(), self.root, staging);
         defer app.deinit();
-        return app.run(&documents, &budget);
+        return app.run(&documents, &.{});
     }
     /// Build the staged project and report the located issue one run produced.
     fn reject(self: *Harness, documents: [3][]const u8) !?bridge.Issue {
         var app: application.App = undefined;
-        try app.initDisk(self.process(), self.root);
+        try app.initDiskWithOptions(self.process(), self.root, staging);
         defer app.deinit();
-        _ = app.run(&documents, &budget) catch return app.issue;
+        _ = app.run(&documents, &.{}) catch return app.issue;
         // A successful render must not satisfy a rejection assertion.
         try t.expect(false);
         return null;
@@ -166,12 +170,14 @@ test "schematic byte callbacks reject positions and documents the host never sup
     );
     try t.expectEqual(@as(?bridge.Issue, null), try harness.reject(empty));
     // A nonzero result with no reported issue is bounded-storage exhaustion.
+    // The published byte is never read: a nonzero result withholds publication.
     try harness.source("main.my",
         \\module main
         \\import io
         \\
         \\
         \\def main(host: Host) -> i64:
+        \\    _ = io.put(host, 65u8)
         \\    return 3
     );
     try t.expectEqual(@as(i64, 24), (try harness.reject(empty)).?.code);
@@ -311,12 +317,63 @@ test "schematic renders the whole fixture identically, normally and under collec
     try app.initDisk(harness.process(), "src/schematic/guest");
     defer app.deinit();
     const expected = try std.Io.Dir.cwd().readFileAlloc(t.io, "experiments/schematic/straps-synth-lmx2595.svg", a, .limited(1024 * 1024));
-    try t.expectEqualStrings(expected, try app.run(&documents, &budget));
-    try t.expectEqualStrings(expected, try app.run(&documents, &.{ budget[0], "--gc-stress" }));
+    try t.expectEqualStrings(expected, try app.run(&documents, &.{}));
+    try t.expectEqualStrings(expected, try app.run(&documents, &.{"--gc-stress"}));
 }
 
 test {
     _ = @import("dev_session.zig");
+    _ = @import("runner.zig");
+}
+
+// The shipped policy counts no instructions, so these two prove what still
+// stops a guest that never returns: the call-depth ceiling its build carries,
+// and the wall clock. Both build through `initDisk`, which is the policy the
+// runner itself uses.
+// spec: SCHEMATIC-RUNNER-BOUNDS-1
+test "unbounded recursion in a release-policy guest stops at the call-depth ceiling" {
+    const harness = try staged(
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def descend(depth: int) -> int:
+        \\    return descend(depth + 1)
+        \\
+        \\
+        \\def main(host: Host) -> i64:
+        \\    _ = io.put(host, 65u8)
+        \\    return descend(0)
+    );
+    defer harness.close();
+    var app: application.App = undefined;
+    try app.initDisk(harness.process(), harness.root);
+    defer app.deinit();
+    try t.expectError(error.GuestTrap, app.run(&empty, &.{}));
+    try t.expectEqual(@as(?bridge.Issue, null), app.issue);
+}
+
+// spec-case: SCHEMATIC-RUNNER-BOUNDS-1
+test "a release-policy guest that outruns its ceiling stops at the wall clock" {
+    const harness = try staged(
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def main(host: Host) -> i64:
+        \\    step = io.length(host, 0) + 1
+        \\    total = 0
+        \\    while total < 4000000000:
+        \\        total = total + step
+        \\    return io.put(host, u8(total % 256))
+    );
+    defer harness.close();
+    var app: application.App = undefined;
+    try app.initDisk(harness.process(), harness.root);
+    defer app.deinit();
+    // A caller's own ceiling is read before the policy's, so this costs a
+    // second rather than the shipped minute.
+    try t.expectError(error.GuestTrap, app.run(&empty, &.{"--timeout=1"}));
 }
 
 const named_main =
@@ -358,9 +415,9 @@ test "named schematic input providers reject documents the host never supplied" 
     var app: application.App = undefined;
     try app.initDisk(harness.process(), harness.root);
     defer app.deinit();
-    try t.expectError(error.GuestTrap, app.run(&.{ "Circuit", "Pinout", "" }, &budget));
+    try t.expectError(error.GuestTrap, app.run(&.{ "Circuit", "Pinout", "" }, &.{}));
     // A document the host cannot hand to the guest is refused before it starts.
-    try t.expectError(error.InvalidSchematic, app.run(&.{ "Circuit", "Pinout", "\xff" }, &budget));
+    try t.expectError(error.InvalidSchematic, app.run(&.{ "Circuit", "Pinout", "\xff" }, &.{}));
     try t.expectEqual(@as(i64, 8), app.issue.?.code);
 }
 
@@ -387,6 +444,7 @@ test "schematic bulk buffer boundaries hold normally and under collection stress
     try harness.source("main.my",
         \\module main
         \\import bulk_io_test
+        \\import io
         \\
         \\
         \\def main(host: Host) -> int:
@@ -398,13 +456,13 @@ test "schematic bulk buffer boundaries hold normally and under collection stress
         \\        return 3
         \\    if not bulk_io_test.test_decimal_uses_exact_remaining_capacity():
         \\        return 4
-        \\    return 0
+        \\    return io.flush(host, io.output())
     );
     var app: application.App = undefined;
     try app.initDisk(harness.process(), harness.root);
     defer app.deinit();
-    try t.expectEqualStrings("", try app.run(&empty, &budget));
-    try t.expectEqualStrings("", try app.run(&empty, &.{ budget[0], "--gc-stress" }));
+    try t.expectEqualStrings("", try app.run(&empty, &.{}));
+    try t.expectEqualStrings("", try app.run(&empty, &.{"--gc-stress"}));
 }
 
 // spec: SCHEMATIC-PYTHON-1
@@ -417,5 +475,5 @@ test "Python schematic decimal output preserves negative numbers and minimum int
     var app: application.App = undefined;
     try app.initDisk(harness.process(), harness.root);
     defer app.deinit();
-    try t.expectEqualStrings("-12,-9223372036854775808,0", try app.run(&empty, &.{ budget[0], "--gc-stress" }));
+    try t.expectEqualStrings("-12,-9223372036854775808,0", try app.run(&empty, &.{"--gc-stress"}));
 }
