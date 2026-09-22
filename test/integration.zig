@@ -160,7 +160,7 @@ test "CLI managed constants import run build installed and invalidate warm cache
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
         \\module main
         \\import constants
-        \\def read[T]() -> str effects(managed_allocation):
+        \\def read[T]() -> str:
         \\    return constants.TEXT
         \\def main(out: Stream) -> int:
         \\    out.print(read[int]())
@@ -905,7 +905,7 @@ test "build --run detects module projects and installed binaries receive the sam
         \\module helper
         \\
         \\
-        \\public def render(args: list[str]) -> str effects(managed_allocation):
+        \\public def render(args: list[str]) -> str:
         \\    out = ""
         \\    for value in args:
         \\        out = out + "[" + value + "]"
@@ -5425,7 +5425,7 @@ test "CLI nested record alias rejects under effects and runs with a mutation foo
         \\    values: list[int]
         \\
         \\
-        \\def overwrite(box: Box) -> None effects():
+        \\def overwrite(box: mut Box) -> None effects():
         \\    box.values[0] = 7
         \\
         \\
@@ -7438,11 +7438,11 @@ const invoke_app =
     \\    return x
     \\
     \\
-    \\public def shift(p: Point, dx: i64) -> Point effects(managed_allocation):
+    \\public def shift(p: Point, dx: i64) -> Point:
     \\    return Point(x=p.x + dx, y=p.y)
     \\
     \\
-    \\public def origin(x: i64) -> Point effects(managed_allocation):
+    \\public def origin(x: i64) -> Point:
     \\    return Point(x=x, y=0)
     \\
     \\
@@ -7465,7 +7465,7 @@ const invoke_app =
     \\    return x
     \\
     \\
-    \\public def text_len(text: str) -> i64 effects(managed_allocation):
+    \\public def text_len(text: str) -> i64:
     \\    return len(text)
     \\
     \\
@@ -7500,23 +7500,23 @@ const invoke_text =
     \\module app
     \\
     \\
-    \\public def letter(n: i64) -> str effects(managed_allocation):
+    \\public def letter(n: i64) -> str:
     \\    return chr(n)
     \\
     \\
-    \\public def greeting() -> str effects(managed_allocation):
+    \\public def greeting() -> str:
     \\    return "h\u00e9llo \u4e16\u754c \U0001F600"
     \\
     \\
-    \\public def frozen() -> str effects(managed_allocation):
+    \\public def frozen() -> str:
     \\    return "literal"
     \\
     \\
-    \\public def shout(n: i64) -> str effects(managed_allocation):
+    \\public def shout(n: i64) -> str:
     \\    return chr(n) + "!"
     \\
     \\
-    \\public def repeated(n: i64) -> str effects(managed_allocation):
+    \\public def repeated(n: i64) -> str:
     \\    text = ""
     \\    i = 0
     \\    while i < n:
@@ -7525,7 +7525,7 @@ const invoke_text =
     \\    return text
     \\
     \\
-    \\public def count(text: str) -> i64 effects(managed_allocation):
+    \\public def count(text: str) -> i64:
     \\    return len(text)
 ;
 
