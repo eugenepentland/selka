@@ -685,6 +685,69 @@ test "the fast protocol drops the per-call sticky test and keeps the trace posit
     defer full_parsed.deinit();
     try std.testing.expect(std.mem.indexOf(u8, named(full_parsed.value, "main").?.il, "loadl %trap") != null);
 }
+/// The unit named `name` in a manifest emitted from `source` under `policy`.
+fn emittedUnder(a: std.mem.Allocator, source: []const u8, policy: language.native_interface.Policy, name: []const u8) ![]u8 {
+    var program = try language.Compilation.init(a, "qbe.my", source);
+    defer program.deinit();
+    const manifest = try program.emitQbeWithOptions(a, policy);
+    defer a.free(manifest);
+    var parsed = try std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer parsed.deinit();
+    return a.dupe(u8, (named(parsed.value, name) orelse return error.TestUnexpectedResult).il);
+}
+const halting_source =
+    \\def grow(x: int, step: int) -> int:
+    \\    return x + step
+    \\
+    \\
+    \\def poke(xs: mut list[int], at: int) -> None:
+    \\    xs[at] = 7
+    \\
+    \\
+    \\def flip(x: int, s: int) -> int:
+    \\    return -(x << s)
+    \\
+    \\
+    \\def main() -> int:
+    \\    xs: list[int] = [1, 2, 3]
+    \\    poke(mut xs, 1)
+    \\    return grow(1, flip(2, 1))
+;
+// spec: QBE-NORETURN-1
+test "the fast protocol ends each fail helper's path in hlt and accounting keeps the sticky exit" {
+    const a = std.testing.allocator;
+    // Neither accounting: the overflow and the list-bounds failure paths end in
+    // `hlt` right after their helper, and no fail call is followed by the jump
+    // into the shared exit.
+    const fast_grow = try emittedUnder(a, halting_source, .{ .step_checks = false, .frame_checks = false }, "grow");
+    defer a.free(fast_grow);
+    const fast_poke = try emittedUnder(a, halting_source, .{ .step_checks = false, .frame_checks = false }, "poke");
+    defer a.free(fast_poke);
+    try std.testing.expect(std.mem.indexOf(u8, fast_grow, "call $myl_qbe_fail_overflow_op(") != null);
+    try std.testing.expectEqual(std.mem.count(u8, fast_grow, "call $myl_qbe_fail_"), std.mem.count(u8, fast_grow, "\n hlt\n"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, fast_grow, "jmp @failure"));
+    try std.testing.expect(std.mem.indexOf(u8, fast_poke, "myl_qbe_fail_") != null);
+    try std.testing.expectEqual(std.mem.count(u8, fast_poke, "call $myl_qbe_fail_"), std.mem.count(u8, fast_poke, "\n hlt\n"));
+    // The negation's and the shift's cold blocks call a value helper that
+    // always traps there, so they end in `hlt` as well.
+    const fast_flip = try emittedUnder(a, halting_source, .{ .step_checks = false, .frame_checks = false }, "flip");
+    defer a.free(fast_flip);
+    try std.testing.expect(std.mem.indexOf(u8, fast_flip, "call $myl_qbe_int_neg(") != null);
+    try std.testing.expect(std.mem.indexOf(u8, fast_flip, "call $myl_qbe_int_binary(") != null);
+    try std.testing.expectEqual(std.mem.count(u8, fast_flip, "call $myl_qbe_fail_") + 2, std.mem.count(u8, fast_flip, "\n hlt\n"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, fast_flip, "jmp @failure"));
+    // Frame accounting alone keeps the sticky protocol, and with it the return
+    // through `@failure` after every helper; so does the fully accounted
+    // program a library and the guest-test runner build.
+    const framed = try emittedUnder(a, halting_source, .{ .step_checks = false }, "grow");
+    defer a.free(framed);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, framed, " hlt"));
+    try std.testing.expect(std.mem.indexOf(u8, framed, ")\n jmp @failure\n") != null);
+    const accounted = try emittedUnder(a, halting_source, .{}, "poke");
+    defer a.free(accounted);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, accounted, " hlt"));
+    try std.testing.expect(std.mem.indexOf(u8, accounted, ")\n jmp @failure\n") != null);
+}
 // spec: QBE-POSITION-2
 test "a trap position stores on the cold path and a call site keeps its own" {
     const a = std.testing.allocator;

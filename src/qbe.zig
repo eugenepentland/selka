@@ -512,6 +512,41 @@ fn sinkPositions(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
     return std.mem.join(a, "\n", kept.items);
 }
 
+/// QBE-NORETURN-1: end every failure path whose last call is a `myl_qbe_fail_*`
+/// helper in `hlt` (LLVM's `unreachable`) instead of `jmp @failure`. Only the
+/// fast protocol runs this: there the guest-stack trampoline has armed the
+/// non-local exit before any guest instruction runs, and every such helper calls
+/// the runtime's `fail`, which builds the trace and leaves through it, so the
+/// jump after the call is dead. Keeping it anyway makes every check an edge into
+/// the shared exit, which blocks inlining and merges the no-overflow facts of
+/// every path. A build with step or frame accounting keeps the sticky return.
+/// The value helpers `myl_qbe_int_neg` and `myl_qbe_int_binary` also compute
+/// ordinary results, so their call ends a path only in the cold block the
+/// checked negation and shift open for the one operand class that always traps.
+fn haltFailurePaths(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
+    var kept: std.ArrayList([]const u8) = .empty;
+    defer kept.deinit(a);
+    var scan = std.mem.splitScalar(u8, text, '\n');
+    var block: []const u8 = "";
+    var previous: []const u8 = "";
+    while (scan.next()) |line| {
+        const exits = std.mem.eql(u8, line, " jmp @failure") or std.mem.eql(u8, line, " jmp @entry_failure");
+        try kept.append(a, if (exits and failingCall(block, previous)) " hlt" else line);
+        if (std.mem.startsWith(u8, line, "@")) block = line;
+        previous = line;
+    }
+    return std.mem.join(a, "\n", kept.items);
+}
+
+/// Whether `call`, the last line of the block labelled `block`, is a call that
+/// has already recorded a trap and left through the runtime's non-local exit.
+fn failingCall(block: []const u8, call: []const u8) bool {
+    if (std.mem.startsWith(u8, call, " call $myl_qbe_fail_")) return true;
+    if (std.mem.startsWith(u8, call, " call $myl_qbe_int_neg(")) return std.mem.startsWith(u8, block, "@neg_overflow");
+    if (std.mem.startsWith(u8, call, " call $myl_qbe_int_binary(")) return std.mem.startsWith(u8, block, "@shift_invalid");
+    return false;
+}
+
 /// Whether a lowered body can leave `ctx->trap` set and fall through to the next
 /// instruction. A `myl_qbe_fail_*` helper, and any call the body follows with the
 /// `jmp @failure` that unwinds, fails the instruction outright; every other call
@@ -1360,6 +1395,7 @@ const Emitter = struct {
         text = try dropUnusedRoots(self.allocator, text);
         text = try dropUnusedHeap(self.allocator, text);
         text = try dropUnusedSlots(self.allocator, text);
+        if (!self.stickyFlagTest()) text = try haltFailurePaths(self.allocator, text);
         return stripUnreferencedLabels(self.allocator, text);
     }
     /// Forget a lowering whose frame turned out too big for the native stack so

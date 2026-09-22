@@ -481,6 +481,10 @@ class MemoryClasses:
         return None
 
 
+#: The runtime's failure helpers: each records a trap and calls `fail`.
+FAIL_HELPER_PREFIX = "myl_qbe_fail_"
+
+
 class Emitter:
     """Translates one parsed QBE unit into a self-contained LLVM module."""
 
@@ -1493,8 +1497,41 @@ class Emitter:
         """
         return []
 
+    def declaration_attributes(self, name):
+        """The function attributes one runtime declaration carries.
+
+        A `myl_qbe_fail_*` helper runs only on a path that has already failed,
+        so it is `cold` wherever it is called.  It is also `noreturn` in this
+        module when every call to it is immediately followed by `hlt`
+        (QBE-NORETURN-1): the frontend emits that only for a build whose entry
+        armed the runtime's non-local exit, where the helper leaves through it.
+        A unit that keeps the sticky `jmp @failure` after any call says the
+        helper may return there, and its declaration says nothing more.
+        """
+        attributes = runtime_attributes.get(name, "")
+        if not name.startswith(FAIL_HELPER_PREFIX):
+            return attributes
+        extra = "noreturn cold" if name in self.halting_helpers() else "cold"
+        return f"{attributes} {extra}" if attributes else extra
+
+    def halting_helpers(self):
+        """Fail helpers whose every call in this unit is followed by `hlt`."""
+        halting, returning = set(), set()
+        for block in self.function.blocks:
+            for index, instruction in enumerate(block.instructions):
+                if instruction.opcode != "call" or not isinstance(instruction.extra, str):
+                    continue
+                if not instruction.extra.startswith(FAIL_HELPER_PREFIX):
+                    continue
+                following = block.instructions[index + 1:index + 2]
+                if following and following[0].opcode == "hlt":
+                    halting.add(instruction.extra)
+                else:
+                    returning.add(instruction.extra)
+        return halting - returning
+
     def on_hlt(self, instruction):
-        """`hlt`: a trap terminator the frontend never emits."""
+        """`hlt`: the end of a failure path whose fail helper never returns."""
         return ["  unreachable"]
 
     # -- module ------------------------------------------------------------
@@ -1544,7 +1581,7 @@ class Emitter:
                     result_type = "void"
                 else:
                     result_type = result.value if hasattr(result, "storage") else result
-                attributes = runtime_attributes.get(name, "")
+                attributes = self.declaration_attributes(name)
                 suffix = " " + attributes if attributes else ""
                 out.append(f"declare {result_type} @{name}({', '.join(rendered)}){suffix}")
         if self.attributes:
