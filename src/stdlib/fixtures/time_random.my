@@ -5,7 +5,7 @@ import time
 
 def streams() -> int:
     generator = random.seeded(42)
-    first = random.next_word(generator)
+    first = random.next_word(mut generator)
     alias = generator
     second = random.next_word(alias)
     if first == second:
@@ -70,7 +70,7 @@ def ranges() -> int:
                 return 25
         case Err(_):
             return 26
-    match random.randint(generator, 7, 7):
+    match random.randmut int(generator, 7, 7):
         case Ok(value):
             if value != 7:
                 return 27

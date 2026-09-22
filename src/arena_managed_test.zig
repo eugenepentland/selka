@@ -136,14 +136,14 @@ test "ARENA-MANAGED-2 escape shares objects that already live in the enclosing r
 // spec: ARENA-MANAGED-3
 test "ARENA-MANAGED-3 the store barrier traps when a helper stores arena storage outward" {
     const source =
-        \\def stash(outer: list[list[int]], inner: list[int]) -> None:
+        \\def stash(outer: mut list[list[int]], inner: list[int]) -> None:
         \\    outer.append(inner)
         \\
         \\def main() -> int:
         \\    keeper: list[list[int]] = []
         \\    with arena() as scratch:
         \\        temp: list[int] = [1]
-        \\        stash(keeper, temp)
+        \\        stash(mut keeper, temp)
         \\    return len(keeper)
     ;
     const outcome = try run(source, false);
@@ -153,13 +153,13 @@ test "ARENA-MANAGED-3 the store barrier traps when a helper stores arena storage
 // spec-case: ARENA-MANAGED-3
 test "ARENA-MANAGED-3 the store barrier covers dictionary values written through a helper" {
     const source =
-        \\def stash(outer: dict[int, list[int]], inner: list[int]) -> None:
+        \\def stash(outer: mut dict[int, list[int]], inner: list[int]) -> None:
         \\    outer[1] = inner
         \\
         \\def main() -> int:
         \\    keeper: dict[int, list[int]] = {}
         \\    with arena() as scratch:
-        \\        stash(keeper, [3])
+        \\        stash(mut keeper, [3])
         \\    return 0
     ;
     const outcome = try run(source, false);
@@ -381,7 +381,7 @@ test "ARENA-MANAGED-7 arena scopes and escape copies unwind on every allocation 
 // spec: ARENA-MANAGED-8
 test "ARENA-MANAGED-8 the native backend lowers arena scopes, the barrier and escape" {
     const source =
-        \\def stash(outer: list[list[int]], inner: list[int]) -> None:
+        \\def stash(outer: mut list[list[int]], inner: list[int]) -> None:
         \\    outer.append(inner)
         \\
         \\def main() -> int:
@@ -389,7 +389,7 @@ test "ARENA-MANAGED-8 the native backend lowers arena scopes, the barrier and es
         \\    with arena() as scratch:
         \\        inner: list[int] = [7]
         \\        holder: list[list[int]] = [inner, inner]
-        \\        stash(holder, inner)
+        \\        stash(mut holder, inner)
         \\        kept = scratch.escape(holder[0])
         \\    return kept[0]
     ;

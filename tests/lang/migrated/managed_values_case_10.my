@@ -1,14 +1,14 @@
 module managed_values_case_10
 
 
-def next(xs: list[i64]) -> i64 effects(mutation, managed_allocation) mutates(xs):
+def next(xs: mut list[i64]) -> i64 effects(mutation, managed_allocation):
     xs.append(1)
     return 42
 
 
 public def program() -> i64:
     xs: list[i64] = []
-    s = str(next(xs))
+    s = str(next(mut xs))
     expected: str = b"42"
     if s == expected:
         return len(xs)

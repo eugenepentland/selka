@@ -203,5 +203,5 @@ only place that rewrites history, and only on its own branch.
 - `guardian.toml` is diff-scoped against `HEAD`, so a lane sees only its own
   files in scope; the whole-tree checks still read everything.
 - The `&` marker path (`lexer.lexWithMarkers`, `src.mutation_markers`,
-  `--mutation-markers`) exists today and is retired by the `mut` lane, not by
-  `F`.
+  `--mutation-markers`) was retired by the `mut` lane together with the
+  `mutates(...)` clause; `mut` now carries the whole contract.

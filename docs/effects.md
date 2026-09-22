@@ -56,7 +56,7 @@ source error.
 | `environment` | reading process environment variables |
 | `output` | `print` |
 | `host` | calling a host-provided implementation, such as an `extern def` |
-| `mutation` | writing caller-owned managed state reachable from an input, subject to the declared `mutates(...)` footprint |
+| `mutation` | writing caller-owned managed state reachable from an input, subject to the declared `mut` parameter set |
 
 `noalloc` and `noio` are shorthands for the two common ceilings. `noalloc`
 excludes `managed_allocation` and permits everything else. `noio` excludes
@@ -113,13 +113,20 @@ def main() -> int:
 
 ## Mutation contracts
 
-`effects(mutation)` permits externally observable writes to managed state.
-A signature may also carry `mutates(a, b)`, naming the parameters whose
-reachable mutable objects it may write. Names normalize to parameter positions,
-an unknown name is an error at the declaration, and the clause requires the
-`mutation` effect. Omitting the clause, or writing `mutates()`, permits no
-caller-owned input to be written; a function with no `mutation` effect cannot
-modify caller-owned managed state at all.
+A parameter a function writes through is declared `name: mut T`, and those
+parameters are the function's mutation footprint: the positions whose reachable
+mutable objects the call may write. A caller marks each argument it binds to one
+of them — `restock(mut inventory, "bolt", 5)` — so the write is visible on the
+call line as well as in the signature. The marker is required exactly where the
+callee declares `mut` and rejected where it does not, and a `mut` parameter the
+body never writes is an error too, because a stale marker is the lie the spelling
+exists to prevent. A receiver is never marked: `values.append(1)` and
+`mapping.sort()` need nothing.
+
+`mut` is accepted only on a type that can carry a write back to the caller:
+`list`, `dict`, `class`, `Cell`, `[N]T`, `byte_buffer`, and a `record`, union,
+option or result holding one. A scalar, `str` or `bytes` parameter declared `mut`
+is rejected, because no write through it could be observed.
 
 The guarantee is for the duration of the call and covers lists, dictionaries,
 `Cell`, and mutable descendants reached through records, arrays, options, unions,
@@ -133,29 +140,26 @@ the compiler can prove the two are disjoint; passing the same value twice is the
 simplest case. Two writable aliases are permitted and ordinary sequential
 ordering applies. Unknown possible overlap is treated as overlap, so a caller
 that intends two independent arguments either declares both writable or builds an
-independent snapshot. This is a proof obligation created by a declared
-`mutates(...)` clause: an unannotated helper's inferred writes carry no promise,
-so forwarding two shared collections through it behaves like Python — sequential,
-shared, with no overlap diagnostic.
+independent snapshot.
 
 ```mylang
 # doc: expect 7
-def replace_first(values: list[int], replacement: int) -> None effects(mutation) mutates(values):
+def replace_first(values: mut list[int], replacement: int) -> None effects(mutation):
     values[0] = replacement
 
 def main(out: Stream) -> int effects(managed_allocation, output):
     values = [1]
-    replace_first(values, 7)
+    replace_first(mut values, 7)
     out.print(values[0])
     return 0
 ```
 
-An unpermitted write is rejected at the write site and reported against the
-declared ceiling:
+A write through a parameter that is not declared `mut` is rejected at the write
+site with the declaration to paste:
 
 ```mylang
-# doc: expect-error E_MUTATION_PERMISSION
-def overwrite(values: list[int]) -> None effects():
+# doc: expect-error E_MUTATION_MARKER
+def overwrite(values: list[int]) -> None effects(mutation):
     values[0] = 42
 
 def main() -> int:
@@ -167,19 +171,19 @@ def main() -> int:
 ### Sharing, aliases and snapshots
 
 Mutation follows the managed object, not the variable spelling. Two names bound
-to the same list name one writable object, and a `mutates(...)` clause names the
+to the same list name one writable object, and a `mut` parameter names a
 parameter position rather than the caller's variable:
 
 ```mylang
 # doc: expect 5
-def set_first(values: list[int], replacement: int) -> None effects(mutation) mutates(values):
+def set_first(values: mut list[int], replacement: int) -> None effects(mutation):
     values[0] = replacement
 
 
 def main(out: Stream) -> int effects(managed_allocation, output):
     shared = [1, 2]
     alias = shared
-    set_first(alias, 5)
+    set_first(mut alias, 5)
     out.print(shared[0])
     return 0
 ```
@@ -208,19 +212,19 @@ unrelated values:
 
 ```mylang
 # doc: expect-error E_MUTATION_OVERLAP
-def touch(x: list[int], y: list[int]) -> None effects(mutation) mutates(x):
+def touch(x: mut list[int], y: list[int]) -> None effects(mutation):
     x[0] = 1
     _ = y[0]
 
 
-def use(a: list[int], b: list[int]) -> None effects(mutation) mutates(a):
-    touch(a, b)
+def use(a: mut list[int], b: list[int]) -> None effects(mutation):
+    touch(mut a, b)
 
 
 def main() -> int:
     a = [1]
     b = [2]
-    use(a, b)
+    use(mut a, b)
     return 0
 ```
 
@@ -228,18 +232,18 @@ Two writable aliases are permitted, and ordinary sequential ordering applies:
 
 ```mylang
 # doc: expect 0
-def pair(first: list[int], second: list[int]) -> None effects(mutation) mutates(first, second):
+def pair(first: mut list[int], second: mut list[int]) -> None effects(mutation):
     first[0] = 1
     second[1] = 2
 
 
-def use(values: list[int]) -> None effects(mutation) mutates(values):
-    pair(values, values)
+def use(values: mut list[int]) -> None effects(mutation):
+    pair(mut values, mut values)
 
 
 def main() -> int:
     values = [0, 0]
-    use(values)
+    use(mut values)
     return values[0] + values[1] - 3
 ```
 
@@ -248,20 +252,20 @@ read-only arguments meet. The snapshot allocation is visible as its own effect:
 
 ```mylang
 # doc: expect 0
-def touch(x: list[int], y: list[int]) -> None effects(mutation) mutates(x):
+def touch(x: mut list[int], y: list[int]) -> None effects(mutation):
     x[0] = 1
     _ = y[0]
 
 
-def use(a: list[int], b: list[int]) -> None effects(mutation, managed_allocation) mutates(a):
+def use(a: mut list[int], b: list[int]) -> None effects(mutation, managed_allocation):
     snapshot = b.copy()
-    touch(a, snapshot)
+    touch(mut a, snapshot)
 
 
 def main() -> int:
     a = [1]
     b = [2]
-    use(a, b)
+    use(mut a, b)
     return 0
 ```
 
@@ -273,12 +277,12 @@ proves otherwise, so a caller that writes through the result still needs the
 input's permission:
 
 ```mylang
-# doc: expect-error E_MUTATION_PERMISSION
+# doc: expect-error E_MUTATION_MARKER
 def identity(values: list[int]) -> list[int] effects():
     return values
 
 
-def overwrite(values: list[int]) -> None effects():
+def overwrite(values: list[int]) -> None effects(mutation):
     picked = identity(values)
     picked[0] = 0
 
@@ -297,14 +301,14 @@ def identity(values: list[int]) -> list[int] effects():
     return values
 
 
-def overwrite(values: list[int]) -> None effects(mutation) mutates(values):
+def overwrite(values: mut list[int]) -> None effects(mutation):
     picked = identity(values)
     picked[0] = 0
 
 
 def main() -> int:
     values = [1]
-    overwrite(values)
+    overwrite(mut values)
     return 0
 ```
 
@@ -354,20 +358,13 @@ def main(fs: Filesystem) -> int:
     return 0
 ```
 
-## Mandatory mutation footprint
+## Declaration-site mutation errors
 
-A function with no effect ceiling whose body writes storage reachable from a
-caller argument is diagnosed with `W_MUTATES_MISSING` when its declaration omits
-`mutates(...)`. Reference-typed `class` parameters are exempt: writing through the
-reference is the reason the parameter is passed, so only by-value inputs such as a
-`list`, array or `record` position require the clause. The warning prints the
-inferred clause verbatim so the fix is a paste, and the diagnostic is advisory for
-this version. Writing `mutates(...)` without an effect ceiling means "unbounded
-effects, with this footprint", and an explicit ceiling that lacks `mutation` still
-rejects `E_MUTATES_EFFECT`.
+The `mut` spelling is checked in both directions, always. A parameter the body
+writes with no `mut` is rejected at its declaration with the parameter to paste:
 
 ```mylang
-# doc: check
+# doc: expect-error E_MUTATION_MARKER
 def touch(values: list[int]) -> None:
     values[0] = 1
 
@@ -377,6 +374,12 @@ def main() -> int:
     touch(values)
     return 0
 ```
+
+A `mut` parameter the body never writes is rejected too, so a marker cannot go
+stale, and a `mut` on a type with nothing to write — a scalar, `str` or `bytes`
+— is rejected at the declaration. The retired `mutates(...)` clause and the
+opt-in `&` argument marker are removed spellings that name `mut` in their
+diagnostics.
 
 ## Filesystem dir
 

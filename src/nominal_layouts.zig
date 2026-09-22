@@ -1,5 +1,6 @@
 //! Bounded symbolic layout expansion preserves arguments without representative runtime types.
 const std = @import("std");
+const ast = @import("ast.zig");
 const templates = @import("nominal_templates.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
@@ -157,7 +158,7 @@ pub const Graph = struct {
                 for (callback.arguments, 0..) |argument, i| arguments_out[i] = try self.resolve(argument, arguments, callback.syntax.span);
                 break :result self.intern(.{ .base = .{ .callback = .{
                     .effects = callback.syntax.effect_bound.allowed,
-                    .mutates = callback.syntax.mutates,
+                    .mutates = try ast.mutPositions(self.allocator, callback.syntax.mut_parameters),
                     .return_origin = .unknown,
                 } }, .arguments = arguments_out[0..callback.arguments.len] }, callback.syntax.span);
             },

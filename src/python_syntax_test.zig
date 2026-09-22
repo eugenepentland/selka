@@ -455,6 +455,7 @@ test "foundation syntax: a mut parameter marker sets the flag and leaves the typ
     try t.expectEqualStrings("list[int]", c.src.text(parameters[0].ty));
     try t.expect(!parameters[1].mut);
     try t.expectEqualStrings("int", c.src.text(parameters[1].ty));
+    try t.expectEqualSlices(u16, &.{0}, c.syntax.?.functions[0].signature.mut_positions);
 }
 
 // spec-case: SYNTAX-MUT-1
@@ -495,20 +496,17 @@ test "foundation syntax: a mut call-argument marker wraps its target and leaves 
 }
 
 // spec-case: SYNTAX-MUT-1
-test "foundation syntax: the existing ampersand argument marker keeps its plumbing" {
+test "foundation syntax: the retired ampersand marker is a removed spelling" {
     var c = try language.Compilation.init(t.allocator, "mut.my",
         \\def main() -> int:
         \\    push(&values)
         \\    return 0
     );
     defer c.deinit();
-    c.src.mutation_markers = true;
-    try c.parse();
-    const parsed_program = c.syntax.?;
-    const call = parsed_program.statements.items[@backingInt(bodyOf(parsed_program)[0])].data.discard;
-    const markers = parsed_program.nodes.items[@backingInt(call)].data.call.argument_markers;
-    try t.expectEqual(@as(usize, 1), markers.len);
-    try t.expect(markers[0]);
+    try t.expectError(error.SourceError, c.parse());
+    const diag = c.diagnostics.items[0];
+    try t.expectEqualStrings("E_REMOVED_SPELLING", diag.code);
+    try t.expect(std.mem.indexOf(u8, diag.message, "write `mut value`") != null);
 }
 
 // spec-case: SYNTAX-MUT-1

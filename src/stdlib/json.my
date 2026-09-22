@@ -265,18 +265,18 @@ def peek(scanner: Scanner) -> int:
 
 
 # Move the cursor one byte forward.
-def advance(scanner: Scanner):
+def advance(scanner: mut Scanner):
     scanner.position[0] = scanner.position[0] + 1
     return
 
 
 # Move the cursor past the four whitespace bytes RFC 8259 allows.
-def skip_whitespace(scanner: Scanner):
+def skip_whitespace(scanner: mut Scanner):
     while not at_end(scanner):
         byte = peek(scanner)
         if byte != 32 and byte != 9 and byte != 10 and byte != 13:
             return
-        advance(scanner)
+        advance(mut scanner)
     return
 
 
@@ -306,7 +306,7 @@ def hex_value(byte: int) -> int:
 
 
 # Append the UTF-8 encoding of one code point to a byte accumulator.
-def append_code_point(out: list[int], code: int):
+def append_code_point(out: mut list[int], code: int):
     if code < 128:
         out.append(code)
         return
@@ -339,7 +339,7 @@ def decoded(values: list[int]) -> Result[str, str]:
 
 
 # The four hexadecimal digits of a \u escape.
-def read_hex4(scanner: Scanner) -> Result[int, str]:
+def read_hex4(scanner: mut Scanner) -> Result[int, str]:
     value = 0
     index = 0
     while index < 4:
@@ -348,39 +348,39 @@ def read_hex4(scanner: Scanner) -> Result[int, str]:
         digit = hex_value(peek(scanner))
         if digit < 0:
             return Err(fail(scanner, "invalid JSON unicode escape"))
-        advance(scanner)
+        advance(mut scanner)
         value = value * 16 + digit
         index += 1
     return Ok(value)
 
 
 # One escaped code point, including a complete surrogate pair.
-def read_unicode_escape(scanner: Scanner, out: list[int]) -> Result[bool, str]:
-    first = read_hex4(scanner)?
+def read_unicode_escape(scanner: mut Scanner, out: mut list[int]) -> Result[bool, str]:
+    first = read_hex4(mut scanner)?
     if first >= 56320 and first <= 57343:
         return Err(fail(scanner, "JSON low surrogate has no high surrogate"))
     if first < 55296 or first > 56319:
-        append_code_point(out, first)
+        append_code_point(mut out, first)
         return Ok(True)
     if peek(scanner) != 92:
         return Err(fail(scanner, "JSON high surrogate needs a low surrogate"))
-    advance(scanner)
+    advance(mut scanner)
     if peek(scanner) != 117:
         return Err(fail(scanner, "JSON high surrogate needs a low surrogate"))
-    advance(scanner)
-    second = read_hex4(scanner)?
+    advance(mut scanner)
+    second = read_hex4(mut scanner)?
     if second < 56320 or second > 57343:
         return Err(fail(scanner, "JSON high surrogate needs a low surrogate"))
-    append_code_point(out, 65536 + (first - 55296) * 1024 + second - 56320)
+    append_code_point(mut out, 65536 + (first - 55296) * 1024 + second - 56320)
     return Ok(True)
 
 
 # One backslash escape from an RFC 8259 string body.
-def read_escape(scanner: Scanner, out: list[int]) -> Result[bool, str]:
+def read_escape(scanner: mut Scanner, out: mut list[int]) -> Result[bool, str]:
     if at_end(scanner):
         return Err(fail(scanner, "unterminated JSON escape"))
     byte = peek(scanner)
-    advance(scanner)
+    advance(mut scanner)
     if byte == 34 or byte == 92 or byte == 47:
         out.append(byte)
         return Ok(True)
@@ -401,16 +401,16 @@ def read_escape(scanner: Scanner, out: list[int]) -> Result[bool, str]:
         return Ok(True)
     if byte != 117:
         return Err(fail(scanner, "unknown JSON string escape"))
-    return read_unicode_escape(scanner, out)
+    return read_unicode_escape(mut scanner, mut out)
 
 
 # One string body, with the opening quote under the cursor.
-def read_string(scanner: Scanner) -> Result[str, str]:
-    advance(scanner)
+def read_string(scanner: mut Scanner) -> Result[str, str]:
+    advance(mut scanner)
     out: list[int] = []
     while not at_end(scanner):
         byte = peek(scanner)
-        advance(scanner)
+        advance(mut scanner)
         if byte == 34:
             return decoded(out)
         if byte < 32:
@@ -418,64 +418,64 @@ def read_string(scanner: Scanner) -> Result[str, str]:
         if byte != 92:
             out.append(byte)
         else:
-            _ = read_escape(scanner, out)?
+            _ = read_escape(mut scanner, mut out)?
     return Err(fail(scanner, "unterminated JSON string"))
 
 
 # Move the cursor past the digits of an integer or fraction part.
-def skip_digits(scanner: Scanner):
+def skip_digits(scanner: mut Scanner):
     while not at_end(scanner) and is_digit_byte(peek(scanner)):
-        advance(scanner)
+        advance(mut scanner)
     return
 
 
 # The exponent part of a number, if one starts under the cursor.
-def read_exponent(scanner: Scanner) -> Result[bool, str]:
+def read_exponent(scanner: mut Scanner) -> Result[bool, str]:
     if at_end(scanner):
         return Ok(False)
     if peek(scanner) != 101 and peek(scanner) != 69:
         return Ok(False)
-    advance(scanner)
+    advance(mut scanner)
     if peek(scanner) == 43 or peek(scanner) == 45:
-        advance(scanner)
+        advance(mut scanner)
     if at_end(scanner) or not is_digit_byte(peek(scanner)):
         return Err(fail(scanner, "JSON exponent needs a digit"))
-    skip_digits(scanner)
+    skip_digits(mut scanner)
     return Ok(True)
 
 
 # The fraction part of a number, if one starts under the cursor.
-def read_fraction(scanner: Scanner) -> Result[bool, str]:
+def read_fraction(scanner: mut Scanner) -> Result[bool, str]:
     if at_end(scanner) or peek(scanner) != 46:
         return Ok(False)
-    advance(scanner)
+    advance(mut scanner)
     if at_end(scanner) or not is_digit_byte(peek(scanner)):
         return Err(fail(scanner, "JSON fraction needs a digit"))
-    skip_digits(scanner)
+    skip_digits(mut scanner)
     return Ok(True)
 
 
 # The integer part of a number, rejecting a leading zero before more digits.
-def read_integer_part(scanner: Scanner) -> Result[bool, str]:
+def read_integer_part(scanner: mut Scanner) -> Result[bool, str]:
     if peek(scanner) == 45:
-        advance(scanner)
+        advance(mut scanner)
     if at_end(scanner) or not is_digit_byte(peek(scanner)):
         return Err(fail(scanner, "JSON number needs a digit"))
     if peek(scanner) != 48:
-        skip_digits(scanner)
+        skip_digits(mut scanner)
         return Ok(True)
-    advance(scanner)
+    advance(mut scanner)
     if not at_end(scanner) and is_digit_byte(peek(scanner)):
         return Err(fail(scanner, "JSON number has a leading zero"))
     return Ok(True)
 
 
 # One number literal, exact when it has no fraction, exponent or overflow.
-def read_number(scanner: Scanner) -> Result[Json, str]:
+def read_number(scanner: mut Scanner) -> Result[Json, str]:
     start = scanner.position[0]
-    _ = read_integer_part(scanner)?
-    floating = read_fraction(scanner)?
-    if read_exponent(scanner)?:
+    _ = read_integer_part(mut scanner)?
+    floating = read_fraction(mut scanner)?
+    if read_exponent(mut scanner)?:
         floating = True
     literal = ""
     match scanner.data[start:scanner.position[0]].decode():
@@ -497,7 +497,7 @@ def read_number(scanner: Scanner) -> Result[Json, str]:
 
 
 # One of the three bare literals, matched exactly.
-def read_literal(scanner: Scanner, word: bytes, value: Json) -> Result[Json, str]:
+def read_literal(scanner: mut Scanner, word: bytes, value: Json) -> Result[Json, str]:
     start = scanner.position[0]
     if start + len(word) > len(scanner.data):
         return Err(fail(scanner, "truncated JSON literal"))
@@ -508,83 +508,83 @@ def read_literal(scanner: Scanner, word: bytes, value: Json) -> Result[Json, str
 
 
 # One array body, with the opening bracket under the cursor.
-def read_array(scanner: Scanner, depth: int) -> Result[Json, str]:
-    advance(scanner)
+def read_array(scanner: mut Scanner, depth: int) -> Result[Json, str]:
+    advance(mut scanner)
     items: list[Json] = []
-    skip_whitespace(scanner)
+    skip_whitespace(mut scanner)
     if peek(scanner) == 93:
-        advance(scanner)
+        advance(mut scanner)
         return Ok(array(items))
     while not at_end(scanner):
-        items.append(read_value(scanner, depth + 1)?)
-        skip_whitespace(scanner)
+        items.append(read_value(mut scanner, depth + 1)?)
+        skip_whitespace(mut scanner)
         byte = peek(scanner)
         if byte == 93:
-            advance(scanner)
+            advance(mut scanner)
             return Ok(array(items))
         if byte != 44:
             return Err(fail(scanner, "expected ',' or ']' in JSON array"))
-        advance(scanner)
+        advance(mut scanner)
     return Err(fail(scanner, "unterminated JSON array"))
 
 
 # One object member, added to the accumulated fields.
-def read_member(scanner: Scanner, fields: dict[str, Json], depth: int) -> Result[bool, str]:
-    skip_whitespace(scanner)
+def read_member(scanner: mut Scanner, fields: mut dict[str, Json], depth: int) -> Result[bool, str]:
+    skip_whitespace(mut scanner)
     if peek(scanner) != 34:
         return Err(fail(scanner, "JSON object keys must be strings"))
-    key = read_string(scanner)?
+    key = read_string(mut scanner)?
     if key in fields:
         return Err(fail(scanner, "JSON object has a duplicate key"))
-    skip_whitespace(scanner)
+    skip_whitespace(mut scanner)
     if peek(scanner) != 58:
         return Err(fail(scanner, "expected ':' after a JSON object key"))
-    advance(scanner)
-    fields[key] = read_value(scanner, depth + 1)?
+    advance(mut scanner)
+    fields[key] = read_value(mut scanner, depth + 1)?
     return Ok(True)
 
 
 # One object body, with the opening brace under the cursor.
-def read_object(scanner: Scanner, depth: int) -> Result[Json, str]:
-    advance(scanner)
+def read_object(scanner: mut Scanner, depth: int) -> Result[Json, str]:
+    advance(mut scanner)
     fields: dict[str, Json] = {}
-    skip_whitespace(scanner)
+    skip_whitespace(mut scanner)
     if peek(scanner) == 125:
-        advance(scanner)
+        advance(mut scanner)
         return Ok(object(fields))
     while not at_end(scanner):
-        _ = read_member(scanner, fields, depth)?
-        skip_whitespace(scanner)
+        _ = read_member(mut scanner, mut fields, depth)?
+        skip_whitespace(mut scanner)
         byte = peek(scanner)
         if byte == 125:
-            advance(scanner)
+            advance(mut scanner)
             return Ok(object(fields))
         if byte != 44:
             return Err(fail(scanner, "expected ',' or '}' in JSON object"))
-        advance(scanner)
+        advance(mut scanner)
     return Err(fail(scanner, "unterminated JSON object"))
 
 
 # One value of any kind, bounded by the nesting limit.
-def read_value(scanner: Scanner, depth: int) -> Result[Json, str]:
+def read_value(scanner: mut Scanner, depth: int) -> Result[Json, str]:
     if depth > max_depth():
         return Err(fail(scanner, "JSON nesting is deeper than the limit"))
-    skip_whitespace(scanner)
+    skip_whitespace(mut scanner)
     byte = peek(scanner)
     if byte == 123:
-        return read_object(scanner, depth)
+        return read_object(mut scanner, depth)
     if byte == 91:
-        return read_array(scanner, depth)
+        return read_array(mut scanner, depth)
     if byte == 34:
-        return Ok(text(read_string(scanner)?))
+        return Ok(text(read_string(mut scanner)?))
     if byte == 116:
-        return read_literal(scanner, b"true", boolean(True))
+        return read_literal(mut scanner, b"true", boolean(True))
     if byte == 102:
-        return read_literal(scanner, b"false", boolean(False))
+        return read_literal(mut scanner, b"false", boolean(False))
     if byte == 110:
-        return read_literal(scanner, b"null", null_value())
+        return read_literal(mut scanner, b"null", null_value())
     if byte == 45 or is_digit_byte(byte):
-        return read_number(scanner)
+        return read_number(mut scanner)
     if byte < 0:
         return Err(fail(scanner, "unexpected end of JSON input"))
     return Err(fail(scanner, "unexpected character in JSON input"))
@@ -593,8 +593,8 @@ def read_value(scanner: Scanner, depth: int) -> Result[Json, str]:
 # One complete RFC 8259 document, rejecting anything after the top-level value.
 public def loads(source: str) -> Result[Json, Error] effects(managed_allocation):
     scanner = scanner_of(source.encode())
-    value = read_value(scanner, 1)?
-    skip_whitespace(scanner)
+    value = read_value(mut scanner, 1)?
+    skip_whitespace(mut scanner)
     if not at_end(scanner):
         return Err(Error.Malformed(fail(scanner, "trailing characters after a JSON value")))
     return Ok(value)
@@ -656,7 +656,7 @@ def rendered_number(value: float) -> str:
 
 
 # Append the compact rendering of one value to the accumulated pieces.
-def write_value(pieces: list[str], value: Json):
+def write_value(pieces: mut list[str], value: Json):
     match value:
         case Json.null:
             pieces.append("null")
@@ -672,25 +672,25 @@ def write_value(pieces: list[str], value: Json):
         case Json.text(body):
             pieces.append(quoted(body))
         case Json.array(items):
-            write_array(pieces, items)
+            write_array(mut pieces, items)
         case Json.object(fields):
-            write_object(pieces, fields)
+            write_object(mut pieces, fields)
     return
 
 
 # Append a rendered array, keeping element order.
-def write_array(pieces: list[str], items: list[Json]):
+def write_array(pieces: mut list[str], items: list[Json]):
     pieces.append("[")
     for index, item in enumerate(items):
         if index > 0:
             pieces.append(",")
-        write_value(pieces, item)
+        write_value(mut pieces, item)
     pieces.append("]")
     return
 
 
 # Append a rendered object, keeping insertion order.
-def write_object(pieces: list[str], fields: dict[str, Json]):
+def write_object(pieces: mut list[str], fields: dict[str, Json]):
     pieces.append("{")
     first = True
     for key in fields:
@@ -699,7 +699,7 @@ def write_object(pieces: list[str], fields: dict[str, Json]):
         first = False
         pieces.append(quoted(key))
         pieces.append(":")
-        write_value(pieces, fields[key])
+        write_value(mut pieces, fields[key])
     pieces.append("}")
     return
 
@@ -707,5 +707,5 @@ def write_object(pieces: list[str], fields: dict[str, Json]):
 # A value rendered as compact RFC 8259 text without added whitespace.
 public def dumps(value: Json) -> str effects(managed_allocation):
     pieces: list[str] = []
-    write_value(pieces, value)
+    write_value(mut pieces, value)
     return "".join(pieces)

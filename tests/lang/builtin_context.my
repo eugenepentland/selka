@@ -35,7 +35,7 @@ class Holder:
     values: list[i64]
 
 
-def choose_holder(value: Holder, other: list[i64]) -> i64 effects(mutation, managed_allocation) mutates(value):
+def choose_holder(value: mut Holder, other: list[i64]) -> i64 effects(mutation, managed_allocation):
     _ = other
     xs = value.values
     xs.append(42)
@@ -82,7 +82,7 @@ public def test_record_fields_and_nested_list_elements_propagate_empty_list_cont
     nested: list[list[i64]] = []
     inner: list[i64] = []
     nested.append(inner)
-    return choose_holder(Holder(values=[]), []) == 42
+    return choose_holder(mut Holder(values=[]), []) == 42
 
 
 # spec: BUILTIN-CONTEXT-4

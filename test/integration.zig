@@ -52,26 +52,26 @@ fn managedConstantModes(temporary: *testing.TmpDir, data: []const u8, expected: 
     try expectConstantProcess(&.{ output, "--gc-stress" }, expected);
 }
 
-// A module-entry `run` prints the check phase's diagnostics and the project
-// runner must not print the same warnings again before executing.
+// A module-entry `run` prints the check phase's diagnostics exactly once: a
+// clean project prints none, and the runner has nothing to repeat.
 test "CLI run reports each frontend warning once" {
     const outcome = try runProjectFixture("run",
         \\module main
         \\
         \\
-        \\def touch(values: list[int]) -> None:
+        \\def touch(values: mut list[int]) -> None:
         \\    values[0] = 1
         \\
         \\
         \\def main() -> int:
         \\    values = [1]
-        \\    touch(values)
+        \\    touch(mut values)
         \\    return 0
     , &.{});
     defer testing.allocator.free(outcome.stdout);
     defer testing.allocator.free(outcome.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
-    try testing.expectEqual(@as(usize, 1), std.mem.count(u8, outcome.stderr, "W_MUTATES_MISSING"));
+    try testing.expectEqual(@as(usize, 0), std.mem.count(u8, outcome.stderr, "warning["));
 }
 
 // spec-case: NATIVE-RUN-MANIFEST-CACHE-1
@@ -307,10 +307,9 @@ fn invokeProjectOptions(command: []const u8, text: []const u8, options: []const 
     if (stderr_part.len == 0) try testing.expectEqualStrings("", outcome.stderr) else try testing.expect(std.mem.indexOf(u8, outcome.stderr, stderr_part) != null);
 }
 
-/// `check` a project entry that imports the embedded `random` module. That
-/// module's private `below` helper carries a pre-existing `W_MUTATES_MISSING`
-/// advisory, so the check must succeed without a diagnostic even though stderr
-/// is non-empty; the advisory is not a capability failure.
+/// `check` a project entry that imports the embedded `random` module. Its
+/// private helpers declare the `mut` parameters they write, so the check must
+/// succeed with no diagnostic at all.
 fn checkProjectClean(text: []const u8) !void {
     const outcome = try runProjectFixture("check", text, &.{});
     defer testing.allocator.free(outcome.stdout);
@@ -5453,13 +5452,11 @@ test "CLI nested record alias rejects under effects and runs with a mutation foo
     try invoke("run", permitted, 0, "7\n", "");
 }
 
-// spec-case: MUTATION-MARKER-1
-test "CLI mutation markers gate the call-site & spelling" {
-    // Default mode keeps `&` a removed spelling, so the fixture is rejected.
-    try invokeOptions("check", @embedFile("fixtures/mutation-markers.my"), &.{}, 1, "", "E_REMOVED_SPELLING");
-    // With the opt-in flag the marked call checks and runs.
-    try invokeOptions("check", @embedFile("fixtures/mutation-markers.my"), &.{"--mutation-markers"}, 0, "", "");
-    try invokeOptions("run", @embedFile("fixtures/mutation-markers.my"), &.{"--mutation-markers"}, 0, "8\n", "");
+// spec-case: MUT-PARAM-5
+test "CLI the mut spelling checks and runs while the removed flag is rejected" {
+    try invokeOptions("check", @embedFile("fixtures/mutation-markers.my"), &.{}, 0, "", "");
+    try invokeOptions("run", @embedFile("fixtures/mutation-markers.my"), &.{}, 0, "8\n", "");
+    try invokeOptions("check", @embedFile("fixtures/mutation-markers.my"), &.{"--mutation-markers"}, 2, "", "--mutation-markers was removed");
 }
 
 // --- P1: selected test providers validated against declared contracts ---

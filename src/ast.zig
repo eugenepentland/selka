@@ -100,7 +100,7 @@ pub const Node = struct {
         length: NodeId,
         record: struct { name: Span, fields: []const FieldInit },
         field: struct { base: NodeId, name: Span },
-        call: struct { argument_names: []const ?Span = &.{}, evaluation_order: []const usize = &.{}, owner: ?Span = null, type_arguments: []const Span = &.{}, name: Span, arguments: []const NodeId, argument_markers: []const bool = &.{} },
+        call: struct { argument_names: []const ?Span = &.{}, evaluation_order: []const usize = &.{}, owner: ?Span = null, type_arguments: []const Span = &.{}, name: Span, arguments: []const NodeId },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
         /// A parenthesized or bare tuple value; two to eight elements.
@@ -217,8 +217,9 @@ pub const FunctionSignature = struct {
     type_parameters: []const TypeParameter = &.{},
     parameters: []const Parameter,
     return_type: Span,
-    /// Normalized parameter positions from an optional `mutates(...)` clause.
-    mutates: []const u16 = &.{},
+    /// Sorted zero-based positions of the parameters declared `name: mut T`.
+    /// This set is the declared mutation footprint of the function.
+    mut_positions: []const u16 = &.{},
     /// Abstract-checked direct input positions, retained for interface consumers.
     inferred_mutates: []const u16 = &.{},
     /// Whether the abstract body performed a managed receiver write.
@@ -297,6 +298,20 @@ pub fn docstringOf(program: Program, declaration: Span) ?DeclarationDoc {
     return null;
 }
 
+/// Zero-based positions of the parameters one flag list marks `mut`, in source
+/// order. Consumes the per-parameter flag list a callback type records; the
+/// caller owns the returned slice.
+pub fn mutPositions(allocator: std.mem.Allocator, flags: []const bool) std.mem.Allocator.Error![]const u16 {
+    var positions: [16]u16 = undefined;
+    var count: usize = 0;
+    for (flags, 0..) |flag, index| {
+        if (!flag or count == positions.len) continue;
+        positions[count] = @intCast(index);
+        count += 1;
+    }
+    return allocator.dupe(u16, positions[0..count]);
+}
+
 /// Expression-bodied anonymous function with contextually typed parameters and result.
 pub const Lambda = struct { span: Span, parameters: []const Span, body: NodeId };
 /// Source type declarations collected separately from function bodies and expression tables.
@@ -326,10 +341,8 @@ pub const CallbackType = struct {
     parameter_names: []const ?Span = &.{},
     return_type: Span,
     effect_bound: effect_set.Bound,
-    /// Normalized parameter positions from an optional `mutates(...)` clause.
-    mutates: []const u16 = &.{},
     /// One flag per parameter in source order, true where the declared type was
-    /// preceded by `mut`.
+    /// preceded by `mut`. The set is the callable's declared mutation footprint.
     mut_parameters: []const bool = &.{},
 };
 /// One `tuple[T1, ..., Tn]` type spelling with its element type spans.

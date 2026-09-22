@@ -158,7 +158,7 @@ public def height(points: list[Point]) -> int effects():
     return bottom
 
 
-def placeRows(rows: list[Row]) -> int:
+def placeRows(rows: mut list[Row]) -> int:
     total = 0
     i = 0
     while i < len(rows):
@@ -432,7 +432,7 @@ public def build(host: Host, parts: list[c.Part], pins: list[c.Pin]) -> list[Poi
     lookup = netLookup(pins, nets)
     out: list[Point] = []
     ordered = collectRows(host, parts, pins, nets, lookup)
-    _ = placeRows(ordered)
+    _ = placeRows(mut ordered)
     i = 0
     while i < len(pins):
         pin = pins[i]

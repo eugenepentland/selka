@@ -14,7 +14,6 @@ pub const Flags = struct {
     /// change the default result.
     pure_skip: bool = false,
     /// Opt-in D3 experiment forwarded to every compiler child the test spawns.
-    mutation_markers: bool = false,
     /// `--affected` selects only tests that reach a declaration changed since
     /// `--against REF`; the reference itself lives on `Options.against`.
     affected: bool = false,
@@ -86,7 +85,7 @@ pub const Toolchain = struct {
 pub const usage = "usage: mylang test <entry.my|directory> [--filter SUBSTRING|GLOB] [--cases FILE]\n" ++
     "  --affected --against REF  run only tests reaching a declaration changed since REF\n" ++
     "  --link FILE --link-library NAME --library-path DIR (repeatable)\n" ++
-    "  --cache-dir DIR --force --no-cache --report --json --pure-skip --mutation-markers --qbe PATH --zig PATH\n" ++
+    "  --cache-dir DIR --force --no-cache --report --json --pure-skip --qbe PATH --zig PATH\n" ++
     "  a ReleaseFast test build uses the LLVM release path; --qbe PATH forces QBE\n" ++
     "  --gc-stress  run every collected test under the runtime's stress collector\n" ++
     "  --mode Debug|ReleaseFast\n" ++
@@ -129,7 +128,6 @@ pub fn parse(args: []const []const u8) Error!Options {
             continue;
         }
         if (std.mem.eql(u8, arg, "--mutation-markers")) {
-            result.flags.mutation_markers = true;
             continue;
         }
         if (std.mem.eql(u8, arg, "--bench-only")) {

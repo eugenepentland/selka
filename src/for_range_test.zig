@@ -23,14 +23,14 @@ const generic_text =
     \\    return result + sum_range[u8](0u8, 5u8)
 ;
 const once_text =
-    \\def bound(counter: list[int], value: int) -> int:
+    \\def bound(counter: mut list[int], value: int) -> int:
     \\    counter.append(1)
     \\    return value
     \\
     \\def main() -> int:
     \\    counter: list[int] = []
     \\    result: int = 0
-    \\    for i in range(bound(counter, 0), bound(counter, 4)):
+    \\    for i in range(bound(mut counter, 0), bound(mut counter, 4)):
     \\        result += i
     \\    return result + len(counter)
     \\

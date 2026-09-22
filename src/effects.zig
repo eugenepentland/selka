@@ -8,7 +8,9 @@ pub const ValidateError = error{
 const std = @import("std");
 const typed = @import("typed.zig");
 const sets = @import("effect_set.zig");
-const Span = @import("source.zig").Span;
+const ast = @import("ast.zig");
+const source = @import("source.zig");
+const Span = source.Span;
 const diagnostic = @import("diagnostic.zig");
 const mutation = @import("mutation.zig");
 const bytecode_model = @import("bytecode_model.zig");
@@ -308,7 +310,25 @@ fn directPrint(graph: *Graph, index: usize, output: typed.Print, span: Span) voi
 }
 
 /// Infer transitive effects and reject function bodies that exceed declared effect bounds.
-pub fn check(allocator: std.mem.Allocator, program: typed.Program, exported: []const bool, sink: *diagnostic.Sink) diagnostic.Error!void {
+/// Everything the effect and mutation passes need besides the checked program:
+/// the exporting verdicts and the source the declaration-side messages quote.
+pub const Request = struct {
+    /// Whether each function is exported, in program order.
+    exported: []const bool,
+    /// Merged source of the checked program, for paste-ready diagnostics.
+    src: source.Source,
+    /// Parsed declarations, which carry each parameter's own type span.
+    syntax: ast.Program,
+    /// Diagnostic destination.
+    sink: *diagnostic.Sink,
+};
+
+/// Validate every checked function's effects, then enforce the mutation
+/// guarantee over the same program. Request collects the program's exporting
+/// verdicts, its merged source and the diagnostic sink.
+pub fn check(allocator: std.mem.Allocator, program: typed.Program, request: Request) diagnostic.Error!void {
+    const exported = request.exported;
+    const sink = request.sink;
     var graph = try Graph.init(allocator, program.functions.len);
     defer graph.deinit();
     const cleanup_masks = cleanupMasks(allocator, program.records) catch |err| switch (err) {
@@ -400,7 +420,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, exported: []c
     // transitive write footprints and return-alias bounds to a fixed point,
     // attributes writes to caller inputs through aliases and calls, and rejects
     // writes that exceed a declared ceiling or unknown-overlap call arguments.
-    const mutation_violated = @import("origins.zig").check(allocator, program, exported, sink) catch |err| switch (err) {
+    const mutation_violated = @import("origins.zig").check(allocator, program, .{ .exported = exported, .src = request.src, .syntax = request.syntax, .sink = sink }) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
     };
     // Exported declarations are no longer required to spell out a ceiling. The
@@ -481,7 +501,7 @@ pub fn checkAbstract(allocator: std.mem.Allocator, functions: []const @import("a
         if (inferred == 0) continue;
         const bound = function.policy.effect_bound orelse continue;
         const has_permission = bound.allowed & sets.bit(.mutation) != 0;
-        const permitted = positionMask(function.signature.mutates);
+        const permitted = positionMask(function.signature.mut_positions);
         if (has_permission and inferred & ~permitted == 0) continue;
         sink.items.append(sink.allocator, .{
             .code = "E_MUTATION_PERMISSION",

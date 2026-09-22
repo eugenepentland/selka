@@ -86,7 +86,7 @@ pub const usage = "usage: mylang build <file.my> (-o <output> | --run) [--projec
     "  a ReleaseFast build defaults to --backend llvm --llvm-opt 3 --lto;\n" ++
     "  a Debug build defaults to --backend qbe\n" ++
     "  --qbe PATH --zig PATH --mode Debug|ReleaseFast (default ReleaseFast) --target amd64_sysv\n" ++
-    "  " ++ cache_dir_flag ++ "DIR  --no-cache  --report  --mutation-markers\n" ++
+    "  " ++ cache_dir_flag ++ "DIR  --no-cache  --report\n" ++
     "  --timings=json  phase-timings-v1 JSON Lines on stderr (frontend/codegen/link/native)\n" ++
     "  --keep-symbols  keep the guest symbol table so `perf report` names functions\n" ++
     "  --max-memory BYTES  byte ceiling for --run (K/M/G suffixes; default 4G)\n" ++
@@ -118,17 +118,13 @@ pub fn parse(args: []const []const u8) Error!Options {
             result.cache = no_cache;
             continue;
         }
-        // `--mutation-markers` is a checker flag, not a build control. It is
-        // accepted here and forwarded to the frontend child by scanning
-        // `link_arguments`, so the frozen Options field set does not grow.
-        if (std.mem.eql(u8, argument, "--mutation-markers")) continue;
         // `--step-accounting` is a build-policy request, not a build control: the
         // host application that always runs its guest under `--max-steps=` asks
-        // for the accounting that enforces it. Like `--mutation-markers` it rides
-        // in `link_arguments` so the frozen Options field set does not grow.
+        // for the accounting that enforces it. It rides in `link_arguments` so
+        // the frozen Options field set does not grow.
         if (std.mem.eql(u8, argument, "--step-accounting")) continue;
         // `--keep-symbols` is a measurement-only link policy, not a build
-        // control. Like `--mutation-markers` and `--step-accounting` it rides in
+        // control. Like `--step-accounting` it rides in
         // `link_arguments`, which the driver already scans, so the frozen
         // Options field set does not grow for a profiling switch.
         if (std.mem.eql(u8, argument, "--keep-symbols")) continue;

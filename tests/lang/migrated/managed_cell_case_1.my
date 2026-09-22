@@ -1,13 +1,13 @@
 module managed_cell_case_1
 
 
-def bump(cell: Cell[int]) -> None effects(mutation) mutates(cell):
+def bump(cell: mut Cell[int]) -> None effects(mutation):
     cell.value = cell.value + 1
 
 
 public def program() -> int:
     cell = Cell(value=40)
     alias = cell
-    bump(alias)
-    bump(cell)
+    bump(mut alias)
+    bump(mut cell)
     return cell.value

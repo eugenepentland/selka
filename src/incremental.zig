@@ -475,7 +475,7 @@ fn normalizedDeclarationHash(scratch: std.mem.Allocator, src: source.Source, kin
 fn normalizeSpan(scratch: std.mem.Allocator, src: source.Source, span: source.Span) Error![]const u8 {
     if (span.start > span.end or span.end > src.bytes.len) return error.InternalError;
     var sink: diagnostic.Sink = .{ .allocator = scratch };
-    const tokens = lexer.lexRangeWithMarkers(scratch, src.bytes, span, src.mutation_markers, &sink) catch |err| switch (err) {
+    const tokens = lexer.lexRange(scratch, src.bytes, span, &sink) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.InternalError,
     };
@@ -506,7 +506,7 @@ fn normalizedFunctionDeclarationHash(scratch: std.mem.Allocator, src: source.Sou
     defer out.deinit();
     try writerWrite(&out.writer, normalized);
     try writerWrite(&out.writer, "\x00public-mutates=");
-    if (function.signature.mutates.len == 0) try writerWrite(&out.writer, "none") else try writePositions(&out.writer, function.signature.mutates);
+    if (function.signature.mut_positions.len == 0) try writerWrite(&out.writer, "none") else try writePositions(&out.writer, function.signature.mut_positions);
     try writerWrite(&out.writer, "\x00public-return-origin=");
     try writeReturnOrigin(&out.writer, .unknown);
     const bytes = out.toOwnedSlice() catch return error.OutOfMemory;
@@ -514,28 +514,18 @@ fn normalizedFunctionDeclarationHash(scratch: std.mem.Allocator, src: source.Sou
 }
 
 fn normalizedFunctionSpan(scratch: std.mem.Allocator, src: source.Source, syntax: ast.Program, function: ast.Function) Error![]const u8 {
-    const span = try functionSpan(scratch, src, syntax, function);
+    const span = baseFunctionSpan(syntax, function);
     if (span.start > span.end or span.end > src.bytes.len) return error.InternalError;
     var sink: diagnostic.Sink = .{ .allocator = scratch };
-    const tokens = lexer.lexRangeWithMarkers(scratch, src.bytes, span, src.mutation_markers, &sink) catch |err| switch (err) {
+    const tokens = lexer.lexRange(scratch, src.bytes, span, &sink) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.InternalError,
     };
-    const clause = try mutatesClauseSpan(scratch, src, syntax, function);
     var out: std.Io.Writer.Allocating = .init(scratch);
     defer out.deinit();
     var first = true;
     var index: usize = 0;
     while (tokens[index].tag != .eof) {
-        if (clause) |region| {
-            if (tokens[index].span.start == region.start) {
-                if (!first) try writerWrite(&out.writer, "\x00");
-                first = false;
-                try writeCanonicalMutates(&out.writer, function.signature.mutates);
-                while (tokens[index].tag != .eof and tokens[index].span.end <= region.end) index += 1;
-                continue;
-            }
-        }
         const token = tokens[index];
         if (token.span.start > token.span.end or token.span.end > src.bytes.len) return error.InternalError;
         if (!first) try writerWrite(&out.writer, "\x00");
@@ -544,12 +534,6 @@ fn normalizedFunctionSpan(scratch: std.mem.Allocator, src: source.Source, syntax
         index += 1;
     }
     return out.toOwnedSlice() catch return error.OutOfMemory;
-}
-
-fn writeCanonicalMutates(writer: *std.Io.Writer, positions: []const u16) Error!void {
-    try writerWrite(writer, "mutates(");
-    try writePositions(writer, positions);
-    try writerWrite(writer, ")");
 }
 
 fn writePositions(writer: *std.Io.Writer, positions: []const u16) Error!void {
@@ -962,51 +946,6 @@ fn baseFunctionSpan(syntax: ast.Program, function: ast.Function) source.Span {
     }
     if (function.policy.effect_bound) |bound| end = @max(end, bound.span.end);
     return .{ .start = start, .end = end };
-}
-
-/// The declaration region hashed into the public interface. For a nonempty
-/// `mutates(...)` clause this extends the header span through the closing
-/// parenthesis; the normalizer replaces those tokens with the contract's sorted
-/// parameter positions, so `mutates()`/omitted remain the same and binder
-/// spelling or argument order cannot leak into the fingerprint.
-fn functionSpan(scratch: std.mem.Allocator, src: source.Source, syntax: ast.Program, function: ast.Function) Error!source.Span {
-    var span = baseFunctionSpan(syntax, function);
-    if (try mutatesClauseSpan(scratch, src, syntax, function)) |clause| span.end = @max(span.end, clause.end);
-    return span;
-}
-
-fn mutatesClauseSpan(scratch: std.mem.Allocator, src: source.Source, syntax: ast.Program, function: ast.Function) Error!?source.Span {
-    if (function.signature.mutates.len == 0) return null;
-    const bound = function.policy.effect_bound orelse return null;
-    var limit = src.bytes.len;
-    const body_span = syntax.statements.items[@backingInt(function.body)].span;
-    if (body_span.start >= bound.span.end and body_span.start <= src.bytes.len) limit = body_span.start;
-    if (bound.span.end > limit or limit > src.bytes.len) return error.InternalError;
-    var sink: diagnostic.Sink = .{ .allocator = scratch };
-    const tokens = lexer.lexRangeWithMarkers(scratch, src.bytes, .{ .start = bound.span.end, .end = limit }, src.mutation_markers, &sink) catch |err| switch (err) {
-        error.OutOfMemory => return error.OutOfMemory,
-        else => return error.InternalError,
-    };
-    var index: usize = 0;
-    while (tokens[index].tag != .eof) : (index += 1) {
-        if (tokens[index].tag != .ident) continue;
-        if (!std.mem.eql(u8, src.bytes[tokens[index].span.start..tokens[index].span.end], "mutates")) continue;
-        if (index + 1 >= tokens.len or tokens[index + 1].tag != .lparen) continue;
-        var depth: usize = 0;
-        var close = index + 1;
-        while (close < tokens.len) : (close += 1) {
-            switch (tokens[close].tag) {
-                .lparen => depth += 1,
-                .rparen => {
-                    depth -|= 1;
-                    if (depth == 0) return .{ .start = tokens[index].span.start, .end = tokens[close].span.end };
-                },
-                else => {},
-            }
-        }
-        return error.InternalError;
-    }
-    return error.InternalError;
 }
 
 fn typeParametersEnd(parameters: []const ast.TypeParameter) usize {

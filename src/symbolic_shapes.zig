@@ -55,7 +55,7 @@ pub const Context = struct {
                     .parameters = values[0 .. values.len - 1],
                     .result = values[values.len - 1],
                     .effects = callback.syntax.effect_bound.allowed,
-                    .mutates = callback.syntax.mutates,
+                    .mutates = try ast.mutPositions(self.arena.allocator(), callback.syntax.mut_parameters),
                     .return_origin = .unknown,
                 };
                 break :result .{ .callback = signature };
@@ -108,7 +108,7 @@ pub const Context = struct {
                 .parameters = parameters,
                 .result = try self.sourceType(callback.return_type, depth + 1, aliases),
                 .effects = callback.effect_bound.allowed,
-                .mutates = callback.mutates,
+                .mutates = try ast.mutPositions(self.arena.allocator(), callback.mut_parameters),
                 .return_origin = .unknown,
             };
             return .{ .callback = signature };
