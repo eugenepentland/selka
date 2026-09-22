@@ -886,6 +886,15 @@ const CallSite = struct {
     parameter_types: []const typed.Type = &.{},
     parameter_locals: []const typed.Local = &.{},
     sink: *diagnostic.Sink,
+    roots: ?Roots = null,
+
+    /// Whether two arguments read through locals that may name one object.
+    fn sameRoot(self: CallSite, program: typed.Program, a: usize, b: usize) bool {
+        const roots = self.roots orelse return false;
+        const left = mutation.nodeRoot(program, self.arguments[a]) orelse return false;
+        const right = mutation.nodeRoot(program, self.arguments[b]) orelse return false;
+        return roots.same(@backingInt(left), @backingInt(right));
+    }
 
     fn typeAt(self: CallSite, index: usize) typed.Type {
         if (index < self.parameter_types.len) return self.parameter_types[index];
@@ -893,10 +902,44 @@ const CallSite = struct {
     }
 };
 
+/// Which locals of one function may name the same storage. A local assigned
+/// from a path rooted at another local, or bound to a `match` payload of one,
+/// joins that local's class. Origins already separate caller-owned inputs, so
+/// only two fresh arguments consult this: fresh storage is not the caller's, but
+/// one fresh list passed twice is still one list.
+const Roots = struct {
+    parent: []usize,
+
+    fn init(allocator: std.mem.Allocator, count: usize) std.mem.Allocator.Error!Roots {
+        const parent = try allocator.alloc(usize, count);
+        for (parent, 0..) |*slot, index| slot.* = index;
+        return .{ .parent = parent };
+    }
+
+    fn find(self: Roots, slot: usize) usize {
+        var at = slot;
+        while (self.parent[at] != at) at = self.parent[at];
+        return at;
+    }
+
+    fn join(self: Roots, a: usize, b: usize) void {
+        if (a >= self.parent.len or b >= self.parent.len) return;
+        const left = self.find(a);
+        const right = self.find(b);
+        if (left != right) self.parent[left] = right;
+    }
+
+    fn same(self: Roots, a: usize, b: usize) bool {
+        if (a >= self.parent.len or b >= self.parent.len) return false;
+        return self.find(a) == self.find(b);
+    }
+};
+
 const OverlapChecker = struct {
     allocator: std.mem.Allocator,
     program: typed.Program,
     summaries: []const Summary,
+    roots: ?Roots = null,
 
     /// Report the first writable/read-only argument pair not proven disjoint.
     fn checkArguments(self: *const OverlapChecker, site: CallSite, written_mask: u16) std.mem.Allocator.Error!bool {
@@ -906,13 +949,13 @@ const OverlapChecker = struct {
             const written_bit = @as(u16, 1) << @intCast(written);
             if (written_mask & written_bit == 0 or written >= site.arguments.len) continue;
             if (written >= site.arguments.len or !mayContainManaged(self.program, site.typeAt(written))) continue;
-            if (context.nodeOrigin(site.function, site.origins, site.arguments[written], 0).isFresh()) continue;
-            if (try self.checkReadOnly(&context, site, written, written_mask)) return true;
+            const fresh = context.nodeOrigin(site.function, site.origins, site.arguments[written], 0).isFresh();
+            if (try self.checkReadOnly(&context, site, written, written_mask, fresh)) return true;
         }
         return false;
     }
 
-    fn checkReadOnly(self: *const OverlapChecker, context: *const Context, site: CallSite, written: u5, written_mask: u16) std.mem.Allocator.Error!bool {
+    fn checkReadOnly(self: *const OverlapChecker, context: *const Context, site: CallSite, written: u5, written_mask: u16, written_fresh: bool) std.mem.Allocator.Error!bool {
         var read_only: u5 = 0;
         while (read_only < 16) : (read_only += 1) {
             const read_bit = @as(u16, 1) << @intCast(read_only);
@@ -921,7 +964,12 @@ const OverlapChecker = struct {
             const written_type = site.typeAt(written);
             const read_type = site.typeAt(read_only);
             if (!mayContainManaged(self.program, read_type)) continue;
-            if (context.nodeOrigin(site.function, site.origins, site.arguments[read_only], 0).isFresh()) continue;
+            const read_fresh = context.nodeOrigin(site.function, site.origins, site.arguments[read_only], 0).isFresh();
+            // Fresh storage is never the caller's, so a fresh argument can only
+            // meet another fresh one, and only through a shared local.
+            const both_fresh = written_fresh and read_fresh;
+            if (both_fresh and !site.sameRoot(self.program, written, read_only)) continue;
+            if (!both_fresh and (written_fresh or read_fresh)) continue;
             var stack: [64]TypePair = undefined;
             if (!typesMayAlias(self.program, written_type, read_type, &stack, 0)) continue;
             try site.sink.items.append(self.allocator, .{
@@ -957,6 +1005,7 @@ fn overlapForCall(checker: *const OverlapChecker, function: typed.Function, orig
                 .arguments = call.arguments,
                 .parameter_locals = callee.scope.locals[0..callee.signature.parameter_count],
                 .sink = sink,
+                .roots = checker.roots,
             };
             return checker.checkArguments(site, mask);
         },
@@ -970,6 +1019,7 @@ fn overlapForCall(checker: *const OverlapChecker, function: typed.Function, orig
                 .arguments = invoke.arguments,
                 .parameter_types = signature.parameters,
                 .sink = sink,
+                .roots = checker.roots,
             };
             return checker.checkArguments(site, mask);
         },
@@ -984,7 +1034,9 @@ fn collectOverlaps(allocator: std.mem.Allocator, program: typed.Program, summari
     defer scratch.deinit();
     const origins = try scratch.allocator().alloc(Origin, if (locals == 0) 1 else locals);
     @memset(origins, .{});
-    const checker = OverlapChecker{ .allocator = allocator, .program = program, .summaries = summaries };
+    const roots = try Roots.init(scratch.allocator(), origins.len);
+    const checker = OverlapChecker{ .allocator = allocator, .program = program, .summaries = summaries, .roots = roots };
+    const context = Context{ .allocator = allocator, .program = program, .summaries = summaries };
     var violated = false;
     var walker = try Walker.init(scratch.allocator(), program, function.scope.body);
     defer walker.deinit();
@@ -993,10 +1045,15 @@ fn collectOverlaps(allocator: std.mem.Allocator, program: typed.Program, summari
             const statement = program.statements[@backingInt(statement_id)];
             switch (statement.data) {
                 .initialize, .assign => |store| {
-                    const context = Context{ .allocator = allocator, .program = program, .summaries = summaries };
                     const value = context.nodeOrigin(function, origins, store.value, 0);
                     const slot = @backingInt(store.slot);
                     if (slot < origins.len) origins[slot] = Origin.merge(origins[slot], value);
+                    if (mutation.nodeRoot(program, store.value)) |root| roots.join(slot, @backingInt(root));
+                },
+                .match => |matched| {
+                    bindArmPayloads(&context, function, origins, matched, 0);
+                    const root = mutation.nodeRoot(program, matched.value) orelse continue;
+                    for (matched.arms) |arm| if (arm.slot) |slot| roots.join(@backingInt(slot), @backingInt(root));
                 },
                 else => {},
             }
