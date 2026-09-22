@@ -1,0 +1,151 @@
+module tuples
+
+
+record Label:
+    pair: tuple[int, str]
+
+
+def split_first(text: str, sep: str) -> tuple[str, str]:
+    at = text.find(sep)
+    if at < 0:
+        return text, ""
+    return text[0:at], text[at + 1:len(text)]
+
+
+def labelled(pair: tuple[int, str]) -> Label:
+    return Label(pair=pair)
+
+
+def find(pairs: list[tuple[int, str]], wanted: int) -> Option[tuple[int, str]]:
+    for number, letter in pairs:
+        if number == wanted:
+            return Some((number, letter))
+    return None
+
+
+def letter_of(found: Option[tuple[int, str]]) -> str:
+    if found is None:
+        return ""
+    number, letter = found
+    return letter
+
+
+def pair_sum(pair: tuple[int, int]) -> int:
+    left, right = pair
+    return left + right
+
+
+def managed_pair() -> tuple[int, list[int]]:
+    seen: list[int] = []
+    seen.append(7)
+    return 3, seen
+
+
+def first_or[T](pair: tuple[T, int], fallback: T) -> T:
+    value, count = pair
+    if count > 0:
+        return value
+    return fallback
+
+
+def swap_pair[T](pair: tuple[T, T]) -> tuple[T, T]:
+    left, right = pair
+    return right, left
+
+
+# A returned tuple destructures by name, `_` skips one, and the swap idiom
+# rewrites both names from one tuple value.
+# spec: TUPLE-3
+public def test_a_returned_tuple_destructures_and_the_swap_idiom_works() -> bool:
+    head, rest = split_first("key=value", "=")
+    if head != "key" or rest != "value":
+        return False
+    a = 1
+    b = 2
+    a, b = b, a
+    if a != 2 or b != 1:
+        return False
+    first, _ = split_first("a=b", "=")
+    return first == "a"
+
+
+# A tuple is an ordinary value: it lives in a list, in a record field, and each
+# element keeps its own type.
+# spec: TUPLE-2
+public def test_a_tuple_nests_in_a_list_and_in_a_record_field() -> bool:
+    pairs: list[tuple[int, str]] = [(1, "a"), (2, "b")]
+    total = 0
+    for number, letter in pairs:
+        total = total + number
+        if letter == "":
+            return False
+    if total != 3:
+        return False
+    wrapped = labelled((4, "d"))
+    number, letter = wrapped.pair
+    return number == 4 and letter == "d"
+
+
+# spec-case: TUPLE-2
+public def test_an_option_and_a_result_payload_can_be_a_tuple() -> bool:
+    pairs: list[tuple[int, str]] = [(1, "a"), (2, "b")]
+    if letter_of(find(pairs, 2)) != "b":
+        return False
+    if letter_of(find(pairs, 9)) != "":
+        return False
+    ok: Result[tuple[int, str], str] = Ok((5, "e"))
+    match ok:
+        case Ok(pair):
+            number, letter = pair
+            return number == 5 and letter == "e"
+        case Err(message):
+            return False
+
+
+# spec: TUPLE-6
+public def test_tuple_equality_and_rendering_follow_the_aggregate_rule() -> bool:
+    left: tuple[int, str] = (1, "a")
+    right = (1, "a")
+    if left != right:
+        return False
+    if left == (1, "b") or left == (2, "a"):
+        return False
+    if str(left) != "(1, 'a')":
+        return False
+    nested = (1, (2, "b"))
+    if str(nested) != "(1, (2, 'b'))":
+        return False
+    pairs: list[tuple[int, str]] = [left, (2, "b")]
+    return str(pairs) == "[(1, 'a'), (2, 'b')]"
+
+
+# A tuple is managed-bearing when an element is, so `escape` copies the whole
+# tuple out of the arena and the list it holds still reads back afterwards.
+# spec-case: TUPLE-2
+public def test_a_tuple_carrying_a_managed_element_escapes_an_arena() -> bool:
+    kept: tuple[int, list[int]] = (0, [])
+    with arena() as scratch:
+        built = managed_pair()
+        kept = scratch.escape(built)
+    number, values = kept
+    if number != 3 or len(values) != 1 or values[0] != 7:
+        return False
+    return pair_sum((1, 2)) == 3
+
+
+# A template may take, destructure and return `tuple[T, int]`; the element that
+# is a type parameter stays that parameter, so one definition serves int and str.
+# spec: TUPLE-8
+public def test_a_generic_function_over_a_tuple_keeps_its_element_type() -> bool:
+    if first_or((7, 1), 0) != 7:
+        return False
+    if first_or(("a", 0), "b") != "b":
+        return False
+    first, second = swap_pair((1, 2))
+    if first != 2 or second != 1:
+        return False
+    pairs: list[tuple[int, int]] = [(1, 2), (3, 4)]
+    total = 0
+    for left, right in pairs:
+        total = total + left + right
+    return total == 10

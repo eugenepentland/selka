@@ -77,6 +77,18 @@ pub fn resolve(allocator: std.mem.Allocator, catalog: *@import("type_catalog.zig
         const length = if (template.length_parameter) |at| try @import("generic_lengths.zig").resolve(src, at, parameters, binding.lengths, sink) else template.length;
         return catalog.instantiateArray(allocator, element, length, span, sink);
     }
+    if (catalog.templates.store) |store| if (store.index.syntax.tuples.get(span.start)) |syntax| {
+        var elements: [8]typed.Type = undefined;
+        for (syntax.elements, 0..) |element, index| elements[index] = try resolve(allocator, catalog, src, sink, .{
+            .span = element,
+            .parameters = parameters,
+            .arguments = arguments,
+            .lengths = binding.lengths,
+            .aliases = binding.aliases,
+            .depth = depth + 1,
+        });
+        return @import("nominal_catalog.zig").instantiateTuple(catalog, elements[0..syntax.elements.len], span);
+    };
     // A prelude type named without an import — the mutable octet buffer — is
     // declared with the prelude but materialized on its first mention, so a
     // module-local declaration of that name still wins its own scope.

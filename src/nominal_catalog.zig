@@ -384,6 +384,19 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     return catalog;
 }
 
+/// Materialize the interned record for one concrete tuple element list. The
+/// graph key carries the element identities, so two spellings or values with
+/// the same elements materialize one record, exactly as a closed spelling does.
+pub fn instantiateTuple(catalog: *Catalog, elements: []const typed.Type, span: source.Span) Error!typed.Type {
+    const state = catalog.templates.store orelse return error.InternalError;
+    var ids: [8]layouts.Id = undefined;
+    for (elements, 0..) |element, i| ids[i] = try state.typeArgument(catalog.records, element, span, 0);
+    const id = try state.graph.materializeKey(.{ .base = .{ .tuple = {} }, .arguments = ids[0..elements.len] }, span);
+    var builder: Builder = .{ .context = state.context, .index = state.index, .graph = state.graph, .catalog = catalog, .identities = &state.identities };
+    try builder.complete();
+    return builder.runtimeType(id);
+}
+
 /// Materialize ordered type identities and their optional constant length values.
 pub fn instantiateLengths(catalog: *Catalog, declaration: usize, arguments: []const typed.Type, lengths: []const ?usize, span: source.Span) Error!typed.Type {
     const state = catalog.templates.store orelse return error.InternalError;

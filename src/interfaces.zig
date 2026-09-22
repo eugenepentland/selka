@@ -311,6 +311,13 @@ pub const Index = struct {
             if (array.index == .enum_type) try self.signatureType(module, array.index.enum_type);
             return self.signatureType(module, array.element);
         }
+        // A tuple is structural: its element spans are checked in place and the
+        // whole spelling names no declaration of its own.
+        for (syntax.types.expressions.tuples) |tuple| {
+            if (tuple.span.start != span.start or tuple.span.end != span.end) continue;
+            for (tuple.elements) |element| try self.signatureType(module, element);
+            return;
+        }
         const src = self.project.modules.items[module].src;
         if (typed.Type.fromName(src.text(span)) != null) return;
         if (!self.units[module].names.contains(src.text(span)) and prelude.scalar(src.text(span))) return;
@@ -447,6 +454,11 @@ pub const Index = struct {
             if (array.span.start != span.start or array.span.end != span.end) continue;
             if (array.index == .enum_type) try self.genericSignatureType(module, array.index.enum_type, parameters);
             return self.genericSignatureType(module, array.element, parameters);
+        }
+        for (self.units[module].syntax.types.expressions.tuples) |tuple| {
+            if (tuple.span.start != span.start or tuple.span.end != span.end) continue;
+            for (tuple.elements) |element| try self.genericSignatureType(module, element, parameters);
+            return;
         }
         try self.signatureType(module, span);
     }
@@ -1053,6 +1065,17 @@ pub const Index = struct {
             }
             try out.appendSlice(allocator, "]");
             try out.appendSlice(allocator, try self.contractTypeTextPath(module, array.element, parameters, path));
+            return out.toOwnedSlice(allocator);
+        }
+        for (self.units[module].syntax.types.expressions.tuples) |tuple| {
+            if (tuple.span.start != span.start or tuple.span.end != span.end) continue;
+            var out: std.ArrayList(u8) = .empty;
+            try out.appendSlice(allocator, "tuple[");
+            for (tuple.elements, 0..) |element, index| {
+                if (index != 0) try out.appendSlice(allocator, ",");
+                try out.appendSlice(allocator, try self.contractTypeTextPath(module, element, parameters, path));
+            }
+            try out.appendSlice(allocator, "]");
             return out.toOwnedSlice(allocator);
         }
         if (typed.Type.fromName(text)) |builtin| return allocator.dupe(u8, prelude.reservedTypeName(builtin) orelse typed.typeName(builtin, &.{}));

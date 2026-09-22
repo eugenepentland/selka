@@ -2,6 +2,11 @@
   "language_version": "0.1.0",
   "primary_backend": "qbe",
   "implemented": {
+    "tuples": {
+      "kind": "language",
+      "summary": "`tuple[T1, ..., Tn]` (two to eight elements) is an immutable, fixed-arity anonymous record: it is built with `(a, b)` and the bare forms after `return`, taken apart only by destructuring (`x, y = value`, `for a, b in pairs`, `_` for a value not needed), compares structurally, prints as `(1, 'a')`, and is rejected when indexed, named by field, called as a method or measured with `len`.",
+      "doc": "docs/tuples.md#tuples"
+    },
     "typed-hole-obligations": {
       "kind": "tooling",
       "summary": "`mylang check --diagnostics=json` attaches a versioned `typed-hole-obligation` record to each `E_TYPED_HOLE` diagnostic: snapshot identity and hole range, declared and contextual expected types, usable bindings, generic requirements, effect ceiling and mutation footprint, with whole-program facts a hole cannot promise named in an `unavailable` list.",

@@ -300,3 +300,85 @@ test "the host boundary rejects a tuple signature" {
         \\
     , "E_HOST_SIGNATURE");
 }
+
+// spec: TUPLE-8
+test "a generic function takes, destructures and returns tuple[T, int]" {
+    try accepts(
+        \\def first_or[T](pair: tuple[T, int], fallback: T) -> T:
+        \\    value, count = pair
+        \\    if count > 0:
+        \\        return value
+        \\    return fallback
+        \\
+        \\
+        \\def main() -> int:
+        \\    return first_or((7, 1), 0) + first_or(("a", 0), "b").find("a")
+        \\
+    );
+    // The element that is a type parameter keeps its identity: an int for an
+    // int tuple, a str for a str tuple, with no conversion between them.
+    try t.expectEqual(@as(i64, 7), try value(
+        \\def first_or[T](pair: tuple[T, int], fallback: T) -> T:
+        \\    value, count = pair
+        \\    if count > 0:
+        \\        return value
+        \\    return fallback
+        \\
+        \\
+        \\def main() -> int:
+        \\    return first_or((7, 1), 0)
+        \\
+    ));
+    try t.expectEqualStrings("b\n", try output(
+        \\def first_or[T](pair: tuple[T, int], fallback: T) -> T:
+        \\    value, count = pair
+        \\    if count > 0:
+        \\        return value
+        \\    return fallback
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    out.print(first_or(("a", 0), "b"))
+        \\    return 0
+        \\
+    ));
+}
+
+// spec-case: TUPLE-8
+test "a generic tuple requirement is its elements' requirement" {
+    // A copyable element list satisfies a copy bound, and the destructured
+    // parameter still returns its own parameter type.
+    try accepts(
+        \\def swap_pair[T: copy](pair: tuple[T, T]) -> tuple[T, T]:
+        \\    left, right = pair
+        \\    return right, left
+        \\
+        \\
+        \\def main() -> int:
+        \\    first, second = swap_pair((1, 2))
+        \\    return first * 10 + second
+        \\
+    );
+}
+
+/// Check one unit and return its canonical formatted text.
+fn formatted(source: []const u8) ![]u8 {
+    var compilation = try language.Compilation.init(t.allocator, unit_name, source);
+    defer compilation.deinit();
+    return compilation.format(t.allocator);
+}
+
+// spec: TUPLE-7
+test "the formatter returns a tuple value, type and target list unchanged" {
+    const source = "def pair() -> tuple[int, str]:\n    return (1, \"a\")\n\n\n" ++
+        "def main() -> int:\n    first, second = pair()\n    return first\n";
+    const once = try formatted(source);
+    defer t.allocator.free(once);
+    const twice = try formatted(once);
+    defer t.allocator.free(twice);
+    try t.expectEqualStrings(once, twice);
+    try t.expect(std.mem.indexOf(u8, once, "tuple[int, str]") != null);
+    try t.expect(std.mem.indexOf(u8, once, "first, second = pair()") != null);
+}
+
+

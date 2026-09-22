@@ -204,6 +204,13 @@ a list literal becomes the array and a dict literal keyed by `Kind.case` becomes
 table whenever the surrounding annotation, parameter, field or result demands one. The
 array length is checked statically and the table requires every case exactly once.
 
+A tuple groups two to eight values without declaring a record: `(a, b)` builds one, the
+type is written `tuple[str, int]`, and the bare forms `return a, b` and `x, y = a, b`
+are accepted, so `a, b = b, a` is the swap. A tuple has no fields, no indexing, no
+methods and no `len`; take it apart by destructuring, `x, y = value` or `for x, y in
+pairs`, and bind `_` for a value you do not need. It compares structurally, prints as
+`(1, 'a')`, and is one structural type everywhere. See [tuples](tuples.md).
+
 ```mylang
 # doc: expect 42
 enum Status:

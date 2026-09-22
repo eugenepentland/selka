@@ -126,6 +126,35 @@ test "default interface listing renders the whole signature with Python capabili
     try t.expect(std.mem.indexOf(u8, text, "ceiling(mutation)") != null);
 }
 
+// spec-case: TUPLE-7
+test "list-interfaces spells a tuple signature back in source form" {
+    const body =
+        \\module main
+        \\
+        \\
+        \\public def split(text: str, sep: str) -> tuple[str, str]:
+        \\    return text, sep
+        \\
+        \\
+        \\public def main() -> int:
+        \\    head, rest = split("key=value", "=")
+        \\    return len(head) + len(rest)
+    ;
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    try compilation.check();
+    index.program = compilation.program.?;
+    const text = try index.render(t.allocator);
+    defer t.allocator.free(text);
+    const surface = try @import("typed.zig").surfaceTypeText(t.allocator, text);
+    defer t.allocator.free(surface);
+    try t.expect(std.mem.indexOf(u8, surface, "tuple[str, str]") != null);
+}
+
 fn reject(body: []const u8, code: []const u8) !void {
     var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = body }, .{ .path = units_path, .bytes = units } } };
     var project = graph.Project.init(t.allocator);

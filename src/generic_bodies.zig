@@ -30,8 +30,12 @@ const eTryReturn = "E_TRY_RETURN";
 const eArgument = diagnostic.generic_argument;
 const eListType = @import("collection_lower.zig").list_type_error;
 const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
+const eTupleArity = "E_TUPLE_ARITY";
+/// The accepted arity beside a rejected tuple in a template body.
+const tuple_arity_message = symbolic_shapes.tuple_arity_message;
 const Catalog = @import("records.zig").Catalog;
 const symbolic = @import("symbolic_types.zig");
+const symbolic_shapes = @import("symbolic_shapes.zig");
 const provider_shapes = @import("symbolic_providers.zig");
 const generic_cache = @import("generic_cache.zig");
 const Symbolic = symbolic.Value;
@@ -154,6 +158,13 @@ const Checker = struct {
             const length: Symbolic = if (template.length_parameter) |at| try self.lengthType(at) else .{ .length = template.length };
             return self.arrayWithLength(length, try self.ty(template.syntax.element), span);
         }
+        if (self.catalog.templates.store) |store| if (store.index.syntax.tuples.get(span.start)) |syntax| {
+            try self.enter(span);
+            defer self.depth -= 1;
+            const elements = try self.field_arena.allocator().alloc(Symbolic, syntax.elements.len);
+            for (syntax.elements, elements) |element, *out| out.* = try self.ty(element);
+            return self.symbolicTuple(elements, span);
+        };
         const text = self.src.text(span);
         switch (requirements.matchScope(self.requirement_aliases, self.src, span)) {
             .subject => |index| {
@@ -522,6 +533,8 @@ const Checker = struct {
     /// The dictionary receiver of one `items()` iteration source in a template body.
     fn fieldAssignment(self: *Checker, node: ast.Node) Error!Symbolic {
         const assignment = node.data.field_assignment;
+        if (self.program.nodes.items[@backingInt(assignment.target)].data == .tuple)
+            return self.tupleAssignment(assignment, node.span);
         var root = assignment.target;
         while (self.program.nodes.items[@backingInt(root)].data == .field) root = self.program.nodes.items[@backingInt(root)].data.field.base;
         const root_node = self.program.nodes.items[@backingInt(root)];
@@ -533,6 +546,78 @@ const Checker = struct {
         self.seedManagedWrite(self.parameterIndex(root, 0));
         const expected = try self.expression(assignment.target);
         try self.compatible(try self.expressionExpected(assignment.value, expected), expected, node.span);
+        return .{ .concrete = .unit };
+    }
+    /// Build a symbolic tuple value from its element values. Concrete elements
+    /// are interned in the catalog, so a value and a `tuple[...]` spelling of
+    /// the same elements are one identity; anything else keeps the elements as
+    /// ordered arguments, which is what makes `tuple[T, int]` spellable.
+    fn symbolicTuple(self: *Checker, elements: []const Symbolic, span: source.Span) Error!Symbolic {
+        if (elements.len < 2 or elements.len > 8) return self.sink.fail(eTupleArity, span, tuple_arity_message);
+        var concrete: [8]typed.Type = undefined;
+        var all_concrete = true;
+        for (elements, 0..) |element, index| {
+            if (element != .concrete) {
+                all_concrete = false;
+                break;
+            }
+            concrete[index] = element.concrete;
+        }
+        if (all_concrete) return .{ .concrete = try self.catalog.tupleType(concrete[0..elements.len]) };
+        const declaration = self.catalog.templates.store.?.index.tupleDeclaration(elements.len) orelse return error.InternalError;
+        return self.shapes().nominal(declaration, elements);
+    }
+    /// Check one `(a, b)` value in a template body. A destination that already
+    /// demands a tuple type checks each element against its positional type;
+    /// otherwise the element types are inferred and interned.
+    fn tupleValue(self: *Checker, span: source.Span, elements: []const ast.NodeId) Error!Symbolic {
+        const demanded = self.expected_types.get(span);
+        const expected = if (demanded) |value| symbolic_shapes.tupleArity(self.catalog, value) else null;
+        if (expected) |arity| if (arity != elements.len) return self.sink.fail(
+            eTupleArity,
+            span,
+            try std.fmt.allocPrint(self.allocator, "this tuple has {d} elements but the destination has {d}; write {d} elements", .{ elements.len, arity, arity }),
+        );
+        const values = try self.field_arena.allocator().alloc(Symbolic, elements.len);
+        for (elements, 0..) |element, index| {
+            if (demanded) |value| {
+                const wanted = symbolic_shapes.tupleElement(self.catalog, value, index).?;
+                values[index] = try self.expressionExpected(element, wanted);
+                try self.compatible(values[index], wanted, span);
+            } else values[index] = try self.expression(element);
+        }
+        return self.symbolicTuple(values, span);
+    }
+    /// The accepted arity a two-name `for` needs, naming the one-name loop.
+    fn twoNameLoopMessage(self: *Checker, elements: usize) Error![]const u8 {
+        return std.fmt.allocPrint(
+            self.allocator,
+            "a two-name `for` destructures a two-value tuple; this one has {d} values — bind it with one name and destructure it in the body",
+            .{elements},
+        );
+    }
+    /// `x, y = value` inside a template body: the value must be a tuple whose
+    /// arity matches the names, and each name binds one positional element.
+    fn tupleAssignment(self: *Checker, assignment: @FieldType(@FieldType(ast.Node, "data"), "field_assignment"), span: source.Span) Error!Symbolic {
+        const names = self.program.nodes.items[@backingInt(assignment.target)].data.tuple;
+        const value = try self.expression(assignment.value);
+        const arity = symbolic_shapes.tupleArity(self.catalog, value) orelse {
+            const found = try self.symbolicText(value);
+            const message = try std.fmt.allocPrint(self.allocator, "a destructuring assignment binds the values of a tuple; `{s}` is not one — bind it with one name instead", .{found});
+            return self.sink.fail("E_TYPE", span, message);
+        };
+        if (arity != names.len) return self.sink.fail(eTupleArity, span, "a destructuring assignment binds one name per tuple element");
+        for (names, 0..) |name_id, index| {
+            const name = self.program.nodes.items[@backingInt(name_id)].data.name;
+            if (std.mem.eql(u8, self.src.text(name), "_")) continue;
+            const element = symbolic_shapes.tupleElement(self.catalog, value, index).?;
+            if (self.active.contains(self.src.text(name))) {
+                const target = try self.local(name);
+                if (!target.mutable) return self.sink.fail(diagnostic.immutable, name, "assignment requires a mutable binding");
+                try self.compatible(element, target.ty, name);
+                self.option_facts.forget(self.active.get(self.src.text(name)).?);
+            } else try self.bind(name, element, true);
+        }
         return .{ .concrete = .unit };
     }
     /// Build an enum-indexed table from a dict literal whose context already demands `[Kind]T`.
@@ -1425,10 +1510,10 @@ const Checker = struct {
                 try self.supports(target, .integer, cast.ty);
                 break :result target;
             },
-            // lane: tuples (item 4), conditional expression (item 6) and the
-            // `mut` marker (item 1): the lanes add real support for the ones
-            // that can appear in a generic body.
-            .tuple => return self.sink.fail(eUnsupported, node.span, "tuple values are not supported inside generic function bodies yet"),
+            // lane: conditional expression (item 6) and the `mut` marker
+            // (item 1): the lanes add real support for the ones that can appear
+            // in a generic body.
+            .tuple => |elements| try self.tupleValue(node.span, elements),
             .conditional => return self.sink.fail(eUnsupported, node.span, "conditional expressions are not supported inside generic function bodies yet"),
             .mut_argument => return self.sink.fail(eUnsupported, node.span, "the `mut` argument marker is not supported inside generic function bodies yet"),
         };
@@ -1927,10 +2012,16 @@ const Checker = struct {
                 const element = try self.iterationElement(source_type, owner, statement_value.span);
                 const first = self.locals.items.len;
                 if (each.index_name != null and !each.enumerated) {
-                    if (dictionary_views.symbolicKind(self.catalog, element) != .item) return self.sink.fail("E_ITERATION", statement_value.span, "two iteration names require dictionary items, enumerate or zip");
-                    const shape = try self.shapes().schema(element, statement_value.span);
-                    try self.bind(each.index_name.?, shape.fields[0].ty.?, false);
-                    try self.bind(each.name, shape.fields[1].ty.?, false);
+                    if (symbolic_shapes.tupleArity(self.catalog, element)) |arity| {
+                        if (arity != 2) return self.sink.fail(eTupleArity, statement_value.span, try self.twoNameLoopMessage(arity));
+                        try self.bind(each.index_name.?, symbolic_shapes.tupleElement(self.catalog, element, 0).?, false);
+                        try self.bind(each.name, symbolic_shapes.tupleElement(self.catalog, element, 1).?, false);
+                    } else {
+                        if (dictionary_views.symbolicKind(self.catalog, element) != .item) return self.sink.fail("E_ITERATION", statement_value.span, "two iteration names require dictionary items, enumerate or zip");
+                        const shape = try self.shapes().schema(element, statement_value.span);
+                        try self.bind(each.index_name.?, shape.fields[0].ty.?, false);
+                        try self.bind(each.name, shape.fields[1].ty.?, false);
+                    }
                 } else {
                     try self.bind(each.name, element, false);
                     if (each.index_name) |name| try self.bind(name, .{ .concrete = .i64 }, false);

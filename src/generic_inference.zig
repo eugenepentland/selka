@@ -45,6 +45,13 @@ pub const Context = struct {
             }
             return self.matchDepth(template.syntax.element, shape.element, depth + 1);
         }
+        if (self.catalog.templates.store) |store| if (store.index.syntax.tuples.get(expected.start)) |syntax| {
+            const shapes = @import("symbolic_shapes.zig");
+            const arity = shapes.tupleArity(self.catalog, actual) orelse return self.mismatch();
+            if (arity != syntax.elements.len) return self.mismatch();
+            for (syntax.elements, 0..) |element, index| try self.matchDepth(element, shapes.tupleElement(self.catalog, actual, index).?, depth + 1);
+            return;
+        };
         if (self.catalog.templates.applications.get(expected.start)) |template| {
             return self.matchNominal(template.declaration, template.syntax.arguments, actual, depth);
         }
