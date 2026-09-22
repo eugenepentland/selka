@@ -142,7 +142,7 @@ fn validateHost(allocator: std.mem.Allocator, program: Program, function: Functi
     }
 }
 fn validateHostType(allocator: std.mem.Allocator, records: []const typed.Record, ty: typed.Type) Error!void {
-    @import("data_type.zig").check(allocator, records, ty, true) catch |err| switch (err) {
+    @import("data_type.zig").checkHost(allocator, records, ty) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.InternalError,
     };

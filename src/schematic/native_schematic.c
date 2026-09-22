@@ -137,6 +137,39 @@ static const char *read_block_packed(void *context, MylangHostPackedCall *call) 
     call->output_written=MYLANG_SCHEMATIC_BLOCK;
     return NULL;
 }
+/* A declaration carrying `bytes` has no node-bridge form, so the checked
+   fallback exists only to satisfy the binding contract and always refuses. */
+static const char *payload_only(void *context, MylangHostCall *call) {
+    (void)context; (void)call;
+    return "HostFailure";
+}
+/* One whole document as an owned payload: the guest receives its own immutable
+   copy, and the provider keeps the octets it loaded at start-up. */
+static const char *read_document_packed(void *context, MylangHostPackedCall *call) {
+    (void)context;
+    if (call->argument_count!=1 || call->arguments[0].size!=8 || call->output.size || call->output.bytes) return "HostFailure";
+    int64_t id; memcpy(&id,call->arguments[0].bytes,8);
+    if (!known(id)) return "HostFailure";
+    size_t count=state.length[id];
+    if (!mylang_host_packed_charge(call,1+count)) return "HostWorkLimit";
+    call->output.bytes=state.bytes[id];
+    call->output.size=count;
+    call->output_written=count;
+    return NULL;
+}
+/* One whole rendered payload. The output limit and the byte work charge are
+   applied before any octet is written, exactly as for a block write. */
+static const char *write_bytes_packed(void *context, MylangHostPackedCall *call) {
+    (void)context;
+    if (call->argument_count!=1 || call->output.size!=8) return "HostFailure";
+    size_t count=call->arguments[0].size;
+    if (count>MYLANG_SCHEMATIC_OUTPUT-state.written) return "HostWorkLimit";
+    if (!mylang_host_packed_charge(call,1+count)) return "HostWorkLimit";
+    if (count && fwrite(call->arguments[0].bytes,1,count,state.output)!=count) return "HostFailure";
+    state.written+=count;
+    int64_t result=0; memcpy(call->output.bytes,&result,8); call->output_written=8;
+    return NULL;
+}
 static const char *write_block(void *context, MylangHostCall *call) {
     (void)context;
     if (call->argument_nodes!=MYLANG_SCHEMATIC_BLOCK+2 || !call->capacity || call->arguments[0].children!=MYLANG_SCHEMATIC_BLOCK) return "HostFailure";
@@ -197,6 +230,7 @@ static const char *report(void *context, MylangHostCall *call) {
 static const char *one_i64[] = {"i64"}, *two_i64[] = {"i64", "i64"};
 static const char *three_i64[] = {"i64", "i64", "i64"}, *one_u8[] = {"u8"};
 static const char *block_and_count[] = {"[256]u8", "i64"};
+static const char *one_payload[] = {"bytes"};
 static const MylangHostBinding declared[] = {
     {"io::circuit_input", NULL, 0, "i64", 32, 32, NULL, circuit_input, NULL},
     {"io::pinout_input", NULL, 0, "i64", 32, 32, NULL, pinout_input, NULL},
@@ -207,6 +241,8 @@ static const MylangHostBinding declared[] = {
     {"io::issue", three_i64, 3, "i64", 32, 32, NULL, report, NULL},
     {"io::read_block", two_i64, 2, "[256]u8", 32, 32, NULL, read_block, read_block_packed},
     {"io::write_block", block_and_count, 2, "i64", 32, 32, NULL, write_block, write_block_packed},
+    {"io::read_document", one_i64, 1, "bytes", 32, 32, NULL, payload_only, read_document_packed},
+    {"io::write_bytes", one_payload, 1, "i64", 32, 32, NULL, payload_only, write_bytes_packed},
     {"io::finish", NULL, 0, "i64", 32, 32, NULL, finish, NULL},
     {"io::output_limit", NULL, 0, "i64", 32, 32, NULL, output_limit, NULL},
 };
@@ -244,5 +280,7 @@ MylangNativeProviders mylang_native_providers(void) {
     providers.host.count = selected(names);
     providers.host.max_calls = 4000000;
     providers.host.max_work = 4000000;
+    /* One payload never exceeds a whole rendered document's capacity. */
+    providers.host.max_payload = MYLANG_SCHEMATIC_OUTPUT;
     return providers;
 }

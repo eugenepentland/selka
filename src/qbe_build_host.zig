@@ -49,7 +49,7 @@ pub fn source(allocator: std.mem.Allocator, metadata: std.json.Value) Error![]co
 }
 // twin-drift-ok: Host schemas encode unsupported kinds, scalar bit widths and explicit variant counts; JSON schemas use a distinct runtime ABI.
 fn emitType(writer: *std.Io.Writer, types: []const std.json.Value, item: std.json.Value) Error!void {
-    const kinds = [_][]const u8{ "unsupported", "scalar", "record", "array", "variant", "domain" };
+    const kinds = [_][]const u8{ "unsupported", "scalar", "record", "array", "variant", "domain", "bytes" };
     const kind = for (kinds, 0..) |name, i| {
         if (std.mem.eql(u8, name, v.text(v.get(item, "kind")))) break i;
     } else return error.InvalidManifest;
@@ -93,6 +93,19 @@ test "empty host metadata embeds preflight and produces valid sentinel tables" {
     try std.testing.expect(std.mem.indexOf(u8, result, "qbe_host_declaration_count=0;") != null);
 }
 
+// spec: HOST-PACKED-2
+test "native host metadata gives an owned bytes payload its own schema kind in both directions" {
+    const parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
+        \\{"types":[{"name":"i64","kind":"scalar","size":8,"alignment":8,"bits":64,"signed":true},{"name":"bytes","kind":"bytes","size":8,"alignment":8}],"declarations":[{"name":"read","symbol":"host_read","parameters":["i64"],"result":"bytes","effects":32},{"name":"write","symbol":"host_write","parameters":["bytes"],"result":"i64","effects":32}]}
+    , .{});
+    defer parsed.deinit();
+    const result = try source(std.testing.allocator, parsed.value);
+    defer std.testing.allocator.free(result);
+    try std.testing.expect(std.mem.indexOf(u8, result, "{\"bytes\",8,0,0,6,0,0,NULL,NULL},") != null);
+    try std.testing.expect(std.mem.indexOf(u8, result, "{\"read\",(const size_t[]){0},1,1,32},") != null);
+    try std.testing.expect(std.mem.indexOf(u8, result, "{\"write\",(const size_t[]){1},1,0,32},") != null);
+}
+
 // spec: HOST-PACKED-1
 test "native host generator preserves the checked copied-value bridge snapshot" {
     const parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
@@ -105,5 +118,5 @@ test "native host generator preserves the checked copied-value bridge snapshot" 
     std.crypto.hash.sha2.Sha256.hash(result, &digest, .{});
     // Includes cached bindings, bounded scratch and checked scalar/packed copies;
     // tests/qbe_host_bridge.c exercises their runtime checks and cleanup.
-    try std.testing.expectEqualStrings("dbd4bb4c0020088d75adcada9779771804a1231a9222d4a080c7e1ee7b7842e2", &std.fmt.bytesToHex(digest, .lower));
+    try std.testing.expectEqualStrings("9bba83ee73b484dd4cf85197661f16544b834e3e717d011ad327e03e39f93067", &std.fmt.bytesToHex(digest, .lower));
 }

@@ -13,7 +13,8 @@ pub const operations = [_][]const u8{
     "io::circuit_input", "io::pinout_input", "io::interface_input",
     "io::length",        "io::byte",         "io::put",
     "io::issue",         "io::read_block",   "io::write_block",
-    "io::finish",        "io::output_limit",
+    "io::finish",        "io::output_limit", "io::read_document",
+    "io::write_bytes",
 };
 /// Name the operations this guest actually declares. Older guests omit the named
 /// input providers, and a provider that registered one the guest never declared

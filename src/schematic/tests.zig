@@ -22,6 +22,12 @@ const declarations =
     \\public host def write_block(host: Host, payload: [256]u8, count: i64) -> i64 effects(host)
     \\
     \\
+    \\public host def read_document(host: Host, file: i64) -> bytes effects(host)
+    \\
+    \\
+    \\public host def write_bytes(host: Host, payload: bytes) -> i64 effects(host)
+    \\
+    \\
     \\public host def finish(host: Host) -> i64 effects(host)
     \\
     \\
@@ -166,12 +172,13 @@ test "schematic byte callbacks reject positions and documents the host never sup
     );
     try t.expectEqual(@as(?bridge.Issue, null), try harness.reject(empty));
     // A nonzero result with no reported issue is bounded-storage exhaustion.
+    // The entry claims no capability, because a body that calls nothing cannot
+    // have the host effect its parameter would promise.
     try harness.source("main.my",
         \\module main
-        \\import io
         \\
         \\
-        \\def main(host: Host) -> i64:
+        \\def main() -> i64:
         \\    return 3
     );
     try t.expectEqual(@as(i64, 24), (try harness.reject(empty)).?.code);
@@ -226,6 +233,58 @@ test "schematic packed callbacks reject invalid ranges and preserve output-limit
         \\    return io.output_limit(host)
     );
     try t.expectEqual(@as(?bridge.Issue, null), try harness.reject(empty));
+}
+// spec: SCHEMATIC-BULK-2
+test "schematic payload calls carry a whole document in and a whole rendering out" {
+    const harness = try staged(
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def main(host: Host) -> i64:
+        \\    document = io.read_document(host, 0)
+        \\    if len(document) != 3 or document != b"ABC":
+        \\        return 9
+        \\    if len(io.read_document(host, 1)) != 0:
+        \\        return 8
+        \\    status = io.write_bytes(host, document[1:3])
+        \\    if status != 0:
+        \\        return 7
+        \\    return io.finish(host)
+    );
+    defer harness.close();
+    try t.expectEqualStrings("BC", try harness.render(.{ "ABC", "", "" }));
+}
+// spec-case: SCHEMATIC-BULK-2
+test "schematic payload calls refuse unknown documents and outlive no guest storage" {
+    const harness = try staged(
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def main(host: Host) -> i64:
+        \\    _ = io.read_document(host, 7)
+        \\    return 0
+    );
+    defer harness.close();
+    try t.expectEqual(@as(?bridge.Issue, null), try harness.reject(.{ "A", "", "" }));
+    // The provider's own octets are copied out, so a second read of the same
+    // document is an independent byte string with the same content.
+    try harness.source("main.my",
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def main(host: Host) -> i64:
+        \\    first = io.read_document(host, 0)
+        \\    second = io.read_document(host, 0)
+        \\    if first != second:
+        \\        return 5
+        \\    _ = io.write_bytes(host, first)
+        \\    _ = io.write_bytes(host, second)
+        \\    return io.finish(host)
+    );
+    try t.expectEqualStrings("AA", try harness.render(.{ "A", "", "" }));
 }
 test "schematic documents reject malformed UTF8 and XML controls with exact byte positions" {
     try t.expect(bridge.validateDocuments(&.{"ok \xc2\xb5\n\t\r"}) == null);
@@ -389,7 +448,7 @@ test "schematic bulk buffer boundaries hold normally and under collection stress
         \\import bulk_io_test
         \\
         \\
-        \\def main(host: Host) -> int:
+        \\def main() -> int:
         \\    if not bulk_io_test.test_minimum_integer_decimal():
         \\        return 1
         \\    if not bulk_io_test.test_negative_decimal_width_boundaries():
@@ -398,6 +457,8 @@ test "schematic bulk buffer boundaries hold normally and under collection stress
         \\        return 3
         \\    if not bulk_io_test.test_decimal_uses_exact_remaining_capacity():
         \\        return 4
+        \\    if not bulk_io_test.test_payload_snapshot_matches_the_appended_buffer():
+        \\        return 5
         \\    return 0
     );
     var app: application.App = undefined;

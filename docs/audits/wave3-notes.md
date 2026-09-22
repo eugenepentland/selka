@@ -61,7 +61,7 @@ section (shared page, not edited here). The orchestrator may prefer a new
 `#mandatory-mutation-footprint` section with a runnable example; the wave-3 doc
 example to add there is:
 
-```mylang
+```mylang notest
 def touch(values: list[int]) -> None:
     values[0] = 1
 

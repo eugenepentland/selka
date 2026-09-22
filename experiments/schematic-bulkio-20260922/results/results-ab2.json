@@ -1,0 +1,1669 @@
+{
+ "cpu": 10,
+ "rounds": 61,
+ "warmups": 3,
+ "seed": 20260922,
+ "reference": "block-io",
+ "arms": {
+  "zig-o3": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/zig-o3",
+   "kind": "native"
+  },
+  "rust-o3": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/rust-o3",
+   "kind": "native"
+  },
+  "block-io": {
+   "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-ace808d4899b6a8ab/.tmp/audit-before/arms/gc-lto",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::write_block,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  },
+  "payload-io": {
+   "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-ace808d4899b6a8ab/.tmp/audit/arms/gc-lto",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  },
+  "before-audit-compiler": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/arms/gc-lto",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::write_block,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  }
+ },
+ "hashes": {
+  "fixture": {
+   "zig-o3": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "rust-o3": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "block-io": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "payload-io": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "before-audit-compiler": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388"
+  },
+  "changed-net": {
+   "zig-o3": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "rust-o3": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "block-io": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "payload-io": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "before-audit-compiler": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90"
+  },
+  "changed-value": {
+   "zig-o3": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "rust-o3": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "block-io": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "payload-io": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "before-audit-compiler": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+  }
+ },
+ "summary": {
+  "fixture": {
+   "median_ms": {
+    "zig-o3": 2.318723,
+    "rust-o3": 2.636229,
+    "block-io": 4.978581,
+    "payload-io": 4.92353,
+    "before-audit-compiler": 4.997546
+   },
+   "p10_p90": {
+    "zig-o3": [
+     2.05922,
+     2.63605
+    ],
+    "rust-o3": [
+     2.326531,
+     2.948171
+    ],
+    "block-io": [
+     4.555985,
+     5.643696
+    ],
+    "payload-io": [
+     4.605534,
+     5.434321
+    ],
+    "before-audit-compiler": [
+     4.684049,
+     5.371052
+    ]
+   },
+   "min_ms": {
+    "zig-o3": 1.958888,
+    "rust-o3": 2.087166,
+    "block-io": 4.392654,
+    "payload-io": 4.386425,
+    "before-audit-compiler": 4.498556
+   },
+   "ratio_to_block-io": {
+    "zig-o3": {
+     "ratio": 0.4657397358805651,
+     "ci95": [
+      0.44749781801760163,
+      0.48300363200825147
+     ]
+    },
+    "rust-o3": {
+     "ratio": 0.5295141326414092,
+     "ci95": [
+      0.5141338696150543,
+      0.5476599754225561
+     ]
+    },
+    "payload-io": {
+     "ratio": 0.9889424315884386,
+     "ci95": [
+      0.9655862829943067,
+      1.009372593624508
+     ]
+    },
+    "before-audit-compiler": {
+     "ratio": 1.003809318357982,
+     "ci95": [
+      0.9768266139134264,
+      1.0374486003867351
+     ]
+    }
+   }
+  },
+  "changed-net": {
+   "median_ms": {
+    "zig-o3": 2.277046,
+    "rust-o3": 2.604806,
+    "block-io": 4.982865,
+    "payload-io": 5.054434,
+    "before-audit-compiler": 5.02233
+   },
+   "p10_p90": {
+    "zig-o3": [
+     2.072146,
+     2.544728
+    ],
+    "rust-o3": [
+     2.391455,
+     2.927712
+    ],
+    "block-io": [
+     4.558619,
+     5.635187
+    ],
+    "payload-io": [
+     4.554866,
+     5.456784
+    ],
+    "before-audit-compiler": [
+     4.603543,
+     5.600574
+    ]
+   },
+   "min_ms": {
+    "zig-o3": 1.91924,
+    "rust-o3": 2.156875,
+    "block-io": 4.351672,
+    "payload-io": 4.380482,
+    "before-audit-compiler": 4.354102
+   },
+   "ratio_to_block-io": {
+    "zig-o3": {
+     "ratio": 0.4569752541961301,
+     "ci95": [
+      0.43604255306921175,
+      0.46899761518727606
+     ]
+    },
+    "rust-o3": {
+     "ratio": 0.5227526734117821,
+     "ci95": [
+      0.4983547475776842,
+      0.5389640239550101
+     ]
+    },
+    "payload-io": {
+     "ratio": 1.0143630220766566,
+     "ci95": [
+      0.9602875686001388,
+      1.0294370838711973
+     ]
+    },
+    "before-audit-compiler": {
+     "ratio": 1.0079201423277573,
+     "ci95": [
+      0.9617369460846023,
+      1.0314701138144444
+     ]
+    }
+   }
+  },
+  "changed-value": {
+   "median_ms": {
+    "zig-o3": 2.324555,
+    "rust-o3": 2.661095,
+    "block-io": 4.994748,
+    "payload-io": 4.923989,
+    "before-audit-compiler": 4.988129
+   },
+   "p10_p90": {
+    "zig-o3": [
+     2.137634,
+     2.694489
+    ],
+    "rust-o3": [
+     2.393857,
+     2.816881
+    ],
+    "block-io": [
+     4.654592,
+     5.487669
+    ],
+    "payload-io": [
+     4.510872,
+     5.405163
+    ],
+    "before-audit-compiler": [
+     4.591043,
+     5.522812
+    ]
+   },
+   "min_ms": {
+    "zig-o3": 1.895289,
+    "rust-o3": 2.20879,
+    "block-io": 4.543219,
+    "payload-io": 4.375829,
+    "before-audit-compiler": 4.408359
+   },
+   "ratio_to_block-io": {
+    "zig-o3": {
+     "ratio": 0.4653998560087516,
+     "ci95": [
+      0.45005950001394535,
+      0.47913802841443615
+     ]
+    },
+    "rust-o3": {
+     "ratio": 0.5327786306736596,
+     "ci95": [
+      0.5138326558584236,
+      0.5460951368991666
+     ]
+    },
+    "payload-io": {
+     "ratio": 0.9858333193186122,
+     "ci95": [
+      0.9487214953622344,
+      1.0269295901251214
+     ]
+    },
+    "before-audit-compiler": {
+     "ratio": 0.9986748080183423,
+     "ci95": [
+      0.9700900827285555,
+      1.026422554250985
+     ]
+    }
+   }
+  }
+ },
+ "rows": [
+  {
+   "fixture": {
+    "block-io": 5.178027,
+    "before-audit-compiler": 5.196415,
+    "payload-io": 5.290175,
+    "zig-o3": 2.663493,
+    "rust-o3": 2.941859
+   },
+   "changed-net": {
+    "payload-io": 5.301467,
+    "rust-o3": 2.772195,
+    "zig-o3": 2.510871,
+    "before-audit-compiler": 5.448133,
+    "block-io": 5.515417
+   },
+   "changed-value": {
+    "before-audit-compiler": 5.278879,
+    "block-io": 11.826911,
+    "payload-io": 5.289042,
+    "zig-o3": 2.648377,
+    "rust-o3": 2.816881
+   }
+  },
+  {
+   "fixture": {
+    "block-io": 5.643696,
+    "payload-io": 5.859482,
+    "rust-o3": 2.972123,
+    "before-audit-compiler": 5.193779,
+    "zig-o3": 5.914611
+   },
+   "changed-net": {
+    "zig-o3": 4.891521,
+    "rust-o3": 2.979097,
+    "block-io": 6.463819,
+    "before-audit-compiler": 5.762152,
+    "payload-io": 8.025537
+   },
+   "changed-value": {
+    "block-io": 5.487669,
+    "rust-o3": 4.197894,
+    "before-audit-compiler": 5.659091,
+    "payload-io": 6.665269,
+    "zig-o3": 3.503937
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 3.184085,
+    "payload-io": 5.144996,
+    "before-audit-compiler": 5.32985,
+    "block-io": 5.347696,
+    "zig-o3": 2.551564
+   },
+   "changed-net": {
+    "block-io": 7.964949,
+    "rust-o3": 2.911233,
+    "payload-io": 5.123214,
+    "before-audit-compiler": 5.249235,
+    "zig-o3": 2.275535
+   },
+   "changed-value": {
+    "zig-o3": 2.823568,
+    "payload-io": 5.247334,
+    "block-io": 5.506877,
+    "before-audit-compiler": 5.065745,
+    "rust-o3": 2.767412
+   }
+  },
+  {
+   "fixture": {
+    "block-io": 4.950647,
+    "zig-o3": 2.51446,
+    "rust-o3": 2.629319,
+    "before-audit-compiler": 5.265349,
+    "payload-io": 4.910133
+   },
+   "changed-net": {
+    "before-audit-compiler": 5.2097,
+    "payload-io": 5.095916,
+    "block-io": 5.200022,
+    "rust-o3": 2.925581,
+    "zig-o3": 2.306232
+   },
+   "changed-value": {
+    "payload-io": 4.801614,
+    "zig-o3": 2.373461,
+    "rust-o3": 2.471131,
+    "before-audit-compiler": 4.988129,
+    "block-io": 5.276178
+   }
+  },
+  {
+   "fixture": {
+    "block-io": 5.161074,
+    "rust-o3": 2.767778,
+    "before-audit-compiler": 5.094395,
+    "payload-io": 5.240436,
+    "zig-o3": 2.09478
+   },
+   "changed-net": {
+    "rust-o3": 2.743261,
+    "payload-io": 5.100749,
+    "zig-o3": 2.544728,
+    "before-audit-compiler": 5.357743,
+    "block-io": 5.476382
+   },
+   "changed-value": {
+    "zig-o3": 2.626,
+    "payload-io": 5.18688,
+    "rust-o3": 2.70951,
+    "before-audit-compiler": 5.057518,
+    "block-io": 5.210869
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 2.36947,
+    "payload-io": 6.321309,
+    "before-audit-compiler": 4.931041,
+    "block-io": 5.397999,
+    "zig-o3": 2.498341
+   },
+   "changed-net": {
+    "before-audit-compiler": 4.839213,
+    "block-io": 4.832834,
+    "rust-o3": 2.802498,
+    "zig-o3": 2.483987,
+    "payload-io": 4.874697
+   },
+   "changed-value": {
+    "payload-io": 5.195402,
+    "zig-o3": 2.545864,
+    "block-io": 4.994748,
+    "before-audit-compiler": 5.143395,
+    "rust-o3": 2.726721
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 2.610553,
+    "payload-io": 4.865907,
+    "before-audit-compiler": 4.888319,
+    "block-io": 4.998107,
+    "zig-o3": 2.573692
+   },
+   "changed-net": {
+    "rust-o3": 2.754055,
+    "before-audit-compiler": 5.596864,
+    "block-io": 4.928867,
+    "payload-io": 4.883557,
+    "zig-o3": 2.277046
+   },
+   "changed-value": {
+    "payload-io": 5.014053,
+    "block-io": 5.30491,
+    "rust-o3": 2.674924,
+    "zig-o3": 2.350987,
+    "before-audit-compiler": 5.22212
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 2.326498,
+    "block-io": 4.886239,
+    "rust-o3": 2.326531,
+    "before-audit-compiler": 4.498556,
+    "payload-io": 4.435903
+   },
+   "changed-net": {
+    "rust-o3": 2.67899,
+    "zig-o3": 2.108605,
+    "payload-io": 4.644868,
+    "block-io": 4.558619,
+    "before-audit-compiler": 4.556194
+   },
+   "changed-value": {
+    "rust-o3": 2.382274,
+    "zig-o3": 2.324555,
+    "payload-io": 4.511901,
+    "block-io": 4.664017,
+    "before-audit-compiler": 4.645475
+   }
+  },
+  {
+   "fixture": {
+    "block-io": 4.45853,
+    "payload-io": 4.598366,
+    "rust-o3": 2.565658,
+    "before-audit-compiler": 5.268065,
+    "zig-o3": 2.212262
+   },
+   "changed-net": {
+    "zig-o3": 1.964112,
+    "before-audit-compiler": 4.401528,
+    "rust-o3": 2.360863,
+    "payload-io": 4.461637,
+    "block-io": 5.374448
+   },
+   "changed-value": {
+    "before-audit-compiler": 4.579979,
+    "block-io": 4.664806,
+    "zig-o3": 2.05133,
+    "payload-io": 5.157628,
+    "rust-o3": 2.720344
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 2.682386,
+    "block-io": 4.978581,
+    "zig-o3": 2.435434,
+    "before-audit-compiler": 4.810786,
+    "payload-io": 5.055275
+   },
+   "changed-net": {
+    "zig-o3": 2.48446,
+    "payload-io": 5.125752,
+    "block-io": 5.008483,
+    "before-audit-compiler": 4.752667,
+    "rust-o3": 2.597711
+   },
+   "changed-value": {
+    "before-audit-compiler": 4.985075,
+    "zig-o3": 2.356124,
+    "payload-io": 4.880887,
+    "rust-o3": 2.729254,
+    "block-io": 5.061103
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 2.403672,
+    "block-io": 4.677854,
+    "rust-o3": 2.187712,
+    "payload-io": 4.640271,
+    "before-audit-compiler": 4.58854
+   },
+   "changed-net": {
+    "payload-io": 4.623526,
+    "zig-o3": 1.995718,
+    "before-audit-compiler": 4.64973,
+    "rust-o3": 2.438707,
+    "block-io": 4.495438
+   },
+   "changed-value": {
+    "rust-o3": 2.411053,
+    "zig-o3": 2.137634,
+    "payload-io": 4.736763,
+    "before-audit-compiler": 4.799243,
+    "block-io": 4.623396
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 2.159103,
+    "payload-io": 4.950911,
+    "rust-o3": 2.722721,
+    "before-audit-compiler": 4.913198,
+    "block-io": 4.813236
+   },
+   "changed-net": {
+    "zig-o3": 2.317178,
+    "block-io": 5.236833,
+    "before-audit-compiler": 4.710607,
+    "payload-io": 5.248457,
+    "rust-o3": 2.738986
+   },
+   "changed-value": {
+    "before-audit-compiler": 5.022563,
+    "payload-io": 4.577175,
+    "block-io": 5.090987,
+    "rust-o3": 2.590395,
+    "zig-o3": 2.208935
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 2.252376,
+    "block-io": 5.670181,
+    "rust-o3": 2.502342,
+    "before-audit-compiler": 4.946055,
+    "payload-io": 4.773535
+   },
+   "changed-net": {
+    "zig-o3": 2.15468,
+    "block-io": 4.955531,
+    "rust-o3": 2.695222,
+    "before-audit-compiler": 4.9635,
+    "payload-io": 4.781781
+   },
+   "changed-value": {
+    "before-audit-compiler": 4.97004,
+    "zig-o3": 2.156288,
+    "payload-io": 4.79566,
+    "block-io": 4.944097,
+    "rust-o3": 2.532374
+   }
+  },
+  {
+   "fixture": {
+    "payload-io": 4.736772,
+    "zig-o3": 2.302842,
+    "rust-o3": 2.449788,
+    "block-io": 4.506073,
+    "before-audit-compiler": 4.733557
+   },
+   "changed-net": {
+    "before-audit-compiler": 4.534805,
+    "zig-o3": 2.250826,
+    "block-io": 5.703962,
+    "payload-io": 4.380482,
+    "rust-o3": 2.704096
+   },
+   "changed-value": {
+    "before-audit-compiler": 4.647663,
+    "zig-o3": 2.184667,
+    "payload-io": 4.500805,
+    "block-io": 4.814928,
+    "rust-o3": 2.442726
+   }
+  },
+  {
+   "fixture": {
+    "payload-io": 4.697895,
+    "zig-o3": 2.047352,
+    "block-io": 4.458092,
+    "before-audit-compiler": 5.371052,
+    "rust-o3": 2.948171
+   },
+   "changed-net": {
+    "zig-o3": 2.325263,
+    "payload-io": 4.554866,
+    "block-io": 4.351672,
+    "before-audit-compiler": 4.558163,
+    "rust-o3": 2.428714
+   },
+   "changed-value": {
+    "rust-o3": 2.3486,
+    "payload-io": 4.712374,
+    "before-audit-compiler": 4.938716,
+    "block-io": 5.163024,
+    "zig-o3": 2.630662
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 2.359456,
+    "before-audit-compiler": 5.3477,
+    "rust-o3": 2.860122,
+    "payload-io": 5.152591,
+    "block-io": 5.266967
+   },
+   "changed-net": {
+    "payload-io": 5.09426,
+    "block-io": 4.948588,
+    "zig-o3": 2.239869,
+    "before-audit-compiler": 5.864832,
+    "rust-o3": 2.875502
+   },
+   "changed-value": {
+    "zig-o3": 2.372906,
+    "before-audit-compiler": 4.990568,
+    "block-io": 4.99742,
+    "rust-o3": 2.978013,
+    "payload-io": 5.021692
+   }
+  },
+  {
+   "fixture": {
+    "before-audit-compiler": 4.997546,
+    "block-io": 8.422995,
+    "rust-o3": 3.00854,
+    "payload-io": 5.279943,
+    "zig-o3": 2.492862
+   },
+   "changed-net": {
+    "zig-o3": 2.610263,
+    "block-io": 5.468783,
+    "payload-io": 5.054434,
+    "before-audit-compiler": 6.098985,
+    "rust-o3": 2.823205
+   },
+   "changed-value": {
+    "rust-o3": 2.831875,
+    "payload-io": 5.168622,
+    "before-audit-compiler": 5.28822,
+    "block-io": 5.295766,
+    "zig-o3": 2.288773
+   }
+  },
+  {
+   "fixture": {
+    "payload-io": 4.92353,
+    "zig-o3": 2.459767,
+    "block-io": 5.296737,
+    "before-audit-compiler": 5.315591,
+    "rust-o3": 2.862895
+   },
+   "changed-net": {
+    "rust-o3": 2.573199,
+    "zig-o3": 2.257516,
+    "before-audit-compiler": 5.257915,
+    "payload-io": 5.170954,
+    "block-io": 5.45248
+   },
+   "changed-value": {
+    "zig-o3": 2.367073,
+    "block-io": 5.266946,
+    "rust-o3": 2.874116,
+    "payload-io": 5.268644,
+    "before-audit-compiler": 5.294535
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 2.685871,
+    "block-io": 5.391862,
+    "zig-o3": 2.830986,
+    "payload-io": 5.277352,
+    "before-audit-compiler": 5.367539
+   },
+   "changed-net": {
+    "zig-o3": 2.369756,
+    "rust-o3": 2.641416,
+    "payload-io": 5.349077,
+    "block-io": 5.212574,
+    "before-audit-compiler": 5.121442
+   },
+   "changed-value": {
+    "rust-o3": 2.786926,
+    "block-io": 5.173452,
+    "zig-o3": 2.537036,
+    "payload-io": 5.140553,
+    "before-audit-compiler": 5.298063
+   }
+  },
+  {
+   "fixture": {
+    "payload-io": 5.301516,
+    "zig-o3": 2.544662,
+    "before-audit-compiler": 5.292138,
+    "block-io": 5.267393,
+    "rust-o3": 2.832843
+   },
+   "changed-net": {
+    "payload-io": 5.145845,
+    "before-audit-compiler": 5.446823,
+    "zig-o3": 2.561359,
+    "rust-o3": 2.823582,
+    "block-io": 5.71585
+   },
+   "changed-value": {
+    "block-io": 5.43249,
+    "payload-io": 5.163064,
+    "before-audit-compiler": 5.212509,
+    "zig-o3": 2.694489,
+    "rust-o3": 3.026716
+   }
+  },
+  {
+   "fixture": {
+    "before-audit-compiler": 5.128633,
+    "rust-o3": 2.87485,
+    "payload-io": 4.8658,
+    "zig-o3": 2.487831,
+    "block-io": 4.723872
+   },
+   "changed-net": {
+    "before-audit-compiler": 5.168365,
+    "zig-o3": 2.617547,
+    "block-io": 5.499125,
+    "rust-o3": 2.744602,
+    "payload-io": 4.908786
+   },
+   "changed-value": {
+    "block-io": 5.2768,
+    "zig-o3": 2.549416,
+    "before-audit-compiler": 5.270873,
+    "rust-o3": 2.798989,
+    "payload-io": 4.684758
+   }
+  },
+  {
+   "fixture": {
+    "before-audit-compiler": 4.782146,
+    "rust-o3": 2.713182,
+    "payload-io": 4.621873,
+    "zig-o3": 2.386711,
+    "block-io": 4.904939
+   },
+   "changed-net": {
+    "block-io": 4.855194,
+    "rust-o3": 2.500989,
+    "before-audit-compiler": 4.687831,
+    "payload-io": 4.959396,
+    "zig-o3": 2.426355
+   },
+   "changed-value": {
+    "payload-io": 4.765408,
+    "before-audit-compiler": 4.634182,
+    "block-io": 4.886067,
+    "rust-o3": 2.60427,
+    "zig-o3": 2.323873
+   }
+  },
+  {
+   "fixture": {
+    "before-audit-compiler": 4.638372,
+    "payload-io": 4.615418,
+    "block-io": 4.954136,
+    "zig-o3": 2.264846,
+    "rust-o3": 2.278071
+   },
+   "changed-net": {
+    "block-io": 5.102328,
+    "zig-o3": 2.258355,
+    "before-audit-compiler": 4.854862,
+    "rust-o3": 2.450327,
+    "payload-io": 4.447982
+   },
+   "changed-value": {
+    "block-io": 4.948937,
+    "zig-o3": 2.314925,
+    "payload-io": 4.770452,
+    "rust-o3": 2.731837,
+    "before-audit-compiler": 4.728311
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 2.030136,
+    "rust-o3": 2.437226,
+    "before-audit-compiler": 4.753601,
+    "payload-io": 4.592208,
+    "block-io": 4.418158
+   },
+   "changed-net": {
+    "zig-o3": 1.992844,
+    "before-audit-compiler": 4.813167,
+    "block-io": 4.626207,
+    "payload-io": 4.472883,
+    "rust-o3": 2.604049
+   },
+   "changed-value": {
+    "payload-io": 4.478255,
+    "block-io": 4.663454,
+    "zig-o3": 2.323668,
+    "rust-o3": 2.500559,
+    "before-audit-compiler": 4.544426
+   }
+  },
+  {
+   "fixture": {
+    "before-audit-compiler": 4.684049,
+    "zig-o3": 2.506421,
+    "payload-io": 4.955071,
+    "block-io": 4.722106,
+    "rust-o3": 2.42261
+   },
+   "changed-net": {
+    "block-io": 4.623626,
+    "zig-o3": 2.3758,
+    "payload-io": 4.97701,
+    "rust-o3": 2.457502,
+    "before-audit-compiler": 4.565266
+   },
+   "changed-value": {
+    "rust-o3": 2.510558,
+    "payload-io": 5.258548,
+    "zig-o3": 2.268556,
+    "block-io": 4.694281,
+    "before-audit-compiler": 4.751565
+   }
+  },
+  {
+   "fixture": {
+    "before-audit-compiler": 4.764538,
+    "zig-o3": 2.130403,
+    "payload-io": 4.693786,
+    "block-io": 4.56235,
+    "rust-o3": 2.474697
+   },
+   "changed-net": {
+    "zig-o3": 2.362494,
+    "payload-io": 4.75577,
+    "block-io": 4.761281,
+    "before-audit-compiler": 4.663905,
+    "rust-o3": 2.480341
+   },
+   "changed-value": {
+    "block-io": 4.654592,
+    "rust-o3": 2.482181,
+    "before-audit-compiler": 4.591043,
+    "zig-o3": 2.450437,
+    "payload-io": 4.723108
+   }
+  },
+  {
+   "fixture": {
+    "block-io": 4.683919,
+    "payload-io": 4.49723,
+    "before-audit-compiler": 4.733567,
+    "zig-o3": 2.076317,
+    "rust-o3": 2.087166
+   },
+   "changed-net": {
+    "before-audit-compiler": 4.790967,
+    "payload-io": 4.61033,
+    "block-io": 4.470366,
+    "rust-o3": 2.732988,
+    "zig-o3": 2.073762
+   },
+   "changed-value": {
+    "rust-o3": 2.246297,
+    "zig-o3": 2.15152,
+    "block-io": 4.628161,
+    "payload-io": 4.510872,
+    "before-audit-compiler": 4.408359
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 2.735221,
+    "block-io": 4.949145,
+    "payload-io": 4.907488,
+    "zig-o3": 2.141158,
+    "before-audit-compiler": 4.915674
+   },
+   "changed-net": {
+    "block-io": 4.527589,
+    "payload-io": 5.063754,
+    "zig-o3": 2.430185,
+    "before-audit-compiler": 5.131196,
+    "rust-o3": 2.569607
+   },
+   "changed-value": {
+    "payload-io": 5.088005,
+    "block-io": 4.750071,
+    "before-audit-compiler": 4.889416,
+    "zig-o3": 2.371218,
+    "rust-o3": 2.643999
+   }
+  },
+  {
+   "fixture": {
+    "payload-io": 4.682706,
+    "block-io": 5.171697,
+    "zig-o3": 2.532504,
+    "before-audit-compiler": 5.235182,
+    "rust-o3": 2.769594
+   },
+   "changed-net": {
+    "zig-o3": 2.430486,
+    "payload-io": 4.969508,
+    "block-io": 5.22007,
+    "before-audit-compiler": 5.600917,
+    "rust-o3": 2.552245
+   },
+   "changed-value": {
+    "block-io": 4.984385,
+    "before-audit-compiler": 5.289894,
+    "payload-io": 5.048041,
+    "zig-o3": 2.59109,
+    "rust-o3": 2.749199
+   }
+  },
+  {
+   "fixture": {
+    "before-audit-compiler": 5.026531,
+    "payload-io": 5.052206,
+    "zig-o3": 2.462393,
+    "block-io": 5.041087,
+    "rust-o3": 2.523679
+   },
+   "changed-net": {
+    "payload-io": 5.096253,
+    "before-audit-compiler": 4.97261,
+    "block-io": 5.084241,
+    "rust-o3": 2.625377,
+    "zig-o3": 2.29671
+   },
+   "changed-value": {
+    "rust-o3": 2.75961,
+    "before-audit-compiler": 4.827497,
+    "zig-o3": 2.422089,
+    "payload-io": 4.681888,
+    "block-io": 4.702069
+   }
+  },
+  {
+   "fixture": {
+    "block-io": 5.002114,
+    "zig-o3": 2.413963,
+    "payload-io": 4.819779,
+    "before-audit-compiler": 5.272386,
+    "rust-o3": 2.636229
+   },
+   "changed-net": {
+    "before-audit-compiler": 4.978492,
+    "zig-o3": 2.174989,
+    "rust-o3": 2.904303,
+    "block-io": 4.982865,
+    "payload-io": 5.133784
+   },
+   "changed-value": {
+    "rust-o3": 2.562217,
+    "block-io": 4.98396,
+    "before-audit-compiler": 4.941681,
+    "payload-io": 5.212932,
+    "zig-o3": 2.444126
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 2.318723,
+    "payload-io": 4.976058,
+    "before-audit-compiler": 4.75595,
+    "block-io": 5.898112,
+    "rust-o3": 2.600141
+   },
+   "changed-net": {
+    "zig-o3": 2.078054,
+    "payload-io": 5.050653,
+    "before-audit-compiler": 5.134688,
+    "block-io": 5.348564,
+    "rust-o3": 2.938114
+   },
+   "changed-value": {
+    "block-io": 4.886173,
+    "payload-io": 4.884835,
+    "zig-o3": 2.253946,
+    "rust-o3": 2.729189,
+    "before-audit-compiler": 4.715828
+   }
+  },
+  {
+   "fixture": {
+    "block-io": 5.482873,
+    "payload-io": 4.713565,
+    "rust-o3": 2.621455,
+    "zig-o3": 2.303251,
+    "before-audit-compiler": 4.634711
+   },
+   "changed-net": {
+    "zig-o3": 2.257514,
+    "payload-io": 4.945526,
+    "rust-o3": 2.45108,
+    "before-audit-compiler": 4.893724,
+    "block-io": 4.593523
+   },
+   "changed-value": {
+    "zig-o3": 2.301257,
+    "block-io": 4.706778,
+    "payload-io": 4.414685,
+    "before-audit-compiler": 4.657501,
+    "rust-o3": 2.67672
+   }
+  },
+  {
+   "fixture": {
+    "payload-io": 4.745266,
+    "block-io": 4.552377,
+    "rust-o3": 2.109189,
+    "zig-o3": 2.03902,
+    "before-audit-compiler": 4.708713
+   },
+   "changed-net": {
+    "payload-io": 4.560684,
+    "rust-o3": 2.245011,
+    "zig-o3": 2.137618,
+    "block-io": 4.438055,
+    "before-audit-compiler": 4.646273
+   },
+   "changed-value": {
+    "block-io": 4.543219,
+    "before-audit-compiler": 4.712812,
+    "zig-o3": 2.267058,
+    "payload-io": 4.375829,
+    "rust-o3": 2.458527
+   }
+  },
+  {
+   "fixture": {
+    "payload-io": 4.598773,
+    "before-audit-compiler": 4.832026,
+    "block-io": 4.956369,
+    "zig-o3": 2.181598,
+    "rust-o3": 2.643609
+   },
+   "changed-net": {
+    "before-audit-compiler": 4.888379,
+    "payload-io": 4.807158,
+    "zig-o3": 2.455201,
+    "rust-o3": 2.478839,
+    "block-io": 4.752194
+   },
+   "changed-value": {
+    "rust-o3": 2.542926,
+    "zig-o3": 2.181189,
+    "before-audit-compiler": 4.676193,
+    "payload-io": 4.589261,
+    "block-io": 4.591472
+   }
+  },
+  {
+   "fixture": {
+    "before-audit-compiler": 4.780659,
+    "rust-o3": 2.432522,
+    "payload-io": 4.668128,
+    "zig-o3": 2.228175,
+    "block-io": 4.555985
+   },
+   "changed-net": {
+    "payload-io": 4.506753,
+    "block-io": 4.50765,
+    "rust-o3": 2.406755,
+    "zig-o3": 1.91924,
+    "before-audit-compiler": 4.354102
+   },
+   "changed-value": {
+    "zig-o3": 2.2832,
+    "payload-io": 4.570335,
+    "before-audit-compiler": 4.546505,
+    "block-io": 4.72218,
+    "rust-o3": 2.20879
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 2.295177,
+    "payload-io": 4.386425,
+    "before-audit-compiler": 5.071833,
+    "block-io": 5.163998,
+    "zig-o3": 2.129393
+   },
+   "changed-net": {
+    "payload-io": 4.460672,
+    "before-audit-compiler": 4.922182,
+    "block-io": 5.887607,
+    "rust-o3": 2.509285,
+    "zig-o3": 2.563272
+   },
+   "changed-value": {
+    "block-io": 4.613529,
+    "payload-io": 5.405163,
+    "rust-o3": 2.647048,
+    "zig-o3": 2.78792,
+    "before-audit-compiler": 5.10513
+   }
+  },
+  {
+   "fixture": {
+    "before-audit-compiler": 4.958452,
+    "block-io": 4.732346,
+    "rust-o3": 2.406556,
+    "payload-io": 5.21674,
+    "zig-o3": 2.167368
+   },
+   "changed-net": {
+    "rust-o3": 2.508854,
+    "zig-o3": 2.276189,
+    "before-audit-compiler": 5.442186,
+    "block-io": 4.882238,
+    "payload-io": 5.231454
+   },
+   "changed-value": {
+    "before-audit-compiler": 5.126722,
+    "zig-o3": 1.980646,
+    "payload-io": 4.614786,
+    "rust-o3": 2.618506,
+    "block-io": 5.134694
+   }
+  },
+  {
+   "fixture": {
+    "payload-io": 5.264484,
+    "zig-o3": 1.958888,
+    "rust-o3": 2.640714,
+    "before-audit-compiler": 5.525167,
+    "block-io": 5.033267
+   },
+   "changed-net": {
+    "rust-o3": 2.643871,
+    "zig-o3": 2.09571,
+    "block-io": 4.75213,
+    "payload-io": 5.353135,
+    "before-audit-compiler": 4.775346
+   },
+   "changed-value": {
+    "zig-o3": 1.911483,
+    "rust-o3": 2.807515,
+    "payload-io": 5.230056,
+    "before-audit-compiler": 4.728042,
+    "block-io": 5.622516
+   }
+  },
+  {
+   "fixture": {
+    "block-io": 4.392654,
+    "payload-io": 4.880143,
+    "zig-o3": 2.599884,
+    "rust-o3": 2.786077,
+    "before-audit-compiler": 5.268688
+   },
+   "changed-net": {
+    "block-io": 4.845927,
+    "zig-o3": 2.261231,
+    "before-audit-compiler": 5.02233,
+    "payload-io": 5.219729,
+    "rust-o3": 2.435559
+   },
+   "changed-value": {
+    "rust-o3": 2.761875,
+    "block-io": 5.059224,
+    "payload-io": 4.38492,
+    "zig-o3": 2.719617,
+    "before-audit-compiler": 5.312824
+   }
+  },
+  {
+   "fixture": {
+    "before-audit-compiler": 5.109972,
+    "block-io": 5.0572,
+    "payload-io": 4.965779,
+    "rust-o3": 2.334957,
+    "zig-o3": 2.165014
+   },
+   "changed-net": {
+    "zig-o3": 2.274089,
+    "rust-o3": 2.263951,
+    "block-io": 5.393113,
+    "payload-io": 5.431788,
+    "before-audit-compiler": 5.838502
+   },
+   "changed-value": {
+    "block-io": 5.362004,
+    "before-audit-compiler": 5.596343,
+    "payload-io": 5.480262,
+    "zig-o3": 2.837952,
+    "rust-o3": 2.478416
+   }
+  },
+  {
+   "fixture": {
+    "before-audit-compiler": 4.770819,
+    "payload-io": 5.786172,
+    "zig-o3": 2.422542,
+    "rust-o3": 2.596013,
+    "block-io": 5.543882
+   },
+   "changed-net": {
+    "before-audit-compiler": 5.06388,
+    "block-io": 5.503309,
+    "payload-io": 5.56437,
+    "zig-o3": 2.462996,
+    "rust-o3": 2.667096
+   },
+   "changed-value": {
+    "payload-io": 5.118176,
+    "before-audit-compiler": 5.127544,
+    "block-io": 5.23699,
+    "zig-o3": 2.200834,
+    "rust-o3": 2.705704
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 2.725878,
+    "payload-io": 5.188467,
+    "rust-o3": 2.778755,
+    "before-audit-compiler": 5.664255,
+    "block-io": 5.755188
+   },
+   "changed-net": {
+    "block-io": 4.868596,
+    "before-audit-compiler": 5.041553,
+    "zig-o3": 2.318684,
+    "payload-io": 4.998096,
+    "rust-o3": 2.810606
+   },
+   "changed-value": {
+    "rust-o3": 3.205223,
+    "before-audit-compiler": 5.65832,
+    "zig-o3": 2.665556,
+    "payload-io": 5.318959,
+    "block-io": 4.802443
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 2.63605,
+    "payload-io": 5.559237,
+    "block-io": 5.843753,
+    "rust-o3": 2.89723,
+    "before-audit-compiler": 5.183341
+   },
+   "changed-net": {
+    "zig-o3": 2.493114,
+    "rust-o3": 2.927712,
+    "before-audit-compiler": 5.079087,
+    "block-io": 5.781217,
+    "payload-io": 5.071246
+   },
+   "changed-value": {
+    "block-io": 5.531392,
+    "rust-o3": 2.615893,
+    "before-audit-compiler": 5.582454,
+    "payload-io": 5.480013,
+    "zig-o3": 2.716588
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 3.031643,
+    "before-audit-compiler": 5.289886,
+    "zig-o3": 2.049298,
+    "payload-io": 5.434321,
+    "block-io": 5.683098
+   },
+   "changed-net": {
+    "before-audit-compiler": 5.745864,
+    "zig-o3": 2.476309,
+    "rust-o3": 3.310145,
+    "payload-io": 5.700995,
+    "block-io": 5.32186
+   },
+   "changed-value": {
+    "payload-io": 5.621562,
+    "before-audit-compiler": 5.476167,
+    "rust-o3": 2.376277,
+    "zig-o3": 2.329996,
+    "block-io": 5.392209
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 2.727272,
+    "before-audit-compiler": 5.5206,
+    "block-io": 5.068396,
+    "rust-o3": 3.145287,
+    "payload-io": 5.005071
+   },
+   "changed-net": {
+    "before-audit-compiler": 5.128797,
+    "rust-o3": 2.950175,
+    "zig-o3": 2.31348,
+    "payload-io": 5.52053,
+    "block-io": 5.373092
+   },
+   "changed-value": {
+    "rust-o3": 2.621516,
+    "zig-o3": 2.39594,
+    "before-audit-compiler": 6.182707,
+    "payload-io": 6.382385,
+    "block-io": 6.082518
+   }
+  },
+  {
+   "fixture": {
+    "before-audit-compiler": 5.18684,
+    "rust-o3": 2.792471,
+    "block-io": 4.698168,
+    "payload-io": 5.245597,
+    "zig-o3": 2.339567
+   },
+   "changed-net": {
+    "zig-o3": 2.31494,
+    "payload-io": 5.471768,
+    "block-io": 4.965187,
+    "rust-o3": 2.604806,
+    "before-audit-compiler": 5.445059
+   },
+   "changed-value": {
+    "payload-io": 5.35502,
+    "rust-o3": 2.661095,
+    "zig-o3": 1.895289,
+    "block-io": 5.176611,
+    "before-audit-compiler": 5.213212
+   }
+  },
+  {
+   "fixture": {
+    "before-audit-compiler": 5.689528,
+    "payload-io": 5.504961,
+    "block-io": 5.327341,
+    "zig-o3": 2.36783,
+    "rust-o3": 2.732829
+   },
+   "changed-net": {
+    "block-io": 5.507895,
+    "before-audit-compiler": 5.549012,
+    "zig-o3": 2.315648,
+    "rust-o3": 2.546059,
+    "payload-io": 5.390765
+   },
+   "changed-value": {
+    "block-io": 5.453493,
+    "payload-io": 5.153234,
+    "zig-o3": 2.647608,
+    "before-audit-compiler": 5.362766,
+    "rust-o3": 2.750874
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 2.768431,
+    "block-io": 5.554218,
+    "before-audit-compiler": 5.127487,
+    "zig-o3": 2.275857,
+    "payload-io": 5.173991
+   },
+   "changed-net": {
+    "rust-o3": 3.105145,
+    "payload-io": 4.927116,
+    "before-audit-compiler": 5.016527,
+    "zig-o3": 2.048915,
+    "block-io": 4.763428
+   },
+   "changed-value": {
+    "before-audit-compiler": 5.447476,
+    "block-io": 5.574217,
+    "payload-io": 5.306184,
+    "rust-o3": 2.784897,
+    "zig-o3": 2.287775
+   }
+  },
+  {
+   "fixture": {
+    "before-audit-compiler": 5.494304,
+    "zig-o3": 2.10232,
+    "rust-o3": 2.426778,
+    "block-io": 4.893094,
+    "payload-io": 4.777696
+   },
+   "changed-net": {
+    "zig-o3": 2.502306,
+    "payload-io": 5.456784,
+    "rust-o3": 2.404243,
+    "before-audit-compiler": 4.603543,
+    "block-io": 4.947455
+   },
+   "changed-value": {
+    "block-io": 4.862,
+    "before-audit-compiler": 4.676552,
+    "zig-o3": 2.035799,
+    "rust-o3": 2.561676,
+    "payload-io": 4.699804
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 2.05922,
+    "before-audit-compiler": 4.681627,
+    "block-io": 4.84181,
+    "rust-o3": 2.463071,
+    "payload-io": 4.97368
+   },
+   "changed-net": {
+    "zig-o3": 2.248627,
+    "block-io": 4.656065,
+    "before-audit-compiler": 5.122591,
+    "payload-io": 4.722927,
+    "rust-o3": 2.156875
+   },
+   "changed-value": {
+    "zig-o3": 2.197757,
+    "block-io": 4.709093,
+    "rust-o3": 2.393857,
+    "payload-io": 4.776601,
+    "before-audit-compiler": 4.725243
+   }
+  },
+  {
+   "fixture": {
+    "before-audit-compiler": 4.749933,
+    "zig-o3": 2.164101,
+    "rust-o3": 2.227543,
+    "payload-io": 4.644552,
+    "block-io": 4.753477
+   },
+   "changed-net": {
+    "payload-io": 4.84693,
+    "rust-o3": 2.631924,
+    "before-audit-compiler": 4.65453,
+    "zig-o3": 2.262131,
+    "block-io": 5.56653
+   },
+   "changed-value": {
+    "block-io": 4.653627,
+    "rust-o3": 2.484666,
+    "zig-o3": 2.08812,
+    "payload-io": 4.735222,
+    "before-audit-compiler": 5.151592
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 2.395723,
+    "before-audit-compiler": 4.86058,
+    "payload-io": 4.935573,
+    "rust-o3": 2.595045,
+    "block-io": 4.843862
+   },
+   "changed-net": {
+    "payload-io": 4.948622,
+    "zig-o3": 2.38759,
+    "rust-o3": 2.391455,
+    "before-audit-compiler": 5.005739,
+    "block-io": 4.922608
+   },
+   "changed-value": {
+    "block-io": 4.766475,
+    "before-audit-compiler": 4.683959,
+    "zig-o3": 2.171912,
+    "payload-io": 4.730928,
+    "rust-o3": 2.698581
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 2.184985,
+    "block-io": 5.571572,
+    "payload-io": 5.209504,
+    "rust-o3": 2.674429,
+    "before-audit-compiler": 4.839356
+   },
+   "changed-net": {
+    "zig-o3": 2.234567,
+    "block-io": 5.280966,
+    "payload-io": 5.526857,
+    "before-audit-compiler": 4.74072,
+    "rust-o3": 2.472338
+   },
+   "changed-value": {
+    "before-audit-compiler": 5.269768,
+    "rust-o3": 2.785195,
+    "payload-io": 5.498062,
+    "zig-o3": 2.216403,
+    "block-io": 4.704397
+   }
+  },
+  {
+   "fixture": {
+    "before-audit-compiler": 4.887103,
+    "rust-o3": 2.583484,
+    "block-io": 5.123734,
+    "payload-io": 4.845644,
+    "zig-o3": 2.251554
+   },
+   "changed-net": {
+    "block-io": 4.979178,
+    "zig-o3": 2.142156,
+    "rust-o3": 2.368371,
+    "payload-io": 4.754035,
+    "before-audit-compiler": 5.274973
+   },
+   "changed-value": {
+    "before-audit-compiler": 4.766356,
+    "zig-o3": 2.138862,
+    "rust-o3": 2.717637,
+    "payload-io": 5.011846,
+    "block-io": 4.961608
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 3.169522,
+    "zig-o3": 2.392613,
+    "payload-io": 4.976597,
+    "block-io": 4.868767,
+    "before-audit-compiler": 5.186483
+   },
+   "changed-net": {
+    "rust-o3": 3.160464,
+    "zig-o3": 2.072146,
+    "payload-io": 5.380907,
+    "before-audit-compiler": 5.506585,
+    "block-io": 5.635187
+   },
+   "changed-value": {
+    "zig-o3": 2.643104,
+    "payload-io": 4.896808,
+    "rust-o3": 2.764526,
+    "before-audit-compiler": 5.622374,
+    "block-io": 5.272852
+   }
+  },
+  {
+   "fixture": {
+    "payload-io": 5.681911,
+    "before-audit-compiler": 4.869757,
+    "zig-o3": 2.703158,
+    "block-io": 4.824238,
+    "rust-o3": 2.909046
+   },
+   "changed-net": {
+    "before-audit-compiler": 5.067806,
+    "block-io": 5.290698,
+    "zig-o3": 3.043808,
+    "payload-io": 5.242485,
+    "rust-o3": 2.491476
+   },
+   "changed-value": {
+    "zig-o3": 2.583941,
+    "rust-o3": 2.810898,
+    "before-audit-compiler": 5.522812,
+    "payload-io": 4.719738,
+    "block-io": 5.295524
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 2.111534,
+    "payload-io": 4.902589,
+    "rust-o3": 2.499638,
+    "block-io": 4.809097,
+    "before-audit-compiler": 5.686739
+   },
+   "changed-net": {
+    "before-audit-compiler": 5.206824,
+    "zig-o3": 2.042603,
+    "rust-o3": 2.497809,
+    "block-io": 4.621675,
+    "payload-io": 5.347208
+   },
+   "changed-value": {
+    "block-io": 5.096644,
+    "zig-o3": 2.272118,
+    "rust-o3": 2.541501,
+    "before-audit-compiler": 4.54821,
+    "payload-io": 4.685182
+   }
+  },
+  {
+   "fixture": {
+    "before-audit-compiler": 5.051575,
+    "rust-o3": 2.898045,
+    "payload-io": 4.871313,
+    "zig-o3": 2.299456,
+    "block-io": 5.082392
+   },
+   "changed-net": {
+    "before-audit-compiler": 5.600574,
+    "payload-io": 5.167902,
+    "zig-o3": 2.19299,
+    "block-io": 4.904206,
+    "rust-o3": 2.60351
+   },
+   "changed-value": {
+    "payload-io": 5.291421,
+    "zig-o3": 2.485918,
+    "before-audit-compiler": 4.743176,
+    "rust-o3": 2.557698,
+    "block-io": 4.706717
+   }
+  },
+  {
+   "fixture": {
+    "block-io": 4.942401,
+    "rust-o3": 2.396632,
+    "payload-io": 4.605534,
+    "before-audit-compiler": 4.842554,
+    "zig-o3": 2.154532
+   },
+   "changed-net": {
+    "block-io": 5.192511,
+    "rust-o3": 2.703505,
+    "payload-io": 4.942744,
+    "before-audit-compiler": 5.013125,
+    "zig-o3": 2.174202
+   },
+   "changed-value": {
+    "block-io": 5.113857,
+    "payload-io": 4.923989,
+    "rust-o3": 2.325668,
+    "before-audit-compiler": 4.588717,
+    "zig-o3": 2.276322
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 2.024822,
+    "rust-o3": 2.558085,
+    "before-audit-compiler": 4.629797,
+    "payload-io": 4.616456,
+    "block-io": 4.756857
+   },
+   "changed-net": {
+    "zig-o3": 2.180206,
+    "block-io": 4.785401,
+    "before-audit-compiler": 4.683824,
+    "rust-o3": 2.259922,
+    "payload-io": 4.975149
+   },
+   "changed-value": {
+    "before-audit-compiler": 4.898977,
+    "block-io": 4.97273,
+    "zig-o3": 2.181611,
+    "payload-io": 4.384737,
+    "rust-o3": 2.41534
+   }
+  }
+ ]
+}

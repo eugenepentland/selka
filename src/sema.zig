@@ -5944,9 +5944,9 @@ fn literalText(bytes: []const u8, span: source.Span) []const u8 {
 }
 
 fn checkHostType(allocator: std.mem.Allocator, catalog: []const typed.Record, ty: typed.Type, span: source.Span, sink: *diagnostic.Sink) Error!void {
-    @import("data_type.zig").check(allocator, catalog, ty, true) catch |err| switch (err) {
+    @import("data_type.zig").checkHost(allocator, catalog, ty) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
-        else => return sink.fail("E_HOST_SIGNATURE", span, "host signatures require ordinary data without capabilities or runtime-owned storage"),
+        else => return sink.fail("E_HOST_SIGNATURE", span, "host signatures require ordinary data, or `bytes`, without capabilities or other runtime-owned storage"),
     };
 }
 
