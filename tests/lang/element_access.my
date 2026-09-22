@@ -1,0 +1,140 @@
+module element_access
+
+# Element reads and writes on a managed list are lowered against the receiver's
+# own storage: a write stores one element in place, a read projects the field
+# the consumer asked for, and a record-returning helper writes its caller's
+# destination once. These cases pin the value semantics all of that must keep —
+# an element is a value, a copy taken before a write still holds what it held,
+# and a mutated receiver is visible through every later read.
+
+
+public record Cell:
+    name: str
+    count: i64
+
+
+public record Inner:
+    tag: i64
+    depth: i64
+
+
+public record Outer:
+    label: str
+    inner: Inner
+
+
+def bump(cells: mut list[Cell], at: i64, by: i64):
+    cells[at] = Cell(name=cells[at].name, count=cells[at].count + by)
+
+
+def relabel(cells: mut list[Cell], at: i64, name: str):
+    cells[at] = Cell(name=name, count=cells[at].count)
+
+
+def count_at(cells: list[Cell], at: i64) -> i64:
+    return cells[at].count
+
+
+def pick(cells: list[Cell], at: i64) -> Cell:
+    return cells[at]
+
+
+def find(cells: list[Cell], name: str) -> Cell:
+    i = 0
+    while i < len(cells):
+        cell = cells[i]
+        if cell.name == name:
+            return cell
+        i += 1
+    return Cell(name="", count=- 1)
+
+
+def depth_of(outers: list[Outer], at: i64) -> i64:
+    return outers[at].inner.depth
+
+
+def total(cells: list[Cell]) -> i64:
+    sum = 0
+    for cell in cells:
+        sum += cell.count
+    return sum
+
+
+public def test_scalar_element_write_lands_in_place() -> bool:
+    values = [1, 2, 3]
+    values[1] = 30
+    values[- 1] = 40
+    return values[0] == 1 and values[1] == 30 and values[2] == 40 and len(values) == 3
+
+
+public def test_record_element_write_replaces_the_whole_element() -> bool:
+    cells = [Cell(name="a", count=1), Cell(name="b", count=2)]
+    bump(mut cells, 1, 5)
+    relabel(mut cells, 0, "z")
+    return cells[0].name == "z" and cells[0].count == 1 and cells[1].name == "b" and cells[1].count == 7
+
+
+public def test_element_copy_taken_before_a_write_keeps_its_value() -> bool:
+    cells = [Cell(name="a", count=1)]
+    taken = cells[0]
+    cells[0] = Cell(name="b", count=2)
+    return taken.name == "a" and taken.count == 1 and cells[0].name == "b" and cells[0].count == 2
+
+
+public def test_managed_field_survives_an_element_write() -> bool:
+    cells = [Cell(name="first", count=1), Cell(name="second", count=2)]
+    i = 0
+    while i < 200:
+        cells[0] = Cell(name="live " + str(i), count=i)
+        i += 1
+    return cells[0].name == "live 199" and cells[0].count == 199 and cells[1].name == "second"
+
+
+public def test_element_write_inside_an_arena_scope() -> bool:
+    answer = 0
+    with arena():
+        cells = [Cell(name="a", count=1), Cell(name="b", count=2)]
+        cells[1] = Cell(name="c", count=9)
+        answer = cells[1].count + len(cells)
+    return answer == 11
+
+
+public def test_field_read_through_an_element_sees_the_current_value() -> bool:
+    cells = [Cell(name="a", count=1), Cell(name="b", count=2)]
+    before = count_at(cells, 1)
+    cells[1] = Cell(name="b", count=20)
+    return before == 2 and count_at(cells, 1) == 20 and cells[- 1].count == 20
+
+
+public def test_nested_field_read_through_an_element() -> bool:
+    outers = [
+        Outer(label="a", inner=Inner(tag=1, depth=7)),
+        Outer(label="b", inner=Inner(tag=2, depth=9))
+    ]
+    return depth_of(outers, 0) == 7 and depth_of(outers, 1) == 9 and outers[1].inner.tag == 2
+
+
+public def test_returned_element_is_an_independent_value() -> bool:
+    cells = [Cell(name="a", count=1)]
+    taken = pick(cells, 0)
+    cells[0] = Cell(name="b", count=2)
+    again = pick(cells, 0)
+    return taken.name == "a" and taken.count == 1 and again.name == "b" and again.count == 2
+
+
+public def test_element_local_survives_the_branch_that_returns_it() -> bool:
+    cells = [Cell(name="a", count=1), Cell(name="b", count=2), Cell(name="c", count=3)]
+    found = find(cells, "b")
+    missing = find(cells, "zz")
+    return found.name == "b" and found.count == 2 and missing.count == - 1
+
+
+public def test_loop_variable_reads_every_element() -> bool:
+    cells = [Cell(name="a", count=1), Cell(name="b", count=2), Cell(name="c", count=3)]
+    before = total(cells)
+    cells[2] = Cell(name="c", count=30)
+    return before == 6 and total(cells) == 33
+
+
+def main() -> int:
+    return 0

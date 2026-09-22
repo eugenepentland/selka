@@ -287,6 +287,19 @@ test "native execution reports entry results, guest output and located traps" {
     try std.testing.expectEqual(@as(i64, 0), failure.trap.detail.values.right);
 }
 
+/// An out-of-range write of a record element, whose in-place lowering
+/// (QBE-LISTSET-1) raises the bounds trap the runtime helper used to raise.
+const record_element_write =
+    \\record Row:
+    \\    name: str
+    \\
+    \\
+    \\def main() -> i64:
+    \\    rows = [Row(name="a")]
+    \\    rows[3] = Row(name="b")
+    \\    return 0
+;
+
 // spec: QBE-TRAP-DETAIL-1
 test "native execution reports original bounds indexes for read write pop array text and bytes" {
     const Case = struct {
@@ -302,6 +315,10 @@ test "native execution reports original bounds indexes for read write pop array 
         .{ .source = "def main() -> i64:\n    xs = [1]\n    return xs[14]\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = 14, .length = 1, .text = "(index 14, length 1)" },
         .{ .source = "def main() -> i64:\n    xs = [1, 2]\n    return xs[-5]\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -5, .length = 2, .text = "(index -5, length 2)" },
         .{ .source = "def main() -> i64:\n    xs = [1, 2]\n    xs[-5] = 9\n    return 0\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -5, .length = 2, .text = "(index -5, length 2)" },
+        // QBE-LISTSET-1: the in-place element write raises the same trap the
+        // `myl_native_list_set` call used to, with the caller's own index.
+        .{ .source = "def main() -> i64:\n    xs = [1, 2]\n    xs[14] = 9\n    return 0\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = 14, .length = 2, .text = "(index 14, length 2)" },
+        .{ .source = record_element_write, .code = "R_LIST_BOUNDS", .operation = .index, .index = 3, .length = 1, .text = "(index 3, length 1)" },
         .{ .source = "def main() -> i64:\n    xs: list[i64] = []\n    return xs.pop()\n", .code = "R_LIST_BOUNDS", .operation = .pop, .index = null, .length = 0, .text = "(length 0)" },
         .{ .source = "def main() -> i64:\n    xs = [1, 2]\n    return xs.pop(7)\n", .code = "R_LIST_BOUNDS", .operation = .pop, .index = 7, .length = 2, .text = "(index 7, length 2)" },
         .{ .source = "def main() -> i64:\n    xs: [3]int = [1, 2, 3]\n    return xs[7]\n", .code = "R_INDEX_BOUNDS", .operation = .index, .index = 7, .length = 3, .text = "(index 7, length 3)" },

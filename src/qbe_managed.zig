@@ -10,6 +10,9 @@ const copy_scratch = " %v{d} =l copy %s{d}\n";
 const load_scratch = " %v{d} =l loadl %s{d}\n";
 /// Load one native word through a computed pointer.
 const load_pointer = " %v{d} =l loadl %v{d}\n";
+/// Unsigned `index < length` test: the one comparison every bounds-checked
+/// element access — read, write and slice endpoint — is admitted by.
+const unsigned_below = " %v{d} =l cultl %v{d}, %v{d}\n";
 /// Append one element through the runtime's grow-capable helper.
 const list_append_call = " %v{d} =w call $myl_native_list_append(l %heap, l %v{d}, l %v{d})\n";
 const format = @import("qbe_format.zig");
@@ -158,8 +161,7 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             } else {
                 const index_value = try self.load("s", base);
                 const length = try receiverLength(E, self, list);
-                try self.print(" %v{d} =w call $myl_native_list_set(l %v{d}, l %v{d}, l %v{d})\n", .{ output, list, index_value, value_pointer });
-                try requireIndexBounds(E, self, output, index_value, length, normalized_index_failure);
+                try inlineIndexWrite(E, self, .{ .input = list, .at = index_value, .raw_index = index_value, .length = length, .element = element, .slot = position }, normalized_index_failure);
             }
             try self.print(store_unit, .{base});
         },
@@ -547,8 +549,7 @@ fn emitIndex(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Ty
         if (replacing) {
             const value = try operandPointer(E, self, schema.shape.buffer.?, base + 2);
             try arena_lower.Lower(E).barrier(self, input, schema.shape.buffer.?, value);
-            try self.print(" %v{d} =w call $myl_native_list_set(l %v{d}, l %v{d}, l %v{d})\n", .{ result, input, at, value });
-            try requireIndexBounds(E, self, result, raw_index, length, index_failure);
+            try inlineIndexWrite(E, self, .{ .input = input, .at = at, .raw_index = raw_index, .length = length, .element = schema.shape.buffer.?, .slot = base + 2 }, index_failure);
             try self.store(base, input);
         } else {
             try inlineIndexRead(E, self, .{ .input = input, .at = at, .raw_index = raw_index, .length = length, .element = schema.shape.buffer.?, .slot = base }, index_failure);
@@ -615,7 +616,7 @@ fn elementFeedsStore(comptime E: type, self: *E, element: typed.Type) Error!bool
 /// reports an index this lowering already normalized, or one it has not.
 fn inlineIndexRead(comptime E: type, self: *E, read: IndexRead, failure: []const u8) Error!void {
     const valid = self.temp();
-    try self.print(" %v{d} =l cultl %v{d}, %v{d}\n", .{ valid, read.at, read.length });
+    try self.print(unsigned_below, .{ valid, read.at, read.length });
     try requireIndexBounds(E, self, valid, read.raw_index, read.length, failure);
     const address = try elementAddress(E, self, read.input, read.at, read.element);
     if (self.isScalar(read.element)) {
@@ -629,6 +630,34 @@ fn inlineIndexRead(comptime E: type, self: *E, read: IndexRead, failure: []const
         try self.print(" blit %v{d}, %v{d}, {d}\n", .{ address, pointer, (try self.layout(read.element)).size });
         try self.store(read.slot, pointer);
     }
+}
+/// QBE-LISTSET-1: write one element of a list or byte string where it lives,
+/// in place of a `myl_native_list_set` call.
+///
+/// The helper is a bounds test and one `copy_element` of the element's own
+/// size; both are emitted here against the same unsigned comparison, the same
+/// receiver length and the same detail-carrying trap, so the observable
+/// behaviour — including the index and length the trap reports — is unchanged.
+/// The list's generation is untouched, because the helper never bumped it
+/// either: an element write neither moves storage nor changes the length, so no
+/// iteration guard can observe it.
+///
+/// Removing the call is what pays for this. `loweredAllocates` reads the text a
+/// lowering produced, so an element write that names only `myl_qbe_fail_*`
+/// helpers is no longer a safepoint and the whole root push around it — one
+/// record per live traced local and operand — disappears with it.
+///
+/// A value that names storage inside the same receiver writes one
+/// stride-sized, stride-aligned region onto another, so the two regions are
+/// identical or disjoint; a record cannot contain itself, so a same-typed
+/// region inside the element can only be the element itself. That is exactly
+/// the aliasing the runtime `memcpy` already had.
+fn inlineIndexWrite(comptime E: type, self: *E, write: IndexRead, failure: []const u8) Error!void {
+    const valid = self.temp();
+    try self.print(unsigned_below, .{ valid, write.at, write.length });
+    try requireIndexBounds(E, self, valid, write.raw_index, write.length, failure);
+    const address = try elementAddress(E, self, write.input, write.at, write.element);
+    try self.writeValue(address, try self.load("s", write.slot), write.element);
 }
 /// Address of element `index` in a native list-like receiver's backing storage.
 /// `storage` is the word at `list_storage_offset` in the header; the stride is
@@ -834,7 +863,7 @@ fn textAt(comptime E: type, self: *E, input: usize, at: usize, ty: typed.Type, r
     try self.print(load_pointer, .{ size, input });
     const normalized = try normalizedIndex(E, self, at, size, ty);
     const valid = self.temp();
-    try self.print(" %v{d} =l cultl %v{d}, %v{d}\n", .{ valid, normalized, size });
+    try self.print(unsigned_below, .{ valid, normalized, size });
     try requireIndexBounds(E, self, valid, at, size, "myl_qbe_fail_text_bounds_detail");
     try self.print(" %v{d} =l call $myl_native_text_at(l %heap, l %v{d}, l %v{d})\n", .{ result, input, normalized });
     try checkedPointer(E, self, result, base);

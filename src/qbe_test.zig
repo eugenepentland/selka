@@ -1762,3 +1762,54 @@ test "a list element the loop variable copies is read through its own address" {
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
     try std.testing.expect(std.mem.indexOf(u8, body, "myl_qbe_fail_normalized_index_bounds") != null);
 }
+
+// spec: QBE-LISTSET-1
+test "QBE-LISTSET-1 a list element write stores through the element address" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def store(values: mut list[i64], value: i64):
+        \\    values[1] = value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values = [1, 2, 3]
+        \\    store(mut values, 30)
+        \\    return values[1]
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "store").?.il;
+    // The runtime helper was a bounds test and one `copy_element`; both are
+    // emitted here, so nothing calls into the runtime for the write.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_list_set"));
+    try std.testing.expect(std.mem.indexOf(u8, body, "cultl") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "myl_qbe_fail_normalized_index_bounds") != null);
+    // With no allocating callee left in the write, the frame pushes no root
+    // record across it.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%root0"));
+}
+
+// spec-case: QBE-LISTSET-1
+test "QBE-LISTSET-1 a record element write over traced elements pushes no root" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    name: str
+        \\    count: i64
+        \\
+        \\
+        \\def relabel(rows: mut list[Row], row: Row):
+        \\    rows[0] = row
+        \\
+        \\
+        \\def main() -> i64:
+        \\    rows = [Row(name="a", count=1)]
+        \\    relabel(mut rows, Row(name="b", count=2))
+        \\    return rows[0].count
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "relabel").?.il;
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_list_set"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%root0"));
+    // The element itself lands in the receiver's storage through one copy of
+    // its own size, the one the runtime helper used to make.
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit ") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, " =l mul ") != null);
+}
