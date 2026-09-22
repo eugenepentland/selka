@@ -51,9 +51,11 @@ storage grows by doubling, so `append`, `append_range`, `append_byte`,
 fragment's octets straight into that capacity and no fragment allocates a value
 for itself: `append_text` builds no temporary encoded `bytes`, and `append_int`
 and `append_float` no temporary text or byte value at all. `append_float` writes
-the canonical spelling `str(value)` prints, built on the runtime's own stack. `finish` copies the buffer once into an immutable
-snapshot with `bytes(buffer)`, so it contributes `managed_allocation` but does
-not mutate the builder; when the assembled octets are only going to a stream,
+the canonical spelling `str(value)` prints, built on the runtime's own stack. `finish` publishes the buffer as an immutable snapshot
+with `bytes(buffer)`, which copies no octet: the snapshot reads the buffer's own
+storage and the buffer's next write moves its octets into a private block first,
+so `finish` contributes `managed_allocation` but does not mutate the builder;
+when the assembled octets are only going to a stream,
 `stream.write(builder.buffer)` writes the buffer's own storage instead and skips
 that copy.
 

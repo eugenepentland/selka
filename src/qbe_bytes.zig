@@ -55,13 +55,17 @@ pub fn Lower(comptime E: type) type {
             try self.checkFailure("failure");
             try self.store(base, result);
         }
-        /// Lower `bytes(buffer)` into a fresh immutable copy of a byte-kind
-        /// buffer's current octets.
+        /// Lower `bytes(buffer)` into an immutable snapshot of a byte-kind
+        /// buffer's current octets. The snapshot reads the buffer's own block and
+        /// retains it, and the buffer is left with no spare capacity, so its next
+        /// write detaches the octets into a private block first: a published
+        /// snapshot can never be written through, and the conversion copies no
+        /// octet to publish one.
         pub fn copyImmutable(self: *E, stack: []const typed.Type) Error!void {
             const base = stack.len - 1;
             const input = try self.load("s", base);
             const result = self.temp();
-            try self.print(" %v{d} =l call $myl_qbe_bytes_copy(l %ctx, l %v{d})\n", .{ result, input });
+            try self.print(" %v{d} =l call $myl_qbe_bytes_snapshot(l %ctx, l %v{d})\n", .{ result, input });
             try self.checkFailure("failure");
             try self.store(base, result);
         }

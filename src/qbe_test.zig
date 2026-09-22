@@ -1295,6 +1295,25 @@ test "STREAM-BYTES-2 a buffer write lowers to the raw byte sink with no snapshot
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_bytes_copy("));
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_bytes_slice("));
 }
+// spec-case: PY-BYTES-SNAPSHOT-1
+test "PY-BYTES-SNAPSHOT-1 converting a buffer publishes a snapshot with no copy call" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def take() -> bytes:
+        \\    empty: list[int] = []
+        \\    buffer = byte_buffer(empty)
+        \\    _ = buffer.append_range(b"head", 0, 4)
+        \\    return bytes(buffer)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return len(take())
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "take").?.il;
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "myl_qbe_bytes_snapshot("));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_bytes_copy("));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_qbe_bytes_copy("));
+}
 // spec: QBE-MATCHPROJ-1
 test "QBE-MATCHPROJ a read-only binding names a payload that owns nothing in place" {
     var parsed = try emitted(std.testing.allocator,

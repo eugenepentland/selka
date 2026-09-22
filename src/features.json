@@ -254,7 +254,7 @@
     },
     "mutable-byte-buffer": {
       "kind": "language",
-      "summary": "`byte_buffer` is the mutable octet buffer beside immutable `bytes`: six in-place append methods over spare capacity, including direct integer and canonical float formatting, and `bytes(buffer)` copies it into an immutable snapshot.",
+      "summary": "`byte_buffer` is the mutable octet buffer beside immutable `bytes`: six in-place append methods over spare capacity, including direct integer and canonical float formatting, and `bytes(buffer)` publishes it as an immutable snapshot without copying its octets.",
       "doc": "docs/bytes.md#writing-octets-in-place"
     },
     "managed-insertion-ordered-dictionaries": {

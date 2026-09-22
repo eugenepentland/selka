@@ -63,6 +63,12 @@ myl_native_text *myl_native_bytes_decode_range(myl_native_heap *, myl_native_byt
  * refuses an immortal receiver rather than writing storage the image owns. */
 /* One write, one rejected argument or frozen receiver, one refused allocation. */
 enum { MYL_BYTES_FAILED = 0, MYL_BYTES_WROTE = 1, MYL_BYTES_REFUSED = 2 };
+/* The buffer's current octets as an immutable byte string that reads them where
+ * they are, retaining their block: `bytes(buffer)` copies no octet. The buffer
+ * keeps its octets and length but loses its spare capacity, so its next write
+ * detaches them into a private block first and a published snapshot can never be
+ * written through. NULL after an exhausted allocation budget. */
+myl_native_bytes *myl_native_bytes_buffer_snapshot(myl_native_heap *, myl_native_bytes *buffer);
 /* Grow the backing so `extra` more octets fit, keeping `length` and content. */
 int myl_native_bytes_buffer_reserve(myl_native_heap *, myl_native_bytes *, int64_t extra);
 /* Append one octet; a value outside 0..255 is refused without writing. */

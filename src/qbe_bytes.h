@@ -14,6 +14,10 @@ myl_native_bytes *myl_qbe_bytes_from_list(void *context, myl_native_list *list);
 /* A fresh immutable copy of a byte-kind buffer's current octets; NULL after an
    exhausted allocation budget. */
 myl_native_bytes *myl_qbe_bytes_copy(void *context, myl_native_bytes *input);
+/* The buffer's current octets as an immutable snapshot that reads them where they
+   are, retaining their block and leaving the buffer to detach on its next write;
+   NULL after an exhausted allocation budget. */
+myl_native_bytes *myl_qbe_bytes_snapshot(void *context, myl_native_bytes *input);
 /* The validating scalar count as a checked result: 0 publishes the count, 1 the
    invalid-UTF-8 message, -1 a sticky trap. */
 int myl_qbe_bytes_scalar_count(void *context, myl_native_bytes *input, void **output);

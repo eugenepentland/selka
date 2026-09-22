@@ -80,6 +80,31 @@ myl_native_bytes *myl_native_bytes_view(myl_native_heap *heap, myl_native_bytes 
     myl_native_root_pop(heap,&root);
     return view;
 }
+/* Publish the buffer's current octets as an immutable byte string that reads
+   them where they are. The snapshot is a view of the buffer's block, so no octet
+   is copied, and it retains that block: the octets stay readable after the
+   buffer itself is unreachable. The buffer keeps its octets and its length but
+   is left with no spare capacity and marked, so the emitted append fast path
+   cannot write into a block a snapshot reads, and the first write that follows
+   moves the octets into a private block (see `buffer_ready`). That detach is
+   what makes a published snapshot immutable. */
+myl_native_bytes *myl_native_bytes_buffer_snapshot(myl_native_heap *heap, myl_native_bytes *buffer) {
+    myl_native_root root;
+    myl_native_root_push(heap,&root,&buffer,&pointer_type);
+    myl_native_bytes *snapshot=myl_native_heap_alloc(heap,&view_header_type,1);
+    if (snapshot) {
+        void *backing=view_backing(heap,buffer);
+        snapshot->element=&byte_type;
+        snapshot->length=buffer->length;
+        snapshot->capacity=buffer->length;
+        snapshot->storage=buffer->storage;
+        snapshot->work.owner=backing;
+        buffer->work.owner=backing;
+        buffer->capacity=0;
+    }
+    myl_native_root_pop(heap,&root);
+    return snapshot;
+}
 /* Count the Unicode scalars of a byte string's octets in one validating pass, so
    measuring a range never decodes it. A word at a time is ASCII — one scalar per
    octet — and every other scalar is decoded with exactly the acceptance rules of
@@ -414,10 +439,10 @@ static int buffer_frozen(const myl_native_heap *heap, const myl_native_bytes *bu
    instead: the octets it already holds are exactly the ones the copy would
    rewrite, and the pages behind them are exactly the ones the copy would fault
    a second time for, so a doubling buffer costs its final size in memory
-   traffic rather than twice it. The buffer's backing is private — `byte_buffer`
-   is only ever built by a fresh allocation or a copy, and `view` refuses a
-   mutable receiver — so nothing else points into it and a moved reservation is
-   observed only through the header this stores it back into. */
+   traffic rather than twice it. A moved reservation is only ever observed
+   through the header this stores it back into: a buffer whose block a snapshot
+   reads is detached by `buffer_ready` before it reaches here, and `view` refuses
+   a mutable receiver, so no other value points into the block being moved. */
 static int buffer_grow(myl_native_heap *heap, myl_native_bytes *buffer, size_t needed) {
     if (needed<=buffer->capacity) return 1;
     size_t capacity=buffer->capacity<64 ? 64 : buffer->capacity;
@@ -438,33 +463,59 @@ static int buffer_grow(myl_native_heap *heap, myl_native_bytes *buffer, size_t n
     buffer->capacity=capacity;
     return 1;
 }
-/* Grow the buffer while it and one companion value stay reachable, because the
-   growth allocation may collect before this call stores the new storage. Room
-   that is already reserved allocates nothing, so it collects nothing and needs
-   no roots: a capacity-sufficient append costs one test here instead of two
-   root records on every call. */
-static int buffer_grow_rooted(myl_native_heap *heap, myl_native_bytes *buffer, void *companion, size_t needed) {
-    if (needed<=buffer->capacity) return 1;
+/* Make the buffer's backing private and big enough for `needed` octets. A buffer
+   whose block a published snapshot reads carries that block in its drop link and
+   has no spare capacity, so this is where the octets move into a block no
+   snapshot can see — the copy is the price of the first write after a snapshot,
+   and a buffer that is never written again pays nothing. The new block is sized
+   the way the ordinary grow would size it, so the write that follows finds room
+   already reserved. */
+static int buffer_ready(myl_native_heap *heap, myl_native_bytes *buffer, size_t needed) {
+    if (buffer->work.owner) {
+        size_t capacity=buffer->length<64 ? 64 : buffer->length;
+        while (capacity<needed) {
+            if (capacity>SIZE_MAX/2) return 0;
+            capacity*=2;
+        }
+        void *storage=myl_native_heap_alloc_at(heap,buffer->element,capacity,myl_native_object_region(heap,buffer));
+        if (!storage) return 0;
+        if (buffer->length) memcpy(storage,buffer->storage,buffer->length);
+        buffer->storage=storage;
+        buffer->capacity=capacity;
+        buffer->work.owner=NULL;
+    }
+    return buffer_grow(heap,buffer,needed);
+}
+/* Make the buffer's backing private and able to hold `needed` octets while it
+   and one companion value stay reachable, because either allocation may collect
+   before this call stores the new storage. Room that is already reserved in a
+   private backing allocates nothing, so it collects nothing and needs no roots:
+   a capacity-sufficient append costs two tests here instead of two root records
+   on every call. A request that adds no octets at all — `reserve(0)` — changes
+   nothing, which is also what leaves a marked buffer marked. */
+static int buffer_ready_rooted(myl_native_heap *heap, myl_native_bytes *buffer, void *companion, size_t needed) {
+    if (needed<=buffer->capacity && !buffer->work.owner) return 1;
+    if (needed<=buffer->length) return 1;
     myl_native_root buffer_root, companion_root;
     myl_native_root_push(heap,&buffer_root,&buffer,&pointer_type);
     if (companion) myl_native_root_push(heap,&companion_root,companion,&pointer_type);
-    int grown=buffer_grow(heap,buffer,needed);
+    int ready=buffer_ready(heap,buffer,needed);
     if (companion) myl_native_root_pop(heap,&companion_root);
     myl_native_root_pop(heap,&buffer_root);
-    return grown;
+    return ready;
 }
 int myl_native_bytes_buffer_reserve(myl_native_heap *heap, myl_native_bytes *buffer, int64_t extra) {
     if (extra<0) return MYL_BYTES_REFUSED;
     if (buffer_frozen(heap,buffer)) return extra==0 ? MYL_BYTES_WROTE : MYL_BYTES_REFUSED;
     if ((uint64_t)extra>SIZE_MAX-buffer->length) return MYL_BYTES_FAILED;
-    if (!buffer_grow_rooted(heap,buffer,NULL,buffer->length+(size_t)extra)) return MYL_BYTES_FAILED;
+    if (!buffer_ready_rooted(heap,buffer,NULL,buffer->length+(size_t)extra)) return MYL_BYTES_FAILED;
     return MYL_BYTES_WROTE;
 }
 int myl_native_bytes_buffer_append_byte(myl_native_heap *heap, myl_native_bytes *buffer, int64_t value) {
     if (value<0 || value>255) return MYL_BYTES_REFUSED;
     if (buffer_frozen(heap,buffer)) return MYL_BYTES_REFUSED;
     if (buffer->length==SIZE_MAX) return MYL_BYTES_FAILED;
-    if (!buffer_grow_rooted(heap,buffer,NULL,buffer->length+1)) return MYL_BYTES_FAILED;
+    if (!buffer_ready_rooted(heap,buffer,NULL,buffer->length+1)) return MYL_BYTES_FAILED;
     ((unsigned char *)buffer->storage)[buffer->length++]=(unsigned char)value;
     return MYL_BYTES_WROTE;
 }
@@ -474,7 +525,7 @@ int myl_native_bytes_buffer_append_range(myl_native_heap *heap, myl_native_bytes
     size_t count=(size_t)(end-start);
     if (!count) return MYL_BYTES_WROTE;
     if (count>SIZE_MAX-buffer->length) return MYL_BYTES_FAILED;
-    if (!buffer_grow_rooted(heap,buffer,&data,buffer->length+count)) return MYL_BYTES_FAILED;
+    if (!buffer_ready_rooted(heap,buffer,&data,buffer->length+count)) return MYL_BYTES_FAILED;
     /* `data` may be the buffer itself. Growth reallocates the buffer's backing,
        so the source is read back through the rooted pointer afterwards; the
        destination is always the end, past every copied octet, so the two ranges
@@ -492,7 +543,7 @@ int myl_native_bytes_buffer_append_utf8(myl_native_heap *heap, myl_native_bytes 
     size_t required=text?text->bytes:0;
     if (required>SIZE_MAX-buffer->length) return MYL_BYTES_FAILED;
     if (!required) return MYL_BYTES_WROTE;
-    if (!buffer_grow_rooted(heap,buffer,&text,buffer->length+required)) return MYL_BYTES_FAILED;
+    if (!buffer_ready_rooted(heap,buffer,&text,buffer->length+required)) return MYL_BYTES_FAILED;
     memcpy((unsigned char *)buffer->storage+buffer->length,myl_native_text_payload(text),required);
     buffer->length+=required;
     return MYL_BYTES_WROTE;
@@ -514,7 +565,7 @@ int myl_native_bytes_buffer_append_raw(myl_native_heap *heap, myl_native_bytes *
     if (buffer_frozen(heap,buffer)) return MYL_BYTES_REFUSED;
     if (!count) return MYL_BYTES_WROTE;
     if (count>SIZE_MAX-buffer->length) return MYL_BYTES_FAILED;
-    if (!buffer_grow_rooted(heap,buffer,NULL,buffer->length+count)) return MYL_BYTES_FAILED;
+    if (!buffer_ready_rooted(heap,buffer,NULL,buffer->length+count)) return MYL_BYTES_FAILED;
     memcpy((unsigned char *)buffer->storage+buffer->length,data,count);
     buffer->length+=count;
     return MYL_BYTES_WROTE;
@@ -524,7 +575,7 @@ int myl_native_bytes_buffer_append_int(myl_native_heap *heap, myl_native_bytes *
     unsigned char digits[20];
     size_t width=decimal_digits(digits,value);
     if (width>SIZE_MAX-buffer->length) return MYL_BYTES_FAILED;
-    if (!buffer_grow_rooted(heap,buffer,NULL,buffer->length+width)) return MYL_BYTES_FAILED;
+    if (!buffer_ready_rooted(heap,buffer,NULL,buffer->length+width)) return MYL_BYTES_FAILED;
     memcpy((unsigned char *)buffer->storage+buffer->length,digits,width);
     buffer->length+=width;
     return MYL_BYTES_WROTE;

@@ -416,10 +416,13 @@ stream write, and appending afterwards cannot change what was already written.
 
 Only `byte_buffer` carries those methods, so an immutable byte string can never
 be written through: a `b"..."` literal, a slice and a view are all read-only, and
-`bytes(buffer)` copies the buffer's current octets into a fresh immutable byte
-string. Build a buffer with `byte_buffer(values)` from a `list[int]` — the
-standard library [`byte_builder`](standard-library.md#byte_builder) module wraps
-one — and take its snapshot with `bytes(buffer)`.
+`bytes(buffer)` publishes the buffer's current octets as an immutable snapshot
+without copying them — the snapshot reads the buffer's own storage and retains
+it, and the buffer's next write moves its octets into a private block first, so
+a snapshot never changes under a later append. Build a buffer with
+`byte_buffer(values)` from a `list[int]` — the standard library
+[`byte_builder`](standard-library.md#byte_builder) module wraps one — and take
+its snapshot with `bytes(buffer)`.
 
 ```mylang
 # doc: expect 42
