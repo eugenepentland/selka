@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 import random
+import re
 import statistics
 import subprocess
 import time
@@ -35,6 +36,24 @@ DOCUMENTS = ('lib/modules/straps-synth-lmx2595.sexp',
              'lib/pinouts/lmx2595rhar.sexp', 'lib/interfaces/spi.sexp')
 CPU = 6
 SEED = 20260921
+GUEST_IO = ROOT / 'src/schematic/guest/io.my'
+
+
+def declared_hosts():
+    """The host functions the schematic guest declares, as the runtime wants them.
+
+    The launcher registers exactly the names it is handed, so this list has to
+    follow the guest rather than a copy of it: when the bulk-I/O host calls were
+    added to io.my, the hardcoded list here named seven of eleven and every
+    mylang arm trapped HostMissingRegistration.  Reading the declarations keeps
+    the harness correct across guest changes; an empty result is an error rather
+    than a silently empty contract.
+    """
+    names = re.findall(r'^(?:public )?host def ([a-z_][a-z0-9_]*)',
+                       GUEST_IO.read_text(), re.M)
+    if not names:
+        raise SystemExit(f'no host declarations found in {GUEST_IO}')
+    return ','.join(f'io::{name}' for name in names)
 
 
 def digest(data):
@@ -60,7 +79,7 @@ def command(arm, case, extra=()):
         args += [str(output), *extra]
     else:
         environment.update(
-            MYLANG_SCHEMATIC_DECLARED='io::circuit_input,io::pinout_input,io::interface_input,io::length,io::byte,io::put,io::issue',
+            MYLANG_SCHEMATIC_DECLARED=declared_hosts(),
             MYLANG_SCHEMATIC_OUTPUT=str(output), MYLANG_SCHEMATIC_ISSUE=str(issue))
         environment.update({f'MYLANG_SCHEMATIC_INPUT_{i}': str(project / path)
                             for i, path in enumerate(DOCUMENTS)})
