@@ -52,9 +52,10 @@ typedef struct myl_native_root {
  * free slot carries no count. The count lives in the header rather than in the
  * segment because precise tracing needs it for any payload address, including
  * one first reached through a root. Word 1 is the element descriptor. Two words
- * keep the payload aligned to `max_align_t` because a segment slot is. Arena
- * payloads carry no header: use the heap-aware metadata functions below for a
- * payload of unknown origin. */
+ * keep the payload aligned to `max_align_t` because a segment slot is. An arena
+ * payload carries the same two words, so every managed payload's region,
+ * element and count are one header load away; its mark word is described with
+ * MYL_NATIVE_OBJECT_ARENA below. */
 struct myl_native_object {
     uintptr_t mark;
     const myl_native_type *element;
@@ -65,6 +66,27 @@ enum { MYL_NATIVE_OBJECT_MARKED = 1, MYL_NATIVE_OBJECT_IMMORTAL = 2,
 /* The mark word's sign bit, above any canonical address and above the element
  * count. A free slot's word is `link | MYL_NATIVE_OBJECT_FREE`. */
 #define MYL_NATIVE_OBJECT_FREE (((uintptr_t)1) << (sizeof(uintptr_t) * 8 - 1))
+/* The mark word of an arena allocation: this flag, the owning arena depth in
+ * the bits from MYL_NATIVE_ARENA_REGION_SHIFT up to the flag, and the element
+ * count between the two flag bits and the depth. The collector never sets the
+ * mark or immortal bit on one, and a tracing-heap count is kept below the flag,
+ * so the flag alone tells an arena payload from every other managed payload. */
+#define MYL_NATIVE_OBJECT_ARENA (((uintptr_t)1) << 62)
+#define MYL_NATIVE_ARENA_REGION_SHIFT 40
+/* Largest element count a tracing-heap mark word holds below the arena flag. */
+#define MYL_NATIVE_OBJECT_COUNT_MAX ((size_t)((MYL_NATIVE_OBJECT_ARENA >> MYL_NATIVE_OBJECT_COUNT_SHIFT) - 1))
+/* Largest element count and arena depth an arena mark word holds. The depth
+ * bound is far beyond any nesting a native stack can reach. */
+#define MYL_NATIVE_ARENA_COUNT_MAX ((((size_t)1) << (MYL_NATIVE_ARENA_REGION_SHIFT - MYL_NATIVE_OBJECT_COUNT_SHIFT)) - 1)
+#define MYL_NATIVE_ARENA_REGION_MAX ((unsigned)((MYL_NATIVE_OBJECT_ARENA >> MYL_NATIVE_ARENA_REGION_SHIFT) - 1))
+/* Arena depth owning one non-null managed payload, read from its header: the
+ * recorded depth for an arena allocation, 0 for a tracing-heap object or a
+ * frozen literal. One load, whatever the number of arena chunks. */
+static inline unsigned myl_native_header_region(const void *payload) {
+    uintptr_t mark = ((const myl_native_object *)payload - 1)->mark;
+    if (!(mark & MYL_NATIVE_OBJECT_ARENA)) return 0;
+    return (unsigned)((mark >> MYL_NATIVE_ARENA_REGION_SHIFT) & MYL_NATIVE_ARENA_REGION_MAX);
+}
 /* The mark word a generated frozen literal block in the image initializes. Such
  * a block is never queued, so its element count is unreachable and only the
  * immortal flag is spelled. */

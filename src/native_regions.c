@@ -12,7 +12,7 @@ static void reach(const myl_native_heap *heap, const myl_native_type *type,
     if (type->kind == MYL_NATIVE_POINTER) {
         void *pointer;
         memcpy(&pointer, raw, sizeof pointer);
-        unsigned region = myl_native_object_region(heap, pointer);
+        unsigned region = pointer ? myl_native_header_region(pointer) : 0;
         if (region > *deepest) *deepest = region;
     } else if (type->kind == MYL_NATIVE_ARRAY) {
         for (size_t i = 0; i < type->count; ++i) reach(heap, type->fields[0].type, raw + i * type->stride, deepest);
@@ -35,7 +35,11 @@ unsigned myl_native_region_reach(const myl_native_heap *heap,
 int myl_native_region_check(myl_native_heap *heap, const void *container,
                             const myl_native_type *type, const void *value) {
     if (!heap->region_depth) return 1;
-    return myl_native_region_reach(heap, type, value) <= myl_native_object_region(heap, container);
+    /* No live object is younger than the innermost open arena, so a container
+     * that already lives there accepts every value without walking it. */
+    unsigned owner = container ? myl_native_header_region(container) : 0;
+    if (owner >= heap->region_depth) return 1;
+    return myl_native_region_reach(heap, type, value) <= owner;
 }
 int myl_native_region_retains(myl_native_heap *heap, const myl_native_type *type, const void *value) {
     if (!heap->region_depth) return 0;

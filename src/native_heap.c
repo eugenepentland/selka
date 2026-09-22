@@ -61,16 +61,19 @@ int myl_native_budget_guard(size_t budget) {
     ceiling.rlim_cur = wanted;
     return setrlimit(RLIMIT_AS, &ceiling) == 0;
 }
+/* Every managed payload — tracing-heap, arena or frozen literal — sits behind
+ * a two-word header, so these read it directly and need no heap state. */
 unsigned myl_native_object_region(const myl_native_heap *heap, const void *payload) {
-    return payload ? myl_native_arena_region(heap, payload) : 0;
+    (void)heap;
+    return payload ? myl_native_header_region(payload) : 0;
 }
 const myl_native_type *myl_native_object_element(const myl_native_heap *heap, const void *payload) {
-    if (!payload) return NULL;
-    if (myl_native_arena_region(heap, payload)) return myl_native_arena_element(heap, payload);
-    return ((const myl_native_object *)payload - 1)->element;
+    (void)heap;
+    return payload ? ((const myl_native_object *)payload - 1)->element : NULL;
 }
 int myl_native_object_immortal(const myl_native_heap *heap, const void *payload) {
-    if (!payload || myl_native_arena_region(heap, payload)) return 0;
+    (void)heap;
+    if (!payload) return 0;
     return (((const myl_native_object *)payload - 1)->mark & MYL_NATIVE_OBJECT_IMMORTAL) != 0;
 }
 /* Element count recovered from the mark word's high bits. Never called for a
@@ -183,7 +186,8 @@ static int worklist_push(myl_native_heap *heap, myl_native_object *object) {
     return 1;
 }
 int myl_native_region_begin(myl_native_heap *heap) {
-    if (heap->region_depth == UINT_MAX) return 0;
+    /* Each arena allocation records its depth in its header, which bounds it. */
+    if (heap->region_depth >= MYL_NATIVE_ARENA_REGION_MAX) return 0;
     heap->region_depth++;
     heap->arena.scopes++;
     return 1;
@@ -196,13 +200,12 @@ void myl_native_region_end(myl_native_heap *heap) {
 static void trace(myl_native_heap *, const myl_native_type *, const void *);
 static void mark(myl_native_heap *heap, void *payload) {
     if (!payload) return;
-    /* Region storage is retained wholesale. Its outgoing GC edges are scanned
-     * once separately, so arena cycles never enter the collector's work list. */
-    if (myl_native_arena_region(heap, payload)) return;
     myl_native_object *object = (myl_native_object *)payload - 1;
     /* Immortal payloads live in the image, not the heap: they can never be
-     * collected, so re-tracing one would only queue static storage. */
-    if (object->mark & (MYL_NATIVE_OBJECT_MARKED | MYL_NATIVE_OBJECT_IMMORTAL)) return;
+     * collected, so re-tracing one would only queue static storage. Region
+     * storage is retained wholesale; its outgoing GC edges are scanned once
+     * separately, so arena cycles never enter the collector's work list. */
+    if (object->mark & (MYL_NATIVE_OBJECT_MARKED | MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_ARENA)) return;
     if (!worklist_push(heap, object)) { heap->scratch_failed = 1; return; }
     object->mark |= MYL_NATIVE_OBJECT_MARKED;
 }
@@ -360,12 +363,11 @@ static int opaque_elements(const myl_native_type *element) {
 }
 void *myl_native_heap_extend(myl_native_heap *heap, void *payload, size_t count) {
     if (!payload) return NULL;
-    if (myl_native_arena_region(heap, payload)) return NULL;
     myl_native_object *object = (myl_native_object *)payload - 1;
-    if (object->mark & MYL_NATIVE_OBJECT_IMMORTAL) return NULL;
+    if (object->mark & (MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_ARENA)) return NULL;
     const myl_native_type *element = object->element;
     if (!element || !element->size) return NULL;
-    if (count > (SIZE_MAX >> MYL_NATIVE_OBJECT_COUNT_SHIFT)) return NULL;
+    if (count > MYL_NATIVE_OBJECT_COUNT_MAX) return NULL;
     if (count > (SIZE_MAX - sizeof(myl_native_object)) / element->size) return NULL;
     /* The count and stride the ordinary allocation path would charge for the
      * same request, so a grown block is indistinguishable from a fresh one. */
@@ -410,9 +412,9 @@ void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *ele
     if (!element || !element->alignment || element->alignment > alignof(max_align_t)) return NULL;
     if ((element->alignment & (element->alignment - 1)) || element->size % element->alignment) return NULL;
     if (region > heap->region_depth) return NULL;
-    /* The mark word stores the count above two flag bits, so a count that cannot
-     * shift is refused rather than truncated. */
-    if (count > (SIZE_MAX >> MYL_NATIVE_OBJECT_COUNT_SHIFT)) return NULL;
+    /* The mark word stores the count above two flag bits and below the arena
+     * flag, so a count that cannot fit there is refused rather than truncated. */
+    if (count > MYL_NATIVE_OBJECT_COUNT_MAX) return NULL;
     if (element->size && count > (SIZE_MAX - sizeof(myl_native_object)) / element->size) return NULL;
     if (region) return myl_native_arena_alloc(heap, element, count, region);
     size_t stride = round_stride(sizeof(myl_native_object) + count * element->size);
@@ -459,9 +461,8 @@ void myl_native_heap_destroy(myl_native_heap *heap) {
 
 void myl_native_heap_release(myl_native_heap *heap, void *payload) {
     if (!payload) return;
-    if (myl_native_arena_region(heap, payload)) return;
     myl_native_object *object = (myl_native_object *)payload - 1;
-    if (object->mark & MYL_NATIVE_OBJECT_IMMORTAL) return;
+    if (object->mark & (MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_ARENA)) return;
     /* Release is rare (owned storage, not the tracing path), so the containing
      * segment is found by walking the list rather than by an address map. */
     myl_native_segment **link = &heap->segments;

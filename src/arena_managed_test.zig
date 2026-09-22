@@ -590,3 +590,55 @@ test "ARENA-MANAGED-10 a chunk reused after an escape copy keeps the escaped val
     const stressed = try run(source, true);
     try t.expectEqual(@as(i64, 4025), stressed.value);
 }
+
+// spec-case: ARENA-MANAGED-11
+test "ARENA-MANAGED-11 the header barrier traps a younger store after the arena spans many chunks" {
+    const fill =
+        \\def stash(outer: mut list[list[int]], inner: list[int]) -> None:
+        \\    outer.append(inner)
+        \\
+        \\def fill(count: int) -> list[list[int]]:
+        \\    rows: list[list[int]] = []
+        \\    for index in range(count):
+        \\        rows.append([index])
+        \\    return rows
+        \\
+    ;
+    // Thousands of small lists put the outer arena's container and the value
+    // stored into it in different chunks; each depth comes from its header.
+    const into_older_arena = try run(fill ++
+        \\def main() -> int:
+        \\    kept = 0
+        \\    with arena():
+        \\        keeper = fill(3000)
+        \\        with arena():
+        \\            stash(mut keeper, [1])
+        \\        kept = len(keeper)
+        \\    return kept
+    , false);
+    try t.expectEqualStrings("R_ARENA_ESCAPE", into_older_arena.trap.code);
+    const into_collected = try run(fill ++
+        \\def main() -> int:
+        \\    keeper: list[list[int]] = []
+        \\    with arena():
+        \\        rows = fill(3000)
+        \\        stash(mut keeper, rows[2999])
+        \\    return len(keeper)
+    , false);
+    try t.expectEqualStrings("R_ARENA_ESCAPE", into_collected.trap.code);
+    // At the same scale an arena container accepts its own arena's values, and
+    // a younger container accepts older ones.
+    try t.expectEqual(@as(i64, 3004), try value(fill ++
+        \\def main() -> int:
+        \\    kept = 0
+        \\    with arena():
+        \\        keeper = fill(3000)
+        \\        stash(mut keeper, [7])
+        \\        with arena():
+        \\            younger = fill(2)
+        \\            stash(mut younger, keeper[2999])
+        \\            kept = len(younger)
+        \\        kept = kept + len(keeper)
+        \\    return kept
+    ));
+}
