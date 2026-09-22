@@ -32,6 +32,12 @@ per primitive with a matched kernel suite, and ranks what closes it.
 [The performance roadmap](performance-roadmap.md) turns that ranking into the
 ordered list of changes to make next, each with its measured price and its
 acceptance test.
+The [22 September 2026 schematic audit](audits/schematic-parity-gap-2026-09-22.md)
+measures the schematic SVG tool against its byte-identical Zig and Rust ports
+phase by phase: the default build is 1.84× Zig, the shipped runner's QBE plus
+step-accounting policy 5.8×, stripping every check and the frame protocol still
+leaves 1.64×, and on the guest's own work the gap is 4.3× — aggregate copies,
+container-header reloads, byte-granular I/O and the checked append path, ranked.
 
 ## What is fast without trying
 

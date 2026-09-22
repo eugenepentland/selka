@@ -1,0 +1,408 @@
+{
+ "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/arms/gc-lto",
+ "runs": 4000,
+ "samples": 1384,
+ "outside_main_executable": 430,
+ "percent_outside": 31.069364161849713,
+ "unmapped_inside": 1,
+ "overflow": 0,
+ "functions": [
+  {
+   "name": "io::flush",
+   "samples": 136,
+   "percent": 9.826589595375722
+  },
+  {
+   "name": "sexpr::at",
+   "samples": 133,
+   "percent": 9.609826589595375
+  },
+  {
+   "name": "text::write",
+   "samples": 101,
+   "percent": 7.297687861271676
+  },
+  {
+   "name": "sexpr::form",
+   "samples": 96,
+   "percent": 6.936416184971098
+  },
+  {
+   "name": "text::escaped",
+   "samples": 86,
+   "percent": 6.213872832369942
+  },
+  {
+   "name": "text::decimal",
+   "samples": 75,
+   "percent": 5.41907514450867
+  },
+  {
+   "name": "svg::passive",
+   "samples": 57,
+   "percent": 4.118497109826589
+  },
+  {
+   "name": "layout_routes::build",
+   "samples": 53,
+   "percent": 3.8294797687861273
+  },
+  {
+   "name": "circuit::label",
+   "samples": 42,
+   "percent": 3.0346820809248554
+  },
+  {
+   "name": "draw::line",
+   "samples": 26,
+   "percent": 1.8786127167630058
+  },
+  {
+   "name": "qbe_host_invoke",
+   "samples": 19,
+   "percent": 1.3728323699421965
+  },
+  {
+   "name": "circuit::pinForm",
+   "samples": 15,
+   "percent": 1.083815028901734
+  },
+  {
+   "name": "buffer_ready_rooted",
+   "samples": 13,
+   "percent": 0.9393063583815029
+  },
+  {
+   "name": "layout::partPin",
+   "samples": 12,
+   "percent": 0.8670520231213873
+  },
+  {
+   "name": "svg::pinStart",
+   "samples": 11,
+   "percent": 0.7947976878612717
+  },
+  {
+   "name": "svg::render",
+   "samples": 10,
+   "percent": 0.7225433526011561
+  },
+  {
+   "name": "svg::chip",
+   "samples": 8,
+   "percent": 0.5780346820809249
+  },
+  {
+   "name": "main",
+   "samples": 5,
+   "percent": 0.36127167630057805
+  },
+  {
+   "name": "svg::finishGroup",
+   "samples": 5,
+   "percent": 0.36127167630057805
+  },
+  {
+   "name": "layout::innerPin",
+   "samples": 5,
+   "percent": 0.36127167630057805
+  },
+  {
+   "name": "draw::labelStart",
+   "samples": 5,
+   "percent": 0.36127167630057805
+  },
+  {
+   "name": "layout_routes::blocked",
+   "samples": 4,
+   "percent": 0.28901734104046245
+  },
+  {
+   "name": "svg::displayRef",
+   "samples": 4,
+   "percent": 0.28901734104046245
+  },
+  {
+   "name": "svg::instanceStart",
+   "samples": 4,
+   "percent": 0.28901734104046245
+  },
+  {
+   "name": "layout::depth",
+   "samples": 3,
+   "percent": 0.21676300578034682
+  },
+  {
+   "name": "draw::labelEnd",
+   "samples": 3,
+   "percent": 0.21676300578034682
+  },
+  {
+   "name": "ports::equal",
+   "samples": 3,
+   "percent": 0.21676300578034682
+  },
+  {
+   "name": "circuit::normalize",
+   "samples": 3,
+   "percent": 0.21676300578034682
+  },
+  {
+   "name": "write_block_packed",
+   "samples": 3,
+   "percent": 0.21676300578034682
+  },
+  {
+   "name": "svg::ports",
+   "samples": 2,
+   "percent": 0.14450867052023122
+  },
+  {
+   "name": "myl_native_heap_alloc_at",
+   "samples": 2,
+   "percent": 0.14450867052023122
+  },
+  {
+   "name": "myl_qbe_on_stack",
+   "samples": 2,
+   "percent": 0.14450867052023122
+  },
+  {
+   "name": "draw::label",
+   "samples": 1,
+   "percent": 0.07225433526011561
+  },
+  {
+   "name": "layout::bridge",
+   "samples": 1,
+   "percent": 0.07225433526011561
+  },
+  {
+   "name": "layout::nearest",
+   "samples": 1,
+   "percent": 0.07225433526011561
+  },
+  {
+   "name": "svg::portName",
+   "samples": 1,
+   "percent": 0.07225433526011561
+  },
+  {
+   "name": "layout::groundBranch",
+   "samples": 1,
+   "percent": 0.07225433526011561
+  },
+  {
+   "name": "layout::pinGroup",
+   "samples": 1,
+   "percent": 0.07225433526011561
+  },
+  {
+   "name": "layout::collectRows",
+   "samples": 1,
+   "percent": 0.07225433526011561
+  }
+ ],
+ "top_pcs": [
+  {
+   "address": "0x10b280a",
+   "samples": 83,
+   "percent": 5.997109826589595
+  },
+  {
+   "address": "0x107c488",
+   "samples": 51,
+   "percent": 3.684971098265896
+  },
+  {
+   "address": "0x10857dc",
+   "samples": 40,
+   "percent": 2.8901734104046244
+  },
+  {
+   "address": "0x107c46a",
+   "samples": 31,
+   "percent": 2.239884393063584
+  },
+  {
+   "address": "0x10b280f",
+   "samples": 26,
+   "percent": 1.8786127167630058
+  },
+  {
+   "address": "0x107c483",
+   "samples": 16,
+   "percent": 1.1560693641618498
+  },
+  {
+   "address": "0x10857e2",
+   "samples": 12,
+   "percent": 0.8670520231213873
+  },
+  {
+   "address": "0x107f425",
+   "samples": 11,
+   "percent": 0.7947976878612717
+  },
+  {
+   "address": "0x10bcc98",
+   "samples": 10,
+   "percent": 0.7225433526011561
+  },
+  {
+   "address": "0x107c46d",
+   "samples": 9,
+   "percent": 0.6502890173410405
+  },
+  {
+   "address": "0x107f563",
+   "samples": 9,
+   "percent": 0.6502890173410405
+  },
+  {
+   "address": "0x1085441",
+   "samples": 8,
+   "percent": 0.5780346820809249
+  },
+  {
+   "address": "0x10858f3",
+   "samples": 8,
+   "percent": 0.5780346820809249
+  },
+  {
+   "address": "0x10857e8",
+   "samples": 8,
+   "percent": 0.5780346820809249
+  },
+  {
+   "address": "0x10855ab",
+   "samples": 8,
+   "percent": 0.5780346820809249
+  },
+  {
+   "address": "0x107c48b",
+   "samples": 8,
+   "percent": 0.5780346820809249
+  },
+  {
+   "address": "0x10b3518",
+   "samples": 7,
+   "percent": 0.5057803468208093
+  },
+  {
+   "address": "0x107f5c3",
+   "samples": 7,
+   "percent": 0.5057803468208093
+  },
+  {
+   "address": "0x108543d",
+   "samples": 6,
+   "percent": 0.43352601156069365
+  },
+  {
+   "address": "0x108558e",
+   "samples": 6,
+   "percent": 0.43352601156069365
+  },
+  {
+   "address": "0x108e37b",
+   "samples": 6,
+   "percent": 0.43352601156069365
+  },
+  {
+   "address": "0x10bcca8",
+   "samples": 6,
+   "percent": 0.43352601156069365
+  },
+  {
+   "address": "0x10d9680",
+   "samples": 5,
+   "percent": 0.36127167630057805
+  },
+  {
+   "address": "0x1089740",
+   "samples": 5,
+   "percent": 0.36127167630057805
+  },
+  {
+   "address": "0x108dccf",
+   "samples": 5,
+   "percent": 0.36127167630057805
+  },
+  {
+   "address": "0x107f598",
+   "samples": 5,
+   "percent": 0.36127167630057805
+  },
+  {
+   "address": "0x10b2720",
+   "samples": 4,
+   "percent": 0.28901734104046245
+  },
+  {
+   "address": "0x1080436",
+   "samples": 4,
+   "percent": 0.28901734104046245
+  },
+  {
+   "address": "0x107f98f",
+   "samples": 4,
+   "percent": 0.28901734104046245
+  },
+  {
+   "address": "0x107f406",
+   "samples": 4,
+   "percent": 0.28901734104046245
+  },
+  {
+   "address": "0x10803c0",
+   "samples": 4,
+   "percent": 0.28901734104046245
+  },
+  {
+   "address": "0x10855de",
+   "samples": 4,
+   "percent": 0.28901734104046245
+  },
+  {
+   "address": "0x107f403",
+   "samples": 4,
+   "percent": 0.28901734104046245
+  },
+  {
+   "address": "0x1085710",
+   "samples": 4,
+   "percent": 0.28901734104046245
+  },
+  {
+   "address": "0x10bcca3",
+   "samples": 4,
+   "percent": 0.28901734104046245
+  },
+  {
+   "address": "0x1072e67",
+   "samples": 4,
+   "percent": 0.28901734104046245
+  },
+  {
+   "address": "0x1085974",
+   "samples": 4,
+   "percent": 0.28901734104046245
+  },
+  {
+   "address": "0x1080588",
+   "samples": 4,
+   "percent": 0.28901734104046245
+  },
+  {
+   "address": "0x10b27bc",
+   "samples": 3,
+   "percent": 0.21676300578034682
+  },
+  {
+   "address": "0x1085428",
+   "samples": 3,
+   "percent": 0.21676300578034682
+  }
+ ]
+}

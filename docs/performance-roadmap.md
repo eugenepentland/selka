@@ -52,6 +52,18 @@ Zig ReleaseSafe, the like-for-like comparator (checks on), runs at about 1.1×
 ReleaseFast on these workloads, so "≤ 1.2× ReleaseFast" is "≈ parity with
 ReleaseSafe".
 
+**Re-measured 2026-09-22 on the schematic render** in
+[the schematic audit](audits/schematic-parity-gap-2026-09-22.md): the default
+build is **1.84× Zig / 1.60× Rust** (2.40 ms against 1.31 / 1.50), but the
+shipped `schematic-svg` runner pins QBE with `--qbe PATH` and asks for step
+accounting, so the tool itself runs at **5.8×**; stripping every check and the
+frame protocol by manifest rewrite reaches only 1.64×, and per phase the guest's
+own work is 4.3× Zig (model construction 7.2×, SVG emission 5.7×, parsing 5.0×,
+placement 2.5×, routing 1.4×). The remaining levers are item 6's in-place
+aggregate reads and return-slot forwarding, alias metadata so container headers
+stay in registers, `bytes`-carrying bulk host I/O, and an output-emission fast
+path; item 8's step-accounting cost is 4.75 of the bounded build's 7.15 ms.
+
 ## The order
 
 The items are ranked by measured price divided by the size of the change, with

@@ -1,0 +1,1680 @@
+{
+ "cpu": 6,
+ "rounds": 31,
+ "warmups": 3,
+ "seed": 20260922,
+ "reference": "zig-o3",
+ "arms": {
+  "zig-o3": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/zig-o3",
+   "kind": "native"
+  },
+  "rust-o3": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/rust-o3",
+   "kind": "native"
+  },
+  "rust-o3-native": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/bench/rust-o3-native",
+   "kind": "native"
+  },
+  "go-fast": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/go-fast",
+   "kind": "native"
+  },
+  "gc-lto": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/arms/gc-lto",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::write_block,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  },
+  "arena-lto": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/arms/arena-lto",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::write_block,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  },
+  "qbe": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/arms/qbe",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::write_block,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  },
+  "gc-lto-bounded": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/arms/gc-lto-bounded",
+   "kind": "mylang",
+   "bounded": true,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::write_block,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  },
+  "qbe-bounded": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/arms/qbe-bounded",
+   "kind": "mylang",
+   "bounded": true,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::write_block,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  },
+  "prod-default": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/prod/prod-default",
+   "kind": "mylang",
+   "bounded": true,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::write_block,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  }
+ },
+ "hashes": {
+  "fixture": {
+   "zig-o3": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "rust-o3": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "rust-o3-native": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "go-fast": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "gc-lto": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "arena-lto": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "qbe": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "gc-lto-bounded": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "qbe-bounded": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "prod-default": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388"
+  },
+  "changed-net": {
+   "zig-o3": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "rust-o3": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "rust-o3-native": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "go-fast": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "gc-lto": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "arena-lto": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "qbe": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "gc-lto-bounded": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "qbe-bounded": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "prod-default": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90"
+  },
+  "changed-value": {
+   "zig-o3": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "rust-o3": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "rust-o3-native": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "go-fast": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "gc-lto": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "arena-lto": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "qbe": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "gc-lto-bounded": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "qbe-bounded": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "prod-default": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+  }
+ },
+ "summary": {
+  "fixture": {
+   "median_ms": {
+    "zig-o3": 1.304703,
+    "rust-o3": 1.503876,
+    "rust-o3-native": 1.449464,
+    "go-fast": 1.906032,
+    "gc-lto": 2.400732,
+    "arena-lto": 2.309334,
+    "qbe": 2.777235,
+    "gc-lto-bounded": 7.152384,
+    "qbe-bounded": 7.525808,
+    "prod-default": 7.573562
+   },
+   "p10_p90": {
+    "zig-o3": [
+     1.212334,
+     1.43369
+    ],
+    "rust-o3": [
+     1.384566,
+     1.630045
+    ],
+    "rust-o3-native": [
+     1.374637,
+     1.562316
+    ],
+    "go-fast": [
+     1.772638,
+     1.990326
+    ],
+    "gc-lto": [
+     2.30744,
+     2.505225
+    ],
+    "arena-lto": [
+     2.196306,
+     2.454354
+    ],
+    "qbe": [
+     2.653785,
+     2.912406
+    ],
+    "gc-lto-bounded": [
+     6.899117,
+     7.531057
+    ],
+    "qbe-bounded": [
+     7.286783,
+     7.988707
+    ],
+    "prod-default": [
+     7.246029,
+     7.851623
+    ]
+   },
+   "min_ms": {
+    "zig-o3": 1.203939,
+    "rust-o3": 1.290515,
+    "rust-o3-native": 1.244097,
+    "go-fast": 1.736779,
+    "gc-lto": 2.29304,
+    "arena-lto": 2.087343,
+    "qbe": 2.544237,
+    "gc-lto-bounded": 6.724282,
+    "qbe-bounded": 7.045834,
+    "prod-default": 7.194887
+   },
+   "ratio_to_zig-o3": {
+    "rust-o3": {
+     "ratio": 1.152657731299767,
+     "ci95": [
+      1.1142510345484133,
+      1.188448555915745
+     ]
+    },
+    "rust-o3-native": {
+     "ratio": 1.1109532207713173,
+     "ci95": [
+      1.0672127778788,
+      1.153646818664486
+     ]
+    },
+    "go-fast": {
+     "ratio": 1.4608933987275265,
+     "ci95": [
+      1.4180249224223447,
+      1.4822355601921535
+     ]
+    },
+    "gc-lto": {
+     "ratio": 1.8400601516207138,
+     "ci95": [
+      1.7848313435990928,
+      1.8835221201205437
+     ]
+    },
+    "arena-lto": {
+     "ratio": 1.7700074269776342,
+     "ci95": [
+      1.7061466009394977,
+      1.8061672482452544
+     ]
+    },
+    "qbe": {
+     "ratio": 2.1286338729963834,
+     "ci95": [
+      2.054337510700787,
+      2.180717204973344
+     ]
+    },
+    "gc-lto-bounded": {
+     "ratio": 5.482001650950446,
+     "ci95": [
+      5.344311991836662,
+      5.618298370538237
+     ]
+    },
+    "qbe-bounded": {
+     "ratio": 5.76821544826677,
+     "ci95": [
+      5.565837066762169,
+      5.990408184933456
+     ]
+    },
+    "prod-default": {
+     "ratio": 5.804816881696447,
+     "ci95": [
+      5.563891383448749,
+      5.95300231028273
+     ]
+    }
+   }
+  },
+  "changed-net": {
+   "median_ms": {
+    "zig-o3": 1.3076,
+    "rust-o3": 1.451332,
+    "rust-o3-native": 1.452207,
+    "go-fast": 1.923525,
+    "gc-lto": 2.428155,
+    "arena-lto": 2.304315,
+    "qbe": 2.76899,
+    "gc-lto-bounded": 7.125391,
+    "qbe-bounded": 7.361847,
+    "prod-default": 7.50024
+   },
+   "p10_p90": {
+    "zig-o3": [
+     1.202761,
+     1.43237
+    ],
+    "rust-o3": [
+     1.321345,
+     1.551136
+    ],
+    "rust-o3-native": [
+     1.279434,
+     1.575007
+    ],
+    "go-fast": [
+     1.825139,
+     2.015856
+    ],
+    "gc-lto": [
+     2.342793,
+     2.621737
+    ],
+    "arena-lto": [
+     2.207786,
+     2.393532
+    ],
+    "qbe": [
+     2.656586,
+     2.9459
+    ],
+    "gc-lto-bounded": [
+     6.909312,
+     7.399431
+    ],
+    "qbe-bounded": [
+     7.219874,
+     7.878808
+    ],
+    "prod-default": [
+     7.174056,
+     7.858546
+    ]
+   },
+   "min_ms": {
+    "zig-o3": 1.147567,
+    "rust-o3": 1.220506,
+    "rust-o3-native": 1.241832,
+    "go-fast": 1.634309,
+    "gc-lto": 2.232979,
+    "arena-lto": 2.099607,
+    "qbe": 2.6059,
+    "gc-lto-bounded": 6.674342,
+    "qbe-bounded": 7.099843,
+    "prod-default": 6.992682
+   },
+   "ratio_to_zig-o3": {
+    "rust-o3": {
+     "ratio": 1.1099204649739982,
+     "ci95": [
+      1.066302166664748,
+      1.1313610992769865
+     ]
+    },
+    "rust-o3-native": {
+     "ratio": 1.110589629856225,
+     "ci95": [
+      1.0804655836518344,
+      1.1386342941990286
+     ]
+    },
+    "go-fast": {
+     "ratio": 1.471034720097889,
+     "ci95": [
+      1.4281315571863216,
+      1.5220591564318902
+     ]
+    },
+    "gc-lto": {
+     "ratio": 1.8569554909758332,
+     "ci95": [
+      1.813811577325217,
+      1.9120352564216458
+     ]
+    },
+    "arena-lto": {
+     "ratio": 1.7622476292444171,
+     "ci95": [
+      1.7080717640301382,
+      1.7883359072554506
+     ]
+    },
+    "qbe": {
+     "ratio": 2.117612419700214,
+     "ci95": [
+      2.0617592623877044,
+      2.1610187020332057
+     ]
+    },
+    "gc-lto-bounded": {
+     "ratio": 5.4492130620985,
+     "ci95": [
+      5.307116955978904,
+      5.557213425542709
+     ]
+    },
+    "qbe-bounded": {
+     "ratio": 5.630045120832058,
+     "ci95": [
+      5.487357202118833,
+      5.791893576036259
+     ]
+    },
+    "prod-default": {
+     "ratio": 5.735882532884673,
+     "ci95": [
+      5.573730821066699,
+      5.860629257503875
+     ]
+    }
+   }
+  },
+  "changed-value": {
+   "median_ms": {
+    "zig-o3": 1.34431,
+    "rust-o3": 1.474226,
+    "rust-o3-native": 1.484673,
+    "go-fast": 1.918667,
+    "gc-lto": 2.443241,
+    "arena-lto": 2.278703,
+    "qbe": 2.750351,
+    "gc-lto-bounded": 7.089884,
+    "qbe-bounded": 7.48164,
+    "prod-default": 7.519133
+   },
+   "p10_p90": {
+    "zig-o3": [
+     1.186982,
+     1.407872
+    ],
+    "rust-o3": [
+     1.315917,
+     1.584563
+    ],
+    "rust-o3-native": [
+     1.35333,
+     1.593812
+    ],
+    "go-fast": [
+     1.791719,
+     2.07164
+    ],
+    "gc-lto": [
+     2.365237,
+     2.763025
+    ],
+    "arena-lto": [
+     2.1952,
+     2.39175
+    ],
+    "qbe": [
+     2.651054,
+     2.8915
+    ],
+    "gc-lto-bounded": [
+     6.795055,
+     7.549484
+    ],
+    "qbe-bounded": [
+     7.296222,
+     7.817324
+    ],
+    "prod-default": [
+     7.202791,
+     7.850761
+    ]
+   },
+   "min_ms": {
+    "zig-o3": 1.024768,
+    "rust-o3": 1.197848,
+    "rust-o3-native": 1.299074,
+    "go-fast": 1.694802,
+    "gc-lto": 2.322536,
+    "arena-lto": 2.023417,
+    "qbe": 2.613034,
+    "gc-lto-bounded": 6.729196,
+    "qbe-bounded": 7.153622,
+    "prod-default": 7.086909
+   },
+   "ratio_to_zig-o3": {
+    "rust-o3": {
+     "ratio": 1.096641399677158,
+     "ci95": [
+      1.0674074713344899,
+      1.1667775028257423
+     ]
+    },
+    "rust-o3-native": {
+     "ratio": 1.1044126726722259,
+     "ci95": [
+      1.0635170715697544,
+      1.162111236360034
+     ]
+    },
+    "go-fast": {
+     "ratio": 1.4272504109915125,
+     "ci95": [
+      1.3885454350397852,
+      1.5176283021374715
+     ]
+    },
+    "gc-lto": {
+     "ratio": 1.817468441058982,
+     "ci95": [
+      1.7703249670135273,
+      1.9217211719654692
+     ]
+    },
+    "arena-lto": {
+     "ratio": 1.6950725651077507,
+     "ci95": [
+      1.6630064565755702,
+      1.7895767730478214
+     ]
+    },
+    "qbe": {
+     "ratio": 2.0459202118558966,
+     "ci95": [
+      1.9894977228423445,
+      2.178029067221586
+     ]
+    },
+    "gc-lto-bounded": {
+     "ratio": 5.273994837500279,
+     "ci95": [
+      5.105216268018036,
+      5.609074407024435
+     ]
+    },
+    "qbe-bounded": {
+     "ratio": 5.5654127396210695,
+     "ci95": [
+      5.448249829887416,
+      5.89162108486012
+     ]
+    },
+    "prod-default": {
+     "ratio": 5.59330288400741,
+     "ci95": [
+      5.433251700239747,
+      5.918698282554916
+     ]
+    }
+   }
+  }
+ },
+ "rows": [
+  {
+   "fixture": {
+    "gc-lto-bounded": 7.14384,
+    "arena-lto": 3.319924,
+    "zig-o3": 1.212334,
+    "go-fast": 1.842112,
+    "rust-o3": 1.369257,
+    "gc-lto": 2.30744,
+    "prod-default": 7.380997,
+    "rust-o3-native": 1.340063,
+    "qbe-bounded": 7.322086,
+    "qbe": 2.653785
+   },
+   "changed-net": {
+    "go-fast": 1.997522,
+    "prod-default": 7.551379,
+    "gc-lto": 2.373881,
+    "rust-o3": 1.451332,
+    "gc-lto-bounded": 6.920139,
+    "rust-o3-native": 1.412822,
+    "zig-o3": 1.202761,
+    "qbe-bounded": 7.361847,
+    "qbe": 2.620022,
+    "arena-lto": 2.250139
+   },
+   "changed-value": {
+    "qbe-bounded": 7.373697,
+    "prod-default": 7.430689,
+    "gc-lto-bounded": 6.927998,
+    "qbe": 2.686296,
+    "gc-lto": 2.322536,
+    "arena-lto": 2.211735,
+    "rust-o3-native": 1.369852,
+    "rust-o3": 1.197848,
+    "go-fast": 1.825451,
+    "zig-o3": 1.186982
+   }
+  },
+  {
+   "fixture": {
+    "arena-lto": 2.180939,
+    "gc-lto": 2.499498,
+    "go-fast": 2.021501,
+    "rust-o3-native": 1.392925,
+    "zig-o3": 1.352838,
+    "qbe": 2.724474,
+    "prod-default": 7.730078,
+    "rust-o3": 1.507048,
+    "gc-lto-bounded": 7.448773,
+    "qbe-bounded": 7.475617
+   },
+   "changed-net": {
+    "gc-lto-bounded": 6.96164,
+    "qbe": 2.643072,
+    "qbe-bounded": 7.479215,
+    "prod-default": 7.319375,
+    "rust-o3-native": 1.538143,
+    "rust-o3": 1.579846,
+    "arena-lto": 2.278275,
+    "gc-lto": 2.625778,
+    "zig-o3": 1.287445,
+    "go-fast": 1.926843
+   },
+   "changed-value": {
+    "zig-o3": 1.269878,
+    "rust-o3": 1.440734,
+    "prod-default": 7.519133,
+    "gc-lto": 2.451361,
+    "gc-lto-bounded": 6.729196,
+    "rust-o3-native": 1.604286,
+    "qbe": 2.619337,
+    "qbe-bounded": 7.637984,
+    "arena-lto": 2.266859,
+    "go-fast": 1.957132
+   }
+  },
+  {
+   "fixture": {
+    "arena-lto": 2.326385,
+    "rust-o3-native": 1.505669,
+    "prod-default": 7.259566,
+    "gc-lto-bounded": 7.345893,
+    "rust-o3": 1.544659,
+    "zig-o3": 1.373482,
+    "go-fast": 1.926736,
+    "qbe": 2.670699,
+    "qbe-bounded": 7.875852,
+    "gc-lto": 2.407753
+   },
+   "changed-net": {
+    "qbe-bounded": 7.1148,
+    "rust-o3": 1.525243,
+    "zig-o3": 1.246374,
+    "go-fast": 1.911255,
+    "prod-default": 7.35222,
+    "gc-lto-bounded": 7.140287,
+    "qbe": 2.9459,
+    "rust-o3-native": 1.58533,
+    "gc-lto": 2.460578,
+    "arena-lto": 2.270231
+   },
+   "changed-value": {
+    "zig-o3": 1.386343,
+    "go-fast": 1.861041,
+    "rust-o3": 1.596452,
+    "rust-o3-native": 1.593812,
+    "gc-lto-bounded": 7.02228,
+    "gc-lto": 2.763025,
+    "arena-lto": 2.236018,
+    "prod-default": 7.383387,
+    "qbe": 2.750351,
+    "qbe-bounded": 7.571884
+   }
+  },
+  {
+   "fixture": {
+    "arena-lto": 2.196306,
+    "gc-lto-bounded": 7.032378,
+    "prod-default": 7.422309,
+    "go-fast": 1.962433,
+    "rust-o3": 1.375158,
+    "gc-lto": 2.505225,
+    "zig-o3": 1.355201,
+    "qbe": 2.914446,
+    "rust-o3-native": 1.562316,
+    "qbe-bounded": 7.360778
+   },
+   "changed-net": {
+    "qbe-bounded": 7.354039,
+    "zig-o3": 1.302506,
+    "prod-default": 7.448422,
+    "qbe": 2.696027,
+    "gc-lto": 2.411152,
+    "gc-lto-bounded": 6.933012,
+    "rust-o3": 1.324647,
+    "go-fast": 1.901638,
+    "rust-o3-native": 1.392672,
+    "arena-lto": 2.317124
+   },
+   "changed-value": {
+    "gc-lto": 2.378395,
+    "arena-lto": 2.261311,
+    "rust-o3": 1.315917,
+    "qbe-bounded": 7.507251,
+    "qbe": 2.781622,
+    "go-fast": 1.937187,
+    "zig-o3": 1.238105,
+    "gc-lto-bounded": 7.134838,
+    "rust-o3-native": 1.35333,
+    "prod-default": 7.341771
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.299754,
+    "arena-lto": 2.293996,
+    "gc-lto": 2.367707,
+    "prod-default": 7.4195,
+    "gc-lto-bounded": 7.693681,
+    "qbe-bounded": 7.85089,
+    "qbe": 2.818377,
+    "rust-o3-native": 1.390416,
+    "go-fast": 1.885211,
+    "rust-o3": 1.630045
+   },
+   "changed-net": {
+    "zig-o3": 1.342487,
+    "rust-o3": 1.506194,
+    "qbe": 2.763692,
+    "gc-lto-bounded": 7.374722,
+    "prod-default": 7.681985,
+    "go-fast": 2.005258,
+    "qbe-bounded": 7.456686,
+    "rust-o3-native": 1.468118,
+    "gc-lto": 2.32558,
+    "arena-lto": 2.099607
+   },
+   "changed-value": {
+    "qbe-bounded": 7.48164,
+    "zig-o3": 1.571014,
+    "rust-o3-native": 1.475578,
+    "prod-default": 7.508622,
+    "arena-lto": 2.502354,
+    "gc-lto-bounded": 6.80729,
+    "go-fast": 1.694802,
+    "rust-o3": 1.395632,
+    "qbe": 2.641027,
+    "gc-lto": 2.38327
+   }
+  },
+  {
+   "fixture": {
+    "qbe": 2.590771,
+    "rust-o3-native": 1.730874,
+    "arena-lto": 2.289394,
+    "rust-o3": 1.529703,
+    "gc-lto-bounded": 6.945139,
+    "zig-o3": 1.310896,
+    "gc-lto": 2.401745,
+    "prod-default": 7.54608,
+    "qbe-bounded": 7.149542,
+    "go-fast": 2.021523
+   },
+   "changed-net": {
+    "prod-default": 7.162281,
+    "zig-o3": 1.295688,
+    "go-fast": 1.931507,
+    "gc-lto-bounded": 6.695376,
+    "qbe": 2.76899,
+    "gc-lto": 2.346069,
+    "rust-o3-native": 1.537976,
+    "arena-lto": 2.258685,
+    "rust-o3": 1.450949,
+    "qbe-bounded": 7.233393
+   },
+   "changed-value": {
+    "prod-default": 7.202791,
+    "qbe": 2.725126,
+    "gc-lto-bounded": 6.797159,
+    "rust-o3-native": 1.578052,
+    "zig-o3": 1.398085,
+    "gc-lto": 2.354247,
+    "rust-o3": 1.434728,
+    "qbe-bounded": 7.296222,
+    "arena-lto": 2.355915,
+    "go-fast": 1.877767
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3-native": 1.570344,
+    "prod-default": 7.200749,
+    "arena-lto": 2.269663,
+    "rust-o3": 1.47394,
+    "zig-o3": 1.460331,
+    "gc-lto-bounded": 7.806521,
+    "qbe-bounded": 7.397645,
+    "go-fast": 1.918358,
+    "qbe": 2.909582,
+    "gc-lto": 2.38099
+   },
+   "changed-net": {
+    "zig-o3": 1.432909,
+    "qbe": 2.67985,
+    "gc-lto": 2.458824,
+    "arena-lto": 2.304315,
+    "rust-o3": 1.462066,
+    "gc-lto-bounded": 7.261993,
+    "qbe-bounded": 7.354567,
+    "go-fast": 1.865182,
+    "rust-o3-native": 1.488306,
+    "prod-default": 7.642377
+   },
+   "changed-value": {
+    "qbe": 2.749458,
+    "rust-o3": 1.526009,
+    "gc-lto-bounded": 6.945607,
+    "gc-lto": 2.421778,
+    "rust-o3-native": 1.541635,
+    "zig-o3": 1.42044,
+    "arena-lto": 2.278703,
+    "prod-default": 7.086909,
+    "go-fast": 2.044188,
+    "qbe-bounded": 7.614304
+   }
+  },
+  {
+   "fixture": {
+    "qbe": 2.738693,
+    "zig-o3": 1.285082,
+    "go-fast": 1.873797,
+    "prod-default": 7.664452,
+    "arena-lto": 2.316402,
+    "rust-o3": 1.651522,
+    "qbe-bounded": 7.613141,
+    "gc-lto": 2.342692,
+    "gc-lto-bounded": 7.037106,
+    "rust-o3-native": 1.436487
+   },
+   "changed-net": {
+    "zig-o3": 1.338703,
+    "arena-lto": 2.304424,
+    "rust-o3": 1.456029,
+    "gc-lto": 2.636661,
+    "qbe": 2.905876,
+    "qbe-bounded": 7.308419,
+    "go-fast": 1.836959,
+    "gc-lto-bounded": 7.055558,
+    "prod-default": 7.697729,
+    "rust-o3-native": 1.491758
+   },
+   "changed-value": {
+    "go-fast": 1.956187,
+    "rust-o3": 1.520181,
+    "zig-o3": 1.259663,
+    "rust-o3-native": 1.44265,
+    "gc-lto-bounded": 7.82968,
+    "arena-lto": 2.381129,
+    "prod-default": 7.810473,
+    "qbe": 2.822901,
+    "qbe-bounded": 7.758152,
+    "gc-lto": 2.620408
+   }
+  },
+  {
+   "fixture": {
+    "prod-default": 7.665065,
+    "gc-lto": 2.394332,
+    "gc-lto-bounded": 6.987133,
+    "zig-o3": 1.334014,
+    "qbe-bounded": 7.398245,
+    "qbe": 2.921244,
+    "arena-lto": 2.258217,
+    "rust-o3": 1.498164,
+    "go-fast": 1.939124,
+    "rust-o3-native": 1.496446
+   },
+   "changed-net": {
+    "prod-default": 7.858546,
+    "zig-o3": 1.27031,
+    "gc-lto-bounded": 6.997017,
+    "go-fast": 1.963032,
+    "qbe-bounded": 7.272027,
+    "arena-lto": 2.314035,
+    "qbe": 2.745985,
+    "gc-lto": 2.405359,
+    "rust-o3-native": 1.452623,
+    "rust-o3": 1.583279
+   },
+   "changed-value": {
+    "rust-o3-native": 1.455817,
+    "prod-default": 7.328753,
+    "rust-o3": 1.584563,
+    "zig-o3": 1.367985,
+    "qbe-bounded": 7.40384,
+    "arena-lto": 2.3121,
+    "qbe": 2.728328,
+    "gc-lto-bounded": 7.199022,
+    "go-fast": 1.902902,
+    "gc-lto": 2.391749
+   }
+  },
+  {
+   "fixture": {
+    "gc-lto": 2.421355,
+    "go-fast": 1.916745,
+    "qbe-bounded": 7.425001,
+    "rust-o3-native": 1.415757,
+    "arena-lto": 2.340601,
+    "qbe": 2.769802,
+    "prod-default": 7.194887,
+    "rust-o3": 1.543429,
+    "zig-o3": 1.344548,
+    "gc-lto-bounded": 6.884027
+   },
+   "changed-net": {
+    "rust-o3-native": 1.352034,
+    "zig-o3": 1.24836,
+    "gc-lto-bounded": 6.909312,
+    "arena-lto": 2.334609,
+    "qbe-bounded": 7.459023,
+    "go-fast": 2.015856,
+    "qbe": 2.766794,
+    "gc-lto": 2.385321,
+    "rust-o3": 1.220506,
+    "prod-default": 6.992682
+   },
+   "changed-value": {
+    "rust-o3-native": 1.543579,
+    "arena-lto": 2.193555,
+    "qbe-bounded": 7.398197,
+    "rust-o3": 1.544376,
+    "gc-lto": 2.500891,
+    "prod-default": 7.273381,
+    "gc-lto-bounded": 6.795055,
+    "go-fast": 1.918667,
+    "zig-o3": 1.381986,
+    "qbe": 2.651284
+   }
+  },
+  {
+   "fixture": {
+    "qbe-bounded": 7.286783,
+    "zig-o3": 1.361758,
+    "arena-lto": 2.309334,
+    "qbe": 2.661838,
+    "go-fast": 1.912407,
+    "gc-lto": 2.3788,
+    "rust-o3": 1.59664,
+    "rust-o3-native": 1.374637,
+    "prod-default": 7.424006,
+    "gc-lto-bounded": 7.158633
+   },
+   "changed-net": {
+    "arena-lto": 2.263,
+    "prod-default": 7.130645,
+    "rust-o3": 1.389557,
+    "rust-o3-native": 1.520849,
+    "gc-lto-bounded": 6.841694,
+    "qbe-bounded": 7.127227,
+    "go-fast": 2.000554,
+    "zig-o3": 1.43237,
+    "qbe": 2.823063,
+    "gc-lto": 2.348111
+   },
+   "changed-value": {
+    "gc-lto": 2.400815,
+    "qbe": 2.613034,
+    "zig-o3": 1.34431,
+    "qbe-bounded": 7.153622,
+    "gc-lto-bounded": 6.754662,
+    "rust-o3": 1.564969,
+    "arena-lto": 2.204763,
+    "go-fast": 1.779801,
+    "prod-default": 7.645887,
+    "rust-o3-native": 1.624997
+   }
+  },
+  {
+   "fixture": {
+    "prod-default": 7.347847,
+    "gc-lto": 2.386914,
+    "qbe": 2.838507,
+    "rust-o3": 1.503876,
+    "zig-o3": 1.290218,
+    "rust-o3-native": 1.362414,
+    "qbe-bounded": 7.045834,
+    "gc-lto-bounded": 7.130151,
+    "go-fast": 1.888459,
+    "arena-lto": 2.152951
+   },
+   "changed-net": {
+    "go-fast": 1.983479,
+    "prod-default": 7.185228,
+    "qbe": 2.738233,
+    "zig-o3": 1.148831,
+    "rust-o3-native": 1.37236,
+    "qbe-bounded": 7.219874,
+    "arena-lto": 2.358475,
+    "gc-lto-bounded": 7.032131,
+    "gc-lto": 2.500176,
+    "rust-o3": 1.426828
+   },
+   "changed-value": {
+    "qbe": 2.70321,
+    "arena-lto": 2.274539,
+    "rust-o3": 1.582247,
+    "prod-default": 7.138858,
+    "rust-o3-native": 1.474712,
+    "gc-lto-bounded": 6.799975,
+    "qbe-bounded": 7.379585,
+    "go-fast": 2.130377,
+    "gc-lto": 2.442317,
+    "zig-o3": 1.249484
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.211409,
+    "arena-lto": 2.325234,
+    "gc-lto": 2.450174,
+    "prod-default": 7.634109,
+    "go-fast": 1.990326,
+    "qbe-bounded": 7.525862,
+    "rust-o3-native": 1.404886,
+    "qbe": 2.777235,
+    "gc-lto-bounded": 6.724282,
+    "rust-o3": 1.548681
+   },
+   "changed-net": {
+    "gc-lto-bounded": 6.997026,
+    "qbe": 2.839588,
+    "gc-lto": 2.35948,
+    "zig-o3": 1.319163,
+    "rust-o3-native": 1.483078,
+    "prod-default": 7.818802,
+    "rust-o3": 1.409616,
+    "qbe-bounded": 7.384482,
+    "arena-lto": 2.342485,
+    "go-fast": 1.975253
+   },
+   "changed-value": {
+    "gc-lto": 2.487398,
+    "rust-o3": 1.409177,
+    "arena-lto": 2.338092,
+    "gc-lto-bounded": 7.089884,
+    "qbe-bounded": 7.31999,
+    "rust-o3-native": 1.499207,
+    "zig-o3": 1.272017,
+    "prod-default": 7.503778,
+    "qbe": 2.716389,
+    "go-fast": 1.881356
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3-native": 1.443766,
+    "qbe": 2.78337,
+    "prod-default": 7.267083,
+    "gc-lto-bounded": 6.817531,
+    "rust-o3": 1.491723,
+    "zig-o3": 1.451666,
+    "gc-lto": 2.483927,
+    "arena-lto": 2.269646,
+    "go-fast": 1.872734,
+    "qbe-bounded": 7.446432
+   },
+   "changed-net": {
+    "arena-lto": 2.365896,
+    "qbe-bounded": 7.259493,
+    "prod-default": 7.211078,
+    "rust-o3-native": 1.594889,
+    "qbe": 2.689088,
+    "go-fast": 2.011805,
+    "rust-o3": 1.324955,
+    "zig-o3": 1.388147,
+    "gc-lto": 2.422298,
+    "gc-lto-bounded": 6.674342
+   },
+   "changed-value": {
+    "gc-lto": 2.430606,
+    "rust-o3-native": 1.437026,
+    "qbe-bounded": 7.209821,
+    "go-fast": 1.911042,
+    "prod-default": 7.10063,
+    "qbe": 2.653913,
+    "gc-lto-bounded": 6.768114,
+    "rust-o3": 1.474226,
+    "zig-o3": 1.403299,
+    "arena-lto": 2.29634
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 1.68816,
+    "prod-default": 7.246029,
+    "zig-o3": 1.300859,
+    "qbe-bounded": 7.318903,
+    "qbe": 2.836705,
+    "gc-lto": 2.386506,
+    "arena-lto": 2.226916,
+    "gc-lto-bounded": 7.152384,
+    "go-fast": 1.928097,
+    "rust-o3-native": 1.541558
+   },
+   "changed-net": {
+    "zig-o3": 1.389759,
+    "arena-lto": 2.33687,
+    "prod-default": 7.257466,
+    "qbe": 2.730545,
+    "qbe-bounded": 7.099843,
+    "rust-o3": 1.492349,
+    "gc-lto-bounded": 7.179425,
+    "go-fast": 1.91062,
+    "gc-lto": 2.621899,
+    "rust-o3-native": 1.499729
+   },
+   "changed-value": {
+    "gc-lto-bounded": 6.889733,
+    "qbe": 2.796819,
+    "prod-default": 7.456889,
+    "arena-lto": 2.246991,
+    "rust-o3": 1.452569,
+    "zig-o3": 1.357043,
+    "qbe-bounded": 7.241465,
+    "go-fast": 2.08068,
+    "gc-lto": 2.531864,
+    "rust-o3-native": 1.527513
+   }
+  },
+  {
+   "fixture": {
+    "go-fast": 1.905986,
+    "gc-lto": 2.296984,
+    "rust-o3-native": 1.499021,
+    "gc-lto-bounded": 6.899117,
+    "rust-o3": 1.496285,
+    "prod-default": 7.406603,
+    "arena-lto": 2.359435,
+    "zig-o3": 1.311927,
+    "qbe-bounded": 7.345293,
+    "qbe": 2.740515
+   },
+   "changed-net": {
+    "prod-default": 7.174056,
+    "go-fast": 1.911844,
+    "zig-o3": 1.373929,
+    "gc-lto-bounded": 7.017935,
+    "qbe-bounded": 7.222765,
+    "arena-lto": 2.317179,
+    "rust-o3": 1.421674,
+    "qbe": 2.783493,
+    "rust-o3-native": 1.452207,
+    "gc-lto": 2.428155
+   },
+   "changed-value": {
+    "gc-lto": 2.43067,
+    "qbe": 2.685617,
+    "arena-lto": 2.219841,
+    "gc-lto-bounded": 7.549484,
+    "rust-o3": 1.748302,
+    "rust-o3-native": 1.410669,
+    "prod-default": 7.580883,
+    "zig-o3": 1.325242,
+    "qbe-bounded": 7.450311,
+    "go-fast": 2.059735
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 1.384566,
+    "go-fast": 1.817054,
+    "qbe": 2.714959,
+    "qbe-bounded": 8.125873,
+    "gc-lto": 2.306458,
+    "zig-o3": 1.208293,
+    "arena-lto": 2.087343,
+    "rust-o3-native": 1.482494,
+    "gc-lto-bounded": 6.917577,
+    "prod-default": 7.278393
+   },
+   "changed-net": {
+    "qbe-bounded": 7.314264,
+    "rust-o3": 1.346039,
+    "arena-lto": 2.17955,
+    "rust-o3-native": 1.404999,
+    "qbe": 2.679679,
+    "zig-o3": 1.149096,
+    "gc-lto-bounded": 7.001053,
+    "gc-lto": 2.232979,
+    "go-fast": 1.825139,
+    "prod-default": 7.35548
+   },
+   "changed-value": {
+    "prod-default": 7.581973,
+    "rust-o3-native": 1.299074,
+    "go-fast": 1.895793,
+    "rust-o3": 1.388985,
+    "qbe": 2.651054,
+    "gc-lto-bounded": 7.553368,
+    "gc-lto": 2.522173,
+    "arena-lto": 2.212794,
+    "qbe-bounded": 7.424614,
+    "zig-o3": 1.167915
+   }
+  },
+  {
+   "fixture": {
+    "go-fast": 1.924583,
+    "zig-o3": 1.304703,
+    "rust-o3": 1.290515,
+    "gc-lto": 2.387593,
+    "qbe-bounded": 7.285932,
+    "arena-lto": 3.303434,
+    "prod-default": 7.228884,
+    "rust-o3-native": 1.449464,
+    "qbe": 3.931095,
+    "gc-lto-bounded": 7.244926
+   },
+   "changed-net": {
+    "rust-o3": 1.282253,
+    "qbe": 2.714099,
+    "arena-lto": 2.262759,
+    "rust-o3-native": 1.279153,
+    "gc-lto": 2.424796,
+    "qbe-bounded": 7.255143,
+    "gc-lto-bounded": 7.041222,
+    "prod-default": 7.214632,
+    "go-fast": 1.799954,
+    "zig-o3": 1.297385
+   },
+   "changed-value": {
+    "qbe": 3.706808,
+    "rust-o3": 1.441898,
+    "qbe-bounded": 7.430448,
+    "rust-o3-native": 1.492053,
+    "gc-lto-bounded": 7.027045,
+    "prod-default": 7.528605,
+    "go-fast": 1.816372,
+    "zig-o3": 1.347497,
+    "gc-lto": 2.465292,
+    "arena-lto": 2.251676
+   }
+  },
+  {
+   "fixture": {
+    "gc-lto": 2.326951,
+    "rust-o3": 1.435789,
+    "prod-default": 7.887295,
+    "arena-lto": 2.454354,
+    "gc-lto-bounded": 7.51374,
+    "rust-o3-native": 1.498384,
+    "qbe": 2.835391,
+    "qbe-bounded": 7.890207,
+    "go-fast": 2.076538,
+    "zig-o3": 1.43031
+   },
+   "changed-net": {
+    "go-fast": 1.842147,
+    "arena-lto": 2.366439,
+    "gc-lto": 2.47276,
+    "rust-o3": 1.463466,
+    "gc-lto-bounded": 7.364072,
+    "prod-default": 7.949785,
+    "qbe": 2.802316,
+    "zig-o3": 1.46607,
+    "rust-o3-native": 1.450511,
+    "qbe-bounded": 7.808907
+   },
+   "changed-value": {
+    "gc-lto": 2.365237,
+    "prod-default": 7.80425,
+    "qbe": 2.8915,
+    "arena-lto": 2.330874,
+    "rust-o3": 1.440133,
+    "qbe-bounded": 8.101715,
+    "zig-o3": 1.409867,
+    "go-fast": 2.090714,
+    "rust-o3-native": 1.416404,
+    "gc-lto-bounded": 7.562248
+   }
+  },
+  {
+   "fixture": {
+    "qbe-bounded": 7.703858,
+    "zig-o3": 1.43369,
+    "gc-lto-bounded": 7.308614,
+    "arena-lto": 2.286415,
+    "qbe": 2.820521,
+    "rust-o3-native": 1.413525,
+    "prod-default": 7.659797,
+    "go-fast": 1.736779,
+    "gc-lto": 2.439622,
+    "rust-o3": 1.589897
+   },
+   "changed-net": {
+    "gc-lto-bounded": 7.331446,
+    "gc-lto": 2.571442,
+    "zig-o3": 1.244969,
+    "qbe": 2.7867,
+    "go-fast": 1.983576,
+    "rust-o3": 1.420921,
+    "arena-lto": 2.209813,
+    "rust-o3-native": 1.487705,
+    "qbe-bounded": 7.878808,
+    "prod-default": 9.032114
+   },
+   "changed-value": {
+    "qbe-bounded": 7.774528,
+    "prod-default": 7.886615,
+    "arena-lto": 2.39175,
+    "gc-lto-bounded": 7.309973,
+    "zig-o3": 1.358926,
+    "rust-o3": 1.464153,
+    "gc-lto": 2.553358,
+    "qbe": 2.862897,
+    "rust-o3-native": 1.547998,
+    "go-fast": 1.990384
+   }
+  },
+  {
+   "fixture": {
+    "qbe-bounded": 8.043902,
+    "rust-o3": 1.544362,
+    "qbe": 2.912406,
+    "zig-o3": 1.263624,
+    "go-fast": 1.952429,
+    "arena-lto": 2.355074,
+    "gc-lto": 2.46825,
+    "prod-default": 7.573562,
+    "rust-o3-native": 1.537498,
+    "gc-lto-bounded": 7.531057
+   },
+   "changed-net": {
+    "rust-o3-native": 1.719661,
+    "qbe": 2.907043,
+    "prod-default": 7.768491,
+    "arena-lto": 2.558329,
+    "zig-o3": 1.315394,
+    "gc-lto": 2.621737,
+    "go-fast": 1.916231,
+    "gc-lto-bounded": 7.44876,
+    "rust-o3": 1.50556,
+    "qbe-bounded": 7.765087
+   },
+   "changed-value": {
+    "qbe-bounded": 7.806671,
+    "rust-o3-native": 1.445241,
+    "gc-lto": 2.77883,
+    "rust-o3": 1.512991,
+    "zig-o3": 1.396614,
+    "arena-lto": 2.382811,
+    "prod-default": 7.868183,
+    "go-fast": 1.944622,
+    "gc-lto-bounded": 7.468584,
+    "qbe": 2.787979
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3-native": 1.452346,
+    "rust-o3": 1.402257,
+    "gc-lto-bounded": 7.356804,
+    "prod-default": 7.748248,
+    "arena-lto": 2.292321,
+    "qbe-bounded": 7.786057,
+    "qbe": 2.879675,
+    "zig-o3": 1.257778,
+    "gc-lto": 2.617913,
+    "go-fast": 1.881522
+   },
+   "changed-net": {
+    "rust-o3-native": 1.424568,
+    "qbe": 3.887165,
+    "rust-o3": 1.321345,
+    "zig-o3": 1.285946,
+    "gc-lto": 2.568292,
+    "gc-lto-bounded": 7.284312,
+    "qbe-bounded": 7.651193,
+    "go-fast": 1.852236,
+    "prod-default": 7.85886,
+    "arena-lto": 2.378157
+   },
+   "changed-value": {
+    "qbe": 2.689498,
+    "prod-default": 7.874442,
+    "go-fast": 1.902628,
+    "gc-lto-bounded": 7.410904,
+    "arena-lto": 2.397036,
+    "qbe-bounded": 7.771397,
+    "rust-o3": 1.471582,
+    "zig-o3": 1.370231,
+    "gc-lto": 2.408745,
+    "rust-o3-native": 1.682403
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.32691,
+    "gc-lto": 2.425619,
+    "rust-o3-native": 1.440044,
+    "qbe": 2.701615,
+    "prod-default": 7.950233,
+    "go-fast": 1.922289,
+    "qbe-bounded": 7.925605,
+    "rust-o3": 1.554387,
+    "arena-lto": 2.398929,
+    "gc-lto-bounded": 7.440954
+   },
+   "changed-net": {
+    "rust-o3": 1.708178,
+    "gc-lto": 2.509911,
+    "qbe": 2.818233,
+    "rust-o3-native": 1.26696,
+    "arena-lto": 2.393532,
+    "gc-lto-bounded": 7.414052,
+    "go-fast": 2.038304,
+    "zig-o3": 1.310785,
+    "prod-default": 7.627056,
+    "qbe-bounded": 7.587932
+   },
+   "changed-value": {
+    "rust-o3-native": 1.427349,
+    "gc-lto": 3.628406,
+    "gc-lto-bounded": 7.439886,
+    "prod-default": 7.658564,
+    "qbe": 2.875123,
+    "rust-o3": 1.533988,
+    "go-fast": 1.791719,
+    "zig-o3": 1.407872,
+    "arena-lto": 2.400991,
+    "qbe-bounded": 7.667513
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 1.394193,
+    "rust-o3-native": 1.536144,
+    "gc-lto": 2.513052,
+    "prod-default": 7.754266,
+    "gc-lto-bounded": 7.14925,
+    "qbe": 2.798303,
+    "go-fast": 1.882524,
+    "qbe-bounded": 7.452652,
+    "arena-lto": 2.281682,
+    "zig-o3": 1.273817
+   },
+   "changed-net": {
+    "prod-default": 7.595086,
+    "rust-o3": 1.551136,
+    "zig-o3": 1.455461,
+    "gc-lto-bounded": 7.230732,
+    "gc-lto": 2.552546,
+    "go-fast": 2.083891,
+    "rust-o3-native": 1.432781,
+    "arena-lto": 2.236296,
+    "qbe-bounded": 7.494568,
+    "qbe": 2.741469
+   },
+   "changed-value": {
+    "qbe": 2.84453,
+    "arena-lto": 2.328513,
+    "rust-o3": 1.585019,
+    "rust-o3-native": 1.494759,
+    "prod-default": 7.64286,
+    "gc-lto-bounded": 7.21207,
+    "gc-lto": 2.400315,
+    "qbe-bounded": 7.412399,
+    "go-fast": 1.919099,
+    "zig-o3": 1.318074
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.441476,
+    "gc-lto-bounded": 7.651638,
+    "qbe": 2.843019,
+    "gc-lto": 2.478587,
+    "rust-o3-native": 1.56347,
+    "qbe-bounded": 7.664926,
+    "rust-o3": 1.486955,
+    "prod-default": 7.76966,
+    "arena-lto": 2.58887,
+    "go-fast": 1.952041
+   },
+   "changed-net": {
+    "qbe-bounded": 8.003588,
+    "qbe": 2.880768,
+    "rust-o3-native": 1.575007,
+    "go-fast": 1.923525,
+    "arena-lto": 2.541423,
+    "zig-o3": 1.3076,
+    "gc-lto-bounded": 7.399431,
+    "rust-o3": 1.493592,
+    "gc-lto": 2.495743,
+    "prod-default": 7.774871
+   },
+   "changed-value": {
+    "arena-lto": 2.37587,
+    "zig-o3": 1.263601,
+    "qbe": 3.193716,
+    "gc-lto-bounded": 7.407025,
+    "qbe-bounded": 7.981605,
+    "rust-o3-native": 1.492039,
+    "prod-default": 7.81101,
+    "go-fast": 1.951362,
+    "gc-lto": 2.390809,
+    "rust-o3": 1.533238
+   }
+  },
+  {
+   "fixture": {
+    "gc-lto": 2.471899,
+    "arena-lto": 2.421709,
+    "rust-o3-native": 1.377851,
+    "gc-lto-bounded": 7.453561,
+    "rust-o3": 1.546004,
+    "go-fast": 1.906032,
+    "zig-o3": 1.228307,
+    "prod-default": 7.851623,
+    "qbe-bounded": 7.988707,
+    "qbe": 2.832237
+   },
+   "changed-net": {
+    "arena-lto": 2.40692,
+    "rust-o3": 1.48168,
+    "qbe-bounded": 7.883569,
+    "gc-lto": 2.457804,
+    "zig-o3": 1.355817,
+    "prod-default": 7.720226,
+    "rust-o3-native": 1.44402,
+    "qbe": 2.800006,
+    "go-fast": 1.740143,
+    "gc-lto-bounded": 7.355126
+   },
+   "changed-value": {
+    "rust-o3": 1.533708,
+    "gc-lto": 2.443241,
+    "zig-o3": 1.204624,
+    "rust-o3-native": 1.484673,
+    "qbe": 2.842991,
+    "gc-lto-bounded": 7.381983,
+    "qbe-bounded": 7.711749,
+    "arena-lto": 2.353286,
+    "go-fast": 1.877214,
+    "prod-default": 7.848821
+   }
+  },
+  {
+   "fixture": {
+    "arena-lto": 2.323018,
+    "prod-default": 7.750329,
+    "rust-o3-native": 1.512311,
+    "qbe-bounded": 7.920694,
+    "zig-o3": 1.26766,
+    "qbe": 2.730811,
+    "go-fast": 1.839099,
+    "rust-o3": 1.475666,
+    "gc-lto-bounded": 7.134411,
+    "gc-lto": 2.382026
+   },
+   "changed-net": {
+    "qbe-bounded": 7.728781,
+    "zig-o3": 1.147567,
+    "rust-o3": 1.465891,
+    "qbe": 3.924651,
+    "prod-default": 7.50024,
+    "gc-lto": 2.5158,
+    "arena-lto": 2.274921,
+    "gc-lto-bounded": 7.125391,
+    "rust-o3-native": 1.387291,
+    "go-fast": 1.976853
+   },
+   "changed-value": {
+    "qbe": 2.841609,
+    "zig-o3": 1.171688,
+    "gc-lto": 2.444462,
+    "prod-default": 7.782888,
+    "rust-o3": 1.492038,
+    "go-fast": 1.930449,
+    "arena-lto": 2.1952,
+    "rust-o3-native": 1.306127,
+    "qbe-bounded": 7.817324,
+    "gc-lto-bounded": 7.229664
+   }
+  },
+  {
+   "fixture": {
+    "prod-default": 7.966271,
+    "gc-lto": 2.720844,
+    "qbe-bounded": 8.217647,
+    "rust-o3-native": 1.389063,
+    "gc-lto-bounded": 7.151883,
+    "rust-o3": 1.528401,
+    "qbe": 2.686369,
+    "arena-lto": 2.245378,
+    "go-fast": 1.772638,
+    "zig-o3": 1.203939
+   },
+   "changed-net": {
+    "rust-o3-native": 1.29588,
+    "gc-lto-bounded": 7.352411,
+    "rust-o3": 1.478612,
+    "qbe-bounded": 7.946254,
+    "go-fast": 2.34848,
+    "zig-o3": 1.349188,
+    "qbe": 2.6059,
+    "arena-lto": 2.209967,
+    "prod-default": 7.354981,
+    "gc-lto": 2.320098
+   },
+   "changed-value": {
+    "rust-o3-native": 1.391986,
+    "qbe-bounded": 8.112583,
+    "rust-o3": 1.526159,
+    "qbe": 2.835448,
+    "prod-default": 7.850761,
+    "zig-o3": 1.387325,
+    "gc-lto-bounded": 6.906559,
+    "gc-lto": 2.444497,
+    "go-fast": 2.07164,
+    "arena-lto": 2.305245
+   }
+  },
+  {
+   "fixture": {
+    "gc-lto-bounded": 7.144586,
+    "rust-o3": 1.494715,
+    "rust-o3-native": 1.379991,
+    "qbe": 2.755603,
+    "gc-lto": 2.29304,
+    "arena-lto": 2.285258,
+    "zig-o3": 1.214795,
+    "prod-default": 7.446959,
+    "qbe-bounded": 7.525795,
+    "go-fast": 1.742102
+   },
+   "changed-net": {
+    "rust-o3-native": 1.466081,
+    "qbe": 3.72356,
+    "arena-lto": 2.207786,
+    "zig-o3": 1.331865,
+    "prod-default": 7.582505,
+    "rust-o3": 1.365138,
+    "qbe-bounded": 7.283579,
+    "gc-lto-bounded": 7.66437,
+    "go-fast": 1.856371,
+    "gc-lto": 2.360205
+   },
+   "changed-value": {
+    "gc-lto-bounded": 6.993475,
+    "go-fast": 1.734491,
+    "qbe-bounded": 7.57181,
+    "zig-o3": 1.331451,
+    "prod-default": 7.33056,
+    "arena-lto": 2.13932,
+    "rust-o3": 1.27313,
+    "gc-lto": 2.322737,
+    "rust-o3-native": 1.323883,
+    "qbe": 2.905719
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 1.392542,
+    "gc-lto-bounded": 7.185684,
+    "qbe-bounded": 7.525808,
+    "arena-lto": 2.345785,
+    "prod-default": 7.680421,
+    "go-fast": 1.870377,
+    "zig-o3": 1.298764,
+    "qbe": 2.61433,
+    "gc-lto": 2.400732,
+    "rust-o3-native": 1.520791
+   },
+   "changed-net": {
+    "go-fast": 1.875122,
+    "zig-o3": 1.303155,
+    "arena-lto": 2.283998,
+    "gc-lto-bounded": 7.09572,
+    "qbe": 2.846878,
+    "qbe-bounded": 7.316411,
+    "prod-default": 7.423457,
+    "gc-lto": 2.342793,
+    "rust-o3": 1.324495,
+    "rust-o3-native": 1.279434
+   },
+   "changed-value": {
+    "rust-o3": 1.346887,
+    "zig-o3": 1.344124,
+    "rust-o3-native": 1.517865,
+    "go-fast": 1.820576,
+    "gc-lto": 3.323103,
+    "gc-lto-bounded": 7.212063,
+    "qbe-bounded": 7.467338,
+    "arena-lto": 2.023417,
+    "prod-default": 7.450598,
+    "qbe": 2.66433
+   }
+  },
+  {
+   "fixture": {
+    "go-fast": 1.766524,
+    "qbe": 2.544237,
+    "rust-o3-native": 1.244097,
+    "rust-o3": 1.81089,
+    "arena-lto": 2.401625,
+    "qbe-bounded": 7.637742,
+    "gc-lto-bounded": 7.29261,
+    "prod-default": 7.661743,
+    "gc-lto": 2.36811,
+    "zig-o3": 1.401906
+   },
+   "changed-net": {
+    "rust-o3-native": 1.241832,
+    "arena-lto": 2.133239,
+    "rust-o3": 1.278791,
+    "zig-o3": 1.291557,
+    "go-fast": 1.634309,
+    "qbe": 2.656586,
+    "prod-default": 7.483664,
+    "qbe-bounded": 7.66382,
+    "gc-lto": 2.420073,
+    "gc-lto-bounded": 7.19995
+   },
+   "changed-value": {
+    "qbe-bounded": 7.339503,
+    "rust-o3": 1.235192,
+    "zig-o3": 1.024768,
+    "prod-default": 7.23351,
+    "qbe": 2.77049,
+    "gc-lto": 2.504163,
+    "arena-lto": 2.254431,
+    "go-fast": 2.058792,
+    "rust-o3-native": 1.522371,
+    "gc-lto-bounded": 6.994266
+   }
+  }
+ ]
+}

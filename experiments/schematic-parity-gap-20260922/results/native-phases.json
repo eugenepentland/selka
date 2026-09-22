@@ -1,0 +1,836 @@
+{
+ "summary": {
+  "zig-phases": {
+   "wall_median_ms": 1.166969,
+   "phases_us": {
+    "read": 23.232,
+    "layout": 88.882,
+    "routes": 26.013,
+    "parse": 34.024,
+    "model": 51.765,
+    "render": 163.707,
+    "write": 14.226
+   }
+  },
+  "rust-phases": {
+   "wall_median_ms": 1.29003,
+   "phases_us": {
+    "read": 12.634,
+    "layout": 86.254,
+    "routes": 20.263,
+    "parse": 37.151,
+    "model": 53.66,
+    "render": 155.93,
+    "write": 32.335
+   }
+  }
+ },
+ "rows": [
+  {
+   "rust-phases": {
+    "wall_ms": 1.530056,
+    "phases": {
+     "read": 13738,
+     "layout": 95880,
+     "routes": 22459,
+     "parse": 41003,
+     "model": 58230,
+     "render": 171813,
+     "write": 35843
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.347743,
+    "phases": {
+     "read": 24067,
+     "layout": 90108,
+     "routes": 27994,
+     "parse": 34222,
+     "model": 53253,
+     "render": 167689,
+     "write": 15046
+    }
+   }
+  },
+  {
+   "rust-phases": {
+    "wall_ms": 1.414659,
+    "phases": {
+     "read": 12864,
+     "layout": 89616,
+     "routes": 20811,
+     "parse": 40258,
+     "model": 54319,
+     "render": 159957,
+     "write": 32117
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.072359,
+    "phases": {
+     "read": 20683,
+     "layout": 90183,
+     "routes": 24278,
+     "parse": 37322,
+     "model": 56633,
+     "render": 164943,
+     "write": 12770
+    }
+   }
+  },
+  {
+   "rust-phases": {
+    "wall_ms": 1.386034,
+    "phases": {
+     "read": 12640,
+     "layout": 85251,
+     "routes": 20363,
+     "parse": 42198,
+     "model": 54168,
+     "render": 154302,
+     "write": 31976
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.255504,
+    "phases": {
+     "read": 22628,
+     "layout": 90420,
+     "routes": 25594,
+     "parse": 35272,
+     "model": 51644,
+     "render": 166082,
+     "write": 14202
+    }
+   }
+  },
+  {
+   "zig-phases": {
+    "wall_ms": 2.165633,
+    "phases": {
+     "read": 23674,
+     "layout": 89306,
+     "routes": 26057,
+     "parse": 34135,
+     "model": 51893,
+     "render": 163653,
+     "write": 15429
+    }
+   },
+   "rust-phases": {
+    "wall_ms": 1.372581,
+    "phases": {
+     "read": 12627,
+     "layout": 86210,
+     "routes": 21307,
+     "parse": 37113,
+     "model": 53559,
+     "render": 155990,
+     "write": 33169
+    }
+   }
+  },
+  {
+   "zig-phases": {
+    "wall_ms": 1.277675,
+    "phases": {
+     "read": 23664,
+     "layout": 88757,
+     "routes": 26139,
+     "parse": 33537,
+     "model": 52215,
+     "render": 162403,
+     "write": 17718
+    }
+   },
+   "rust-phases": {
+    "wall_ms": 2.372186,
+    "phases": {
+     "read": 12634,
+     "layout": 111235,
+     "routes": 20783,
+     "parse": 37628,
+     "model": 54249,
+     "render": 180660,
+     "write": 33510
+    }
+   }
+  },
+  {
+   "rust-phases": {
+    "wall_ms": 1.381215,
+    "phases": {
+     "read": 12364,
+     "layout": 87375,
+     "routes": 20410,
+     "parse": 36589,
+     "model": 54883,
+     "render": 156056,
+     "write": 32335
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.280128,
+    "phases": {
+     "read": 23695,
+     "layout": 88882,
+     "routes": 30281,
+     "parse": 33587,
+     "model": 51826,
+     "render": 174192,
+     "write": 15162
+    }
+   }
+  },
+  {
+   "rust-phases": {
+    "wall_ms": 1.306152,
+    "phases": {
+     "read": 13698,
+     "layout": 81349,
+     "routes": 19272,
+     "parse": 37348,
+     "model": 54981,
+     "render": 146507,
+     "write": 34105
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.263424,
+    "phases": {
+     "read": 22402,
+     "layout": 83055,
+     "routes": 24451,
+     "parse": 31277,
+     "model": 48658,
+     "render": 152455,
+     "write": 14051
+    }
+   }
+  },
+  {
+   "rust-phases": {
+    "wall_ms": 1.341203,
+    "phases": {
+     "read": 11798,
+     "layout": 120827,
+     "routes": 20589,
+     "parse": 35113,
+     "model": 50974,
+     "render": 189851,
+     "write": 33372
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.145199,
+    "phases": {
+     "read": 22898,
+     "layout": 83797,
+     "routes": 24174,
+     "parse": 35912,
+     "model": 49631,
+     "render": 154402,
+     "write": 12031
+    }
+   }
+  },
+  {
+   "rust-phases": {
+    "wall_ms": 1.27974,
+    "phases": {
+     "read": 11702,
+     "layout": 80984,
+     "routes": 18880,
+     "parse": 36509,
+     "model": 51718,
+     "render": 144408,
+     "write": 31031
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.200349,
+    "phases": {
+     "read": 22188,
+     "layout": 84875,
+     "routes": 24407,
+     "parse": 31152,
+     "model": 48392,
+     "render": 171216,
+     "write": 14226
+    }
+   }
+  },
+  {
+   "rust-phases": {
+    "wall_ms": 1.335146,
+    "phases": {
+     "read": 12491,
+     "layout": 78862,
+     "routes": 19390,
+     "parse": 36016,
+     "model": 50453,
+     "render": 143735,
+     "write": 31853
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.208611,
+    "phases": {
+     "read": 24217,
+     "layout": 88303,
+     "routes": 26127,
+     "parse": 34024,
+     "model": 51840,
+     "render": 162936,
+     "write": 15710
+    }
+   }
+  },
+  {
+   "zig-phases": {
+    "wall_ms": 1.179482,
+    "phases": {
+     "read": 23232,
+     "layout": 83192,
+     "routes": 24486,
+     "parse": 31558,
+     "model": 48547,
+     "render": 151920,
+     "write": 14466
+    }
+   },
+   "rust-phases": {
+    "wall_ms": 1.280636,
+    "phases": {
+     "read": 13586,
+     "layout": 79802,
+     "routes": 21091,
+     "parse": 36390,
+     "model": 50405,
+     "render": 146076,
+     "write": 30928
+    }
+   }
+  },
+  {
+   "rust-phases": {
+    "wall_ms": 1.348518,
+    "phases": {
+     "read": 13237,
+     "layout": 79998,
+     "routes": 19467,
+     "parse": 35102,
+     "model": 50658,
+     "render": 145130,
+     "write": 31679
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.206336,
+    "phases": {
+     "read": 22186,
+     "layout": 107869,
+     "routes": 26255,
+     "parse": 31844,
+     "model": 48496,
+     "render": 181472,
+     "write": 14770
+    }
+   }
+  },
+  {
+   "zig-phases": {
+    "wall_ms": 1.089772,
+    "phases": {
+     "read": 21923,
+     "layout": 77397,
+     "routes": 23063,
+     "parse": 32845,
+     "model": 47176,
+     "render": 143051,
+     "write": 12641
+    }
+   },
+   "rust-phases": {
+    "wall_ms": 1.333304,
+    "phases": {
+     "read": 12639,
+     "layout": 81672,
+     "routes": 19481,
+     "parse": 36735,
+     "model": 50070,
+     "render": 146829,
+     "write": 31865
+    }
+   }
+  },
+  {
+   "zig-phases": {
+    "wall_ms": 1.202664,
+    "phases": {
+     "read": 22995,
+     "layout": 84331,
+     "routes": 23984,
+     "parse": 31487,
+     "model": 49066,
+     "render": 171581,
+     "write": 16578
+    }
+   },
+   "rust-phases": {
+    "wall_ms": 1.311719,
+    "phases": {
+     "read": 12472,
+     "layout": 86254,
+     "routes": 20453,
+     "parse": 37356,
+     "model": 54052,
+     "render": 155381,
+     "write": 33930
+    }
+   }
+  },
+  {
+   "zig-phases": {
+    "wall_ms": 1.166969,
+    "phases": {
+     "read": 24016,
+     "layout": 84024,
+     "routes": 24258,
+     "parse": 31422,
+     "model": 49084,
+     "render": 154686,
+     "write": 12859
+    }
+   },
+   "rust-phases": {
+    "wall_ms": 1.253483,
+    "phases": {
+     "read": 13431,
+     "layout": 81019,
+     "routes": 19232,
+     "parse": 35111,
+     "model": 50236,
+     "render": 149378,
+     "write": 32967
+    }
+   }
+  },
+  {
+   "rust-phases": {
+    "wall_ms": 1.314441,
+    "phases": {
+     "read": 12518,
+     "layout": 84988,
+     "routes": 20976,
+     "parse": 37696,
+     "model": 50388,
+     "render": 154979,
+     "write": 36711
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.132735,
+    "phases": {
+     "read": 21036,
+     "layout": 83385,
+     "routes": 22410,
+     "parse": 34465,
+     "model": 50048,
+     "render": 151406,
+     "write": 13400
+    }
+   }
+  },
+  {
+   "zig-phases": {
+    "wall_ms": 1.180113,
+    "phases": {
+     "read": 23616,
+     "layout": 88679,
+     "routes": 25963,
+     "parse": 33955,
+     "model": 51302,
+     "render": 162257,
+     "write": 14353
+    }
+   },
+   "rust-phases": {
+    "wall_ms": 1.325997,
+    "phases": {
+     "read": 14536,
+     "layout": 86596,
+     "routes": 20630,
+     "parse": 37020,
+     "model": 54111,
+     "render": 155930,
+     "write": 33929
+    }
+   }
+  },
+  {
+   "zig-phases": {
+    "wall_ms": 1.23142,
+    "phases": {
+     "read": 22418,
+     "layout": 83312,
+     "routes": 24226,
+     "parse": 31933,
+     "model": 48624,
+     "render": 151635,
+     "write": 13314
+    }
+   },
+   "rust-phases": {
+    "wall_ms": 1.304344,
+    "phases": {
+     "read": 12854,
+     "layout": 80515,
+     "routes": 19155,
+     "parse": 34735,
+     "model": 50700,
+     "render": 169964,
+     "write": 34443
+    }
+   }
+  },
+  {
+   "rust-phases": {
+    "wall_ms": 1.262762,
+    "phases": {
+     "read": 13426,
+     "layout": 80852,
+     "routes": 18958,
+     "parse": 36392,
+     "model": 50400,
+     "render": 145344,
+     "write": 29576
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.175829,
+    "phases": {
+     "read": 22395,
+     "layout": 82645,
+     "routes": 24665,
+     "parse": 32105,
+     "model": 48540,
+     "render": 152521,
+     "write": 14678
+    }
+   }
+  },
+  {
+   "rust-phases": {
+    "wall_ms": 1.29003,
+    "phases": {
+     "read": 11784,
+     "layout": 81137,
+     "routes": 19320,
+     "parse": 34510,
+     "model": 51089,
+     "render": 192996,
+     "write": 33885
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.121348,
+    "phases": {
+     "read": 21483,
+     "layout": 85261,
+     "routes": 24211,
+     "parse": 35557,
+     "model": 53059,
+     "render": 154668,
+     "write": 12256
+    }
+   }
+  },
+  {
+   "rust-phases": {
+    "wall_ms": 1.248403,
+    "phases": {
+     "read": 11722,
+     "layout": 79631,
+     "routes": 18957,
+     "parse": 35768,
+     "model": 52971,
+     "render": 144154,
+     "write": 30755
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.171799,
+    "phases": {
+     "read": 23542,
+     "layout": 89571,
+     "routes": 26095,
+     "parse": 33440,
+     "model": 51847,
+     "render": 163892,
+     "write": 15827
+    }
+   }
+  },
+  {
+   "zig-phases": {
+    "wall_ms": 1.134268,
+    "phases": {
+     "read": 24052,
+     "layout": 96402,
+     "routes": 27922,
+     "parse": 33607,
+     "model": 52419,
+     "render": 176073,
+     "write": 14971
+    }
+   },
+   "rust-phases": {
+    "wall_ms": 1.174509,
+    "phases": {
+     "read": 12464,
+     "layout": 86887,
+     "routes": 20258,
+     "parse": 39685,
+     "model": 53660,
+     "render": 155527,
+     "write": 30444
+    }
+   }
+  },
+  {
+   "zig-phases": {
+    "wall_ms": 1.065644,
+    "phases": {
+     "read": 23932,
+     "layout": 89319,
+     "routes": 26468,
+     "parse": 34336,
+     "model": 53389,
+     "render": 163311,
+     "write": 13320
+    }
+   },
+   "rust-phases": {
+    "wall_ms": 1.198638,
+    "phases": {
+     "read": 12892,
+     "layout": 87857,
+     "routes": 20463,
+     "parse": 38025,
+     "model": 53901,
+     "render": 156377,
+     "write": 33023
+    }
+   }
+  },
+  {
+   "zig-phases": {
+    "wall_ms": 1.144615,
+    "phases": {
+     "read": 23782,
+     "layout": 89488,
+     "routes": 26277,
+     "parse": 34034,
+     "model": 52491,
+     "render": 171034,
+     "write": 15119
+    }
+   },
+   "rust-phases": {
+    "wall_ms": 1.15436,
+    "phases": {
+     "read": 15547,
+     "layout": 90013,
+     "routes": 20219,
+     "parse": 39975,
+     "model": 57200,
+     "render": 158211,
+     "write": 32152
+    }
+   }
+  },
+  {
+   "rust-phases": {
+    "wall_ms": 1.224139,
+    "phases": {
+     "read": 12470,
+     "layout": 86891,
+     "routes": 22398,
+     "parse": 40164,
+     "model": 53435,
+     "render": 157470,
+     "write": 31288
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.08347,
+    "phases": {
+     "read": 24005,
+     "layout": 89962,
+     "routes": 26646,
+     "parse": 34392,
+     "model": 51627,
+     "render": 164491,
+     "write": 13891
+    }
+   }
+  },
+  {
+   "rust-phases": {
+    "wall_ms": 1.248223,
+    "phases": {
+     "read": 12470,
+     "layout": 91555,
+     "routes": 20521,
+     "parse": 37151,
+     "model": 53253,
+     "render": 160758,
+     "write": 33282
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.085872,
+    "phases": {
+     "read": 22757,
+     "layout": 88253,
+     "routes": 26067,
+     "parse": 55763,
+     "model": 52003,
+     "render": 163276,
+     "write": 13188
+    }
+   }
+  },
+  {
+   "rust-phases": {
+    "wall_ms": 1.158578,
+    "phases": {
+     "read": 13369,
+     "layout": 86617,
+     "routes": 19791,
+     "parse": 38654,
+     "model": 55681,
+     "render": 155227,
+     "write": 31079
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.109479,
+    "phases": {
+     "read": 23626,
+     "layout": 91026,
+     "routes": 26013,
+     "parse": 34175,
+     "model": 52401,
+     "render": 165413,
+     "write": 13996
+    }
+   }
+  },
+  {
+   "zig-phases": {
+    "wall_ms": 1.095115,
+    "phases": {
+     "read": 23849,
+     "layout": 89371,
+     "routes": 25758,
+     "parse": 33742,
+     "model": 51763,
+     "render": 163707,
+     "write": 15194
+    }
+   },
+   "rust-phases": {
+    "wall_ms": 1.19133,
+    "phases": {
+     "read": 12548,
+     "layout": 86659,
+     "routes": 20195,
+     "parse": 37013,
+     "model": 58128,
+     "render": 156116,
+     "write": 32355
+    }
+   }
+  },
+  {
+   "zig-phases": {
+    "wall_ms": 1.070059,
+    "phases": {
+     "read": 22819,
+     "layout": 90328,
+     "routes": 27029,
+     "parse": 35120,
+     "model": 54820,
+     "render": 165622,
+     "write": 13791
+    }
+   },
+   "rust-phases": {
+    "wall_ms": 1.168629,
+    "phases": {
+     "read": 12170,
+     "layout": 87495,
+     "routes": 20072,
+     "parse": 38173,
+     "model": 55456,
+     "render": 156421,
+     "write": 31289
+    }
+   }
+  },
+  {
+   "rust-phases": {
+    "wall_ms": 1.232703,
+    "phases": {
+     "read": 12666,
+     "layout": 85121,
+     "routes": 20405,
+     "parse": 37537,
+     "model": 53755,
+     "render": 155353,
+     "write": 33368
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.089731,
+    "phases": {
+     "read": 24689,
+     "layout": 92115,
+     "routes": 26357,
+     "parse": 34111,
+     "model": 51765,
+     "render": 167403,
+     "write": 13555
+    }
+   }
+  },
+  {
+   "rust-phases": {
+    "wall_ms": 1.18022,
+    "phases": {
+     "read": 12123,
+     "layout": 88188,
+     "routes": 20263,
+     "parse": 40350,
+     "model": 55071,
+     "render": 156615,
+     "write": 30202
+    }
+   },
+   "zig-phases": {
+    "wall_ms": 1.119401,
+    "phases": {
+     "read": 22842,
+     "layout": 89412,
+     "routes": 27436,
+     "parse": 34232,
+     "model": 52955,
+     "render": 164649,
+     "write": 14682
+    }
+   }
+  }
+ ]
+}

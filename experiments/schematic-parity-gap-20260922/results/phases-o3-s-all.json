@@ -1,0 +1,1988 @@
+{
+ "summary": {
+  "wall_median_ms": {
+   "original": 2.093162,
+   "control": 2.104593,
+   "probe": 2.123729,
+   "gc-lto": 2.321321
+  },
+  "phases": {
+   "main::main": {
+    "median_inclusive_us": 988.037,
+    "calls": 1
+   },
+   "io::load": {
+    "median_inclusive_us": 64.501,
+    "calls": 3
+   },
+   "sexpr::parse": {
+    "median_inclusive_us": 169.193,
+    "calls": 3
+   },
+   "schematic::build": {
+    "median_inclusive_us": 272.538,
+    "calls": 1
+   },
+   "circuit::collectPins": {
+    "median_inclusive_us": 76.309,
+    "calls": 1
+   },
+   "circuit::normalize": {
+    "median_inclusive_us": 100.989,
+    "calls": 1
+   },
+   "validate::model": {
+    "median_inclusive_us": 24.572,
+    "calls": 1
+   },
+   "ports::collect": {
+    "median_inclusive_us": 4.325,
+    "calls": 1
+   },
+   "svg::render": {
+    "median_inclusive_us": 472.036,
+    "calls": 1
+   },
+   "layout::build": {
+    "median_inclusive_us": 176.11,
+    "calls": 1
+   },
+   "layout_graph::build": {
+    "median_inclusive_us": 37.065,
+    "calls": 1
+   },
+   "layout_routes::build": {
+    "median_inclusive_us": 32.363,
+    "calls": 1
+   },
+   "io::flush": {
+    "median_inclusive_us": 47.79,
+    "calls": 1
+   }
+  }
+ },
+ "rows": [
+  {
+   "control": {
+    "wall_ms": 2.176026,
+    "phases": {}
+   },
+   "original": {
+    "wall_ms": 2.093162,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 1.941402,
+    "phases": {
+     "io::load": [
+      42716,
+      15474,
+      7442
+     ],
+     "sexpr::parse": [
+      161513,
+      5524,
+      1507
+     ],
+     "circuit::collectPins": [
+      76309
+     ],
+     "validate::model": [
+      25844
+     ],
+     "circuit::normalize": [
+      101239
+     ],
+     "ports::collect": [
+      4325
+     ],
+     "schematic::build": [
+      274383
+     ],
+     "layout_graph::build": [
+      36155
+     ],
+     "layout::build": [
+      173828
+     ],
+     "layout_routes::build": [
+      32219
+     ],
+     "io::flush": [
+      51557
+     ],
+     "svg::render": [
+      479412
+     ],
+     "main::main": [
+      999804
+     ]
+    }
+   },
+   "gc-lto": {
+    "wall_ms": 2.412321,
+    "phases": {}
+   }
+  },
+  {
+   "gc-lto": {
+    "wall_ms": 2.409173,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.185439,
+    "phases": {
+     "io::load": [
+      42142,
+      15289,
+      7518
+     ],
+     "sexpr::parse": [
+      162344,
+      5384,
+      1524
+     ],
+     "circuit::collectPins": [
+      76673
+     ],
+     "validate::model": [
+      25790
+     ],
+     "circuit::normalize": [
+      101571
+     ],
+     "ports::collect": [
+      4303
+     ],
+     "schematic::build": [
+      276667
+     ],
+     "layout_graph::build": [
+      42826
+     ],
+     "layout::build": [
+      188199
+     ],
+     "layout_routes::build": [
+      32102
+     ],
+     "io::flush": [
+      47790
+     ],
+     "svg::render": [
+      486245
+     ],
+     "main::main": [
+      1009391
+     ]
+    }
+   },
+   "original": {
+    "wall_ms": 2.074986,
+    "phases": {}
+   },
+   "control": {
+    "wall_ms": 2.18064,
+    "phases": {}
+   }
+  },
+  {
+   "probe": {
+    "wall_ms": 2.152417,
+    "phases": {
+     "io::load": [
+      42267,
+      15223,
+      8331
+     ],
+     "sexpr::parse": [
+      162927,
+      5494,
+      1581
+     ],
+     "circuit::collectPins": [
+      76486
+     ],
+     "validate::model": [
+      25774
+     ],
+     "circuit::normalize": [
+      101419
+     ],
+     "ports::collect": [
+      4505
+     ],
+     "schematic::build": [
+      275526
+     ],
+     "layout_graph::build": [
+      37000
+     ],
+     "layout::build": [
+      175636
+     ],
+     "layout_routes::build": [
+      36557
+     ],
+     "io::flush": [
+      52128
+     ],
+     "svg::render": [
+      483065
+     ],
+     "main::main": [
+      1006138
+     ]
+    }
+   },
+   "original": {
+    "wall_ms": 2.229638,
+    "phases": {}
+   },
+   "gc-lto": {
+    "wall_ms": 3.449739,
+    "phases": {}
+   },
+   "control": {
+    "wall_ms": 2.099111,
+    "phases": {}
+   }
+  },
+  {
+   "original": {
+    "wall_ms": 2.195239,
+    "phases": {}
+   },
+   "gc-lto": {
+    "wall_ms": 2.356416,
+    "phases": {}
+   },
+   "control": {
+    "wall_ms": 2.201735,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.395326,
+    "phases": {
+     "io::load": [
+      42679,
+      15300,
+      7473
+     ],
+     "sexpr::parse": [
+      174389,
+      5503,
+      1508
+     ],
+     "circuit::collectPins": [
+      76263
+     ],
+     "validate::model": [
+      25915
+     ],
+     "circuit::normalize": [
+      102841
+     ],
+     "ports::collect": [
+      4641
+     ],
+     "schematic::build": [
+      277447
+     ],
+     "layout_graph::build": [
+      46059
+     ],
+     "layout::build": [
+      198459
+     ],
+     "layout_routes::build": [
+      33462
+     ],
+     "io::flush": [
+      74038
+     ],
+     "svg::render": [
+      529490
+     ],
+     "main::main": [
+      1066333
+     ]
+    }
+   }
+  },
+  {
+   "gc-lto": {
+    "wall_ms": 2.399303,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.230463,
+    "phases": {
+     "io::load": [
+      44289,
+      15588,
+      7614
+     ],
+     "sexpr::parse": [
+      163947,
+      5465,
+      1458
+     ],
+     "circuit::collectPins": [
+      76675
+     ],
+     "validate::model": [
+      25867
+     ],
+     "circuit::normalize": [
+      102107
+     ],
+     "ports::collect": [
+      4356
+     ],
+     "schematic::build": [
+      277671
+     ],
+     "layout_graph::build": [
+      37082
+     ],
+     "layout::build": [
+      176110
+     ],
+     "layout_routes::build": [
+      32637
+     ],
+     "io::flush": [
+      49246
+     ],
+     "svg::render": [
+      478457
+     ],
+     "main::main": [
+      1007829
+     ]
+    }
+   },
+   "control": {
+    "wall_ms": 2.100152,
+    "phases": {}
+   },
+   "original": {
+    "wall_ms": 2.131257,
+    "phases": {}
+   }
+  },
+  {
+   "control": {
+    "wall_ms": 2.150603,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.12856,
+    "phases": {
+     "io::load": [
+      43919,
+      15682,
+      7530
+     ],
+     "sexpr::parse": [
+      161884,
+      5044,
+      1375
+     ],
+     "circuit::collectPins": [
+      71528
+     ],
+     "validate::model": [
+      24361
+     ],
+     "circuit::normalize": [
+      94343
+     ],
+     "ports::collect": [
+      4041
+     ],
+     "schematic::build": [
+      258570
+     ],
+     "layout_graph::build": [
+      33926
+     ],
+     "layout::build": [
+      163289
+     ],
+     "layout_routes::build": [
+      30735
+     ],
+     "io::flush": [
+      45377
+     ],
+     "svg::render": [
+      444125
+     ],
+     "main::main": [
+      951247
+     ]
+    }
+   },
+   "gc-lto": {
+    "wall_ms": 2.337368,
+    "phases": {}
+   },
+   "original": {
+    "wall_ms": 2.046362,
+    "phases": {}
+   }
+  },
+  {
+   "original": {
+    "wall_ms": 2.108444,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.071569,
+    "phases": {
+     "io::load": [
+      39201,
+      15030,
+      6989
+     ],
+     "sexpr::parse": [
+      152421,
+      5105,
+      1476
+     ],
+     "circuit::collectPins": [
+      71680
+     ],
+     "validate::model": [
+      24071
+     ],
+     "circuit::normalize": [
+      94857
+     ],
+     "ports::collect": [
+      4036
+     ],
+     "schematic::build": [
+      257584
+     ],
+     "layout_graph::build": [
+      34065
+     ],
+     "layout::build": [
+      164500
+     ],
+     "layout_routes::build": [
+      30952
+     ],
+     "io::flush": [
+      47082
+     ],
+     "svg::render": [
+      445503
+     ],
+     "main::main": [
+      934536
+     ]
+    }
+   },
+   "control": {
+    "wall_ms": 2.039322,
+    "phases": {}
+   },
+   "gc-lto": {
+    "wall_ms": 2.360088,
+    "phases": {}
+   }
+  },
+  {
+   "gc-lto": {
+    "wall_ms": 2.336632,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.11857,
+    "phases": {
+     "io::load": [
+      38867,
+      14302,
+      6929
+     ],
+     "sexpr::parse": [
+      152584,
+      5135,
+      1522
+     ],
+     "circuit::collectPins": [
+      71940
+     ],
+     "validate::model": [
+      24375
+     ],
+     "circuit::normalize": [
+      95323
+     ],
+     "ports::collect": [
+      4134
+     ],
+     "schematic::build": [
+      259597
+     ],
+     "layout_graph::build": [
+      37065
+     ],
+     "layout::build": [
+      183133
+     ],
+     "layout_routes::build": [
+      33180
+     ],
+     "io::flush": [
+      45320
+     ],
+     "svg::render": [
+      472036
+     ],
+     "main::main": [
+      963190
+     ]
+    }
+   },
+   "original": {
+    "wall_ms": 2.006188,
+    "phases": {}
+   },
+   "control": {
+    "wall_ms": 2.328222,
+    "phases": {}
+   }
+  },
+  {
+   "gc-lto": {
+    "wall_ms": 2.24715,
+    "phases": {}
+   },
+   "original": {
+    "wall_ms": 3.302806,
+    "phases": {}
+   },
+   "control": {
+    "wall_ms": 2.188151,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.178541,
+    "phases": {
+     "io::load": [
+      42063,
+      15187,
+      7589
+     ],
+     "sexpr::parse": [
+      162839,
+      5351,
+      1508
+     ],
+     "circuit::collectPins": [
+      76611
+     ],
+     "validate::model": [
+      26224
+     ],
+     "circuit::normalize": [
+      101626
+     ],
+     "ports::collect": [
+      4529
+     ],
+     "schematic::build": [
+      278492
+     ],
+     "layout_graph::build": [
+      37939
+     ],
+     "layout::build": [
+      196704
+     ],
+     "layout_routes::build": [
+      36924
+     ],
+     "io::flush": [
+      48270
+     ],
+     "svg::render": [
+      504436
+     ],
+     "main::main": [
+      1031528
+     ]
+    }
+   }
+  },
+  {
+   "gc-lto": {
+    "wall_ms": 2.413286,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.139551,
+    "phases": {
+     "io::load": [
+      41569,
+      15474,
+      7400
+     ],
+     "sexpr::parse": [
+      163089,
+      5487,
+      1545
+     ],
+     "circuit::collectPins": [
+      76668
+     ],
+     "validate::model": [
+      25768
+     ],
+     "circuit::normalize": [
+      101742
+     ],
+     "ports::collect": [
+      4655
+     ],
+     "schematic::build": [
+      277085
+     ],
+     "layout_graph::build": [
+      39822
+     ],
+     "layout::build": [
+      181426
+     ],
+     "layout_routes::build": [
+      32491
+     ],
+     "io::flush": [
+      54204
+     ],
+     "svg::render": [
+      491433
+     ],
+     "main::main": [
+      1014993
+     ]
+    }
+   },
+   "original": {
+    "wall_ms": 2.106183,
+    "phases": {}
+   },
+   "control": {
+    "wall_ms": 2.386607,
+    "phases": {}
+   }
+  },
+  {
+   "gc-lto": {
+    "wall_ms": 2.259397,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 3.313983,
+    "phases": {
+     "io::load": [
+      39119,
+      14271,
+      7066
+     ],
+     "sexpr::parse": [
+      153050,
+      5125,
+      1432
+     ],
+     "circuit::collectPins": [
+      71918
+     ],
+     "validate::model": [
+      24207
+     ],
+     "circuit::normalize": [
+      107266
+     ],
+     "ports::collect": [
+      4507
+     ],
+     "schematic::build": [
+      272538
+     ],
+     "layout_graph::build": [
+      39913
+     ],
+     "layout::build": [
+      180755
+     ],
+     "layout_routes::build": [
+      30819
+     ],
+     "io::flush": [
+      45934
+     ],
+     "svg::render": [
+      464587
+     ],
+     "main::main": [
+      969118
+     ]
+    }
+   },
+   "original": {
+    "wall_ms": 2.096591,
+    "phases": {}
+   },
+   "control": {
+    "wall_ms": 2.017662,
+    "phases": {}
+   }
+  },
+  {
+   "gc-lto": {
+    "wall_ms": 2.17879,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.121924,
+    "phases": {
+     "io::load": [
+      38941,
+      14158,
+      7090
+     ],
+     "sexpr::parse": [
+      152609,
+      5103,
+      1439
+     ],
+     "circuit::collectPins": [
+      71476
+     ],
+     "validate::model": [
+      24273
+     ],
+     "circuit::normalize": [
+      98211
+     ],
+     "ports::collect": [
+      4160
+     ],
+     "schematic::build": [
+      263105
+     ],
+     "layout_graph::build": [
+      35921
+     ],
+     "layout::build": [
+      171717
+     ],
+     "layout_routes::build": [
+      30663
+     ],
+     "io::flush": [
+      46195
+     ],
+     "svg::render": [
+      454738
+     ],
+     "main::main": [
+      949196
+     ]
+    }
+   },
+   "original": {
+    "wall_ms": 2.090818,
+    "phases": {}
+   },
+   "control": {
+    "wall_ms": 2.104593,
+    "phases": {}
+   }
+  },
+  {
+   "probe": {
+    "wall_ms": 2.117774,
+    "phases": {
+     "io::load": [
+      38642,
+      14321,
+      7089
+     ],
+     "sexpr::parse": [
+      151591,
+      5072,
+      1474
+     ],
+     "circuit::collectPins": [
+      71645
+     ],
+     "validate::model": [
+      24250
+     ],
+     "circuit::normalize": [
+      94544
+     ],
+     "ports::collect": [
+      4063
+     ],
+     "schematic::build": [
+      259012
+     ],
+     "layout_graph::build": [
+      33677
+     ],
+     "layout::build": [
+      163174
+     ],
+     "layout_routes::build": [
+      31094
+     ],
+     "io::flush": [
+      48208
+     ],
+     "svg::render": [
+      451659
+     ],
+     "main::main": [
+      940231
+     ]
+    }
+   },
+   "gc-lto": {
+    "wall_ms": 2.307689,
+    "phases": {}
+   },
+   "original": {
+    "wall_ms": 2.054707,
+    "phases": {}
+   },
+   "control": {
+    "wall_ms": 3.154801,
+    "phases": {}
+   }
+  },
+  {
+   "gc-lto": {
+    "wall_ms": 2.273404,
+    "phases": {}
+   },
+   "control": {
+    "wall_ms": 2.076173,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.123729,
+    "phases": {
+     "io::load": [
+      39234,
+      14520,
+      6950
+     ],
+     "sexpr::parse": [
+      158892,
+      5547,
+      1615
+     ],
+     "circuit::collectPins": [
+      79416
+     ],
+     "validate::model": [
+      24161
+     ],
+     "circuit::normalize": [
+      95144
+     ],
+     "ports::collect": [
+      3965
+     ],
+     "schematic::build": [
+      269087
+     ],
+     "layout_graph::build": [
+      36697
+     ],
+     "layout::build": [
+      178833
+     ],
+     "layout_routes::build": [
+      33383
+     ],
+     "io::flush": [
+      45775
+     ],
+     "svg::render": [
+      462842
+     ],
+     "main::main": [
+      971497
+     ]
+    }
+   },
+   "original": {
+    "wall_ms": 2.01315,
+    "phases": {}
+   }
+  },
+  {
+   "gc-lto": {
+    "wall_ms": 2.321321,
+    "phases": {}
+   },
+   "original": {
+    "wall_ms": 2.065771,
+    "phases": {}
+   },
+   "control": {
+    "wall_ms": 2.453228,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.098209,
+    "phases": {
+     "io::load": [
+      40479,
+      14284,
+      6932
+     ],
+     "sexpr::parse": [
+      154893,
+      5049,
+      1497
+     ],
+     "circuit::collectPins": [
+      71668
+     ],
+     "validate::model": [
+      24461
+     ],
+     "circuit::normalize": [
+      96513
+     ],
+     "ports::collect": [
+      4200
+     ],
+     "schematic::build": [
+      260876
+     ],
+     "layout_graph::build": [
+      37642
+     ],
+     "layout::build": [
+      173085
+     ],
+     "layout_routes::build": [
+      52502
+     ],
+     "io::flush": [
+      47003
+     ],
+     "svg::render": [
+      494300
+     ],
+     "main::main": [
+      990544
+     ]
+    }
+   }
+  },
+  {
+   "gc-lto": {
+    "wall_ms": 2.200035,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.135502,
+    "phases": {
+     "io::load": [
+      41169,
+      18046,
+      7071
+     ],
+     "sexpr::parse": [
+      169269,
+      5843,
+      1624
+     ],
+     "circuit::collectPins": [
+      71671
+     ],
+     "validate::model": [
+      24050
+     ],
+     "circuit::normalize": [
+      94997
+     ],
+     "ports::collect": [
+      4089
+     ],
+     "schematic::build": [
+      263657
+     ],
+     "layout_graph::build": [
+      36301
+     ],
+     "layout::build": [
+      176269
+     ],
+     "layout_routes::build": [
+      30038
+     ],
+     "io::flush": [
+      45511
+     ],
+     "svg::render": [
+      455215
+     ],
+     "main::main": [
+      974658
+     ]
+    }
+   },
+   "control": {
+    "wall_ms": 1.999465,
+    "phases": {}
+   },
+   "original": {
+    "wall_ms": 3.165459,
+    "phases": {}
+   }
+  },
+  {
+   "control": {
+    "wall_ms": 2.121344,
+    "phases": {}
+   },
+   "gc-lto": {
+    "wall_ms": 2.449213,
+    "phases": {}
+   },
+   "original": {
+    "wall_ms": 2.339879,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.382515,
+    "phases": {
+     "io::load": [
+      47858,
+      17105,
+      8314
+     ],
+     "sexpr::parse": [
+      179879,
+      5793,
+      1777
+     ],
+     "circuit::collectPins": [
+      82792
+     ],
+     "validate::model": [
+      28409
+     ],
+     "circuit::normalize": [
+      109875
+     ],
+     "ports::collect": [
+      5063
+     ],
+     "schematic::build": [
+      301355
+     ],
+     "layout_graph::build": [
+      42348
+     ],
+     "layout::build": [
+      194711
+     ],
+     "layout_routes::build": [
+      36062
+     ],
+     "io::flush": [
+      54855
+     ],
+     "svg::render": [
+      526633
+     ],
+     "main::main": [
+      1103069
+     ]
+    }
+   }
+  },
+  {
+   "control": {
+    "wall_ms": 2.172234,
+    "phases": {}
+   },
+   "gc-lto": {
+    "wall_ms": 2.363855,
+    "phases": {}
+   },
+   "original": {
+    "wall_ms": 2.116492,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.016496,
+    "phases": {
+     "io::load": [
+      41912,
+      15351,
+      7647
+     ],
+     "sexpr::parse": [
+      162724,
+      5587,
+      1634
+     ],
+     "circuit::collectPins": [
+      76593
+     ],
+     "validate::model": [
+      26022
+     ],
+     "circuit::normalize": [
+      101916
+     ],
+     "ports::collect": [
+      4656
+     ],
+     "schematic::build": [
+      276410
+     ],
+     "layout_graph::build": [
+      36597
+     ],
+     "layout::build": [
+      183438
+     ],
+     "layout_routes::build": [
+      34983
+     ],
+     "io::flush": [
+      48027
+     ],
+     "svg::render": [
+      487716
+     ],
+     "main::main": [
+      1012776
+     ]
+    }
+   }
+  },
+  {
+   "probe": {
+    "wall_ms": 2.111286,
+    "phases": {
+     "io::load": [
+      41876,
+      15385,
+      7809
+     ],
+     "sexpr::parse": [
+      161382,
+      5386,
+      1573
+     ],
+     "circuit::collectPins": [
+      76717
+     ],
+     "validate::model": [
+      25905
+     ],
+     "circuit::normalize": [
+      101052
+     ],
+     "ports::collect": [
+      7686
+     ],
+     "schematic::build": [
+      278626
+     ],
+     "layout_graph::build": [
+      41116
+     ],
+     "layout::build": [
+      197889
+     ],
+     "layout_routes::build": [
+      34746
+     ],
+     "io::flush": [
+      51948
+     ],
+     "svg::render": [
+      516352
+     ],
+     "main::main": [
+      1040885
+     ]
+    }
+   },
+   "gc-lto": {
+    "wall_ms": 2.331346,
+    "phases": {}
+   },
+   "original": {
+    "wall_ms": 1.968436,
+    "phases": {}
+   },
+   "control": {
+    "wall_ms": 2.002846,
+    "phases": {}
+   }
+  },
+  {
+   "original": {
+    "wall_ms": 1.949162,
+    "phases": {}
+   },
+   "gc-lto": {
+    "wall_ms": 2.230729,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.061748,
+    "phases": {
+     "io::load": [
+      42375,
+      15305,
+      7500
+     ],
+     "sexpr::parse": [
+      182950,
+      5511,
+      1540
+     ],
+     "circuit::collectPins": [
+      76954
+     ],
+     "validate::model": [
+      25963
+     ],
+     "circuit::normalize": [
+      100989
+     ],
+     "ports::collect": [
+      4371
+     ],
+     "schematic::build": [
+      275461
+     ],
+     "layout_graph::build": [
+      36608
+     ],
+     "layout::build": [
+      176262
+     ],
+     "layout_routes::build": [
+      32363
+     ],
+     "io::flush": [
+      48968
+     ],
+     "svg::render": [
+      475611
+     ],
+     "main::main": [
+      1019122
+     ]
+    }
+   },
+   "control": {
+    "wall_ms": 2.092236,
+    "phases": {}
+   }
+  },
+  {
+   "probe": {
+    "wall_ms": 2.078002,
+    "phases": {
+     "io::load": [
+      41405,
+      15311,
+      7636
+     ],
+     "sexpr::parse": [
+      165578,
+      5582,
+      1638
+     ],
+     "circuit::collectPins": [
+      80395
+     ],
+     "validate::model": [
+      25883
+     ],
+     "circuit::normalize": [
+      101207
+     ],
+     "ports::collect": [
+      4413
+     ],
+     "schematic::build": [
+      281777
+     ],
+     "layout_graph::build": [
+      38283
+     ],
+     "layout::build": [
+      176795
+     ],
+     "layout_routes::build": [
+      35355
+     ],
+     "io::flush": [
+      48066
+     ],
+     "svg::render": [
+      497861
+     ],
+     "main::main": [
+      1029190
+     ]
+    }
+   },
+   "original": {
+    "wall_ms": 2.091367,
+    "phases": {}
+   },
+   "gc-lto": {
+    "wall_ms": 2.371773,
+    "phases": {}
+   },
+   "control": {
+    "wall_ms": 3.24919,
+    "phases": {}
+   }
+  },
+  {
+   "probe": {
+    "wall_ms": 2.128321,
+    "phases": {
+     "io::load": [
+      41015,
+      15247,
+      7717
+     ],
+     "sexpr::parse": [
+      162282,
+      5355,
+      1645
+     ],
+     "circuit::collectPins": [
+      76485
+     ],
+     "validate::model": [
+      28998
+     ],
+     "circuit::normalize": [
+      101750
+     ],
+     "ports::collect": [
+      4366
+     ],
+     "schematic::build": [
+      278810
+     ],
+     "layout_graph::build": [
+      36004
+     ],
+     "layout::build": [
+      173058
+     ],
+     "layout_routes::build": [
+      32553
+     ],
+     "io::flush": [
+      50859
+     ],
+     "svg::render": [
+      473929
+     ],
+     "main::main": [
+      998699
+     ]
+    }
+   },
+   "control": {
+    "wall_ms": 2.15978,
+    "phases": {}
+   },
+   "gc-lto": {
+    "wall_ms": 2.339828,
+    "phases": {}
+   },
+   "original": {
+    "wall_ms": 2.149497,
+    "phases": {}
+   }
+  },
+  {
+   "probe": {
+    "wall_ms": 2.128842,
+    "phases": {
+     "io::load": [
+      38424,
+      14464,
+      7446
+     ],
+     "sexpr::parse": [
+      168422,
+      5538,
+      1484
+     ],
+     "circuit::collectPins": [
+      73351
+     ],
+     "validate::model": [
+      24281
+     ],
+     "circuit::normalize": [
+      94338
+     ],
+     "ports::collect": [
+      3973
+     ],
+     "schematic::build": [
+      264186
+     ],
+     "layout_graph::build": [
+      34709
+     ],
+     "layout::build": [
+      163951
+     ],
+     "layout_routes::build": [
+      30493
+     ],
+     "io::flush": [
+      45169
+     ],
+     "svg::render": [
+      444136
+     ],
+     "main::main": [
+      956930
+     ]
+    }
+   },
+   "gc-lto": {
+    "wall_ms": 2.276625,
+    "phases": {}
+   },
+   "control": {
+    "wall_ms": 2.114929,
+    "phases": {}
+   },
+   "original": {
+    "wall_ms": 2.099107,
+    "phases": {}
+   }
+  },
+  {
+   "control": {
+    "wall_ms": 3.169027,
+    "phases": {}
+   },
+   "gc-lto": {
+    "wall_ms": 2.239628,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.092237,
+    "phases": {
+     "io::load": [
+      40491,
+      14207,
+      6990
+     ],
+     "sexpr::parse": [
+      152395,
+      5084,
+      1437
+     ],
+     "circuit::collectPins": [
+      71597
+     ],
+     "validate::model": [
+      24570
+     ],
+     "circuit::normalize": [
+      102681
+     ],
+     "ports::collect": [
+      4429
+     ],
+     "schematic::build": [
+      267358
+     ],
+     "layout_graph::build": [
+      40402
+     ],
+     "layout::build": [
+      171804
+     ],
+     "layout_routes::build": [
+      31146
+     ],
+     "io::flush": [
+      44832
+     ],
+     "svg::render": [
+      452034
+     ],
+     "main::main": [
+      953837
+     ]
+    }
+   },
+   "original": {
+    "wall_ms": 2.075415,
+    "phases": {}
+   }
+  },
+  {
+   "original": {
+    "wall_ms": 3.166909,
+    "phases": {}
+   },
+   "control": {
+    "wall_ms": 2.080409,
+    "phases": {}
+   },
+   "gc-lto": {
+    "wall_ms": 2.256764,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.16239,
+    "phases": {
+     "io::load": [
+      41926,
+      15294,
+      7685
+     ],
+     "sexpr::parse": [
+      166705,
+      5391,
+      1602
+     ],
+     "circuit::collectPins": [
+      73514
+     ],
+     "validate::model": [
+      24279
+     ],
+     "circuit::normalize": [
+      95172
+     ],
+     "ports::collect": [
+      4111
+     ],
+     "schematic::build": [
+      266726
+     ],
+     "layout_graph::build": [
+      37910
+     ],
+     "layout::build": [
+      167729
+     ],
+     "layout_routes::build": [
+      30884
+     ],
+     "io::flush": [
+      45247
+     ],
+     "svg::render": [
+      449869
+     ],
+     "main::main": [
+      969174
+     ]
+    }
+   }
+  },
+  {
+   "gc-lto": {
+    "wall_ms": 2.286594,
+    "phases": {}
+   },
+   "original": {
+    "wall_ms": 2.069572,
+    "phases": {}
+   },
+   "control": {
+    "wall_ms": 2.020735,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.088364,
+    "phases": {
+     "io::load": [
+      40783,
+      14243,
+      7032
+     ],
+     "sexpr::parse": [
+      156796,
+      5475,
+      1570
+     ],
+     "circuit::collectPins": [
+      78302
+     ],
+     "validate::model": [
+      24215
+     ],
+     "circuit::normalize": [
+      94900
+     ],
+     "ports::collect": [
+      4043
+     ],
+     "schematic::build": [
+      267346
+     ],
+     "layout_graph::build": [
+      34267
+     ],
+     "layout::build": [
+      163410
+     ],
+     "layout_routes::build": [
+      30743
+     ],
+     "io::flush": [
+      46102
+     ],
+     "svg::render": [
+      442332
+     ],
+     "main::main": [
+      948081
+     ]
+    }
+   }
+  },
+  {
+   "control": {
+    "wall_ms": 2.045071,
+    "phases": {}
+   },
+   "original": {
+    "wall_ms": 3.078063,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.144913,
+    "phases": {
+     "io::load": [
+      41837,
+      15176,
+      7488
+     ],
+     "sexpr::parse": [
+      162958,
+      5125,
+      1445
+     ],
+     "circuit::collectPins": [
+      72028
+     ],
+     "validate::model": [
+      24201
+     ],
+     "circuit::normalize": [
+      95280
+     ],
+     "ports::collect": [
+      4185
+     ],
+     "schematic::build": [
+      259657
+     ],
+     "layout_graph::build": [
+      35720
+     ],
+     "layout::build": [
+      171401
+     ],
+     "layout_routes::build": [
+      32743
+     ],
+     "io::flush": [
+      45835
+     ],
+     "svg::render": [
+      462209
+     ],
+     "main::main": [
+      968391
+     ]
+    }
+   },
+   "gc-lto": {
+    "wall_ms": 2.28698,
+    "phases": {}
+   }
+  },
+  {
+   "control": {
+    "wall_ms": 2.10262,
+    "phases": {}
+   },
+   "gc-lto": {
+    "wall_ms": 2.255503,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.168294,
+    "phases": {
+     "io::load": [
+      42075,
+      15356,
+      7508
+     ],
+     "sexpr::parse": [
+      162038,
+      5502,
+      1497
+     ],
+     "circuit::collectPins": [
+      76445
+     ],
+     "validate::model": [
+      25917
+     ],
+     "circuit::normalize": [
+      106765
+     ],
+     "ports::collect": [
+      4655
+     ],
+     "schematic::build": [
+      282286
+     ],
+     "layout_graph::build": [
+      40170
+     ],
+     "layout::build": [
+      181628
+     ],
+     "layout_routes::build": [
+      32679
+     ],
+     "io::flush": [
+      48439
+     ],
+     "svg::render": [
+      484246
+     ],
+     "main::main": [
+      1013032
+     ]
+    }
+   },
+   "original": {
+    "wall_ms": 2.083243,
+    "phases": {}
+   }
+  },
+  {
+   "probe": {
+    "wall_ms": 2.093385,
+    "phases": {
+     "io::load": [
+      41426,
+      15183,
+      7440
+     ],
+     "sexpr::parse": [
+      156398,
+      5027,
+      1410
+     ],
+     "circuit::collectPins": [
+      71505
+     ],
+     "validate::model": [
+      24253
+     ],
+     "circuit::normalize": [
+      94825
+     ],
+     "ports::collect": [
+      4147
+     ],
+     "schematic::build": [
+      257647
+     ],
+     "layout_graph::build": [
+      33897
+     ],
+     "layout::build": [
+      162651
+     ],
+     "layout_routes::build": [
+      30171
+     ],
+     "io::flush": [
+      45256
+     ],
+     "svg::render": [
+      441553
+     ],
+     "main::main": [
+      937538
+     ]
+    }
+   },
+   "gc-lto": {
+    "wall_ms": 2.269132,
+    "phases": {}
+   },
+   "control": {
+    "wall_ms": 2.085491,
+    "phases": {}
+   },
+   "original": {
+    "wall_ms": 2.384098,
+    "phases": {}
+   }
+  },
+  {
+   "control": {
+    "wall_ms": 2.043851,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.114183,
+    "phases": {
+     "io::load": [
+      41525,
+      14585,
+      7269
+     ],
+     "sexpr::parse": [
+      153077,
+      5020,
+      1445
+     ],
+     "circuit::collectPins": [
+      71607
+     ],
+     "validate::model": [
+      24572
+     ],
+     "circuit::normalize": [
+      99464
+     ],
+     "ports::collect": [
+      4421
+     ],
+     "schematic::build": [
+      266017
+     ],
+     "layout_graph::build": [
+      39748
+     ],
+     "layout::build": [
+      178597
+     ],
+     "layout_routes::build": [
+      31045
+     ],
+     "io::flush": [
+      45244
+     ],
+     "svg::render": [
+      460797
+     ],
+     "main::main": [
+      962933
+     ]
+    }
+   },
+   "original": {
+    "wall_ms": 2.088984,
+    "phases": {}
+   },
+   "gc-lto": {
+    "wall_ms": 2.342316,
+    "phases": {}
+   }
+  },
+  {
+   "gc-lto": {
+    "wall_ms": 2.222936,
+    "phases": {}
+   },
+   "probe": {
+    "wall_ms": 2.105884,
+    "phases": {
+     "io::load": [
+      42358,
+      15311,
+      7475
+     ],
+     "sexpr::parse": [
+      162234,
+      5420,
+      1539
+     ],
+     "circuit::collectPins": [
+      80462
+     ],
+     "validate::model": [
+      25836
+     ],
+     "circuit::normalize": [
+      100490
+     ],
+     "ports::collect": [
+      4233
+     ],
+     "schematic::build": [
+      278061
+     ],
+     "layout_graph::build": [
+      37542
+     ],
+     "layout::build": [
+      175299
+     ],
+     "layout_routes::build": [
+      30106
+     ],
+     "io::flush": [
+      52775
+     ],
+     "svg::render": [
+      462440
+     ],
+     "main::main": [
+      988037
+     ]
+    }
+   },
+   "control": {
+    "wall_ms": 2.101472,
+    "phases": {}
+   },
+   "original": {
+    "wall_ms": 2.036314,
+    "phases": {}
+   }
+  }
+ ]
+}
