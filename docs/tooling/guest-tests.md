@@ -110,6 +110,11 @@ beneath the directory that no reporting child loaded as `not run: <path>
 the count line and `unloaded` to the JSON report, and exits 2. A test file can
 therefore fail a run, but it can never silently drop out of one.
 
+Each run materializes its private source snapshot under `$TMPDIR/.pending/` when
+`TMPDIR` is set and non-empty, and under `/tmp/.pending/` otherwise. On a host
+whose `/tmp` is a small or quota-bound tmpfs, point `TMPDIR` at disk; otherwise
+a full `/tmp` fails every test with `host failure: DiskQuota`.
+
 On a corpus of 100 small programs with 200 tests, a cold run takes about 7
 seconds, an unchanged rerun about 0.6 seconds, and a run after editing one
 program about 0.8 seconds — re-executing only the two tests that program owns.
