@@ -284,8 +284,6 @@ const Checker = struct {
     owner: ?typed.Type = null,
     /// The `with open(...)` head whose failure traps instead of yielding a result.
     trapping_open: ?source.Span = null,
-    /// Opt-in D3 experiment: enforce call-site `&` markers against `mutates(...)`.
-    mutation_markers: bool = false,
 
     fn checkFunction(self: *Checker, i: usize) Error!typed.Function {
         if (i >= self.lambda_start and i < self.lambda_start + self.syntax.lambdas.len)
@@ -372,9 +370,12 @@ const Checker = struct {
                 .constant_arguments = self.instance_keys.items[i].lengths,
                 .return_type = self.return_type,
                 .parameter_count = function.signature.parameters.len,
-                .mutates = function.signature.mutates,
+                .mutates = &.{},
                 .return_origin = .unknown,
-                .declared_mutates = function.signature.mutates,
+                // The declared footprint is the `mut` parameter set itself: a
+                // written position and a `name: mut T` declaration are the same
+                // fact, so there is no separate clause to reconcile.
+                .declared_mutates = function.signature.mut_positions,
             },
             .scope = .{
                 .body = body.id,
@@ -556,7 +557,7 @@ const Checker = struct {
         const descriptors = try self.allocator.alloc([]const u8, arguments.len);
         for (arguments, 0..) |argument, i| descriptors[i] = try semantic_key.argumentDescriptor(self.allocator, argument, if (i < lengths.len) lengths[i] else null, self.catalog.records);
         const provider = try semantic_key.providerIdentity(self.allocator, arguments, self.catalog.records);
-        const contract = semantic_key.declaredContractDigest(function.policy.effect_bound, function.signature.mutates);
+        const contract = semantic_key.declaredContractDigest(function.policy.effect_bound, function.signature.mut_positions);
         const canonical = try semantic_key.specializationFingerprint(self.allocator, .{
             .template_identity = prepared.keys[declaration],
             .arguments = descriptors,
@@ -3146,7 +3147,7 @@ const Checker = struct {
             .parameters = parameters,
             .return_type = result,
             .effects = allowed,
-            .mutates = function.signature.mutates,
+            .mutates = function.signature.mut_positions,
             .return_origin = .unknown,
         };
         // Reuse the destination's interned schema when only its return-origin bound
@@ -3168,7 +3169,7 @@ const Checker = struct {
         const slot = try self.resolve(call.name);
         const contract = callables.signature(self.locals.items[@backingInt(slot)].ty, self.catalog.records) orelse return self.sink.fail(callback_type_code, call.name, "called local is not a function value");
         if (call.type_arguments.len != 0 or call.arguments.len != contract.parameters.len) return self.sink.fail("E_ARITY", call.name, "callback argument count must match its signature");
-        try self.checkMutationMarkers(call.arguments, call.argument_markers, contract.mutates);
+        try self.checkMutationMarkers(call.name, call.arguments, contract.mutates);
         self.locals.items[@backingInt(slot)].usage.reads += 1;
         const callee: typed.NodeId = @fromBackingInt(self.nodes.items.len);
         try self.nodes.append(self.allocator, .{ .span = call.name, .ty = self.locals.items[@backingInt(slot)].ty, .data = .{ .local = slot } });
@@ -3484,7 +3485,7 @@ const Checker = struct {
     /// record update rather than the positional three-argument list intrinsic.
     /// A declared, imported or local name called `replace` keeps its own meaning.
     fn recordUpdateCall(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
-        if (call.owner != null or call.argument_names.len == 0 or call.argument_markers.len != 0) return false;
+        if (call.owner != null or call.argument_names.len == 0 or self.callCarriesMutMarker(call)) return false;
         if (!std.mem.eql(u8, self.src.text(call.name), "replace")) return false;
         if (self.active.contains(self.src.text(call.name))) return false;
         return !try self.topLevel(call.name);
@@ -3502,12 +3503,12 @@ const Checker = struct {
         out.data = .{ .update = .{ .base = base, .fields = try self.fields(record_type, initializers, false, node.span) } };
     }
     fn checkCall(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
-        // A call carrying `&` markers must resolve to a declared function or a
-        // callable value: only those expose a `mutates(...)` footprint. Skipping
-        // the builtin/constructor dispatch for such a call routes it through the
-        // ordinary resolution below, where a marker on a non-declaring callee is
-        // reported instead of silently accepted.
-        const markers_present = input.argument_markers.len != 0;
+        // A call carrying a `mut` marker must resolve to a declared function or a
+        // callable value: only those expose a `mut` parameter set. Skipping the
+        // builtin and constructor dispatch for such a call routes it through the
+        // ordinary resolution below, where the marker is checked positionally
+        // instead of silently accepted and dropped.
+        const markers_present = self.callCarriesMutMarker(input);
         if (!markers_present) {
             if (try self.checkCapabilityNarrowing(node, input, out)) return;
             if (try self.checkNetworkHost(node, input, out)) return;
@@ -3557,7 +3558,7 @@ const Checker = struct {
         const function = try self.specialize(target.declaration, call, node.span);
         const signature = self.syntaxFunction(function);
         try self.warnDeprecated(function, input);
-        try self.checkMutationMarkers(call.arguments, call.argument_markers, signature.signature.mutates);
+        try self.checkMutationMarkers(call.name, call.arguments, signature.signature.mut_positions);
         var arguments: std.ArrayList(typed.NodeId) = .empty;
         for (call.arguments, signature.signature.parameters) |arg, parameter| {
             const argument = self.syntax.nodes.items[@backingInt(arg)];
@@ -3598,28 +3599,34 @@ const Checker = struct {
         });
         try self.sink.items.append(self.allocator, .{ .severity = .warning, .code = "W_DEPRECATED", .span = input.name, .message = message });
     }
-    /// Enforce the opt-in D3 call-site `&` marker against a resolved callee's
-    /// declared `mutates(...)` parameter positions. `arguments` is already in
-    /// parameter order and `markers` is aligned with it. A marker is required on
-    /// every declared position, rejected on an undeclared one, and rejected on a
-    /// target that cannot be assigned through.
-    fn checkMutationMarkers(self: *Checker, arguments: []const ast.NodeId, markers: []const bool, mutates: []const u16) Error!void {
-        if (!self.mutation_markers) return;
+    /// Enforce the `mut` call-site marker for one resolved call. `arguments` is in
+    /// parameter order and `mut_positions` is the callee's declared `mut` set, so
+    /// the marker is required exactly where the callee declares a write, rejected
+    /// where it declares none, and rejected on a target that cannot be assigned
+    /// through. Each rejection spells the replacement in its own message.
+    fn checkMutationMarkers(self: *Checker, call_name: source.Span, arguments: []const ast.NodeId, mut_positions: []const u16) Error!void {
         for (arguments, 0..) |argument, position| {
-            const declared = markerPositionDeclared(mutates, @intCast(position));
-            const marked = markers.len != 0 and markers[position];
+            const declared = markerPositionDeclared(mut_positions, @intCast(position));
             const arg_node = self.syntax.nodes.items[@backingInt(argument)];
-            const text = self.src.text(arg_node.span);
-            if (declared and !marked) {
-                const message = try std.fmt.allocPrint(self.allocator, "argument {d} is declared writable by `mutates(...)`; add the `&` marker so the call shows the write: `&{s}`", .{ position + 1, text });
+            if (arg_node.data != .mut_argument) continue;
+            const target = self.syntax.nodes.items[@backingInt(arg_node.data.mut_argument)];
+            if (!declared) {
+                const message = try std.fmt.allocPrint(self.allocator, "`{s}` does not write `{s}`; remove `mut`", .{ self.src.text(call_name), self.src.text(target.span) });
                 return self.sink.fail(mutation_marker_code, arg_node.span, message);
             }
-            if (marked and !declared) {
-                const message = try std.fmt.allocPrint(self.allocator, "`&` marks a write, but the callee does not declare this position in `mutates(...)`; remove the marker: `{s}`", .{text});
-                return self.sink.fail(mutation_marker_code, arg_node.span, message);
-            }
-            if (marked and !self.markerTarget(arg_node)) return self.sink.fail(mutation_marker_code, arg_node.span, "`&` requires an assignable argument (a variable, field, or list slot); assign it to a local first");
+            if (!self.markerTarget(target)) return self.sink.fail(
+                mutation_marker_code,
+                arg_node.span,
+                "`mut` requires an assignable argument (a variable, field or list slot); assign it to a local first",
+            );
         }
+    }
+    /// Whether any argument of one call is wrapped in a `mut` marker. A marker
+    /// belongs to a call that declares a `mut` position to check it against, so a
+    /// call carrying one skips the builtin and constructor dispatch.
+    fn callCarriesMutMarker(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) bool {
+        for (call.arguments) |argument| if (self.syntax.nodes.items[@backingInt(argument)].data == .mut_argument) return true;
+        return false;
     }
     /// Whether an argument expression names a place a callee could write to:
     /// a variable, or a field/index chain rooted at one.
@@ -3631,7 +3638,7 @@ const Checker = struct {
             else => false,
         };
     }
-    /// Whether one zero-based position appears in a normalized `mutates(...)` set.
+    /// Whether one zero-based position appears in a normalized `mut` set.
     fn markerPositionDeclared(positions: []const u16, position: u16) bool {
         for (positions) |candidate| if (candidate == position) return true;
         return false;
@@ -4097,9 +4104,15 @@ const Checker = struct {
             // lane: conditional expression (item 6): this arm is replaced by the
             // two-branch check the simple lane adds.
             .conditional => return self.sink.fail(eNotImplemented, node.span, "conditional expressions parse but are not checked yet"),
-            // lane: mut marker (item 1): this arm is replaced by the
-            // mutation-marker check the `mut` lane adds.
-            .mut_argument => return self.sink.fail(eNotImplemented, node.span, "the `mut` argument marker parses but is not checked yet"),
+            // A `mut` marker is transparent in expression position: the value it
+            // wraps keeps its own type and node. The call that owns the marker
+            // checks the position, and a marker anywhere else has no call to be
+            // checked against.
+            .mut_argument => |inner| {
+                const value = self.resolved[@backingInt(inner)].?;
+                out.ty = self.nodes.items[@backingInt(value)].ty;
+                out.data = self.nodes.items[@backingInt(value)].data;
+            },
         }
         return out;
     }
@@ -5384,7 +5397,6 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         .ordinary_ids = ordinary_ids,
         .lambda_types = lambda_types,
         .lambda_captures = lambda_captures,
-        .mutation_markers = src.mutation_markers,
     };
     defer allocator.free(checker.managed_types);
     // C3 reuse: prepared declaration facts and fresh identity maps are

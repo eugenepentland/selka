@@ -18,10 +18,6 @@ pub fn bind(allocator: std.mem.Allocator, src: source.Source, call: Call, parame
     errdefer allocator.free(values);
     const order = try allocator.alloc(usize, parameters.len);
     errdefer allocator.free(order);
-    // Keep the opt-in `&` markers aligned with the reordered parameter list.
-    const marker_buffer: ?[]bool = if (call.argument_markers.len != 0) try allocator.alloc(bool, parameters.len) else null;
-    errdefer if (marker_buffer) |buffer| allocator.free(buffer);
-    if (marker_buffer) |buffer| @memset(buffer, false);
     const filled = try allocator.alloc(bool, parameters.len);
     defer allocator.free(filled);
     @memset(filled, false);
@@ -32,7 +28,6 @@ pub fn bind(allocator: std.mem.Allocator, src: source.Source, call: Call, parame
         filled[target] = true;
         values[target] = value;
         order[source_index] = target;
-        if (marker_buffer) |buffer| buffer[target] = call.argument_markers[source_index];
     }
     var next = call.arguments.len;
     for (parameters, 0..) |parameter, index| if (!filled[index]) {
@@ -48,7 +43,6 @@ pub fn bind(allocator: std.mem.Allocator, src: source.Source, call: Call, parame
     out.arguments = values;
     out.argument_names = &.{};
     out.evaluation_order = order;
-    out.argument_markers = if (marker_buffer) |buffer| buffer else &.{};
     return out;
 }
 fn parameterIndex(src: source.Source, parameters: []const ast.Parameter, name: source.Span, sink: *diagnostic.Sink) diagnostic.Error!usize {
@@ -69,5 +63,4 @@ pub fn release(allocator: std.mem.Allocator, original: Call, bound: Call) void {
     if (bound.arguments.ptr == original.arguments.ptr) return;
     allocator.free(bound.arguments);
     allocator.free(bound.evaluation_order);
-    if (bound.argument_markers.len != 0 and bound.argument_markers.ptr != original.argument_markers.ptr) allocator.free(bound.argument_markers);
 }

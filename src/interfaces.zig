@@ -596,8 +596,6 @@ pub const Index = struct {
         }
         writer.writeAll(")") catch return error.OutOfMemory;
         if (inferred == null) writer.print(" analysis({s})", .{fact_status.name(unavailableAnalysis(self.program, function))}) catch return error.OutOfMemory;
-        const mutates = try self.mutatesNamesText(origin.module, function.signature);
-        if (mutates.len != 0) writer.print(" mutates({s})", .{mutates}) catch return error.OutOfMemory;
         if (function.policy.effect_bound) |bound| {
             writer.writeAll(" ceiling(") catch return error.OutOfMemory;
             var ceiling: std.ArrayList(u8) = .empty;
@@ -669,23 +667,6 @@ pub const Index = struct {
             .display = symbol.name,
         };
         return .{ .module = module, .symbol = symbol, .display = symbol.name };
-    }
-    /// Render one declared `mutates` footprint by source parameter name, falling
-    /// back to the numeric position only if the declaration is malformed.
-    fn mutatesNamesText(self: *Index, module: usize, signature: ast.FunctionSignature) ContractError![]const u8 {
-        if (signature.mutates.len == 0) return "";
-        const allocator = self.project.arena.allocator();
-        const src = self.project.modules.items[module].src;
-        var out: std.ArrayList(u8) = .empty;
-        for (signature.mutates, 0..) |position, index| {
-            if (index != 0) try out.appendSlice(allocator, ",");
-            if (position < signature.parameters.len) {
-                try out.appendSlice(allocator, src.text(signature.parameters[position].name));
-            } else {
-                try out.appendSlice(allocator, try std.fmt.allocPrint(allocator, "{d}", .{position}));
-            }
-        }
-        return out.toOwnedSlice(allocator);
     }
     /// Render exported declarations, plus the unexported `test_` declarations
     /// that already have the defaulting test shape, as a canonical
@@ -779,7 +760,7 @@ pub const Index = struct {
         var out: ContractDeclaration = .{ .name = symbol.name, .kind = "function" };
         out.generics = try self.contractGenericsText(module, function.signature.type_parameters);
         out.signature = try self.contractSignatureText(module, function.signature);
-        out.permissions = try permissionsText(self.project.arena.allocator(), mask, function.signature.mutates, "unknown");
+        out.permissions = try permissionsText(self.project.arena.allocator(), mask, function.signature.mut_positions, "unknown");
         if (ast.hasAttribute(self.units[module].syntax, function.name, .@"test")) out.@"test" = true;
         return out;
     }
@@ -816,7 +797,7 @@ pub const Index = struct {
         for (signature.parameters, 0..) |parameter, index| {
             if (index != 0) try out.appendSlice(allocator, ",");
             try out.appendSlice(allocator, src.text(parameter.name));
-            try out.appendSlice(allocator, ":");
+            try out.appendSlice(allocator, if (parameter.mut) ":mut " else ":");
             try out.appendSlice(allocator, try self.contractTypeText(module, parameter.ty, signature.type_parameters));
             if (parameter.default_value) |value| {
                 const span = self.units[module].syntax.nodes.items[@backingInt(value)].span;
@@ -1026,6 +1007,7 @@ pub const Index = struct {
             try out.appendSlice(allocator, "def(");
             for (callback.parameters, 0..) |parameter, index| {
                 if (index != 0) try out.appendSlice(allocator, ",");
+                if (index < callback.mut_parameters.len and callback.mut_parameters[index]) try out.appendSlice(allocator, "mut ");
                 try out.appendSlice(allocator, try self.contractTypeTextPath(module, parameter, parameters, path));
             }
             try out.appendSlice(allocator, ")->");
@@ -1033,14 +1015,6 @@ pub const Index = struct {
             try out.appendSlice(allocator, " effects(");
             try appendEffectNames(&out, allocator, callback.effect_bound.allowed);
             try out.appendSlice(allocator, ")");
-            if (callback.mutates.len != 0) {
-                try out.appendSlice(allocator, " mutates(");
-                for (callback.mutates, 0..) |position, index| {
-                    if (index != 0) try out.appendSlice(allocator, ",");
-                    try out.appendSlice(allocator, try std.fmt.allocPrint(allocator, "{d}", .{position}));
-                }
-                try out.appendSlice(allocator, ")");
-            }
             return out.toOwnedSlice(allocator);
         }
         for (self.units[module].syntax.types.expressions.arrays) |array| {
@@ -1333,7 +1307,7 @@ fn moduleSyntax(project: *graph.Project, module_id: usize, cache: ?*SyntaxCache,
 }
 fn parseModule(project: *graph.Project, module_id: usize, sink: *diagnostic.Sink) diagnostic.Error!ast.Program {
     const module = project.modules.items[module_id];
-    const tokens = try lexer.lexWithMarkers(project.arena.allocator(), module.src.bytes, module.src.mutation_markers, sink);
+    const tokens = try lexer.lex(project.arena.allocator(), module.src.bytes, sink);
     var parse: parser.Parser = .{ .src = module.src, .arena = &project.arena, .tokens = tokens, .sink = sink };
     return parse.parseModule();
 }

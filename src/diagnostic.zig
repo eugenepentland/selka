@@ -360,16 +360,17 @@ pub fn appendRequirements(allocator: std.mem.Allocator, src: source.Source, para
     }
 }
 
-/// Spell one declaration's `mutates(...)` footprint from its own parameter
-/// names, or `none` when it permits no parameter writes.
+/// Spell one declaration's mutation footprint from its own parameter names as
+/// the `name: mut T` list a reader would write, or `none` when it declares no
+/// written parameter.
 pub fn mutationFact(allocator: std.mem.Allocator, src: source.Source, function: ast.Function) error{OutOfMemory}!Fact {
-    if (function.signature.mutates.len == 0) return .{ .text = "none", .span = function.name };
+    if (function.signature.mut_positions.len == 0) return .{ .text = "none", .span = function.name };
     var out: std.Io.Writer.Allocating = .init(allocator);
     // The successful slice is transferred out and empties the writer, so this
     // releases only a partial buffer on an error return.
     defer out.deinit();
-    out.writer.writeAll("mutates(") catch return error.OutOfMemory;
-    for (function.signature.mutates, 0..) |position, index| {
+    out.writer.writeAll("mut(") catch return error.OutOfMemory;
+    for (function.signature.mut_positions, 0..) |position, index| {
         if (index != 0) out.writer.writeAll(", ") catch return error.OutOfMemory;
         out.writer.writeAll(src.text(function.signature.parameters[position].name)) catch return error.OutOfMemory;
     }

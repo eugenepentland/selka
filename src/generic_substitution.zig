@@ -1,5 +1,6 @@
 //! Concrete composite signatures share nominal identities and specialization limits.
 const std = @import("std");
+const ast = @import("ast.zig");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 const Span = @import("source.zig").Span;
@@ -56,7 +57,7 @@ pub fn resolve(allocator: std.mem.Allocator, catalog: *@import("type_catalog.zig
             .parameters = inputs[0..callback.parameters.len],
             .return_type = result,
             .effects = callback.effect_bound.allowed,
-            .mutates = callback.mutates,
+            .mutates = try ast.mutPositions(allocator, callback.mut_parameters),
             .return_origin = .unknown,
         }, span, sink);
     };

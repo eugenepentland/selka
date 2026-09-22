@@ -176,7 +176,7 @@ const Checker = struct {
             .parameters = parameters,
             .result = result,
             .effects = syntax.effect_bound.allowed,
-            .mutates = syntax.mutates,
+            .mutates = try ast.mutPositions(self.field_arena.allocator(), syntax.mut_parameters),
             .return_origin = .unknown,
         };
         return .{ .callback = signature };

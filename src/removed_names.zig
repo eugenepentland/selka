@@ -32,7 +32,7 @@ const entries = [_]Entry{
     .{ .removed = "f64_neg", .canonical = "float", .message = "`f64_neg` was removed; negate a `float` value with `-`" },
     .{ .removed = "f64_from_u64", .canonical = "float", .message = "`f64_from_u64` was removed; convert an integer with `float(value)`" },
     .{ .removed = "f64_to_u64", .canonical = "int", .message = "`f64_to_u64` was removed; convert a `float` value with `int(value)`" },
-    .{ .removed = "&", .canonical = "", .message = "`&` was removed and has no replacement" },
+    .{ .removed = "&", .canonical = "mut", .message = "`&` was removed; write `mut value`" },
     .{ .removed = "=>", .canonical = "", .message = "`=>` was removed and has no replacement" },
 };
 

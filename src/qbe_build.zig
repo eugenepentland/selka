@@ -222,7 +222,6 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         // refuses one at run time. A library always keeps it.
         const frame_accounted = frameAccounting(parsed.link_arguments);
         if (fast_executable and !frame_accounted) try arguments.append(a, "--drop-frame-checks");
-        if (mutationMarkers(parsed.link_arguments)) try arguments.append(a, "--mutation-markers");
         if (selectFile(parsed.link_arguments)) |path| {
             try arguments.append(a, try std.fmt.allocPrint(a, "--select-file={s}", .{path}));
             // Forward the work-report request for selective test builds so native-test
@@ -332,14 +331,6 @@ test "a build argument naming a step ceiling keeps its accounting" {
     try std.testing.expect(!stepAccounting(&.{ "main.my", "-o", "out" }));
     // A ceiling after `--` belongs to the guest, not to this build.
     try std.testing.expect(!stepAccounting(&.{ "main.my", "--", "--max-steps=1" }));
-}
-
-/// Whether the original build arguments opted into call-site mutation markers.
-/// The flag is accepted by the build parser but intentionally not stored in
-/// `Options`, whose field count is frozen by the type-size ratchet.
-fn mutationMarkers(args: []const []const u8) bool {
-    for (args) |argument| if (std.mem.eql(u8, argument, "--mutation-markers")) return true;
-    return false;
 }
 
 /// The argument vector for one built program and the options it was given.

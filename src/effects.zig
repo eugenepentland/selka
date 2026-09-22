@@ -481,7 +481,7 @@ pub fn checkAbstract(allocator: std.mem.Allocator, functions: []const @import("a
         if (inferred == 0) continue;
         const bound = function.policy.effect_bound orelse continue;
         const has_permission = bound.allowed & sets.bit(.mutation) != 0;
-        const permitted = positionMask(function.signature.mutates);
+        const permitted = positionMask(function.signature.mut_positions);
         if (has_permission and inferred & ~permitted == 0) continue;
         sink.items.append(sink.allocator, .{
             .code = "E_MUTATION_PERMISSION",

@@ -103,7 +103,6 @@ pub const Session = struct {
     fn appendPolicyFlags(self: Session, argv: *std.ArrayList([]const u8)) Error!void {
         if (self.options.flags.no_cache) try argv.append(self.context.allocator, "--no-cache");
         if (self.options.flags.output.report) try argv.append(self.context.allocator, "--report");
-        if (self.options.flags.mutation_markers) try argv.append(self.context.allocator, "--mutation-markers");
     }
     /// The native object-cache directory also carries the frontend semantic and
     /// syntax caches for this environment, so facts and selective emission share

@@ -20,7 +20,6 @@ pub const Source = struct { path: []const u8, bytes: []const u8 };
 pub const Identity = struct {
     sources: []const Source,
     policy: ?[]const u8 = null,
-    mutation_markers: bool = false,
     step_checks: bool = false,
     frame_checks: bool = true,
 };
@@ -76,7 +75,6 @@ fn entryPaths(context: fs.Context, settings: options.Options, identity: Identity
 fn keyFor(context: fs.Context, identity: Identity) ![]const u8 {
     var hash = std.crypto.hash.sha2.Sha256.init(.{});
     hash.update("native-run-validated-graph-v1");
-    frame(&hash, if (identity.mutation_markers) "mutation-on" else "mutation-off");
     frame(&hash, if (identity.step_checks) "steps-on" else "steps-off");
     frame(&hash, if (identity.frame_checks) "frames-on" else "frames-off");
     frame(&hash, identity.policy orelse "");
