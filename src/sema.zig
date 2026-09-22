@@ -17,7 +17,6 @@ const lambda_context_code = "E_LAMBDA_CONTEXT";
 const call_argument_code = "E_CALL_ARGUMENT";
 /// Stable code for a call-site `&` mutation marker that does not match the
 /// callee's declared `mutates(...)` footprint.
-const mutation_marker_code = "E_MUTATION_MARKER";
 const eResultOperation = diagnostic.result_operation;
 const eOwnedConsumed = diagnostic.owned_consumed;
 const eResultPath = diagnostic.result_path;
@@ -116,6 +115,8 @@ const eTextOperator = "E_TEXT_OPERATOR";
 /// expression, and the `mut` argument marker. Every use carries a `// lane:`
 /// comment and is deleted by that lane.
 const eNotImplemented = "E_NOT_IMPLEMENTED";
+/// A missing, unneeded or unauthorizable `mut` marker is one diagnostic code.
+const mutation_marker_code = @import("origins.zig").mutation_marker_code;
 const unsupported_collection = "operation is not supported by this collection";
 const unsupported_list = "operation is not supported by lists";
 const method_arity = "collection method argument count differs from its signature";

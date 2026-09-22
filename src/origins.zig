@@ -22,8 +22,10 @@ pub const permission_code = "E_MUTATION_PERMISSION";
 pub const overlap_code = "E_MUTATION_OVERLAP";
 /// Diagnostic code for a bounded analysis that had to widen conservatively.
 pub const limit_code = "E_MUTATION_LIMIT";
-/// Warning code for an externally observable write with no declared footprint.
-pub const missing_footprint_code = "W_MUTATES_MISSING";
+/// Error code for a `mut` marker that is missing, unneeded or unauthorizable.
+pub const mutation_marker_code = "E_MUTATION_MARKER";
+/// Error code for a parameter declared `mut` that the body never writes.
+pub const unused_mut_code = mutation_marker_code;
 
 /// Abstract upper bound on the caller inputs a value may alias.
 ///
@@ -576,59 +578,161 @@ fn writeParameterName(writer: *std.Io.Writer, function: typed.Function, position
     try writer.print("p{d}", .{position});
 }
 
-/// Build the mandatory-footprint warning, printing the inferred `mutates(...)`
-/// clause verbatim so the reader can paste it onto the declaration.
-fn missingFootprintMessage(allocator: std.mem.Allocator, function: typed.Function, summary: Summary) std.mem.Allocator.Error![]const u8 {
-    var positions = summary.mutates;
-    // An untraceable target widens to every parameter, exactly as the inferred
-    // footprint published on the signature does.
-    if (summary.mutates_unknown) {
-        var bit: u5 = 0;
-        while (bit < 16) : (bit += 1) {
-            if (bit < function.signature.parameter_count) positions |= @as(u16, 1) << @intCast(bit);
-        }
-    }
+/// Build the rejection for a written parameter that no `mut` marks, naming the
+/// exact declaration the reader should paste. `positions` is the inferred write
+/// set widened by every position an untraceable target could reach, so the paste
+/// covers the whole contract the body needs.
+fn unmarkedWriteMessage(allocator: std.mem.Allocator, program: typed.Program, function: typed.Function, positions: u16) std.mem.Allocator.Error![]const u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
     text.writer.writeAll("this function writes ") catch return error.OutOfMemory;
-    if (positions == 0) {
-        text.writer.writeAll("a caller-reachable location") catch return error.OutOfMemory;
-    } else {
-        var listed = false;
-        var position: u5 = 0;
-        while (position < 16) : (position += 1) {
-            if (positions & (@as(u16, 1) << @intCast(position)) == 0) continue;
-            if (listed) text.writer.writeAll(", ") catch return error.OutOfMemory;
-            text.writer.writeAll("`") catch return error.OutOfMemory;
-            writeParameterName(&text.writer, function, position) catch return error.OutOfMemory;
-            text.writer.print("` (parameter {d})", .{@as(u32, position) + 1}) catch return error.OutOfMemory;
-            listed = true;
-        }
-    }
-    text.writer.writeAll(" reachable from the caller; declare `mutates(") catch return error.OutOfMemory;
     var listed = false;
     var position: u5 = 0;
     while (position < 16) : (position += 1) {
         if (positions & (@as(u16, 1) << @intCast(position)) == 0) continue;
         if (listed) text.writer.writeAll(", ") catch return error.OutOfMemory;
+        text.writer.writeAll("`") catch return error.OutOfMemory;
         writeParameterName(&text.writer, function, position) catch return error.OutOfMemory;
+        text.writer.print("` (parameter {d})", .{@as(u32, position) + 1}) catch return error.OutOfMemory;
         listed = true;
     }
-    text.writer.writeAll(")`") catch return error.OutOfMemory;
+    text.writer.writeAll(" reachable from the caller; declare ") catch return error.OutOfMemory;
+    writeMutatedParameters(&text.writer, allocator, program, function, positions) catch return error.OutOfMemory;
     return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
 }
 
-/// Whether parameter `position` is a reference-typed `class` (or the builtin
-/// `Cell`). Writing through such a parameter is the reason it is passed by
-/// reference, so the mandatory-footprint warning exempts it.
-fn isClassParameter(program: typed.Program, function: typed.Function, position: u5) bool {
+/// Build the rejection for a `mut` parameter the body never writes, with the
+/// parameter's own declaration as the paste that removes the marker.
+fn unusedMutMessage(allocator: std.mem.Allocator, program: typed.Program, function: typed.Function, position: u5) std.mem.Allocator.Error![]const u8 {
+    var text: std.Io.Writer.Allocating = .init(allocator);
+    defer text.deinit();
+    text.writer.writeAll("`") catch return error.OutOfMemory;
+    writeParameterName(&text.writer, function, position) catch return error.OutOfMemory;
+    text.writer.writeAll("` is declared `mut` but never written; remove `mut`: ") catch return error.OutOfMemory;
+    writeMutatedParameter(&text.writer, allocator, program, function, position) catch return error.OutOfMemory;
+    return allocator.dupe(u8, text.written()) catch return error.OutOfMemory;
+}
+
+/// Write one `name: mut T` declaration per set bit of `positions`, comma
+/// separated. Each is a paste-ready parameter annotation.
+fn writeMutatedParameters(writer: *std.Io.Writer, allocator: std.mem.Allocator, program: typed.Program, function: typed.Function, positions: u16) std.mem.Allocator.Error!void {
+    var listed = false;
+    var position: u5 = 0;
+    while (position < 16) : (position += 1) {
+        if (positions & (@as(u16, 1) << @intCast(position)) == 0) continue;
+        if (listed) writer.writeAll(", ") catch return error.OutOfMemory;
+        try writeMutatedParameter(writer, allocator, program, function, position);
+        listed = true;
+    }
+}
+
+/// Whether a parameter of this type can be written through at all. `list`,
+/// `dict`, `class`, `Cell`, `[N]T`, `byte_buffer` and any record, union, option
+/// or result holding one carry mutable managed storage; scalars, `str`, `bytes`
+/// and records built only from those do not, so `mut` on them would promise a
+/// write that cannot reach the caller.
+fn carriesWritableStorage(program: typed.Program, ty: typed.Type) bool {
+    if (ty.isAggregate() and ty.recordIndex() < program.records.len) {
+        const record = program.records[ty.recordIndex()];
+        // `str` and `bytes` are immutable managed buffers and `Cell` is a mutable
+        // one, so the managed flag alone does not answer the question.
+        if (record.collection.kind == .string or record.collection.kind == .bytes) return false;
+    }
+    return mayContainManaged(program, ty);
+}
+
+/// One parameter's declaration as `name: mut T`. The declared type is rendered
+/// from the checked type, whose record name is the source spelling (`list[int]`,
+/// `[4]u8`, a class or a domain name), so the paste stays a valid annotation.
+fn writeMutatedParameter(writer: *std.Io.Writer, allocator: std.mem.Allocator, program: typed.Program, function: typed.Function, position: u5) std.mem.Allocator.Error!void {
+    writeParameterName(writer, function, position) catch return error.OutOfMemory;
+    writer.writeAll(": mut ") catch return error.OutOfMemory;
+    const index: usize = position;
+    if (index >= function.scope.locals.len) {
+        writer.writeAll("T") catch return error.OutOfMemory;
+        return;
+    }
+    writer.writeAll(try typed.surfaceTypeName(allocator, function.scope.locals[index].ty, program.records)) catch return error.OutOfMemory;
+}
+
+/// Whether the declared parameter at `position` carries a valid `mut` type, so
+/// the marker promises a write that can actually reach the caller.
+fn mutParameterValid(program: typed.Program, function: typed.Function, position: u5) bool {
     const index: usize = position;
     if (index >= function.scope.locals.len) return false;
-    const parameter = function.scope.locals[index].ty;
-    if (!parameter.isAggregate()) return false;
-    const record_index = parameter.recordIndex();
-    if (record_index >= program.records.len) return false;
-    return program.records[record_index].isManagedRecord();
+    return carriesWritableStorage(program, function.scope.locals[index].ty);
+}
+
+/// Every parameter position an unattributed write could reach. An untraceable
+/// target can only be caller state through an argument, and every argument of
+/// this function is one of its own parameters.
+fn unknownWritePositions(function: typed.Function) u16 {
+    var positions: u16 = 0;
+    var bit: u5 = 0;
+    while (bit < 16) : (bit += 1) {
+        if (bit < function.signature.parameter_count) positions |= @as(u16, 1) << @intCast(bit);
+    }
+    return positions;
+}
+
+/// The declaration-side half of item 1: a written parameter must be declared
+/// `mut`, a declared `mut` must be written, and `mut` must name a type with
+/// something to write. Every message carries the exact replacement text.
+fn checkMutDeclarations(allocator: std.mem.Allocator, program: typed.Program, index: usize, summary: Summary, sink: *diagnostic.Sink) std.mem.Allocator.Error!bool {
+    const function = program.functions[index];
+    const positions: u16 = if (summary.mutates_unknown) unknownWritePositions(function) else summary.mutates;
+    const declared = positionsBitset(function.signature.declared_mutates);
+    var violated = false;
+    var position: u5 = 0;
+    // A `mut` that names a type with no writable storage fails wherever the
+    // function is called, so it is reported before any write is attributed.
+    while (position < 16) : (position += 1) {
+        if (declared & (@as(u16, 1) << @intCast(position)) == 0) continue;
+        if (mutParameterValid(program, function, position)) continue;
+        const message = try std.fmt.allocPrint(
+            allocator,
+            "`mut` on `{s}` has nothing to write; only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`",
+            .{typed.typeName(function.scope.locals[position].ty, program.records)},
+        );
+        try sink.items.append(allocator, .{
+            .code = mutation_marker_code,
+            .span = function.scope.locals[position].declaration,
+            .message = message,
+        });
+        violated = true;
+    }
+    if (summary.external and positions & ~declared != 0) {
+        const message = try unmarkedWriteMessage(allocator, program, function, positions & ~declared);
+        try sink.items.append(allocator, .{
+            .code = mutation_marker_code,
+            .span = summary.witness orelse function.declaration,
+            .message = message,
+        });
+        violated = true;
+    }
+    // A host declaration has no body to write, and a lambda implements a
+    // destination contract that may permit more positions than it writes.
+    if (function.policy.host != null or isLambdaName(function.name)) return violated;
+    position = 0;
+    while (position < 16) : (position += 1) {
+        if (declared & (@as(u16, 1) << @intCast(position)) == 0) continue;
+        if (summary.mutates & (@as(u16, 1) << @intCast(position)) != 0) continue;
+        const message = try unusedMutMessage(allocator, program, function, position);
+        try sink.items.append(allocator, .{
+            .code = unused_mut_code,
+            .span = function.scope.locals[position].declaration,
+            .message = message,
+        });
+        violated = true;
+    }
+    return violated;
+}
+
+/// Whether one checked function is a lambda body rather than a declared
+/// function. Lambdas take their parameter contract from the destination
+/// callback type, which may permit writes the body does not perform.
+fn isLambdaName(name: []const u8) bool {
+    return std.mem.startsWith(u8, name, "lambda@");
 }
 
 fn checkDeclaredBound(allocator: std.mem.Allocator, program: typed.Program, index: usize, summary: Summary, sink: *diagnostic.Sink) std.mem.Allocator.Error!bool {
@@ -637,9 +741,7 @@ fn checkDeclaredBound(allocator: std.mem.Allocator, program: typed.Program, inde
     const permitted = positionsBitset(function.signature.declared_mutates);
     if (function.policy.effect_bound) |bound| {
         const has_permission = bound.allowed & effect_set.bit(.mutation) != 0;
-        const covered = summary.mutates & ~permitted == 0;
-        const permitted_write = has_permission and covered and !summary.mutates_unknown;
-        if (!permitted_write) {
+        if (!has_permission) {
             const message = try permissionMessage(allocator, function, summary, permitted, has_permission);
             try sink.items.append(allocator, .{
                 .code = permission_code,
@@ -649,35 +751,29 @@ fn checkDeclaredBound(allocator: std.mem.Allocator, program: typed.Program, inde
             });
             return true;
         }
-        // A passing ceiling already accounts for the write; only an omitted
-        // footprint on an unbounded declaration is the new warning's business.
-    }
-    if (function.signature.declared_mutates.len == 0) {
-        // A `class` parameter is written through a reference by design, so it needs
-        // no `mutates(...)` clause. Warn unless every named position is a class
-        // parameter; an untraceable or unnamed caller-reachable location still warns.
-        var warn = summary.mutates_unknown or summary.mutates == 0;
-        if (!warn) {
-            var position: u5 = 0;
-            while (position < 16) : (position += 1) {
-                if (summary.mutates & (@as(u16, 1) << @intCast(position)) == 0) continue;
-                if (!isClassParameter(program, function, position)) {
-                    warn = true;
-                    break;
-                }
-            }
-        }
-        if (warn) {
-            const message = try missingFootprintMessage(allocator, function, summary);
+        // A declared `mut` position already reports its own missing marker, so a
+        // write that lands outside the declared set is reported there rather than
+        // twice. Only an untraceable target, which no single position can cover,
+        // stays a permission failure.
+        if (summary.mutates_unknown and !mutCoversUnknown(permitted, function)) {
+            const message = try permissionMessage(allocator, function, summary, permitted, has_permission);
             try sink.items.append(allocator, .{
-                .code = missing_footprint_code,
-                .severity = .warning,
+                .code = permission_code,
                 .span = summary.witness orelse function.declaration,
                 .message = message,
+                .related = .{ .span = bound.span, .message = "declared effect ceiling and mutates footprint are here" },
             });
+            return true;
         }
     }
     return false;
+}
+
+/// Whether the declared `mut` positions already permit every position an
+/// unattributed write could reach, which is what makes such a write the marker
+/// error's business rather than a permission failure's.
+fn mutCoversUnknown(permitted: u16, function: typed.Function) bool {
+    return unknownWritePositions(function) & ~permitted == 0;
 }
 
 /// One pair of nominal record identities already assumed disjoint on a path.
@@ -872,6 +968,11 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, exported: []c
     }
     for (program.functions, 0..) |_, index| {
         if (try checkDeclaredBound(allocator, program, index, built.summaries[index], sink)) violated = true;
+    }
+    // Item 1's declaration side: every write is declared `mut`, every `mut` is
+    // written, and every `mut` names a type with storage to write.
+    for (program.functions, 0..) |_, index| {
+        if (try checkMutDeclarations(allocator, program, index, built.summaries[index], sink)) violated = true;
     }
     for (program.functions, 0..) |_, index| {
         if (try collectOverlaps(allocator, program, built.summaries, index, sink)) violated = true;

@@ -257,14 +257,31 @@ test "formatter still rejects invalid syntax and reports its source diagnostic" 
     try t.expectError(error.SourceError, compilation.format(t.allocator));
 }
 
-// spec-case: TOOL-5
-test "formatter keeps the mutates clause separated from the effect ceiling" {
+// spec: MUT-PARAM-6
+test "formatter keeps the mut parameter and the mut argument marker canonical" {
     const expected =
-        \\def replace_first(values: list[int], replacement: int) -> None effects(mutation) mutates(values):
+        \\def replace_first(values: mut list[int], replacement: int) -> None effects(mutation):
         \\    values[0] = replacement
         \\
+        \\
+        \\def main() -> int effects(managed_allocation):
+        \\    values = [1]
+        \\    replace_first(mut values, replacement=2)
+        \\    return values[0] - 2
+        \\
     ;
-    try expectCanonical(t.allocator, "def replace_first(values: list[int], replacement: int) -> None effects(mutation)  mutates(values):\n    values[0] = replacement\n", expected);
+    const unformatted =
+        \\def replace_first(values:  mut   list[int],  replacement: int) -> None   effects(mutation):
+        \\    values[0] = replacement
+        \\
+        \\
+        \\def main() -> int effects(managed_allocation):
+        \\    values = [1]
+        \\    replace_first(  mut   values , replacement = 2 )
+        \\    return values[0] - 2
+        \\
+    ;
+    try expectCanonical(t.allocator, unformatted, expected);
 }
 
 // spec: ATTR-1
