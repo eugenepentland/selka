@@ -27,6 +27,12 @@ def bounded(value: Option[int], fallback: int) -> int noalloc:
 def bounded_default(value: Option[int], fallback: int) -> int noalloc:
     return value.unwrap_or(fallback)
 
+def measured(value: Option[int]) -> int:
+    value.is_none()
+    value.is_some()
+    value.unwrap_or(4)
+    return bounded_default(value, 5) + int(value.is_some())
+
 # spec-case: OPTION-METHODS-1
 public def test_option_methods_default_on_some_and_none() -> bool:
     present: Option[int] = Some(42)
@@ -58,3 +64,7 @@ public def test_option_methods_under_noalloc() -> bool:
 # spec-case: OPTION-METHODS-1
 public def test_option_methods_presence_after_narrowing() -> bool:
     return narrowed_default(Some(4)) == 4 and narrowed_default(None) == 9
+
+# spec-case: OPTION-METHODS-2
+public def test_option_methods_as_statements_and_arguments() -> bool:
+    return measured(Some(3)) == 4 and measured(None) == 5

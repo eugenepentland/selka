@@ -4232,6 +4232,11 @@ const Checker = struct {
     }
     fn consumedTemporaries(self: *Checker, node: ast.Node, out: typed.Node) Error!usize {
         if (node.data == .unary and node.data.unary.op == .is_none) return 1;
+        // An intrinsic `Option` method is checked in place: its receiver and its
+        // one argument are the call's own and never reached this stack, so
+        // neither the tag test nor the two-arm match consumes a temporary.
+        if (node.data == .method_call and option_flow.methodNamed(self.src.text(node.data.method_call.name)) != null) return 0;
+        if (node.data == .call and self.optionReceiverMethod(node.data.call)) return 0;
         if (node.data == .index and out.data == .block_value) return 2;
         if (node.data == .length and out.data == .block_value) return 1;
         if (node.data == .bytes or node.data == .text or node.data == .integer) return 0;

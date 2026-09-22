@@ -94,6 +94,27 @@ test "an Option carrying a checked result still requires match" {
     try t.expectEqualStrings("use match for an Option carrying an owned value or checked Result", message);
 }
 
+// spec-case: OPTION-METHODS-2
+test "an Option method checks in place wherever its value is used" {
+    try accepted(
+        \\def report(value: Option[int], out: Stream) -> None effects(output):
+        \\    out.print(value.unwrap_or(7))
+        \\    out.print(value.is_none())
+        \\    out.print(value.is_some())
+        \\
+        \\
+        \\def measured(value: Option[int]) -> int:
+        \\    value.is_none()
+        \\    value.is_some()
+        \\    value.unwrap_or(4)
+        \\    return value.unwrap_or(5) + int(value.is_some())
+        \\
+        \\
+        \\def main() -> int:
+        \\    return measured(Some(1))
+    );
+}
+
 // spec-case: OPTION-METHODS-1
 test "an integer-literal default adopts the payload type" {
     try accepted(
