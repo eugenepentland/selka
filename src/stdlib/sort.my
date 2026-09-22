@@ -46,14 +46,123 @@ def merge_by_key[T: copy + storable](left: list[T], right: list[T], key: def(T) 
     return out
 
 
-# A new list ordered by an integer key function; the ordering is stable.
-public def sort_by_key[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[T]:
+# The recursive merge sort_by_key used before it packed keys, whose order of
+# asking for keys keys_in_merge_order reproduces. It remains the path for a
+# list too long for a position to fit in 31 bits.
+def merge_sort_by_key[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[T]:
     if len(values) <= 1:
         return values[:]
     middle = len(values) // 2
-    left = sort_by_key(values[0:middle], key)
-    right = sort_by_key(values[middle:len(values)], key)
+    left = merge_sort_by_key(values[0:middle], key)
+    right = merge_sort_by_key(values[middle:len(values)], key)
     return merge_by_key(left, right, key)
+
+
+# Every key of `values`, in index order, each computed exactly once. They are
+# computed in the order the recursive merge first asked for them: its halving
+# ends in blocks of two or three elements, and it first reaches each block's
+# elements from last to first, block after block from left to right. A key
+# function that traps therefore raises the same trap it always did.
+def keys_in_merge_order[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[int]:
+    keys: list[int] = []
+    # A stack of the ends of the halves still to visit, innermost on top; the
+    # half on top starts where the previous block ended.
+    ends = [len(values)]
+    depth = 1
+    start = 0
+    while depth > 0:
+        end = ends[depth - 1]
+        if end - start > 3:
+            middle = start + (end - start) // 2
+            if depth < len(ends):
+                ends[depth] = middle
+            else:
+                ends.append(middle)
+            depth += 1
+        else:
+            if end - start == 3:
+                third = key(values[start + 2])
+                second = key(values[start + 1])
+                keys.append(key(values[start]))
+                keys.append(second)
+                keys.append(third)
+            else:
+                second = key(values[start + 1])
+                keys.append(key(values[start]))
+                keys.append(second)
+            depth -= 1
+            start = end
+    return keys
+
+
+# How many low bits hold every position below `count`.
+def position_bits(count: int) -> int effects():
+    bits = 0
+    while bits < 62 and shift_left(1, bits) < count:
+        bits += 1
+    return bits
+
+
+# Turn `keys` into words whose low `bits` bits are the positions in stable
+# ascending key order, when every key minus `low` fits above those bits: each
+# key becomes the word (key - low, position) in place, and one integer sort of
+# the words orders them.
+def pack_in_place(keys: mut list[int], low: int, bits: int) -> None:
+    for i in range(len(keys)):
+        keys[i] = bit_or(shift_left(keys[i] - low, bits), i)
+    keys.sort()
+
+
+# Positions of `keys` in stable ascending key order for any keys, when a
+# position fits in 31 bits: sort (low 32 bits, position) words, then sort
+# (high 32 bits, rank in that order) words, so each pass keeps the ties of
+# the one before.
+def split_order(keys: list[int], bits: int) -> list[int]:
+    mask = shift_left(1, bits) - 1
+    by_low = [bit_or(shift_left(bit_and(keys[i], 4294967295), bits), i) for i in range(len(keys))]
+    by_low.sort()
+    by_high = [bit_or(shift_left(shift_right(keys[bit_and(by_low[rank], mask)], 32) + 2147483648, bits), rank) for rank in range(len(by_low))]
+    by_high.sort()
+    return [by_low[bit_and(word, mask)] for word in by_high]
+
+
+# Words whose low `bits` bits are the positions of `keys` in stable ascending
+# key order; `bits` is at most 31. `keys` itself becomes those words when they
+# fit one word per key.
+def key_order(keys: mut list[int], bits: int) -> list[int]:
+    low = keys[0]
+    high = keys[0]
+    for k in keys:
+        if k < low:
+            low = k
+        if k > high:
+            high = k
+    # high - low without overflowing: a negative low leaves room below the maximum.
+    narrow = low >= 0 or high <= 9223372036854775807 + low
+    if narrow and high - low <= shift_right(9223372036854775807, bits):
+        pack_in_place(mut keys, low, bits)
+        return keys
+    return split_order(keys, bits)
+
+
+# A new list ordered by an integer key function; the ordering is stable.
+#
+# Each key is computed once, in the order keys_in_merge_order documents, and
+# the order itself comes from the built-in integer sort: a key and its
+# position are packed into one integer word, so sorting the words sorts the
+# positions by key with ties in input order. Keys spread too far apart to
+# pack beside a position take two such sorts, 32 bits of the key each.
+public def sort_by_key[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[T]:
+    count = len(values)
+    if count <= 1:
+        return values[:]
+    bits = position_bits(count)
+    if bits > 31:
+        return merge_sort_by_key(values, key)
+    keys = keys_in_merge_order(values, key)
+    order = key_order(mut keys, bits)
+    mask = shift_left(1, bits) - 1
+    return [values[bit_and(word, mask)] for word in order]
 
 
 # Whether a list of integers is already in ascending order.

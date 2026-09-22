@@ -1,3 +1,5 @@
+module scalable_sorting
+
 # spec-case: PY-COLLECTIONS-15
 public def test_in_place_sort_scales_and_preserves_aliases() -> bool:
     values: list[int] = []
@@ -35,3 +37,8 @@ public def test_text_sort_in_place_matches_sorted_through_aliases_and_fields() -
     groups = [words]
     groups[0].sort()
     return words == expected and alias == ["a", "z", "é", "😀"]
+
+
+# The directory runner selects programs by their entry point.
+def main() -> int:
+    return 0

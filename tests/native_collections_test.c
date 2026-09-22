@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 static const myl_native_type number = { .size = 8, .alignment = 8, .kind = MYL_NATIVE_PLAIN };
 static const myl_native_type pointer = { .size = sizeof(void *), .alignment = _Alignof(void *), .kind = MYL_NATIVE_POINTER };
 /* spec-case: LIST-GROWTH-1. A list grown past the size classes keeps every
@@ -37,8 +39,97 @@ static void growth_keeps_elements(void) {
     myl_native_root_pop(&heap, &root);
     myl_native_heap_destroy(&heap);
 }
+/* spec-case: LIST-SORT-RUNS-1. The adaptive merge against a stable insertion
+   reference, over lengths on both sides of the insertion and merge thresholds
+   and inputs from random through already sorted, reversed and run-structured.
+   Texts with equal payloads in separate objects and signed zeros are the
+   equal elements whose order is observable, so they check stability. */
+static uint64_t sort_state = 88172645463325252u;
+static uint64_t sort_noise(void) {
+    sort_state ^= sort_state << 13;
+    sort_state ^= sort_state >> 7;
+    sort_state ^= sort_state << 17;
+    return sort_state;
+}
+static int64_t sort_shape(size_t i, size_t count, int shape) {
+    switch (shape) {
+    case 0: return (int64_t)(sort_noise() >> 40) - 8388608;
+    case 1: return (int64_t)i;
+    case 2: return (int64_t)(count - i);
+    case 3: return (int64_t)(i % 37);
+    case 4: return (i / 50) % 2 ? (int64_t)i : (int64_t)(count - i);
+    default: return (int64_t)(sort_noise() >> 61);
+    }
+}
+static void sort_matches_reference(void) {
+    static const size_t lengths[] = { 2, 3, 16, 17, 31, 32, 33, 64, 65, 257, 1000, 4099 };
+    static const unsigned char *const words[] = { (const unsigned char *)"", (const unsigned char *)"a",
+        (const unsigned char *)"\xc3\xa9", (const unsigned char *)"\xf0\x9f\x98\x80", (const unsigned char *)"ab",
+        (const unsigned char *)"\xe2\x82\xac", (const unsigned char *)"A", (const unsigned char *)"\x7f" };
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 64u << 20);
+    /* Every object stays reachable from a root: the texts through `held`, and
+       each round's three lists through their own roots. */
+    myl_native_list *held = myl_native_list_new(&heap, &pointer, 32);
+    assert(held);
+    myl_native_root held_root;
+    myl_native_root_push(&heap, &held_root, &held, &pointer);
+    myl_native_text *texts[32];
+    for (size_t i = 0; i < 32; i++) {
+        texts[i] = myl_native_text_from_utf8(&heap, words[i % 8], strlen((const char *)words[i % 8]));
+        assert(texts[i] && myl_native_list_append(&heap, held, &texts[i]));
+    }
+    int64_t *expected = malloc(4099 * sizeof *expected);
+    myl_native_text **order = malloc(4099 * sizeof *order);
+    double *zeros = malloc(4099 * sizeof *zeros);
+    assert(expected && order && zeros);
+    for (size_t l = 0; l < sizeof lengths / sizeof lengths[0]; l++) {
+        size_t count = lengths[l];
+        for (int shape = 0; shape < 6; shape++) {
+            myl_native_list *numbers = NULL, *strings = NULL, *floats = NULL;
+            myl_native_root numbers_root, strings_root, floats_root;
+            myl_native_root_push(&heap, &numbers_root, &numbers, &pointer);
+            myl_native_root_push(&heap, &strings_root, &strings, &pointer);
+            myl_native_root_push(&heap, &floats_root, &floats, &pointer);
+            numbers = myl_native_list_new(&heap, &number, count);
+            strings = myl_native_list_new(&heap, &pointer, count);
+            floats = myl_native_list_new(&heap, &number, count);
+            assert(numbers && strings && floats);
+            for (size_t i = 0; i < count; i++) {
+                int64_t value = sort_shape(i, count, shape);
+                myl_native_text *text = texts[(uint64_t)value % 32];
+                double real = value % 3 == 0 ? (value % 2 ? -0.0 : 0.0) : (double)value;
+                assert(myl_native_list_append(&heap, numbers, &value));
+                assert(myl_native_list_append(&heap, strings, &text));
+                assert(myl_native_list_append(&heap, floats, &real));
+                size_t at = i;
+                while (at > 0 && expected[at - 1] > value) { expected[at] = expected[at - 1]; at--; }
+                expected[at] = value;
+                at = i;
+                while (at > 0 && myl_native_text_compare(order[at - 1], text) > 0) { order[at] = order[at - 1]; at--; }
+                order[at] = text;
+                at = i;
+                while (at > 0 && zeros[at - 1] > real) { zeros[at] = zeros[at - 1]; at--; }
+                zeros[at] = real;
+            }
+            assert(myl_native_list_sort(numbers, 0) && myl_native_list_sort(strings, 3) && myl_native_list_sort(floats, 2));
+            assert(memcmp(numbers->storage, expected, count * sizeof *expected) == 0);
+            assert(memcmp(strings->storage, order, count * sizeof *order) == 0);
+            assert(memcmp(floats->storage, zeros, count * sizeof *zeros) == 0);
+            myl_native_root_pop(&heap, &floats_root);
+            myl_native_root_pop(&heap, &strings_root);
+            myl_native_root_pop(&heap, &numbers_root);
+        }
+    }
+    myl_native_root_pop(&heap, &held_root);
+    free(zeros);
+    free(order);
+    free(expected);
+    myl_native_heap_destroy(&heap);
+}
 int main(void) {
     growth_keeps_elements();
+    sort_matches_reference();
     myl_native_heap heap;
     myl_native_heap_init(&heap, 1 << 20);
     heap.stress = 1;

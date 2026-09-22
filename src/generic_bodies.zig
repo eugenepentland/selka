@@ -739,6 +739,10 @@ const Checker = struct {
             .append, .write => .{ .concrete = .unit },
             .keys, .values, .split => try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{if (kind == .keys) key else if (kind == .split) owner else element}),
             .join => owner,
+            .sort => sorted: {
+                if (family != .list or !self.sortable(element)) return self.sink.fail("E_COLLECTION_METHOD", operation.span, "sort requires an integer, float or str element type");
+                break :sorted .{ .concrete = .unit };
+            },
             else => return self.sink.fail(eUnsupported, operation.span, "unsupported collection operation in generic body"),
         };
         const numeric_parse = kind == .parse_int or kind == .parse_float or kind == .parse_int_range or kind == .parse_float_range;
@@ -911,6 +915,14 @@ const Checker = struct {
     }
     fn isFloat(self: *Checker, value: Symbolic) bool {
         return value == .concrete and numeric_surface.isFloat(value.concrete, self.catalog.records);
+    }
+    /// Whether a list of `element` has a native order for `sort`: a concrete
+    /// integer, float or str element, the same set the concrete checker accepts.
+    fn sortable(self: *Checker, element: Symbolic) bool {
+        if (element != .concrete) return false;
+        if (element.concrete.isInteger() or self.isFloat(element)) return true;
+        const text = self.catalog.names.get("str") orelse return false;
+        return element.concrete == text;
     }
     /// `T(x)` converts between integer widths wherever `T` names a type parameter of this
     /// template or a declared integer type, rather than a function.

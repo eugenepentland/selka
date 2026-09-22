@@ -2473,9 +2473,7 @@ const Checker = struct {
             .names = try self.signatureNames(owner_type),
             .arguments = inputs.len,
         });
-        if (kind == .sort and !(element.isInteger() or numeric_surface.isFloat(element, self.catalog.records))) {
-            return self.sink.fail(eCollectionMethod, node.span, "sort requires an integer or float element type");
-        }
+        if (kind == .sort) try self.requireSortable(element, node.span);
         const names = try self.signatureNames(owner_type);
         const arguments = try self.allocator.alloc(typed.NodeId, inputs.len);
         switch (kind) {
@@ -3260,9 +3258,7 @@ const Checker = struct {
             .names = try self.signatureNames(owner_type),
             .arguments = operation.arguments.len,
         });
-        if (kind == .sort and !(element.isInteger() or numeric_surface.isFloat(element, self.catalog.records))) {
-            return self.sink.fail(eCollectionMethod, operation.owner, "sort requires an integer or float element type");
-        }
+        if (kind == .sort) try self.requireSortable(element, operation.owner);
         const names = try self.signatureNames(owner_type);
         const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
         for (operation.arguments, arguments, 0..) |input, *argument, index| {

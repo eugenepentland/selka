@@ -475,8 +475,9 @@ and a local binding or declared function of the same name still wins. `sum`,
 `min` and `max` accept a list of the element type they name; text extrema compare
 the stored Unicode scalars without allocating an encoding. `sorted` accepts a
 list of `int`, `float` or `str` and returns a new stable ascending list without
-changing its input. It and `values.sort()` use a stable merge with one reusable
-work buffer, so reverse-ordered large lists retain `O(n log n)` behavior. For
+changing its input. It and `values.sort()` use a stable merge that keeps the runs
+a list already has, with one work buffer of at most half the list, so ordered
+and reverse-ordered lists sort in linear time and every list in `O(n log n)`. For
 floats, NaNs follow ordered values while equal values and signed zeros retain
 their input order. `reversed(xs)` copies a list or string from last to first
 and, like `zip(a, b)`, is also a `for` source; `zip` stops at the shorter list and the
