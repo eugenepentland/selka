@@ -370,11 +370,11 @@ const decimal_main =
     \\import text
     \\def main(host: Host) -> int:
     \\    out = io.output()
-    \\    text.decimal(out, -12)
-    \\    io.appendByte(out, 44u8)
-    \\    text.decimal(out, -9223372036854775808)
-    \\    io.appendByte(out, 44u8)
-    \\    text.decimal(out, 0)
+    \\    text.decimal(mut out, -12)
+    \\    io.appendByte(mut out, 44u8)
+    \\    text.decimal(mut out, -9223372036854775808)
+    \\    io.appendByte(mut out, 44u8)
+    \\    text.decimal(mut out, 0)
     \\    return io.flush(host, out)
 ;
 
