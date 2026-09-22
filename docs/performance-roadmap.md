@@ -30,6 +30,24 @@ it. The headline table stays as the 21 September audit measured it, so its two
 columns name the ReleaseFast default and the Debug/explicit arm rather than
 "the default".
 
+**Re-measured 2026-09-22** on the S-expression parser, which is the workload the
+projection below turns on, after items 1, 3, 4 and 5 and item 6's first half
+landed. `.tmp/roadmap-verify/parser_ab.py` builds
+`experiments/sexpr-port/main.my` with the current compiler and the in-repo Zig
+reference (`experiments/sexpr-port/zig-bench`, ReleaseFast), asserts both
+produce **byte-identical** output, and alternates the two arms over the 7.42 MB
+`input8.sexp` for seven rounds:
+
+| parser arm | mylang | Zig | ratio | audit (21 Sept, LLVM O3 + LTO, large) |
+|---|---:|---:|---:|---:|
+| census | 40.7 ms | 27.2 ms | **1.50×** | 2.1× |
+| render | 68.2 ms | 35.9 ms | **1.90×** | 3.0× |
+
+So the parser is materially closer than the audit snapshot, and render — not
+census — is now the arm that leads the gap. It is still outside the ≤ 1.2×
+target, which the projection expected a build of items 1 through 6 to reach;
+item 2's frozen frame work and the rest of item 6 are the named differences.
+
 Zig ReleaseSafe, the like-for-like comparator (checks on), runs at about 1.1×
 ReleaseFast on these workloads, so "≤ 1.2× ReleaseFast" is "≈ parity with
 ReleaseSafe".
