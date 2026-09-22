@@ -17,6 +17,7 @@ sys.path.insert(0, str(HERE))
 from qbe_llvm import translate_text, LOADS, STORES  # noqa: E402
 from runtime_signatures import signature as runtime_signature  # noqa: E402
 from runtime_signatures import SIGNATURES  # noqa: E402
+from runtime_signatures import ATTRIBUTES  # noqa: E402
 
 
 class AdapterTests(unittest.TestCase):
@@ -552,11 +553,85 @@ MARKER
 """
         ir = translate_text(unit, "heap")
         self.assertIn("declare ptr @myl_qbe_heap(ptr) memory(none) nounwind willreturn", ir)
-        self.assertEqual(set(ATTRIBUTES), {"myl_qbe_heap"})
+        self.assertEqual(set(ATTRIBUTES), {"myl_qbe_heap", "myl_qbe_float_canonical"})
         self.assertEqual(self.compile_units({"heap": unit},
             '#include <stdio.h>\nextern long test(void *);\n'
             'void *myl_qbe_heap(void *ctx){return ctx;}\n'
             'int main(void){int x;printf("%d\\n",test(&x)==(long)&x);}\n'), "1\n")
+
+    HALTING_UNIT = """export function l $grow(l %ctx, l %a, l %b) {
+@entry
+ %sum =l add %a, %b
+ %x =l xor %a, %sum
+ %y =l xor %b, %sum
+ %both =l and %x, %y
+ %over =l csltl %both, 0
+ jnz %over, @overflow, @checked
+@overflow
+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %a, l %b, l 64)
+ hlt
+@checked
+ ret %sum
+@failure
+ ret 0
+}
+"""
+
+    def test_halted_failure_path_is_unreachable_and_its_helper_noreturn(self):
+        # QBE-NORETURN-1: the fast protocol ends a fail helper's path in `hlt`.
+        ir = translate_text(self.HALTING_UNIT, "halting")
+        self.assertIn("call void @myl_qbe_fail_overflow_op(", ir)
+        self.assertIn("  unreachable", ir)
+        self.assertIn("declare void @myl_qbe_fail_overflow_op(ptr, i64, i64, i64, i64) noreturn cold", ir)
+        # A unit that keeps the sticky return after any call to the helper says
+        # it may return, so its declaration is only `cold`.
+        sticky = self.HALTING_UNIT.replace(" hlt\n", " jmp @failure\n")
+        ir = translate_text(sticky, "sticky")
+        self.assertNotIn("unreachable", ir)
+        self.assertIn("declare void @myl_qbe_fail_overflow_op(ptr, i64, i64, i64, i64) cold\n", ir)
+        mixed = self.HALTING_UNIT.replace(
+            "@checked\n ret %sum\n",
+            "@checked\n %again =l csltl %sum, 0\n jnz %again, @late, @done\n"
+            "@late\n call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %a, l %b, l 64)\n"
+            " jmp @failure\n@done\n ret %sum\n")
+        self.assertIn("@myl_qbe_fail_overflow_op(ptr, i64, i64, i64, i64) cold\n",
+                      translate_text(mixed, "mixed"))
+        with self.assertRaisesRegex(Exception, "hlt takes no operands"):
+            translate_text(self.HALTING_UNIT.replace(" hlt\n", " hlt %sum\n"), "operand")
+
+    def test_canonical_nan_helper_touches_only_inaccessible_memory(self):
+        # The helper reads only a runtime-private volatile, so a header load
+        # and a frame-position store no longer have to straddle its call.
+        unit = """export function l $pick(l %ctx, l %list) {
+@entry
+ %before =l loadl %list
+ %nan =l call $myl_qbe_float_canonical(l %ctx)
+ %after =l loadl %list
+ %sum =l add %before, %after
+ %both =l add %sum, %nan
+ ret %both
+}
+"""
+        ir = translate_text(unit, "canonical")
+        self.assertIn("declare i64 @myl_qbe_float_canonical(ptr) "
+                      "memory(inaccessiblemem: readwrite) nounwind willreturn", ir)
+        main = ('#include <stdio.h>\n#include <stdint.h>\nextern long pick(void *, long *);\n'
+                'static volatile uint64_t probe;\n'
+                'uint64_t myl_qbe_float_canonical(void *c){(void)c;(void)probe;return 5;}\n'
+                'int main(void){long x=3;printf("%ld\\n",pick(&x,&x));}\n')
+        self.assertEqual(self.compile_units({"canonical": unit}, main), "11\n")
+
+    def test_halted_failure_path_leaves_through_the_helper(self):
+        # The helper leaves through a non-local exit, the way the runtime's
+        # `fail` does once the entry trampoline armed it.
+        main = ('#include <setjmp.h>\n#include <stdio.h>\n#include <stdint.h>\n'
+                'extern long grow(void *, long, long);\nstatic jmp_buf out;\n'
+                'void myl_qbe_fail_overflow_op(void *c, int64_t op, int64_t l, int64_t r, int64_t w)'
+                '{(void)c;(void)op;(void)w;printf("trap %lld %lld\\n",(long long)l,(long long)r);longjmp(out,1);}\n'
+                'int main(void){int ctx;if(setjmp(out)==0){printf("%ld\\n",grow(&ctx,2,3));'
+                'grow(&ctx,INT64_MAX,1);puts("fell through");}return 0;}\n')
+        self.assertEqual(self.compile_units({"halting": self.HALTING_UNIT}, main),
+                         "5\ntrap 9223372036854775807 1\n")
 
     def test_installed_registry_reads_materialized_runtime(self):
         with tempfile.TemporaryDirectory() as directory:

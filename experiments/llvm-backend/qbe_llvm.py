@@ -500,7 +500,13 @@ def build_instruction(opcode, qbe_type, dest, operands, number, unit, raw):
         args = [one(operands)]
     elif opcode in INTEGER_OPS or opcode in COMPARISONS or opcode in CONVERSIONS:
         args = [one(item) for item in split_operands(operands)]
-    elif opcode in ("hlt", "vastart", "vaarg"):
+    elif opcode == "hlt":
+        # QBE-NORETURN-1: a failure path whose `myl_qbe_fail_*` helper leaves
+        # through the runtime's non-local exit ends here; `on_hlt` lowers it to
+        # `unreachable`.
+        if operands.strip() or dest is not None:
+            fail("hlt takes no operands and defines nothing")
+    elif opcode in ("vastart", "vaarg"):
         fail(f"unsupported opcode `{opcode}`")
     else:
         fail(f"unknown opcode `{opcode}`")

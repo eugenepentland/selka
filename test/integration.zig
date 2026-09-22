@@ -1313,6 +1313,108 @@ test "an executable built without a frame ceiling refuses a runtime frame budget
     try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", output, cache_argument, tools[0], tools[1], "--mode=Debug" }, "");
     try expectConstantProcess(&.{ output, "--max-frames=1" }, "");
 }
+/// Build `name` as a ReleaseFast executable twice — with no ceiling, so its
+/// failure paths end in `hlt`, and with a frame ceiling, which keeps the sticky
+/// return through `@failure` — and run both; then run it through `mylang run`
+/// with and without a frame ceiling. Each pair must report the same bytes and
+/// exit status 1, and the executable's report must be `expected` with `{path}`
+/// standing for the entry's absolute path.
+fn expectHaltedTrapIdentical(temporary: *testing.TmpDir, name: []const u8, source: []const u8, expected: []const u8) !void {
+    const a = testing.allocator;
+    const file = try std.fmt.allocPrint(a, "{s}.my", .{name});
+    defer a.free(file);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = file, .data = source });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, file, a);
+    defer a.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const cache_argument = try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{directory});
+    defer a.free(cache_argument);
+    const fast = try std.fmt.allocPrint(a, "{s}/{s}-fast", .{ directory, name });
+    defer a.free(fast);
+    const framed = try std.fmt.allocPrint(a, "{s}/{s}-framed", .{ directory, name });
+    defer a.free(framed);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", fast, cache_argument, tools[0], tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", framed, cache_argument, tools[0], tools[1], "--max-frames=100000" }, "");
+    const wanted = try std.mem.replaceOwned(u8, a, expected, "{path}", entry);
+    defer a.free(wanted);
+    const halted = try std.process.run(a, testing.io, .{ .argv = &.{fast} });
+    defer a.free(halted.stdout);
+    defer a.free(halted.stderr);
+    const sticky = try std.process.run(a, testing.io, .{ .argv = &.{framed} });
+    defer a.free(sticky.stdout);
+    defer a.free(sticky.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, halted.term);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, sticky.term);
+    try testing.expectEqualStrings("", halted.stdout);
+    try testing.expectEqualStrings(wanted, halted.stderr);
+    try testing.expectEqualStrings(halted.stderr, sticky.stderr);
+    // `mylang run` builds the same fast protocol with QBE unless a ceiling asks
+    // for accounting; both report the trap the same way.
+    const run_fast = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "run", entry, cache_argument, tools[0], tools[1] } });
+    defer a.free(run_fast.stdout);
+    defer a.free(run_fast.stderr);
+    const run_framed = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "run", entry, cache_argument, tools[0], tools[1], "--max-frames=100000" } });
+    defer a.free(run_framed.stdout);
+    defer a.free(run_framed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, run_fast.term);
+    try testing.expectEqual(run_fast.term, run_framed.term);
+    try testing.expect(std.mem.indexOf(u8, run_fast.stderr, wanted[0 .. std.mem.indexOfScalar(u8, wanted, '\n') orelse wanted.len]) != null);
+    try testing.expectEqualStrings(run_fast.stderr, run_framed.stderr);
+}
+// spec-case: QBE-NORETURN-1
+test "a trap through a halting failure path reports the same code, trace, record and status" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    // A checked add that overflows three frames deep.
+    try expectHaltedTrapIdentical(&temporary, "overflow",
+        \\# an overflow three frames deep
+        \\
+        \\
+        \\def grow(x: int, step: int) -> int:
+        \\    return x + step
+        \\
+        \\
+        \\def climb(x: int) -> int:
+        \\    total = x
+        \\    for i in range(10):
+        \\        total = grow(total, 1000000000000000000)
+        \\    return total
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    out.print(climb(1))
+        \\    return 0
+    ,
+        \\{path}:5:14: error[R_OVERFLOW]: native execution failed (add: left 9000000000000000001, right 1000000000000000000, width 64)
+        \\  in grow at {path}:5:14
+        \\  in climb at {path}:11:17
+        \\  in main at {path}:16:15
+        \\
+    ++ "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9000000000000000001,\"right\":1000000000000000000,\"width\":64}\n");
+    // An out-of-range list write after a loop that succeeded.
+    try expectHaltedTrapIdentical(&temporary, "index",
+        \\# an out-of-range list write after a successful loop
+        \\
+        \\
+        \\def poke(xs: mut list[int], at: int) -> None:
+        \\    xs[at] = 7
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    xs: list[int] = [1, 2, 3]
+        \\    total = 0
+        \\    for x in xs:
+        \\        total = total + x
+        \\    poke(mut xs, total)
+        \\    out.print(total)
+        \\    return 0
+    ,
+        \\{path}:5:5: error[R_LIST_BOUNDS]: native execution failed (index 6, length 3)
+        \\  in poke at {path}:5:5
+        \\  in main at {path}:13:5
+        \\
+    ++ "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":6,\"length\":3}\n");
+}
 // spec-case: QBE-STEP-ACCOUNTING-1
 test "an executable built without a requested ceiling refuses a runtime step budget" {
     var temporary = testing.tmpDir(.{});
