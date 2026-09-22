@@ -472,18 +472,32 @@ interleaved medians, every arm's stdout byte-identical):
 | `alloc_churn` | 2.0–2.2× | ≤ 2× — at the boundary |
 | `fib` | 3.49× | frozen (item 2) |
 
-**The two remaining loop gaps are bounded by checked arithmetic, and that is
-measured, not argued.** `bytes_scan`'s scan and `list_records`' sum both
-accumulate with `+`, which must trap on overflow. Replacing the accumulator with
-the prelude's `wrapping_add` in a scratch copy of each kernel — same source, same
-stdout, only the never-taken overflow case changed — takes `bytes_scan` 80 → 63 ms
-(`vpcmpeqb`/`vpaddq` appear) and `list_records` 79 → 63 ms (28 `vpaddq`), i.e.
-about **1.15× and 1.13×** against the same Zig builds. LLVM will not vectorise a
-reduction whose every step may branch to a trap, and Zig's ReleaseFast `+` is
-unchecked, so the floor *with checked arithmetic removed* sits inside the target
-while the current form cannot reach it. The earlier hypotheses are dead and
-recorded so they are not retried: the scan loop carries no length reload, bounds
-check, index normalisation or `i += 1` check, and the inner `if` is not the cost
+**Checked arithmetic bounds `list_records` — and only `list_records`.** Both
+kernels accumulate with `+`, which must trap on overflow, and LLVM will not
+vectorise a reduction whose every step may branch to a trap. The language already
+provides the escape hatch: the prelude's `wrapping_add`/`wrapping_sub`/
+`wrapping_mul` choose the overflow behaviour at the operation
+([integer operations](../integer-operations.md)), and `src/stdlib/random.my`
+uses them. The suite now carries `bytes_scan_wrapping.my` and
+`list_records_wrapping.my` — the same kernels with `wrapping_add`, byte-identical
+stdout — so the difference is reproducible rather than argued.
+
+Re-measured on merged main, interleaved wall clock over 31 rounds **and** pinned
+CPU time over 10 runs (both agree):
+
+| kernel | checked | `wrapping_add` | verdict |
+| --- | ---: | ---: | --- |
+| `list_records` | 69.1 ms | 59.6 ms | **0.86× wall / 0.84× CPU** — the unchecked form is inside the ≤1.3× target |
+| `bytes_scan` | 44.8 ms | 54.8 ms | **1.22× wall / 1.29× CPU — slower**, despite 272 `vpaddq`/64 `vpcmpeqb` in the binary |
+
+So the earlier scratch-copy reading (`bytes_scan` 80 → 63 ms) does **not**
+reproduce: for that access pattern the scalar five-uop scan with a well-predicted
+branch is already near the memory-bound floor, and the vectorised reduction adds
+work without removing the load traffic. `bytes_scan` therefore measures 1.23× on
+a quiet machine *with* checking, and is not arithmetic-bound; `list_records` is,
+and a guest can already opt out of it. The other hypotheses stay recorded as dead
+so they are not retried: the scan loop carries no length reload, bounds check,
+index normalisation or `i += 1` check, and the inner `if` is not the cost
 (`count += data[i]` and `for b in data:` measure the same).
 
 Closing those two kernels therefore needs one of: a proof that a given
