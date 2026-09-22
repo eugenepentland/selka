@@ -1724,11 +1724,6 @@ const Emitter = struct {
         };
         return projected.toOwnedSlice(self.allocator);
     }
-    /// Link this function's native-stack frame record and enforce the logical
-    /// depth ceiling and the execution-stack floor without a runtime call. The
-    /// record is `{prev, function, position, native_bytes}`; generated code owns
-    /// the first three words and reads `ctx->frames`/`ctx->frame_limit`/
-    /// `ctx->frame_floor` at their frozen offsets.
     /// Whether this function links a frame record at all. QBE-UNCHECKED-1: a
     /// build that carries neither ceiling and was asked to drop its value
     /// guards has nothing left that reads the record — no step check, no depth
@@ -1738,6 +1733,12 @@ const Emitter = struct {
     fn framesLinked(self: *const Emitter) bool {
         return self.checks or self.step_checks or self.frame_checks;
     }
+    /// Link this function's native-stack frame record and enforce the logical
+    /// depth ceiling and the execution-stack floor without a runtime call. The
+    /// record is `{prev, function, position, native_bytes}`; generated code owns
+    /// the first three words and reads `ctx->frames`/`ctx->frame_limit`/
+    /// `ctx->frame_floor` at their frozen offsets. A build that links no record
+    /// at all emits nothing here (see `framesLinked`).
     fn enterFrame(self: *Emitter, name: []const u8) GenerateError!void {
         if (!self.framesLinked()) return;
         const admit = self.temp();
