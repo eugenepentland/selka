@@ -3821,16 +3821,22 @@ const Checker = struct {
             const arg_node = self.syntax.nodes.items[@backingInt(argument)];
             if (arg_node.data != .mut_argument) {
                 if (!declared) continue;
+                const marked = try self.markedCallText(arguments, position);
                 const message = try std.fmt.allocPrint(
                     self.allocator,
-                    "`{s}` writes `{s}`; write `{s}(mut {s})`",
-                    .{ self.src.text(call_name), self.src.text(arg_node.span), self.src.text(call_name), self.src.text(arg_node.span) },
+                    "`{s}` writes `{s}`; write `{s}`",
+                    .{ self.src.text(call_name), self.src.text(arg_node.span), marked },
                 );
                 return self.sink.fail(mutation_marker_code, arg_node.span, message);
             }
             const target = self.syntax.nodes.items[@backingInt(arg_node.data.mut_argument)];
             if (!declared) {
-                const message = try std.fmt.allocPrint(self.allocator, "`{s}` does not write `{s}`; remove `mut`", .{ self.src.text(call_name), self.src.text(target.span) });
+                const plain = try self.unmarkedCallText(arguments, position);
+                const message = try std.fmt.allocPrint(
+                    self.allocator,
+                    "`{s}` does not write `{s}`; remove `mut`: `{s}`",
+                    .{ self.src.text(call_name), self.src.text(target.span), plain },
+                );
                 return self.sink.fail(mutation_marker_code, arg_node.span, message);
             }
             if (!self.markerTarget(target)) return self.sink.fail(
@@ -3839,6 +3845,49 @@ const Checker = struct {
                 "`mut` requires an assignable argument (a variable, field or list slot); assign it to a local first",
             );
         }
+    }
+    /// The call's own source text with `mut ` inserted before argument `target`,
+    /// so a missing-marker diagnostic carries the whole corrected call rather
+    /// than the one argument that needed it.
+    fn markedCallText(self: *Checker, arguments: []const ast.NodeId, target: usize) Error![]const u8 {
+        return self.callTextWithMarker(arguments, target, true);
+    }
+    /// The same text with the `mut ` before argument `target` removed, for the
+    /// diagnostic that reports a marker the callee does not write.
+    fn unmarkedCallText(self: *Checker, arguments: []const ast.NodeId, target: usize) Error![]const u8 {
+        return self.callTextWithMarker(arguments, target, false);
+    }
+    /// Rebuild one call's argument list from source, adding or dropping a single
+    /// `mut ` marker at `target`. Each argument keeps its own spelling, so a named
+    /// operand stays `name=value`; a call with no arguments returns empty.
+    fn callTextWithMarker(self: *Checker, arguments: []const ast.NodeId, target: usize, add: bool) Error![]const u8 {
+        if (arguments.len == 0 or target >= arguments.len) return "";
+        var out: std.ArrayList(u8) = .empty;
+        try out.append(self.allocator, '(');
+        for (arguments, 0..) |argument, position| {
+            if (position != 0) try out.appendSlice(self.allocator, ", ");
+            const node = self.syntax.nodes.items[@backingInt(argument)];
+            if (position == target) {
+                if (add) {
+                    // The argument is unmarked (that is why this diagnostic
+                    // exists), so its span is the operand as written and
+                    // inserting `mut ` keeps a `name=value` spelling intact.
+                    try out.appendSlice(self.allocator, "mut ");
+                    try out.appendSlice(self.allocator, self.src.text(node.span));
+                } else {
+                    // Dropping a marker: the node wraps the operand, so only the
+                    // wrapped expression belongs in the repaired call.
+                    const target_node = self.syntax.nodes.items[@backingInt(node.data.mut_argument)];
+                    try out.appendSlice(self.allocator, self.src.text(target_node.span));
+                }
+                continue;
+            }
+            // A non-target argument may itself carry a marker the caller wrote;
+            // its span then includes the keyword, which is the text to keep.
+            try out.appendSlice(self.allocator, self.src.text(node.span));
+        }
+        try out.append(self.allocator, ')');
+        return out.items;
     }
     /// Whether any argument of one call is wrapped in a `mut` marker. A marker
     /// belongs to a call that declares a `mut` position to check it against, so a

@@ -325,6 +325,17 @@ const marker_missing =
     \\    return 0
 ;
 
+const marker_multi_missing =
+    \\def touch(values: mut list[int], item: int) -> None effects(mutation):
+    \\    values[0] = item
+    \\
+    \\
+    \\def main() -> int effects(managed_allocation):
+    \\    values = [7]
+    \\    touch(values, 1)
+    \\    return 0
+;
+
 const marker_extra =
     \\def peek(values: list[int]) -> int effects():
     \\    return values[0]
@@ -385,6 +396,21 @@ const marker_indirect_missing =
     \\    apply(touch, mut values)
     \\    return 0
 ;
+
+// spec-case: MUT-PARAM-1
+test "M4 the missing-marker paste is the whole call with only that argument marked" {
+    const diag = try markerError(marker_multi_missing);
+    defer t.allocator.free(diag.message);
+    try t.expectEqualStrings(marker_code, diag.code);
+    try t.expect(std.mem.indexOf(u8, diag.message, "write `(mut values, 1)`") != null);
+}
+
+// spec-case: MUT-PARAM-1
+test "M4 the unneeded-marker paste is the call without the marker and names the argument" {
+    const diag = try markerError(marker_extra);
+    defer t.allocator.free(diag.message);
+    try t.expect(std.mem.indexOf(u8, diag.message, "remove `mut`: `(values)`") != null);
+}
 
 // spec: MUT-PARAM-1
 test "M4 a call-site mut marker on a declared mut position is accepted" {
