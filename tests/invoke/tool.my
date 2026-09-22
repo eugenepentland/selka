@@ -89,4 +89,5 @@ public def identity[T](value: T) -> T effects():
 
 
 public def probe_filesystem(fs: Filesystem) -> i64 effects(filesystem):
+    _ = fs
     return 0

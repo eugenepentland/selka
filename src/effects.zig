@@ -22,6 +22,7 @@ const diagnostic = @import("diagnostic.zig");
 const mutation = @import("mutation.zig");
 const bytecode_model = @import("bytecode_model.zig");
 const callables = @import("callables.zig");
+const entry_adapter = @import("entry_adapter.zig");
 const Witness = struct { span: Span, via: ?usize = null };
 const Edge = struct { caller: usize, span: Span };
 fn allocatingSequence(records: []const typed.Record, ty: typed.Type) bool {
@@ -720,6 +721,10 @@ const CeilingContext = struct {
 /// its ceiling, so the caller can keep collecting every violation.
 fn checkSignatureCeiling(ctx: CeilingContext, index: usize) diagnostic.Error!bool {
     const function = ctx.program.functions[index];
+    // The synthesized entry wrapper is the runtime's exit protocol, not guest
+    // code: rendering an `Err` result on stderr is how `main -> Result` reports,
+    // just as an `int` result becomes the status, so no signature bounds it.
+    if (std.mem.eql(u8, function.name, entry_adapter.wrapper_name)) return false;
     // A `host def`/`extern def` has no body to derive from: its clause is its
     // authority and stays its ceiling.
     const derived_applies = function.policy.host == null and !function.policy.c_abi;
