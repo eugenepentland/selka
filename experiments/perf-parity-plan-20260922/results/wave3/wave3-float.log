@@ -1,0 +1,14 @@
+spectral_norm: 4 qualified arms: my zig-fast l5 l5-nan
+mandelbrot: 4 qualified arms: my zig-fast l5 l5-nan
+raytrace: 4 qualified arms: my zig-fast l5 l5-nan
+nbody: 7 qualified arms: my my-class zig-fast l5 class:l5 l5-nan class:l5-nan
+matmul: 7 qualified arms: my my-flat zig-fast l5 flat:l5 l5-nan flat:l5-nan
+sieve: 4 qualified arms: my zig-fast l5 l5-nan
+binary_trees: 6 qualified arms: my zig-fast l5 arena:l5 l5-nan arena:l5-nan
+spectral_norm: ref 254.5 ms | my=3.26x  zig-fast=1.00x  l5=3.52x  l5-nan=3.28x
+mandelbrot: ref 254.0 ms | my=0.99x  zig-fast=1.00x  l5=1.49x  l5-nan=1.00x
+raytrace: ref 141.8 ms | my=3.05x  zig-fast=1.00x  l5=5.82x  l5-nan=3.16x
+nbody: ref 232.4 ms | my=3.34x  my-class=2.40x  zig-fast=1.00x  l5=6.67x  class:l5=5.38x  l5-nan=2.15x  class:l5-nan=2.71x
+matmul: ref 60.4 ms | my=3.79x  my-flat=2.55x  zig-fast=1.00x  l5=6.84x  flat:l5=4.02x  l5-nan=3.80x  flat:l5-nan=2.71x
+sieve: ref 92.0 ms | my=1.64x  zig-fast=1.00x  l5=1.64x  l5-nan=1.65x
+binary_trees: ref 333.9 ms | my=1.91x  zig-fast=1.00x  l5=1.89x  arena:l5=1.30x  l5-nan=1.90x  arena:l5-nan=1.32x

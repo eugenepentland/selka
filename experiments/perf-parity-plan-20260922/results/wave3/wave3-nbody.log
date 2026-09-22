@@ -1,0 +1,6 @@
+nbody: 7 qualified arms: my my-class zig-fast l5 class:l5 l5-nan class:l5-nan
+raytrace: 4 qualified arms: my zig-fast l5 l5-nan
+spectral_norm: 4 qualified arms: my zig-fast l5 l5-nan
+nbody: ref 206.4 ms | my=1.93x  my-class=1.66x  zig-fast=1.00x  l5=4.86x  class:l5=4.21x  l5-nan=2.08x  class:l5-nan=1.87x
+raytrace: ref 131.7 ms | my=2.74x  zig-fast=1.00x  l5=5.48x  l5-nan=2.94x
+spectral_norm: ref 284.6 ms | my=3.78x  zig-fast=1.00x  l5=4.06x  l5-nan=3.82x
