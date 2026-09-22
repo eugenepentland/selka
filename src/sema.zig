@@ -1808,6 +1808,7 @@ const Checker = struct {
             value = try b.node(schema.fields[field].ty, .{ .field = .{ .base = value, .index = field } });
         }
         const expected = self.nodes.items[@backingInt(value)].ty;
+        const current = value;
         try self.hint(assignment.value, expected);
         value = try self.expressionWithTemporaries(assignment.value, temporaries);
         if (dead_owner) |owner| {
@@ -1816,12 +1817,36 @@ const Checker = struct {
             if (!shared) self.noteDeadRecordWrite(owner, node.span);
         }
         try self.require(self.nodes.items[@backingInt(value)].ty, expected, node.span);
-        if (destination.index == null) try self.requireArenaStore(destination.owner, value);
+        if (assignment.op == .add and expected.isAggregate() and self.catalog.records[expected.recordIndex()].isCollection() and self.catalog.records[expected.recordIndex()].collection.kind == .list) {
+            // `target.items += other` is Python's in-place extend, exactly as it is
+            // for a list binding: the field keeps the same list, which every alias
+            // observes growing, so nothing is stored back.
+            if (destination.index == null) try self.requireArenaStore(destination.owner, value);
+            const receiver = try b.local(expected);
+            try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = receiver, .value = current } }));
+            try statements.append(self.allocator, try b.stmt(.{ .discard = try b.operation(receiver, .extend, try self.allocator.dupe(typed.NodeId, &.{value})) }));
+            return b.block(statements.items, try b.node(.unit, .unit));
+        }
+        if (assignment.op != .set) {
+            // `target.field op= value` reads the field through the same once-evaluated
+            // destination, then evaluates the right-hand side, combines the pair with
+            // the operator's ordinary rules and stores the result, the way Python and
+            // the list-slot form `values[i] op= value` do. The combined value is kept
+            // in its own slot after the destination is set up, so a narrowed owner's
+            // refresh cannot run before the field it reads.
+            const combined = try self.augmented(assignment.op, current, value, node.span);
+            if (destination.index == null) try self.requireArenaStore(destination.owner, combined);
+            const stored = try b.local(expected);
+            try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = stored, .value = combined } }));
+            if (destination.refresh) |refresh| try statements.append(self.allocator, refresh);
+            value = try b.read(stored);
+        } else if (destination.index == null) try self.requireArenaStore(destination.owner, value);
         // The value needs its own slot only to survive the destination refresh: it
         // must be computed before the refresh, which re-reads the binding. A managed
         // record needs no refresh, and its update reads the binding where it stands,
         // so the value can go straight into the update's operand.
-        if (destination.refresh) |refresh| {
+        if (destination.refresh != null and assignment.op == .set) {
+            const refresh = destination.refresh.?;
             const assigned = try b.local(expected);
             const evaluate_value = try b.stmt(.{ .initialize = .{ .slot = assigned, .value = value } });
             try statements.insert(self.allocator, 0, evaluate_value);

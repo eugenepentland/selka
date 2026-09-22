@@ -1502,9 +1502,8 @@ pub const Parser = struct {
         self.cursor.pos += 1;
         const target = self.syntax.nodes.items[@backingInt(value)];
         if (target.data == .field) {
-            if (op != .set) return self.sink.fail("E_ASSIGNMENT_TARGET", operator.span, "augmented assignment to a record field is not supported; write the field out in full");
             const assigned = try self.expression(0);
-            return self.append(.{ .span = .join(target.span, self.syntax.nodes.items[@backingInt(assigned)].span), .data = .{ .field_assignment = .{ .target = value, .value = assigned } } });
+            return self.append(.{ .span = .join(target.span, self.syntax.nodes.items[@backingInt(assigned)].span), .data = .{ .field_assignment = .{ .target = value, .value = assigned, .op = op } } });
         }
         if (target.data != .index) return self.sink.fail("E_ASSIGNMENT_TARGET", target.span, "indexed assignment requires a list binding and index");
         if (op != .set) {
