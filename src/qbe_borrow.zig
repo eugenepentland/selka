@@ -500,6 +500,12 @@ fn inert(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"),
         // over a managed type is string concatenation or a content comparison,
         // which calls the runtime and can collect.
         .binary_integer => |operation| !operation.ty.isAggregate(),
+        // A cast to an integer type only range-checks and traps, like the
+        // checked arithmetic above; it is how a runtime index's negative-index
+        // normalization converts the receiver length. A cast to text builds a
+        // string, which allocates (`QBE-ELEMREF-3`).
+        .cast_integer => |target| target.integer() != null,
+        .call => |callee| try blindCall(E, self, callee),
         // A whole-value store can drop the value it replaces, which is a
         // release the run must not contain; a drop-free destination cannot.
         .store_local => |target| !(try self.layout(self.function.scope.locals[@backingInt(target)].ty)).drop,
@@ -526,6 +532,44 @@ fn inert(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"),
         },
         else => false,
     };
+}
+
+/// Whether a direct call can neither collect nor name the receiver, so a borrow
+/// may stay live across it (`QBE-ELEMREF-4`).
+///
+/// The backing storage stops naming the checked element only if something
+/// grows, overwrites, shrinks or frees it. A callee the allocation analysis
+/// proved cannot allocate — directly, through any callee, or through a function
+/// value — can neither start a collection nor grow a list. It could still write
+/// an element or shrink a list it holds, but to hold one it must be handed a
+/// reference: the language has no mutable globals (a module constant is an
+/// immutable scalar literal), no closures, and a function value names a
+/// top-level function with no state. So a callee none of whose parameter types
+/// traces a reference starts with no heap object in reach, cannot allocate one,
+/// and therefore cannot name the receiver or anything in it. The borrowed
+/// element itself may be one of the arguments: its type then traces nothing
+/// either, and a parameter the callee writes is copied into its own frame at
+/// entry, so it only ever reads the element.
+///
+/// A `mut` parameter is the one way a callee writes storage its caller names
+/// without a reference: a `mut [N]T` of scalars traces nothing. So a callee
+/// with any mutation footprint, or one that writes any aggregate parameter at
+/// all, declines as well.
+///
+/// In the first emission pass the allocation analysis is not known yet and
+/// every call declines, which only keeps the copy that pass's text is measured
+/// with.
+fn blindCall(comptime E: type, self: *E, callee: typed.FunctionId) Error!bool {
+    const id = @backingInt(callee);
+    if (id >= self.pure.len or !self.pure[id]) return false;
+    const function = self.program.functions[id];
+    if (function.signature.mutates.len != 0 or function.signature.declared_mutates.len != 0) return false;
+    for (function.scope.locals[0..function.signature.parameter_count], 0..) |parameter, index| {
+        if ((try self.layout(parameter.ty)).trace) return false;
+        if (self.isScalar(parameter.ty)) continue;
+        for (0..function.scope.instructions.len) |at| if (writesLocalAt(function, at, index)) return false;
+    }
+    return true;
 }
 
 /// Whether reading one element of this receiver is an inline load rather than a

@@ -4,6 +4,7 @@ const scalar_lower = @import("qbe_scalar.zig");
 const zero_local = @import("qbe_format.zig").zero_local;
 const arena_lower = @import("qbe_arena.zig");
 const borrow_lower = @import("qbe_borrow.zig");
+const liveness = @import("qbe_liveness.zig");
 const managed_lower = @import("qbe_managed.zig");
 const std = @import("std");
 const bytecode = @import("bytecode.zig");
@@ -742,6 +743,7 @@ fn allocateAnalysis(a: std.mem.Allocator, program: bytecode.Program, units: []co
 /// Whether a unit's text allocates on its own: any call other than a pure
 /// runtime callee or another unit in this program (which the graph handles).
 fn unitAllocates(text: []const u8, units: []const Unit) bool {
+    if (callsIndirectly(text)) return true;
     var rest = text;
     while (std.mem.indexOf(u8, rest, "call $")) |at| {
         rest = rest[at + "call $".len ..];
@@ -752,6 +754,14 @@ fn unitAllocates(text: []const u8, units: []const Unit) bool {
         rest = rest[stop..];
     }
     return false;
+}
+
+/// Whether the text invokes a function value (`QBE-INVOKE-SAFEPOINT-1`). The
+/// callee is whatever top-level function the value names, known only at run
+/// time, so the call is a safepoint and its caller can allocate — exactly like a
+/// direct call to a function that can.
+fn callsIndirectly(text: []const u8) bool {
+    return std.mem.indexOf(u8, text, " call %") != null;
 }
 
 fn frameCallee(name: []const u8) bool {
@@ -773,7 +783,11 @@ fn guestSymbol(name: []const u8, units: []const Unit) bool {
 /// `%heap` to the frozen root offset.
 fn dropUnusedRoots(a: std.mem.Allocator, text: []const u8) GenerateError![]u8 {
     if (std.mem.indexOf(u8, text, "=l add %root") != null) return a.dupe(u8, text);
-    const drops = std.mem.indexOf(u8, text, "myl_native_owned_drop") != null;
+    // A closing arena scope scans every local declared before it through its
+    // slot, assigned or not, so the zero-fill is what it reads for one the
+    // body has not reached yet (`QBE-ROOTLIVE-1`).
+    const drops = std.mem.indexOf(u8, text, "myl_native_owned_drop") != null or
+        std.mem.indexOf(u8, text, "myl_qbe_region_retains") != null;
     var kept: std.ArrayList([]const u8) = .empty;
     defer kept.deinit(a);
     var scan = std.mem.splitScalar(u8, text, '\n');
@@ -1143,6 +1157,9 @@ const Emitter = struct {
     arm_addresses: []const ArmAddress = &.{},
     /// Per instruction, whether a branch reaches it directly.
     branch_targets: []bool = &.{},
+    /// Per instruction, the locals a safepoint there publishes as roots
+    /// (`QBE-ROOTLIVE-1`); null publishes every traced local.
+    live_roots: ?liveness.Roots = null,
 
     /// Shared lowering primitive for target operation emitters.
     pub fn reject(self: *Emitter, pc: usize) GenerateError {
@@ -1280,6 +1297,7 @@ const Emitter = struct {
         self.branch_targets = try self.collectBranchTargets();
         self.by_reference = try self.addressLocals();
         try self.findRoots();
+        if (self.has_roots and self.has_safepoints) self.live_roots = try self.rootLiveness();
         const capacity = ir.stack_capacity;
         // QBE-FRAMEFIT-1: before the body exists, the only bound on the per-pc
         // aggregate scratch counts every buffer the lowering might declare, and
@@ -1888,6 +1906,7 @@ const Emitter = struct {
     /// collect even though `get_index` and `cast_integer` can allocate in
     /// another variant, and this keeps them from pushing roots they never need.
     fn loweredAllocates(text: []const u8) bool {
+        if (callsIndirectly(text)) return true;
         var rest = text;
         while (std.mem.indexOf(u8, rest, "call $")) |at| {
             rest = rest[at + "call $".len ..];
@@ -2316,7 +2335,7 @@ const Emitter = struct {
     /// With none there is nothing to link, and the push and its restore are
     /// omitted, exactly as the former per-root call sequence omitted them.
     fn liveRoots(self: *Emitter, stack: []const typed.Type) GenerateError!bool {
-        for (self.function.scope.locals, 0..) |local, i| if (try self.tracedRoot(i, local.ty)) return true;
+        for (self.function.scope.locals, 0..) |local, i| if (try self.publishedRoot(i, local.ty)) return true;
         for (stack) |ty| if ((try self.layout(ty)).trace) return true;
         return false;
     }
@@ -2327,6 +2346,25 @@ const Emitter = struct {
     fn tracedRoot(self: *Emitter, index: usize, ty: typed.Type) GenerateError!bool {
         if (self.borrowsElement(index)) return false;
         return (try self.layout(ty)).trace;
+    }
+    /// Whether a safepoint at the current instruction publishes local `index`:
+    /// the root protocol reads it and its value is live there
+    /// (`QBE-ROOTLIVE-1`). A dead local's value is never read again, so a
+    /// collection that frees what only it named frees garbage.
+    fn publishedRoot(self: *Emitter, index: usize, ty: typed.Type) GenerateError!bool {
+        if (!try self.tracedRoot(index, ty)) return false;
+        const live = self.live_roots orelse return true;
+        return live.has(self.pc, index);
+    }
+    /// Answer which locals each safepoint publishes. A local whose type owns
+    /// something is pinned: the epilogue and every overwriting store release it
+    /// through its slot, so it stays published wherever it was before.
+    fn rootLiveness(self: *Emitter) GenerateError!liveness.Roots {
+        const locals = self.function.scope.locals;
+        const pinned = try self.allocator.alloc(bool, locals.len);
+        defer self.allocator.free(pinned);
+        for (locals, pinned) |local, *pin| pin.* = (try self.layout(local.ty)).drop;
+        return liveness.analyze(self.allocator, .{ .function = self.function, .states = self.states, .pinned = pinned });
     }
     /// Whether this function keeps the root protocol at all: it has a live
     /// traced local or operand and at least one instruction that can collect.
@@ -2349,7 +2387,7 @@ const Emitter = struct {
         try self.print(" %v{d} =l loadl %v{d}\n", .{ head, base });
         var count: usize = 0;
         var previous = try std.fmt.allocPrint(self.allocator, "%v{d}", .{head});
-        for (self.function.scope.locals, 0..) |local, i| if (try self.tracedRoot(i, local.ty)) {
+        for (self.function.scope.locals, 0..) |local, i| if (try self.publishedRoot(i, local.ty)) {
             // A parameter read through the caller's address is traced where it
             // lives; every other aggregate local is traced at its own slot.
             const traced = if (self.byReference(i))
