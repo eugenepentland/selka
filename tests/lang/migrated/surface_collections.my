@@ -11,7 +11,7 @@ public def test_generic_list_methods_retain_element_type_che() -> bool:
     return c1.program() == 42
 
 # spec: SURFACE-COLLECTIONS-1
-public dmut ef test_list_methods_indexing_and_indexed_assignment() -> bool:
+public def test_list_methods_indexing_and_indexed_assignment() -> bool:
     return c2.program() == 42
 
 # spec: SURFACE-COLLECTIONS-2

@@ -11,13 +11,13 @@ import effects_case_6 as c6
 
 # spec-case: MUTATION-METADATA-1
 public def test_m2_declared_mutation_permits_direct_writes_a() -> bool:
-    return c1.pmut rogram() == 0
+    return c1.program() == 0
 
 # spec-case: MUTATION-METADATA-1
 public def test_m2_disjoint_managed_argument_types_are_prove() -> bool:
     return c2.program() == 0
 
-public dmut ef test_m2_fresh_containers_may_be_built_inserted_in() -> bool:
+public def test_m2_fresh_containers_may_be_built_inserted_in() -> bool:
     return c3.program() == 0
 
 # spec-case: MUTATION-METADATA-1
