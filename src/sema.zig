@@ -274,6 +274,12 @@ const Checker = struct {
     current_function: ?typed.FunctionId = null,
     current_lambda: ?usize = null,
     lambda_start: usize = 0,
+    /// One flag per instance key: the declaration carried a `mut` parameter whose
+    /// type cannot carry a write. Its call-site markers are not checked against
+    /// the footprint it never declared.
+    mut_parameter_rejected: std.ArrayList(bool) = .empty,
+    /// Instance key currently being checked, for per-instance bookkeeping.
+    checked_index: usize = 0,
     lambda_types: []?typed.Type = &.{},
     lambda_captures: []?[]const LambdaCapture = &.{},
     loops: struct { active: std.ArrayList(LoopScope) = .empty, next: usize = 0 } = .{},
@@ -287,6 +293,7 @@ const Checker = struct {
     trapping_open: ?source.Span = null,
 
     fn checkFunction(self: *Checker, i: usize) Error!typed.Function {
+        self.checked_index = i;
         if (i >= self.lambda_start and i < self.lambda_start + self.syntax.lambdas.len)
             return self.checkLambdaFunction(i - self.lambda_start);
         const allocator = self.allocator;
@@ -450,6 +457,16 @@ const Checker = struct {
     fn ty(self: *Checker, span: source.Span) Error!typed.Type {
         if (self.current_function) |id| return self.functionType(id, span);
         return self.catalog.resolve(self.src, span, self.sink);
+    }
+    /// Record that the function currently being checked declared a `mut`
+    /// parameter of a type that cannot carry a write. The array is filled lazily
+    /// because only a rejected declaration pays for it.
+    fn markMutRejected(self: *Checker) Error!void {
+        if (self.mut_parameter_rejected.items.len != self.instance_keys.items.len) {
+            try self.mut_parameter_rejected.resize(self.allocator, self.instance_keys.items.len);
+            @memset(self.mut_parameter_rejected.items, false);
+        }
+        self.mut_parameter_rejected.items[self.checked_index] = true;
     }
     fn syntaxFunction(self: *Checker, id: typed.FunctionId) ast.Function {
         return self.syntax.functions[@backingInt(self.instance_keys.items[@backingInt(id)].declaration)];
@@ -2803,6 +2820,13 @@ const Checker = struct {
                 try work.append(self.allocator, .{ .id = b.left });
                 return true;
             },
+            // A `mut` marker is transparent: the value it wraps is checked on its
+            // own, and the node itself reuses the resolved target's type and data.
+            .mut_argument => |inner| {
+                try work.append(self.allocator, .{ .id = id, .emit = true });
+                try work.append(self.allocator, .{ .id = inner });
+                return true;
+            },
             else => {},
         }
         return false;
@@ -3559,7 +3583,7 @@ const Checker = struct {
         const function = try self.specialize(target.declaration, call, node.span);
         const signature = self.syntaxFunction(function);
         try self.warnDeprecated(function, input);
-        try self.checkMutationMarkers(call.name, call.arguments, signature.signature.mut_positions);
+        if (!self.mutFootprintRejected(function)) try self.checkMutationMarkers(call.name, call.arguments, signature.signature.mut_positions);
         var arguments: std.ArrayList(typed.NodeId) = .empty;
         for (call.arguments, signature.signature.parameters) |arg, parameter| {
             const argument = self.syntax.nodes.items[@backingInt(arg)];
@@ -3609,7 +3633,15 @@ const Checker = struct {
         for (arguments, 0..) |argument, position| {
             const declared = markerPositionDeclared(mut_positions, @intCast(position));
             const arg_node = self.syntax.nodes.items[@backingInt(argument)];
-            if (arg_node.data != .mut_argument) continue;
+            if (arg_node.data != .mut_argument) {
+                if (!declared) continue;
+                const message = try std.fmt.allocPrint(
+                    self.allocator,
+                    "`{s}` writes `{s}`; write `{s}(mut {s})`",
+                    .{ self.src.text(call_name), self.src.text(arg_node.span), self.src.text(call_name), self.src.text(arg_node.span) },
+                );
+                return self.sink.fail(mutation_marker_code, arg_node.span, message);
+            }
             const target = self.syntax.nodes.items[@backingInt(arg_node.data.mut_argument)];
             if (!declared) {
                 const message = try std.fmt.allocPrint(self.allocator, "`{s}` does not write `{s}`; remove `mut`", .{ self.src.text(call_name), self.src.text(target.span) });
@@ -3640,6 +3672,13 @@ const Checker = struct {
         };
     }
     /// Whether one zero-based position appears in a normalized `mut` set.
+    /// Whether the declaration behind one instance key was rejected for a `mut`
+    /// type that cannot carry a write. A call to it is not judged against a
+    /// footprint the declaration never had.
+    fn mutFootprintRejected(self: *Checker, id: typed.FunctionId) bool {
+        const index = @backingInt(id);
+        return index < self.mut_parameter_rejected.items.len and self.mut_parameter_rejected.items[index];
+    }
     fn markerPositionDeclared(positions: []const u16, position: u16) bool {
         for (positions) |candidate| if (candidate == position) return true;
         return false;
@@ -5108,6 +5147,22 @@ const Checker = struct {
             if (try self.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "parameter shadows a top-level function");
             const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
             const parameter_type = try self.ty(parameter.ty);
+            // `mut` promises a write the caller can observe, so it is accepted
+            // only on a type that can carry one. Rejecting it here, before any
+            // body or call is checked, keeps the declaration out of the published
+            // footprint: the call site reports the missing marker instead.
+            if (parameter.mut and !typed.carriesWritableStorage(self.catalog.records, parameter_type)) {
+                try markMutRejected(self);
+                return sink.fail(
+                    mutation_marker_code,
+                    parameter.ty,
+                    try std.fmt.allocPrint(
+                        allocator,
+                        "`mut` on `{s}` has nothing to write; only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`",
+                        .{typed.typeName(parameter_type, self.catalog.records)},
+                    ),
+                );
+            }
             if (parameter.default_value) |value| {
                 const checked = try self.expressionExpected(value, parameter_type);
                 try self.require(self.nodes.items[@backingInt(checked)].ty, parameter_type, parameter.ty);
@@ -5490,7 +5545,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     const exported = try exportedFunctions(allocator, module_names, checked.functions);
     timingAdd(timing, "entry_adaptation", entry_start);
     const effects_start = timingStart(timing);
-    try @import("effects.zig").check(allocator, checked, exported, sink);
+    try @import("effects.zig").check(allocator, checked, .{ .exported = exported, .src = src, .syntax = program, .sink = sink });
     timingAdd(timing, "effect_origin_passes", effects_start);
     const codecs_start = timingStart(timing);
     try @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink);

@@ -455,6 +455,7 @@ test "foundation syntax: a mut parameter marker sets the flag and leaves the typ
     try t.expectEqualStrings("list[int]", c.src.text(parameters[0].ty));
     try t.expect(!parameters[1].mut);
     try t.expectEqualStrings("int", c.src.text(parameters[1].ty));
+    try t.expectEqualSlices(u16, &.{0}, c.syntax.?.functions[0].signature.mut_positions);
 }
 
 // spec-case: SYNTAX-MUT-1

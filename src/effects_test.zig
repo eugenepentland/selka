@@ -397,7 +397,7 @@ test "M4 a written parameter without mut is rejected with the declaration paste"
     const diag = try markerError(marker_missing);
     defer t.allocator.free(diag.message);
     try t.expectEqualStrings(marker_code, diag.code);
-    try t.expect(std.mem.indexOf(u8, diag.message, "declare `values: mut list[i64]`") != null);
+    try t.expect(std.mem.indexOf(u8, diag.message, "declare `values: mut list[int]`") != null);
 }
 
 // spec-case: MUT-PARAM-1
@@ -706,7 +706,7 @@ test "M2 a write through an unmarked parameter is the marker error, not a permis
         \\    values = [1]
         \\    touch(values)
         \\    return 0
-    , marker_code, "declare `values: mut list[i64]`");
+    , marker_code, "declare `values: mut list[int]`");
     try reject(
         \\def set_value(cell: Cell[int]) -> None effects():
         \\    cell.value = 1
@@ -716,7 +716,7 @@ test "M2 a write through an unmarked parameter is the marker error, not a permis
         \\    cell = Cell(value=0)
         \\    set_value(cell)
         \\    return 0
-    , marker_code, "declare `cell: mut Cell[i64]`");
+    , marker_code, "declare `cell: mut Cell[int]`");
 }
 
 // spec: MUT-PARAM-4
@@ -762,7 +762,7 @@ test "M2 forwarding mut x where x is the caller's own parameter needs that param
         \\    values = [1]
         \\    forward(values)
         \\    return 0
-    , marker_code, "declare `values: mut list[i64]`");
+    , marker_code, "declare `values: mut list[int]`");
 }
 
 // spec-case: MUTATION-METADATA-1
@@ -1172,7 +1172,7 @@ test "M1 an unmarked written parameter is rejected with every position listed" {
     }
     try t.expectEqual(@as(usize, 1), messages.len);
     try t.expect(std.mem.indexOf(u8, messages[0], "this function writes `first` (parameter 1), `second` (parameter 2)") != null);
-    try t.expect(std.mem.indexOf(u8, messages[0], "declare `first: mut list[i64]`, `second: mut list[i64]`") != null);
+    try t.expect(std.mem.indexOf(u8, messages[0], "declare `first: mut list[int]`, `second: mut list[int]`") != null);
 }
 
 // spec-case: MUT-PARAM-2

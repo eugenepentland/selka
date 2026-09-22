@@ -323,6 +323,31 @@ pub fn requiresHandling(ty: Type, records: []const Record) bool {
 pub fn typeName(ty: Type, records: []const Record) []const u8 {
     return if (ty.isAggregate()) records[ty.recordIndex()].name else @tagName(ty);
 }
+/// Whether a parameter of this type can be written through at all. `list`,
+/// `dict`, `class`, `Cell`, `[N]T`, `byte_buffer` and any record, union, option
+/// or result holding one carry mutable managed storage; scalars, `str`, `bytes`
+/// and records built only from those do not, so `mut` on them would promise a
+/// write that cannot reach the caller.
+pub fn carriesWritableStorage(records: []const Record, ty: Type) bool {
+    return writableDepth(records, ty, 0);
+}
+
+fn writableDepth(records: []const Record, ty: Type, depth: usize) bool {
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len or depth == 64) return false;
+    const record = records[ty.recordIndex()];
+    if (record.managed) {
+        // `str` and `bytes` are immutable managed buffers; every other managed
+        // schema -- a collection, `Cell`, or a user `class` -- is writable.
+        return record.collection.kind != .string and record.collection.kind != .bytes;
+    }
+    if (record.shape.array) |array| if (writableDepth(records, array.element, depth + 1)) return true;
+    if (record.shape.variants) |variants| for (variants.cases) |case| {
+        if (case.payload) |payload| if (writableDepth(records, payload, depth + 1)) return true;
+    };
+    for (record.fields) |field| if (writableDepth(records, field.ty, depth + 1)) return true;
+    return false;
+}
+
 /// Render a type the way source spells it, for user-facing diagnostics.
 pub fn surfaceTypeName(allocator: std.mem.Allocator, ty: Type, records: []const Record) std.mem.Allocator.Error![]const u8 {
     return surfaceTypeText(allocator, typeName(ty, records));

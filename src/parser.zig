@@ -338,7 +338,7 @@ pub const Parser = struct {
     fn atMutArgument(self: *Parser) bool {
         if (!self.identIsMut()) return false;
         return switch (self.tokens[self.cursor.pos + 1].tag) {
-            .ident, .integer, .bytes, .format, .kw_true, .kw_false, .kw_none, .kw_len, .kw_replace, .kw_todo, .minus, .bang => true,
+            .ident, .integer, .bytes, .format, .kw_true, .kw_false, .kw_none, .kw_len, .kw_replace, .kw_todo, .minus, .bang, .lbracket, .lparen, .lbrace => true,
             else => false,
         };
     }
@@ -916,6 +916,9 @@ pub const Parser = struct {
             );
         }
         const body = if (host != null) try self.addStatement(.{ .span = (try self.expect(.semicolon)).span, .data = .{ .block = &.{} } }) else try self.block(name.span);
+        // The `mut` positions are read from the parameter list before it is
+        // handed over, because `toOwnedSlice` empties the list it returns.
+        const mut_positions = try ast.mutPositions(self.arena.allocator(), try self.declaredMutFlags(parameters.parameters.items));
         return .{
             .policy = .{
                 .host = host,
@@ -929,7 +932,7 @@ pub const Parser = struct {
                 .type_parameters = type_parameters,
                 .parameters = try parameters.parameters.toOwnedSlice(self.arena.allocator()),
                 .return_type = return_type,
-                .mut_positions = try ast.mutPositions(self.arena.allocator(), try self.declaredMutFlags(parameters.parameters.items)),
+                .mut_positions = mut_positions,
                 .keyword_only_from = parameters.keyword_only_from,
             },
             .name = name.span,
