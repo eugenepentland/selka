@@ -108,6 +108,38 @@ attributes) and fixed three latent adapter gaps the QBE arm never hit:
 callbacks declared as globals, and the `split`/`ord`/`chr` and dir-resource
 runtime helpers absent from the signature table.
 
+**`float_loop` was a compiler defect, not a constant factor — fixed 2026-09-22**
+(`QBE-FLOAT-CANON-1`). This item named the kernel's `float_loop` regression
+(`-O3` without LTO 122.9 ms against QBE's 89.9 ms) and LTO only recovered it to
+QBE parity; the kernel then sat at 2.76× Zig. Instruction-level profiling put
+100% of its samples in the unrolled recurrence and showed the real cost was
+**NaN canonicalisation placed on the dependency chain**: `floatBinary` merged
+the canonical NaN into the result with a literal plus a phi in the *integer
+bit-pattern* domain (`%result =l phi @nan 9221120237041090560, @finite %raw`),
+so LLVM if-converted the diamond and selected in the GPR domain
+(`vucomisd`/`vmovq`/`cmovp`, plus a `vmovq` back for the next operation) and its
+SLP vectorizer packed the multiply's and the square root's canonicalisations into
+one `vpunpcklqdq`/`vcmpunordpd`/`vblendvpd`/`vshufpd` chain — about 29 cycles per
+iteration against the 8 of a bare `vmulsd`/`vaddsd` chain. The cold path now
+calls a new `myl_qbe_float_canonical`, whose `volatile` read no optimizer may
+move, duplicate or speculate, so the canonicalisation stays a predicted branch
+and the finite path is the operation plus one `cuod` compare. `float_loop` falls
+**2.76× → 1.00× Zig ReleaseFast** (35.6 ms against 35.5 ms), the explicit
+`--backend qbe` arm 0.98×, with `records` 0.91×, `intloop` 0.95×, `calls` 1.02×
+and every arm's stdout byte-identical. One negative result worth keeping:
+`noinline` alone did **not** work — LLVM still folded the diamond into a blend —
+which is why the helper's volatile read is load-bearing.
+
+Two measured negatives from the same work redirect what is left. The printer's
+`str(value)`-to-measure width path is real but **under 0.6%** of render samples
+(only 10,160 of 120,840 AST nodes are numeric), so it cannot close the parser's
+1.90× render gap; that gap is ~34% libc memory traffic (18.7% at one AVX
+`rep movsb` memcpy, 8.3% memset, ~4% malloc/free), 12.4% `push_node` and 7.2% GC
+`trace`, including the 7.4 MB output buffer's doubling and `byte_builder.finish`'s
+one full copy. And census cannot be improved from printer work at all — 37% of
+its samples are libc memory traffic and 17.6% the collector, which is item 3's
+unfinished list-representation half.
+
 ### 2. Take the frame protocol off the call path
 
 *Compiler and runtime. Size: medium to large.*
