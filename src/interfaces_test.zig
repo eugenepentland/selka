@@ -101,10 +101,12 @@ test "default interface listing renders the whole signature with Python capabili
         \\
         \\
         \\public def main(fs: Filesystem, clock: Clock) -> int:
+        \\    _ = fs
+        \\    _ = clock
         \\    return 0
         \\
         \\
-        \\public def bump(values: list[int]) -> int effects(mutation) mutates(values):
+        \\public def bump(values: mut list[int]) -> int effects(mutation):
         \\    values[0] = values[0] + 1
         \\    return values[0]
     ;
@@ -122,7 +124,7 @@ test "default interface listing renders the whole signature with Python capabili
     try t.expect(std.mem.indexOf(u8, text, "filesystem_cap") == null);
     try t.expect(std.mem.indexOf(u8, text, "clock_cap") == null);
     try t.expect(std.mem.indexOf(u8, text, "effects()") != null);
-    try t.expect(std.mem.indexOf(u8, text, "mutates(values)") != null);
+    try t.expect(std.mem.indexOf(u8, text, "def(values:mut list[i64])->i64") != null);
     try t.expect(std.mem.indexOf(u8, text, "ceiling(mutation)") != null);
 }
 
@@ -839,11 +841,11 @@ test "public schema renders normalized mutates metadata and callback contracts" 
         \\module main
         \\
         \\
-        \\public def touch(values: list[int]) -> None effects(mutation) mutates(values):
+        \\public def touch(values: mut list[int]) -> None effects(mutation):
         \\    values[0] = 1
         \\
         \\
-        \\public def apply(f: def(values: list[int]) -> None effects(mutation) mutates(values)) -> None effects():
+        \\public def apply(f: def(values: mut list[int]) -> None effects(mutation)) -> None effects():
         \\    _ = f
         \\
         \\

@@ -7,19 +7,22 @@ def streams() -> int:
     generator = random.seeded(42)
     first = random.next_word(mut generator)
     alias = generator
-    second = random.next_word(alias)
+    second = random.next_word(mut alias)
     if first == second:
         return 1
     replay = random.seeded(42)
-    if random.next_word(replay) != first or random.next_word(replay) != second:
+    if random.next_word(mut replay) != first or random.next_word(mut replay) != second:
         return 2
-    if random.next_word(generator) != random.next_word(replay):
+    if random.next_word(mut generator) != random.next_word(mut replay):
         return 3
     if first != 13679457532755275413u64:
         return 4
-    if random.next_word(random.seeded(0)) != 16294208416658607535u64:
+    seeded = random.seeded(0)
+    if random.next_word(mut seeded) != 16294208416658607535u64:
         return 5
-    if random.next_word(random.from_word(18446744073709551615u64)) != random.next_word(random.seeded(0 - 1)):
+    top = random.from_word(18446744073709551615u64)
+    wrapped = random.seeded(0 - 1)
+    if random.next_word(mut top) != random.next_word(mut wrapped):
         return 6
     return 0
 
@@ -28,7 +31,7 @@ def fractions() -> int:
     generator = random.seeded(7)
     draw = 0
     while draw < 500:
-        value = random.random(generator)
+        value = random.random(mut generator)
         if value < 0.0 or value >= 1.0:
             return 10
         draw += 1
@@ -41,7 +44,7 @@ def ranges() -> int:
     low = 0
     high = 0
     while draw < 500:
-        match random.randint(generator, 0 - 3, 3):
+        match random.randint(mut generator, 0 - 3, 3):
             case Ok(value):
                 if value < 0 - 3 or value > 3:
                     return 20
@@ -54,23 +57,23 @@ def ranges() -> int:
         draw += 1
     if low == 0 or high == 0:
         return 22
-    match random.randint(generator, 5, 4):
+    match random.randint(mut generator, 5, 4):
         case Ok(_):
             return 23
         case Err(_):
             _ = 0
-    match random.randint(generator, 0 - 9223372036854775807 - 1, 9223372036854775807):
+    match random.randint(mut generator, 0 - 9223372036854775807 - 1, 9223372036854775807):
         case Ok(_):
             _ = 0
         case Err(_):
             return 24
-    match random.randint(generator, 0 - 9223372036854775807 - 1, 0):
+    match random.randint(mut generator, 0 - 9223372036854775807 - 1, 0):
         case Ok(value):
             if value > 0:
                 return 25
         case Err(_):
             return 26
-    match random.randmut int(generator, 7, 7):
+    match random.randint(mut generator, 7, 7):
         case Ok(value):
             if value != 7:
                 return 27
@@ -82,25 +85,25 @@ def ranges() -> int:
 def permutations() -> int:
     generator = random.seeded(5)
     items = [1, 2, 3, 4, 5]
-    random.shuffle(generator, items)
+    random.shuffle(mut generator, mut items)
     total = 0
     for value in items:
         total += value
     if total != 15 or len(items) != 5:
         return 30
-    match random.choice(generator, items):
+    match random.choice(mut generator, items):
         case Some(value):
             if value < 1 or value > 5:
                 return 31
         case None:
             return 32
     empty: list[int] = []
-    match random.choice(generator, empty):
+    match random.choice(mut generator, empty):
         case Some(_):
             return 33
         case None:
             _ = 0
-    random.shuffle(generator, empty)
+    random.shuffle(mut generator, mut empty)
     return 0
 
 

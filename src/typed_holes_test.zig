@@ -194,7 +194,7 @@ test "ordinary and uncalled generic holes retain their own bounded context snaps
     try t.expect(bindingType(maybe, "pending") == null);
     try t.expectEqual(@as(usize, 1), maybe.contract.unusable_bindings);
     const bounded = try obligationFor(&compilation, "bounded");
-    try t.expectEqualStrings("mutates(values)", bounded.contract.mutation.?.text);
+    try t.expectEqualStrings("mut(values)", bounded.contract.mutation.?.text);
     try t.expect(std.mem.indexOf(u8, bounded.contract.effects.?.text, "mutation") != null);
     const generic = try obligationFor(&compilation, "template");
     try t.expectEqualStrings("T", generic.declared.text);

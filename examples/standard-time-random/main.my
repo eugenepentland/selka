@@ -7,37 +7,37 @@ def streams() -> int:
     generator = random.seeded(0)
     if random.next_word(mut generator) != 16294208416658607535u64:
         return 1
-    if random.next_word(generator) != 7960286522194355700u64:
+    if random.next_word(mut generator) != 7960286522194355700u64:
         return 2
     replay = random.seeded(0)
-    if random.next_word(replay) != 16294208416658607535u64:
+    if random.next_word(mut replay) != 16294208416658607535u64:
         return 3
     alias = replay
-    if random.next_word(alias) != 7960286522194355700u64:
+    if random.next_word(mut alias) != 7960286522194355700u64:
         return 4
     fresh = random.seeded(0)
-    _ = random.next_word(fresh)
-    _ = random.next_word(fresh)
-    if random.next_word(replay) != random.next_word(fresh):
+    _ = random.next_word(mut fresh)
+    _ = random.next_word(mut fresh)
+    if random.next_word(mut replay) != random.next_word(mut fresh):
         return 5
     return 0
 
 
 def bounds() -> int:
     generator = random.seeded(3)
-    match random.randint(generator, 4, 3):
+    match random.randint(mut generator, 4, 3):
         case Ok(_):
             return 10
         case Err(_):
             _ = 0
-    match random.randint(generator, 0 - 9223372036854775807 - 1, 9223372036854775807):
+    match random.randint(mut generator, 0 - 9223372036854775807 - 1, 9223372036854775807):
         case Ok(_):
             _ = 0
         case Err(_):
             return 11
     draws = 0
     while draws < 200:
-        match random.randint(generator, 0, 9):
+        match random.randint(mut generator, 0, 9):
             case Ok(value):
                 if value < 0 or value > 9:
                     return 12
@@ -70,7 +70,7 @@ def limits() -> int:
             return 23
         case Err(_):
             _ = 0
-    match time.millismut econds(42):
+    match time.milliseconds(42):
         case Ok(span):
             if span.nanoseconds != 42000000:
                 return 24

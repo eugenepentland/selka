@@ -308,11 +308,11 @@ test "PY-BYTES-SNAPSHOT-1 a published snapshot survives the builder's later writ
         \\
         \\def main() -> int:
         \\    out = byte_builder.create()
-        \\    byte_builder.append_text(out, "abc")
+        \\    byte_builder.append_text(mut out, "abc")
         \\    first = byte_builder.finish(out)
         \\    # The snapshot reads the buffer's own octets; the append that follows
         \\    # moves them into a private block, so `first` cannot change.
-        \\    byte_builder.append_text(out, "def")
+        \\    byte_builder.append_text(mut out, "def")
         \\    second = byte_builder.finish(out)
         \\    if first != b"abc" or len(first) != 3:
         \\        return 1
@@ -320,7 +320,7 @@ test "PY-BYTES-SNAPSHOT-1 a published snapshot survives the builder's later writ
         \\        return 2
         \\    # Appending an earlier snapshot back into its own builder reads the
         \\    # detached block, which the snapshot retains.
-        \\    byte_builder.append(out, first)
+        \\    byte_builder.append(mut out, first)
         \\    third = byte_builder.finish(out)
         \\    if third != b"abcdefabc":
         \\        return 3
@@ -333,9 +333,9 @@ test "PY-BYTES-SNAPSHOT-1 a published snapshot survives the builder's later writ
         \\    blank = byte_builder.finish(other)
         \\    if len(blank) != 0:
         \\        return 6
-        \\    if not byte_builder.reserve(other, 32):
+        \\    if not byte_builder.reserve(mut other, 32):
         \\        return 7
-        \\    if not byte_builder.append_byte(other, 90):
+        \\    if not byte_builder.append_byte(mut other, 90):
         \\        return 8
         \\    if blank != b"" or byte_builder.finish(other) != b"Z":
         \\        return 9
@@ -354,14 +354,14 @@ test "a snapshot taken under collection keeps its octets across later appends" {
         \\    out = byte_builder.create()
         \\    index = 0
         \\    while index < 64:
-        \\        byte_builder.append_text(out, "piece")
+        \\        byte_builder.append_text(mut out, "piece")
         \\        index += 1
         \\    published = byte_builder.finish(out)
         \\    if len(published) != 320:
         \\        return 1
         \\    index = 0
         \\    while index < 8:
-        \\        byte_builder.append_text(out, "tail")
+        \\        byte_builder.append_text(mut out, "tail")
         \\        index += 1
         \\    if len(published) != 320 or published[0] != 112 or published[319] != 101:
         \\        return 2
