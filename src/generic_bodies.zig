@@ -545,6 +545,7 @@ const Checker = struct {
         } else if (root_node.data != .index) return self.sink.fail("E_ASSIGNMENT_TARGET", root_node.span, "field assignment requires a mutable local record or list slot");
         self.seedManagedWrite(self.parameterIndex(root, 0));
         const expected = try self.expression(assignment.target);
+        if (assignment.op != .set) try self.augmentedTarget(assignment.op, expected, node.span);
         try self.compatible(try self.expressionExpected(assignment.value, expected), expected, node.span);
         return .{ .concrete = .unit };
     }

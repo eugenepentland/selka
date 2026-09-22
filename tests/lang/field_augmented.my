@@ -1,0 +1,85 @@
+module field_augmented
+
+
+class FieldCounter:
+    n: int
+    total: float
+    label: str
+    items: list[int]
+
+
+record FieldPoint:
+    x: int
+    y: int
+
+
+class FieldHolder:
+    inner: FieldCounter
+    point: FieldPoint
+
+
+def bump(counter: mut FieldCounter) -> int:
+    counter.n += 1
+    counter.n *= 3
+    counter.n -= 1
+    counter.n //= 2
+    counter.n %= 5
+    counter.total += 0.5
+    counter.total /= 2.0
+    counter.label += "!"
+    return counter.n
+
+
+def reset(counter: mut FieldCounter) -> int:
+    counter.n = 100
+    return 1
+
+
+def new_counter() -> FieldCounter:
+    return FieldCounter(n=1, total=1.0, label="a", items=[1])
+
+
+# An augmented assignment to a class field reads the field, applies the
+# operator's ordinary rules and stores the result, like a binding does.
+# spec: AUGMENTED-FIELD-1
+public def test_augmented_assignment_updates_a_class_field() -> bool:
+    c = new_counter()
+    if bump(mut c) != 2:
+        return False
+    return c.n == 2 and c.total == 0.75 and c.label == "a!"
+
+
+# Record fields, nested field paths and fields of list elements take the same
+# operators, each evaluating its owner once.
+# spec-case: AUGMENTED-FIELD-1
+public def test_augmented_assignment_reaches_records_nested_paths_and_list_slots() -> bool:
+    p = FieldPoint(x=1, y=2)
+    p.x += 10
+    p.y -= 5
+    h = FieldHolder(inner=new_counter(), point=FieldPoint(x=0, y=0))
+    h.inner.n += 4
+    h.point.y += 7
+    points = [FieldPoint(x=1, y=1)]
+    points[0].x += 5
+    return p.x == 11 and p.y == -3 and h.inner.n == 5 and h.point.y == 7 and points[0].x == 6
+
+
+# `+=` on a list field extends the list in place, so an alias sees the growth.
+# spec-case: AUGMENTED-FIELD-1
+public def test_augmented_addition_to_a_list_field_extends_in_place() -> bool:
+    c = new_counter()
+    alias = c.items
+    c.items += [9, 8]
+    return len(c.items) == 3 and len(alias) == 3 and alias[2] == 8
+
+
+# Python reads the field before it evaluates the right-hand side.
+# spec-case: AUGMENTED-FIELD-1
+public def test_augmented_field_reads_the_field_before_the_right_side() -> bool:
+    c = new_counter()
+    c.n += reset(mut c)
+    return c.n == 2
+
+
+def main() -> int:
+    return 0
