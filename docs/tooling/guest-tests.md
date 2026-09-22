@@ -115,10 +115,16 @@ cached prog040::test_scale40
 
 ## Reusing unaffected results
 
-Allocation and process-local mutation are deterministic for keyed test inputs,
-so they do not prevent successful-result reuse. Actual external effects,
-including output, clock, randomness and environment access, still prevent it.
-The stricter `--pure-skip` signature rule still excludes declared mutation.
+Allocation, process-local mutation and output are deterministic for keyed test
+inputs, so they do not prevent successful-result reuse. A test that takes
+`out: Stream` or `err: Stream` is reused like any other: the runner captures a
+test process's standard output and standard error and discards both when the
+test passes, and a receipt records only a pass, so a cached pass shows exactly
+what an executed pass shows. A failure's captured output is part of its report,
+and a failure is never reused. Actual external effects — clock, randomness,
+environment, filesystem and network access — still prevent reuse. The stricter
+`--pure-skip` signature rule still excludes declared mutation and any capability
+parameter, `Stream` included.
 
 The source identity covers the resolved import closure and required configuration
 and policy files. An edit to an unimported neighboring module neither discards
