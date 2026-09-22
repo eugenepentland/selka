@@ -7,9 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-/* One requested directory grant, borrowed from argv for the process lifetime. */
+/* One requested directory grant, borrowed from the options for the process lifetime. */
 typedef struct { const char *path; int writable; } MylangRequest;
-/* Parsed authority options. Without `--restrict` every capability is granted
+/* Parsed authority options from `MYLANG_OPTIONS`. Without `--restrict` every capability is granted
    and the `--allow-*` flags narrow nothing; `--allow-random=SEED` still pins the
    entropy seed, because it selects a stream rather than withholding one. */
 typedef struct {
@@ -171,34 +171,75 @@ static int provision(MylangGrants *grants, MylangNativeProviders *providers, int
     }
     return 1;
 }
+/* Split `text` in place into whitespace-separated options. A double-quoted
+   stretch keeps its whitespace, and inside it a backslash takes the next
+   character literally, so any option can be spelled. Returns the option count,
+   or -1 for an unterminated quote. */
+static int split_options(char *text, char **options) {
+    int count = 0;
+    char *read = text, *write = text;
+    while (*read) {
+        while (*read == ' ' || *read == '\t' || *read == '\n' || *read == '\r') ++read;
+        if (!*read) break;
+        options[count++] = write;
+        int quoted = 0;
+        for (; *read && (quoted || !(*read == ' ' || *read == '\t' || *read == '\n' || *read == '\r')); ++read) {
+            if (*read == '"') { quoted = !quoted; continue; }
+            if (quoted && *read == '\\' && read[1]) ++read;
+            *write++ = *read;
+        }
+        if (quoted) return -1;
+        if (*read) ++read;
+        *write++ = 0;
+    }
+    return count;
+}
+/* Read every runtime option from `MYLANG_OPTIONS` into the grants and the
+   controls. Returns 0 after reporting an option that is unknown, malformed or
+   not a usable grant. */
+static int read_options(MylangGrants *grants, MylQbeControls *controls, char **storage) {
+    const char *value = getenv(MYLANG_OPTIONS_VARIABLE);
+    *storage = NULL;
+    if (!value || !*value) return 1;
+    size_t length = strlen(value);
+    char *text = malloc(length + 1);
+    char **options = calloc(length / 2 + 1, sizeof *options);
+    *storage = text;
+    if (!text || !options) { free(options); fputs("OutOfMemory: QBE runtime failure\n", stderr); return 0; }
+    memcpy(text, value, length + 1);
+    int count = split_options(text, options);
+    if (count < 0) fputs("mylang: " MYLANG_OPTIONS_VARIABLE " has an unterminated quote\n", stderr);
+    for (int i = 0; i < count; ++i) {
+        int matched = 0;
+        int usable = accept(grants, options[i], &matched);
+        if (matched && !usable) {
+            fprintf(stderr, "mylang: the option %s is not a usable capability grant\n", options[i]);
+            count = -1;
+        } else if (!matched && !myl_qbe_control(controls, options[i])) {
+            fprintf(stderr, "mylang: " MYLANG_OPTIONS_VARIABLE " names %s, which is not a runtime option\n", options[i]);
+            count = -1;
+        }
+        if (count < 0) break;
+    }
+    free(options);
+    return count >= 0;
+}
 int mylang_qbe_run_grants(uint64_t (*entry)(void *), int argc, char **argv, const MylangNativeProviders *base) {
     MylangGrants grants = {0};
     mylang_scoped_init(&grants.scoped);
     grants.names = "";
-    char **kept = calloc(argc > 0 ? (size_t)argc : 1, sizeof *kept);
-    if (!kept) { fputs("OutOfMemory: QBE runtime failure\n", stderr); return 2; }
-    int count = 0;
-    if (argc > 0) kept[count++] = argv[0];
-    int delimiter = 0;
-    for (int i = 1; i < argc; ++i) {
-        if (!delimiter && !strcmp(argv[i], "--")) {
-            kept[count++] = argv[i];
-            delimiter = 1;
-            continue;
-        }
-        int matched = 0;
-        if (!delimiter && !accept(&grants, argv[i], &matched) && matched) {
-            fprintf(stderr, "mylang: the option %s is not a usable capability grant\n", argv[i]);
-            free(kept);
-            return 2;
-        }
-        if (!matched) kept[count++] = argv[i];
+    MylQbeControls controls = {0};
+    char *storage;
+    if (!read_options(&grants, &controls, &storage)) {
+        free(storage);
+        return 2;
     }
     MylangNativeProviders providers = base ? *base : (MylangNativeProviders){0};
     int status = 2;
-    if (provision(&grants, &providers, base != NULL)) status = mylang_qbe_run_providers(entry, count, kept, &providers);
+    /* Every argument after the program name is the guest's, `--` included. */
+    if (provision(&grants, &providers, base != NULL)) status = mylang_qbe_run_process(entry, &controls, argc > 0 ? argc - 1 : 0, argc > 0 ? argv + 1 : argv, &providers);
     else fputs("mylang: a requested directory grant could not be opened\n", stderr);
-    free(kept);
     mylang_scoped_close(&grants.scoped);
+    free(storage);
     return status;
 }

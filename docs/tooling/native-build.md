@@ -104,9 +104,15 @@ independently cached object per guest function and links those objects with the
 bundled runtime. `--run` replaces `-o`: it executes a temporary binary with
 inherited stdin, stdout, stderr and working directory, returns that program's
 exit status, and removes the binary afterwards while keeping the cached objects;
-runtime options go after `--`, including the same `--restrict` and `--allow-*`
-capability options `mylang run` takes: a native executable grants every
-capability by default and `--restrict` denies them. Build tools resolve from `--qbe`/`--zig` first,
+runtime options go before `--` — the same `--restrict` and `--allow-*`
+capability options, budgets, `--gc-stress` and `--print-result` that `mylang
+run` takes — and the values after `--` are the program's arguments. A native
+executable grants every capability by default. It hands `main(args)` every
+argument after `argv[0]` unchanged and reads its runtime options only from the
+`MYLANG_OPTIONS` environment variable, spelled as on the `mylang run` command
+line and separated by spaces, so `MYLANG_OPTIONS=--restrict ./app` denies every
+capability and `./app --gc-stress` passes `--gc-stress` to the program. See
+[the native backend](../io.md#the-native-backend) for quoting and errors. Build tools resolve from `--qbe`/`--zig` first,
 then from executables sitting beside the running `mylang`, then from `PATH`, and
 never from the working directory. `amd64_sysv` is the only supported target, a
 module entry needs `--project`, `--library` produces a shared library, and a
@@ -136,9 +142,9 @@ emits no step check, which is what makes the default `mylang run` and
 position marker is kept only where a diagnostic can read it — an instruction that
 can fail, an `assert`, or a call site — because that is what trap traces and
 `assert` messages read.
-Because such a binary cannot honor a ceiling, giving it `--max-steps=` at runtime
-reports `R_NO_STEP_ACCOUNTING` and names how to get a bounded run, rather than
-silently ignoring the flag. `--max-frames`, `--timeout` and `--max-memory` are
+Because such a binary cannot honor a ceiling, giving it `--max-steps=` in
+`MYLANG_OPTIONS` reports `R_NO_STEP_ACCOUNTING` and names how to get a bounded
+run, rather than silently ignoring the option. `--max-frames`, `--timeout` and `--max-memory` are
 enforced by the runtime and are unaffected.
 
 ## Unchecked release builds
@@ -194,8 +200,8 @@ runner) that always run their guest under a finite budget.
 `--max-frames=N` or `--step-accounting` keeps the frame protocol and the
 accounting that enforces the ceiling, and gives up only the value guards; that
 combination is supported and measured. A build with neither ceiling is the one
-that also drops the frame record, and giving such a binary `--max-steps=` at
-runtime still reports `R_NO_STEP_ACCOUNTING` rather than ignoring it.
+that also drops the frame record, and giving such a binary `--max-steps=` in
+`MYLANG_OPTIONS` still reports `R_NO_STEP_ACCOUNTING` rather than ignoring it.
 
 ## Object cache and link
 

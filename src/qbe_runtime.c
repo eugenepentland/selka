@@ -633,63 +633,73 @@ void myl_qbe_step_at(void *context, uint64_t position) {
     if (ctx->active_frame) ctx->active_frame->position = position;
     myl_qbe_step(context);
 }
-static uint64_t budget(void *context, const char *text) {
+/* Parse one positive decimal budget; zero reports an empty, zero, non-numeric
+   or overflowing value. */
+static uint64_t budget(const char *text) {
     uint64_t value = 0;
-    if (!*text) return fail(context, "InvalidBudget");
+    if (!*text) return 0;
     for (; *text; ++text) {
-        if (*text < '0' || *text > '9' || value > (UINT64_MAX - (unsigned)(*text - '0')) / 10) return fail(context, "InvalidBudget");
+        if (*text < '0' || *text > '9' || value > (UINT64_MAX - (unsigned)(*text - '0')) / 10) return 0;
         value = value * 10 + (unsigned)(*text - '0');
     }
-    if (!value) return fail(context, "InvalidBudget");
     return value;
 }
-int mylang_qbe_run_options(uint64_t (*entry)(void *), int argc, char **argv) {
-    return mylang_qbe_run_providers(entry, argc, argv, NULL);
+/* Consume one budget control spelled `prefix` plus a value into `slot`. */
+static int budget_control(MylQbeControls *controls, const char *option, const char *prefix, uint64_t *slot, int *seen) {
+    size_t width = strlen(prefix);
+    if (strncmp(option, prefix, width)) return 0;
+    uint64_t value = budget(option + width);
+    if (*seen || !value) controls->error = *seen ? "RepeatedRuntimeOption" : "InvalidBudget";
+    *seen = 1;
+    *slot = value;
+    return 1;
 }
-int mylang_qbe_run_providers(uint64_t (*entry)(void *), int argc, char **argv, const struct MylangNativeProvidersTag *providers) {
+/* Consume one switch control spelled exactly `name`. */
+static int switch_control(MylQbeControls *controls, const char *option, const char *name, int *slot) {
+    if (strcmp(option, name)) return 0;
+    if (*slot) controls->error = "RepeatedRuntimeOption";
+    *slot = 1;
+    return 1;
+}
+int myl_qbe_control(MylQbeControls *controls, const char *option) {
+    if (budget_control(controls, option, "--max-steps=", &controls->max_steps, &controls->seen_steps)) return 1;
+    if (budget_control(controls, option, "--max-frames=", &controls->max_frames, &controls->seen_frames)) return 1;
+    if (budget_control(controls, option, "--timeout=", &controls->timeout, &controls->seen_timeout)) return 1;
+    if (switch_control(controls, option, "--gc-stress", &controls->stress)) return 1;
+    return switch_control(controls, option, "--print-result", &controls->print);
+}
+int mylang_qbe_run_options(uint64_t (*entry)(void *), int argc, char **argv) {
+    MylQbeControls controls = {0};
+    for (int i = 1; i < argc; ++i) {
+        if (myl_qbe_control(&controls, argv[i])) continue;
+        fprintf(stderr, "mylang: %s is not a runtime option\n", argv[i]);
+        return 2;
+    }
+    return mylang_qbe_run_process(entry, &controls, 0, NULL, NULL);
+}
+int mylang_qbe_run_process(uint64_t (*entry)(void *), const MylQbeControls *controls, int argc, char **argv, const struct MylangNativeProvidersTag *providers) {
     /* Unbounded by default: the memory ceiling contains a runaway allocation,
        and --timeout=SECONDS is the elapsed-time guard. */
-    Context context = {.max_steps=MYL_QBE_UNBOUNDED, .max_frames=MYL_QBE_UNBOUNDED};
-    uint64_t timeout = 0;
-    int saw_steps = 0, saw_frames = 0, saw_timeout = 0, stress = 0, print = 0;
-    int delimiter = 0;
-    char **guest = calloc(argc > 1 ? (size_t)argc : 1, sizeof *guest);
-    if (!guest) { fputs("OutOfMemory: QBE runtime failure\n", stderr); return 2; }
-    int guest_count = 0;
-    for (int i = 1; i < argc; ++i) {
-        if (!delimiter && !strcmp(argv[i], "--")) {
-            delimiter = 1;
-            continue;
-        }
-        if (!delimiter) {
-            if (!strncmp(argv[i], "--max-steps=", 12) && !saw_steps++) { context.max_steps = budget(&context, argv[i] + 12); continue; }
-            if (!strncmp(argv[i], "--max-frames=", 13) && !saw_frames++) { context.max_frames = budget(&context, argv[i] + 13); continue; }
-            if (!strncmp(argv[i], "--timeout=", 10) && !saw_timeout++) { timeout = budget(&context, argv[i] + 10); continue; }
-            if (!strcmp(argv[i], "--gc-stress") && !stress) { stress = 1; continue; }
-            if (!strcmp(argv[i], "--print-result") && !print) { print = 1; continue; }
-        }
-        guest[guest_count++] = argv[i];
-    }
-    if (context.trap) {
-        fprintf(stderr, "%s: QBE runtime failure\n", context.trap);
-        free(guest);
+    if (controls->error) {
+        fprintf(stderr, "%s: QBE runtime failure\n", controls->error);
         return 2;
     }
-    if (!arm_timeout(timeout)) {
+    uint64_t steps = controls->seen_steps ? controls->max_steps : MYL_QBE_UNBOUNDED;
+    uint64_t frames = controls->seen_frames ? controls->max_frames : MYL_QBE_UNBOUNDED;
+    if (!arm_timeout(controls->timeout)) {
         fputs("mylang: cannot arm the --timeout wall-clock guard\n", stderr);
-        free(guest);
         return 2;
     }
-    for (int i = 0; i < guest_count; ++i) {
-        if (!myl_native_text_valid_utf8((const unsigned char *)guest[i], strlen(guest[i]))) {
+    /* The guest receives its arguments exactly as the process was given them:
+       no runtime option is read from them, so `--gc-stress` or `--` is data. */
+    for (int i = 0; i < argc; ++i) {
+        if (!myl_native_text_valid_utf8((const unsigned char *)argv[i], strlen(argv[i]))) {
             fprintf(stderr, "mylang: guest argument is not valid UTF-8\n");
-            free(guest);
             return 2;
         }
     }
     MylQbeResult result;
-    if (execute_config_args(entry, context.max_steps, context.max_frames, stress, providers, NULL, guest_count, guest, &result)) {
-        free(guest);
+    if (execute_config_args(entry, steps, frames, controls->stress, providers, NULL, argc, argv, &result)) {
         if (result.reported) return 2;
         char suffix[192] = "";
         (void)detail_text(&result.trap_detail, suffix, sizeof suffix);
@@ -706,7 +716,6 @@ int mylang_qbe_run_providers(uint64_t (*entry)(void *), int argc, char **argv, c
             fprintf(stderr, "%s%s\n", MYL_QBE_TRAP_RECORD_MARKER, record);
         return strncmp(result.code,"R_",2) ? 2:1;
     }
-    free(guest);
     /* The entry point's integer result becomes the process exit status, the way
        a Python or Go program returns an exit code, truncated to the low 8 bits
        (POSIX `waitpid` semantics: status = value & 0xFF). `--print-result` is now
@@ -715,7 +724,7 @@ int mylang_qbe_run_providers(uint64_t (*entry)(void *), int argc, char **argv, c
        status and returns 1 above, because the program never reached its return. */
     int64_t value;
     memcpy(&value, &result.value, sizeof value);
-    if (print) printf("%" PRId64 "\n", value);
+    if (controls->print) printf("%" PRId64 "\n", value);
     return (int)((uint64_t)value & 0xFF);
 }
 int mylang_qbe_execute(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, MylQbeResult *result) {
