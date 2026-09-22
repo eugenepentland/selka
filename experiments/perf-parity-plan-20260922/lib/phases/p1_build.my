@@ -1,0 +1,15 @@
+import strings
+
+
+def pad(count: int) -> str:
+    match strings.repeat("x", count):
+        case Ok(text):
+            return text
+        case Err(_):
+            return ""
+
+
+def main(out: Stream) -> int:
+    text = "\n".join([f"item{i},{(i * 7919) % 100003},{pad(i % 7)}" for i in range(200000)])
+    out.print(f"{len(text)}")
+    return 0

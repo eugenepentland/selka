@@ -1,0 +1,155 @@
+{
+ "binary": ".tmp/prof/scan_split.after.sym",
+ "runs": 5,
+ "samples": 928,
+ "outside": 312,
+ "functions": [
+  {
+   "function": "<outside: shared libraries>",
+   "samples": 312,
+   "share": 0.33620689655172414
+  },
+  {
+   "function": "myl_native_heap_alloc_at",
+   "samples": 147,
+   "share": 0.1584051724137931
+  },
+  {
+   "function": "myl_native_text_split",
+   "samples": 118,
+   "share": 0.1271551724137931
+  },
+  {
+   "function": "myl_native_heap_collect",
+   "samples": 117,
+   "share": 0.12607758620689655
+  },
+  {
+   "function": "myl_native_octets_find",
+   "samples": 85,
+   "share": 0.09159482758620689
+  },
+  {
+   "function": "trace",
+   "samples": 69,
+   "share": 0.07435344827586207
+  },
+  {
+   "function": "slot_take",
+   "samples": 34,
+   "share": 0.036637931034482756
+  },
+  {
+   "function": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+   "samples": 25,
+   "share": 0.02693965517241379
+  },
+  {
+   "function": "_fini",
+   "samples": 21,
+   "share": 0.022629310344827586
+  }
+ ],
+ "hot_pcs": [
+  {
+   "pc": "0x101bcb2",
+   "samples": 59,
+   "share": 0.06357758620689655
+  },
+  {
+   "pc": "0x101be18",
+   "samples": 39,
+   "share": 0.04202586206896552
+  },
+  {
+   "pc": "0x101d882",
+   "samples": 28,
+   "share": 0.03017241379310345
+  },
+  {
+   "pc": "0x101bb86",
+   "samples": 27,
+   "share": 0.029094827586206896
+  },
+  {
+   "pc": "0x101c04f",
+   "samples": 21,
+   "share": 0.022629310344827586
+  },
+  {
+   "pc": "0x101d8d5",
+   "samples": 21,
+   "share": 0.022629310344827586
+  },
+  {
+   "pc": "0x10200c0",
+   "samples": 19,
+   "share": 0.020474137931034482
+  },
+  {
+   "pc": "0x101c030",
+   "samples": 17,
+   "share": 0.018318965517241378
+  },
+  {
+   "pc": "0x101c3a9",
+   "samples": 13,
+   "share": 0.014008620689655173
+  },
+  {
+   "pc": "0x101691f",
+   "samples": 10,
+   "share": 0.010775862068965518
+  },
+  {
+   "pc": "0x101bf86",
+   "samples": 10,
+   "share": 0.010775862068965518
+  },
+  {
+   "pc": "0x101c470",
+   "samples": 10,
+   "share": 0.010775862068965518
+  },
+  {
+   "pc": "0x101643f",
+   "samples": 9,
+   "share": 0.009698275862068966
+  },
+  {
+   "pc": "0x101c3a6",
+   "samples": 9,
+   "share": 0.009698275862068966
+  },
+  {
+   "pc": "0x101c344",
+   "samples": 8,
+   "share": 0.008620689655172414
+  },
+  {
+   "pc": "0x101cf10",
+   "samples": 7,
+   "share": 0.007543103448275862
+  },
+  {
+   "pc": "0x101d015",
+   "samples": 7,
+   "share": 0.007543103448275862
+  },
+  {
+   "pc": "0x101d0b6",
+   "samples": 7,
+   "share": 0.007543103448275862
+  },
+  {
+   "pc": "0x101c045",
+   "samples": 6,
+   "share": 0.00646551724137931
+  },
+  {
+   "pc": "0x101cf22",
+   "samples": 6,
+   "share": 0.00646551724137931
+  }
+ ]
+}
