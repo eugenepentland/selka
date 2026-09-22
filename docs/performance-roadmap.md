@@ -447,6 +447,43 @@ array-typed record fields through `update_record`, and return-slot forwarding
 `layout_routes::build` profile share and schematic `peek` numbers were not
 measured, so no claim is made about them.
 
+**Second half landed, 2026-09-22** (lane 5,
+[schematic-lane-aggregates](audits/schematic-lane-aggregates-2026-09-22.md)).
+Two of the named changes are done, and the lane adds two more:
+- the by-reference destination local: `QBE-ELEMREF-2` for `x = xs[i]` and
+  the loop variable, over the borrow's real live range;
+- return-slot forwarding in both directions: `QBE-RETFWD-1` returns
+  `xs[i]` from the receiver's storage, and `QBE-CALLREF-1` keeps a call's
+  record result in the call's own buffer;
+- added, `QBE-CTORREAD-1`: a constructor reads a whole-record field operand
+  where it lives;
+- added, `QBE-LISTSET-1`: `xs[i] = v` is an inline bounds test and store
+  instead of a `myl_native_list_set` call. That call was a safepoint and pushed
+  every live traced root.
+
+The last one is the large effect. Measured by
+[the parity plan audit](audits/performance-parity-plan-2026-09-22.md) (§4.1,
+§6.1) on a ReleaseFast build of the lane, interleaved against Zig, output
+byte-identical:
+- thirteen-program geomean **5.79× → 2.97×**;
+- `nbody` 71.7× → 4.9×, `matmul` 41.3× → 7.1×, `fannkuch_redux`
+  15.8× → 1.27×, `sieve` 7.1× → 1.8×, `sort_quick` 1.89× → 1.32×;
+- schematic render **1.98× → 1.73×**;
+- the parser and the micro-kernels unchanged (census 1.73×, render 2.22×,
+  micro geomean 1.36×).
+
+**Acceptance is still not met.** `list_records` is 1.43×, not ≤ 1.3×, and
+the `layout_routes::build` profile share was not re-measured. One program got
+slower: `raytrace`, by 2–4.5%, because a loop variable handed to a call is now
+copied where the old, narrower proof borrowed it.
+
+Still to do:
+- array-typed record fields through `update_record`;
+- folding `xs[i].f = v`'s update into the in-place write (it still copies the
+  record twice);
+- admitting integer casts and provably non-aliasing calls inside a borrow's
+  live range.
+
 ### 7. Dictionary follow-ups
 
 *Runtime. Size: small.*

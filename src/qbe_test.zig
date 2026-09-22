@@ -454,7 +454,14 @@ test "aggregate projections load scalars directly while escaping records retain 
     }
     const snapshot = named(parsed.value, "snapshot").?.il;
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, snapshot, "myl_native_list_get"));
-    try std.testing.expect(std.mem.indexOf(u8, snapshot, "blit ") != null);
+    // The escaping record leaves by value: the function returns an aggregate
+    // type, so the return copies the checked element into storage the caller
+    // owns. That copy is the snapshot (`QBE-RETFWD-1`); no second one is made
+    // in per-pc scratch first. The spec-case below checks the snapshot keeps
+    // its value across an element write, growth and collection.
+    try std.testing.expect(std.mem.indexOf(u8, snapshot, "export function :") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, snapshot, "%agg"));
+    try std.testing.expect(std.mem.indexOf(u8, snapshot, "myl_qbe_fail_normalized_index_bounds") != null);
 }
 
 // spec-case: QBE-AGGREGATE-READ-1

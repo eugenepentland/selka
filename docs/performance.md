@@ -42,10 +42,17 @@ The [22 September 2026 parity plan](audits/performance-parity-plan-2026-09-22.md
 widens the comparison to thirteen idiomatic programs ported to Zig and Rust
 (5.8× Zig on the geometric mean today, 1.02× for Rust). It prices each
 language rule and lowering protocol separately by rewriting the emitted code,
-and it orders the fixes into five waves. Among them: the paused aggregate lane,
+and it orders the fixes into five waves. Among them: the aggregate lane,
 failure paths that end in `unreachable`, canonicalizing NaN only when observed,
 and runtime library algorithms. Its composed, measured ladder reaches 2.2×, and
 the projection with the library work is about 1.6×.
+[The aggregate lane](audits/schematic-lane-aggregates-2026-09-22.md) is the
+first wave's code. It writes and reads a list element where the element lives,
+so `xs[i] = v` is a bounds test and one store instead of a runtime call behind
+the frame's GC roots. On the same thirteen programs it takes the geometric mean
+from 5.8× to 3.0× Zig: `nbody` 72× → 4.9×, `matmul` 41× → 7.1×,
+`fannkuch_redux` 16× → 1.3×, `sieve` 7.1× → 1.8×. The schematic render goes
+from 1.98× to 1.73×.
 
 ## What is fast without trying
 
@@ -107,8 +114,13 @@ address, a short-lived local is named by its own slot, a record constructed
 straight into a local is built there rather than in scratch and then copied, and a
 match arm whose binding owns nothing reads the payload where it already lives, so
 field reads, tag tests and payload projections are loads through a pointer rather
-than aggregate copies. Writes still get their own storage, and a write to a copied
-value stays a copy's write.
+than aggregate copies. A list element works the same way. `x = xs[i]`, the
+loop variable of `for x in xs`, and `return xs[i]` name the element inside
+the list instead of a copy when nothing between the read and its last use can
+move or change the list. A record a call returns
+stays in the call's own result buffer when the caller only reads it, and
+`xs[i] = v` writes the element in place. Writes still get their own storage,
+and a write to a copied value stays a copy's write.
 
 ```mylang
 # doc: expect 42
