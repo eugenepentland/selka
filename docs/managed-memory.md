@@ -95,13 +95,13 @@ snapshot of that value, never an interior pointer into growable storage.
 
 ```mylang
 # doc: expect 42
-def widen(target: list[int]) -> None:
+def widen(target: mut list[int]) -> None:
     target.append(2)
 
 def main() -> int:
     values: list[int] = [40]
     alias = values
-    widen(alias)
+    widen(mut alias)
     return values[0] + alias[1]
 ```
 

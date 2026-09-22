@@ -83,19 +83,19 @@ import byte_builder
 
 def main() -> int:
     output = byte_builder.create()
-    byte_builder.append_text(output, "λ")
-    if not byte_builder.append_byte(output, 0):
+    byte_builder.append_text(mut output, "λ")
+    if not byte_builder.append_byte(mut output, 0):
         return 1
-    if not byte_builder.append_spaces(output, 3):
+    if not byte_builder.append_spaces(mut output, 3):
         return 2
     smallest = -9223372036854775808
-    byte_builder.append_int(output, smallest)
-    if not byte_builder.append_range(output, b"0123456789", 4, 6):
+    byte_builder.append_int(mut output, smallest)
+    if not byte_builder.append_range(mut output, b"0123456789", 4, 6):
         return 3
     snapshot = byte_builder.finish(output)
-    if byte_builder.append_range(output, b"0123456789", 6, 99):
+    if byte_builder.append_range(mut output, b"0123456789", 6, 99):
         return 4
-    if not byte_builder.reserve(output, 128):
+    if not byte_builder.reserve(mut output, 128):
         return 5
     if byte_builder.finish(output) != snapshot:
         return 6
@@ -517,11 +517,11 @@ import pool
 def main() -> int:
     seed: list[int] = []
     store = pool.create(seed)
-    first = pool.insert(store, 10)
-    second = pool.insert(store, 32)
-    if not pool.remove(store, first) or pool.remove(store, first):
+    first = pool.insert(mut store, 10)
+    second = pool.insert(mut store, 32)
+    if not pool.remove(mut store, first) or pool.remove(mut store, first):
         return 1
-    third = pool.insert(store, 10)
+    third = pool.insert(mut store, 10)
     if pool.capacity(store) != 2 or pool.count(store) != 2:
         return 2
     match pool.get(store, first):
@@ -618,7 +618,7 @@ def main() -> int:
     generator = random.seeded(7)
     index = 0
     while index < 100:
-        match random.randint(generator, 0 - 5, 5):
+        match random.randint(mut generator, 0 - 5, 5):
             case Ok(value):
                 if value < 0 - 5 or value > 5:
                     return 1
@@ -626,11 +626,11 @@ def main() -> int:
                 return 0 - len(message)
         index += 1
     items = [1, 2, 3, 4, 5]
-    random.shuffle(generator, items)
+    random.shuffle(mut generator, mut items)
     total = 0
     for value in items:
         total += value
-    if random.random(generator) >= 1.0:
+    if random.random(mut generator) >= 1.0:
         return 2
     return total + 27
 ```

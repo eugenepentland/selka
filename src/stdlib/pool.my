@@ -34,7 +34,7 @@ public def create[T: copy + storable](values: list[T]) -> Pool[T]:
     counters.append(0)
     store = Pool[T](slots=slots, generations=generations, live=live, free=free, counters=counters)
     for value in values:
-        _ = insert(store, value)
+        _ = insert(mut store, value)
     return store
 
 

@@ -58,14 +58,14 @@ Use `record` when a copied value is wanted and `class` when the object has ident
 class Counter:
     n: int
 
-def bump(counter: Counter):
+def bump(counter: mut Counter):
     counter.n = counter.n + 1
 
 def main() -> int:
     a = Counter(n=1)
     b = a
     b.n = 7
-    bump(a)
+    bump(mut a)
     return a.n
 ```
 

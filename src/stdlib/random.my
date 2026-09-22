@@ -55,7 +55,7 @@ public def next_word(generator: mut Random) -> u64 effects(mutation):
 
 
 # A float uniformly drawn from the 2^53 multiples of 2^-53 in [0, 1).
-public def random(generator: Random) -> float effects(mutation):
+public def random(generator: mut Random) -> float effects(mutation):
     drawn = shift_right(next_word(mut generator), 11u64)
     return float(i64(drawn)) / 9007199254740992.0
 
@@ -68,7 +68,7 @@ def span(low: int, high: int) -> u64:
 
 
 # An unbiased word below a modulus, retrying the biased tail of the range.
-def below(generator: Random, modulus: u64) -> u64:
+def below(generator: mut Random, modulus: u64) -> u64 effects(mutation):
     if modulus == 0u64:
         return next_word(mut generator)
     threshold = wrapping_sub(0u64, modulus) % modulus
@@ -86,20 +86,20 @@ def offset(low: int, value: u64) -> int:
 
 
 # A uniform integer in an inclusive range, covering the full signed width.
-public def randint(generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):
+public def randint(generator: mut Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):
     if low > high:
         return Err("randint needs low <= high")
     width = span(low, high)
     if width == 18446744073709551615u64:
         return Ok(offset(low, next_word(mut generator)))
-    return Ok(offset(low, below(generator, width + 1u64)))
+    return Ok(offset(low, below(mut generator, width + 1u64)))
 
 
 # A uniformly chosen element, or nothing when the list is empty.
-public def choice[T: copy + storable](generator: Random, items: list[T]) -> Option[T] effects(mutation, managed_allocation):
+public def choice[T: copy + storable](generator: mut Random, items: list[T]) -> Option[T] effects(mutation, managed_allocation):
     if len(items) == 0:
         return None
-    match randint(generator, 0, len(items) - 1):
+    match randint(mut generator, 0, len(items) - 1):
         case Ok(index):
             return Some(items[index])
         case Err(_):
@@ -107,10 +107,10 @@ public def choice[T: copy + storable](generator: Random, items: list[T]) -> Opti
 
 
 # A list permuted in place by an unbiased Fisher-Yates pass.
-public def shuffle[T: copy + storable](generator: Random, items: list[T]) effects(mutation, managed_allocation):
+public def shuffle[T: copy + storable](generator: mut Random, items: mut list[T]) effects(mutation, managed_allocation):
     index = len(items) - 1
     while index > 0:
-        match randint(generator, 0, index):
+        match randint(mut generator, 0, index):
             case Ok(pick):
                 held = items[index]
                 items[index] = items[pick]
