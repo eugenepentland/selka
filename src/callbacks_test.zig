@@ -291,7 +291,8 @@ test "E1 pure callbacks enter output-permitting slots and the reverse direction 
         \\    return f(x)
         \\
         \\
-        \\def main() -> i64:
+        \\def main(out: Stream) -> i64:
+        \\    _ = out
         \\    return apply(pure, 41)
     , 42);
 
@@ -397,20 +398,20 @@ test "E1 native target validation agrees with the checker on effect ceilings" {
         \\    return x + 1
         \\
         \\
-        \\def output_only(x: i64) -> i64 effects(output):
+        \\def permissive(x: i64) -> i64 noalloc:
         \\    return x + 1
         \\
         \\
         \\def main() -> i64:
         \\    f = pure
-        \\    _ = output_only(0)
+        \\    _ = permissive(0)
         \\    return f(1)
     ;
     var c = try language.Compilation.init(t.allocator, "native-effect-validation.my", source);
     defer c.deinit();
     try c.emit();
     const pure = try functionIndex(c.code.?, "pure");
-    const output_only = try functionIndex(c.code.?, "output_only");
+    const permissive = try functionIndex(c.code.?, "permissive");
     const original = c.code.?;
     const functions = try t.allocator.dupe(language.bytecode.Function, original.functions);
     defer t.allocator.free(functions);
@@ -424,7 +425,7 @@ test "E1 native target validation agrees with the checker on effect ceilings" {
     for (instructions) |*instruction| {
         if (instruction.op != .function_value) continue;
         if (@backingInt(instruction.op.function_value.function) != pure) continue;
-        instruction.op.function_value.function = @fromBackingInt(output_only);
+        instruction.op.function_value.function = @fromBackingInt(permissive);
         forged = true;
         try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, program));
         break;

@@ -856,6 +856,11 @@
       "kind": "language",
       "summary": "`value_if_true if condition else value_if_false` is one expression whose condition is bool, whose arms take the expected type when the context supplies one, and of which only the chosen arm is evaluated.",
       "doc": "docs/python-syntax.md#conditional-expressions"
+    },
+    "derived-effect-ceilings": {
+      "kind": "language",
+      "summary": "A function's effect ceiling is derived from its parameter list - a capability parameter permits its effect, a `mut` parameter `mutation`, a callback parameter its declared ceiling, and allocation is always permitted - so a body that exceeds it is rejected in that body with the parameter to add; `noalloc`, `noio` and `effects(...)` only narrow it, a clause that restates it warns `W_DERIVED_EFFECTS`, a clause naming an effect no parameter supplies is `E_DERIVED_EFFECTS`, and a capability parameter the body never reads is `E_UNUSED_CAPABILITY`.",
+      "doc": "docs/effects.md#the-signature-is-the-ceiling"
     }
   },
   "unsupported": [

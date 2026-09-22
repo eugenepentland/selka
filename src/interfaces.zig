@@ -591,14 +591,35 @@ pub const Index = struct {
         mask |= try self.resourceTypeEffect(module, signature.return_type);
         for (signature.parameters) |parameter| {
             if (parameter.mut) mask |= effect_set.bit(.mutation);
-            const text = try self.contractTypeText(module, parameter.ty, signature.type_parameters);
-            if (capabilityEffect(text)) |effect| mask |= effect_set.bit(effect);
-            mask |= try self.resourceTypeEffect(module, parameter.ty);
-            for (self.units[module].syntax.types.expressions.callbacks) |callback| {
-                if (callback.span.start != parameter.ty.start or callback.span.end != parameter.ty.end) continue;
-                // An omitted callback ceiling is the unbounded `all` mask, which
-                // declares nothing and therefore contributes nothing.
-                if (callback.effect_bound.allowed != effect_set.all) mask |= callback.effect_bound.allowed;
+            mask |= try self.typeAuthority(module, parameter.ty, signature.type_parameters, 0);
+        }
+        return mask;
+    }
+
+    /// Authority one parameter type carries, read from the declaration alone: a
+    /// capability type permits its effect, a callback type the bounded ceiling it
+    /// declares, an external `resource` the family it belongs to, and a local
+    /// record whatever its own fields carry, so a record holding an
+    /// `Environment` publishes `environment` exactly as the capability does.
+    fn typeAuthority(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter, depth: usize) ContractError!effect_set.Mask {
+        if (depth == 32) return 0;
+        var mask: effect_set.Mask = 0;
+        const text = try self.contractTypeText(module, span, parameters);
+        if (capabilityEffect(text)) |effect| mask |= effect_set.bit(effect);
+        mask |= try self.resourceTypeEffect(module, span);
+        for (self.units[module].syntax.types.expressions.callbacks) |callback| {
+            if (callback.span.start != span.start or callback.span.end != span.end) continue;
+            // An omitted callback ceiling is the unbounded `all` mask, which
+            // declares nothing and therefore contributes nothing.
+            if (callback.effect_bound.allowed != effect_set.all) mask |= callback.effect_bound.allowed;
+        }
+        const identity = self.typeIdentity(module, span) catch return mask;
+        const symbol = self.units[identity.module].symbols.items[identity.symbol];
+        for (self.units[identity.module].syntax.types.records) |record| {
+            if (record.type_parameters.len != 0) continue;
+            if (record.name.start != symbol.span.start or record.name.end != symbol.span.end) continue;
+            for (record.fields) |field| {
+                mask |= try self.typeAuthority(identity.module, field.ty, &.{}, depth + 1);
             }
         }
         return mask;

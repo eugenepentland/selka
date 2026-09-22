@@ -43,13 +43,19 @@ presented as a fact.
 | `declarations` | `null` when the analysis is `unavailable`; the matched declaration records otherwise, possibly none. |
 | `analysis` (per declaration) | `checked` — the inferred `effects` are the checker's own for a checked instantiation; `template` — the declaration is generic and nothing instantiated it here, so no inferred set is published (its `ceiling` still is); `declaration-only` — bodies were not checked; `declared` — a type, resource or constraint declaration, which has no body. |
 | `effects` | The checked inferred effect set. `null` whenever `analysis` is not `checked`; `[]` means "inferred: no effects", which is a fact, not a gap. |
-| `ceiling` | The ceiling the source itself declared, available whether or not bodies were checked. `null` means the source wrote none. |
-| `mutates` | The names in the declaration's own `mutates(...)` clause, or `null` when it wrote none. |
+| `ceiling` | The ceiling the signature implies — one effect per capability parameter, `mutation` per `mut` parameter, a callback parameter's bounded ceiling, and `managed_allocation`, which is always permitted — narrowed by an explicit `noalloc`, `noio` or `effects(...)` clause. It follows from the declaration alone, so it is published whether or not bodies were checked. |
+| `mutates` | The declaration's mutation footprint: the zero-based positions of its `name: mut T` parameters, or `null` for a declaration with no parameter list of its own. |
 
 The conservative full effect vocabulary the compiler falls back to when it could not
 infer anything is deliberately **not** published as an inference: a generic template
 reports `effects: null` with `analysis: "template"`, which is the difference between a
 fact and a fallback that the baseline report singled out.
+
+`effects` and `ceiling` answer different questions. `effects` is what the checked body
+does; `ceiling` is what the signature permits, and it is the one an interface
+fingerprint carries, so a body edit inside the ceiling changes `body_sha256` and leaves
+`interface_sha256` alone. `list-interfaces` prints `ceiling(...)` for every function
+and `effects(...)` only when a body was checked.
 
 ## Query, format and exit status
 

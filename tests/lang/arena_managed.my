@@ -1,0 +1,125 @@
+module arena_managed
+
+
+def build(limit: int) -> list[int]:
+    items: list[int] = []
+    for index in range(limit):
+        items.append(index)
+    return items
+
+
+# spec: ARENA-MANAGED-1
+public def test_nested_arenas_redirect_helper_allocation_and_release_each_scope_in_bulk() -> bool:
+    total = 0
+    with arena() as outer:
+        first = build(3)
+        with arena() as inner:
+            second = build(4)
+            total = total + len(second)
+        total = total + len(first)
+    return total == 7
+
+
+# spec-case: ARENA-MANAGED-1
+public def test_an_anonymous_arena_scope_still_bulk_releases_its_allocations() -> bool:
+    total = 0
+    with arena():
+        total = len(build(5))
+    return total == 5
+
+
+# spec: ARENA-MANAGED-2
+public def test_escape_copies_a_shared_subgraph_once_into_the_enclosing_region() -> bool:
+    kept: list[list[int]] = []
+    with arena() as scratch:
+        shared: list[int] = [7]
+        holder: list[list[int]] = [shared, shared]
+        kept = scratch.escape(holder)
+    return len(kept) * 10 + kept[0][0] + kept[1][0] == 34
+
+
+record Node:
+    value: int
+    links: list[Node]
+
+
+# spec-case: ARENA-MANAGED-2
+public def test_escape_preserves_a_cycle_through_a_record_field() -> bool:
+    kept: list[Node] = []
+    with arena() as scratch:
+        nodes: list[Node] = []
+        nodes.append(Node(value=5, links=nodes))
+        kept = scratch.escape(nodes)
+    return kept[0].value + len(kept[0].links) == 6
+
+
+def solve(limit: int) -> list[int]:
+    with arena() as scratch:
+        working = build(limit)
+        return scratch.escape(working)
+
+
+# spec-case: ARENA-MANAGED-2
+public def test_an_escaped_copy_may_be_returned_from_the_outermost_arena_scope() -> bool:
+    kept = solve(6)
+    return len(kept) * 10 + kept[5] == 65
+
+
+# spec-case: ARENA-MANAGED-2
+public def test_escape_shares_objects_that_already_live_in_the_enclosing_region() -> bool:
+    older: list[int] = [4]
+    kept: list[list[int]] = []
+    with arena() as scratch:
+        holder: list[list[int]] = [older]
+        kept = scratch.escape(holder)
+    older.append(5)
+    return len(kept[0]) * 10 + kept[0][1] == 25
+
+
+def risky(flag: int) -> Result[int, int]:
+    if flag == 0:
+        return Err(7)
+    return Ok(flag)
+
+
+def solve_result(flag: int) -> Result[int, int]:
+    with arena() as scratch:
+        items: list[int] = [1, 2, 3]
+        checked = risky(flag)?
+        return Ok(checked + len(items))
+
+
+# spec: ARENA-MANAGED-5
+public def test_result_propagation_out_of_an_arena_releases_its_storage_in_bulk() -> bool:
+    match solve_result(0):
+        case Ok(found):
+            return found == 7
+        case Err(code):
+            return code == 7
+
+
+# spec-case: ARENA-MANAGED-5
+public def test_break_and_continue_out_of_an_arena_close_the_scope_exactly_once() -> bool:
+    total = 0
+    for round in range(4):
+        with arena() as scratch:
+            total = total + len(build(2))
+            if round == 0:
+                continue
+            if round == 2:
+                break
+    return total == 6
+
+
+def waste() -> int:
+    temp: list[int] = [1, 2, 3]
+    return len(temp)
+
+
+# spec: ARENA-MANAGED-6
+public def test_stress_collection_inside_an_arena_preserves_its_values_until_bulk_release() -> bool:
+    total = 0
+    with arena() as scratch:
+        total = waste()
+        total = total + waste()
+    return total == 6

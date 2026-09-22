@@ -112,7 +112,9 @@ compiler records and therefore stay in Zig.
 Trap tests stay in Zig. `mylang test` treats a trap as a failure and never
 reuses a trap result, so `expect_trap` would exist for roughly 60 tests alone,
 and sharding already hides their serial cost. Reopen only if a runner feature
-earns its keep for other work; this is a decision, not a pending item.
+earns its keep for other work; this is a decision, not a pending item. A whole
+case that is one trap or one rejection can instead go to `tests/reject` and its
+`zig build test-reject` runner; see `docs/tooling/test-layout.md`.
 
 Effect and provider tests stay in Zig. A directory run rejects `--cases`, so
 each entry would need a sibling manifest and its own build step, and the unit

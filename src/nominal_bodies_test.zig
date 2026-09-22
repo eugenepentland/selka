@@ -44,10 +44,9 @@ const basic = definitions ++
     \\    return box.value
     \\
     \\
-    \\def alter[T](box: Box[T], x: T) -> Box[T]:
-    \\    y = box
-    \\    y.value = x
-    \\    return y
+    \\def alter[T](box: mut Box[T], x: T) -> Box[T]:
+    \\    box.value = x
+    \\    return box
     \\
     \\
     \\def slot[T](x: T) -> Slot[T]:
@@ -63,7 +62,8 @@ const basic = definitions ++
     \\
     \\
     \\def main() -> i64:
-    \\    return extract[i64](alter[i64](pack[i64](3), choose[i64](slot[i64](7), 0)))
+    \\    boxed = pack[i64](3)
+    \\    return extract[i64](alter[i64](mut boxed, choose[i64](slot[i64](7), 0)))
 ;
 test "nominal bodies reject invalid uncalled field payload and identity operations" {
     try reject(definitions ++

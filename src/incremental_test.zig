@@ -360,6 +360,7 @@ test "an exported body edit inside its declared ceiling preserves the API finger
         \\public def emit(out: Stream) -> i64 effects(output, managed_allocation):
         \\    items: list[i64] = []
         \\    items.append(1)
+        \\    out.print("x")
         \\    return items[0]
         \\
         \\
@@ -744,27 +745,31 @@ test "project interface follows exported constants and effect ceilings but not c
     defer incremental.deinit(c1, t.allocator);
     try t.expect(!std.mem.eql(u8, c0.project_interface_sha256, c1.project_interface_sha256));
 
+    // The ceiling is the signature's own, so a different capability parameter is
+    // what makes a different published ceiling -- and a different fingerprint.
     const effect_clock =
         \\module main
         \\
         \\
-        \\public def tick() -> i64 effects(clock):
+        \\public def tick(clock: Clock) -> i64 effects(clock):
+        \\    _ = clock
         \\    return 1
         \\
         \\
-        \\def main() -> i64:
-        \\    return tick()
+        \\def main(clock: Clock) -> i64:
+        \\    return tick(clock)
     ;
     const effect_random =
         \\module main
         \\
         \\
-        \\public def tick() -> i64 effects(random):
+        \\public def tick(entropy: Entropy) -> i64 effects(random):
+        \\    _ = entropy
         \\    return 1
         \\
         \\
-        \\def main() -> i64:
-        \\    return tick()
+        \\def main(entropy: Entropy) -> i64:
+        \\    return tick(entropy)
     ;
     var effects = [_]File{.{ .path = "main.my", .bytes = effect_clock }};
     const e0 = try describe(&effects, t.allocator);

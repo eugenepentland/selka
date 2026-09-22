@@ -231,12 +231,13 @@ const effect_bound =
     \\    return n + 1
     \\
     \\
-    \\public def api(n: i64) -> i64 effects(clock):
+    \\public def api(clock: Clock, n: i64) -> i64 effects(clock):
+    \\    _ = clock
     \\    return helper(n)
     \\
     \\
-    \\def main() -> i64 effects(clock):
-    \\    return api(41)
+    \\def main(clock: Clock) -> i64:
+    \\    return api(clock, 41)
 ;
 
 const constant_base =

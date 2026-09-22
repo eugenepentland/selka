@@ -3,23 +3,35 @@
 Authority in this language is carried by values: an entry point that wants to
 touch the filesystem declares a `Filesystem` parameter, and the command line
 decides whether to grant it. Effects are the other half of that story. Every
-function has an inferred set of the capability-shaped things it can do, and a
-function may declare a ceiling on that set which the checker enforces through the
-whole call graph beneath it.
+function has an inferred set of the capability-shaped things it can do, and the
+signature itself is the ceiling on that set.
 
 ## Capability effects
 
-The annotation goes after the return type: `noalloc`, `noio`, or an explicit
-`effects(...)` list. It is a ceiling, not a description — the checker infers each
-function's real effect set from its body and its resolved callees, then rejects
-any function whose inferred set exceeds its declared bound. Because inference
-follows resolved call identities rather than names, a bound on one function
-constrains everything it transitively calls, including helpers written in other
-modules. An omitted annotation imposes no bound; it does not mean "no effects".
-That includes exported functions: the checker freezes the inferred mask as the
-published interface ceiling, so a plain `export` is enough and an explicit
-`noalloc`, `noio` or `effects(...)` is an opt-in narrowing that is still enforced
-as an upper bound.
+The signature is the whole contract: a `Stream` parameter permits `output`, a
+`Filesystem` parameter `filesystem`, `Network` `network`, `Clock` `clock`,
+`Entropy` `random`, `Environment` `environment`, `Host` `host`, a `mut`
+parameter `mutation`, a callback parameter the bounded ceiling its own type
+declares, and `managed_allocation` is always permitted. A parameter or result
+whose type carries an owned resource contributes that resource's effect too. A
+body that exceeds that ceiling is rejected in that body, and the diagnostic names
+the parameter to add.
+
+`noalloc`, `noio` and an explicit `effects(...)` list go after the return type
+and only ever narrow that derived ceiling. A clause that permits exactly what the
+parameters imply — `effects(host, managed_allocation)` on a function whose only
+capability parameter is `Host` — is `W_DERIVED_EFFECTS` and says to remove it; a
+clause that names an effect no parameter can supply is `E_DERIVED_EFFECTS` at the
+clause, because it can never be satisfied. A capability parameter the body never
+reads is `E_UNUSED_CAPABILITY`: the signature claims authority the body cannot
+use, so the fix is to pass it on or drop it.
+
+Because the ceiling follows from the signature, it is what the interfaces
+publish: `list-interfaces` prints `ceiling(...)` for a declaration whose body was
+never checked, the contract manifest and public schema publish it, and it is part
+of `interface_sha256` while the inferred body set is not. A host declaration
+(`host def`, `extern def`) has no body to derive from, so its `effects(...)`
+clause stays its ceiling as written.
 
 A compile-time `str` literal is an immutable constant, not an allocation:
 `print("hi")` under `effects(output)` and `len("abc")` under `noalloc` are
@@ -38,6 +50,40 @@ def report(width: int, height: int) -> int noalloc:
 def main(out: Stream) -> int effects(output):
     out.print(report(6, 7))
     return 0
+```
+
+## The signature is the ceiling
+
+Every function is held to the ceiling its parameter list implies, so a body that
+reaches an effect no parameter supplies is rejected where the effect happens, and
+the rejection names the parameter to add. Here `emit` takes the stream it prints
+through, and `relay` must take one too before it can call it.
+
+```mylang
+# doc: expect 7
+def emit(out: Stream, value: int) -> None:
+    out.print(value)
+
+def relay(out: Stream, value: int) -> None:
+    emit(out, value)
+
+def main(out: Stream) -> int:
+    relay(out, 7)
+    return 0
+```
+
+A capability parameter the body never reads is `E_UNUSED_CAPABILITY`, because the
+signature claims authority the body cannot use:
+
+```mylang
+# doc: expect-error E_UNUSED_CAPABILITY
+def equal(host: Host, a: int, b: int) -> bool:
+    return a == b
+
+def main(host: Host) -> int:
+    if equal(host, 1, 1):
+        return 0
+    return 1
 ```
 
 ## The vocabulary
@@ -74,13 +120,14 @@ ceiling, not the concrete target's smaller ceiling.
 
 ## What a bound rejects
 
-Exceeding a bound is `E_EFFECT_BOUND`, reported at the annotation rather than at
-the operation. The diagnostic names the shortest path it found from the bounded
-function to the origin — here `count -> labels` — and attaches a related span at
-the operation that first contributes the effect, so a bound broken three calls
-down still points at the line responsible. Suppressing or discarding a result
-does not erase its effects, and syntactically present branches count even when
-they cannot be taken.
+Exceeding a bound is `E_EFFECT_BOUND`. With an explicit clause it is reported at
+the annotation, and with a signature-derived ceiling it is reported at the
+operation or call that reaches the effect. Either way the diagnostic names the
+shortest path it found from the bounded function to the origin — here
+`count -> labels` — and attaches a related span at the operation that first
+contributes the effect, so a bound broken three calls down still points at the
+line responsible. Suppressing or discarding a result does not erase its effects,
+and syntactically present branches count even when they cannot be taken.
 
 ```mylang
 # doc: expect-error E_EFFECT_BOUND

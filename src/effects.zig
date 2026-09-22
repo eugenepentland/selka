@@ -342,6 +342,31 @@ fn callbackContribution(contract: typed.Callable) sets.Mask {
     return if (contract.effects == sets.all) 0 else contract.effects;
 }
 
+/// Authority one parameter type carries, walked through elements, case payloads
+/// and fields: a capability type permits its effect wherever it is held, a
+/// callback type the bounded ceiling it declares, and an owned resource the
+/// effect of dropping it. A record that holds an `Environment` therefore permits
+/// `environment` exactly as an `Environment` parameter does.
+pub fn authorityMask(records: []const typed.Record, ty: typed.Type, depth: usize) sets.Mask {
+    if (depth == 128 or !ty.isAggregate() or ty.recordIndex() >= records.len) return 0;
+    var mask: sets.Mask = if (capabilityEffect(ty)) |effect| sets.bit(effect) else 0;
+    if (callables.signature(ty, records)) |contract| mask |= callbackContribution(contract);
+    mask |= ownershipMask(records, ty, depth);
+    const record = records[ty.recordIndex()];
+    if (record.shape.array) |array| {
+        if (array.length != 0) mask |= authorityMask(records, array.element, depth + 1);
+    } else if (record.shape.variants) |variants| {
+        for (variants.cases) |case| {
+            if (case.payload) |payload| mask |= authorityMask(records, payload, depth + 1);
+        }
+    } else if (record.contract.callback == null) {
+        for (record.fields) |field| {
+            mask |= authorityMask(records, field.ty, depth + 1);
+        }
+    }
+    return mask;
+}
+
 /// Effect ceiling a signature implies by construction: one effect per capability
 /// parameter, `mutation` for every `mut` parameter, the declared ceiling of every
 /// callback parameter, `managed_allocation`, which is always permitted, and the
@@ -354,9 +379,7 @@ pub fn derivedCeiling(records: []const typed.Record, function: typed.Function) s
     var mask: sets.Mask = sets.bit(.managed_allocation);
     mask |= ownershipMask(records, signature.return_type, 0);
     for (function.scope.locals[0..signature.parameter_count]) |parameter| {
-        if (capabilityEffect(parameter.ty)) |effect| mask |= sets.bit(effect);
-        if (callables.signature(parameter.ty, records)) |contract| mask |= callbackContribution(contract);
-        mask |= ownershipMask(records, parameter.ty, 0);
+        mask |= authorityMask(records, parameter.ty, 0);
     }
     for (signature.declared_mutates) |position| {
         if (position < signature.parameter_count) mask |= sets.bit(.mutation);
@@ -373,6 +396,15 @@ pub fn effectiveCeiling(records: []const typed.Record, function: typed.Function)
     if (function.policy.host != null or function.policy.c_abi) return declared orelse sets.all;
     const derived = derivedCeiling(records, function);
     return if (declared) |mask| mask & derived else derived;
+}
+
+/// Whether the source at `span` is an effect clause the source actually wrote.
+/// A synthesized bound — a constant getter's, or a lambda's destination
+/// contract — carries a span that names the declaration instead, and none of the
+/// clause diagnostics apply to it.
+pub fn writtenClause(src: source.Source, span: Span) bool {
+    const text = src.text(span);
+    return std.mem.startsWith(u8, text, "effects") or std.mem.startsWith(u8, text, "noalloc") or std.mem.startsWith(u8, text, "noio");
 }
 
 /// Whether a clause is one of the negative forms (`noalloc`, `noio`) rather than
@@ -423,6 +455,7 @@ fn appendDerivedViolation(allocator: std.mem.Allocator, ctx: BoundContext, index
 /// parameters imply is `W_DERIVED_EFFECTS` because it says nothing.
 fn appendClauseDiagnostics(allocator: std.mem.Allocator, src: source.Source, function: typed.Function, derived: sets.Mask, sink: *diagnostic.Sink) diagnostic.Error!bool {
     const bound = function.policy.effect_bound orelse return false;
+    if (!writtenClause(src, bound.span)) return false;
     const clause = src.text(bound.span);
     if (!negativeClause(src, bound.span)) {
         const unsupplied = bound.allowed & ~derived;

@@ -1547,11 +1547,15 @@ const Checker = struct {
             },
             // A tuple value is checked element-wise against its schema, and a
             // conditional with the same condition and arm agreement rules as an
-            // ordinary function body. The `mut` marker has no generic spelling
-            // yet, so it stays rejected here.
+            // ordinary function body.
             .tuple => |elements| try self.tupleValue(node.span, elements),
             .conditional => |conditional| try self.conditionalValue(node, conditional),
-            .mut_argument => return self.sink.fail(eUnsupported, node.span, "the `mut` argument marker is not supported inside generic function bodies yet"),
+            // A `mut` argument marker is transparent here. What the template must
+            // agree on is the marked value's symbolic type; whether the marker
+            // belongs at this position is decided by the concrete specialization,
+            // which re-checks every call with the declared footprint and the
+            // full origin analysis.
+            .mut_argument => |inner| try self.expression(inner),
         };
     }
     /// `value_if_true if condition else value_if_false` inside a template body:

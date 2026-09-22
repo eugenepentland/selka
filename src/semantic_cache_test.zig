@@ -314,7 +314,7 @@ test "semantic cache rechecks transitive effects when only a callee body changes
         \\host def tick(host: Host) -> i64 effects(host)
         \\
         \\
-        \\def main(host: Host) -> i64 effects(clock):
+        \\def main(host: Host) -> i64 effects():
         \\    return change(host)
         \\
         \\
@@ -611,7 +611,8 @@ test "a function value with no matching declared callback misses with its exact 
         \\    return x + 1
         \\
         \\
-        \\def main() -> i64 effects(output):
+        \\def main(out: Stream) -> i64:
+        \\    _ = out
         \\    return apply(one, 41)
     ;
     try compare(t.allocator, &cache, program, 42);

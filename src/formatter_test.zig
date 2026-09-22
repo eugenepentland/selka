@@ -264,7 +264,7 @@ test "formatter keeps the mut parameter and the mut argument marker canonical" {
         \\    values[0] = replacement
         \\
         \\
-        \\def main() -> int effects(managed_allocation):
+        \\def main() -> int:
         \\    values = [1]
         \\    replace_first(mut values, replacement=2)
         \\    return values[0] - 2
@@ -275,7 +275,7 @@ test "formatter keeps the mut parameter and the mut argument marker canonical" {
         \\    values[0] = replacement
         \\
         \\
-        \\def main() -> int effects(managed_allocation):
+        \\def main() -> int:
         \\    values = [1]
         \\    replace_first(  mut   values , replacement = 2 )
         \\    return values[0] - 2

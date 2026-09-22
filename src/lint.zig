@@ -2214,6 +2214,7 @@ fn runDerivedEffects(context: *RuleContext) std.mem.Allocator.Error!void {
     for (facts.program.functions) |function| {
         if (function.policy.host != null or function.policy.c_abi) continue;
         const bound = function.policy.effect_bound orelse continue;
+        if (!derived_effects.writtenClause(facts.src, bound.span)) continue;
         const derived = derived_effects.derivedCeiling(facts.program.records, function);
         if (derived & ~bound.allowed != 0) continue;
         if (!derived_effects.negativeClause(facts.src, bound.span) and bound.allowed & ~derived != 0) continue;

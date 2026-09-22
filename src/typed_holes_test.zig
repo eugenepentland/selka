@@ -32,7 +32,7 @@ const snapshot_source =
     \\    return todo[int]()
     \\
     \\
-    \\def bounded(values: list[int]) -> int effects(mutation) mutates(values):
+    \\def bounded(values: mut list[int]) -> int effects(mutation):
     \\    return todo[int]()
     \\
     \\

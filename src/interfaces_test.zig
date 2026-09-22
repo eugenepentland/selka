@@ -2141,7 +2141,7 @@ test "exported functions publish their inferred ceiling while explicit ceilings 
     const pure_contracts = try index_pure.renderContracts(t.allocator);
     defer t.allocator.free(pure_contracts);
     try t.expect(std.mem.indexOf(u8, pure_contracts, "\"name\":\"value\"") != null);
-    try t.expect(std.mem.indexOf(u8, pure_contracts, "\"permissions\":\"effects=;mutates=;origin=unknown\"") != null);
+    try t.expect(std.mem.indexOf(u8, pure_contracts, "\"permissions\":\"effects=managed_allocation;mutates=;origin=unknown\"") != null);
 
     // An allocating export publishes the derived managed_allocation ceiling.
     const allocating =
@@ -2193,7 +2193,7 @@ test "exported functions publish their inferred ceiling while explicit ceilings 
     const generic_contracts = try index_generic.renderContracts(t.allocator);
     defer t.allocator.free(generic_contracts);
     try t.expect(std.mem.indexOf(u8, generic_contracts, "\"name\":\"identity\"") != null);
-    try t.expect(std.mem.indexOf(u8, generic_contracts, "\"permissions\":\"effects=;mutates=;origin=unknown\"") != null);
+    try t.expect(std.mem.indexOf(u8, generic_contracts, "\"permissions\":\"effects=managed_allocation;mutates=;origin=unknown\"") != null);
 
     const domain =
         \\module main
@@ -2221,7 +2221,7 @@ test "exported functions publish their inferred ceiling while explicit ceilings 
     const domain_contracts = try index_domain.renderContracts(t.allocator);
     defer t.allocator.free(domain_contracts);
     try t.expect(std.mem.indexOf(u8, domain_contracts, "\"name\":\"Distance.make\"") != null);
-    try t.expect(std.mem.indexOf(u8, domain_contracts, "\"permissions\":\"effects=;mutates=;origin=unknown\"") != null);
+    try t.expect(std.mem.indexOf(u8, domain_contracts, "\"permissions\":\"effects=managed_allocation;mutates=;origin=unknown\"") != null);
 
     // An explicit ceiling is still an opt-in narrowing and still rejects excess.
     const narrowed =
@@ -2387,7 +2387,7 @@ test "an unchecked listing reports an unavailable inferred set and keeps a decla
     const text = try index.render(t.allocator);
     defer t.allocator.free(text);
     try t.expect(std.mem.indexOf(u8, text, "export function double def(x:i64)->i64 effects(unavailable) analysis(declaration-only) ceiling(managed_allocation) tests(unavailable)") != null);
-    try t.expect(std.mem.indexOf(u8, text, "export function unfinished def(x:i64)->i64 effects(unavailable) analysis(declaration-only) tests(unavailable)") != null);
+    try t.expect(std.mem.indexOf(u8, text, "export function unfinished def(x:i64)->i64 effects(unavailable) analysis(declaration-only) ceiling(managed_allocation) tests(unavailable)") != null);
     // The internal conservative mask is a bound, never a published inference.
     try t.expect(std.mem.indexOf(u8, text, "filesystem") == null);
 }
@@ -2404,7 +2404,7 @@ test "a checked listing publishes the inferred set with no analysis clause" {
     const text = try index.render(t.allocator);
     defer t.allocator.free(text);
     try t.expect(std.mem.indexOf(u8, text, "export function double def(x:i64)->i64 effects() ceiling(managed_allocation) tests(0)") != null);
-    try t.expect(std.mem.indexOf(u8, text, "export function pure def(x:i64)->i64 effects() tests(0)") != null);
+    try t.expect(std.mem.indexOf(u8, text, "export function pure def(x:i64)->i64 effects() ceiling(managed_allocation) tests(0)") != null);
     try t.expect(std.mem.indexOf(u8, text, "analysis(") == null);
     try t.expect(std.mem.indexOf(u8, text, "unavailable") == null);
 }
@@ -2452,12 +2452,13 @@ test "the contract manifest states whether a checked program supplied inferred e
     var index_unchecked = try interfaces.build(&project_unchecked);
     const unchecked = try index_unchecked.renderContracts(t.allocator);
     defer t.allocator.free(unchecked);
-    // Declared ceilings and directional bounds do not change; the manifest now
-    // says that no body was checked, so its `effects=` value cannot be read as an
-    // inferred summary.
+    // The permissions value is the ceiling the signature implies, which follows
+    // from the declaration whether or not a body was checked; the conservative
+    // mask the checker keeps internally is never published as a fact, so nothing
+    // here names `filesystem`.
     try t.expect(std.mem.indexOf(u8, unchecked, "\"analysis\":\"declaration-only\"") != null);
     try t.expect(std.mem.indexOf(u8, unchecked, "\"permissions\":\"effects=managed_allocation;mutates=;origin=unknown\"") != null);
-    try t.expect(std.mem.indexOf(u8, unchecked, "\"permissions\":\"effects=filesystem") != null);
+    try t.expect(std.mem.indexOf(u8, unchecked, "filesystem") == null);
 
     var files_checked: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = checked_ceiling_fixture }} };
     var project_checked = graph.Project.init(t.allocator);
@@ -2469,11 +2470,11 @@ test "the contract manifest states whether a checked program supplied inferred e
     index_checked.program = compilation_checked.program.?;
     const checked = try index_checked.renderContracts(t.allocator);
     defer t.allocator.free(checked);
-    // A checked manifest keeps exactly the bytes it always published: the status
-    // field is omitted rather than written as `checked`, and the inferred set is
-    // still the `permissions` value.
+    // A checked manifest keeps the same shape: the status field is omitted rather
+    // than written as `checked`, and the derived ceiling is the `permissions`
+    // value.
     try t.expect(std.mem.indexOf(u8, checked, "\"analysis\"") == null);
-    try t.expect(std.mem.indexOf(u8, checked, "\"permissions\":\"effects=;mutates=;origin=unknown\"") != null);
+    try t.expect(std.mem.indexOf(u8, checked, "\"permissions\":\"effects=managed_allocation;mutates=;origin=unknown\"") != null);
 }
 
 // spec: FACT-STATUS-1

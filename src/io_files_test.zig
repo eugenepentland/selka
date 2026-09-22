@@ -426,11 +426,12 @@ test "FILE-METHOD-1 generic bodies reject the method spelling like the free form
 // spec-case: FILE-METHOD-1
 test "FILE-METHOD-1 a same-named function or local keeps the free form while the method stays the receiver's" {
     try expectPrinted(
-        \\def read_text(fs: Filesystem, path: str) -> str:
+        \\def read_text(path: str) -> str:
+        \\    _ = path
         \\    return "shadowed"
         \\
         \\def main(fs: Filesystem, out: Stream) -> int:
-        \\    out.print(read_text(fs, "notes.txt"))
+        \\    out.print(read_text("notes.txt"))
         \\    out.print(fs.read_text("notes.txt"))
         \\    return 0
     , "shadowed\nOk('alpha\\nbeta\\n')\n");

@@ -514,3 +514,25 @@ test "canonical specialization keys distinguish every keyed dimension and argume
     const digest_b = semantic_key.declaredContractDigest(bound, &.{1});
     try t.expect(!std.mem.eql(u8, &digest_a, &digest_b));
 }
+
+// spec: MUT-PARAM-7
+test "a mut argument marker inside a generic body forwards to a declared mut parameter" {
+    var c = try language.Compilation.init(t.allocator, "mut_generic.my",
+        \\def push(values: mut list[i64], value: i64) -> None:
+        \\    values.append(value)
+        \\
+        \\
+        \\def twice[T](values: mut list[i64], tag: T) -> None:
+        \\    _ = tag
+        \\    push(mut values, 1)
+        \\    push(mut values, 2)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values: list[i64] = []
+        \\    twice[bool](mut values, True)
+        \\    return values[0] + values[1]
+    );
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 3), (try native.run(&c)).value);
+}
