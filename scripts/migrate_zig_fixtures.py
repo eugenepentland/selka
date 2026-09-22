@@ -80,20 +80,58 @@ def offset(text: str, line: int, column: int) -> int:
     return sum(len(part) + 1 for part in text.split("\n")[: line - 1]) + column - 1
 
 
+DECLARE = re.compile(r"declare `([^`]+)`")
+CALL_PASTE = re.compile(r"write `(\([^`]*\))`")
+
+
+def apply_marker(text: str, at: int, message: str):
+    """Apply one `E_MUTATION_MARKER` paste at `at`. Returns the new text or None."""
+    declared = DECLARE.search(message)
+    if declared:
+        replacement = declared.group(1)
+        name = replacement.split(":", 1)[0].strip()
+        start = text.rfind(name + ":", 0, at)
+        if start < 0:
+            return None
+        end = text.find(",", start)
+        close = text.find(")", start)
+        if end < 0 or (close >= 0 and close < end):
+            end = close
+        if end < 0:
+            end = len(text)
+        return text[:start] + replacement + text[end:]
+    call = CALL_PASTE.search(message)
+    if call and text[at] == "(":
+        end = match_close(text, at)
+        if end < 0:
+            return None
+        return text[:at] + call.group(1) + text[end + 1 :]
+    return None
+
+
 def clean_run(compiler: Path, text: str, work: Path, report: list):
-    """Delete every clause diagnostic from one fixture. Returns the new text."""
-    for _ in range(8):
+    """Apply the compiler's own pastes to one fixture. Returns the new text."""
+    for _ in range(12):
         diagnostics = check(compiler, text, work)
-        clause = [(l, c, code) for l, c, code, _ in diagnostics if code in ("E_DERIVED_EFFECTS", "W_DERIVED_EFFECTS")]
-        if not clause:
+        fixable = [
+            (l, c, code, message)
+            for l, c, code, message in diagnostics
+            if code in ("E_DERIVED_EFFECTS", "W_DERIVED_EFFECTS") or (code == "E_MUTATION_MARKER" and ("declare `" in message or "write `(" in message))
+        ]
+        if not fixable:
             return text, diagnostics
         before = text
-        for line, column, _ in sorted(clause, reverse=True):
+        for line, column, code, message in sorted(fixable, reverse=True):
             at = offset(text, line, column)
-            match = CLAUSE.match(text, at)
-            if not match:
+            if code in ("E_DERIVED_EFFECTS", "W_DERIVED_EFFECTS"):
+                match = CLAUSE.match(text, at)
+                if not match:
+                    continue
+                text = text[:at] + text[match.end() :]
                 continue
-            text = text[:at] + text[match.end() :]
+            updated = apply_marker(text, at, message)
+            if updated is not None:
+                text = updated
         if text == before:
             return text, diagnostics
     return text, check(compiler, text, work)
