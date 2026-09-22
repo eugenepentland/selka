@@ -451,9 +451,10 @@ measured, so no claim is made about them.
 
 *Runtime. Size: small.*
 
-`pop` rebuilds the index and is O(n), so a pop loop is O(n²); dictionary
-equality in `native_equal.c` is still O(n²); the hash is unseeded FNV-1a, so
-adversarial keys can degrade it (a keyed hash needs a per-process seed, which
+`pop` renumbers the index in place and is O(n), so a pop loop is O(n²);
+dictionary equality in `native_equal.c` is still O(n²); the hash is an
+unseeded word-at-a-time multiply ([PY-DICT-3], 2026-09-22), so adversarial
+keys can degrade it (a keyed hash needs a per-process seed, which
 means a sanctioned entropy source for the runtime). Do these when a workload
 shows them; none is on the parity path.
 
