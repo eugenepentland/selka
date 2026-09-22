@@ -35,8 +35,8 @@ public def test_decimal_uses_exact_remaining_capacity() -> bool:
         io.append(mut out, block)
         i += 1
     tail = b"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-    io.append(out, tail)
+    io.append(mut out, tail)
     if out.failed or len(out.buffer) != 4194301:
         return False
-    io.appendInt(out, - 99)
+    io.appendInt(mut out, - 99)
     return not out.failed and len(out.buffer) == 4194304 and out.buffer[4194301:4194304] == b"-99"
