@@ -77,6 +77,9 @@ pub const Summary = struct {
     external: bool = false,
     /// First located external write, used for diagnostics.
     witness: ?source.Span = null,
+    /// First located write that reaches a parameter the signature does not
+    /// declare `mut`, where the missing-marker diagnostic points.
+    undeclared_witness: ?source.Span = null,
 };
 
 fn mergeSummaries(a: Summary, b: Summary) Summary {
@@ -87,6 +90,7 @@ fn mergeSummaries(a: Summary, b: Summary) Summary {
         .writes = a.writes or b.writes,
         .external = a.external or b.external,
         .witness = a.witness orelse b.witness,
+        .undeclared_witness = a.undeclared_witness orelse b.undeclared_witness,
     };
 }
 
@@ -193,10 +197,10 @@ fn applyBlockStatements(context: *const Context, function: typed.Function, origi
     if (depth == 256) return;
     const statement = context.program.statements[@backingInt(body)];
     switch (statement.data) {
-        .initialize, .assign => |store| {
-            const value = context.nodeOrigin(function, origins, store.value, depth + 1);
-            const slot = @backingInt(store.slot);
-            if (slot < origins.len) origins[slot] = Origin.merge(origins[slot], value);
+        .initialize, .assign => _ = bindStatement(context, function, origins, statement, depth + 1),
+        .match => |matched| {
+            _ = bindStatement(context, function, origins, statement, depth + 1);
+            for (matched.arms) |arm| applyBlockStatements(context, function, origins, arm.body, depth + 1);
         },
         .block => |children| for (children) |child| applyBlockStatements(context, function, origins, child, depth + 1),
         .branch => |branch| {
@@ -207,10 +211,44 @@ fn applyBlockStatements(context: *const Context, function: typed.Function, origi
             applyBlockStatements(context, function, origins, loop.body, depth + 1);
             if (loop.step) |step| applyBlockStatements(context, function, origins, step, depth + 1);
         },
-        .match => |matched| for (matched.arms) |arm| applyBlockStatements(context, function, origins, arm.body, depth + 1),
         .with_scope => |scope| applyBlockStatements(context, function, origins, scope.body, depth + 1),
         else => {},
     }
+}
+
+/// Merge one binding statement's value origin into the local origin table and
+/// report whether any local's origin grew. A store binds its slot to the value;
+/// a `match` binds each arm's payload slot to the matched value, because a
+/// payload of a class type is the very object the matched container holds, so
+/// a write through it is a write to the container's owner.
+fn bindStatement(context: *const Context, function: typed.Function, origins: []Origin, statement: typed.Statement, depth: usize) bool {
+    switch (statement.data) {
+        .initialize, .assign => |store| {
+            const value = context.nodeOrigin(function, origins, store.value, depth);
+            return widen(origins, @backingInt(store.slot), value);
+        },
+        .match => |matched| {
+            var grew = false;
+            for (matched.arms) |arm| {
+                const slot = arm.slot orelse continue;
+                const index = @backingInt(slot);
+                if (index >= function.scope.locals.len) continue;
+                const payload = function.scope.locals[index].ty;
+                if (widen(origins, index, context.childIfManaged(payload, function, origins, matched.value, depth))) grew = true;
+            }
+            return grew;
+        },
+        else => return false,
+    }
+}
+
+/// Merge `value` into one slot's origin, reporting whether it grew.
+fn widen(origins: []Origin, slot: usize, value: Origin) bool {
+    if (slot >= origins.len) return false;
+    const merged = Origin.merge(origins[slot], value);
+    const grew = merged.positions != origins[slot].positions or merged.unknown != origins[slot].unknown;
+    origins[slot] = merged;
+    return grew;
 }
 
 const Context = struct {
@@ -381,13 +419,23 @@ const WriteSite = struct {
         if (origin_value.unknown) {
             self.summary.mutates_unknown = true;
             self.summary.external = true;
-            if (self.summary.witness == null) self.summary.witness = span;
+            self.witness(unknownWritePositions(self.function), span);
             return;
         }
         if (origin_value.positions == 0) return;
         self.summary.mutates |= origin_value.positions;
         self.summary.external = true;
+        self.witness(origin_value.positions, span);
+    }
+
+    /// Remember where one external write reaching `positions` happened: the
+    /// first such write overall, and the first one that reaches a parameter the
+    /// signature does not declare `mut`, so a missing-marker diagnostic points
+    /// at a write that needs the marker rather than at an allowed one.
+    fn witness(self: WriteSite, positions: u16, span: source.Span) void {
         if (self.summary.witness == null) self.summary.witness = span;
+        const declared = positionsBitset(self.function.signature.declared_mutates);
+        if (positions & ~declared != 0 and self.summary.undeclared_witness == null) self.summary.undeclared_witness = span;
     }
 
     fn absorb(self: WriteSite, mask: u16, unknown: bool, span: source.Span) void {
@@ -405,7 +453,7 @@ const WriteSite = struct {
             if (reaches_caller) {
                 self.summary.mutates_unknown = true;
                 self.summary.external = true;
-                if (self.summary.witness == null) self.summary.witness = span;
+                self.witness(unknownWritePositions(self.function), span);
             }
             return;
         }
@@ -416,7 +464,7 @@ const WriteSite = struct {
                 self.summary.writes = true;
                 self.summary.mutates_unknown = true;
                 self.summary.external = true;
-                if (self.summary.witness == null) self.summary.witness = span;
+                self.witness(unknownWritePositions(self.function), span);
                 continue;
             }
             const origin_value = self.context.nodeOrigin(self.function, self.origins, self.arguments[position], 0);
@@ -461,17 +509,13 @@ fn absorbExpressionCall(context: *const Context, function: typed.Function, origi
 /// Bind one statement's effect on the local origin table. A `return` merges its
 /// value's origin into the summary; that reads only bindings already resolved,
 /// because the first pass visits statements in source order.
-fn applyStatement(context: *const Context, function: typed.Function, origins: []Origin, statement_id: typed.StatementId, summary: *Summary) void {
+fn applyStatement(context: *const Context, function: typed.Function, origins: []Origin, statement_id: typed.StatementId, summary: *Summary) bool {
     const statement = context.program.statements[@backingInt(statement_id)];
     switch (statement.data) {
-        .initialize, .assign => |store| {
-            const value = context.nodeOrigin(function, origins, store.value, 0);
-            const slot = @backingInt(store.slot);
-            if (slot < origins.len) origins[slot] = Origin.merge(origins[slot], value);
-        },
         .ret => |value| summary.return_origin = Origin.merge(summary.return_origin, context.nodeOrigin(function, origins, value, 0)),
-        else => {},
+        else => return bindStatement(context, function, origins, statement, 0),
     }
+    return false;
 }
 
 fn applyExpression(context: *const Context, function: typed.Function, origins: []const Origin, expression_id: typed.NodeId, summary: *Summary) void {
@@ -493,12 +537,21 @@ fn analyzeFunction(context: *const Context, index: usize) std.mem.Allocator.Erro
     // also recorded writes could meet the read before the store and attribute the
     // write to fresh storage. Return origins are merged in the same first pass
     // because they only read the bindings that are already known.
-    var bindings = try Walker.init(context.allocator, context.program, function.scope.body);
-    defer bindings.deinit();
-    while (try bindings.next()) |item| switch (item) {
-        .statement => |statement_id| applyStatement(context, function, origins, statement_id, &summary),
-        else => {},
-    };
+    // A loop can read a binding before a later statement widens it, so the
+    // walk repeats until no local's origin grows. Each origin only gains bits
+    // from a finite set, so the repetition is bounded by the locals' count.
+    var grew = true;
+    while (grew) {
+        grew = false;
+        var bindings = try Walker.init(context.allocator, context.program, function.scope.body);
+        defer bindings.deinit();
+        while (try bindings.next()) |item| switch (item) {
+            .statement => |statement_id| if (applyStatement(context, function, origins, statement_id, &summary)) {
+                grew = true;
+            },
+            else => {},
+        };
+    }
     var walker = try Walker.init(context.allocator, context.program, function.scope.body);
     defer walker.deinit();
     while (try walker.next()) |item| switch (item) {
@@ -715,7 +768,7 @@ fn checkMutDeclarations(allocator: std.mem.Allocator, program: typed.Program, re
         const message = try unmarkedWriteMessage(allocator, src, declared_function, function, positions & ~declared);
         try sink.items.append(allocator, .{
             .code = mutation_marker_code,
-            .span = summary.witness orelse function.declaration,
+            .span = summary.undeclared_witness orelse summary.witness orelse function.declaration,
             .message = message,
         });
         violated = true;
@@ -975,16 +1028,8 @@ fn collectOverlaps(allocator: std.mem.Allocator, program: typed.Program, summari
     defer walker.deinit();
     while (try walker.next()) |item| switch (item) {
         .statement => |statement_id| {
-            const statement = program.statements[@backingInt(statement_id)];
-            switch (statement.data) {
-                .initialize, .assign => |store| {
-                    const context = Context{ .allocator = allocator, .program = program, .summaries = summaries };
-                    const value = context.nodeOrigin(function, origins, store.value, 0);
-                    const slot = @backingInt(store.slot);
-                    if (slot < origins.len) origins[slot] = Origin.merge(origins[slot], value);
-                },
-                else => {},
-            }
+            const context = Context{ .allocator = allocator, .program = program, .summaries = summaries };
+            _ = bindStatement(&context, function, origins, program.statements[@backingInt(statement_id)], 0);
         },
         .expression => |expression_id| {
             const node = program.nodes[@backingInt(expression_id)];
