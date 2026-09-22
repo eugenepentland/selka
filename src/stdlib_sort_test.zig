@@ -28,10 +28,10 @@ test "standard sort keeps its copies rooted under collection stress" {
 }
 
 // spec-case: STANDARD-SORT-KEY-1
-test "keyed sort computes keys in the order the recursive merge first asked for them" {
-    // Seven elements halve into [0, 3) and [3, 7), and the first block is
-    // reached from its last element, so element 2's division traps before
-    // element 1's overflow even though element 1 comes first in the list.
+test "keyed sort computes each key once in input order" {
+    // Element 1 overflows and element 2 divides by zero: sort_by_key forwards
+    // to the keyed sort, which asks for keys in input order, so the first
+    // trapping element in the list decides the trap.
     try fixture.trap(t.allocator, "module main\nimport sort\n" ++
         "def fragile(value: int) -> int effects():\n" ++
         "    if value == 1:\n" ++
@@ -41,7 +41,7 @@ test "keyed sort computes keys in the order the recursive merge first asked for 
         "    return value\n" ++
         "def main() -> int:\n" ++
         "    ordered = sort.sort_by_key([0, 1, 2, 3, 4, 5, 6], fragile)\n" ++
-        "    return ordered[0]\n", .{}, "R_DIVISION_BY_ZERO");
+        "    return ordered[0]\n", .{}, "R_OVERFLOW");
     try fixture.trap(t.allocator, "module main\nimport sort\n" ++
         "def fragile(value: int) -> int effects():\n" ++
         "    if value == 0:\n" ++
@@ -50,7 +50,7 @@ test "keyed sort computes keys in the order the recursive merge first asked for 
         "        return 9223372036854775807 + value\n" ++
         "    return value\n" ++
         "def main() -> int:\n" ++
-        "    ordered = sort.sort_by_key([0, 1, 2, 3], fragile)\n" ++
+        "    ordered = sort.sort_by_key([1, 0, 2, 3], fragile)\n" ++
         "    return ordered[0]\n", .{}, "R_OVERFLOW");
 }
 

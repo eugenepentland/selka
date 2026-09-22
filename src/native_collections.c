@@ -591,6 +591,394 @@ int myl_native_list_sort(myl_native_list *list, unsigned order) {
     if (size == 8) return order == 0 ? sort_i64(base, list->length) : sort_u64(base, list->length);
     return sort_generic(base, list->length, order, size);
 }
+/* `values.sort(key=..., reverse=...)` after the guest has computed every key
+   once, in input order, into `keys`: a decorated sort. The keys decide an
+   order of positions. When `values` is `source`, one pass of cycle-following
+   moves the elements into that order, so the list is sorted in place and
+   keeps its identity, length, capacity and generation. Otherwise `values` is
+   an empty list with room for them all, and the elements of `source` are
+   gathered into it in order: `sorted(xs, key=...)` builds its copy already
+   sorted, with no copy to permute afterwards.
+
+   A key is one scalar or a flat tuple of them. Field `i` of `shape` is the
+   four bits at `4 + 4 * i`: the low two bits are its kind (signed, unsigned,
+   binary64 or text) and the high two its width (8, 4, 2 or 1 bytes); the low
+   four bits of `shape` are the field count. Byte `i` of `offsets` is field
+   `i`'s offset inside one key.
+
+   A numeric key becomes one order-preserving 64-bit word: a signed integer
+   with its sign bit flipped, an unsigned one as it is, and a binary64 value
+   with its bits reflected, signed zeros made one and every NaN the largest
+   word, so NaNs sort after every ordered value. `reverse` complements the
+   word, so the order is the descending one while ties still come in input
+   order: reverse is not sort-then-reverse. When every word minus the
+   smallest fits above the position bits, the word and its position are packed
+   into one integer and sorted by the integer engine; this is the common case
+   and it reuses the key list's own storage for the packed words. Keys spread
+   wider take two such sorts, 32 bits each. Text keys and tuples sort
+   (key, position) entries with a stable merge that compares fields in order.
+
+   Nothing here calls guest code or allocates managed memory, so no collection
+   runs while elements sit in the temporary. On an allocation failure it
+   returns 0 before any element has moved; the key list may by then hold
+   packed words, which the guest never reads again. */
+enum { KEY_SIGNED, KEY_UNSIGNED, KEY_FLOAT, KEY_TEXT };
+typedef struct { unsigned count; unsigned char kind[8], size[8], offset[8]; } key_shape;
+static int key_shape_decode(uint64_t shape, uint64_t offsets, size_t stride, key_shape *out) {
+    static const unsigned char widths[4] = { 8, 4, 2, 1 };
+    out->count = (unsigned)(shape & 15);
+    if (out->count == 0 || out->count > 8) return 0;
+    for (unsigned i = 0; i < out->count; i++) {
+        unsigned field = (unsigned)(shape >> (4 + 4 * i)) & 15;
+        out->kind[i] = (unsigned char)(field & 3);
+        out->size[i] = widths[field >> 2];
+        out->offset[i] = (unsigned char)(offsets >> (8 * i));
+        if ((out->kind[i] == KEY_FLOAT || out->kind[i] == KEY_TEXT) && out->size[i] != 8) return 0;
+        if ((size_t)out->offset[i] + out->size[i] > stride) return 0;
+    }
+    return 1;
+}
+/* One numeric key field as a word whose unsigned order is the key order. */
+static inline uint64_t key_word(const unsigned char *at, unsigned kind, unsigned size) {
+    if (kind == KEY_FLOAT) {
+        double value;
+        memcpy(&value, at, 8);
+        if (isnan(value)) return UINT64_MAX;
+        if (value == 0) value = 0;
+        uint64_t bits;
+        memcpy(&bits, &value, 8);
+        return bits >> 63 ? ~bits : bits | (UINT64_C(1) << 63);
+    }
+    if (kind == KEY_SIGNED) {
+        int64_t value;
+        switch (size) {
+        case 1: { int8_t x; memcpy(&x, at, 1); value = x; break; }
+        case 2: { int16_t x; memcpy(&x, at, 2); value = x; break; }
+        case 4: { int32_t x; memcpy(&x, at, 4); value = x; break; }
+        default: memcpy(&value, at, 8); break;
+        }
+        return (uint64_t)value ^ (UINT64_C(1) << 63);
+    }
+    switch (size) {
+    case 1: { uint8_t x; memcpy(&x, at, 1); return x; }
+    case 2: { uint16_t x; memcpy(&x, at, 2); return x; }
+    case 4: { uint32_t x; memcpy(&x, at, 4); return x; }
+    default: { uint64_t x; memcpy(&x, at, 8); return x; }
+    }
+}
+/* Three-way comparison of key field `field` of two keys. */
+static inline int key_field_compare(const unsigned char *left, const unsigned char *right, const key_shape *shape, unsigned field) {
+    const unsigned char *a = left + shape->offset[field], *b = right + shape->offset[field];
+    if (shape->kind[field] == KEY_TEXT) {
+        myl_native_text *x, *y;
+        memcpy(&x, a, sizeof x);
+        memcpy(&y, b, sizeof y);
+        int order = myl_native_text_compare(x, y);
+        return order < 0 ? -1 : order > 0;
+    }
+    uint64_t x = key_word(a, shape->kind[field], shape->size[field]);
+    uint64_t y = key_word(b, shape->kind[field], shape->size[field]);
+    return x < y ? -1 : x > y;
+}
+/* How far ahead along a cycle the permutation prefetches the element it will
+   move next. */
+#define KEYED_LOOKAHEAD 8
+/* Move every element into the slot `order` names for it: slot `i` receives
+   the element at `order[i]`. Each cycle is followed once and marked done by
+   setting `order[j] = j`, through one element-sized temporary.
+
+   Following a cycle is a chain of dependent loads, so it runs at memory
+   latency unless the next elements are already on their way. The positions
+   are first narrowed to 32 bits in place, which halves the table the chain
+   walks and keeps more of it in cache, and a second cursor runs
+   KEYED_LOOKAHEAD steps ahead on the same cycle, prefetching the element each
+   step will read. */
+static void keyed_permute(myl_native_list *values, uint64_t *wide, size_t count, unsigned char *held) {
+    size_t size = values->element->size;
+    unsigned char *base = values->storage;
+    if (size == 0) return;
+    uint32_t *order = (uint32_t *)wide;
+    if (count <= UINT32_MAX) {
+        /* Entry `i` is read at byte 8i before it is written at byte 4i. */
+        for (size_t i = 0; i < count; i++) order[i] = (uint32_t)wide[i];
+    }
+    for (size_t i = 0; i < count; i++) {
+        size_t first = count <= UINT32_MAX ? order[i] : (size_t)wide[i];
+        if (first == i) continue;
+        copy_element(held, base + i * size, size);
+        size_t j = i, ahead = i;
+        for (int step = 0; step < KEYED_LOOKAHEAD && (step == 0 || ahead != i); step++) {
+            ahead = count <= UINT32_MAX ? order[ahead] : (size_t)wide[ahead];
+            __builtin_prefetch(base + ahead * size);
+        }
+        for (;;) {
+            size_t k;
+            if (count <= UINT32_MAX) {
+                k = order[j];
+                order[j] = (uint32_t)j;
+            } else {
+                k = (size_t)wide[j];
+                wide[j] = j;
+            }
+            if (k == i) {
+                copy_element(base + j * size, held, size);
+                break;
+            }
+            if (ahead != i) {
+                ahead = count <= UINT32_MAX ? order[ahead] : (size_t)wide[ahead];
+                __builtin_prefetch(base + ahead * size);
+            }
+            copy_element(base + j * size, base + k * size, size);
+            j = k;
+        }
+    }
+}
+/* Where the ordered elements go: back into `source` itself along the
+   permutation's cycles (an in-place sort, through `held`), or gathered in
+   order from `source` into the empty list `values` (a sorted copy). */
+typedef struct { myl_native_list *values; const myl_native_list *source; unsigned char *held; } keyed_target;
+static void keyed_place(const keyed_target *target, uint64_t *order, size_t count) {
+    if (target->values == target->source) {
+        keyed_permute(target->values, order, count, target->held);
+        return;
+    }
+    size_t size = target->source->element->size;
+    unsigned char *out = target->values->storage;
+    const unsigned char *in = target->source->storage;
+    for (size_t i = 0; i < count; i++) copy_element(out + i * size, in + (size_t)order[i] * size, size);
+    target->values->length = count;
+    target->values->generation++;
+}
+/* Move every element to the slot `dest` names for it: the element at `i`
+   goes to `dest[i]`. In place this follows each cycle once, carrying one
+   element in `held` and marking each handled position `dest[p] = p`, with the
+   same narrowed table and lookahead prefetch as keyed_permute; for a copy it
+   scatters the elements into the empty target. */
+static void keyed_place_dest(const keyed_target *target, uint64_t *wide, size_t count) {
+    size_t size = target->source->element->size;
+    if (target->values != target->source) {
+        unsigned char *out = target->values->storage;
+        const unsigned char *in = target->source->storage;
+        for (size_t i = 0; i < count; i++) copy_element(out + (size_t)wide[i] * size, in + i * size, size);
+        target->values->length = count;
+        target->values->generation++;
+        return;
+    }
+    unsigned char *base = target->values->storage, *held = target->held;
+    if (size == 0) return;
+    /* count <= UINT32_MAX here: the counting path requires it. */
+    uint32_t *dest = (uint32_t *)wide;
+    for (size_t i = 0; i < count; i++) dest[i] = (uint32_t)wide[i];
+    unsigned char *swap = held + size;
+    for (size_t i = 0; i < count; i++) {
+        if (dest[i] == i) continue;
+        copy_element(held, base + i * size, size);
+        size_t p = i, ahead = i;
+        for (int step = 0; step < KEYED_LOOKAHEAD && (step == 0 || ahead != i); step++) {
+            ahead = dest[ahead];
+            __builtin_prefetch(base + ahead * size);
+        }
+        for (;;) {
+            size_t d = dest[p];
+            dest[p] = (uint32_t)p;
+            if (d == i) {
+                copy_element(base + i * size, held, size);
+                break;
+            }
+            if (ahead != i) {
+                ahead = dest[ahead];
+                __builtin_prefetch(base + ahead * size);
+            }
+            copy_element(swap, base + d * size, size);
+            copy_element(base + d * size, held, size);
+            copy_element(held, swap, size);
+            p = d;
+        }
+    }
+}
+/* A single numeric key whose words span fewer values than there are
+   elements: a stable counting sort. One pass counts each key, a prefix sum
+   turns the counts into first slots, and a second pass gives each element,
+   in input order, the next slot of its key — so equal keys keep input order
+   without any comparison. */
+static int keyed_count(const keyed_target *target, myl_native_list *keys, const key_shape *shape, uint64_t flip, uint64_t low, uint64_t span) {
+    size_t count = target->source->length, stride = keys->element->size;
+    const unsigned char *rows = keys->storage;
+    unsigned kind = shape->kind[0], size = shape->size[0], offset = shape->offset[0];
+    uint32_t *slots = calloc((size_t)span + 1, sizeof *slots);
+    if (!slots) return 0;
+    for (size_t i = 0; i < count; i++) slots[(key_word(rows + i * stride + offset, kind, size) ^ flip) - low]++;
+    uint32_t next = 0;
+    for (uint64_t b = 0; b <= span; b++) {
+        uint32_t here = slots[b];
+        slots[b] = next;
+        next += here;
+    }
+    int own = stride == 8 && offset == 0 && keys != target->values && keys != target->source;
+    uint64_t *dest = own ? (uint64_t *)keys->storage : malloc(count * 8);
+    if (!dest) {
+        free(slots);
+        return 0;
+    }
+    for (size_t i = 0; i < count; i++) dest[i] = slots[(key_word(rows + i * stride + offset, kind, size) ^ flip) - low]++;
+    free(slots);
+    keyed_place_dest(target, dest, count);
+    if (!own) free(dest);
+    return 1;
+}
+typedef struct { uint64_t word; uint64_t position; } keyed_entry;
+typedef struct { const unsigned char *keys; size_t stride; const key_shape *shape; unsigned reverse; } keyed_order;
+/* Whether entry `a` goes strictly before entry `b`. A single text key is
+   carried in the entry itself; any other key is read from its row. */
+static inline int keyed_less(const keyed_entry *a, const keyed_entry *b, const keyed_order *by) {
+    const keyed_entry *x = by->reverse ? b : a, *y = by->reverse ? a : b;
+    if (by->shape->count == 1 && by->shape->kind[0] == KEY_TEXT) {
+        myl_native_text *p, *q;
+        memcpy(&p, &x->word, sizeof p);
+        memcpy(&q, &y->word, sizeof q);
+        return myl_native_text_compare(p, q) < 0;
+    }
+    const unsigned char *left = by->keys + (size_t)x->position * by->stride;
+    const unsigned char *right = by->keys + (size_t)y->position * by->stride;
+    for (unsigned field = 0; field < by->shape->count; field++) {
+        int order = key_field_compare(left, right, by->shape, field);
+        if (order) return order < 0;
+    }
+    return 0;
+}
+/* Stable bottom-up merge of entries: insertion-sorted blocks of 16, then
+   passes that merge adjacent blocks between `entries` and `spare`, taking
+   the left entry on a tie. Returns the array holding the result. */
+static keyed_entry *keyed_merge_sort(keyed_entry *entries, keyed_entry *spare, size_t count, const keyed_order *by) {
+    for (size_t start = 0; start < count; start += 16) {
+        size_t end = count - start < 16 ? count : start + 16;
+        for (size_t i = start + 1; i < end; i++) {
+            keyed_entry held = entries[i];
+            size_t j = i;
+            while (j > start && keyed_less(&held, &entries[j - 1], by)) {
+                entries[j] = entries[j - 1];
+                j--;
+            }
+            entries[j] = held;
+        }
+    }
+    keyed_entry *from = entries, *to = spare;
+    for (size_t width = 16; width < count; width *= 2) {
+        for (size_t start = 0; start < count; start += 2 * width) {
+            size_t middle = count - start < width ? count : start + width;
+            size_t end = count - middle < width ? count : middle + width;
+            size_t a = start, b = middle, out = start;
+            while (a < middle && b < end) to[out++] = keyed_less(&from[b], &from[a], by) ? from[b++] : from[a++];
+            while (a < middle) to[out++] = from[a++];
+            while (b < end) to[out++] = from[b++];
+        }
+        keyed_entry *swap = from;
+        from = to;
+        to = swap;
+    }
+    return from;
+}
+static int keyed_sort_entries(const keyed_target *target, const myl_native_list *keys, const key_shape *shape, unsigned reverse) {
+    size_t count = target->source->length, stride = keys->element->size;
+    if (count > SIZE_MAX / (2 * sizeof(keyed_entry))) return 0;
+    keyed_entry *entries = malloc(2 * count * sizeof *entries);
+    if (!entries) return 0;
+    const unsigned char *rows = keys->storage;
+    for (size_t i = 0; i < count; i++) {
+        entries[i].position = i;
+        entries[i].word = 0;
+        if (shape->count == 1 && shape->kind[0] == KEY_TEXT) memcpy(&entries[i].word, rows + i * stride + shape->offset[0], 8);
+    }
+    keyed_order by = { .keys = rows, .stride = stride, .shape = shape, .reverse = reverse };
+    keyed_entry *sorted = keyed_merge_sort(entries, entries + count, count, &by);
+    uint64_t *order = (uint64_t *)entries;
+    /* Entry `i` is 16 bytes and position `i` is 8, so compacting forward
+       never overwrites an entry not yet read, whichever half holds them. */
+    for (size_t i = 0; i < count; i++) order[i] = sorted[i].position;
+    keyed_place(target, order, count);
+    free(entries);
+    return 1;
+}
+/* One numeric key: pack `(word - low) << bits | position` into one integer
+   per element when that fits, else sort by the low 32 bits of the word and
+   then, stably, by the high 32 bits. */
+static int keyed_sort_words(const keyed_target *target, myl_native_list *keys, const key_shape *shape, unsigned reverse) {
+    size_t count = target->source->length, stride = keys->element->size;
+    const unsigned char *rows = keys->storage;
+    unsigned kind = shape->kind[0], size = shape->size[0], offset = shape->offset[0];
+    uint64_t flip = reverse ? UINT64_MAX : 0, low = UINT64_MAX, high = 0;
+    for (size_t i = 0; i < count; i++) {
+        uint64_t word = key_word(rows + i * stride + offset, kind, size) ^ flip;
+        low = word < low ? word : low;
+        high = word > high ? word : high;
+    }
+    if (count <= UINT32_MAX && high - low < count) return keyed_count(target, keys, shape, flip, low, high - low);
+    unsigned bits = 1;
+    while (bits < 63 && ((uint64_t)1 << bits) < count) bits++;
+    uint64_t mask = ((uint64_t)1 << bits) - 1;
+    if (((high - low) >> (64 - bits)) == 0) {
+        /* The words replace the keys one for one, so they are written into
+           the key list's storage when it has 8-byte keys of its own, not the
+           elements themselves. */
+        int own = stride == 8 && offset == 0 && keys != target->values && keys != target->source;
+        uint64_t *words = own ? (uint64_t *)keys->storage : malloc(count * 8);
+        if (!words) return 0;
+        for (size_t i = 0; i < count; i++) words[i] = ((key_word(rows + i * stride + offset, kind, size) ^ flip) - low) << bits | i;
+        if (!sort_u64((unsigned char *)words, count)) {
+            if (!own) free(words);
+            return 0;
+        }
+        for (size_t i = 0; i < count; i++) words[i] &= mask;
+        keyed_place(target, words, count);
+        if (!own) free(words);
+        return 1;
+    }
+    if (bits > 32) return keyed_sort_entries(target, keys, shape, reverse);
+    uint64_t *by_low = malloc(count * 8), *by_high = malloc(count * 8);
+    if (!by_low || !by_high) {
+        free(by_low);
+        free(by_high);
+        return 0;
+    }
+    for (size_t i = 0; i < count; i++) by_low[i] = ((key_word(rows + i * stride + offset, kind, size) ^ flip) & UINT32_MAX) << bits | i;
+    int sorted = sort_u64((unsigned char *)by_low, count);
+    for (size_t rank = 0; sorted && rank < count; rank++) {
+        uint64_t word = key_word(rows + (by_low[rank] & mask) * stride + offset, kind, size) ^ flip;
+        by_high[rank] = (word >> 32) << bits | rank;
+    }
+    if (sorted) sorted = sort_u64((unsigned char *)by_high, count);
+    if (sorted) {
+        for (size_t i = 0; i < count; i++) by_high[i] = by_low[by_high[i] & mask] & mask;
+        keyed_place(target, by_high, count);
+    }
+    free(by_low);
+    free(by_high);
+    return sorted;
+}
+int myl_native_list_sort_keyed(myl_native_list *values, myl_native_list *source, myl_native_list *keys, uint64_t shape, uint64_t offsets, uint64_t reverse) {
+    key_shape decoded;
+    if (!source || !keys || keys->length != source->length) return 0;
+    size_t count = source->length, size = source->element->size;
+    /* A sorted copy gathers into an empty list with room for every element. */
+    if (values != source && (values->length != 0 || values->capacity < count || values->element->size != size)) return 0;
+    if (!key_shape_decode(shape, offsets, keys->element->size, &decoded)) return 0;
+    if (count < 2) {
+        uint64_t first = 0;
+        if (values != source && count) keyed_place(&(keyed_target){ .values = values, .source = source }, &first, 1);
+        return 1;
+    }
+    /* Two element-sized temporaries: the one carried along a cycle, and the
+       one it is exchanged through. */
+    unsigned char inline_held[128];
+    unsigned char *held = values != source || 2 * size <= sizeof inline_held ? inline_held : malloc(2 * size);
+    if (!held) return 0;
+    keyed_target target = { .values = values, .source = source, .held = held };
+    int done = decoded.count == 1 && decoded.kind[0] != KEY_TEXT
+        ? keyed_sort_words(&target, keys, &decoded, reverse != 0)
+        : keyed_sort_entries(&target, keys, &decoded, reverse != 0);
+    if (held != inline_held) free(held);
+    return done;
+}
 myl_native_list *myl_native_list_copy(myl_native_heap *heap, const myl_native_list *input) {
     const myl_native_list *rooted = input;
     myl_native_root root;

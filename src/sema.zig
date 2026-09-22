@@ -133,11 +133,20 @@ const dictionary_get_alternative = "a dictionary `get` always takes its fallback
 /// The accepted callee for a bare `print` or `eprint`: `Stream`'s printing
 /// method, with the optional `sep` and `end` keywords the I/O builtins accept.
 const print_signature = buffer_operations.stream_print_signature;
-/// The accepted callee of the `sorted` prelude builtin; Python's `reverse=` is
-/// rejected with `reversed(sorted(...))` instead.
+/// The accepted callee of the `sorted` prelude builtin, with Python's `key=`
+/// and `reverse=` keywords.
 const sorted_signature = buffer_operations.sorted_signature;
-/// The accepted spelling for Python's `sorted(..., reverse=True)`.
-const sorted_reverse_alternative = "sorted orders ascending only; write `reversed(sorted(values))` for a descending order";
+/// The accepted signature of a list's `sort` method with its keywords.
+const list_sort_signature = buffer_operations.list_sort_signature;
+/// The accepted spelling for Python 2's `cmp=` comparison function.
+const sort_cmp_alternative = "there is no comparison-function form; key= maps each element to the value compared instead, such as key=lambda item: (item.rank, item.name)";
+/// One sort call's operands as written: the callee name the diagnostics point
+/// at, the operands and their keywords, how many leading operands are the
+/// positional list, and the signature a rejection shows.
+const SortSite = struct { name: source.Span, arguments: []const ast.NodeId, names: []const ?source.Span, positional: usize, signature: []const u8 };
+/// The `key=` and `reverse=` operands of one sort call, and whether `reverse=`
+/// was written first.
+const SortKeywords = struct { key: ?ast.NodeId = null, reverse: ?ast.NodeId = null, reverse_first: bool = false };
 /// The accepted spelling of a Python method form this language rejects, or null
 /// when it has none. Only deliberate, known gaps appear here; a rejected call
 /// with no entry prints its signature or its accepted methods and stops.
@@ -1396,8 +1405,8 @@ const Checker = struct {
         if (!try self.preludeName(call)) return false;
         const name = self.src.text(call.name);
         if (std.mem.eql(u8, name, "sorted")) {
-            try self.validateSortedArguments(call);
-            if (call.arguments.len == 2) {
+            const keywords = try self.sortedKeywords(call);
+            if (keywords.key != null or keywords.reverse != null) {
                 try work.append(self.allocator, .{ .id = call_id, .sorted_key = true });
                 try work.append(self.allocator, .{ .id = call.arguments[0] });
                 return true;
@@ -1417,7 +1426,11 @@ const Checker = struct {
     fn checkPreludeCall(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!bool {
         if (!try self.preludeName(call)) return false;
         const name = self.src.text(call.name);
-        if (std.mem.eql(u8, name, "sorted")) try self.validateSortedArguments(call) else try call_arguments.positional(call, self.sink);
+        if (std.mem.eql(u8, name, "sorted")) {
+            out.* = try self.checkSortedCall(node.span, call);
+            return true;
+        }
+        try call_arguments.positional(call, self.sink);
         const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
         if (prelude_builtins.materializes(name) and call.arguments.len == 1) {
             if (try self.rangeSource(call.arguments[0])) |range| {
@@ -1434,24 +1447,110 @@ const Checker = struct {
         out.* = (try builtins.build(node.span, name, values)) orelse return false;
         return true;
     }
-    fn validateSortedArguments(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!void {
-        if (call.arguments.len == 0 or call.arguments.len > 2) return self.sink.failCallSite("E_ARITY", call.name, "sorted requires a list and optional key callback", null, sorted_signature);
-        if (call.argument_names.len == 0) {
-            if (call.arguments.len == 2) return self.sink.failCallSite(call_argument_code, self.syntax.nodes.items[@backingInt(call.arguments[1])].span, "sorted key must be written as key=callback", null, sorted_signature);
-            return;
+    /// Bind the operands of one sort call by name. `site.positional` leading
+    /// operands are the list (one for `sorted`, none for `values.sort`); every
+    /// other operand is `key=` or `reverse=`, each at most once and only by
+    /// keyword, as Python spells them.
+    fn sortKeywords(self: *Checker, site: SortSite) Error!SortKeywords {
+        var out: SortKeywords = .{};
+        for (site.arguments, 0..) |argument, index| {
+            const keyword = if (site.names.len == 0) null else site.names[index];
+            if (index < site.positional) {
+                if (keyword) |name| return self.sink.failCallSite(call_argument_code, name, "the sorted list is positional", null, site.signature);
+                continue;
+            }
+            const name = keyword orelse
+                return self.sink.failCallSite(call_argument_code, self.syntax.nodes.items[@backingInt(argument)].span, "key and reverse are keyword-only: write key=callback and reverse=flag", null, site.signature);
+            const text = self.src.text(name);
+            const repeated = if (std.mem.eql(u8, text, "key")) out.key != null else if (std.mem.eql(u8, text, "reverse")) out.reverse != null else null;
+            const is_repeat = repeated orelse {
+                // Python 2's comparison function has a mechanical repair, so it
+                // is named; any other keyword only gets the signature.
+                const related: ?diagnostic.Related = if (std.mem.eql(u8, text, "cmp")) .{ .span = name, .message = sort_cmp_alternative, .role = .alternative } else null;
+                return self.sink.failCallSite(call_argument_code, site.name, "sorting accepts only the named arguments key= and reverse=", related, site.signature);
+            };
+            if (is_repeat) return self.sink.failCallSite(call_argument_code, name, "this sort argument is given more than once", null, site.signature);
+            if (std.mem.eql(u8, text, "key")) out.key = argument else {
+                out.reverse = argument;
+                out.reverse_first = out.key == null;
+            }
         }
-        if (call.argument_names[0] != null) return self.sink.failCallSite(call_argument_code, call.argument_names[0].?, "the sorted list is positional", null, sorted_signature);
-        if (call.arguments.len != 2 or call.argument_names[1] == null or !std.mem.eql(u8, self.src.text(call.argument_names[1].?), "key")) {
-            // `reverse=` is a Python keyword this surface does not accept, and the
-            // repair is mechanical: `reversed` is already a prelude builtin.
-            if (call.argument_names.len > 1) if (call.argument_names[1]) |keyword| if (std.mem.eql(u8, self.src.text(keyword), "reverse"))
-                return self.sink.failCallSite(call_argument_code, call.name, "sorted accepts only the named argument key=callback", .{ .span = keyword, .message = sorted_reverse_alternative, .role = .alternative }, sorted_signature);
-            return self.sink.failCallSite(call_argument_code, call.name, "sorted accepts only the named argument key=callback", null, sorted_signature);
+        return out;
+    }
+    /// The named operands of one `sorted(...)` call, after its positional list.
+    fn sortedKeywords(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!SortKeywords {
+        if (call.arguments.len == 0) return self.sink.failCallSite("E_ARITY", call.name, "sorted requires a list", null, sorted_signature);
+        return self.sortKeywords(.{ .name = call.name, .arguments = call.arguments, .names = call.argument_names, .positional = 1, .signature = sorted_signature });
+    }
+    /// Hint the operands of one keyword sort over a list of `element`:
+    /// `reverse` is a `bool`, and a lambda key is `def(element) -> K effects()`
+    /// with `K` read off its body (`int` when the body does not say). The slot
+    /// has exactly the type that spelling interns, return-origin bound
+    /// included, so it is one type with every other callback of that signature.
+    fn hintSortKeywords(self: *Checker, keywords: SortKeywords, element: typed.Type) Error!void {
+        if (keywords.reverse) |flag| try self.hint(flag, .bool);
+        const key = keywords.key orelse return;
+        const node = self.syntax.nodes.items[@backingInt(key)];
+        if (node.data != .name) return;
+        const result = if (self.lambdaIndex(node.span)) |index| lambda: {
+            const lambda = self.syntax.lambdas[index];
+            const inferred = if (lambda.parameters.len == 1) try self.lambdaKeyType(lambda.body, self.src.text(lambda.parameters[0]), element) else null;
+            break :lambda inferred orelse .i64;
+        } else try self.namedKeyResult(node.span) orelse return;
+        const parameters = try self.allocator.dupe(typed.Type, &.{element});
+        const callback = try callables.intern(self.allocator, &self.catalog, .{ .parameters = parameters, .return_type = result, .effects = 0, .mutates = &.{}, .return_origin = .unknown }, node.span, self.sink);
+        try self.hint(key, callback);
+    }
+    /// The declared result of a top-level function named as a sort key, so an
+    /// unannotated key function fills the key slot with the empty ceiling its
+    /// one element parameter derives, exactly as it fills any callback
+    /// parameter; null for a local or anything but a nongeneric function.
+    fn namedKeyResult(self: *Checker, name: source.Span) Error!?typed.Type {
+        const text = self.src.text(name);
+        if (self.active.contains(text) or std.mem.indexOf(u8, text, "::") != null) return null;
+        const key = if (self.catalog.module_names) |names| module: {
+            if (!try names.topLevel(name)) return null;
+            break :module try names.reference(name, .function, null, null, self.sink);
+        } else text;
+        const declaration = self.functions.get(key) orelse return null;
+        const function = self.syntax.functions[@backingInt(declaration)];
+        if (function.policy.owner != null or function.signature.type_parameters.len != 0) return null;
+        const result = try self.catalog.resolve(self.src, function.signature.return_type, self.sink);
+        return result;
+    }
+    /// The key type a sort-key lambda's body returns, read off the body when it
+    /// is the parameter itself, a field path from it, a negation, arithmetic or
+    /// `len` of one, or a tuple of those; null when the body does not say.
+    fn lambdaKeyType(self: *Checker, body: ast.NodeId, parameter: []const u8, element: typed.Type) Error!?typed.Type {
+        const node = self.syntax.nodes.items[@backingInt(body)];
+        switch (node.data) {
+            .name => |name| return if (std.mem.eql(u8, self.src.text(name), parameter)) element else null,
+            .field => |field| {
+                const base = try self.lambdaKeyType(field.base, parameter, element) orelse return null;
+                if (!base.isAggregate() or base.recordIndex() >= self.catalog.records.len) return null;
+                const slot = self.catalog.field_names.items[base.recordIndex()].get(self.src.text(field.name)) orelse return null;
+                const declared = self.catalog.records[base.recordIndex()].fields;
+                return if (slot < declared.len) declared[slot].ty else null;
+            },
+            .unary => |unary| return if (unary.op == .neg) self.lambdaKeyType(unary.operand, parameter, element) else null,
+            .binary => |binary| return switch (binary.op) {
+                .add, .sub, .mul, .div, .floor_div, .rem => try self.lambdaKeyType(binary.left, parameter, element) orelse try self.lambdaKeyType(binary.right, parameter, element),
+                else => null,
+            },
+            .length => return .i64,
+            .tuple => |items| {
+                if (items.len < 2 or items.len > 8) return null;
+                const types = try self.allocator.alloc(typed.Type, items.len);
+                for (items, types) |item, *slot| slot.* = try self.lambdaKeyType(item, parameter, element) orelse return null;
+                const tuple = try self.catalog.tupleType(types);
+                return tuple;
+            },
+            else => return null,
         }
     }
-    fn hintSortedArguments(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!void {
-        try self.validateSortedArguments(call);
-        if (call.arguments.len != 2) return;
+    /// Hint the operands of one keyword `sorted(values, ...)` once the list
+    /// operand is checked.
+    fn hintSortedArguments(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call"), keywords: SortKeywords) Error!void {
         const input = self.syntax.nodes.items[@backingInt(call.arguments[0])];
         const input_type = if (self.resolved[@backingInt(call.arguments[0])]) |value|
             self.nodes.items[@backingInt(value)].ty
@@ -1459,18 +1558,104 @@ const Checker = struct {
             const slot = self.active.get(self.src.text(input.data.name)) orelse return;
             break :name self.locals.items[@backingInt(slot)].ty;
         } else return;
-        if (!input_type.isAggregate()) return self.sink.fail("E_PRELUDE_TYPE", input.span, "sorted key requires a list input");
+        try self.hintSortKeywords(keywords, try self.sortedElement(input_type, input.span));
+    }
+    /// The element type of the list a keyword `sorted` call sorts.
+    fn sortedElement(self: *Checker, input_type: typed.Type, span: source.Span) Error!typed.Type {
+        if (!input_type.isAggregate()) return self.sink.fail("E_PRELUDE_TYPE", span, "sorted key requires a list input");
         const input_schema = self.catalog.records[input_type.recordIndex()];
         if (!input_schema.isCollection() or input_schema.collection.kind != .list)
-            return self.sink.fail("E_PRELUDE_TYPE", input.span, "sorted key requires a list input");
-        const element = input_schema.shape.buffer.?;
-        const parameters = try self.allocator.dupe(typed.Type, &.{element});
-        // The key slot is exactly the type `def(T) -> int effects()` spells, whose
-        // return-origin bound is unknown. A narrower bound would mint a second
-        // schema with the same name as every written or stored callback of that
-        // type, and an identity key's parameter origin would fall outside it.
-        const callback = try callables.intern(self.allocator, &self.catalog, .{ .parameters = parameters, .return_type = .i64, .effects = 0, .mutates = &.{}, .return_origin = .unknown }, call.argument_names[1].?, self.sink);
-        try self.hint(call.arguments[1], callback);
+            return self.sink.fail("E_PRELUDE_TYPE", span, "sorted key requires a list input");
+        return input_schema.shape.buffer.?;
+    }
+    /// Check the already checked operands of one keyword sort of a list of
+    /// `element` in `owner`: the key maps one element to an ordered key, a
+    /// sort without a key needs an ordered element, and `reverse` is a `bool`.
+    fn checkedSort(self: *Checker, span: source.Span, element: typed.Type, keywords: SortKeywords, owner: typed.LocalId) Error!prelude_builtins.KeyedSort {
+        const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
+        var sort: prelude_builtins.KeyedSort = .{ .span = span, .owner = owner, .reverse_first = keywords.reverse_first };
+        if (keywords.key) |id| {
+            sort.key = self.resolved[@backingInt(id)].?;
+            _ = try builtins.sortKey(self.syntax.nodes.items[@backingInt(id)].span, element, sort.key.?);
+        } else if (keywords.reverse != null) try self.requireSortable(element, span);
+        if (keywords.reverse) |id| {
+            sort.reverse = self.resolved[@backingInt(id)].?;
+            if (self.nodes.items[@backingInt(sort.reverse.?)].ty != .bool)
+                return self.sink.fail("E_TYPE", self.syntax.nodes.items[@backingInt(id)].span, "reverse= takes a bool: reverse=True sorts in descending order");
+        }
+        return sort;
+    }
+    /// `sorted(values, key=..., reverse=...)`: check the named operands and
+    /// build the sorted copy.
+    fn checkSortedCall(self: *Checker, span: source.Span, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!typed.Node {
+        const keywords = try self.sortedKeywords(call);
+        const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
+        const input = self.resolved[@backingInt(call.arguments[0])].?;
+        if (keywords.key == null and keywords.reverse == null) return builtins.sorted(.{ .input = input, .sort = .{ .span = span, .owner = undefined } });
+        const element = try self.sortedElement(self.nodes.items[@backingInt(input)].ty, self.syntax.nodes.items[@backingInt(call.arguments[0])].span);
+        return builtins.sorted(.{ .input = input, .sort = try self.checkedSort(span, element, keywords, undefined) });
+    }
+    /// The list local of a `values.sort(...)` call that passes arguments, the
+    /// Python keyword form; null for any other call. A bare `values.sort()`
+    /// stays the plain buffer operation.
+    fn listSortOwner(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) ?typed.LocalId {
+        const owner = call.owner orelse return null;
+        if (call.arguments.len == 0 or !std.mem.eql(u8, self.src.text(call.name), "sort")) return null;
+        const slot = self.active.get(self.src.text(owner)) orelse return null;
+        return if (self.listLocal(slot)) slot else null;
+    }
+    fn listLocal(self: *Checker, slot: typed.LocalId) bool {
+        const local_type = self.locals.items[@backingInt(slot)].ty;
+        if (!local_type.isAggregate()) return false;
+        const schema = self.catalog.records[local_type.recordIndex()];
+        return schema.isCollection() and schema.collection.kind == .list;
+    }
+    fn listSortKeywords(self: *Checker, name: source.Span, arguments: []const ast.NodeId, names: []const ?source.Span) Error!SortKeywords {
+        return self.sortKeywords(.{ .name = name, .arguments = arguments, .names = names, .positional = 0, .signature = list_sort_signature });
+    }
+    /// Queue the operands of one `values.sort(key=..., reverse=...)` call in
+    /// source order, hinted by the list's element type.
+    fn queueListSort(self: *Checker, work: *std.ArrayList(Work), call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
+        const slot = self.listSortOwner(call) orelse return false;
+        const keywords = try self.listSortKeywords(call.name, call.arguments, call.argument_names);
+        try self.hintSortKeywords(keywords, self.catalog.records[self.locals.items[@backingInt(slot)].ty.recordIndex()].shape.buffer.?);
+        var index = call.arguments.len;
+        while (index > 0) {
+            index -= 1;
+            try work.append(self.allocator, .{ .id = call.arguments[index] });
+        }
+        return true;
+    }
+    /// `values.sort(key=..., reverse=...)` on a list local: sort it in place.
+    fn checkListSort(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), slot: typed.LocalId, out: *typed.Node) Error!void {
+        const keywords = try self.listSortKeywords(call.name, call.arguments, call.argument_names);
+        const local = &self.locals.items[@backingInt(slot)];
+        local.usage.reads += 1;
+        local.usage.writes += 1;
+        const element = self.catalog.records[local.ty.recordIndex()].shape.buffer.?;
+        const sort = try self.checkedSort(node.span, element, keywords, slot);
+        const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+        out.* = try b.block(try builtins.keyedSort(sort), try b.node(.unit, .unit));
+    }
+    /// `receiver.sort(key=..., reverse=...)` on any list expression: the
+    /// receiver is checked already; hint and check the named operands in
+    /// source order, then sort the list the receiver evaluated to in place.
+    fn checkMethodListSort(self: *Checker, node: ast.Node, base: typed.NodeId, temporaries: []const typed.Type) Error!typed.Node {
+        const call = node.data.method_call;
+        const keywords = try self.listSortKeywords(call.name, call.arguments, call.argument_names);
+        const list = self.nodes.items[@backingInt(base)].ty;
+        const element = try self.listElement(list, node.span);
+        try self.hintSortKeywords(keywords, element);
+        for (call.arguments) |argument| _ = try self.expressionWithTemporaries(argument, temporaries);
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+        const owner = try b.local(list);
+        const sort = try self.checkedSort(node.span, element, keywords, owner);
+        const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
+        var statements: std.ArrayList(typed.StatementId) = .empty;
+        try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = owner, .value = base } }));
+        try statements.appendSlice(self.allocator, try builtins.keyedSort(sort));
+        return b.block(statements.items, try b.node(.unit, .unit));
     }
     /// Whole-path file helpers are reserved under the same shadowing rule as `print`.
     fn fileAccessBuiltin(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?file_operations.Access {
@@ -1740,6 +1925,9 @@ const Checker = struct {
                     node.data = .{ .file_operation = .{ .kind = kind, .owner = owner, .argument = if (call.arguments.len == 0) null else call.arguments[0] } };
                     return node;
                 }
+                // `values.sort(key=..., reverse=...)` stays a call: its operands
+                // are named, and it lowers to a keyed sort, not one operation.
+                if (self.listSortOwner(call) != null) return node;
                 if (value_type.isAggregate() and self.catalog.records[value_type.recordIndex()].isCollection()) {
                     try call_arguments.positional(call, self.sink);
                     const name = self.src.text(call.name);
@@ -2366,6 +2554,10 @@ const Checker = struct {
         const owner_type = self.nodes.items[@backingInt(base)].ty;
         if (prelude.optionShape(owner_type, self.catalog.records) != null)
             return self.checkOptionMethod(node, base, call.name, call.arguments, temporaries);
+        // Only a list's `sort` takes named operands, and passing any operand
+        // to it is the Python keyword form.
+        if (std.mem.eql(u8, name, "sort") and call.arguments.len != 0) return self.checkMethodListSort(node, base, temporaries);
+        if (call.argument_names.len != 0) return self.sink.fail(call_argument_code, call.name, "collection methods take their arguments by position; only a list's sort takes key= and reverse=");
         const kind = buffer_operations.methodFor(name, call.arguments.len) orelse {
             const managed = owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].isCollection();
             const family: ?ManagedKind = if (managed) self.catalog.records[owner_type.recordIndex()].collection.kind else null;
@@ -2671,6 +2863,7 @@ const Checker = struct {
         }
     }
     fn queueBuiltinCall(self: *Checker, work: *std.ArrayList(Work), call_id: ast.NodeId, call: @FieldType(@FieldType(ast.Node, "data"), "call"), node: ast.Node) Error!bool {
+        if (try self.queueListSort(work, call)) return true;
         if (try self.queuePreludeCall(work, call_id, call)) return true;
         if (try self.floatIntrinsic(call) != null) {
             try call_arguments.positional(call, self.sink);
@@ -3719,6 +3912,7 @@ const Checker = struct {
         // builtin and constructor dispatch for such a call routes it through the
         // ordinary resolution below, where the marker is checked positionally
         // instead of silently accepted and dropped.
+        if (self.listSortOwner(input)) |slot| return self.checkListSort(node, input, slot, out);
         const markers_present = self.callCarriesMutMarker(input);
         if (!markers_present) {
             if (try self.checkCapabilityNarrowing(node, input, out)) return;
@@ -4595,8 +4789,14 @@ const Checker = struct {
             if (task.sorted_key) {
                 const parent = self.syntax.nodes.items[@backingInt(task.id)];
                 std.debug.assert(parent.data == .call);
-                try self.hintSortedArguments(parent.data.call);
-                try work.append(self.allocator, .{ .id = parent.data.call.arguments[1] });
+                const call = parent.data.call;
+                try self.hintSortedArguments(call, try self.sortedKeywords(call));
+                // The named operands are checked in source order, after the list.
+                var index = call.arguments.len;
+                while (index > 1) {
+                    index -= 1;
+                    try work.append(self.allocator, .{ .id = call.arguments[index] });
+                }
                 continue;
             }
             if (task.verify) |state| {

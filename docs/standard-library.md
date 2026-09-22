@@ -253,14 +253,14 @@ sort over an arbitrary element type needs an integer key function, because the
 language has no ordering contract: `copy`, `equality`, `integer`, `codec` and
 `storable` are the only generic requirements.
 
-`sort_by_key` computes each element's key once and lets the integer engine order
-the positions: it packs every key, less the smallest, above the element's
-position in one integer, so sorting those integers sorts by key with ties in
-input order, and keys too far apart to share a word with a position take two
-such sorts of 32 key bits each. It computes the keys in the order its earlier
-recursive merge first asked for them, so a key function that traps still raises
-the same trap. Keyed `sorted` retains its bottom-up callback order and reuses one
-scratch list across every pass. Sorting NaNs last is a deliberate
+`sort_by_key` is a thin forwarder to Python's keyed sort: it returns
+`sorted(values, key=key)`, which computes each element's key exactly once, in
+list order, and gathers the elements into the new list with the native keyed sort
+(see [keyed sorting](python-syntax.md#keyed-sorting) for `key=`, `reverse=` and
+the `float`, `str` and tuple keys the method and `sorted` accept). A key
+function that traps on several elements reports the first of them in list order;
+before the keyed sort existed, `sort_by_key` asked for keys in the order a
+recursive merge first needed them. Sorting NaNs last is a deliberate
 regularization: the earlier comparator treated a NaN as tied with every value,
 so its position could depend on merge boundaries rather than one ordering
 contract.

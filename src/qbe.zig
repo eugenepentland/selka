@@ -1888,6 +1888,9 @@ const Emitter = struct {
     /// collect even though `get_index` and `cast_integer` can allocate in
     /// another variant, and this keeps them from pushing roots they never need.
     fn loweredAllocates(text: []const u8) bool {
+        // An indirect call runs whatever guest function the callback value
+        // names, so it can always allocate and collect.
+        if (std.mem.indexOf(u8, text, "call %") != null) return true;
         var rest = text;
         while (std.mem.indexOf(u8, rest, "call $")) |at| {
             rest = rest[at + "call $".len ..];

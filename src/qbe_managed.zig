@@ -226,6 +226,16 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try self.require(output, allocation_failure);
             try self.print(store_unit, .{base});
         },
+        .sort_keyed => {
+            const source = try self.load("s", base);
+            const keys = try self.load("s", base + 1);
+            const reverse = try self.load("s", base + 2);
+            const key_list = stack[base + 1];
+            const key = try keyShape(E, self, self.program.records[key_list.recordIndex()].shape.buffer.?);
+            try self.print(" %v{d} =w call $myl_native_list_sort_keyed(l %v{d}, l %v{d}, l %v{d}, l {d}, l {d}, l %v{d})\n", .{ output, list, source, keys, key.shape, key.offsets, reverse });
+            try self.require(output, allocation_failure);
+            try self.print(store_unit, .{base});
+        },
         .copy => {
             const result = self.temp();
             try self.print(" %v{d} =l call $myl_native_list_copy(l %heap, l %v{d})\n", .{ result, list });
@@ -240,6 +250,39 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
     }
 }
 
+/// A sort key's field description for `myl_native_list_sort_keyed`: four bits
+/// per field above a four-bit count (kind in the low two bits — signed,
+/// unsigned, binary64, text — and width 8, 4, 2 or 1 in the high two), and one
+/// offset byte per field. A scalar key is one field at offset zero; a tuple key
+/// is its fields in order.
+const KeyShape = struct { shape: u64, offsets: u64 };
+fn keyShape(comptime E: type, self: *E, key: typed.Type) Error!KeyShape {
+    const layout = try self.layout(key);
+    const tuple = key.isAggregate() and self.program.records[key.recordIndex()].isRecord();
+    if (!tuple) return .{ .shape = 1 | @as(u64, try keyField(E, self, key)) << 4, .offsets = 0 };
+    if (layout.fields.len == 0 or layout.fields.len > 8) return error.InternalError;
+    var out: KeyShape = .{ .shape = layout.fields.len, .offsets = 0 };
+    for (layout.fields, 0..) |field, index| {
+        if (field.offset > 255) return error.InternalError;
+        out.shape |= @as(u64, try keyField(E, self, field.ty)) << @intCast(4 + 4 * index);
+        out.offsets |= field.offset << @intCast(8 * index);
+    }
+    return out;
+}
+/// The four-bit kind and width code of one scalar key field.
+fn keyField(comptime E: type, self: *E, ty: typed.Type) Error!u4 {
+    if (numeric_surface.isFloat(ty, self.program.records)) return 2;
+    if (ty.isAggregate() and self.program.records[ty.recordIndex()].collection.kind == .string) return 3;
+    const signed = if (ty.integer()) |integer| integer.signed else if (ty == .bool) false else return error.InternalError;
+    const width: u4 = switch ((try self.layout(ty)).size) {
+        8 => 0,
+        4 => 1,
+        2 => 2,
+        1 => 3,
+        else => return error.InternalError,
+    };
+    return width << 2 | @as(u4, if (signed) 0 else 1);
+}
 /// Copy a stepped slice through the shared native list routine, which text shares.
 fn steppedSlice(comptime E: type, self: *E, base: usize, input: usize) Error!void {
     return sliceStep(E, self, base, input, "myl_native_list_slice_step");
