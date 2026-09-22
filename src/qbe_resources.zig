@@ -56,14 +56,17 @@ pub fn Lower(comptime E: type) type {
                     const output = try self.aggregatePointer();
                     const payload = try self.address(output, (try self.layout(ty)).payload_offset);
                     const label = self.temp();
-                    try self.print(" jnz %v{d}, @completeerr{d}, @completeok{d}\n@completeerr{d}\n storew {d}, %v{d}\n", .{ status, label, label, label, shape.result.error_tag, output });
+                    try self.print(" jnz %v{d}, @completeerr{d}, @completeok{d}\n@completeerr{d}\n", .{ status, label, label, label });
+                    try self.writeTag(ty, shape.result.error_tag, output);
                     const owner_field = try self.field(shape.result.error_type, shape.resource_field);
                     const code_field = try self.field(shape.result.error_type, shape.code_field);
                     try self.writeValue(try self.address(payload, owner_field.offset), resource, shape.resource_type);
                     const code = self.temp();
                     try self.print(" %v{d} =l extsw %v{d}\n", .{ code, status });
                     try self.writeValue(try self.address(payload, code_field.offset), code, .i64);
-                    try self.print(" jmp @completed{d}\n@completeok{d}\n storew {d}, %v{d}\n storeb 1, %v{d}\n jmp @completed{d}\n@completed{d}\n", .{ label, label, shape.result.ok_tag, output, payload, label, label });
+                    try self.print(" jmp @completed{d}\n@completeok{d}\n", .{ label, label });
+                    try self.writeTag(ty, shape.result.ok_tag, output);
+                    try self.print(" storeb 1, %v{d}\n jmp @completed{d}\n@completed{d}\n", .{ payload, label, label });
                     try self.store(h - 1, output);
                 },
                 .resource_io => |io| try ioOperation(self, io, stack),

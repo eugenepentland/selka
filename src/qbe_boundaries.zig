@@ -35,15 +35,12 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             const pointer = try self.aggregatePointer();
             const slot = try self.address(pointer, (try self.layout(get.output)).payload_offset);
             const label = self.temp();
-            try self.print(
-                " jnz %v{d}, @environment_some{d}, @environment_none{d}\n@environment_some{d}\n storew {d}, %v{d}\n",
-                .{ present, label, label, label, option.some, pointer },
-            );
+            try self.print(" jnz %v{d}, @environment_some{d}, @environment_none{d}\n@environment_some{d}\n", .{ present, label, label, label });
+            try self.writeTag(get.output, option.some, pointer);
             try self.writeValue(slot, text, option.element);
-            try self.print(
-                " jmp @environment_done{d}\n@environment_none{d}\n storew {d}, %v{d}\n jmp @environment_done{d}\n@environment_done{d}\n",
-                .{ label, label, option.none, pointer, label, label },
-            );
+            try self.print(" jmp @environment_done{d}\n@environment_none{d}\n", .{ label, label });
+            try self.writeTag(get.output, option.none, pointer);
+            try self.print(" jmp @environment_done{d}\n@environment_done{d}\n", .{ label, label });
             try self.store(h - 2, pointer);
         },
         .environment_only => |only| {

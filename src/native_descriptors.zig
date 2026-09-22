@@ -75,6 +75,7 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
         .record, .domain => "MYL_NATIVE_RECORD",
         .array => "MYL_NATIVE_ARRAY",
         .variant => "MYL_NATIVE_VARIANT",
+        .niche => "MYL_NATIVE_NICHE",
         else => "MYL_NATIVE_PLAIN",
     };
     const fields = if (layout.fields.len == 0) "NULL" else try std.fmt.allocPrint(a, "{s}_fields", .{name});

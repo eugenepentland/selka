@@ -9,6 +9,8 @@
 static void reach(const myl_native_heap *heap, const myl_native_type *type,
                   const void *bytes, unsigned *deepest) {
     const unsigned char *raw = bytes;
+    /* A niche optional is its reference word, and null reaches no region. */
+    if (type->kind == MYL_NATIVE_NICHE) type = type->fields[0].type;
     if (type->kind == MYL_NATIVE_POINTER) {
         void *pointer;
         memcpy(&pointer, raw, sizeof pointer);
@@ -116,6 +118,8 @@ static void *ensure(Copier *copier, const myl_native_type *type, void *source) {
 }
 static void patch(Copier *copier, const myl_native_type *type, void *bytes) {
     unsigned char *raw = bytes;
+    /* A niche optional is its reference word; `ensure` keeps null as null. */
+    if (type->kind == MYL_NATIVE_NICHE) type = type->fields[0].type;
     if (type->kind == MYL_NATIVE_POINTER) {
         void *pointer;
         memcpy(&pointer, raw, sizeof pointer);

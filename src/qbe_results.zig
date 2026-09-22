@@ -19,9 +19,12 @@ pub fn Lower(comptime E: type) type {
             const pointer = try self.aggregatePointer();
             const slot = try self.address(pointer, (try self.layout(args.ty)).payload_offset);
             const label = self.temp();
-            try self.print(" jnz %v{d}, @some{d}, @none{d}\n@some{d}\n storew {d}, %v{d}\n", .{ args.status, label, label, label, shape.some, pointer });
+            try self.print(" jnz %v{d}, @some{d}, @none{d}\n@some{d}\n", .{ args.status, label, label, label });
+            try self.writeTag(args.ty, shape.some, pointer);
             try self.writeValue(slot, args.value, shape.element);
-            try self.print(" jmp @parsed{d}\n@none{d}\n storew {d}, %v{d}\n jmp @parsed{d}\n@parsed{d}\n", .{ label, label, shape.none, pointer, label, label });
+            try self.print(" jmp @parsed{d}\n@none{d}\n", .{ label, label });
+            try self.writeTag(args.ty, shape.none, pointer);
+            try self.print(" jmp @parsed{d}\n@parsed{d}\n", .{ label, label });
             try self.store(args.slot, pointer);
         }
         /// Store a checked result whose success and error payloads are both managed
@@ -31,9 +34,11 @@ pub fn Lower(comptime E: type) type {
             const pointer = try self.aggregatePointer();
             const slot = try self.address(pointer, (try self.layout(args.ty)).payload_offset);
             const label = self.temp();
-            try self.print(" jnz %v{d}, @payloaderr{d}, @payloadok{d}\n@payloaderr{d}\n storew {d}, %v{d}\n", .{ args.status, label, label, label, shape.error_tag, pointer });
+            try self.print(" jnz %v{d}, @payloaderr{d}, @payloadok{d}\n@payloaderr{d}\n", .{ args.status, label, label, label });
+            try self.writeTag(args.ty, shape.error_tag, pointer);
             try self.writeValue(slot, args.value, shape.error_type);
-            try self.print(" jmp @payloaddone{d}\n@payloadok{d}\n storew {d}, %v{d}\n", .{ label, label, shape.ok_tag, pointer });
+            try self.print(" jmp @payloaddone{d}\n@payloadok{d}\n", .{ label, label });
+            try self.writeTag(args.ty, shape.ok_tag, pointer);
             try self.writeValue(slot, args.value, shape.ok_type);
             try self.print(" jmp @payloaddone{d}\n@payloaddone{d}\n", .{ label, label });
             try self.store(args.slot, pointer);
@@ -44,11 +49,13 @@ pub fn Lower(comptime E: type) type {
             const pointer = try self.aggregatePointer();
             const slot = try self.address(pointer, (try self.layout(args.ty)).payload_offset);
             const label = self.temp();
-            try self.print(" jnz %v{d}, @providererror{d}, @providerok{d}\n@providererror{d}\n storew {d}, %v{d}\n", .{ args.status, label, label, label, shape.error_tag, pointer });
+            try self.print(" jnz %v{d}, @providererror{d}, @providerok{d}\n@providererror{d}\n", .{ args.status, label, label, label });
+            try self.writeTag(args.ty, shape.error_tag, pointer);
             const status = self.temp();
             try self.print(" %v{d} =l extsw %v{d}\n", .{ status, args.status });
             try self.writeValue(slot, status, shape.error_type);
-            try self.print(" jmp @providerresult{d}\n@providerok{d}\n storew {d}, %v{d}\n", .{ label, label, shape.ok_tag, pointer });
+            try self.print(" jmp @providerresult{d}\n@providerok{d}\n", .{ label, label });
+            try self.writeTag(args.ty, shape.ok_tag, pointer);
             try self.writeValue(slot, args.value, shape.ok_type);
             try self.print(" jmp @providerresult{d}\n@providerresult{d}\n", .{ label, label });
             try self.store(args.slot, pointer);

@@ -30,8 +30,13 @@ struct myl_native_type {
     unsigned trace_mode;
 };
 enum { MYL_NATIVE_TRACE_LEGACY, MYL_NATIVE_TRACE_NONE, MYL_NATIVE_TRACE_FIELDS };
+/* MYL_NATIVE_NICHE is an `Option` of a managed reference stored as the one
+ * reference word: null is `None`. Its only field is the reference at offset 0,
+ * tagged with the `Some` case, and every walker reads it through that field,
+ * whose pointer handling already treats null as no reference. */
 enum { MYL_NATIVE_PLAIN, MYL_NATIVE_POINTER, MYL_NATIVE_RECORD,
-       MYL_NATIVE_ARRAY, MYL_NATIVE_VARIANT, MYL_NATIVE_OWNED_BUFFER, MYL_NATIVE_OWNED_POOL, MYL_NATIVE_FLOAT, MYL_NATIVE_RESOURCE };
+       MYL_NATIVE_ARRAY, MYL_NATIVE_VARIANT, MYL_NATIVE_OWNED_BUFFER, MYL_NATIVE_OWNED_POOL, MYL_NATIVE_FLOAT, MYL_NATIVE_RESOURCE,
+       MYL_NATIVE_NICHE };
 typedef struct myl_native_root {
     struct myl_native_root *previous;
     void *address;

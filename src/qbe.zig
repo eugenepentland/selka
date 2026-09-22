@@ -2328,7 +2328,7 @@ const Emitter = struct {
         if (ty.isAggregate() and self.program.records[ty.recordIndex()].managed) return true;
         if (scalar(ty, self.program.records)) return true;
         const value = try self.layout(ty);
-        return value.kind == .record or value.kind == .array or value.kind == .variant or value.kind == .domain;
+        return value.kind == .record or value.kind == .array or value.kind == .variant or value.kind == .niche or value.kind == .domain;
     }
     /// Shared ABI lowering for guest and trusted host wrappers.
     pub fn abiType(self: *Emitter, ty: typed.Type) GenerateError![]const u8 {
@@ -2558,9 +2558,29 @@ const Emitter = struct {
     pub fn markObject(self: *Emitter, value: usize) GenerateError!void {
         try self.print(" # myl-obj %v{d}\n", .{value});
     }
-    /// Store one variant case tag at the start of a record pointer.
-    pub fn writeTag(self: *Emitter, tag: usize, pointer: usize) GenerateError!void {
-        try self.print(" storew {d}, %v{d}\n", .{ tag, pointer });
+    /// Select case `tag` of the variant of type `ty` stored at `pointer`. A
+    /// tagged variant stores the tag word at its start. A niche optional
+    /// (QBE-NICHE-1) has no tag word: `None` is the null reference, stored
+    /// here, and `Some` is selected by the payload write that follows.
+    pub fn writeTag(self: *Emitter, ty: typed.Type, tag: usize, pointer: usize) GenerateError!void {
+        const value = try self.layout(ty);
+        if (value.kind != .niche) return self.print(" storew {d}, %v{d}\n", .{ tag, pointer });
+        if (tag != value.fields[0].tag.?) try self.print(" storel 0, %v{d}\n", .{pointer});
+    }
+    /// Load the active case tag of the variant of type `ty` stored at
+    /// `pointer` into a fresh `l` temporary. A niche optional's tag is whether
+    /// its reference word is null (QBE-NICHE-1).
+    pub fn readTag(self: *Emitter, ty: typed.Type, pointer: usize) GenerateError!usize {
+        const value = try self.layout(ty);
+        const tag = self.temp();
+        if (value.kind != .niche) {
+            try self.print(" %v{d} =l loaduw %v{d}\n", .{ tag, pointer });
+            return tag;
+        }
+        const word = self.temp();
+        const present: []const u8 = if (value.fields[0].tag.? == 1) "cnel" else "ceql";
+        try self.print(" %v{d} =l loadl %v{d}\n %v{d} =l {s} %v{d}, 0\n", .{ word, pointer, tag, present, word });
+        return tag;
     }
     /// Shared lowering primitive for target operation emitters.
     pub fn readValue(self: *Emitter, pointer: usize, ty: typed.Type) GenerateError!usize {
@@ -2703,12 +2723,12 @@ const Emitter = struct {
                 const input_offset = (try self.layout(propagate.input)).payload_offset;
                 if (typed.resultShape(propagate.input, self.program.records)) |input| {
                     const output = typed.resultShape(propagate.output, self.program.records).?;
-                    const tag = self.temp();
+                    const tag = try self.readTag(propagate.input, source);
                     const success = self.temp();
-                    try self.print(" %v{d} =l loaduw %v{d}\n %v{d} =l ceql %v{d}, {d}\n", .{ tag, source, success, tag, input.ok_tag });
+                    try self.print(" %v{d} =l ceql %v{d}, {d}\n", .{ success, tag, input.ok_tag });
                     try self.print(" jnz %v{d}, @tryok{d}, @tryerror{d}\n@tryerror{d}\n", .{ success, tag, tag, tag });
                     const pointer = try self.aggregatePointer();
-                    try self.writeTag(output.error_tag, pointer);
+                    try self.writeTag(propagate.output, output.error_tag, pointer);
                     const slot = try self.address(pointer, (try self.layout(propagate.output)).payload_offset);
                     const payload = try self.readValue(try self.address(source, input_offset), input.error_type);
                     if (input.error_type == output.error_type) {
@@ -2717,7 +2737,7 @@ const Emitter = struct {
                         // The error type is a case payload of the enclosing error union, so
                         // wrap the whole incoming error value in that case.
                         const error_tag = typed.wrappingCase(self.program.records, output.error_type, input.error_type) orelse return error.InternalError;
-                        try self.writeTag(error_tag, slot);
+                        try self.writeTag(output.error_type, error_tag, slot);
                         try self.writeValue(try self.address(slot, (try self.layout(output.error_type)).payload_offset), payload, input.error_type);
                     }
                     for (stack[0 .. h - 1], 0..) |ty, slot_index| try self.dropOperand(slot_index, ty);
@@ -2726,12 +2746,12 @@ const Emitter = struct {
                     try self.store(h - 1, try self.readValue(try self.address(source, input_offset), input.ok_type));
                 } else if (prelude.optionShape(propagate.input, self.program.records)) |input| {
                     const output = prelude.optionShape(propagate.output, self.program.records).?;
-                    const tag = self.temp();
+                    const tag = try self.readTag(propagate.input, source);
                     const success = self.temp();
-                    try self.print(" %v{d} =l loaduw %v{d}\n %v{d} =l ceql %v{d}, {d}\n", .{ tag, source, success, tag, input.some });
+                    try self.print(" %v{d} =l ceql %v{d}, {d}\n", .{ success, tag, input.some });
                     try self.print(" jnz %v{d}, @tryok{d}, @tryerror{d}\n@tryerror{d}\n", .{ success, tag, tag, tag });
                     const pointer = try self.aggregatePointer();
-                    try self.writeTag(output.none, pointer);
+                    try self.writeTag(propagate.output, output.none, pointer);
                     for (stack[0 .. h - 1], 0..) |ty, slot| try self.dropOperand(slot, ty);
                     try self.store(0, pointer);
                     try self.print(" jmp @i{d}\n@tryok{d}\n", .{ propagate.error_target, tag });

@@ -208,7 +208,10 @@ fn variant(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalo
         writer.print(" {{{d}, {s}, {s}, {d}}},\n", .{ layout.payload_offset, render, try quoted(a, label), tag }) catch return error.OutOfMemory;
     }
     writer.writeAll("};\n") catch return error.OutOfMemory;
-    const call = try std.fmt.allocPrint(a, "myl_print_variant(o, v, d, {s}_cases, {d});", .{ item.name, variants.cases.len });
+    // QBE-NICHE-1: a niche optional has no tag word; its case is whether the
+    // reference word is null, so it prints through its own entry point.
+    const entry = if (layout.kind == .niche) "myl_print_niche" else "myl_print_variant";
+    const call = try std.fmt.allocPrint(a, "{s}(o, v, d, {s}_cases, {d});", .{ entry, item.name, variants.cases.len });
     return body(writer, item.name, call);
 }
 

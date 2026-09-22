@@ -247,7 +247,9 @@ pub fn describeWithDomains(allocator: std.mem.Allocator, catalog: *native.Catalo
             if (record.shape.variants) |variants| {
                 const fields = try allocator.alloc(Field, variants.cases.len);
                 for (variants.cases, fields) |case, *field| field.* = .{ .type = if (case.payload) |payload| typed.typeName(payload, catalog.records) else null, .offset = layout.payload_offset };
-                item.kind = "variant";
+                // QBE-NICHE-1: a niche optional stores no tag word, so the
+                // adapter reads its case from whether the reference is null.
+                item.kind = if (layout.kind == .niche) "niche" else "variant";
                 item.aggregate.fields = fields;
             } else {
                 const fields = try allocator.alloc(Field, layout.fields.len);

@@ -35,4 +35,7 @@ void myl_print_domain(MylPrint *out, const void *value, unsigned depth, const ch
 /* Case names already carry their printed spelling, bare for results, options
    and `None`, and `Owner.case` for an enum or ordinary union. */
 void myl_print_variant(MylPrint *out, const void *value, unsigned depth, const MylPrintField *cases, size_t count);
+/* An `Option` of a managed reference stored as that reference alone: the null
+   word prints the payload-free case, any other word the case with a payload. */
+void myl_print_niche(MylPrint *out, const void *value, unsigned depth, const MylPrintField *cases, size_t count);
 #endif

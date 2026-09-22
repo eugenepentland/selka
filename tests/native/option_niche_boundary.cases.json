@@ -1,0 +1,46 @@
+{
+  "option_niche_boundary::test_list_of_optional_text": {
+    "arguments": {
+      "words": [
+        {"case": "some", "value": "a"},
+        {"case": "none"},
+        {"case": "some", "value": "b"}
+      ]
+    },
+    "expected": [
+      {"case": "none"},
+      {"case": "some", "value": "-"},
+      {"case": "none"}
+    ]
+  },
+  "option_niche_boundary::test_optional_list_argument": {
+    "arguments": {
+      "values": {"case": "none"}
+    },
+    "expected": "-1"
+  },
+  "option_niche_boundary::test_optional_list_result": {
+    "arguments": {
+      "count": "3"
+    },
+    "expected": {"case": "some", "value": ["0", "1", "2"]}
+  },
+  "option_niche_boundary::test_optional_optional_text": {
+    "arguments": {
+      "value": {"case": "some", "value": {"case": "none"}}
+    },
+    "expected": "0"
+  },
+  "option_niche_boundary::test_optional_text_argument": {
+    "arguments": {
+      "word": {"case": "some", "value": "héllo"}
+    },
+    "expected": "5"
+  },
+  "option_niche_boundary::test_optional_text_result": {
+    "arguments": {
+      "flag": true
+    },
+    "expected": {"case": "some", "value": "niche"}
+  }
+}
