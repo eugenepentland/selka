@@ -529,13 +529,13 @@ test "mutation summaries are recomputed rather than copied with a reused body" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const writing =
-        \\def touch(values: list[int]) -> None:
+        \\def touch(values: mut list[int]) -> None:
         \\    values[0] = 1
         \\
         \\
         \\def main() -> i64:
         \\    values = [1]
-        \\    touch(values)
+        \\    touch(mut values)
         \\    return values[0]
     ;
     try compare(t.allocator, &cache, writing, 1);

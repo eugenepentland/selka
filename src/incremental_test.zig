@@ -259,12 +259,13 @@ test "effect-bound edits change the function interface hash" {
         \\module main
         \\
         \\
-        \\def touch() -> i64 effects(clock):
+        \\def touch(clock: Clock) -> i64 effects(clock):
+        \\    _ = clock
         \\    return 0
         \\
         \\
-        \\def main() -> i64:
-        \\    return touch()
+        \\def main(clock: Clock) -> i64:
+        \\    return touch(clock)
         },
     };
     const first = try describe(&entries, t.allocator);
@@ -278,12 +279,13 @@ test "effect-bound edits change the function interface hash" {
         \\module main
         \\
         \\
-        \\def touch() -> i64 effects(random):
+        \\def touch(entropy: Entropy) -> i64 effects(random):
+        \\    _ = entropy
         \\    return 0
         \\
         \\
-        \\def main() -> i64:
-        \\    return touch()
+        \\def main(entropy: Entropy) -> i64:
+        \\    return touch(entropy)
     ;
     const second = try describe(&entries, t.allocator);
     defer incremental.deinit(second, t.allocator);
