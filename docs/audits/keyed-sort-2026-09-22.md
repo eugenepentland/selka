@@ -6,7 +6,40 @@ Lane `lang/keyed-sort` of the performance-parity plan
 
 ## Result
 
-RESULTS_TABLE
+Loaded machine (load average 9–13 during the batch; Zig's `sort_records` took
+148 ms against 108 ms on a quieter run). 11 interleaved rounds pinned to CPU 9,
+paired medians against Zig ReleaseFast with 95% bootstrap intervals
+(`table.py --ms --ci`). Peak RSS is the median of three `/usr/bin/time` runs
+per arm. *before* is the base compiler (`install-textsort`, the integration
+branch this lane starts from); the keyed program has no *before* because the
+surface did not exist.
+
+| program | spelling | before | after | target | peak RSS (× Zig) |
+|---|---|---:|---:|---|---:|
+| `sort_records_keyed` (new) | `records.sort(key=lambda r: r.key)` | — | **0.56** [0.51, 0.62] | ≤ 1.0×, RSS ≤ 2× | 26.7 MB (**1.67**) |
+| `sort_records_sorted` | `sorted(records, key=lambda r: r.key)` | 1.48 [1.44, 1.48] | **0.33** [0.32, 0.33] | ≤ 1.0× | 50.0 → 42.1 MB (2.62) |
+| `sort_records` | `sort.sort_by_key(records, by_key)` | 0.69 [0.67, 0.70] | **0.31** [0.30, 0.32] | not gated | 42.4 → 42.1 MB (2.63) |
+| `sort_builtin` | `values.sort()` | 0.50 [0.47, 0.53] | 0.52 [0.49, 0.53] | unchanged | 26.4 → 26.4 MB |
+
+Zig ReleaseSafe ran at 1.16× and 1.17×, Rust at 0.41× and 0.31× in the same
+batch. Raw rounds:
+[`results/wave3/keyed-sort.json`](../../experiments/perf-parity-plan-20260922/results/wave3/keyed-sort.json).
+
+All three acceptance items hold. The in-place keyed sort holds no second list
+of records: its peak is the records, the key list and the counting table. The
+two copying spellings still hold the input and the result (2× Zig by
+construction, as the lib-sort lane noted), so their RSS is unchanged; they now
+gather the result directly, so their time is below the in-place sort's.
+
+`sort_records`' keys (0..99 999 over a million records) span fewer values than
+there are elements, so all three keyed spellings take the counting-sort path
+below. Keys spread wider than the list take the packed integer sort, which is
+the lib-sort lane's `sort_by_key` engine: about the old `before` column plus
+the permutation. Earlier in this lane, before the counting path and the
+prefetching permutation existed, the in-place arm measured 0.80× on a quiet
+machine and 1.22× under heavy load (a latency-bound cycle walk suffers most
+from a shared, thrashed L3); the prefetch took that loaded figure to 1.02× and
+the counting path to the numbers above.
 
 ## Surface
 
@@ -76,12 +109,19 @@ one internal buffer operation `.sort_keyed(source, keys, reverse)` that calls
 
 - A numeric key becomes one order-preserving 64-bit word (sign flip for signed,
   reflected bits for binary64 with `-0` merged and NaN greatest), complemented
-  for `reverse`. When every word minus the smallest fits above the position
-  bits, `(word - low) << bits | position` is sorted by the lib-sort lane's
-  integer engine **in the key list's own storage**; wider keys take two 32-bit
-  passes. Text and tuple keys sort (key, position) entries with a stable merge.
+  for `reverse`. When the words span fewer values than there are elements, a
+  **stable counting sort** gives each element, in input order, the next slot of
+  its key (one counting pass, a prefix sum, one assigning pass; no
+  comparisons), writing the slots into the key list's own storage. Otherwise,
+  when every word minus the smallest fits above the position bits,
+  `(word - low) << bits | position` is sorted by the lib-sort lane's integer
+  engine, again in the key list's storage; wider keys take two 32-bit passes.
+  Text and tuple keys sort (key, position) entries with a stable merge.
 - In place (`values.sort`): the elements move along the permutation's cycles
-  through one element-sized temporary — no second list of elements.
+  through element-sized temporaries — no second list of elements. A cycle walk
+  is a chain of dependent loads, so the position table is first narrowed to 32
+  bits (half the cache footprint) and a second cursor runs eight steps ahead on
+  the same cycle, prefetching the element each step will move.
 - Copy (`sorted`, and so `sort_by_key`): the elements are gathered in order
   from the original list into a new list allocated at its length, so no copy is
   made only to be permuted.
@@ -121,8 +161,48 @@ root-liveness lane also works near — flag for the merge.
   80-byte elements, a list that is its own key list, refused shapes — clean
   under UBSan and ASan.
 
-GATE_SECTION
+## Gate
+
+Each full-gate step ran on the committed tree and was diffed against the base's
+logs (`textsort-*.log`) with `gate_diff.py`. `/tmp` on this machine is a tmpfs
+whose per-user quota other sessions had exhausted, and the guest-test runner
+hard-codes `/tmp` (`src/native_test_session.zig:88`), so every step ran inside
+the coordinator's `faketmp.sh` (a private `/tmp` on the main disk).
+
+| step | base failures | lane failures | new |
+|---|---:|---:|---|
+| `zig build test` | 55 | 46 | 0 |
+| `zig build test-qbe` | 2 | 2 | 0 |
+| `zig build test-qbe-build` | 0 | 0 | 0 |
+| `zig build fmt-check` | 0 | 0 | 0 |
+| `zig build test-schematic` | 0 | 0 | 0 |
+| `zig build test-byte-io` | 0 | 0 | 0 |
+| `zig build test-docs` | — | 0 | green |
+
+Guardian was green on every build and on the whole-tree pre-commit run. The
+`test-lang` step inside `zig build test` ran 76 programs with none dropped,
+`keyed_sorting` included. The failures that remain are the base's
+half-finished migration (for example `removed names and punctuation report
+their canonical migration` and `M1 mutates clause normalizes duplicate names`,
+both failing on the base).
 
 ## Left
 
-LEFT_SECTION
+- A lambda key's type is read off a few body shapes (element, field path,
+  arithmetic, negation, `len`, tuples of those); any other lambda body is
+  typed `int`, so a `str` key from, say, a method call needs a named function.
+  Full inference would need the lambda body checked before its slot is typed.
+- `key=None` is not accepted, nor nested tuples or tuples with non-scalar
+  fields as keys.
+- Found, not fixed: an unannotated function passed to a generic callback
+  parameter (`sort.sort_by_key(xs, by_rank)` where `by_rank` has no
+  `effects()`) is `E_TYPE` "expected … effects(), found … effects(<all>)" on
+  the base and on this branch. The concrete keyword forms are unaffected.
+- Keys spread wider than the list take the packed merge sort and then the
+  cycle walk, which stays memory-latency-bound; the suite has no wide-key
+  keyed program to measure it against Zig.
+- The QBE-INVOKE-ROOTS-1 fix is in `src/qbe.zig` (`loweredAllocates`), next to
+  the safepoint code the root-liveness lane changes; check it survives that
+  merge.
+- The guest-test runner's hard-coded `/tmp` (above) makes the gate depend on
+  the tmpfs quota.
