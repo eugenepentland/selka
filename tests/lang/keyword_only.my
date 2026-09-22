@@ -1,0 +1,50 @@
+module keyword_only
+
+# A bare `*` makes every parameter after it keyword-only: the operand binds by
+# name, operands may appear in any order, and a defaulted keyword-only parameter
+# may precede a required one. These cases pin the binding rule and the boundary
+# the interface listing publishes.
+
+
+def issue(host: int, *, code: int, file: int, position: int) -> int:
+    return host * 1000 + code * 100 + file * 10 + position
+
+
+def describe(prefix: str, *, loud: bool = False, suffix: str) -> str:
+    if loud:
+        return prefix + suffix + "!"
+    return prefix + suffix
+
+
+def shift(value: int, *, amount: int = 2) -> int:
+    return value + amount
+
+
+# spec: KEYWORD-ONLY-2
+public def test_keyword_only_parameters_bind_by_name_in_any_order() -> bool:
+    return issue(1, code=2, file=3, position=4) == 1234
+
+
+# spec-case: KEYWORD-ONLY-2
+public def test_keyword_only_parameters_accept_a_reordered_call() -> bool:
+    return issue(1, position=4, file=3, code=2) == 1234
+
+
+# spec-case: KEYWORD-ONLY-2
+public def test_keyword_only_parameters_mix_with_positional_operands() -> bool:
+    return issue(host=9, code=8, file=7, position=6) == 9876
+
+
+# spec-case: KEYWORD-ONLY-2
+public def test_a_defaulted_keyword_only_parameter_takes_its_declared_default() -> bool:
+    return shift(40) == 42
+
+
+# spec-case: KEYWORD-ONLY-2
+public def test_a_defaulted_keyword_only_parameter_may_precede_a_required_one() -> bool:
+    return describe("a", suffix="b") == "ab"
+
+
+# spec-case: KEYWORD-ONLY-2
+public def test_a_named_keyword_only_parameter_overrides_its_declared_default() -> bool:
+    return describe("a", loud=True, suffix="b") == "ab!"

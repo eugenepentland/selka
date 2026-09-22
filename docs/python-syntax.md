@@ -330,6 +330,43 @@ Write `heartbeat,` and `count: int,`. The parser still stops at the first syntax
 error; these four messages are targeted at the shapes above rather than general
 error recovery.
 
+## Conditional expressions
+
+`value_if_true if condition else value_if_false` is one expression with Python's
+precedence, read to the right when it nests. The condition must be `bool`, and
+both arms have one type — the expected type where the context supplies one, for
+instance a binding annotation, a return type or a call parameter, and otherwise
+the then arm's own type, with an integer literal arm adopting the expected width.
+Nothing widens between the arms, so arms that disagree are rejected with `E_TYPE`
+(`conditional arms must agree: ...`). Only the chosen arm is evaluated, so a
+guard on the left genuinely prevents a trap on the right, while both arms are
+still checked: each contributes its effects, and a name no path reaching an arm
+assigns is still `E_UNBOUND`.
+
+```mylang
+# doc: expect 42
+def maybe(value: int) -> Option[int]:
+    return Some(value) if value > 0 else None
+
+
+def pick(side: int) -> int:
+    return 532 if side == 1 else 42
+
+
+def main() -> int:
+    match maybe(pick(2)):
+        case Some(value):
+            return value
+        case None:
+            return 0
+```
+
+`Some(value) if value > 0 else None` takes the `Option[int]` its return type
+demands, so both arms are constructed contextually. The expression is accepted
+in every expression position — an assignment value, a `return` value, a call or
+keyword argument, a record-constructor field, a list element and an f-string
+hole — and `a if p else b if q else c` nests in the else arm.
+
 ## Statement forms Python spells differently
 
 The same targeted messaging covers the everyday statement shapes a Python first

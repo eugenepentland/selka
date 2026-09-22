@@ -836,6 +836,16 @@
       "kind": "tooling",
       "summary": "`mylang invoke <entry.my> --function 'module::name' --describe` reports the selected export's checked argument and result contract, wire representation, effects, required capabilities and invocation eligibility without running it, and `--input=FILE` executes exactly one call in a bounded native child and writes one `native-invocation-v1` JSON object on stdout, where a returned `Result.Err` is a completed call and traps, timeouts and malformed requests are distinguished from it.",
       "doc": "docs/tooling/invocation.md#mylang-invoke"
+    },
+    "keyword-only-parameters": {
+      "kind": "language",
+      "summary": "A bare `*` in a parameter list makes every following parameter keyword-only, so it binds by name in any order, and a call that passes one positionally is `E_KEYWORD_ONLY` with the whole call rewritten using the parameter names.",
+      "doc": "docs/functions.md#keyword-only-parameters"
+    },
+    "conditional-expression": {
+      "kind": "language",
+      "summary": "`value_if_true if condition else value_if_false` is one expression whose condition is bool, whose arms take the expected type when the context supplies one, and of which only the chosen arm is evaluated.",
+      "doc": "docs/python-syntax.md#conditional-expressions"
     }
   },
   "unsupported": [

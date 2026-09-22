@@ -378,3 +378,87 @@ test "a dict get without its fallback names the operand the accepted call carrie
         \\    return v
     , "E_ARITY", "a dictionary `get` always takes its fallback: `d.get(key, default)`");
 }
+
+// spec: CONDITIONAL-EXPR-1
+test "conditional arms must agree on one type without widening between them" {
+    try expectMessage(
+        \\def main() -> int:
+        \\    x = 1 if True else "a"
+        \\    return 0
+    , "E_TYPE", "conditional arms must agree: `int` here, `str` in the else arm");
+}
+
+// spec: CONDITIONAL-EXPR-2
+test "a conditional condition is bool" {
+    try expectMessage(
+        \\def main() -> int:
+        \\    x = 1 if 2 else 3
+        \\    return 0
+    , "E_TYPE", "expected bool, found int");
+}
+
+// spec: CONDITIONAL-EXPR-3
+test "only the chosen conditional arm runs and a standalone conditional needs a discard" {
+    try run(
+        \\def fails() -> int:
+        \\    zero = 0
+        \\    return 1 // zero
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 42 if True else fails()
+    , 42);
+    try expectMessage(
+        \\def main() -> int:
+        \\    1 if True else 2
+        \\    return 0
+    , "E_EXPLICIT_DISCARD_REQUIRED", "a standalone non-unit value requires `_ =` or result handling");
+}
+
+// spec-case: CONDITIONAL-EXPR-3
+test "both conditional arms count for definite assignment and for effects" {
+    try expectMessage(
+        \\def main() -> int:
+        \\    if True:
+        \\        y = 1
+        \\    return 0 if False else y
+    , "E_UNBOUND", "name may be read before it is assigned; some control-flow path reaching here leaves it unbound");
+    try expectMessage(
+        \\def shout(out: Stream) -> int effects():
+        \\    _ = out.print("a") if False else out.print("b")
+        \\    return 0
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    return shout(out)
+    , "E_EFFECT_BOUND", "effect `output` exceeds declared bound: shout; inferred bound is effects(output)");
+}
+
+// spec: CONDITIONAL-EXPR-4
+test "a conditional takes its type from the expected type and nests in its else arm" {
+    try run(
+        \\def pick(value: bool) -> u8:
+        \\    return 1 if value else 2
+        \\
+        \\
+        \\def lookup(found: bool) -> Option[int]:
+        \\    return Some(7) if found else None
+        \\
+        \\
+        \\def describe(value: int) -> int:
+        \\    return value + 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    x: u8 = pick(True)
+        \\    y = 9 if False else 8 if False else 7
+        \\    label = f"{y} {'item' if y == 1 else 'items'}"
+        \\    if label != "7 items":
+        \\        return 0
+        \\    match lookup(True):
+        \\        case Some(index):
+        \\            return describe(index if True else 0) + int(x) - 1
+        \\        case None:
+        \\            return 0
+    , 8);
+}

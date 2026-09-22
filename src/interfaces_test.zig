@@ -126,6 +126,32 @@ test "default interface listing renders the whole signature with Python capabili
     try t.expect(std.mem.indexOf(u8, text, "ceiling(mutation)") != null);
 }
 
+// spec: KEYWORD-ONLY-3
+test "an interface signature prints the bare star that makes later parameters keyword-only" {
+    const body =
+        \\module main
+        \\
+        \\
+        \\public def issue(host: int, *, code: int, file: int = 0) -> int effects():
+        \\    return host + code + file
+        \\
+        \\
+        \\public def main() -> int:
+        \\    return 0
+    ;
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    try compilation.check();
+    index.program = compilation.program.?;
+    const text = try index.render(t.allocator);
+    defer t.allocator.free(text);
+    try t.expect(std.mem.indexOf(u8, text, "def(host:i64,*,code:i64,file:i64=0)->i64") != null);
+}
+
 fn reject(body: []const u8, code: []const u8) !void {
     var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = body }, .{ .path = units_path, .bytes = units } } };
     var project = graph.Project.init(t.allocator);

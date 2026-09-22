@@ -111,9 +111,9 @@ fn augmentedOperator(op: ast.AssignmentOp) ast.BinaryOp {
 }
 const eTextOperator = "E_TEXT_OPERATOR";
 /// Temporary rejection for the syntax the foundation parser accepts before its
-/// lane implements the check: tuple values and destructuring, the conditional
-/// expression, and the `mut` argument marker. Every use carries a `// lane:`
-/// comment and is deleted by that lane.
+/// lane implements the check: tuple values and destructuring, and the `mut`
+/// argument marker. Every use carries a `// lane:` comment and is deleted by
+/// that lane.
 const eNotImplemented = "E_NOT_IMPLEMENTED";
 /// A missing, unneeded or unauthorizable `mut` marker is one diagnostic code.
 const mutation_marker_code = @import("origins.zig").mutation_marker_code;
@@ -999,7 +999,7 @@ const Checker = struct {
                 .message = "private function declared here",
             },
         );
-        const bound = try call_arguments.bind(self.allocator, self.src, call, signature.signature.parameters, self.sink);
+        const bound = try call_arguments.bind(self.allocator, self.src, self.syntax.nodes.items, call, signature.signature, self.sink);
         return .{ .declaration = function, .call = bound };
     }
     fn requireDomainAccess(self: *Checker, domain_type: typed.Type, span: source.Span) Error!void {
@@ -3874,6 +3874,90 @@ const Checker = struct {
             .op_span = b.op_span,
         } };
     }
+    /// `value_if_true if condition else value_if_false`. Both arms are checked
+    /// against the contextual expected type when there is one and must agree
+    /// otherwise, and the result is desugared to an if/else that assigns a fresh
+    /// temporary: only the chosen arm runs, while definite assignment, option
+    /// narrowing, effect, origin and ownership analysis see the two-branch
+    /// statement they already understand.
+    fn checkConditional(self: *Checker, node: ast.Node, conditional: @FieldType(@FieldType(ast.Node, "data"), "conditional")) Error!typed.Node {
+        const condition = try self.expressionExpected(conditional.condition, .bool);
+        try self.require(self.nodes.items[@backingInt(condition)].ty, .bool, self.syntax.nodes.items[@backingInt(conditional.condition)].span);
+        const expected = self.expected_types.get(node.span);
+        const before = try self.pendingState(self.locals.items.len);
+        const init_before = try self.initSnapshot();
+        const facts_before = try self.option_facts.snapshot(self.allocator);
+        try self.assumeOption(conditional.condition, true);
+        const then_value = try self.conditionalArm(conditional.then_value, expected);
+        const facts_then = try self.option_facts.snapshot(self.allocator);
+        const then_state = try self.pendingState(before.len);
+        const init_then = try self.initSnapshot();
+        self.restorePending(before);
+        self.initRestore(init_before);
+        self.option_facts.restore(facts_before);
+        try self.assumeOption(conditional.condition, false);
+        const else_value = try self.conditionalArm(conditional.else_value, expected orelse self.nodes.items[@backingInt(then_value)].ty);
+        try self.requireConditionalArms(expected, then_value, else_value);
+        // Both arms continue, so the facts and ownership state they agree on
+        // survive the expression exactly as they survive an `if`/`else`.
+        self.option_facts.intersect(facts_then);
+        self.initIntersect(init_then);
+        try self.samePending(then_state, node.span, eResultPath);
+        self.restorePending(then_state);
+        const value_type = expected orelse self.nodes.items[@backingInt(then_value)].ty;
+        return self.conditionalValue(node, condition, then_value, else_value, value_type);
+    }
+    /// One conditional arm, checked against the expected result type when the
+    /// context supplies one and on its own otherwise.
+    fn conditionalArm(self: *Checker, id: ast.NodeId, expected: ?typed.Type) Error!typed.NodeId {
+        return if (expected) |ty_value| self.expressionExpected(id, ty_value) else self.expression(id);
+    }
+    /// Both arms of a conditional have one type: the contextual expected type
+    /// when there is one, and otherwise the then arm's own type. Integer literal
+    /// arms adopt the expected width through the ordinary hint, and no numeric
+    /// widening happens between arms.
+    fn requireConditionalArms(self: *Checker, expected: ?typed.Type, then_value: typed.NodeId, else_value: typed.NodeId) Error!void {
+        const then_type = self.nodes.items[@backingInt(then_value)].ty;
+        if (expected) |ty_value| {
+            try self.require(then_type, ty_value, self.nodes.items[@backingInt(then_value)].span);
+            return self.require(self.nodes.items[@backingInt(else_value)].ty, ty_value, self.nodes.items[@backingInt(else_value)].span);
+        }
+        const else_type = self.nodes.items[@backingInt(else_value)].ty;
+        if (then_type == else_type) return;
+        const then_name = try typed.surfaceTypeName(self.allocator, then_type, self.catalog.records);
+        const else_name = try typed.surfaceTypeName(self.allocator, else_type, self.catalog.records);
+        const message = try std.fmt.allocPrint(self.allocator, "conditional arms must agree: `{s}` here, `{s}` in the else arm", .{ then_name, else_name });
+        return self.sink.fail("E_TYPE", self.nodes.items[@backingInt(then_value)].span, message);
+    }
+    /// The desugared conditional: a fresh unnamed temporary each arm assigns,
+    /// read as the block's value. The temporary is not a source binding, so no
+    /// name can resolve to it and no pending obligation outlives its read.
+    fn conditionalValue(self: *Checker, node: ast.Node, condition: typed.NodeId, then_value: typed.NodeId, else_value: typed.NodeId, value_type: typed.Type) Error!typed.Node {
+        const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
+        try self.locals.append(self.allocator, .{
+            .ownership = .{ .initialized = true, .transfer_available = self.transfers(value_type) },
+            .name = "<conditional>",
+            .declaration = node.span,
+            .ty = value_type,
+            .mutable = false,
+            .usage = .{ .reads = 1, .temporary = true },
+        });
+        const then_assign = try self.conditionalAssign(self.nodes.items[@backingInt(then_value)].span, slot, then_value);
+        const else_assign = try self.conditionalAssign(self.nodes.items[@backingInt(else_value)].span, slot, else_value);
+        const branch: typed.StatementId = @fromBackingInt(self.statements.items.len);
+        try self.statements.append(self.allocator, .{ .span = node.span, .terminates = false, .data = .{ .branch = .{ .condition = condition, .then_body = then_assign, .else_body = else_assign } } });
+        const body: typed.StatementId = @fromBackingInt(self.statements.items.len);
+        try self.statements.append(self.allocator, .{ .span = node.span, .terminates = false, .data = .{ .block = try self.allocator.dupe(typed.StatementId, &.{branch}) } });
+        const read: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = node.span, .ty = value_type, .data = .{ .local = slot } });
+        return .{ .span = node.span, .ty = value_type, .data = .{ .block_value = .{ .body = body, .value = read } } };
+    }
+    /// One arm of the desugared conditional: the value stored into its temporary.
+    fn conditionalAssign(self: *Checker, span: source.Span, slot: typed.LocalId, value: typed.NodeId) Error!typed.StatementId {
+        const id: typed.StatementId = @fromBackingInt(self.statements.items.len);
+        try self.statements.append(self.allocator, .{ .span = span, .terminates = false, .data = .{ .assign = .{ .slot = slot, .value = value } } });
+        return id;
+    }
     fn checkMembership(self: *Checker, node: ast.Node, membership: @FieldType(@FieldType(ast.Node, "data"), "membership"), temporaries: []const typed.Type) Error!typed.Node {
         const needle = try self.expressionWithTemporaries(membership.needle, temporaries);
         const container = try self.expressionWithTemporaries(membership.container, temporaries);
@@ -4141,9 +4225,7 @@ const Checker = struct {
             // lane: tuples (item 4): this arm is replaced by the record-backed
             // tuple check the tuple lane adds.
             .tuple => return self.sink.fail(eNotImplemented, node.span, "tuple values parse but are not checked yet"),
-            // lane: conditional expression (item 6): this arm is replaced by the
-            // two-branch check the simple lane adds.
-            .conditional => return self.sink.fail(eNotImplemented, node.span, "conditional expressions parse but are not checked yet"),
+            .conditional => |conditional| return self.checkConditional(node, conditional),
             // A `mut` marker is transparent in expression position: the value it
             // wraps keeps its own type and node. The call that owns the marker
             // checks the position, and a marker anywhere else has no call to be

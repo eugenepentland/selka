@@ -1,8 +1,93 @@
 //! Python named arguments retain declaration identity, source order, and cleanup.
 const std = @import("std");
 const t = std.testing;
+const graph = @import("project.zig");
+const interfaces = @import("interfaces.zig");
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
+const project_compile = @import("project_compile.zig");
+
+/// One in-memory project file, so a keyword-only rejection can name an
+/// imported callee the way its call site spells it.
+const ProjectFile = struct { path: []const u8, bytes: []const u8 };
+const ProjectFiles = struct {
+    entries: []const ProjectFile,
+    fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) graph.ReadError![]u8 {
+        const self: *ProjectFiles = @ptrCast(@alignCast(context.?));
+        for (self.entries) |file| if (std.mem.eql(u8, file.path, path)) {
+            if (file.bytes.len > limit) return error.TooLarge;
+            return allocator.dupe(u8, file.bytes);
+        };
+        return error.NotFound;
+    }
+    fn provider(self: *ProjectFiles) graph.Provider {
+        return .{ .context = self, .read = read };
+    }
+};
+
+// spec: KEYWORD-ONLY-1
+test "keyword-only parameters reject a positional operand with the whole call rewritten" {
+    const io_module =
+        \\module io
+        \\
+        \\
+        \\public def issue(host: int, *, code: int, file: int, position: int) -> int effects():
+        \\    return host + code + file + position
+    ;
+    const entry =
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def main() -> int:
+        \\    return io.issue(1, 13, 0, 4)
+    ;
+    var files: ProjectFiles = .{ .entries = &.{
+        .{ .path = "io.my", .bytes = io_module },
+        .{ .path = "main.my", .bytes = entry },
+    } };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile.Compilation.init(&index);
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqualStrings("E_KEYWORD_ONLY", compilation.diagnostics.items.items[0].code);
+    try t.expectEqualStrings("`code` is keyword-only; write `io.issue(1, code=13, file=0, position=4)`", compilation.diagnostics.items.items[0].message);
+}
+
+// spec-case: KEYWORD-ONLY-1
+test "a keyword argument already written by name keeps its name in the rewritten call" {
+    const text =
+        \\def issue(host: int, *, code: int, file: int, position: int) -> int:
+        \\    return host + code + file + position
+        \\
+        \\
+        \\def main() -> int:
+        \\    return issue(1, 3, code=2, position=4)
+    ;
+    var c = try language.Compilation.init(t.allocator, "keyword-only.my", text);
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.check());
+    try t.expectEqualStrings("E_KEYWORD_ONLY", c.diagnostics.items[0].code);
+    try t.expectEqualStrings("`file` is keyword-only; write `issue(1, file=3, code=2, position=4)`", c.diagnostics.items[0].message);
+}
+
+// spec-case: KEYWORD-ONLY-1
+test "a positional operand before the keyword-only boundary still binds positionally" {
+    const text =
+        \\def issue(host: int, port: int, *, code: int) -> int:
+        \\    return host + port + code
+        \\
+        \\
+        \\def main() -> int:
+        \\    return issue(1, 2, code=3)
+    ;
+    var c = try language.Compilation.init(t.allocator, "keyword-only.my", text);
+    defer c.deinit();
+    try c.check();
+    try t.expectEqual(@as(i64, 6), (try native.run(&c)).value);
+}
 
 // spec: PYTHON-CALL-2
 test "Python calls reject unknown duplicate missing and misplaced arguments and invalid defaults" {
