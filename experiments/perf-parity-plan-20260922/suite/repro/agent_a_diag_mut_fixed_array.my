@@ -1,0 +1,19 @@
+# Diagnostic repro (agent-a): a fixed array of records cannot be updated in
+# place through a parameter. `mut [2]P` is rejected with a message whose own
+# list of mutable kinds includes "array", and without `mut` the in-place
+# spelling `ps[i].x = ...` is E_COLLECTION_METHOD ("indexed field assignment
+# requires a list or dictionary"), as is `for p in ps` ("iteration requires a
+# collection or dictionary view"). Expected today: E_MUTATION_MARKER at 11:18.
+record P:
+    x: float
+
+
+def bump(ps: mut [2]P) -> None:
+    ps[0].x = ps[0].x + 1.0
+
+
+def main(out: Stream) -> int:
+    ps: [2]P = [P(x=0.0), P(x=1.0)]
+    bump(mut ps)
+    out.print(ps[0].x)
+    return 0

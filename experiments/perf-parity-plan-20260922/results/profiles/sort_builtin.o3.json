@@ -1,0 +1,140 @@
+{
+ "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/prof/sort_builtin.o3",
+ "runs": 3,
+ "samples": 814,
+ "outside": 3,
+ "functions": [
+  {
+   "function": "myl_native_list_sort",
+   "samples": 740,
+   "share": 0.9090909090909091
+  },
+  {
+   "function": "myl_f_2f907a6de331cc77376c52e70ba55765a30be18cd9bc69587585fbb71b80de1d",
+   "samples": 39,
+   "share": 0.04791154791154791
+  },
+  {
+   "function": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+   "samples": 26,
+   "share": 0.03194103194103194
+  },
+  {
+   "function": "memcpy",
+   "samples": 4,
+   "share": 0.004914004914004914
+  },
+  {
+   "function": "<outside: shared libraries>",
+   "samples": 3,
+   "share": 0.0036855036855036856
+  },
+  {
+   "function": "myl_f_c13c52e621b92bebe749c88cd534902ef1775431585495f0069477d079227567",
+   "samples": 2,
+   "share": 0.002457002457002457
+  }
+ ],
+ "hot_pcs": [
+  {
+   "pc": "0x10089b5",
+   "samples": 149,
+   "share": 0.18304668304668303
+  },
+  {
+   "pc": "0x1008a53",
+   "samples": 145,
+   "share": 0.17813267813267813
+  },
+  {
+   "pc": "0x10089b8",
+   "samples": 48,
+   "share": 0.05896805896805897
+  },
+  {
+   "pc": "0x10088b8",
+   "samples": 19,
+   "share": 0.02334152334152334
+  },
+  {
+   "pc": "0x10089ab",
+   "samples": 17,
+   "share": 0.020884520884520884
+  },
+  {
+   "pc": "0x10047da",
+   "samples": 15,
+   "share": 0.018427518427518427
+  },
+  {
+   "pc": "0x10089c9",
+   "samples": 15,
+   "share": 0.018427518427518427
+  },
+  {
+   "pc": "0x10089ae",
+   "samples": 14,
+   "share": 0.0171990171990172
+  },
+  {
+   "pc": "0x1008ab8",
+   "samples": 13,
+   "share": 0.01597051597051597
+  },
+  {
+   "pc": "0x1008abc",
+   "samples": 13,
+   "share": 0.01597051597051597
+  },
+  {
+   "pc": "0x100899b",
+   "samples": 12,
+   "share": 0.014742014742014743
+  },
+  {
+   "pc": "0x10089b1",
+   "samples": 12,
+   "share": 0.014742014742014743
+  },
+  {
+   "pc": "0x1004f72",
+   "samples": 11,
+   "share": 0.013513513513513514
+  },
+  {
+   "pc": "0x1008870",
+   "samples": 11,
+   "share": 0.013513513513513514
+  },
+  {
+   "pc": "0x100887a",
+   "samples": 11,
+   "share": 0.013513513513513514
+  },
+  {
+   "pc": "0x100899d",
+   "samples": 11,
+   "share": 0.013513513513513514
+  },
+  {
+   "pc": "0x1008876",
+   "samples": 10,
+   "share": 0.012285012285012284
+  },
+  {
+   "pc": "0x10088b4",
+   "samples": 10,
+   "share": 0.012285012285012284
+  },
+  {
+   "pc": "0x1008993",
+   "samples": 10,
+   "share": 0.012285012285012284
+  },
+  {
+   "pc": "0x10089a0",
+   "samples": 10,
+   "share": 0.012285012285012284
+  }
+ ]
+}

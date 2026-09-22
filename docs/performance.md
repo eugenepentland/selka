@@ -38,6 +38,14 @@ phase by phase: the default build is 1.84× Zig, the shipped runner's QBE plus
 step-accounting policy 5.8×, stripping every check and the frame protocol still
 leaves 1.64×, and on the guest's own work the gap is 4.3× — aggregate copies,
 container-header reloads, byte-granular I/O and the checked append path, ranked.
+The [22 September 2026 parity plan](audits/performance-parity-plan-2026-09-22.md)
+widens the comparison to thirteen idiomatic programs ported to Zig and Rust
+(5.8× Zig on the geometric mean today, 1.02× for Rust). It prices each
+language rule and lowering protocol separately by rewriting the emitted code,
+and it orders the fixes into five waves. Among them: the paused aggregate lane,
+failure paths that end in `unreachable`, canonicalizing NaN only when observed,
+and runtime library algorithms. Its composed, measured ladder reaches 2.2×, and
+the projection with the library work is about 1.6×.
 
 ## What is fast without trying
 

@@ -1,0 +1,9 @@
+# Diagnostic repro (agent-a): Python list repetition `[x] * n` is not
+# supported, but the rejection reads as a type mismatch on the operands
+# ("expected list[float], found int") and does not name the construct or the
+# accepted spelling (`[1.0 for _ in range(n)]`).
+# Expected today: E_TYPE at 7:16.
+def main(out: Stream) -> int:
+    xs = [1.0] * 4
+    out.print(len(xs))
+    return 0

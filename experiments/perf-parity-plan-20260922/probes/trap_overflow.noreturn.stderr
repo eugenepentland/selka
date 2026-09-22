@@ -1,0 +1,5 @@
+/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/trapcheck/trap_overflow.my:5:14: error[R_OVERFLOW]: native execution failed (add: left 9000000000000000001, right 1000000000000000000, width 64)
+  in grow at /home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/trapcheck/trap_overflow.my:5:14
+  in climb at /home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/trapcheck/trap_overflow.my:11:17
+  in main at /home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/trapcheck/trap_overflow.my:16:15
+MYLANG-TRAP {"version":1,"operation":"add","left":9000000000000000001,"right":1000000000000000000,"width":64}

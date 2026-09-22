@@ -1,0 +1,22 @@
+# Performance repro (agent-a), part 2 of 2: the loop of
+# agent_a_perf_slot_write_one_live.my with five more read-only lists live in
+# the writing function. Prints 200000; took 1.5-1.6 s against part 1's 0.60 s
+# (rough, E-core, unpinned-load).
+def bump(xs: mut list[float], a: list[float], b: list[float], c: list[float], d: list[float], e: list[float], rounds: int) -> None:
+    n = len(xs)
+    for r in range(rounds):
+        for j in range(n):
+            xs[j] = xs[j] + 1.0
+    xs[0] = xs[0] + a[0] + b[0] + c[0] + d[0] + e[0]
+
+
+def main(out: Stream) -> int:
+    xs = [0.0 for _ in range(1000)]
+    a = [0.0 for _ in range(4)]
+    b = [0.0 for _ in range(4)]
+    c = [0.0 for _ in range(4)]
+    d = [0.0 for _ in range(4)]
+    e = [0.0 for _ in range(4)]
+    bump(mut xs, a, b, c, d, e, 100000)
+    out.print(int(xs[0] + xs[999]))
+    return 0

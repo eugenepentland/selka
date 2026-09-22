@@ -1,0 +1,43 @@
+# Performance pathology (not wrong output): storing managed values into a
+# container inside `with arena():` is O(live arena chunks) per store, so a
+# phase that allocates N objects and keeps them costs O(N^2).
+#
+# Build: mylang build arena_store_quadratic.my -o repro   (default ReleaseFast)
+# Measured on an E-core (taskset -c 12-19), 2026-09-22, install-a3 compiler:
+#   N = 1,000,000  -> 0.30 s   73 MB
+#   N = 2,000,000  -> 1.15 s  144 MB   (4x the time for 2x the work)
+# The same loop without the arena block: 1M -> ~0.05 s, 2M -> ~0.10 s (linear),
+# and allocating the same strings inside the arena without storing them is
+# linear too (1M 0.04 s, 2M 0.10 s). A dict[str, int] store behaves the same
+# (0.5M 0.07 s, 1M 0.25 s, 2M 1.02 s vs 0.05/0.09/0.17 s under the GC).
+#
+# Suspected cause (runtime source in src/): every managed store inside an
+# arena runs the region store barrier (native_regions.c
+# myl_native_region_check -> myl_native_region_reach), which asks
+# myl_native_object_region for both the stored value and the container;
+# that is myl_native_arena_region -> containing() in native_arena.c, a linear
+# walk of heap->arena_chunks. Chunks cap at 1 MiB and every arena allocation
+# also stores a 24-byte Allocation record, so a phase holding N small objects
+# has O(N) chunks and each store walks O(N) of them. The header comment in
+# native_regions.c says the depth is carried in each managed header, but the
+# lookup goes through the chunk list instead. List growth
+# (myl_native_heap_extend) and dict index sizing call the same lookup.
+#
+# Effect on the suite: knucleotide.my with each counting phase wrapped in
+# `with arena():` runs 2.3 s instead of 0.9 s, with a higher peak RSS
+# (99 MB instead of 78 MB).
+
+
+def keep(n: int) -> int:
+    items: list[str] = []
+    for i in range(n):
+        items.append(str(i % 1000))
+    return len(items)
+
+
+def main(out: Stream) -> int:
+    total = 0
+    with arena():
+        total = keep(2000000)
+    out.print(total)
+    return 0

@@ -1,0 +1,2 @@
+census {'a3': '29.8 ms (1.73x)', 'a3-unchecked': '26.1 ms (1.55x)', 'l5': '28.5 ms (1.73x)', 'l5-unchecked': '25.7 ms (1.54x)', 'zig': '16.4 ms (1.00x)'}
+render {'a3': '44.9 ms (2.21x)', 'a3-unchecked': '41.3 ms (2.00x)', 'l5': '45.6 ms (2.22x)', 'l5-unchecked': '40.9 ms (2.00x)', 'zig': '20.6 ms (1.00x)'}

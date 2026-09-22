@@ -1,0 +1,125 @@
+{
+ "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/prof/sieve.o3",
+ "runs": 3,
+ "samples": 1619,
+ "outside": 0,
+ "functions": [
+  {
+   "function": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+   "samples": 1243,
+   "share": 0.7677578752316244
+  },
+  {
+   "function": "myl_native_list_set",
+   "samples": 376,
+   "share": 0.23224212476837555
+  },
+  {
+   "function": "<outside: shared libraries>",
+   "samples": 0,
+   "share": 0.0
+  }
+ ],
+ "hot_pcs": [
+  {
+   "pc": "0x1004b36",
+   "samples": 275,
+   "share": 0.169857936998147
+  },
+  {
+   "pc": "0x10083f9",
+   "samples": 233,
+   "share": 0.1439159975293391
+  },
+  {
+   "pc": "0x1004a55",
+   "samples": 45,
+   "share": 0.027794935145151328
+  },
+  {
+   "pc": "0x1004b0f",
+   "samples": 39,
+   "share": 0.024088943792464484
+  },
+  {
+   "pc": "0x1004a5d",
+   "samples": 38,
+   "share": 0.02347127856701668
+  },
+  {
+   "pc": "0x1004ae7",
+   "samples": 38,
+   "share": 0.02347127856701668
+  },
+  {
+   "pc": "0x1004b2a",
+   "samples": 37,
+   "share": 0.02285361334156887
+  },
+  {
+   "pc": "0x1004af1",
+   "samples": 33,
+   "share": 0.02038295243977764
+  },
+  {
+   "pc": "0x100450c",
+   "samples": 30,
+   "share": 0.01852995676343422
+  },
+  {
+   "pc": "0x1004aec",
+   "samples": 25,
+   "share": 0.015441630636195183
+  },
+  {
+   "pc": "0x1004b1f",
+   "samples": 24,
+   "share": 0.014823965410747375
+  },
+  {
+   "pc": "0x1004a45",
+   "samples": 23,
+   "share": 0.014206300185299567
+  },
+  {
+   "pc": "0x1004ae2",
+   "samples": 21,
+   "share": 0.012970969734403953
+  },
+  {
+   "pc": "0x10083f4",
+   "samples": 21,
+   "share": 0.012970969734403953
+  },
+  {
+   "pc": "0x1004af6",
+   "samples": 20,
+   "share": 0.012353304508956145
+  },
+  {
+   "pc": "0x1004508",
+   "samples": 19,
+   "share": 0.01173563928350834
+  },
+  {
+   "pc": "0x1004b03",
+   "samples": 19,
+   "share": 0.01173563928350834
+  },
+  {
+   "pc": "0x1004d32",
+   "samples": 16,
+   "share": 0.009882643607164917
+  },
+  {
+   "pc": "0x1004d3e",
+   "samples": 16,
+   "share": 0.009882643607164917
+  },
+  {
+   "pc": "0x1004ace",
+   "samples": 15,
+   "share": 0.00926497838171711
+  }
+ ]
+}

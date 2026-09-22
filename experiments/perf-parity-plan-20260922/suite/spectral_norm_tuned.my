@@ -1,0 +1,59 @@
+# spectral_norm (tuned): identical to spectral_norm.my except that `a` does
+# its index arithmetic with wrapping_add / wrapping_mul instead of the checked
+# `+` and `*`. The values never exceed about 8e6, so no operation can wrap and
+# the result is bit-identical. What changes is code generation: with checked
+# arithmetic `a` can trap, so the LLVM build keeps it an out-of-line call with a
+# frame record and spills the running sum around every call; with wrapping
+# arithmetic nothing in `a` can trap and it is inlined into the inner loops,
+# which then match the Zig and Rust loops instruction for instruction apart
+# from one bounds check, one NaN check per float operation and position stores.
+# `a` is still a separate function. See SUITE.md section 3.
+
+
+def a(i: int, j: int) -> float:
+    ij = wrapping_add(i, j)
+    return 1.0 / float(wrapping_add(wrapping_add(wrapping_mul(ij, wrapping_add(ij, 1)) // 2, i), 1))
+
+
+def mul_av(v: list[float], out: mut list[float]) -> None:
+    n = len(v)
+    for i in range(n):
+        s = 0.0
+        for j in range(n):
+            s = s + a(i, j) * v[j]
+        out[i] = s
+
+
+def mul_atv(v: list[float], out: mut list[float]) -> None:
+    n = len(v)
+    for i in range(n):
+        s = 0.0
+        for j in range(n):
+            s = s + a(j, i) * v[j]
+        out[i] = s
+
+
+# The checker cannot prove the read-only `v` disjoint from the writable `tmp`
+# (both are parameters), so `mul_av(v, mut tmp)` is E_MUTATION_OVERLAP; its
+# suggested "fresh snapshot" is the fix that keeps this function's shape. The
+# two copies per call are 40 copies of 2000 floats in the whole run.
+def mul_atav(v: list[float], out: mut list[float], tmp: mut list[float]) -> None:
+    mul_av(v.copy(), mut tmp)
+    mul_atv(tmp.copy(), mut out)
+
+
+def main(out: Stream) -> int:
+    n = 2000
+    u = [1.0 for _ in range(n)]
+    v = [0.0 for _ in range(n)]
+    tmp = [0.0 for _ in range(n)]
+    for _ in range(10):
+        mul_atav(u, mut v, mut tmp)
+        mul_atav(v, mut u, mut tmp)
+    vbv = 0.0
+    vv = 0.0
+    for i in range(n):
+        vbv = vbv + u[i] * v[i]
+        vv = vv + v[i] * v[i]
+    out.print(int(sqrt(vbv / vv) * 1e9))
+    return 0

@@ -1,0 +1,46 @@
+{
+ "zig-o3": {
+  "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/zig-o3",
+  "kind": "native"
+ },
+ "rust-o3": {
+  "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/rust-o3",
+  "kind": "native"
+ },
+ "a3:gc-lto": {
+  "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/schematic/a3/gc-lto",
+  "kind": "mylang",
+  "bounded": false,
+  "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+ },
+ "a3:gc-lto-unchecked": {
+  "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/schematic/a3/gc-lto-unchecked",
+  "kind": "mylang",
+  "bounded": false,
+  "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+ },
+ "a3:arena-lto": {
+  "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/schematic/a3/arena-lto",
+  "kind": "mylang",
+  "bounded": false,
+  "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+ },
+ "l5:gc-lto": {
+  "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/schematic/l5/gc-lto",
+  "kind": "mylang",
+  "bounded": false,
+  "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+ },
+ "l5:gc-lto-unchecked": {
+  "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/schematic/l5/gc-lto-unchecked",
+  "kind": "mylang",
+  "bounded": false,
+  "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+ },
+ "l5:arena-lto": {
+  "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/schematic/l5/arena-lto",
+  "kind": "mylang",
+  "bounded": false,
+  "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+ }
+}

@@ -1,0 +1,200 @@
+{
+ "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/prof/text_ops.o3",
+ "runs": 5,
+ "samples": 1273,
+ "outside": 93,
+ "functions": [
+  {
+   "function": "myl_native_heap_alloc_at",
+   "samples": 247,
+   "share": 0.19402985074626866
+  },
+  {
+   "function": "myl_native_heap_collect",
+   "samples": 153,
+   "share": 0.1201885310290652
+  },
+  {
+   "function": "myl_f_71cb497ea7ce5a4e45e1e14bf1169eb2f17412a032c1b901ef4cb867f563b743",
+   "samples": 127,
+   "share": 0.0997643362136685
+  },
+  {
+   "function": "trace",
+   "samples": 124,
+   "share": 0.0974076983503535
+  },
+  {
+   "function": "compiler_rt.bcmp",
+   "samples": 113,
+   "share": 0.08876669285153181
+  },
+  {
+   "function": "<outside: shared libraries>",
+   "samples": 93,
+   "share": 0.07305577376276512
+  },
+  {
+   "function": "myl_native_text_split",
+   "samples": 54,
+   "share": 0.04241948153967007
+  },
+  {
+   "function": "myl_native_text_replace",
+   "samples": 54,
+   "share": 0.04241948153967007
+  },
+  {
+   "function": "myl_native_text_join",
+   "samples": 47,
+   "share": 0.036920659858601726
+  },
+  {
+   "function": "memcpy",
+   "samples": 43,
+   "share": 0.03377847604084839
+  },
+  {
+   "function": "myl_native_text_count",
+   "samples": 24,
+   "share": 0.018853102906520033
+  },
+  {
+   "function": "slot_take",
+   "samples": 20,
+   "share": 0.015710919088766692
+  },
+  {
+   "function": "myl_native_text_concat",
+   "samples": 20,
+   "share": 0.015710919088766692
+  },
+  {
+   "function": "myl_native_list_append",
+   "samples": 19,
+   "share": 0.014925373134328358
+  },
+  {
+   "function": "myl_native_bytes_number_parse",
+   "samples": 18,
+   "share": 0.014139827179890024
+  },
+  {
+   "function": "myl_native_text_substring",
+   "samples": 15,
+   "share": 0.01178318931657502
+  },
+  {
+   "function": "myl_f_d6bf454ff06f2ce7a7f5efd219968492f4d6e1a63fea299cb4c04e0b175f12b5",
+   "samples": 14,
+   "share": 0.010997643362136685
+  },
+  {
+   "function": "myl_native_root_push",
+   "samples": 14,
+   "share": 0.010997643362136685
+  }
+ ],
+ "hot_pcs": [
+  {
+   "pc": "0x101d090",
+   "samples": 122,
+   "share": 0.09583660644147683
+  },
+  {
+   "pc": "0x101cf15",
+   "samples": 77,
+   "share": 0.060487038491751764
+  },
+  {
+   "pc": "0x101cdd2",
+   "samples": 51,
+   "share": 0.04006284367635507
+  },
+  {
+   "pc": "0x101cca6",
+   "samples": 28,
+   "share": 0.02199528672427337
+  },
+  {
+   "pc": "0x10221c0",
+   "samples": 26,
+   "share": 0.0204241948153967
+  },
+  {
+   "pc": "0x101ce30",
+   "samples": 19,
+   "share": 0.014925373134328358
+  },
+  {
+   "pc": "0x10221dc",
+   "samples": 16,
+   "share": 0.012568735271013355
+  },
+  {
+   "pc": "0x101d190",
+   "samples": 15,
+   "share": 0.01178318931657502
+  },
+  {
+   "pc": "0x101ecd0",
+   "samples": 12,
+   "share": 0.009426551453260016
+  },
+  {
+   "pc": "0x101cd94",
+   "samples": 11,
+   "share": 0.00864100549882168
+  },
+  {
+   "pc": "0x1022041",
+   "samples": 10,
+   "share": 0.007855459544383346
+  },
+  {
+   "pc": "0x10221eb",
+   "samples": 10,
+   "share": 0.007855459544383346
+  },
+  {
+   "pc": "0x101eb68",
+   "samples": 9,
+   "share": 0.007069913589945012
+  },
+  {
+   "pc": "0x10221d4",
+   "samples": 9,
+   "share": 0.007069913589945012
+  },
+  {
+   "pc": "0x101d09d",
+   "samples": 9,
+   "share": 0.007069913589945012
+  },
+  {
+   "pc": "0x101cdaa",
+   "samples": 8,
+   "share": 0.006284367635506678
+  },
+  {
+   "pc": "0x101ca67",
+   "samples": 8,
+   "share": 0.006284367635506678
+  },
+  {
+   "pc": "0x10221d0",
+   "samples": 8,
+   "share": 0.006284367635506678
+  },
+  {
+   "pc": "0x10223ae",
+   "samples": 8,
+   "share": 0.006284367635506678
+  },
+  {
+   "pc": "0x102203d",
+   "samples": 8,
+   "share": 0.006284367635506678
+  }
+ ]
+}

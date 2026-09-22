@@ -1,0 +1,17 @@
+# trap_overflow: a checked add that overflows inside a helper, three frames deep.
+
+
+def grow(x: int, step: int) -> int:
+    return x + step
+
+
+def climb(x: int) -> int:
+    total = x
+    for i in range(10):
+        total = grow(total, 1000000000000000000)
+    return total
+
+
+def main(out: Stream) -> int:
+    out.print(climb(1))
+    return 0

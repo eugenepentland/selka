@@ -1,0 +1,24 @@
+# Diagnostic repro (agent-a), part 1 of 2: spectral_norm's mul_atav shape.
+# `mul_av(v, mut tmp)` inside a function that received both lists as
+# parameters is E_MUTATION_OVERLAP, whose message offers "pass a fresh
+# snapshot, make both inputs writable, or split the call". Following the
+# middle suggestion is agent_a_diag_overlap_hint_writable.my, which the checker
+# then rejects with E_MUTATION_MARKER ("declared `mut` but never written"), so
+# that hint cannot be followed. (`v.copy()` or calling from `main` both work.)
+def mul_av(v: list[float], out: mut list[float]) -> None:
+    for i in range(len(v)):
+        out[i] = v[i] * 2.0
+
+
+def mul_twice(v: list[float], out: mut list[float], tmp: mut list[float]) -> None:
+    mul_av(v, mut tmp)
+    mul_av(tmp, mut out)
+
+
+def main(out: Stream) -> int:
+    u = [1.0 for _ in range(4)]
+    w = [0.0 for _ in range(4)]
+    tmp = [0.0 for _ in range(4)]
+    mul_twice(u, mut w, mut tmp)
+    out.print(w[0])
+    return 0
