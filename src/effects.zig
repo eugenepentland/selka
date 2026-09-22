@@ -311,16 +311,43 @@ pub fn supplyingParameter(effect: sets.Effect) ?[]const u8 {
     };
 }
 
+/// Effects one type's ownership implies: an external resource family carries its
+/// own effect, and every element, case payload or field contributes what it
+/// holds. This mirrors `cleanupMasks` for one type, with a depth guard in place
+/// of the fixpoint so a recursive shape cannot loop.
+pub fn ownershipMask(records: []const typed.Record, ty: typed.Type, depth: usize) sets.Mask {
+    if (depth == 128 or !ty.isAggregate() or ty.recordIndex() >= records.len) return 0;
+    const record = records[ty.recordIndex()];
+    var mask: sets.Mask = if (record.shape.resource) |kind| sets.bit(kind.effect()) else 0;
+    if (record.shape.array) |array| {
+        if (array.length != 0) mask |= ownershipMask(records, array.element, depth + 1);
+    } else if (record.shape.variants) |variants| {
+        for (variants.cases) |case| {
+            if (case.payload) |payload| mask |= ownershipMask(records, payload, depth + 1);
+        }
+    } else {
+        for (record.fields) |field| {
+            mask |= ownershipMask(records, field.ty, depth + 1);
+        }
+    }
+    return mask;
+}
+
 /// Effect ceiling a signature implies by construction: one effect per capability
 /// parameter, `mutation` for every `mut` parameter, the declared ceiling of every
-/// callback parameter, and `managed_allocation`, which is always permitted.
-/// A body may not exceed this set; a clause may only narrow it further.
-pub fn derivedCeiling(records: []const typed.Record, signature: typed.FunctionSignature, locals: []const typed.Local) sets.Mask {
-    if (signature.parameter_count > locals.len) return sets.all;
+/// callback parameter, `managed_allocation`, which is always permitted, and the
+/// effects the signature's own ownership carries, because an owned resource the
+/// body may drop is authority the signature already grants. A body may not
+/// exceed this set; a clause may only narrow it further.
+pub fn derivedCeiling(records: []const typed.Record, function: typed.Function) sets.Mask {
+    const signature = function.signature;
+    if (signature.parameter_count > function.scope.locals.len) return sets.all;
     var mask: sets.Mask = sets.bit(.managed_allocation);
-    for (locals[0..signature.parameter_count]) |parameter| {
+    mask |= ownershipMask(records, signature.return_type, 0);
+    for (function.scope.locals[0..signature.parameter_count]) |parameter| {
         if (capabilityEffect(parameter.ty)) |effect| mask |= sets.bit(effect);
         if (callables.signature(parameter.ty, records)) |contract| mask |= contract.effects;
+        mask |= ownershipMask(records, parameter.ty, 0);
     }
     for (signature.declared_mutates) |position| {
         if (position < signature.parameter_count) mask |= sets.bit(.mutation);
@@ -335,7 +362,7 @@ pub fn derivedCeiling(records: []const typed.Record, signature: typed.FunctionSi
 pub fn effectiveCeiling(records: []const typed.Record, function: typed.Function) sets.Mask {
     const declared = if (function.policy.effect_bound) |bound| bound.allowed else null;
     if (function.policy.host != null or function.policy.c_abi) return declared orelse sets.all;
-    const derived = derivedCeiling(records, function.signature, function.scope.locals);
+    const derived = derivedCeiling(records, function);
     return if (declared) |mask| mask & derived else derived;
 }
 
@@ -624,7 +651,7 @@ fn checkSignatureCeiling(ctx: CeilingContext, index: usize) diagnostic.Error!boo
     // A `host def`/`extern def` has no body to derive from: its clause is its
     // authority and stays its ceiling.
     const derived_applies = function.policy.host == null and !function.policy.c_abi;
-    const derived = derivedCeiling(ctx.program.records, function.signature, function.scope.locals);
+    const derived = derivedCeiling(ctx.program.records, function);
     var violated = false;
     if (derived_applies) violated = try appendClauseDiagnostics(ctx.allocator, ctx.src, function, derived, ctx.sink);
     const forbidden = function.policy.effects & ~effectiveCeiling(ctx.program.records, function);

@@ -25,11 +25,11 @@ public def at(nodes: list[Node], index: int) -> Node:
     return nodes[index]
 
 
-public def form(host: Host, nodes: list[Node], index: int, name: bytes) -> bool:
+public def form(nodes: list[Node], index: int, name: bytes) -> bool:
     item = at(nodes, index)
     if item.kind != Kind.list or item.next == index + 1:
         return False
-    return text.matches(host, at(nodes, index + 1).span, name)
+    return text.matches(at(nodes, index + 1).span, name)
 
 
 public def parse(host: Host, document: io.Document) -> Result[list[Node], int]:

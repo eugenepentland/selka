@@ -16,16 +16,16 @@ record Edge:
     b: int
 
 
-public def rail(host: Host, span: text.Span) -> bool:
-    if text.matches(host, span, b"GND"):
+public def rail(span: text.Span) -> bool:
+    if text.matches(span, b"GND"):
         return True
     return span.end - span.start >= 2 and span.source[span.start] == 86 and span.source[span.start + 1] == 95
 
 
-public def find(host: Host, nets: list[Net], span: text.Span) -> int effects(host):
+public def find(nets: list[Net], span: text.Span) -> int:
     i = 0
     while i < len(nets):
-        if text.equal(host, nets[i].span, span):
+        if text.equal(nets[i].span, span):
             return i
         i += 1
     return - 1
@@ -40,7 +40,7 @@ public def findId(nets: list[Net], identity: int) -> int:
     return - 1
 
 
-public def build(host: Host, parts: list[c.Part], pins: list[c.Pin]) -> list[Net]:
+public def build(parts: list[c.Part], pins: list[c.Pin]) -> list[Net]:
     nets: list[Net] = []
     edges: list[Edge] = []
     i = 0

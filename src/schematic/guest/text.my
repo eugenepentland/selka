@@ -18,7 +18,7 @@ public def empty() -> Span:
     )
 
 
-public def equal(host: Host, a: Span, b: Span) -> bool effects(host):
+public def equal(a: Span, b: Span) -> bool:
     if a.end - a.start != b.end - b.start:
         return False
     i = 0
@@ -29,7 +29,7 @@ public def equal(host: Host, a: Span, b: Span) -> bool effects(host):
     return True
 
 
-public def matches(host: Host, a: Span, b: bytes) -> bool effects(host):
+public def matches(a: Span, b: bytes) -> bool:
     if a.end - a.start != len(b):
         return False
     i = 0
@@ -40,7 +40,7 @@ public def matches(host: Host, a: Span, b: bytes) -> bool effects(host):
     return True
 
 
-public def number(host: Host, a: Span) -> int effects(host):
+public def number(a: Span) -> int:
     value = 0
     i = a.start
     if i == a.end:
@@ -97,7 +97,7 @@ public def decimal(out: mut io.Output, value: int):
     return io.appendInt(mut out, value)
 
 
-public def identifier(host: Host, a: Span) -> bool effects(host):
+public def identifier(a: Span) -> bool:
     if a.start == a.end or a.end - a.start > 64:
         return False
     i = a.start
@@ -115,7 +115,7 @@ def lower(ch: u8) -> u8:
     return ch
 
 
-public def folded(host: Host, a: Span, b: Span) -> bool effects(host):
+public def folded(a: Span, b: Span) -> bool:
     if a.end - a.start != b.end - b.start:
         return False
     i = 0

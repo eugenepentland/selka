@@ -11,6 +11,7 @@ test {
     _ = @import("native_test_wire.zig");
 
     _ = @import("doc_coverage.zig");
+    _ = @import("tokens_dump_test.zig");
     _ = @import("doc_coverage_command.zig");
     _ = @import("doctest_command.zig");
     _ = @import("reference_test.zig");

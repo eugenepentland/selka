@@ -1,0 +1,92 @@
+{
+  "at_token.my": {
+    "status": "ok"
+  },
+  "bad_escape.my": {
+    "reason": "stage-0 lexing only finds the closing quote; E_BYTE_ESCAPE is reported while decoding in a later phase",
+    "status": "skip"
+  },
+  "blank_comment_suite.my": {
+    "status": "ok"
+  },
+  "bytes_literals.my": {
+    "status": "ok"
+  },
+  "comments_only.my": {
+    "status": "ok"
+  },
+  "crlf.my": {
+    "status": "ok"
+  },
+  "decl_heads.my": {
+    "status": "ok"
+  },
+  "delimiters.my": {
+    "status": "ok"
+  },
+  "empty.my": {
+    "status": "ok"
+  },
+  "format_strings.my": {
+    "status": "ok"
+  },
+  "integers.my": {
+    "status": "ok"
+  },
+  "keywords.my": {
+    "status": "ok"
+  },
+  "literal_limit.my": {
+    "reason": "the 65536 decoded-byte limit is enforced when decoding after lexing; a <40-line fixture cannot reach it",
+    "status": "skip"
+  },
+  "mixed_indent.my": {
+    "status": "error"
+  },
+  "module_header.my": {
+    "status": "ok"
+  },
+  "multiple_dedents.my": {
+    "status": "ok"
+  },
+  "nested_indent.my": {
+    "status": "ok"
+  },
+  "nesting_limit.my": {
+    "reason": "the 256-level nesting limit needs 257 indentation levels, beyond the <40-line fixture budget",
+    "status": "skip"
+  },
+  "operators.my": {
+    "status": "ok"
+  },
+  "removed_amp.my": {
+    "status": "error"
+  },
+  "removed_fat_arrow.my": {
+    "status": "error"
+  },
+  "removed_spelling.my": {
+    "status": "error"
+  },
+  "strings_escapes.my": {
+    "status": "ok"
+  },
+  "tabs.my": {
+    "status": "error"
+  },
+  "unicode_ident.my": {
+    "status": "error"
+  },
+  "unicode_string.my": {
+    "status": "ok"
+  },
+  "unknown_backtick.my": {
+    "status": "error"
+  },
+  "unknown_char.my": {
+    "status": "error"
+  },
+  "unterminated_string.my": {
+    "status": "error"
+  }
+}

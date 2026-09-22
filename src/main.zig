@@ -62,6 +62,7 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose] (run every fenced documentation example)\n       mylang " ++
     "reference --query TERM [--format=text|json] (compiler-derived facts from this executable)\n       mylang " ++
     "invoke <entry.my> --function='module::name' (--describe | --input=FILE) (call one exported function natively)\n       mylang " ++
+    "dump-tokens <file.my> (stage-0 `tokens-v1` JSON on stdout; lexical failures exit 1)\n       mylang " ++
     "<schema-project|input-module|check|run|dump-bytecode|di" ++
     "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
     "t-module|fmt-project|emit-qbe|emit-project-qbe|list-modules|list-interfaces|list-" ++
@@ -407,6 +408,10 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     init.timings.counts.source_bytes = bytes.len;
     init.timings.counts.modules = 1;
     init.timings.end();
+    // `dump-tokens` is a stage-0 oracle: it lexes one file and stops, never
+    // loading imports, parsing, checking or lowering. It is the reference for
+    // the differential self-host lexer.
+    if (parsed.command == .@"dump-tokens") return dumpTokens(init, parsed, bytes);
     // `run` and `check` accept a project entry: a file that opens with a module
     // header (or a module-only import/export) loads its reachable graph exactly as
     // `run-project`/`check-project` does. A plain single-file program skips this
@@ -511,6 +516,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .@"check-session",
         .@"schema-project",
         .@"input-module",
+        .@"dump-tokens",
         .fmt,
         .@"fmt-module",
         .@"fmt-project",
@@ -661,6 +667,31 @@ fn report(init: Context, compilation: *const language.Compilation) !void {
     }
 }
 
+/// Lex exactly one file and write a `tokens-v1` JSON document.
+/// A lexical failure writes diagnostics to stderr and returns exit status 1; no
+/// partial document is printed.
+fn dumpTokens(init: Context, parsed: Parsed, bytes: []const u8) !u8 {
+    const src = try language.source.Source.init(init.arena.allocator(), parsed.path, bytes);
+    var sink: language.diagnostic.Sink = .{ .allocator = init.gpa };
+    defer sink.deinit();
+    const tokens = language.lexer.lex(init.gpa, bytes, &sink) catch |err| switch (err) {
+        error.SourceError => {
+            for (sink.items.items) |item| {
+                const rendered = try language.diagnostic_output.render(init.gpa, item, src, init.diagnostics);
+                defer init.gpa.free(rendered);
+                try std.Io.File.stderr().writeStreamingAll(init.io, rendered);
+            }
+            return 1;
+        },
+        else => return err,
+    };
+    defer init.gpa.free(tokens);
+    const document = try language.tokens_dump.render(init.gpa, parsed.path, src, tokens);
+    defer init.gpa.free(document);
+    try std.Io.File.stdout().writeStreamingAll(init.io, document);
+    return 0;
+}
+
 const Command = enum {
     @"index-project",
     @"project-dependencies",
@@ -689,6 +720,7 @@ const Command = enum {
     check,
     run,
     @"dump-bytecode",
+    @"dump-tokens",
     @"discover-duplicates",
     @"report-quality",
 };

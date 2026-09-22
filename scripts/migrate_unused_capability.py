@@ -124,6 +124,81 @@ def resolve(directory: Path, name: str):
     return candidate if candidate.exists() else None
 
 
+DECLARATION = re.compile(r"^[ \t]*(?:(?:public|export|restricted|conversion)[ \t]+)*def[ \t]+([A-Za-z_][A-Za-z0-9_]*)[ \t]*(\[[^\]]*\])?[ \t]*\(", re.MULTILINE)
+
+
+def declaration_index(files):
+    """Every declared function's parameter names, keyed by local name."""
+    index: dict = {}
+    for path in files:
+        text = path.read_text(encoding="utf-8")
+        for match in DECLARATION.finditer(text):
+            open_paren = match.end() - 1
+            close = match_close(text, open_paren)
+            if close < 0:
+                continue
+            names = []
+            for start, end in split_spans(text, open_paren + 1, close):
+                head = text[start:end].split(":", 1)[0].split("=", 1)[0].strip()
+                names.append(head)
+            index.setdefault(match.group(1), []).append(names)
+    return index
+
+
+def capability_parameters(text: str, offset: int) -> set:
+    """Names of the enclosing declaration's capability parameters."""
+    head = text.rfind("def ", 0, offset)
+    if head < 0:
+        return set()
+    name = NAME.match(text, head + 4)
+    open_paren = text.find("(", name.end() if name else head + 4)
+    if open_paren < 0:
+        return set()
+    close = match_close(text, open_paren)
+    if close < 0:
+        return set()
+    spans = split_spans(text, open_paren + 1, close)
+    names = set()
+    for start, end in spans:
+        declared = text[start:end]
+        head, separator, rest = declared.partition(":")
+        if not separator:
+            continue
+        base = rest.split("=", 1)[0].strip().removeprefix("mut ").split("[", 1)[0].strip()
+        if base in ("Host", "Stream", "Filesystem", "Network", "Clock", "Entropy", "Environment"):
+            names.add(head.strip())
+    return names
+
+
+def infer_removed_argument(text: str, offset: int, arguments, index):
+    """Index of the extra argument a callee that lost a parameter no longer takes.
+
+    The recorded registry is authoritative; this fallback reads the callee's
+    declaration instead, and accepts only an argument count one larger than the
+    declaration, a removal that keeps every other argument aligned with a
+    declared parameter name, and an argument named by one of the caller's own
+    capability parameters.
+    """
+    match = NAME.match(text[offset : offset + 64])
+    if not match:
+        return None
+    candidates = index.get(match.group(0).rsplit(".", 1)[-1])
+    if not candidates:
+        return None
+    caller_capabilities = capability_parameters(text, offset)
+    best, best_score = None, 0
+    for parameters in candidates:
+        if len(arguments) != len(parameters) + 1:
+            continue
+        for position in range(len(arguments)):
+            remaining = [text[s:e] for i, (s, e) in enumerate(arguments) if i != position]
+            score = sum(1 for value, name in zip(remaining, parameters) if value == name)
+            weighted = score + (1 if remaining and text[arguments[position][0] : arguments[position][1]] in caller_capabilities else 0)
+            if weighted > best_score:
+                best, best_score = position, weighted
+    return best
+
+
 def arguments_of(text: str, call_offset: int):
     open_paren = text.find("(", call_offset)
     if open_paren < 0:
@@ -134,9 +209,10 @@ def arguments_of(text: str, call_offset: int):
     return split_spans(text, open_paren + 1, close)
 
 
-def plan_round(compiler: Path, files, registry):
+def plan_round(compiler: Path, files, registry, index):
     """Collect one fix per diagnostic. Returns (plans, leftover)."""
     plans: dict[Path, list] = {}
+    seen: set = set()
     leftover = []
     for path in files:
         tmp = None
@@ -166,11 +242,17 @@ def plan_round(compiler: Path, files, registry):
                     leftover.append(f"{name}:{line}:{column}: {code} (no enclosing parameter)")
                     continue
                 function, index, _ = located
+                if (target, "parameter", offset) in seen:
+                    continue
+                seen.add((target, "parameter", offset))
                 plans.setdefault(target, []).append(("parameter", offset, function, index, None))
             elif code in ("W_DERIVED_EFFECTS", "E_DERIVED_EFFECTS"):
                 if not CLAUSE.match(text, offset):
                     leftover.append(f"{name}:{line}:{column}: {code} (no clause at span)")
                     continue
+                if (target, "clause", offset) in seen:
+                    continue
+                seen.add((target, "clause", offset))
                 plans.setdefault(target, []).append(("clause", offset, None, None, None))
             elif code == "E_ARITY":
                 match = NAME.match(text[offset : offset + 64])
@@ -178,19 +260,25 @@ def plan_round(compiler: Path, files, registry):
                     leftover.append(f"{name}:{line}:{column}: {code} (no callee name)")
                     continue
                 local = match.group(0).rsplit(".", 1)[-1]
-                removed = registry.get(local)
-                if not removed:
-                    leftover.append(f"{name}:{line}:{column}: {code} (callee {local} lost no parameter: {message})")
-                    continue
-                position, parameter_name = removed[-1]
                 arguments = arguments_of(text, offset)
-                if arguments is None or position >= len(arguments):
-                    leftover.append(f"{name}:{line}:{column}: {code} (argument {position} absent)")
+                if arguments is None:
+                    leftover.append(f"{name}:{line}:{column}: {code} (no argument list)")
                     continue
-                declared = text[arguments[position][0] : arguments[position][1]]
-                if declared != parameter_name:
-                    leftover.append(f"{name}:{line}:{column}: {code} (argument {position} is `{declared}`, not `{parameter_name}`)")
+                removed = registry.get(local)
+                position, parameter_name = None, None
+                if removed:
+                    candidate, parameter_name = removed[-1]
+                    if candidate < len(arguments) and text[arguments[candidate][0] : arguments[candidate][1]] == parameter_name:
+                        position = candidate
+                if position is None:
+                    position = infer_removed_argument(text, offset, arguments, index)
+                    parameter_name = text[arguments[position][0] : arguments[position][1]] if position is not None else None
+                if position is None:
+                    leftover.append(f"{name}:{line}:{column}: {code} (cannot tell which argument to drop: {message})")
                     continue
+                if (target, "argument", offset) in seen:
+                    continue
+                seen.add((target, "argument", offset))
                 plans.setdefault(target, []).append(("argument", offset, local, position, parameter_name))
             else:
                 leftover.append(f"{name}:{line}:{column}: {code}: {message}")
@@ -242,9 +330,10 @@ def main(argv):
         path = Path(root)
         files.extend(sorted(path.rglob("*.my")) if path.is_dir() else [path])
     registry: dict = {}
+    index = declaration_index(files)
     leftover = []
     for round_number in range(1, arguments.rounds + 1):
-        plans, leftover = plan_round(arguments.compiler, files, registry)
+        plans, leftover = plan_round(arguments.compiler, files, registry, index)
         edits = apply_plans(plans, registry) if arguments.apply else sum(len(v) for v in plans.values())
         print(f"round {round_number}: {edits} edit(s), {len(leftover)} unfixed", flush=True)
         if not arguments.apply or edits == 0:

@@ -1,0 +1,16 @@
+module main
+import schematic_inputs
+import sexpr
+import schematic
+import svg
+
+def main(host: Host) -> Result[None, int]:
+    inputs = schematic_inputs.load(host)?
+    circuit = sexpr.parse(host, inputs.circuit)?
+    pinout = sexpr.parse(host, inputs.pinout)?
+    interface = sexpr.parse(host, inputs.interface)?
+    drawing = schematic.build(host, circuit, pinout, interface)?
+    status = svg.render(host, drawing)
+    if status != 0:
+        return Err(status)
+    return Ok(None)

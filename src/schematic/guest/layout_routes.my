@@ -25,7 +25,7 @@ def distance(a: l.Point, b: l.Point) -> int:
     return x + y
 
 
-public def external(host: Host, net: text.Span, connections: list[p.Port]) -> bool:
+public def external(net: text.Span, connections: list[p.Port]) -> bool:
     target = p.Port(
         prefix=text.empty(),
         name=net,
@@ -33,13 +33,13 @@ public def external(host: Host, net: text.Span, connections: list[p.Port]) -> bo
     )
     i = 0
     while i < len(connections):
-        if p.equal(host, target, connections[i]):
+        if p.equal(target, connections[i]):
             return True
         i += 1
     return False
 
 
-def blocked(host: Host, a: l.Point, b: l.Point, net_id: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:
+def blocked(a: l.Point, b: l.Point, net_id: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:
     i = 0
     while i < len(pins):
         pin = pins[i]
@@ -58,7 +58,7 @@ def blocked(host: Host, a: l.Point, b: l.Point, net_id: int, parts: list[c.Part]
     return False
 
 
-public def build(host: Host, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], connections: list[p.Port]) -> list[Segment]:
+public def build(parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], connections: list[p.Port]) -> list[Segment]:
     out: list[Segment] = []
     i = 0
     while i < len(pins):
@@ -131,7 +131,7 @@ public def build(host: Host, parts: list[c.Part], pins: list[c.Pin], points: lis
                     junction=False,
                     terminal=True
                 ))
-            if nearest < 0 and count > 1 and not isGround and not isRail and external(host, display, connections):
+            if nearest < 0 and count > 1 and not isGround and not isRail and external(display, connections):
                 dx = 24
                 if point.x < 442:
                     dx = - 24
@@ -148,7 +148,7 @@ public def build(host: Host, parts: list[c.Part], pins: list[c.Pin], points: lis
                 dx = 24
                 if parts[pin.part].kind == 0:
                     dx = 140
-                    if not external(host, display, connections) and not isRail and not isGround:
+                    if not external(display, connections) and not isRail and not isGround:
                         dx = 50
                 if point.x < 442:
                     dx = - dx
@@ -261,12 +261,12 @@ public def build(host: Host, parts: list[c.Part], pins: list[c.Pin], points: lis
                         junction=False,
                         terminal=False
                     ))
-                elif point.x == previous.x and blocked(host, point, previous, pin.display_id, parts, pins, points):
+                elif point.x == previous.x and blocked(point, previous, pin.display_id, parts, pins, points):
                     offset = 16
                     lane = point.x + offset
                     lane_start = l.Point(x=lane, y=point.y)
                     lane_end = l.Point(x=lane, y=previous.y)
-                    while blocked(host, lane_start, lane_end, pin.display_id, parts, pins, points) and offset < 160:
+                    while blocked(lane_start, lane_end, pin.display_id, parts, pins, points) and offset < 160:
                         offset += 16
                         lane = point.x + offset
                         lane_start.x = lane

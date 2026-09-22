@@ -71,7 +71,7 @@ def displayRef(out: mut io.Output, parts: list[c.Part], index: int):
     return text.decimal(mut out, n)
 
 
-def passive(host: Host, out: mut io.Output, index: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]):
+def passive(out: mut io.Output, index: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]):
     item = parts[index]
     a = l.Point(
         x=0,
@@ -132,7 +132,7 @@ def passive(host: Host, out: mut io.Output, index: int, parts: list[c.Part], pin
     return finishGroup(mut out)
 
 
-def chip(host: Host, out: mut io.Output, index: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], pinout: list[s.Node]):
+def chip(out: mut io.Output, index: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], pinout: list[s.Node]):
     instanceStart(mut out, parts[index])
     d.rect(mut out, 352, 20, 180, l.height(points) - 40)
     d.labelStart(mut out, 442, 38, 1)
@@ -153,7 +153,7 @@ def chip(host: Host, out: mut io.Output, index: int, parts: list[c.Part], pins: 
                     side = 1
                     anchor = 2
                 d.line(mut out, point.x, point.y, point.x + side * 40, point.y)
-                d.label(mut out, point.x - side * 8, point.y + 4, anchor, c.label(host, pinout, pin.number))
+                d.label(mut out, point.x - side * 8, point.y + 4, anchor, c.label(pinout, pin.number))
                 d.labelStart(mut out, point.x + side * 3, point.y - 3, 1)
                 text.decimal(mut out, pin.number)
                 d.labelEnd(mut out)
@@ -184,11 +184,11 @@ def ports(out: mut io.Output, connections: list[p.Port]):
     return
 
 
-def ground(host: Host, net: text.Span) -> bool:
-    return text.matches(host, net, b"GND")
+def ground(net: text.Span) -> bool:
+    return text.matches(net, b"GND")
 
 
-def routes(host: Host, out: mut io.Output, segments: list[r.Segment], connections: list[p.Port]):
+def routes(out: mut io.Output, segments: list[r.Segment], connections: list[p.Port]):
     i = 0
     while i < len(segments):
         item = segments[i]
@@ -197,14 +197,14 @@ def routes(host: Host, out: mut io.Output, segments: list[r.Segment], connection
         text.write(mut out, b"\">")
         d.line(mut out, item.x1, item.y1, item.x2, item.y2)
         if item.terminal:
-            if ground(host, item.net):
+            if ground(item.net):
                 text.write(mut out, b"<g class=\"ground\">")
                 d.line(mut out, item.x2, item.y2, item.x2, item.y2 + 6)
                 d.line(mut out, item.x2 - 7, item.y2 + 6, item.x2 + 7, item.y2 + 6)
                 d.line(mut out, item.x2 - 4, item.y2 + 9, item.x2 + 4, item.y2 + 9)
                 d.line(mut out, item.x2 - 1, item.y2 + 12, item.x2 + 1, item.y2 + 12)
                 finishGroup(mut out)
-            elif not r.external(host, item.net, connections) and not l.rail(host, item.net):
+            elif not r.external(item.net, connections) and not l.rail(item.net):
                 text.write(mut out, b"<g class=\"dangling-marker\">")
                 d.line(mut out, item.x2 - 4, item.y2 - 4, item.x2 + 4, item.y2 + 4)
                 d.line(mut out, item.x2 - 4, item.y2 + 4, item.x2 + 4, item.y2 - 4)
@@ -223,7 +223,7 @@ def routes(host: Host, out: mut io.Output, segments: list[r.Segment], connection
     return
 
 
-public def render(host: Host, drawing: schematic.Schematic) -> int effects(host, managed_allocation, mutation):
+public def render(host: Host, drawing: schematic.Schematic) -> int:
     out = io.output()
     nodes = drawing.nodes
     parts = drawing.parts
@@ -231,24 +231,24 @@ public def render(host: Host, drawing: schematic.Schematic) -> int effects(host,
     pinout = drawing.pinout
     connections = drawing.connections
     points = l.build(host, parts, pins)
-    segments = r.build(host, parts, pins, points, connections)
+    segments = r.build(parts, pins, points, connections)
     text.write(mut out, b"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 884 ")
     text.decimal(mut out, l.height(points))
     text.write(mut out, b"\" width=\"884\" height=\"")
     text.decimal(mut out, l.height(points))
     text.write(mut out, b"\" role=\"img\"><title>")
-    text.escaped(mut out, c.title(host, nodes))
+    text.escaped(mut out, c.title(nodes))
     text.write(mut out, b"</title><style>svg{background:#0d1117}text{font-family:Arial,sans-serif;font-size:11px;fill:#aaa;stroke:none}line,path{stroke:#4a9;stroke-width:1.5;fill:none}.chip{fill:#16213e;stroke:#4a9eff;stroke-width:2}.symbol rect,.symbol path,.symbol line{fill:none;stroke:#8888cc;stroke-width:1.5}.component>text{font-size:9px;fill:#888}.component>text:first-of-type{font-size:9px}.component:has(.chip)>text{fill:#4a9eff;font-size:12px;font-weight:bold}[data-pin]>line{stroke:#666}[data-pin]>text{font-size:12px}[data-pin]>text:last-child{font-size:9px;fill:#666}.symbol-clear{fill:#0d1117;stroke:none}.ground line{stroke:#d6bb24}.dangling-marker line{stroke:#666}.net-label text{fill:#4a9eff;font-size:11px;font-weight:bold}[data-nc]{display:none}</style><rect width=\"100%\" height=\"100%\" fill=\"#0d1117\"/>")
-    routes(host, mut out, segments, connections)
+    routes(mut out, segments, connections)
     i = 0
     while i < len(parts):
         if parts[i].kind == 0:
-            chip(host, mut out, i, parts, pins, points, pinout)
+            chip(mut out, i, parts, pins, points, pinout)
         i += 1
     i = 0
     while i < len(parts):
         if parts[i].kind != 0:
-            passive(host, mut out, i, parts, pins, points)
+            passive(mut out, i, parts, pins, points)
         i += 1
     ports(mut out, connections)
     text.write(mut out, b"</svg>")

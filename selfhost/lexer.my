@@ -1,0 +1,576 @@
+module lexer
+
+# Production tokenizer and Python-layout lowering. The scanner works on the raw
+# source bytes so token spans and line/column locations match the stage-0 Zig
+# lexer byte for byte. The main boundary prints one token per line as
+# `<kind> <start> <end>`, or one `error <code> <line> <column> <start> <end>`
+# line and exits 0 so the differential harness never depends on exit codes.
+import source
+import token
+import diagnostic
+
+const TAB: int = 9
+const LF: int = 10
+const CR: int = 13
+const SPACE: int = 32
+const HASH: int = 35
+const SINGLE_QUOTE: int = 39
+const DOUBLE_QUOTE: int = 34
+const BACKSLASH: int = 92
+const LETTER_B: int = 98
+const LETTER_F: int = 102
+
+
+# ASCII letter (no underscore), the stage-0 alphabetic test.
+def is_letter(byte: int) -> bool:
+    if byte >= 65 and byte <= 90:
+        return True
+    return byte >= 97 and byte <= 122
+
+
+# ASCII identifier start: letters and underscore.
+def is_alpha(byte: int) -> bool:
+    if is_letter(byte):
+        return True
+    return byte == 95
+
+
+# ASCII identifier continuation: letters, digits and underscore.
+def is_alnum(byte: int) -> bool:
+    if is_alpha(byte):
+        return True
+    return byte >= 48 and byte <= 57
+
+
+# std.ascii.isAlphanumeric: letters and digits only, no underscore. Numeric
+# scanning retains trailing alphanumerics but stops before an underscore.
+def is_number_alnum(byte: int) -> bool:
+    if is_letter(byte):
+        return True
+    return byte >= 48 and byte <= 57
+
+
+def is_digit(byte: int) -> bool:
+    return byte >= 48 and byte <= 57
+
+
+# std.ascii.isWhitespace: space and bytes 9 through 13.
+def is_space(byte: int) -> bool:
+    if byte == SPACE:
+        return True
+    return byte >= 9 and byte <= 13
+
+
+# Metadata for one located lexical failure.
+def make_diag(src: source.Source, code: str, start: int, end: int, message: str) -> diagnostic.Diagnostic:
+    at = source.locate(src, start)
+    return diagnostic.Diagnostic(code=code, line=at.line, column=at.column, start=start, end=end, message=message)
+
+
+# Find the extent of a quoted byte/format literal under stage-0 termination rules.
+def byte_literal_end(src: source.Source, quote_index: int) -> Result[int, diagnostic.Diagnostic]:
+    raw = src.raw
+    limit = len(raw)
+    index = quote_index + 1
+    while index < limit:
+        if raw[index] == raw[quote_index]:
+            return Ok(index + 1)
+        if raw[index] == LF or raw[index] == CR:
+            break
+        if raw[index] == BACKSLASH:
+            index += 1
+            if index == limit or raw[index] == LF or raw[index] == CR:
+                break
+        index += 1
+    return Err(make_diag(src, diagnostic.E_BYTE_LITERAL, quote_index, index, "unterminated byte literal; escape newlines with \\n"))
+
+
+# Stage-0 numeric extent: digits, an optional dotted fraction and exponent, then
+# any trailing alphanumerics retained for a precise later checker diagnostic.
+def float_end(src: source.Source, start: int) -> int:
+    raw = src.raw
+    limit = len(raw)
+    at = start
+    while at < limit and is_digit(raw[at]):
+        at += 1
+    if at + 1 < limit and raw[at] == 46 and is_digit(raw[at + 1]):
+        at += 1
+        while at < limit and is_digit(raw[at]):
+            at += 1
+    if at < limit and (raw[at] == 101 or raw[at] == 69):
+        at += 1
+        if at < limit and (raw[at] == 43 or raw[at] == 45):
+            at += 1
+    while at < limit and is_number_alnum(raw[at]):
+        at += 1
+    return at
+
+
+# Stage-0 keyword and alias classification, length-bucketed: a word only
+# compares against candidates of its own length. Removed spellings are
+# rejected here, where the exact slice is already in hand, so `tokenize`
+# slices an identifier once and takes a single classification call.
+def classify_word(src: source.Source, word: bytes, start: int, end: int) -> Result[token.TokenKind, diagnostic.Diagnostic]:
+    n = len(word)
+    if n == 2:
+        if word == b"if":
+            return Ok(token.TokenKind.kw_if)
+        if word == b"in":
+            return Ok(token.TokenKind.kw_in)
+        if word == b"i8":
+            return Ok(token.TokenKind.kw_i8)
+        if word == b"u8":
+            return Ok(token.TokenKind.kw_u8)
+        if word == b"as":
+            return Ok(token.TokenKind.kw_as)
+        if word == b"or":
+            return Ok(token.TokenKind.or_or)
+        return Ok(token.TokenKind.ident)
+    if n == 3:
+        if word == b"i64":
+            return Ok(token.TokenKind.kw_i64)
+        if word == b"for":
+            return Ok(token.TokenKind.kw_for)
+        if word == b"i16":
+            return Ok(token.TokenKind.kw_i16)
+        if word == b"i32":
+            return Ok(token.TokenKind.kw_i32)
+        if word == b"u16":
+            return Ok(token.TokenKind.kw_u16)
+        if word == b"u32":
+            return Ok(token.TokenKind.kw_u32)
+        if word == b"u64":
+            return Ok(token.TokenKind.kw_u64)
+        if word == b"len":
+            return Ok(token.TokenKind.kw_len)
+        if word == b"def":
+            return Ok(token.TokenKind.kw_def)
+        if word == b"and":
+            return Ok(token.TokenKind.and_and)
+        if word == b"not":
+            return Ok(token.TokenKind.bang)
+        return Ok(token.TokenKind.ident)
+    if n == 4:
+        if word == b"bool":
+            return Ok(token.TokenKind.kw_bool)
+        if word == b"else":
+            return Ok(token.TokenKind.kw_else)
+        if word == b"type":
+            return Ok(token.TokenKind.kw_type)
+        if word == b"wrap":
+            return Ok(token.TokenKind.kw_wrap)
+        if word == b"todo":
+            return Ok(token.TokenKind.kw_todo)
+        if word == b"enum":
+            return Ok(token.TokenKind.kw_enum)
+        if word == b"pass":
+            return Ok(token.TokenKind.kw_pass)
+        if word == b"elif":
+            return Ok(token.TokenKind.kw_elif)
+        if word == b"case":
+            return Ok(token.TokenKind.kw_case)
+        if word == b"with":
+            return Ok(token.TokenKind.kw_with)
+        if word == b"True":
+            return Ok(token.TokenKind.kw_true)
+        if word == b"None":
+            return Ok(token.TokenKind.kw_none)
+        return Ok(token.TokenKind.ident)
+    if n == 5:
+        if word == b"while":
+            return Ok(token.TokenKind.kw_while)
+        if word == b"break":
+            return Ok(token.TokenKind.kw_break)
+        if word == b"const":
+            return Ok(token.TokenKind.kw_const)
+        if word == b"union":
+            return Ok(token.TokenKind.kw_union)
+        if word == b"match":
+            return Ok(token.TokenKind.kw_match)
+        if word == b"arena":
+            return Ok(token.TokenKind.kw_arena)
+        if word == b"class":
+            return Ok(token.TokenKind.kw_class)
+        if word == b"False":
+            return Ok(token.TokenKind.kw_false)
+        return Ok(token.TokenKind.ident)
+    if n == 6:
+        if word == b"f64_eq":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`f64_eq` was removed from the language surface"))
+        if word == b"f64_lt":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`f64_lt` was removed from the language surface"))
+        if word == b"f64_le":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`f64_le` was removed from the language surface"))
+        if word == b"bit_or":
+            return Ok(token.TokenKind.kw_bit_or)
+        if word == b"return":
+            return Ok(token.TokenKind.kw_return)
+        if word == b"domain":
+            return Ok(token.TokenKind.kw_domain)
+        if word == b"unwrap":
+            return Ok(token.TokenKind.kw_unwrap)
+        if word == b"assert":
+            return Ok(token.TokenKind.kw_assert)
+        return Ok(token.TokenKind.ident)
+    if n == 7:
+        if word == b"f64_add":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`f64_add` was removed from the language surface"))
+        if word == b"f64_sub":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`f64_sub` was removed from the language surface"))
+        if word == b"f64_mul":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`f64_mul` was removed from the language surface"))
+        if word == b"f64_div":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`f64_div` was removed from the language surface"))
+        if word == b"f64_abs":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`f64_abs` was removed from the language surface"))
+        if word == b"f64_neg":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`f64_neg` was removed from the language surface"))
+        if word == b"bit_and":
+            return Ok(token.TokenKind.kw_bit_and)
+        if word == b"bit_xor":
+            return Ok(token.TokenKind.kw_bit_xor)
+        if word == b"replace":
+            return Ok(token.TokenKind.kw_replace)
+        if word == b"private":
+            return Ok(token.TokenKind.kw_private)
+        return Ok(token.TokenKind.ident)
+    if n == 8:
+        if word == b"f64_sqrt":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`f64_sqrt` was removed from the language surface"))
+        if word == b"f64_ceil":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`f64_ceil` was removed from the language surface"))
+        if word == b"continue":
+            return Ok(token.TokenKind.kw_continue)
+        return Ok(token.TokenKind.ident)
+    if n == 9:
+        if word == b"f64_floor":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`f64_floor` was removed from the language surface"))
+        if word == b"f64_trunc":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`f64_trunc` was removed from the language surface"))
+        if word == b"clock_cap":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`clock_cap` was removed from the language surface"))
+        if word == b"clock_now":
+            return Ok(token.TokenKind.kw_clock_now)
+        return Ok(token.TokenKind.ident)
+    if n == 10:
+        if word == b"f64_to_u64":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`f64_to_u64` was removed from the language surface"))
+        if word == b"shift_left":
+            return Ok(token.TokenKind.kw_shift_left)
+        if word == b"conversion":
+            return Ok(token.TokenKind.kw_conversion)
+        if word == b"random_cap":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`random_cap` was removed from the language surface"))
+        if word == b"random_u64":
+            return Ok(token.TokenKind.kw_random_u64)
+        return Ok(token.TokenKind.ident)
+    if n == 11:
+        if word == b"shift_right":
+            return Ok(token.TokenKind.kw_shift_right)
+        if word == b"network_cap":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`network_cap` was removed from the language surface"))
+        return Ok(token.TokenKind.ident)
+    if n == 12:
+        if word == b"f64_from_u64":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`f64_from_u64` was removed from the language surface"))
+        if word == b"wrapping_add":
+            return Ok(token.TokenKind.kw_wrapping_add)
+        if word == b"wrapping_sub":
+            return Ok(token.TokenKind.kw_wrapping_sub)
+        if word == b"wrapping_mul":
+            return Ok(token.TokenKind.kw_wrapping_mul)
+        if word == b"codec_encode":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`codec_encode` was removed from the language surface"))
+        if word == b"codec_decode":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`codec_decode` was removed from the language surface"))
+        if word == b"__float_sqrt":
+            return Ok(token.TokenKind.kw_f64_sqrt)
+        return Ok(token.TokenKind.ident)
+    if n == 13:
+        if word == b"read_resource":
+            return Ok(token.TokenKind.kw_read_resource)
+        return Ok(token.TokenKind.ident)
+    if n == 14:
+        if word == b"saturating_add":
+            return Ok(token.TokenKind.kw_saturating_add)
+        if word == b"saturating_sub":
+            return Ok(token.TokenKind.kw_saturating_sub)
+        if word == b"saturating_mul":
+            return Ok(token.TokenKind.kw_saturating_mul)
+        if word == b"filesystem_cap":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`filesystem_cap` was removed from the language surface"))
+        if word == b"write_resource":
+            return Ok(token.TokenKind.kw_write_resource)
+        return Ok(token.TokenKind.ident)
+    if n == 15:
+        if word == b"environment_cap":
+            return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`environment_cap` was removed from the language surface"))
+        if word == b"environment_get":
+            return Ok(token.TokenKind.kw_environment_get)
+        return Ok(token.TokenKind.ident)
+    if n == 16:
+        if word == b"acquire_resource":
+            return Ok(token.TokenKind.kw_acquire_resource)
+        return Ok(token.TokenKind.ident)
+    if n == 17:
+        if word == b"complete_resource":
+            return Ok(token.TokenKind.kw_complete_resource)
+        if word == b"restrict_resource":
+            return Ok(token.TokenKind.kw_restrict_resource)
+        return Ok(token.TokenKind.ident)
+    return Ok(token.TokenKind.ident)
+
+
+# '&' and '=>' were removed with no replacement and fail at tokenization.
+def reject_removed_punctuation(src: source.Source, ch: int, following: int, start: int, end: int) -> Result[int, diagnostic.Diagnostic]:
+    if ch == 38:
+        return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end, "`&` was removed and has no replacement"))
+    if ch == 61 and following == 62:
+        return Err(make_diag(src, diagnostic.E_REMOVED_SPELLING, start, end + 1, "`=>` was removed and has no replacement"))
+    return Ok(0)
+
+
+# Raw tokenization without indentation lowering.
+def tokenize(src: source.Source) -> Result[list[token.Token], diagnostic.Diagnostic]:
+    raw = src.raw
+    limit = len(raw)
+    tokens: list[token.Token] = []
+    index = 0
+    while index < limit:
+        start = index
+        ch = raw[index]
+        if ch == SPACE or (ch >= 9 and ch <= 13):
+            index += 1
+            continue
+        if ch == HASH:
+            while index < limit and raw[index] != LF:
+                index += 1
+            continue
+        if ch == LETTER_F and index + 1 < limit and (raw[index + 1] == DOUBLE_QUOTE or raw[index + 1] == SINGLE_QUOTE):
+            index = byte_literal_end(src, start + 1)?
+            tokens.append(token.Token(kind=token.TokenKind.format, start=start, end=index))
+            continue
+        if ch == DOUBLE_QUOTE or ch == SINGLE_QUOTE or (ch == LETTER_B and index + 1 < limit and (raw[index + 1] == DOUBLE_QUOTE or raw[index + 1] == SINGLE_QUOTE)):
+            quote = start
+            if ch == LETTER_B:
+                quote = start + 1
+            index = byte_literal_end(src, quote)?
+            tokens.append(token.Token(kind=token.TokenKind.bytes, start=start, end=index))
+            continue
+        if (ch >= 65 and ch <= 90) or (ch >= 97 and ch <= 122) or ch == 95:
+            index += 1
+            while index < limit:
+                byte = raw[index]
+                if (byte >= 65 and byte <= 90) or (byte >= 97 and byte <= 122) or (byte >= 48 and byte <= 57) or byte == 95:
+                    index += 1
+                    continue
+                break
+            word = raw[start:index]
+            kind = classify_word(src, word, start, index)?
+            tokens.append(token.Token(kind=kind, start=start, end=index))
+            continue
+        if ch >= 48 and ch <= 57:
+            index = float_end(src, start)
+            tokens.append(token.Token(kind=token.TokenKind.integer, start=start, end=index))
+            continue
+        index += 1
+        following = 0
+        if index < limit:
+            following = raw[index]
+        _ = reject_removed_punctuation(src, ch, following, start, index)?
+        kind = token.TokenKind.ident
+        if ch == 46:
+            kind = token.TokenKind.dot
+        elif ch == 40:
+            kind = token.TokenKind.lparen
+        elif ch == 41:
+            kind = token.TokenKind.rparen
+        elif ch == 44:
+            kind = token.TokenKind.comma
+        elif ch == 61:
+            if following == 61:
+                index += 1
+                kind = token.TokenKind.eq_eq
+            else:
+                kind = token.TokenKind.equal
+        elif ch == 58:
+            kind = token.TokenKind.colon
+        elif ch == 47:
+            if following == 47:
+                if index + 1 < limit and raw[index + 1] == 61:
+                    index += 2
+                    kind = token.TokenKind.slash_slash_equal
+                else:
+                    index += 1
+                    kind = token.TokenKind.slash_slash
+            elif following == 61:
+                index += 1
+                kind = token.TokenKind.slash_equal
+            else:
+                kind = token.TokenKind.slash
+        elif ch == 45:
+            if following == 62:
+                index += 1
+                kind = token.TokenKind.arrow
+            elif following == 61:
+                index += 1
+                kind = token.TokenKind.minus_equal
+            else:
+                kind = token.TokenKind.minus
+        elif ch == 43:
+            if following == 61:
+                index += 1
+                kind = token.TokenKind.plus_equal
+            else:
+                kind = token.TokenKind.plus
+        elif ch == 42:
+            if following == 61:
+                index += 1
+                kind = token.TokenKind.star_equal
+            else:
+                kind = token.TokenKind.star
+        elif ch == 37:
+            if following == 61:
+                index += 1
+                kind = token.TokenKind.percent_equal
+            else:
+                kind = token.TokenKind.percent
+        elif ch == 33:
+            if following == 61:
+                index += 1
+                kind = token.TokenKind.bang_eq
+            else:
+                return Err(make_diag(src, diagnostic.E_TOKEN, start, index, "unexpected character in source"))
+        elif ch == 60:
+            if following == 61:
+                index += 1
+                kind = token.TokenKind.le
+            else:
+                kind = token.TokenKind.lt
+        elif ch == 62:
+            if following == 61:
+                index += 1
+                kind = token.TokenKind.ge
+            else:
+                kind = token.TokenKind.gt
+        elif ch == 91:
+            kind = token.TokenKind.lbracket
+        elif ch == 93:
+            kind = token.TokenKind.rbracket
+        elif ch == 123:
+            kind = token.TokenKind.lbrace
+        elif ch == 125:
+            kind = token.TokenKind.rbrace
+        elif ch == 59:
+            kind = token.TokenKind.semicolon
+        elif ch == 63:
+            kind = token.TokenKind.question
+        elif ch == 64:
+            kind = token.TokenKind.at
+        else:
+            return Err(make_diag(src, diagnostic.E_TOKEN, start, index, "unexpected character in source"))
+        tokens.append(token.Token(kind=kind, start=start, end=index))
+    tokens.append(token.Token(kind=token.TokenKind.eof, start=index, end=index))
+    return Ok(tokens)
+
+
+
+# Python-layout lowering: a colon at end of a logical line opens a suite, and
+# dedents close it with zero-width spans at the next significant token.
+def lower(raw_tokens: list[token.Token], src: source.Source) -> Result[list[token.Token], diagnostic.Diagnostic]:
+    out: list[token.Token] = []
+    levels: list[int] = [0]
+    while len(levels) < 257:
+        levels.append(0)
+    level = 0
+    delimiters = 0
+    previous_line = 0 - 1
+    pending = False
+    index = 0
+    count = len(raw_tokens)
+    # Raw tokens are in source order, so the line pointer only moves forward.
+    # One amortized O(1) walk replaces two binary searches per token.
+    starts = src.line_starts
+    line_count = len(starts)
+    line_ptr = 0
+    while index < count:
+        original = raw_tokens[index]
+        kind = original.kind
+        token_start = original.start
+        token_end = original.end
+        while line_ptr + 1 < line_count and starts[line_ptr + 1] <= token_start:
+            line_ptr += 1
+        line = starts[line_ptr]
+        if kind == token.TokenKind.eof or (previous_line != line and delimiters == 0):
+            indent = 0
+            if kind != token.TokenKind.eof:
+                at = line
+                while at < token_start:
+                    ch = src.raw[at]
+                    if ch == TAB:
+                        return Err(make_diag(src, diagnostic.E_INDENTATION, token_start, token_end, "indentation uses spaces; tabs are not permitted"))
+                    if ch != SPACE and ch != CR:
+                        break
+                    indent += 1
+                    at += 1
+            if pending:
+                if kind == token.TokenKind.eof or indent <= levels[level]:
+                    return Err(make_diag(src, diagnostic.E_INDENTATION, token_start, token_end, "expected an indented block after ':'"))
+                if level + 1 == len(levels):
+                    return Err(make_diag(src, diagnostic.E_NESTING_LIMIT, token_start, token_end, "indentation exceeds 256 levels"))
+                level += 1
+                levels[level] = indent
+                pending = False
+            else:
+                while indent < levels[level]:
+                    level -= 1
+                    out.append(token.Token(kind=token.TokenKind.dedent, start=token_start, end=token_start))
+                if indent != levels[level]:
+                    return Err(make_diag(src, diagnostic.E_INDENTATION, token_start, token_end, "unexpected indentation or dedent does not match an enclosing block"))
+        previous_line = line
+        next_line = False
+        if index + 1 < count:
+            if raw_tokens[index + 1].kind == token.TokenKind.eof:
+                next_line = True
+            else:
+                next_start = raw_tokens[index + 1].start
+                look = line_ptr
+                while look + 1 < line_count and starts[look + 1] <= next_start:
+                    look += 1
+                if starts[look] != line:
+                    next_line = True
+        if kind == token.TokenKind.colon and delimiters == 0 and next_line:
+            kind = token.TokenKind.indent
+            pending = True
+        else:
+            if kind == token.TokenKind.lparen or kind == token.TokenKind.lbracket or kind == token.TokenKind.lbrace:
+                delimiters += 1
+            if kind == token.TokenKind.rparen or kind == token.TokenKind.rbracket or kind == token.TokenKind.rbrace:
+                delimiters -= 1
+                if delimiters < 0:
+                    delimiters = 0
+        out.append(token.Token(kind=kind, start=token_start, end=token_end))
+        index += 1
+    return Ok(out)
+
+
+# Full stage-0 token stream: raw tokenization followed by layout lowering.
+public def lex(src: source.Source) -> Result[list[token.Token], diagnostic.Diagnostic]:
+    raw = tokenize(src)?
+    return lower(raw, src)
+
+
+def main(args: list[str], fs: Filesystem, out: Stream) -> Result[int, str] effects(filesystem, managed_allocation, output):
+    if len(args) != 1:
+        return Err("usage: lexer <file.my>")
+    text = fs.read_text(args[0])?
+    raw = text.encode()
+    src = source.make(args[0], raw, text)
+    match lex(src):
+        case Ok(tokens):
+            for tok in tokens:
+                out.print(token.kind_name(tok.kind), tok.start, tok.end)
+            return Ok(0)
+        case Err(item):
+            out.print("error", item.code, item.line, item.column, item.start, item.end)
+            return Ok(0)

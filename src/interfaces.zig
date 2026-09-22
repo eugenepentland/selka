@@ -580,23 +580,43 @@ pub const Index = struct {
     }
     /// Effects one declaration's parameter list permits by construction. It is
     /// read from the signature alone — resolved capability parameter types, the
-    /// `mut` markers, every callback parameter's declared ceiling — plus
-    /// `managed_allocation`, which is always ambient. A checked body may not
-    /// exceed it, and an explicit `noalloc`/`noio`/`effects(...)` clause only
-    /// narrows it, so this is the ceiling the interface publishes for a
-    /// declaration whose body was never checked.
+    /// `mut` markers, every callback parameter's declared ceiling, and the
+    /// effects an external resource type carries in the parameters or the
+    /// result — plus `managed_allocation`, which is always ambient. A checked
+    /// body may not exceed it, and an explicit `noalloc`/`noio`/`effects(...)`
+    /// clause only narrows it, so this is the ceiling the interface publishes for
+    /// a declaration whose body was never checked.
     fn derivedCeiling(self: *Index, module: usize, signature: ast.FunctionSignature) ContractError!effect_set.Mask {
         var mask = effect_set.bit(.managed_allocation);
+        mask |= try self.resourceTypeEffect(module, signature.return_type);
         for (signature.parameters) |parameter| {
             if (parameter.mut) mask |= effect_set.bit(.mutation);
             const text = try self.contractTypeText(module, parameter.ty, signature.type_parameters);
             if (capabilityEffect(text)) |effect| mask |= effect_set.bit(effect);
+            mask |= try self.resourceTypeEffect(module, parameter.ty);
             for (self.units[module].syntax.types.expressions.callbacks) |callback| {
                 if (callback.span.start != parameter.ty.start or callback.span.end != parameter.ty.end) continue;
                 mask |= callback.effect_bound.allowed;
             }
         }
         return mask;
+    }
+
+    /// The effect an external `resource NAME: kind` type carries when it appears
+    /// in a signature, or zero for every other type. Only a directly named
+    /// resource is read here; a resource nested inside a record is caught by the
+    /// checked program, which walks the whole record catalog.
+    fn resourceTypeEffect(self: *Index, module: usize, span: source.Span) ContractError!effect_set.Mask {
+        const identity = self.typeIdentity(module, span) catch return 0;
+        const symbol = self.units[identity.module].symbols.items[identity.symbol];
+        const source_text = self.project.modules.items[identity.module].src;
+        for (self.units[identity.module].syntax.types.resources) |resource| {
+            if (resource.name.start != symbol.span.start or resource.name.end != symbol.span.end) continue;
+            const kind = source_text.text(resource.backing);
+            if (std.mem.eql(u8, kind, "filesystem")) return effect_set.bit(.filesystem);
+            if (std.mem.eql(u8, kind, "network")) return effect_set.bit(.network);
+        }
+        return 0;
     }
 
     /// Ceiling the interface publishes for one declaration: the derived set, and

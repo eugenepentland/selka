@@ -18,10 +18,9 @@ import sys
 
 OUT = Path(__file__).resolve().parent
 sys.path.insert(0, str(OUT))
-from measure import DOCUMENTS, NATIVE_ARMS, ROOT, WORK  # noqa: E402
+from measure import DOCUMENTS, NATIVE_ARMS, ROOT, WORK, declared_hosts  # noqa: E402
 
-DECLARED = ('io::circuit_input,io::pinout_input,io::interface_input,'
-            'io::length,io::byte,io::put,io::issue')
+DECLARED = declared_hosts()
 MYLANG = WORK / 'mylang-o3'
 SCRATCH = WORK / 'differential'
 

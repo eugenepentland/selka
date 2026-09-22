@@ -1,123 +1,48 @@
-schematic_inputs.my:7:55: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def load(host: Host) -> Result[io.Inputs, int] effects(host, managed_allocation):
-                                                        ^
-io.my:19:62: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  def load(host: Host, identity: int) -> Result[Document, int] effects(host, managed_allocation):
-                                                               ^
-io.my:42:31: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it
-  public def output() -> Output effects(managed_allocation):
-                                ^
-io.my:47:50: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation, mutation)` is exactly what the parameters imply; remove it
-  public def append(out: mut Output, value: bytes) effects(managed_allocation, mutation):
-                                                   ^
-io.my:58:51: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation, mutation)` is exactly what the parameters imply; remove it
-  public def appendByte(out: mut Output, value: u8) effects(managed_allocation, mutation):
-                                                    ^
-io.my:69:51: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation, mutation)` is exactly what the parameters imply; remove it
-  public def appendInt(out: mut Output, value: int) effects(managed_allocation, mutation):
-                                                    ^
-io.my:101:50: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def flush(host: Host, out: Output) -> int effects(host, managed_allocation):
-                                                   ^
-io.my:145:54: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def inputs(host: Host) -> Result[Inputs, int] effects(host, managed_allocation):
-                                                       ^
-sexpr.my:18:54: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it
-  public def at(nodes: list[Node], index: int) -> Node effects(managed_allocation):
-                                                       ^
-sexpr.my:28:81: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def form(host: Host, nodes: list[Node], index: int, name: bytes) -> bool effects(host, managed_allocation):
-                                                                                  ^
-sexpr.my:35:80: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def parse(host: Host, document: io.Document) -> Result[list[Node], int] effects(host, managed_allocation):
-                                                                                 ^
-text.my:12:28: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it
-  public def empty() -> Span effects(managed_allocation):
-                             ^
-text.my:59:52: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation, mutation)` is exactly what the parameters imply; remove it
-  public def write(out: mut io.Output, value: bytes) effects(managed_allocation, mutation):
-                                                     ^
-text.my:63:49: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation, mutation)` is exactly what the parameters imply; remove it
-  public def escaped(out: mut io.Output, a: Span) effects(managed_allocation, mutation):
-                                                  ^
-text.my:96:52: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation, mutation)` is exactly what the parameters imply; remove it
-  public def decimal(out: mut io.Output, value: int) effects(managed_allocation, mutation):
-                                                     ^
-schematic.my:16:136: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def build(host: Host, nodes: list[sexpr.Node], pinout: list[sexpr.Node], interface: list[sexpr.Node]) -> Result[Schematic, int] effects(host, managed_allocation):
-                                                                                                                                         ^
-circuit.my:54:57: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def body(host: Host, nodes: list[s.Node]) -> int effects(host, managed_allocation):
-                                                          ^
-circuit.my:66:64: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def title(host: Host, nodes: list[s.Node]) -> text.Span effects(host, managed_allocation):
-                                                                 ^
-circuit.my:85:85: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def collectParts(host: Host, nodes: list[s.Node]) -> Result[list[Part], int] effects(host, managed_allocation):
-                                                                                      ^
-circuit.my:129:78: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def label(host: Host, pinout: list[s.Node], number: int) -> text.Span effects(host, managed_allocation):
-                                                                               ^
-circuit.my:138:124: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def collectPins(host: Host, nodes: list[s.Node], parts: list[Part], pinout: list[s.Node]) -> Result[list[Pin], int] effects(host, managed_allocation):
-                                                                                                                             ^
-circuit.my:195:86: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def group(host: Host, nodes: list[s.Node], reference: text.Span) -> text.Span effects(host, managed_allocation):
-                                                                                       ^
-circuit.my:254:78: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation, mutation)` is exactly what the parameters imply; remove it
-  public def normalize(host: Host, parts: mut list[Part], pins: mut list[Pin]) effects(host, managed_allocation, mutation):
-                                                                               ^
-validate.my:79:59: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def source(host: Host, nodes: list[s.Node]) -> int effects(host, managed_allocation):
-                                                            ^
-validate.my:113:64: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def pinoutCheck(host: Host, nodes: list[s.Node]) -> int effects(host, managed_allocation):
-                                                                 ^
-validate.my:163:120: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def model(host: Host, nodes: list[s.Node], parts: list[c.Part], pins: list[c.Pin], pinout: list[s.Node]) -> int effects(host, managed_allocation):
-                                                                                                                         ^
-ports.my:49:101: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def collect(host: Host, nodes: list[s.Node], lanes: list[s.Node]) -> Result[list[Port], int] effects(host, managed_allocation):
-                                                                                                      ^
-ports.my:143:84: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def validate(host: Host, connections: list[Port], pins: list[c.Pin]) -> int effects(host, managed_allocation):
-                                                                                     ^
-svg.my:226:68: error[E_DERIVED_EFFECTS]: `effects(host, managed_allocation, mutation)` names `mutation`, which no parameter supplies; add `changed: mut T` to the parameters or drop the clause
-  public def render(host: Host, drawing: schematic.Schematic) -> int effects(host, managed_allocation, mutation):
-                                                                     ^
-draw.my:6:69: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation, mutation)` is exactly what the parameters imply; remove it
-  public def rect(out: mut io.Output, x: int, y: int, w: int, h: int) effects(managed_allocation, mutation):
-                                                                      ^
-draw.my:19:73: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation, mutation)` is exactly what the parameters imply; remove it
-  public def line(out: mut io.Output, x1: int, y1: int, x2: int, y2: int) effects(managed_allocation, mutation):
-                                                                          ^
-draw.my:32:72: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation, mutation)` is exactly what the parameters imply; remove it
-  public def labelStart(out: mut io.Output, x: int, y: int, anchor: int) effects(managed_allocation, mutation):
-                                                                         ^
-draw.my:48:41: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation, mutation)` is exactly what the parameters imply; remove it
-  public def labelEnd(out: mut io.Output) effects(managed_allocation, mutation):
-                                          ^
-draw.my:53:85: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation, mutation)` is exactly what the parameters imply; remove it
-  public def label(out: mut io.Output, x: int, y: int, anchor: int, value: text.Span) effects(managed_allocation, mutation):
-                                                                                      ^
-draw.my:59:50: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation, mutation)` is exactly what the parameters imply; remove it
-  public def symbol(out: mut io.Output, kind: int) effects(managed_allocation, mutation):
-                                                   ^
-layout.my:21:54: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def rail(host: Host, span: text.Span) -> bool effects(host, managed_allocation):
-                                                       ^
-layout.my:430:85: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def build(host: Host, parts: list[c.Part], pins: list[c.Pin]) -> list[Point] effects(host, managed_allocation):
-                                                                                      ^
-layout_graph.my:19:54: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def rail(host: Host, span: text.Span) -> bool effects(host, managed_allocation):
-                                                       ^
-layout_graph.my:43:83: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
+text.my:21:18: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def equal(host: Host, a: Span, b: Span) -> bool effects(host):
+                   ^
+text.my:32:20: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def matches(host: Host, a: Span, b: bytes) -> bool effects(host):
+                     ^
+text.my:43:19: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def number(host: Host, a: Span) -> int effects(host):
+                    ^
+text.my:100:23: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def identifier(host: Host, a: Span) -> bool effects(host):
+                        ^
+text.my:118:19: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public def folded(host: Host, a: Span, b: Span) -> bool effects(host):
+                    ^
+ports.my:121:12: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def byteAt(host: Host, item: Port, index: int) -> u8:
+             ^
+svg.my:74:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def passive(host: Host, out: mut io.Output, index: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]):
+              ^
+layout.my:60:17: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def collectRows(host: Host, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> list[Row]:
+                  ^
+layout.my:223:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def nearest(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net], lookup: list[int]) -> int:
+              ^
+layout.my:223:37: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def nearest(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net], lookup: list[int]) -> int:
+                                      ^
+layout.my:274:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def depth(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:
+            ^
+layout.my:274:35: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def depth(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:
+                                    ^
+layout.my:274:56: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def depth(host: Host, pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net], lookup: list[int]) -> int:
+                                                         ^
+layout_graph.my:43:18: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
   public def build(host: Host, parts: list[c.Part], pins: list[c.Pin]) -> list[Net] effects(host, managed_allocation):
-                                                                                    ^
-layout_routes.my:28:84: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def external(host: Host, net: text.Span, connections: list[p.Port]) -> bool effects(host, managed_allocation):
-                                                                                     ^
-layout_routes.my:61:137: warning[W_DERIVED_EFFECTS]: `effects(host, managed_allocation)` is exactly what the parameters imply; remove it
-  public def build(host: Host, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], connections: list[p.Port]) -> list[Segment] effects(host, managed_allocation):
-                                                                                                                                          ^
+                   ^
+layout_routes.my:42:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def blocked(host: Host, a: l.Point, b: l.Point, net_id: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:
+              ^
+layout_routes.my:42:62: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  def blocked(host: Host, a: l.Point, b: l.Point, net_id: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]) -> bool:
+                                                               ^

@@ -46,7 +46,9 @@ pub const diagnostic_output = @import("diagnostic_output.zig");
 /// Parse-only top-level declaration listing for store and tooling consumers.
 pub const declarations = @import("declarations.zig");
 /// Checked mechanical translation from the legacy brace surface to Python syntax.
-const lexer = @import("lexer.zig");
+pub const lexer = @import("lexer.zig");
+/// `tokens-v1` machine output used as the stage-0 lexer oracle.
+pub const tokens_dump = @import("tokens_dump.zig");
 const parser = @import("parser.zig");
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
