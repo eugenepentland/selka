@@ -768,6 +768,98 @@ test "M2 a mut footprint still rejects a writable argument aliasing a read-only 
     , "E_MUTATION_OVERLAP", "may alias");
 }
 
+/// Two families of mutually recursive classes, `Expr` over three node classes
+/// and `Heap` over three object classes with four fields each, up to the last
+/// field of `Obj2`; `recursive_graphs_tail` closes them with a
+/// `count(state: mut State, e: Expr)` that makes the overlap proof walk both.
+const recursive_graphs_head =
+    \\class Node0:
+    \\    left: Expr
+    \\    right: Expr
+    \\    items: list[Expr]
+    \\    extra: list[Expr]
+    \\
+    \\class Node1:
+    \\    left: Expr
+    \\    right: Expr
+    \\    items: list[Expr]
+    \\    extra: list[Expr]
+    \\
+    \\class Node2:
+    \\    left: Expr
+    \\    right: Expr
+    \\    items: list[Expr]
+    \\    extra: list[Expr]
+    \\
+    \\union Expr:
+    \\    leaf: int,
+    \\    n0: Node0,
+    \\    n1: Node1,
+    \\    n2: Node2
+    \\
+    \\class Obj0:
+    \\    next: Heap
+    \\    values: list[float]
+    \\    more: list[Heap]
+    \\    extra: list[Heap]
+    \\
+    \\class Obj1:
+    \\    next: Heap
+    \\    values: list[float]
+    \\    more: list[Heap]
+    \\    extra: list[Heap]
+    \\
+    \\class Obj2:
+    \\    next: Heap
+    \\    values: list[float]
+    \\    more: list[Heap]
+    \\
+;
+/// The rest of the recursive-graph program after the last field of `Obj2`.
+const recursive_graphs_tail =
+    \\
+    \\union Heap:
+    \\    empty: int,
+    \\    o0: Obj0,
+    \\    o1: Obj1,
+    \\    o2: Obj2
+    \\
+    \\class State:
+    \\    objects: list[Heap]
+    \\    depth: int
+    \\
+    \\def count(state: mut State, e: Expr) -> int:
+    \\    state.depth = state.depth + 1
+    \\    match e:
+    \\        case Expr.leaf(v):
+    \\            return v
+    \\        case _:
+    \\            return 0
+    \\
+    \\def walk(state: mut State, e: Expr) -> int:
+    \\    return count(mut state, e)
+    \\
+    \\def main() -> int:
+    \\    s = State(objects=[], depth=0)
+    \\    return walk(mut s, Expr.leaf(3))
+    \\
+;
+
+// The per-path walk this replaced re-walked every path to a pair, so these two
+// graphs never finished checking; expanding each pair once settles them at once.
+// spec: MUT-OVERLAP-PROOF-1
+test "the overlap proof over two recursive class graphs expands each type pair once" {
+    var c = try language.Compilation.init(t.allocator, fixture_path, recursive_graphs_head ++ "    extra: list[Heap]\n" ++ recursive_graphs_tail);
+    defer c.deinit();
+    try c.check();
+    try t.expectEqual(@as(?language.diagnostic.Diagnostic, null), firstError(c.diagnostics.items));
+}
+
+// spec-case: MUT-OVERLAP-PROOF-1
+test "the overlap proof still rejects two recursive graphs that share one component deep down" {
+    try reject(recursive_graphs_head ++ "    source: list[Expr]\n" ++ recursive_graphs_tail, "E_MUTATION_OVERLAP", "may alias");
+}
+
 // spec-case: MUT-PARAM-4
 test "M2 forwarding mut x where x is the caller's own parameter needs that parameter mut" {
     try reject(

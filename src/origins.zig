@@ -786,47 +786,81 @@ fn mutCoversUnknown(permitted: u16, function: typed.Function) bool {
     return unknownWritePositions(function) & ~permitted == 0;
 }
 
-/// One pair of nominal record identities already assumed disjoint on a path.
-pub const TypePair = struct { a: usize, b: usize };
+/// One unordered pair of types the disjointness proof has queued.
+const TypePair = struct { low: typed.Type, high: typed.Type };
 
-fn registeredPair(stack: []const TypePair, a: usize, b: usize) bool {
-    for (stack) |pair| if (pair.a == a and pair.b == b) return true;
-    return false;
-}
+/// What one queued pair settles on its own.
+const PairVerdict = enum { alias, disjoint, expand };
 
-/// Whether a value of `target` may be one of `container`'s managed components.
-fn aliasComponents(program: typed.Program, target: typed.Type, container: typed.Type, stack: []TypePair, depth: usize) bool {
-    if (!container.isAggregate()) return false;
-    const index = container.recordIndex();
-    if (index >= program.records.len) return true;
-    const record = program.records[index];
-    if (record.shape.buffer) |element| if (typesMayAlias(program, target, element, stack, depth)) return true;
-    if (record.shape.array) |array| if (typesMayAlias(program, target, array.element, stack, depth)) return true;
-    if (record.shape.domain) |domain| if (typesMayAlias(program, target, domain, stack, depth)) return true;
-    if (record.shape.variants) |variants| for (variants.cases) |case| {
-        const payload = case.payload orelse continue;
-        if (typesMayAlias(program, target, payload, stack, depth)) return true;
-    };
-    for (record.fields) |field| if (typesMayAlias(program, target, field.ty, stack, depth)) return true;
-    return false;
-}
-
-/// Sound proof that two argument types cannot share mutable managed storage.
-/// Distinct nominal identities only alias through a shared component; re-entering
-/// the same pair on one path is treated as no new alias (coinductive).
-pub fn typesMayAlias(program: typed.Program, a: typed.Type, b: typed.Type, stack: []TypePair, depth: usize) bool {
-    if (a == b) return true;
-    if (!mayContainManaged(program, a) or !mayContainManaged(program, b)) return false;
-    if (!a.isAggregate() or !b.isAggregate()) return false;
+/// Settle a pair without looking at components: the same type or the same
+/// nominal record may alias, a side that holds no managed storage cannot, and a
+/// record the catalog cannot describe may. Anything else aliases only through
+/// a component.
+fn pairVerdict(program: typed.Program, a: typed.Type, b: typed.Type) PairVerdict {
+    if (a == b) return .alias;
+    if (!mayContainManaged(program, a) or !mayContainManaged(program, b)) return .disjoint;
+    if (!a.isAggregate() or !b.isAggregate()) return .disjoint;
     const ai = a.recordIndex();
     const bi = b.recordIndex();
-    if (ai >= program.records.len or bi >= program.records.len) return true;
-    if (ai == bi) return true;
-    if (depth >= stack.len) return true;
-    if (registeredPair(stack[0..depth], ai, bi)) return false;
-    stack[depth] = .{ .a = ai, .b = bi };
-    if (aliasComponents(program, a, b, stack, depth + 1)) return true;
-    if (aliasComponents(program, b, a, stack, depth + 1)) return true;
+    if (ai >= program.records.len or bi >= program.records.len) return .alias;
+    if (ai == bi) return .alias;
+    return .expand;
+}
+
+/// The proof's whole state for one query: every pair ever queued, so each is
+/// expanded at most once, and the pairs still to expand.
+const AliasSearch = struct {
+    allocator: std.mem.Allocator,
+    program: typed.Program,
+    seen: std.AutoHashMapUnmanaged(TypePair, void) = .empty,
+    pending: std.ArrayList(TypePair) = .empty,
+
+    fn deinit(self: *AliasSearch) void {
+        self.seen.deinit(self.allocator);
+        self.pending.deinit(self.allocator);
+    }
+
+    /// Queue an unordered pair unless this query already queued it.
+    fn queue(self: *AliasSearch, a: typed.Type, b: typed.Type) std.mem.Allocator.Error!void {
+        const pair: TypePair = if (@backingInt(a) <= @backingInt(b)) .{ .low = a, .high = b } else .{ .low = b, .high = a };
+        if ((try self.seen.getOrPut(self.allocator, pair)).found_existing) return;
+        try self.pending.append(self.allocator, pair);
+    }
+
+    /// Queue `target` against every managed component of `container`.
+    fn queueComponents(self: *AliasSearch, target: typed.Type, container: typed.Type) std.mem.Allocator.Error!void {
+        const record = self.program.records[container.recordIndex()];
+        if (record.shape.buffer) |element| try self.queue(target, element);
+        if (record.shape.array) |array| try self.queue(target, array.element);
+        if (record.shape.domain) |domain| try self.queue(target, domain);
+        if (record.shape.variants) |variants| for (variants.cases) |case| {
+            if (case.payload) |payload| try self.queue(target, payload);
+        };
+        for (record.fields) |field| try self.queue(target, field.ty);
+    }
+};
+
+/// Sound proof that two argument types cannot share mutable managed storage.
+/// Two values may alias exactly when some pair reachable from `(a, b)`, by
+/// replacing either side with one of its managed components, is the same type,
+/// the same nominal record or a record the catalog cannot describe. The search
+/// is a reachability walk over unordered type pairs that expands each pair once
+/// for the whole query, so it is polynomial in the number of reachable types;
+/// meeting a pair again adds nothing (coinductive), which is what the old
+/// per-path walk concluded too, only after re-walking every path to it.
+pub fn typesMayAlias(allocator: std.mem.Allocator, program: typed.Program, a: typed.Type, b: typed.Type) std.mem.Allocator.Error!bool {
+    var search = AliasSearch{ .allocator = allocator, .program = program };
+    defer search.deinit();
+    try search.queue(a, b);
+    while (search.pending.pop()) |pair| {
+        switch (pairVerdict(program, pair.low, pair.high)) {
+            .alias => return true,
+            .disjoint => continue,
+            .expand => {},
+        }
+        try search.queueComponents(pair.low, pair.high);
+        try search.queueComponents(pair.high, pair.low);
+    }
     return false;
 }
 
@@ -874,8 +908,7 @@ const OverlapChecker = struct {
             const read_type = site.typeAt(read_only);
             if (!mayContainManaged(self.program, read_type)) continue;
             if (context.nodeOrigin(site.function, site.origins, site.arguments[read_only], 0).isFresh()) continue;
-            var stack: [64]TypePair = undefined;
-            if (!typesMayAlias(self.program, written_type, read_type, &stack, 0)) continue;
+            if (!try typesMayAlias(self.allocator, self.program, written_type, read_type)) continue;
             try site.sink.items.append(self.allocator, .{
                 .code = overlap_code,
                 .span = self.program.nodes[@backingInt(site.arguments[read_only])].span,
