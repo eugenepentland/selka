@@ -1238,6 +1238,70 @@ test "M1 a class parameter written through is accepted once marked" {
 }
 
 // spec-case: MUT-PARAM-2
+test "M1 a write through a match payload binding needs the matched parameter's mut" {
+    const messages = try markerMessages(
+        \\def grow(candidate: Option[list[int]]) -> int:
+        \\    match candidate:
+        \\        case Some(items):
+        \\            items.append(1)
+        \\            return len(items)
+        \\        case None:
+        \\            return 0
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    );
+    defer {
+        for (messages) |message| t.allocator.free(message);
+        t.allocator.free(messages);
+    }
+    try t.expectEqual(@as(usize, 1), messages.len);
+    try t.expect(std.mem.indexOf(u8, messages[0], "declare `candidate: mut Option[list[int]]`") != null);
+}
+
+// spec-case: MUT-PARAM-2
+test "M1 a field write through a narrowed Option parameter needs mut and is accepted once marked" {
+    const messages = try markerMessages(
+        \\class Counter:
+        \\    value: int
+        \\
+        \\
+        \\def bump(candidate: Option[Counter]) -> int:
+        \\    if candidate is None:
+        \\        return 0
+        \\    candidate.value = candidate.value + 1
+        \\    return candidate.value
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    );
+    defer {
+        for (messages) |message| t.allocator.free(message);
+        t.allocator.free(messages);
+    }
+    try t.expectEqual(@as(usize, 1), messages.len);
+    try t.expect(std.mem.indexOf(u8, messages[0], "declare `candidate: mut Option[Counter]`") != null);
+    try accept(
+        \\class Counter:
+        \\    value: int
+        \\
+        \\
+        \\def bump(candidate: mut Option[Counter]) -> int:
+        \\    if candidate is None:
+        \\        return 0
+        \\    candidate.value = candidate.value + 1
+        \\    return candidate.value
+        \\
+        \\
+        \\def main() -> int:
+        \\    candidate: Option[Counter] = Some(Counter(value=41))
+        \\    return bump(mut candidate) - 42
+    );
+}
+
+// spec-case: MUT-PARAM-2
 test "M1 writing only fresh local storage needs no mut parameter" {
     try accept(
         \\def local_edit() -> int:

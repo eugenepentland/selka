@@ -207,9 +207,26 @@ fn applyBlockStatements(context: *const Context, function: typed.Function, origi
             applyBlockStatements(context, function, origins, loop.body, depth + 1);
             if (loop.step) |step| applyBlockStatements(context, function, origins, step, depth + 1);
         },
-        .match => |matched| for (matched.arms) |arm| applyBlockStatements(context, function, origins, arm.body, depth + 1),
+        .match => |matched| {
+            bindArmPayloads(context, function, origins, matched, depth + 1);
+            for (matched.arms) |arm| applyBlockStatements(context, function, origins, arm.body, depth + 1);
+        },
         .with_scope => |scope| applyBlockStatements(context, function, origins, scope.body, depth + 1),
         else => {},
+    }
+}
+
+/// A `match` arm's payload binding aliases the matched value's payload, so it
+/// takes the matched value's origin. A write through the binding — including the
+/// hidden one an `Option` narrowing lowers `candidate.field = v` to — then reaches
+/// the caller instead of looking like fresh local storage.
+fn bindArmPayloads(context: *const Context, function: typed.Function, origins: []Origin, matched: @FieldType(@FieldType(typed.Statement, "data"), "match"), depth: usize) void {
+    for (matched.arms) |arm| {
+        const slot = arm.slot orelse continue;
+        const index = @backingInt(slot);
+        if (index >= origins.len or index >= function.scope.locals.len) continue;
+        const payload = context.childIfManaged(function.scope.locals[index].ty, function, origins, matched.value, depth);
+        origins[index] = Origin.merge(origins[index], payload);
     }
 }
 
@@ -500,6 +517,7 @@ fn applyStatement(context: *const Context, function: typed.Function, origins: []
             absorbElementWrite(context, function, origins, store, statement.span, summary);
         },
         .ret => |value| summary.return_origin = Origin.merge(summary.return_origin, context.nodeOrigin(function, origins, value, 0)),
+        .match => |matched| bindArmPayloads(context, function, origins, matched, 0),
         else => {},
     }
 }

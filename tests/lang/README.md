@@ -7,9 +7,9 @@ one native program, named after the Zig file it came from
 receipts and `--affected` stay per area. Files under `migrated/` are generated
 area entries: `<area>.my` imports one `<area>_case_N.my` module per moved Zig
 test, and each case module keeps its original guest program verbatim behind a
-`public def program() -> int`. The case modules declare no `main`, so the
+`public def program() -> int`. The case modules declare no tests, so the
 directory runner does not run them as programs of their own; the area entry
-holds the tests that assert `cN.program() == <expected>`. Both forms give every
+imports them and holds the tests that assert `cN.program() == <expected>`. Both forms give every
 test its own receipt, so an unrelated edit no longer rebuilds a whole Zig root,
 and one program per area keeps the directory fan-out cheap.
 
@@ -62,9 +62,10 @@ value assertions so it cannot silently drop a generated or diagnostic case.
 
 ## Converting one Zig test
 
-1. One `.my` file per Zig test file. Start it with `module <file stem>` and end
-   it with `def main() -> int: return 0`; the directory runner treats a file
-   with a top-level `main` as one program.
+1. One `.my` file per Zig test file, starting with `module <file stem>`. It
+   needs no `main`: the directory runner runs every file that declares a test
+   and that no other program imports, and fails the run, naming the file, if a
+   test-declaring file is loaded by no program.
 2. One `public def test_<name>() -> bool` per Zig `test "..."`. The runner
    asserts `true`, so turn the Zig helper's expected value into a comparison
    inside the guest.

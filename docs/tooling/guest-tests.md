@@ -87,7 +87,12 @@ The positional argument may be a directory instead of one entry. Every project
 root beneath it is selected in sorted path order: a `.my` file that declares a
 top-level `main`, plus standalone `*_test.my` files. A library module imported by
 a root is not run as a program of its own, so a multi-module project is one
-program rather than one `E_MAIN`/`E_MODULE_NAME` failure per module. Generated
+program rather than one `E_MAIN`/`E_MODULE_NAME` failure per module; its tests
+run once, as part of that root. A library that declares a test (a `def test_`
+function or an `@test` one) and that no root's import closure reaches is
+selected as well and checked through the stub-`main` projection above, so a
+test file needs neither `main` nor the `*_test.my` suffix. Of two such
+libraries where one imports the other, only the importer is selected. Generated
 `.mylang-cache`, `.zig-cache`, `zig-out` and `.git` trees are skipped, and each
 root runs as its own child command, up to the machine's core count at a time.
 The children share one object cache and one receipt directory, so an unchanged
@@ -97,6 +102,13 @@ case listing, one count line naming how many programs took part, and the most
 severe exit status: 2 if any program failed to set up, 1 if any case failed, 3
 if the whole selection was empty or skipped, and 0 otherwise. `--cases` is
 rejected for a directory run, because its keys name the tests of one project.
+
+Each child's `--json` report lists the project sources its check loaded as
+`modules`. After merging, the directory run names every test-declaring source
+beneath the directory that no reporting child loaded as `not run: <path>
+(declares tests, but no program loaded it)`, adds `N test sources not loaded` to
+the count line and `unloaded` to the JSON report, and exits 2. A test file can
+therefore fail a run, but it can never silently drop out of one.
 
 On a corpus of 100 small programs with 200 tests, a cold run takes about 7
 seconds, an unchanged rerun about 0.6 seconds, and a run after editing one

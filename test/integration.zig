@@ -7505,6 +7505,87 @@ test "a directory run discovers project roots instead of every module" {
     try testing.expect(std.mem.indexOf(u8, run.stderr, "E_MODULE_NAME") == null);
 }
 
+const directory_orphan_inner =
+    \\module inner
+    \\
+    \\
+    \\public def base() -> int effects():
+    \\    return 40
+    \\
+    \\
+    \\public def test_inner() -> bool effects():
+    \\    return base() == 40
+;
+
+const directory_orphan_outer =
+    \\module outer
+    \\import inner
+    \\
+    \\
+    \\public def test_outer() -> bool effects():
+    \\    return inner.base() + 2 == 42
+;
+
+const directory_helper_with_test =
+    \\module helper
+    \\
+    \\
+    \\public def value() -> int effects():
+    \\    return 7
+    \\
+    \\
+    \\public def test_helper() -> bool effects():
+    \\    return value() == 7
+;
+
+// spec: NATIVE-TEST-14
+test "a directory run runs a main-less test library no root imports, and every test once" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try writeProjectFile(&temporary, "suite/main.my", directory_project_main);
+    try writeProjectFile(&temporary, "suite/helper.my", directory_helper_with_test);
+    try writeProjectFile(&temporary, "suite/inner.my", directory_orphan_inner);
+    try writeProjectFile(&temporary, "suite/outer.my", directory_orphan_outer);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const suite = try std.fs.path.join(a, &.{ root, "suite" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const run = try guestTestRun(a, suite, &.{"--json"}, cache);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, run.term);
+    const report = (try std.json.parseFromSlice(std.json.Value, a, run.stdout, .{})).value;
+    // `main.my` carries `helper`; `outer.my` carries `inner`, so `inner.my` is
+    // not a program of its own and none of the four tests runs twice.
+    try testing.expectEqual(@as(i64, 2), report.object.get("programs").?.integer);
+    try testing.expectEqual(@as(i64, 4), report.object.get("passed").?.integer);
+    try testing.expectEqual(@as(i64, 0), report.object.get("unloaded").?.integer);
+    for ([_][]const u8{ "main::test_main", "helper::test_helper", "inner::test_inner", "outer::test_outer" }) |name| {
+        try testing.expectEqual(@as(usize, 1), std.mem.count(u8, run.stdout, name));
+    }
+}
+
+// spec-case: NATIVE-TEST-15
+test "a single-entry test report lists the project sources its check loaded" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try writeProjectFile(&temporary, "suite/main.my", directory_project_main);
+    try writeProjectFile(&temporary, "suite/helper.my", directory_project_helper);
+    try writeProjectFile(&temporary, "suite/unrelated.my", directory_orphan_inner);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const entry = try std.fs.path.join(a, &.{ root, "suite", "main.my" });
+    const run = try guestTestRun(a, entry, &.{"--json"}, try std.fs.path.join(a, &.{ root, "cache" }));
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, run.term);
+    const report = (try std.json.parseFromSlice(std.json.Value, a, run.stdout, .{})).value;
+    const modules = report.object.get("modules").?.array.items;
+    try testing.expectEqual(@as(usize, 2), modules.len);
+    try testing.expectEqualStrings(try std.fs.path.join(a, &.{ root, "suite", "helper.my" }), modules[0].string);
+    try testing.expectEqualStrings(entry, modules[1].string);
+}
+
 // spec-case: LINT-5
 test "CLI list-interfaces prints a tests column from the shared reachability index" {
     var temp = testing.tmpDir(.{});
