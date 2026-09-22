@@ -1310,3 +1310,82 @@ test "a declared footprint without a ceiling still enforces overlap at call site
         \\    return 0
     , "E_MUTATION_OVERLAP", "may alias");
 }
+
+/// The first warning one accepted compilation produced, with the source text its
+/// span covers. Both are copied out because the compilation arena is released
+/// with the compilation.
+fn warningOf(source: []const u8) !struct { code: []const u8, span_text: []u8 } {
+    var c = try language.Compilation.init(t.allocator, fixture_path, source);
+    defer c.deinit();
+    try c.check();
+    for (c.diagnostics.items) |item| {
+        if (item.severity != .warning) continue;
+        return .{ .code = item.code, .span_text = try t.allocator.dupe(u8, c.src.text(item.span)) };
+    }
+    return error.TestUnexpectedResult;
+}
+
+// spec: DERIVED-EFFECTS-1
+test "a body that exceeds the ceiling its own signature implies names the parameter to add" {
+    // A `host def` clause grants the authority the host side declares. A relay
+    // whose own signature supplies no such parameter exceeds its ceiling, and the
+    // rejection names the parameter that would supply it.
+    const relay = "host def put(host: Host, value: u8) -> int effects(host, filesystem)\n\n" ++
+        "def relay(host: Host) -> int:\n    return put(host, 1u8)\n\n" ++
+        "def main(host: Host) -> int:\n    return relay(host)\n";
+    try reject(relay, "E_EFFECT_BOUND", "add `fs: Filesystem` to the parameters");
+    // The same bodies are accepted once every signature on the path supplies it.
+    try accept("host def put(host: Host, value: u8) -> int effects(host, filesystem)\n\n" ++
+        "def relay(host: Host, fs: Filesystem) -> int:\n    _ = fs\n    return put(host, 1u8)\n\n" ++
+        "def main(host: Host, fs: Filesystem) -> int:\n    return relay(host, fs)\n");
+    // A capability parameter is what permits its effect, and a `mut` parameter
+    // what permits `mutation`; neither can be replaced by a clause.
+    try reject("def load(fs: Filesystem) -> int:\n    return 0\n\n" ++
+        "def main() -> int:\n    return 0\n", "E_UNUSED_CAPABILITY", "`fs` is never used");
+    try accept("def write(values: mut list[int]) -> None:\n    values.append(1)\n\n" ++
+        "def main() -> int:\n    values = [0]\n    write(mut values)\n    return values[0]\n");
+}
+
+// spec: DERIVED-EFFECTS-2
+test "an effect clause that restates the derived ceiling warns and a narrowing stays" {
+    const restating = try warningOf("def helper(host: Host) -> int effects(host, managed_allocation):\n    return 1\n\n" ++
+        "def main(host: Host) -> int:\n    return helper(host)\n");
+    try t.expectEqualStrings("W_DERIVED_EFFECTS", restating.code);
+    try t.expectEqualStrings("effects(host, managed_allocation)", restating.span_text);
+    // A clause that withholds what the parameters imply is a real narrowing.
+    try accept("def helper(host: Host, fs: Filesystem) -> int effects(host, filesystem):\n    _ = fs\n    return 1\n\n" ++
+        "def main(host: Host, fs: Filesystem) -> int:\n    return helper(host, fs)\n");
+    try accept("def helper(count: int) -> int noalloc:\n    return count + 1\n\n" ++
+        "def main() -> int:\n    return helper(1)\n");
+    // `noio` on a body with no io-capable parameter withholds nothing.
+    const noio = try warningOf("def helper(count: int) -> int noio:\n    return count + 1\n\n" ++
+        "def main() -> int:\n    return helper(1)\n");
+    try t.expectEqualStrings("W_DERIVED_EFFECTS", noio.code);
+    try t.expectEqualStrings("noio", noio.span_text);
+}
+
+// spec: DERIVED-EFFECTS-3
+test "a clause naming an effect no parameter supplies is rejected with the paste" {
+    try reject("def helper(count: int) -> int effects(filesystem):\n    return count + 1\n\n" ++
+        "def main() -> int:\n    return helper(1)\n", "E_DERIVED_EFFECTS", "add `fs: Filesystem` to the parameters or drop the clause");
+    try reject("def helper(count: int) -> int effects(clock):\n    return count + 1\n\n" ++
+        "def main() -> int:\n    return helper(1)\n", "E_DERIVED_EFFECTS", "`effects(clock)` names `clock`");
+    // A clause may still narrow a derived set, and a `host def` clause is the
+    // declaration's own authority rather than a summary of its parameters.
+    try accept("def helper(out: Stream) -> None effects(output):\n    out.print(\"x\")\n\n" ++
+        "def main(out: Stream) -> int:\n    helper(out)\n    return 0\n");
+    try accept("host def put(host: Host) -> int effects(host, managed_allocation)\n\n" ++
+        "def main(host: Host) -> int:\n    return put(host)\n");
+}
+
+// spec: UNUSED-CAPABILITY-1
+test "a capability parameter the body never reads is rejected and a passed-on one is not" {
+    try reject("public def equal(host: Host, a: int, b: int) -> bool:\n    return a == b\n\n" ++
+        "def main(host: Host) -> int:\n    if equal(host, 1, 1):\n        return 0\n    return 1\n", "E_UNUSED_CAPABILITY", "`host` is never used");
+    try reject("def main(out: Stream) -> int:\n    return 0\n", "E_UNUSED_CAPABILITY", "`out` is never used");
+    // Handing the capability to another function is a read, so a frame that
+    // never calls a host operation itself still uses its authority.
+    try accept("host def inner(host: Host) -> int effects(host)\n\n" ++
+        "def outer(host: Host) -> int:\n    return inner(host)\n\n" ++
+        "def main(host: Host) -> int:\n    return outer(host)\n");
+}

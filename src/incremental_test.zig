@@ -291,6 +291,54 @@ test "effect-bound edits change the function interface hash" {
     try t.expect(!std.mem.eql(u8, interface, declaration(second, "main", "touch").interface_sha256.?));
 }
 
+// spec: DERIVED-EFFECTS-4
+test "an unannotated body edit inside the derived ceiling preserves the API fingerprint and still changes the body hash" {
+    // The published ceiling is what the parameter list implies, so it is already
+    // in the fingerprint's signature text. A body that starts allocating inside
+    // that ceiling therefore leaves the declaration interface -- and every
+    // caller's type check -- untouched.
+    const printing_body =
+        \\module main
+        \\
+        \\
+        \\public def emit(out: Stream) -> i64:
+        \\    out.print("x")
+        \\    return 0
+        \\
+        \\
+        \\def main(out: Stream) -> i64:
+        \\    return emit(out)
+    ;
+    const allocating_body =
+        \\module main
+        \\
+        \\
+        \\public def emit(out: Stream) -> i64:
+        \\    items: list[i64] = []
+        \\    items.append(1)
+        \\    out.print("x")
+        \\    return items[0]
+        \\
+        \\
+        \\def main(out: Stream) -> i64:
+        \\    return emit(out)
+    ;
+    var entries = [_]File{.{ .path = "main.my", .bytes = printing_body }};
+    const first = try describe(&entries, t.allocator);
+    defer incremental.deinit(first, t.allocator);
+    const first_interface = try t.allocator.dupe(u8, declaration(first, "main", "emit").interface_sha256.?);
+    defer t.allocator.free(first_interface);
+    const first_body = try t.allocator.dupe(u8, declaration(first, "main", "emit").body_sha256.?);
+    defer t.allocator.free(first_body);
+
+    entries[0].bytes = allocating_body;
+    const second = try describe(&entries, t.allocator);
+    defer incremental.deinit(second, t.allocator);
+    try t.expectEqualStrings(first_interface, declaration(second, "main", "emit").interface_sha256.?);
+    try t.expectEqualStrings(first.project_interface_sha256, second.project_interface_sha256);
+    try t.expect(!std.mem.eql(u8, first_body, declaration(second, "main", "emit").body_sha256.?));
+}
+
 // spec-case: EFFECT-CEILING-1
 test "an exported body edit inside its declared ceiling preserves the API fingerprint and still changes the body hash" {
     const output_body =
