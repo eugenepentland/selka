@@ -19,22 +19,22 @@ def lifecycle() -> int:
     seed: list[int] = []
     store = pool.create(seed)
     first = pool.insert(mut store, 10)
-    second = pool.insert(store, 20)
+    second = pool.insert(mut store, 20)
     if pool.count(store) != 2 or pool.capacity(store) != 2:
         return 1
     if value_of(store, first) != 10 or value_of(store, second) != 20:
         return 2
-    if not pool.occupied(store, first) or not pool.set(store, first, 11):
+    if not pool.occupied(store, first) or not pool.set(mut store, first, 11):
         return 3
     if value_of(store, first) != 11:
         return 4
-    if not pool.remove(store, first) or pool.remove(store, first):
+    if not pool.remove(mut store, first) or pool.remove(mut store, first):
         return 5
-    if value_of(store, first) != 0 - 1 or pool.set(store, first, 99):
+    if value_of(store, first) != 0 - 1 or pool.set(mut store, first, 99):
         return 6
     if pool.occupied(store, first) or pool.count(store) != 1:
         return 7
-    third = poomut l.insert(store, 30)
+    third = pool.insert(mut store, 30)
     if pool.capacity(store) != 2 or value_of(store, third) != 30:
         return 8
     if value_of(store, first) != 0 - 1:
@@ -58,8 +58,8 @@ def sharing() -> int:
         return 22
     other: list[int] = []
     outside = pool.create(other)
-    foreign = pool.insert(outside, 7)
-    _ = pool.remove(store, pool.handles(store)[0])
+    foreign = pool.insert(mut outside, 7)
+    _ = pool.remove(mut store, pool.handles(store)[0])
     if pool.count(store) != 3:
         return 23
     if value_of(outside, foreign) != 7:
@@ -77,7 +77,7 @@ def records() -> int:
                 return 30
         case None:
             return 31
-    if not pool.set(store, handle, Node(label="b", weight=3)):
+    if not pool.set(mut store, handle, Node(label="b", weight=3)):
         return 32
     match pool.get(store, handle):
         case Some(node):
@@ -85,7 +85,7 @@ def records() -> int:
                 return 33
         case None:
             return 34
-    if not pool.remove(store, handle):
+    if not pool.remove(mut store, handle):
         return 35
     match pool.get(store, handle):
         case Some(_):
@@ -106,14 +106,14 @@ def churn() -> int:
     index = 0
     while index < 32:
         if index % 2 == 0:
-            if not pool.remove(store, handles[index]):
+            if not pool.remove(mut store, handles[index]):
                 return 40
         index += 1
     if pool.count(store) != 16 or pool.capacity(store) != 32:
         return 41
     index = 0
     while index < 16:
-        _ = pool.insert(store, 100 + index)
+        _ = pool.insert(mut store, 100 + index)
         index += 1
     if pool.capacity(store) != 32 or pool.count(store) != 32:
         return 42

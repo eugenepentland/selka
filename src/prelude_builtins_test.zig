@@ -345,7 +345,7 @@ test "removed names and punctuation report their canonical migration" {
     try rejectMigration("def main() -> int:\n    values: List[int] = []\n    return len(values)\n", "list[", "List");
     try rejectMigration("def main() -> int:\n    values = [1]\n    values.push(2)\n    return 0\n", "append", "push");
     try rejectMigration("def main() -> int:\n    values = {\"a\": 1}\n    if values.contains(\"a\"):\n        return 1\n    return 0\n", "in", "contains");
-    try rejectMigration("def main() -> int:\n    return 1 & 1\n", "no replacement", "&");
+    try rejectMigration("def touch(values: mut list[int]) -> None:\n    values[0] = 1\n\n\ndef main() -> int:\n    values = [1]\n    touch(&values)\n    return 0\n", "write `mut value`", "&");
     try rejectMigration("def main() -> int:\n    return 1 => 1\n", "no replacement", "=>");
 }
 

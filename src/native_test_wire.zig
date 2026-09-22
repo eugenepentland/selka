@@ -488,15 +488,15 @@ test "local mutation reuses a receipt while output executes again" {
     try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "main.my", .data =
         \\module main
         \\
-        \\def change(xs: list[int]) -> None effects(mutation) mutates(xs):
+        \\def change(xs: mut list[int]):
         \\    xs[0] = 2
         \\
-        \\public def test_local_mutation() -> bool effects(mutation, managed_allocation):
+        \\public def test_local_mutation() -> bool:
         \\    xs: list[int] = [1]
-        \\    change(xs)
+        \\    change(mut xs)
         \\    return xs[0] == 2
         \\
-        \\public def test_external_output(out: Stream) -> bool effects(output):
+        \\public def test_external_output(out: Stream) -> bool:
         \\    out.print("")
         \\    return True
         \\

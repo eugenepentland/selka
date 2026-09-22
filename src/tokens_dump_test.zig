@@ -44,7 +44,7 @@ test "unexpected character yields E_TOKEN with the right location and exit statu
     var arena_state = std.heap.ArenaAllocator.init(t.allocator);
     defer arena_state.deinit();
     const arena = arena_state.allocator();
-    const bytes = "x = @";
+    const bytes = "x = $";
     const src = try source.Source.init(arena, "bad.my", bytes);
     var sink: diagnostic.Sink = .{ .allocator = arena };
     try t.expectError(error.SourceError, lexer.lex(arena, bytes, &sink));

@@ -40,7 +40,7 @@ const seeded =
     "    match random.from_entropy(entropy):\n" ++
     "        case Ok(generator):\n" ++
     "            replay = random.from_word(generator.state[0])\n" ++
-    "            if random.next_word(generator) != random.next_word(replay):\n" ++
+    "            if random.next_word(mut generator) != random.next_word(mut replay):\n" ++
     "                return 1\n" ++
     "            return 42\n" ++
     failed ++

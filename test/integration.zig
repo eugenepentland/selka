@@ -5554,7 +5554,7 @@ test "CLI nested record alias rejects under effects and runs with a mutation foo
         \\
         \\def main() -> int:
         \\    box = Box(values=[1])
-        \\    overwrite(box)
+        \\    overwrite(mut box)
         \\    return box.values[0]
     ;
     try invoke("check", rejected, 1, "", "E_MUTATION_PERMISSION");
@@ -5563,13 +5563,13 @@ test "CLI nested record alias rejects under effects and runs with a mutation foo
         \\    values: list[int]
         \\
         \\
-        \\def overwrite(box: Box) -> None effects(mutation) mutates(box):
+        \\def overwrite(box: mut Box) -> None:
         \\    box.values[0] = 7
         \\
         \\
         \\def main() -> int:
         \\    box = Box(values=[1])
-        \\    overwrite(box)
+        \\    overwrite(mut box)
         \\    return box.values[0]
     ;
     try invoke("run", permitted, 0, "7\n", "");
@@ -5592,7 +5592,20 @@ const p1_production_unfinished =
     \\    def make(discount: int) -> Stub effects():
     \\        return wrap[Stub](discount)
     \\
-    \\    def price(policy: Stub, subtotal: int) -> int effects(mutation) mutates(policy):
+    \\    def price(policy: Stub, ledger: mut list[int], rates: list[int], subtotal: int) -> int effects(mutation):
+    \\        return todo[int]()
+;
+/// Production with the whole derived ceiling written out, so a replacement can
+/// narrow the clause while keeping the signature.
+const p1_production_allocating =
+    \\module production
+    \\
+    \\
+    \\public domain Stub: int:
+    \\    def make(discount: int) -> Stub effects():
+    \\        return wrap[Stub](discount)
+    \\
+    \\    def price(policy: Stub, ledger: mut list[int], rates: list[int], subtotal: int) -> int effects(mutation, managed_allocation):
     \\        return todo[int]()
 ;
 const p1_production_bad_interface =
@@ -5603,7 +5616,7 @@ const p1_production_bad_interface =
     \\    def make(discount: int) -> Stub effects():
     \\        return wrap[Stub](discount)
     \\
-    \\    def price(policy: Stub, subtotal: int) -> int effects():
+    \\    def price(policy: Stub, ledger: list[int], rates: list[int], subtotal: int) -> int effects():
     \\        return subtotal
 ;
 const p1_main =
@@ -5615,19 +5628,26 @@ const p1_main =
     \\    return 0
     \\
     \\
-    \\public def test_checkout() -> bool effects():
+    \\public def test_checkout() -> bool:
     \\    policy = production.Stub.make(250)
-    \\    return production.Stub.price(policy, 2000) == 1750
+    \\    ledger: list[int] = [0]
+    \\    rates: list[int] = [0]
+    \\    return production.Stub.price(policy, mut ledger, rates, 2000) == 1750
 ;
-fn p1Fake(perm: []const u8, body: []const u8) ![]const u8 {
+/// A replacement `production.Stub.price` whose managed parameters, effect
+/// clause and first body line vary; `ledger` is the production footprint.
+fn p1Fake(parameters: []const u8, perm: []const u8, body: []const u8) ![]const u8 {
     return std.fmt.allocPrint(
         testing.allocator,
         "module production\n\n\npublic domain Stub: int:\n" ++
             "    def make(discount: int) -> Stub effects():\n        return wrap[Stub](discount)\n\n" ++
-            "    def price(policy: Stub, subtotal: int) -> int {s}:\n        {s}\n        return subtotal - unwrap(policy)\n",
-        .{ perm, body },
+            "    def price(policy: Stub, {s}, subtotal: int) -> int {s}:\n        {s}\n        return subtotal - unwrap(policy)\n",
+        .{ parameters, perm, body },
     );
 }
+/// The production footprint: `ledger` written, `rates` read-only.
+const p1_footprint = "ledger: mut list[int], rates: list[int]";
+const p1_write = "ledger[0] = subtotal";
 fn p1WriteCases(dir: *std.testing.TmpDir, name: []const u8, key: []const u8, source: []const u8) !void {
     const a = testing.allocator;
     var providers: std.json.ObjectMap = .empty;
@@ -5669,7 +5689,7 @@ test "P1 selects a validated fake while the unfinished production body is never 
     const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
     defer testing.allocator.free(cache);
 
-    const fake = try p1Fake("effects(mutation) mutates(policy)", "_ = subtotal");
+    const fake = try p1Fake(p1_footprint, "effects(mutation)", p1_write);
     defer testing.allocator.free(fake);
     try p1WriteCases(&temp, "cases.json", "production.my", fake);
 
@@ -5691,7 +5711,7 @@ test "P1 selects a validated fake while the unfinished production body is never 
     try testing.expect(std.mem.indexOf(u8, warm.stdout, "\"cached\":1") != null);
 
     // Changing the fake value changes its identity and forces a fresh execution.
-    const changed = try p1Fake("effects(mutation) mutates(policy)", "_ = subtotal");
+    const changed = try p1Fake(p1_footprint, "effects(mutation)", p1_write);
     defer testing.allocator.free(changed);
     const mutated = try std.mem.replaceOwned(u8, testing.allocator, changed, "return subtotal - unwrap(policy)", "return subtotal - unwrap(policy) + 1");
     defer testing.allocator.free(mutated);
@@ -5716,7 +5736,7 @@ test "P1 rejects stronger or malformed replacements and a bad production interfa
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try writeProjectFile(&temp, "main.my", p1_main);
-    try writeProjectFile(&temp, "production.my", p1_production_unfinished);
+    try writeProjectFile(&temp, "production.my", p1_production_allocating);
     const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
     defer testing.allocator.free(entry);
     const root = std.fs.path.dirname(entry).?;
@@ -5725,8 +5745,8 @@ test "P1 rejects stronger or malformed replacements and a bad production interfa
     const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
     defer testing.allocator.free(cache);
 
-    // A narrower mutation footprint is accepted.
-    const narrow = try p1Fake("effects(mutation)", "_ = subtotal");
+    // A narrower effect clause is accepted.
+    const narrow = try p1Fake(p1_footprint, "effects(mutation)", p1_write);
     defer testing.allocator.free(narrow);
     try p1WriteCases(&temp, "cases.json", "production.my", narrow);
     const accepted = try p1Invoke(entry, cases_path, cache);
@@ -5734,15 +5754,22 @@ test "P1 rejects stronger or malformed replacements and a bad production interfa
     defer testing.allocator.free(accepted.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, accepted.term);
 
-    // A stronger mutation footprint rejects.
-    const wide = try p1Fake("effects(mutation) mutates(policy, subtotal)", "_ = subtotal");
-    defer testing.allocator.free(wide);
-    try p1WriteCases(&temp, "cases.json", "production.my", wide);
-    const rejected = try p1Invoke(entry, cases_path, cache);
-    defer testing.allocator.free(rejected.stdout);
-    defer testing.allocator.free(rejected.stderr);
-    try testing.expect(rejected.term != .exited or rejected.term.exited != 0);
-    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "IncompatibleProvider") != null);
+    // The `mut` footprint is part of the signature every caller writes against
+    // (`price(policy, mut ledger, rates, ...)`), so a replacement may neither
+    // drop a `mut` nor add one.
+    for ([_][2][]const u8{
+        .{ "ledger: list[int], rates: list[int]", "_ = subtotal" },
+        .{ "ledger: mut list[int], rates: mut list[int]", "ledger[0] = subtotal\n        rates[0] = subtotal" },
+    }) |footprint| {
+        const changed = try p1Fake(footprint[0], "effects(mutation)", footprint[1]);
+        defer testing.allocator.free(changed);
+        try p1WriteCases(&temp, "cases.json", "production.my", changed);
+        const rejected = try p1Invoke(entry, cases_path, cache);
+        defer testing.allocator.free(rejected.stdout);
+        defer testing.allocator.free(rejected.stderr);
+        try testing.expect(rejected.term != .exited or rejected.term.exited != 0);
+        try testing.expect(std.mem.indexOf(u8, rejected.stderr, "IncompatibleProvider") != null);
+    }
 
     // An unknown replacement path rejects without touching a production body.
     try p1WriteCases(&temp, "cases.json", "nope.my", narrow);
@@ -5776,14 +5803,14 @@ test "P1 rejects every incompatible replacement dimension" {
     const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
     defer testing.allocator.free(cache);
 
-    const base = try p1Fake("effects(mutation) mutates(policy)", "_ = subtotal");
+    const base = try p1Fake(p1_footprint, "effects(mutation)", p1_write);
     defer testing.allocator.free(base);
     const variants = [_]struct { label: []const u8, from: []const u8, to: []const u8 }{
         .{ .label = "parameter type", .from = "subtotal: int) -> int", .to = "subtotal: bool) -> int" },
         .{ .label = "parameter default", .from = "subtotal: int) -> int", .to = "subtotal: int = 0) -> int" },
         .{ .label = "nominal identity", .from = "Stub", .to = "Other" },
         .{ .label = "generic requirement", .from = "def price(policy:", .to = "def price[T: copy](policy:" },
-        .{ .label = "effects too wide", .from = "effects(mutation) mutates(policy)", .to = "effects(mutation, output) mutates(policy)" },
+        .{ .label = "effects too wide", .from = "effects(mutation)", .to = "effects(mutation, managed_allocation)" },
     };
     for (variants) |variant| {
         const changed = try std.mem.replaceOwned(u8, testing.allocator, base, variant.from, variant.to);
@@ -5815,7 +5842,7 @@ test "P1 ignores an unselected production body type error while its declarations
         \\    def make(discount: int) -> Stub effects():
         \\        return wrap[Stub](discount)
         \\
-        \\    def price(policy: Stub, subtotal: int) -> int effects(mutation) mutates(policy):
+        \\    def price(policy: Stub, ledger: mut list[int], rates: list[int], subtotal: int) -> int effects(mutation):
         \\        return True
     ;
     try writeProjectFile(&temp, "main.my", p1_main);
@@ -5828,7 +5855,7 @@ test "P1 ignores an unselected production body type error while its declarations
     const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
     defer testing.allocator.free(cache);
 
-    const fake = try p1Fake("effects(mutation) mutates(policy)", "_ = subtotal");
+    const fake = try p1Fake(p1_footprint, "effects(mutation)", p1_write);
     defer testing.allocator.free(fake);
     try p1WriteCases(&temp, "cases.json", "production.my", fake);
     const selected = try p1Invoke(entry, cases_path, cache);

@@ -389,13 +389,13 @@ test "an exported body edit inside its declared ceiling preserves the API finger
     try t.expect(!std.mem.eql(u8, first_body, declaration(second, "main", "emit").body_sha256.?));
 }
 
-test "declared mutation positions and normalized clause spellings change function and project fingerprints" {
+test "declared mut positions change function and project fingerprints while write order does not" {
     const mutates_a =
         \\module main
         \\
         \\
-        \\public def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(a):
-        \\    pass
+        \\public def change(a: mut list[int], b: list[int]) -> None:
+        \\    a[0] = b[0]
         \\
         \\
         \\def main() -> int:
@@ -405,32 +405,33 @@ test "declared mutation positions and normalized clause spellings change functio
         \\module main
         \\
         \\
-        \\public def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(b):
-        \\    pass
+        \\public def change(a: list[int], b: mut list[int]) -> None:
+        \\    b[0] = a[0]
         \\
         \\
         \\def main() -> int:
         \\    return 0
     ;
-    const a_interface = try functionInterfaceHash(t.allocator, mutates_a, "change");
-    defer t.allocator.free(a_interface);
-    const b_interface = try functionInterfaceHash(t.allocator, mutates_b, "change");
-    defer t.allocator.free(b_interface);
-    const a_project = try projectInterfaceHash(t.allocator, mutates_a);
-    defer t.allocator.free(a_project);
-    const b_project = try projectInterfaceHash(t.allocator, mutates_b);
-    defer t.allocator.free(b_project);
-    try t.expect(!std.mem.eql(u8, a_interface, b_interface));
-    try t.expect(!std.mem.eql(u8, a_project, b_project));
+    const mutates_a_interface = try functionInterfaceHash(t.allocator, mutates_a, "change");
+    defer t.allocator.free(mutates_a_interface);
+    const mutates_b_interface = try functionInterfaceHash(t.allocator, mutates_b, "change");
+    defer t.allocator.free(mutates_b_interface);
+    const mutates_a_project = try projectInterfaceHash(t.allocator, mutates_a);
+    defer t.allocator.free(mutates_a_project);
+    const mutates_b_project = try projectInterfaceHash(t.allocator, mutates_b);
+    defer t.allocator.free(mutates_b_project);
+    try t.expect(!std.mem.eql(u8, mutates_a_interface, mutates_b_interface));
+    try t.expect(!std.mem.eql(u8, mutates_a_project, mutates_b_project));
 
-    // M1 requires sorted, duplicate-free positions: spelling order and repeated
-    // binders are not part of the contract identity.
+    // The footprint is the set of `mut` parameters, so the order the body
+    // writes them in is not part of the contract identity.
     const ordered =
         \\module main
         \\
         \\
-        \\public def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(a, b):
-        \\    pass
+        \\public def change(a: mut list[int], b: mut list[int]) -> None:
+        \\    a[0] = 1
+        \\    b[0] = 2
         \\
         \\
         \\def main() -> int:
@@ -440,8 +441,9 @@ test "declared mutation positions and normalized clause spellings change functio
         \\module main
         \\
         \\
-        \\public def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(b, a, b):
-        \\    pass
+        \\public def change(a: mut list[int], b: mut list[int]) -> None:
+        \\    b[0] = 2
+        \\    a[0] = 1
         \\
         \\
         \\def main() -> int:
@@ -458,50 +460,16 @@ test "declared mutation positions and normalized clause spellings change functio
     try t.expectEqualStrings(ordered_interface, reordered_interface);
     try t.expectEqualStrings(ordered_project, reordered_project);
 
-    // Explicit `mutates()` normalizes exactly like omission: both are the empty
-    // footprint and neither contributes a clause region to the declaration hash.
-    const empty =
-        \\module main
-        \\
-        \\
-        \\public def change(a: list[int], b: list[int]) -> None effects(mutation) mutates():
-        \\    pass
-        \\
-        \\
-        \\def main() -> int:
-        \\    return 0
-    ;
-    const omitted =
-        \\module main
-        \\
-        \\
-        \\public def change(a: list[int], b: list[int]) -> None effects(mutation):
-        \\    pass
-        \\
-        \\
-        \\def main() -> int:
-        \\    return 0
-    ;
-    const empty_interface = try functionInterfaceHash(t.allocator, empty, "change");
-    defer t.allocator.free(empty_interface);
-    const omitted_interface = try functionInterfaceHash(t.allocator, omitted, "change");
-    defer t.allocator.free(omitted_interface);
-    const empty_project = try projectInterfaceHash(t.allocator, empty);
-    defer t.allocator.free(empty_project);
-    const omitted_project = try projectInterfaceHash(t.allocator, omitted);
-    defer t.allocator.free(omitted_project);
-    try t.expectEqualStrings(empty_interface, omitted_interface);
-    try t.expectEqualStrings(empty_project, omitted_project);
-
     // Generic templates use the AST declaration region because they do not have
-    // a checked ordinary-function body in the manifest. The clause must still
+    // a checked ordinary-function body in the manifest. The marker must still
     // participate there.
     const generic_a =
         \\module main
         \\
         \\
-        \\public def pick[T](value: T, a: list[int], b: list[int]) -> list[int] effects(mutation) mutates(a):
-        \\    return a
+        \\public def pick[T](value: T, a: mut list[int], b: list[int]) -> list[int]:
+        \\    a[0] = b[0]
+        \\    return b
         \\
         \\
         \\def main() -> int:
@@ -511,8 +479,9 @@ test "declared mutation positions and normalized clause spellings change functio
         \\module main
         \\
         \\
-        \\public def pick[T](value: T, a: list[int], b: list[int]) -> list[int] effects(mutation) mutates(b):
-        \\    return a
+        \\public def pick[T](value: T, a: list[int], b: mut list[int]) -> list[int]:
+        \\    b[0] = a[0]
+        \\    return b
         \\
         \\
         \\def main() -> int:

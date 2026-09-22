@@ -2,7 +2,7 @@ def shuffle(xs: mut list[int]) -> None effects(mutation):
     xs[0] = xs[0] + 1
 
 
-def main() -> int effects(managed_allocation):
+def main() -> int:
     xs = [7]
     shuffle(mut xs)
     return xs[0]
