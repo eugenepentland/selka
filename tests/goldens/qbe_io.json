@@ -86,9 +86,9 @@
     "def main(out: Stream) -> int:\n    out.print(0.0, 1.0, 2.5, 0.1, 100.0)\n    out.print(1e20, 1e-7, 1.7976931348623157e308)\n    out.print(3.0 / 7.0, 1.0 / 3.0, 2.0 / 3.0)\n    out.print(0.0 / 0.0, 1.0 / 0.0, -1.0 / 0.0)\n    out.print([0.5], {\"k\": 0.25})\n    return 0\n",
     []
    ],
-   "returncode": 2,
-   "stderr": "bXlsYW5nOiBob3N0IGZhaWx1cmU6IEludGVybmFsRXJyb3IK",
-   "stdout": "MC4wIDEuMCAyLjUgMC4xIDEwMC4wCjEwMDAwMDAwMDAwMDAwMDAwMDAwMC4wIDAuMDAwMDAwMSA="
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "MC4wIDEuMCAyLjUgMC4xIDEwMC4wCjEwMDAwMDAwMDAwMDAwMDAwMDAwMC4wIDAuMDAwMDAwMSAxNzk3NjkzMTM0ODYyMzE1NzAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAuMAowLjQyODU3MTQyODU3MTQyODU1IDAuMzMzMzMzMzMzMzMzMzMzMyAwLjY2NjY2NjY2NjY2NjY2NjYKbmFuIGluZiAtaW5mClswLjVdIHsnayc6IDAuMjV9CjAK"
   }
  },
  "version": "golden-outcomes-v1"
