@@ -1,0 +1,21 @@
+# Friction (not a crash): a lambda cannot fill a *generic* callback parameter.
+# docs/lambdas.md says a lambda "belongs directly in a callback argument", and
+# it works for a non-generic `def(int) -> int effects()` parameter, but
+#
+#   mylang check this.my
+#   this.my:NN: error[E_LAMBDA_CONTEXT]: lambda requires an expected callback
+#     type; annotate the destination or pass it to a callback parameter
+#
+# for sort.sort_by_key (key: def(T) -> int effects()). The hint is wrong: it
+# *is* passed to a callback parameter. The workaround is a named top-level
+# function. Second problem: the valid `sorted(..., key=lambda ...)` on the next
+# line is then also reported as E_LAMBDA_CONTEXT (a cascade: it checks cleanly
+# once the first line is fixed).
+import sort
+
+
+def main() -> int:
+    xs = [3, 1, 2]
+    a = sort.sort_by_key(xs, lambda v: 0 - v)
+    b = sorted(xs, key=lambda v: 0 - v)
+    return a[0] + b[0]

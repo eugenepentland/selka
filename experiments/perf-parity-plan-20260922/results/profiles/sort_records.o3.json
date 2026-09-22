@@ -1,0 +1,170 @@
+{
+ "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/prof/sort_records.o3",
+ "runs": 3,
+ "samples": 2875,
+ "outside": 167,
+ "functions": [
+  {
+   "function": "myl_f_6c7a9395330fc67fc8f5968275d6f3f0c72c4af7daef0138aac8d5faa24575ce",
+   "samples": 752,
+   "share": 0.26156521739130434
+  },
+  {
+   "function": "myl_f_bdea81805cd6077d384aaf1f4331633f61fb387cedf6760019d54856926c2673",
+   "samples": 520,
+   "share": 0.1808695652173913
+  },
+  {
+   "function": "myl_native_heap_alloc_at",
+   "samples": 434,
+   "share": 0.15095652173913043
+  },
+  {
+   "function": "myl_native_heap_collect",
+   "samples": 213,
+   "share": 0.07408695652173913
+  },
+  {
+   "function": "memset",
+   "samples": 167,
+   "share": 0.05808695652173913
+  },
+  {
+   "function": "<outside: shared libraries>",
+   "samples": 167,
+   "share": 0.05808695652173913
+  },
+  {
+   "function": "slot_take",
+   "samples": 137,
+   "share": 0.04765217391304348
+  },
+  {
+   "function": "myl_f_222a3f921c68842750b3a97467f74d5fffb5bb06c189881fea934052cbb946ed",
+   "samples": 102,
+   "share": 0.035478260869565216
+  },
+  {
+   "function": "myl_native_heap_extend",
+   "samples": 91,
+   "share": 0.03165217391304348
+  },
+  {
+   "function": "myl_native_list_append",
+   "samples": 78,
+   "share": 0.027130434782608695
+  },
+  {
+   "function": "memcpy",
+   "samples": 76,
+   "share": 0.026434782608695653
+  },
+  {
+   "function": "myl_f_6942c2c3d28906de8fb688e8c63e07aaa4a20dc291344c59067340f0a9ddb709",
+   "samples": 33,
+   "share": 0.011478260869565217
+  }
+ ],
+ "hot_pcs": [
+  {
+   "pc": "0x1009e70",
+   "samples": 251,
+   "share": 0.08730434782608695
+  },
+  {
+   "pc": "0x1009bb2",
+   "samples": 169,
+   "share": 0.058782608695652175
+  },
+  {
+   "pc": "0x100a2b9",
+   "samples": 102,
+   "share": 0.035478260869565216
+  },
+  {
+   "pc": "0x100509b",
+   "samples": 68,
+   "share": 0.02365217391304348
+  },
+  {
+   "pc": "0x100513c",
+   "samples": 66,
+   "share": 0.022956521739130435
+  },
+  {
+   "pc": "0x1004290",
+   "samples": 55,
+   "share": 0.019130434782608695
+  },
+  {
+   "pc": "0x1005118",
+   "samples": 47,
+   "share": 0.01634782608695652
+  },
+  {
+   "pc": "0x10051ba",
+   "samples": 42,
+   "share": 0.014608695652173913
+  },
+  {
+   "pc": "0x100a0af",
+   "samples": 42,
+   "share": 0.014608695652173913
+  },
+  {
+   "pc": "0x100511d",
+   "samples": 30,
+   "share": 0.010434782608695653
+  },
+  {
+   "pc": "0x10050ed",
+   "samples": 28,
+   "share": 0.009739130434782608
+  },
+  {
+   "pc": "0x10044ca",
+   "samples": 27,
+   "share": 0.009391304347826087
+  },
+  {
+   "pc": "0x100a03f",
+   "samples": 27,
+   "share": 0.009391304347826087
+  },
+  {
+   "pc": "0x1006ef6",
+   "samples": 25,
+   "share": 0.008695652173913044
+  },
+  {
+   "pc": "0x1006784",
+   "samples": 22,
+   "share": 0.0076521739130434785
+  },
+  {
+   "pc": "0x10051bf",
+   "samples": 20,
+   "share": 0.006956521739130435
+  },
+  {
+   "pc": "0x1005184",
+   "samples": 19,
+   "share": 0.006608695652173913
+  },
+  {
+   "pc": "0x100daed",
+   "samples": 19,
+   "share": 0.006608695652173913
+  },
+  {
+   "pc": "0x1006ef1",
+   "samples": 18,
+   "share": 0.006260869565217392
+  },
+  {
+   "pc": "0x100dae7",
+   "samples": 18,
+   "share": 0.006260869565217392
+  }
+ ]
+}

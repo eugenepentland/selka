@@ -1,0 +1,72 @@
+# knucleotide_tuned: the same counts as knucleotide.my, but no substring is ever
+# materialized. What changed, and why:
+# - The sequence is generated as base codes (A=0, C=1, G=2, T=3) in a list[int]
+#   instead of letters in a str.
+# - Each k-letter key is packed into an int, two bits per base, and maintained
+#   as a rolling code: code = (code * 4 + base) % 4**k. Because A < C < G < T in
+#   both the code and the byte order, sorting codes sorts keys, and the dict
+#   becomes dict[int, int] instead of dict[str, int].
+# - Keys are turned back into text only for the 20 printed entries (decode) and
+#   the 5 queried keys are packed once (encode).
+# Everything else — one fresh dict per k, the get-then-store update, the two
+# stable sorts — is exactly the idiomatic port, so the difference between the
+# two files is what the str slices (allocation, hashing, collection) cost.
+
+
+record Entry:
+    code: int
+    count: int
+
+
+def generate(length: int) -> list[int]:
+    codes: list[int] = []
+    seed = 42
+    for _ in range(length):
+        seed = (seed * 3877 + 29573) % 139968
+        codes.append(seed * 4 // 139968)
+    return codes
+
+
+def frequencies(codes: list[int], k: int) -> dict[int, int]:
+    modulus = 1
+    for _ in range(k):
+        modulus = modulus * 4
+    counts: dict[int, int] = {}
+    code = 0
+    for i, base in enumerate(codes):
+        code = (code * 4 + base) % modulus
+        if i >= k - 1:
+            counts[code] = counts.get(code, 0) + 1
+    return counts
+
+
+def encode(key: str) -> int:
+    code = 0
+    for letter in key:
+        code = code * 4 + "ACGT".find(letter)
+    return code
+
+
+def decode(code: int, k: int) -> str:
+    letters: list[str] = []
+    rest = code
+    for _ in range(k):
+        letters.append("ACGT"[rest % 4])
+        rest = rest // 4
+    letters.reverse()
+    return "".join(letters)
+
+
+def main(out: Stream) -> int:
+    codes = generate(1000000)
+    for k in [1, 2]:
+        counts = frequencies(codes, k)
+        entries = [Entry(code=item.key, count=item.value) for item in counts.items()]
+        # Two stable passes: key ascending, then count descending.
+        by_key = sorted(entries, key=lambda entry: entry.code)
+        for entry in sorted(by_key, key=lambda entry: -entry.count):
+            out.print(decode(entry.code, k), entry.count)
+    for key in ["GGT", "GGTA", "GGTATT", "GGTATTTTAATT", "GGTATTTTAATTTATAGT"]:
+        counts = frequencies(codes, len(key))
+        out.print(f"{counts.get(encode(key), 0)}\t{key}")
+    return 0

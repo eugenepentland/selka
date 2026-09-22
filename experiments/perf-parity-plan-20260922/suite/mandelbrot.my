@@ -1,0 +1,43 @@
+# mandelbrot: a 1600 x 1600 escape-time bitmap (50 iterations, limit 4.0),
+# packed eight pixels per byte and folded into a checksum instead of being
+# written out. See SUITE.md section 5.
+
+
+def mix(c: int, v: int) -> int:
+    return (c * 31 + v) % 1000000007
+
+
+def main(out: Stream) -> int:
+    size = 1600
+    iterations = 50
+    limit = 4.0
+    checksum = 0
+    for y in range(size):
+        ci = 2.0 * float(y) / float(size) - 1.0
+        byte = 0
+        bits = 0
+        for x in range(size):
+            cr = 2.0 * float(x) / float(size) - 1.5
+            zr = 0.0
+            zi = 0.0
+            tr = 0.0
+            ti = 0.0
+            i = 0
+            while i < iterations and tr + ti <= limit:
+                zi = 2.0 * zr * zi + ci
+                zr = tr - ti + cr
+                tr = zr * zr
+                ti = zi * zi
+                i = i + 1
+            byte = byte * 2 + (1 if tr + ti <= limit else 0)
+            bits = bits + 1
+            if bits == 8:
+                checksum = mix(checksum, byte)
+                byte = 0
+                bits = 0
+        if bits > 0:
+            byte = shift_left(byte, 8 - bits)
+            checksum = mix(checksum, byte)
+    out.print(f"P4 {size} {size}")
+    out.print(checksum)
+    return 0

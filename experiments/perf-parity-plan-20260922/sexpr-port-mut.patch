@@ -1,0 +1,403 @@
+diff -ru tree/experiments/sexpr-port/sexpr/parser.my work/sexpr-port-mut/sexpr/parser.my
+--- tree/experiments/sexpr-port/sexpr/parser.my	2026-09-22 18:06:33.546925673 +0000
++++ work/sexpr-port-mut/sexpr/parser.my	2026-09-22 19:09:32.350095178 +0000
+@@ -37,8 +37,8 @@
+         message = "unexpected character"
+     return ParseError(message=message, line=int(span.line), col=int(span.col), offset=problem.offset)
+ 
+-def advance(cursor: Cursor) -> Result[bool, ParseError]:
+-    match tk.next_raw(cursor.lexer):
++def advance(cursor: mut Cursor) -> Result[bool, ParseError]:
++    match tk.next_raw(mut cursor.lexer):
+         case Ok(token):
+             cursor.current = token
+             return Ok(True)
+@@ -164,12 +164,12 @@
+         return parse_si(src, raw)
+     return Err(located(span, "unexpected token"))
+ 
+-def parse_node(cursor: Cursor, depth: int) -> Result[ast.Node, ParseError]:
++def parse_node(cursor: mut Cursor, depth: int) -> Result[ast.Node, ParseError]:
+     raw = cursor.current
+     match raw.kind:
+         case tk.Kind.lparen:
+-            _ = advance(cursor)?
+-            return parse_list(cursor, depth, raw.source.span)
++            _ = advance(mut cursor)?
++            return parse_list(mut cursor, depth, raw.source.span)
+         case tk.Kind.rparen:
+             return Err(located(raw.source.span, "unexpected ')' — no matching '(' is open here"))
+         case tk.Kind.eof:
+@@ -178,14 +178,14 @@
+             # A string node keeps the bytes between the quotes with escapes
+             # intact, which is exactly the tokenizer's text range.
+             node = ast.Node.string(view_of(cursor.src, raw.text_start, raw.text_end), raw.source.span)
+-            _ = advance(cursor)?
++            _ = advance(mut cursor)?
+             return Ok(node)
+         case _:
+             node = parse_leaf(cursor.src, raw)?
+-            _ = advance(cursor)?
++            _ = advance(mut cursor)?
+             return Ok(node)
+ 
+-def parse_list(cursor: Cursor, depth: int, open_span: ast.Span) -> Result[ast.Node, ParseError]:
++def parse_list(cursor: mut Cursor, depth: int, open_span: ast.Span) -> Result[ast.Node, ParseError]:
+     if depth >= cursor.cap:
+         return Err(located(open_span, "s-expression nesting is too deep"))
+     entries: list[ast.Node] = []
+@@ -193,15 +193,15 @@
+         if cursor.current.kind == tk.Kind.eof:
+             return Err(located(open_span, "unexpected end of input — a '(' was never closed"))
+         if cursor.current.kind == tk.Kind.rparen:
+-            _ = advance(cursor)?
++            _ = advance(mut cursor)?
+             return Ok(ast.Node.form(entries, open_span))
+-        entries.append(parse_node(cursor, depth + 1)?)
++        entries.append(parse_node(mut cursor, depth + 1)?)
+ 
+ # The old parser tokenized all input first. Drain only the syntax-error path so
+ # a later lexical failure retains its historical precedence.
+-def finish_after_syntax_error(cursor: Cursor, syntax: ParseError) -> Result[list[ast.Node], ParseError]:
++def finish_after_syntax_error(cursor: mut Cursor, syntax: ParseError) -> Result[list[ast.Node], ParseError]:
+     while cursor.current.kind != tk.Kind.eof:
+-        match tk.next_raw(cursor.lexer):
++        match tk.next_raw(mut cursor.lexer):
+             case Ok(token):
+                 cursor.current = token
+             case Err(problem):
+@@ -220,7 +220,7 @@
+         return Err(ParseError(message="document exceeds the 4 GiB source range", line=1, col=1, offset=0))
+     lx = tk.lexer(src)
+     first = tk.RawToken(kind=tk.Kind.eof, source=tk.SpanToken(start=0, end=0, span=ast.Span(line=1, col=1, offset=0)), text_start=0, text_end=0)
+-    match tk.next_raw(lx):
++    match tk.next_raw(mut lx):
+         case Ok(token):
+             first = token
+         case Err(problem):
+@@ -228,9 +228,9 @@
+     cursor = Cursor(src=src, lexer=lx, current=first, cap=cap)
+     nodes: list[ast.Node] = []
+     while cursor.current.kind != tk.Kind.eof:
+-        match parse_node(cursor, 0):
++        match parse_node(mut cursor, 0):
+             case Ok(node):
+                 nodes.append(node)
+             case Err(problem):
+-                return finish_after_syntax_error(cursor, problem)
++                return finish_after_syntax_error(mut cursor, problem)
+     return Ok(nodes)
+diff -ru tree/experiments/sexpr-port/sexpr/printer.my work/sexpr-port-mut/sexpr/printer.my
+--- tree/experiments/sexpr-port/sexpr/printer.my	2026-09-22 18:06:33.546925673 +0000
++++ work/sexpr-port-mut/sexpr/printer.my	2026-09-22 19:08:41.249520732 +0000
+@@ -206,13 +206,13 @@
+ # `printNode(writer, node, indent)`: `indent` is where this node's children
+ # would be indented if it lays out over several lines. One traversal serves
+ # both entry points, so the layout cannot drift between them.
+-def push_node(out: byte_builder.Builder, node: ast.Node, indent: int) mutates(out):
++def push_node(out: mut byte_builder.Builder, node: ast.Node, indent: int):
+     match node:
+         case ast.Node.form(entries, _):
+             if len(entries) == 0:
+-                byte_builder.append(out, b"()")
++                byte_builder.append(mut out, b"()")
+                 return
+-            byte_builder.append(out, b"(")
++            byte_builder.append(mut out, b"(")
+             if is_short_list(entries):
+                 # Short enough (and shallow enough) for one line. The estimate
+                 # already measured every child, at exactly the indices the
+@@ -220,67 +220,67 @@
+                 index = 0
+                 while index < len(entries):
+                     if index > 0:
+-                        byte_builder.append(out, b" ")
+-                    push_node(out, entries[index], indent + 2)
++                        byte_builder.append(mut out, b" ")
++                    push_node(mut out, entries[index], indent + 2)
+                     index += 1
+             else:
+                 # Too wide or too deep: the first child stays on the "(" line
+                 # and every later child starts an indented line of its own.
+-                push_node(out, entries[0], indent + 2)
++                push_node(mut out, entries[0], indent + 2)
+                 index = 1
+                 while index < len(entries):
+-                    byte_builder.append(out, b"\n")
+-                    _ = byte_builder.append_spaces(out, indent + 2)
+-                    push_node(out, entries[index], indent + 2)
++                    byte_builder.append(mut out, b"\n")
++                    _ = byte_builder.append_spaces(mut out, indent + 2)
++                    push_node(mut out, entries[index], indent + 2)
+                     index += 1
+-            byte_builder.append(out, b")")
++            byte_builder.append(mut out, b")")
+             return
+         case ast.Node.atom(text, _):
+-            append_view(out, text)
++            append_view(mut out, text)
+             return
+         case ast.Node.string(content, _):
+-            byte_builder.append(out, b"\"")
+-            append_view(out, content)
+-            byte_builder.append(out, b"\"")
++            byte_builder.append(mut out, b"\"")
++            append_view(mut out, content)
++            byte_builder.append(mut out, b"\"")
+             return
+         case ast.Node.integer(value, _):
+-            byte_builder.append_int(out, value)
++            byte_builder.append_int(mut out, value)
+             return
+         case ast.Node.decimal(value, _, literal):
+             # A suffixed literal prints as it was written; re-deriving the text
+             # from the f64 would rewrite `100nF` as `0.0000001`.
+             match literal:
+                 case Some(text):
+-                    append_view(out, text)
++                    append_view(mut out, text)
+                 case None:
+-                    append_float(out, value)
++                    append_float(mut out, value)
+             return
+         case ast.Node.measure(value, _):
+-            append_float(out, value)
+-            byte_builder.append(out, b"mm")
++            append_float(mut out, value)
++            byte_builder.append(mut out, b"mm")
+             return
+ 
+ 
+ # Append the bytes a view covers. The source range goes in as it stands, so an
+ # atom's spelling is never widened to Unicode scalars and encoded back, and the
+ # copy is a bulk range append rather than a per-octet loop.
+-def append_view(out: byte_builder.Builder, found: view.View) mutates(out):
+-    _ = byte_builder.append_range(out, found.source, found.start, found.end)
++def append_view(out: mut byte_builder.Builder, found: view.View):
++    _ = byte_builder.append_range(mut out, found.source, found.start, found.end)
+ 
+ 
+ # Append a float the way Zig's printFloat writes it: the shortest round-trip
+ # decimal, with ".0" appended to a whole value whose spelling has none. The
+ # finishing '.'/'e'/'n' test is what keeps a whole value's float spelling
+ # distinct from an integer reading, so it is applied after formatting.
+-def append_float(out: byte_builder.Builder, value: float) mutates(out):
++def append_float(out: mut byte_builder.Builder, value: float):
+     data = render_float(value).encode()
+-    _ = byte_builder.append_range(out, data, 0, len(data))
++    _ = byte_builder.append_range(mut out, data, 0, len(data))
+ 
+ 
+ # Canonical bytes for a single node, laid out at indent 0.
+ public def render_node_bytes(node: ast.Node) -> bytes:
+     out = byte_builder.create()
+-    push_node(out, node, 0)
++    push_node(mut out, node, 0)
+     return byte_builder.finish(out)
+ 
+ 
+@@ -296,8 +296,8 @@
+     index = 0
+     while index < len(nodes):
+         if index > 0:
+-            byte_builder.append(out, b"\n")
+-        push_node(out, nodes[index], 0)
++            byte_builder.append(mut out, b"\n")
++        push_node(mut out, nodes[index], 0)
+         index += 1
+     return byte_builder.finish(out)
+ 
+diff -ru tree/experiments/sexpr-port/sexpr/tokenizer.my work/sexpr-port-mut/sexpr/tokenizer.my
+--- tree/experiments/sexpr-port/sexpr/tokenizer.my	2026-09-22 18:06:33.546925673 +0000
++++ work/sexpr-port-mut/sexpr/tokenizer.my	2026-09-22 19:09:32.350246051 +0000
+@@ -140,7 +140,7 @@
+ 
+ # Store the scan cursor back into the Lexer. Called once per token, never per
+ # byte: inside a token the cursor is local.
+-def store_cursor(lx: Lexer, pos: int, line: int, col: int):
++def store_cursor(lx: mut Lexer, pos: int, line: int, col: int):
+     lx.pos = pos
+     lx.line = line
+     lx.col = col
+@@ -242,7 +242,7 @@
+ # therefore tests two bytes per byte instead of three and does the escape
+ # bookkeeping once per quote instead of once per body byte; the column still
+ # advances once per run, with the delimiter doing its own cursor update.
+-def read_string(lx: Lexer, offset: int) -> Result[RawToken, LexError]:
++def read_string(lx: mut Lexer, offset: int) -> Result[RawToken, LexError]:
+     src = lx.src
+     length = len(src)
+     pos = lx.pos
+@@ -287,16 +287,16 @@
+         closed = True
+         break
+     if not closed:
+-        store_cursor(lx, pos, line, col)
++        store_cursor(mut lx, pos, line, col)
+         return Err(LexError(message="unterminated string", offset=offset, line=start_line))
+     text_end = pos
+     pos = pos + 1  # skip closing "
+     col = col + 1
+-    store_cursor(lx, pos, line, col)
++    store_cursor(mut lx, pos, line, col)
+     return Ok(raw(Kind.string, offset, pos, start, text_end, start_line, start_col))
+ 
+ 
+-def read_atom(lx: Lexer, offset: int) -> RawToken:
++def read_atom(lx: mut Lexer, offset: int) -> RawToken:
+     src = lx.src
+     length = len(src)
+     pos = lx.pos
+@@ -308,12 +308,12 @@
+     while pos < length and is_atom_continue(src[pos]):
+         pos = pos + 1
+         col = col + 1
+-    store_cursor(lx, pos, line, col)
++    store_cursor(mut lx, pos, line, col)
+     return raw(Kind.atom, offset, pos, start, pos, start_line, start_col)
+ 
+ 
+ # An operator atom, allowing the two-character `>= <= == !=` forms.
+-def read_operator(lx: Lexer, offset: int) -> RawToken:
++def read_operator(lx: mut Lexer, offset: int) -> RawToken:
+     src = lx.src
+     length = len(src)
+     pos = lx.pos
+@@ -327,7 +327,7 @@
+     if peek(src, length, pos) == 61:
+         pos = pos + 1
+         col = col + 1
+-    store_cursor(lx, pos, line, col)
++    store_cursor(mut lx, pos, line, col)
+     return raw(Kind.atom, offset, pos, start, pos, start_line, start_col)
+ 
+ 
+@@ -335,7 +335,7 @@
+ # one of `mm`/`mil`, an SI suffix, `%`, or — when more atom characters follow —
+ # a fallback to an atom (`204928-0301.stp`, `12.5abc`, `100kHz`, `5V3`).
+ # None of those bytes can be a newline, so only the column moves.
+-def read_number(lx: Lexer, offset: int) -> RawToken:
++def read_number(lx: mut Lexer, offset: int) -> RawToken:
+     src = lx.src
+     length = len(src)
+     pos = lx.pos
+@@ -364,12 +364,12 @@
+         if peek(src, length, pos + 1) == 109 and not is_atom_continue(peek(src, length, pos + 2)):
+             pos = pos + 2
+             col = col + 2
+-            store_cursor(lx, pos, line, col)
++            store_cursor(mut lx, pos, line, col)
+             return raw(Kind.unit_val, offset, pos, start, num_end, start_line, start_col)
+         if peek(src, length, pos + 1) == 105 and peek(src, length, pos + 2) == 108 and not is_atom_continue(peek(src, length, pos + 3)):
+             pos = pos + 3
+             col = col + 3
+-            store_cursor(lx, pos, line, col)
++            store_cursor(mut lx, pos, line, col)
+             return raw(Kind.unit_val, offset, pos, start, num_end, start_line, start_col)
+     # SI scale (or a bare unit letter); the text keeps the suffix verbatim so
+     # the parser can apply the scale.
+@@ -377,22 +377,22 @@
+     if suffix > 0:
+         pos = pos + suffix
+         col = col + suffix
+-        store_cursor(lx, pos, line, col)
++        store_cursor(mut lx, pos, line, col)
+         return raw(Kind.si_val, offset, pos, start, pos, start_line, start_col)
+     # Percent literal: only when the sign ends the token, so a standalone `%`
+     # still lexes as an operator atom.
+     if peek(src, length, pos) == 37 and not is_atom_continue(peek(src, length, pos + 1)):
+         pos = pos + 1
+         col = col + 1
+-        store_cursor(lx, pos, line, col)
++        store_cursor(mut lx, pos, line, col)
+         return raw(Kind.si_val, offset, pos, start, pos, start_line, start_col)
+     if is_atom_continue(peek(src, length, pos)):
+         while pos < length and is_atom_continue(src[pos]):
+             pos = pos + 1
+             col = col + 1
+-        store_cursor(lx, pos, line, col)
++        store_cursor(mut lx, pos, line, col)
+         return raw(Kind.atom, offset, pos, start, pos, start_line, start_col)
+-    store_cursor(lx, pos, line, col)
++    store_cursor(mut lx, pos, line, col)
+     if is_float:
+         return raw(Kind.float_val, offset, pos, start, pos, start_line, start_col)
+     return raw(Kind.int_val, offset, pos, start, pos, start_line, start_col)
+@@ -404,7 +404,7 @@
+ #
+ # The skip loop is the only place the scanner itself consumes a newline, so it
+ # is the only place line/col need updating here; the readers do their own.
+-public def next_raw(lx: Lexer) -> Result[RawToken, LexError]:
++public def next_raw(lx: mut Lexer) -> Result[RawToken, LexError]:
+     src = lx.src
+     length = len(src)
+     pos = lx.pos
+@@ -439,24 +439,24 @@
+     offset = pos
+     byte = peek(src, length, pos)
+     if byte == -1:
+-        store_cursor(lx, pos, line, col)
++        store_cursor(mut lx, pos, line, col)
+         return Ok(raw(Kind.eof, offset, offset, offset, offset, line, col))
+     if byte == 40:
+-        store_cursor(lx, pos + 1, line, col + 1)
++        store_cursor(mut lx, pos + 1, line, col + 1)
+         return Ok(raw(Kind.lparen, offset, pos + 1, offset, pos + 1, line, col))
+     if byte == 41:
+-        store_cursor(lx, pos + 1, line, col + 1)
++        store_cursor(mut lx, pos + 1, line, col + 1)
+         return Ok(raw(Kind.rparen, offset, pos + 1, offset, pos + 1, line, col))
+     # Hand the cursor over at the token boundary; each reader re-reads it once.
+-    store_cursor(lx, pos, line, col)
++    store_cursor(mut lx, pos, line, col)
+     if byte == 34:
+-        return read_string(lx, offset)
++        return read_string(mut lx, offset)
+     if is_digit(byte) or (byte == 45 and is_digit(peek(src, length, pos + 1))):
+-        return Ok(read_number(lx, offset))
++        return Ok(read_number(mut lx, offset))
+     if is_atom_start(byte):
+-        return Ok(read_atom(lx, offset))
++        return Ok(read_atom(mut lx, offset))
+     if is_operator_char(byte):
+-        return Ok(read_operator(lx, offset))
++        return Ok(read_operator(mut lx, offset))
+     return Err(LexError(message="unexpected character", offset=offset, line=line))
+ 
+ 
+@@ -465,7 +465,7 @@
+     lx = lexer(src)
+     tokens: list[Token] = []
+     while True:
+-        match next_raw(lx):
++        match next_raw(mut lx):
+             case Ok(found):
+                 token = materialize(src, found)
+                 tokens.append(token)
+--- tree/experiments/sexpr-port/main.my	2026-09-22 18:06:33.546028443 +0000
++++ work/sexpr-port-mut/main.my	2026-09-22 19:08:15.944205059 +0000
+@@ -26,7 +26,7 @@
+     values: float
+ 
+ 
+-def tally(counts: Tally, node: ast.Node, depth: int) mutates(counts):
++def tally(counts: mut Tally, node: ast.Node, depth: int):
+     counts.nodes = counts.nodes + 1
+     if depth > counts.depth:
+         counts.depth = depth
+@@ -47,13 +47,13 @@
+         case ast.Node.form(entries, _):
+             counts.forms = counts.forms + 1
+             for child in entries:
+-                tally(counts, child, depth + 1)
++                tally(mut counts, child, depth + 1)
+ 
+ 
+ def summarise(nodes: list[ast.Node]) -> str:
+     counts = Tally(forms=0, nodes=0, atoms=0, strings=0, ints=0, floats=0, measures=0, depth=0, values=0.0)
+     for node in nodes:
+-        tally(counts, node, 0)
++        tally(mut counts, node, 0)
+     return f"forms={counts.forms} nodes={counts.nodes} atoms={counts.atoms} strings={counts.strings} ints={counts.ints} floats={counts.floats} measures={counts.measures} max_depth={counts.depth} value_sum={counts.values}"
+ 
+ 

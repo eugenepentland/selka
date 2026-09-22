@@ -1,0 +1,33 @@
+# sieve_tuned: sieve.my with the crossing-off loop moved into a small helper.
+# Same list[bool], same writes in the same order, same output.
+#
+# What changed: only where the inner `flags[j] = False` loop lives. Every
+# list slot write republishes the enclosing function's GC root chain before
+# the store; in main that chain is 7 four-word records per write, in the
+# two-parameter helper it is 2. Nothing else differs. (Replacing
+# `j = j + step` with wrapping_add measured within noise, so it is not used.)
+
+
+def cross_off(flags: mut list[bool], start: int, step: int, n: int) -> None:
+    j = start
+    while j <= n:
+        flags[j] = False
+        j = j + step
+
+
+def main(out: Stream) -> int:
+    n = 20000000
+    flags = [True for _ in range(n + 1)]
+    flags[0] = False
+    flags[1] = False
+    i = 2
+    while i * i <= n:
+        if flags[i]:
+            cross_off(mut flags, i * i, i, n)
+        i = i + 1
+    count = 0
+    for flag in flags:
+        if flag:
+            count += 1
+    out.print(count)
+    return 0

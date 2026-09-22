@@ -1,0 +1,5 @@
+{
+ "gc-lto": {"backend": "llvm", "opt": "3", "lto": true, "bounded": false},
+ "gc-lto-unchecked": {"backend": "llvm", "opt": "3", "lto": true, "bounded": false, "unchecked": true},
+ "arena-lto": {"backend": "llvm", "opt": "3", "lto": true, "bounded": false, "guest": "arena"}
+}
