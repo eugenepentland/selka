@@ -1550,7 +1550,117 @@ const Emitter = struct {
             flags[index] = true;
         }
         self.arm_addresses = try self.payloadAddresses(f, flags);
+        try self.elementLocals(f, flags);
         return flags;
+    }
+    /// The iteration locals that may name their list element where it lives.
+    ///
+    /// `for x in xs` reads element `i` and stores it into the loop variable. When
+    /// the element owns nothing and the variable's whole live range is the short
+    /// run that starts at that store, the variable can hold the element's checked
+    /// address instead of a copy of it: `store_local` keeps the address word, and
+    /// every read of the variable reaches the element itself, which is the value
+    /// the copy held. Nothing in that run can call, allocate, release or move the
+    /// backing storage, so the address cannot go stale before the last read, and
+    /// the next iteration overwrites it before anything reads it again.
+    fn elementLocals(self: *Emitter, f: bytecode.Function, flags: []bool) GenerateError!void {
+        for (f.scope.instructions, 0..) |instruction, pc| {
+            const operation = switch (instruction.op) {
+                .buffer_operation => |op| op,
+                else => continue,
+            };
+            if (operation.kind != .read) continue;
+            const owner = f.scope.locals[@backingInt(operation.owner)].ty;
+            if (!owner.isAggregate()) continue;
+            const schema = self.program.records[owner.recordIndex()];
+            if (!schema.managed or schema.collection.kind != .list) continue;
+            const element = schema.shape.buffer orelse continue;
+            if (!element.isAggregate()) continue;
+            const value = try self.layout(element);
+            if (value.drop or value.trace or value.size == 0) continue;
+            if (self.program.records[element.recordIndex()].isManagedRecord()) continue;
+            try self.claimElementLocal(f, flags, pc, element);
+        }
+    }
+    /// Claim one element read's destination local, when every condition the
+    /// address-holding form needs holds: the read is followed straight away by a
+    /// store into a local of the element's own type, that store is the local's
+    /// only write, every read of it lies in the branch-free run that follows, and
+    /// no instruction between the store and the last of those reads can
+    /// invalidate the address, release a value or move out of the frame.
+    fn claimElementLocal(self: *Emitter, f: bytecode.Function, flags: []bool, pc: usize, element: typed.Type) GenerateError!void {
+        const code = f.scope.instructions;
+        const at_store = pc + 1;
+        if (at_store >= code.len or at_store >= self.states.len) return;
+        if (self.states[at_store] == null or self.isBranchTarget(at_store)) return;
+        const slot = switch (code[at_store].op) {
+            .store_local => |target| @backingInt(target),
+            else => return,
+        };
+        if (slot >= flags.len or flags[slot]) return;
+        if (slot < f.signature.parameter_count) return;
+        if (f.scope.locals[slot].ty != element) return;
+        for (code, 0..) |_, at| if (at != at_store and writesLocalAt(f, at, slot)) return;
+        // The local's reads all sit in the branch-free run that starts at the
+        // store; the last of them is where the address has to still be good.
+        var end = at_store + 1;
+        while (end < code.len and !self.isBranchTarget(end)) : (end += 1) switch (code[end].op) {
+            .jump, .jump_if_false, .switch_variant, .ret => break,
+            else => {},
+        };
+        var last: ?usize = null;
+        for (code[0..end], 0..) |other, at| {
+            const target = switch (other.op) {
+                .load_local => |read| @backingInt(read),
+                else => continue,
+            };
+            if (target != slot) continue;
+            if (at <= at_store) return;
+            last = at;
+        }
+        const at_last = last orelse return;
+        for (code[at_store + 1 .. at_last + 1], at_store + 1..) |other, at| {
+            _ = at;
+            if (!try self.inertInstruction(f, other.op)) return;
+        }
+        flags[slot] = true;
+    }
+    /// Whether an instruction between an element store and its last read can
+    /// neither call, allocate, release nor mutate — the only ways an address into
+    /// a list's backing storage can stop naming the element it was checked for.
+    /// Everything outside this set declines the address-holding form, so an
+    /// opcode added later only costs the copy it already paid.
+    fn inertInstruction(self: *Emitter, f: bytecode.Function, op: @FieldType(bytecode.Instruction, "op")) GenerateError!bool {
+        return switch (op) {
+            .load_local,
+            .push_i64,
+            .push_integer,
+            .push_bool,
+            .push_unit,
+            .get_field,
+            .array_length,
+            .binary_integer,
+            .add_i64_checked,
+            .sub_i64_checked,
+            .mul_i64_checked,
+            .neg_integer,
+            .neg_i64_checked,
+            .cmp_i64,
+            .cmp_bool,
+            .cmp_enum,
+            .cmp_domain,
+            .not_bool,
+            .wrap_domain,
+            .unwrap_domain,
+            .pop,
+            .acknowledge,
+            .assert_true,
+            => true,
+            // A whole-value store can drop the value it replaces, which is a
+            // release the run must not contain; a drop-free destination cannot.
+            .store_local => |target| !(try self.layout(f.scope.locals[@backingInt(target)].ty)).drop,
+            else => false,
+        };
     }
     /// The match payload bindings that may name the payload where it lives.
     ///
@@ -2550,11 +2660,17 @@ const Emitter = struct {
             .store_local => |slot| {
                 const index = @backingInt(slot);
                 const ty = self.function.scope.locals[index].ty;
-                // QBE-CTORFWD-1 and QBE-ARRAYWRITE-1: the instruction before
-                // this store already wrote this local where it lives — a
-                // constructor field by field, a `replace` one element — so
-                // there is nothing left to copy.
-                if (!try @import("qbe_aggregate.zig").storeForwarded(@TypeOf(self), self, self.pc, index)) {
+                // QBE-ELEMENT-ADDRESS-1: an iteration local that names its
+                // element in place holds the checked address the read produced,
+                // so the store keeps that word instead of copying the element
+                // into the frame and reading it back out of there.
+                if (self.byReference(index)) {
+                    try self.print(" storel %v{d}, %l{d}\n", .{ try self.load("s", h - 1), index });
+                } else if (!try @import("qbe_aggregate.zig").storeForwarded(@TypeOf(self), self, self.pc, index)) {
+                    // QBE-CTORFWD-1 and QBE-ARRAYWRITE-1: the instruction before
+                    // this store already wrote this local where it lives — a
+                    // constructor field by field, a `replace` one element — so
+                    // there is nothing left to copy.
                     const v = try self.load("s", h - 1);
                     if ((try self.layout(ty)).drop) {
                         try self.print(drop_local, .{ try self.descriptor(ty), index });

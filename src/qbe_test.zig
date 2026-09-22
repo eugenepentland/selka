@@ -1392,6 +1392,72 @@ test "QBE-MATCHPROJ a scrutinee the arm writes keeps the payload copy" {
     try std.testing.expect(std.mem.count(u8, body, "blit ") >= 2);
 }
 
+// spec: QBE-ELEMENT-ADDRESS-1
+test "an iteration local names its element where it lives" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    c: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    rows: list[Row] = []
+        \\    total = 0
+        \\    for row in rows:
+        \\        total += row.c
+        \\    return total
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "main").?.il;
+    // The loop variable holds the checked element address, so no copy of the
+    // sixteen-byte element is made and its slot stays one word.
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit ") == null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "alloc8 16") == null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "=l cultl ") != null);
+}
+// spec-case: QBE-ELEMENT-ADDRESS-1
+test "a scalar element list keeps the value path" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def main() -> i64:
+        \\    values: list[i64] = [1, 2, 3]
+        \\    total = 0
+        \\    for value in values:
+        \\        total += value
+        \\    return total
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "main").?.il;
+    // A scalar element is loaded by value, so the address-holding form never
+    // applies and the loop still reads the element's own width.
+    try std.testing.expect(std.mem.indexOf(u8, body, "myl_qbe_fail_iteration") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "=l loadl %v") != null);
+}
+// spec-case: QBE-ELEMENT-ADDRESS-1
+test "an iteration local keeps its copy when a call sits before its last read" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    c: i64
+        \\
+        \\
+        \\def doubled(value: i64) -> i64:
+        \\    return value * 2
+        \\
+        \\
+        \\def main() -> i64:
+        \\    rows: list[Row] = []
+        \\    total = 0
+        \\    for row in rows:
+        \\        total += doubled(row.a) + row.c
+        \\    return total
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "main").?.il;
+    // The call runs between the store and the variable's last read, so the
+    // element could move under the address: the loop variable keeps its copy.
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit ") != null);
+}
+
 // spec: QBE-AGGREF-2
 test "QBE-AGGREF-2 a local passed beside another argument is named by its own slot" {
     var parsed = try emitted(std.testing.allocator,
@@ -1671,9 +1737,9 @@ test "a list element the loop variable copies is read through its own address" {
     defer parsed.deinit();
     const body = named(parsed.value, "total").?.il;
     // The checked element address reaches the store of the loop variable
-    // directly, so the per-pc aggregate scratch copy is gone and the one copy
-    // left is the loop variable's own.
+    // directly and stays there (QBE-ELEMENT-ADDRESS-1), so neither the per-pc
+    // aggregate scratch nor the loop variable's own copy is made.
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_list_get"));
-    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "blit "));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
     try std.testing.expect(std.mem.indexOf(u8, body, "myl_qbe_fail_normalized_index_bounds") != null);
 }
