@@ -53,6 +53,14 @@ def depth_of(outers: list[Outer], at: i64) -> i64:
     return outers[at].inner.depth
 
 
+def walk(cells: list[Cell], at: i64) -> Cell:
+    head = cells[at]
+    if at + 1 >= len(cells):
+        return Cell(name=head.name, count=head.count)
+    rest = walk(cells, at + 1)
+    return Cell(name=head.name, count=head.count + rest.count)
+
+
 def total(cells: list[Cell]) -> i64:
     sum = 0
     for cell in cells:
@@ -134,6 +142,38 @@ public def test_loop_variable_reads_every_element() -> bool:
     before = total(cells)
     cells[2] = Cell(name="c", count=30)
     return before == 6 and total(cells) == 33
+
+
+public def test_call_result_local_is_a_value_of_its_own() -> bool:
+    cells = [Cell(name="a", count=1), Cell(name="b", count=2)]
+    first = pick(cells, 0)
+    second = pick(cells, 1)
+    cells[0] = Cell(name="z", count=99)
+    return first.name == "a" and second.name == "b" and first.count == 1 and second.count == 2
+
+
+public def test_call_result_field_read_keeps_the_returned_value() -> bool:
+    cells = [Cell(name="alpha", count=4)]
+    inner = pick(cells, 0).name
+    cells[0] = Cell(name="beta", count=5)
+    return inner == "alpha" and pick(cells, 0).name == "beta"
+
+
+public def test_recursive_helper_returns_independent_records() -> bool:
+    cells = [Cell(name="a", count=1), Cell(name="b", count=2), Cell(name="c", count=3)]
+    first = walk(cells, 0)
+    second = walk(cells, 1)
+    return first.count == 6 and first.name == "a" and second.count == 5 and cells[0].count == 1
+
+
+public def test_borrow_ends_when_the_receiver_is_written() -> bool:
+    cells = [Cell(name="a", count=1), Cell(name="b", count=2)]
+    taken = cells[0]
+    i = 0
+    while i < 60:
+        cells[0] = Cell(name="live", count=i)
+        i += 1
+    return taken.name == "a" and taken.count == 1 and cells[0].count == 59
 
 
 def main() -> int:

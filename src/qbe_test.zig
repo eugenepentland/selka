@@ -1763,6 +1763,171 @@ test "a list element the loop variable copies is read through its own address" {
     try std.testing.expect(std.mem.indexOf(u8, body, "myl_qbe_fail_normalized_index_bounds") != null);
 }
 
+// spec: QBE-RETFWD-1
+test "QBE-RETFWD-1 an element returned straight back crosses the boundary once" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def at(rows: list[Row], index: i64) -> Row:
+        \\    return rows[index]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return at([Row(a=1, b=2)], 0).b
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "at").?.il;
+    // The element address reaches the `ret` directly, so the copy into per-pc
+    // scratch and the reload out of it are both gone; the caller's own copy is
+    // the only one left and it is made by the return itself.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%agg"));
+    try std.testing.expect(std.mem.indexOf(u8, body, "myl_qbe_fail_normalized_index_bounds") != null);
+}
+
+// spec-case: QBE-RETFWD-1
+test "QBE-RETFWD-1 a frame that closes an arena scope keeps the element copy" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def at(rows: list[Row], index: i64) -> Row:
+        \\    with arena():
+        \\        _ = len(rows)
+        \\    return rows[index]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return at([Row(a=1, b=2)], 0).b
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "at").?.il;
+    // The epilogue closes the scope before the result is copied out, so the
+    // element is snapshotted while the scope is still open.
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit ") != null);
+}
+
+// spec: QBE-CALLREF-1
+test "QBE-CALLREF-1 a record result the caller only reads stays in the call's buffer" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def at(rows: list[Row], index: i64) -> Row:
+        \\    return rows[index]
+        \\
+        \\
+        \\def total(rows: list[Row]) -> i64:
+        \\    row = at(rows, 0)
+        \\    return row.a + row.b
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return total([Row(a=1, b=2)])
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "total").?.il;
+    // `row` holds the address of the call's own result buffer, so the caller
+    // makes no copy at all and its slot is one word.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+    try std.testing.expect(std.mem.indexOf(u8, body, " %l1 =l alloc8 8\n") != null);
+}
+
+// spec-case: QBE-CALLREF-1
+test "QBE-CALLREF-1 a result the body reassigns keeps its own copy" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def at(rows: list[Row], index: i64) -> Row:
+        \\    return rows[index]
+        \\
+        \\
+        \\def total(rows: list[Row]) -> i64:
+        \\    row = at(rows, 0)
+        \\    row = Row(a=row.b, b=row.a)
+        \\    return row.a + row.b
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return total([Row(a=1, b=2)])
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "total").?.il;
+    // The second store is another write of the same local, so the slot holds
+    // the value and the call's result is copied into it.
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit ") != null);
+}
+
+// spec: QBE-ELEMREF-2
+test "QBE-ELEMREF-2 an indexed element local is named in place across branches" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def find(rows: list[Row], key: i64) -> i64:
+        \\    i = 0
+        \\    while i < len(rows):
+        \\        row = rows[i]
+        \\        if row.a == key:
+        \\            return row.b
+        \\        i += 1
+        \\    return - 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return find([Row(a=1, b=2)], 1)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "find").?.il;
+    // Every instruction the borrow is live across — the field reads, the
+    // comparison, the branch and the return — is inert, so the element is
+    // never copied out of the list.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_list_get"));
+}
+
+// spec-case: QBE-ELEMREF-2
+test "QBE-ELEMREF-2 a call inside the live range keeps the element copy" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def grow(rows: mut list[Row]) -> i64:
+        \\    rows.append(Row(a=9, b=9))
+        \\    return len(rows)
+        \\
+        \\
+        \\def find(rows: mut list[Row]) -> i64:
+        \\    row = rows[0]
+        \\    _ = grow(mut rows)
+        \\    return row.b
+        \\
+        \\
+        \\def main() -> i64:
+        \\    rows = [Row(a=1, b=2)]
+        \\    return find(mut rows)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "find").?.il;
+    // The append can reallocate the backing storage, so the element is
+    // snapshotted before the call and `row` keeps the value it read.
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit ") != null);
+}
+
 // spec: QBE-LISTSET-1
 test "QBE-LISTSET-1 a list element write stores through the element address" {
     var parsed = try emitted(std.testing.allocator,

@@ -1374,7 +1374,11 @@ const Emitter = struct {
         const f = self.function;
         try self.allocateSlot("scratch", 16);
         try self.allocateSlot("arguments", try self.argumentVectorBytes());
-        for (f.scope.locals, 0..) |local, i| try self.allocateIndex("l", i, try self.localSlotBytes(i, local.ty));
+        for (f.scope.locals, 0..) |local, i| {
+            try self.allocateIndex("l", i, try self.localSlotBytes(i, local.ty));
+            const placeholder = try self.placeholderBytes(i, local.ty);
+            if (placeholder != 0) try self.allocateIndex("lz", i, placeholder);
+        }
         for (0..capacity) |i| try self.allocateIndex("s", i, 8);
         if (self.has_roots) for (0..f.scope.locals.len + capacity) |i| try self.allocateIndex("root", i, 32);
     }
@@ -1437,7 +1441,10 @@ const Emitter = struct {
             // A parameter is stored into its slot below, before any instruction
             // can run, so a root push can never observe it unset.
             if (i < f.signature.parameter_count) continue;
-            if ((try self.layout(local.ty)).trace) try self.zeroTracedLocal(i, local.ty);
+            const placeholder = try self.placeholderBytes(i, local.ty);
+            if (placeholder != 0) {
+                try self.print(" call $memset(l %lz{d}, w 0, l {d})\n storel %lz{d}, %l{d}\n", .{ i, placeholder, i, i });
+            } else if ((try self.layout(local.ty)).trace) try self.zeroTracedLocal(i, local.ty);
         }
         const packed_args = try self.packedParameters(f);
         for (f.scope.locals[0..f.signature.parameter_count], 0..) |local, i| {
@@ -1550,117 +1557,12 @@ const Emitter = struct {
             flags[index] = true;
         }
         self.arm_addresses = try self.payloadAddresses(f, flags);
-        try self.elementLocals(f, flags);
+        // QBE-ELEMREF-2 and QBE-CALLREF-1: the ordinary locals one instruction
+        // fills from storage this frame can name — a list element, a
+        // record-returning call's result buffer — hold that address instead of
+        // a copy of the value.
+        try @import("qbe_borrow.zig").Lower(Emitter).claim(self, flags);
         return flags;
-    }
-    /// The iteration locals that may name their list element where it lives.
-    ///
-    /// `for x in xs` reads element `i` and stores it into the loop variable. When
-    /// the element owns nothing and the variable's whole live range is the short
-    /// run that starts at that store, the variable can hold the element's checked
-    /// address instead of a copy of it: `store_local` keeps the address word, and
-    /// every read of the variable reaches the element itself, which is the value
-    /// the copy held. Nothing in that run can call, allocate, release or move the
-    /// backing storage, so the address cannot go stale before the last read, and
-    /// the next iteration overwrites it before anything reads it again.
-    fn elementLocals(self: *Emitter, f: bytecode.Function, flags: []bool) GenerateError!void {
-        for (f.scope.instructions, 0..) |instruction, pc| {
-            const operation = switch (instruction.op) {
-                .buffer_operation => |op| op,
-                else => continue,
-            };
-            if (operation.kind != .read) continue;
-            const owner = f.scope.locals[@backingInt(operation.owner)].ty;
-            if (!owner.isAggregate()) continue;
-            const schema = self.program.records[owner.recordIndex()];
-            if (!schema.managed or schema.collection.kind != .list) continue;
-            const element = schema.shape.buffer orelse continue;
-            if (!element.isAggregate()) continue;
-            const value = try self.layout(element);
-            if (value.drop or value.trace or value.size == 0) continue;
-            if (self.program.records[element.recordIndex()].isManagedRecord()) continue;
-            try self.claimElementLocal(f, flags, pc, element);
-        }
-    }
-    /// Claim one element read's destination local, when every condition the
-    /// address-holding form needs holds: the read is followed straight away by a
-    /// store into a local of the element's own type, that store is the local's
-    /// only write, every read of it lies in the branch-free run that follows, and
-    /// no instruction between the store and the last of those reads can
-    /// invalidate the address, release a value or move out of the frame.
-    fn claimElementLocal(self: *Emitter, f: bytecode.Function, flags: []bool, pc: usize, element: typed.Type) GenerateError!void {
-        const code = f.scope.instructions;
-        const at_store = pc + 1;
-        if (at_store >= code.len or at_store >= self.states.len) return;
-        if (self.states[at_store] == null or self.isBranchTarget(at_store)) return;
-        const slot = switch (code[at_store].op) {
-            .store_local => |target| @backingInt(target),
-            else => return,
-        };
-        if (slot >= flags.len or flags[slot]) return;
-        if (slot < f.signature.parameter_count) return;
-        if (f.scope.locals[slot].ty != element) return;
-        for (code, 0..) |_, at| if (at != at_store and writesLocalAt(f, at, slot)) return;
-        // The local's reads all sit in the branch-free run that starts at the
-        // store; the last of them is where the address has to still be good.
-        var end = at_store + 1;
-        while (end < code.len and !self.isBranchTarget(end)) : (end += 1) switch (code[end].op) {
-            .jump, .jump_if_false, .switch_variant, .ret => break,
-            else => {},
-        };
-        var last: ?usize = null;
-        for (code[0..end], 0..) |other, at| {
-            const target = switch (other.op) {
-                .load_local => |read| @backingInt(read),
-                else => continue,
-            };
-            if (target != slot) continue;
-            if (at <= at_store) return;
-            last = at;
-        }
-        const at_last = last orelse return;
-        for (code[at_store + 1 .. at_last + 1], at_store + 1..) |other, at| {
-            _ = at;
-            if (!try self.inertInstruction(f, other.op)) return;
-        }
-        flags[slot] = true;
-    }
-    /// Whether an instruction between an element store and its last read can
-    /// neither call, allocate, release nor mutate — the only ways an address into
-    /// a list's backing storage can stop naming the element it was checked for.
-    /// Everything outside this set declines the address-holding form, so an
-    /// opcode added later only costs the copy it already paid.
-    fn inertInstruction(self: *Emitter, f: bytecode.Function, op: @FieldType(bytecode.Instruction, "op")) GenerateError!bool {
-        return switch (op) {
-            .load_local,
-            .push_i64,
-            .push_integer,
-            .push_bool,
-            .push_unit,
-            .get_field,
-            .array_length,
-            .binary_integer,
-            .add_i64_checked,
-            .sub_i64_checked,
-            .mul_i64_checked,
-            .neg_integer,
-            .neg_i64_checked,
-            .cmp_i64,
-            .cmp_bool,
-            .cmp_enum,
-            .cmp_domain,
-            .not_bool,
-            .wrap_domain,
-            .unwrap_domain,
-            .pop,
-            .acknowledge,
-            .assert_true,
-            => true,
-            // A whole-value store can drop the value it replaces, which is a
-            // release the run must not contain; a drop-free destination cannot.
-            .store_local => |target| !(try self.layout(f.scope.locals[@backingInt(target)].ty)).drop,
-            else => false,
-        };
     }
     /// The match payload bindings that may name the payload where it lives.
     ///
@@ -2172,6 +2074,23 @@ const Emitter = struct {
         if (self.byReference(index)) return 8;
         return @max(8, (try self.layout(ty)).size);
     }
+    /// The zero-filled buffer a borrowed local's slot points at until the store
+    /// that gives it its real address runs, or zero when it needs none.
+    ///
+    /// A root push reads every traced local's slot, including at a safepoint
+    /// that runs before the store — the very case the per-local zero-fill was
+    /// written for. A slot that holds an address must therefore always name a
+    /// traceable value of the local's type, so it starts out naming an all-zero
+    /// one, which has no reference for the collector to follow. Only a local
+    /// this frame fills itself needs it: a parameter's address arrives before
+    /// any instruction runs, and a local whose type traces nothing is never
+    /// read by a root push.
+    fn placeholderBytes(self: *Emitter, index: usize, ty: typed.Type) GenerateError!u64 {
+        if (!self.byReference(index) or index < self.function.signature.parameter_count) return 0;
+        const value = try self.layout(ty);
+        if (!value.trace) return 0;
+        return @max(8, value.size);
+    }
     /// The stack bytes one outgoing argument of this type can occupy: one word
     /// for a value that crosses as a scalar or as an address, the value's own
     /// size only for a move-only aggregate that still crosses by value. The
@@ -2225,7 +2144,10 @@ const Emitter = struct {
     /// `native_frame_limit`; a heap frame is allocated at exactly this size.
     fn frameBytes(self: *Emitter, capacity: usize, temporaries: u64) GenerateError!u64 {
         var size: u64 = (try self.argumentVectorBytes()) + 64 + @as(u64, capacity) * 8;
-        for (self.function.scope.locals, 0..) |local, i| size = try addFrame(size, try self.localSlotBytes(i, local.ty));
+        for (self.function.scope.locals, 0..) |local, i| {
+            size = try addFrame(size, try self.localSlotBytes(i, local.ty));
+            size = try addFrame(size, try self.placeholderBytes(i, local.ty));
+        }
         size = try addFrame(size, temporaries);
         if (self.has_roots) size = try addFrame(size, @as(u64, self.function.scope.locals.len + capacity) * 32);
         // A result that crosses through the caller's storage occupies nothing

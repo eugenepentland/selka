@@ -581,6 +581,39 @@ fn immediateScalarProjection(comptime E: type, self: *E, element: typed.Type) Er
     }
     return false;
 }
+/// QBE-RETFWD-1: a list element whose only consumer is the `ret` that hands it
+/// back is returned from the receiver's own storage.
+///
+/// The result of a function leaves through one copy the caller owns: `%out` for
+/// a result over 4 KiB, the frame's `%return_storage` for a heap-backed frame,
+/// and QBE's own return pad otherwise. Every one of them copies out of the
+/// address the `ret` names, so naming the element's checked address makes the
+/// copy into per-pc aggregate scratch — and the reload out of it that defeats
+/// store forwarding — disappear, leaving exactly the one copy the language
+/// promised.
+///
+/// Only the epilogue runs between the address and that copy, so the address is
+/// claimed only where the epilogue can neither release nor free what it names:
+/// a frame that drops a local could release owned storage, and a frame that
+/// closes an arena scope frees everything the scope owns, so both keep the
+/// snapshot. Unlinking the frame record and releasing a heap frame touch
+/// neither the receiver nor its backing.
+fn elementFeedsReturn(comptime E: type, self: *E, element: typed.Type) Error!bool {
+    const code = self.function.scope.instructions;
+    const next = self.pc + 1;
+    if (next >= code.len or self.states[next] == null) return false;
+    if (next < self.branch_targets.len and self.branch_targets[next]) return false;
+    if (code[next].op != .ret) return false;
+    if (self.function.signature.return_type != element) return false;
+    const value = try self.layout(element);
+    if (value.drop or value.size == 0) return false;
+    if (arena_lower.releasesOnReturn(self.arenas, self.function)) return false;
+    for (self.function.scope.locals, 0..) |local, index| {
+        if (self.byReference(index)) continue;
+        if ((try self.layout(local.ty)).drop) return false;
+    }
+    return true;
+}
 /// QBE-AGGREF-1's by-address rule for a list element whose only consumer is the
 /// store that copies it into a local of its own.
 ///
@@ -624,6 +657,8 @@ fn inlineIndexRead(comptime E: type, self: *E, read: IndexRead, failure: []const
     } else if (try immediateScalarProjection(E, self, read.element)) {
         try self.store(read.slot, address);
     } else if (try elementFeedsStore(E, self, read.element)) {
+        try self.store(read.slot, address);
+    } else if (try elementFeedsReturn(E, self, read.element)) {
         try self.store(read.slot, address);
     } else {
         const pointer = try self.aggregatePointer();
