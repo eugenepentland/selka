@@ -271,6 +271,11 @@ entirely bounds the kernel near 53 ms ≈ 1.5× and no further, so the target ne
 the `get`/write fusion (and the emitted call and root overhead around it), not a
 different string representation.
 
+**Both misses were closed by item 5's completion, not by the representation.**
+Item 4's own measurements are the honest record of what the UTF-8 change alone
+did; the `str_build` and `dict_count` targets are met by the inline byte-buffer
+append and the dictionary probe memoization recorded under item 5 below.
+
 ### 5. Give the runtime's fast paths to the optimizer
 
 *Runtime and build. Size: small, incremental.*
@@ -308,6 +313,32 @@ is untouched by this change; its hot loop is already hoisted by LTO and Zig wins
 by unrolling the byte compare, so no item-5 lever remains there and the
 acceptance is **not claimed**. The already-landed LTO runtime archive means part
 of item 5's projected gain was present before these changes.
+
+**Completed 2026-09-22** — the remaining levers, each measured on the default
+`o3-lto` arm with interleaved rounds and byte-identical arm output:
+
+- **`byte_buffer.append_range`/`append_byte` lower their capacity-sufficient
+  case inline** (`QBE-BUFFER-APPEND-1`), with the grow helper and the frame's
+  root protocol reached only when the element does not fit, and **growth extends
+  the block's own reservation in place** instead of allocating a fresh block and
+  copying into it. A doubling `byte_buffer` was writing 256 MB and taking 64,227
+  minor faults for a 128 MB buffer; after the change it takes 31,513 against
+  Zig's 31,341. `str_build` **3.67× → 1.15×** (target ≤ 1.5×, **met**).
+- **A doubling list's backing grows the same way**, with the one value that
+  cannot survive a move — an element pointer already inside the backing, as
+  `extend(list, list)` passes — kept on the ordinary allocate-and-copy path.
+  `list_append_sum` **3.00× → 1.36×** (target ≤ 2×, **met**).
+- **A string-keyed dictionary remembers the entry its last probe found**, so the
+  two probes of `counts[k] = counts.get(k, 0) + 1` hash the key, walk the table
+  and compare the payload bytes once; the record is accepted only while the
+  queried pointer and the live entry at that position still agree, and an
+  insertion, a `pop`, a `clear`, a rebuilt index or an equal-but-distinct text
+  falls back to the full probe. `dict_count` **2.77× → 1.39×** (target ≤ 1.5×,
+  **met**; byte comparisons per run fall from 5,476,657 to 2,740,026).
+
+The `bytes_scan` acceptance is still **not claimed** (1.4–1.5×, and no item-5
+lever remains), and `alloc_churn` measures 2.0–2.2× across runs — at the item-3
+acceptance boundary rather than clearly inside it — so neither is claimed here.
 
 ### 6. Stop materializing records the caller only reads
 
