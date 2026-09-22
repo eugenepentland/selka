@@ -279,6 +279,124 @@ static void reuse_after_escape(void) {
     assert(myl_native_root_pop(&heap,&root));
     myl_native_heap_destroy(&heap);
 }
+/* spec-case: ARENA-MANAGED-11. An arena payload's depth and element come from
+   the header in front of it. With the chunk list detached every lookup still
+   answers, so no lookup walks the chunks however many the arena holds. */
+static void header_regions(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,8u<<20);
+    void *collected=myl_native_heap_alloc(&heap,&wide,1);
+    assert(collected);
+    assert(myl_native_region_begin(&heap));
+    enum { count=4096 };
+    static void *outer[count];
+    for (size_t i=0;i<count;i++) {
+        outer[i]=myl_native_heap_alloc(&heap,&wide,1);
+        assert(outer[i]);
+    }
+    assert(myl_native_region_begin(&heap));
+    void *inner=myl_native_heap_alloc(&heap,&octet,3);
+    assert(inner && heap.arena.chunks_live>=3);
+    myl_native_arena_chunk *chunks=heap.arena_chunks;
+    heap.arena_chunks=NULL;
+    for (size_t i=0;i<count;i++) {
+        assert(myl_native_object_region(&heap,outer[i])==1);
+        assert(myl_native_object_element(&heap,outer[i])==&wide);
+        assert(!myl_native_object_immortal(&heap,outer[i]));
+    }
+    assert(myl_native_object_region(&heap,inner)==2 && myl_native_object_element(&heap,inner)==&octet);
+    assert(myl_native_object_region(&heap,collected)==0 && myl_native_object_element(&heap,collected)==&wide);
+    assert(myl_native_object_region(&heap,&frozen.value)==0 && myl_native_object_immortal(&heap,&frozen.value));
+    assert(!myl_native_object_region(&heap,NULL) && !myl_native_object_element(&heap,NULL));
+    heap.arena_chunks=chunks;
+    myl_native_region_end(&heap);
+    myl_native_region_end(&heap);
+    assert(!heap.region_depth && heap.objects_live==1);
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: ARENA-MANAGED-11. A container in the innermost arena accepts any
+   value without walking it; an older container still refuses a younger value
+   and accepts its own region's and older ones. */
+static void barrier_by_header(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,1<<20);
+    myl_native_list *collected=myl_native_list_new(&heap,&number,0);
+    assert(myl_native_region_begin(&heap));
+    myl_native_list *older=myl_native_list_new(&heap,&number,0);
+    assert(myl_native_region_begin(&heap));
+    myl_native_list *younger=myl_native_list_new(&heap,&number,0);
+    assert(collected && older && younger);
+    assert(myl_native_region_check(&heap,younger,&integers,&younger));
+    assert(myl_native_region_check(&heap,younger,&integers,&older));
+    assert(myl_native_region_check(&heap,younger,&integers,&collected));
+    assert(!myl_native_region_check(&heap,older,&integers,&younger));
+    assert(myl_native_region_check(&heap,older,&integers,&older));
+    assert(myl_native_region_check(&heap,older,&integers,&collected));
+    assert(!myl_native_region_check(&heap,collected,&integers,&younger));
+    assert(!myl_native_region_check(&heap,collected,&integers,&older));
+    assert(myl_native_region_check(&heap,collected,&integers,&collected));
+    myl_native_region_end(&heap);
+    myl_native_region_end(&heap);
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: ARENA-MANAGED-11. Collection scans every arena allocation through
+   its header, so a collected object referenced only from the first and the last
+   of thousands of arena slots — in different chunks — stays live. */
+static void scan_across_chunks(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,8u<<20);
+    assert(myl_native_region_begin(&heap));
+    enum { count=3000 };
+    static void **slots[count];
+    for (size_t i=0;i<count;i++) {
+        slots[i]=myl_native_heap_alloc(&heap,&pointer,1);
+        assert(slots[i]);
+    }
+    assert(heap.arena.chunks_live>=2);
+    int64_t *first=myl_native_heap_alloc_at(&heap,&number,1,0);
+    int64_t *last=myl_native_heap_alloc_at(&heap,&number,1,0);
+    assert(first && last && !myl_native_object_region(&heap,first));
+    *first=11; *last=22;
+    *slots[0]=first; *slots[count-1]=last;
+    assert(myl_native_heap_alloc_at(&heap,&number,1,0));
+    size_t live=heap.objects_live;
+    heap.stress=1;
+    myl_native_heap_collect(&heap);
+    heap.stress=0;
+    assert(heap.objects_live==live-1 && *first==11 && *last==22);
+    myl_native_region_end(&heap);
+    myl_native_heap_collect(&heap);
+    assert(!heap.objects_live && !heap.bytes);
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: ARENA-MANAGED-11. The header bounds an arena allocation's count
+   and the nesting depth, and a tracing-heap count stays below the arena flag;
+   past a bound the allocation or scope is refused, never truncated. */
+static void header_bounds(void) {
+    static const myl_native_type empty={.size=0,.alignment=1,.kind=MYL_NATIVE_PLAIN,.trace_mode=MYL_NATIVE_TRACE_NONE};
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,1<<20);
+    void *most=myl_native_heap_alloc(&heap,&empty,MYL_NATIVE_OBJECT_COUNT_MAX);
+    assert(most && !myl_native_object_region(&heap,most) && myl_native_object_element(&heap,most)==&empty);
+    assert(!myl_native_heap_alloc(&heap,&empty,MYL_NATIVE_OBJECT_COUNT_MAX+1));
+    assert(myl_native_region_begin(&heap));
+    void *widest=myl_native_heap_alloc(&heap,&empty,MYL_NATIVE_ARENA_COUNT_MAX);
+    assert(widest && myl_native_object_region(&heap,widest)==1 && myl_native_object_element(&heap,widest)==&empty);
+    assert(!myl_native_heap_alloc(&heap,&empty,MYL_NATIVE_ARENA_COUNT_MAX+1));
+    assert(myl_native_heap_alloc(&heap,&wide,1));
+    heap.stress=1;
+    myl_native_heap_collect(&heap);
+    heap.stress=0;
+    myl_native_region_end(&heap);
+    heap.region_depth=MYL_NATIVE_ARENA_REGION_MAX-1;
+    assert(myl_native_region_begin(&heap) && heap.region_depth==MYL_NATIVE_ARENA_REGION_MAX);
+    void *deepest=myl_native_heap_alloc(&heap,&wide,1);
+    assert(deepest && myl_native_object_region(&heap,deepest)==MYL_NATIVE_ARENA_REGION_MAX);
+    assert(!myl_native_region_begin(&heap) && heap.region_depth==MYL_NATIVE_ARENA_REGION_MAX);
+    myl_native_region_end(&heap);
+    heap.region_depth=0;
+    myl_native_heap_destroy(&heap);
+}
 int main(void) {
     chunked_objects();
     zero_and_validation();
@@ -292,5 +410,9 @@ int main(void) {
     reuse_respects_budget();
     nested_scope_reuse();
     reuse_after_escape();
+    header_regions();
+    barrier_by_header();
+    scan_across_chunks();
+    header_bounds();
     return 0;
 }

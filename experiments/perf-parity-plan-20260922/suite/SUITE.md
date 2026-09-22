@@ -211,6 +211,10 @@ Every `frequencies` call builds a fresh map over the whole sequence (so the
 k = 12 and k = 18 maps hold about a million distinct keys). mylang: `dict[str,
 int]` keyed by slices of a `str`. Rust: `HashMap<&[u8], u32>` (or `&str`) with
 the default hasher. Zig: `std.StringHashMap(u32)` over slices.
+`knucleotide_arena.my` is the same program with every counting phase (the map,
+its slice keys and the sorted report) inside its own `with arena():` block. Only
+the generated sequence stays on the collecting heap. It checks that an
+arena-wrapped phase is no slower than the collecting one.
 
 ## 7. `sort_builtin`, `sort_quick`, `sort_records` — sorting
 
