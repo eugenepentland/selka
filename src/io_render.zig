@@ -8,6 +8,8 @@ const runtime = @import("runtime_values.zig");
 pub const Error = std.Io.Writer.Error || error{Unprintable};
 /// Nesting beyond this depth renders as `...`, so cyclic managed graphs terminate.
 pub const max_depth: usize = 24;
+/// Bytes that hold the positional rendering of every finite `float`.
+pub const float_frame: usize = 352;
 
 /// Whether a checked type has a Python rendering, used to reject `print` arguments.
 pub fn printable(ty: typed.Type, records: []const typed.Record) bool {
@@ -187,7 +189,9 @@ fn float(writer: *std.Io.Writer, record: *runtime.Aggregate) Error!void {
     const number: f64 = @bitCast(@as(u64, @intCast(raw)));
     if (std.math.isNan(number)) return writer.writeAll("nan");
     if (std.math.isInf(number)) return writer.writeAll(if (number < 0) "-inf" else "inf");
-    var buffer: [64]u8 = undefined;
+    // The longest positional finite double is the smallest subnormal: a sign,
+    // `0.`, 323 zeros and its digits. `src/native_print.c` uses the same frame.
+    var buffer: [float_frame]u8 = undefined;
     const rendered = std.fmt.bufPrint(&buffer, "{d}", .{number}) catch return error.Unprintable;
     try writer.writeAll(rendered);
     if (std.mem.indexOfAny(u8, rendered, ".eEn") == null) try writer.writeAll(".0");
