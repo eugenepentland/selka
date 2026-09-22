@@ -28,10 +28,12 @@ def bounded_default(value: Option[int], fallback: int) -> int noalloc:
     return value.unwrap_or(fallback)
 
 def measured(value: Option[int]) -> int:
-    value.is_none()
-    value.is_some()
-    value.unwrap_or(4)
-    return bounded_default(value, 5) + int(value.is_some())
+    _ = value.is_none()
+    _ = value.is_some()
+    _ = value.unwrap_or(4)
+    if value.is_some():
+        return bounded_default(value, 5) + 1
+    return bounded_default(value, 5)
 
 # spec-case: OPTION-METHODS-1
 public def test_option_methods_default_on_some_and_none() -> bool:
@@ -55,7 +57,9 @@ public def test_option_methods_generic_bodies() -> bool:
 public def test_option_methods_literal_default_adopts_payload_type() -> bool:
     narrow: list[u8] = [u8(5)]
     missing: list[u8] = []
-    return head(narrow).unwrap_or(7) == 5 and head(missing).unwrap_or(7) == 7
+    adopted: u8 = head(narrow).unwrap_or(7)
+    fallback: u8 = head(missing).unwrap_or(7)
+    return adopted == u8(5) and fallback == u8(7)
 
 # spec-case: OPTION-METHODS-2
 public def test_option_methods_under_noalloc() -> bool:

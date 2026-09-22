@@ -1756,14 +1756,19 @@ fn comparisonOperands(program: typed.Program, node: typed.Node) ?Comparison {
     return null;
 }
 
+/// Whether one binary operator is a comparison.
+fn comparisonOp(op: typed.BinaryOp) bool {
+    return switch (op) {
+        .lt, .le, .eq, .ne, .gt, .ge => true,
+        else => false,
+    };
+}
+
 /// Whether one comparison against a constant tests for a sentinel: any
 /// comparison against a negative literal, or the `< 0` and `>= 0` guards that
 /// name presence.
 fn sentinelTest(op: typed.BinaryOp, literal: i128) bool {
-    switch (op) {
-        .lt, .le, .eq, .ne, .gt, .ge => {},
-        else => return false,
-    }
+    if (!comparisonOp(op)) return false;
     if (literal == 0) return op == .lt or op == .ge;
     return literal < 0;
 }
@@ -1823,7 +1828,10 @@ fn runSentinelInt(context: *RuleContext) std.mem.Allocator.Error!void {
 /// Scan one function for comparisons that test a sentinel result and for `-1`
 /// comparisons against its own parameters or record fields. `caller` is reused
 /// as the per-function map from a local slot to the sentinel function whose
-/// result it holds, and `sites` collects the repeated `-1` subjects.
+/// result it holds, and `sites` collects the repeated `-1` subjects. Only
+/// source bindings count: a lowering temporary (a collection read's rooted
+/// receiver, a normalized index, a match payload) is the compiler's own
+/// bookkeeping and never a reader-facing sentinel.
 fn scanSentinelFunction(context: *RuleContext, program: typed.Program, sources: []const bool, function: typed.Function, caller: *std.ArrayList(?typed.FunctionId), sites: *std.ArrayList(MinusOneSite)) std.mem.Allocator.Error!void {
     const memory = context.memory;
     try caller.resize(memory, function.scope.locals.len);
@@ -1838,7 +1846,12 @@ fn scanSentinelFunction(context: *RuleContext, program: typed.Program, sources: 
             .expression => continue,
         };
         switch (program.statements[@backingInt(statement)].data) {
-            .initialize, .assign => |store| try stores.append(memory, store),
+            .initialize, .assign => |store| {
+                const slot = @backingInt(store.slot);
+                if (slot >= function.scope.locals.len) continue;
+                if (function.scope.locals[slot].usage.temporary) continue;
+                try stores.append(memory, store);
+            },
             else => {},
         }
     }
@@ -1875,10 +1888,11 @@ fn scanSentinelFunction(context: *RuleContext, program: typed.Program, sources: 
         };
         const node = program.nodes[@backingInt(id)];
         const comparison = comparisonOperands(program, node) orelse continue;
-        if (!sentinelTest(comparison.op, comparison.literal)) {
-            if (comparison.literal == -1) try recordMinusOne(context, program, function, comparison.value, sites);
-            continue;
-        }
+        if (!comparisonOp(comparison.op)) continue;
+        // A `-1` comparison is the second trigger on its own, whether or not it
+        // also tests a sentinel function's result below.
+        if (comparison.literal == -1) try recordMinusOne(context, program, function, comparison.value, sites);
+        if (!sentinelTest(comparison.op, comparison.literal)) continue;
         if (sentinelCallee(program, sources, comparison.value)) |callee| {
             try reportSentinelComparison(context, program, callee, node.span);
             continue;
@@ -1916,9 +1930,15 @@ fn recordMinusOne(context: *RuleContext, program: typed.Program, function: typed
             if (!base.isAggregate()) return;
             const record = program.records[base.recordIndex()];
             if (field.index >= record.fields.len) return;
+            // A field read the lowering introduced names no declared field of a
+            // source value, so it is not a reader-facing sentinel either.
+            if (program.nodes[@backingInt(field.base)].data == .local) {
+                const slot = @backingInt(program.nodes[@backingInt(field.base)].data.local);
+                if (slot < function.scope.locals.len and function.scope.locals[slot].usage.temporary) return;
+            }
             try sites.append(context.memory, .{
                 .key = try std.fmt.allocPrint(context.memory, "field:{d}:{d}", .{ base.recordIndex(), field.index }),
-                .description = try std.fmt.allocPrint(context.memory, "field `{s}` of `{s}`", .{ record.fields[field.index].name, record.name }),
+                .description = try std.fmt.allocPrint(context.memory, "field `{s}` of `{s}`", .{ record.fields[field.index].name, localName(record.name) }),
                 .qualified = function.name,
                 .module = moduleName(function.name),
                 .span = node.span,
@@ -1927,6 +1947,7 @@ fn recordMinusOne(context: *RuleContext, program: typed.Program, function: typed
         .local => |local| {
             const slot = @backingInt(local);
             if (slot >= function.signature.parameter_count or slot >= function.scope.locals.len) return;
+            if (function.scope.locals[slot].usage.temporary) return;
             try sites.append(context.memory, .{
                 .key = try std.fmt.allocPrint(context.memory, "parameter:{d}:{d}", .{ @backingInt(function.id), slot }),
                 .description = try std.fmt.allocPrint(context.memory, "parameter `{s}` of `{s}`", .{ function.scope.locals[slot].name, localName(function.name) }),
