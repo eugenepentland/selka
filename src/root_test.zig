@@ -106,6 +106,7 @@ test {
     _ = @import("import_policy_test.zig");
     _ = @import("lint_config_test.zig");
     _ = @import("lint_test.zig");
+    _ = @import("lint_sentinel_test.zig");
     _ = @import("lint_reach_test.zig");
     _ = @import("lint_store_test.zig");
     _ = @import("source_map_test.zig");
@@ -148,6 +149,7 @@ test {
     _ = @import("resource_io_test.zig");
     _ = @import("results_test.zig");
     _ = @import("propagation_test.zig");
+    _ = @import("option_methods_test.zig");
     _ = @import("domain_codecs_test.zig");
     _ = @import("runtime_values_test.zig");
     _ = @import("managed_values_test.zig");

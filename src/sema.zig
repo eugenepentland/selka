@@ -91,6 +91,9 @@ const bindingDeclaredHere = "binding declared here";
 const eImmutable = diagnostic.immutable;
 const eResultDiscard = diagnostic.result_discard;
 const eCellEquality = "E_CELL_EQUALITY";
+/// One diagnostic for every rejected `Option` operation, so the intrinsic
+/// methods and the `is None` test report the same code.
+const eOptionTest = "E_OPTION_TEST";
 const eEnvironmentName = "E_ENVIRONMENT_NAME";
 const variantDeclaredHere = "variant declared here";
 const std = @import("std");
@@ -2284,6 +2287,71 @@ const Checker = struct {
         try self.nodes.append(self.allocator, value);
         return self.checkCollectionAccess(node, .{ .base = base, .receiver = slot, .kind = kind, .inputs = call.arguments, .temporaries = temporaries });
     }
+    /// Check one intrinsic `Option[T]` method against an already checked
+    /// receiver. `unwrap_or`'s default is checked against the payload with the
+    /// ordinary literal inference, so an integer-literal default adopts the
+    /// payload type exactly as it does in a binding. Presence tests lower to the
+    /// tag test and `unwrap_or` to a two-arm match, both through `option_flow`.
+    fn checkOptionMethod(self: *Checker, node: ast.Node, base: typed.NodeId, name: source.Span, arguments: []const ast.NodeId, temporaries: []const typed.Type) Error!typed.Node {
+        const text = self.src.text(name);
+        const receiver_type = self.nodes.items[@backingInt(base)].ty;
+        // A narrowed local has already projected its payload, so the receiver
+        // type decides: an Option here still needs its tag, a payload does not.
+        const shape = prelude.optionShape(receiver_type, self.catalog.records);
+        const payload = if (shape) |present| present.element else receiver_type;
+        const intrinsic = option_flow.methodNamed(text) orelse return self.sink.fail(eCollectionMethod, name, option_flow.method_spellings);
+        if (intrinsic == .unwrap_or and arguments.len != 1)
+            return self.sink.fail("E_ARITY", node.span, "`unwrap_or` takes exactly one argument: `unwrap_or(default)`");
+        if (intrinsic != .unwrap_or and arguments.len != 0) {
+            const message = try std.fmt.allocPrint(self.allocator, "`{s}` takes no arguments", .{text});
+            return self.sink.fail("E_ARITY", node.span, message);
+        }
+        if (shape != null and self.transfers(receiver_type))
+            return self.sink.fail(eOptionTest, name, "use match for an Option carrying an owned value or checked Result");
+        if (intrinsic == .unwrap_or) {
+            const argument = arguments[0];
+            try self.hint(argument, payload);
+            const fallback = try self.expressionWithTemporaries(argument, temporaries);
+            const actual = self.nodes.items[@backingInt(fallback)].ty;
+            if (actual != payload) {
+                const expected_name = try typed.surfaceTypeName(self.allocator, payload, self.catalog.records);
+                const actual_name = try typed.surfaceTypeName(self.allocator, actual, self.catalog.records);
+                const message = try std.fmt.allocPrint(self.allocator, "`unwrap_or` default must be `{s}` (the Option's payload), found {s}", .{ expected_name, actual_name });
+                return self.sink.fail("E_TYPE", self.syntax.nodes.items[@backingInt(argument)].span, message);
+            }
+            // A proven-present receiver is its own payload; the default is
+            // checked for its type but is dead on every path that reaches here.
+            if (shape == null) return self.nodes.items[@backingInt(base)];
+            return option_flow.defaultValue(Checker, self, base, shape.?, fallback, node.span);
+        }
+        if (shape == null) return .{ .span = node.span, .ty = .bool, .data = .{ .boolean = intrinsic == .is_some } };
+        const presence = try option_flow.testValue(self, base, shape.?, node.span);
+        if (intrinsic == .is_none) return presence;
+        const test_id: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, presence);
+        return .{ .span = node.span, .ty = .bool, .data = .{ .unary = .{ .op = .not, .operand = test_id, .op_span = node.span } } };
+    }
+    /// Whether a call whose receiver is a plain name belongs to the intrinsic
+    /// `Option` methods: the name is an active binding declared as an `Option`,
+    /// and either the name is one of the three methods or the payload is not a
+    /// narrowed collection, whose own methods this receiver keeps.
+    fn optionReceiverMethod(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) bool {
+        const owner = call.owner orelse return false;
+        const slot = self.active.get(self.src.text(owner)) orelse return false;
+        if (prelude.optionShape(self.locals.items[@backingInt(slot)].ty, self.catalog.records) == null) return false;
+        return option_flow.methodNamed(self.src.text(call.name)) != null or self.narrowedCollection(call) == null;
+    }
+    /// Check the intrinsic `Option` method one named local receiver calls. The
+    /// caller has already established that this call is one of them.
+    fn checkOptionReceiverMethod(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), temporaries: []const typed.Type) Error!typed.Node {
+        try call_arguments.positional(call, self.sink);
+        const owner = call.owner.?;
+        var value: typed.Node = .{ .span = owner, .ty = .unit, .data = .unit };
+        try self.checkName(.{ .span = owner, .data = .{ .name = owner } }, owner, &value);
+        const base: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, value);
+        return self.checkOptionMethod(node, base, call.name, call.arguments, temporaries);
+    }
     fn checkCollectionMethod(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
         const call = node.data.method_call;
         const name = self.src.text(call.name);
@@ -2292,6 +2360,8 @@ const Checker = struct {
         // `checkListAccess` reads the same cached checked node.
         const base = try self.expressionWithTemporaries(call.base, temporaries);
         const owner_type = self.nodes.items[@backingInt(base)].ty;
+        if (prelude.optionShape(owner_type, self.catalog.records) != null)
+            return self.checkOptionMethod(node, base, call.name, call.arguments, temporaries);
         const kind = buffer_operations.methodFor(name, call.arguments.len) orelse {
             const managed = owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].isCollection();
             const family: ?ManagedKind = if (managed) self.catalog.records[owner_type.recordIndex()].collection.kind else null;
@@ -2876,6 +2946,10 @@ const Checker = struct {
             },
             .call => |call| {
                 if (self.narrowedCollection(call) != null) return false;
+                // An intrinsic `Option` method on a named local is checked in
+                // place, like a narrowed collection method: its receiver and its
+                // one argument are the call's own, not queued temporaries.
+                if (self.optionReceiverMethod(call)) return false;
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 if (try self.queueCapabilityCall(work, call)) return true;
                 if (self.environmentMethod(call) != null) return true;
@@ -3844,8 +3918,8 @@ const Checker = struct {
         const operand = self.resolved[@backingInt(u.operand)].?;
         const operand_ty = self.nodes.items[@backingInt(operand)].ty;
         if (u.op == .is_none) {
-            const shape = prelude.optionShape(operand_ty, self.catalog.records) orelse return self.sink.fail("E_OPTION_TEST", u.op_span, "is None requires an Option value");
-            if (self.transfers(operand_ty)) return self.sink.fail("E_OPTION_TEST", u.op_span, "use match for an Option carrying an owned value or checked Result");
+            const shape = prelude.optionShape(operand_ty, self.catalog.records) orelse return self.sink.fail(eOptionTest, u.op_span, "is None requires an Option value");
+            if (self.transfers(operand_ty)) return self.sink.fail(eOptionTest, u.op_span, "use match for an Option carrying an owned value or checked Result");
             return option_flow.testValue(self, operand, shape, node.span);
         }
         out.ty = if (u.op == .not) .bool else operand_ty;
@@ -4331,6 +4405,10 @@ const Checker = struct {
             },
             .name => |name| try self.checkName(node, name, &out),
             .call => |call| {
+                // An intrinsic `Option` method outranks the narrowed-collection
+                // reading, so a proven-present `Option[list[T]]` receiver still
+                // answers `unwrap_or` while keeping `append` and the rest.
+                if (self.optionReceiverMethod(call)) return self.checkOptionReceiverMethod(node, call, temporaries);
                 if (self.narrowedCollection(call)) |slot| return self.checkNarrowedMethod(node, slot, temporaries);
                 try self.checkCall(node, call, &out);
             },
@@ -4403,6 +4481,11 @@ const Checker = struct {
     }
     fn consumedTemporaries(self: *Checker, node: ast.Node, out: typed.Node) Error!usize {
         if (node.data == .unary and node.data.unary.op == .is_none) return 1;
+        // An intrinsic `Option` method is checked in place: its receiver and its
+        // one argument are the call's own and never reached this stack, so
+        // neither the tag test nor the two-arm match consumes a temporary.
+        if (node.data == .method_call and option_flow.methodNamed(self.src.text(node.data.method_call.name)) != null) return 0;
+        if (node.data == .call and self.optionReceiverMethod(node.data.call)) return 0;
         if (node.data == .index and out.data == .block_value) return 2;
         if (node.data == .length and out.data == .block_value) return 1;
         if (node.data == .bytes or node.data == .text or node.data == .integer) return 0;

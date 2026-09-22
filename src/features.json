@@ -387,6 +387,11 @@
       "summary": "Local Option payloads are available on paths guarded by `is None` or `is not None`.",
       "doc": "docs/results-and-options.md#flow-sensitive-option-guards"
     },
+    "option-methods": {
+      "kind": "language",
+      "summary": "`Option[T]` answers `unwrap_or(default)`, `is_none()` and `is_some()`; the default is checked against the payload and an integer literal adopts it, the methods are pure, allocation-free and usable in generic bodies, and the `sentinel-int` lint names the `Option[int]` rewrite for a `-1` convention.",
+      "doc": "docs/results-and-options.md#option-methods"
+    },
     "const-length-generics": {
       "kind": "language",
       "summary": "A `const N: u64` parameter carries a bounded array length through generic signatures.",

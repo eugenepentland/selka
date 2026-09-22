@@ -55,6 +55,48 @@ This initial implementation lowers guards and payload reads through existing var
 dispatch, including a defensive trap for an invalidated payload projection. It does
 not promise redundant-check elimination or prove integer bounds.
 
+## Option methods
+
+`Option[T]` answers three intrinsic methods and nothing else: `unwrap_or(default: T) -> T`
+returns the payload or the default, `is_none() -> bool` answers whether the value is
+absent, and `is_some() -> bool` answers whether it is present. All three are pure and
+allocate nothing, so a `noalloc` ceiling accepts them, and all three work in a generic
+body whose parameter is an `Option[T]`. `unwrap_or`'s default is checked against the
+payload type, and an integer literal adopts that type exactly as it does in a binding,
+so a `u8` payload makes `unwrap_or(7)` a `u8` default.
+
+```mylang
+# doc: expect 47
+def parse(text: str) -> Option[int]:
+    return int(text)
+
+def head[T: copy + storable](values: list[T]) -> Option[T]:
+    if len(values) == 0:
+        return None
+    return Some(values[0])
+
+def width(text: str) -> int noalloc:
+    return parse(text).unwrap_or(0)
+
+def main() -> int:
+    total = parse("nope").unwrap_or(7)
+    total = total + head([40, 1]).unwrap_or(0)
+    if parse("2").is_none():
+        total = total + 100
+    if head([1]).is_some():
+        total = total + width("0")
+    return total
+```
+
+This returns `47`: the absent parse takes the literal default `7`, the present list head
+takes `40`, and the presence tests leave `total` alone. The receiver may be a named
+binding or any expression, and a binding already narrowed by `is None` answers
+`unwrap_or` with its payload and the two presence tests with constants. An `Option`
+carrying an owned value or a checked `Result` still needs explicit `match`; a mismatched
+default is `E_TYPE` and names the payload type it expected. The `sentinel-int` lint
+reports the older convention — a function returning `-1` on one path whose result a
+caller tests against a negative literal — and names this rewrite.
+
 ## Checked results
 
 `Result[T, E]` is a two-case value: `Ok(value)` carries the success payload and

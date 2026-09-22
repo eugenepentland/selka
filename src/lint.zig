@@ -226,6 +226,7 @@ const rule_same_type_adjacent_params = "same-type-adjacent-params";
 const rule_duplicate_body = "duplicate-body";
 const rule_output_in_library = "output-in-library";
 const rule_positional_literal = "positional-literal";
+const rule_sentinel_int = "sentinel-int";
 
 /// Advisory size-budget defaults for the report-only rules (plan section 9).
 const default_max_function_lines: usize = 80;
@@ -381,6 +382,12 @@ pub const rules = [_]Rule{
         .description = "a call passes a bool, integer or None literal positionally, where naming the parameter reads better",
         .modes = .{ .agent = .report, .strict = .report, .safety = .report },
         .run = runPositionalLiteral,
+    },
+    .{
+        .name = rule_sentinel_int,
+        .description = "an `int` sentinel a negative literal marks, where `Option[int]` with `is None` or `unwrap_or` would say it",
+        .modes = .{ .agent = .report, .strict = .block, .safety = .block },
+        .run = runSentinelInt,
     },
 };
 
@@ -1894,4 +1901,298 @@ fn runOutputInLibrary(context: *RuleContext) std.mem.Allocator.Error!void {
             .subject = .{ .module = module, .qualified = function.name },
         });
     }
+}
+
+// --- sentinel-int -----------------------------------------------------------
+
+/// Function local names whose `-1` is the method's own contract rather than a
+/// sentinel to rewrite: `str.find` and `bytes.find`/`find_any` answer the
+/// searched index or `-1`, so a project function mirroring that spelling is
+/// exempt by name.
+const sentinel_exempt_names = [_][]const u8{ "find", "find_any" };
+
+/// One comparison of a constant against a value with the constant on the right.
+const Comparison = struct { op: typed.BinaryOp, value: typed.NodeId, literal: i128 };
+
+/// One `-1` compared against a parameter or a field.
+const MinusOneSite = struct {
+    /// Identity of the parameter or field, so repeats of one subject group together.
+    key: []const u8,
+    /// Subject as the finding reads it, e.g. "field `pin` of `Pin`".
+    description: []const u8,
+    qualified: []const u8,
+    module: []const u8,
+    span: source.Span,
+};
+
+/// Whether a function is exempt from the sentinel rule by its local name.
+fn sentinelExempt(qualified: []const u8) bool {
+    for (sentinel_exempt_names) |name| if (std.mem.eql(u8, localName(qualified), name)) return true;
+    return false;
+}
+
+/// The constant value of one integer expression, or null when it is not one.
+fn literalValue(program: typed.Program, id: typed.NodeId) ?i128 {
+    const node = program.nodes[@backingInt(id)];
+    switch (node.data) {
+        .integer => |value| return value,
+        .unary => |unary| {
+            if (unary.op != .neg) return null;
+            const operand = literalValue(program, unary.operand) orelse return null;
+            return -operand;
+        },
+        else => return null,
+    }
+}
+
+/// The comparison one operator spells when its operands swap sides.
+fn flippedComparison(op: typed.BinaryOp) typed.BinaryOp {
+    return switch (op) {
+        .lt => .gt,
+        .gt => .lt,
+        .le => .ge,
+        .ge => .le,
+        else => op,
+    };
+}
+
+/// The value and constant one comparison tests, with the constant on the right,
+/// or null when neither operand is an integer constant.
+fn comparisonOperands(program: typed.Program, node: typed.Node) ?Comparison {
+    if (node.data != .binary) return null;
+    const binary = node.data.binary;
+    if (literalValue(program, binary.right)) |literal| return .{ .op = binary.op, .value = binary.left, .literal = literal };
+    if (literalValue(program, binary.left)) |literal| return .{ .op = flippedComparison(binary.op), .value = binary.right, .literal = literal };
+    return null;
+}
+
+/// Whether one binary operator is a comparison.
+fn comparisonOp(op: typed.BinaryOp) bool {
+    return switch (op) {
+        .lt, .le, .eq, .ne, .gt, .ge => true,
+        else => false,
+    };
+}
+
+/// Whether one comparison against a constant tests for a sentinel: any
+/// comparison against a negative literal, or the `< 0` and `>= 0` guards that
+/// name presence.
+fn sentinelTest(op: typed.BinaryOp, literal: i128) bool {
+    if (!comparisonOp(op)) return false;
+    if (literal == 0) return op == .lt or op == .ge;
+    return literal < 0;
+}
+
+/// Whether one function's declared result is an integer and some `return` in
+/// its body is a negative integer literal, which is what makes that result a
+/// sentinel. A function exempt by name never is.
+fn returnsSentinel(memory: std.mem.Allocator, program: typed.Program, function: typed.Function) std.mem.Allocator.Error!bool {
+    if (!function.signature.return_type.isInteger()) return false;
+    if (sentinelExempt(function.name)) return false;
+    var walker = try walk.Walker.init(memory, program, function.scope.body);
+    defer walker.deinit();
+    while (try walker.next()) |item| {
+        const statement = switch (item) {
+            .statement => |id| id,
+            .expression => continue,
+        };
+        const returned = switch (program.statements[@backingInt(statement)].data) {
+            .ret => |value| value,
+            else => continue,
+        };
+        if (literalValue(program, returned)) |value| if (value < 0) return true;
+    }
+    return false;
+}
+
+/// The sentinel function one expression is a direct call to, or null.
+fn sentinelCallee(program: typed.Program, sources: []const bool, id: typed.NodeId) ?typed.FunctionId {
+    const node = program.nodes[@backingInt(id)];
+    const call = switch (node.data) {
+        .call => |call| call,
+        else => return null,
+    };
+    const index = @backingInt(call.function);
+    if (index >= sources.len or !sources[index]) return null;
+    return call.function;
+}
+
+/// `sentinel-int`: report an `int` used as a sentinel. A function whose result
+/// is a negative literal on some path and is compared against a negative
+/// literal where its value is tested is reported at that comparison, and so is
+/// a parameter or field compared against `-1` in two or more places. Every
+/// finding names the `Option[int]` rewrite.
+fn runSentinelInt(context: *RuleContext) std.mem.Allocator.Error!void {
+    const program = context.facts.program;
+    const sources = try context.memory.alloc(bool, program.functions.len);
+    defer context.memory.free(sources);
+    for (program.functions, 0..) |function, index| sources[index] = try returnsSentinel(context.memory, program, function);
+    var caller: std.ArrayList(?typed.FunctionId) = .empty;
+    defer caller.deinit(context.memory);
+    var sites: std.ArrayList(MinusOneSite) = .empty;
+    defer sites.deinit(context.memory);
+    for (program.functions) |function| try scanSentinelFunction(context, program, sources, function, &caller, &sites);
+    try reportMinusOneSites(context, sites.items);
+}
+
+/// Scan one function for comparisons that test a sentinel result and for `-1`
+/// comparisons against its own parameters or record fields. `caller` is reused
+/// as the per-function map from a local slot to the sentinel function whose
+/// result it holds, and `sites` collects the repeated `-1` subjects. Only
+/// source bindings count: a lowering temporary (a collection read's rooted
+/// receiver, a normalized index, a match payload) is the compiler's own
+/// bookkeeping and never a reader-facing sentinel.
+fn scanSentinelFunction(context: *RuleContext, program: typed.Program, sources: []const bool, function: typed.Function, caller: *std.ArrayList(?typed.FunctionId), sites: *std.ArrayList(MinusOneSite)) std.mem.Allocator.Error!void {
+    const memory = context.memory;
+    try caller.resize(memory, function.scope.locals.len);
+    @memset(caller.items, null);
+    var stores: std.ArrayList(typed.Store) = .empty;
+    defer stores.deinit(memory);
+    var walker = try walk.Walker.init(memory, program, function.scope.body);
+    defer walker.deinit();
+    while (try walker.next()) |item| {
+        const statement = switch (item) {
+            .statement => |id| id,
+            .expression => continue,
+        };
+        switch (program.statements[@backingInt(statement)].data) {
+            .initialize, .assign => |store| {
+                const slot = @backingInt(store.slot);
+                if (slot >= function.scope.locals.len) continue;
+                if (function.scope.locals[slot].usage.temporary) continue;
+                try stores.append(memory, store);
+            },
+            else => {},
+        }
+    }
+    // A local may be assigned from another local, so propagate the sentinel
+    // fact to a fixpoint instead of trusting statement order.
+    var changed = true;
+    while (changed) {
+        changed = false;
+        for (stores.items) |store| {
+            const slot = @backingInt(store.slot);
+            if (slot >= caller.items.len or caller.items[slot] != null) continue;
+            if (sentinelCallee(program, sources, store.value)) |callee| {
+                caller.items[slot] = callee;
+                changed = true;
+                continue;
+            }
+            const value = program.nodes[@backingInt(store.value)];
+            const from = switch (value.data) {
+                .local => |source_slot| @backingInt(source_slot),
+                else => continue,
+            };
+            if (from < caller.items.len) if (caller.items[from]) |callee| {
+                caller.items[slot] = callee;
+                changed = true;
+            };
+        }
+    }
+    var comparisons = try walk.Walker.init(memory, program, function.scope.body);
+    defer comparisons.deinit();
+    while (try comparisons.next()) |item| {
+        const id = switch (item) {
+            .expression => |node| node,
+            .statement => continue,
+        };
+        const node = program.nodes[@backingInt(id)];
+        const comparison = comparisonOperands(program, node) orelse continue;
+        if (!comparisonOp(comparison.op)) continue;
+        // A `-1` comparison is the second trigger on its own, whether or not it
+        // also tests a sentinel function's result below.
+        if (comparison.literal == -1) try recordMinusOne(context, program, function, comparison.value, sites);
+        if (!sentinelTest(comparison.op, comparison.literal)) continue;
+        if (sentinelCallee(program, sources, comparison.value)) |callee| {
+            try reportSentinelComparison(context, program, callee, node.span);
+            continue;
+        }
+        const value = program.nodes[@backingInt(comparison.value)];
+        const slot = switch (value.data) {
+            .local => |local| @backingInt(local),
+            else => continue,
+        };
+        if (slot >= caller.items.len) continue;
+        if (caller.items[slot]) |callee| try reportSentinelComparison(context, program, callee, node.span);
+    }
+}
+
+/// Report one comparison that tests a sentinel function's result against a
+/// negative literal, naming the callee and the `Option[int]` rewrite.
+fn reportSentinelComparison(context: *RuleContext, program: typed.Program, callee: typed.FunctionId, span: source.Span) std.mem.Allocator.Error!void {
+    const sentinel = program.functions[@backingInt(callee)];
+    const message = try std.fmt.allocPrint(context.memory, "`{s}` returns -1 on one path and its result is tested against a negative literal here; return `Option[int]` and test `is None` or use `unwrap_or`", .{localName(sentinel.name)});
+    try context.findings.append(context.memory, .{
+        .code = "L_SENTINEL_INT",
+        .rule = rule_sentinel_int,
+        .span = span,
+        .message = message,
+        .subject = .{ .module = moduleName(sentinel.name), .qualified = sentinel.name },
+    });
+}
+
+/// Record one `-1` comparison against a parameter or a record field.
+fn recordMinusOne(context: *RuleContext, program: typed.Program, function: typed.Function, value: typed.NodeId, sites: *std.ArrayList(MinusOneSite)) std.mem.Allocator.Error!void {
+    const node = program.nodes[@backingInt(value)];
+    switch (node.data) {
+        .field => |field| {
+            const base = program.nodes[@backingInt(field.base)].ty;
+            if (!base.isAggregate()) return;
+            const record = program.records[base.recordIndex()];
+            if (field.index >= record.fields.len) return;
+            // A field read the lowering introduced names no declared field of a
+            // source value, so it is not a reader-facing sentinel either.
+            if (program.nodes[@backingInt(field.base)].data == .local) {
+                const slot = @backingInt(program.nodes[@backingInt(field.base)].data.local);
+                if (slot < function.scope.locals.len and function.scope.locals[slot].usage.temporary) return;
+            }
+            try sites.append(context.memory, .{
+                .key = try std.fmt.allocPrint(context.memory, "field:{d}:{d}", .{ base.recordIndex(), field.index }),
+                .description = try std.fmt.allocPrint(context.memory, "field `{s}` of `{s}`", .{ record.fields[field.index].name, localName(record.name) }),
+                .qualified = function.name,
+                .module = moduleName(function.name),
+                .span = node.span,
+            });
+        },
+        .local => |local| {
+            const slot = @backingInt(local);
+            if (slot >= function.signature.parameter_count or slot >= function.scope.locals.len) return;
+            if (function.scope.locals[slot].usage.temporary) return;
+            try sites.append(context.memory, .{
+                .key = try std.fmt.allocPrint(context.memory, "parameter:{d}:{d}", .{ @backingInt(function.id), slot }),
+                .description = try std.fmt.allocPrint(context.memory, "parameter `{s}` of `{s}`", .{ function.scope.locals[slot].name, localName(function.name) }),
+                .qualified = function.name,
+                .module = moduleName(function.name),
+                .span = node.span,
+            });
+        },
+        else => {},
+    }
+}
+
+/// Report one finding per parameter or field compared against `-1` in two or
+/// more places, naming the subject and the `Option[int]` rewrite.
+fn reportMinusOneSites(context: *RuleContext, sites: []MinusOneSite) std.mem.Allocator.Error!void {
+    std.mem.sort(MinusOneSite, sites, {}, minusOneLessThan);
+    var start: usize = 0;
+    while (start < sites.len) {
+        var end = start + 1;
+        while (end < sites.len and std.mem.eql(u8, sites[start].key, sites[end].key)) end += 1;
+        if (end - start >= 2) {
+            const site = sites[end - 1];
+            const message = try std.fmt.allocPrint(context.memory, "{s} is compared against -1 in {d} places; declare it `Option[int]` and test `is None` or use `unwrap_or`", .{ site.description, end - start });
+            try context.findings.append(context.memory, .{
+                .code = "L_SENTINEL_INT",
+                .rule = rule_sentinel_int,
+                .span = site.span,
+                .message = message,
+                .subject = .{ .module = site.module, .qualified = site.qualified },
+            });
+        }
+        start = end;
+    }
+}
+
+fn minusOneLessThan(_: void, left: MinusOneSite, right: MinusOneSite) bool {
+    return std.mem.lessThan(u8, left.key, right.key);
 }

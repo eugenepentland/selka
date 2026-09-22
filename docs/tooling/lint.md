@@ -112,6 +112,7 @@ default, `report`, leaves the inner loop untouched.
 | `same-type-adjacent-params` | `L_SAME_TYPE_ADJACENT_PARAMS` | report only | Adjacent parameters sharing one non-capability type, where a keyword argument reads better. |
 | `duplicate-body` | `L_DUPLICATE_BODY` | report only, never blocking | Two or more checked functions whose normalized bodies are identical. |
 | `output-in-library` | `L_OUTPUT_IN_LIBRARY` | report only | A function whose inferred effects include `output` in a module outside `rules.output-in-library.modules` (default `main`, `*_cli`, `cli`, `cli.*`, `*_integration`, `integration.*`). |
+| `sentinel-int` | `L_SENTINEL_INT` | report; block under `strict` | An `int` used as a sentinel: a function that returns a negative integer literal on some path and whose result a caller compares against a negative literal (or the `< 0`/`>= 0` presence guards), and a parameter or record field compared against `-1` in two or more places. Every finding names the `Option[int]` rewrite. A function named `find` or `find_any` is exempt, because `-1` is that method's own contract. |
 
 The section-9 advisory rules are `.report` under `agent`, `strict` and
 `safety`: they measure, print and never refuse. `integration-tests` is likewise
