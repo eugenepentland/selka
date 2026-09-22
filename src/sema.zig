@@ -1465,7 +1465,11 @@ const Checker = struct {
             return self.sink.fail("E_PRELUDE_TYPE", input.span, "sorted key requires a list input");
         const element = input_schema.shape.buffer.?;
         const parameters = try self.allocator.dupe(typed.Type, &.{element});
-        const callback = try callables.intern(self.allocator, &self.catalog, .{ .parameters = parameters, .return_type = .i64, .effects = 0, .mutates = &.{}, .return_origin = .fresh }, call.argument_names[1].?, self.sink);
+        // The key slot is exactly the type `def(T) -> int effects()` spells, whose
+        // return-origin bound is unknown. A narrower bound would mint a second
+        // schema with the same name as every written or stored callback of that
+        // type, and an identity key's parameter origin would fall outside it.
+        const callback = try callables.intern(self.allocator, &self.catalog, .{ .parameters = parameters, .return_type = .i64, .effects = 0, .mutates = &.{}, .return_origin = .unknown }, call.argument_names[1].?, self.sink);
         try self.hint(call.arguments[1], callback);
     }
     /// Whole-path file helpers are reserved under the same shadowing rule as `print`.
