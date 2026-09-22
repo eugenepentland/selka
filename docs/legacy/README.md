@@ -30,6 +30,13 @@ Four broad removals are recorded here:
   `mylang run`, `run-project` and `test` build a program and execute it in a child
   process. Bytecode remains the compiler's internal IR and `dump-bytecode` still
   prints it; see [../current-language.md](../current-language.md).
+- **Opt-in mutation markers** (removed 2026-09-21). The `mutates(a, b)` clause,
+  the `&argument` call-site marker, the `--mutation-markers` flag and the
+  advisory `W_MUTATES_MISSING` warning. A parameter a function writes through is
+  now declared `name: mut T` and every argument bound to one is written `mut
+  argument`, with the rule always on; writing `mutates(...)` or `&x` reports
+  `E_REMOVED_SPELLING` naming the replacement, and `--mutation-markers` is
+  rejected on every command. See [../effects.md](../effects.md).
 
 `src/features.json` records every removal under its `removed` key with its date
 and the narrower spellings it took with it; that list is the authority.

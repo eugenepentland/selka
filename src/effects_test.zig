@@ -588,7 +588,8 @@ test "M1 mutates metadata survives AST copy and relocation" {
     const copied = try @import("ast_copy.zig").clone(arena.allocator(), c.syntax.?);
     try t.expectEqual(@as(usize, 1), copied.types.expressions.callbacks.len);
     const callback = copied.types.expressions.callbacks[0];
-    try t.expectEqualSlices(u16, &.{0}, callback.mutates);
+    try t.expectEqual(@as(usize, 1), callback.mut_parameters.len);
+    try t.expect(callback.mut_parameters[0]);
     try t.expectEqual(@as(usize, 1), callback.parameter_names.len);
     try t.expect(callback.parameter_names[0] != null);
 }

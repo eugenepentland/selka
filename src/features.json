@@ -574,13 +574,13 @@
     },
     "checked-mutation-contracts": {
       "kind": "language",
-      "summary": "effects(mutation) with mutates(...) permits only declared caller-owned managed writes; deep origins, return aliasing and conservative overlap rejection are checked through calls, generics and callbacks.",
+      "summary": "A parameter a function writes through is declared `name: mut T`, that set is the function's mutation footprint, and every argument bound to one is written `mut argument`, so a call shows exactly what it changes; deep origins, return aliasing and conservative overlap rejection are checked through calls, generics and callbacks.",
       "doc": "docs/effects.md#mutation-contracts"
     },
-    "mutation-markers": {
-      "kind": "tooling",
-      "summary": "Opt-in `--mutation-markers` flag: a call-site `&` marks an argument passed to a callee parameter declared in `mutates(...)`, and a marker on an undeclared position, a non-assignable argument, or a missing marker is a located `E_MUTATION_MARKER` with a concrete replacement; off by default, so `&` remains a removed spelling.",
-      "doc": "docs/effects.md#mutation-contracts"
+    "mut-parameters": {
+      "kind": "language",
+      "summary": "`name: mut T` declares a written parameter and `mut argument` marks the call site, in both directions: a write through an unmarked parameter and a `mut` the body never writes are `E_MUTATION_MARKER` with the exact replacement, `mut` is accepted only on a type with writable storage, and receivers stay unmarked.",
+      "doc": "docs/effects.md#declaration-site-mutation-errors"
     },
     "per-function-body-reuse": {
       "kind": "tooling",
@@ -792,11 +792,6 @@
       "summary": "`mylang run`, `run-project` and `build --run` accept repeatable `--allow-endpoint=IP:PORT` grants that provision a literal-only TCP provider for a `Network` entry point under `--restrict`; without the grant the entry point is refused.",
       "doc": "docs/effects.md#network-host"
     },
-    "mandatory-mutation-footprint-warning": {
-      "kind": "language",
-      "summary": "A function with no effect ceiling that writes caller-reachable storage without a `mutates(...)` clause is warned with the inferred footprint printed verbatim, except for reference-typed `class` parameters, which are exempt because writing through the reference is their purpose; `mutates(...)` without a ceiling means unbounded effects with that footprint.",
-      "doc": "docs/effects.md#mandatory-mutation-footprint"
-    },
     "host-capability-foreign-calls": {
       "kind": "tooling",
       "summary": "Every `extern def` and `host def` takes `host: Host` as its first parameter; the checker verifies it at each call and the C ABI drops it before the foreign call, with `--allow-host` under `--restrict`.",
@@ -917,6 +912,10 @@
     "memory-accounting-categories": {
       "date": "2026-09-14",
       "note": "mylang-io --memory-report, --max-runtime-bytes, --max-vm-bytes and --max-host-bytes, and the runtime-memory-v1 split of VM bytes into guest backing and bookkeeping. There is no VM allocator to split; guest-memory-ceilings bounds a guest process instead."
+    },
+    "mandatory-mutation-footprint-warning": {
+      "date": "2026-09-21",
+      "note": "`W_MUTATES_MISSING` and the reference-typed `class` exemption, with the `mutates(...)` clause and the opt-in `&` / `--mutation-markers` marker beside them. A parameter a function writes through is declared `name: mut T` and every argument bound to one is written `mut argument`; see the implemented `mut-parameters` entry."
     }
   }
 }
