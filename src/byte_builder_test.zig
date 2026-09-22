@@ -27,7 +27,7 @@ test "standard byte builder keeps its published call surface unchanged" {
         \\        return False
         \\    if not byte_builder.append_spaces(mut out, 2):
         \\        return False
-        \\    return byte_builder.finish(mut out) == b"abcde  "
+        \\    return byte_builder.finish(out) == b"abcde  "
         \\
         \\def main() -> int:
         \\    if not build():
@@ -46,7 +46,7 @@ test "standard byte builder freezes a snapshot that is appended back into its bu
         \\def main() -> int:
         \\    out = byte_builder.create()
         \\    byte_builder.append_text(mut out, "λ")
-        \\    first = byte_builder.finish(mut out)
+        \\    first = byte_builder.finish(out)
         \\    byte_builder.append(mut out, first)
         \\    if not byte_builder.append_range(mut out, first, 1, 2):
         \\        return 1
@@ -55,11 +55,11 @@ test "standard byte builder freezes a snapshot that is appended back into its bu
         \\    expected = b"\xce\xbb\xce\xbb\xbb-9223372036854775808"
         \\    if first != b"\xce\xbb":
         \\        return 2
-        \\    if byte_builder.finish(mut out) != expected:
+        \\    if byte_builder.finish(out) != expected:
         \\        return 3
         \\    if not byte_builder.reserve(mut out, 64):
         \\        return 4
-        \\    if byte_builder.finish(mut out) != expected:
+        \\    if byte_builder.finish(out) != expected:
         \\        return 5
         \\    return 42
         \\
@@ -209,7 +209,7 @@ test "byte buffer methods compile and run in discard position" {
         \\    if data != b"el\xce\xbb-42A":
         \\        return 1
         \\    _ = byte_builder.append_range(mut out, b"tail", 0, 4)
-        \\    if byte_builder.finish(mut out) != b"seedtail":
+        \\    if byte_builder.finish(out) != b"seedtail":
         \\        return 2
         \\    return 42
         \\

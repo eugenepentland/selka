@@ -411,12 +411,12 @@ test "PY-BYTES-FUSED-RANGE-1 immediate slices and views parse under noalloc" {
 // spec-case: PY-BYTES-FUSED-RANGE-1
 test "PY-BYTES-FUSED-RANGE-1 receiver and bounds keep source order and run once" {
     try t.expectEqual(@as(i64, 42), try value(
-        "def source(log: list[int], raw: bytes) -> bytes effects(mutation) mutates(log):\n" ++
+        "def source(log: mut list[int], raw: bytes) -> bytes effects(mutation):\n" ++
             "    log[0] = log[0] + 1\n    return raw\n" ++
-            "def bound(log: list[int]) -> int effects(mutation) mutates(log):\n" ++
+            "def bound(log: mut list[int]) -> int effects(mutation):\n" ++
             "    value = log[0]\n    log[0] = value + 1\n    return value\n" ++
             "def main() -> int:\n    log: list[int] = [0]\n" ++
-            "    match source(log, b\"x42\")[bound(log):bound(log)].parse_int():\n" ++
+            "    match source(mut log, b\"x42\")[bound(mut log):bound(mut log)].parse_int():\n" ++
             "        case Some(number):\n            if number != 4 or log[0] != 3:\n                return 1\n" ++
             "        case None:\n            return 2\n    return 42\n",
     ));
