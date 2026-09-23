@@ -15,7 +15,7 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             const pointer = if (destination) |slot|
                 try localPointer(@TypeOf(self), self, slot)
             else if (schema.isManagedRecord())
-                try allocateCell(@TypeOf(self), self, record.ty)
+                try @import("qbe_alloc.zig").cell(@TypeOf(self), self, record.ty, stack)
             else
                 try self.aggregatePointer();
             for (0..record.fields) |i| {
@@ -42,6 +42,7 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             const cell = self.program.records[record.ty.recordIndex()].isManagedRecord();
             const pointer = if (cell) source else try self.aggregatePointer();
             if (!cell) try self.print(" blit %v{d}, %v{d}, {d}\n", .{ source, pointer, (try self.layout(record.ty)).size });
+            if (cell and try storesReference(@TypeOf(self), self, record.ty, record.indices)) try @import("qbe_alloc.zig").barrier(@TypeOf(self), self, pointer);
             for (record.indices, 0..) |index, i| {
                 const member = try self.field(record.ty, index);
                 if (cell) {
@@ -339,11 +340,12 @@ fn readsLocal(op: @FieldType(bytecode.Instruction, "op"), slot: usize) bool {
     };
 }
 
-fn allocateCell(comptime E: type, self: E, ty: typed.Type) Error!usize {
-    const pointer = self.temp();
-    try self.print(" %v{d} =l call $myl_native_heap_alloc(l %heap, l extern ${s}_body, l 1)\n", .{ pointer, try self.descriptor(ty) });
-    try self.require(pointer, @import("qbe_format.zig").allocation_failure);
-    return pointer;
+/// Whether a field update of a class body stores anything the collector
+/// traces, which is when the generational barrier must see it. A store of
+/// scalars alone cannot make an old body reference a young object.
+fn storesReference(comptime E: type, self: E, ty: typed.Type, indices: []const usize) Error!bool {
+    for (indices) |index| if ((try self.layout((try self.field(ty, index)).ty)).trace) return true;
+    return false;
 }
 
 fn armPayload(comptime E: type, self: E, ty_value: typed.Type, slot_value: ?typed.LocalId, i: usize, pointer: usize) Error!void {

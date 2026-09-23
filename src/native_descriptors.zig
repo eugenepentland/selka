@@ -39,8 +39,8 @@ pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]
             // as no reference. So the runtime sees the payload's own pointer
             // descriptor under this name and needs no kind of its own.
             const payload = layout.fields[0].ty;
-            try emit(a, writer, catalog, item.name, try catalog.layout(payload), payload);
-        } else try emit(a, writer, catalog, item.name, layout, item.ty);
+            try emit(a, writer, catalog, .{ .name = item.name, .ty = payload }, try catalog.layout(payload));
+        } else try emit(a, writer, catalog, .{ .name = item.name, .ty = item.ty }, layout);
         if (item.ty.isAggregate() and catalog.records[item.ty.recordIndex()].managed) {
             // Collections use their runtime header and typed element descriptors.
             // Nominal managed records can allocate this inline body directly.
@@ -48,13 +48,20 @@ pub fn generate(allocator: std.mem.Allocator, catalog: *native.Catalog) Error![]
             if (record.shape.array == null and !record.shape.hasRuntimeIdentity()) {
                 const body = try catalog.heapLayout(item.ty);
                 defer catalog.releaseLayout(body);
-                try emit(a, writer, catalog, try std.fmt.allocPrint(a, "{s}_body", .{item.name}), body, item.ty);
+                // QBE-GEN-BARRIER-1: a class body is the one object whose
+                // post-construction stores all run the generational barrier.
+                try emit(a, writer, catalog, .{ .name = try std.fmt.allocPrint(a, "{s}_body", .{item.name}), .ty = item.ty, .cell = true }, body);
             }
         }
     }
     return output.toOwnedSlice();
 }
-fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, name: []const u8, layout: native.Layout, ty: typed.Type) Error!void {
+/// One descriptor to emit: its symbol, the semantic type it describes, and
+/// whether it is a class body the store barrier watches.
+const Target = struct { name: []const u8, ty: typed.Type, cell: bool = false };
+fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, target: Target, layout: native.Layout) Error!void {
+    const name = target.name;
+    const ty = target.ty;
     if (layout.fields.len != 0) {
         writer.print("static const myl_native_field {s}_fields[] = {{\n", .{name}) catch return error.OutOfMemory;
         for (layout.fields) |field| {
@@ -107,8 +114,8 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
     writer.print(
         "const myl_native_type {s} = {{.size={d},.alignment={d},.fields={s},.field_count={d}," ++
             ".count={d},.stride={d},.kind={s},.collection_kind={d},.element={s},.key={s}," ++
-            ".trace_fields={s},.trace_field_count={d},.trace_mode={s}}};\n",
-        .{ name, layout.size, layout.alignment, fields, layout.fields.len, layout.count, layout.stride, kind, collection_kind, element, key, trace_fields, trace_field_count, trace_mode },
+            ".trace_fields={s},.trace_field_count={d},.trace_mode={s},.cell={d}}};\n",
+        .{ name, layout.size, layout.alignment, fields, layout.fields.len, layout.count, layout.stride, kind, collection_kind, element, key, trace_fields, trace_field_count, trace_mode, @intFromBool(target.cell) },
     ) catch return error.OutOfMemory;
 }
 

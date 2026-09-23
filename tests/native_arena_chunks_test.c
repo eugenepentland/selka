@@ -397,7 +397,47 @@ static void header_bounds(void) {
     heap.region_depth=0;
     myl_native_heap_destroy(&heap);
 }
+/* spec-case: QBE-INLINE-ALLOC-1. After a runtime allocation at the innermost
+   depth the arena window is open on the chunk's free tail; an object bumped out
+   of it the way generated code does is found by the collector's arena scan,
+   carries its depth in its header, is released with the scope, and its bytes
+   are zeroed before the chunk is reused. Opening a nested scope closes it. */
+static void inline_arena_window(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,8u<<20);
+    assert(myl_native_region_begin(&heap));
+    assert(myl_native_heap_alloc(&heap,&pointer,1));
+    assert(heap.arena_window.cursor && heap.arena_window.cursor<heap.arena_window.limit);
+    assert(heap.arena_mark==(MYL_NATIVE_OBJECT_ARENA|((uintptr_t)1<<MYL_NATIVE_ARENA_REGION_SHIFT)|4));
+    myl_native_object *bumped=(myl_native_object *)heap.arena_window.cursor;
+    heap.arena_window.cursor+=32;
+    bumped->mark=heap.arena_mark;
+    bumped->element=&pointer;
+    int64_t *kept=myl_native_heap_alloc_at(&heap,&number,1,0);
+    assert(kept);
+    *kept=5;
+    *(int64_t **)(bumped+1)=kept;
+    assert(myl_native_header_region(bumped+1)==1);
+    myl_native_heap_collect(&heap);
+    assert(!heap.arena_window.cursor && *kept==5 && !myl_native_object_region(&heap,kept));
+    assert(myl_native_heap_alloc(&heap,&pointer,1) && heap.arena_window.cursor);
+    assert(myl_native_region_begin(&heap));
+    assert(!heap.arena_window.cursor);
+    myl_native_region_end(&heap);
+    myl_native_region_end(&heap);
+    assert(!heap.arena_window.cursor);
+    /* The released chunk comes back zeroed over what the window handed out. */
+    assert(myl_native_region_begin(&heap));
+    void **again=myl_native_heap_alloc(&heap,&pointer,1);
+    assert(again && !*again && heap.arena.reused);
+    assert(!((void **)heap.arena_window.cursor)[2]);
+    myl_native_region_end(&heap);
+    myl_native_heap_collect(&heap);
+    assert(!heap.bytes);
+    myl_native_heap_destroy(&heap);
+}
 int main(void) {
+    inline_arena_window();
     chunked_objects();
     zero_and_validation();
     nested_chunks();

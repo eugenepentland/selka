@@ -9,6 +9,12 @@ void *myl_native_arena_alloc(myl_native_heap *, const myl_native_type *, size_t,
  * edges need no traversal because every allocation survives until scope exit. */
 void myl_native_arena_trace(myl_native_heap *, void (*)(myl_native_heap *, const myl_native_type *, const void *));
 void myl_native_arena_release(myl_native_heap *, unsigned);
+/* Fold generated code's arena window back into its chunk's `used` and close
+ * it. Every runtime operation that reads or extends a chunk's used prefix calls
+ * this first. A generated allocation from the window is never counted in
+ * `objects_live` or the arena statistics; its bytes were charged with the
+ * chunk. */
+void myl_native_arena_sync(myl_native_heap *);
 /* Return every retained chunk to the host. Called when the heap is destroyed
  * and when a host reservation fails, since retained chunks are the only bytes
  * the runtime can give back without losing a live allocation. */

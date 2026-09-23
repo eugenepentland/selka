@@ -279,6 +279,18 @@ the elements through the header object's own descriptor, and the frozen
 consumer must understand, so it is left for a change that can pay its own way on
 both the fast paths item 5 and item 6 already read.
 
+**Superseded in part, 2026-09-22** (`QBE-INLINE-ALLOC-1`, `GC-GENERATIONS-1`,
+`QBE-GEN-BARRIER-1`; [audit](audits/alloc-gc-2026-09-22.md)). The per-class
+free lists are gone: a sweep threads *holes* — runs of free slots — and every
+allocator bumps a window over one. Classes up to 8 KiB live in aligned 64 KiB
+segments with side mark bits, so a sweep reads bitmaps rather than slots, and
+charges round to 16 bytes instead of 32. Small `class` bodies are allocated
+inline from a prepaid per-class window. The collector is generational with
+sticky mark bits: minor collections trace young objects only, rescanning old
+runtime storage and the class bodies a store barrier reported. `binary_trees`
+went from 2.26× to 0.89× Zig and the collector from 71% to about 14% of its
+samples.
+
 ### 4. Store strings as UTF-8
 
 *Language and runtime. Size: large.*

@@ -182,6 +182,185 @@ static void long_chain_test(void) {
     assert(heap.objects_live == 0);
     myl_native_heap_destroy(&heap);
 }
+/* A class body: the same record, but every later store runs the barrier. */
+static const myl_native_type cell_type = {
+    .size = sizeof(Node), .alignment = _Alignof(Node), .kind = MYL_NATIVE_RECORD,
+    .fields = node_fields, .field_count = 1, .cell = 1
+};
+/* Make the next allocation run the collection it is due for. */
+static Node *allocate_due(myl_native_heap *heap, const myl_native_type *type) {
+    heap->next_collection = heap->bytes - heap->arena.reserved_bytes;
+    Node *node = myl_native_heap_alloc(heap, type, 1);
+    assert(node);
+    return node;
+}
+/* spec-case: GC-GENERATIONS-1. A minor collection keeps every old object
+   without tracing it, keeps a young object an old unwatched record references,
+   and leaves old garbage to the next full collection. */
+static void minor_collection_test(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 64 << 20);
+    Node *old = myl_native_heap_alloc(&heap, &node_type, 1);
+    myl_native_root root;
+    myl_native_root_push(&heap, &root, &old, &pointer_type);
+    Node *garbage = myl_native_heap_alloc(&heap, &node_type, 1);
+    garbage->next = myl_native_heap_alloc(&heap, &node_type, 1);
+    myl_native_root dropped;
+    myl_native_root_push(&heap, &dropped, &garbage, &pointer_type);
+    myl_native_heap_collect(&heap);
+    assert(heap.objects_live == 3 && heap.generations.full_collections == 1);
+    assert(myl_native_root_pop(&heap, &dropped));
+    /* The young node is reachable only through the old record. */
+    old->next = myl_native_heap_alloc(&heap, &node_type, 1);
+    old->next->value = 7;
+    size_t minors = heap.generations.minor_collections;
+    Node *extra = allocate_due(&heap, &node_type);
+    (void)extra;
+    assert(heap.generations.minor_collections == minors + 1);
+    /* old, its young child, and the old garbage pair survive; `extra` is new. */
+    assert(heap.objects_live == 5 && old->next->value == 7);
+    myl_native_heap_collect(&heap);
+    assert(heap.objects_live == 2 && old->next->value == 7);
+    assert(myl_native_root_pop(&heap, &root));
+    myl_native_heap_collect(&heap);
+    assert(heap.objects_live == 0 && heap.bytes == 0);
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: GC-GENERATIONS-1. Old storage in a large class (a header-marked
+   object in a shared segment) and in an oversized one-slot segment is
+   rescanned by a minor collection, keeping a young object stored into it; a
+   size-classed object's mark lives in its segment's bitmap and the header bit
+   records only that it is old. */
+static void large_rescan_test(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 64 << 20);
+    Node **large = myl_native_heap_alloc(&heap, &pointer_type, 2000);
+    myl_native_root large_root;
+    myl_native_root_push(&heap, &large_root, &large, &pointer_type);
+    Node **huge = myl_native_heap_alloc(&heap, &pointer_type, 40000);
+    myl_native_root huge_root;
+    myl_native_root_push(&heap, &huge_root, &huge, &pointer_type);
+    assert(large && huge);
+    assert((((myl_native_object *)large - 1)->mark & MYL_NATIVE_OBJECT_LARGE) != 0);
+    assert((((myl_native_object *)huge - 1)->mark & MYL_NATIVE_OBJECT_LARGE) != 0);
+    Node *small = myl_native_heap_alloc(&heap, &node_type, 1);
+    myl_native_root small_root;
+    myl_native_root_push(&heap, &small_root, &small, &pointer_type);
+    assert((((myl_native_object *)small - 1)->mark & MYL_NATIVE_OBJECT_LARGE) == 0);
+    myl_native_heap_collect(&heap);
+    assert((((myl_native_object *)small - 1)->mark & MYL_NATIVE_OBJECT_MARKED) != 0);
+    large[7] = myl_native_heap_alloc(&heap, &node_type, 1);
+    huge[39999] = myl_native_heap_alloc(&heap, &node_type, 1);
+    large[7]->value = 70;
+    huge[39999]->value = 99;
+    size_t live = heap.objects_live, minors = heap.generations.minor_collections;
+    allocate_due(&heap, &node_type);
+    assert(heap.generations.minor_collections == minors + 1);
+    assert(heap.objects_live == live + 1 && large[7]->value == 70 && huge[39999]->value == 99);
+    assert(myl_native_root_pop(&heap, &small_root));
+    assert(myl_native_root_pop(&heap, &huge_root));
+    assert(myl_native_root_pop(&heap, &large_root));
+    myl_native_heap_collect(&heap);
+    assert(heap.objects_live == 0 && heap.bytes == 0);
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: GC-GENERATIONS-1. A store into an old class body is reported by
+   the barrier: the body loses its mark, is listed once, and the next minor
+   collection traces it, keeping the young object it now references. */
+static void remembered_cell_test(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 64 << 20);
+    Node *old = myl_native_heap_alloc(&heap, &cell_type, 1);
+    myl_native_root root;
+    myl_native_root_push(&heap, &root, &old, &pointer_type);
+    myl_native_heap_collect(&heap);
+    assert((((myl_native_object *)old - 1)->mark & MYL_NATIVE_OBJECT_MARKED) != 0);
+    Node *young = myl_native_heap_alloc(&heap, &node_type, 1);
+    young->value = 11;
+    myl_native_heap_remember(&heap, old);
+    myl_native_heap_remember(&heap, old);
+    assert(heap.generations.remembered.length == 1);
+    assert((((myl_native_object *)old - 1)->mark & MYL_NATIVE_OBJECT_MARKED) == 0);
+    old->next = young;
+    young = NULL;
+    size_t minors = heap.generations.minor_collections;
+    allocate_due(&heap, &node_type);
+    assert(heap.generations.minor_collections == minors + 1);
+    assert(heap.generations.remembered.length == 0);
+    assert(heap.objects_live == 3 && old->next->value == 11);
+    assert((((myl_native_object *)old - 1)->mark & MYL_NATIVE_OBJECT_MARKED) != 0);
+    assert(myl_native_root_pop(&heap, &root));
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: GC-GENERATIONS-1. Budget pressure always collects fully, so old
+   garbage is reclaimed before an allocation is refused. */
+static void pressure_collects_fully_test(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 1 << 20);
+    Node *old = myl_native_heap_alloc(&heap, &node_type, 1);
+    myl_native_root root;
+    myl_native_root_push(&heap, &root, &old, &pointer_type);
+    myl_native_heap_collect(&heap);
+    assert(myl_native_root_pop(&heap, &root));
+    old = NULL;
+    size_t fulls = heap.generations.full_collections;
+    heap.generations.full_threshold = SIZE_MAX;
+    heap.next_collection = SIZE_MAX;
+    /* The only charged object is old garbage; the full collection frees it. */
+    assert(heap.bytes == 32);
+    heap.limit = 32;
+    assert(myl_native_heap_alloc(&heap, &node_type, 1));
+    assert(heap.generations.full_collections == fulls + 1 && !heap.exhausted);
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: QBE-INLINE-ALLOC-1. The runtime half of inline allocation: the
+   slow call refills the class's list with prepaid slots the trigger admits,
+   popping them costs no further charge, and every slot nobody took is
+   discharged again — by a settle, by opening an arena, or by a collection. */
+static void inline_list_test(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 64 << 20);
+    myl_native_window *window = &heap.inline_windows[1];
+    Node *first = myl_native_heap_alloc_small(&heap, &node_type, 1);
+    assert(first && window->cursor != window->limit);
+    /* A fresh segment is one hole: the whole of it is charged at once. */
+    size_t charged = heap.bytes, live = heap.objects_live;
+    size_t slots = (MYL_NATIVE_SEGMENT_BYTES - offsetof(myl_native_segment, data)) / 32;
+    assert(charged == slots * 32 && live == slots);
+    myl_native_object *slot = (myl_native_object *)window->cursor;
+    window->cursor += 32;
+    slot->mark = 1u << MYL_NATIVE_OBJECT_COUNT_SHIFT;
+    slot->element = &node_type;
+    assert(heap.bytes == charged);
+    myl_native_heap_settle(&heap);
+    assert(window->cursor == window->limit && heap.bytes == 64 && heap.objects_live == 2);
+    /* The trigger bounds a window: room for exactly three more slots. */
+    heap.next_collection = heap.bytes + 4 * 32;
+    assert(myl_native_heap_alloc_small(&heap, &node_type, 1));
+    assert(heap.bytes == heap.next_collection && window->limit - window->cursor == 3 * 32);
+    assert(myl_native_region_begin(&heap));
+    assert(window->cursor == window->limit && heap.bytes == 3 * 32);
+    myl_native_region_end(&heap);
+    heap.next_collection = SIZE_MAX;
+    assert(myl_native_heap_alloc_small(&heap, &node_type, 1) && window->cursor != window->limit);
+    myl_native_heap_collect(&heap);
+    assert(window->cursor == window->limit && heap.bytes == 0 && heap.objects_live == 0);
+    heap.stress = 1;
+    assert(myl_native_heap_alloc_small(&heap, &node_type, 1) && window->cursor == window->limit);
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: QBE-INLINE-ALLOC-1. A charge is the header plus the payload
+   rounded to the payload's 16-byte alignment, then up to a class stride: a
+   24-byte payload takes the 48-byte class, the one generated code assumes. */
+static void stride_rounding_test(void) {
+    typedef struct { void *a, *b, *c; } Three;
+    const myl_native_type three = { .size = sizeof(Three), .alignment = _Alignof(Three), .kind = MYL_NATIVE_PLAIN };
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 1 << 20);
+    assert(myl_native_heap_alloc(&heap, &three, 1) && heap.bytes == 48);
+    assert(myl_native_heap_alloc_small(&heap, &three, 2) && heap.inline_windows[2].cursor);
+    myl_native_heap_destroy(&heap);
+}
 static void automatic_collection_test(void) {
     myl_native_heap heap;
     myl_native_heap_init(&heap,SIZE_MAX);
@@ -348,5 +527,11 @@ int main(void) {
     array_and_variant_test();
     filtered_trace_map_test();
     long_chain_test();
+    minor_collection_test();
+    remembered_cell_test();
+    large_rescan_test();
+    pressure_collects_fully_test();
+    inline_list_test();
+    stride_rounding_test();
     puts("native heap tests passed");
 }

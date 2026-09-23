@@ -1,0 +1,156 @@
+module gc_generations
+
+# The collector is generational: a survivor stays marked and old, and a minor
+# collection follows no reference into the old generation. These cases build a
+# long-lived structure, let collections promote it, and then give it a young
+# object in every way a program can — a field store into an old class body
+# (the store barrier), an append to an old list and a store into an old list
+# slot (rescanned without a barrier) — before churning enough garbage to run
+# more collections. A young object an old one references must survive them.
+# Under `--gc-stress` minor and full collections alternate at every
+# allocation.
+
+
+class Node:
+    next: Option[Node]
+    value: int
+
+
+def chain(n: int) -> Node:
+    head = Node(next=None, value=0)
+    for i in range(n):
+        head = Node(next=Some(head), value=i + 1)
+    return head
+
+
+def length(node: Node) -> int:
+    count = 1
+    cursor = node
+    while True:
+        match cursor.next:
+            case Some(next):
+                cursor = next
+                count += 1
+            case None:
+                return count
+
+
+# Allocate about 8 KB of short-lived text per round, so a few hundred rounds
+# run minor collections within a test's instruction budget. Returns the rounds.
+def churn(rounds: int) -> int:
+    done = 0
+    for _ in range(rounds):
+        text = "abcdefgh"
+        for doubling in range(9):
+            text = text + text
+        done += len(text) // 4096
+    return done
+
+
+def last_value(node: Node) -> int:
+    match node.next:
+        case Some(next):
+            return next.value
+        case None:
+            return -1
+
+
+# spec: GC-GENERATIONS-1
+public def test_a_long_lived_chain_survives_many_minor_collections() -> bool:
+    old = chain(200)
+    rounds = churn(2500)
+    return length(old) == 201 and old.value == 200 and rounds == 2500
+
+
+# spec-case: QBE-GEN-BARRIER-1
+public def test_an_old_class_body_keeps_a_young_object_stored_into_it() -> bool:
+    old = chain(50)
+    _ = churn(1200)
+    old.next = Some(Node(next=None, value=77))
+    _ = churn(1200)
+    return last_value(old) == 77 and length(old) == 2
+
+
+# spec-case: QBE-GEN-BARRIER-1
+public def test_a_young_chain_hung_on_an_old_body_survives_intact() -> bool:
+    old = chain(10)
+    _ = churn(1200)
+    old.next = Some(chain(30))
+    _ = churn(1200)
+    return length(old) == 32 and last_value(old) == 30
+
+
+# spec-case: GC-GENERATIONS-1
+public def test_an_old_list_keeps_young_objects_appended_and_stored() -> bool:
+    nodes: list[Node] = []
+    for i in range(20):
+        nodes.append(Node(next=None, value=i))
+    _ = churn(1200)
+    nodes.append(Node(next=None, value=500))
+    nodes[3] = Node(next=None, value=300)
+    _ = churn(1200)
+    return len(nodes) == 21 and nodes[20].value == 500 and nodes[3].value == 300 and nodes[4].value == 4
+
+
+def filled(count: int) -> list[Node]:
+    nodes: list[Node] = []
+    for i in range(count):
+        nodes.append(Node(next=None, value=i))
+    return nodes
+
+
+def replace_every(nodes: mut list[Node], step: int, base: int) effects(mutation, managed_allocation):
+    i = 0
+    while i < len(nodes):
+        nodes[i] = Node(next=None, value=base + i)
+        i += step
+
+
+def value_sum(nodes: list[Node]) -> int:
+    sum = 0
+    for node in nodes:
+        sum += node.value
+    return sum
+
+
+# Element storage of 2000 references (16 KB) is a large-class object that keeps
+# its mark in its header; it is rescanned by every minor collection like any
+# other old storage. (Oversized one-slot storage is covered by the runtime's C
+# tests, which can afford a list that large.)
+# spec-case: GC-GENERATIONS-1
+public def test_an_old_large_list_keeps_young_objects_stored_into_it() -> bool:
+    large = filled(2000)
+    _ = churn(1200)
+    replace_every(mut large, 7, 1000000)
+    large.append(Node(next=None, value=5))
+    _ = churn(1200)
+    # 286 slots were replaced, each by its index plus the base.
+    return value_sum(large) == 2000 * 1999 // 2 + 286 * 1000000 + 5 and len(large) == 2001
+
+
+# spec-case: QBE-INLINE-ALLOC-1
+public def test_class_bodies_bumped_out_of_nested_arenas_keep_their_fields() -> bool:
+    outer_total = 0
+    inner_total = 0
+    kept = chain(5)
+    for round in range(200):
+        with arena():
+            outer = chain(40)
+            with arena():
+                inner = chain(25)
+                inner_total += length(inner) + last_value(inner)
+            outer_total += length(outer) + outer.value
+    return outer_total == 200 * (41 + 40) and inner_total == 200 * (26 + 24) and length(kept) == 6
+
+
+# spec-case: QBE-INLINE-ALLOC-1
+public def test_inline_constructed_bodies_start_zeroed_and_hold_their_fields() -> bool:
+    total = 0
+    for i in range(30000):
+        node = Node(next=None, value=i)
+        match node.next:
+            case Some(next):
+                total += next.value + 1000000
+            case None:
+                total += node.value
+    return total == 30000 * 29999 // 2

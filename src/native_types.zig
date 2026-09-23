@@ -33,7 +33,7 @@ const State = enum { unseen, active, done };
 /// Versioned Linux AMD64 ABI catalog. The caller retains records and identities
 /// until deinit. Fields and cached layouts are owned by this catalog.
 pub const Catalog = struct {
-    pub const abi_version = "mylang-native-amd64-layout-v3";
+    pub const abi_version = "mylang-native-amd64-layout-v4";
     allocator: std.mem.Allocator,
     records: []const typed.Record,
     identities: []const []const u8,

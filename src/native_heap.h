@@ -28,6 +28,13 @@ struct myl_native_type {
     const myl_native_field *trace_fields;
     size_t trace_field_count;
     unsigned trace_mode;
+    /* Nonzero only for a generated `class` body: every store into an allocated
+     * object of this descriptor after its constructor filled it runs the
+     * generational store barrier (`myl_native_heap_remember`), so an old body is
+     * not rescanned by a minor collection unless a store reached it. Zero keeps
+     * the conservative rule every runtime descriptor relies on: an old object's
+     * references are rescanned by every minor collection. */
+    unsigned cell;
 };
 enum { MYL_NATIVE_TRACE_LEGACY, MYL_NATIVE_TRACE_NONE, MYL_NATIVE_TRACE_FIELDS };
 enum { MYL_NATIVE_PLAIN, MYL_NATIVE_POINTER, MYL_NATIVE_RECORD,
@@ -44,13 +51,19 @@ typedef struct myl_native_root {
 } myl_native_root;
 /* One tracing-heap allocation's two-word header, laid out immediately before its
  * payload so the collector reaches it as `(myl_native_object *)payload - 1`.
- * Word 0 is the mark word: bit 0 is the collector's mark, bit 1 marks storage
- * that lives outside the heap (a frozen `str`/`bytes` literal), which the
- * collector never queues, re-traces, frees or bulk-releases, and every higher
- * bit holds the element count. A reclaimed slot reuses the whole word as its
- * free-list link with `MYL_NATIVE_OBJECT_FREE` set above the link, because a
- * free slot carries no count. The count lives in the header rather than in the
- * segment because precise tracing needs it for any payload address, including
+ * Word 0 is the mark word: bit 0 says the object is old — for a large object
+ * (`MYL_NATIVE_OBJECT_LARGE`) it is the collector's mark itself, for any other
+ * object the mark lives in its segment's bitmap and bit 0 is the flag the
+ * generational store barrier tests — bit 1 marks storage that lives outside
+ * the heap (a frozen `str`/`bytes` literal), which the collector never queues,
+ * re-traces, frees or bulk-releases, and the bits above hold the element count
+ * (below bit 62, the arena flag, and bit 63, the large flag). A free slot of a
+ * segment without mark bits is never marked: the first slot of a hole holds a
+ * `myl_native_hole` whose first word is an aligned address, and every other
+ * free slot keeps its last occupant's unmarked word. A free slot of a bitmap
+ * segment may keep a stale bit 0, which nothing reads: its mark bit is clear.
+ * The count lives in the header rather than in the segment because precise
+ * tracing needs it for any payload address, including
  * one first reached through a root. Word 1 is the element descriptor. Two words
  * keep the payload aligned to `max_align_t` because a segment slot is. An arena
  * payload carries the same two words, so every managed payload's region,
@@ -63,9 +76,6 @@ struct myl_native_object {
 typedef struct myl_native_object myl_native_object;
 enum { MYL_NATIVE_OBJECT_MARKED = 1, MYL_NATIVE_OBJECT_IMMORTAL = 2,
        MYL_NATIVE_OBJECT_COUNT_SHIFT = 2 };
-/* The mark word's sign bit, above any canonical address and above the element
- * count. A free slot's word is `link | MYL_NATIVE_OBJECT_FREE`. */
-#define MYL_NATIVE_OBJECT_FREE (((uintptr_t)1) << (sizeof(uintptr_t) * 8 - 1))
 /* The mark word of an arena allocation: this flag, the owning arena depth in
  * the bits from MYL_NATIVE_ARENA_REGION_SHIFT up to the flag, and the element
  * count between the two flag bits and the depth. The collector never sets the
@@ -97,16 +107,73 @@ static inline unsigned myl_native_header_region(const void *payload) {
  * this count matches its table. */
 #define MYL_NATIVE_CLASS_COUNT 52
 #define MYL_NATIVE_CLASS_LIMIT ((size_t)262144)
+/* The size classes generated code allocates from inline: the first twelve,
+ * strides 16 to 256. Their strides are a compile-time contract with
+ * `inline_class_strides` in src/qbe_alloc.zig, which a Zig test checks against
+ * the table in native_heap.c. */
+#define MYL_NATIVE_INLINE_CLASSES 12
+/* A size-classed segment is one block of this many bytes aligned to its own
+ * size, so any object in it finds its segment — and its mark bit — by masking
+ * its address. One mark bit covers each 16-byte granule of the block. */
+#define MYL_NATIVE_SEGMENT_BYTES ((size_t)1 << 16)
+#define MYL_NATIVE_SEGMENT_MARK_WORDS (MYL_NATIVE_SEGMENT_BYTES / 16 / 64)
+/* The mark word bit that tells an object with a one-slot segment of its own
+ * (an oversized object) from a size-classed one: an oversized object keeps its
+ * collector mark in its header's bit 0, a size-classed object in its segment's
+ * mark bits. Bit 63 is above any element count a tracing-heap object holds. */
+#define MYL_NATIVE_OBJECT_LARGE (((uintptr_t)1) << 63)
 /* One size-classed slab of tracing-heap storage: `slots` fixed-stride object
  * slots at `data`, zero-filled by the host on first use. `used` counts the
- * slots handed out by the bump pointer, and `class_index` names the stride's
- * class (`MYL_NATIVE_CLASS_COUNT` for a one-slot oversized segment). */
+ * slots the segment has handed out as fresh storage — its tail past `used` has
+ * never held an object — and `class_index` names the stride's class
+ * (`MYL_NATIVE_CLASS_COUNT` for a one-slot oversized segment). */
 typedef struct myl_native_segment {
     struct myl_native_segment *next;
     size_t stride, slots, used, class_index;
+    /* The first hole the last sweep found: a run of consecutive free slots
+     * inside the used prefix, whose first slot holds a `myl_native_hole`
+     * naming the run's end and the next hole. `live` counts the marked slots
+     * that sweep kept. `available` links the segment into its class's list of
+     * segments with holes nobody has started on. A segment is dirty from the
+     * moment it hands out storage (or an object of it is released) until it is
+     * swept again, so a minor collection sweeps exactly the segments that can
+     * hold a young object. */
+    unsigned char *holes;
+    size_t live;
+    struct myl_native_segment *available;
+    unsigned char dirty, listed;
+    /* The collector's mark bits of a size-classed segment, one per 16-byte
+     * granule of the segment's aligned block, set at an object's first
+     * granule. An oversized segment keeps its one object's mark in the
+     * object's header instead and leaves this unused. */
+    uint64_t marks[MYL_NATIVE_SEGMENT_MARK_WORDS];
     max_align_t payload_alignment;
     unsigned char data[];
 } myl_native_segment;
+/* The header a sweep writes into the first slot of a hole. `end` is the
+ * address just past the run, 16-aligned, so the word reads as an unmarked mark
+ * word to anything that inspects the slot; every other slot of the run keeps
+ * whatever its last occupant left, which is never marked either. */
+typedef struct {
+    unsigned char *end, *next;
+} myl_native_hole;
+/* A run of free slots one allocator consumes by bumping `cursor` a stride at
+ * a time until it reaches `limit`; both are NULL when the window is empty. */
+typedef struct {
+    unsigned char *cursor, *limit;
+} myl_native_window;
+/* One size class's allocation state. Storage comes from holes — first the
+ * `source` segment's, then each `available` segment's, then the never-used
+ * tail of the bump segment `current` or a fresh segment — and is consumed
+ * through two windows: generated code's inline window (in
+ * `myl_native_heap.inline_windows`, taken from `inline_segment`) and the
+ * runtime path's own `runtime` window. `runtime_fresh` says the runtime
+ * window is never-used, still zero-filled storage. */
+typedef struct {
+    myl_native_segment *current, *source, *available, *inline_segment;
+    myl_native_window runtime;
+    int runtime_fresh;
+} myl_native_class;
 typedef struct myl_native_drop_link {
     struct myl_native_drop_link *next;
     void *owner;
@@ -133,6 +200,38 @@ typedef struct {
     size_t cached, cached_bytes;
 } myl_native_arena_statistics;
 typedef struct myl_native_arena_chunk myl_native_arena_chunk;
+typedef struct myl_native_scan_plan myl_native_scan_plan;
+/* One growable array of object headers the collector owns. */
+typedef struct {
+    myl_native_object **items;
+    size_t length, capacity;
+} myl_native_object_stack;
+/* The sticky-mark generational state. After a collection every surviving
+ * object keeps its mark bit and is old; an allocation is young (unmarked). A
+ * minor collection marks only young objects: a reference to an old object is
+ * not followed, because an old object's references are already old — except
+ * for the two sets it rescans. `rescan` lists every old size-classed object
+ * whose descriptor is traced and not a `cell`, appended as each is marked and
+ * reset by a full collection: those may gain a young reference with no
+ * barrier (runtime collections, list storage); old oversized ones are found
+ * on the segment list instead.
+ * `remembered` lists the old `cell` bodies a store has reached since the last
+ * collection; the barrier clears such a body's mark bit, so a minor collection
+ * marks it and traces it like a young object. A full collection clears every
+ * mark first and reclaims old garbage too. */
+typedef struct {
+    myl_native_object_stack rescan, remembered;
+    /* Old-generation bytes (`old_bytes`) at which the next collection is a
+     * full one. */
+    size_t full_threshold;
+    /* Set when a set above could not grow or a collection was abandoned, so
+     * the next collection must be full to stay sound. */
+    int force_full;
+    size_t minor_collections, full_collections;
+    /* Tracing-heap bytes the last collection kept: the old generation,
+     * including garbage a minor collection cannot reclaim. */
+    size_t old_bytes;
+} myl_native_generations;
 typedef struct {
     /* Every size-classed slab the heap ever reserved; the sweep walks this list
      * of segments, so no object carries a link to its neighbour. */
@@ -181,12 +280,50 @@ typedef struct {
      * refused, so a partial mark can never be swept. */
     size_t pending_len, pending_capacity;
     int scratch_failed;
-    /* Bump segment and reclaimed-slot list per size class. A class's free list
-     * is threaded through reclaimed headers; `current` is the segment the bump
-     * pointer still has room in. */
-    myl_native_segment *current[MYL_NATIVE_CLASS_COUNT];
-    myl_native_object *free_lists[MYL_NATIVE_CLASS_COUNT];
+    /* Generated code's inline allocation windows, one per inline size class,
+     * at the frozen offset `MYL_NATIVE_HEAP_INLINE_OFFSET`. Every slot left in
+     * one is prepaid: already charged to `bytes`, `objects_live` and the
+     * collection trigger when `myl_native_heap_alloc_small` opened the window,
+     * so the inline path only bumps the cursor and writes the header. A
+     * collection empties every window and recounts what is live, which
+     * discharges the slots nobody took. The windows are empty whenever an arena
+     * is open, under `--gc-stress` and while an escape copy suspends
+     * collection, so every such allocation takes the runtime path. */
+    myl_native_window inline_windows[MYL_NATIVE_INLINE_CLASSES];
+    /* Generated code's arena window, at the frozen offset
+     * `MYL_NATIVE_HEAP_ARENA_OFFSET`: the free tail of the innermost open
+     * arena's current chunk, and the mark word of a one-element allocation at
+     * that depth. A class body constructed inside an arena is bumped out of it
+     * with no runtime call; the chunk is zero-filled, so its payload needs no
+     * clearing. The window is open only between arena allocations the runtime
+     * made at the innermost depth, and every runtime operation on arena chunks
+     * first folds its progress back into the chunk and closes it
+     * (`myl_native_arena_sync`). */
+    myl_native_window arena_window;
+    uintptr_t arena_mark;
+    myl_native_class classes[MYL_NATIVE_CLASS_COUNT];
+    myl_native_generations generations;
+    /* Tracing-heap objects charged to `objects_live`, so a collection that
+     * recounts them can correct that total without touching arena counts. */
+    size_t gc_objects;
+    /* The arena chunk `arena_window` belongs to, or NULL when it is closed. */
+    myl_native_arena_chunk *arena_window_chunk;
+    /* Size-classed segments are carved from aligned host mappings of
+     * `MYL_NATIVE_SEGMENT_POOL` segments: the unused rest of the newest one
+     * runs from `pool_next` to `pool_end`, and every mapping is listed in
+     * `pools` so destroying the heap unmaps it. */
+    unsigned char *pool_next, *pool_end;
+    void **pools;
+    size_t pool_count, pool_capacity;
+    /* The collector's cache of element descriptors flattened into their
+     * reference slots, allocated on first use; see native_heap.c. */
+    struct myl_native_scan_plan *scan_plans;
 } myl_native_heap;
+/* Frozen byte offsets of `inline_windows` and `arena_window`, read by generated
+ * inline allocation; src/native_heap.c asserts them and src/qbe_alloc.zig
+ * mirrors them. */
+#define MYL_NATIVE_HEAP_INLINE_OFFSET 1280
+#define MYL_NATIVE_HEAP_ARENA_OFFSET 1472
 /* Address space granted to a guest process on top of its managed byte budget:
  * program text, the C library's own arenas and the test harness that loads it.
  * A trivial native guest needs about 64 MiB of address space before it holds
@@ -247,7 +384,26 @@ void *myl_native_heap_alloc_block(myl_native_heap *heap, size_t prefix, size_t e
  * from the block — the payload itself and any pointer into its bytes — as dead
  * the moment it asks. Only a block nothing else points into may grow. */
 void *myl_native_heap_extend(myl_native_heap *heap, void *payload, size_t count);
+/* Run one full collection: every unreachable tracing-heap object, young or
+ * old, is reclaimed. */
 void myl_native_heap_collect(myl_native_heap *heap);
+/* Allocate one zeroed element of `element`, whose stride is in inline size
+ * class `class_index`, and open that class's inline window on the storage
+ * after it: prepaid slots for generated code to bump through. Collection and
+ * the budget refusal happen exactly where `myl_native_heap_alloc` would put
+ * them. Inside an arena, under `--gc-stress` and during an escape copy it is
+ * `myl_native_heap_alloc` and opens no window. The descriptor's class is
+ * checked against `class_index`, and a mismatch — a compiler defect — aborts
+ * the process rather than handing out a slot of the wrong stride. */
+void *myl_native_heap_alloc_small(myl_native_heap *heap, const myl_native_type *element, size_t class_index);
+/* Close every inline window, discharging its prepaid slots and giving them
+ * back to their segment as a hole, so `bytes` counts only allocations
+ * generated code received. */
+void myl_native_heap_settle(myl_native_heap *heap);
+/* The generational store barrier's slow half: an old `cell` body is about to
+ * receive a store, so clear its mark bit and remember it for the next minor
+ * collection. A body that is already young or remembered is left alone. */
+void myl_native_heap_remember(myl_native_heap *heap, void *payload);
 /* Allocate at an explicit arena depth so collection backing joins its owner
  * rather than the innermost open arena. */
 void *myl_native_heap_alloc_at(myl_native_heap *heap,
