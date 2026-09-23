@@ -1,0 +1,27 @@
+# bytes_scan_wrapping: bytes_scan with an unchecked accumulator.
+#
+# Identical to `bytes_scan.my` except that the two accumulating steps use the
+# prelude's `wrapping_add` instead of `+`. The kernel's values never overflow, so
+# the printed line is byte-identical to `bytes_scan.my`; the difference is that
+# the accumulator can no longer trap, which is what lets the optimizer vectorise
+# the reduction. This is the "checked arithmetic floor" evidence for the
+# performance roadmap: `+` is checked by design, and a guest that wants the
+# unchecked form chooses it at the operation.
+
+
+def main(out: Stream) -> int:
+    empty: list[int] = []
+    buffer = byte_buffer(empty)
+    piece = b"mylang micro benchmark kernel payload 0123456789 abcdefghijklmno"
+    for i in range(131072):
+        _ = buffer.append_range(piece, 0, 64)
+    data = bytes(buffer)
+    size = len(data)
+    count = 0
+    for pass_index in range(16):
+        count = wrapping_add(count, pass_index)
+        for i in range(size):
+            if data[i] == 109:
+                count = wrapping_add(count, 1)
+    out.print(count)
+    return 0

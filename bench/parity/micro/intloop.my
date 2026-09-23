@@ -1,0 +1,10 @@
+# intloop: checked integer arithmetic over a loop-carried dependency.
+# total = (total + i * 7) % 1000003 for i in 0..N
+
+
+def main(out: Stream) -> int:
+    total = 0
+    for i in range(30000000):
+        total = (total + i * 7) % 1000003
+    out.print(total)
+    return 0

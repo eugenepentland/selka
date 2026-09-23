@@ -1,0 +1,51 @@
+# fannkuch_redux: the benchmarks-game C algorithm over three small list[int]s.
+# Flips prefixes of every permutation of 0..n-1 in the incremental order the C
+# program generates; prints the alternating flip checksum and the maximum.
+
+
+def fannkuch(n: int) -> tuple[int, int]:
+    perm = [0 for _ in range(n)]
+    perm1 = list(range(n))
+    count = [0 for _ in range(n)]
+    max_flips = 0
+    checksum = 0
+    perm_count = 0
+    r = n
+    while True:
+        while r != 1:
+            count[r - 1] = r
+            r = r - 1
+        for i in range(n):
+            perm[i] = perm1[i]
+        flips = 0
+        k = perm[0]
+        while k != 0:
+            k2 = shift_right(k + 1, 1)
+            for i in range(k2):
+                temp = perm[i]
+                perm[i] = perm[k - i]
+                perm[k - i] = temp
+            flips = flips + 1
+            k = perm[0]
+        max_flips = max(max_flips, flips)
+        checksum = checksum + (flips if perm_count % 2 == 0 else -flips)
+        while True:
+            if r == n:
+                return checksum, max_flips
+            perm0 = perm1[0]
+            for i in range(r):
+                perm1[i] = perm1[i + 1]
+            perm1[r] = perm0
+            count[r] = count[r] - 1
+            if count[r] > 0:
+                break
+            r = r + 1
+        perm_count = perm_count + 1
+
+
+def main(out: Stream) -> int:
+    n = 10
+    checksum, max_flips = fannkuch(n)
+    out.print(checksum)
+    out.print(f"Pfannkuchen({n}) = {max_flips}")
+    return 0

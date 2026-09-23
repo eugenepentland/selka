@@ -1,0 +1,39 @@
+# knucleotide: every k-letter substring of a generated DNA sequence counted in a
+# dict[str, int] keyed by slices of one str (SUITE.md section 6).
+
+
+record Entry:
+    key: str
+    count: int
+
+
+def generate(length: int) -> str:
+    bases = "ACGT"
+    parts: list[str] = []
+    seed = 42
+    for _ in range(length):
+        seed = (seed * 3877 + 29573) % 139968
+        parts.append(bases[seed * 4 // 139968])
+    return "".join(parts)
+
+
+def frequencies(seq: str, k: int) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for i in range(len(seq) - k + 1):
+        key = seq[i:i + k]
+        counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
+def main(out: Stream) -> int:
+    seq = generate(1000000)
+    for k in [1, 2]:
+        counts = frequencies(seq, k)
+        # Two stable passes: key ascending, then count descending.
+        by_key = [Entry(key=key, count=counts[key]) for key in sorted(list(counts.keys()))]
+        for entry in sorted(by_key, key=lambda entry: -entry.count):
+            out.print(entry.key, entry.count)
+    for key in ["GGT", "GGTA", "GGTATT", "GGTATTTTAATT", "GGTATTTTAATTTATAGT"]:
+        counts = frequencies(seq, len(key))
+        out.print(f"{counts.get(key, 0)}\t{key}")
+    return 0

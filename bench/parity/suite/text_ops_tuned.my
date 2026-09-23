@@ -1,0 +1,93 @@
+# text_ops_tuned: the same results as text_ops.my, written against bytes and
+# byte_buffer so that no per-line or per-field object is ever allocated. What
+# changed, and why:
+# - The text is assembled in one byte_buffer with append_range/append_int/
+#   append_byte (no f-string, no strings.repeat Result, no list of lines, no
+#   join) and published once with bytes(buffer), which copies nothing.
+# - Lines and fields are located with find_any(set, start) and parsed in place
+#   with parse_int_range, instead of text.split("\n") and line.split(",")
+#   materializing 200,000 line strings and 600,000 field strings.
+# - The rewrite appends the unchanged runs between matches into a second
+#   byte_buffer (bytes has no replace), and ",1" is counted with the same scan.
+# The text is ASCII, so byte lengths equal the str lengths text_ops.my prints.
+
+
+def build(lines: int) -> bytes:
+    empty: list[int] = []
+    buffer = byte_buffer(empty)
+    for i in range(lines):
+        if i > 0:
+            _ = buffer.append_byte(10)
+        _ = buffer.append_range(b"item", 0, 4)
+        _ = buffer.append_int(i)
+        _ = buffer.append_byte(44)
+        _ = buffer.append_int((i * 7919) % 100003)
+        _ = buffer.append_byte(44)
+        for _ in range(i % 7):
+            _ = buffer.append_byte(120)
+    return bytes(buffer)
+
+
+# Every occurrence of "item" replaced by "it", scanning for the first octet and
+# confirming the rest in place.
+def rewrite(text: bytes) -> bytes:
+    empty: list[int] = []
+    buffer = byte_buffer(empty)
+    _ = buffer.reserve(len(text))
+    at = 0
+    while True:
+        hit = text.find_any(b"i", at)
+        if hit < 0:
+            _ = buffer.append_range(text, at, len(text))
+            return bytes(buffer)
+        if hit + 4 <= len(text) and text[hit + 1] == 116 and text[hit + 2] == 101 and text[hit + 3] == 109:
+            _ = buffer.append_range(text, at, hit)
+            _ = buffer.append_range(b"it", 0, 2)
+            at = hit + 4
+        else:
+            _ = buffer.append_range(text, at, hit + 1)
+            at = hit + 1
+
+
+# Non-overlapping occurrences of ",1".
+def count_comma_one(text: bytes) -> int:
+    found = 0
+    at = 0
+    while True:
+        hit = text.find_any(b",", at)
+        if hit < 0:
+            return found
+        if hit + 1 < len(text) and text[hit + 1] == 49:
+            found += 1
+            at = hit + 2
+        else:
+            at = hit + 1
+
+
+def main(out: Stream) -> int:
+    text = build(200000)
+    total = 0
+    widths = 0
+    sevens = 0
+    start = 0
+    while True:
+        end = text.find_any(b"\n", start)
+        if end < 0:
+            end = len(text)
+        first = text.find_any(b",", start)
+        second = text.find_any(b",", first + 1)
+        match text.parse_int_range(first + 1, second):
+            case Some(value):
+                total += value
+            case None:
+                return 1
+        widths += end - (second + 1)
+        if text[first - 1] == 55:
+            sevens += 1
+        if end == len(text):
+            break
+        start = end + 1
+    rewritten = rewrite(text)
+    out.print(f"{total} {widths} {sevens}")
+    out.print(f"{len(text)} {len(rewritten)} {count_comma_one(text)}")
+    return 0
