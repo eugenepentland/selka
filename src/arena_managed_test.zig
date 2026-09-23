@@ -642,3 +642,47 @@ test "ARENA-MANAGED-11 the header barrier traps a younger store after the arena 
         \\    return kept
     ));
 }
+
+const stash_text =
+    \\def stash(outer: mut list[str], value: str) -> None:
+    \\    outer.append(value)
+    \\
+    \\def text() -> str:
+    \\    return "".join(["row " + str(i) + "," for i in range(40)])
+    \\
+;
+
+/// The trap code of storing `piece`, a piece of an outer text made inside an
+/// arena, into an outer list through a helper, under collection stress.
+fn storeOutward(piece: []const u8) ![]const u8 {
+    const source = try std.fmt.allocPrint(t.allocator, stash_text ++
+        \\def main() -> int:
+        \\    keeper: list[str] = []
+        \\    source = text()
+        \\    with arena() as scratch:
+        \\        stash(mut keeper, {s})
+        \\    return len(keeper)
+    , .{piece});
+    defer t.allocator.free(source);
+    return (try run(source, true)).trap.code;
+}
+
+// spec-case: TEXT-VIEW-2
+test "TEXT-VIEW-2 a piece made inside an arena traps when a helper stores it outward, as a copy did" {
+    // A long slice of an outer text is a view allocated in the arena; the whole
+    // outer text answered as a piece inside the arena is one too, and a short
+    // split piece is an arena copy.
+    try t.expectEqualStrings("R_ARENA_ESCAPE", try storeOutward("source[4:200]"));
+    try t.expectEqualStrings("R_ARENA_ESCAPE", try storeOutward("source[0:len(source)]"));
+    try t.expectEqualStrings("R_ARENA_ESCAPE", try storeOutward("source.strip()"));
+    try t.expectEqualStrings("R_ARENA_ESCAPE", try storeOutward("source.split(\",\")[3]"));
+    // `escape` hands the same pieces out as text of their own octets.
+    try t.expectEqual(@as(i64, 196 + 270 + 5), try value(stash_text ++
+        \\def main() -> int:
+        \\    keeper: list[str] = []
+        \\    source = text()
+        \\    with arena() as scratch:
+        \\        keeper = scratch.escape([source[4:200], source.strip(), source.split(",")[3]])
+        \\    return len(keeper[0]) + len(keeper[1]) + len(keeper[2])
+    ));
+}
