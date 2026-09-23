@@ -99,8 +99,8 @@ const JsonDetail = struct {
     operation: []const u8,
     index: ?i64 = null,
     length: ?u64 = null,
-    left: ?i64 = null,
-    right: ?i64 = null,
+    left: ?i128 = null,
+    right: ?i128 = null,
     width: ?u64 = null,
 };
 
@@ -135,8 +135,8 @@ fn renderJson(context: fs.Context, text: []const u8) Error!?[]u8 {
         .operation = value.operation.name(),
         .index = if (value.has(trap_detail.present_index)) value.values.index else null,
         .length = if (value.has(trap_detail.present_length)) value.values.length else null,
-        .left = if (value.has(trap_detail.present_left)) value.values.left else null,
-        .right = if (value.has(trap_detail.present_right)) value.values.right else null,
+        .left = if (value.has(trap_detail.present_left)) value.operand(value.values.left) else null,
+        .right = if (value.has(trap_detail.present_right)) value.operand(value.values.right) else null,
         .width = if (value.has(trap_detail.present_width)) value.values.width else null,
     } else null;
     const record = try std.json.Stringify.valueAlloc(context.allocator, .{
