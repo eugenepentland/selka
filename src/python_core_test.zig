@@ -219,6 +219,43 @@ test "an explicit narrow callback ceiling still rejects a wider function value" 
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings("E_TYPE", compilation.diagnostics.items[0].code);
 }
+// spec-case: CALLBACK-SLOT-1
+test "an unannotated function whose body exceeds the slot it fills is rejected at the value" {
+    // A direct call fixes the slot up front; `run` is noio, so accepting the
+    // value would let `output` through a callback its bound never sees.
+    try expectMessage(
+        \\def key(out: Stream, x: int) -> int:
+        \\    out.print(x)
+        \\    return x
+        \\
+        \\
+        \\def run(out: Stream, f: def(Stream, int) -> int effects(), x: int) -> int noio:
+        \\    return f(out, x)
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    return run(out, key, 1)
+    , "E_EFFECT_BOUND", "`key` fills a callback slot of type `def(stream_cap, int) -> int effects()`, but its body has effect `output`: key; keep the body within the slot's ceiling, or widen the callback type's `effects(...)`");
+    // A generic callee's slot is concrete only after inference; the same rule
+    // holds there, with the witness path through the helper the body calls.
+    try expectMessage(
+        \\def show(out: Stream, x: int) -> int:
+        \\    out.print(x)
+        \\    return x
+        \\
+        \\
+        \\def key(out: Stream, x: int) -> int:
+        \\    return show(out, x)
+        \\
+        \\
+        \\def run[T: copy + storable](out: Stream, f: def(Stream, T) -> int effects(), x: T) -> int:
+        \\    return f(out, x)
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    return run(out, key, 1)
+    , "E_EFFECT_BOUND", "`key` fills a callback slot of type `def(stream_cap, int) -> int effects()`, but its body has effect `output`: key -> show; keep the body within the slot's ceiling, or widen the callback type's `effects(...)`");
+}
 // spec: DEAD-RECORD-WRITE-1
 test "dead record writes reject loop and parameter copies but not fresh locals" {
     var loop = try language.Compilation.init(t.allocator, "dead-loop.my",

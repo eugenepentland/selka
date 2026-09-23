@@ -241,6 +241,27 @@ def main(out: Stream) -> int:
 it been written `noio`, or with an empty `effects()`, the declaration would be
 rejected before the program ran.
 
+A function declared without an effect clause takes the ceiling of whatever slot
+it fills — a direct call's parameter, a generic call's parameter such as
+`sort.sort_by_key`'s key, or a sort key — so it needs no `effects()` of its own to
+be passed where one is expected. Its body is then held to that ceiling: an
+unannotated function whose body can print, touch the filesystem or reach any other
+capability effect the slot forbids is rejected with `E_EFFECT_BOUND` at the place
+the value is passed. Allocation is the exception; like every signature, the slot
+permits it.
+
+```mylang
+# doc: expect 3
+import sort
+
+def negate(value: int) -> int:
+    return 0 - value
+
+def main() -> int:
+    ordered = sort.sort_by_key([1, 3, 2], negate)
+    return ordered[0]
+```
+
 ## Mutating callbacks
 
 A callable signature declares the `mut` parameters it writes just as a declared

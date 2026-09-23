@@ -3816,6 +3816,26 @@ const Checker = struct {
         out.ty = self.catalog.records[record_type.recordIndex()].fields[field_index].ty;
         out.data = .{ .field = .{ .base = base, .index = field_index } };
     }
+    /// CALLBACK-SLOT-1: a generic callee's callback parameter is only concrete
+    /// once its type arguments are inferred from the checked arguments, so an
+    /// unannotated function value passed there was typed before its slot was
+    /// known and carries the unbounded ceiling. Give it the slot's type, exactly
+    /// as `functionValue` does for a slot known up front; the effect pass then
+    /// holds the function's inferred body to that ceiling.
+    fn adoptSlotCeiling(self: *Checker, value: typed.NodeId, expected: typed.Type) void {
+        const node = &self.nodes.items[@backingInt(value)];
+        if (node.ty == expected) return;
+        const target = switch (node.data) {
+            .function_value => |id| id,
+            else => return,
+        };
+        if (self.syntaxFunction(target).policy.effect_bound != null) return;
+        const actual = callables.signature(node.ty, self.catalog.records) orelse return;
+        const slot = callables.signature(expected, self.catalog.records) orelse return;
+        if (actual.return_type != slot.return_type or !std.mem.eql(typed.Type, actual.parameters, slot.parameters)) return;
+        if (!callables.positionSubset(actual.mutates, slot.mutates)) return;
+        node.ty = expected;
+    }
     fn functionValue(self: *Checker, name: source.Span, out: *typed.Node) Error!bool {
         const key = if (self.catalog.module_names) |names| module: {
             if (!try names.topLevel(name) and std.mem.indexOf(u8, self.src.text(name), "::") == null) return false;
@@ -4262,7 +4282,9 @@ const Checker = struct {
         for (call.arguments, signature.signature.parameters) |arg, parameter| {
             const argument = self.syntax.nodes.items[@backingInt(arg)];
             const value = self.resolved[@backingInt(arg)].?;
-            try self.require(self.nodes.items[@backingInt(value)].ty, try self.functionType(function, parameter.ty), argument.span);
+            const expected = try self.functionType(function, parameter.ty);
+            self.adoptSlotCeiling(value, expected);
+            try self.require(self.nodes.items[@backingInt(value)].ty, expected, argument.span);
             try arguments.append(self.allocator, value);
         }
         out.ty = try self.functionType(function, signature.signature.return_type);
