@@ -2489,6 +2489,171 @@ test "CLI test discovers a test_ function without an explicit export" {
     try testing.expect(std.mem.indexOf(u8, result.stdout, "1 passed") != null);
 }
 
+/// A guest test file whose one test passes.
+const scratch_passing_program =
+    \\module main
+    \\
+    \\def test_add() -> bool:
+    \\    return 1 + 1 == 2
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+/// A guest test file the checker rejects before any test is built.
+const scratch_rejected_program =
+    \\module main
+    \\
+    \\def test_add() -> bool:
+    \\    return 1 + "two"
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+/// Paths of one scratch-staging fixture: the entry, its private cache, the
+/// compiler-child trace, and the directory offered as `TMPDIR`.
+const ScratchFixture = struct { root: []const u8, entry: []const u8, cache: []const u8, trace: []const u8, scratch: []const u8 };
+/// Write `program` as `main.my` and create an empty scratch directory beside it.
+fn scratchFixture(temporary: *testing.TmpDir, program: []const u8) !ScratchFixture {
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = program });
+    try temporary.dir.createDirPath(testing.io, "scratch");
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    return .{
+        .root = try testing.allocator.dupe(u8, root),
+        .entry = try std.fs.path.join(testing.allocator, &.{ root, "main.my" }),
+        .cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" }),
+        .trace = try std.fs.path.join(testing.allocator, &.{ root, "trace.log" }),
+        .scratch = try std.fs.path.join(testing.allocator, &.{ root, "scratch" }),
+    };
+}
+fn freeScratchFixture(fixture: ScratchFixture) void {
+    for ([_][]const u8{ fixture.root, fixture.entry, fixture.cache, fixture.trace, fixture.scratch }) |path| testing.allocator.free(path);
+}
+/// Run `mylang test` on the fixture with a private environment: `TMPDIR` is the
+/// fixture's scratch directory when `offer_scratch` is set and absent otherwise.
+fn scratchRun(fixture: ScratchFixture, offer_scratch: bool) !std.process.RunResult {
+    var environment: std.process.Environ.Map = .init(testing.allocator);
+    defer environment.deinit();
+    try environment.put("HOME", fixture.root);
+    try environment.put("MYLANG_TEST_TRACE", fixture.trace);
+    if (offer_scratch) try environment.put("TMPDIR", fixture.scratch);
+    try forwardZigCache(&environment);
+    const cache_arg = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{fixture.cache});
+    defer testing.allocator.free(cache_arg);
+    return spawnWithEnv(&.{ compiler_path, "test", fixture.entry, cache_arg, tools[0], tools[1] }, &environment);
+}
+/// The compiler-child trace the last run wrote, or empty when it spawned none.
+fn scratchTrace(fixture: ScratchFixture) ![]u8 {
+    return std.Io.Dir.cwd().readFileAlloc(testing.io, fixture.trace, testing.allocator, .limited(1 << 20)) catch testing.allocator.dupe(u8, "");
+}
+/// Names directly under `directory`, sorted, joined by `,`.
+fn scratchEntries(directory: []const u8) ![]u8 {
+    var names: std.ArrayList([]const u8) = .empty;
+    defer {
+        for (names.items) |name| testing.allocator.free(name);
+        names.deinit(testing.allocator);
+    }
+    var opened = try std.Io.Dir.cwd().openDir(testing.io, directory, .{ .iterate = true });
+    defer opened.close(testing.io);
+    var iterator = opened.iterate();
+    while (try iterator.next(testing.io)) |entry| try names.append(testing.allocator, try testing.allocator.dupe(u8, entry.name));
+    std.mem.sort([]const u8, names.items, {}, struct {
+        fn less(_: void, left: []const u8, right: []const u8) bool {
+            return std.mem.lessThan(u8, left, right);
+        }
+    }.less);
+    return std.mem.join(testing.allocator, ",", names.items);
+}
+
+// spec: NATIVE-SCRATCH-ROOT-2
+test "mylang test stages under TMPDIR, never under /tmp, and removes its staging after a passing run" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const fixture = try scratchFixture(&temporary, scratch_passing_program);
+    defer freeScratchFixture(fixture);
+    const result = try scratchRun(fixture, true);
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "1 passed") != null);
+    const trace = try scratchTrace(fixture);
+    defer testing.allocator.free(trace);
+    const staged = try std.fs.path.join(testing.allocator, &.{ fixture.scratch, ".pending", "" });
+    defer testing.allocator.free(staged);
+    // Every compiler child read its snapshot from beneath TMPDIR's staging folder.
+    try testing.expect(std.mem.indexOf(u8, trace, staged) != null);
+    try testing.expect(std.mem.indexOf(u8, trace, "/tmp/.pending/") == null);
+    // The run removed its private staging and the then-empty shared folder.
+    const entries = try scratchEntries(fixture.scratch);
+    defer testing.allocator.free(entries);
+    try testing.expectEqualStrings("", entries);
+}
+
+// spec-case: NATIVE-SCRATCH-ROOT-2
+test "mylang test leaves no staging behind when the project is rejected before any test builds" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const fixture = try scratchFixture(&temporary, scratch_rejected_program);
+    defer freeScratchFixture(fixture);
+    const result = try scratchRun(fixture, true);
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, result.term);
+    const trace = try scratchTrace(fixture);
+    defer testing.allocator.free(trace);
+    const staged = try std.fs.path.join(testing.allocator, &.{ fixture.scratch, ".pending", "" });
+    defer testing.allocator.free(staged);
+    // The rejection came from a child that did stage under TMPDIR ...
+    try testing.expect(std.mem.indexOf(u8, trace, staged) != null);
+    // ... and the failing run still removed every staging directory it made.
+    const entries = try scratchEntries(fixture.scratch);
+    defer testing.allocator.free(entries);
+    try testing.expectEqualStrings("", entries);
+}
+
+// spec-case: NATIVE-SCRATCH-ROOT-2
+test "mylang test with TMPDIR unset falls back to staging under /tmp" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const fixture = try scratchFixture(&temporary, scratch_passing_program);
+    defer freeScratchFixture(fixture);
+    const result = try scratchRun(fixture, false);
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    const trace = try scratchTrace(fixture);
+    defer testing.allocator.free(trace);
+    try testing.expect(std.mem.indexOf(u8, trace, " /tmp/.pending/") != null);
+    // The offered-but-unused scratch directory stays untouched.
+    const entries = try scratchEntries(fixture.scratch);
+    defer testing.allocator.free(entries);
+    try testing.expectEqualStrings("", entries);
+}
+
+// spec-case: NATIVE-SCRATCH-OWNER-1
+test "mylang test reclaims a killed run's marked staging and keeps unmarked scratch" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const fixture = try scratchFixture(&temporary, scratch_passing_program);
+    defer freeScratchFixture(fixture);
+    // What a SIGKILLed run leaves: its owned directory, marker unlocked because
+    // the kernel dropped the dead holder's lock, and its half-written snapshot.
+    try temporary.dir.createDirPath(testing.io, "scratch/.pending/0123456789abcdef0123456789abcdef/.pending/snapshot");
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "scratch/.pending/0123456789abcdef0123456789abcdef/.owner", .data = "" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "scratch/.pending/0123456789abcdef0123456789abcdef/.pending/snapshot/main.my", .data = "module main\n" });
+    // Scratch without a marker is not provably this runner's, so it survives.
+    try temporary.dir.createDirPath(testing.io, "scratch/.pending/foreign");
+    const result = try scratchRun(fixture, true);
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    const pending = try std.fs.path.join(testing.allocator, &.{ fixture.scratch, ".pending" });
+    defer testing.allocator.free(pending);
+    const entries = try scratchEntries(pending);
+    defer testing.allocator.free(entries);
+    try testing.expectEqualStrings("foreign", entries);
+}
+
 // spec-case: NATIVE-TEST-1
 test "CLI test ignores unexported test_ helpers that cannot default" {
     var temporary = testing.tmpDir(.{});

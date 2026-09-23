@@ -115,6 +115,15 @@ Each run materializes its private source snapshot under `$TMPDIR/.pending/` when
 whose `/tmp` is a small or quota-bound tmpfs, point `TMPDIR` at disk; otherwise
 a full `/tmp` fails every test with `host failure: DiskQuota`.
 
+A run removes that staging on every exit it controls — a pass, a failing test,
+a rejected project, a host error. A run killed outright (`SIGKILL`, a crash)
+cannot, so each run's staging directory carries a `.owner` marker it holds an
+exclusive `flock` on for as long as it lives. The next run reclaims every
+`.pending/` sibling whose marker it can lock, because the kernel releases a
+dead process's locks; directories without a marker (another tool's, or an
+older compiler's) and markers a live run still holds are never touched. The
+same applies to the report workspace a directory run keeps under its cache.
+
 On a corpus of 100 small programs with 200 tests, a cold run takes about 7
 seconds, an unchanged rerun about 0.6 seconds, and a run after editing one
 program about 0.8 seconds — re-executing only the two tests that program owns.

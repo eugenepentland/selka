@@ -140,7 +140,7 @@ pub fn run(context: fs.Context, opts: options.Options) Error!u8 {
     const paths = selection.entries;
     const cache = try context.absolute(opts.cache);
     try context.mkdir(cache);
-    const workspace = try context.temporary(cache);
+    const workspace = try context.owned(cache);
     defer context.remove(workspace);
     const outcomes = try a.alloc(Outcome, paths.len);
     const workers = width(context, opts, paths.len);

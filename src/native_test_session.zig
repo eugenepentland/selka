@@ -85,7 +85,9 @@ pub const Session = struct {
         // Capture before creating cache files beneath a test source directory.
         const source = try snapshot.captureExcluding(context, opts.source, directory);
         try context.mkdir(directory);
-        const temporary = try context.temporary(try context.absolute(context.scratchRoot()));
+        // Owned scratch: a killed or crashed run cannot remove its snapshot, so
+        // the next run's `owned` reclaims it once its owner marker is unlocked.
+        const temporary = try context.owned(try context.absolute(context.scratchRoot()));
         errdefer context.remove(temporary);
         return .{
             .context = context,

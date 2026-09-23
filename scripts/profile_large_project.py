@@ -44,6 +44,7 @@ import selectors
 import shutil
 import signal
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -1736,7 +1737,7 @@ def main(argv=None):
     if args.only:
         workloads = [item for item in workloads if args.only in item["label"]]
 
-    scratch = Path(args.workdir) if args.workdir else Path(os.environ.get("MYLANG_S1_WORKDIR", "/tmp/mylang-s1-work"))
+    scratch = Path(args.workdir) if args.workdir else Path(os.environ.get("MYLANG_S1_WORKDIR") or Path(tempfile.gettempdir()) / "mylang-s1-work")
     scratch.mkdir(parents=True, exist_ok=True)
     compiler = str(args.compiler.resolve())
 
