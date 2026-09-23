@@ -712,9 +712,8 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, request: Requ
 /// instantiated parameter), so a call through that slot is charged only that
 /// ceiling. Its inferred body set is what keeps that honest: every function
 /// value whose target declares no clause of its own must fit the ceiling its
-/// value type carries, or a capability effect (`output`, `filesystem`, ...)
-/// would reach a caller through a callback its bound never sees. Reports each
-/// violation and returns whether any.
+/// value type carries, or an effect would reach a caller through a callback
+/// its bound never sees. Reports each violation and returns whether any.
 fn checkSlotCeilings(allocator: std.mem.Allocator, ctx: BoundContext, sink: *diagnostic.Sink) diagnostic.Error!bool {
     const program = ctx.program;
     var violated = false;
@@ -727,11 +726,10 @@ fn checkSlotCeilings(allocator: std.mem.Allocator, ctx: BoundContext, sink: *dia
         const function = program.functions[target];
         if (function.policy.effect_bound != null) continue;
         const contract = callables.signature(node.ty, program.records) orelse return error.InternalError;
-        // `managed_allocation` is exempt: every derived ceiling permits it, and a
-        // sort key that builds a `str` (LIST-SORT-KEY-3) fills the `effects()`
-        // key slot by design (CALLBACK-EFFECTS-1). `mutation` belongs to the
-        // mutation analysis.
-        const forbidden = ctx.graph.states[target].mask & ~contract.effects & ~sets.bit(.mutation) & ~sets.bit(.managed_allocation);
+        // `mutation` belongs to the mutation analysis. A sort key that builds a
+        // `str` (LIST-SORT-KEY-3) fits because the key slot itself admits
+        // `managed_allocation` (LAMBDA-KEY-INFER-1).
+        const forbidden = ctx.graph.states[target].mask & ~contract.effects & ~sets.bit(.mutation);
         if (forbidden == 0) continue;
         const effect = for (std.meta.tags(sets.Effect)) |effect| {
             if (forbidden & sets.bit(effect) != 0) break effect;

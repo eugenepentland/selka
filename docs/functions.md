@@ -246,9 +246,9 @@ it fills — a direct call's parameter, a generic call's parameter such as
 `sort.sort_by_key`'s key, or a sort key — so it needs no `effects()` of its own to
 be passed where one is expected. Its body is then held to that ceiling: an
 unannotated function whose body can print, touch the filesystem or reach any other
-capability effect the slot forbids is rejected with `E_EFFECT_BOUND` at the place
-the value is passed. Allocation is the exception; like every signature, the slot
-permits it.
+effect the slot forbids — including allocation for an `effects()` slot — is rejected
+with `E_EFFECT_BOUND` at the place the value is passed. A sort key may allocate: its
+slot is `def(T) -> K effects(managed_allocation)`.
 
 ```mylang
 # doc: expect 3

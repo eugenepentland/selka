@@ -268,6 +268,10 @@ const variant_calls = @import("variant_calls.zig");
 const truncating = @import("truncating_math.zig");
 
 const LambdaCapture = struct { name: []const u8 };
+/// The `lambda_types` entry of a sort-key lambda whose key type could not be
+/// inferred (LAMBDA-KEY-INFER-1). No callback type is `unit`, so the marker
+/// never collides with a real slot; its `E_SORT_KEY` already names the lambda.
+const uninferred_lambda: typed.Type = .unit;
 
 const Checker = struct {
     allocator: std.mem.Allocator,
@@ -439,6 +443,7 @@ const Checker = struct {
             if (self.inGenericBody(lambda.span)) return self.sink.fail("E_GENERIC_BODY_UNSUPPORTED", lambda.span, @import("generic_bodies.zig").lambda_in_generic_body);
             return self.sink.fail(lambda_context_code, lambda.span, "lambda requires an expected callback type");
         };
+        if (lambda_type == uninferred_lambda) return error.SourceError;
         const contract = callables.signature(lambda_type, self.catalog.records) orelse return error.InternalError;
         self.current_function = null;
         self.current_lambda = index;
@@ -1509,10 +1514,14 @@ const Checker = struct {
         return self.sortKeywords(.{ .name = call.name, .arguments = call.arguments, .names = call.argument_names, .positional = 1, .signature = sorted_signature });
     }
     /// Hint the operands of one keyword sort over a list of `element`:
-    /// `reverse` is a `bool`, and a lambda key is `def(element) -> K effects()`
-    /// with `K` read off its body (`int` when the body does not say). The slot
-    /// has exactly the type that spelling interns, return-origin bound
+    /// `reverse` is a `bool`, and a lambda key is
+    /// `def(element) -> K effects(managed_allocation)` with `K` read off its
+    /// body or, failing that, its body's own type (LAMBDA-KEY-INFER-1). The
+    /// slot has exactly the type that spelling interns, return-origin bound
     /// included, so it is one type with every other callback of that signature.
+    /// It admits allocation because its one call site is the keyed sort the
+    /// enclosing function already charges `managed_allocation` for, so a key
+    /// that builds a `str` is exact rather than exempt (LAMBDA-KEY-INFER-1).
     fn hintSortKeywords(self: *Checker, keywords: SortKeywords, element: typed.Type) Error!void {
         if (keywords.reverse) |flag| try self.hint(flag, .bool);
         const key = keywords.key orelse return;
@@ -1520,11 +1529,18 @@ const Checker = struct {
         if (node.data != .name) return;
         const result = if (self.lambdaIndex(node.span)) |index| lambda: {
             const lambda = self.syntax.lambdas[index];
-            const inferred = if (lambda.parameters.len == 1) try self.lambdaKeyType(lambda.body, self.src.text(lambda.parameters[0]), element) else null;
-            break :lambda inferred orelse .i64;
+            // Any other arity is the lambda's own E_ARITY against the one-element slot.
+            if (lambda.parameters.len != 1) break :lambda .i64;
+            const read = try self.lambdaKeyType(lambda.body, self.src.text(lambda.parameters[0]), element);
+            break :lambda read orelse self.inferLambdaKey(lambda, element) catch |err| {
+                // Its E_SORT_KEY stands for the lambda too: its own check adds nothing.
+                if (err == error.SourceError) self.lambda_types[index] = uninferred_lambda;
+                return err;
+            };
         } else try self.namedKeyResult(node.span) orelse return;
         const parameters = try self.allocator.dupe(typed.Type, &.{element});
-        const callback = try callables.intern(self.allocator, &self.catalog, .{ .parameters = parameters, .return_type = result, .effects = 0, .mutates = &.{}, .return_origin = .unknown }, node.span, self.sink);
+        const slot: typed.Callable = .{ .parameters = parameters, .return_type = result, .effects = effect_set.bit(.managed_allocation), .mutates = &.{}, .return_origin = .unknown };
+        const callback = try callables.intern(self.allocator, &self.catalog, slot, node.span, self.sink);
         try self.hint(key, callback);
     }
     /// The declared result of a top-level function named as a sort key, so an
@@ -1543,6 +1559,57 @@ const Checker = struct {
         if (function.policy.owner != null or function.signature.type_parameters.len != 0) return null;
         const result = try self.catalog.resolve(self.src, function.signature.return_type, self.sink);
         return result;
+    }
+    /// LAMBDA-KEY-INFER-1: the key type of a one-parameter sort-key lambda whose
+    /// body is not a shape `lambdaKeyType` reads is the body's ordinary type. The
+    /// body is checked once here with its parameter bound to the list's element,
+    /// and every trace of that trial — typed nodes, statements, locals, resolved
+    /// entries, the parameter binding, option facts, ownership state and
+    /// diagnostics — is undone, so the lambda is checked for real, against the
+    /// slot this type fixes, exactly once later. A body that does not type on
+    /// its own is `E_SORT_KEY` quoting why, never a guessed `int`.
+    fn inferLambdaKey(self: *Checker, lambda: ast.Lambda, element: typed.Type) Error!typed.Type {
+        const saved_nodes = self.nodes.items.len;
+        const saved_statements = self.statements.items.len;
+        const saved_locals = self.locals.items.len;
+        const saved_resolved = self.resolved_nodes.items.len;
+        const saved_diagnostics = self.sink.items.items.len;
+        const pending = try self.pendingState(saved_locals);
+        const facts = try self.option_facts.snapshot(self.allocator);
+        const parameter = lambda.parameters[0];
+        const name = self.src.text(parameter);
+        const shadowed = self.active.get(name);
+        try self.locals.append(self.allocator, .{
+            .name = name,
+            .declaration = parameter,
+            .ty = element,
+            .mutable = false,
+            .ownership = .{ .initialized = true, .transfer_available = self.transfers(element) },
+        });
+        try self.active.put(self.allocator, name, @fromBackingInt(saved_locals));
+        const outcome = self.expression(lambda.body);
+        const key_type: ?typed.Type = if (outcome) |value| self.nodes.items[@backingInt(value)].ty else |err| switch (err) {
+            error.SourceError => null,
+            else => |failure| return failure,
+        };
+        for (self.resolved_nodes.items[saved_resolved..]) |index| self.resolved[index] = null;
+        self.resolved_nodes.shrinkRetainingCapacity(saved_resolved);
+        self.nodes.shrinkRetainingCapacity(saved_nodes);
+        self.statements.shrinkRetainingCapacity(saved_statements);
+        self.locals.shrinkRetainingCapacity(saved_locals);
+        if (shadowed) |slot| try self.active.put(self.allocator, name, slot) else _ = self.active.remove(name);
+        self.restorePending(pending);
+        self.option_facts.restore(facts);
+        var reason: ?diagnostic.Diagnostic = null;
+        for (self.sink.items.items[saved_diagnostics..]) |item| if (item.severity == .err) {
+            reason = item;
+            break;
+        };
+        self.sink.items.shrinkRetainingCapacity(saved_diagnostics);
+        if (key_type) |found| return found;
+        const why = reason orelse return error.InternalError;
+        const message = try std.fmt.allocPrint(self.allocator, "this lambda's key type cannot be inferred from its body ({s}: {s}); write a top-level key function with a declared result and pass it by name", .{ why.code, why.message });
+        return self.sink.fail("E_SORT_KEY", lambda.span, message);
     }
     /// The key type a sort-key lambda's body returns, read off the body when it
     /// is the parameter itself, a field path from it, a negation, arithmetic or

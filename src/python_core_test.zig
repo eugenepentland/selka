@@ -255,6 +255,20 @@ test "an unannotated function whose body exceeds the slot it fills is rejected a
         \\def main(out: Stream) -> int:
         \\    return run(out, key, 1)
     , "E_EFFECT_BOUND", "`key` fills a callback slot of type `def(stream_cap, int) -> int effects()`, but its body has effect `output`: key -> show; keep the body within the slot's ceiling, or widen the callback type's `effects(...)`");
+    // Allocation is held to the slot too: `run` is noalloc and calls through
+    // an `effects()` slot, so an allocating helper cannot fill it.
+    try expectMessage(
+        \\def key(x: int) -> int:
+        \\    return len(str(x))
+        \\
+        \\
+        \\def run(f: def(int) -> int effects(), x: int) -> int noalloc:
+        \\    return f(x)
+        \\
+        \\
+        \\def main() -> int:
+        \\    return run(key, 123)
+    , "E_EFFECT_BOUND", "`key` fills a callback slot of type `def(int) -> int effects()`, but its body has effect `managed_allocation`: key; keep the body within the slot's ceiling, or widen the callback type's `effects(...)`");
 }
 // spec: DEAD-RECORD-WRITE-1
 test "dead record writes reject loop and parameter copies but not fresh locals" {
