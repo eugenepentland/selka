@@ -19,12 +19,15 @@ comparison would be vacuous.
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import Executor, ThreadPoolExecutor
 import json
+import os
 import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from typing import Callable
 
 ROOT = Path(__file__).resolve().parent.parent
 LLVM_QBE = ROOT / "experiments" / "llvm-backend" / "qbe_llvm.py"
@@ -241,62 +244,87 @@ def with_backend(argv: list[str], qbe: Path | None) -> list[str]:
     return argv if qbe is None else [*argv, f"--qbe={qbe}"]
 
 
-def check_invoke(compiler: Path, caches: dict, timeout: float) -> list[str]:
-    """Compare every invoke case across backends, returning one line each."""
-    lines = []
+def check_invoke(compiler: Path, caches: dict, timeout: float, pool: Executor) -> Callable[[], list[str]]:
+    """Start every invoke case on both backends; the result compares them, one line each."""
+    pending = []
     for entry, function, request, expected in INVOKE_CASES:
         label = f"invoke {function} {Path(request).name}"
-        reports = {}
-        for name, qbe in caches.items():
-            argv = with_backend(invoke_argv(entry, function, request), qbe["qbe"])
-            reports[name] = payload(run(compiler, argv, qbe["cache"], timeout), f"{label} [{name}]")
-        first, second = reports["qbe"], reports["llvm"]
-        if comparable(first) != comparable(second):
-            raise Failure(f"{label}: backends disagree\n  qbe : {json.dumps(comparable(first))[:400]}\n  llvm: {json.dumps(comparable(second))[:400]}")
-        if expected is not None:
-            actual = first.get("invocation", {}).get("value")
-            if actual != expected:
-                raise Failure(f"{label}: expected {json.dumps(expected)}, got {json.dumps(actual)}")
-        lines.append(f"agree  {label} -> {json.dumps(first.get('invocation', {}).get('value'))[:60]}")
-    return lines
+        runs = {name: pool.submit(run, compiler, with_backend(invoke_argv(entry, function, request), qbe["qbe"]), qbe["cache"], timeout)
+                for name, qbe in caches.items()}
+        pending.append((label, expected, runs))
+
+    def finish() -> list[str]:
+        lines = []
+        for label, expected, runs in pending:
+            reports = {name: payload(proc.result(), f"{label} [{name}]") for name, proc in runs.items()}
+            first, second = reports["qbe"], reports["llvm"]
+            if comparable(first) != comparable(second):
+                raise Failure(f"{label}: backends disagree\n  qbe : {json.dumps(comparable(first))[:400]}\n  llvm: {json.dumps(comparable(second))[:400]}")
+            if expected is not None:
+                actual = first.get("invocation", {}).get("value")
+                if actual != expected:
+                    raise Failure(f"{label}: expected {json.dumps(expected)}, got {json.dumps(actual)}")
+            lines.append(f"agree  {label} -> {json.dumps(first.get('invocation', {}).get('value'))[:60]}")
+        return lines
+    return finish
 
 
-def check_describe(compiler: Path, caches: dict, timeout: float) -> list[str]:
-    """Compare the schema each backend reports for the same export."""
-    lines = []
+def check_describe(compiler: Path, caches: dict, timeout: float, pool: Executor) -> Callable[[], list[str]]:
+    """Start the schema query for every export on both backends; the result compares them."""
+    pending = []
     for entry, function in DESCRIBE_CASES:
         label = f"describe {function}"
-        reports = {}
-        for name, qbe in caches.items():
-            argv = with_backend(["invoke", entry, "--function", function, "--describe"], qbe["qbe"])
-            reports[name] = payload(run(compiler, argv, qbe["cache"], timeout), f"{label} [{name}]")
-        first, second = reports["qbe"], reports["llvm"]
-        if comparable(first) != comparable(second):
-            raise Failure(f"{label}: backends disagree\n  qbe : {json.dumps(comparable(first))[:400]}\n  llvm: {json.dumps(comparable(second))[:400]}")
-        status = first.get("description", {})
-        lines.append(f"agree  {label} -> eligible={status.get('eligible')} wire={status.get('wire_supported')}")
-    return lines
+        runs = {name: pool.submit(run, compiler, with_backend(["invoke", entry, "--function", function, "--describe"], qbe["qbe"]), qbe["cache"], timeout)
+                for name, qbe in caches.items()}
+        pending.append((label, runs))
+
+    def finish() -> list[str]:
+        lines = []
+        for label, runs in pending:
+            reports = {name: payload(proc.result(), f"{label} [{name}]") for name, proc in runs.items()}
+            first, second = reports["qbe"], reports["llvm"]
+            if comparable(first) != comparable(second):
+                raise Failure(f"{label}: backends disagree\n  qbe : {json.dumps(comparable(first))[:400]}\n  llvm: {json.dumps(comparable(second))[:400]}")
+            status = first.get("description", {})
+            lines.append(f"agree  {label} -> eligible={status.get('eligible')} wire={status.get('wire_supported')}")
+        return lines
+    return finish
 
 
-def check_cases(compiler: Path, caches: dict, timeout: float) -> list[str]:
-    """Compare `mylang test --cases` across backends over the shared codec."""
-    lines = []
+def check_cases(compiler: Path, caches: dict, timeout: float, pool: Executor) -> Callable[[], list[str]]:
+    """Start `mylang test --cases` on both backends over the shared codec; the result compares them."""
+    pending = []
     for entry, cases in CASES_CASES:
         label = f"cases {Path(entry).name}"
-        results = {}
-        for name, qbe in caches.items():
-            argv = with_backend(["test", entry, "--cases", cases], qbe["qbe"])
-            proc = run(compiler, argv, qbe["cache"], timeout)
-            if proc.returncode != 0:
-                raise Failure(f"{label} [{name}]: exit {proc.returncode}\n{proc.stdout[-400:]}\n{proc.stderr[-400:]}")
-            summary = proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else ""
-            if "0 failed" not in summary:
-                raise Failure(f"{label} [{name}]: {summary}")
-            results[name] = summary
-        if results["qbe"] != results["llvm"]:
-            raise Failure(f"{label}: backends disagree\n  qbe : {results['qbe']}\n  llvm: {results['llvm']}")
-        lines.append(f"agree  {label} -> {results['qbe']}")
-    return lines
+        runs = {name: pool.submit(run, compiler, with_backend(["test", entry, "--cases", cases], qbe["qbe"]), qbe["cache"], timeout)
+                for name, qbe in caches.items()}
+        pending.append((label, runs))
+
+    def finish() -> list[str]:
+        lines = []
+        for label, runs in pending:
+            results = {}
+            for name, future in runs.items():
+                proc = future.result()
+                if proc.returncode != 0:
+                    raise Failure(f"{label} [{name}]: exit {proc.returncode}\n{proc.stdout[-400:]}\n{proc.stderr[-400:]}")
+                summary = proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else ""
+                if "0 failed" not in summary:
+                    raise Failure(f"{label} [{name}]: {summary}")
+                results[name] = summary
+            if results["qbe"] != results["llvm"]:
+                raise Failure(f"{label}: backends disagree\n  qbe : {results['qbe']}\n  llvm: {results['llvm']}")
+            lines.append(f"agree  {label} -> {results['qbe']}")
+        return lines
+    return finish
+
+
+def default_jobs() -> int:
+    """Commands run at once: `MYLANG_JOBS` when set, else the cores up to 8."""
+    try:
+        return max(1, int(os.environ["MYLANG_JOBS"]))
+    except (KeyError, ValueError):
+        return max(1, min(8, os.cpu_count() or 1))
 
 
 def self_test() -> None:
@@ -323,6 +351,7 @@ def main() -> int:
     parser.add_argument("--compiler", type=Path, help="the mylang binary under test")
     parser.add_argument("--timeout", type=float, default=180.0, help="seconds allowed per command")
     parser.add_argument("--keep", action="store_true", help="keep the per-backend caches for inspection")
+    parser.add_argument("--jobs", type=int, default=default_jobs(), help="commands run at once (default: MYLANG_JOBS, else up to 8)")
     args = parser.parse_args()
     if args.self_test:
         self_test()
@@ -339,10 +368,13 @@ def main() -> int:
             "qbe": {"qbe": None, "cache": root / "qbe"},
             "llvm": {"qbe": LLVM_QBE, "cache": root / "llvm"},
         }
+        # Every command is independent and each backend has its own cache, so
+        # they all run concurrently; the comparisons still happen in case order.
         lines = []
-        lines += check_invoke(args.compiler, caches, args.timeout)
-        lines += check_describe(args.compiler, caches, args.timeout)
-        lines += check_cases(args.compiler, caches, args.timeout)
+        with ThreadPoolExecutor(max_workers=args.jobs) as pool:
+            checks = [check(args.compiler, caches, args.timeout, pool) for check in (check_invoke, check_describe, check_cases)]
+            for finish in checks:
+                lines += finish()
         for line in lines:
             print(line)
         print(f"native-boundary: {len(lines)} case(s) agree across QBE and LLVM")
