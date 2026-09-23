@@ -26,6 +26,7 @@ FILES = {
     "test/integration.zig": 'test "CLI prints" {\n    try run();\n}\n',
     "tests/lang/python_core.my": "module python_core\n\npublic def test_core() -> bool:\n    return True\n",
     "tests/lang/text_views.my": "module text_views\n\n# spec: FOO-1\npublic def test_views() -> bool:\n    return True\n",
+    "tests/lang/builtin_context.my": "module builtin_context\n\npublic def test_context() -> bool:\n    return True\n",
     "tests/guest/lists.my": "module lists\n\npublic def test_lists() -> bool:\n    return True\n",
     "docs/io.md": "# IO\n",
     "SPEC.md": "- [BAR-2] bar\n",
@@ -79,6 +80,8 @@ class Mapping(SyntheticRepo):
         self.assertIn("test-native-memory", sel.steps)
         self.assertIn("test-native-heap", sel.steps)
         self.assertIn("tests/lang/text_views.my", sel.guest)
+        # A runtime part matches whole words of an area's name, not substrings.
+        self.assertNotIn("tests/lang/builtin_context.my", sel.guest)
 
     def test_a_guest_test_file_runs_itself(self) -> None:
         sel = self.select({"tests/lang/python_core.my": ["    return True"], "tests/guest/lists.my": ["x"]})

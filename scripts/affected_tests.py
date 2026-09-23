@@ -293,6 +293,7 @@ def select_zig_file(sel: Selection, corpus: Corpus, path: str) -> None:
     if path not in corpus.unit_tests:
         sel.notes.append("{}: not reached from {}; only the gate covers it".format(path, UNIT_ROOT))
         return
+    before = len(sel.unit)
     if corpus.unit_tests[path]:
         sel.add(sel.unit, namespace(path), "tests declared in {}".format(path))
     stem = Path(path).stem
@@ -303,6 +304,9 @@ def select_zig_file(sel: Selection, corpus: Corpus, path: str) -> None:
         for importer in sorted(corpus.importers.get(path, ())):
             if importer.endswith("_test.zig") and corpus.unit_tests.get(importer):
                 sel.add(sel.unit, namespace(importer), "{} imports {}".format(importer, path))
+        if len(sel.unit) == before:
+            sel.notes.append("{}: no test file declares or imports it; only tests the diff names by spec tag, "
+                             "diagnostic code or function are selected, and the gate covers the rest".format(path))
         guest_smoke(sel, "compiler source {}".format(path))
 
 
@@ -322,8 +326,9 @@ def select_runtime(sel: Selection, corpus: Corpus, path: str) -> None:
         if part not in stem:
             continue
         for entry in corpus.guest_files:
-            name = Path(entry).name
-            if entry.startswith("tests/lang/") and "/" not in entry[len("tests/lang/"):] and any(f in name for f in fragments):
+            words = Path(entry).stem.split("_")
+            if entry.startswith("tests/lang/") and "/" not in entry[len("tests/lang/"):] and \
+                    any(word.startswith(f) for word in words for f in fragments):
                 sel.add(sel.guest, entry, "exercises the {} runtime ({})".format(part, path))
                 matched = True
     if not matched:
