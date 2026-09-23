@@ -86,6 +86,12 @@ static int enqueue(Copier *copier, Clone item) {
     copier->pending[copier->queued++] = item;
     return 1;
 }
+/* Element count of an arena payload's header: every object the copier clones
+   lives in the dying arena, so its count sits between the flag bits and the
+   arena depth. */
+static size_t arena_count(const myl_native_object *header) {
+    return (size_t)(header->mark >> MYL_NATIVE_OBJECT_COUNT_SHIFT) & MYL_NATIVE_ARENA_COUNT_MAX;
+}
 /* Allocate an empty clone with the source's shape in the enclosing region. */
 static void *shallow(Copier *copier, const myl_native_type *type, void *source) {
     if (type->collection_kind == 3) {
@@ -96,7 +102,19 @@ static void *shallow(Copier *copier, const myl_native_type *type, void *source) 
        the whole value: one allocation in the enclosing region and nothing left
        for `fill` to walk. */
     if (type->collection_kind == 2) return myl_native_text_clone(copier->heap, source);
-    if (!type->collection_kind || type->collection_kind > 4) return NULL;
+    /* A `class` body (or a Cell) has no collection header: its pointer
+       descriptor is opaque, and the shape lives in the payload's own header —
+       the body descriptor and its element count. The clone is an ordinary
+       allocation of that shape in the enclosing region, so it gets the same
+       header, age and barrier descriptor (`cell`) a constructor would give it:
+       a fresh tracing-heap object is young, and `fill` writes its fields
+       before anything can observe it, so no store barrier is owed. */
+    if (!type->collection_kind) {
+        const myl_native_object *header = (const myl_native_object *)source - 1;
+        if (!header->element) return NULL;
+        return myl_native_heap_alloc(copier->heap, header->element, arena_count(header));
+    }
+    if (type->collection_kind > 4) return NULL;
     const myl_native_list *from = source;
     myl_native_list *clone = myl_native_list_new(copier->heap, from->element, from->length);
     if (clone) clone->length = from->length;
@@ -158,6 +176,15 @@ static void fill_dictionary(Copier *copier, Clone item) {
 static void fill(Copier *copier, Clone item) {
     if (item.type->collection_kind == 3) return fill_dictionary(copier, item);
     if (item.type->collection_kind == 2) return;
+    if (!item.type->collection_kind) {
+        const myl_native_object *header = (const myl_native_object *)item.source - 1;
+        const myl_native_type *body = header->element;
+        size_t count = arena_count(header);
+        for (size_t i = 0; i < count && !copier->failed; ++i)
+            translate(copier, body, (const unsigned char *)item.source + i * body->size,
+                      (unsigned char *)item.clone + i * body->size);
+        return;
+    }
     myl_native_list *from = item.source, *clone = item.clone;
     size_t width = from->element->size;
     for (size_t i = 0; i < from->length && !copier->failed; ++i)
