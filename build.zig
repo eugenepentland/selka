@@ -691,6 +691,13 @@ pub fn build(b: *std.Build) void {
     harvest_run.setCwd(b.path("."));
     usefulness_step.dependOn(&harvest_run.step);
     test_step.dependOn(usefulness_step);
+    // The SPEC.md merge driver (`scripts/merge_spec.py`): synthetic three-way
+    // cases, a throwaway repository end to end, and a replay of real merges.
+    const spec_merge_step = b.step("test-spec-merge", "Verify the SPEC.md merge driver, including replayed history");
+    const spec_merge_run = bounded(b.addSystemCommand(&.{ "python3", "tests/test_spec_merge.py" }), rss.driver);
+    spec_merge_run.setCwd(b.path("."));
+    spec_merge_step.dependOn(&spec_merge_run.step);
+    test_step.dependOn(spec_merge_step);
     // The bundled runtime's `content_hash` comes from a make-phase run of
     // `build_qbe_assets.zig`. This driver runs that file on throwaway trees that
     // share one Zig cache, the way a stale hash once reached an installed compiler.

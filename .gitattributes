@@ -1,0 +1,3 @@
+# Merge SPEC.md by bullet tag. Needs `sh scripts/setup-git.sh` once per clone;
+# without it git ignores this line and uses its ordinary text merge.
+/SPEC.md merge=spec-bullets

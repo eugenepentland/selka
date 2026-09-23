@@ -114,6 +114,21 @@ Guardian runs **inside** `zig build test` and blocks; there are no baselines.
 - **Tests need at least one `expect*` assertion** and **no `if`/`while`/`switch` or extra
   `for` at the top level of a test body**. Write straight-line assertions.
 
+## Merging `SPEC.md` (run once per clone)
+
+```
+sh scripts/setup-git.sh
+```
+
+It registers the `spec-bullets` merge driver that `.gitattributes` names for `SPEC.md`
+(`scripts/merge_spec.py`) in the clone's shared `.git/config`, so every worktree gets it.
+The driver merges bullets by tag: both sides' appends to one section are kept (ours,
+then theirs), a bullet amended on one side keeps only the new text, and only a tag both
+sides changed differently, or prose both sides edited, is left as a conflict. Without the
+setup git ignores the attribute and falls back to its plain line merge, where parallel
+appends conflict and a hand union can repeat an amended tag (Guardian rejects that).
+Tests: `zig build test-spec-merge`.
+
 ## Documentation gate
 
 Every feature slug in `src/features.json` needs `{kind, summary, doc}` and the `doc`
