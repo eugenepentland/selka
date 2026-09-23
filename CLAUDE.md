@@ -49,6 +49,21 @@ only to time the compiler itself or to hand a compiler to other agents.
 
 ## Fast loops (use these while iterating)
 
+- `python3 scripts/affected_tests.py` — **the inner loop for a change.** It diffs
+  against the merge-base with `main` (plus staged, unstaged and untracked files; `--base
+  REF` to choose), maps each changed file to the tests that most directly cover it and
+  runs only those: `src/foo.zig` → the Zig tests in and beside it (`foo_test.zig`, test
+  files importing it), tests carrying a `spec:` tag, diagnostic code or function the
+  diff touches, plus a guest smoke; `src/*.c` → `test-native-memory`, `test-native-heap`
+  and the guest areas using that runtime part; `tests/lang/x.my` → `mylang test` on it;
+  a doc page → its doctest and `doc-coverage`; the LLVM adapter → `test-llvm-adapter`
+  plus an LLVM guest smoke; a driver under `tests/` → its build step. It prints what it
+  selected and why (`--dry-run` stops there), runs Zig selections as sharded
+  processes, and says on every run that it is **not the gate**. Measured 2026-09-23
+  on a loaded machine: 1–2 s for a `.my` or doc edit, 14 s for `src/sema.zig`, 25 s
+  for a `src/native_*.c`, 57 s for `src/qbe.zig` (its 108 Zig tests). Run it through
+  the build slot like any build. The full gate below is still required before you
+  finish.
 - `zig build test-units -Dtest-filter=SUBSTRING` — runs only `src/root_test.zig` tests
   whose name contains SUBSTRING. `-Dtest-filter=arena` is 34 tests in about 1.5 s; the whole
   root is 1113 tests in about 73 s (measured warm 2026-09-18; `zig build test` shards it). `zig build test-cli -Dtest-filter=…` does the same for
@@ -94,6 +109,17 @@ zig build fmt-check
 ```
 
 `zig build test` also runs `mylang doc-coverage .` and `mylang doctest .`.
+
+Test verdicts are cached like build outputs. A test shard, a Python driver or the
+doctest re-runs only when its test binary, the compiler or `qbe` it runs, its command,
+or one of the repository files it reads changes; those files are declared per step in
+`build_test_inputs.zig`, and `zig build test` fails (`test-inputs-coverage`) when a
+test names a repository path its step does not declare. An unchanged `zig build test`
+takes seconds, and a `.my` or doc edit re-runs only what reads it. A cached step
+prints no test count, so the `Build Summary` total counts only what ran:
+`-Dtest-rerun=true` re-runs every test step (full counts, or to rule out a stale
+verdict you suspect). When a test starts reading a new fixture, declare it in
+`build_test_inputs.zig`.
 
 `zig build test` splits its two slow Zig roots across processes: `src/root_test.zig`
 into `-Dtest-shards=N` shards (default 12) and `test/integration.zig` into `N/2`, each
