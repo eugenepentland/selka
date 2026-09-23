@@ -19,6 +19,11 @@ any other toolchain.
   `zig build` produces a Debug compiler; cached guest tests still pay its parsing,
   JSON and dependency-planning costs. This setting optimizes the compiler itself,
   independently of the guest program's backend and optimization flags.
+- Never point two source trees (a base checkout and a worktree) at one
+  `ZIG_LOCAL_CACHE_DIR`. Zig reuses the cached configure phase across them, and its
+  absolute paths name the first tree. The build now fails with "this build
+  configuration belongs to …" instead of quietly bundling the wrong runtime. See
+  `docs/tooling/native-build.md#where-the-content-hash-comes-from`.
 
 ## Fast loops (use these while iterating)
 

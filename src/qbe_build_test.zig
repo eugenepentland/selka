@@ -319,13 +319,14 @@ test "a default build shares its runtime tree under XDG while an explicit cache-
 
 // `content_hash` is the build-time identity every materialized runtime tree and
 // installed runtime archive is named by. It must be the digest of exactly the
-// bytes `assets.zig` embeds: a warm `.zig-cache` once reused a configure phase
-// whose directory dependency only watched for added/removed/renamed names, so
-// an in-place runtime edit left the old `content_hash` beside freshly copied
-// `@embedFile` bytes and a later build could resolve an archive under the old
-// identity. Recompute the canonical manifest from the embedded bytes; the
-// encoding deliberately mirrors `manifest`/`digest` in `build_qbe_assets.zig`
-// (the build script cannot be imported here). Keep them in step.
+// bytes `assets.zig` embeds. Twice a cached configure phase broke that: once
+// when its directory dependency watched only names, and once when two trees
+// shared one Zig cache. Each time a runtime edit left the old `content_hash`
+// beside freshly copied `@embedFile` bytes, and a later build could resolve an
+// archive under the old identity. Recompute the canonical manifest from the
+// embedded bytes; the encoding deliberately mirrors `manifest`/`digest` in
+// `build_qbe_assets.zig` (the build script cannot be imported here). Keep them
+// in step.
 // spec-case: QBE-3
 test "bundled content hash digests exactly the embedded runtime bytes" {
     var text: std.Io.Writer.Allocating = .init(std.testing.allocator);
@@ -341,6 +342,24 @@ test "bundled content hash digests exactly the embedded runtime bytes" {
     std.crypto.hash.sha2.Sha256.hash(text.written(), &digest, .{});
     const hex = std.fmt.bytesToHex(digest, .lower);
     try std.testing.expectEqualStrings(bundled.content_hash, &hex);
+}
+
+// The embedded runtime must be this tree's runtime, not a copy another tree or an
+// older configuration chose: every bundled file equals `src/<path>` on disk now.
+// With the digest test above, the installed compiler's `content_hash` names the
+// bytes a `mylang build` from this checkout should link. The test runs from the
+// build root, as every `zig build` step here does.
+// spec: QBE-RUNTIME-IDENTITY-1
+test "the bundled runtime is byte for byte this tree's runtime sources" {
+    const a = std.testing.allocator;
+    for (bundled.files) |asset| {
+        const path = try std.fs.path.join(a, &.{ "src", asset.path });
+        defer a.free(path);
+        const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .unlimited);
+        defer a.free(bytes);
+        try std.testing.expectEqualStrings(bytes, asset.bytes);
+    }
+    try std.testing.expect(bundled.files.len > 0);
 }
 
 /// True when the generated compiler identity names `path`.
