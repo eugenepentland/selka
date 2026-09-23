@@ -539,9 +539,9 @@ fn validateOpTryResult(program: Program, function: Function, propagate: @FieldTy
         if (input.error_type != output.error_type and typed.wrappingCase(program.records, output.error_type, input.error_type) == null) return error.InternalError;
         return;
     }
-    if (prelude.optionShape(propagate.input, program.records)) |input| {
-        const output = prelude.optionShape(propagate.output, program.records) orelse return error.InternalError;
-        if (input.element != output.element) return error.InternalError;
+    if (prelude.optionShape(propagate.input, program.records) != null) {
+        // A propagated `None` is rebuilt in the output type, so the elements may differ.
+        if (prelude.optionShape(propagate.output, program.records) == null) return error.InternalError;
         return;
     }
     return error.InternalError;

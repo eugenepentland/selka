@@ -116,10 +116,17 @@ static size_t detail_text(const MylQbeTrapDetail *detail, char *out, size_t size
         if (!append(out, size, &used, " (length %" PRIu64 ")", detail->length)) return 0;
     } else if (present & (MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | MYL_QBE_TRAP_PRESENT_WIDTH)) {
         if (!append(out, size, &used, " (%s:", detail->operation ? detail->operation : "arithmetic")) return 0;
-        if ((present & MYL_QBE_TRAP_PRESENT_LEFT) &&
-            !append(out, size, &used, " left %" PRId64, detail->left)) return 0;
-        if ((present & MYL_QBE_TRAP_PRESENT_RIGHT) &&
-            !append(out, size, &used, ", right %" PRId64, detail->right)) return 0;
+        if (present & MYL_QBE_TRAP_PRESENT_UNSIGNED) {
+            if ((present & MYL_QBE_TRAP_PRESENT_LEFT) &&
+                !append(out, size, &used, " left %" PRIu64, (uint64_t)detail->left)) return 0;
+            if ((present & MYL_QBE_TRAP_PRESENT_RIGHT) &&
+                !append(out, size, &used, ", right %" PRIu64, (uint64_t)detail->right)) return 0;
+        } else {
+            if ((present & MYL_QBE_TRAP_PRESENT_LEFT) &&
+                !append(out, size, &used, " left %" PRId64, detail->left)) return 0;
+            if ((present & MYL_QBE_TRAP_PRESENT_RIGHT) &&
+                !append(out, size, &used, ", right %" PRId64, detail->right)) return 0;
+        }
         if ((present & MYL_QBE_TRAP_PRESENT_WIDTH) &&
             !append(out, size, &used, ", width %" PRIu64, detail->width)) return 0;
         if (!append(out, size, &used, ")")) return 0;
@@ -159,10 +166,18 @@ static size_t detail_json(const MylQbeTrapDetail *detail, char *out, size_t size
         !append(out, size, &used, ",\"index\":%" PRId64, detail->index)) return 0;
     if ((present & MYL_QBE_TRAP_PRESENT_LENGTH) &&
         !append(out, size, &used, ",\"length\":%" PRIu64, detail->length)) return 0;
-    if ((present & MYL_QBE_TRAP_PRESENT_LEFT) &&
-        !append(out, size, &used, ",\"left\":%" PRId64, detail->left)) return 0;
-    if ((present & MYL_QBE_TRAP_PRESENT_RIGHT) &&
-        !append(out, size, &used, ",\"right\":%" PRId64, detail->right)) return 0;
+    if (present & MYL_QBE_TRAP_PRESENT_UNSIGNED) {
+        if (!append(out, size, &used, ",\"unsigned\":true")) return 0;
+        if ((present & MYL_QBE_TRAP_PRESENT_LEFT) &&
+            !append(out, size, &used, ",\"left\":%" PRIu64, (uint64_t)detail->left)) return 0;
+        if ((present & MYL_QBE_TRAP_PRESENT_RIGHT) &&
+            !append(out, size, &used, ",\"right\":%" PRIu64, (uint64_t)detail->right)) return 0;
+    } else {
+        if ((present & MYL_QBE_TRAP_PRESENT_LEFT) &&
+            !append(out, size, &used, ",\"left\":%" PRId64, detail->left)) return 0;
+        if ((present & MYL_QBE_TRAP_PRESENT_RIGHT) &&
+            !append(out, size, &used, ",\"right\":%" PRId64, detail->right)) return 0;
+    }
     if ((present & MYL_QBE_TRAP_PRESENT_WIDTH) &&
         !append(out, size, &used, ",\"width\":%" PRIu64, detail->width)) return 0;
     if (!append(out, size, &used, "}")) return 0;
@@ -513,18 +528,23 @@ void myl_qbe_fail_array_bounds(void *context, int64_t index, uint64_t length) {
     fail_detail(context, "R_INDEX_BOUNDS", "index",
         MYL_QBE_TRAP_PRESENT_INDEX | MYL_QBE_TRAP_PRESENT_LENGTH, index, length, 0, 0, 0);
 }
+/* The present bit a generated call site's MYL_QBE_UNSIGNED_OPERANDS flag asks for. */
+static uint32_t operand_sign(uint64_t flagged) {
+    return (flagged & MYL_QBE_UNSIGNED_OPERANDS) ? MYL_QBE_TRAP_PRESENT_UNSIGNED : 0;
+}
 void myl_qbe_fail_division(void *context, uint64_t binary_op, int64_t left, int64_t right) {
-    fail_detail(context, "R_DIVISION_BY_ZERO", operation_name(binary_op),
-        MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT, 0, 0, left, right, 0);
+    fail_detail(context, "R_DIVISION_BY_ZERO", operation_name(binary_op & ~MYL_QBE_UNSIGNED_OPERANDS),
+        MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | operand_sign(binary_op), 0, 0, left, right, 0);
 }
 void myl_qbe_fail_overflow_op(void *context, uint64_t binary_op, int64_t left, int64_t right, uint64_t width) {
     fail_detail(context, "R_OVERFLOW", operation_name(binary_op),
-        MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | MYL_QBE_TRAP_PRESENT_WIDTH,
-        0, 0, left, right, width);
+        MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | MYL_QBE_TRAP_PRESENT_WIDTH | operand_sign(width),
+        0, 0, left, right, width & ~MYL_QBE_UNSIGNED_OPERANDS);
 }
 void myl_qbe_fail_cast(void *context, int64_t value, uint64_t width) {
     fail_detail(context, "R_OVERFLOW", "cast",
-        MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_WIDTH, 0, 0, value, 0, width);
+        MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_WIDTH | operand_sign(width), 0, 0, value, 0,
+        width & ~MYL_QBE_UNSIGNED_OPERANDS);
 }
 myl_native_heap *myl_qbe_heap(void *context) {
     return &((Context *)context)->heap;
@@ -543,7 +563,12 @@ static Wide decode(uint64_t value, uint64_t is_signed) {
     memcpy(&signed_value, &value, sizeof signed_value);
     return is_signed ? (Wide)signed_value : (Wide)value;
 }
-/* Reinterpret already-evaluated bits as the signed operand the diagnostic shows. */
+/* The present bit that makes the detail render an unsigned operation's operands unsigned. */
+static uint32_t unsigned_bit(uint64_t is_signed) {
+    return is_signed ? 0 : MYL_QBE_TRAP_PRESENT_UNSIGNED;
+}
+/* Reinterpret already-evaluated bits as the operand the diagnostic shows; an
+   unsigned operand keeps its bit pattern and is flagged by `unsigned_bit`. */
 static int64_t as_i64(uint64_t value, uint64_t is_signed) {
     int64_t signed_value;
     memcpy(&signed_value, &value, sizeof signed_value);
@@ -564,11 +589,11 @@ static uint64_t checked(void *context, Wide value, uint64_t is_signed, uint64_t 
 }
 uint64_t myl_qbe_int_cast(void *context, uint64_t from_signed, uint64_t to_signed, uint64_t width, uint64_t value) {
     return checked(context, decode(value, from_signed), to_signed, width,
-        MYL_QBE_OPERATION_CAST, MYL_QBE_TRAP_PRESENT_LEFT, as_i64(value, from_signed), 0);
+        MYL_QBE_OPERATION_CAST, MYL_QBE_TRAP_PRESENT_LEFT | unsigned_bit(from_signed), as_i64(value, from_signed), 0);
 }
 uint64_t myl_qbe_int_neg(void *context, uint64_t is_signed, uint64_t width, uint64_t value) {
     return checked(context, -decode(value, is_signed), is_signed, width,
-        MYL_QBE_OPERATION_NEG, MYL_QBE_TRAP_PRESENT_LEFT, as_i64(value, is_signed), 0);
+        MYL_QBE_OPERATION_NEG, MYL_QBE_TRAP_PRESENT_LEFT | unsigned_bit(is_signed), as_i64(value, is_signed), 0);
 }
 uint64_t myl_qbe_int_binary(void *context, uint64_t op, uint64_t is_signed, uint64_t width, uint64_t left, uint64_t right) {
     Wide a = decode(left, is_signed), b = decode(right, is_signed), result = 0;
@@ -580,12 +605,12 @@ uint64_t myl_qbe_int_binary(void *context, uint64_t op, uint64_t is_signed, uint
         case 1: result = a - b; break;
         case 2: if (__builtin_mul_overflow(a, b, &result))
             return fail_detail(context, "R_OVERFLOW", operation_name(op),
-                MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | MYL_QBE_TRAP_PRESENT_WIDTH,
+                MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | MYL_QBE_TRAP_PRESENT_WIDTH | unsigned_bit(is_signed),
                 0, 0, (int64_t)a, (int64_t)b, width);
             break;
         case 3: case 4: case 5: case 6: {
             if (!b) return fail_detail(context, "R_DIVISION_BY_ZERO", operation_name(op),
-                MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT, 0, 0, (int64_t)a, (int64_t)b, 0);
+                MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | unsigned_bit(is_signed), 0, 0, (int64_t)a, (int64_t)b, 0);
             Wide q = a / b, r = a % b;
             if (op >= 5 && r && ((r < 0) != (b < 0))) { --q; r += b; }
             result = (op == 3 || op == 5) ? q : r;
@@ -618,7 +643,7 @@ uint64_t myl_qbe_int_binary(void *context, uint64_t op, uint64_t is_signed, uint
         default: return fail(context, "R_INTERNAL");
     }
     return checked(context, result, is_signed, width, op,
-        MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT, (int64_t)a, (int64_t)b);
+        MYL_QBE_TRAP_PRESENT_LEFT | MYL_QBE_TRAP_PRESENT_RIGHT | unsigned_bit(is_signed), (int64_t)a, (int64_t)b);
 wrapping:
     result = (Wide)(raw & mask);
     return (uint64_t)(is_signed && result > maximum ? result - mod : result);

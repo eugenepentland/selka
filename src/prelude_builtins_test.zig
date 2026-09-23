@@ -148,7 +148,8 @@ test "sorted key lambdas order records stably and diagnose invalid inputs" {
         \\    return ordered[0].position * 100 + ordered[1].position * 10 + ordered[2].position
     , 102);
     try reject("def main() -> int:\n    return len(sorted(1, key=lambda value: value))\n", "E_PRELUDE_TYPE");
-    try reject("def main() -> int:\n    xs = [1]\n    return len(sorted(xs, key=lambda value: True))\n", "E_TYPE");
+    // A `bool` key is ordered, False first; its body's own type is the key type.
+    try run("def main() -> int:\n    ys = sorted([3, 1, 2], key=lambda v: v > 1)\n    return ys[0] * 100 + ys[1] * 10 + ys[2]\n", 132);
     try run("def main() -> int:\n    ys = sorted([3, 1, 2], key=lambda v: 0 - v, reverse=True)\n    return ys[0] * 100 + ys[1] * 10 + ys[2]\n", 123);
 }
 
@@ -211,6 +212,33 @@ test "a mut key and a comparison function are rejected with their repair" {
     try t.expectEqualStrings("E_CALL_ARGUMENT", item.code);
     try t.expectEqualStrings("cmp", compilation.src.text(item.related.?.span));
     try t.expectEqualStrings("list[T].sort(*, key: def(T) -> K = None, reverse: bool = False) -> None", item.provenance.requirement.?.message);
+}
+
+// spec-case: LAMBDA-KEY-INFER-1
+test "hintSortKeywords: a lambda key whose body does not type on its own is one E_SORT_KEY quoting why" {
+    const program =
+        \\record Entry:
+        \\    rank: int
+        \\
+        \\
+        \\def main() -> int:
+        \\    xs = [Entry(rank=1)]
+        \\    xs.sort(key=lambda e: e.missing)
+        \\    return 0
+    ;
+    var compilation = try language.Compilation.init(t.allocator, "key.my", program);
+    defer compilation.deinit();
+    // `hintSortKeywords` catches the failed inference's error.SourceError and
+    // marks the lambda, so the never-typed lambda adds no E_LAMBDA_CONTEXT.
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqual(@as(usize, 1), compilation.diagnostics.items.len);
+    const item = compilation.diagnostics.items[0];
+    try t.expectEqualStrings("E_SORT_KEY", item.code);
+    try t.expectEqualStrings("lambda e: e.missing", compilation.src.text(item.span));
+    try t.expect(std.mem.startsWith(u8, item.message, "this lambda's key type cannot be inferred from its body (E_"));
+    try t.expect(std.mem.endsWith(u8, item.message, "); write a top-level key function with a declared result and pass it by name"));
+    // A body that types on its own but has no order is the ordinary no-order E_SORT_KEY.
+    try reject("record Entry:\n    rank: int\n\n\ndef main() -> int:\n    xs = [Entry(rank=1)]\n    xs.sort(key=lambda e: [e.rank])\n    return 0\n", "E_SORT_KEY");
 }
 
 // spec: LIST-SORT-KEY-3

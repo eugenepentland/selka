@@ -220,6 +220,82 @@ ALIAS_SUFFIX = {FRAME: ", !alias.scope !3, !noalias !4",
                 FOREIGN: ", !alias.scope !4, !noalias !3"}
 
 
+class Dominators:
+    """The dominance relation of one control-flow graph, by block label.
+
+    `edges` maps every label to its successor labels and `entry` is where
+    control starts.  The immediate dominators come from the iterative
+    algorithm of Cooper, Harvey and Kennedy over reverse postorder; one walk of
+    the dominator tree then numbers every block on entry and exit, so a query
+    is two comparisons.  A block dominates itself; a block control cannot
+    reach neither dominates nor is dominated.
+    """
+
+    def __init__(self, entry, edges):
+        postorder, seen, stack = [], {entry}, [(entry, iter(edges.get(entry, ())))]
+        while stack:
+            label, successors = stack[-1]
+            advanced = False
+            for successor in successors:
+                if successor not in seen:
+                    seen.add(successor)
+                    stack.append((successor, iter(edges.get(successor, ()))))
+                    advanced = True
+                    break
+            if not advanced:
+                postorder.append(label)
+                stack.pop()
+        rank = {label: index for index, label in enumerate(postorder)}
+        predecessors = {label: [] for label in postorder}
+        for label in postorder:
+            for successor in edges.get(label, ()):
+                predecessors[successor].append(label)
+        idom = {entry: entry}
+        reverse = list(reversed(postorder))
+        changed = True
+        while changed:
+            changed = False
+            for label in reverse[1:]:
+                chosen = None
+                for predecessor in predecessors[label]:
+                    if predecessor not in idom:
+                        continue
+                    chosen = predecessor if chosen is None else self._meet(idom, rank, predecessor, chosen)
+                if chosen is not None and idom.get(label) != chosen:
+                    idom[label] = chosen
+                    changed = True
+        children = {label: [] for label in idom}
+        for label, parent in idom.items():
+            if label != entry:
+                children[parent].append(label)
+        self.enter, self.leave, clock, walk = {}, {}, 0, [(entry, False)]
+        while walk:
+            label, done = walk.pop()
+            if done:
+                self.leave[label] = clock
+            else:
+                self.enter[label] = clock
+                walk.append((label, True))
+                walk.extend((child, False) for child in children[label])
+            clock += 1
+
+    @staticmethod
+    def _meet(idom, rank, left, right):
+        """The nearest common dominator of two processed blocks."""
+        while left != right:
+            while rank[left] < rank[right]:
+                left = idom[left]
+            while rank[right] < rank[left]:
+                right = idom[right]
+        return left
+
+    def dominates(self, dominator, block):
+        """Whether every path from the entry to `block` passes `dominator`."""
+        if dominator not in self.enter or block not in self.enter:
+            return False
+        return self.enter[dominator] <= self.enter[block] and self.leave[block] <= self.leave[dominator]
+
+
 class MemoryClasses:
     """Which memory class each temporary of one unit addresses.
 
@@ -399,7 +475,7 @@ class MemoryClasses:
     def _established(writes, reads, dominators):
         """Whether one of `writes` runs before every one of `reads`, on every path."""
         for label, index in writes:
-            if all(label in dominators.get(read_label, ()) and
+            if all(dominators.dominates(label, read_label) and
                    (label != read_label or index < read_index)
                    for read_label, read_index in reads):
                 return True
@@ -419,49 +495,30 @@ class MemoryClasses:
         return [following] if following else []
 
     def _dominators(self):
-        """The dominator set of every reachable block, by label.
+        """The dominance relation of the function's reachable blocks.
 
         A QBE block is entered only at its label and runs straight through, so a
         block that dominates a load's block has run its own instructions before
         that load.  Unreachable blocks are left out and dominate nothing.
+
+        Linear in the number of blocks and edges (the immediate-dominator tree of
+        Cooper, Harvey and Kennedy, then one tree walk), where the per-block
+        dominator sets it replaces were quadratic in space: a function past about
+        20 000 blocks — every checked operation adds two — ran the adapter out of
+        memory.
         """
         if self.dominator_sets is not None:
             return self.dominator_sets
         blocks = self.function.blocks
         order = [block.label for block in blocks]
+        known = set(order)
         edges = {}
         for index, block in enumerate(blocks):
             following = blocks[index + 1].label if index + 1 < len(blocks) else None
             edges[block.label] = [label for label in self._successors(block, following)
-                                  if label in set(order)]
-        entry = order[0]
-        reachable, pending = {entry}, [entry]
-        while pending:
-            for successor in edges[pending.pop()]:
-                if successor not in reachable:
-                    reachable.add(successor)
-                    pending.append(successor)
-        predecessors = {label: [] for label in order}
-        for label in order:
-            for successor in edges[label]:
-                predecessors[successor].append(label)
-        universe = set(label for label in order if label in reachable)
-        dominators = {label: (set([entry]) if label == entry else set(universe))
-                      for label in universe}
-        changed = True
-        while changed:
-            changed = False
-            for label in order:
-                if label not in universe or label == entry:
-                    continue
-                incoming = [dominators[p] for p in predecessors[label] if p in universe]
-                merged = set.intersection(*incoming) if incoming else set()
-                merged.add(label)
-                if merged != dominators[label]:
-                    dominators[label] = merged
-                    changed = True
-        self.dominator_sets = dominators
-        return dominators
+                                  if label in known]
+        self.dominator_sets = Dominators(order[0], edges)
+        return self.dominator_sets
 
     def _slot_store_target(self, instruction):
         """The simple slot one `storel` writes, or None."""

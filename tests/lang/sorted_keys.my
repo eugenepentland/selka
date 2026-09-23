@@ -3,7 +3,7 @@ module sorted_keys
 import sort
 
 # `sorted(xs, key=...)` shares its key type with every other callback value of
-# `def(T) -> int effects()` in the program (SPEC.md PRELUDE-SORT-KEY-2). The two
+# `def(T) -> int effects(managed_allocation)` in the program (SPEC.md PRELUDE-SORT-KEY-2). The two
 # repros in experiments/perf-parity-plan-20260922/suite/repro/ passed `check`
 # and then failed lowering with an internal error; every spelling below lives in
 # one program on purpose, because the second failure needed a second callback

@@ -354,6 +354,39 @@ test "native execution reports original bounds indexes for read write pop array 
     }
 }
 
+// spec: TRAP-UNSIGNED-1
+test "unsigned overflow cast and division traps quote their operands unsigned and signed ones unchanged" {
+    const Case = struct { body: []const u8, code: []const u8, text: []const u8, unsigned: bool };
+    const cases = [_]Case{
+        .{ .body = "return i64(a + b)", .code = "R_OVERFLOW", .text = "(add: left 18446744073709551614, right 5, width 64)", .unsigned = true },
+        .{ .body = "return i64(a * b)", .code = "R_OVERFLOW", .text = "(mul: left 18446744073709551614, right 5, width 64)", .unsigned = true },
+        .{ .body = "return i64(a)", .code = "R_OVERFLOW", .text = "(cast: left 18446744073709551614, width 64)", .unsigned = true },
+        .{ .body = "return i64(a // (b - b))", .code = "R_DIVISION_BY_ZERO", .text = "left 18446744073709551614, right 0)", .unsigned = true },
+        .{ .body = "return i64(b - a)", .code = "R_OVERFLOW", .text = "(sub: left 5, right 18446744073709551614, width 64)", .unsigned = true },
+        // A signed operation keeps its signed rendering byte for byte.
+        .{ .body = "return c + 1", .code = "R_OVERFLOW", .text = "(add: left 9223372036854775807, right 1, width 64)", .unsigned = false },
+        .{ .body = "return d * 2", .code = "R_OVERFLOW", .text = "(mul: left -9223372036854775807, right 2, width 64)", .unsigned = false },
+    };
+    for (cases) |case| {
+        const source = try std.fmt.allocPrint(std.testing.allocator,
+            \\def compute(a: u64, b: u64, c: i64, d: i64) -> i64:
+            \\    {s}
+            \\
+            \\
+            \\def main() -> i64:
+            \\    return compute(18446744073709551614, 5, 9223372036854775807, -9223372036854775807)
+        , .{case.body});
+        defer std.testing.allocator.free(source);
+        var compilation = try language.Compilation.init(std.testing.allocator, "unsigned.my", source);
+        defer compilation.deinit();
+        const outcome = try run(&compilation);
+        try std.testing.expect(outcome.trapped());
+        try std.testing.expectEqualStrings(case.code, outcome.trap.code);
+        try std.testing.expectEqual(case.unsigned, outcome.trap.detail.has(trap_detail.present_unsigned));
+        try std.testing.expect(std.mem.indexOf(u8, outcome.stderr, case.text) != null);
+    }
+}
+
 // spec-case: QBE-TRAP-DETAIL-1
 test "native execution keeps the first trap detail and leaves budget traps detail-free" {
     var first = try language.Compilation.init(std.testing.allocator, "first.my",
