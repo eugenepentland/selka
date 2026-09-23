@@ -1,0 +1,8 @@
+scan_count: 7 qualified arms: my my-unchecked my-qbe zig-fast zig-safe before before-qbe
+scan_replace: 7 qualified arms: my my-unchecked my-qbe zig-fast zig-safe before before-qbe
+scan_split: 7 qualified arms: my my-unchecked my-qbe zig-fast zig-safe before before-qbe
+slice_walk: 7 qualified arms: my my-unchecked my-qbe zig-fast zig-safe before before-qbe
+scan_count: ref 94.9 ms | my=1.01x  my-unchecked=1.01x  my-qbe=1.02x  zig-fast=1.00x  zig-safe=2.96x  before=5.50x  before-qbe=4.06x
+scan_replace: ref 156.7 ms | my=0.34x  my-unchecked=0.34x  my-qbe=0.32x  zig-fast=1.00x  zig-safe=1.74x  before=1.68x  before-qbe=1.20x
+scan_split: ref 35.9 ms | my=3.31x  my-unchecked=3.28x  my-qbe=3.24x  zig-fast=1.00x  zig-safe=1.50x  before=6.09x  before-qbe=5.56x
+slice_walk: ref 1.7 ms | my=2.88x  my-unchecked=2.67x  my-qbe=2.86x  zig-fast=1.00x  zig-safe=1.14x  before=247.36x  before-qbe=264.93x

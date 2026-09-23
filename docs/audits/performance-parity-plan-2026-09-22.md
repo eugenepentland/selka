@@ -18,6 +18,13 @@ for this audit. Evidence, harnesses, raw rounds and every port are under
 [`experiments/perf-parity-plan-20260922`](../../experiments/perf-parity-plan-20260922/README.md).
 No production source changed.
 
+> **Implemented 2026-09-23.** Every wave below landed on `perf/parity-integration`.
+> Measured on one quiet batch, the 13-program suite went from 5.79× to 1.19× Zig
+> (QBE 8.40× → 2.41×). See
+> [`performance-parity-results-2026-09-23.md`](performance-parity-results-2026-09-23.md),
+> which also corrects three claims here: lane 5 slowed `raytrace` by 2–4.5%, the
+> arena chunk-list analysis in §4.9, and the frame protocol's remaining price.
+
 ## Headline
 
 1. **Written the way their languages' users write them, thirteen programs run at

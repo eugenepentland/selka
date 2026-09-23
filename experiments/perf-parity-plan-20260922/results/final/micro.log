@@ -1,0 +1,22 @@
+alloc_churn: 14 qualified arms: my my-unchecked my-qbe my-arena zig-fast zig-safe zig-gpa rust rust-checked rust-reuse before arena:before before-qbe arena:before-qbe
+bytes_scan: 12 qualified arms: my my-unchecked my-qbe my-wrapping zig-fast zig-safe rust rust-checked before wrapping:before before-qbe wrapping:before-qbe
+calls: 10 qualified arms: my my-unchecked my-qbe zig-fast zig-safe zig-inline rust rust-checked before before-qbe
+dict_count: 11 qualified arms: my my-unchecked my-qbe zig-fast zig-safe zig-getorput rust rust-checked rust-entry before before-qbe
+fib: 9 qualified arms: my my-unchecked my-qbe zig-fast zig-safe rust rust-checked before before-qbe
+float_loop: 9 qualified arms: my my-unchecked my-qbe zig-fast zig-safe rust rust-checked before before-qbe
+intloop: 9 qualified arms: my my-unchecked my-qbe zig-fast zig-safe rust rust-checked before before-qbe
+list_append_sum: 9 qualified arms: my my-unchecked my-qbe zig-fast zig-safe rust rust-checked before before-qbe
+list_records: 12 qualified arms: my my-unchecked my-qbe my-wrapping zig-fast zig-safe rust rust-checked before wrapping:before before-qbe wrapping:before-qbe
+records: 9 qualified arms: my my-unchecked my-qbe zig-fast zig-safe rust rust-checked before before-qbe
+str_build: 9 qualified arms: my my-unchecked my-qbe zig-fast zig-safe rust rust-checked before before-qbe
+alloc_churn: ref 76.5 ms | my=1.88x  my-unchecked=1.89x  my-qbe=3.33x  my-arena=1.52x  zig-fast=1.00x  zig-safe=1.10x  zig-gpa=0.88x  rust=1.27x  rust-checked=1.25x  rust-reuse=0.72x  before=2.13x  arena:before=1.68x  before-qbe=3.72x  arena:before-qbe=3.28x
+bytes_scan: ref 41.4 ms | my=1.40x  my-unchecked=1.39x  my-qbe=3.03x  my-wrapping=1.40x  zig-fast=1.00x  zig-safe=1.26x  rust=0.39x  rust-checked=1.49x  before=1.09x  wrapping:before=1.38x  before-qbe=3.01x  wrapping:before-qbe=3.62x
+calls: ref 120.3 ms | my=0.99x  my-unchecked=1.04x  my-qbe=2.23x  zig-fast=1.00x  zig-safe=1.01x  zig-inline=1.08x  rust=0.80x  rust-checked=0.82x  before=0.99x  before-qbe=2.25x
+dict_count: ref 25.7 ms | my=1.14x  my-unchecked=1.09x  my-qbe=1.60x  zig-fast=1.00x  zig-safe=1.34x  zig-getorput=0.60x  rust=2.14x  rust-checked=2.14x  rust-entry=1.21x  before=1.60x  before-qbe=2.81x
+fib: ref 31.2 ms | my=1.90x  my-unchecked=1.03x  my-qbe=3.00x  zig-fast=1.00x  zig-safe=1.97x  rust=1.10x  rust-checked=1.81x  before=3.54x  before-qbe=3.85x
+float_loop: ref 32.1 ms | my=1.01x  my-unchecked=1.02x  my-qbe=2.86x  zig-fast=1.00x  zig-safe=1.01x  rust=1.01x  rust-checked=1.01x  before=1.02x  before-qbe=2.57x
+intloop: ref 111.8 ms | my=0.94x  my-unchecked=0.94x  my-qbe=2.37x  zig-fast=1.00x  zig-safe=1.01x  rust=0.96x  rust-checked=0.86x  before=0.94x  before-qbe=2.34x
+list_append_sum: ref 48.1 ms | my=1.13x  my-unchecked=1.12x  my-qbe=1.37x  zig-fast=1.00x  zig-safe=1.07x  rust=1.09x  rust-checked=1.10x  before=1.44x  before-qbe=1.55x
+list_records: ref 46.4 ms | my=1.38x  my-unchecked=1.21x  my-qbe=1.39x  my-wrapping=1.20x  zig-fast=1.00x  zig-safe=1.08x  rust=0.96x  rust-checked=1.13x  before=1.46x  wrapping:before=1.21x  before-qbe=1.43x  wrapping:before-qbe=1.35x
+records: ref 76.4 ms | my=0.92x  my-unchecked=1.04x  my-qbe=2.06x  zig-fast=1.00x  zig-safe=0.91x  rust=0.84x  rust-checked=0.75x  before=0.93x  before-qbe=2.06x
+str_build: ref 39.2 ms | my=1.16x  my-unchecked=1.14x  my-qbe=1.93x  zig-fast=1.00x  zig-safe=1.24x  rust=1.08x  rust-checked=1.08x  before=1.19x  before-qbe=2.03x
