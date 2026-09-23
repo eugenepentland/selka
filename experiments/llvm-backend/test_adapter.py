@@ -642,7 +642,8 @@ export function l $myl_f_0123456789abcdef(l %ctx, l %a) {
         self.assertIn("!llvm.pseudo_probe_desc", ir)
         self.assertIn('linkageName: "myl_f_0123456789abcdef"', ir)
         self.assertIn("emissionKind: DebugDirectivesOnly", ir)
-        self.assertIn('"frame-pointer"="non-leaf"', ir)
+        self.assertIn("uwtable", ir.split("attributes #0 = {")[1].split("}")[0])
+        self.assertNotIn('"frame-pointer"', ir)
         self.assertIn('"disable-tail-calls"="true"', ir)
         # Position 5 is probe 5; the guard's column-1 call is probe 0.
         self.assertIn(f"discriminator: {(5 << 3) | (100 << 19) | (2 << 26) | 7})", ir)

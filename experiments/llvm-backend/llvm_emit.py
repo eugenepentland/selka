@@ -513,9 +513,11 @@ class FrameMapDebug:
       it replaced: a trap inside it reports the helper's call site, as the
       record's position did.
     * Every call is `nomerge`: merging two call sites would merge their
-      positions.  `"disable-tail-calls"` keeps a call from replacing its
-      caller's frame, and `"frame-pointer"="non-leaf"` keeps the frame-pointer
-      chain the runtime walks.
+      positions, and `"disable-tail-calls"` keeps a call from replacing its
+      caller's frame.  `uwtable` gives every such function asynchronous unwind
+      tables: the runtime walks an LLVM program's stack by its CFI (the linked
+      libunwind's `_Unwind_Backtrace`), so no guest function spends a register
+      or a push on a frame pointer.
     * A probe index is 16 bits.  A call at a position past that carries its
       location without a probe and is `noinline`, and so is its function, so
       nothing is ever inlined through a position the probe cannot name; the
@@ -571,7 +573,7 @@ class FrameMapDebug:
         if not self.active:
             return []
         extra = ["noinline"] if self.unprobed else []
-        return ['"frame-pointer"="non-leaf"', '"disable-tail-calls"="true"', *extra]
+        return ["uwtable", '"disable-tail-calls"="true"', *extra]
 
     def reference(self, location):
         """The metadata number of one `(line, column)` debug location."""

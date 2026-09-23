@@ -168,8 +168,9 @@ fires.
   reports the helper's call site, exactly as the record's position did. Calls
   are `nomerge` (two call sites never fold into one position),
   `"disable-tail-calls"` keeps a call from replacing its caller's frame, and
-  `"frame-pointer"="non-leaf"` keeps the chain the runtime walks. A position
-  past the 16-bit probe index is `noinline` at its call and on its function.
+  `uwtable` gives every such function unwind tables, so guest code keeps no
+  frame pointer. A position past the 16-bit probe index is `noinline` at its
+  call and on its function.
 - **The table.** Before an object is assembled — per unit for QBE and LLVM
   without LTO, and for full LTO on the assembly LLD produces for the whole
   program (`--lto-emit-asm`, then an ordinary native link) —
@@ -178,15 +179,18 @@ fires.
   reaches the object), and appends a retained `mylang_frame_map` section with
   one entry per logical frame of each call site, innermost first: the return
   address, the position with an entry-guard and an inlined-caller bit, and the
-  unit's metadata, each as a 32-bit self-relative offset.
+  unit's metadata, each as a 32-bit self-relative offset; an entry from
+  assembly that carries call-frame information (LLVM's) also has an unwind bit.
 - **At a trap.** The runtime (`fail` in `src/qbe_runtime.c`) sorts the table
-  once, follows the frame-pointer chain from its own frame across the guest
-  stack mapping, reports every return address found in the table (skipping an
-  entry guard's frame, which was never entered) and expands bytecode-inliner
-  splices as before. The runtime and the generated C are compiled with frame
-  pointers in every function that calls — the runtime only in the units that
-  can reach `fail`, so the heap and collector keep every register — and the
-  chain crosses runtime frames.
+  once, walks the guest stack from its own frame, reports every return address
+  found in the table (skipping an entry guard's frame, which was never
+  entered) and expands bytecode-inliner splices as before. An LLVM program is
+  unwound by its call-frame information: the executable links Zig's libunwind
+  statically and the runtime calls `_Unwind_Backtrace`. A QBE program follows
+  the frame-pointer chain: QBE keeps a frame pointer in every function that
+  calls, and so do the generated C and every runtime unit that can reach
+  `fail`; the heap, collector and container units, which only return a status,
+  keep every register.
 
 A trap's code, message, trace, `MYLANG-TRAP` record, `assert` message and exit
 status are byte-identical to the linked-record protocol, including for a callee

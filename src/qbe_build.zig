@@ -14,6 +14,12 @@ const native_link = @import("native_link.zig");
 const gc_sections = "-Wl,--gc-sections";
 /// The manifest array that lists every emitted unit.
 const manifest_functions = "functions";
+/// Zig's bundled LLVM libunwind, linked statically into an LLVM frame-map
+/// executable so a trap can unwind guest frames that keep no frame pointer.
+/// The runtime names `_Unwind_Backtrace` and `_Unwind_GetIP` weakly, so a
+/// program without libunwind still links; a weak reference pulls nothing out of
+/// an archive, so the link asks for both symbols outright.
+const unwind_link = [_][]const u8{ "-lunwind", "-Wl,-u,_Unwind_Backtrace", "-Wl,-u,_Unwind_GetIP" };
 const module_syntax = @import("module_syntax.zig");
 /// Build errors include frontend transport, native tools and manifest validation.
 pub const Error = fs.Error || std.json.ParseError(std.json.Scanner) || outputs.Error ||
@@ -749,6 +755,7 @@ const State = struct {
         if (parsed.library) try args.appendSlice(a, &library_link_arguments);
         try args.appendSlice(a, self.objects.items);
         try native_link.append(self.context, parsed.link_arguments, &args, false);
+        if (self.unwinds(parsed)) try args.appendSlice(a, &unwind_link);
         // Unreferenced runtime sections leave with the archive members nothing pulled.
         // `-s` drops the symbol table and any DWARF an object or an installed archive
         // still carries: traps and their frames read the runtime's own tables. A
@@ -794,6 +801,12 @@ const State = struct {
         if (self.cache.codegen.lto and !parsed.library and self.usesFrameMap()) return self.linkAssembled(parsed, candidate);
         try self.context.command(try self.linkCommand(parsed, candidate), null);
     }
+    /// Whether this link is an LLVM frame-map executable, whose guest code keeps
+    /// no frame pointer: its traps unwind by call-frame information, so it
+    /// links libunwind for `_Unwind_Backtrace` (QBE-FRAMEMAP-1).
+    fn unwinds(self: *State, parsed: options.Options) bool {
+        return self.cache.codegen.llvm and !parsed.library and self.usesFrameMap();
+    }
     /// Whether any unit was lowered for the frame map (QBE-FRAMEMAP-1).
     fn usesFrameMap(self: *State) bool {
         for (v.array(v.get(self.manifest, manifest_functions))) |unit| {
@@ -829,6 +842,7 @@ const State = struct {
         for (self.objects.items) |path| if (try self.nativeObject(path)) try args.append(a, path);
         try args.append(a, object);
         try native_link.append(self.context, parsed.link_arguments, &args, false);
+        try args.appendSlice(a, &unwind_link);
         try args.appendSlice(a, &.{ "-lm", gc_sections });
         if (!options.keepSymbols(parsed.link_arguments)) try args.append(a, "-s");
         try args.appendSlice(a, &.{ "-o", candidate });

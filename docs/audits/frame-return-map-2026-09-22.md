@@ -171,7 +171,36 @@ outside the stack.
 
 ## 6.4, second half: `readonly` guest functions — not done
 
-@@READONLY@@
+The plan's idea: with the record gone, mark a guest function whose signature
+says it cannot write — no `mut`, no effects, no allocation — `readonly` or
+`memory(argmem: read)`. It is not provably sound, so it is not done:
+
+- **Every trap path writes memory.** A pure function still carries its checks.
+  Their `myl_qbe_fail_*` call stores the trap code, the detail and the trace
+  into the context (and the first trap sorts the frame-map table into a
+  `malloc` block kept in a static) before `longjmp` leaves. A `readonly` or
+  `memory(argmem: read)` claim is false on exactly those paths. In practice the
+  writes are observed only after control has left every guest frame, but LLVM's
+  semantics give no such exemption, and the benefit would come precisely from
+  LLVM relying on the claim across calls.
+- **`argmem` does not describe this IL.** The adapter passes every pointer as an
+  `i64` and converts it at each use (`inttoptr`), and a list's elements sit
+  behind a pointer loaded from its header. Neither is "memory based on a pointer
+  argument", so `memory(argmem: read)` would make the function's own loads of
+  its collection's elements undefined — worse than unsound, it would license
+  deleting them. Only a whole-memory `memory(read)` fits, and the trap paths
+  break that one.
+- **What LLVM now infers by itself.** With no record escaping through `ctx`, a
+  guest function that makes no call is no longer a writer at all, and LLVM's
+  own attribute inference sees that: such functions are inferred
+  `memory(none)`/`memory(read)` under LTO and are freely inlined, hoisted and
+  CSE'd. A function that calls a check's fail helper stays opaque, as it must.
+
+A sound version needs the trap paths to write nothing LLVM can see — a fail
+helper that only reads its arguments and leaves through `longjmp`, with the
+trace built in a buffer the helper owns — and a parameter convention that
+carries pointers as `ptr` so `readonly` parameter attributes can say which
+argument is only read. Both are adapter/runtime changes larger than this lane.
 
 ## Gate
 

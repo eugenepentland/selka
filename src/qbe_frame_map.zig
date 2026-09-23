@@ -36,6 +36,11 @@ pub const guard_flag: u32 = 0x8000_0000;
 /// Bit set in an entry's position word when the entry is a caller the previous
 /// entry's function was inlined into, at this entry's position.
 pub const caller_flag: u32 = 0x4000_0000;
+/// Bit set in every entry of assembly that carries call-frame information
+/// (`.cfi_startproc`): LLVM's, whose guest functions keep no frame pointer, so
+/// the runtime unwinds such a program by its unwind tables. QBE keeps a frame
+/// pointer and emits no CFI, and its entries leave the bit clear.
+pub const unwind_flag: u32 = 0x2000_0000;
 
 /// Failures while annotating assembly.
 pub const Error = error{ OutOfMemory, FrameMapMismatch };
@@ -254,7 +259,7 @@ const Scan = struct {
         // must be the function it sits in: anything else would lose a frame.
         if (!std.mem.eql(u8, unit, call.function)) return error.FrameMapMismatch;
         const pc = at.line - 1;
-        if (pc >= caller_flag) return error.FrameMapMismatch;
+        if (pc >= unwind_flag) return error.FrameMapMismatch;
         try out.append(self.allocator, .{ .unit = unit, .word = if (at.column == guard_column) pc | guard_flag else pc });
     }
 };
@@ -290,10 +295,11 @@ pub fn annotate(allocator: std.mem.Allocator, text: []const u8) Error![]u8 {
         if (labels.get(index)) |label| w.print("\n.Lmyl_fm_{d}:", .{label}) catch return error.OutOfMemory;
     }
     if (sites.items.len != 0) {
+        const unwind: u32 = if (std.mem.indexOf(u8, text, ".cfi_startproc") != null) unwind_flag else 0;
         w.print("\n\t.section\t{s},\"aR\",@progbits\n\t.p2align\t2\n", .{section}) catch return error.OutOfMemory;
         for (sites.items) |site| {
             for (frames.items[site.first .. site.first + site.count]) |frame| {
-                w.print("\t.long\t.Lmyl_fm_{d}-.\n\t.long\t{d}\n\t.long\t{s}_meta-.\n", .{ site.label, frame.word, frame.unit }) catch return error.OutOfMemory;
+                w.print("\t.long\t.Lmyl_fm_{d}-.\n\t.long\t{d}\n\t.long\t{s}_meta-.\n", .{ site.label, frame.word | unwind, frame.unit }) catch return error.OutOfMemory;
             }
         }
     }
@@ -343,6 +349,16 @@ test "an inlined call names every frame it was inlined through, innermost first"
     try std.testing.expect(std.mem.indexOf(u8, output, "\t.long\t.Lmyl_fm_1-.\n\t.long\t2147483648\n\t.long\tmyl_f_b_meta-.\n\t.long\t.Lmyl_fm_1-.\n\t.long\t1073741832\n") != null);
     // A descriptor GUID printed signed names the same function as its unsigned probe.
     try std.testing.expect(std.mem.indexOf(u8, output, "\t.long\t.Lmyl_fm_2-.\n\t.long\t4\n\t.long\tmyl_f_c_meta-.\n") != null);
+}
+
+// spec-case: QBE-FRAMEMAP-ASM-1
+test "assembly with call-frame information marks its entries for the unwinder" {
+    const a = std.testing.allocator;
+    const input = ".file 1 \"myl_f_ab\"\nmyl_f_ab:\n\t.cfi_startproc\n\t.loc 1 8\n\tcallq g\n\t.cfi_endproc\n";
+    const output = try annotate(a, input);
+    defer a.free(output);
+    try std.testing.expect(std.mem.indexOf(u8, output, "\t.long\t.Lmyl_fm_0-.\n\t.long\t536870919\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, output, ".cfi_startproc") != null);
 }
 
 // spec-case: QBE-FRAMEMAP-ASM-1
