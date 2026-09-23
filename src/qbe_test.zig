@@ -752,6 +752,156 @@ test "the fast protocol ends each fail helper's path in hlt and accounting keeps
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, accounted, " hlt"));
     try std.testing.expect(std.mem.indexOf(u8, accounted, ")\n jmp @failure\n") != null);
 }
+/// The checked-arithmetic sequence of `il`: from the first `%v = OP %v, %v`
+/// whose operands are both temporaries through the `jnz` that tests its flag,
+/// with every temporary renamed `%tN` in order of first appearance and the
+/// branch cut after its condition.
+fn canonicalCheck(allocator: std.mem.Allocator, il: []const u8, op: []const u8) ![]u8 {
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const marker = try std.fmt.allocPrint(a, " =l {s} %v", .{op});
+    var out: std.ArrayList(u8) = .empty;
+    var names: std.ArrayList([]const u8) = .empty;
+    var started = false;
+    var lines = std.mem.splitScalar(u8, il, '\n');
+    while (lines.next()) |line| {
+        started = started or (std.mem.startsWith(u8, line, " %v") and std.mem.indexOf(u8, line, marker) != null and std.mem.count(u8, line, "%v") == 3);
+        if (!started) continue;
+        const jump = std.mem.startsWith(u8, line, " jnz ");
+        const text = if (jump) line[0 .. std.mem.indexOfScalar(u8, line, ',') orelse line.len] else line;
+        var index: usize = 0;
+        while (index < text.len) {
+            if (!std.mem.startsWith(u8, text[index..], "%v")) {
+                try out.append(a, text[index]);
+                index += 1;
+                continue;
+            }
+            var end = index + 2;
+            while (end < text.len and std.ascii.isDigit(text[end])) end += 1;
+            const name = text[index..end];
+            var number: usize = names.items.len;
+            for (names.items, 0..) |seen, position| {
+                if (std.mem.eql(u8, seen, name)) number = position;
+            }
+            if (number == names.items.len) try names.append(a, name);
+            try out.print(a, "%t{d}", .{number});
+            index = end;
+        }
+        try out.append(a, '\n');
+        if (jump) break;
+    }
+    return allocator.dupe(u8, out.items);
+}
+/// `canonicalCheck` of function `name` in `source` under the fast protocol.
+fn fastCheck(a: std.mem.Allocator, source: []const u8, name: []const u8, op: []const u8) ![]u8 {
+    const il = try emittedUnder(a, source, .{ .step_checks = false, .frame_checks = false }, name);
+    defer a.free(il);
+    return canonicalCheck(a, il, op);
+}
+// spec-case: LLVM-OVERFLOW-INTRINSIC-1
+test "a checked 64-bit add, subtract and multiply emit the exact flag formulas the LLVM adapter lowers to overflow intrinsics" {
+    // `experiments/llvm-backend/llvm_emit.overflow_formulas` rewrites exactly
+    // these values (and `test_adapter.CHECK_BODIES` spells them), so a change
+    // here must change the adapter too, or the checks silently go back to the
+    // xor/and sign test and the four-limb product.
+    const a = std.testing.allocator;
+    const source =
+        \\def sadd(x: int, y: int) -> int:
+        \\    return x + y
+        \\
+        \\
+        \\def ssub(x: int, y: int) -> int:
+        \\    return x - y
+        \\
+        \\
+        \\def smul(x: int, y: int) -> int:
+        \\    return x * y
+        \\
+        \\
+        \\def uadd(x: u64, y: u64) -> u64:
+        \\    return x + y
+        \\
+        \\
+        \\def usub(x: u64, y: u64) -> u64:
+        \\    return x - y
+        \\
+        \\
+        \\def umul(x: u64, y: u64) -> u64:
+        \\    return x * y
+        \\
+        \\
+        \\def main() -> int:
+        \\    return sadd(1, 2) + ssub(3, 1) + smul(2, 2) + int(uadd(1u64, 2u64) + usub(3u64, 1u64) + umul(2u64, 2u64))
+    ;
+    const signed_add = try fastCheck(a, source, "sadd", "add");
+    defer a.free(signed_add);
+    try std.testing.expectEqualStrings(
+        \\ %t0 =l add %t1, %t2
+        \\ %t3 =l xor %t1, %t0
+        \\ %t4 =l xor %t2, %t0
+        \\ %t5 =l and %t3, %t4
+        \\ %t6 =l csltl %t5, 0
+        \\ jnz %t6
+        \\
+    , signed_add);
+    const signed_sub = try fastCheck(a, source, "ssub", "sub");
+    defer a.free(signed_sub);
+    try std.testing.expectEqualStrings(
+        \\ %t0 =l sub %t1, %t2
+        \\ %t3 =l xor %t1, %t2
+        \\ %t4 =l xor %t1, %t0
+        \\ %t5 =l and %t3, %t4
+        \\ %t6 =l csltl %t5, 0
+        \\ jnz %t6
+        \\
+    , signed_sub);
+    const unsigned_add = try fastCheck(a, source, "uadd", "add");
+    defer a.free(unsigned_add);
+    try std.testing.expectEqualStrings(" %t0 =l add %t1, %t2\n %t3 =l cultl %t0, %t1\n jnz %t3\n", unsigned_add);
+    const unsigned_sub = try fastCheck(a, source, "usub", "sub");
+    defer a.free(unsigned_sub);
+    try std.testing.expectEqualStrings(" %t0 =l sub %t1, %t2\n %t3 =l cultl %t1, %t2\n jnz %t3\n", unsigned_sub);
+    const high =
+        \\ %t0 =l mul %t1, %t2
+        \\ %t3 =l and %t1, 4294967295
+        \\ %t4 =l shr %t1, 32
+        \\ %t5 =l and %t2, 4294967295
+        \\ %t6 =l shr %t2, 32
+        \\ %t7 =l mul %t3, %t5
+        \\ %t8 =l shr %t7, 32
+        \\ %t9 =l mul %t4, %t5
+        \\ %t10 =l add %t9, %t8
+        \\ %t11 =l and %t10, 4294967295
+        \\ %t12 =l shr %t10, 32
+        \\ %t13 =l mul %t3, %t6
+        \\ %t14 =l add %t13, %t11
+        \\ %t15 =l shr %t14, 32
+        \\ %t16 =l mul %t4, %t6
+        \\ %t17 =l add %t16, %t12
+        \\ %t18 =l add %t17, %t15
+        \\
+    ;
+    const unsigned_mul = try fastCheck(a, source, "umul", "mul");
+    defer a.free(unsigned_mul);
+    try std.testing.expectEqualStrings(high ++ " %t19 =l cnel %t18, 0\n jnz %t19\n", unsigned_mul);
+    const signed_mul = try fastCheck(a, source, "smul", "mul");
+    defer a.free(signed_mul);
+    try std.testing.expectEqualStrings(high ++
+        \\ %t19 =l csltl %t1, 0
+        \\ %t20 =l csltl %t2, 0
+        \\ %t21 =l neg %t19
+        \\ %t22 =l neg %t20
+        \\ %t23 =l and %t2, %t21
+        \\ %t24 =l and %t1, %t22
+        \\ %t25 =l sub %t18, %t23
+        \\ %t25 =l sub %t25, %t24
+        \\ %t26 =l sar %t0, 63
+        \\ %t27 =l cnel %t25, %t26
+        \\ jnz %t27
+        \\
+    , signed_mul);
+}
 // spec: QBE-POSITION-2
 test "a trap position stores on the cold path and a call site keeps its own" {
     const a = std.testing.allocator;

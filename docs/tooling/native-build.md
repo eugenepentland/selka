@@ -97,6 +97,22 @@ The `# myl-obj` markers are comment lines of their own. QBE's lexer drops a `#`
 comment to end of line, so the QBE backend's assembly is byte-identical with and
 without them.
 
+The adapter does lower one kind of check differently, without assuming anything
+about it: a checked 64-bit `+`, `-` or `*` becomes
+`llvm.{s,u}{add,sub,mul}.with.overflow.i64`, so it reaches the machine as the
+operation and one flag branch (`add; jo`, `sub; jb`, `imul; jo`) rather than the
+frontend's xor/and sign test or its four-limb high product. The adapter evaluates
+each block symbolically and replaces a flag only when its value is *exactly* one
+of the frontend's overflow formulas over an `add`, `sub` or `mul` earlier in the
+block. Each formula equals the intrinsic's overflow bit for every pair of 64-bit
+operands, so this is a change of spelling, not a new fact: the branch, the cold
+block and its `myl_qbe_fail_overflow_op` call (same operands, width and
+position) are untouched, and a trap reports exactly what it did before. A
+narrower width's range test and the single compare against a literal operand
+are already one compare and stay as they are. `LLVM-OVERFLOW-INTRINSIC-1` in
+`SPEC.md` states the rule; `experiments/llvm-backend/llvm_emit.OverflowChecks`
+implements it.
+
 ## `mylang build`
 
 `mylang build <file.my> -o <output>` checks the program, lowers it, compiles one
