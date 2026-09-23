@@ -210,6 +210,23 @@ the smallest credible next step is a driver-side pass annotating each call site
 with a distinct symbol (or an IL extension giving each call site a label
 reference), after which the map is built and read only on a trap.
 
+**Landed, 2026-09-22 (wave 4, `perf/frame-return-map`).** The record is gone
+from the fast protocol (`QBE-FRAMEMAP-1`). Every call is positioned with
+`dbgloc`. The build turns QBE's `.loc` lines, and LLVM's pseudo-probe call sites
+with their inline stacks, into a return-address table (`QBE-FRAMEMAP-ASM-1`).
+Full LTO goes through `ld.lld --lto-emit-asm` for this. A trap walks the guest
+stack: by call-frame information for LLVM (static libunwind, guest `uwtable`,
+no frame pointer) and by frame pointers for QBE.
+
+- LLVM keeps inlining guest code, and inlined frames are still reported.
+- Traps are byte-identical over a 280-case corpus.
+- The floor test stays, now two instructions against `%rsp`.
+- `fib` is 3.35× → 2.08× Zig ReleaseFast. That is not ≤ 1.9×: the checked
+  add's lowering is what is left.
+- `raytrace` −23.5%, the suite geomean −2.6%, the parser −5–6%.
+
+See [the lane report](audits/frame-return-map-2026-09-22.md).
+
 ### 3. Shrink what an allocation touches, and replace the collector's allocator and sweep
 
 *Runtime ABI. Size: large.*

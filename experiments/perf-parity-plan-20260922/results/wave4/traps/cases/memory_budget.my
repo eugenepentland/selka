@@ -1,0 +1,12 @@
+def grow(n: int) -> list[int]:
+    items = [0]
+    for i in range(n):
+        items.append(i)
+    return items
+
+
+def main() -> int:
+    total = 0
+    for round in range(1000):
+        total = total + len(grow(100000000))
+    return total
