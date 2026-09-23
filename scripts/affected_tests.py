@@ -99,6 +99,7 @@ HOST_STEPS = (
     ("scripts/setup-git.sh", "test-spec-merge"),
     ("tests/test_spec_merge.py", "test-spec-merge"),
     ("build_test_inputs.zig", "test-inputs-coverage"),
+    ("tests/input_manifest.py", "test-inputs-coverage"),
     ("tests/native_heap_test.c", "test-native-heap"),
     ("tests/native_arena_chunks_test.c", "test-native-heap"),
     ("tests/invoke/", "test-native-boundary"),

@@ -223,10 +223,14 @@ A `zig build` Run step is re-executed only when its cache key changes, and the
 gate's test steps now use that: the root shards, the host-application roots,
 the Python drivers and `mylang doctest` are keyed on the test binary, the
 emitted compiler and `qbe` they run, their command and environment, and the
-repository files listed for them in `build_test_inputs.zig` (every file under a
-declared directory, found at configure time, with the directory itself a
-configure dependency so an added fixture is seen). An unchanged `zig build
-test` reruns only Guardian, `doc-coverage`, the guest suites (whose own
+repository files listed for them in `build_test_inputs.zig`. Those lists are
+expanded on every build by `tests/input_manifest.py`, which writes one content
+manifest per list (a SHA-256 per file); each step declares its manifest, so an
+edited, added, removed or renamed file re-runs exactly the steps whose lists
+cover it. The walk happens at make time because this Zig version records
+`dependOnDirectory` but never re-runs the configure phase for it: a list
+expanded in `build.zig` would not see a new fixture. An unchanged `zig build
+test` reruns only the manifest walk (0.15 s), Guardian, `doc-coverage`, the guest suites (whose own
 receipts make that near-free) and the SPEC merge replay, which reads git
 history. `test-inputs-coverage` fails the gate when a test source names an
 existing repository path that its step does not declare, and

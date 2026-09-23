@@ -4,10 +4,12 @@
 //! changes: its arguments, its environment, the artifacts it names and the
 //! files declared as its inputs. A test binary that opens a fixture, or a
 //! Python driver that compiles every probe under a directory, reads files the
-//! build system cannot see, so each such step declares them here. `build.zig`
-//! turns every entry into content inputs (`addFileInput`) at configure time and
-//! asks the configure phase to re-run when a declared directory gains, loses or
-//! renames an entry (`dependOnDirectory`), so a new fixture is picked up too.
+//! build system cannot see, so each such step names a list here. On every build
+//! `tests/input_manifest.py` expands each list and writes one content manifest
+//! per list, and the step declares that manifest as its input: an edited, added,
+//! removed or renamed file changes the manifest and re-runs the step. Every
+//! `pub` list below is passed to it; a step names its list by the constant's
+//! name.
 //!
 //! Entry syntax:
 //! - `dir/` — every file under `dir`, recursively;
@@ -17,11 +19,11 @@
 //! Hidden entries, `__pycache__` and `*.pyc` are never inputs.
 //!
 //! The lists were measured by tracing every `open`/`stat` the steps made
-//! (`strace -f`, recorded in `docs/audits/test-loop-speed-2026-09-23.md`) and
-//! are checked on every gate by `tests/test_inputs_coverage.py`, which fails
-//! when a test source names a repository path no entry covers. When a test
-//! starts reading a new file, declare it here; `-Dtest-rerun=true` re-runs every
-//! cached test step regardless.
+//! (`strace -f`, see `docs/audits/test-loop-speed-2026-09-23.md`) and are
+//! checked on every gate by `tests/test_inputs_coverage.py`, which fails when a
+//! test source names a repository path no entry covers. When a test starts
+//! reading a new file, declare it here; `-Dtest-rerun=true` re-runs every cached
+//! test step regardless.
 
 /// The LLVM adapter's sources. A compiler that builds a guest reads them
 /// through `MYLANG_LLVM_ADAPTER` whenever the release path is selected.
@@ -141,3 +143,9 @@ pub const coverage = [_][]const u8{
     "src/**/*.zig",
     "test/**/*.zig",
 };
+
+/// `tests/test_inputs_coverage.py --self-test`.
+pub const coverage_self = [_][]const u8{"tests/test_inputs_coverage.py"};
+
+/// `tests/input_manifest.py --self-test`.
+pub const manifest_self = [_][]const u8{"tests/input_manifest.py"};

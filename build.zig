@@ -118,60 +118,34 @@ var tool_inputs: [2]?std.Build.LazyPath = .{ null, null };
 /// `-Dtest-rerun`: run every cached test step even when none of its inputs
 /// changed, to see full selected-test counts or to rule out a stale verdict.
 var test_rerun = false;
-/// Every declared input entry already expanded to files, so a tree several steps
-/// share is walked once per configure.
-var expanded_inputs: std.StringHashMapUnmanaged([]const std.Build.LazyPath) = .empty;
-/// Expand one `build_test_inputs.zig` entry into the files it names. Every
-/// directory walked becomes a configure dependency, so a created, deleted or
-/// renamed file re-runs the configure phase and re-expands the entry.
-fn expandInputs(b: *std.Build, entry: []const u8) []const std.Build.LazyPath {
-    if (expanded_inputs.get(entry)) |paths| return paths;
-    var paths: std.ArrayList(std.Build.LazyPath) = .empty;
-    const tree: ?struct { dir: []const u8, suffix: []const u8, recursive: bool } =
-        if (std.mem.endsWith(u8, entry, "/")) .{ .dir = entry[0 .. entry.len - 1], .suffix = "", .recursive = true } else if (std.mem.indexOf(u8, entry, "/**/*")) |at|
-            .{ .dir = entry[0..at], .suffix = entry[at + "/**/*".len ..], .recursive = true }
-        else if (std.mem.indexOf(u8, entry, "/*")) |at|
-            .{ .dir = entry[0..at], .suffix = entry[at + "/*".len ..], .recursive = false }
-        else
-            null;
-    if (tree) |t| {
-        var dir = b.root.openDir(b.graph.io, t.dir, .{ .iterate = true }) catch |err|
-            std.debug.panic("declared test input {s}: {t}; update build_test_inputs.zig", .{ entry, err });
-        defer dir.close(b.graph.io);
-        b.dependOnDirectory(b.path(t.dir));
-        var walker = dir.walkSelectively(b.allocator) catch @panic("out of memory");
-        defer walker.deinit();
-        while (walker.next(b.graph.io) catch |err| std.debug.panic("walking {s}: {t}", .{ t.dir, err })) |item| {
-            if (item.basename[0] == '.' or std.mem.eql(u8, item.basename, "__pycache__")) continue;
-            const sub_path = b.pathJoin(&.{ t.dir, item.path });
-            switch (item.kind) {
-                .directory => if (t.recursive) {
-                    walker.enter(b.graph.io, item) catch |err| std.debug.panic("walking {s}: {t}", .{ sub_path, err });
-                    b.dependOnDirectory(b.path(sub_path));
-                },
-                .file => if (std.mem.endsWith(u8, item.basename, t.suffix) and !std.mem.endsWith(u8, item.basename, ".pyc"))
-                    paths.append(b.allocator, b.path(sub_path)) catch @panic("out of memory"),
-                else => {},
-            }
-        }
-    } else {
-        b.root.access(b.graph.io, entry, .{}) catch |err|
-            std.debug.panic("declared test input {s}: {t}; update build_test_inputs.zig", .{ entry, err });
-        // Only the file's existence is configure-time state; its bytes are a make-phase input.
-        b.dependOnDirectory(b.path(std.fs.path.dirname(entry) orelse "."));
-        paths.append(b.allocator, b.path(entry)) catch @panic("out of memory");
+/// The directory of per-list content manifests `tests/input_manifest.py` writes
+/// on every build, one `NAME.txt` per list in `build_test_inputs.zig`.
+var input_manifests: ?std.Build.LazyPath = null;
+/// Add the step that hashes every declared test input, once per build. It runs on
+/// every invocation because only a make-phase walk sees a file added to a
+/// declared directory: this Zig version records `dependOnDirectory` but never
+/// re-runs the configure phase for it. An unchanged tree yields byte-identical
+/// manifests, so the cached steps that read them stay cached.
+fn addInputManifests(b: *std.Build) void {
+    const run = b.addSystemCommand(&.{ "python3", "tests/input_manifest.py" });
+    run.setName("hash declared test inputs");
+    run.setCwd(b.path("."));
+    run.has_side_effects = true;
+    run.step.max_rss = rss.script;
+    input_manifests = run.addOutputDirectoryArg("test-inputs");
+    inline for (comptime std.meta.declarations(test_inputs)) |name| {
+        run.addArgs(&.{ "--list", name });
+        run.addArgs(&@field(test_inputs, name));
     }
-    const owned = paths.toOwnedSlice(b.allocator) catch @panic("out of memory");
-    expanded_inputs.put(b.allocator, entry, owned) catch @panic("out of memory");
-    return owned;
 }
 /// Let a test step's verdict be cached: it re-runs only when its command, its
 /// environment, an artifact it names, the tools the environment names, or one of
-/// the repository files `entries` declares changes (or under `-Dtest-rerun`).
-fn cached(run: *std.Build.Step.Run, entries: []const []const u8) void {
+/// the repository files the `list` in `build_test_inputs.zig` declares changes
+/// (or under `-Dtest-rerun`). An empty `list` declares no repository files.
+fn cached(run: *std.Build.Step.Run, list: []const u8) void {
     run.has_side_effects = test_rerun;
     const b = run.step.owner;
-    for (entries) |entry| for (expandInputs(b, entry)) |path| run.addFileInput(path);
+    if (list.len != 0) run.addFileInput(input_manifests.?.path(b, b.fmt("{s}.txt", .{list})));
     for (tool_inputs) |tool| if (tool) |path| run.addFileInput(path);
 }
 /// A test driver outside Zig (Python, or the compiler on a whole tree) whose
@@ -180,12 +154,12 @@ fn cached(run: *std.Build.Step.Run, entries: []const []const u8) void {
 /// step's standard output, so the command's standard output is sent to standard
 /// error, which it keeps and prints when the step fails. `name` labels the step
 /// in the build summary, where every such step would otherwise read `run sh`.
-fn driver(b: *std.Build, name: []const u8, bytes: u64, entries: []const []const u8) *std.Build.Step.Run {
+fn driver(b: *std.Build, name: []const u8, bytes: u64, list: []const u8) *std.Build.Step.Run {
     const run = bounded(b.addSystemCommand(&.{ "sh", "-c", "exec \"$@\" 1>&2", "driver" }), bytes);
     run.setName(name);
     run.setCwd(b.path("."));
     run.expectExitCode(0);
-    cached(run, entries);
+    cached(run, list);
     return run;
 }
 /// Declare a step's resident-memory ceiling, and give it the native tools a guest
@@ -237,13 +211,14 @@ fn forwardFilters(b: *std.Build, step: *std.Build.Step.Run, filters: []const []c
     for (filters) |filter| step.addArg(b.fmt("--guardian-filter={s}", .{filter}));
 }
 /// How to split one test root: its shard count, each shard's resident-memory
-/// ceiling, the repository files its tests read (`build_test_inputs.zig`), the
+/// ceiling, the list naming the repository files its tests read
+/// (`build_test_inputs.zig`), the
 /// whole-root run a count of 1 uses instead, and — for the focused sharded
 /// steps — the `-Dtest-filter` values to forward and whether to cache verdicts.
 const Shards = struct {
     count: usize,
     bytes: u64,
-    inputs: []const []const u8,
+    inputs: []const u8,
     whole: *std.Build.Step.Run,
     filters: []const []const u8 = &.{},
     cache: bool = true,
@@ -391,6 +366,7 @@ pub fn build(b: *std.Build) void {
     // Installed beside `mylang`, where the native build driver looks for it before `PATH`.
     const qbe_exe = vendoredQbe(b, target);
     tool_inputs = .{ qbe_exe.getEmittedBin(), exe.getEmittedBin() };
+    addInputManifests(b);
     const install_qbe_step = b.addInstallArtifact(qbe_exe, .{});
     b.getInstallStep().dependOn(&install_qbe_step.step);
     // LLVM's adapter is optional at run time; keep its imported modules beside
@@ -596,8 +572,8 @@ pub fn build(b: *std.Build) void {
     // The gate runs each slow root as several concurrent shards; `test-units`
     // and `test-cli` keep the single whole-root run, so `-Dtest-filter` behaves
     // exactly as documented and its selected-test count means what it says.
-    const unit_runs = shardRuns(b, unit, .{ .count = unit_shards, .bytes = rss.shard_unit, .inputs = &test_inputs.unit, .whole = run_unit });
-    const cli_runs = shardRuns(b, integration, .{ .count = cli_shards, .bytes = rss.shard_cli, .inputs = &test_inputs.cli, .whole = run_integration });
+    const unit_runs = shardRuns(b, unit, .{ .count = unit_shards, .bytes = rss.shard_unit, .inputs = "unit", .whole = run_unit });
+    const cli_runs = shardRuns(b, integration, .{ .count = cli_shards, .bytes = rss.shard_cli, .inputs = "cli", .whole = run_integration });
     dependOnAll(test_step, unit_runs);
     // The fast inner loops: no Python drivers, no Guardian and no full install graph,
     // so `-Dtest-filter` returns in seconds.
@@ -609,22 +585,22 @@ pub fn build(b: *std.Build) void {
     // cached, so every run reports what it selected.
     const units_sharded = b.step("test-units-sharded", "Run src/root_test.zig split into -Dtest-shards processes, honouring -Dtest-filter");
     const cli_sharded = b.step("test-cli-sharded", "Run test/integration.zig split into -Dtest-shards/2 processes, honouring -Dtest-filter");
-    dependOnAll(units_sharded, shardRuns(b, unit, .{ .count = requested_shards, .bytes = rss.shard_unit, .inputs = &.{}, .whole = run_unit, .filters = test_filters, .cache = false }));
-    dependOnAll(cli_sharded, shardRuns(b, integration, .{ .count = @max(1, requested_shards / 2), .bytes = rss.shard_cli, .inputs = &.{}, .whole = run_integration, .filters = test_filters, .cache = false }));
+    dependOnAll(units_sharded, shardRuns(b, unit, .{ .count = requested_shards, .bytes = rss.shard_unit, .inputs = "", .whole = run_unit, .filters = test_filters, .cache = false }));
+    dependOnAll(cli_sharded, shardRuns(b, integration, .{ .count = @max(1, requested_shards / 2), .bytes = rss.shard_cli, .inputs = "", .whole = run_integration, .filters = test_filters, .cache = false }));
     const byte_io_step = b.step("test-byte-io", "Verify raw guest stdin/stdout and host bounds");
     const run_byte_io_unit = bounded(b.addRunArtifact(byte_io_unit), rss.host_suite);
-    cached(run_byte_io_unit, &test_inputs.byte_io);
+    cached(run_byte_io_unit, "byte_io");
     byte_io_step.dependOn(&run_byte_io_unit.step);
     test_step.dependOn(&run_byte_io_unit.step);
     guardian.addAllChecks(b, guardian_exe, byte_io_step, .{});
     boundedChecks(byte_io_step);
     dependOnAll(test_step, cli_runs);
     const run_board_unit = bounded(b.addRunArtifact(board_unit), rss.host_suite);
-    cached(run_board_unit, &test_inputs.board);
+    cached(run_board_unit, "board");
     test_step.dependOn(&run_board_unit.step);
     const schematic_step = b.step("test-schematic", "Verify guest SVG generation against Netlisp connectivity and source mutations");
     const run_schematic_unit = bounded(b.addRunArtifact(schematic_unit), rss.host_suite);
-    cached(run_schematic_unit, &test_inputs.schematic);
+    cached(run_schematic_unit, "schematic");
     const audit_runtime = b.step("test-runtime-audit", "Run every Zig test root for isolated runtime probes");
     guardian.addAllChecks(b, guardian_exe, audit_runtime, .{});
     boundedChecks(audit_runtime);
@@ -738,7 +714,7 @@ pub fn build(b: *std.Build) void {
     native_test_unit.root_module.addImport("memory_budget", budget);
     guardian.enableTestDiagnostics(native_test_unit.root_module);
     const run_native_test_unit = bounded(b.addRunArtifact(native_test_unit), rss.suite);
-    cached(run_native_test_unit, &test_inputs.native_roots);
+    cached(run_native_test_unit, "native_roots");
     native_test_step.dependOn(&run_native_test_unit.step);
     compile_tests.dependOn(&native_test_unit.step);
     guardian.addAllChecks(b, guardian_exe, native_test_step, .{});
@@ -752,7 +728,7 @@ pub fn build(b: *std.Build) void {
     }) });
     guardian.enableTestDiagnostics(ffi_unit.root_module);
     const run_ffi_unit = bounded(b.addRunArtifact(ffi_unit), rss.suite);
-    cached(run_ffi_unit, &test_inputs.native_roots);
+    cached(run_ffi_unit, "native_roots");
     ffi_step.dependOn(&run_ffi_unit.step);
     compile_tests.dependOn(&ffi_unit.step);
     guardian.addAllChecks(b, guardian_exe, ffi_step, .{});
@@ -767,7 +743,7 @@ pub fn build(b: *std.Build) void {
     });
     guardian.enableTestDiagnostics(host_native_unit.root_module);
     const run_host_native_unit = bounded(b.addRunArtifact(host_native_unit), rss.suite);
-    cached(run_host_native_unit, &test_inputs.native_roots);
+    cached(run_host_native_unit, "native_roots");
     qbe_build_step.dependOn(&run_host_native_unit.step);
     compile_tests.dependOn(&host_native_unit.step);
     const qbe_build_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
@@ -779,7 +755,7 @@ pub fn build(b: *std.Build) void {
     qbe_build_unit.root_module.addImport("memory_budget", budget);
     guardian.enableTestDiagnostics(qbe_build_unit.root_module);
     const run_qbe_build_unit = bounded(b.addRunArtifact(qbe_build_unit), rss.suite);
-    cached(run_qbe_build_unit, &test_inputs.native_roots);
+    cached(run_qbe_build_unit, "native_roots");
     qbe_build_step.dependOn(&run_qbe_build_unit.step);
     compile_tests.dependOn(&qbe_build_unit.step);
     const host_bridge_module = b.createModule(.{ .target = target, .optimize = optimize, .link_libc = true });
@@ -806,7 +782,7 @@ pub fn build(b: *std.Build) void {
     guardian.enableTestDiagnostics(golden_unit.root_module);
     compile_tests.dependOn(&golden_unit.step);
     const run_golden = bounded(b.addRunArtifact(golden_unit), rss.suite);
-    cached(run_golden, &test_inputs.golden);
+    cached(run_golden, "golden");
     forwardFilters(b, run_golden, test_filters);
     run_golden.setCwd(b.path("."));
     golden_step.dependOn(&run_golden.step);
@@ -817,10 +793,10 @@ pub fn build(b: *std.Build) void {
     guardian.addAllChecks(b, guardian_exe, agent_tools, .{});
     boundedChecks(agent_tools);
     const idiom_step = b.step("test-idioms", "Measure Python-shaped idioms and reject regressions");
-    const idiom_self_test = driver(b, "python3 tests/idiom_probes.py --self-test", rss.script, &test_inputs.idioms_self);
+    const idiom_self_test = driver(b, "python3 tests/idiom_probes.py --self-test", rss.script, "idioms_self");
     idiom_self_test.addArgs(&.{ "python3", "tests/idiom_probes.py", "--self-test" });
     idiom_step.dependOn(&idiom_self_test.step);
-    const idiom_run = driver(b, "python3 tests/idiom_probes.py --compiler", rss.driver, &test_inputs.idioms);
+    const idiom_run = driver(b, "python3 tests/idiom_probes.py --compiler", rss.driver, "idioms");
     idiom_run.addArgs(&.{ "python3", "tests/idiom_probes.py", "--compiler" });
     idiom_run.addArtifactArg(exe);
     idiom_step.dependOn(&idiom_run.step);
@@ -830,14 +806,14 @@ pub fn build(b: *std.Build) void {
     // compiler) and the friction harvest over its replay fixture. Registering
     // them here keeps them from rotting outside the gate.
     const usefulness_step = b.step("test-agent-usefulness", "Verify parser hints, headerless imports, and the friction harvest");
-    const hints_static = driver(b, "python3 tests/parser_hints.py", rss.script, &test_inputs.parser_hints);
+    const hints_static = driver(b, "python3 tests/parser_hints.py", rss.script, "parser_hints");
     hints_static.addArgs(&.{ "python3", "tests/parser_hints.py" });
     usefulness_step.dependOn(&hints_static.step);
-    const hints_run = driver(b, "python3 tests/parser_hints.py --compiler", rss.driver, &test_inputs.parser_hints);
+    const hints_run = driver(b, "python3 tests/parser_hints.py --compiler", rss.driver, "parser_hints");
     hints_run.addArgs(&.{ "python3", "tests/parser_hints.py", "--compiler" });
     hints_run.addArtifactArg(exe);
     usefulness_step.dependOn(&hints_run.step);
-    const harvest_run = driver(b, "python3 tests/test_friction_harvest.py", rss.script, &test_inputs.friction);
+    const harvest_run = driver(b, "python3 tests/test_friction_harvest.py", rss.script, "friction");
     harvest_run.addArgs(&.{ "python3", "tests/test_friction_harvest.py" });
     usefulness_step.dependOn(&harvest_run.step);
     test_step.dependOn(usefulness_step);
@@ -863,10 +839,10 @@ pub fn build(b: *std.Build) void {
     // and requires one answer, so a shape that satisfies its contract on QBE and
     // not on LLVM fails here instead of on whichever backend nobody ran.
     const boundary_step = b.step("test-native-boundary", "Verify every carried boundary shape agrees across the QBE and LLVM backends");
-    const boundary_self = driver(b, "python3 tests/native_boundary_matrix.py --self-test", rss.script, &test_inputs.boundary_self);
+    const boundary_self = driver(b, "python3 tests/native_boundary_matrix.py --self-test", rss.script, "boundary_self");
     boundary_self.addArgs(&.{ "python3", "tests/native_boundary_matrix.py", "--self-test" });
     boundary_step.dependOn(&boundary_self.step);
-    const boundary_run = driver(b, "python3 tests/native_boundary_matrix.py --compiler", rss.parity, &test_inputs.boundary);
+    const boundary_run = driver(b, "python3 tests/native_boundary_matrix.py --compiler", rss.parity, "boundary");
     boundary_run.addArgs(&.{ "python3", "tests/native_boundary_matrix.py", "--compiler" });
     boundary_run.addArtifactArg(exe);
     boundary_step.dependOn(&boundary_run.step);
@@ -875,7 +851,7 @@ pub fn build(b: *std.Build) void {
     // rewrites, frame map and declaration attributes. Nothing else fails if the
     // adapter silently stops matching a shape, so they run in the gate.
     const adapter_step = b.step("test-llvm-adapter", "Run the LLVM adapter's unit tests");
-    const adapter_run = driver(b, "python3 -m unittest test_adapter", rss.driver, &test_inputs.adapter);
+    const adapter_run = driver(b, "python3 -m unittest test_adapter", rss.driver, "adapter");
     adapter_run.addArgs(&.{ "python3", "-m", "unittest", "test_adapter" });
     adapter_run.setCwd(b.path("experiments/llvm-backend"));
     adapter_step.dependOn(&adapter_run.step);
@@ -884,7 +860,7 @@ pub fn build(b: *std.Build) void {
     // print, text views) under UBSan. Two of them broke silently in merges when
     // only lanes ran them by hand, so they run in the gate.
     const native_memory_step = b.step("test-native-memory", "Run the C runtime suites under UBSan");
-    const native_memory_run = driver(b, "python3 scripts/test_native_memory.py", rss.driver, &test_inputs.native_memory);
+    const native_memory_run = driver(b, "python3 scripts/test_native_memory.py", rss.driver, "native_memory");
     native_memory_run.addArgs(&.{ "python3", "scripts/test_native_memory.py" });
     native_memory_step.dependOn(&native_memory_run.step);
     test_step.dependOn(native_memory_step);
@@ -892,15 +868,18 @@ pub fn build(b: *std.Build) void {
     // `scripts/affected_tests.py`, and the check that every repository file a
     // cached test root names is one of its declared inputs.
     const affected_step = b.step("test-affected-selection", "Pin scripts/affected_tests.py's change-to-test mapping");
-    const affected_run = driver(b, "python3 tests/test_affected_tests.py", rss.script, &test_inputs.affected);
+    const affected_run = driver(b, "python3 tests/test_affected_tests.py", rss.script, "affected");
     affected_run.addArgs(&.{ "python3", "tests/test_affected_tests.py" });
     affected_step.dependOn(&affected_run.step);
     test_step.dependOn(affected_step);
     const coverage_step = b.step("test-inputs-coverage", "Require every repository file a cached test names to be a declared input");
-    const coverage_self = driver(b, "python3 tests/test_inputs_coverage.py --self-test", rss.script, &.{"tests/test_inputs_coverage.py"});
+    const coverage_self = driver(b, "python3 tests/test_inputs_coverage.py --self-test", rss.script, "coverage_self");
     coverage_self.addArgs(&.{ "python3", "tests/test_inputs_coverage.py", "--self-test" });
     coverage_step.dependOn(&coverage_self.step);
-    const coverage_run = driver(b, "python3 tests/test_inputs_coverage.py", rss.script, &test_inputs.coverage);
+    const coverage_run = driver(b, "python3 tests/test_inputs_coverage.py", rss.script, "coverage");
+    const manifest_self = driver(b, "python3 tests/input_manifest.py --self-test", rss.script, "manifest_self");
+    manifest_self.addArgs(&.{ "python3", "tests/input_manifest.py", "--self-test" });
+    coverage_step.dependOn(&manifest_self.step);
     coverage_run.addArgs(&.{ "python3", "tests/test_inputs_coverage.py" });
     coverage_step.dependOn(&coverage_run.step);
     test_step.dependOn(coverage_step);
@@ -932,7 +911,7 @@ pub fn build(b: *std.Build) void {
     boundedChecks(lang_step);
     const doctest_step = b.step("test-docs", "Execute every fenced documentation example");
     // The doctest fans its units out across a worker pool, so it is bounded like a suite.
-    const doctest_run = driver(b, "mylang doctest .", rss.suite, &test_inputs.doctest);
+    const doctest_run = driver(b, "mylang doctest .", rss.suite, "doctest");
     doctest_run.addArtifactArg(exe);
     doctest_run.addArgs(&.{ "doctest", "." });
     doctest_step.dependOn(&doctest_run.step);
