@@ -174,6 +174,11 @@ $ mylang test suite/ --jobs 4 --max-memory=256M
 8 passed, 0 cached, 0 failed, 0 skipped across 4 programs
 ```
 
+That bounds one invocation. Several agents building and gating on one machine
+share it through `scripts/build-slot.sh`, which admits a job only when a slot and
+enough `MemAvailable` are free
+([many agents on one machine](many-agents.md)).
+
 ## Sharded Zig test roots
 
 The gate's two slow Zig test roots run as several processes rather than one:

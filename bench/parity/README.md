@@ -18,7 +18,9 @@ Without `-Dbench-mylang` the step first installs this checkout's compiler (the
 ordinary `zig build`, so a Debug compiler unless `-Doptimize` says otherwise).
 The compiler's own optimization changes only how long the builds take: the
 programs are built with `mylang build`'s default (ReleaseFast, LLVM O3 + LTO),
-and a Debug and a ReleaseFast compiler emit byte-identical binaries. Add
+and a Debug and a ReleaseFast compiler emit byte-identical binaries
+(`python3 bench/parity/bench_parity.py same-binaries --other PATH/bin/mylang`
+checks every mylang arm; 88 of 88 matched on 2026-09-23). Add
 `-Dcompiler-only=true` so that install skips the three application runners,
 which it would otherwise build without using them.
 
@@ -76,7 +78,12 @@ qualify is skipped with a notice. A mylang arm that fails either way, or a
    An excess the second pass does not repeat is printed as `noise`, not a
    failure. `-- --no-confirm` fails on the first pass.
 
-Pick a performance core (`lscpu -e`: on a hybrid Intel part the E-cores are
+Without `-Dbench-cpu` the timing CPU is the first of `MYLANG_TIMING_CPUS`
+(default `2,3,10,11`). `scripts/build-slot.sh` keeps builds and gates off those
+CPUs, and the harness builds its own arms with them masked off. Before timing, it
+warns when the timing CPU or its sibling is already busy
+([many agents on one machine](../../docs/tooling/many-agents.md)). Otherwise,
+pick a performance core (`lscpu -e`: on a hybrid Intel part the E-cores are
 the high-numbered CPUs) that nothing else is pinned to **and whose SMT sibling
 is idle** (the `CORE` column pairs them; CPU 10's sibling on the i7-12700H is
 CPU 11). Interleaving makes a ratio fair to both arms against load that slows
