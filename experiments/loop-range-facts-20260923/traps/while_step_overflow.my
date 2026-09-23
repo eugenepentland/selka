@@ -1,0 +1,14 @@
+def mark(flags: mut list[bool], j0: int, step: int, n: int) -> int:
+    j = j0
+    marked = 0
+    while j <= n:
+        flags[j % 40] = False
+        marked += 1
+        j = j + step
+    return marked
+
+
+def main(out: Stream) -> int:
+    flags = [True for _ in range(40)]
+    out.print(mark(mut flags, -9, 1, 30))
+    return mark(mut flags, 9223372036854775000, 100, 9223372036854775800)

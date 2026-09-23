@@ -236,7 +236,9 @@ zig build guardian -- install-hook .
 
 The hook command installs a blocking pre-commit gate in this checkout; repeat it
 after cloning because Git hooks are local. It also configures Guardian metadata
-merge handling.
+merge handling. Also run `sh scripts/setup-git.sh` once per clone: it registers
+the `SPEC.md` merge driver (`scripts/merge_spec.py`), which merges spec bullets by
+tag so parallel branches that append to one section no longer conflict.
 
 [SPEC.md](SPEC.md) links implemented behaviors to executable regression tests.
 [Versioned JSON diagnostics](docs/experiments/json-diagnostics.md) are available

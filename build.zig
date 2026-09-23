@@ -273,13 +273,15 @@ fn boundedChecks(step: *std.Build.Step) void {
 /// `zig build test` never builds or times it. Arguments after `--` reach the
 /// harness (`--json PATH`, `--arms ...`, `--write-thresholds`).
 fn addParityBench(b: *std.Build) void {
-    const cpu = b.option(u32, "bench-cpu", "bench-parity: the one CPU every timed process is pinned to (default 2)") orelse 2;
+    const cpu = b.option(u32, "bench-cpu", "bench-parity: the one CPU every timed process is pinned to (default: first of MYLANG_TIMING_CPUS, else 2)");
     const rounds = b.option(u32, "bench-rounds", "bench-parity: timed rounds per program (default 7)") orelse 7;
     const filter = b.option([]const u8, "bench-filter", "bench-parity: comma-separated substrings of GROUP/NAME, e.g. sieve or micro/");
     const compiler = b.option([]const u8, "bench-mylang", "bench-parity: time this compiler instead of the one this build installs");
     const bench = b.addSystemCommand(&.{ "python3", "bench/parity/bench_parity.py", "run", "--zig", b.graph.zig_exe });
     bench.setCwd(b.path("."));
-    bench.addArgs(&.{ "--cpu", b.fmt("{d}", .{cpu}), "--rounds", b.fmt("{d}", .{rounds}) });
+    // Without -Dbench-cpu the harness picks the first reserved timing CPU itself.
+    if (cpu) |index| bench.addArgs(&.{ "--cpu", b.fmt("{d}", .{index}) });
+    bench.addArgs(&.{ "--rounds", b.fmt("{d}", .{rounds}) });
     if (filter) |needle| {
         if (std.mem.trim(u8, needle, " \t\r\n,").len == 0) {
             std.debug.print("error: -Dbench-filter= needs a non-empty substring; omit it to run every program\n", .{});
@@ -814,6 +816,13 @@ pub fn build(b: *std.Build) void {
     harvest_run.addArgs(&.{ "python3", "tests/test_friction_harvest.py" });
     usefulness_step.dependOn(&harvest_run.step);
     test_step.dependOn(usefulness_step);
+    // The SPEC.md merge driver (`scripts/merge_spec.py`): synthetic three-way
+    // cases, a throwaway repository end to end, and a replay of real merges.
+    const spec_merge_step = b.step("test-spec-merge", "Verify the SPEC.md merge driver, including replayed history");
+    const spec_merge_run = bounded(b.addSystemCommand(&.{ "python3", "tests/test_spec_merge.py" }), rss.driver);
+    spec_merge_run.setCwd(b.path("."));
+    spec_merge_step.dependOn(&spec_merge_run.step);
+    test_step.dependOn(spec_merge_step);
     // The bundled runtime's `content_hash` comes from a make-phase run of
     // `build_qbe_assets.zig`. This driver runs that file on throwaway trees that
     // share one Zig cache, the way a stale hash once reached an installed compiler.

@@ -89,6 +89,18 @@ pub fn runWithOptions(compilation: anytype, options: Options) Error!Run {
     return spawn(try program(session, manifest), options);
 }
 
+/// Build one single-file compilation under the protocol a published executable
+/// and an unbounded `mylang run` use — no step or frame accounting, value
+/// guards on — and run it once. That is the protocol loop versioning
+/// (`QBE-LOOP-VERSION-1`) lowers under, so a test can compare it with `run`.
+pub fn runUnaccounted(compilation: *language.Compilation, options: Options) Error!Run {
+    const session = try wiring.acquire();
+    var scratch = std.heap.ArenaAllocator.init(session.allocator());
+    defer scratch.deinit();
+    const manifest = try compilation.emitQbeWithOptions(scratch.allocator(), .{ .step_checks = false, .frame_checks = false });
+    return spawn(try program(session, manifest), options);
+}
+
 /// Publish one emitted manifest as an executable, reusing an identical earlier build.
 pub fn program(session: *wiring.Session, manifest: []const u8) Error![]const u8 {
     var scratch = std.heap.ArenaAllocator.init(session.allocator());
