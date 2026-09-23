@@ -110,6 +110,7 @@ test {
     _ = @import("sema_collections.zig");
     _ = @import("sema_calls.zig");
     _ = @import("sema_operators.zig");
+    _ = @import("sema_expressions.zig");
     _ = @import("invalidation_matrix_test.zig");
     _ = @import("semantic_project_test.zig");
     _ = @import("import_policy_test.zig");
