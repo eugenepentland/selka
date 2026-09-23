@@ -4857,8 +4857,9 @@ const Checker = struct {
                         try self.require(input.error_type, output.error_type, node.span);
                     element = input.ok_type;
                 } else if (prelude.optionShape(input_ty, self.catalog.records)) |input| {
-                    const output = prelude.optionShape(self.return_type, self.catalog.records) orelse return self.sink.fail("E_TRY_RETURN", node.span, "try requires a function returning an Option type");
-                    try self.require(input.element, output.element, node.span);
+                    // OPTION-TRY-3: `None` carries no payload, so it propagates
+                    // into any enclosing `Option[U]`, whatever the operand's `T`.
+                    _ = prelude.optionShape(self.return_type, self.catalog.records) orelse return self.sink.fail("E_TRY_RETURN", node.span, "try requires a function returning an Option type");
                     element = input.element;
                 } else return self.sink.fail("E_TRY_TYPE", node.span, "try requires a declared result or option");
                 try self.requireHandled(0, node.span);

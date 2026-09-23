@@ -1796,8 +1796,9 @@ const Checker = struct {
             return input.ok_type;
         }
         if (try self.shapes().matchOption(value, span)) |input| {
-            const output = (try self.shapes().matchOption(self.result, span)) orelse return self.sink.fail(eTryReturn, span, "try requires a function returning an Option type");
-            try self.same(input.element, output.element, span);
+            // OPTION-TRY-3: a propagated `None` carries no payload, so the
+            // enclosing Option's element need not match the operand's.
+            _ = (try self.shapes().matchOption(self.result, span)) orelse return self.sink.fail(eTryReturn, span, "try requires a function returning an Option type");
             try self.requireHandled(0, span);
             if (temporaries != 0) return self.sink.fail("E_RESULT_PROPAGATION", span, "propagation could drop an already evaluated result temporary");
             return input.element;
