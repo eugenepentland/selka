@@ -41,7 +41,7 @@ its floor is the CLI root. The per-edit check does care. Measured on
 | One Zig area | `python3 scripts/focused_test.py units arena` | 1.5 s for 34 tests, and every run recompiles the 1113-test root binary |
 | One mylang area, warm | `mylang test tests/lang/python_values.my --cache-dir .mylang-cache/lang-tests --gc-stress` | 0.06 s, every unchanged test replays its receipt |
 | One mylang area, cold | same after editing the file | under 1 s, only the edited tests execute |
-| Whole `tests/lang` after one edit | `mylang test tests/lang --cache-dir .mylang-cache/lang-tests --gc-stress` | about 0.5 s, plus the 20 mutation or output tests that re-execute by design |
+| Whole `tests/lang` after one edit | `mylang test tests/lang --cache-dir .mylang-cache/lang-tests --gc-stress` | about 0.5 s; every unchanged test, output-effect tests included, replays its receipt |
 
 `--affected --against HEAD` narrows a mylang run further to the tests whose
 dependency closure reaches a changed declaration. Nothing equivalent exists for

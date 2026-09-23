@@ -792,6 +792,179 @@ test "M2 a mut footprint still rejects a writable argument aliasing a read-only 
     , 2);
 }
 
+/// Two families of mutually recursive classes, `Expr` over three node classes
+/// and `Heap` over three object classes with four fields each, up to the last
+/// field of `Obj2`; `recursive_graphs_tail` closes them with a
+/// `count(state: mut State, e: Expr)` that makes the overlap proof walk both.
+const recursive_graphs_head =
+    \\class Node0:
+    \\    left: Expr
+    \\    right: Expr
+    \\    items: list[Expr]
+    \\    extra: list[Expr]
+    \\
+    \\class Node1:
+    \\    left: Expr
+    \\    right: Expr
+    \\    items: list[Expr]
+    \\    extra: list[Expr]
+    \\
+    \\class Node2:
+    \\    left: Expr
+    \\    right: Expr
+    \\    items: list[Expr]
+    \\    extra: list[Expr]
+    \\
+    \\union Expr:
+    \\    leaf: int,
+    \\    n0: Node0,
+    \\    n1: Node1,
+    \\    n2: Node2
+    \\
+    \\class Obj0:
+    \\    next: Heap
+    \\    values: list[float]
+    \\    more: list[Heap]
+    \\    extra: list[Heap]
+    \\
+    \\class Obj1:
+    \\    next: Heap
+    \\    values: list[float]
+    \\    more: list[Heap]
+    \\    extra: list[Heap]
+    \\
+    \\class Obj2:
+    \\    next: Heap
+    \\    values: list[float]
+    \\    more: list[Heap]
+    \\
+;
+/// The rest of the recursive-graph program after the last field of `Obj2`.
+const recursive_graphs_tail =
+    \\
+    \\union Heap:
+    \\    empty: int,
+    \\    o0: Obj0,
+    \\    o1: Obj1,
+    \\    o2: Obj2
+    \\
+    \\class State:
+    \\    objects: list[Heap]
+    \\    depth: int
+    \\
+    \\def count(state: mut State, e: Expr) -> int:
+    \\    state.depth = state.depth + 1
+    \\    match e:
+    \\        case Expr.leaf(v):
+    \\            return v
+    \\        case _:
+    \\            return 0
+    \\
+    \\def walk(state: mut State, e: Expr) -> int:
+    \\    return count(mut state, e)
+    \\
+    \\def main() -> int:
+    \\    s = State(objects=[], depth=0)
+    \\    return walk(mut s, Expr.leaf(3))
+    \\
+;
+
+// The per-path walk this replaced re-walked every path to a pair, so these two
+// graphs never finished checking; expanding each pair once settles them at once.
+// spec: MUT-OVERLAP-PROOF-1
+test "the overlap proof over two recursive class graphs expands each type pair once" {
+    var c = try language.Compilation.init(t.allocator, fixture_path, recursive_graphs_head ++ "    extra: list[Heap]\n" ++ recursive_graphs_tail);
+    defer c.deinit();
+    try c.check();
+    try t.expectEqual(@as(?language.diagnostic.Diagnostic, null), firstError(c.diagnostics.items));
+}
+
+// spec-case: MUT-OVERLAP-PROOF-1
+test "the overlap proof still rejects two recursive graphs that share one component deep down" {
+    try reject(recursive_graphs_head ++ "    source: list[Expr]\n" ++ recursive_graphs_tail, "E_MUTATION_OVERLAP", "may alias");
+}
+
+/// A runtime whose object table holds classes behind a union, as the Lox VM's
+/// does; `close` writes an upvalue it takes out of the table with `match`.
+fn upvalueProgram(comptime parameter: []const u8, comptime argument: []const u8) []const u8 {
+    return std.fmt.comptimePrint(
+        \\class Upvalue:
+        \\    closed: int
+        \\
+        \\union Obj:
+        \\    empty,
+        \\    up: Upvalue
+        \\
+        \\class Runtime:
+        \\    objects: list[Obj]
+        \\
+        \\def close({s}, i: int):
+        \\    match rt.objects[i]:
+        \\        case Obj.up(u):
+        \\            target = u
+        \\            target.closed = 1
+        \\        case _:
+        \\            return
+        \\
+        \\def main() -> int:
+        \\    rt = Runtime(objects=[Obj.up(Upvalue(closed=0))])
+        \\    close({s}, 0)
+        \\    return 0
+        \\
+    , .{ parameter, argument });
+}
+
+// spec: MUT-TRACK-1
+test "a write through a match payload writes the owner of the matched value" {
+    try accept(comptime upvalueProgram("rt: mut Runtime", "mut rt"));
+    try reject(comptime upvalueProgram("rt: Runtime", "rt"), marker_code, "declare `rt: mut Runtime`");
+}
+
+// A binding a later loop statement widens carries the widened origin at the
+// write: on the second iteration `b` is `a`, which the first made `p`.
+// spec-case: MUT-TRACK-1
+test "binding origins reach a fixed point across a loop" {
+    try reject(
+        \\class Box:
+        \\    n: int
+        \\
+        \\def shuffle(p: Box):
+        \\    a = Box(n=0)
+        \\    b = Box(n=0)
+        \\    for i in range(2):
+        \\        b.n = i
+        \\        b = a
+        \\        a = p
+        \\
+        \\def main() -> int:
+        \\    shuffle(Box(n=0))
+        \\    return 0
+    , marker_code, "declare `p: mut Box`");
+}
+
+// spec-case: MUT-TRACK-1
+test "the missing-marker diagnostic points at the write that needs the marker" {
+    const source =
+        \\class Box:
+        \\    n: int
+        \\
+        \\def both(r: mut Box, x: Box):
+        \\    r.n = 1
+        \\    x.n = 2
+        \\
+        \\def main() -> int:
+        \\    r = Box(n=0)
+        \\    both(mut r, Box(n=0))
+        \\    return 0
+    ;
+    var c = try language.Compilation.init(t.allocator, fixture_path, source);
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.check());
+    const diag = firstError(c.diagnostics.items) orelse return error.TestUnexpectedResult;
+    try t.expectEqualStrings(marker_code, diag.code);
+    try t.expectEqualStrings("x.n", source[diag.span.start..][0..3]);
+}
+
 // spec-case: MUT-PARAM-4
 test "M2 forwarding mut x where x is the caller's own parameter needs that parameter mut" {
     try reject(

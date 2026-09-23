@@ -122,8 +122,10 @@ each entry would need a sibling manifest and its own build step, and the unit
 root's remaining fixtures are Zig callbacks rather than data. Reopen if a
 non-unit caller needs provider substitutions.
 
-`tests/lang` cases that exercise `mutation` or `output` effects re-execute on
-every run. `[NATIVE-TEST-2]` says externally effectful executions are not
-reused, so this is the intended behavior, not a caching regression. The
+`tests/lang` cases that exercise `mutation` or `output` effects reuse their
+receipts like every other passing test (`[NATIVE-TEST-2]`,
+`[NATIVE-TEST-OUTPUT-1]`): a passing test's captured output is discarded, so
+there is nothing a re-execution would show. Only a test with a genuinely
+external effect (clock, entropy, environment, files, network) re-executes. The
 migrated sources are warning-clean, so a warning never explains a missing
 receipt.

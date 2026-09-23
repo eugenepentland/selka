@@ -191,19 +191,20 @@ by bisecting `--max-steps` against the built binary.
 When you want a ceiling, ask for one and the trap names the flag that applies it:
 
 ```console
-$ ./loop10 --print-result --max-steps=200
+$ MYLANG_OPTIONS='--print-result --max-steps=200' ./loop10
 loop10.my:5:24: error[R_STEP_LIMIT]: instruction budget exhausted; raise it with --max-steps=N
   in main at loop10.my:5:24
-$ ./loop10 --print-result --max-steps=2000000000
+$ MYLANG_OPTIONS='--print-result --max-steps=2000000000' ./loop10
 155298
 ```
 
 Set the ceiling on whichever command runs the program: `mylang run prog.my
---max-steps=N`, a built binary `./prog --max-steps=N`, and `mylang build prog.my
---run -- --max-steps=N` (runtime options follow `--`). `--max-frames=N` bounds call
+--max-steps=N`, a built binary `MYLANG_OPTIONS=--max-steps=N ./prog`, and `mylang
+build prog.my --run --max-steps=N` (runtime options precede `--`; a built binary
+reads them only from `MYLANG_OPTIONS`, so its arguments are all the program's). `--max-frames=N` bounds call
 depth the same way and its trap names that flag instead. To bound elapsed time
 rather than work, `--timeout=SECONDS` arms a monotonic wall-clock timer on `mylang
-run`, `mylang build --run` and a built binary; when it fires the process writes
+run`, `mylang build --run` and a built binary (in `MYLANG_OPTIONS`); when it fires the process writes
 `R_TIMEOUT` to standard error and exits 1. `mylang test` is the exception that keeps
 a budget by default — 1,000,000 instructions and 1,024 frames per test process —
 because a tight guard is useful there; `--max-steps=N` and `--max-frames=N` bound
@@ -404,7 +405,7 @@ def main(host: Host) -> int:
     return int(hypot(host, 3.0, 4.0)) * 10 + int(hypot(host, 5.0, 12.0))
 EOF
 $ mylang build hyp.my -o hyp --link-library m
-$ ./hyp --print-result
+$ MYLANG_OPTIONS=--print-result ./hyp
 63
 ```
 

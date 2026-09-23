@@ -70,13 +70,6 @@ fn lessThan(_: void, left: Item, right: Item) bool {
     return std.mem.lessThan(u8, left.name, right.name);
 }
 
-/// Whether a collection element is a managed record: its slot holds a body
-/// pointer, so the element renderer needs the loaded pointer, not the slot.
-fn managedRecordElement(catalog: *native.Catalog, ty: typed.Type) bool {
-    if (!ty.isAggregate() or ty.recordIndex() >= catalog.records.len) return false;
-    return catalog.records[ty.recordIndex()].isManagedRecord();
-}
-
 /// Add one type and every type reachable from its printed contents.
 fn discover(a: std.mem.Allocator, catalog: *native.Catalog, ty: typed.Type, wanted: *std.array_hash_map.Auto(typed.Type, void)) Error!void {
     if ((try wanted.getOrPut(a, ty)).found_existing) return;
@@ -157,15 +150,13 @@ fn collection(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Cat
         .list => {
             const element_ty = record.shape.buffer orelse return error.InvalidType;
             const element = try symbol(a, catalog, element_ty);
-            const helper = if (managedRecordElement(catalog, element_ty)) "myl_print_list_ref" else "myl_print_list";
-            return body(writer, item.name, try std.fmt.allocPrint(a, "{s}(o, v, d, {s});", .{ helper, element }));
+            return body(writer, item.name, try std.fmt.allocPrint(a, "myl_print_list(o, v, d, {s});", .{element}));
         },
         .dictionary => {
             const key = try symbol(a, catalog, record.collection.key orelse return error.InvalidType);
             const value_ty = record.shape.buffer orelse return error.InvalidType;
             const value = try symbol(a, catalog, value_ty);
-            const helper = if (managedRecordElement(catalog, value_ty)) "myl_print_dictionary_ref" else "myl_print_dictionary";
-            return body(writer, item.name, try std.fmt.allocPrint(a, "{s}(o, v, d, {s}, {s});", .{ helper, key, value }));
+            return body(writer, item.name, try std.fmt.allocPrint(a, "myl_print_dictionary(o, v, d, {s}, {s});", .{ key, value }));
         },
     }
 }
@@ -184,6 +175,11 @@ fn tuple(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog,
     return body(writer, item.name, call);
 }
 
+/// Emit a record renderer. A class value's slot holds its body pointer, so a
+/// class renders through `myl_print_class`, which loads that pointer before
+/// reading fields at their heap offsets; every container, record field, union
+/// payload and top-level `print` operand hands a renderer its value's slot, so
+/// the one rule covers a class wherever it is nested.
 fn fields(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, item: Item, record: typed.Record) Error!void {
     const managed = record.isManagedRecord();
     const layout = if (managed) try catalog.heapLayout(item.ty) else try catalog.layout(item.ty);
@@ -194,7 +190,8 @@ fn fields(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog
         writer.print(" {{{d}, {s}, {s}, 0}},\n", .{ layout.fields[index].offset, child, try quoted(a, field.name) }) catch return error.OutOfMemory;
     }
     writer.writeAll("};\n") catch return error.OutOfMemory;
-    const call = try std.fmt.allocPrint(a, "myl_print_record(o, v, d, {s}, {s}_fields, {d});", .{ try quoted(a, shortName(record.name)), item.name, record.fields.len });
+    const helper = if (managed) "myl_print_class" else "myl_print_record";
+    const call = try std.fmt.allocPrint(a, "{s}(o, v, d, {s}, {s}_fields, {d});", .{ helper, try quoted(a, shortName(record.name)), item.name, record.fields.len });
     return body(writer, item.name, call);
 }
 

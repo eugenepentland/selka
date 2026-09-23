@@ -42,9 +42,9 @@ program. Pass `--max-steps=N` or `--max-frames=N` to impose one, and
 `--timeout=SECONDS` to cap elapsed time on whichever command runs the program:
 
 ```console
-$ ./loop --max-steps=500000000        # built binary: the same flags are ordinary arguments
+$ MYLANG_OPTIONS=--max-steps=500000000 ./loop   # built binary: options in the environment
 $ mylang run loop.my --max-steps=500000000
-$ mylang build loop.my --run -- --max-steps=500000000
+$ mylang build loop.my --run --max-steps=500000000
 $ mylang run loop.my --timeout=30     # wall-clock guard; no default
 loop.my:3:13: error[R_TIMEOUT]: wall-clock budget exhausted; raise it with --timeout=SECONDS
 ```

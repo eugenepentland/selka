@@ -110,8 +110,11 @@ pub const Context = struct {
             parent.openFile(self.io, name, .{ .mode = if (mode == 'r') .read_only else .write_only, .follow_symlinks = follow, .allow_directory = false }) catch |err| return mapError(err);
         errdefer file.close(self.io);
         const stat = file.stat(self.io) catch |err| return mapError(err);
-        if (stat.kind != .file) return error.Denied;
-        if (mode == 't') file.setLength(self.io, 0) catch |err| return mapError(err);
+        // A scoped root serves regular files only; the direct root holds the
+        // process's own authority and, like `fopen`, also takes a FIFO or a
+        // device, refusing only a directory (`src/native_scoped.c` agrees).
+        if (if (follow) stat.kind == .directory else stat.kind != .file) return error.Denied;
+        if (mode == 't' and stat.kind == .file) file.setLength(self.io, 0) catch |err| return mapError(err);
         return file;
     }
     fn acquireNetwork(raw: *anyopaque, request: []const u8, permissions: resources.Permissions) CallError!u64 {

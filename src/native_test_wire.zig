@@ -477,8 +477,12 @@ fn runFixture(allocator: std.mem.Allocator, resolved: Tools, stem: []const u8, e
     try std.testing.expect(std.mem.indexOf(u8, result.stdout, "0 failed") != null);
 }
 
+// A test whose only external effect is output is reused like a local-mutation
+// test: a passing test's captured output is discarded, so a replayed pass shows
+// exactly what an executed one does.
 // spec-case: NATIVE-TEST-13
-test "local mutation reuses a receipt while output executes again" {
+// spec-case: NATIVE-TEST-OUTPUT-1
+test "local mutation and output both reuse a receipt" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
@@ -512,8 +516,8 @@ test "local mutation reuses a receipt while output executes again" {
     const warm = try std.process.run(a, std.testing.io, .{ .argv = argv });
     try std.testing.expectEqual(@as(u8, 0), build_io.exitCode(warm.term));
     const report = try std.json.parseFromSlice(std.json.Value, a, warm.stdout, .{});
-    try std.testing.expectEqual(@as(i64, 1), v.get(report.value, "cached").integer);
-    try std.testing.expectEqual(@as(i64, 1), v.get(report.value, "passed").integer);
+    try std.testing.expectEqual(@as(i64, 2), v.get(report.value, "cached").integer);
+    try std.testing.expectEqual(@as(i64, 0), v.get(report.value, "passed").integer);
 }
 
 // spec: QBE-AGGREF-5

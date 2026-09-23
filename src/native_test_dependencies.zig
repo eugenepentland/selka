@@ -33,7 +33,12 @@ pub const Metadata = struct {
     reasons: []const []const u8,
 };
 /// Effects confined to one freshly spawned test process and its keyed inputs.
-pub const deterministic_effects = effects.bit(.managed_allocation) | effects.bit(.mutation);
+/// Output is one of them: a test's writes to `out` and `err` are determined by
+/// the same keyed inputs as its result, and the runner captures both streams and
+/// discards them when the test passes, while a receipt records only a pass. A
+/// reused pass therefore shows exactly what an executed pass shows — nothing —
+/// and a failure, whose captured output is reported, is never reused.
+pub const deterministic_effects = effects.bit(.managed_allocation) | effects.bit(.mutation) | effects.bit(.output);
 /// Record checked call edges and the canonical type inputs actually used by a unit.
 /// All returned allocations belong to the caller's compilation arena.
 pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, index: usize, il: []const u8, catalog: *layouts.Catalog, states: []const ?[]const typed.Type) layouts.Error!Metadata {
@@ -206,6 +211,24 @@ test "checked metadata allows process-local mutation but rejects external effect
     const external = try describe(a, .{ .functions = &functions }, 0, "stable IL", &catalog, &.{});
     try std.testing.expect(!external.cacheable);
     try std.testing.expectEqualStrings(first.implementation_hash, external.implementation_hash);
+}
+
+// spec: NATIVE-TEST-OUTPUT-1
+test "checked metadata keeps a test whose only external effect is output cacheable" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var functions = [_]bytecode.Function{
+        .{ .id = @fromBackingInt(0), .name = "test_prints", .scope = .{ .instructions = &.{} }, .policy = .{ .effects = effects.bit(.output) | effects.bit(.managed_allocation) } },
+    };
+    var catalog = try layouts.Catalog.initRecords(a, &.{});
+    defer catalog.deinit();
+    const printing = try describe(a, .{ .functions = &functions }, 0, "stable IL", &catalog, &.{});
+    try std.testing.expect(printing.cacheable);
+    try std.testing.expectEqual(@as(usize, 0), printing.reasons.len);
+    functions[0].policy.effects = effects.bit(.output) | effects.bit(.environment);
+    const environmental = try describe(a, .{ .functions = &functions }, 0, "stable IL", &catalog, &.{});
+    try std.testing.expect(!environmental.cacheable);
 }
 
 test "semantic type fingerprints follow managed elements and ignore unused declarations" {

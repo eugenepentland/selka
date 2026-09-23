@@ -1,12 +1,14 @@
 /* Python-style rendering of native values, byte-identical to src/io_render.zig.
-   The VM formats a float into a 64-byte frame and reports a value that does not
-   fit as unprintable; this runtime keeps that bound so both backends agree. */
+   A float renders positionally, so its frame must hold the longest finite
+   double: a sign, `0.`, the 323 zeros before the smallest subnormal's digit and
+   up to 17 significant digits, or the 309 integer digits of the largest double.
+   Both renderers use the same frame, so no finite value is ever unprintable. */
 #include "native_print.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define FLOAT_FRAME 64u
+#define FLOAT_FRAME 352u
 /* Make room for `length` more bytes, doubling the buffer until they fit. A line
    that cannot grow is marked failed and keeps the bytes it already holds. */
 static int reserve(MylPrint *out, size_t length) {
@@ -186,19 +188,6 @@ void myl_print_list(MylPrint *out, const void *value, unsigned depth, MylPrintFn
     }
     byte(out, ']');
 }
-void myl_print_list_ref(MylPrint *out, const void *value, unsigned depth, MylPrintFn element) {
-    if (myl_print_deep(out, depth)) return;
-    myl_native_list *list;
-    memcpy(&list, value, sizeof list);
-    byte(out, '[');
-    for (size_t i = 0; i < list->length; ++i) {
-        if (i) literal(out, ", ");
-        const void *item;
-        memcpy(&item, (const unsigned char *)list->storage + i * list->element->size, sizeof item);
-        element(out, item, depth + 1);
-    }
-    byte(out, ']');
-}
 void myl_print_dictionary(MylPrint *out, const void *value, unsigned depth, MylPrintFn key, MylPrintFn item) {
     if (myl_print_deep(out, depth)) return;
     myl_native_dictionary *dict;
@@ -214,22 +203,6 @@ void myl_print_dictionary(MylPrint *out, const void *value, unsigned depth, MylP
     byte(out, '}');
 }
 
-void myl_print_dictionary_ref(MylPrint *out, const void *value, unsigned depth, MylPrintFn key, MylPrintFn item) {
-    if (myl_print_deep(out, depth)) return;
-    myl_native_dictionary *dict;
-    memcpy(&dict, value, sizeof dict);
-    byte(out, '{');
-    for (size_t i = 0; i < dict->entries->length; ++i) {
-        const unsigned char *entry = (const unsigned char *)dict->entries->storage + i * dict->entry_type.size;
-        if (i) literal(out, ", ");
-        key(out, entry, depth + 1);
-        literal(out, ": ");
-        const void *element_value;
-        memcpy(&element_value, entry + dict->value_offset, sizeof element_value);
-        item(out, element_value, depth + 1);
-    }
-    byte(out, '}');
-}
 void myl_print_array(MylPrint *out, const void *value, unsigned depth, size_t count, size_t stride, MylPrintFn element) {
     if (myl_print_deep(out, depth)) return;
     byte(out, '[');
@@ -250,6 +223,11 @@ void myl_print_record(MylPrint *out, const void *value, unsigned depth, const ch
         fields[i].render(out, (const unsigned char *)value + fields[i].offset, depth + 1);
     }
     byte(out, ')');
+}
+void myl_print_class(MylPrint *out, const void *slot, unsigned depth, const char *name, const MylPrintField *fields, size_t count) {
+    const void *body;
+    memcpy(&body, slot, sizeof body);
+    myl_print_record(out, body, depth, name, fields, count);
 }
 void myl_print_tuple(MylPrint *out, const void *value, unsigned depth, const MylPrintField *elements, size_t count) {
     if (myl_print_deep(out, depth)) return;

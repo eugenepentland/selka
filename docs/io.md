@@ -127,6 +127,24 @@ def main(out: Stream, err: Stream) -> int:
     return written
 ```
 
+A `Stream` stored in a class or record field is called through the field
+expression directly, `sink.stream.write(data)` or `sink.stream.print(...)`,
+with the same effect and result. That form takes positional arguments only; bind
+the stream to a name first to pass `sep=` or `end=`.
+
+```mylang
+# doc: expect ok 2
+class Sink:
+    stream: Stream
+    label: str
+
+
+def main(out: Stream) -> int:
+    sink = Sink(stream=out, label="ok")
+    sink.stream.print(sink.label, 2)
+    return 0
+```
+
 ## debug
 
 `debug(values...)` writes to standard error without a capability and without
@@ -209,8 +227,10 @@ $ mylang run report.my -- --format=json "two words" ""
 ```
 
 The list never contains a synthetic program name. An installed executable
-takes OS arguments after `argv[0]` the same way; use `--` to separate its
-runtime controls from flag-looking guest values. Every argument is validated as
+hands `main` every OS argument after `argv[0]` unchanged — `--` and
+flag-looking values such as `--gc-stress` included — because it reads its own
+runtime options from the `MYLANG_OPTIONS` environment variable instead (see
+[the native backend](#the-native-backend)). Every argument is validated as
 Unicode before guest execution, and invalid platform bytes fail with a stable
 host-boundary diagnostic on stderr.
 
@@ -281,7 +301,7 @@ name outside the active `--allow-env` allow-list is a denied authority, which
 traps rather than answering `None`. `env.only("HOME", "PATH")` narrows an
 `Environment` to the listed literal names, and `env.names()` returns the sorted
 allow-list as `list[str]`. `mylang run` and installed executables grant the
-process environment by default; under `--restrict`, `--allow-env[=NAME,...]`
+process environment (including `MYLANG_OPTIONS`) by default; under `--restrict`, `--allow-env[=NAME,...]`
 selects the visible names. All launch paths now report an ungranted capability
 with the same stderr line and exit 2.
 
@@ -425,16 +445,27 @@ Generic function bodies reject file operations. The native backend runs them.
 `print` and every file operation run on the QBE native backend, so `mylang
 build` and `mylang build --run` accept a program that uses them.
 A native executable grants every capability by default, exactly as `mylang run`
-does, and takes the same `--restrict` and `--allow-*` options; `mylang build
---run` forwards them after `--`:
+does. It never reads an option from its own arguments — every one of them is the
+program's — so the runtime options `mylang run` takes travel in the
+`MYLANG_OPTIONS` environment variable instead: `--restrict` and the `--allow-*`
+grants, `--max-steps=N`, `--max-frames=N`, `--timeout=SECONDS`, `--gc-stress`
+and `--print-result`, separated by spaces. Wrap an option that contains a space
+in double quotes (a backslash inside the quotes escapes the next character). An
+unknown or repeated option, or an unterminated quote, exits 2 before the program
+runs. `mylang build --run` takes the same options on its own command line,
+before `--`, and passes the values after `--` to the program:
 
 ```text
-$ mylang build report.my --run -- --restrict --allow-read=notes
+$ MYLANG_OPTIONS='--restrict --allow-read=notes' ./report --format=json
+$ mylang build report.my --run --restrict --allow-read=notes -- --format=json
 ```
+
+`mylang run`, `run-project` and `build --run` set `MYLANG_OPTIONS` for the
+program from their own command line, replacing any value they inherited.
 
 A native executable exits with the entry point's `int` result (truncated to the
 low 8 bits), the way `mylang run` does, and writes that result after the
-program's own output only when passed `--print-result`.
+program's own output only when `MYLANG_OPTIONS` names `--print-result`.
 
 Generic function bodies still reject `print` and the file builtins, with
 `E_GENERIC_BODY_UNSUPPORTED`. Write an ordinary function and call it from the

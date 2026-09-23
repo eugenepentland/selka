@@ -1845,6 +1845,24 @@ const Checker = struct {
         } };
         _ = node;
     }
+    /// `print` and `write` on a `Stream` reached through an expression rather
+    /// than a bare name, such as a class field (`sink.stream.write(data)`). The
+    /// parser hands such a call over as a method call, so it lands here with its
+    /// receiver already checked; it lowers exactly like the named-receiver form.
+    /// A method call carries positional arguments only, so `sep=` and `end=`
+    /// still need the stream bound to a name first.
+    fn checkStreamReceiverMethod(self: *Checker, node: ast.Node, stream: typed.NodeId, temporaries: []const typed.Type) Error!typed.Node {
+        const method = node.data.method_call;
+        const name = self.src.text(method.name);
+        const write = std.mem.eql(u8, name, "write");
+        if (!write and !std.mem.eql(u8, name, "print"))
+            return self.sink.fail(eCollectionMethod, method.name, "unknown method for a Stream receiver; a Stream has the methods print and write");
+        for (method.arguments) |argument| _ = try self.expressionWithTemporaries(argument, temporaries);
+        const call: @FieldType(@FieldType(ast.Node, "data"), "call") = .{ .name = method.name, .arguments = method.arguments };
+        var out: typed.Node = .{ .span = node.span, .ty = .unit, .data = .unit };
+        if (write) try self.checkStreamWrite(node, call, stream, &out) else try self.checkPrint(node, call, .{ .stream = stream }, &out);
+        return out;
+    }
     fn checkStreamWrite(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), stream: typed.NodeId, out: *typed.Node) Error!void {
         try call_arguments.positional(call, self.sink);
         if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "stream.write takes one str or bytes argument");
@@ -2133,6 +2151,7 @@ const Checker = struct {
             value = try b.node(schema.fields[field].ty, .{ .field = .{ .base = value, .index = field } });
         }
         const expected = self.nodes.items[@backingInt(value)].ty;
+        const current = value;
         try self.hint(assignment.value, expected);
         value = try self.expressionWithTemporaries(assignment.value, temporaries);
         if (dead_owner) |owner| {
@@ -2141,12 +2160,36 @@ const Checker = struct {
             if (!shared) self.noteDeadRecordWrite(owner, node.span);
         }
         try self.require(self.nodes.items[@backingInt(value)].ty, expected, node.span);
-        if (destination.index == null) try self.requireArenaStore(destination.owner, value);
+        if (assignment.op == .add and expected.isAggregate() and self.catalog.records[expected.recordIndex()].isCollection() and self.catalog.records[expected.recordIndex()].collection.kind == .list) {
+            // `target.items += other` is Python's in-place extend, exactly as it is
+            // for a list binding: the field keeps the same list, which every alias
+            // observes growing, so nothing is stored back.
+            if (destination.index == null) try self.requireArenaStore(destination.owner, value);
+            const receiver = try b.local(expected);
+            try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = receiver, .value = current } }));
+            try statements.append(self.allocator, try b.stmt(.{ .discard = try b.operation(receiver, .extend, try self.allocator.dupe(typed.NodeId, &.{value})) }));
+            return b.block(statements.items, try b.node(.unit, .unit));
+        }
+        if (assignment.op != .set) {
+            // `target.field op= value` reads the field through the same once-evaluated
+            // destination, then evaluates the right-hand side, combines the pair with
+            // the operator's ordinary rules and stores the result, the way Python and
+            // the list-slot form `values[i] op= value` do. The combined value is kept
+            // in its own slot after the destination is set up, so a narrowed owner's
+            // refresh cannot run before the field it reads.
+            const combined = try self.augmented(assignment.op, current, value, node.span);
+            if (destination.index == null) try self.requireArenaStore(destination.owner, combined);
+            const stored = try b.local(expected);
+            try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = stored, .value = combined } }));
+            if (destination.refresh) |refresh| try statements.append(self.allocator, refresh);
+            value = try b.read(stored);
+        } else if (destination.index == null) try self.requireArenaStore(destination.owner, value);
         // The value needs its own slot only to survive the destination refresh: it
         // must be computed before the refresh, which re-reads the binding. A managed
         // record needs no refresh, and its update reads the binding where it stands,
         // so the value can go straight into the update's operand.
-        if (destination.refresh) |refresh| {
+        if (destination.refresh != null and assignment.op == .set) {
+            const refresh = destination.refresh.?;
             const assigned = try b.local(expected);
             const evaluate_value = try b.stmt(.{ .initialize = .{ .slot = assigned, .value = value } });
             try statements.insert(self.allocator, 0, evaluate_value);
@@ -2802,6 +2845,7 @@ const Checker = struct {
         const owner_type = self.nodes.items[@backingInt(base)].ty;
         if (prelude.optionShape(owner_type, self.catalog.records) != null)
             return self.checkOptionMethod(node, base, call.name, call.arguments, temporaries);
+        if (owner_type == .stream_cap) return self.checkStreamReceiverMethod(node, base, temporaries);
         // Only a list's `sort` takes named operands, and passing any operand
         // to it is the Python keyword form.
         if (std.mem.eql(u8, name, "sort") and call.arguments.len != 0) return self.checkMethodListSort(node, base, temporaries);
@@ -5001,6 +5045,9 @@ const Checker = struct {
         // neither the tag test nor the two-arm match consumes a temporary.
         if (node.data == .method_call and option_flow.methodNamed(self.src.text(node.data.method_call.name)) != null) return 0;
         if (node.data == .call and self.optionReceiverMethod(node.data.call)) return 0;
+        // `print`/`write` through a `Stream` field checks its receiver and
+        // arguments in place, so none of them reached this stack either.
+        if (node.data == .method_call and (out.data == .print or out.data == .stream_write)) return 0;
         if (node.data == .index and out.data == .block_value) return 2;
         if (node.data == .length and out.data == .block_value) return 1;
         if (node.data == .bytes or node.data == .text or node.data == .integer) return 0;

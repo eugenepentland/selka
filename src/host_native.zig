@@ -167,8 +167,9 @@ pub const Program = struct {
     /// Run the guest once and report its entry-point result. A trapped or
     /// otherwise failing child leaves its diagnostics on the host's stderr.
     pub fn invoke(self: *Program, arguments: []const []const u8) Error!i64 {
+        try qbe_build.runtime_options.apply(self.allocator, &self.environment, try command(self.allocator, arguments));
         const result = try std.process.run(self.allocator, self.io, .{
-            .argv = try command(self.allocator, self.path, arguments),
+            .argv = &.{self.path},
             .environ_map = &self.environment,
             .stdout_limit = .limited(stream_limit),
             .stderr_limit = .limited(stream_limit),
@@ -233,13 +234,15 @@ fn located(io: std.Io, chosen: []const u8, name: []const u8, fallback: []const u
     std.Io.Dir.cwd().access(io, fallback, .{ .execute = true }) catch return chosen;
     return fallback;
 }
-/// The argument vector for one guest invocation. A native executable reports
-/// its entry result only when asked, and a host application always needs it.
-pub fn command(allocator: std.mem.Allocator, path: []const u8, arguments: []const []const u8) std.mem.Allocator.Error![]const []const u8 {
-    var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(allocator, &.{ path, "--print-result" });
-    try argv.appendSlice(allocator, arguments);
-    return argv.toOwnedSlice(allocator);
+/// The runtime options for one guest invocation, which travel in
+/// `MYLANG_OPTIONS` rather than on the guest's command line. A native
+/// executable reports its entry result only when asked, and a host application
+/// always needs it.
+pub fn command(allocator: std.mem.Allocator, arguments: []const []const u8) std.mem.Allocator.Error![]const []const u8 {
+    var options: std.ArrayList([]const u8) = .empty;
+    try options.append(allocator, "--print-result");
+    try options.appendSlice(allocator, arguments);
+    return options.toOwnedSlice(allocator);
 }
 
 /// A native executable reports its entry-point result as its final output line.

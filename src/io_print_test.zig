@@ -127,12 +127,37 @@ test "IO-6 the native backend lowers print through generated per-type renderers"
     defer compilation.deinit();
     const manifest = try compilation.emitQbe(t.allocator);
     defer t.allocator.free(manifest);
-    for ([_][]const u8{ "myl_qbe_stream_begin", "myl_qbe_stream_finish", "myl_qbe_print_raw", "myl_print_dictionary", "myl_print_bytes", "myl_print_record", "myl_print_variant", "myl_print_float" }) |symbol| {
+    for ([_][]const u8{ "myl_qbe_stream_begin", "myl_qbe_stream_finish", "myl_qbe_print_raw", "myl_print_dictionary", "myl_print_bytes", "myl_print_class", "myl_print_variant", "myl_print_float" }) |symbol| {
         try t.expect(std.mem.indexOf(u8, manifest, symbol) != null);
     }
     // Case spellings and field names travel in the generated renderers.
     try t.expect(std.mem.indexOf(u8, manifest, "\\\"Colour.green\\\"") != null);
     try t.expect(std.mem.indexOf(u8, manifest, "\\\"Some\\\"") != null);
+}
+
+// spec: IO-15
+test "IO-15 print and write work on a Stream held in a class field" {
+    const source =
+        \\class Sink:
+        \\    stream: Stream
+        \\    label: str
+        \\
+        \\record Pair:
+        \\    first: Sink
+        \\    count: int
+        \\
+        \\def emit(sink: Sink) -> int:
+        \\    written = sink.stream.write(b"hello\n")
+        \\    sink.stream.print(sink.label, written)
+        \\    return written
+        \\
+        \\def main(out: Stream) -> int:
+        \\    pair = Pair(first=Sink(stream=out, label="n"), count=1)
+        \\    _ = pair.first.stream.write("x\n")
+        \\    return emit(pair.first) - 6
+    ;
+    try expectOutput(source, "x\nhello\nn 6\n");
+    try reject("class Sink:\n    stream: Stream\n\ndef main(out: Stream) -> int:\n    sink = Sink(stream=out)\n    sink.stream.flush()\n    return 0\n", "E_COLLECTION_METHOD");
 }
 
 // spec: QBE-BULK-TEXT-1

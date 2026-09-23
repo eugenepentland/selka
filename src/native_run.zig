@@ -39,10 +39,12 @@ pub fn execute(allocator: std.mem.Allocator, request: Request) Error!u8 {
     var context = try fs.Context.init(allocator, request.io, request.environ);
     defer context.deinit();
     const path = try publish(context, request.settings, request.manifest);
-    const argv = try builder.command(context, path, request.settings.arguments);
+    // Runtime options travel in `MYLANG_OPTIONS`; the program's argv is only
+    // what followed `--` on this command line.
+    const started = try builder.launch(context, path, request.settings.arguments, request.settings);
     var child = try std.process.spawn(context.io, .{
-        .argv = argv,
-        .environ_map = try builder.ceiling(context, request.settings),
+        .argv = started.argv,
+        .environ_map = started.environ,
         .stderr = .pipe,
     });
     switch (request.diagnostics) {

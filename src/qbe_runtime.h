@@ -223,8 +223,23 @@ uint64_t myl_qbe_float_unary(void *context, uint64_t op, uint64_t value);
 void myl_qbe_enter(void *context);
 void myl_qbe_leave(void *context);
 void myl_qbe_step(void *context);
+/* The runtime controls one process runs under. A native executable reads them
+ * from `MYLANG_OPTIONS`, never from its own arguments: `--max-steps=N`,
+ * `--max-frames=N`, `--timeout=SECONDS`, `--gc-stress` and `--print-result`.
+ * A zero-initialized value is unbounded, unstressed and silent. `error` names
+ * the first malformed or repeated control. */
+typedef struct MylQbeControls {
+    uint64_t max_steps, max_frames, timeout;
+    int seen_steps, seen_frames, seen_timeout, stress, print;
+    const char *error;
+} MylQbeControls;
+/* Consume one runtime control into `controls`; 0 when `option` names none. */
+int myl_qbe_control(MylQbeControls *controls, const char *option);
+/* Run `entry` as the whole process under `controls`, handing the guest its
+ * `argc` arguments unchanged. Returns the process exit status. */
+int mylang_qbe_run_process(uint64_t (*entry)(void *), const MylQbeControls *controls, int argc, char **argv, const struct MylangNativeProvidersTag *providers);
 int mylang_qbe_run(uint64_t (*entry)(void *));
-int mylang_qbe_run_providers(uint64_t (*entry)(void *), int argc, char **argv, const struct MylangNativeProvidersTag *providers);
+/* Run `entry` with `argv[1..]` as runtime controls and no guest arguments. */
 int mylang_qbe_run_options(uint64_t (*entry)(void *), int argc, char **argv);
 /* Declare that this process runs one guest program and then exits, so the runner
  * may leave the managed heap to the process instead of freeing every live object

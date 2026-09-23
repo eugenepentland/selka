@@ -53,7 +53,7 @@ pub const TypedValue = struct { ty: Span, value: NodeId };
 pub const Node = struct {
     span: Span,
     data: union(enum) {
-        field_assignment: struct { target: NodeId, value: NodeId },
+        field_assignment: struct { target: NodeId, value: NodeId, op: AssignmentOp = .set },
         index_assignment: struct { target: NodeId, op: AssignmentOp, value: NodeId },
         list_literal: []const NodeId,
         /// `receiver.name(arguments)` on an expression receiver, with the keyword

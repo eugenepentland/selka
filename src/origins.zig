@@ -77,6 +77,9 @@ pub const Summary = struct {
     external: bool = false,
     /// First located external write, used for diagnostics.
     witness: ?source.Span = null,
+    /// First located write that reaches a parameter the signature does not
+    /// declare `mut`, where the missing-marker diagnostic points.
+    undeclared_witness: ?source.Span = null,
 };
 
 fn mergeSummaries(a: Summary, b: Summary) Summary {
@@ -87,6 +90,7 @@ fn mergeSummaries(a: Summary, b: Summary) Summary {
         .writes = a.writes or b.writes,
         .external = a.external or b.external,
         .witness = a.witness orelse b.witness,
+        .undeclared_witness = a.undeclared_witness orelse b.undeclared_witness,
     };
 }
 
@@ -193,10 +197,10 @@ fn applyBlockStatements(context: *const Context, function: typed.Function, origi
     if (depth == 256) return;
     const statement = context.program.statements[@backingInt(body)];
     switch (statement.data) {
-        .initialize, .assign => |store| {
-            const value = context.nodeOrigin(function, origins, store.value, depth + 1);
-            const slot = @backingInt(store.slot);
-            if (slot < origins.len) origins[slot] = Origin.merge(origins[slot], value);
+        .initialize, .assign => _ = bindStatement(context, function, origins, statement, depth + 1),
+        .match => |matched| {
+            _ = bindStatement(context, function, origins, statement, depth + 1);
+            for (matched.arms) |arm| applyBlockStatements(context, function, origins, arm.body, depth + 1);
         },
         .block => |children| for (children) |child| applyBlockStatements(context, function, origins, child, depth + 1),
         .branch => |branch| {
@@ -207,27 +211,44 @@ fn applyBlockStatements(context: *const Context, function: typed.Function, origi
             applyBlockStatements(context, function, origins, loop.body, depth + 1);
             if (loop.step) |step| applyBlockStatements(context, function, origins, step, depth + 1);
         },
-        .match => |matched| {
-            bindArmPayloads(context, function, origins, matched, depth + 1);
-            for (matched.arms) |arm| applyBlockStatements(context, function, origins, arm.body, depth + 1);
-        },
         .with_scope => |scope| applyBlockStatements(context, function, origins, scope.body, depth + 1),
         else => {},
     }
 }
 
-/// A `match` arm's payload binding aliases the matched value's payload, so it
-/// takes the matched value's origin. A write through the binding — including the
-/// hidden one an `Option` narrowing lowers `candidate.field = v` to — then reaches
-/// the caller instead of looking like fresh local storage.
-fn bindArmPayloads(context: *const Context, function: typed.Function, origins: []Origin, matched: @FieldType(@FieldType(typed.Statement, "data"), "match"), depth: usize) void {
-    for (matched.arms) |arm| {
-        const slot = arm.slot orelse continue;
-        const index = @backingInt(slot);
-        if (index >= origins.len or index >= function.scope.locals.len) continue;
-        const payload = context.childIfManaged(function.scope.locals[index].ty, function, origins, matched.value, depth);
-        origins[index] = Origin.merge(origins[index], payload);
+/// Merge one binding statement's value origin into the local origin table and
+/// report whether any local's origin grew. A store binds its slot to the value;
+/// a `match` binds each arm's payload slot to the matched value, because a
+/// payload of a class type is the very object the matched container holds, so
+/// a write through it is a write to the container's owner.
+fn bindStatement(context: *const Context, function: typed.Function, origins: []Origin, statement: typed.Statement, depth: usize) bool {
+    switch (statement.data) {
+        .initialize, .assign => |store| {
+            const value = context.nodeOrigin(function, origins, store.value, depth);
+            return widen(origins, @backingInt(store.slot), value);
+        },
+        .match => |matched| {
+            var grew = false;
+            for (matched.arms) |arm| {
+                const slot = arm.slot orelse continue;
+                const index = @backingInt(slot);
+                if (index >= function.scope.locals.len) continue;
+                const payload = function.scope.locals[index].ty;
+                if (widen(origins, index, context.childIfManaged(payload, function, origins, matched.value, depth))) grew = true;
+            }
+            return grew;
+        },
+        else => return false,
     }
+}
+
+/// Merge `value` into one slot's origin, reporting whether it grew.
+fn widen(origins: []Origin, slot: usize, value: Origin) bool {
+    if (slot >= origins.len) return false;
+    const merged = Origin.merge(origins[slot], value);
+    const grew = merged.positions != origins[slot].positions or merged.unknown != origins[slot].unknown;
+    origins[slot] = merged;
+    return grew;
 }
 
 const Context = struct {
@@ -415,13 +436,23 @@ const WriteSite = struct {
         if (origin_value.unknown) {
             self.summary.mutates_unknown = true;
             self.summary.external = true;
-            if (self.summary.witness == null) self.summary.witness = span;
+            self.witness(unknownWritePositions(self.function), span);
             return;
         }
         if (origin_value.positions == 0) return;
         self.summary.mutates |= origin_value.positions;
         self.summary.external = true;
+        self.witness(origin_value.positions, span);
+    }
+
+    /// Remember where one external write reaching `positions` happened: the
+    /// first such write overall, and the first one that reaches a parameter the
+    /// signature does not declare `mut`, so a missing-marker diagnostic points
+    /// at a write that needs the marker rather than at an allowed one.
+    fn witness(self: WriteSite, positions: u16, span: source.Span) void {
         if (self.summary.witness == null) self.summary.witness = span;
+        const declared = positionsBitset(self.function.signature.declared_mutates);
+        if (positions & ~declared != 0 and self.summary.undeclared_witness == null) self.summary.undeclared_witness = span;
     }
 
     fn absorb(self: WriteSite, mask: u16, unknown: bool, span: source.Span) void {
@@ -439,7 +470,7 @@ const WriteSite = struct {
             if (reaches_caller) {
                 self.summary.mutates_unknown = true;
                 self.summary.external = true;
-                if (self.summary.witness == null) self.summary.witness = span;
+                self.witness(unknownWritePositions(self.function), span);
             }
             return;
         }
@@ -450,7 +481,7 @@ const WriteSite = struct {
                 self.summary.writes = true;
                 self.summary.mutates_unknown = true;
                 self.summary.external = true;
-                if (self.summary.witness == null) self.summary.witness = span;
+                self.witness(unknownWritePositions(self.function), span);
                 continue;
             }
             const origin_value = self.context.writtenArgumentOrigin(self.function, self.origins, self.arguments[position]);
@@ -507,19 +538,18 @@ fn absorbExpressionCall(context: *const Context, function: typed.Function, origi
 /// Bind one statement's effect on the local origin table. A `return` merges its
 /// value's origin into the summary; that reads only bindings already resolved,
 /// because the first pass visits statements in source order.
-fn applyStatement(context: *const Context, function: typed.Function, origins: []Origin, statement_id: typed.StatementId, summary: *Summary) void {
+fn applyStatement(context: *const Context, function: typed.Function, origins: []Origin, statement_id: typed.StatementId, summary: *Summary) bool {
     const statement = context.program.statements[@backingInt(statement_id)];
     switch (statement.data) {
         .initialize, .assign => |store| {
-            const value = context.nodeOrigin(function, origins, store.value, 0);
-            const slot = @backingInt(store.slot);
-            if (slot < origins.len) origins[slot] = Origin.merge(origins[slot], value);
+            const grew = bindStatement(context, function, origins, statement, 0);
             absorbElementWrite(context, function, origins, store, statement.span, summary);
+            return grew;
         },
         .ret => |value| summary.return_origin = Origin.merge(summary.return_origin, context.nodeOrigin(function, origins, value, 0)),
-        .match => |matched| bindArmPayloads(context, function, origins, matched, 0),
-        else => {},
+        else => return bindStatement(context, function, origins, statement, 0),
     }
+    return false;
 }
 
 fn applyExpression(context: *const Context, function: typed.Function, origins: []const Origin, expression_id: typed.NodeId, summary: *Summary) void {
@@ -541,12 +571,21 @@ fn analyzeFunction(context: *const Context, index: usize) std.mem.Allocator.Erro
     // also recorded writes could meet the read before the store and attribute the
     // write to fresh storage. Return origins are merged in the same first pass
     // because they only read the bindings that are already known.
-    var bindings = try Walker.init(context.allocator, context.program, function.scope.body);
-    defer bindings.deinit();
-    while (try bindings.next()) |item| switch (item) {
-        .statement => |statement_id| applyStatement(context, function, origins, statement_id, &summary),
-        else => {},
-    };
+    // A loop can read a binding before a later statement widens it, so the
+    // walk repeats until no local's origin grows. Each origin only gains bits
+    // from a finite set, so the repetition is bounded by the locals' count.
+    var grew = true;
+    while (grew) {
+        grew = false;
+        var bindings = try Walker.init(context.allocator, context.program, function.scope.body);
+        defer bindings.deinit();
+        while (try bindings.next()) |item| switch (item) {
+            .statement => |statement_id| if (applyStatement(context, function, origins, statement_id, &summary)) {
+                grew = true;
+            },
+            else => {},
+        };
+    }
     var walker = try Walker.init(context.allocator, context.program, function.scope.body);
     defer walker.deinit();
     while (try walker.next()) |item| switch (item) {
@@ -763,7 +802,7 @@ fn checkMutDeclarations(allocator: std.mem.Allocator, program: typed.Program, re
         const message = try unmarkedWriteMessage(allocator, src, declared_function, function, positions & ~declared);
         try sink.items.append(allocator, .{
             .code = mutation_marker_code,
-            .span = summary.witness orelse function.declaration,
+            .span = summary.undeclared_witness orelse summary.witness orelse function.declaration,
             .message = message,
         });
         violated = true;
@@ -834,47 +873,81 @@ fn mutCoversUnknown(permitted: u16, function: typed.Function) bool {
     return unknownWritePositions(function) & ~permitted == 0;
 }
 
-/// One pair of nominal record identities already assumed disjoint on a path.
-pub const TypePair = struct { a: usize, b: usize };
+/// One unordered pair of types the disjointness proof has queued.
+const TypePair = struct { low: typed.Type, high: typed.Type };
 
-fn registeredPair(stack: []const TypePair, a: usize, b: usize) bool {
-    for (stack) |pair| if (pair.a == a and pair.b == b) return true;
-    return false;
-}
+/// What one queued pair settles on its own.
+const PairVerdict = enum { alias, disjoint, expand };
 
-/// Whether a value of `target` may be one of `container`'s managed components.
-fn aliasComponents(program: typed.Program, target: typed.Type, container: typed.Type, stack: []TypePair, depth: usize) bool {
-    if (!container.isAggregate()) return false;
-    const index = container.recordIndex();
-    if (index >= program.records.len) return true;
-    const record = program.records[index];
-    if (record.shape.buffer) |element| if (typesMayAlias(program, target, element, stack, depth)) return true;
-    if (record.shape.array) |array| if (typesMayAlias(program, target, array.element, stack, depth)) return true;
-    if (record.shape.domain) |domain| if (typesMayAlias(program, target, domain, stack, depth)) return true;
-    if (record.shape.variants) |variants| for (variants.cases) |case| {
-        const payload = case.payload orelse continue;
-        if (typesMayAlias(program, target, payload, stack, depth)) return true;
-    };
-    for (record.fields) |field| if (typesMayAlias(program, target, field.ty, stack, depth)) return true;
-    return false;
-}
-
-/// Sound proof that two argument types cannot share mutable managed storage.
-/// Distinct nominal identities only alias through a shared component; re-entering
-/// the same pair on one path is treated as no new alias (coinductive).
-pub fn typesMayAlias(program: typed.Program, a: typed.Type, b: typed.Type, stack: []TypePair, depth: usize) bool {
-    if (a == b) return true;
-    if (!mayContainManaged(program, a) or !mayContainManaged(program, b)) return false;
-    if (!a.isAggregate() or !b.isAggregate()) return false;
+/// Settle a pair without looking at components: the same type or the same
+/// nominal record may alias, a side that holds no managed storage cannot, and a
+/// record the catalog cannot describe may. Anything else aliases only through
+/// a component.
+fn pairVerdict(program: typed.Program, a: typed.Type, b: typed.Type) PairVerdict {
+    if (a == b) return .alias;
+    if (!mayContainManaged(program, a) or !mayContainManaged(program, b)) return .disjoint;
+    if (!a.isAggregate() or !b.isAggregate()) return .disjoint;
     const ai = a.recordIndex();
     const bi = b.recordIndex();
-    if (ai >= program.records.len or bi >= program.records.len) return true;
-    if (ai == bi) return true;
-    if (depth >= stack.len) return true;
-    if (registeredPair(stack[0..depth], ai, bi)) return false;
-    stack[depth] = .{ .a = ai, .b = bi };
-    if (aliasComponents(program, a, b, stack, depth + 1)) return true;
-    if (aliasComponents(program, b, a, stack, depth + 1)) return true;
+    if (ai >= program.records.len or bi >= program.records.len) return .alias;
+    if (ai == bi) return .alias;
+    return .expand;
+}
+
+/// The proof's whole state for one query: every pair ever queued, so each is
+/// expanded at most once, and the pairs still to expand.
+const AliasSearch = struct {
+    allocator: std.mem.Allocator,
+    program: typed.Program,
+    seen: std.AutoHashMapUnmanaged(TypePair, void) = .empty,
+    pending: std.ArrayList(TypePair) = .empty,
+
+    fn deinit(self: *AliasSearch) void {
+        self.seen.deinit(self.allocator);
+        self.pending.deinit(self.allocator);
+    }
+
+    /// Queue an unordered pair unless this query already queued it.
+    fn queue(self: *AliasSearch, a: typed.Type, b: typed.Type) std.mem.Allocator.Error!void {
+        const pair: TypePair = if (@backingInt(a) <= @backingInt(b)) .{ .low = a, .high = b } else .{ .low = b, .high = a };
+        if ((try self.seen.getOrPut(self.allocator, pair)).found_existing) return;
+        try self.pending.append(self.allocator, pair);
+    }
+
+    /// Queue `target` against every managed component of `container`.
+    fn queueComponents(self: *AliasSearch, target: typed.Type, container: typed.Type) std.mem.Allocator.Error!void {
+        const record = self.program.records[container.recordIndex()];
+        if (record.shape.buffer) |element| try self.queue(target, element);
+        if (record.shape.array) |array| try self.queue(target, array.element);
+        if (record.shape.domain) |domain| try self.queue(target, domain);
+        if (record.shape.variants) |variants| for (variants.cases) |case| {
+            if (case.payload) |payload| try self.queue(target, payload);
+        };
+        for (record.fields) |field| try self.queue(target, field.ty);
+    }
+};
+
+/// Sound proof that two argument types cannot share mutable managed storage.
+/// Two values may alias exactly when some pair reachable from `(a, b)`, by
+/// replacing either side with one of its managed components, is the same type,
+/// the same nominal record or a record the catalog cannot describe. The search
+/// is a reachability walk over unordered type pairs that expands each pair once
+/// for the whole query, so it is polynomial in the number of reachable types;
+/// meeting a pair again adds nothing (coinductive), which is what the old
+/// per-path walk concluded too, only after re-walking every path to it.
+pub fn typesMayAlias(allocator: std.mem.Allocator, program: typed.Program, a: typed.Type, b: typed.Type) std.mem.Allocator.Error!bool {
+    var search = AliasSearch{ .allocator = allocator, .program = program };
+    defer search.deinit();
+    try search.queue(a, b);
+    while (search.pending.pop()) |pair| {
+        switch (pairVerdict(program, pair.low, pair.high)) {
+            .alias => return true,
+            .disjoint => continue,
+            .expand => {},
+        }
+        try search.queueComponents(pair.low, pair.high);
+        try search.queueComponents(pair.high, pair.low);
+    }
     return false;
 }
 
@@ -970,8 +1043,7 @@ const OverlapChecker = struct {
             const both_fresh = written_fresh and read_fresh;
             if (both_fresh and !site.sameRoot(self.program, written, read_only)) continue;
             if (!both_fresh and (written_fresh or read_fresh)) continue;
-            var stack: [64]TypePair = undefined;
-            if (!typesMayAlias(self.program, written_type, read_type, &stack, 0)) continue;
+            if (!try typesMayAlias(self.allocator, self.program, written_type, read_type)) continue;
             try site.sink.items.append(self.allocator, .{
                 .code = overlap_code,
                 .span = self.program.nodes[@backingInt(site.arguments[read_only])].span,
@@ -1043,16 +1115,10 @@ fn collectOverlaps(allocator: std.mem.Allocator, program: typed.Program, summari
     while (try walker.next()) |item| switch (item) {
         .statement => |statement_id| {
             const statement = program.statements[@backingInt(statement_id)];
+            _ = bindStatement(&context, function, origins, statement, 0);
             switch (statement.data) {
-                .initialize, .assign => |store| {
-                    const value = context.nodeOrigin(function, origins, store.value, 0);
-                    const slot = @backingInt(store.slot);
-                    if (slot < origins.len) origins[slot] = Origin.merge(origins[slot], value);
-                    if (mutation.nodeRoot(program, store.value)) |root| roots.join(slot, @backingInt(root));
-                },
-                .match => |matched| {
-                    bindArmPayloads(&context, function, origins, matched, 0);
-                    const root = mutation.nodeRoot(program, matched.value) orelse continue;
+                .initialize, .assign => |store| if (mutation.nodeRoot(program, store.value)) |root| roots.join(@backingInt(store.slot), @backingInt(root)),
+                .match => |matched| if (mutation.nodeRoot(program, matched.value)) |root| {
                     for (matched.arms) |arm| if (arm.slot) |slot| roots.join(@backingInt(slot), @backingInt(root));
                 },
                 else => {},
