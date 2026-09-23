@@ -2614,3 +2614,83 @@ test "QBE-ELEMREF-4 a call that takes a traced parameter keeps the copy" {
     // is snapshotted before the call.
     try std.testing.expect(std.mem.indexOf(u8, body, "blit ") != null);
 }
+
+const barrier_program =
+    \\class Node:
+    \\    next: Option[Node]
+    \\    value: int
+    \\
+    \\
+    \\def link(node: mut Node, other: Node) effects(mutation):
+    \\    node.next = Some(other)
+    \\
+    \\
+    \\def bump(node: mut Node) effects(mutation):
+    \\    node.value = node.value + 1
+    \\
+    \\
+    \\def main() -> int:
+    \\    first = Node(next=None, value=1)
+    \\    second = Node(next=None, value=2)
+    \\    link(mut first, second)
+    \\    bump(mut first)
+    \\    return first.value
+;
+
+// spec: QBE-GEN-BARRIER-1
+test "QBE-GEN-BARRIER-1 a reference store into a class body runs the barrier and a scalar store does not" {
+    const a = std.testing.allocator;
+    var parsed = try emitted(a, barrier_program);
+    defer parsed.deinit();
+    const link = named(parsed.value, "link").?.il;
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, link, "call $myl_native_heap_remember(l %heap, "));
+    try std.testing.expect(std.mem.indexOf(u8, link, " =l and ") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, named(parsed.value, "bump").?.il, "myl_native_heap_remember"));
+}
+
+// spec-case: QBE-INLINE-ALLOC-1
+test "QBE-INLINE-ALLOC-1 a small class body is popped inline and only the refill call publishes roots" {
+    const a = std.testing.allocator;
+    var parsed = try emitted(a, barrier_program);
+    defer parsed.deinit();
+    const body = named(parsed.value, "main").?.il;
+    // Node is 24 bytes, so header and body share the 48-byte class, index 2:
+    // its window sits at the frozen inline offset plus two windows.
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, body, ", 1312\n"));
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, body, "call $myl_native_heap_alloc_small(l %heap, "));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "call $myl_native_heap_alloc("));
+    // The second constructor runs while `first` is live: its root push sits on
+    // the refill branch, between the branch label and the call, and nowhere
+    // before the first refill branch.
+    const slow = std.mem.lastIndexOf(u8, body, "@cell_slow").?;
+    const call = std.mem.indexOfPos(u8, body, slow, "call $myl_native_heap_alloc_small").?;
+    try std.testing.expect(std.mem.indexOf(u8, body[slow..call], "=l add %heap, 16\n") != null);
+    const first_slow = std.mem.indexOf(u8, body, "@cell_slow").?;
+    try std.testing.expect(std.mem.indexOf(u8, body[0..first_slow], "=l add %heap, 16\n") == null);
+    // A program that never opens an arena has no arena window check.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, ", 1472\n"));
+}
+
+// spec-case: QBE-INLINE-ALLOC-1
+test "QBE-INLINE-ALLOC-1 a program with arenas bumps the arena window before calling the runtime" {
+    const a = std.testing.allocator;
+    var parsed = try emitted(a,
+        \\class Node:
+        \\    next: Option[Node]
+        \\    value: int
+        \\
+        \\
+        \\def main() -> int:
+        \\    total = 0
+        \\    with arena():
+        \\        first = Node(next=None, value=1)
+        \\        total = first.value
+        \\    return total
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "main").?.il;
+    const arena = std.mem.indexOf(u8, body, ", 1472\n").?;
+    const call = std.mem.indexOf(u8, body, "call $myl_native_heap_alloc_small").?;
+    try std.testing.expect(std.mem.indexOf(u8, body, "@cell_slow").? < arena and arena < call);
+    try std.testing.expect(std.mem.indexOf(u8, body, "@cell_arena") != null);
+}
