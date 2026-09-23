@@ -1,0 +1,17 @@
+# a conditional count that overflows past the maximum
+
+
+def count_of(values: list[int], start: int) -> int:
+    count = start
+    for v in values:
+        if v % 3 == 0:
+            count += 1
+    return count
+
+
+def main(out: Stream) -> int:
+    values = [i for i in range(90)]
+    out.print(count_of(values, 0))
+    out.print(count_of(values, 9223372036854775807 - 29))
+    out.print(count_of(values, 9223372036854775807 - 30))
+    return 0

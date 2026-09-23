@@ -205,7 +205,6 @@ FOREIGN = "foreign"
 #: which is the caller's storage and never one of this unit's allocations.
 HELPER_CLASSES = {"myl_qbe_frame_allocate": FRAME, "myl_qbe_heap": FOREIGN}
 
-
 #: Metadata identifiers of the two scopes and of the one-element scope lists a
 #: tagged access names.  The domain and both scopes are `distinct`, so the IR
 #: linker cannot unify one unit's classes with another's during LTO.

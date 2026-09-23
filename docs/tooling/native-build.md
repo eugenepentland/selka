@@ -99,18 +99,40 @@ activation made after it was entered: no value that existed before the call can
 point into it, no managed object is allocated inside it, and it is released
 before the activation returns. So the adapter gives each placed access
 `!alias.scope`/`!noalias` saying the two classes never meet. It carries a class
-through `copy` and offsetting `add`, and
-through a stack slot whose address never leaves the unit — either because every
-store to it agrees on one class and one of those stores dominates every load, or,
-inside one block, from the last value stored above the load. Everything else is
-left unplaced and carries no metadata, which keeps it aliasing both classes the
-way every access behaved before. This is what lets a loop keep a container's
-length and storage pointer in registers instead of reloading the header on every
+through `copy` and offsetting `add`, and through a stack slot whose address
+never leaves the unit by a forward must-analysis: a load answers the class the
+last store put in the slot on every path that reaches it, and nothing when two
+paths disagree or a path reaches it before any store. Everything else is left
+unplaced and carries no metadata, which keeps it aliasing both classes the way
+every access behaved before. This is what lets a loop keep a container's length
+and storage pointer in registers instead of reloading the header on every
 element; `MYLANG_QBE_LLVM_ALIAS=0` turns the metadata off for an A/B run.
 
-The `# myl-obj` markers are comment lines of their own. QBE's lexer drops a `#`
-comment to end of line, so the QBE backend's assembly is byte-identical with and
-without them.
+Foreign memory is placed more finely where the emitter says what it is
+(`LLVM-ELEMENT-CLASS-1`). The storage word of a managed container — the start of
+its element storage block — is marked `# myl-elem %temp KIND`, where KIND is the
+element size and `r` for GC references or `v` for plain values, and every other
+marked address is an **object** (a header or an allocation's payload). An
+object access and an element access never alias, and neither do element
+accesses of two kinds: each storage block is an allocation of its own that no
+object overlaps and that only ever holds elements of its kind. A plain foreign
+access still aliases all of them, and a copy between two classes carries both
+classes' scopes and only the scopes neither end can alias. This is what keeps a
+list's length and storage word, and a list of lists' row pointers, in registers
+across a loop that stores into element storage (`matmul`, `nbody`).
+
+A load or store whose address is an element address computed earlier in the
+same block — the marked storage word or object plus at least one variable term
+— is given that address as a plain `getelementptr i8` from the marked base
+instead of an `inttoptr` of the integer sum (`LLVM-ELEMENT-GEP-1`). The bits
+are the same; LLVM's scalar evolution does not look through `inttoptr`, so only
+this form lets it see `data[i]` advance by one element per iteration, load a
+whole vector instead of gathering one element at a time, and compute
+dependence distances.
+
+The `# myl-obj` and `# myl-elem` markers are comment lines of their own. QBE's
+lexer drops a `#` comment to end of line, so the QBE backend's assembly is
+byte-identical with and without them.
 
 The adapter does lower one kind of check differently, without assuming anything
 about it: a checked 64-bit `+`, `-` or `*` becomes
@@ -127,6 +149,26 @@ narrower width's range test and the single compare against a literal operand
 are already one compare and stay as they are. `LLVM-OVERFLOW-INTRINSIC-1` in
 `SPEC.md` states the rule; `experiments/llvm-backend/llvm_emit.OverflowChecks`
 implements it.
+
+It also versions a loop whose overflow checks decide nothing but the trap
+(`LLVM-STICKY-REDUCTION-1`, `experiments/llvm-backend/sticky_loops.py`). The
+loop's entry goes to a fast copy in which the check of a *reduction* — a frame
+cell the loop changes only by adding or subtracting a 64-bit signed value to a
+value it held — is dropped while the copy sums the magnitudes of what it adds,
+and any other overflow check is *sticky*: its flag is OR-ed into one word and the
+copy continues with the wrapped value. Bounds, cast, division and iteration
+checks stay branches, to a fallback. Each exit of the fast copy verifies that the
+sticky word is zero and that `|entry value| + sum |added| <= 2^63 - 1` for every
+reduction, which bounds every intermediate value; then the fast copy computed
+exactly what the checked loop would have. Otherwise, and on every would-be trap,
+the fallback restores each frame cell the loop wrote and runs the original loop
+from the same state, so a trap reports the same code, operands, position and
+trace as before. The rewrite requires a loop with no call, `blit` or phi, whose
+stores all land in this activation's own cells, and in which no value that may
+have wrapped reaches a non-check branch, an address, a shift amount, a divisor, a
+float-to-integer conversion or a cell whose address escapes; a check whose value
+would is kept as a branch. The fast copy of `count += 1` or `total += x` is
+branch-free and LLVM vectorizes it. `MYLANG_QBE_LLVM_STICKY=0` turns it off.
 
 ## `mylang build`
 

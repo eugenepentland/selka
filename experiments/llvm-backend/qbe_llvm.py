@@ -27,7 +27,9 @@ Design rules, in the order they constrain the code:
   run, so no guard can become dead because of it.
 * QBE temporaries are mutable cells. Each gets a private entry-block slot;
   LLVM's promotion and SROA passes recover SSA where possible. Address arithmetic
-  uses GEP only when conservative provenance checks establish an object origin.
+  uses GEP only when conservative provenance checks establish an object origin,
+  and for a load or store whose address is an element address summed from a
+  marked storage word in the same block (LLVM-ELEMENT-GEP-1).
 * Source allocations stay where the source put them: the emitter deliberately
   hoists some aggregate scratch to the entry block and not others.
 * An unsupported opcode, type or calling shape raises `ParseError` naming the
@@ -907,6 +909,15 @@ def compile_ir(ir_text, output):
         command = [zig, "cc", "-c", "-flto", optimization, "-fPIC", "-g0", ir_path, "-o", output]
     else:
         command = [zig, "cc", "-S", optimization, "-fPIC", "-g0", ir_path, "-o", output]
+    remarks = os.environ.get("MYLANG_QBE_LLVM_REMARKS")
+    if remarks:
+        # Diagnostic only: this unit's own optimization remarks (a full-LTO
+        # pre-link compile already vectorizes a self-contained loop), written
+        # beside the others.  A warm object cache never reaches this point.
+        os.makedirs(remarks, exist_ok=True)
+        record = os.path.join(remarks, os.path.basename(output) + ".yaml")
+        command += ["-fsave-optimization-record=yaml", f"-foptimization-record-file={record}",
+                    "-foptimization-record-passes=loop-vectorize|licm|gvn"]
     completed = subprocess.run(command, capture_output=True, text=True)
     if completed.returncode != 0:
         raise ParseError(f"LLVM rejected the translated unit:\n{completed.stderr}\n"

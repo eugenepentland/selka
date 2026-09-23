@@ -1,0 +1,20 @@
+# bytes scan counting past the maximum
+
+
+def scan(start: int) -> int:
+    empty: list[int] = []
+    buffer = byte_buffer(empty)
+    for i in range(300):
+        _ = buffer.append_byte(i % 256)
+    data = bytes(buffer)
+    count = start
+    for i in range(len(data)):
+        if data[i] == 109:
+            count += 1
+    return count
+
+
+def main(out: Stream) -> int:
+    out.print(scan(0))
+    out.print(scan(9223372036854775806))
+    return 0
