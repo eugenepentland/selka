@@ -286,6 +286,25 @@ test "formatter allocation failures release collectComments and collectTopStarts
     try t.checkAllAllocationFailures(no_resize.allocator(), failureScenario, .{});
 }
 
+// spec: FMT-MODULE-DETECT-1
+test "fmt formats a file that opens with a module header or an import instead of rejecting it" {
+    const module_text = "module calc\n\n\ndef twice(x: int) -> int:\n    return x*2\n";
+    const formatted = try formatOnce(t.allocator, "calc.my", module_text);
+    defer t.allocator.free(formatted);
+    const expected = try formatModuleOnce(t.allocator, "calc.my", module_text);
+    defer t.allocator.free(expected);
+    try t.expectEqualStrings(expected, formatted);
+    try t.expect(std.mem.indexOf(u8, formatted, "x * 2") != null);
+    const script = "# a script\nimport math\n\n\ndef main() -> int:\n    return int(math.floor(2.5))\n";
+    const imported = try formatOnce(t.allocator, "script.my", script);
+    defer t.allocator.free(imported);
+    const imported_module = try formatModuleOnce(t.allocator, "script.my", script);
+    defer t.allocator.free(imported_module);
+    try t.expectEqualStrings(imported_module, imported);
+    try t.expect(!language.opensAsModule("def module_count() -> int:\n    return 0\n"));
+    try t.expect(!language.opensAsModule("# module notes\nmodulex = 1\n"));
+}
+
 test "formatter still rejects invalid syntax and reports its source diagnostic" {
     const invalid =
         \\def main() -> i64:

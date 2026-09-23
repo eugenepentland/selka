@@ -128,7 +128,11 @@ pub const Compilation = struct {
         if (cache) |disk| try disk.rememberSyntax(self.src, 0, self.syntax.?);
     }
 
+    /// Allocate the canonical formatting of this unit. A file that opens with a
+    /// `module` header or an `import` directive is a module file, so it is
+    /// formatted with the module grammar rather than rejected at its first word.
     pub fn format(self: *Compilation, allocator: std.mem.Allocator) FormatError![]u8 {
+        if (opensAsModule(self.src.bytes)) return self.formatModule(allocator);
         try self.parse();
         return @import("formatter.zig").format(allocator, self.src.bytes, self.tokens.?, self.syntax.?.types);
     }
@@ -245,3 +249,18 @@ pub const reference_tables = struct {
 /// and identity types, so it lives in this module and the command-line root
 /// reaches it through `language.friction_log` rather than a second import.
 pub const friction_log = @import("friction_log.zig");
+
+/// Whether a source's first line that is neither blank nor a comment is a
+/// `module` header or an `import` directive: the openings of a module file.
+pub fn opensAsModule(source_bytes: []const u8) bool {
+    var lines = std.mem.splitScalar(u8, source_bytes, '\n');
+    while (lines.next()) |raw| {
+        const line = std.mem.trim(u8, raw, " \t\r");
+        if (line.len == 0 or line[0] == '#') continue;
+        for ([_][]const u8{ "module", "import" }) |word| {
+            if (std.mem.startsWith(u8, line, word) and line.len > word.len and (line[word.len] == ' ' or line[word.len] == '\t')) return true;
+        }
+        return false;
+    }
+    return false;
+}
