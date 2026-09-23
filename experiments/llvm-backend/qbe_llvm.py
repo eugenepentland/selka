@@ -259,9 +259,6 @@ class Function:
         # Temporaries the frontend marked `# myl-obj`: addresses it knows name
         # memory outside this function's stack frame.
         self.object_hints = set()
-        # Temporaries the frontend marked `# myl-gep`: element storage every
-        # offset added to stays inside (LLVM-OBJECT-GEP-1).
-        self.address_bases = set()
 
 
 class Unit:
@@ -363,7 +360,7 @@ def parse_unit(text, unit="unit"):
         raise ParseError("unit contains no function", unit)
     header = lines[index].strip()
     function, index = parse_header(header, lines, index, unit)
-    function.blocks = parse_blocks(lines, index, unit, function.object_hints, function.address_bases)
+    function.blocks = parse_blocks(lines, index, unit, function.object_hints)
     if not function.blocks:
         raise ParseError("function contains no blocks", unit, function.line, header)
     return Unit(function, aggregates, alignments, debug_file)
@@ -407,22 +404,12 @@ def parse_header(header, lines, index, unit):
 #: `llvm_emit.classify_memory`).  Format: `# myl-obj %temp`.
 OBJECT_MARKER = "# myl-obj "
 
-#: Marker line the frontend writes before a managed object's element storage
-#: address when every offset it adds to that address stays inside the storage
-#: (LLVM-OBJECT-GEP-1): the storage a proving loop guard loaded for a
-#: scalar-element list or byte string.  Derived addresses are then
-#: `getelementptr`s, which LLVM's loop vectorizer can follow.
-#: Format: `# myl-gep %temp`.
-GEP_MARKER = "# myl-gep "
 
-
-def parse_blocks(lines, index, unit, object_hints=None, address_bases=None):
+def parse_blocks(lines, index, unit, object_hints=None):
     """Parse the block list of one function body.
 
     `object_hints`, when given, collects the temporaries the frontend marked as
-    holding an address outside this function's stack frame, and
-    `address_bases` the ones it marked as element storage every derived
-    address stays inside.
+    holding an address outside this function's stack frame.
     """
     blocks, current = [], None
     while index < len(lines):
@@ -433,11 +420,6 @@ def parse_blocks(lines, index, unit, object_hints=None, address_bases=None):
             marked = stripped[len(OBJECT_MARKER):].strip()
             if marked.startswith("%"):
                 object_hints.add(marked[1:])
-            continue
-        if stripped.startswith(GEP_MARKER):
-            marked = stripped[len(GEP_MARKER):].strip()
-            if address_bases is not None and marked.startswith("%"):
-                address_bases.add(marked[1:])
             continue
         line = strip_comment(raw)
         if not line:

@@ -195,36 +195,6 @@ const unversioned =
     \\    return grow(mut xs, 4) + text(xs)
 ;
 
-const records =
-    \\record Body:
-    \\    x: float
-    \\    v: float
-    \\
-    \\
-    \\def drift(bodies: mut list[Body], dt: float) -> None:
-    \\    for i in range(len(bodies)):
-    \\        bodies[i].x = bodies[i].x + dt * bodies[i].v
-    \\
-    \\
-    \\def main() -> int:
-    \\    bodies = [Body(x=1.0, v=2.0)]
-    \\    drift(mut bodies, 0.5)
-    \\    return int(bodies[0].x)
-;
-
-// spec-case: LLVM-OBJECT-GEP-1
-test "only storage of scalar elements is marked for getelementptr addressing" {
-    const scalars = try fastIl(list_sum, "total");
-    defer t.allocator.free(scalars);
-    try t.expectEqual(@as(usize, 1), std.mem.count(u8, (try parts(scalars)).before, " # myl-gep %v"));
-    const whole = try fastIl(records, "drift");
-    defer t.allocator.free(whole);
-    // The record list's storage comes from the guard, but its elements are
-    // copied whole, so it stays integer arithmetic for the adapter.
-    try t.expect(std.mem.count(u8, (try parts(whole)).before, ", 32\n") >= 1);
-    try t.expectEqual(@as(usize, 0), std.mem.count(u8, whole, "myl-gep"));
-}
-
 /// Require that function `name` of `source` has no check-free copy.
 fn expectUnversioned(source: []const u8, name: []const u8) !void {
     const il = try fastIl(source, name);

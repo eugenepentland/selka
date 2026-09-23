@@ -1875,9 +1875,8 @@ test "checked arithmetic at every width reports the same result and trap from th
     defer a.free(wanted);
     try testing.expectEqualStrings(wanted, trapped);
 }
-/// Loops LLVM vectorizes once their checks are proven (`QBE-LOOP-VERSION-1`)
-/// and their element addresses are `getelementptr`s (`LLVM-OBJECT-GEP-1`): a
-/// byte count and a row update, sized and shifted from the command line.
+/// Loops LLVM vectorizes once their checks are proven (`QBE-LOOP-VERSION-1`):
+/// a byte count and a row update, sized and shifted from the command line.
 const vector_loops_program =
     \\def number(text: str) -> int:
     \\    match int(text):
@@ -1915,8 +1914,8 @@ const vector_loops_program =
     \\    out.print(int(total))
     \\    return 0
 ;
-// spec: LLVM-OBJECT-GEP-1
-test "loops vectorized through element getelementptrs compute and trap exactly as QBE does" {
+// spec-case: QBE-LOOP-VERSION-1
+test "versioned loops LLVM vectorizes compute and trap exactly as QBE does" {
     const a = testing.allocator;
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();

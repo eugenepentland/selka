@@ -128,20 +128,6 @@ are already one compare and stay as they are. `LLVM-OVERFLOW-INTRINSIC-1` in
 `SPEC.md` states the rule; `experiments/llvm-backend/llvm_emit.OverflowChecks`
 implements it.
 
-Inside the check-free copy of a versioned loop (`QBE-LOOP-VERSION-1`), an
-element address computed from the storage the loop's guard loaded for a list or
-byte string of scalar elements is a `getelementptr i8` from that storage rather
-than an `add` of integers (`LLVM-OBJECT-GEP-1`); the emitter says which storage
-qualifies with a `# myl-gep %temp` marker. Every such offset is an element the
-guard proved in bounds, so the address is the same either way; the difference
-is that LLVM's loop vectorizer recognizes `storage + i * 8` as consecutive in
-`i` only when it is a `getelementptr`, so a proven loop becomes vector loads and
-stores instead of scalar ones. Everything else keeps integer arithmetic: a
-record element is copied whole with `blit`, and deriving it with
-`getelementptr` turns that copy into wide vector moves that the element's later
-field reads cannot forward from (an `nbody` built with `--unchecked` ran six
-times slower that way).
-
 ## `mylang build`
 
 `mylang build <file.my> -o <output>` checks the program, lowers it, compiles one

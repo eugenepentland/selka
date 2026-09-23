@@ -986,19 +986,8 @@ class Emitter:
 
         This is derived from parsed operations, rather than rewriting optimized
         IR that merely happens to resemble address arithmetic.  Only allocations,
-        aggregate parameters, globals, the element storage the frontend marked
-        `# myl-gep`, and copies/additions derived from them are admitted.
-
-        A `# myl-gep` address is the element storage a proving loop guard
-        loaded for a list or byte string of scalar elements
-        (`LLVM-OBJECT-GEP-1`, `QBE-LOOP-VERSION-1`), and every addition the
-        frontend makes to it stays inside that storage: an element whose
-        position the guard proved.  Deriving the element address with
-        `getelementptr` rather than integer arithmetic is what lets LLVM's loop
-        vectorizer see it as consecutive in the index.  Plain `# myl-obj`
-        addresses are deliberately not admitted: a record element copied with
-        a `blit` through a `getelementptr` becomes wide vector moves that later
-        narrow field reads cannot forward from.
+        aggregate parameters, globals, and copies/additions derived from them are
+        admitted.
         """
         definition_count = {temp.name: 1 for _letter, temp in self.function.parameters}
         for block in self.function.blocks:
@@ -1011,7 +1000,6 @@ class Emitter:
 
         pointers = {temp.name for letter, temp in self.function.parameters
                     if aggregate_bytes(letter, self.sizes) is not None and unique(temp.name)}
-        pointers |= {name for name in self.function.address_bases if unique(name)}
         # Only explicit origins establish provenance.  A later memory use does
         # not prove that integer arithmetic constructing its address was
         # object-relative.

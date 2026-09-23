@@ -153,13 +153,9 @@ pub fn Lower(comptime E: type) type {
             const temp = self.temp();
             try self.markObject(header);
             try self.print(" %v{d} =l add %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ field, header, storage_offset, temp, field });
-            try self.markObject(temp);
-            // LLVM-OBJECT-GEP-1: every element the copy addresses through this
-            // storage is one the guard proved in bounds, so the LLVM adapter
-            // may derive those addresses with `getelementptr`. Only scalar
-            // elements qualify: a record element is copied whole, and wide
-            // copies through it defeat store forwarding to its field reads.
-            if (self.isScalar(try elementType(self, id))) try self.print(" # myl-gep %v{d}\n", .{temp});
+            // The element storage block, with its element layout, as every
+            // other storage load names it (LLVM-ELEMENT-CLASS-1).
+            try self.markElements(temp, try elementType(self, id));
             active.storages[id] = temp;
             return temp;
         }
