@@ -22,12 +22,18 @@ typedef struct {
  * or found the key absent with `slot` the empty slot a write would fill. The
  * record is a hint, never an answer: a found entry is revalidated against the
  * live entry list, and an absence is recorded only for keys compared by value
- * and is dropped by every change that could insert, move or remove a key. */
+ * and is dropped by every change that could insert, move or remove a key.
+ * A described slice (`myl_native_dictionary_read_range`) is recorded under
+ * states of its own: `key` holds the text it ranges over and `offset` and
+ * `bytes` the span, so the record nominates only that same query; an absence
+ * also carries `epoch`, the heap's collection count, so it applies only while
+ * that text cannot have been reclaimed and its address reused. */
 typedef struct {
     uint64_t key;
     size_t entry;
     uint32_t slot, hash;
     unsigned state;
+    size_t offset, bytes, epoch;
 } myl_native_dictionary_probe;
 typedef struct {
     myl_native_list *entries;
@@ -52,6 +58,24 @@ int myl_native_dictionary_contains(const myl_native_dictionary *, const void *ke
  * allocation failure without altering entries or insertion order. */
 int myl_native_dictionary_read(const myl_native_dictionary *, const void *key, void *output);
 int myl_native_dictionary_write(myl_native_heap *, myl_native_dictionary *, const void *key, const void *value);
+/* The half of `write` that allocates nothing: the value of a key already present
+ * is replaced and 1 answered; an absent key answers 0 and changes nothing, so
+ * generated code calls `write` — and links its roots — only for a new key
+ * (DICT-OVERWRITE-1). A miss is recorded exactly as a lookup's is. */
+int myl_native_dictionary_overwrite(myl_native_dictionary *, const void *key, const void *value);
+/* `read`, `contains`, `overwrite` and `write` of a `str`-keyed dictionary whose
+ * key is the slice `span` of `text`, which is never built (DICT-RANGE-KEY-1).
+ * A lookup hashes and compares the octets in place, so it allocates nothing;
+ * `write` allocates an owned key, in the dictionary's own region, only when the
+ * key is new. Every answer is the one the built slice would get: the stored
+ * keys, their order and their hashes are exactly those a `write` of the slice
+ * would leave. The heap is read, never changed, by the lookups: it dates the
+ * absence they record, which lets the `write` of a read-modify-write skip its
+ * walk. */
+int myl_native_dictionary_read_range(const myl_native_heap *, const myl_native_dictionary *, const myl_native_text *text, const myl_native_text_span *span, void *output);
+int myl_native_dictionary_contains_range(const myl_native_heap *, const myl_native_dictionary *, const myl_native_text *text, const myl_native_text_span *span);
+int myl_native_dictionary_overwrite_range(const myl_native_heap *, myl_native_dictionary *, const myl_native_text *text, const myl_native_text_span *span, const void *value);
+int myl_native_dictionary_write_range(myl_native_heap *, myl_native_dictionary *, myl_native_text *text, const myl_native_text_span *span, const void *value);
 myl_native_list *myl_native_dictionary_snapshot(myl_native_heap *, myl_native_dictionary *, int keys);
 /* Insertion-order reads return zero outside the live entry range and preserve
  * output. They are internal iteration primitives, not source-level methods. */

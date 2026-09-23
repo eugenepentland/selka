@@ -13,8 +13,11 @@ static const myl_native_type dict_type={.size=sizeof(myl_native_dictionary),.ali
  * eight-byte integer as one word, a narrower integer as its zero-extended bytes,
  * and a key wider than a word (only reachable from C) as a byte string. */
 enum { KEY_TEXT, KEY_WORD, KEY_NARROW, KEY_WIDE };
-/* What the last probe learned: nothing, the key's entry, or the key's absence. */
-enum { PROBE_NONE, PROBE_FOUND, PROBE_ABSENT };
+/* What the last probe learned: nothing, the key's entry, the key's absence, or
+ * the absence of a described slice (DICT-RANGE-KEY-1). The two absences are
+ * kept apart because a slice's record names the text it ranges over, which a
+ * lookup of that whole text must never mistake for its own. */
+enum { PROBE_NONE, PROBE_FOUND, PROBE_ABSENT, PROBE_FOUND_SPAN, PROBE_ABSENT_SPAN };
 /* The largest table: slot numbers stay below 2^31, so a slot position fits the
  * record's 32 bits with NO_SLOT to spare, and an entry index fits the low half
  * of a slot. A longer entry list drops the index and scans. */
@@ -404,6 +407,139 @@ int myl_native_dictionary_write(myl_native_heap *heap, myl_native_dictionary *di
     size_t index=recall(dict,key);
     if (index==NO_ENTRY) return write_walk(heap,dict,key,value);
     copy_value(dict,entry_at(dict,index)+dict->value_offset,value);
+    return 1;
+}
+static __attribute__((noinline)) int overwrite_walk(myl_native_dictionary *dict, const void *key, const void *value) {
+    size_t index=locate(dict,key).entry;
+    if (index==NO_ENTRY) return 0;
+    copy_value(dict,entry_at(dict,index)+dict->value_offset,value);
+    return 1;
+}
+int myl_native_dictionary_overwrite(myl_native_dictionary *dict, const void *key, const void *value) {
+    size_t index=recall(dict,key);
+    if (index==NO_ENTRY) return overwrite_walk(dict,key,value);
+    copy_value(dict,entry_at(dict,index)+dict->value_offset,value);
+    return 1;
+}
+/* A described slice as a lookup key (DICT-RANGE-KEY-1): the octets it names, in
+ * place inside the text it ranges over, and that text with the span for the
+ * record of an absence. */
+typedef struct {
+    const myl_native_text *text;
+    const myl_native_text_span *span;
+    const unsigned char *octets;
+} span_key;
+static inline span_key span_of(const myl_native_text *text, const myl_native_text_span *span) {
+    return (span_key){text,span,myl_native_text_storage(text)+span->offset};
+}
+/* Whether a stored key holds exactly the slice's octets. Stored keys are owned,
+ * so their octets are the header's tail (`insert`). */
+static inline int same_span(const unsigned char *entry, span_key key) {
+    const myl_native_text *stored=text_of(entry);
+    return stored->bytes==key.span->bytes && same_octets((const unsigned char *)(stored+1),key.octets,key.span->bytes);
+}
+/* Whether the record was made for this very span of this very text. */
+static inline int same_query(const myl_native_dictionary_probe *last, span_key key) {
+    return last->key==(uint64_t)(uintptr_t)key.text && last->offset==key.span->offset && last->bytes==key.span->bytes;
+}
+/* The entry the last probe found for this span of this text, when it still
+ * holds the slice's octets. The record nominates only the query it was made for
+ * — the same text, offset and length, which is what the write of a
+ * read-modify-write asks — so a lookup of any other span fails the nomination on
+ * a register compare instead of on a coin-flip octet comparison; the nomination
+ * is then proven by comparing the entry's octets, as a text's recall is. */
+static inline size_t recall_span(const myl_native_dictionary *dict, span_key key) {
+    const myl_native_dictionary_probe *last=&dict->last;
+    if (last->state!=PROBE_FOUND_SPAN || !same_query(last,key) || last->entry>=dict->entries->length) return NO_ENTRY;
+    return same_span(entry_at(dict,last->entry),key)?last->entry:NO_ENTRY;
+}
+/* The heap's collection count while no arena is open, which is when a recorded
+ * slice's absence may be written or believed. The record names the ranged text
+ * by address; that text was live when it was recorded, and a tracing-heap
+ * object is reclaimed only by a collection, so an unchanged count proves the
+ * address still names the same immutable text. An arena frees without
+ * collecting, so no absence is dated while one is open. */
+static inline int span_epoch(const myl_native_heap *heap, size_t *epoch) {
+    if (heap->region_depth) return 0;
+    *epoch=heap->collections;
+    return 1;
+}
+/* The walk for a described slice, answering from a recorded absence of the same
+ * span of the same text when nothing since can have inserted a key (every
+ * insertion drops the record) or reclaimed that text (`span_epoch`). Whatever the
+ * walk learns is recorded, as `locate` records it. */
+static inline __attribute__((always_inline)) located locate_span(const myl_native_heap *heap, const myl_native_dictionary *dict, span_key key) {
+    myl_native_dictionary_probe *last=(myl_native_dictionary_probe *)&dict->last;
+    size_t epoch=0;
+    int dated=span_epoch(heap,&epoch);
+    if (dated && last->state==PROBE_ABSENT_SPAN && same_query(last,key) && last->epoch==epoch)
+        return (located){NO_ENTRY,last->slot,last->hash};
+    located found={NO_ENTRY,NO_SLOT,0};
+    if (!dict->index.capacity) {
+        for (size_t i=0;i<dict->entries->length;i++)
+            if (same_span(entry_at(dict,i),key)) { found.entry=i; break; }
+    } else {
+        uint32_t hash=myl_native_octets_hash(key.octets,key.span->bytes);
+        const uint64_t *slots=dict->index.slots;
+        size_t mask=dict->index.capacity-1, at=hash&mask;
+        found=(located){NO_ENTRY,NO_SLOT,hash};
+        for (uint64_t slot;(slot=slots[at]);at=(at+1)&mask) {
+            if ((uint32_t)(slot>>32)!=hash) continue;
+            size_t entry=MYL_NATIVE_DICTIONARY_SLOT_ENTRY(slot)-1;
+            if (same_span(entry_at(dict,entry),key)) { found.entry=entry; break; }
+        }
+        found.slot=(uint32_t)at;
+    }
+    uint64_t text=(uint64_t)(uintptr_t)key.text;
+    if (found.entry!=NO_ENTRY) *last=(myl_native_dictionary_probe){.key=text,.entry=found.entry,.state=PROBE_FOUND_SPAN,.offset=key.span->offset,.bytes=key.span->bytes};
+    else if (dated && found.slot!=NO_SLOT) *last=(myl_native_dictionary_probe){.key=text,.slot=found.slot,.hash=found.hash,.state=PROBE_ABSENT_SPAN,.offset=key.span->offset,.bytes=key.span->bytes,.epoch=epoch};
+    else last->state=PROBE_NONE;
+    return found;
+}
+/* The entry holding a described slice, from the record or one walk. */
+static inline __attribute__((always_inline)) located find_span(const myl_native_heap *heap, const myl_native_dictionary *dict, span_key key) {
+    size_t entry=recall_span(dict,key);
+    if (entry!=NO_ENTRY) return (located){entry,NO_SLOT,0};
+    return locate_span(heap,dict,key);
+}
+int myl_native_dictionary_read_range(const myl_native_heap *heap, const myl_native_dictionary *dict, const myl_native_text *text, const myl_native_text_span *span, void *output) {
+    size_t index=find_span(heap,dict,span_of(text,span)).entry;
+    if (index==NO_ENTRY) return 0;
+    copy_value(dict,output,entry_at(dict,index)+dict->value_offset);
+    return 1;
+}
+int myl_native_dictionary_contains_range(const myl_native_heap *heap, const myl_native_dictionary *dict, const myl_native_text *text, const myl_native_text_span *span) {
+    return find_span(heap,dict,span_of(text,span)).entry!=NO_ENTRY;
+}
+int myl_native_dictionary_overwrite_range(const myl_native_heap *heap, myl_native_dictionary *dict, const myl_native_text *text, const myl_native_text_span *span, const void *value) {
+    size_t index=find_span(heap,dict,span_of(text,span)).entry;
+    if (index==NO_ENTRY) return 0;
+    copy_value(dict,entry_at(dict,index)+dict->value_offset,value);
+    return 1;
+}
+/* A new key from a described slice: its owned text is built in the dictionary's
+ * own region, where `insert` would have put an owned copy of a view, and carries
+ * the hash the walk already computed, so the insertion hashes nothing. */
+static __attribute__((noinline)) int insert_span(myl_native_heap *heap, myl_native_dictionary *dict, myl_native_text *text, const myl_native_text_span *span, const void *value, located at) {
+    myl_native_root root;
+    myl_native_root_push(heap,&root,&dict,&pointer_type);
+    myl_native_text *owned=myl_native_text_piece_at(heap,text,span,myl_native_object_region(heap,dict));
+    myl_native_root_pop(heap,&root);
+    if (!owned) return 0;
+    if (at.slot!=NO_SLOT) {
+        owned->hash=at.hash;
+        owned->flags|=MYL_TEXT_HASHED;
+    }
+    int ok=insert(heap,dict,&owned,value,at);
+    /* The text is live — the generated frame still holds it — so the new entry
+     * is recorded for this same span, as a found probe of it would be. */
+    if (ok) dict->last=(myl_native_dictionary_probe){.key=(uint64_t)(uintptr_t)text,.entry=dict->entries->length-1,.state=PROBE_FOUND_SPAN,.offset=span->offset,.bytes=span->bytes};
+    return ok;
+}
+int myl_native_dictionary_write_range(myl_native_heap *heap, myl_native_dictionary *dict, myl_native_text *text, const myl_native_text_span *span, const void *value) {
+    located at=find_span(heap,dict,span_of(text,span));
+    if (at.entry==NO_ENTRY) return insert_span(heap,dict,text,span,value,at);
+    copy_value(dict,entry_at(dict,at.entry)+dict->value_offset,value);
     return 1;
 }
 myl_native_list *myl_native_dictionary_snapshot(myl_native_heap *heap, myl_native_dictionary *dict, int keys) {
