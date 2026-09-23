@@ -57,12 +57,25 @@ const rss = struct {
     /// clean cache: 103M-141M for the test process, up to 1.22G for a moment
     /// across its tree; the ceiling is a concurrency budget.
     const shard_cli: u64 = 768 * mib;
-    /// Python drivers that drive the compiler but build no native programs.
+    /// The host applications' test roots (board, byte I/O, schematic) and the
+    /// directory run of `tests/guest`. Observed on a clean cache (2026-09-23):
+    /// the schematic root's process tree 1.24G, `tests/guest` 1.33G, the board
+    /// and byte I/O roots under 50M.
+    const host_suite: u64 = 1536 * mib;
+    /// Drivers that run the compiler a few programs at a time. Observed on a
+    /// clean cache: the idiom probes 0.69G, parser hints 0.47G, the C runtime
+    /// suites (every suite compiling at once) 0.55G.
     const driver: u64 = 1024 * mib;
-    /// Drivers that compile and link native programs, the QBE parity and
+    /// Drivers that compile and link many native programs at once, the QBE
+    /// parity and boundary drivers. Observed: the boundary matrix 1.29G-1.45G.
     const parity: u64 = 2048 * mib;
-    /// Guardian's whole-tree gate. Observed: the whole-tree run stays well under 100M.
-    const gate: u64 = 1024 * mib;
+    /// Checks that run Python or a small C harness but no compiler: the
+    /// self-tests, the friction harvest, the SPEC merge driver, the inner-loop
+    /// checks. Observed: under 60M each. Declaring a driver's 1G for each of
+    /// them only kept the build runner from starting test shards it had room for.
+    const script: u64 = 256 * mib;
+    /// Guardian's whole-tree gate. Observed: the whole-tree run's tree 273M.
+    const gate: u64 = 512 * mib;
     /// Zig compilations. Only these and the test binaries report a peak to the
     /// build runner, so only they can trip a ceiling; the margin over the debug
     /// peak leaves room for a ReleaseFast build of the same tree.
@@ -587,18 +600,18 @@ pub fn build(b: *std.Build) void {
     b.step("test-units", "Run only src/root_test.zig, honouring -Dtest-filter").dependOn(&run_unit.step);
     b.step("test-cli", "Run only test/integration.zig, honouring -Dtest-filter").dependOn(&run_integration.step);
     const byte_io_step = b.step("test-byte-io", "Verify raw guest stdin/stdout and host bounds");
-    const run_byte_io_unit = bounded(b.addRunArtifact(byte_io_unit), rss.suite);
+    const run_byte_io_unit = bounded(b.addRunArtifact(byte_io_unit), rss.host_suite);
     cached(run_byte_io_unit, &test_inputs.byte_io);
     byte_io_step.dependOn(&run_byte_io_unit.step);
     test_step.dependOn(&run_byte_io_unit.step);
     guardian.addAllChecks(b, guardian_exe, byte_io_step, .{});
     boundedChecks(byte_io_step);
     dependOnAll(test_step, cli_runs);
-    const run_board_unit = bounded(b.addRunArtifact(board_unit), rss.suite);
+    const run_board_unit = bounded(b.addRunArtifact(board_unit), rss.host_suite);
     cached(run_board_unit, &test_inputs.board);
     test_step.dependOn(&run_board_unit.step);
     const schematic_step = b.step("test-schematic", "Verify guest SVG generation against Netlisp connectivity and source mutations");
-    const run_schematic_unit = bounded(b.addRunArtifact(schematic_unit), rss.suite);
+    const run_schematic_unit = bounded(b.addRunArtifact(schematic_unit), rss.host_suite);
     cached(run_schematic_unit, &test_inputs.schematic);
     const audit_runtime = b.step("test-runtime-audit", "Run every Zig test root for isolated runtime probes");
     guardian.addAllChecks(b, guardian_exe, audit_runtime, .{});
@@ -659,7 +672,7 @@ pub fn build(b: *std.Build) void {
         .root_module = native_heap_module,
     });
     const run_native_heap_test = b.addRunArtifact(native_heap_test);
-    run_native_heap_test.step.max_rss = rss.driver;
+    run_native_heap_test.step.max_rss = rss.script;
     // The harness binary is its only input, so a checked run is cached on it.
     run_native_heap_test.expectExitCode(0);
     const native_heap_step = b.step("test-native-heap", "Verify native collector trace, cycle, budget, and equality paths");
@@ -690,7 +703,7 @@ pub fn build(b: *std.Build) void {
         .root_module = native_arena_module,
     });
     const run_native_arena_test = b.addRunArtifact(native_arena_test);
-    run_native_arena_test.step.max_rss = rss.driver;
+    run_native_arena_test.step.max_rss = rss.script;
     run_native_arena_test.expectExitCode(0);
     native_heap_step.dependOn(&run_native_arena_test.step);
     native_heap_step.dependOn(&run_native_heap_test.step);
@@ -792,10 +805,10 @@ pub fn build(b: *std.Build) void {
     guardian.addAllChecks(b, guardian_exe, agent_tools, .{});
     boundedChecks(agent_tools);
     const idiom_step = b.step("test-idioms", "Measure Python-shaped idioms and reject regressions");
-    const idiom_self_test = driver(b, "python3 tests/idiom_probes.py --self-test", rss.driver, &test_inputs.idioms_self);
+    const idiom_self_test = driver(b, "python3 tests/idiom_probes.py --self-test", rss.script, &test_inputs.idioms_self);
     idiom_self_test.addArgs(&.{ "python3", "tests/idiom_probes.py", "--self-test" });
     idiom_step.dependOn(&idiom_self_test.step);
-    const idiom_run = driver(b, "python3 tests/idiom_probes.py --compiler", rss.parity, &test_inputs.idioms);
+    const idiom_run = driver(b, "python3 tests/idiom_probes.py --compiler", rss.driver, &test_inputs.idioms);
     idiom_run.addArgs(&.{ "python3", "tests/idiom_probes.py", "--compiler" });
     idiom_run.addArtifactArg(exe);
     idiom_step.dependOn(&idiom_run.step);
@@ -805,21 +818,21 @@ pub fn build(b: *std.Build) void {
     // compiler) and the friction harvest over its replay fixture. Registering
     // them here keeps them from rotting outside the gate.
     const usefulness_step = b.step("test-agent-usefulness", "Verify parser hints, headerless imports, and the friction harvest");
-    const hints_static = driver(b, "python3 tests/parser_hints.py", rss.driver, &test_inputs.parser_hints);
+    const hints_static = driver(b, "python3 tests/parser_hints.py", rss.script, &test_inputs.parser_hints);
     hints_static.addArgs(&.{ "python3", "tests/parser_hints.py" });
     usefulness_step.dependOn(&hints_static.step);
-    const hints_run = driver(b, "python3 tests/parser_hints.py --compiler", rss.parity, &test_inputs.parser_hints);
+    const hints_run = driver(b, "python3 tests/parser_hints.py --compiler", rss.driver, &test_inputs.parser_hints);
     hints_run.addArgs(&.{ "python3", "tests/parser_hints.py", "--compiler" });
     hints_run.addArtifactArg(exe);
     usefulness_step.dependOn(&hints_run.step);
-    const harvest_run = driver(b, "python3 tests/test_friction_harvest.py", rss.driver, &test_inputs.friction);
+    const harvest_run = driver(b, "python3 tests/test_friction_harvest.py", rss.script, &test_inputs.friction);
     harvest_run.addArgs(&.{ "python3", "tests/test_friction_harvest.py" });
     usefulness_step.dependOn(&harvest_run.step);
     test_step.dependOn(usefulness_step);
     // The SPEC.md merge driver (`scripts/merge_spec.py`): synthetic three-way
     // cases, a throwaway repository end to end, and a replay of real merges.
     const spec_merge_step = b.step("test-spec-merge", "Verify the SPEC.md merge driver, including replayed history");
-    const spec_merge_run = bounded(b.addSystemCommand(&.{ "python3", "tests/test_spec_merge.py" }), rss.driver);
+    const spec_merge_run = bounded(b.addSystemCommand(&.{ "python3", "tests/test_spec_merge.py" }), rss.script);
     spec_merge_run.setCwd(b.path("."));
     spec_merge_step.dependOn(&spec_merge_run.step);
     test_step.dependOn(spec_merge_step);
@@ -838,7 +851,7 @@ pub fn build(b: *std.Build) void {
     // and requires one answer, so a shape that satisfies its contract on QBE and
     // not on LLVM fails here instead of on whichever backend nobody ran.
     const boundary_step = b.step("test-native-boundary", "Verify every carried boundary shape agrees across the QBE and LLVM backends");
-    const boundary_self = driver(b, "python3 tests/native_boundary_matrix.py --self-test", rss.driver, &test_inputs.boundary_self);
+    const boundary_self = driver(b, "python3 tests/native_boundary_matrix.py --self-test", rss.script, &test_inputs.boundary_self);
     boundary_self.addArgs(&.{ "python3", "tests/native_boundary_matrix.py", "--self-test" });
     boundary_step.dependOn(&boundary_self.step);
     const boundary_run = driver(b, "python3 tests/native_boundary_matrix.py --compiler", rss.parity, &test_inputs.boundary);
@@ -867,15 +880,15 @@ pub fn build(b: *std.Build) void {
     // `scripts/affected_tests.py`, and the check that every repository file a
     // cached test root names is one of its declared inputs.
     const affected_step = b.step("test-affected-selection", "Pin scripts/affected_tests.py's change-to-test mapping");
-    const affected_run = driver(b, "python3 tests/test_affected_tests.py", rss.driver, &test_inputs.affected);
+    const affected_run = driver(b, "python3 tests/test_affected_tests.py", rss.script, &test_inputs.affected);
     affected_run.addArgs(&.{ "python3", "tests/test_affected_tests.py" });
     affected_step.dependOn(&affected_run.step);
     test_step.dependOn(affected_step);
     const coverage_step = b.step("test-inputs-coverage", "Require every repository file a cached test names to be a declared input");
-    const coverage_self = driver(b, "python3 tests/test_inputs_coverage.py --self-test", rss.driver, &.{"tests/test_inputs_coverage.py"});
+    const coverage_self = driver(b, "python3 tests/test_inputs_coverage.py --self-test", rss.script, &.{"tests/test_inputs_coverage.py"});
     coverage_self.addArgs(&.{ "python3", "tests/test_inputs_coverage.py", "--self-test" });
     coverage_step.dependOn(&coverage_self.step);
-    const coverage_run = driver(b, "python3 tests/test_inputs_coverage.py", rss.driver, &test_inputs.coverage);
+    const coverage_run = driver(b, "python3 tests/test_inputs_coverage.py", rss.script, &test_inputs.coverage);
     coverage_run.addArgs(&.{ "python3", "tests/test_inputs_coverage.py" });
     coverage_step.dependOn(&coverage_run.step);
     test_step.dependOn(coverage_step);
@@ -886,7 +899,7 @@ pub fn build(b: *std.Build) void {
     b.step("test-doc-coverage", "Require a documented example for every feature and standard export").dependOn(&doc_coverage.step);
     test_step.dependOn(&doc_coverage.step);
     const guest_step = b.step("test-guest", "Run the guest-behavior tests written in the language");
-    const guest_tests = bounded(b.addRunArtifact(exe), rss.suite);
+    const guest_tests = bounded(b.addRunArtifact(exe), rss.host_suite);
     guest_tests.addArgs(&.{ "test", "tests/guest", "--cache-dir", ".mylang-cache/guest-tests" });
     guest_tests.setCwd(b.path("."));
     guest_tests.has_side_effects = true;

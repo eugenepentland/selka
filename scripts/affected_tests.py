@@ -95,6 +95,9 @@ HOST_STEPS = (
     ("scripts/affected_tests.py", "test-affected-selection"),
     ("tests/test_affected_tests.py", "test-affected-selection"),
     ("tests/test_inputs_coverage.py", "test-inputs-coverage"),
+    ("scripts/merge_spec.py", "test-spec-merge"),
+    ("scripts/setup-git.sh", "test-spec-merge"),
+    ("tests/test_spec_merge.py", "test-spec-merge"),
     ("build_test_inputs.zig", "test-inputs-coverage"),
     ("tests/native_heap_test.c", "test-native-heap"),
     ("tests/native_arena_chunks_test.c", "test-native-heap"),
@@ -531,7 +534,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dry-run", action="store_true", help="print the selection and run nothing")
     parser.add_argument("--serial", action="store_true", help="run the zig build commands one at a time")
     parser.add_argument("--guest-full", action="store_true", help="run all of tests/lang instead of the selected guest files")
-    parser.add_argument("--zig", default=None, help="zig driver to invoke (default: as scripts/focused_test.py)")
+    parser.add_argument("--zig", default=None, help="zig driver to invoke (default: $ZIG, else as scripts/focused_test.py)")
     args = parser.parse_args(argv)
 
     base, how = resolve_base(args.base)
@@ -552,7 +555,7 @@ def main(argv: list[str] | None = None) -> int:
         print_gate_reminder()
         return 0
 
-    zig = args.zig or focused_test.zig_program()
+    zig = args.zig or os.environ.get("ZIG") or focused_test.zig_program()
     builds, guests = plan(sel, zig)
     stamp = time.strftime("%Y%m%d-%H%M%S")
     started = time.time()
