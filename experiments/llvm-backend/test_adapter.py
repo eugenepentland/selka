@@ -491,6 +491,36 @@ MARKER
             '#include <stdio.h>\nextern long test(void *, void *);\n'
             'int main(void){long v=77;long *p=&v;printf("%ld\\n",test(0,&p));}\n'), "77\n")
 
+    #: An element read the way the frontend lowers `xs[i]`: the header's
+    #: storage word, then storage plus the scaled index.
+    ELEMENT_PROBE = """export function l $test(l %ctx, l %handle, l %index) {
+@entry
+ %obj =l loadl %handle
+ # myl-obj %obj
+ %field =l add %obj, 32
+ %storage =l loadl %field
+STORAGE
+ %offset =l mul %index, 8
+ %address =l add %storage, %offset
+ %value =l loadl %address
+ ret %value
+}
+"""
+
+    def test_marked_element_address_is_a_getelementptr(self):
+        # LLVM-OBJECT-GEP-1: storage marked as a managed object is a base the
+        # element address is derived from with `getelementptr`, so a loop
+        # vectorizer sees it advance with the index.
+        ir = translate_text(self.ELEMENT_PROBE.replace("STORAGE", " # myl-obj %storage"), "element")
+        self.assertEqual(2, ir.count("getelementptr i8"))
+        self.assertEqual(self.compile_units({"element": self.ELEMENT_PROBE.replace("STORAGE", " # myl-obj %storage")},
+            '#include <stdio.h>\nextern long test(void *, void *, long);\n'
+            'int main(void){long data[3]={5,6,7};long header[5]={0,0,0,0,(long)data};'
+            'long *p=header;printf("%ld\\n",test(0,&p,2));}\n'), "7\n")
+        # An unmarked storage word keeps integer arithmetic for the element.
+        plain = translate_text(self.ELEMENT_PROBE.replace("STORAGE\n", ""), "element")
+        self.assertEqual(1, plain.count("getelementptr i8"))
+
     def test_unmarked_address_from_memory_carries_no_class(self):
         ir = translate_text(self.OBJECT_PROBE.replace("MARKER\n", ""), "obj")
         # `%obj` came out of memory, so the load through it is left unplaced and

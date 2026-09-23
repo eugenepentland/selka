@@ -986,8 +986,16 @@ class Emitter:
 
         This is derived from parsed operations, rather than rewriting optimized
         IR that merely happens to resemble address arithmetic.  Only allocations,
-        aggregate parameters, globals, and copies/additions derived from them are
-        admitted.
+        aggregate parameters, globals, the managed-object addresses the frontend
+        marked `# myl-obj`, and copies/additions derived from them are admitted.
+
+        A marked address is a managed container's header or the element storage
+        its header names (`QBE-LOOP-VERSION-1`, `markObject` in `src/qbe.zig`),
+        and every addition the frontend makes to one stays inside that object: a
+        header field, or an element whose index a bounds check (or a loop guard
+        that proved the check) admitted first.  Deriving such an element address
+        with `getelementptr` rather than integer arithmetic is what lets LLVM's
+        loop vectorizer see it as consecutive in the index.
         """
         definition_count = {temp.name: 1 for _letter, temp in self.function.parameters}
         for block in self.function.blocks:
@@ -1000,6 +1008,7 @@ class Emitter:
 
         pointers = {temp.name for letter, temp in self.function.parameters
                     if aggregate_bytes(letter, self.sizes) is not None and unique(temp.name)}
+        pointers |= {name for name in self.function.object_hints if unique(name)}
         # Only explicit origins establish provenance.  A later memory use does
         # not prove that integer arithmetic constructing its address was
         # object-relative.

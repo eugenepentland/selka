@@ -6,6 +6,8 @@ const arena_lower = @import("qbe_arena.zig");
 const borrow_lower = @import("qbe_borrow.zig");
 const liveness = @import("qbe_liveness.zig");
 const range_keys = @import("qbe_range_keys.zig");
+const loop_facts = @import("qbe_loop_facts.zig");
+const loop_version = @import("qbe_loop_version.zig");
 const managed_lower = @import("qbe_managed.zig");
 const std = @import("std");
 const bytecode = @import("bytecode.zig");
@@ -36,6 +38,8 @@ pub const frame_map_guard_column: u32 = 1;
 /// prologue allocates and every return path releases.
 const Frame = union(enum) { native, heap: u64 };
 const store_scalar = " storel {d}, %s{d}\n";
+/// An unconditional jump to an instruction label: its prefix, then its pc.
+const jump_label = " jmp @{s}{d}\n";
 const Location = struct { path: []const u8, line: usize, column: usize };
 /// One contiguous splice of an inlined callee body into a caller: the callee's
 /// metadata symbol, the caller pc range its body occupies, the callee-local pc
@@ -363,24 +367,36 @@ fn consumesOperand(op: @FieldType(bytecode.Instruction, "op")) bool {
     };
 }
 
-/// The digits of a line that is exactly an instruction label (`@i12`), or null
-/// when the line is anything else.
-fn pcLabel(line: []const u8) ?[]const u8 {
-    if (line.len < 3 or line[0] != '@' or line[1] != 'i') return null;
-    for (line[2..]) |byte| if (!std.ascii.isDigit(byte)) return null;
-    return line[2..];
+/// The length of the instruction-label name starting at `text[0]`: `i`, or
+/// the versioned loop's `fi` and `oi` (`QBE-LOOP-VERSION-1`), then at least one
+/// digit. Zero when `text` does not start with one.
+fn pcLabelName(text: []const u8) usize {
+    var at: usize = 0;
+    if (at < text.len and (text[at] == 'f' or text[at] == 'o')) at += 1;
+    if (at >= text.len or text[at] != 'i') return 0;
+    at += 1;
+    const digits = at;
+    while (at < text.len and std.ascii.isDigit(text[at])) at += 1;
+    return if (at > digits) at else 0;
 }
 
-/// Record every `@i<digits>` token a line mentions. A definition line never
+/// The name of a line that is exactly an instruction label (`@i12`, `@fi12`,
+/// `@oi12`), or null when the line is anything else.
+fn pcLabel(line: []const u8) ?[]const u8 {
+    if (line.len < 3 or line[0] != '@') return null;
+    const name = pcLabelName(line[1..]);
+    if (name == 0 or name + 1 != line.len) return null;
+    return line[1..];
+}
+
+/// Record every instruction label a line mentions. A definition line never
 /// mentions itself, so callers skip labels before calling this.
 fn collectLabelReferences(a: std.mem.Allocator, referenced: *std.StringHashMapUnmanaged(void), line: []const u8) GenerateError!void {
     var rest = line;
-    while (std.mem.indexOf(u8, rest, "@i")) |at| {
-        const start = at + 2;
-        var end = start;
-        while (end < rest.len and std.ascii.isDigit(rest[end])) end += 1;
-        if (end > start) try referenced.put(a, rest[start..end], {});
-        rest = rest[start..];
+    while (std.mem.indexOfScalar(u8, rest, '@')) |at| {
+        rest = rest[at + 1 ..];
+        const name = pcLabelName(rest);
+        if (name != 0) try referenced.put(a, rest[0..name], {});
     }
 }
 
@@ -1267,6 +1283,13 @@ const Emitter = struct {
     /// The slices lowered as described dictionary keys and where their spans
     /// live (`DICT-RANGE-KEY-1`).
     range_keys: range_keys.Plan = .{},
+    /// The loops lowered twice, behind a guard (`QBE-LOOP-VERSION-1`).
+    loop_plan: loop_facts.Plan = .{},
+    /// Set while the check-free copy of a versioned loop is being lowered.
+    version: ?*loop_version.Active = null,
+    /// Set while the original copy of a versioned loop is being lowered, whose
+    /// header label the guard took.
+    original: ?*const loop_facts.Loop = null,
 
     /// Shared lowering primitive for target operation emitters.
     pub fn reject(self: *Emitter, pc: usize) GenerateError {
@@ -1404,6 +1427,10 @@ const Emitter = struct {
         self.branch_targets = try self.collectBranchTargets();
         self.by_reference = try self.addressLocals();
         self.range_keys = try self.planRangeKeys();
+        // QBE-LOOP-VERSION-1: only a build whose value guards are on has
+        // anything to prove, and step accounting counts every instruction the
+        // original executes, so a counted build keeps one copy.
+        if (self.checks and !self.step_checks) self.loop_plan = try loop_facts.plan(self.allocator, .{ .program = self.program, .function = f, .states = self.states });
         try self.findRoots();
         if (self.has_roots and self.has_safepoints) self.live_roots = try self.rootLiveness();
         const capacity = ir.stack_capacity;
@@ -1503,6 +1530,8 @@ const Emitter = struct {
         self.linked = false;
         self.small_leaf = false;
         self.fused = null;
+        self.version = null;
+        self.original = null;
     }
     /// Find the slices this function can describe instead of build.
     fn planRangeKeys(self: *Emitter) GenerateError!range_keys.Plan {
@@ -1994,16 +2023,89 @@ const Emitter = struct {
         };
     }
     fn emitInstructions(self: *Emitter) GenerateError!void {
-        const f = self.function;
-        for (f.scope.instructions, 0..) |instruction, pc| {
-            const stack = self.states[pc] orelse continue;
-            // The position marker is not budget metadata: trap traces and
-            // `assert` messages read the frame's current pc, so it is emitted
-            // even where the step check is not.
-            if (self.framesLinked()) try self.print("@i{d}\n storel {d}, %position\n", .{ pc, pc }) else try self.print("@i{d}\n", .{pc});
+        for (0..self.function.scope.instructions.len) |pc| {
+            if (self.states[pc] == null) continue;
+            // QBE-LOOP-VERSION-1: a versioned loop's guard and check-free copy
+            // go in front of its header; the original follows unchanged.
+            if (self.loop_plan.at(pc)) |loop| {
+                if (try loop_version.Lower(Emitter).emit(self, loop)) self.original = loop;
+            }
+            try self.emitAt(pc);
+            if (self.original) |loop| if (pc == loop.back) {
+                self.original = null;
+            };
+        }
+    }
+    /// The label prefix of a jump to `target`: inside the check-free copy a
+    /// target in its loop is the copy's own instruction, inside the original
+    /// copy the header is the original's (the guard took the ordinary label),
+    /// and everything else is the ordinary instruction label.
+    pub fn labelPrefix(self: *const Emitter, target: usize) []const u8 {
+        if (self.version) |active| {
+            if (target >= active.loop.head and target <= active.loop.back) return "fi";
+        } else if (self.original) |loop| {
+            if (target == loop.head) return "oi";
+        }
+        return "i";
+    }
+    /// Lower `jump_if_false target` with its condition in operand slot `h - 1`.
+    fn conditionalJump(self: *Emitter, target: usize, h: usize) GenerateError!void {
+        // QBE-LOOP-VERSION-1: a condition the guard proved false on every
+        // iteration (a proven index's `< 0` test) always jumps.
+        if (self.loopAction()) |action| if (action.taken) return self.print(jump_label, .{ self.labelPrefix(target), target });
+        const v = try self.load("s", h - 1);
+        try self.print(" jnz %v{d}, @next{d}, @{s}{d}\n", .{ v, self.serial, self.labelPrefix(target), target });
+    }
+    /// Open the block of the instruction at `pc` under label `@<prefix><pc>`.
+    pub fn headerLabel(self: *Emitter, pc: usize, prefix: []const u8) GenerateError!void {
+        // The position marker is not budget metadata: trap traces and
+        // `assert` messages read the frame's current pc, so it is emitted
+        // even where the step check is not.
+        if (self.framesLinked()) try self.print("@{s}{d}\n storel {d}, %position\n", .{ prefix, pc, pc }) else try self.print("@{s}{d}\n", .{ prefix, pc });
+    }
+    /// What the check-free copy may assume at the current instruction, or
+    /// null outside one (`QBE-LOOP-VERSION-1`).
+    pub fn loopAction(self: *const Emitter) ?loop_facts.Action {
+        const active = self.version orelse return null;
+        if (self.pc < active.loop.head or self.pc > active.loop.back) return null;
+        return active.loop.actions[self.pc - active.loop.head];
+    }
+    /// The element storage address the guard loaded for the current
+    /// instruction's receiver, when the check-free copy may use it.
+    pub fn loopStorage(self: *const Emitter) ?usize {
+        const action = self.loopAction() orelse return null;
+        const node = action.receiver orelse return null;
+        return self.version.?.storages[node];
+    }
+    /// The element value the guard read for the current instruction, when the
+    /// check-free copy may use it in place of the read.
+    pub fn loopValue(self: *const Emitter) ?usize {
+        const action = self.loopAction() orelse return null;
+        const node = action.value orelse return null;
+        return self.version.?.values[node];
+    }
+    /// Whether a lowered check-free copy names an allocating callee, which
+    /// would make it a safepoint its plan did not allow for.
+    pub fn copyAllocates(_: *const Emitter, text: []const u8) bool {
+        return loweredAllocates(text);
+    }
+    /// Lower the instruction at `pc` into its own block.
+    pub fn emitAt(self: *Emitter, pc: usize) GenerateError!void {
+        const instruction = self.function.scope.instructions[pc];
+        const stack = self.states[pc] orelse return;
+        {
+            const own = if (self.version != null) "fi" else if (self.original != null and self.original.?.head == pc) "oi" else "i";
+            try self.headerLabel(pc, own);
             if (self.step_checks) try self.step();
             self.pc = pc;
             self.expireFusedDecode(pc);
+            // QBE-LOOP-VERSION-1: an instruction whose guards the loop's own
+            // guard proved is lowered as an unchecked build lowers it.
+            const checks = self.checks;
+            defer self.checks = checks;
+            if (self.loopAction()) |action| if (action.unchecked) {
+                self.checks = false;
+            };
             // An instruction whose own body can leave `ctx->trap` set and still
             // fall through is lowered aside so the test after it can be skipped
             // when it cannot: a body naming only `myl_qbe_fail_*` helpers — every
@@ -2066,10 +2168,10 @@ const Emitter = struct {
             const falls = pc + 1 < self.states.len and self.states[pc + 1] != null;
             switch (instruction.op) {
                 .ret, .jump, .jump_if_false, .switch_variant => {},
-                else => if (!falls) try self.print(" jmp @i{d}\n", .{pc + 1}),
+                else => if (!falls) try self.print(jump_label, .{ self.labelPrefix(pc + 1), pc + 1 }),
             }
             if (instruction.op == .jump_if_false) {
-                if (falls) try self.print("@next{d}\n", .{self.serial}) else try self.print("@next{d}\n jmp @i{d}\n", .{ self.serial, pc + 1 });
+                if (falls) try self.print("@next{d}\n", .{self.serial}) else try self.print("@next{d}\n jmp @{s}{d}\n", .{ self.serial, self.labelPrefix(pc + 1), pc + 1 });
             }
         }
     }
@@ -2863,7 +2965,7 @@ const Emitter = struct {
                     }
                     for (stack[0 .. h - 1], 0..) |ty, slot_index| try self.dropOperand(slot_index, ty);
                     try self.store(0, pointer);
-                    try self.print(" jmp @i{d}\n@tryok{d}\n", .{ propagate.error_target, tag });
+                    try self.print(" jmp @{s}{d}\n@tryok{d}\n", .{ self.labelPrefix(propagate.error_target), propagate.error_target, tag });
                     try self.store(h - 1, try self.readValue(try self.address(source, input_offset), input.ok_type));
                 } else if (prelude.optionShape(propagate.input, self.program.records)) |input| {
                     const output = prelude.optionShape(propagate.output, self.program.records).?;
@@ -2875,7 +2977,7 @@ const Emitter = struct {
                     try self.writeTag(propagate.output, output.none, pointer);
                     for (stack[0 .. h - 1], 0..) |ty, slot| try self.dropOperand(slot, ty);
                     try self.store(0, pointer);
-                    try self.print(" jmp @i{d}\n@tryok{d}\n", .{ propagate.error_target, tag });
+                    try self.print(" jmp @{s}{d}\n@tryok{d}\n", .{ self.labelPrefix(propagate.error_target), propagate.error_target, tag });
                     try self.store(h - 1, try self.readValue(try self.address(source, input_offset), input.element));
                 } else return error.InternalError;
             },
@@ -2939,15 +3041,12 @@ const Emitter = struct {
             },
             .pop, .acknowledge => try self.dropOperand(h - 1, stack[h - 1]),
             .wrap_domain, .unwrap_domain => {},
-            .jump => |target| try self.print(" jmp @i{d}\n", .{target}),
+            .jump => |target| try self.print(jump_label, .{ self.labelPrefix(target), target }),
             .assert_true => {
                 const v = try self.load("s", h - 1);
                 try self.require(v, "myl_qbe_fail_assert");
             },
-            .jump_if_false => |target| {
-                const v = try self.load("s", h - 1);
-                try self.print(" jnz %v{d}, @next{d}, @i{d}\n", .{ v, self.serial, target });
-            },
+            .jump_if_false => |target| try self.conditionalJump(target, h),
             .ret => {
                 const v = try self.load("s", h - 1);
                 try self.returnValue(v);

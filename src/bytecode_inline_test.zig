@@ -235,6 +235,35 @@ test "a later splice remaps an earlier splice's call site" {
     try testing.expectEqual(@as(u64, 3), outcome.trap.frames[1].line);
 }
 
+/// A float helper: `float(i)` and `int(x)` call the pure
+/// `myl_qbe_float_unary`, so the helper is spliced, and a conversion that
+/// traps inside the splice still reports the helper's frame.
+const float_program =
+    \\def scaled(x: i64, factor: float) -> i64:
+    \\    return int(float(x) * factor)
+    \\
+    \\
+    \\def use(x: i64, factor: float) -> i64:
+    \\    return scaled(x, factor)
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return use(3, 2.5) + use(1, 1e300)
+;
+
+// spec-case: BYTECODE-INLINE-2
+test "a callee that converts between integers and floats is inlined and keeps its trap frames" {
+    try testing.expect(!try keepsCall(float_program, "scaled"));
+    var compilation = try language.Compilation.init(testing.allocator, test_path, float_program);
+    defer compilation.deinit();
+    const outcome = try native.run(&compilation);
+    try testing.expect(outcome.trapped());
+    try testing.expectEqual(@as(usize, 3), outcome.trap.frames.len);
+    try testing.expectEqualStrings("scaled", outcome.trap.frames[0].function);
+    try testing.expectEqualStrings("use", outcome.trap.frames[1].function);
+    try testing.expectEqualStrings("main", outcome.trap.frames[2].function);
+}
+
 // spec: BYTECODE-INLINE-3
 test "a callee over the flat budget inlines only inside a loop" {
     try testing.expectEqual(@as(usize, 1), try callsTo(bulky_program, "cold", "big"));

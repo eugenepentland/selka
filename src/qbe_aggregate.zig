@@ -101,7 +101,7 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
                 const matches = self.temp();
                 try self.print(" %v{d} =l ceql %v{d}, {d}\n jnz %v{d}, @arm{d}, @armnext{d}\n@arm{d}\n", .{ matches, tag, i, matches, matches, matches, matches });
                 try armPayload(@TypeOf(self), self, dispatch.ty, arm.slot, i, pointer);
-                try self.print(" jmp @i{d}\n@armnext{d}\n", .{ arm.target, matches });
+                try self.print(" jmp @{s}{d}\n@armnext{d}\n", .{ self.labelPrefix(arm.target), arm.target, matches });
             }
             try self.print(" jmp @failure\n", .{});
         },
@@ -132,7 +132,11 @@ fn indexedElement(comptime E: type, self: E, access: bytecode.Access, ty: typed.
         return useElement(E, self, element, try elementAddress(E, self, element, tag));
     }
     const signed = if (ty.integer()) |info| info.signed else false;
-    if (!access.from_end or !signed) {
+    // QBE-LOOP-VERSION-1: an index the loop's guard proved non-negative
+    // never counts from the end.
+    const proven = if (self.loopAction()) |action| action.nonnegative else false;
+    const counts_from_end = access.from_end and signed;
+    if (!counts_from_end or proven) {
         try boundsCheck(E, self, .{ .index = raw_index, .reported = raw_index, .limit = operand.count, .length = operand.count });
         return useElement(E, self, element, try elementAddress(E, self, element, raw_index));
     }

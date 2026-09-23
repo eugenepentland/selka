@@ -119,6 +119,9 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try self.store(base, output);
         },
         .iteration_check => {
+            // QBE-LOOP-VERSION-1: the loop's guard proved the length it
+            // compares against is the length on every iteration.
+            if (self.loopAction()) |action| if (action.settled) return self.print(store_unit, .{base});
             const expected = try self.load("s", base);
             const actual = self.temp();
             try self.print(" %v{d} =l loadl %v{d}\n %v{d} =l ceql %v{d}, %v{d}\n", .{ actual, list, output, actual, expected });
@@ -133,6 +136,8 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try boolean(E, self, output, base);
         },
         .read => {
+            // QBE-LOOP-VERSION-1: an invariant element the loop's guard read.
+            if (self.loopValue()) |hoisted| return self.store(base, hoisted);
             const index_value = try self.load("s", base);
             const length = try receiverLength(E, self, list);
             // Concrete layouts fix the element stride. Scalars load directly;
@@ -603,9 +608,13 @@ fn emitIndex(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Ty
             try self.store(base, try self.readValue(try self.aggregatePointer(), schema.shape.buffer.?));
         }
     } else {
+        // QBE-LOOP-VERSION-1: an invariant element the loop's guard read, and
+        // an index it proved non-negative, which needs no from-end adjustment.
+        if (!replacing) if (self.loopValue()) |hoisted| return self.store(base, hoisted);
+        const proven = if (self.loopAction()) |action| action.nonnegative else false;
         const raw_index = try self.load("s", base + 1);
         const length = try receiverLength(E, self, input);
-        const at = try normalizedIndex(E, self, raw_index, length, stack[base + 1]);
+        const at = if (proven) raw_index else try normalizedIndex(E, self, raw_index, length, stack[base + 1]);
         if (replacing) {
             const value = try operandPointer(E, self, schema.shape.buffer.?, base + 2);
             try arena_lower.Lower(E).barrier(self, input, schema.shape.buffer.?, value);
@@ -766,13 +775,18 @@ fn inlineIndexWrite(comptime E: type, self: *E, write: IndexRead, failure: []con
 /// `storage` is the word at `list_storage_offset` in the header; the stride is
 /// the element layout's, so byte strings, lists and inline records share it.
 fn elementAddress(comptime E: type, self: *E, list: usize, index: usize, element: typed.Type) Error!usize {
-    const header = self.temp();
-    const storage = self.temp();
     const offset = self.temp();
     const address = self.temp();
-    try self.markObject(list);
-    try self.print(" %v{d} =l add %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ header, list, list_storage_offset, storage, header });
-    try self.markObject(storage);
+    // QBE-LOOP-VERSION-1: a stable receiver's storage address, loaded once
+    // by the loop's guard.
+    const storage = self.loopStorage() orelse blk: {
+        const header = self.temp();
+        const loaded = self.temp();
+        try self.markObject(list);
+        try self.print(" %v{d} =l add %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ header, list, list_storage_offset, loaded, header });
+        try self.markObject(loaded);
+        break :blk loaded;
+    };
     const stride = (try self.layout(element)).size;
     if (stride == 1) {
         try self.print(" %v{d} =l add %v{d}, %v{d}\n", .{ address, storage, index });
