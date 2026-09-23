@@ -630,9 +630,13 @@ const Checker = struct {
         };
         if (arity != names.len) return self.sink.fail(eTupleArity, span, "a destructuring assignment binds one name per tuple element");
         for (names, 0..) |name_id, index| {
+            const element = symbolic_shapes.tupleElement(self.catalog, value, index).?;
+            if (self.program.nodes.items[@backingInt(name_id)].data != .name) {
+                try self.placeTarget(name_id, element, span);
+                continue;
+            }
             const name = self.program.nodes.items[@backingInt(name_id)].data.name;
             if (std.mem.eql(u8, self.src.text(name), "_")) continue;
-            const element = symbolic_shapes.tupleElement(self.catalog, value, index).?;
             if (self.active.contains(self.src.text(name))) {
                 const target = try self.local(name);
                 if (!target.mutable) return self.sink.fail(diagnostic.immutable, name, "assignment requires a mutable binding");
@@ -641,6 +645,24 @@ const Checker = struct {
             } else try self.bind(name, element, true);
         }
         return .{ .concrete = .unit };
+    }
+    /// PY-DESTRUCTURE-PLACE-1: an element or field destructuring target takes
+    /// the tuple element the way `target = value` does in a template body.
+    fn placeTarget(self: *Checker, target: ast.NodeId, element: Symbolic, span: source.Span) Error!void {
+        var root = target;
+        while (true) switch (self.program.nodes.items[@backingInt(root)].data) {
+            .field => |field| root = field.base,
+            .index => |access| root = access.base,
+            else => break,
+        };
+        const root_node = self.program.nodes.items[@backingInt(root)];
+        if (root_node.data == .name) {
+            const binding = try self.local(root_node.data.name);
+            if (!binding.mutable) return self.sink.fail(diagnostic.immutable, root_node.span, "element or field assignment requires a mutable binding");
+            try self.runtimeOwner(root_node.data.name, true);
+        }
+        self.seedManagedWrite(self.parameterIndex(target, 0));
+        try self.compatible(element, try self.expression(target), span);
     }
     /// Build an enum-indexed table from a dict literal whose context already demands `[Kind]T`.
     fn tableLiteral(self: *Checker, node: ast.Node, entries: []const ast.NodeId, expected: Symbolic, key: typed.Type) Error!Symbolic {

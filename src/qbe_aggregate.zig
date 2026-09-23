@@ -26,10 +26,12 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             try self.store(h - record.fields, pointer);
         },
         .get_field => |index| {
+            if (try fieldWriteAt(@TypeOf(self), self, self.pc)) |write| return fieldWriteRead(@TypeOf(self), self, write, h);
             const source = try self.load("s", h - 1);
             const member = try self.field(stack[h - 1], index);
             var value = try self.readValue(try self.address(source, member.offset), member.ty);
-            if (self.program.records[stack[h - 1].recordIndex()].isManagedRecord() and !self.isScalar(member.ty)) {
+            const shared = self.program.records[stack[h - 1].recordIndex()].isManagedRecord() and !self.isScalar(member.ty);
+            if (shared and !try elementRead(@TypeOf(self), self, self.pc, h, member.ty)) {
                 const snapshot = try self.aggregatePointer();
                 try self.writeValue(snapshot, value, member.ty);
                 value = snapshot;
@@ -38,6 +40,7 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
         },
         .update_record => |record| {
             const base = h - record.indices.len - 1;
+            if (try fieldWriteUpdating(@TypeOf(self), self, self.pc)) |write| return self.store(base, try fieldWriteRecord(@TypeOf(self), self, write, base));
             const source = try self.load("s", base);
             const cell = self.program.records[record.ty.recordIndex()].isManagedRecord();
             const pointer = if (cell) source else try self.aggregatePointer();
@@ -59,7 +62,8 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             if (self.program.records[ty.recordIndex()].managed) return managed_lower.Lower(@TypeOf(self.*)).length(self, ty, stack);
             try self.print(" storel {d}, %s{d}\n", .{ (try self.layout(ty)).count, h - 1 });
         },
-        .get_index, .replace_index => |ty| {
+        .get_index, .replace_index => |access| {
+            const ty = access.ty;
             if (self.program.records[ty.recordIndex()].managed) return managed_lower.Lower(@TypeOf(self.*)).index(self, ty, stack);
             const layout_value = try self.layout(ty);
             const replacing = op == .replace_index;
@@ -69,31 +73,16 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
             // writes the element where it already lives.
             const destination = if (replacing) try replaceDestination(@TypeOf(self), self, self.pc) else null;
             var source = if (destination) |target| try localPointer(@TypeOf(self), self, target) else try self.load("s", base);
-            var index = try self.load("s", base + 1);
-            if (!self.isScalar(stack[base + 1])) {
-                const tag = self.temp();
-                try self.print(" %v{d} =l loaduw %v{d}\n", .{ tag, index });
-                index = tag;
-            }
-            // QBE-UNCHECKED-1: the element address below is the operation; the
-            // unsigned range test and its cold trap block are what go away.
-            if (self.checks) {
-                const invalid = self.temp();
-                try self.print(" %v{d} =l cugel %v{d}, {d}\n jnz %v{d}, @bounds{d}, @index{d}\n", .{ invalid, index, layout_value.count, invalid, invalid, invalid });
-                try self.print("@bounds{d}\n call $myl_qbe_fail_array_bounds(l %ctx, l %v{d}, l {d})\n jmp @failure\n@index{d}\n", .{ invalid, index, layout_value.count, invalid });
-            }
-            if (replacing and destination == null) {
+            // QBE-ARRAYWRITE-2: through a record field the operand already
+            // names the field inside the record's own storage.
+            const in_field = replacing and try fieldWriteReplacing(@TypeOf(self), self, self.pc) != null;
+            if (replacing and destination == null and !in_field) {
                 const copy = try self.aggregatePointer();
                 try self.print(" blit %v{d}, %v{d}, {d}\n", .{ source, copy, layout_value.size });
                 source = copy;
             }
-            const offset = self.temp();
-            const address_value = self.temp();
-            try self.print(" %v{d} =l mul %v{d}, {d}\n %v{d} =l add %v{d}, %v{d}\n", .{ offset, index, layout_value.stride, address_value, source, offset });
-            if (replacing) {
-                try self.writeValue(address_value, try self.load("s", h - 1), layout_value.fields[0].ty);
-                try self.store(base, source);
-            } else try self.store(base, try self.readValue(address_value, layout_value.fields[0].ty));
+            const element: Element = .{ .source = source, .result = base, .stride = layout_value.stride, .ty = layout_value.fields[0].ty, .value = if (replacing) h - 1 else null };
+            try indexedElement(@TypeOf(self), self, access, stack[base + 1], .{ .slot = base + 1, .count = layout_value.count }, element);
         },
         .make_variant => |variant| {
             const pointer = try self.aggregatePointer();
@@ -120,6 +109,88 @@ pub fn emit(self: anytype, op: @FieldType(bytecode.Instruction, "op"), stack: []
     }
 }
 
+/// The index operand of a fixed-array access and the array's element count.
+const IndexOperand = struct { slot: usize, count: usize };
+
+/// One fixed-array element access: the array's storage, the operand slot the
+/// result lands in, the element stride and type, and for a `replace` the slot
+/// holding the value written.
+const Element = struct { source: usize, result: usize, stride: usize, ty: typed.Type, value: ?usize };
+
+/// Load a fixed-array index, check it and read or write the element it names.
+///
+/// An enum table's key is a tag loaded from its variant. The checker leaves
+/// `from_end` off where it proved the index non-negative, so those accesses
+/// carry no extra instruction. The trap reports the index the program wrote,
+/// before counting from the end, as a list's does.
+fn indexedElement(comptime E: type, self: E, access: bytecode.Access, ty: typed.Type, operand: IndexOperand, element: Element) Error!void {
+    const raw_index = try self.load("s", operand.slot);
+    if (!self.isScalar(ty)) {
+        const tag = self.temp();
+        try self.print(" %v{d} =l loaduw %v{d}\n", .{ tag, raw_index });
+        try boundsCheck(E, self, .{ .index = tag, .reported = tag, .limit = operand.count, .length = operand.count });
+        return useElement(E, self, element, try elementAddress(E, self, element, tag));
+    }
+    const signed = if (ty.integer()) |info| info.signed else false;
+    if (!access.from_end or !signed) {
+        try boundsCheck(E, self, .{ .index = raw_index, .reported = raw_index, .limit = operand.count, .length = operand.count });
+        return useElement(E, self, element, try elementAddress(E, self, element, raw_index));
+    }
+    return fromEnd(E, self, raw_index, operand.count, element);
+}
+
+/// PY-ARRAY-NEGATIVE-1: an access whose index may count from the end, without
+/// a branch. One unsigned test of `i + N` against `2N` accepts exactly
+/// `-N <= i < N` (an overflowing sum is out of range either way), and the
+/// address is the ordinary `base + i * stride` plus a correction of
+/// `N * stride` selected by the sign mask (`i >> 63`, all ones exactly when `i`
+/// is negative). Keeping the ordinary address as a term, rather than
+/// rewriting the index first, leaves it the affine expression a loop's
+/// induction variable produces, which is what lets an optimizer strength-reduce
+/// it and share it between a read and a write of the same element.
+/// QBE-UNCHECKED-1 drops the test and keeps the address computation.
+fn fromEnd(comptime E: type, self: E, raw_index: usize, count: usize, element: Element) Error!void {
+    const shifted = self.temp();
+    try self.print(" %v{d} =l add %v{d}, {d}\n", .{ shifted, raw_index, count });
+    try boundsCheck(E, self, .{ .index = shifted, .reported = raw_index, .limit = 2 * count, .length = count });
+    const ordinary = try elementAddress(E, self, element, raw_index);
+    const mask = self.temp();
+    const correction = self.temp();
+    const address_value = self.temp();
+    try self.print(" %v{d} =l sar %v{d}, 63\n %v{d} =l and %v{d}, {d}\n", .{ mask, raw_index, correction, mask, count * element.stride });
+    try self.print(" %v{d} =l add %v{d}, %v{d}\n", .{ address_value, ordinary, correction });
+    return useElement(E, self, element, address_value);
+}
+
+/// The address of the element at position `index` of the array.
+fn elementAddress(comptime E: type, self: E, element: Element, index: usize) Error!usize {
+    const offset = self.temp();
+    const address_value = self.temp();
+    try self.print(" %v{d} =l mul %v{d}, {d}\n %v{d} =l add %v{d}, %v{d}\n", .{ offset, index, element.stride, address_value, element.source, offset });
+    return address_value;
+}
+
+/// Read or write the element at a checked address.
+fn useElement(comptime E: type, self: E, element: Element, address_value: usize) Error!void {
+    if (element.value) |slot| {
+        try self.writeValue(address_value, try self.load("s", slot), element.ty);
+        try self.store(element.result, element.source);
+    } else try self.store(element.result, try self.readValue(address_value, element.ty));
+}
+
+/// The unsigned range test of a fixed-array position against its count, and
+/// its cold trap reporting `reported`. QBE-UNCHECKED-1 drops both.
+fn boundsCheck(comptime E: type, self: E, check: RangeTest) Error!void {
+    if (!self.checks) return;
+    const invalid = self.temp();
+    try self.print(" %v{d} =l cugel %v{d}, {d}\n jnz %v{d}, @bounds{d}, @index{d}\n", .{ invalid, check.index, check.limit, invalid, invalid, invalid });
+    try self.print("@bounds{d}\n call $myl_qbe_fail_array_bounds(l %ctx, l %v{d}, l {d})\n jmp @failure\n@index{d}\n", .{ invalid, check.reported, check.length, invalid });
+}
+
+/// One unsigned range test: the value tested against `limit`, and the index
+/// and array length a failure reports.
+const RangeTest = struct { index: usize, reported: usize, limit: usize, length: usize };
+
 /// Whether the instruction immediately before `pc` already wrote local `slot`
 /// in place, so the store at `pc` has nothing left to copy: a record
 /// constructor that built the record there, or a `replace` that wrote one
@@ -128,7 +199,200 @@ pub fn storeForwarded(comptime E: type, self: E, pc: usize, slot: usize) Error!b
     if (pc == 0) return false;
     if (try constructorDestination(E, self, pc - 1)) |destination| return destination == slot;
     if (try replaceDestination(E, self, pc - 1)) |destination| return destination == slot;
+    if (try fieldWriteUpdating(E, self, pc - 1)) |write| return write.slot == slot;
     return false;
+}
+
+/// QBE-ARRAYWRITE-2: one element write through a record field, `r.cells[i] = v`
+/// on a value record local or `c.cells[i] = v` on a `class` reference, found
+/// by the `get_field` that reads the field, the `replace_index` that rebuilds
+/// it and the local both start from.
+const FieldWrite = struct { read: usize, replace: usize, slot: usize, managed: bool };
+
+/// The field-element write whose field read is the `get_field` at `pc`.
+///
+/// The statement the checker builds for `r.cells[i] = v` is `load r; load r;
+/// get_field k; <index>; <value>; replace_index; update_record {k}; store r`:
+/// the array is rebuilt with `replace`, put back into the record with an
+/// update and the record stored back into its binding. When nothing between the
+/// field read and the store can observe or change the record, all three write
+/// the same bytes the element store alone writes, so the field read names the
+/// field inside the record's own storage (a value record's frame slot, or a
+/// `class` cell), the `replace` writes the element there after the same bounds
+/// check, and the update and the store copy nothing. It is claimed only when:
+///
+///  - the statement starts with an empty operand stack and both loads read the
+///    same local, reached by falling through; no branch enters the statement;
+///  - a value record is this frame's own nonzero-sized value owning nothing,
+///    not a parameter slot holding a caller's address; a `class` local holds
+///    its cell pointer, and writing the cell is what the update means;
+///  - the field is a fixed array of scalar elements, so the store needs no
+///    collector or arena barrier;
+///  - every instruction between the field read and the `replace` only pushes,
+///    reads or computes scalars, so none can call, allocate, trap into a
+///    handler or write the local — a trap still aborts before the element
+///    store — and the value was computed before the element is written;
+///  - the `replace` is followed by an update of exactly that field of exactly
+///    that record type and a store into the same local.
+fn fieldWriteAt(comptime E: type, self: E, pc: usize) Error!?FieldWrite {
+    const code = self.function.scope.instructions;
+    if (pc < 2 or pc + 1 >= code.len) return null;
+    const field_index = switch (code[pc].op) {
+        .get_field => |index| index,
+        else => return null,
+    };
+    const slot = switch (code[pc - 2].op) {
+        .load_local => |target| @backingInt(target),
+        else => return null,
+    };
+    switch (code[pc - 1].op) {
+        .load_local => |target| if (@backingInt(target) != slot) return null,
+        else => return null,
+    }
+    const start = self.states[pc - 2] orelse return null;
+    if (start.len != 0 or branchTarget(E, self, pc - 1) or branchTarget(E, self, pc)) return null;
+    if (slot >= self.function.scope.locals.len) return null;
+    const record = self.function.scope.locals[slot].ty;
+    if (!record.isAggregate()) return null;
+    const schema = self.program.records[record.recordIndex()];
+    if (!schema.isRecord() or schema.isCollection()) return null;
+    const managed = schema.isManagedRecord();
+    if (!managed and !try ownRecord(E, self, slot, record)) return null;
+    const array = (try self.field(record, field_index)).ty;
+    if (!try scalarArray(E, self, array)) return null;
+    const replace = try fieldWindow(E, self, pc + 1, slot) orelse return null;
+    switch (code[replace].op) {
+        .replace_index => |access| if (access.ty != array) return null,
+        else => return null,
+    }
+    if (replace + 2 >= code.len or branchTarget(E, self, replace + 1) or branchTarget(E, self, replace + 2)) return null;
+    if (self.states[replace + 1] == null or self.states[replace + 2] == null) return null;
+    switch (code[replace + 1].op) {
+        .update_record => |update| if (update.ty != record or update.indices.len != 1 or update.indices[0] != field_index) return null,
+        else => return null,
+    }
+    switch (code[replace + 2].op) {
+        .store_local => |target| if (@backingInt(target) != slot) return null,
+        else => return null,
+    }
+    return .{ .read = pc, .replace = replace, .slot = slot, .managed = managed };
+}
+
+/// Whether value-record local `slot` holds its own nonzero-sized value owning nothing.
+fn ownRecord(comptime E: type, self: E, slot: usize, record: typed.Type) Error!bool {
+    if (self.byReference(slot)) return false;
+    const value = try self.layout(record);
+    return !value.drop and value.size != 0;
+}
+
+/// Whether `ty` is a fixed array (not a table) of scalar elements.
+fn scalarArray(comptime E: type, self: E, ty: typed.Type) Error!bool {
+    if (!ty.isAggregate()) return false;
+    const schema = self.program.records[ty.recordIndex()];
+    const shape = schema.shape.array orelse return false;
+    if (schema.managed or shape.key != null or !self.isScalar(shape.element)) return false;
+    const value = try self.layout(ty);
+    return !value.drop and value.size != 0;
+}
+
+/// The `replace_index` that ends a field write's window starting at `from`,
+/// when every instruction before it is a scalar push or computation that
+/// neither writes local `slot` nor is entered by a branch.
+fn fieldWindow(comptime E: type, self: E, from: usize, slot: usize) Error!?usize {
+    const code = self.function.scope.instructions;
+    var pc = from;
+    while (pc < code.len) : (pc += 1) {
+        const state = self.states[pc] orelse return null;
+        if (branchTarget(E, self, pc) or state.len < 2) return null;
+        if (state.len == 4 and code[pc].op == .replace_index) return pc;
+        if (!try windowStep(E, self, code[pc].op, slot)) return null;
+    }
+    return null;
+}
+
+/// Whether one instruction inside a field write's window only pushes, reads or
+/// computes a scalar without calling, allocating or writing local `slot`.
+fn windowStep(comptime E: type, self: E, op: @FieldType(bytecode.Instruction, "op"), slot: usize) Error!bool {
+    return switch (op) {
+        .load_local, .push_i64, .push_integer, .push_bool, .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .neg_i64_checked, .cmp_i64, .cmp_bool, .not_bool, .unary_float, .array_length => true,
+        .move_local => |target| @backingInt(target) != slot,
+        .binary_integer => |binary| !binary.ty.isAggregate() or self.isScalar(binary.ty),
+        .neg_integer, .cast_integer => |target| self.isScalar(target),
+        .get_field => true,
+        .get_index => |access| access.ty.isAggregate() and !self.program.records[access.ty.recordIndex()].managed,
+        else => false,
+    };
+}
+
+/// QBE-FIELDARRAY-READ-1: whether the fixed array a `class` field read at `pc`
+/// pushes (to operand height `h`) is consumed only by one element read, with
+/// nothing but scalar pushes and computations between them.
+///
+/// A field of a heap cell is otherwise snapshotted, because the cell can change
+/// while the value is live. An element read that follows at once reads the same
+/// bytes from the cell itself: no instruction in between can call, allocate or
+/// write memory, so the field still holds what the snapshot would have copied,
+/// and `c.cells[i]` costs a bounds check and a load instead of a whole-array
+/// copy.
+fn elementRead(comptime E: type, self: E, pc: usize, h: usize, array: typed.Type) Error!bool {
+    if (!try scalarArray(E, self, array)) return false;
+    const code = self.function.scope.instructions;
+    var at = pc + 1;
+    while (at < code.len) : (at += 1) {
+        const state = self.states[at] orelse return false;
+        if (branchTarget(E, self, at)) return false;
+        if (at > pc + 1 and state.len <= h) return false;
+        if (state.len == h + 1) switch (code[at].op) {
+            .get_index => |access| return access.ty == array,
+            else => {},
+        };
+        if (!try windowStep(E, self, code[at].op, self.function.scope.locals.len)) return false;
+    }
+    return false;
+}
+
+/// The field-element write whose `replace_index` is at `pc`.
+fn fieldWriteReplacing(comptime E: type, self: E, pc: usize) Error!?FieldWrite {
+    const code = self.function.scope.instructions;
+    // The field read runs at height two, the loads under it; every instruction
+    // of the window after it runs at height two or more but is not a field
+    // read at height two, which needs an operand of its own above the array.
+    var read = pc;
+    while (read > 0) {
+        read -= 1;
+        const state = self.states[read] orelse return null;
+        if (state.len < 2) return null;
+        if (state.len == 2 and code[read].op == .get_field) break;
+    } else return null;
+    const write = try fieldWriteAt(E, self, read) orelse return null;
+    return if (write.replace == pc) write else null;
+}
+
+/// The field-element write whose `update_record` is at `pc`.
+fn fieldWriteUpdating(comptime E: type, self: E, pc: usize) Error!?FieldWrite {
+    if (pc == 0) return null;
+    switch (self.function.scope.instructions[pc].op) {
+        .update_record => {},
+        else => return null,
+    }
+    return fieldWriteReplacing(E, self, pc - 1);
+}
+
+/// The record a field write's update answers: the `class` cell pointer on the
+/// operand stack, or the value record's own frame storage.
+fn fieldWriteRecord(comptime E: type, self: E, write: FieldWrite, base: usize) Error!usize {
+    return if (write.managed) self.load("s", base) else localPointer(E, self, write.slot);
+}
+
+/// Push the address of the written field inside the record's own storage.
+fn fieldWriteRead(comptime E: type, self: E, write: FieldWrite, h: usize) Error!void {
+    const index = switch (self.function.scope.instructions[write.read].op) {
+        .get_field => |field_index| field_index,
+        else => return error.InternalError,
+    };
+    const record = try fieldWriteRecord(E, self, write, h - 1);
+    const member = try self.field(self.function.scope.locals[write.slot].ty, index);
+    try self.store(h - 1, try self.address(record, member.offset));
 }
 
 /// QBE-ARRAYWRITE-1: the local a `replace` writes one element of in place, when
@@ -163,7 +427,7 @@ pub fn storeForwarded(comptime E: type, self: E, pc: usize, slot: usize) Error!b
 fn replaceDestination(comptime E: type, self: E, pc: usize) Error!?usize {
     const code = self.function.scope.instructions;
     const ty = switch (code[pc].op) {
-        .replace_index => |array| array,
+        .replace_index => |access| access.ty,
         else => return null,
     };
     if (self.program.records[ty.recordIndex()].managed) return null;

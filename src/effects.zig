@@ -919,7 +919,7 @@ fn seedInstructionEffects(
         .binary_integer => |binary| if (binary.op == .add and allocatingSequence(program.records, binary.ty)) {
             graph.direct(index, .managed_allocation, instruction.span);
         },
-        .get_index => |ty| if (allocatingElement(program.records, ty)) {
+        .get_index => |access| if (allocatingElement(program.records, access.ty)) {
             graph.direct(index, .managed_allocation, instruction.span);
         },
         .acquire_buffer => |ty| if (try managedType(program.records, ty)) graph.direct(index, .managed_allocation, instruction.span) else return error.InternalError,

@@ -118,7 +118,8 @@ pub fn typedNode(program: typed.Program, function: typed.Function, node: typed.N
 /// Classify one instruction from the checked bytecode model.
 pub fn instruction(program: model.Program, function: model.Function, op: @FieldType(model.Instruction, "op"), span: source.Span) ?Witness {
     switch (op) {
-        .replace_index => |ty| {
+        .replace_index => |access| {
+            const ty = access.ty;
             if (!ty.isAggregate()) return null;
             if (ty.recordIndex() >= program.records.len) return null;
             if (!program.records[ty.recordIndex()].managed) return null;

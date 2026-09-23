@@ -328,8 +328,12 @@ test "native execution reports original bounds indexes for read write pop array 
         .{ .source = record_element_write, .code = "R_LIST_BOUNDS", .operation = .index, .index = 3, .length = 1, .text = "(index 3, length 1)" },
         .{ .source = "def main() -> i64:\n    xs: list[i64] = []\n    return xs.pop()\n", .code = "R_LIST_BOUNDS", .operation = .pop, .index = null, .length = 0, .text = "(length 0)" },
         .{ .source = "def main() -> i64:\n    xs = [1, 2]\n    return xs.pop(7)\n", .code = "R_LIST_BOUNDS", .operation = .pop, .index = 7, .length = 2, .text = "(index 7, length 2)" },
-        .{ .source = "def main() -> i64:\n    xs: [3]int = [1, 2, 3]\n    return xs[7]\n", .code = "R_INDEX_BOUNDS", .operation = .index, .index = 7, .length = 3, .text = "(index 7, length 3)" },
-        .{ .source = "def main() -> i64:\n    xs: [3]int = [1, 2, 3]\n    xs = replace(xs, 7, 9)\n    return xs[0]\n", .code = "R_INDEX_BOUNDS", .operation = .index, .index = 7, .length = 3, .text = "(index 7, length 3)" },
+        .{ .source = "def main() -> i64:\n    xs: [3]int = [1, 2, 3]\n    return xs[7]\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = 7, .length = 3, .text = "(index 7, length 3)" },
+        .{ .source = "def main() -> i64:\n    xs: [3]int = [1, 2, 3]\n    xs = replace(xs, 7, 9)\n    return xs[0]\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = 7, .length = 3, .text = "(index 7, length 3)" },
+        // PY-ARRAY-NEGATIVE-1: a fixed array reports the index as written,
+        // before it counts from the end, exactly as the list above does.
+        .{ .source = "def main() -> i64:\n    xs: [2]int = [1, 2]\n    i = -5\n    return xs[i]\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -5, .length = 2, .text = "(index -5, length 2)" },
+        .{ .source = "def main() -> i64:\n    xs: [2]int = [1, 2]\n    xs[-5] = 9\n    return 0\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -5, .length = 2, .text = "(index -5, length 2)" },
         .{ .source = "def main() -> i64:\n    s = \"abc\"\n    _ = s[9]\n    return 0\n", .code = "R_TEXT_BOUNDS", .operation = .index, .index = 9, .length = 3, .text = "(index 9, length 3)" },
         .{ .source = "def main() -> i64:\n    b = b\"abc\"\n    _ = b[-9]\n    return 0\n", .code = "R_LIST_BOUNDS", .operation = .index, .index = -9, .length = 3, .text = "(index -9, length 3)" },
     };

@@ -4395,13 +4395,13 @@ test "CLI checks array schemas dumps indexing and reports bounds traps" {
         \\    return values[1]
     ;
     try invoke("check", bounds, 0, "", "");
-    try invoke("run", bounds, 1, "", ":3:12: error[R_INDEX_BOUNDS]");
+    try invoke("run", bounds, 1, "", ":3:12: error[R_LIST_BOUNDS]");
     try invoke("run",
         \\def main() -> i64:
         \\    payload: [1]u8 = [7u8]
         \\    _ = replace(payload, 18446744073709551615u64, 8u8)
         \\    return 0
-    , 1, "", "error[R_INDEX_BOUNDS]");
+    , 1, "", "error[R_LIST_BOUNDS]");
 }
 test "CLI checks domain privacy unit mismatches and qualified factory execution" {
     try invoke("run", @embedFile("fixtures/domains.my"), 0, "1003\n", "");

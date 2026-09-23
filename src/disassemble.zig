@@ -61,8 +61,8 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
         .push_i64 => |value| try writer.print("PUSH_I64 {d}", .{value}),
         .make_record => |record| try writer.print("MAKE_RECORD type#{d} fields={d} order={any}", .{ @backingInt(record.ty), record.fields, record.order }),
         .update_record => |update| try writer.print("UPDATE_RECORD type#{d} fields={any}", .{ @backingInt(update.ty), update.indices }),
-        .get_index => |ty| try writer.print("GET_INDEX {s}", .{typed.typeName(ty, program.records)}),
-        .replace_index => |ty| try writer.print("REPLACE_INDEX {s}", .{typed.typeName(ty, program.records)}),
+        .get_index => |access| try writer.print("GET_INDEX {s}{s}", .{ typed.typeName(access.ty, program.records), fromEnd(access) }),
+        .replace_index => |access| try writer.print("REPLACE_INDEX {s}{s}", .{ typed.typeName(access.ty, program.records), fromEnd(access) }),
         .array_length => |ty| try writer.print("ARRAY_LENGTH {s}", .{typed.typeName(ty, program.records)}),
         .get_field => |index| try writer.print("GET_FIELD {d}", .{index}),
         .push_integer => |number| try writer.print("PUSH_INT {f} {d}", .{ number.ty, number.value }),
@@ -150,6 +150,11 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
         location.line,
         location.column,
     });
+}
+
+/// The suffix marking an element access that counts a negative index from the end.
+fn fromEnd(access: @import("bytecode_model.zig").Access) []const u8 {
+    return if (access.from_end) " from_end" else "";
 }
 
 fn recordKind(record: typed.Record) []const u8 {

@@ -524,8 +524,9 @@ void myl_qbe_fail_text_bounds_detail(void *context, int64_t index, uint64_t leng
     fail_detail(context, "R_TEXT_BOUNDS", "index",
         MYL_QBE_TRAP_PRESENT_INDEX | MYL_QBE_TRAP_PRESENT_LENGTH, index, length, 0, 0, 0);
 }
+/* PY-ARRAY-NEGATIVE-1: a fixed array's index failure is a list's, code and detail. */
 void myl_qbe_fail_array_bounds(void *context, int64_t index, uint64_t length) {
-    fail_detail(context, "R_INDEX_BOUNDS", "index",
+    fail_detail(context, "R_LIST_BOUNDS", "index",
         MYL_QBE_TRAP_PRESENT_INDEX | MYL_QBE_TRAP_PRESENT_LENGTH, index, length, 0, 0, 0);
 }
 /* The present bit a generated call site's MYL_QBE_UNSIGNED_OPERANDS flag asks for. */

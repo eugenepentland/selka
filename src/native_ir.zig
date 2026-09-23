@@ -196,15 +196,16 @@ const Analyzer = struct {
                     pops = 1;
                     result = record.fields[index].ty;
                 },
-                .get_index => |ty| {
+                .get_index => |access| {
+                    const ty = access.ty;
                     if (!ty.isAggregate() or ty.recordIndex() >= self.program.records.len) return error.InternalError;
                     const record = self.program.records[ty.recordIndex()];
                     pops = 2;
                     result = if (record.managed) (if (record.collection.kind == .string) ty else record.shape.buffer orelse return error.InternalError) else (record.shape.array orelse return error.UnsupportedOperation).element;
                 },
-                .replace_index => |ty| {
+                .replace_index => |access| {
                     pops = 3;
-                    result = ty;
+                    result = access.ty;
                 },
                 .array_length => |ty| {
                     pops = 1;

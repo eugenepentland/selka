@@ -99,7 +99,7 @@ fn addressSource(comptime E: type, self: *E, pc: usize) Error!?Source {
             const base = try projectedBase(E, self, pc) orelse return null;
             return .{ .ty = (try self.field(base.ty, index)).ty, .stable = base.stable };
         },
-        .get_index => |ty| return elementSource(E, self, ty),
+        .get_index => |access| return elementSource(E, self, access.ty),
         .buffer_operation => |operation| {
             if (operation.kind != .read) return null;
             return elementSource(E, self, self.function.scope.locals[@backingInt(operation.owner)].ty);
@@ -523,8 +523,8 @@ fn inert(comptime E: type, self: *E, op: @FieldType(bytecode.Instruction, "op"),
         // or dictionary read calls the runtime, so it is not on this list.
         // A `replace` on a fixed array writes a local or this pc's scratch; on
         // a managed list it writes the receiver's own backing.
-        .get_index => |ty| try readsInline(E, self, ty),
-        .replace_index => |ty| ty.isAggregate() and !self.program.records[ty.recordIndex()].managed,
+        .get_index => |access| try readsInline(E, self, access.ty),
+        .replace_index => |access| access.ty.isAggregate() and !self.program.records[access.ty.recordIndex()].managed,
         .buffer_operation => |operation| switch (operation.kind) {
             .length, .capacity => true,
             .read => try readsInline(E, self, self.function.scope.locals[@backingInt(operation.owner)].ty),

@@ -151,7 +151,7 @@ test "array bytecode validates schema kinds and stack counts" {
         },
     };
     const Op = @FieldType(bc.Instruction, "op");
-    for ([_]Op{ .{ .get_index = .i64 }, .{ .array_length = ty }, .{ .replace_index = ty }, .{ .make_record = .{ .ty = ty, .fields = 2 } } }) |op| {
+    for ([_]Op{ .{ .get_index = .{ .ty = .i64 } }, .{ .array_length = ty }, .{ .replace_index = .{ .ty = ty } }, .{ .make_record = .{ .ty = ty, .fields = 2 } } }) |op| {
         const instructions = [_]bc.Instruction{ .{ .span = span, .op = op }, .{ .span = span, .op = .ret } };
         const program: bc.Program = .{ .records = &.{schema}, .functions = &.{.{
             .id = @fromBackingInt(0),
