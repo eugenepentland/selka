@@ -132,6 +132,43 @@ test "an index the checker proves non-negative carries no adjustment" {
     try t.expectEqual(@as(usize, 0), std.mem.count(u8, adjusted, " phi "));
 }
 
+// spec-case: PY-FOR-REBIND-1
+test "a loop variable the body assigns is its own variable and is not proved non-negative" {
+    var parsed = try emitted(
+        \\def rebound() -> int:
+        \\    values: [8]int = [1, 2, 3, 4, 5, 6, 7, 8]
+        \\    total = 0
+        \\    for index in range(8):
+        \\        index = index - 8
+        \\        total += values[index]
+        \\    for position, value in enumerate(values):
+        \\        position -= 8
+        \\        total += values[position] * value
+        \\    return total
+        \\
+        \\def counted() -> int:
+        \\    values: [8]int = [1, 2, 3, 4, 5, 6, 7, 8]
+        \\    total = 0
+        \\    for index in range(8):
+        \\        for inner in range(index, 8):
+        \\            total += values[inner] + values[index]
+        \\    for position, value in enumerate(values):
+        \\        for inner in range(position, 8):
+        \\            total += values[inner] * value
+        \\    return total
+        \\
+        \\def main() -> int:
+        \\    return rebound() + counted()
+    );
+    defer parsed.deinit();
+    // Each read of an assigned variable may count from the end.
+    try t.expectEqual(@as(usize, 2), adjustments(try named(parsed.value, "rebound")));
+    // A counter nobody assigns is immutable, so a range starting at an
+    // `enumerate` position is as provably non-negative as one starting at a
+    // `range` index.
+    try t.expectEqual(@as(usize, 0), adjustments(try named(parsed.value, "counted")));
+}
+
 // spec-case: PY-ARRAY-WRITE-1
 test "an element write needs a mutable binding and a writable place" {
     try reject(

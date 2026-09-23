@@ -178,7 +178,7 @@ const Evaluator = struct {
                 try self.validateExpression(range.end, depth + 1);
                 const before = self.frame.locals.items.len;
                 defer self.frame.locals.shrinkRetainingCapacity(before);
-                try self.bind(range.name, null, false);
+                try self.bind(range.name, null, true);
                 try self.validateStatement(range.body, depth + 1);
             },
             else => return self.context.sink.fail(eEffect, stmt.span, "compile-time function bodies permit scalar locals, branches and loops; runtime memory and effects are excluded"),
@@ -280,7 +280,7 @@ const Evaluator = struct {
         if (!start.typeOf().isInteger() or start.typeOf() != end.typeOf()) return self.context.sink.fail("E_TYPE", range.name, "compile-time range requires matching integers");
         const before = self.frame.locals.items.len;
         defer self.frame.locals.shrinkRetainingCapacity(before);
-        try self.bind(range.name, start, false);
+        try self.bind(range.name, start, true);
         while (integer(start) < integer(end)) {
             self.frame.locals.items[before].value = start;
             const flow = try self.statement(range.body, depth + 1);

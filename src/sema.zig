@@ -4,6 +4,9 @@ const ManagedKind = @import("runtime_values.zig").ManagedKind;
 const BufferKind = buffer_operations.Kind;
 const collections = @import("collection_lower.zig");
 const option_flow = @import("option_flow.zig");
+const loop_rebinding = @import("loop_rebinding.zig");
+/// A parsed `for` loop over a collection, `enumerate`, `reversed` or `zip`.
+const ForEach = @FieldType(@FieldType(ast.Statement, "data"), "for_each");
 const needs_list = "operation requires a managed list";
 const eListType = @import("collection_lower.zig").list_type_error;
 const call_arguments = @import("call_arguments.zig");
@@ -242,13 +245,9 @@ const ArrayPlace = struct { root: ast.NodeId, steps: []const PlaceStep };
 /// The operator and source value of one element assignment.
 const PlaceWrite = struct { op: ast.AssignmentOp, value: ast.NodeId };
 /// A fixed-array index after the negative-index rule (`PY-ARRAY-NEGATIVE-1`):
-/// the key to read and rebuild with, whether the backend must still count a
-/// negative value from the end, and the enumerate counter the proof that it
-/// cannot be negative rested on, which a write in the loop body withdraws.
-const ArrayKey = struct { key: typed.NodeId, from_end: bool, counter: ?typed.LocalId = null };
-/// An element-access key proved non-negative from an enumerate counter the
-/// loop body may still assign; the accesses built on it follow the key.
-const CounterAssumption = struct { key: typed.NodeId, counter: typed.LocalId };
+/// the key to read and rebuild with, and whether the backend must still count
+/// a negative value from the end.
+const ArrayKey = struct { key: typed.NodeId, from_end: bool };
 /// How a loop reads its source: a collection kind, a fixed array read by
 /// index, or a dictionary view's projection.
 const IterationShape = struct { kind: ManagedKind, fixed: ?typed.Array = null, projection: ?@import("dictionary_views.zig").Kind = null };
@@ -324,10 +323,10 @@ const Checker = struct {
     lambda_captures: []?[]const LambdaCapture = &.{},
     loops: struct { active: std.ArrayList(LoopScope) = .empty, next: usize = 0 } = .{},
     /// Loop counters that are never negative while their loop runs: `range`
-    /// induction variables from a non-negative start (immutable) and
-    /// `enumerate` positions (whose accesses are recorded in `assumptions`).
+    /// induction variables from a non-negative start and `enumerate`
+    /// positions. Each is immutable — a loop whose body assigns its variable
+    /// counts on a hidden local instead (`PY-FOR-REBIND-1`).
     counters: std.AutoHashMapUnmanaged(typed.LocalId, void) = .empty,
-    assumptions: std.ArrayList(CounterAssumption) = .empty,
     return_type: typed.Type = .i64,
     arenas: std.ArrayList(ArenaScope) = .empty,
     catalog: records.Catalog,
@@ -356,7 +355,6 @@ const Checker = struct {
         self.option_facts.clear();
         self.locals = .empty;
         self.counters.clearRetainingCapacity();
-        self.assumptions.clearRetainingCapacity();
         self.active.clearRetainingCapacity();
         self.owner = if (function.policy.owner) |owner| try self.ty(owner) else null;
         self.return_type = try self.ty(function.signature.return_type);
@@ -468,7 +466,6 @@ const Checker = struct {
         self.option_facts.clear();
         self.locals = .empty;
         self.counters.clearRetainingCapacity();
-        self.assumptions.clearRetainingCapacity();
         self.active.clearRetainingCapacity();
         self.owner = null;
         self.return_type = contract.return_type;
@@ -2566,8 +2563,9 @@ const Checker = struct {
     /// checker already holds: an unsigned type, a non-negative constant, a
     /// loop counter, a length, and the checked operators that keep a
     /// non-negative pair non-negative (an overflow traps rather than wraps).
-    /// `counter` receives the one `enumerate` position the answer relied on.
-    fn nonNegative(self: *Checker, id: typed.NodeId, counter: *?typed.LocalId, depth: usize) bool {
+    /// A loop counter is immutable (`PY-FOR-REBIND-1`), so the fact holds for
+    /// every read of it inside its loop.
+    fn nonNegative(self: *Checker, id: typed.NodeId, depth: usize) bool {
         if (depth == 8) return false;
         const node = self.nodes.items[@backingInt(id)];
         if (node.ty.integer()) |info| if (!info.signed) return true;
@@ -2576,31 +2574,19 @@ const Checker = struct {
             .length => true,
             .buffer_operation => |operation| operation.kind == .length,
             // `len(xs)` roots its receiver in a block around the length read.
-            .block_value => |block| self.nonNegative(block.value, counter, depth + 1),
-            .cast => |operand| self.nonNegative(operand, counter, depth + 1),
-            .local => |slot| {
-                if (!self.counters.contains(slot)) return false;
-                if (!self.locals.items[@backingInt(slot)].mutable) return true;
-                if (counter.*) |relied| return relied == slot;
-                counter.* = slot;
-                return true;
-            },
+            .block_value => |block| self.nonNegative(block.value, depth + 1),
+            .cast => |operand| self.nonNegative(operand, depth + 1),
+            .local => |slot| self.counters.contains(slot),
             .binary => |binary| switch (binary.op) {
-                .add, .mul, .div, .floor_div, .rem => self.nonNegative(binary.left, counter, depth + 1) and self.nonNegative(binary.right, counter, depth + 1),
+                .add, .mul, .div, .floor_div, .rem => self.nonNegative(binary.left, depth + 1) and self.nonNegative(binary.right, depth + 1),
                 // Python's `%` takes the divisor's sign.
-                .floor_rem => if (self.constantIndex(binary.right)) |divisor| divisor > 0 else self.nonNegative(binary.left, counter, depth + 1) and self.nonNegative(binary.right, counter, depth + 1),
-                .bit_and => self.nonNegative(binary.left, counter, depth + 1) or self.nonNegative(binary.right, counter, depth + 1),
-                .shift_right => self.nonNegative(binary.left, counter, depth + 1),
+                .floor_rem => if (self.constantIndex(binary.right)) |divisor| divisor > 0 else self.nonNegative(binary.left, depth + 1) and self.nonNegative(binary.right, depth + 1),
+                .bit_and => self.nonNegative(binary.left, depth + 1) or self.nonNegative(binary.right, depth + 1),
+                .shift_right => self.nonNegative(binary.left, depth + 1),
                 else => false,
             },
             else => false,
         };
-    }
-    /// Whether a counting loop's start is non-negative without resting on an
-    /// `enumerate` position the enclosing body may still assign.
-    fn nonNegativeStart(self: *Checker, start: typed.NodeId) bool {
-        var counter: ?typed.LocalId = null;
-        return self.nonNegative(start, &counter, 0) and counter == null;
     }
     /// Apply `PY-ARRAY-NEGATIVE-1` to one fixed-array index. A table key is an
     /// enumeration member and never negative. A constant in `-N .. -1` is
@@ -2616,50 +2602,7 @@ const Checker = struct {
             const b: collections.Builder(Checker) = .{ .checker = self, .span = self.nodes.items[@backingInt(key)].span };
             return .{ .key = try b.node(.i64, .{ .integer = value + length }), .from_end = false };
         }
-        var counter: ?typed.LocalId = null;
-        if (self.nonNegative(key, &counter, 0)) return .{ .key = key, .from_end = false, .counter = counter };
-        return .{ .key = key, .from_end = true };
-    }
-    /// Record that the accesses built on `access.key` skipped the negative-index
-    /// rule on the strength of an `enumerate` position.
-    fn assume(self: *Checker, access: ArrayKey) Error!void {
-        if (access.counter) |counter| try self.assumptions.append(self.allocator, .{ .key = access.key, .counter = counter });
-    }
-    /// Register `counter` as a non-negative loop position while its body is
-    /// checked, when `counted`, answering its write count before the body.
-    fn beginCounter(self: *Checker, counter: typed.LocalId, counted: bool) Error!usize {
-        if (counted) try self.counters.put(self.allocator, counter, {});
-        return self.locals.items[@backingInt(counter)].usage.writes;
-    }
-    /// Close a `beginCounter` once the loop body is checked.
-    fn endCounter(self: *Checker, counter: typed.LocalId, counted: bool, writes_before: usize) void {
-        if (counted) self.settleCounter(counter, writes_before);
-    }
-    /// Withdraw the non-negative proofs that rested on `counter` when the loop
-    /// body assigned it, so those accesses count a negative index from the end.
-    fn settleCounter(self: *Checker, counter: typed.LocalId, writes_before: usize) void {
-        _ = self.counters.remove(counter);
-        const written = self.locals.items[@backingInt(counter)].usage.writes != writes_before;
-        var kept: usize = 0;
-        for (self.assumptions.items) |assumption| {
-            if (assumption.counter != counter) {
-                self.assumptions.items[kept] = assumption;
-                kept += 1;
-                continue;
-            }
-            if (!written) continue;
-            // Every access built on the key was created after it.
-            for (self.nodes.items[@backingInt(assumption.key) + 1 ..]) |*node| switch (node.data) {
-                .index => |*access| if (access.index == assumption.key) {
-                    access.from_end = true;
-                },
-                .replace => |*replace| if (replace.index == assumption.key) {
-                    replace.from_end = true;
-                },
-                else => {},
-            };
-        }
-        self.assumptions.shrinkRetainingCapacity(kept);
+        return .{ .key = key, .from_end = !self.nonNegative(key, 0) };
     }
     /// Evaluate `value` into a fresh temporary now, answering a read of it.
     fn spillValue(self: *Checker, b: collections.Builder(Checker), value: typed.NodeId, statements: *std.ArrayList(typed.StatementId)) Error!typed.NodeId {
@@ -2730,7 +2673,6 @@ const Checker = struct {
                     // carried by whatever temporary holds it.
                     var key = try self.arrayKey(schema, checked);
                     if (!self.effectFreeValue(key.key, 0)) key.key = try self.spillValue(b, key.key, &key_statements);
-                    try self.assume(key);
                     keys_inert = keys_inert and self.inertValue(key.key);
                     keys[i] = key;
                     current = try b.node(schema.element, .{ .index = .{ .base = current, .index = key.key, .from_end = key.from_end } });
@@ -2889,11 +2831,13 @@ const Checker = struct {
         const index = try b.local(element);
         const limit = try b.local(element);
         // PY-ARRAY-NEGATIVE-1: the running index never drops below its start,
-        // and an expression cannot assign it, so settling withdraws nothing.
-        const counted = self.nonNegativeStart(start);
-        const writes_before = try self.beginCounter(index, counted);
+        // and an expression cannot assign it.
+        self.locals.items[@backingInt(index)].mutable = false;
+        if (self.nonNegative(start, 0)) try self.counters.put(self.allocator, index, {});
         const parts = try self.comprehensionBody(b, node, each, index);
-        self.endCounter(index, counted, writes_before);
+        // A trial check of a sort key's lambda discards its locals, so a
+        // counter's slot must not outlive its loop.
+        _ = self.counters.remove(index);
         const i = try b.read(index);
         const step = try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.node(element, .{ .integer = 1 }), element) } });
         const loop_id = self.loops.next;
@@ -5045,7 +4989,6 @@ const Checker = struct {
         try self.requireIndex(schema, self.nodes.items[@backingInt(index_value)].ty, self.syntax.nodes.items[@backingInt(access.index)].span);
         if (self.requiresHandling(schema.element) and schema.length != 1) return self.sink.fail(eResultOperation, node.span, "indexing would drop other result-bearing elements; handle or transfer the entire array");
         const key = try self.arrayKey(schema, index_value);
-        try self.assume(key);
         out.ty = schema.element;
         out.data = .{ .index = .{ .base = base, .index = key.key, .from_end = key.from_end } };
     }
@@ -5182,7 +5125,6 @@ const Checker = struct {
                 try self.requireIndex(schema, self.nodes.items[@backingInt(index_value)].ty, self.syntax.nodes.items[@backingInt(replace.index)].span);
                 try self.require(self.nodes.items[@backingInt(value)].ty, schema.element, self.syntax.nodes.items[@backingInt(replace.value)].span);
                 const key = try self.arrayKey(schema, index_value);
-                try self.assume(key);
                 out.data = .{ .replace = .{ .base = base, .index = key.key, .value = value, .from_end = key.from_end } };
             },
             .length => |input| return self.checkLength(node, input),
@@ -5921,7 +5863,7 @@ const Checker = struct {
         flow.looping = flow.terminates;
         return .{ .loop = .{ .id = loop_id, .condition = condition, .body = body.id } };
     }
-    fn statementForEach(self: *Checker, stmt: ast.Statement, each: @FieldType(@FieldType(ast.Statement, "data"), "for_each")) Error!@FieldType(typed.Statement, "data") {
+    fn statementForEach(self: *Checker, stmt: ast.Statement, each: ForEach) Error!@FieldType(typed.Statement, "data") {
         try self.invalidateOptions(each.body);
         const loop_facts = try self.option_facts.snapshot(self.allocator);
         defer self.option_facts.restore(loop_facts);
@@ -5951,7 +5893,8 @@ const Checker = struct {
         const index = try b.local(.i64);
         const limit = try b.local(.i64);
         const first_slot = try b.local(first_type);
-        const second_slot = if (unpack) try b.local(self.catalog.records[element.recordIndex()].fields[1].ty) else index;
+        const position = try self.loopPosition(b, each, index);
+        const second_slot = if (unpack) try b.local(self.catalog.records[element.recordIndex()].fields[1].ty) else position.slot;
         const names = if (unpack) [_]?source.Span{ each.index_name, each.name } else [_]?source.Span{ each.name, each.index_name };
         const slots = [_]typed.LocalId{ first_slot, second_slot };
         for (names) |maybe_name| if (maybe_name) |name| {
@@ -5973,13 +5916,9 @@ const Checker = struct {
         self.loops.next += 1;
         try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .arenas = self.arenas.items.len });
         defer _ = self.loops.active.pop();
-        // PY-ARRAY-NEGATIVE-1: an `enumerate` position counts up from zero,
-        // but the body may assign the name; accesses that relied on it are
-        // settled once the body is checked.
-        const writes_before = try self.beginCounter(index, each.enumerated);
         const init_before = try self.initSnapshot();
         const body = try self.statement(each.body);
-        self.endCounter(index, each.enumerated, writes_before);
+        _ = self.counters.remove(index);
         const owner = try self.endWalk(b, &source_walk);
         self.initRestore(init_before);
         if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
@@ -5999,6 +5938,7 @@ const Checker = struct {
             try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = first_value } }));
             try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = second_slot, .value = second_value } }));
         } else try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = value } }));
+        try self.appendRebinding(b, &iteration_statements, position, i);
         try iteration_statements.append(self.allocator, body.id);
         const iteration = try b.stmt(.{ .block = try iteration_statements.toOwnedSlice(self.allocator) });
         const advance = try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.integer(1), .i64) } });
@@ -6014,6 +5954,29 @@ const Checker = struct {
         };
         // Walking the array in place, the loop reads the variable itself.
         return .{ .block = try self.allocator.dupe(typed.StatementId, setup[@intFromBool(source_walk.in_place)..]) };
+    }
+    /// PY-FOR-REBIND-1: whether a loop body can assign `name`.
+    fn bodyAssigns(self: *Checker, body: ast.StatementId, name: []const u8) Error!bool {
+        return loop_rebinding.assigns(self.allocator, .{ .program = self.syntax, .src = self.src }, body, name);
+    }
+    /// The slot a `for` loop's position binds — only `enumerate` binds one —
+    /// and whether it is a variable of its own rather than the loop's counter.
+    const Position = struct { slot: typed.LocalId, rebound: bool };
+    /// PY-FOR-REBIND-1: an `enumerate` position the body never assigns is the
+    /// loop's counter itself, immutable and never negative
+    /// (`PY-ARRAY-NEGATIVE-1`); one the body assigns is a variable of its own,
+    /// copied from the counter at the top of every iteration.
+    fn loopPosition(self: *Checker, b: collections.Builder(Checker), each: ForEach, counter: typed.LocalId) Error!Position {
+        if (!each.enumerated) return .{ .slot = counter, .rebound = false };
+        if (try self.bodyAssigns(each.body, self.src.text(each.index_name.?))) return .{ .slot = try b.local(.i64), .rebound = true };
+        self.locals.items[@backingInt(counter)].mutable = false;
+        try self.counters.put(self.allocator, counter, {});
+        return .{ .slot = counter, .rebound = false };
+    }
+    /// Copy the loop's counter into a position variable of its own at the top
+    /// of an iteration; a position that is the counter needs nothing.
+    fn appendRebinding(self: *Checker, b: collections.Builder(Checker), statements: *std.ArrayList(typed.StatementId), position: Position, counter: typed.NodeId) Error!void {
+        if (position.rebound) try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = position.slot, .value = counter } }));
     }
     /// The source a `for` loop reads its elements from, decided around its body.
     const Walk = struct { owner: ?typed.LocalId, variable: ?typed.LocalId, writes: usize, ty: typed.Type, in_place: bool = false };
@@ -6067,7 +6030,7 @@ const Checker = struct {
     }
     /// `for x in reversed(xs):` and `for a, b in zip(xs, ys):` walk their sources
     /// directly, so no intermediate list is materialised.
-    fn preludeIteration(self: *Checker, stmt: ast.Statement, each: @FieldType(@FieldType(ast.Statement, "data"), "for_each")) Error!?[]const typed.StatementId {
+    fn preludeIteration(self: *Checker, stmt: ast.Statement, each: ForEach) Error!?[]const typed.StatementId {
         const node = self.syntax.nodes.items[@backingInt(each.iterable)];
         if (node.data != .call) return null;
         const call = node.data.call;
@@ -6146,14 +6109,26 @@ const Checker = struct {
         const element = self.nodes.items[@backingInt(start)].ty;
         try self.requireInteger(element, range.name);
         try self.require(self.nodes.items[@backingInt(end)].ty, element, self.syntax.nodes.items[@backingInt(range.end)].span);
+        // PY-FOR-REBIND-1: a body that assigns the name gets its own variable,
+        // copied from a hidden counter at the top of every iteration, so the
+        // assignment never changes which iteration comes next.
+        const rebound = try self.bodyAssigns(range.body, name);
         const index: typed.LocalId = @fromBackingInt(self.locals.items.len);
-        try self.locals.append(self.allocator, .{ .name = name, .declaration = range.name, .ty = element, .mutable = false, .ownership = .{ .initialized = true }, .usage = .{ .reads = 1 } });
+        try self.locals.append(self.allocator, .{
+            .name = if (rebound) "<range-index>" else name,
+            .declaration = range.name,
+            .ty = element,
+            .mutable = false,
+            .ownership = .{ .initialized = true },
+            .usage = .{ .reads = 1, .temporary = rebound },
+        });
         // PY-ARRAY-NEGATIVE-1: an immutable induction variable counting up
         // from a non-negative start never holds a negative value.
-        if (self.nonNegativeStart(start)) try self.counters.put(self.allocator, index, {});
+        if (!rebound and self.nonNegative(start, 0)) try self.counters.put(self.allocator, index, {});
         const limit: typed.LocalId = @fromBackingInt(self.locals.items.len);
         try self.locals.append(self.allocator, .{ .name = "<range-limit>", .declaration = range.name, .ty = element, .mutable = false, .usage = .{ .reads = 1, .temporary = true } });
-        try self.active.put(self.allocator, name, index);
+        const variable: typed.LocalId = if (rebound) try self.reboundVariable(range.name, element) else index;
+        try self.active.put(self.allocator, name, variable);
         defer _ = self.active.remove(name);
         const index_node: typed.NodeId = @fromBackingInt(self.nodes.items.len);
         try self.nodes.append(self.allocator, .{ .span = range.name, .ty = element, .data = .{ .local = index } });
@@ -6182,9 +6157,24 @@ const Checker = struct {
         try self.statements.append(self.allocator, .{ .span = range.name, .terminates = false, .data = .{ .initialize = .{ .slot = index, .value = start } } });
         children[1] = @fromBackingInt(self.statements.items.len);
         try self.statements.append(self.allocator, .{ .span = range.name, .terminates = false, .data = .{ .initialize = .{ .slot = limit, .value = end } } });
+        const iteration = if (rebound) try self.rebindFirst(range.name, variable, index_node, body.id) else body.id;
         children[2] = @fromBackingInt(self.statements.items.len);
-        try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = false, .data = .{ .loop = .{ .id = loop_id, .condition = condition, .body = body.id, .step = step } } });
+        try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = false, .data = .{ .loop = .{ .id = loop_id, .condition = condition, .body = iteration, .step = step } } });
         return .{ .block = children };
+    }
+    /// PY-FOR-REBIND-1: the visible loop variable of a counting loop whose body
+    /// assigns it: an ordinary mutable local, bound for the whole body.
+    fn reboundVariable(self: *Checker, name: source.Span, element: typed.Type) Error!typed.LocalId {
+        const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
+        try self.locals.append(self.allocator, .{ .name = self.src.text(name), .declaration = name, .ty = element, .mutable = true, .ownership = .{ .initialized = true }, .usage = .{ .reads = 1 }, .origin = .iteration });
+        return slot;
+    }
+    /// One iteration of a counting loop whose body assigns its variable: the
+    /// variable takes the hidden counter's value, then the body runs.
+    fn rebindFirst(self: *Checker, span: source.Span, variable: typed.LocalId, counter: typed.NodeId, body: typed.StatementId) Error!typed.StatementId {
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = span };
+        const copy = try b.stmt(.{ .initialize = .{ .slot = variable, .value = counter } });
+        return b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{ copy, body }) });
     }
     fn statementLoopExit(self: *Checker, stmt: ast.Statement, continuing: bool, flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         if (self.loops.active.items.len == 0) return self.sink.fail("E_LOOP_EXIT", stmt.span, "break and continue require an enclosing loop");

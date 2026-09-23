@@ -147,13 +147,7 @@ test "generic body contracts reject undeclared operations mismatches and invalid
         \\def f[T: integer](x: T) -> T:
         \\    return x + 1
         , .code = "E_GENERIC_TYPE" },
-        // Assignment binds, so a loop variable is the binding that stays immutable.
-        .{ .text =
-        \\def f[T](x: T) -> T:
-        \\    for i in range(0, 2):
-        \\        i = 1
-        \\    return x
-        , .code = "E_IMMUTABLE" },
+        // A loop variable is assignable (PY-FOR-REBIND-1), so no loop case here.
         .{ .text =
         \\def f[T](x: T) -> T:
         \\    if True:

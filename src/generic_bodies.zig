@@ -2210,17 +2210,17 @@ const Checker = struct {
                 if (each.index_name != null and !each.enumerated) {
                     if (symbolic_shapes.tupleArity(self.catalog, element)) |arity| {
                         if (arity != 2) return self.sink.fail(eTupleArity, statement_value.span, try self.twoNameLoopMessage(arity));
-                        try self.bind(each.index_name.?, symbolic_shapes.tupleElement(self.catalog, element, 0).?, false);
-                        try self.bind(each.name, symbolic_shapes.tupleElement(self.catalog, element, 1).?, false);
+                        try self.bind(each.index_name.?, symbolic_shapes.tupleElement(self.catalog, element, 0).?, true);
+                        try self.bind(each.name, symbolic_shapes.tupleElement(self.catalog, element, 1).?, true);
                     } else {
                         if (dictionary_views.symbolicKind(self.catalog, element) != .item) return self.sink.fail("E_ITERATION", statement_value.span, "two iteration names require dictionary items, enumerate or zip");
                         const shape = try self.shapes().schema(element, statement_value.span);
-                        try self.bind(each.index_name.?, shape.fields[0].ty.?, false);
-                        try self.bind(each.name, shape.fields[1].ty.?, false);
+                        try self.bind(each.index_name.?, shape.fields[0].ty.?, true);
+                        try self.bind(each.name, shape.fields[1].ty.?, true);
                     }
                 } else {
-                    try self.bind(each.name, element, false);
-                    if (each.index_name) |name| try self.bind(name, .{ .concrete = .i64 }, false);
+                    try self.bind(each.name, element, true);
+                    if (each.index_name) |name| try self.bind(name, .{ .concrete = .i64 }, true);
                 }
                 defer self.endScope(first);
                 const before = try self.pendingState(self.locals.items.len);
@@ -2239,7 +2239,7 @@ const Checker = struct {
                 try self.supports(element, .integer, range.name);
                 try self.compatible(try self.expression(range.end), element, range.name);
                 const first = self.locals.items.len;
-                try self.bind(range.name, element, false);
+                try self.bind(range.name, element, true);
                 defer self.endScope(first);
                 const before = try self.pendingState(self.locals.items.len);
                 defer self.allocator.free(before);

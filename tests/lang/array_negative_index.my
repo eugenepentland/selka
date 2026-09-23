@@ -146,10 +146,9 @@ public def test_an_enumerate_position_the_body_assigns_counts_from_the_end() -> 
     values: [4]i64 = [1, 2, 3, 4]
     total = 0
     for position, value in enumerate(values):
-        # The name is the loop's own counter today, so it is put back.
+        # The loop rebinds the name every iteration (PY-FOR-REBIND-1).
         position = position - 4
         total += values[position] * value
-        position = position + 4
     return total == 1 + 4 + 9 + 16
 
 
