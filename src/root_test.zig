@@ -198,6 +198,7 @@ test {
 test {
     _ = @import("qbe.zig");
     _ = @import("qbe_il_passes.zig");
+    _ = @import("qbe_frame.zig");
     _ = @import("qbe_test.zig");
     _ = @import("qbe_text_test.zig");
     _ = @import("qbe_range_keys_test.zig");
