@@ -131,6 +131,19 @@ test "a headerless file that needs a project module keeps the module header rule
     try t.expectEqual(@as(usize, 1), declared.column);
 }
 
+// spec: HEADERLESS-STD-IMPORT-HINT-1
+test "a headerless script importing a non-standard module is told which module and what is standard" {
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = "import math\nimport heapq\n\ndef main() -> int:\n    return 0\n" }} };
+    var loaded = project.Project.init(t.allocator);
+    defer loaded.deinit();
+    try t.expectError(error.SourceError, loaded.load(files.provider(), "main", .{}));
+    const problem = loaded.problem.?;
+    try t.expectEqualStrings("E_MODULE_HEADER", problem.code);
+    try t.expect(std.mem.startsWith(u8, problem.message, "`heapq` is not a standard module (base64, byte_builder, hex, json, math,"));
+    try t.expect(std.mem.endsWith(u8, problem.message, "start this file with `module main`"));
+    try t.expectEqual(@as(usize, 0), problem.site.span.start);
+}
+
 // The fixture provider is what makes the loader tests above mean anything, so
 // its own refusals are exercised too: a missing path and an oversized file.
 test "the in-memory provider reports a missing path and an oversized file" {

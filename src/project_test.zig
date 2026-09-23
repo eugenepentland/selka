@@ -79,6 +79,19 @@ test "module headers reject mismatch duplicate aliases duplicate imports and inv
         .{ .text = "module main\nimport", .code = "E_MODULE_HEADER" },
     }) |case| try rejection(&.{.{ .path = "main.my", .bytes = case.text }}, .{}, case.code);
 }
+// spec: PROJ-MODULE-NAME-FIX-1
+test "a mismatched module name reports the expected name and the exact header to write" {
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = "module main\nimport sexpr.parser\n" },
+        .{ .path = "sexpr/parser.my", .bytes = "module parser\n" },
+    } };
+    var project = p.Project.init(t.allocator);
+    defer project.deinit();
+    try t.expectError(error.SourceError, project.load(files.provider(), "main", .{}));
+    try t.expectEqualStrings("E_MODULE_NAME", project.problem.?.code);
+    try t.expectEqualStrings("declared `module parser`, but this file is `sexpr/parser.my`, so its module name is `sexpr.parser`: " ++
+        "a module's name is its path from the project root without `.my`; write `module sexpr.parser`", project.problem.?.message);
+}
 // spec: PROJ-2
 test "module cycles report importing and related file locations" {
     var files: Files = .{ .entries = &.{

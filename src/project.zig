@@ -187,7 +187,18 @@ pub const Project = struct {
         var scanner: Scanner = .{ .project = self, .id = id, .tokens = tokens };
         if (try self.moduleDeclaration(&scanner, is_entry)) |declared| {
             self.modules.items[id].header.declaration = declared.span;
-            if (!std.mem.eql(u8, declared.text, self.modules.items[id].name)) return self.fail("E_MODULE_NAME", "declared module name does not match its requested path", .{ .module = id, .span = declared.span }, null);
+            if (!std.mem.eql(u8, declared.text, self.modules.items[id].name)) {
+                // State the rule and the exact replacement: an agent that copied
+                // `module main` from an example into `csvstats.my` needs both.
+                const expected = self.modules.items[id].name;
+                const message = try std.fmt.allocPrint(
+                    allocator,
+                    "declared `module {s}`, but this file is `{s}`, so its module name is `{s}`: " ++
+                        "a module's name is its path from the project root without `.my`; write `module {s}`",
+                    .{ declared.text, self.modules.items[id].src.path, expected, expected },
+                );
+                return self.fail("E_MODULE_NAME", message, .{ .module = id, .span = declared.span }, null);
+            }
         }
         var imports: std.ArrayList(Import) = .empty;
         var aliases: std.StringHashMapUnmanaged(source.Span) = .empty;
@@ -250,8 +261,38 @@ pub const Project = struct {
             _ = try scanner.expect(.semicolon);
             return declared;
         }
-        if (!is_entry or !try standardImportOpening(self.arena.allocator(), self.modules.items[scanner.id].src, scanner.tokens, scanner.pos))
-            return self.fail(eModuleHeader, "file must begin with a module declaration", .{ .module = scanner.id, .span = scanner.tokens[scanner.pos].span }, null);
+        if (!is_entry or !try standardImportOpening(self.arena.allocator(), self.modules.items[scanner.id].src, scanner.tokens, scanner.pos)) {
+            const site: Site = .{ .module = scanner.id, .span = scanner.tokens[scanner.pos].span };
+            if (is_entry) if (try self.projectImport(scanner)) |name| {
+                // `import heapq` in a script is usually a Python import, not a
+                // missing header: say which module is not standard and what is.
+                const allocator = self.arena.allocator();
+                const message = try std.fmt.allocPrint(
+                    allocator,
+                    "`{s}` is not a standard module ({s}); a file without a `module` header can import only those. " ++
+                        "To import `{s}.my` from this project, start this file with `module {s}`",
+                    .{ name, try standard_library.names(allocator), name, self.modules.items[scanner.id].name },
+                );
+                return self.fail(eModuleHeader, message, site, null);
+            };
+            return self.fail(eModuleHeader, "file must begin with a module declaration", site, null);
+        }
+        return null;
+    }
+    /// The first imported name in a headerless opening that is not an embedded
+    /// standard module, or null when the opening is not an import list.
+    fn projectImport(self: *Project, scanner: *Scanner) diagnostic.Error!?[]const u8 {
+        const src = self.modules.items[scanner.id].src;
+        const tokens = scanner.tokens;
+        var cursor = scanner.pos;
+        while (cursor + 1 < tokens.len and tokens[cursor].tag == .ident and std.mem.eql(u8, src.text(tokens[cursor].span), "import")) {
+            if (tokens[cursor + 1].tag != .ident) return null;
+            const name = src.text(tokens[cursor + 1].span);
+            if (!try isStandardModule(self.arena.allocator(), name)) return name;
+            cursor += 2;
+            if (cursor < tokens.len and tokens[cursor].tag == .kw_as) cursor += 2;
+            if (cursor < tokens.len and tokens[cursor].tag == .semicolon) cursor += 1;
+        }
         return null;
     }
     /// Allocate the completed dependency graph report; reject incomplete loading state.

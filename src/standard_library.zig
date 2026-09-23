@@ -20,3 +20,15 @@ pub fn source(path: []const u8) ?[]const u8 {
     for (modules) |module| if (std.mem.eql(u8, path, module.path)) return module.text;
     return null;
 }
+
+/// The reserved standard module names, comma-separated in table order, for
+/// diagnostics that tell a user which imports need no project module.
+pub fn names(allocator: std.mem.Allocator) error{OutOfMemory}![]u8 {
+    var joined: std.ArrayList(u8) = .empty;
+    errdefer joined.deinit(allocator);
+    for (modules, 0..) |module, index| {
+        if (index != 0) try joined.appendSlice(allocator, ", ");
+        try joined.appendSlice(allocator, module.path[0 .. module.path.len - ".my".len]);
+    }
+    return joined.toOwnedSlice(allocator);
+}
