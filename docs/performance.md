@@ -452,6 +452,34 @@ reports the same interval as the `native_execution` record in phase-timings JSON
 Lines when a script needs to read it; `mylang test` reports pass/fail outcomes, not
 per-case timings.
 
+## Track parity with Zig and Rust
+
+`zig build bench-parity` is the standing benchmark behind the parity plan: the
+eleven-program suite with its variants, the runtime-library scans and the
+micro-kernels under `bench/parity/`, each written in mylang, Zig and Rust and
+required to print the same bytes. It builds every arm with the compiler this
+checkout installs (or `-Dbench-mylang=PATH`), times fresh processes pinned to one
+CPU in interleaved rounds, and fails when a program's ratio to Zig ReleaseFast
+grows past its threshold in `bench/parity/thresholds.json`. Ratios, not
+milliseconds, are checked, because both sides of a ratio ran in the same round.
+The step is opt-in; `zig build test` never runs it.
+
+```bash
+zig build bench-parity -Dbench-filter=sieve -Dbench-cpu=10 -Dbench-rounds=7
+zig build bench-parity -Dbench-filter=micro/ -- --json parity-micro.json
+python3 bench/parity/bench_parity.py rebaseline .mylang-cache/bench-parity/result.json --label quiet
+```
+
+It prints one table row per program (Zig milliseconds, then `zig-safe`, `rust`,
+`rust-checked`, `my`, its limit, `my-unchecked` and the variants as ratios), the
+suite's geometric means beside the plan's targets, and one line per regression
+naming the program, arm, ratio and threshold. A program over its limit is timed
+a second time, and the step fails only when both passes exceed it. Rust arms are skipped with a notice
+when `rustc` is missing, and instruction and cycle counts are recorded only when
+`kernel.perf_event_paranoid` allows `perf stat`. Rewriting the thresholds is a
+separate, deliberate command; `bench/parity/README.md` gives the tolerance policy
+and the layout.
+
 ## Prove a hot function does not allocate
 
 `noalloc` is a checked effect bound, not a performance hint: a function declared

@@ -173,6 +173,41 @@ fn boundedChecks(step: *std.Build.Step) void {
     }
 }
 
+/// `zig build bench-parity`: the standing mylang/Zig/Rust parity benchmark under
+/// `bench/parity`. It builds every arm with the compiler this build installs (or
+/// `-Dbench-mylang=PATH`), requires byte-identical output, times pinned
+/// interleaved rounds and checks each program's ratio to Zig ReleaseFast against
+/// `bench/parity/thresholds.json`. Opt-in: nothing else depends on it, so
+/// `zig build test` never builds or times it. Arguments after `--` reach the
+/// harness (`--json PATH`, `--arms ...`, `--write-thresholds`).
+fn addParityBench(b: *std.Build) void {
+    const cpu = b.option(u32, "bench-cpu", "bench-parity: the one CPU every timed process is pinned to (default 2)") orelse 2;
+    const rounds = b.option(u32, "bench-rounds", "bench-parity: timed rounds per program (default 7)") orelse 7;
+    const filter = b.option([]const u8, "bench-filter", "bench-parity: comma-separated substrings of GROUP/NAME, e.g. sieve or micro/");
+    const compiler = b.option([]const u8, "bench-mylang", "bench-parity: time this compiler instead of the one this build installs");
+    const bench = b.addSystemCommand(&.{ "python3", "bench/parity/bench_parity.py", "run", "--zig", b.graph.zig_exe });
+    bench.setCwd(b.path("."));
+    bench.addArgs(&.{ "--cpu", b.fmt("{d}", .{cpu}), "--rounds", b.fmt("{d}", .{rounds}) });
+    if (filter) |needle| {
+        if (std.mem.trim(u8, needle, " \t\r\n,").len == 0) {
+            std.debug.print("error: -Dbench-filter= needs a non-empty substring; omit it to run every program\n", .{});
+            std.process.exit(2);
+        }
+        bench.addArgs(&.{ "--filter", needle });
+    }
+    if (compiler) |path| {
+        bench.addArgs(&.{ "--mylang", path });
+    } else {
+        bench.addArg("--mylang");
+        bench.addFileArg(.{ .relative = .{ .base = .install_bin, .sub_path = "mylang" } });
+        bench.step.dependOn(b.getInstallStep());
+    }
+    bench.addPassthruArgs();
+    bench.has_side_effects = true;
+    bench.step.max_rss = rss.parity;
+    b.step("bench-parity", "Time mylang against Zig and Rust on the parity suite and check ratio thresholds (opt-in)").dependOn(&bench.step);
+}
+
 pub fn build(b: *std.Build) void {
     if (!std.mem.eql(u8, builtin.zig_version_string, "0.17.0-dev.1683+5ceec001b"))
         @panic("mylang requires Guardian's Zig 0.17.0-dev.1683+5ceec001b toolchain (see .zigversion)");
@@ -697,6 +732,7 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&doctest_run.step);
     guardian.addAllChecks(b, guardian_exe, doctest_step, .{});
     boundedChecks(doctest_step);
+    addParityBench(b);
     const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("src"), b.path("tests"), b.path("test") }, .check = true });
     b.step("fmt-check", "Check canonical Zig formatting").dependOn(&fmt.step);
 }

@@ -1,0 +1,13 @@
+# alloc_churn: build, fold and drop a 16-element list[int] once per batch.
+
+
+def main(out: Stream) -> int:
+    total = 0
+    for batch in range(1000000):
+        values: list[int] = []
+        for j in range(16):
+            values.append(batch + j)
+        for v in values:
+            total = (total + v) % 1000003
+    out.print(total)
+    return 0

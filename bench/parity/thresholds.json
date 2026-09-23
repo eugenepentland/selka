@@ -1,0 +1,521 @@
+{
+ "schema": "mylang-parity-thresholds-v1",
+ "note": "Provisional baseline, measured on a shared machine: two pooled 9-round batches on CPU 10 (an i7-12700H P-core) of the perf/parity-integration compiler at 79835b13 (ReleaseFast install), load average 5-11. Three earlier batches at load 12-29 moved some ratios by up to 1.8x on identical binaries (nbody, raytrace, alloc_churn), so these thresholds fail under heavy load. The coordinator re-baselines from a quiet-machine run. limit = ratio * (1 + tolerance); see bench/parity/README.md.",
+ "metric": "wall",
+ "reference": "zig-fast",
+ "default_tolerance": 0.15,
+ "batches": {
+  "2026-09-22-cpu10-loaded": {
+   "label": "loaded",
+   "compiler": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-ksort/bin/mylang",
+   "compiler_sha256": "f430917a25d715db1a815a195a527043e18a46baa26927a06e9b573cefcd6085",
+   "commit": "79835b133cbc3c0a68fe30808fa094bdd8b8740c",
+   "runs": [
+    {
+     "started": "2026-09-22T23:49:49Z",
+     "cpu": 10,
+     "rounds": 9,
+     "load": [
+      [
+       28.3876953125,
+       18.19775390625,
+       13.53515625
+      ],
+      [
+       15.63037109375,
+       19.9921875,
+       18.72314453125
+      ]
+     ]
+    },
+    {
+     "started": "2026-09-23T00:04:33Z",
+     "cpu": 10,
+     "rounds": 9,
+     "load": [
+      [
+       14.51708984375,
+       19.1689453125,
+       18.49072265625
+      ],
+      [
+       18.5712890625,
+       23.56103515625,
+       20.00244140625
+      ]
+     ]
+    },
+    {
+     "started": "2026-09-23T00:18:49Z",
+     "cpu": 10,
+     "rounds": 9,
+     "load": [
+      [
+       12.3935546875,
+       20.31396484375,
+       19.23681640625
+      ],
+      [
+       15.8818359375,
+       14.044921875,
+       16.2880859375
+      ]
+     ]
+    }
+   ]
+  },
+  "2026-09-23-cpu10-loaded": {
+   "label": "loaded",
+   "compiler": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-ksort/bin/mylang",
+   "compiler_sha256": "f430917a25d715db1a815a195a527043e18a46baa26927a06e9b573cefcd6085",
+   "commit": "79835b133cbc3c0a68fe30808fa094bdd8b8740c",
+   "runs": [
+    {
+     "started": "2026-09-23T00:31:27Z",
+     "cpu": 10,
+     "rounds": 9,
+     "load": [
+      [
+       10.6396484375,
+       12.9423828125,
+       15.72216796875
+      ],
+      [
+       5.50439453125,
+       7.41943359375,
+       11.54833984375
+      ]
+     ]
+    },
+    {
+     "started": "2026-09-23T00:41:33Z",
+     "cpu": 10,
+     "rounds": 9,
+     "load": [
+      [
+       5.806640625,
+       7.30126953125,
+       11.3759765625
+      ],
+      [
+       4.7158203125,
+       6.3623046875,
+       9.28173828125
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ "benchmarks": {
+  "alloc_churn": {
+   "my": {
+    "ratio": 1.99,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 1.908,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-arena": {
+    "ratio": 1.432,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "binary_trees": {
+   "my": {
+    "ratio": 2.045,
+    "tolerance": 0.28,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 2.011,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-arena": {
+    "ratio": 1.376,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "bytes_scan": {
+   "my": {
+    "ratio": 1.409,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 1.353,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-wrapping": {
+    "ratio": 1.367,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "calls": {
+   "my": {
+    "ratio": 1.001,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 1.045,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "dict_count": {
+   "my": {
+    "ratio": 1.023,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 0.992,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "fannkuch_redux": {
+   "my": {
+    "ratio": 1.34,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 1.004,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-array": {
+    "ratio": 0.82,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-tuned": {
+    "ratio": 0.881,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "fib": {
+   "my": {
+    "ratio": 3.382,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 1.096,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "float_loop": {
+   "my": {
+    "ratio": 1.006,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 1.003,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "intloop": {
+   "my": {
+    "ratio": 0.941,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 0.934,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "knucleotide": {
+   "my": {
+    "ratio": 3.395,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 3.351,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-arena": {
+    "ratio": 3.056,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-tuned": {
+    "ratio": 1.475,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "list_append_sum": {
+   "my": {
+    "ratio": 1.4,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 1.225,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "list_records": {
+   "my": {
+    "ratio": 1.489,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 1.25,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-wrapping": {
+    "ratio": 1.254,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "mandelbrot": {
+   "my": {
+    "ratio": 1.033,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 1.029,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "matmul": {
+   "my": {
+    "ratio": 3.946,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 2.995,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-flat": {
+    "ratio": 2.751,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-tuned": {
+    "ratio": 6.366,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "nbody": {
+   "my": {
+    "ratio": 1.968,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 1.657,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-class": {
+    "ratio": 1.619,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "raytrace": {
+   "my": {
+    "ratio": 1.797,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 1.262,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-tuned": {
+    "ratio": 1.328,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "records": {
+   "my": {
+    "ratio": 0.909,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 1.046,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "scan_count": {
+   "my": {
+    "ratio": 0.673,
+    "tolerance": 0.5,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 0.672,
+    "tolerance": 0.5,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "scan_replace": {
+   "my": {
+    "ratio": 0.399,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 0.4,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "scan_split": {
+   "my": {
+    "ratio": 2.978,
+    "tolerance": 0.17,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 2.995,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "sieve": {
+   "my": {
+    "ratio": 1.885,
+    "tolerance": 0.16,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 1.385,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-tuned": {
+    "ratio": 1.837,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "sort_builtin": {
+   "my": {
+    "ratio": 0.513,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 0.519,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "sort_quick": {
+   "my": {
+    "ratio": 1.305,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 1.105,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "sort_records": {
+   "my": {
+    "ratio": 0.278,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 0.273,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-keyed": {
+    "ratio": 0.56,
+    "tolerance": 0.19,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-sorted": {
+    "ratio": 0.275,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "spectral_norm": {
+   "my": {
+    "ratio": 1.703,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 1.015,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-tuned": {
+    "ratio": 1.029,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "str_build": {
+   "my": {
+    "ratio": 1.195,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 1.169,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  },
+  "text_ops": {
+   "my": {
+    "ratio": 4.361,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-unchecked": {
+    "ratio": 4.359,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   },
+   "my-tuned": {
+    "ratio": 0.666,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu10-loaded"
+   }
+  }
+ }
+}

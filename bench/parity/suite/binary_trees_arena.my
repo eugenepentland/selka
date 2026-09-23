@@ -1,0 +1,50 @@
+# binary_trees (arena variant): the same program as binary_trees.my, but the
+# stretch tree and every short-lived tree are built and checked inside their
+# own `with arena():` block, so each one is released in bulk at block exit
+# instead of being traced. Only the scalar check count leaves a block. The
+# long-lived tree stays on the collecting heap. See SUITE.md section 1.
+
+
+class Node:
+    left: Option[Node]
+    right: Option[Node]
+
+
+def make(depth: int) -> Node:
+    if depth == 0:
+        return Node(left=None, right=None)
+    return Node(left=Some(make(depth - 1)), right=Some(make(depth - 1)))
+
+
+def check(node: Node) -> int:
+    left = node.left
+    right = node.right
+    if left is None or right is None:
+        return 1
+    return 1 + check(left) + check(right)
+
+
+def main(out: Stream) -> int:
+    max_depth = 16
+    min_depth = 4
+
+    stretch = max_depth + 1
+    stretch_check = 0
+    with arena():
+        stretch_check = check(make(stretch))
+    out.print(f"stretch tree of depth {stretch}\t check: {stretch_check}")
+
+    long_lived = make(max_depth)
+
+    depth = min_depth
+    while depth <= max_depth:
+        iterations = shift_left(1, max_depth - depth + min_depth)
+        total = 0
+        for _ in range(iterations):
+            with arena():
+                total = total + check(make(depth))
+        out.print(f"{iterations}\t trees of depth {depth}\t check: {total}")
+        depth = depth + 2
+
+    out.print(f"long lived tree of depth {max_depth}\t check: {check(long_lived)}")
+    return 0
