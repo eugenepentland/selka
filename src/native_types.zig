@@ -6,8 +6,10 @@ const typed = @import("typed.zig");
 pub const Digest = [32]u8;
 /// Invalid schemas, ambiguous identities, excessive layouts or allocation failure.
 pub const Error = error{ OutOfMemory, InvalidType, MissingIdentity, DuplicateIdentity, RecursiveLayout, LayoutOverflow };
-/// Concrete native value representations used by backend and runtime.
-pub const Kind = enum { scalar, record, array, domain, variant, managed, handle, owned_buffer, owned_pool, pool_handle, resource, callable };
+/// Concrete native value representations used by backend and runtime. A
+/// `niche` value is an `Option` of a managed reference stored as the reference
+/// word alone: null is `None`, any other word is `Some` of that reference.
+pub const Kind = enum { scalar, record, array, domain, variant, managed, handle, owned_buffer, owned_pool, pool_handle, resource, callable, niche };
 /// Copy is a byte copy for plain values, a pointer copy for GC references, and
 /// prohibited for move-only values. Trace/drop recurse using the field metadata.
 pub const Copy = enum { bytes, reference, prohibited };
@@ -31,7 +33,7 @@ const State = enum { unseen, active, done };
 /// Versioned Linux AMD64 ABI catalog. The caller retains records and identities
 /// until deinit. Fields and cached layouts are owned by this catalog.
 pub const Catalog = struct {
-    pub const abi_version = "mylang-native-amd64-layout-v2";
+    pub const abi_version = "mylang-native-amd64-layout-v4";
     allocator: std.mem.Allocator,
     records: []const typed.Record,
     identities: []const []const u8,
@@ -173,6 +175,7 @@ pub const Catalog = struct {
         errdefer fields.deinit(self.allocator);
         var result: Layout = .{ .kind = .record, .size = 0, .alignment = 1, .copy = if (record.contract.move_only) .prohibited else .bytes };
         if (record.shape.variants) |variants| {
+            if (try self.niche(variants)) |item| return item;
             result.kind = .variant;
             result.alignment = 4;
             var payload_size: u64 = 0;
@@ -203,6 +206,20 @@ pub const Catalog = struct {
         }
         result.fields = try fields.toOwnedSlice(self.allocator);
         return result;
+    }
+    /// QBE-NICHE-1: an `Option` whose `Some` payload is a managed reference is
+    /// that reference word alone. A managed reference is never null, so the
+    /// null word is free to mean `None`; every other optional keeps its
+    /// `{tag, payload}` layout, including an optional optional, whose inner
+    /// `None` already owns the null word. The single field is the payload at
+    /// offset zero, tagged with the `Some` case, exactly where a tagged
+    /// variant's field table would put it.
+    fn niche(self: *Catalog, variants: typed.Variants) Error!?Layout {
+        const shape = @import("prelude.zig").optionCases(variants) orelse return null;
+        if ((try self.layout(shape.element)).kind != .managed) return null;
+        const fields = try self.allocator.alloc(Field, 1);
+        fields[0] = .{ .offset = 0, .ty = shape.element, .tag = shape.some };
+        return .{ .kind = .niche, .size = 8, .alignment = 8, .fields = fields, .trace = true };
     }
     /// The fingerprint of one builtin type, computed at most once per catalog.
     /// The memo is keyed by the tag and holds only the digest; the layout the
@@ -329,6 +346,56 @@ test "array stride and union payload metadata" {
     const array = try catalog.layout(recordType(1));
     try std.testing.expectEqual(@as(u64, 48), array.size);
     try std.testing.expectEqual(@as(u64, 16), array.stride);
+}
+
+// spec: QBE-NICHE-1
+test "an option of a managed reference is one nullable word and every other option keeps its tag" {
+    const node = recordType(0);
+    const maybe_node = recordType(1);
+    const maybe_maybe = recordType(2);
+    const pair = recordType(3);
+    const maybe_pair = recordType(4);
+    const either = recordType(5);
+    const node_fields = [_]typed.Field{ .{ .name = "left", .declaration = span, .ty = maybe_node }, .{ .name = "right", .declaration = span, .ty = maybe_node } };
+    const pair_fields = [_]typed.Field{.{ .name = "x", .declaration = span, .ty = .i64 }};
+    const option_node = [_]typed.Variant{ .{ .name = "none", .declaration = span, .payload = null }, .{ .name = "some", .declaration = span, .payload = node } };
+    const option_option = [_]typed.Variant{ .{ .name = "some", .declaration = span, .payload = maybe_node }, .{ .name = "none", .declaration = span, .payload = null } };
+    const option_pair = [_]typed.Variant{ .{ .name = "none", .declaration = span, .payload = null }, .{ .name = "some", .declaration = span, .payload = pair } };
+    const other_names = [_]typed.Variant{ .{ .name = "empty", .declaration = span, .payload = null }, .{ .name = "full", .declaration = span, .payload = node } };
+    const records = [_]typed.Record{
+        .{ .id = node, .name = "Node", .declaration = span, .fields = &node_fields, .managed = true },
+        .{ .id = maybe_node, .name = "Option<Node>", .declaration = span, .fields = &.{}, .shape = .{ .variants = .{ .is_union = true, .cases = &option_node } } },
+        .{ .id = maybe_maybe, .name = "Option<Option<Node>>", .declaration = span, .fields = &.{}, .shape = .{ .variants = .{ .is_union = true, .cases = &option_option } } },
+        .{ .id = pair, .name = "Pair", .declaration = span, .fields = &pair_fields },
+        .{ .id = maybe_pair, .name = "Option<Pair>", .declaration = span, .fields = &.{}, .shape = .{ .variants = .{ .is_union = true, .cases = &option_pair } } },
+        .{ .id = either, .name = "Either", .declaration = span, .fields = &.{}, .shape = .{ .variants = .{ .is_union = true, .cases = &other_names } } },
+    };
+    var catalog = try Catalog.initRecords(std.testing.allocator, &records);
+    defer catalog.deinit();
+    const niche = try catalog.layout(maybe_node);
+    try std.testing.expectEqual(Kind.niche, niche.kind);
+    try std.testing.expectEqual(@as(u64, 8), niche.size);
+    try std.testing.expectEqual(@as(u8, 8), niche.alignment);
+    try std.testing.expect(niche.trace);
+    try std.testing.expectEqual(@as(usize, 1), niche.fields.len);
+    try std.testing.expectEqual(@as(u64, 0), niche.fields[0].offset);
+    try std.testing.expectEqual(@as(?usize, 1), niche.fields[0].tag);
+    // A binary_trees node: two optional children are two words, not two tagged pairs.
+    const body = try catalog.heapLayout(node);
+    defer catalog.releaseLayout(body);
+    try std.testing.expectEqual(@as(u64, 16), body.size);
+    try std.testing.expectEqual(@as(u64, 8), body.fields[1].offset);
+    // An optional optional keeps its tag: its inner `None` owns the null word.
+    const nested = try catalog.layout(maybe_maybe);
+    try std.testing.expectEqual(Kind.variant, nested.kind);
+    try std.testing.expectEqual(@as(u64, 16), nested.size);
+    try std.testing.expectEqual(@as(u64, 8), nested.payload_offset);
+    const plain = try catalog.layout(maybe_pair);
+    try std.testing.expectEqual(Kind.variant, plain.kind);
+    try std.testing.expectEqual(@as(u64, 16), plain.size);
+    const named = try catalog.layout(either);
+    try std.testing.expectEqual(Kind.variant, named.kind);
+    try std.testing.expectEqual(@as(u64, 16), named.size);
 }
 
 test "catalog reorder preserves generic layout hashes" {

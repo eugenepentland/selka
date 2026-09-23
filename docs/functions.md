@@ -42,6 +42,36 @@ through the same rules — and generic calls infer their type arguments from the
 values they are given unless the [explicit
 list](#explicit-call-type-arguments) is written out.
 
+### Keyword-only parameters
+
+A bare `*` ends the positional group: every parameter after it binds by name
+only. Keyword-only parameters may be passed in any order, and required and
+defaulted ones may sit in either order, because the required-before-defaulted
+rule holds inside the positional group alone. A call that passes a keyword-only
+parameter positionally is `E_KEYWORD_ONLY`, and the rejection names the
+parameter and prints the whole call as it must be written.
+
+```mylang
+# doc: expect 1204
+def issue(host: int, *, code: int, file: int = 0, position: int = 4) -> int:
+    return host * 1000 + code * 100 + file * 10 + position
+
+
+def main() -> int:
+    written = issue(1, position=4, code=2)
+    defaulted = issue(1, code=2)
+    if written != defaulted:
+        return 0
+    return written
+```
+
+So `io.issue(host, 13, 0, span.start)` reports
+`` `code` is keyword-only; write `io.issue(host, code=13, file=0, position=span.start)` ``.
+The rendered interface signature carries the same `*`, so
+[`mylang list-interfaces`](tooling/navigation.md) prints
+`def(host:int,*,code:int,file:int=0,position:int=4)->i64`, and a reader of the
+contract knows which parameters a call may pass positionally.
+
 ## Unit procedures
 
 A function that produces no value is a procedure. Write `-> None` or omit the
@@ -62,20 +92,20 @@ a failed result whose success payload is unit.
 
 ```mylang
 # doc: expect 42
-def bump(values: list[int]):
+def bump(values: mut list[int]):
     values.append(0)
 
-def add(values: list[int], value: int) -> None:
+def add(values: mut list[int], value: int) -> None:
     if value < 0:
         return
     values.append(value)
 
 def main() -> int:
     values: list[int] = []
-    add(values, 40)
-    add(values, -1)
-    add(values, 2)
-    bump(values)
+    add(mut values, 40)
+    add(mut values, -1)
+    add(mut values, 2)
+    bump(mut values)
     total = 0
     for value in values:
         total += value
@@ -83,7 +113,8 @@ def main() -> int:
 ```
 
 `add` returns early for the negative value, `bump` falls off the end, and neither
-needs a return annotation to say so.
+needs a return annotation to say so. Both write through `values`, so both declare
+`values: mut list[int]` and every caller marks the argument.
 
 ## Entry point signatures
 
@@ -210,25 +241,46 @@ def main(out: Stream) -> int:
 it been written `noio`, or with an empty `effects()`, the declaration would be
 rejected before the program ran.
 
+A function declared without an effect clause takes the ceiling of whatever slot
+it fills — a direct call's parameter, a generic call's parameter such as
+`sort.sort_by_key`'s key, or a sort key — so it needs no `effects()` of its own to
+be passed where one is expected. Its body is then held to that ceiling: an
+unannotated function whose body can print, touch the filesystem or reach any other
+effect the slot forbids — including allocation for an `effects()` slot — is rejected
+with `E_EFFECT_BOUND` at the place the value is passed. A sort key may allocate: its
+slot is `def(T) -> K effects(managed_allocation)`.
+
+```mylang
+# doc: expect 3
+import sort
+
+def negate(value: int) -> int:
+    return 0 - value
+
+def main() -> int:
+    ordered = sort.sort_by_key([1, 3, 2], negate)
+    return ordered[0]
+```
+
 ## Mutating callbacks
 
-A callable signature can also carry an input footprint. `mutates(values)` names
-the callable's own binder, and a call through the value substitutes the actual
-argument origin, so the caller still needs permission for the mutation:
+A callable signature declares the `mut` parameters it writes just as a declared
+function does, and a call through the value substitutes the actual argument
+origin, so the caller still needs permission for the mutation:
 
 ```mylang
 # doc: expect 7
-def apply(values: list[int], f: def(values: list[int]) -> None effects(mutation) mutates(values)) -> None effects(mutation) mutates(values):
-    f(values)
+def apply(values: mut list[int], f: def(values: mut list[int]) -> None effects(mutation)) -> None effects(mutation):
+    f(mut values)
 
 
-def set_first(values: list[int]) -> None effects(mutation) mutates(values):
+def set_first(values: mut list[int]) -> None effects(mutation):
     values[0] = 7
 
 
 def main(out: Stream) -> int effects(managed_allocation, output):
     values = [1]
-    apply(values, set_first)
+    apply(mut values, set_first)
     out.print(values[0])
     return 0
 ```

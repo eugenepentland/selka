@@ -128,6 +128,18 @@ fn noteWarnings(allocator: std.mem.Allocator, function: typed.Function) error{Ou
     var index: usize = 0;
     for (function.scope.locals) |local| {
         if (local.usage.temporary or local.usage.reads != 0) continue;
+        // A capability parameter the body never reads is an error, not a
+        // warning: the signature claims an effect the body cannot have.
+        if (local.origin == .parameter and local.ty.capabilityIndex() != null) {
+            notes[index] = .{
+                .code = @import("effects.zig").unused_capability_code,
+                .severity = .err,
+                .span = local.declaration,
+                .message = try std.fmt.allocPrint(allocator, "`{s}` is never used, so this signature claims an effect the body cannot have; remove the parameter or use it", .{local.name}),
+            };
+            index += 1;
+            continue;
+        }
         notes[index] = .{
             .code = "W_UNUSED_BINDING",
             .severity = .warning,

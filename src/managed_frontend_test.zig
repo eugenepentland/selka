@@ -57,7 +57,7 @@ test "managed generic list creation mutation and copy identity preserve shared a
         \\    return items
         \\
         \\
-        \\def add[T](items: list[T], value: T):
+        \\def add[T](items: mut list[T], value: T):
         \\    items.append(value)
         \\
         \\
@@ -68,7 +68,7 @@ test "managed generic list creation mutation and copy identity preserve shared a
         \\def main() -> i64:
         \\    values = make[i64]()
         \\    alias = identity(values)
-        \\    add[i64](alias, 42)
+        \\    add[i64](mut alias, 42)
         \\    return values[0]
     );
 }

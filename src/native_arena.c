@@ -12,11 +12,13 @@ enum { MYL_ARENA_CACHE_CHUNKS = 4 };
 #define MYL_ARENA_CACHE_BYTES (((size_t)2) << 20)
 #define MYL_ARENA_CACHE_CHUNK_BYTES (((size_t)1) << 20)
 
-typedef struct {
-    const myl_native_type *element;
-    size_t count, offset;
-} Allocation;
-
+/* A chunk's allocations are laid out one after another from `data`, each an
+ * aligned two-word `myl_native_object` header immediately followed by its
+ * payload, exactly as a tracing-heap slot is. The header's mark word carries
+ * MYL_NATIVE_OBJECT_ARENA, the owning depth and the element count, so the
+ * store barrier, the collector and escape copies read an arena payload's
+ * region from the word before it rather than searching for its chunk. `used`
+ * ends the last payload and `count` counts the allocations. */
 struct myl_native_arena_chunk {
     struct myl_native_arena_chunk *next;
     size_t bytes, used, count;
@@ -25,49 +27,25 @@ struct myl_native_arena_chunk {
     unsigned char data[];
 };
 
-/* An integer range comparison also works when the pointer belongs to a GC
- * object or a static literal; relational comparisons on unrelated C pointers do
- * not. Interior storage is recognized as region-owned but never as an object. */
-static myl_native_arena_chunk *containing(const myl_native_heap *heap, const void *payload) {
-    uintptr_t address = (uintptr_t)payload;
-    for (myl_native_arena_chunk *chunk = heap->arena_chunks; chunk; chunk = chunk->next) {
-        uintptr_t start = (uintptr_t)chunk->data;
-        if (address >= start && address - start < chunk->used) return chunk;
-    }
-    return NULL;
+/* Bytes one allocation of `count` elements occupies after its header; a
+ * zero-byte request still takes one byte so every payload is distinct. */
+static size_t payload_bytes(const myl_native_type *element, size_t count) {
+    size_t bytes = element->size * count;
+    return bytes ? bytes : 1;
 }
 
-unsigned myl_native_arena_region(const myl_native_heap *heap, const void *payload) {
-    myl_native_arena_chunk *chunk = containing(heap, payload);
-    return chunk ? chunk->region : 0;
+static size_t capacity(const myl_native_arena_chunk *chunk) {
+    return chunk->bytes - (size_t)(chunk->data - (const unsigned char *)chunk);
 }
 
-static Allocation *records(const myl_native_arena_chunk *chunk) {
-    return (Allocation *)((unsigned char *)chunk + chunk->bytes) - chunk->count;
-}
-
-const myl_native_type *myl_native_arena_element(const myl_native_heap *heap, const void *payload) {
-    myl_native_arena_chunk *chunk = containing(heap, payload);
-    if (!chunk) return NULL;
-    size_t offset = (size_t)((const unsigned char *)payload - chunk->data);
-    const Allocation *entries = records(chunk);
-    size_t low = 0, high = chunk->count;
-    /* Records are reverse allocation order, hence descending payload offsets. */
-    while (low < high) {
-        size_t middle = low + (high - low) / 2;
-        if (entries[middle].offset > offset) low = middle + 1;
-        else high = middle;
-    }
-    return low < chunk->count && entries[low].offset == offset ? entries[low].element : NULL;
-}
-
+/* Aligned offset of the next header and whether it and `payload` fit. */
 static int fits(const myl_native_arena_chunk *chunk, size_t payload, size_t *offset) {
     const size_t mask = alignof(max_align_t) - 1;
     if (chunk->used > SIZE_MAX - mask) return 0;
     *offset = (chunk->used + mask) & ~mask;
-    size_t end = (size_t)((unsigned char *)records(chunk) - chunk->data);
-    return *offset <= end && sizeof(Allocation) <= end - *offset &&
-        payload <= end - *offset - sizeof(Allocation);
+    size_t end = capacity(chunk);
+    return *offset <= end && sizeof(myl_native_object) <= end - *offset &&
+        payload <= end - *offset - sizeof(myl_native_object);
 }
 
 /* Take a retained chunk back into service. A chunk qualifies only when it holds
@@ -75,9 +53,9 @@ static int fits(const myl_native_arena_chunk *chunk, size_t payload, size_t *off
  * sizing policy would have reserved from the host, so reuse never charges the
  * budget more than a fresh reservation would have; the largest qualifying chunk
  * wins because its spare capacity is free. Only the bytes the previous scope
- * wrote can be stale — its payload prefix, which `used` bounds, and its side
- * records at the top — so zeroing exactly those restores a chunk that is
- * byte-identical to a freshly zero-filled one, which precise tracing needs. */
+ * wrote can be stale — its headers and payloads, which `used` bounds — so
+ * zeroing exactly those restores a chunk that is byte-identical to a freshly
+ * zero-filled one, which precise tracing needs. */
 static myl_native_arena_chunk *uncache(myl_native_heap *heap, size_t minimum, size_t ceiling) {
     myl_native_arena_chunk **link = &heap->arena_cache, **best = NULL;
     for (; *link; link = &(*link)->next)
@@ -89,7 +67,6 @@ static myl_native_arena_chunk *uncache(myl_native_heap *heap, size_t minimum, si
     heap->arena.cached--;
     heap->arena.cached_bytes -= chunk->bytes;
     memset(chunk->data, 0, chunk->used);
-    memset(records(chunk), 0, chunk->count * sizeof(Allocation));
     chunk->used = 0;
     chunk->count = 0;
     return chunk;
@@ -119,9 +96,23 @@ void myl_native_arena_reclaim(myl_native_heap *heap) {
     heap->arena.cached = 0;
     heap->arena.cached_bytes = 0;
 }
+/* Make room in the per-depth chunk lists for depth `region`. Zero when the
+ * host refuses the growth. */
+static int depth_room(myl_native_heap *heap, unsigned region) {
+    if (region < heap->arena_depth_capacity) return 1;
+    size_t capacity = heap->arena_depth_capacity ? heap->arena_depth_capacity : 8;
+    while (capacity <= region) capacity *= 2;
+    myl_native_arena_chunk **grown = realloc(heap->arena_chunks, capacity * sizeof *grown);
+    if (!grown) return 0;
+    memset(grown + heap->arena_depth_capacity, 0, (capacity - heap->arena_depth_capacity) * sizeof *grown);
+    heap->arena_chunks = grown;
+    heap->arena_depth_capacity = capacity;
+    return 1;
+}
 static myl_native_arena_chunk *new_chunk(myl_native_heap *heap, size_t payload, unsigned region, size_t previous) {
     const size_t mask = alignof(max_align_t) - 1;
-    size_t overhead = sizeof(myl_native_arena_chunk) + sizeof(Allocation);
+    if (!depth_room(heap, region)) return NULL;
+    size_t overhead = sizeof(myl_native_arena_chunk) + sizeof(myl_native_object);
     if (payload > SIZE_MAX - overhead - mask) return NULL;
     size_t minimum = (overhead + payload + mask) & ~mask;
     /* One oversized allocation must not make every later small reservation
@@ -147,9 +138,10 @@ static myl_native_arena_chunk *new_chunk(myl_native_heap *heap, size_t payload, 
         chunk->bytes = bytes;
         heap->arena.chunks++;
     }
-    chunk->next = heap->arena_chunks;
+    chunk->next = heap->arena_chunks[region];
     chunk->region = region;
-    heap->arena_chunks = chunk;
+    heap->arena_chunks[region] = chunk;
+    if (heap->arena_depths <= region) heap->arena_depths = (size_t)region + 1;
     heap->bytes += chunk->bytes;
     heap->arena.chunks_live++;
     heap->arena.reserved_bytes += chunk->bytes;
@@ -158,50 +150,121 @@ static myl_native_arena_chunk *new_chunk(myl_native_heap *heap, size_t payload, 
     return chunk;
 }
 
+void myl_native_arena_sync(myl_native_heap *heap) {
+    myl_native_arena_chunk *chunk = heap->arena_window_chunk;
+    if (!chunk) return;
+    chunk->used = (size_t)(heap->arena_window.cursor - chunk->data);
+    heap->arena_window = (myl_native_window){NULL, NULL};
+    heap->arena_window_chunk = NULL;
+}
+/* Open generated code's arena window on the free tail of `chunk`, the chunk
+ * the innermost arena allocates from, when bumping through it cannot bypass a
+ * rule the runtime path enforces: never while an escape copy lowers the
+ * depth, and never under `--gc-stress`, which collects at every allocation. */
+static void open_window(myl_native_heap *heap, myl_native_arena_chunk *chunk, unsigned region) {
+    const size_t mask = alignof(max_align_t) - 1;
+    if (region != heap->region_depth || heap->suspended || heap->stress) return;
+    size_t start = (chunk->used + mask) & ~mask;
+    if (start >= capacity(chunk)) return;
+    heap->arena_window = (myl_native_window){chunk->data + start, chunk->data + capacity(chunk)};
+    heap->arena_mark = MYL_NATIVE_OBJECT_ARENA | ((uintptr_t)region << MYL_NATIVE_ARENA_REGION_SHIFT) |
+        ((uintptr_t)1 << MYL_NATIVE_OBJECT_COUNT_SHIFT);
+    heap->arena_window_chunk = chunk;
+}
+
 void *myl_native_arena_alloc(myl_native_heap *heap, const myl_native_type *element, size_t count, unsigned region) {
-    size_t payload = element->size * count;
-    if (!payload) payload = 1;
+    /* The header's mark word holds both, so a value that cannot fit is refused
+     * rather than truncated. */
+    if (count > MYL_NATIVE_ARENA_COUNT_MAX || region > MYL_NATIVE_ARENA_REGION_MAX) return NULL;
+    size_t payload = payload_bytes(element, count);
     if (heap->stress && !heap->suspended) myl_native_heap_collect(heap);
-    myl_native_arena_chunk *chunk = heap->arena_chunks;
-    while (chunk && chunk->region != region) chunk = chunk->next;
+    myl_native_arena_chunk *chunk = heap->arena_window_chunk;
+    unsigned char *start = heap->arena_window.cursor;
+    size_t room = chunk ? (size_t)(heap->arena_window.limit - start) : 0;
+    if (chunk && chunk->region == region && room >= sizeof(myl_native_object) && payload <= room - sizeof(myl_native_object)) {
+        /* The open window is this depth's current chunk: bump it exactly as
+         * generated code does, keeping its cursor 16-aligned. */
+        const size_t mask = alignof(max_align_t) - 1;
+        myl_native_object *header = (myl_native_object *)start;
+        header->mark = MYL_NATIVE_OBJECT_ARENA | ((uintptr_t)region << MYL_NATIVE_ARENA_REGION_SHIFT) |
+            ((uintptr_t)count << MYL_NATIVE_OBJECT_COUNT_SHIFT);
+        header->element = element;
+        chunk->count++;
+        size_t end = (size_t)(start - chunk->data) + sizeof(myl_native_object) + payload;
+        size_t next = (end + mask) & ~mask;
+        heap->arena_window.cursor = next < capacity(chunk) ? chunk->data + next : heap->arena_window.limit;
+        heap->objects_live++;
+        heap->allocations++;
+        heap->arena.allocations++;
+        return header + 1;
+    }
+    /* The window's free tail is exactly where this allocation may land. */
+    myl_native_arena_sync(heap);
+    /* The depth's current chunk is the head of its own list: one load,
+     * however many chunks deeper or shallower scopes hold. */
+    chunk = region < heap->arena_depths ? heap->arena_chunks[region] : NULL;
     size_t offset = 0;
     if (!chunk || !fits(chunk, payload, &offset)) {
         chunk = new_chunk(heap, payload, region, chunk ? chunk->bytes : 0);
         if (!chunk) return NULL;
         offset = 0;
     }
+    myl_native_object *header = (myl_native_object *)(chunk->data + offset);
+    header->mark = MYL_NATIVE_OBJECT_ARENA | ((uintptr_t)region << MYL_NATIVE_ARENA_REGION_SHIFT) |
+        ((uintptr_t)count << MYL_NATIVE_OBJECT_COUNT_SHIFT);
+    header->element = element;
     chunk->count++;
-    *records(chunk) = (Allocation){.element = element, .count = count, .offset = offset};
-    chunk->used = offset + payload;
+    chunk->used = offset + sizeof(myl_native_object) + payload;
     heap->objects_live++;
     heap->allocations++;
     heap->arena.allocations++;
-    return chunk->data + offset;
+    open_window(heap, chunk, region);
+    return header + 1;
 }
 
+/* Walk every allocation of every chunk through its header. The used prefix
+ * is a gapless sequence of 16-aligned headers and payloads — the runtime's and
+ * the ones generated code bumped out of the window alike — so the walk steps
+ * by each header's own size until it reaches `used`. */
 void myl_native_arena_trace(myl_native_heap *heap, void (*trace)(myl_native_heap *, const myl_native_type *, const void *)) {
-    for (myl_native_arena_chunk *chunk = heap->arena_chunks; chunk; chunk = chunk->next) {
-        const Allocation *entries = records(chunk);
-        for (size_t index = 0; index < chunk->count; ++index) {
-            const Allocation *entry = &entries[index];
-            if (entry->element->kind == MYL_NATIVE_PLAIN || entry->element->trace_mode == MYL_NATIVE_TRACE_NONE) continue;
-            for (size_t item = 0; item < entry->count; ++item)
-                trace(heap, entry->element, chunk->data + entry->offset + item * entry->element->size);
+    const size_t mask = alignof(max_align_t) - 1;
+    myl_native_arena_sync(heap);
+    for (size_t depth = 0; depth < heap->arena_depths; ++depth)
+    for (myl_native_arena_chunk *chunk = heap->arena_chunks[depth]; chunk; chunk = chunk->next) {
+        size_t offset = 0;
+        while (offset < chunk->used) {
+            const myl_native_object *header = (const myl_native_object *)(chunk->data + offset);
+            const myl_native_type *element = header->element;
+            size_t count = (size_t)(header->mark >> MYL_NATIVE_OBJECT_COUNT_SHIFT) & MYL_NATIVE_ARENA_COUNT_MAX;
+            const unsigned char *payload = (const unsigned char *)(header + 1);
+            offset = (offset + sizeof(myl_native_object) + payload_bytes(element, count) + mask) & ~mask;
+            if (element->kind == MYL_NATIVE_PLAIN || element->trace_mode == MYL_NATIVE_TRACE_NONE) continue;
+            for (size_t item = 0; item < count; ++item)
+                trace(heap, element, payload + item * element->size);
         }
     }
 }
 
 void myl_native_arena_release(myl_native_heap *heap, unsigned region) {
-    myl_native_arena_chunk **link = &heap->arena_chunks;
-    while (*link) {
-        myl_native_arena_chunk *chunk = *link;
-        if (chunk->region < region) { link = &chunk->next; continue; }
-        *link = chunk->next;
-        heap->bytes -= chunk->bytes;
-        heap->objects_live -= chunk->count;
-        heap->arena.released += chunk->count;
-        heap->arena.reserved_bytes -= chunk->bytes;
-        heap->arena.chunks_live--;
-        if (!cache(heap, chunk)) free(chunk);
+    /* A reused chunk is zeroed up to `used`, which must cover what generated
+     * code bumped out of the window. */
+    myl_native_arena_sync(heap);
+    /* Only the lists of `region` and deeper are visited, deepest first, so
+     * closing a scope costs the chunks it frees, not every open chunk. */
+    while (heap->arena_depths > region) {
+        size_t depth = --heap->arena_depths;
+        myl_native_arena_chunk *chunk = heap->arena_chunks[depth];
+        heap->arena_chunks[depth] = NULL;
+        while (chunk) {
+            myl_native_arena_chunk *next = chunk->next;
+            heap->bytes -= chunk->bytes;
+            heap->objects_live -= chunk->count;
+            heap->arena.released += chunk->count;
+            heap->arena.reserved_bytes -= chunk->bytes;
+            heap->arena.chunks_live--;
+            if (!cache(heap, chunk)) free(chunk);
+            chunk = next;
+        }
     }
+    while (heap->arena_depths && !heap->arena_chunks[heap->arena_depths - 1]) heap->arena_depths--;
 }

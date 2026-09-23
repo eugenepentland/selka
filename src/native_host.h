@@ -19,12 +19,21 @@ static inline int mylang_host_charge(MylangHostCall *call, uint64_t work) {
     if (call->exhausted || work > call->work_remaining) { call->exhausted=1;return 0; }
     call->work_remaining-=work;return 1;
 }
-/* Packed calls are an opt-in fast path for integers and padding-free fixed u8
-   arrays. Every value points into runtime-owned scratch; callbacks may neither
-   retain these copies nor reenter the generated program. Payloads have byte
-   alignment only: use memcpy, never scalar pointer casts, to access integers.
-   The initially zeroed output must keep its pointer and size; on success set
-   output_written to exactly output.size. Return NULL or a static error name. */
+/* Packed calls are an opt-in fast path for integers, padding-free fixed u8
+   arrays and whole immutable `bytes` payloads. Every value points into
+   runtime-owned scratch; callbacks may neither retain these copies nor reenter
+   the generated program. Payloads have byte alignment only: use memcpy, never
+   scalar pointer casts, to access integers.
+   A fixed-shape output is runtime-owned scratch that starts zeroed and must
+   keep its pointer and size; on success set output_written to exactly
+   output.size. A `bytes` result is the one exception: the runtime hands over an
+   empty output and the callback publishes its own read-only octets by setting
+   output.bytes, output.size and an equal output_written. Those octets are
+   copied into a fresh guest byte string before the runtime returns, so they
+   need only outlive the callback, and the runtime never writes through them.
+   A `bytes` argument arrives as a runtime-owned copy of the guest's octets
+   whose size is that byte string's exact length. Return NULL or a static error
+   name. */
 typedef struct { void *bytes; size_t size; } MylangHostPackedValue;
 typedef struct {
     const MylangHostPackedValue *arguments;
@@ -50,7 +59,8 @@ typedef struct {
        callback must not retain call buffers or reenter the generated program. */
     const char *(*invoke)(void *, MylangHostCall *);
     /* Optional packed-copy callback. The runtime uses it only after validating
-       an all-scalar/fixed-u8-array schema and equivalent node/depth quotas. */
+       an all-scalar/fixed-u8-array/`bytes` schema and equivalent node/depth
+       quotas; a declaration naming `bytes` has no node-bridge fallback. */
     const char *(*invoke_packed)(void *, MylangHostPackedCall *);
 } MylangHostBinding;
 typedef struct {
@@ -59,5 +69,8 @@ typedef struct {
     /* Zero selects 10000 calls, 1000000 work, 65536 nodes, 64 levels. */
     uint64_t max_calls, max_work;
     size_t max_values, max_depth;
+    /* Ceiling on one copied `bytes` argument or published `bytes` result, in
+       octets. Zero selects 1 MiB; above 64 MiB the registry is rejected. */
+    size_t max_payload;
 } MylangHostRegistry;
 #endif

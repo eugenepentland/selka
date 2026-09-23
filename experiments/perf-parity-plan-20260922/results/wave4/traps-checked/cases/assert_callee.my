@@ -1,0 +1,14 @@
+def check(value: int) -> int:
+    assert value < 3, "value must stay below three"
+    return value
+
+
+def loop(n: int) -> int:
+    total = 0
+    for i in range(n):
+        total = total + check(i)
+    return total
+
+
+def main() -> int:
+    return loop(5)

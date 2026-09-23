@@ -2,7 +2,7 @@ record Empty:
     pass
 
 
-def mark(log: list[int], value: int) -> int:
+def mark(log: mut list[int], value: int) -> int:
     log[0] = log[0] * 10 + value
     return value
 
@@ -14,5 +14,5 @@ def combine(a: int, b: int = 2) -> int:
 def main() -> int:
     _ = Empty()
     log: list[int] = [0]
-    answer = combine(b=mark(log, 2), a=mark(log, 4))
+    answer = combine(b=mark(mut log, 2), a=mark(mut log, 4))
     return answer + log[0] * 100

@@ -213,7 +213,7 @@ test "navigation publishes declared mutation footprints and return origins" {
         \\module main
         \\
         \\
-        \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+        \\def touch(values: mut list[int]) -> None effects(mutation):
         \\    values[0] = 1
         \\
         \\
@@ -227,7 +227,7 @@ test "navigation publishes declared mutation footprints and return origins" {
         \\
         \\def main() -> int:
         \\    values = [1]
-        \\    touch(values)
+        \\    touch(mut values)
         \\    picked = pick(values)
         \\    picked[0] = 2
         \\    return total(picked)

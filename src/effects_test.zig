@@ -36,22 +36,11 @@ fn accept(source: []const u8) !void {
     try c.check();
     try c.emit();
 }
-/// Check and lower one source with the opt-in `&` marker flag on, returning the
-/// number of checked functions so callers still carry an explicit assertion.
-fn acceptMarkers(source: []const u8) !usize {
-    var c = try language.Compilation.init(t.allocator, fixture_path, source);
-    defer c.deinit();
-    c.src.mutation_markers = true;
-    try c.check();
-    try c.emit();
-    return c.program.?.functions.len;
-}
-/// Check one source with the marker flag on and return its first error. The
-/// message is copied out because the compilation arena is released here.
+/// Check one source and return its first error. The message is copied out
+/// because the compilation arena is released with the compilation.
 fn markerError(source: []const u8) !struct { code: []const u8, message: []u8 } {
     var c = try language.Compilation.init(t.allocator, fixture_path, source);
     defer c.deinit();
-    c.src.mutation_markers = true;
     try t.expectError(error.SourceError, c.check());
     const diag = firstError(c.diagnostics.items) orelse return error.TestUnexpectedResult;
     return .{ .code = diag.code, .message = try t.allocator.dupe(u8, diag.message) };
@@ -89,7 +78,7 @@ test "effect bounds reject unknown and duplicate names and noio permits allocati
     try reject("def main() -> i64 effects(clock, clock):\n    return 0\n", "E_DUPLICATE_EFFECT", "more than once");
     try result("def main() -> int noio:\n    items: list[int] = []\n    items.append(9)\n    return items[0]\n", 9);
     try result(
-        \\def main() -> i64 effects(filesystem, network, clock, random, environment):
+        \\def main() -> i64:
         \\    x = 1
         \\    x += 2
         \\    return x
@@ -154,11 +143,11 @@ test "effect graph inference witnesses emission and rendering release every fail
 
 test "duplicate discovery retains normalized declared effect contracts" {
     var c = try language.Compilation.init(t.allocator, fixture_path,
-        \\def a(n: i64) -> i64 effects(clock, random):
+        \\def a(n: i64) -> i64:
         \\    return n + 1
         \\
         \\
-        \\def b(x: i64) -> i64 effects(random, clock):
+        \\def b(x: i64) -> i64:
         \\    return x + 1
         \\
         \\
@@ -205,24 +194,19 @@ test "declared ceilings reject hidden effects through generic and callback calls
     // Invoking a callback uses the destination contract's ceiling, so a caller
     // that promises less than the callback's declared effects rejects.
     try reject(
-        \\def tick(x: i64) -> i64 effects(clock):
-        \\    _ = x
-        \\    return 0
-        \\
-        \\
         \\def call(f: def(i64) -> i64 effects(clock)) -> i64 effects():
         \\    return f(1)
         \\
         \\
         \\def main() -> i64:
-        \\    return call(tick)
+        \\    return 0
     , "E_EFFECT_BOUND", "exceeds declared bound");
 }
 
 // spec: MUTATION-METADATA-1
 test "M1 direct input writes carry mutation facts while reads do not" {
     var c = try language.Compilation.init(t.allocator, fixture_path,
-        \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+        \\def touch(values: mut list[int]) -> None:
         \\    values[0] = 1
         \\
         \\
@@ -230,9 +214,9 @@ test "M1 direct input writes carry mutation facts while reads do not" {
         \\    return values[0]
         \\
         \\
-        \\def main() -> int effects(managed_allocation):
+        \\def main() -> int:
         \\    values = [7]
-        \\    touch(values)
+        \\    touch(mut values)
         \\    return peek(values)
     );
     defer c.deinit();
@@ -255,7 +239,7 @@ test "M1 direct input writes carry mutation facts while reads do not" {
 
 test "M1 mutates clause parses normalizes and publishes checked metadata" {
     var c = try language.Compilation.init(t.allocator, fixture_path,
-        \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+        \\def touch(values: mut list[int]) -> None effects(mutation):
         \\    values[0] = 1
         \\
         \\
@@ -277,177 +261,201 @@ test "M1 mutates clause parses normalizes and publishes checked metadata" {
     try t.expect(found);
 }
 
-test "M1 mutates errors are declaration-site diagnostics" {
+// spec: MUT-PARAM-5
+test "M1 the mutates clause is a removed spelling naming mut" {
     try reject(
-        \\def touch(values: list[int]) -> None effects(mutation) mutates(missing):
+        \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
         \\    values.append(1)
         \\
         \\
         \\def main() -> int effects():
         \\    return 0
-    , "E_UNKNOWN_MUTATES", "binder");
+    , "E_REMOVED_SPELLING", "mark each written parameter `name: mut T`");
+}
+
+// spec-case: MUT-PARAM-5
+test "M1 the ampersand argument marker is a removed spelling naming mut" {
     try reject(
-        \\def touch(values: list[int]) -> None effects() mutates(values):
-        \\    _ = values
+        \\def touch(values: mut list[int]) -> None effects(mutation):
+        \\    values.append(1)
         \\
         \\
         \\def main() -> int effects():
+        \\    values = [1]
+        \\    touch(&values)
         \\    return 0
-    , "E_MUTATES_EFFECT", "mutation effect");
+    , "E_REMOVED_SPELLING", "write `mut value`");
 }
 
 const marker_direct_valid =
-    \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+    \\def touch(values: mut list[int]) -> None effects(mutation):
     \\    values[0] = 1
     \\
     \\
-    \\def main() -> int effects(managed_allocation):
+    \\def main() -> int:
     \\    values = [7]
-    \\    touch(&values)
-    \\    return 0
+    \\    touch(mut values)
+    \\    return values[0]
 ;
 
 const marker_keyword_valid =
-    \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
-    \\    values[0] = 1
+    \\def touch(values: mut list[int], item: int) -> None effects(mutation):
+    \\    values[0] = item
     \\
     \\
-    \\def main() -> int effects(managed_allocation):
+    \\def main() -> int:
     \\    values = [7]
-    \\    touch(values=&values)
+    \\    touch(item=1, values=mut values)
     \\    return 0
 ;
 
 const marker_missing =
-    \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+    \\def touch(values: list[int]) -> None:
     \\    values[0] = 1
     \\
     \\
-    \\def main() -> int effects(managed_allocation):
+    \\def main() -> int:
     \\    values = [7]
     \\    touch(values)
     \\    return 0
 ;
 
-const marker_extra =
-    \\def combine(left: list[int], right: list[int]) -> None effects(mutation) mutates(left):
-    \\    left[0] = right[0]
-    \\
-    \\
-    \\def main() -> int effects(managed_allocation):
-    \\    left = [1]
-    \\    right = [2]
-    \\    combine(&left, &right)
-    \\    return 0
-;
-
-const marker_non_lvalue =
-    \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
-    \\    values[0] = 1
-    \\
-    \\
-    \\def main() -> int effects(managed_allocation):
-    \\    touch(&[1, 2, 3])
-    \\    return 0
-;
-
-const marker_indirect_valid =
-    \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
-    \\    values[0] = 1
-    \\
-    \\
-    \\def apply(f: def(values: list[int]) -> None effects(mutation) mutates(values), values: list[int]) -> None effects(mutation) mutates(values):
-    \\    f(&values)
+const marker_multi_missing =
+    \\def touch(values: mut list[int], item: int) -> None effects(mutation):
+    \\    values[0] = item
     \\
     \\
     \\def main() -> int effects(managed_allocation):
     \\    values = [7]
-    \\    apply(touch, &values)
+    \\    touch(values, 1)
+    \\    return 0
+;
+
+const marker_extra =
+    \\def peek(values: list[int]) -> int effects():
+    \\    return values[0]
+    \\
+    \\
+    \\def main() -> int effects(managed_allocation):
+    \\    values = [7]
+    \\    return peek(mut values)
+;
+
+const marker_non_lvalue =
+    \\def touch(values: mut list[int]) -> None effects(mutation, managed_allocation):
+    \\    values[0] = 1
+    \\
+    \\
+    \\def main() -> int effects(managed_allocation):
+    \\    touch(mut [1, 2, 3])
+    \\    return 0
+;
+
+const marker_unused =
+    \\def touch(values: mut list[int]) -> None effects():
+    \\    return
+    \\
+    \\
+    \\def main() -> int:
+    \\    values = [7]
+    \\    touch(mut values)
+    \\    return 0
+;
+
+const marker_indirect_valid =
+    \\def touch(values: mut list[int]) -> None effects(mutation):
+    \\    values[0] = 1
+    \\
+    \\
+    \\def apply(f: def(values: mut list[int]) -> None effects(mutation), values: mut list[int]) -> None effects(mutation):
+    \\    f(mut values)
+    \\
+    \\
+    \\def main() -> int:
+    \\    values = [7]
+    \\    apply(touch, mut values)
     \\    return 0
 ;
 
 const marker_indirect_missing =
-    \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+    \\def touch(values: mut list[int]) -> None effects(mutation):
     \\    values[0] = 1
     \\
     \\
-    \\def apply(f: def(values: list[int]) -> None effects(mutation) mutates(values), values: list[int]) -> None effects(mutation) mutates(values):
+    \\def apply(f: def(values: mut list[int]) -> None effects(mutation), values: mut list[int]) -> None effects(mutation):
     \\    f(values)
     \\
     \\
     \\def main() -> int effects(managed_allocation):
     \\    values = [7]
-    \\    apply(touch, &values)
+    \\    apply(touch, mut values)
     \\    return 0
 ;
 
-const marker_indirect_extra =
-    \\def peek(values: list[int]) -> int effects():
-    \\    return values[0]
-    \\
-    \\
-    \\def apply(f: def(values: list[int]) -> int effects(), values: list[int]) -> int effects():
-    \\    return f(&values)
-    \\
-    \\
-    \\def main() -> int effects(managed_allocation):
-    \\    values = [1]
-    \\    return apply(peek, &values)
-;
-
-// spec: MUTATION-MARKER-1
-test "M4 a call-site marker on a declared mutates position is accepted" {
-    try t.expect(try acceptMarkers(marker_direct_valid) >= 2);
+// spec-case: MUT-PARAM-1
+test "M4 the missing-marker paste is the whole call with only that argument marked" {
+    const diag = try markerError(marker_multi_missing);
+    defer t.allocator.free(diag.message);
+    try t.expectEqualStrings(marker_code, diag.code);
+    try t.expect(std.mem.indexOf(u8, diag.message, "write `(mut values, 1)`") != null);
 }
 
-// spec-case: MUTATION-MARKER-1
-test "M4 a keyword argument keeps its marker through parameter binding" {
-    try t.expect(try acceptMarkers(marker_keyword_valid) >= 2);
+// spec-case: MUT-PARAM-1
+test "M4 the unneeded-marker paste is the call without the marker and names the argument" {
+    const diag = try markerError(marker_extra);
+    defer t.allocator.free(diag.message);
+    try t.expect(std.mem.indexOf(u8, diag.message, "remove `mut`: `(values)`") != null);
 }
 
-// spec-case: MUTATION-MARKER-1
-test "M4 a missing marker on a declared mutates position is rejected" {
+// spec: MUT-PARAM-1
+test "M4 a call-site mut marker on a declared mut position is accepted" {
+    try accept(marker_direct_valid);
+    try accept(marker_keyword_valid);
+}
+
+// spec-case: MUT-PARAM-1
+test "M4 a written parameter without mut is rejected with the declaration paste" {
     const diag = try markerError(marker_missing);
     defer t.allocator.free(diag.message);
     try t.expectEqualStrings(marker_code, diag.code);
-    try t.expect(std.mem.indexOf(u8, diag.message, "add the `&` marker") != null);
+    try t.expect(std.mem.indexOf(u8, diag.message, "declare `values: mut list[int]`") != null);
 }
 
-// spec-case: MUTATION-MARKER-1
-test "M4 a marker on an undeclared position is rejected" {
+// spec-case: MUT-PARAM-1
+test "M4 a mut marker on a position the callee does not write is rejected" {
     const diag = try markerError(marker_extra);
     defer t.allocator.free(diag.message);
     try t.expectEqualStrings(marker_code, diag.code);
-    try t.expect(std.mem.indexOf(u8, diag.message, "does not declare") != null);
+    try t.expect(std.mem.indexOf(u8, diag.message, "`peek` does not write `values`; remove `mut`") != null);
 }
 
-// spec-case: MUTATION-MARKER-1
-test "M4 a marker on a non-lvalue is rejected" {
+// spec-case: MUT-PARAM-1
+test "M4 a mut marker on a non-lvalue is rejected" {
     const diag = try markerError(marker_non_lvalue);
     defer t.allocator.free(diag.message);
     try t.expectEqualStrings(marker_code, diag.code);
     try t.expect(std.mem.indexOf(u8, diag.message, "assignable") != null);
 }
 
-// spec-case: MUTATION-MARKER-1
-test "M4 a callable-value call enforces the callback mutates footprint" {
-    try t.expect(try acceptMarkers(marker_indirect_valid) >= 3);
+// spec-case: MUT-PARAM-1
+test "M4 a callable-value call enforces the callback mut parameter set" {
+    try accept(marker_indirect_valid);
     const missing = try markerError(marker_indirect_missing);
     defer t.allocator.free(missing.message);
     try t.expectEqualStrings(marker_code, missing.code);
-    const extra = try markerError(marker_indirect_extra);
-    defer t.allocator.free(extra.message);
-    try t.expectEqualStrings(marker_code, extra.code);
 }
 
-// spec-case: MUTATION-MARKER-1
-test "M4 with the flag off a marker stays a removed spelling" {
-    try reject(marker_direct_valid, "E_REMOVED_SPELLING", "&");
+// spec-case: MUT-PARAM-2
+test "M4 a mut parameter the body never writes is rejected" {
+    const diag = try markerError(marker_unused);
+    defer t.allocator.free(diag.message);
+    try t.expectEqualStrings(marker_code, diag.code);
+    try t.expect(std.mem.indexOf(u8, diag.message, "declared `mut` but never written; remove `mut`") != null);
 }
 
 test "M1 definitely fresh local construction does not require mutation permission" {
     var c = try language.Compilation.init(t.allocator, fixture_path,
-        \\def main() -> int effects(managed_allocation):
+        \\def main() -> int:
         \\    values = [7]
         \\    values.append(8)
         \\    return values[0]
@@ -462,7 +470,7 @@ test "M1 definitely fresh local construction does not require mutation permissio
 // spec-case: MUTATION-METADATA-1
 test "M2 unused generic body enforces its declared mutation contract" {
     try reject(
-        \\def touch[T](values: list[T], item: T) -> None effects():
+        \\def touch[T](values: mut list[T], item: T) -> None effects():
         \\    values[0] = item
         \\
         \\
@@ -470,7 +478,7 @@ test "M2 unused generic body enforces its declared mutation contract" {
         \\    return 0
     , "E_MUTATION_PERMISSION", "generic");
     var c = try language.Compilation.init(t.allocator, fixture_path,
-        \\def touch[T](values: list[T], item: T) -> None effects(mutation) mutates(values):
+        \\def touch[T](values: mut list[T], item: T) -> None effects(mutation):
         \\    values[0] = item
         \\
         \\
@@ -492,11 +500,11 @@ test "M2 unused generic body enforces its declared mutation contract" {
 
 test "M1 callback body carries its direct mutation fact" {
     var c = try language.Compilation.init(t.allocator, fixture_path,
-        \\def apply(f: def(values: list[int]) -> None effects(mutation) mutates(values)) -> None effects():
+        \\def apply(f: def(values: mut list[int]) -> None effects(mutation)) -> None effects():
         \\    _ = f
         \\
         \\
-        \\def main() -> int effects(managed_allocation):
+        \\def main() -> int:
         \\    apply(lambda values: values.clear())
         \\    return 0
     );
@@ -541,13 +549,13 @@ test "M1 callable assignability accepts narrower mutation footprints and return 
 
 test "M1 forged or missing IR mutation summaries reject" {
     var c = try language.Compilation.init(t.allocator, fixture_path,
-        \\def touch(values: list[int]) -> None effects(mutation) mutates(values):
+        \\def touch(values: mut list[int]) -> None:
         \\    values[0] = 1
         \\
         \\
-        \\def main() -> int effects(managed_allocation):
+        \\def main() -> int:
         \\    values = [7]
-        \\    touch(values)
+        \\    touch(mut values)
         \\    return values[0]
     );
     defer c.deinit();
@@ -568,7 +576,7 @@ test "M1 forged or missing IR mutation summaries reject" {
 
 test "M1 callback mutates metadata survives source checking and callable interning" {
     var c = try language.Compilation.init(t.allocator, fixture_path,
-        \\def apply(f: def(values: list[int]) -> None effects(mutation) mutates(values)) -> None effects():
+        \\def apply(f: def(values: mut list[int]) -> None effects(mutation)) -> None effects():
         \\    _ = f
         \\
         \\
@@ -587,7 +595,7 @@ test "M1 callback mutates metadata survives source checking and callable interni
 
 test "M1 mutates metadata survives AST copy and relocation" {
     var c = try language.Compilation.init(t.allocator, fixture_path,
-        \\def apply(f: def(values: list[int]) -> None effects(mutation) mutates(values)) -> None effects():
+        \\def apply(f: def(values: mut list[int]) -> None effects(mutation)) -> None effects():
         \\    _ = f
         \\
         \\
@@ -601,7 +609,8 @@ test "M1 mutates metadata survives AST copy and relocation" {
     const copied = try @import("ast_copy.zig").clone(arena.allocator(), c.syntax.?);
     try t.expectEqual(@as(usize, 1), copied.types.expressions.callbacks.len);
     const callback = copied.types.expressions.callbacks[0];
-    try t.expectEqualSlices(u16, &.{0}, callback.mutates);
+    try t.expectEqual(@as(usize, 1), callback.mut_parameters.len);
+    try t.expect(callback.mut_parameters[0]);
     try t.expectEqual(@as(usize, 1), callback.parameter_names.len);
     try t.expect(callback.parameter_names[0] != null);
 }
@@ -614,55 +623,55 @@ test "M1 effect enum appends mutation without moving existing bits" {
 }
 
 const mutation_forms =
-    \\def slot(values: list[int]) -> None effects(mutation) mutates(values):
+    \\def slot(values: mut list[int]) -> None effects(mutation):
     \\    values[0] = 1
     \\
     \\
-    \\def augment(values: list[int]) -> None effects(mutation) mutates(values):
+    \\def augment(values: mut list[int]) -> None effects(mutation):
     \\    values[0] += 1
     \\
     \\
-    \\def append(values: list[int]) -> None effects(mutation, managed_allocation) mutates(values):
+    \\def append(values: mut list[int]) -> None:
     \\    values.append(1)
     \\
     \\
-    \\def extend(values: list[int], other: list[int]) -> None effects(mutation, managed_allocation) mutates(values):
+    \\def extend(values: mut list[int], other: list[int]) -> None:
     \\    values.extend(other)
     \\
     \\
-    \\def insert(values: list[int]) -> None effects(mutation, managed_allocation) mutates(values):
+    \\def insert(values: mut list[int]) -> None:
     \\    values.insert(0, 1)
     \\
     \\
-    \\def remove(values: list[int]) -> None effects(mutation) mutates(values):
+    \\def remove(values: mut list[int]) -> None effects(mutation):
     \\    values.remove(1)
     \\
     \\
-    \\def pop(values: list[int]) -> None effects(mutation) mutates(values):
+    \\def pop(values: mut list[int]) -> None effects(mutation):
     \\    _ = values.pop()
     \\
     \\
-    \\def clear(values: list[int]) -> None effects(mutation) mutates(values):
+    \\def clear(values: mut list[int]) -> None effects(mutation):
     \\    values.clear()
     \\
     \\
-    \\def reverse(values: list[int]) -> None effects(mutation) mutates(values):
+    \\def reverse(values: mut list[int]) -> None effects(mutation):
     \\    values.reverse()
     \\
     \\
-    \\def sort(values: list[int]) -> None effects(mutation) mutates(values):
+    \\def sort(values: mut list[int]) -> None effects(mutation):
     \\    values.sort()
     \\
     \\
-    \\def update(mapping: dict[str, int]) -> None effects(mutation, managed_allocation) mutates(mapping):
+    \\def update(mapping: mut dict[str, int]) -> None:
     \\    mapping["answer"] = 1
     \\
     \\
-    \\def delete(mapping: dict[str, int]) -> None effects(mutation, managed_allocation) mutates(mapping):
+    \\def delete(mapping: mut dict[str, int]) -> None:
     \\    _ = mapping.pop("answer")
     \\
     \\
-    \\def set_cell(cell: Cell[int]) -> None effects(mutation) mutates(cell):
+    \\def set_cell(cell: mut Cell[int]) -> None effects(mutation):
     \\    cell.value = 1
     \\
     \\
@@ -689,7 +698,7 @@ test "M1 every managed write form contributes a mutation fact" {
 
 test "M1 mutates clause normalizes duplicate names to sorted positions" {
     var c = try language.Compilation.init(t.allocator, fixture_path,
-        \\def touch(a: list[int], b: list[int]) -> None effects(mutation) mutates(b, a, b):
+        \\def touch(a: mut list[int], b: mut list[int]) -> None:
         \\    a[0] = 1
         \\    b[0] = 2
         \\
@@ -708,27 +717,17 @@ test "M1 mutates clause normalizes duplicate names to sorted positions" {
 
 // spec-case: MUTATION-METADATA-1
 // spec: MUTATION-ENFORCE-1
-test "M2 direct list dict and Cell writes require mutation permission" {
+test "M2 a write through an unmarked parameter is the marker error, not a permission one" {
     try reject(
         \\def touch(values: list[int]) -> None effects():
         \\    values[0] = 1
         \\
         \\
-        \\def main() -> int effects(managed_allocation):
+        \\def main() -> int:
         \\    values = [1]
         \\    touch(values)
         \\    return 0
-    , "E_MUTATION_PERMISSION", "exceeds its contract");
-    try reject(
-        \\def touch(mapping: dict[str, int]) -> None effects(managed_allocation):
-        \\    mapping["answer"] = 1
-        \\
-        \\
-        \\def main() -> int effects(managed_allocation):
-        \\    mapping: dict[str, int] = {}
-        \\    touch(mapping)
-        \\    return 0
-    , "E_MUTATION_PERMISSION", "exceeds its contract");
+    , marker_code, "declare `values: mut list[int]`");
     try reject(
         \\def set_value(cell: Cell[int]) -> None effects():
         \\    cell.value = 1
@@ -738,7 +737,250 @@ test "M2 direct list dict and Cell writes require mutation permission" {
         \\    cell = Cell(value=0)
         \\    set_value(cell)
         \\    return 0
+    , marker_code, "declare `cell: mut Cell[int]`");
+}
+
+// spec: MUT-PARAM-4
+test "M2 a mut parameter with no mutation ceiling still exceeds its contract" {
+    try reject(
+        \\def touch(values: mut list[int]) -> None effects(managed_allocation):
+        \\    values[0] = 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    touch(mut values)
+        \\    return 0
     , "E_MUTATION_PERMISSION", "exceeds its contract");
+}
+
+// spec-case: MUT-PARAM-4
+test "M2 a mut footprint still rejects a writable argument aliasing a read-only one" {
+    try reject(
+        \\def touch(dst: mut list[int], src: list[int]) -> None effects(mutation):
+        \\    dst[0] = src[0]
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    touch(mut values, values)
+        \\    return 0
+    , "E_MUTATION_OVERLAP", "may alias");
+    // A fresh local stays one object through a second name, so the alias still
+    // overlaps, while a copy is a different object and does not.
+    try reject(
+        \\def touch(dst: mut list[int], src: list[int]) -> None effects(mutation):
+        \\    dst[0] = src[0]
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    alias = values
+        \\    touch(mut values, alias)
+        \\    return 0
+    , "E_MUTATION_OVERLAP", "may alias");
+    try result(
+        \\def touch(dst: mut list[int], src: list[int]) -> None effects(mutation):
+        \\    dst[0] = src[0] + 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    snapshot = values.copy()
+        \\    touch(mut values, snapshot)
+        \\    return values[0]
+    , 2);
+}
+
+/// Two families of mutually recursive classes, `Expr` over three node classes
+/// and `Heap` over three object classes with four fields each, up to the last
+/// field of `Obj2`; `recursive_graphs_tail` closes them with a
+/// `count(state: mut State, e: Expr)` that makes the overlap proof walk both.
+const recursive_graphs_head =
+    \\class Node0:
+    \\    left: Expr
+    \\    right: Expr
+    \\    items: list[Expr]
+    \\    extra: list[Expr]
+    \\
+    \\class Node1:
+    \\    left: Expr
+    \\    right: Expr
+    \\    items: list[Expr]
+    \\    extra: list[Expr]
+    \\
+    \\class Node2:
+    \\    left: Expr
+    \\    right: Expr
+    \\    items: list[Expr]
+    \\    extra: list[Expr]
+    \\
+    \\union Expr:
+    \\    leaf: int,
+    \\    n0: Node0,
+    \\    n1: Node1,
+    \\    n2: Node2
+    \\
+    \\class Obj0:
+    \\    next: Heap
+    \\    values: list[float]
+    \\    more: list[Heap]
+    \\    extra: list[Heap]
+    \\
+    \\class Obj1:
+    \\    next: Heap
+    \\    values: list[float]
+    \\    more: list[Heap]
+    \\    extra: list[Heap]
+    \\
+    \\class Obj2:
+    \\    next: Heap
+    \\    values: list[float]
+    \\    more: list[Heap]
+    \\
+;
+/// The rest of the recursive-graph program after the last field of `Obj2`.
+const recursive_graphs_tail =
+    \\
+    \\union Heap:
+    \\    empty: int,
+    \\    o0: Obj0,
+    \\    o1: Obj1,
+    \\    o2: Obj2
+    \\
+    \\class State:
+    \\    objects: list[Heap]
+    \\    depth: int
+    \\
+    \\def count(state: mut State, e: Expr) -> int:
+    \\    state.depth = state.depth + 1
+    \\    match e:
+    \\        case Expr.leaf(v):
+    \\            return v
+    \\        case _:
+    \\            return 0
+    \\
+    \\def walk(state: mut State, e: Expr) -> int:
+    \\    return count(mut state, e)
+    \\
+    \\def main() -> int:
+    \\    s = State(objects=[], depth=0)
+    \\    return walk(mut s, Expr.leaf(3))
+    \\
+;
+
+// The per-path walk this replaced re-walked every path to a pair, so these two
+// graphs never finished checking; expanding each pair once settles them at once.
+// spec: MUT-OVERLAP-PROOF-1
+test "the overlap proof over two recursive class graphs expands each type pair once" {
+    var c = try language.Compilation.init(t.allocator, fixture_path, recursive_graphs_head ++ "    extra: list[Heap]\n" ++ recursive_graphs_tail);
+    defer c.deinit();
+    try c.check();
+    try t.expectEqual(@as(?language.diagnostic.Diagnostic, null), firstError(c.diagnostics.items));
+}
+
+// spec-case: MUT-OVERLAP-PROOF-1
+test "the overlap proof still rejects two recursive graphs that share one component deep down" {
+    try reject(recursive_graphs_head ++ "    source: list[Expr]\n" ++ recursive_graphs_tail, "E_MUTATION_OVERLAP", "may alias");
+}
+
+/// A runtime whose object table holds classes behind a union, as the Lox VM's
+/// does; `close` writes an upvalue it takes out of the table with `match`.
+fn upvalueProgram(comptime parameter: []const u8, comptime argument: []const u8) []const u8 {
+    return std.fmt.comptimePrint(
+        \\class Upvalue:
+        \\    closed: int
+        \\
+        \\union Obj:
+        \\    empty,
+        \\    up: Upvalue
+        \\
+        \\class Runtime:
+        \\    objects: list[Obj]
+        \\
+        \\def close({s}, i: int):
+        \\    match rt.objects[i]:
+        \\        case Obj.up(u):
+        \\            target = u
+        \\            target.closed = 1
+        \\        case _:
+        \\            return
+        \\
+        \\def main() -> int:
+        \\    rt = Runtime(objects=[Obj.up(Upvalue(closed=0))])
+        \\    close({s}, 0)
+        \\    return 0
+        \\
+    , .{ parameter, argument });
+}
+
+// spec: MUT-TRACK-1
+test "a write through a match payload writes the owner of the matched value" {
+    try accept(comptime upvalueProgram("rt: mut Runtime", "mut rt"));
+    try reject(comptime upvalueProgram("rt: Runtime", "rt"), marker_code, "declare `rt: mut Runtime`");
+}
+
+// A binding a later loop statement widens carries the widened origin at the
+// write: on the second iteration `b` is `a`, which the first made `p`.
+// spec-case: MUT-TRACK-1
+test "binding origins reach a fixed point across a loop" {
+    try reject(
+        \\class Box:
+        \\    n: int
+        \\
+        \\def shuffle(p: Box):
+        \\    a = Box(n=0)
+        \\    b = Box(n=0)
+        \\    for i in range(2):
+        \\        b.n = i
+        \\        b = a
+        \\        a = p
+        \\
+        \\def main() -> int:
+        \\    shuffle(Box(n=0))
+        \\    return 0
+    , marker_code, "declare `p: mut Box`");
+}
+
+// spec-case: MUT-TRACK-1
+test "the missing-marker diagnostic points at the write that needs the marker" {
+    const source =
+        \\class Box:
+        \\    n: int
+        \\
+        \\def both(r: mut Box, x: Box):
+        \\    r.n = 1
+        \\    x.n = 2
+        \\
+        \\def main() -> int:
+        \\    r = Box(n=0)
+        \\    both(mut r, Box(n=0))
+        \\    return 0
+    ;
+    var c = try language.Compilation.init(t.allocator, fixture_path, source);
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.check());
+    const diag = firstError(c.diagnostics.items) orelse return error.TestUnexpectedResult;
+    try t.expectEqualStrings(marker_code, diag.code);
+    try t.expectEqualStrings("x.n", source[diag.span.start..][0..3]);
+}
+
+// spec-case: MUT-PARAM-4
+test "M2 forwarding mut x where x is the caller's own parameter needs that parameter mut" {
+    try reject(
+        \\def touch(values: mut list[int]) -> None effects(mutation):
+        \\    values[0] = 1
+        \\
+        \\
+        \\def forward(values: list[int]) -> None:
+        \\    touch(mut values)
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    forward(values)
+        \\    return 0
+    , marker_code, "declare `values: mut list[int]`");
 }
 
 // spec-case: MUTATION-METADATA-1
@@ -748,14 +990,14 @@ test "M2 nested record aliases keep the input origin" {
         \\    values: list[int]
         \\
         \\
-        \\def change(box: Box) -> None effects():
+        \\def change(box: mut Box) -> None effects():
         \\    alias = box.values
         \\    alias[0] = 42
         \\
         \\
         \\def main() -> int:
         \\    box = Box(values=[1])
-        \\    change(box)
+        \\    change(mut box)
         \\    return 0
     , "E_MUTATION_PERMISSION", "exceeds its contract");
     try result(
@@ -763,14 +1005,14 @@ test "M2 nested record aliases keep the input origin" {
         \\    values: list[int]
         \\
         \\
-        \\def change(box: Box) -> None effects(mutation) mutates(box):
+        \\def change(box: mut Box) -> None:
         \\    alias = box.values
         \\    alias[0] = 42
         \\
         \\
         \\def main() -> int:
         \\    box = Box(values=[1])
-        \\    change(box)
+        \\    change(mut box)
         \\    if box.values[0] != 42:
         \\        return 1
         \\    return 0
@@ -780,7 +1022,7 @@ test "M2 nested record aliases keep the input origin" {
 // spec-case: MUTATION-METADATA-1
 test "M2 shallow copy severs only the outer container" {
     try result(
-        \\def edit(values: list[int]) -> None effects(managed_allocation):
+        \\def edit(values: list[int]) -> None:
         \\    copy = values.copy()
         \\    copy[0] = 99
         \\
@@ -793,7 +1035,7 @@ test "M2 shallow copy severs only the outer container" {
         \\    return 0
     , 0);
     try reject(
-        \\def edit(values: list[list[int]]) -> None effects(managed_allocation):
+        \\def edit(values: mut list[list[int]]) -> None effects(managed_allocation):
         \\    copy = values.copy()
         \\    copy[0][0] = 99
         \\
@@ -801,7 +1043,7 @@ test "M2 shallow copy severs only the outer container" {
         \\def main() -> int:
         \\    inner = [1]
         \\    values = [inner]
-        \\    edit(values)
+        \\    edit(mut values)
         \\    return 0
     , "E_MUTATION_PERMISSION", "exceeds its contract");
 }
@@ -813,18 +1055,18 @@ test "M2 identity-returning helpers do not launder input origins" {
         \\    return values
         \\
         \\
-        \\def overwrite(values: list[int]) -> None effects(mutation) mutates(values):
+        \\def overwrite(values: mut list[int]) -> None:
         \\    values[0] = 1
         \\
         \\
-        \\def launder(values: list[int]) -> None effects():
+        \\def launder(values: mut list[int]) -> None effects():
         \\    alias = identity(values)
-        \\    overwrite(alias)
+        \\    overwrite(mut alias)
         \\
         \\
-        \\def main() -> int effects(managed_allocation):
+        \\def main() -> int:
         \\    values = [1]
-        \\    launder(values)
+        \\    launder(mut values)
         \\    return 0
     , "E_MUTATION_PERMISSION", "exceeds its contract");
     try result(
@@ -832,14 +1074,14 @@ test "M2 identity-returning helpers do not launder input origins" {
         \\    return values
         \\
         \\
-        \\def overwrite(values: list[int]) -> None effects(mutation) mutates(values):
+        \\def overwrite(values: mut list[int]) -> None:
         \\    values[0] = 42
         \\
         \\
         \\def main() -> int:
         \\    values = [1]
         \\    alias = identity(values)
-        \\    overwrite(alias)
+        \\    overwrite(mut alias)
         \\    if values[0] != 42:
         \\        return 1
         \\    return 0
@@ -857,17 +1099,18 @@ test "M2 return wrappers keep borrowed descendant origins" {
         \\    return Box(values=values)
         \\
         \\
-        \\def overwrite(box: Box) -> None effects(mutation) mutates(box):
+        \\def overwrite(box: mut Box) -> None:
         \\    box.values[0] = 1
         \\
         \\
-        \\def launder(values: list[int]) -> None effects(managed_allocation):
-        \\    overwrite(boxed(values))
+        \\def launder(values: mut list[int]) -> None effects():
+        \\    box = boxed(values)
+        \\    overwrite(mut box)
         \\
         \\
         \\def main() -> int:
         \\    values = [1]
-        \\    launder(values)
+        \\    launder(mut values)
         \\    return 0
     , "E_MUTATION_PERMISSION", "exceeds its contract");
 }
@@ -875,7 +1118,7 @@ test "M2 return wrappers keep borrowed descendant origins" {
 // spec-case: MUTATION-METADATA-1
 test "M2 branches and loops attribute writes to the receiver origin" {
     try result(
-        \\def fill(values: list[int], count: int) -> None effects(mutation) mutates(values):
+        \\def fill(values: mut list[int], count: int) -> None:
         \\    index = 0
         \\    while index < count:
         \\        if index % 2 == 0:
@@ -887,11 +1130,11 @@ test "M2 branches and loops attribute writes to the receiver origin" {
         \\
         \\def main() -> int:
         \\    values = [0, 0]
-        \\    fill(values, 2)
+        \\    fill(mut values, 2)
         \\    return values[0] + values[1]
     , -1);
     try reject(
-        \\def fill(values: list[int], count: int) -> None effects():
+        \\def fill(values: mut list[int], count: int) -> None effects():
         \\    index = 0
         \\    while index < count:
         \\        values[index] = index
@@ -900,7 +1143,7 @@ test "M2 branches and loops attribute writes to the receiver origin" {
         \\
         \\def main() -> int:
         \\    values = [0, 0]
-        \\    fill(values, 2)
+        \\    fill(mut values, 2)
         \\    return 0
     , "E_MUTATION_PERMISSION", "exceeds its contract");
 }
@@ -908,31 +1151,31 @@ test "M2 branches and loops attribute writes to the receiver origin" {
 // spec-case: MUTATION-METADATA-1
 test "M2 recursive helpers propagate mutation footprints to a fixed point" {
     try result(
-        \\def touch(values: list[int], depth: int) -> None effects(mutation) mutates(values):
+        \\def touch(values: mut list[int], depth: int) -> None:
         \\    if depth == 0:
         \\        return
-        \\    touch(values, depth - 1)
+        \\    touch(mut values, depth - 1)
         \\    values[0] = 7
         \\
         \\
         \\def main() -> int:
         \\    values = [1]
-        \\    touch(values, 2)
+        \\    touch(mut values, 2)
         \\    if values[0] != 7:
         \\        return 1
         \\    return 0
     , 0);
     try reject(
-        \\def touch(values: list[int], depth: int) -> None effects():
+        \\def touch(values: mut list[int], depth: int) -> None effects():
         \\    if depth == 0:
         \\        return
-        \\    touch(values, depth - 1)
+        \\    touch(mut values, depth - 1)
         \\    values[0] = 7
         \\
         \\
         \\def main() -> int:
         \\    values = [1]
-        \\    touch(values, 2)
+        \\    touch(mut values, 2)
         \\    return 0
     , "E_MUTATION_PERMISSION", "exceeds its contract");
 }
@@ -940,25 +1183,25 @@ test "M2 recursive helpers propagate mutation footprints to a fixed point" {
 // spec-case: MUTATION-METADATA-1
 test "M2 indirect callbacks obey mutation contracts" {
     try result(
-        \\def apply(f: def(values: list[int]) -> None effects(mutation) mutates(values), values: list[int]) -> None effects(mutation) mutates(values):
-        \\    f(values)
+        \\def apply(f: def(values: mut list[int]) -> None effects(mutation), values: mut list[int]) -> None effects(mutation):
+        \\    f(mut values)
         \\
         \\
         \\def main() -> int:
         \\    values = [1]
-        \\    apply(lambda values: values.clear(), values)
+        \\    apply(lambda values: values.clear(), mut values)
         \\    if len(values) != 0:
         \\        return 1
         \\    return 0
     , 0);
     try reject(
-        \\def apply(f: def(values: list[int]) -> None effects(), values: list[int]) -> None effects():
-        \\    f(values)
+        \\def apply(f: def(values: mut list[int]) -> None effects(), values: mut list[int]) -> None effects():
+        \\    f(mut values)
         \\
         \\
         \\def main() -> int:
         \\    values = [1]
-        \\    apply(lambda values: values.clear(), values)
+        \\    apply(lambda values: values.clear(), mut values)
         \\    return 0
     , "E_MUTATION_PERMISSION", "exceeds its contract");
 }
@@ -966,38 +1209,38 @@ test "M2 indirect callbacks obey mutation contracts" {
 // spec-case: MUTATION-METADATA-1
 test "M2 writable and read-only arguments that may overlap reject" {
     try reject(
-        \\def touch(x: list[int], y: list[int]) -> None effects(mutation) mutates(x):
+        \\def touch(x: mut list[int], y: list[int]) -> None:
         \\    x[0] = 1
         \\    _ = y[0]
         \\
         \\
-        \\def use(values: list[int]) -> None effects(mutation) mutates(values):
-        \\    touch(values, values)
+        \\def use(values: mut list[int]) -> None:
+        \\    touch(mut values, values)
         \\
         \\
         \\def main() -> int:
         \\    values = [1]
-        \\    use(values)
+        \\    use(mut values)
         \\    return 0
     , "E_MUTATION_OVERLAP", "may alias");
     try reject(
-        \\def touch(x: list[int], y: list[int]) -> None effects(mutation) mutates(x):
+        \\def touch(x: mut list[int], y: list[int]) -> None:
         \\    x[0] = 1
         \\    _ = y[0]
         \\
         \\
-        \\def use(a: list[int], b: list[int]) -> None effects(mutation) mutates(a):
-        \\    touch(a, b)
+        \\def use(a: mut list[int], b: list[int]) -> None:
+        \\    touch(mut a, b)
         \\
         \\
         \\def main() -> int:
         \\    a = [1]
         \\    b = [2]
-        \\    use(a, b)
+        \\    use(mut a, b)
         \\    return 0
     , "E_MUTATION_OVERLAP", "may alias");
     try result(
-        \\def touch(x: list[int], y: list[int]) -> None effects(mutation) mutates(x):
+        \\def touch(x: mut list[int], y: list[int]) -> None:
         \\    x[0] = 1
         \\    _ = y[0]
         \\
@@ -1005,7 +1248,7 @@ test "M2 writable and read-only arguments that may overlap reject" {
         \\def main() -> int:
         \\    a = [1]
         \\    b = a.copy()
-        \\    touch(a, b)
+        \\    touch(mut a, b)
         \\    return 0
     , 0);
 }
@@ -1080,25 +1323,24 @@ test "compile-time str literals contribute no managed allocation while computed 
 // spec: MUTATION-OVERLAP-1
 test "unannotated helpers accept shared collection arguments while declared mutates contracts still reject overlap" {
     try accept(
-        \\def merge(dst: list[int], src: list[int]) -> None:
-        \\    for v in src:
-        \\        dst.append(v)
+        \\def total(first: list[int], second: list[int]) -> int:
+        \\    return first[0] + second[0]
         \\
         \\
-        \\def combine(a: list[int], b: list[int]) -> None:
-        \\    merge(a, b)
+        \\def combine(a: list[int]) -> int:
+        \\    return total(a, a)
         \\
         \\
         \\def main() -> int:
         \\    return 0
     );
     try reject(
-        \\def touch(dst: list[int], src: list[int]) -> None effects(mutation) mutates(dst):
+        \\def touch(dst: mut list[int], src: list[int]) -> None:
         \\    dst[0] = src[0]
         \\
         \\
-        \\def combine(a: list[int], b: list[int]) -> None:
-        \\    touch(a, b)
+        \\def combine(a: mut list[int], b: list[int]) -> None:
+        \\    touch(mut a, b)
         \\
         \\
         \\def main() -> int:
@@ -1106,30 +1348,18 @@ test "unannotated helpers accept shared collection arguments while declared muta
     , "E_MUTATION_OVERLAP", "may alias");
 }
 
-const missing_footprint_code = @import("origins.zig").missing_footprint_code;
-
-fn firstMissingFootprint(source: []const u8) !?[]const u8 {
+/// Every `E_MUTATION_MARKER` message one source produces, copied out because the
+/// compilation arena is released with the compilation.
+fn markerMessages(source: []const u8) ![]const []u8 {
     var c = try language.Compilation.init(t.allocator, fixture_path, source);
     defer c.deinit();
-    try c.check();
+    try t.expectError(error.SourceError, c.check());
+    var messages: std.ArrayList([]u8) = .empty;
     for (c.diagnostics.items) |item| {
-        if (std.mem.eql(u8, item.code, missing_footprint_code)) {
-            const message = try t.allocator.dupe(u8, item.message);
-            return message;
-        }
+        if (!std.mem.eql(u8, item.code, marker_code)) continue;
+        try messages.append(t.allocator, try t.allocator.dupe(u8, item.message));
     }
-    return null;
-}
-
-fn missingFootprintCount(source: []const u8) !usize {
-    var c = try language.Compilation.init(t.allocator, fixture_path, source);
-    defer c.deinit();
-    try c.check();
-    var count: usize = 0;
-    for (c.diagnostics.items) |item| {
-        if (std.mem.eql(u8, item.code, missing_footprint_code)) count += 1;
-    }
-    return count;
+    return messages.toOwnedSlice(t.allocator);
 }
 
 const unbounded_writer =
@@ -1143,17 +1373,9 @@ const unbounded_writer =
     \\    return 0
 ;
 
-// spec: W-MUTATES-MISSING-1
-test "an unbounded external write warns with the inferred mutates clause verbatim" {
-    const message = (try firstMissingFootprint(unbounded_writer)).?;
-    defer t.allocator.free(message);
-    try t.expectEqualStrings("this function writes `values` (parameter 1) reachable from the caller; declare `mutates(values)`", message);
-    try t.expectEqual(@as(usize, 1), try missingFootprintCount(unbounded_writer));
-}
-
-// spec-case: W-MUTATES-MISSING-1
-test "every inferred position is listed in the warning clause" {
-    const message = (try firstMissingFootprint(
+// spec: MUT-PARAM-2
+test "M1 an unmarked written parameter is rejected with every position listed" {
+    const messages = try markerMessages(
         \\def write_both(first: list[int], second: list[int]) -> None:
         \\    first[0] = 1
         \\    second[0] = 2
@@ -1161,66 +1383,19 @@ test "every inferred position is listed in the warning clause" {
         \\
         \\def main() -> int:
         \\    return 0
-    )).?;
-    defer t.allocator.free(message);
-    try t.expectEqualStrings("this function writes `first` (parameter 1), `second` (parameter 2) reachable from the caller; declare `mutates(first, second)`", message);
+    );
+    defer {
+        for (messages) |message| t.allocator.free(message);
+        t.allocator.free(messages);
+    }
+    try t.expectEqual(@as(usize, 1), messages.len);
+    try t.expect(std.mem.indexOf(u8, messages[0], "this function writes `first` (parameter 1), `second` (parameter 2)") != null);
+    try t.expect(std.mem.indexOf(u8, messages[0], "declare `first: mut list[int]`, `second: mut list[int]`") != null);
 }
 
-// spec-case: W-MUTATES-MISSING-1
-test "a declared mutates footprint without a ceiling is accepted and warns nothing" {
-    const declared =
-        \\def touch(values: list[int]) -> None mutates(values):
-        \\    values[0] = 1
-        \\
-        \\
-        \\def main() -> int:
-        \\    values = [1]
-        \\    touch(values)
-        \\    return 0
-    ;
-    try accept(declared);
-    try t.expectEqual(@as(usize, 0), try missingFootprintCount(declared));
-}
-
-// spec-case: W-MUTATES-MISSING-1
-test "an explicit ceiling lacking mutation still rejects a mutates clause" {
-    try reject(
-        \\def touch(values: list[int]) -> None effects() mutates(values):
-        \\    values[0] = 1
-        \\
-        \\
-        \\def main() -> int:
-        \\    return 0
-    , "E_MUTATES_EFFECT", "requires the mutation effect");
-    try reject(
-        \\def touch(values: list[int]) -> None effects(output) mutates(values):
-        \\    _ = values
-        \\
-        \\
-        \\def main() -> int:
-        \\    return 0
-    , "E_MUTATES_EFFECT", "requires the mutation effect");
-}
-
-// spec-case: W-MUTATES-MISSING-1
-test "a function that writes only its own local storage is not warned" {
-    const local_only =
-        \\def local_edit() -> int:
-        \\    values = [1]
-        \\    values[0] = 2
-        \\    return values[0]
-        \\
-        \\
-        \\def main() -> int:
-        \\    return local_edit() - 2
-    ;
-    try accept(local_only);
-    try t.expectEqual(@as(usize, 0), try missingFootprintCount(local_only));
-}
-
-// spec-case: W-MUTATES-MISSING-1
-test "writing a reference-typed class parameter does not require a mutates clause" {
-    const class_writer =
+// spec-case: MUT-PARAM-2
+test "M1 a class parameter written through needs its own mut" {
+    const messages = try markerMessages(
         \\class Cursor:
         \\    pos: int
         \\
@@ -1231,26 +1406,269 @@ test "writing a reference-typed class parameter does not require a mutates claus
         \\
         \\
         \\def main() -> int:
-        \\    return bump(Cursor(pos=0)) - 1
-    ;
-    try accept(class_writer);
-    try t.expectEqual(@as(usize, 0), try missingFootprintCount(class_writer));
+        \\    cursor = Cursor(pos=0)
+        \\    return bump(cursor) - 1
+    );
+    defer {
+        for (messages) |message| t.allocator.free(message);
+        t.allocator.free(messages);
+    }
+    try t.expectEqual(@as(usize, 1), messages.len);
+    try t.expect(std.mem.indexOf(u8, messages[0], "declare `cursor: mut Cursor`") != null);
+}
+
+// spec-case: MUT-PARAM-2
+test "M1 a class parameter written through is accepted once marked" {
+    try accept(
+        \\class Cursor:
+        \\    pos: int
+        \\
+        \\
+        \\def bump(cursor: mut Cursor) -> int:
+        \\    cursor.pos = cursor.pos + 1
+        \\    return cursor.pos
+        \\
+        \\
+        \\def main() -> int:
+        \\    cursor = Cursor(pos=0)
+        \\    return bump(mut cursor) - 1
+    );
+}
+
+// spec-case: MUT-PARAM-2
+test "M1 a write through a match payload binding needs the matched parameter's mut" {
+    const messages = try markerMessages(
+        \\def grow(candidate: Option[list[int]]) -> int:
+        \\    match candidate:
+        \\        case Some(items):
+        \\            items.append(1)
+        \\            return len(items)
+        \\        case None:
+        \\            return 0
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    );
+    defer {
+        for (messages) |message| t.allocator.free(message);
+        t.allocator.free(messages);
+    }
+    try t.expectEqual(@as(usize, 1), messages.len);
+    try t.expect(std.mem.indexOf(u8, messages[0], "declare `candidate: mut Option[list[int]]`") != null);
+}
+
+// spec-case: MUT-PARAM-2
+test "M1 a field write through a narrowed Option parameter needs mut and is accepted once marked" {
+    const messages = try markerMessages(
+        \\class Counter:
+        \\    value: int
+        \\
+        \\
+        \\def bump(candidate: Option[Counter]) -> int:
+        \\    if candidate is None:
+        \\        return 0
+        \\    candidate.value = candidate.value + 1
+        \\    return candidate.value
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    );
+    defer {
+        for (messages) |message| t.allocator.free(message);
+        t.allocator.free(messages);
+    }
+    try t.expectEqual(@as(usize, 1), messages.len);
+    try t.expect(std.mem.indexOf(u8, messages[0], "declare `candidate: mut Option[Counter]`") != null);
+    try accept(
+        \\class Counter:
+        \\    value: int
+        \\
+        \\
+        \\def bump(candidate: mut Option[Counter]) -> int:
+        \\    if candidate is None:
+        \\        return 0
+        \\    candidate.value = candidate.value + 1
+        \\    return candidate.value
+        \\
+        \\
+        \\def main() -> int:
+        \\    candidate: Option[Counter] = Some(Counter(value=41))
+        \\    return bump(mut candidate) - 42
+    );
+}
+
+// spec-case: MUT-PARAM-2
+test "M1 writing only fresh local storage needs no mut parameter" {
+    try accept(
+        \\def local_edit() -> int:
+        \\    values = [1]
+        \\    values[0] = 2
+        \\    return values[0]
+        \\
+        \\
+        \\def main() -> int:
+        \\    return local_edit() - 2
+    );
+}
+
+// spec-case: MUT-PARAM-2
+test "M1 forwarding a mut parameter to another call counts as a write" {
+    try accept(
+        \\def touch(values: mut list[int]) -> None effects(mutation):
+        \\    values[0] = 1
+        \\
+        \\
+        \\def forward(values: mut list[int]) -> None effects(mutation):
+        \\    touch(mut values)
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [0]
+        \\    forward(mut values)
+        \\    return values[0] - 1
+    );
+}
+
+// spec: MUT-PARAM-3
+test "M1 mut on a scalar, str or bytes parameter has nothing to write" {
+    const messages = try markerMessages(
+        \\def scale(count: mut int) -> None:
+        \\    return
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    );
+    defer {
+        for (messages) |message| t.allocator.free(message);
+        t.allocator.free(messages);
+    }
+    try t.expectEqual(@as(usize, 1), messages.len);
+    try t.expect(std.mem.indexOf(u8, messages[0], "`mut` on `i64` has nothing to write") != null);
+    try t.expect(std.mem.indexOf(u8, messages[0], "only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`") != null);
 }
 
 // spec-case: MUTATION-OVERLAP-1
 test "a declared footprint without a ceiling still enforces overlap at call sites" {
     try reject(
-        \\def touch(dst: list[int], src: list[int]) -> None mutates(dst):
+        \\def touch(dst: mut list[int], src: list[int]) -> None:
         \\    dst[0] = src[0]
         \\
         \\
-        \\def forward(first: list[int], second: list[int]) -> None mutates(first):
-        \\    touch(first, second)
+        \\def forward(first: mut list[int], second: list[int]) -> None:
+        \\    touch(mut first, second)
         \\
         \\
         \\def main() -> int:
         \\    values = [1]
-        \\    forward(values, values)
+        \\    forward(mut values, values)
         \\    return 0
     , "E_MUTATION_OVERLAP", "may alias");
+}
+
+/// The first warning one accepted compilation produced, with the source text its
+/// span covers. Both are copied out because the compilation arena is released
+/// with the compilation.
+fn warningOf(source: []const u8) !struct { code: []const u8, span_text: []u8 } {
+    var c = try language.Compilation.init(t.allocator, fixture_path, source);
+    defer c.deinit();
+    try c.check();
+    for (c.diagnostics.items) |item| {
+        if (item.severity != .warning) continue;
+        return .{ .code = item.code, .span_text = try t.allocator.dupe(u8, c.src.text(item.span)) };
+    }
+    return error.TestUnexpectedResult;
+}
+
+// spec: DERIVED-EFFECTS-1
+test "a body that exceeds the ceiling its own signature implies names the parameter to add" {
+    // A `host def` clause grants the authority the host side declares. A relay
+    // whose own signature supplies no such parameter exceeds its ceiling, and the
+    // rejection names the parameter that would supply it.
+    const relay = "host def put(host: Host, value: u8) -> int effects(host, filesystem)\n\n" ++
+        "def relay(host: Host) -> int:\n    return put(host, 1u8)\n\n" ++
+        "def main(host: Host) -> int:\n    return relay(host)\n";
+    try reject(relay, "E_EFFECT_BOUND", "add `fs: Filesystem` to the parameters");
+    // The same bodies are accepted once every signature on the path supplies it.
+    try accept("host def put(host: Host, value: u8) -> int effects(host, filesystem)\n\n" ++
+        "def relay(host: Host, fs: Filesystem) -> int:\n    _ = fs\n    return put(host, 1u8)\n\n" ++
+        "def main(host: Host, fs: Filesystem) -> int:\n    return relay(host, fs)\n");
+    // A capability parameter is what permits its effect, and a `mut` parameter
+    // what permits `mutation`; neither can be replaced by a clause.
+    try reject("def load(fs: Filesystem) -> int:\n    return 0\n\n" ++
+        "def main() -> int:\n    return 0\n", "E_UNUSED_CAPABILITY", "`fs` is never used");
+    try accept("def write(values: mut list[int]) -> None:\n    values.append(1)\n\n" ++
+        "def main() -> int:\n    values = [0]\n    write(mut values)\n    return values[0]\n");
+}
+
+// spec-case: DERIVED-EFFECTS-1
+test "a recursive class and union signature derives its ceiling without expanding every path" {
+    try result("class Binary:\n    left: Expr\n    right: Expr\n\n\n" ++
+        "union Expr:\n    number: int,\n    binary: Binary\n\n\n" ++
+        "def total(expr: Expr) -> int:\n" ++
+        "    match expr:\n" ++
+        "        case Expr.number(n):\n            return n\n" ++
+        "        case Expr.binary(node):\n            return total(node.left) + total(node.right)\n\n\n" ++
+        "def main() -> int:\n    return total(Expr.binary(Binary(left=Expr.number(20), right=Expr.number(22))))\n", 42);
+}
+
+// spec-case: DERIVED-EFFECTS-1
+test "a record that holds a capability permits that capability's effect" {
+    try accept("class Authority:\n    env: Environment\n\n\n" ++
+        "def lookup(auth: Authority) -> int effects(environment):\n    _ = auth.env\n    return 0\n\n\n" ++
+        "def main(env: Environment) -> int:\n    return lookup(Authority(env=env))\n");
+    // The same shape without the capability in the record is an over-claim.
+    try reject("class Holder:\n    value: int\n\n\n" ++
+        "def lookup(held: Holder) -> int effects(environment):\n    _ = held\n    return 0\n\n\n" ++
+        "def main() -> int:\n    return 0\n", "E_DERIVED_EFFECTS", "add `env: Environment` to the parameters or drop the clause");
+}
+
+// spec: DERIVED-EFFECTS-2
+test "an effect clause that restates the derived ceiling warns and a narrowing stays" {
+    const restating = try warningOf("host def probe(host: Host) -> int effects(host)\n\n" ++
+        "def helper(host: Host) -> int effects(host, managed_allocation):\n    return probe(host)\n\n" ++
+        "def main(host: Host) -> int:\n    return helper(host)\n");
+    defer t.allocator.free(restating.span_text);
+    try t.expectEqualStrings("W_DERIVED_EFFECTS", restating.code);
+    try t.expectEqualStrings("effects(host, managed_allocation)", restating.span_text);
+    // A clause that withholds what the parameters imply is a real narrowing.
+    try accept("host def probe(host: Host) -> int effects(host)\n\n" ++
+        "def helper(host: Host, fs: Filesystem) -> int effects(host, filesystem):\n    _ = fs\n    return probe(host)\n\n" ++
+        "def main(host: Host, fs: Filesystem) -> int:\n    return helper(host, fs)\n");
+    try accept("def helper(count: int) -> int noalloc:\n    return count + 1\n\n" ++
+        "def main() -> int:\n    return helper(1)\n");
+    // `noio` on a body with no io-capable parameter withholds nothing.
+    const noio = try warningOf("def helper(count: int) -> int noio:\n    return count + 1\n\n" ++
+        "def main() -> int:\n    return helper(1)\n");
+    defer t.allocator.free(noio.span_text);
+    try t.expectEqualStrings("W_DERIVED_EFFECTS", noio.code);
+    try t.expectEqualStrings("noio", noio.span_text);
+}
+
+// spec: DERIVED-EFFECTS-3
+test "a clause naming an effect no parameter supplies is rejected with the paste" {
+    try reject("def helper(count: int) -> int effects(filesystem):\n    return count + 1\n\n" ++
+        "def main() -> int:\n    return helper(1)\n", "E_DERIVED_EFFECTS", "add `fs: Filesystem` to the parameters or drop the clause");
+    try reject("def helper(count: int) -> int effects(clock):\n    return count + 1\n\n" ++
+        "def main() -> int:\n    return helper(1)\n", "E_DERIVED_EFFECTS", "`effects(clock)` names `clock`");
+    // A clause may still narrow a derived set, and a `host def` clause is the
+    // declaration's own authority rather than a summary of its parameters.
+    try accept("def helper(out: Stream) -> None effects(output):\n    out.print(\"x\")\n\n" ++
+        "def main(out: Stream) -> int:\n    helper(out)\n    return 0\n");
+    try accept("host def put(host: Host) -> int effects(host, managed_allocation)\n\n" ++
+        "def main(host: Host) -> int:\n    return put(host)\n");
+}
+
+// spec: UNUSED-CAPABILITY-1
+test "a capability parameter the body never reads is rejected and a passed-on one is not" {
+    try reject("public def equal(host: Host, a: int, b: int) -> bool:\n    return a == b\n\n" ++
+        "def main(host: Host) -> int:\n    if equal(host, 1, 1):\n        return 0\n    return 1\n", "E_UNUSED_CAPABILITY", "`host` is never used");
+    try reject("def main(out: Stream) -> int:\n    return 0\n", "E_UNUSED_CAPABILITY", "`out` is never used");
+    // Handing the capability to another function is a read, so a frame that
+    // never calls a host operation itself still uses its authority.
+    try accept("host def inner(host: Host) -> int effects(host)\n\n" ++
+        "def outer(host: Host) -> int:\n    return inner(host)\n\n" ++
+        "def main(host: Host) -> int:\n    return outer(host)\n");
 }

@@ -1,0 +1,55 @@
+# matmul_tuned: matmul.my (list[list[float]], i-k-j loop order) with the row of C
+# rebuilt by a comprehension for every k instead of updated in place.
+# Each C[i][j] still receives c + aik * b[k][j] for k = 0..n-1 in order, so the
+# IEEE operation sequence, and therefore the output, is unchanged.
+#
+# What changed: `c[i][j] = c[i][j] + aik * b[k][j]` over j becomes
+# `ci = [ci[j] + aik * bk[j] for j in range(n)]`. A comprehension appends into
+# a list reserved to n up front, which lowers to an inline store, whereas an
+# indexed slot write republishes the enclosing function's GC root chain
+# (about 20 four-word records in matmul.my) before the store and
+# dispatches on the runtime element size. The price is one fresh 4 KB row per
+# (i, k) pair, about 1 GB of short-lived allocation reclaimed by the collector.
+#
+# Alternatives measured (rough, E-core): inner j loop moved to a helper that
+# writes in place 0.78 s; dot products over a transposed B (reads only in the
+# inner loop) 0.51 s; hoisting `ci = c[i]` / `bk = b[k]` alone 2.44 s.
+
+
+def lcg(seed: int) -> int:
+    return (seed * 3877 + 29573) % 139968
+
+
+def random_matrix(n: int, seed: int) -> tuple[list[list[float]], int]:
+    rows: list[list[float]] = []
+    for i in range(n):
+        row: list[float] = []
+        for j in range(n):
+            seed = lcg(seed)
+            row.append(float(seed) / 139968.0)
+        rows.append(row)
+    return rows, seed
+
+
+def main(out: Stream) -> int:
+    n = 500
+    a, seed = random_matrix(n, 42)
+    b, seed = random_matrix(n, seed)
+    c: list[list[float]] = []
+    for i in range(n):
+        ci = [0.0 for j in range(n)]
+        for k in range(n):
+            aik = a[i][k]
+            bk = b[k]
+            ci = [ci[j] + aik * bk[j] for j in range(n)]
+        c.append(ci)
+    trace = 0.0
+    for i in range(n):
+        trace = trace + c[i][i]
+    total = 0.0
+    for i in range(n):
+        for j in range(n):
+            total = total + c[i][j]
+    out.print(int(trace * 1000.0))
+    out.print(int(total * 1000.0))
+    return 0

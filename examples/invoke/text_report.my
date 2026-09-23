@@ -32,7 +32,7 @@ public def summarize(text: str, pieces: list[str]) -> Summary effects():
     return Summary(scalars=len(text), pieces=len(pieces), longest=longest, empty=empty)
 
 
-public def join(pieces: list[str], separator: str) -> str effects(managed_allocation):
+public def join(pieces: list[str], separator: str) -> str:
     total = ""
     index = 0
     for piece in pieces:
@@ -43,11 +43,11 @@ public def join(pieces: list[str], separator: str) -> str effects(managed_alloca
     return total
 
 
-public def widths(pieces: list[str]) -> list[i64] effects(managed_allocation):
+public def widths(pieces: list[str]) -> list[i64]:
     return [len(piece) for piece in pieces]
 
 
-public def bracket_all(text: str) -> list[str] effects(managed_allocation):
+public def bracket_all(text: str) -> list[str]:
     return ["[" + text + "]", text]
 
 

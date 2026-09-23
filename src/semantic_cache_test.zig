@@ -340,7 +340,7 @@ test "semantic cache rechecks transitive effects when only a callee body changes
         \\host def tick(host: Host) -> i64 effects(host)
         \\
         \\
-        \\def main(host: Host) -> i64 effects(clock):
+        \\def main(host: Host) -> i64 effects():
         \\    return change(host)
         \\
         \\
@@ -555,28 +555,29 @@ test "mutation summaries are recomputed rather than copied with a reused body" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const writing =
-        \\def touch(values: list[int]) -> None:
+        \\def touch(values: mut list[int]) -> None:
         \\    values[0] = 1
         \\
         \\
         \\def main() -> i64:
         \\    values = [1]
-        \\    touch(values)
+        \\    touch(mut values)
         \\    return values[0]
     ;
     try compare(t.allocator, &cache, writing, 1);
     const reading =
-        \\def touch(values: list[int]) -> None:
-        \\    _ = values
+        \\def touch(values: mut list[int]) -> None:
+        \\    first = 1
+        \\    values[0] = first
         \\
         \\
         \\def main() -> i64:
         \\    values = [1]
-        \\    touch(values)
+        \\    touch(mut values)
         \\    return values[0]
     ;
     const before = cache.statistics.reused;
-    // `main` is unchanged and reused; its `mutates`/`return_origin` summary is
+    // `touch`'s signature is unchanged, so `main` is reused; its summary is
     // recomputed by the mandatory global effect pass and must match fresh.
     try compare(t.allocator, &cache, reading, 1);
     try t.expectEqual(before + 1, cache.statistics.reused);
@@ -637,7 +638,8 @@ test "a function value with no matching declared callback misses with its exact 
         \\    return x + 1
         \\
         \\
-        \\def main() -> i64 effects(output):
+        \\def main(out: Stream) -> i64:
+        \\    _ = out
         \\    return apply(one, 41)
     ;
     try compare(t.allocator, &cache, program, 42);

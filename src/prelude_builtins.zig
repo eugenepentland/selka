@@ -11,6 +11,8 @@ const diagnostic = @import("diagnostic.zig");
 const buffer_operations = @import("buffer_operations.zig");
 const collections = @import("collection_lower.zig");
 const numeric_surface = @import("numeric_surface.zig");
+const callables = @import("callables.zig");
+const record_layouts = @import("record_layouts.zig");
 const Error = diagnostic.Error;
 
 /// Value families the prelude folds and orderings understand.
@@ -58,6 +60,20 @@ pub fn Prelude(comptime Checker: type) type {
         /// Build one prelude builtin call, or null when a later recognizer owns this call.
         pub fn build(self: @This(), span: source.Span, name: []const u8, arguments: []const typed.NodeId) Error!?typed.Node {
             return buildCall(Checker, self.checker, span, name, arguments);
+        }
+        /// `sorted(...)`: a sorted copy of one list, keyed or descending as asked.
+        pub fn sorted(self: @This(), call: SortedCall) Error!typed.Node {
+            return sortedCall(Checker, self.checker, call);
+        }
+        /// `values.sort(key=..., reverse=...)`: the statements of one keyed or
+        /// descending in-place sort.
+        pub fn keyedSort(self: @This(), sort: KeyedSort) Error![]const typed.StatementId {
+            return keyedSortCall(Checker, self.checker, sort);
+        }
+        /// The key type a checked `key=` callback returns, or a diagnostic when
+        /// it does not map one list element to an ordered key.
+        pub fn sortKey(self: @This(), span: source.Span, element: typed.Type, callback: typed.NodeId) Error!typed.Type {
+            return keyType(Checker, self.checker, span, element, callback);
         }
         /// `list(range(...))`: the counted range materialised as a new list.
         pub fn rangeList(self: @This(), span: source.Span, arguments: []const typed.NodeId) Error!typed.Node {
@@ -163,10 +179,6 @@ fn buildCall(comptime Checker: type, checker: *Checker, span: source.Span, name:
     if (std.mem.eql(u8, name, "zip")) return checker.sink.fail(unsupported, span, "zip is only an iteration source: for a, b in zip(xs, ys)");
     if (std.mem.eql(u8, name, ord_builtin)) return @as(?typed.Node, try ordCall(Checker, checker, span, arguments));
     if (std.mem.eql(u8, name, chr_builtin)) return @as(?typed.Node, try chrCall(Checker, checker, span, arguments));
-    if (std.mem.eql(u8, name, "sorted")) {
-        if (arguments.len == 0 or arguments.len > 2) return checker.sink.failCallSite(eArity, span, "sorted requires a list and optional key callback", null, buffer_operations.sorted_signature);
-        return @as(?typed.Node, try sorted(Checker, checker, span, arguments[0], if (arguments.len == 2) arguments[1] else null));
-    }
     const input = try single(Checker, checker, span, name, arguments);
     const built: ?typed.Node = if (std.mem.eql(u8, name, "sum"))
         try sum(Checker, checker, span, input)
@@ -470,121 +482,164 @@ fn extremeOfList(comptime Checker: type, checker: *Checker, span: source.Span, i
     }, try b.read(result));
 }
 
-/// `sorted(xs, key=callback)`: a stable ascending copy, optionally ordered by an integer key.
-fn sorted(comptime Checker: type, checker: *Checker, span: source.Span, input: typed.NodeId, key: ?typed.NodeId) Error!typed.Node {
+/// `sorted(xs)`, `sorted(xs, key=callback)` and `sorted(xs, reverse=flag)`: a
+/// stable copy of the list, ordered by the elements themselves or by the key
+/// each one maps to. The copy is then sorted in place exactly as
+/// `values.sort(...)` sorts, so both spellings share one engine.
+fn sortedCall(comptime Checker: type, checker: *Checker, call: SortedCall) Error!typed.Node {
+    const span = call.sort.span;
     const b = builder(Checker, checker, span);
-    const element = try listElement(Checker, checker, nodeType(Checker, checker, input), span);
-    const family = if (key == null) familyOf(Checker, checker, element) orelse return checker.sink.fail(unsupported, span, "sorted requires a list of int, float or str values") else .integer;
-    if (key == null) {
-        const list = try collections.listType(&checker.catalog, element, span);
-        const result = try b.local(list);
-        return b.block(&.{
-            try b.stmt(.{ .initialize = .{ .slot = result, .value = try retain(Checker, checker, span, try b.slice(input, null, null)) } }),
-            try b.stmt(.{ .discard = try b.operation(result, .sort, &.{}) }),
-        }, try b.read(result));
-    }
-    if (key) |callback| {
-        const contract = @import("callables.zig").signature(nodeType(Checker, checker, callback), checker.catalog.records) orelse return checker.sink.fail(unsupported, span, "sorted key requires a callback");
-        if (contract.parameters.len != 1 or contract.parameters[0] != element or contract.return_type != .i64 or contract.effects != 0)
-            return checker.sink.fail(unsupported, span, "sorted key requires def(T) -> int effects() for the list element type T");
-    }
+    const element = try listElement(Checker, checker, nodeType(Checker, checker, call.input), span);
+    if (call.sort.key == null and familyOf(Checker, checker, element) == null)
+        return checker.sink.fail(unsupported, span, "sorted requires a list of int, float or str values, or a key=callback that maps each element to one");
     const list = try collections.listType(&checker.catalog, element, span);
-    const source_slot = try b.local(list);
-    const target_slot = try b.local(list);
-    const swap_slot = try b.local(list);
-    const count = try b.local(.i64);
-    const width = try b.local(.i64);
-    const cursor = try b.local(.i64);
-    const middle = try b.local(.i64);
-    const end = try b.local(.i64);
-    const left_cursor = try b.local(.i64);
-    const right_cursor = try b.local(.i64);
-    const left_value = try b.local(element);
-    const right_value = try b.local(element);
-    const key_slot = if (key) |callback| try b.local(nodeType(Checker, checker, callback)) else null;
-    const n = try b.read(count);
-    const w = try b.read(width);
-    const i = try b.read(cursor);
-    const fresh = try b.node(list, .{ .acquire_buffer = .{ .capacity = n } });
-    const step_up = try b.binary(.add, w, w, .i64);
-    // `middle` and `end` clamp one run to the end of the list.
-    const middle_bound = try b.binary(.add, i, w, .i64);
-    const end_bound = try b.binary(.add, i, step_up, .i64);
-    const both = try b.binary(.logical_and, try b.binary(.lt, try b.read(left_cursor), try b.read(middle), .bool), try b.binary(.lt, try b.read(right_cursor), try b.read(end), .bool), .bool);
-    const right_order = if (key_slot) |slot| try invokeKey(Checker, checker, span, try b.read(slot), try b.read(right_value)) else try b.read(right_value);
-    const left_order = if (key_slot) |slot| try invokeKey(Checker, checker, span, try b.read(slot), try b.read(left_value)) else try b.read(left_value);
-    const take_right = try less(Checker, checker, span, family, right_order, left_order);
-    const merge = try b.stmt(.{ .block = try keep(Checker, checker, &.{
-        try b.stmt(.{ .assign = .{ .slot = left_value, .value = try b.operation(source_slot, .read, &.{try b.read(left_cursor)}) } }),
-        try b.stmt(.{ .assign = .{ .slot = right_value, .value = try b.operation(source_slot, .read, &.{try b.read(right_cursor)}) } }),
-        try b.stmt(.{ .branch = .{
-            .condition = take_right,
-            .then_body = try b.stmt(.{ .block = try keep(Checker, checker, &.{
-                try b.stmt(.{ .discard = try b.operation(target_slot, .append, &.{try b.read(right_value)}) }),
-                try b.stmt(.{ .assign = .{ .slot = right_cursor, .value = try b.binary(.add, try b.read(right_cursor), try b.integer(1), .i64) } }),
-            }) }),
-            .else_body = try b.stmt(.{ .block = try keep(Checker, checker, &.{
-                try b.stmt(.{ .discard = try b.operation(target_slot, .append, &.{try b.read(left_value)}) }),
-                try b.stmt(.{ .assign = .{ .slot = left_cursor, .value = try b.binary(.add, try b.read(left_cursor), try b.integer(1), .i64) } }),
-            }) }),
-        } }),
-    }) });
-    const drain_left = try b.stmt(.{ .block = try keep(Checker, checker, &.{
-        try b.stmt(.{ .discard = try b.operation(target_slot, .append, &.{try b.operation(source_slot, .read, &.{try b.read(left_cursor)})}) }),
-        try b.stmt(.{ .assign = .{ .slot = left_cursor, .value = try b.binary(.add, try b.read(left_cursor), try b.integer(1), .i64) } }),
-    }) });
-    const drain_right = try b.stmt(.{ .block = try keep(Checker, checker, &.{
-        try b.stmt(.{ .discard = try b.operation(target_slot, .append, &.{try b.operation(source_slot, .read, &.{try b.read(right_cursor)})}) }),
-        try b.stmt(.{ .assign = .{ .slot = right_cursor, .value = try b.binary(.add, try b.read(right_cursor), try b.integer(1), .i64) } }),
-    }) });
-    const run = try b.stmt(.{ .block = try keep(Checker, checker, &.{
-        try b.stmt(.{ .assign = .{ .slot = middle, .value = middle_bound } }),
-        try b.stmt(.{ .branch = .{
-            .condition = try b.binary(.lt, middle_bound, n, .bool),
-            .then_body = try b.stmt(.{ .assign = .{ .slot = middle, .value = middle_bound } }),
-            .else_body = try b.stmt(.{ .assign = .{ .slot = middle, .value = n } }),
-        } }),
-        try b.stmt(.{ .assign = .{ .slot = end, .value = end_bound } }),
-        try b.stmt(.{ .branch = .{
-            .condition = try b.binary(.lt, end_bound, n, .bool),
-            .then_body = try b.stmt(.{ .assign = .{ .slot = end, .value = end_bound } }),
-            .else_body = try b.stmt(.{ .assign = .{ .slot = end, .value = n } }),
-        } }),
-        try b.stmt(.{ .assign = .{ .slot = left_cursor, .value = i } }),
-        try b.stmt(.{ .assign = .{ .slot = right_cursor, .value = try b.read(middle) } }),
-        try b.stmt(.{ .loop = .{
-            .id = loopId(Checker, checker),
-            .condition = both,
-            .body = merge,
-            .step = null,
-        } }),
-        try b.stmt(.{ .loop = .{ .id = loopId(Checker, checker), .condition = try b.binary(.lt, try b.read(left_cursor), try b.read(middle), .bool), .body = drain_left, .step = null } }),
-        try b.stmt(.{ .loop = .{ .id = loopId(Checker, checker), .condition = try b.binary(.lt, try b.read(right_cursor), try b.read(end), .bool), .body = drain_right, .step = null } }),
-        try b.stmt(.{ .assign = .{ .slot = cursor, .value = try b.read(end) } }),
-    }) });
-    const pass = try b.stmt(.{ .block = try keep(Checker, checker, &.{
-        try b.stmt(.{ .discard = try b.operation(target_slot, .clear, &.{}) }),
-        try b.stmt(.{ .assign = .{ .slot = cursor, .value = try b.integer(0) } }),
-        try b.stmt(.{ .loop = .{ .id = loopId(Checker, checker), .condition = try b.binary(.lt, try b.read(cursor), n, .bool), .body = run, .step = null } }),
-        try b.stmt(.{ .assign = .{ .slot = swap_slot, .value = try b.read(source_slot) } }),
-        try b.stmt(.{ .assign = .{ .slot = source_slot, .value = try b.read(target_slot) } }),
-        try b.stmt(.{ .assign = .{ .slot = target_slot, .value = try b.read(swap_slot) } }),
-        try b.stmt(.{ .assign = .{ .slot = width, .value = step_up } }),
-    }) });
-    var setup: std.ArrayList(typed.StatementId) = .empty;
-    try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = source_slot, .value = try retain(Checker, checker, span, try b.slice(input, null, null)) } }));
-    if (key_slot) |slot| try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = slot, .value = key.? } }));
-    try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = count, .value = try b.length(source_slot) } }));
-    try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = target_slot, .value = fresh } }));
-    try setup.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = width, .value = try b.integer(1) } }));
-    try setup.append(checker.allocator, try b.stmt(.{ .loop = .{ .id = loopId(Checker, checker), .condition = try b.binary(.lt, try b.read(width), n, .bool), .body = pass, .step = null } }));
-    return b.block(setup.items, try b.read(source_slot));
+    const result = try b.local(list);
+    var statements: std.ArrayList(typed.StatementId) = .empty;
+    if (call.sort.key == null and call.sort.reverse == null) {
+        try statements.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = result, .value = try retain(Checker, checker, span, try b.slice(call.input, null, null)) } }));
+        try statements.append(checker.allocator, try b.stmt(.{ .discard = try b.operation(result, .sort, &.{}) }));
+    } else {
+        // A keyed copy is gathered already sorted from the original list into
+        // a new one, so no copy is made only to be permuted.
+        const original = try b.local(nodeType(Checker, checker, call.input));
+        try statements.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = original, .value = call.input } }));
+        var sort = call.sort;
+        sort.owner = result;
+        sort.source = original;
+        try statements.appendSlice(checker.allocator, try keyedSortCall(Checker, checker, sort));
+    }
+    return b.block(statements.items, try b.read(result));
 }
 
-fn invokeKey(comptime Checker: type, checker: *Checker, span: source.Span, callback: typed.NodeId, value: typed.NodeId) Error!typed.NodeId {
-    const b = builder(Checker, checker, span);
-    const arguments = try checker.allocator.dupe(typed.NodeId, &.{value});
-    return b.node(.i64, .{ .invoke = .{ .callee = callback, .arguments = arguments } });
+/// One `sorted(...)` call: the checked list argument and the sort it asks for,
+/// whose `owner` the copy replaces.
+pub const SortedCall = struct { input: typed.NodeId, sort: KeyedSort };
+
+/// One keyed or descending sort: the list local it orders — or, when
+/// `source` names the original list, the fresh local its sorted copy is
+/// gathered into — the checked key callback (null to order by the elements
+/// themselves), the checked `reverse` flag (null for ascending), and whether
+/// `reverse=` was written before `key=`, which is the order the two are
+/// evaluated in.
+pub const KeyedSort = struct {
+    span: source.Span,
+    owner: typed.LocalId,
+    source: ?typed.LocalId = null,
+    key: ?typed.NodeId = null,
+    reverse: ?typed.NodeId = null,
+    reverse_first: bool = false,
+};
+
+/// Whether a key field type has an order the native keyed sort compares:
+/// every integer width, `bool`, `float` and `str`.
+fn orderedField(comptime Checker: type, checker: *Checker, ty: typed.Type) bool {
+    if (ty.isInteger() or ty == .bool) return true;
+    return familyOf(Checker, checker, ty) != null;
+}
+
+/// Whether a key type is ordered: one ordered field, or a flat tuple of them,
+/// compared field by field.
+pub fn orderedKey(comptime Checker: type, checker: *Checker, ty: typed.Type) bool {
+    if (orderedField(Checker, checker, ty)) return true;
+    const tuple = record_layouts.tupleRecord(checker.catalog.records, ty) orelse return false;
+    for (tuple.fields) |field| if (!orderedField(Checker, checker, field.ty)) return false;
+    return true;
+}
+
+const eSortKey = "E_SORT_KEY";
+
+/// Check a checked `key=` argument against the list element type and answer
+/// the key type it returns. A key takes exactly one element, never as `mut`,
+/// and returns an ordered key: an integer, `bool`, `float`, `str`, or a flat
+/// tuple of those.
+pub fn keyType(comptime Checker: type, checker: *Checker, span: source.Span, element: typed.Type, callback: typed.NodeId) Error!typed.Type {
+    const contract = callables.signature(nodeType(Checker, checker, callback), checker.catalog.records) orelse
+        return checker.sink.fail(eSortKey, span, "key= takes a function or lambda of one list element that returns its sort key");
+    const element_name = try typed.surfaceTypeName(checker.allocator, element, checker.catalog.records);
+    if (contract.parameters.len != 1 or contract.parameters[0] != element) {
+        const message = try std.fmt.allocPrint(checker.allocator, "the key must take exactly one `{s}`, the list's element type: def(item: {s}) -> K", .{ element_name, element_name });
+        return checker.sink.fail(eSortKey, span, message);
+    }
+    if (contract.mutates.len != 0) return checker.sink.fail(eSortKey, span, "a sort key reads its element and must not declare it `mut`");
+    if (!orderedKey(Checker, checker, contract.return_type)) {
+        const found = try typed.surfaceTypeName(checker.allocator, contract.return_type, checker.catalog.records);
+        const message = try std.fmt.allocPrint(checker.allocator, "the key returns `{s}`, which has no order; return an int, float, str or bool, or a tuple of them", .{found});
+        return checker.sink.fail(eSortKey, span, message);
+    }
+    return contract.return_type;
+}
+
+/// Build one keyed or descending sort. Every key is computed exactly once, in
+/// input order, into one key list sized to the list; the native keyed sort
+/// then orders positions by key and moves the elements into place, or, for a
+/// sorted copy (`sort.source`), gathers them in order into a new list of the
+/// same size. Without a key the list is its own key list.
+pub fn keyedSortCall(comptime Checker: type, checker: *Checker, sort: KeyedSort) Error![]const typed.StatementId {
+    const b = builder(Checker, checker, sort.span);
+    var statements: std.ArrayList(typed.StatementId) = .empty;
+    const input = sort.source orelse sort.owner;
+    const flag = try b.local(.bool);
+    const flag_value = sort.reverse orelse try b.node(.bool, .{ .boolean = false });
+    const flag_init = try b.stmt(.{ .initialize = .{ .slot = flag, .value = flag_value } });
+    const count = try b.local(.i64);
+    const count_init = try b.stmt(.{ .initialize = .{ .slot = count, .value = try b.length(input) } });
+    const callback = sort.key orelse {
+        try statements.appendSlice(checker.allocator, &.{ flag_init, count_init });
+        try statements.appendSlice(checker.allocator, try keyedPlacement(Checker, checker, sort, .{ .keys = input, .flag = flag, .count = count }));
+        return statements.items;
+    };
+    const callback_type = nodeType(Checker, checker, callback);
+    const key_type = (callables.signature(callback_type, checker.catalog.records) orelse return error.InternalError).return_type;
+    const key_slot = try b.local(callback_type);
+    const key_init = try b.stmt(.{ .initialize = .{ .slot = key_slot, .value = callback } });
+    try statements.appendSlice(checker.allocator, if (sort.reverse_first) &.{ flag_init, key_init } else &.{ key_init, flag_init });
+    const key_list = try collections.listType(&checker.catalog, key_type, sort.span);
+    const keys = try b.local(key_list);
+    const index = try b.local(.i64);
+    const i = try b.read(index);
+    // The element is held in its own local across the key call, the way a
+    // `for` loop binds it, so every managed value it carries stays rooted
+    // while the key allocates.
+    const element = try b.local(listElementType(Checker, checker, input));
+    const key = try b.node(key_type, .{ .invoke = .{
+        .callee = try b.read(key_slot),
+        .arguments = try checker.allocator.dupe(typed.NodeId, &.{try b.read(element)}),
+    } });
+    const body = try b.stmt(.{ .block = try keep(Checker, checker, &.{
+        try b.stmt(.{ .assign = .{ .slot = element, .value = try b.operation(input, .read, &.{i}) } }),
+        try b.stmt(.{ .discard = try b.operation(keys, .append, &.{key}) }),
+        try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.integer(1), .i64) } }),
+    }) });
+    try statements.appendSlice(checker.allocator, &.{
+        count_init,
+        try b.stmt(.{ .initialize = .{ .slot = keys, .value = try b.node(key_list, .{ .acquire_buffer = .{ .capacity = try b.read(count) } }) } }),
+        try b.stmt(.{ .initialize = .{ .slot = index, .value = try b.integer(0) } }),
+        try b.stmt(.{ .loop = .{ .id = loopId(Checker, checker), .condition = try b.binary(.lt, i, try b.read(count), .bool), .body = body, .step = null } }),
+    });
+    try statements.appendSlice(checker.allocator, try keyedPlacement(Checker, checker, sort, .{ .keys = keys, .flag = flag, .count = count }));
+    return statements.items;
+}
+
+/// The locals the native keyed sort reads once the keys exist.
+const Placement = struct { keys: typed.LocalId, flag: typed.LocalId, count: typed.LocalId };
+
+/// The native keyed sort itself: in place on `sort.owner`, or, for a sorted
+/// copy, first a new empty list with room for every element in `sort.owner`,
+/// which the sort fills from `sort.source` in order.
+fn keyedPlacement(comptime Checker: type, checker: *Checker, sort: KeyedSort, placement: Placement) Error![]const typed.StatementId {
+    const b = builder(Checker, checker, sort.span);
+    const input = sort.source orelse sort.owner;
+    const operation = try b.stmt(.{ .discard = try b.operation(sort.owner, .sort_keyed, &.{ try b.read(input), try b.read(placement.keys), try b.read(placement.flag) }) });
+    if (sort.source == null) return keep(Checker, checker, &.{operation});
+    const list = checker.locals.items[@backingInt(sort.owner)].ty;
+    const fresh = try b.node(list, .{ .acquire_buffer = .{ .capacity = try b.read(placement.count) } });
+    return keep(Checker, checker, &.{ try b.stmt(.{ .initialize = .{ .slot = sort.owner, .value = fresh } }), operation });
+}
+
+/// The element type of the list a local holds.
+fn listElementType(comptime Checker: type, checker: *Checker, owner: typed.LocalId) typed.Type {
+    const list = checker.locals.items[@backingInt(owner)].ty;
+    return checker.catalog.records[list.recordIndex()].shape.buffer.?;
 }
 
 fn loopId(comptime Checker: type, checker: *Checker) usize {

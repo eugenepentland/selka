@@ -1,0 +1,242 @@
+module array_negative_index
+
+# Fixed arrays take Python's negative indices exactly as lists do
+# (PY-ARRAY-NEGATIVE-1): a read, every element-write form, and `replace`.
+# Also pinned here: augmented assignment to a field of an element
+# (PY-ARRAY-WRITE-2), loops over an array the body never writes
+# (PY-ARRAY-ITER-2), element and field targets in a destructuring assignment
+# (PY-DESTRUCTURE-PLACE-1) and element writes through a record or class field
+# (QBE-ARRAYWRITE-2). The traced element types run under `--gc-stress`.
+
+
+enum Status:
+    ok,
+    missing,
+    failed
+
+
+record Point:
+    x: i64
+    y: i64
+
+
+record Grid:
+    cells: [4]i64
+    label: str
+
+
+class Board:
+    cells: [3]i64
+
+
+def label(index: i64) -> str:
+    return "w" + str(index)
+
+
+def churn(rounds: i64) -> i64:
+    total = 0
+    for round in range(rounds):
+        words = [label(round), label(round + 1)]
+        total += len(words[0]) + len(words[1])
+    return total
+
+
+def last[T: copy + storable, const N: u64](values: [N]T) -> T:
+    return values[-1]
+
+
+def pair(left: i64, right: i64) -> tuple[i64, i64]:
+    return left, right
+
+
+def paint(board: mut Board, index: i64, value: i64) -> None:
+    board.cells[index] = value
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public def test_a_negative_index_reads_from_the_end() -> bool:
+    values: [4]i64 = [10, 20, 30, 40]
+    back = -3
+    return values[-1] == 40 and values[-4] == 10 and values[back] == 20 and values[back + 1] == 30
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public def test_a_negative_index_writes_from_the_end() -> bool:
+    values: [4]i64 = [0, 0, 0, 0]
+    before = values
+    values[-1] = 4
+    back = -4
+    values[back] = 1
+    values[-2] += 3
+    values[back + 1] -= 2
+    return values[0] == 1 and values[1] == -2 and values[2] == 3 and values[3] == 4 and before[3] == 0
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public def test_replace_counts_a_negative_index_from_the_end() -> bool:
+    values: [3]i64 = [1, 2, 3]
+    back = -3
+    changed = replace(replace(values, -1, 9), back, 7)
+    return changed[0] == 7 and changed[2] == 9 and values[0] == 1 and values[2] == 3
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public def test_nested_negative_indices_reach_one_cell() -> bool:
+    grid: [2][3]i64 = [[1, 2, 3], [4, 5, 6]]
+    row = -2
+    grid[-1][-1] = 60
+    grid[row][-3] *= 10
+    return grid[1][2] == 60 and grid[0][0] == 10 and grid[0][2] == 3 and grid[-1][-2] == 5
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public def test_a_field_of_a_negative_element_is_written() -> bool:
+    points: [3]Point = [Point(x=1, y=1), Point(x=2, y=2), Point(x=3, y=3)]
+    back = -2
+    points[-1].x = 30
+    points[back].y += 20
+    return points[2].x == 30 and points[1].y == 22 and points[0].x == 1 and points[-3].y == 1
+
+
+# spec: PY-ARRAY-WRITE-2
+public def test_augmented_assignment_to_a_field_of_an_element_keeps_its_operator() -> bool:
+    points: [2]Point = [Point(x=1, y=2), Point(x=3, y=4)]
+    points[1].x += 10
+    points[0].y *= 5
+    points[1].y -= 1
+    return points[1].x == 13 and points[0].y == 10 and points[1].y == 3 and points[0].x == 1
+
+
+# spec-case: QBE-ARRAYWRITE-2
+public def test_a_record_field_array_takes_a_negative_index() -> bool:
+    grid = Grid(cells=[1, 2, 3, 4], label="g")
+    copy = grid
+    grid.cells[-1] = 40
+    grid.cells[-4] += 10
+    return grid.cells[3] == 40 and grid.cells[0] == 11 and copy.cells[3] == 4 and copy.cells[0] == 1
+
+
+# spec-case: QBE-FIELDARRAY-READ-1
+public def test_a_class_field_array_is_written_in_place_for_every_name() -> bool:
+    board = Board(cells=[0, 0, 0])
+    alias = board
+    board.cells[-1] = 7
+    board.cells[0] += board.cells[-1] * 2
+    paint(mut board, -2, 5)
+    return alias.cells[2] == 7 and alias.cells[0] == 14 and alias.cells[1] == 5
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public def test_an_array_inside_a_list_slot_takes_a_negative_index() -> bool:
+    rows: list[[3]i64] = [[1, 2, 3], [4, 5, 6]]
+    rows[-1][-1] = 60
+    rows[0][-3] += 100
+    return rows[1][2] == 60 and rows[0][0] == 101 and rows[-2][-2] == 2
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public def test_an_enum_table_is_still_indexed_by_its_key() -> bool:
+    table: [Status]i64 = {Status.ok: 1, Status.missing: 2, Status.failed: 3}
+    table[Status.failed] += 10
+    return table[Status.failed] == 13 and table[Status.ok] == 1
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public def test_an_enumerate_position_the_body_assigns_counts_from_the_end() -> bool:
+    values: [4]i64 = [1, 2, 3, 4]
+    total = 0
+    for position, value in enumerate(values):
+        # The loop rebinds the name every iteration (PY-FOR-REBIND-1).
+        position = position - 4
+        total += values[position] * value
+    return total == 1 + 4 + 9 + 16
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public def test_range_and_modular_indices_read_every_element() -> bool:
+    values: [5]i64 = [1, 2, 3, 4, 5]
+    total = 0
+    for index in range(5):
+        total += values[index] * values[(index + 1) % 5] + values[-index - 1]
+    return total == 2 + 6 + 12 + 20 + 5 + 15
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public def test_a_generic_body_counts_from_the_end_of_its_length() -> bool:
+    words: [3]str = ["a", "b", "c"]
+    numbers: [2]i64 = [5, 6]
+    return last(words) == "c" and last(numbers) == 6
+
+
+# spec-case: PY-ARRAY-NEGATIVE-1
+public def test_traced_elements_written_from_the_end_survive_collection() -> bool:
+    words: [4]str = ["", "", "", ""]
+    for index in range(4):
+        words[-index - 1] = label(index)
+        _ = churn(4)
+    return words[0] == "w3" and words[3] == "w0" and words[-2] == "w1"
+
+
+# spec: PY-ARRAY-ITER-2
+public def test_a_loop_over_an_array_the_body_never_writes_sees_every_element() -> bool:
+    words: [3]str = ["a", "b", "c"]
+    joined = ""
+    for word in words:
+        joined = joined + word + label(len(joined))
+        _ = churn(2)
+    return joined == "aw0bw3cw6"
+
+
+# spec-case: PY-ARRAY-ITER-2
+public def test_a_loop_whose_body_writes_the_array_still_walks_the_first_value() -> bool:
+    values: [3]i64 = [1, 2, 3]
+    seen = 0
+    for value in values:
+        values[-1] = 100
+        seen = seen * 10 + value
+    return seen == 123 and values[2] == 100
+
+
+# spec: PY-DESTRUCTURE-PLACE-1
+public def test_a_destructuring_assignment_swaps_array_elements() -> bool:
+    values: [4]i64 = [1, 2, 3, 4]
+    values[0], values[-1] = values[-1], values[0]
+    left = 1
+    right = -2
+    values[left], values[right] = values[right], values[left]
+    return values[0] == 4 and values[1] == 3 and values[2] == 2 and values[3] == 1
+
+
+# spec-case: PY-DESTRUCTURE-PLACE-1
+public def test_a_destructuring_assignment_writes_list_dictionary_and_field_targets() -> bool:
+    items = [1, 2, 3]
+    items[0], items[-1] = items[-1], items[0]
+    counts = {"a": 1, "b": 2}
+    counts["a"], counts["b"] = counts["b"], counts["a"]
+    point = Point(x=1, y=2)
+    point.x, point.y = point.y, point.x
+    points: [2]Point = [Point(x=0, y=0), Point(x=0, y=0)]
+    points[0].x, points[-1].y = pair(5, 6)
+    first, items[1] = 7, 70
+    return items[0] == 3 and items[2] == 1 and items[1] == 70 and counts["a"] == 2 and counts["b"] == 1 and point.x == 2 and point.y == 1 and points[0].x == 5 and points[1].y == 6 and first == 7
+
+
+# spec-case: PY-DESTRUCTURE-PLACE-1
+public def test_a_destructuring_assignment_evaluates_the_whole_value_first() -> bool:
+    values: [3]i64 = [1, 2, 3]
+    index = 0
+    index, values[index] = 2, 9
+    return index == 2 and values[2] == 9 and values[0] == 1
+
+
+# spec-case: PY-DESTRUCTURE-PLACE-1
+public def test_traced_list_slots_swap_while_collections_run() -> bool:
+    words = [label(1), label(2), label(3)]
+    for round in range(3):
+        words[0], words[-1] = words[-1], words[0]
+        _ = churn(3)
+    return words[0] == "w3" and words[2] == "w1" and words[1] == "w2"
+
+
+def main() -> int:
+    return 0

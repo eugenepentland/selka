@@ -10,6 +10,9 @@ const copy_scratch = " %v{d} =l copy %s{d}\n";
 const load_scratch = " %v{d} =l loadl %s{d}\n";
 /// Load one native word through a computed pointer.
 const load_pointer = " %v{d} =l loadl %v{d}\n";
+/// Unsigned `index < length` test: the one comparison every bounds-checked
+/// element access — read, write and slice endpoint — is admitted by.
+const unsigned_below = " %v{d} =l cultl %v{d}, %v{d}\n";
 /// Append one element through the runtime's grow-capable helper.
 const list_append_call = " %v{d} =w call $myl_native_list_append(l %heap, l %v{d}, l %v{d})\n";
 const format = @import("qbe_format.zig");
@@ -22,6 +25,7 @@ const iteration_failure = "myl_qbe_fail_iteration";
 const bytes_lower = @import("qbe_bytes.zig");
 const text_lower = @import("qbe_text.zig");
 const arena_lower = @import("qbe_arena.zig");
+const range_keys = @import("qbe_range_keys.zig");
 const io_lower = @import("qbe_io.zig");
 const render = @import("native_render.zig");
 const dictionary_write = " %v{d} =w call $myl_native_dictionary_write(l %heap, l %v{d}, l %v{d}, l %v{d})\n";
@@ -106,6 +110,7 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
     const h = stack.len;
     const base = h - op.kind.arity();
     const list = try self.load("l", @backingInt(op.owner));
+    try self.markObject(list);
     const output = self.temp();
     switch (op.kind) {
         .length, .capacity => {
@@ -158,8 +163,7 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             } else {
                 const index_value = try self.load("s", base);
                 const length = try receiverLength(E, self, list);
-                try self.print(" %v{d} =w call $myl_native_list_set(l %v{d}, l %v{d}, l %v{d})\n", .{ output, list, index_value, value_pointer });
-                try requireIndexBounds(E, self, output, index_value, length, normalized_index_failure);
+                try inlineIndexWrite(E, self, .{ .input = list, .at = index_value, .raw_index = index_value, .length = length, .element = element, .slot = position }, normalized_index_failure);
             }
             try self.print(store_unit, .{base});
         },
@@ -223,6 +227,16 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try self.require(output, allocation_failure);
             try self.print(store_unit, .{base});
         },
+        .sort_keyed => {
+            const source = try self.load("s", base);
+            const keys = try self.load("s", base + 1);
+            const reverse = try self.load("s", base + 2);
+            const key_list = stack[base + 1];
+            const key = try keyShape(E, self, self.program.records[key_list.recordIndex()].shape.buffer.?);
+            try self.print(" %v{d} =w call $myl_native_list_sort_keyed(l %v{d}, l %v{d}, l %v{d}, l {d}, l {d}, l %v{d})\n", .{ output, list, source, keys, key.shape, key.offsets, reverse });
+            try self.require(output, allocation_failure);
+            try self.print(store_unit, .{base});
+        },
         .copy => {
             const result = self.temp();
             try self.print(" %v{d} =l call $myl_native_list_copy(l %heap, l %v{d})\n", .{ result, list });
@@ -237,6 +251,39 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
     }
 }
 
+/// A sort key's field description for `myl_native_list_sort_keyed`: four bits
+/// per field above a four-bit count (kind in the low two bits — signed,
+/// unsigned, binary64, text — and width 8, 4, 2 or 1 in the high two), and one
+/// offset byte per field. A scalar key is one field at offset zero; a tuple key
+/// is its fields in order.
+const KeyShape = struct { shape: u64, offsets: u64 };
+fn keyShape(comptime E: type, self: *E, key: typed.Type) Error!KeyShape {
+    const layout = try self.layout(key);
+    const tuple = key.isAggregate() and self.program.records[key.recordIndex()].isRecord();
+    if (!tuple) return .{ .shape = 1 | @as(u64, try keyField(E, self, key)) << 4, .offsets = 0 };
+    if (layout.fields.len == 0 or layout.fields.len > 8) return error.InternalError;
+    var out: KeyShape = .{ .shape = layout.fields.len, .offsets = 0 };
+    for (layout.fields, 0..) |field, index| {
+        if (field.offset > 255) return error.InternalError;
+        out.shape |= @as(u64, try keyField(E, self, field.ty)) << @intCast(4 + 4 * index);
+        out.offsets |= field.offset << @intCast(8 * index);
+    }
+    return out;
+}
+/// The four-bit kind and width code of one scalar key field.
+fn keyField(comptime E: type, self: *E, ty: typed.Type) Error!u4 {
+    if (numeric_surface.isFloat(ty, self.program.records)) return 2;
+    if (ty.isAggregate() and self.program.records[ty.recordIndex()].collection.kind == .string) return 3;
+    const signed = if (ty.integer()) |integer| integer.signed else if (ty == .bool) false else return error.InternalError;
+    const width: u4 = switch ((try self.layout(ty)).size) {
+        8 => 0,
+        4 => 1,
+        2 => 2,
+        1 => 3,
+        else => return error.InternalError,
+    };
+    return width << 2 | @as(u4, if (signed) 0 else 1);
+}
 /// Copy a stepped slice through the shared native list routine, which text shares.
 fn steppedSlice(comptime E: type, self: *E, base: usize, input: usize) Error!void {
     return sliceStep(E, self, base, input, "myl_native_list_slice_step");
@@ -279,18 +326,26 @@ fn checkedPointer(comptime E: type, self: *E, result: usize, slot: usize) Error!
 /// Require `result`, otherwise raise a bounds trap carrying the already-loaded
 /// original index and receiver length. `failure` names the detail-carrying
 /// runtime helper; both values are captured, never recomputed.
+///
+/// QBE-UNCHECKED-1: an unchecked build emits neither the test nor the cold
+/// block. The runtime call or inline address that produced `result` still runs,
+/// so the value the caller goes on to use is unchanged on a valid index.
 fn requireIndexBounds(comptime E: type, self: *E, result: usize, index: usize, length: usize, failure: []const u8) Error!void {
+    if (!self.checks) return;
     const label = self.temp();
     try self.print(" jnz %v{d}, @success{d}, @failed{d}\n@failed{d}\n call ${s}(l %ctx, l %v{d}, l %v{d})\n jmp @failure\n@success{d}\n", .{ result, label, label, label, failure, index, length, label });
 }
 /// Require a pop that has no caller index; report the receiver length only.
+/// QBE-UNCHECKED-1 drops this test with the other container-range tests.
 fn requirePopBounds(comptime E: type, self: *E, result: usize, length: usize) Error!void {
+    if (!self.checks) return;
     const label = self.temp();
     try self.print(" jnz %v{d}, @success{d}, @failed{d}\n@failed{d}\n call $myl_qbe_fail_pop_bounds(l %ctx, l %v{d})\n jmp @failure\n@success{d}\n", .{ result, label, label, label, length, label });
 }
 /// Load one native list-like header word (length for lists, text and bytes).
 fn receiverLength(comptime E: type, self: *E, receiver: usize) Error!usize {
     const length = self.temp();
+    try self.markObject(receiver);
     try self.print(load_word, .{ length, receiver });
     return length;
 }
@@ -451,6 +506,7 @@ fn inlineAppend(comptime E: type, self: *E, list: usize, element: typed.Type, va
     // keep the pointer the runtime copies from.
     const scalar = self.isScalar(element) and width != 0 and width <= 8;
     const held = if (scalar) try self.readValue(value_pointer, element) else value_pointer;
+    try self.markObject(list);
     const generation = try self.address(list, list_generation_offset);
     const current = self.temp();
     try self.print(load_pointer, .{ current, generation });
@@ -472,6 +528,7 @@ fn inlineAppend(comptime E: type, self: *E, list: usize, element: typed.Type, va
     const storage = try self.address(list, list_storage_offset);
     const backing = self.temp();
     try self.print(load_pointer, .{ backing, storage });
+    try self.markObject(backing);
     const destination = self.temp();
     if (width == 1) {
         try self.print(" %v{d} =l add %v{d}, %v{d}\n", .{ destination, backing, length });
@@ -494,6 +551,7 @@ fn emitLength(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.T
     if (self.program.records[ty.recordIndex()].collection.kind == .dictionary) {
         try self.print(dictionary_length, .{ result, input });
     } else {
+        try self.markObject(input);
         try self.print(load_word, .{ result, input });
     }
     try self.store(base, result);
@@ -527,13 +585,17 @@ fn emitIndex(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Ty
         const at = try self.load("s", base + 1);
         try textAt(E, self, input, at, stack[base + 1], result, base);
     } else if (schema.collection.kind == .dictionary) {
+        if (!replacing and self.range_keys.role(self.pc) == .key) {
+            try range_keys.Lower(E).access(self, .{ .kind = .read, .dictionary = input, .key = base + 1, .result = result });
+            try self.require(result, missing_key_failure);
+            return self.store(base, try self.readValue(try self.aggregatePointer(), schema.shape.buffer.?));
+        }
         const key = try operandPointer(E, self, schema.collection.key.?, base + 1);
         if (replacing) {
             const value = try operandPointer(E, self, schema.shape.buffer.?, base + 2);
             try arena_lower.Lower(E).barrier(self, input, schema.collection.key.?, key);
             try arena_lower.Lower(E).barrier(self, input, schema.shape.buffer.?, value);
-            try self.print(dictionary_write, .{ result, input, key, value });
-            try self.require(result, allocation_failure);
+            try guardedWrite(E, self, stack, .{ .plain = .{ .dictionary = input, .key = key, .value = value } });
             try self.store(base, input);
         } else {
             try self.print(" %v{d} =w call $myl_native_dictionary_read(l %v{d}, l %v{d}, l %agg{d})\n", .{ result, input, key, self.pc });
@@ -547,8 +609,7 @@ fn emitIndex(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Ty
         if (replacing) {
             const value = try operandPointer(E, self, schema.shape.buffer.?, base + 2);
             try arena_lower.Lower(E).barrier(self, input, schema.shape.buffer.?, value);
-            try self.print(" %v{d} =w call $myl_native_list_set(l %v{d}, l %v{d}, l %v{d})\n", .{ result, input, at, value });
-            try requireIndexBounds(E, self, result, raw_index, length, index_failure);
+            try inlineIndexWrite(E, self, .{ .input = input, .at = at, .raw_index = raw_index, .length = length, .element = schema.shape.buffer.?, .slot = base + 2 }, index_failure);
             try self.store(base, input);
         } else {
             try inlineIndexRead(E, self, .{ .input = input, .at = at, .raw_index = raw_index, .length = length, .element = schema.shape.buffer.?, .slot = base }, index_failure);
@@ -579,6 +640,39 @@ fn immediateScalarProjection(comptime E: type, self: *E, element: typed.Type) Er
         if (self.isScalar(ty)) return true;
     }
     return false;
+}
+/// QBE-RETFWD-1: a list element whose only consumer is the `ret` that hands it
+/// back is returned from the receiver's own storage.
+///
+/// The result of a function leaves through one copy the caller owns: `%out` for
+/// a result over 4 KiB, the frame's `%return_storage` for a heap-backed frame,
+/// and QBE's own return pad otherwise. Every one of them copies out of the
+/// address the `ret` names, so naming the element's checked address makes the
+/// copy into per-pc aggregate scratch — and the reload out of it that defeats
+/// store forwarding — disappear, leaving exactly the one copy the language
+/// promised.
+///
+/// Only the epilogue runs between the address and that copy, so the address is
+/// claimed only where the epilogue can neither release nor free what it names:
+/// a frame that drops a local could release owned storage, and a frame that
+/// closes an arena scope frees everything the scope owns, so both keep the
+/// snapshot. Unlinking the frame record and releasing a heap frame touch
+/// neither the receiver nor its backing.
+fn elementFeedsReturn(comptime E: type, self: *E, element: typed.Type) Error!bool {
+    const code = self.function.scope.instructions;
+    const next = self.pc + 1;
+    if (next >= code.len or self.states[next] == null) return false;
+    if (next < self.branch_targets.len and self.branch_targets[next]) return false;
+    if (code[next].op != .ret) return false;
+    if (self.function.signature.return_type != element) return false;
+    const value = try self.layout(element);
+    if (value.drop or value.size == 0) return false;
+    if (arena_lower.releasesOnReturn(self.arenas, self.function)) return false;
+    for (self.function.scope.locals, 0..) |local, index| {
+        if (self.byReference(index)) continue;
+        if ((try self.layout(local.ty)).drop) return false;
+    }
+    return true;
 }
 /// QBE-AGGREF-1's by-address rule for a list element whose only consumer is the
 /// store that copies it into a local of its own.
@@ -614,9 +708,13 @@ fn elementFeedsStore(comptime E: type, self: *E, element: typed.Type) Error!bool
 /// original index and the receiver length: `failure` names the helper that
 /// reports an index this lowering already normalized, or one it has not.
 fn inlineIndexRead(comptime E: type, self: *E, read: IndexRead, failure: []const u8) Error!void {
-    const valid = self.temp();
-    try self.print(" %v{d} =l cultl %v{d}, %v{d}\n", .{ valid, read.at, read.length });
-    try requireIndexBounds(E, self, valid, read.raw_index, read.length, failure);
+    // QBE-UNCHECKED-1: the comparison exists only to feed the test, so an
+    // unchecked build emits neither and reads the element address directly.
+    if (self.checks) {
+        const valid = self.temp();
+        try self.print(unsigned_below, .{ valid, read.at, read.length });
+        try requireIndexBounds(E, self, valid, read.raw_index, read.length, failure);
+    }
     const address = try elementAddress(E, self, read.input, read.at, read.element);
     if (self.isScalar(read.element)) {
         try self.store(read.slot, try self.readValue(address, read.element));
@@ -624,11 +722,45 @@ fn inlineIndexRead(comptime E: type, self: *E, read: IndexRead, failure: []const
         try self.store(read.slot, address);
     } else if (try elementFeedsStore(E, self, read.element)) {
         try self.store(read.slot, address);
+    } else if (try elementFeedsReturn(E, self, read.element)) {
+        try self.store(read.slot, address);
     } else {
         const pointer = try self.aggregatePointer();
         try self.print(" blit %v{d}, %v{d}, {d}\n", .{ address, pointer, (try self.layout(read.element)).size });
         try self.store(read.slot, pointer);
     }
+}
+/// QBE-LISTSET-1: write one element of a list or byte string where it lives,
+/// in place of a `myl_native_list_set` call.
+///
+/// The helper is a bounds test and one `copy_element` of the element's own
+/// size; both are emitted here against the same unsigned comparison, the same
+/// receiver length and the same detail-carrying trap, so the observable
+/// behaviour — including the index and length the trap reports — is unchanged.
+/// The list's generation is untouched, because the helper never bumped it
+/// either: an element write neither moves storage nor changes the length, so no
+/// iteration guard can observe it.
+///
+/// Removing the call is what pays for this. `loweredAllocates` reads the text a
+/// lowering produced, so an element write that names only `myl_qbe_fail_*`
+/// helpers is no longer a safepoint and the whole root push around it — one
+/// record per live traced local and operand — disappears with it.
+///
+/// A value that names storage inside the same receiver writes one
+/// stride-sized, stride-aligned region onto another, so the two regions are
+/// identical or disjoint; a record cannot contain itself, so a same-typed
+/// region inside the element can only be the element itself. That is exactly
+/// the aliasing the runtime `memcpy` already had.
+fn inlineIndexWrite(comptime E: type, self: *E, write: IndexRead, failure: []const u8) Error!void {
+    // QBE-UNCHECKED-1: the comparison exists only to feed the test, so an
+    // unchecked build emits neither and writes the element address directly.
+    if (self.checks) {
+        const valid = self.temp();
+        try self.print(unsigned_below, .{ valid, write.at, write.length });
+        try requireIndexBounds(E, self, valid, write.raw_index, write.length, failure);
+    }
+    const address = try elementAddress(E, self, write.input, write.at, write.element);
+    try self.writeValue(address, try self.load("s", write.slot), write.element);
 }
 /// Address of element `index` in a native list-like receiver's backing storage.
 /// `storage` is the word at `list_storage_offset` in the header; the stride is
@@ -638,7 +770,9 @@ fn elementAddress(comptime E: type, self: *E, list: usize, index: usize, element
     const storage = self.temp();
     const offset = self.temp();
     const address = self.temp();
+    try self.markObject(list);
     try self.print(" %v{d} =l add %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ header, list, list_storage_offset, storage, header });
+    try self.markObject(storage);
     const stride = (try self.layout(element)).size;
     if (stride == 1) {
         try self.print(" %v{d} =l add %v{d}, %v{d}\n", .{ address, storage, index });
@@ -699,6 +833,7 @@ fn textOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try self.print(store_unit, .{base});
         },
         .slice => {
+            if (self.range_keys.role(self.pc) == .slice) return range_keys.Lower(E).slice(self, input, base);
             const start = try self.load("s", base);
             const end = try self.load("s", base + 1);
             try self.print(" %v{d} =l call $myl_native_text_slice(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ result, input, start, end });
@@ -723,6 +858,82 @@ fn textOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
         .encode, .from_hex => return bytes_lower.Lower(E).textual(self, op, stack),
         // The Python string methods and the number grammar lower on their own.
         else => return text_lower.Lower(E).operation(self, op, stack),
+    }
+}
+/// Leave in operand slot `base` the value a dictionary call that answered
+/// `found` copied out — through `pointer`, or this pc's aggregate scratch when it
+/// is null — or, on a miss, the default operand at `base + 1`.
+fn foundOrDefault(comptime E: type, self: *E, found: usize, pointer: ?usize, base: usize, output: typed.Type) Error!void {
+    const label = self.temp();
+    try self.print(" jnz %v{d}, @found{d}, @missing{d}\n@found{d}\n", .{ found, label, label, label });
+    try self.store(base, try self.readValue(pointer orelse try self.aggregatePointer(), output));
+    try self.print(" jmp @got{d}\n@missing{d}\n", .{ label, label });
+    try self.store(base, try self.load("s", base + 1));
+    try self.print(" jmp @got{d}\n@got{d}\n", .{ label, label });
+}
+/// Lower a dictionary write as its allocation-free half — `overwrite`, which
+/// replaces a present key's value — and, only when that answered absent, the
+/// allocating `write` inside its own root push (`DICT-OVERWRITE-1`). A write of
+/// a key already present, every write of a counting loop but the first, then
+/// publishes no root at all.
+fn guardedWrite(comptime E: type, self: *E, stack: []const typed.Type, write: Write) Error!void {
+    const found = self.temp();
+    try writeCall(E, self, write, found, true);
+    const label = self.temp();
+    try self.print(" jnz %v{d}, @put_done{d}, @put_new{d}\n@put_new{d}\n", .{ found, label, label, label });
+    const pushed = try self.roots(stack);
+    const result = self.temp();
+    try writeCall(E, self, write, result, false);
+    try self.require(result, allocation_failure);
+    if (pushed) try self.restoreRoots();
+    try self.print(" jmp @put_done{d}\n@put_done{d}\n", .{ label, label });
+    self.inline_roots = true;
+}
+/// One dictionary write's operands: an ordinary key operand's pointer, or a
+/// described slice's key height (`DICT-RANGE-KEY-1`).
+const Write = union(enum) {
+    plain: struct { dictionary: usize, key: usize, value: usize },
+    range: range_keys.Access,
+};
+/// Print the allocation-free half of a write (`overwrite`) or the whole write
+/// into `result`.
+fn writeCall(comptime E: type, self: *E, write: Write, result: usize, overwrite: bool) Error!void {
+    switch (write) {
+        .plain => |operands| if (overwrite) {
+            try self.print(" %v{d} =w call $myl_native_dictionary_overwrite(l %v{d}, l %v{d}, l %v{d})\n", .{ result, operands.dictionary, operands.key, operands.value });
+        } else try self.print(dictionary_write, .{ result, operands.dictionary, operands.key, operands.value }),
+        .range => |access| {
+            var call = access;
+            call.kind = if (overwrite) .overwrite else .write;
+            call.result = result;
+            try range_keys.Lower(E).access(self, call);
+        },
+    }
+}
+/// A dictionary lookup or write whose key operand is a described slice
+/// (`DICT-RANGE-KEY-1`): the same answers, traps and stores as the lowering
+/// below, through the entry points that read the slice's octets in place.
+fn rangeKeyOperation(comptime E: type, self: *E, op: BufferOperation, input: usize, stack: []const typed.Type) Error!void {
+    const schema = self.program.records[self.function.scope.locals[@backingInt(op.owner)].ty.recordIndex()];
+    const base = stack.len - op.kind.arity();
+    const result = self.temp();
+    switch (op.kind) {
+        .write => {
+            const value = try operandPointer(E, self, schema.shape.buffer.?, base + 1);
+            try arena_lower.Lower(E).barrier(self, input, schema.shape.buffer.?, value);
+            try guardedWrite(E, self, stack, .{ .range = .{ .kind = .write, .dictionary = input, .key = base, .value = value, .result = result } });
+            try self.print(store_unit, .{base});
+        },
+        .contains => {
+            try range_keys.Lower(E).access(self, .{ .kind = .contains, .dictionary = input, .key = base, .result = result });
+            try boolean(E, self, result, base);
+        },
+        else => {
+            try range_keys.Lower(E).access(self, .{ .kind = .read, .dictionary = input, .key = base, .result = result });
+            if (op.kind == .get) return foundOrDefault(E, self, result, null, base, op.output);
+            try self.require(result, missing_key_failure);
+            try self.store(base, try self.readValue(try self.aggregatePointer(), op.output));
+        },
     }
 }
 fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const typed.Type) Error!void {
@@ -756,6 +967,7 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
             try self.store(base, try self.readValue(try self.aggregatePointer(), op.output));
         },
         .read, .get, .contains, .write => {
+            if (self.range_keys.role(self.pc) == .key) return rangeKeyOperation(E, self, op, input, stack);
             const key = try operandPointer(E, self, schema.collection.key.?, base);
             if (op.kind == .contains) {
                 try self.print(" %v{d} =w call $myl_native_dictionary_contains(l %v{d}, l %v{d})\n", .{ result, input, key });
@@ -764,18 +976,12 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
                 const value = try operandPointer(E, self, schema.shape.buffer.?, base + 1);
                 try arena_lower.Lower(E).barrier(self, input, schema.collection.key.?, key);
                 try arena_lower.Lower(E).barrier(self, input, schema.shape.buffer.?, value);
-                try self.print(dictionary_write, .{ result, input, key, value });
-                try self.require(result, allocation_failure);
+                try guardedWrite(E, self, stack, .{ .plain = .{ .dictionary = input, .key = key, .value = value } });
                 try self.print(store_unit, .{base});
             } else {
                 try self.print(" %v{d} =w call $myl_native_dictionary_read(l %v{d}, l %v{d}, l %agg{d})\n", .{ result, input, key, self.pc });
                 if (op.kind == .get) {
-                    const label = self.temp();
-                    try self.print(" jnz %v{d}, @found{d}, @missing{d}\n@found{d}\n", .{ result, label, label, label });
-                    try self.store(base, try self.readValue(try self.aggregatePointer(), op.output));
-                    try self.print(" jmp @got{d}\n@missing{d}\n", .{ label, label });
-                    try self.store(base, try self.load("s", base + 1));
-                    try self.print(" jmp @got{d}\n@got{d}\n", .{ label, label });
+                    try foundOrDefault(E, self, result, null, base, op.output);
                 } else {
                     try self.require(result, missing_key_failure);
                     try self.store(base, try self.readValue(try self.aggregatePointer(), op.output));
@@ -793,14 +999,7 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
             if (op.kind == .pop_key) {
                 try self.require(result, missing_key_failure);
                 try self.store(base, try self.readValue(pointer, op.output));
-            } else {
-                const label = self.temp();
-                try self.print(" jnz %v{d}, @found{d}, @missing{d}\n@found{d}\n", .{ result, label, label, label });
-                try self.store(base, try self.readValue(pointer, op.output));
-                try self.print(" jmp @got{d}\n@missing{d}\n", .{ label, label });
-                try self.store(base, try self.load("s", base + 1));
-                try self.print(" jmp @got{d}\n@got{d}\n", .{ label, label });
-            }
+            } else try foundOrDefault(E, self, result, pointer, base, op.output);
         },
         .update => {
             const other = try self.load("s", base);
@@ -833,9 +1032,13 @@ fn textAt(comptime E: type, self: *E, input: usize, at: usize, ty: typed.Type, r
     const size = self.temp();
     try self.print(load_pointer, .{ size, input });
     const normalized = try normalizedIndex(E, self, at, size, ty);
-    const valid = self.temp();
-    try self.print(" %v{d} =l cultl %v{d}, %v{d}\n", .{ valid, normalized, size });
-    try requireIndexBounds(E, self, valid, at, size, "myl_qbe_fail_text_bounds_detail");
+    // QBE-UNCHECKED-1: keep the negative-index normalization, which produces the
+    // offset the read uses, and drop only its range test and cold block.
+    if (self.checks) {
+        const valid = self.temp();
+        try self.print(unsigned_below, .{ valid, normalized, size });
+        try requireIndexBounds(E, self, valid, at, size, "myl_qbe_fail_text_bounds_detail");
+    }
     try self.print(" %v{d} =l call $myl_native_text_at(l %heap, l %v{d}, l %v{d})\n", .{ result, input, normalized });
     try checkedPointer(E, self, result, base);
 }

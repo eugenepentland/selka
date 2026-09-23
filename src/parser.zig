@@ -7,6 +7,7 @@ const eInternalName = "E_INTERNAL_NAME";
 const eDefaultArgument = "E_DEFAULT_ARGUMENT";
 const eRequirement = diagnostic.generic_requirement;
 const eGenericLimit = diagnostic.generic_limit;
+const removed_spelling_code = "E_REMOVED_SPELLING";
 const std = @import("std");
 const eIteration = "E_ITERATION";
 const effects = @import("effect_set.zig");
@@ -337,7 +338,7 @@ pub const Parser = struct {
     fn atMutArgument(self: *Parser) bool {
         if (!self.identIsMut()) return false;
         return switch (self.tokens[self.cursor.pos + 1].tag) {
-            .ident, .integer, .bytes, .format, .kw_true, .kw_false, .kw_none, .kw_len, .kw_replace, .kw_todo, .minus, .bang => true,
+            .ident, .integer, .bytes, .format, .kw_true, .kw_false, .kw_none, .kw_len, .kw_replace, .kw_todo, .minus, .bang, .lbracket, .lparen, .lbrace => true,
             else => false,
         };
     }
@@ -534,7 +535,7 @@ pub const Parser = struct {
         // An omitted callback ceiling is unbounded: the slot accepts any function
         // value, and an explicit ceiling remains an upper bound on the callee.
         const bound = try self.effectBound() orelse effects.Bound{ .span = first, .allowed = effects.all };
-        const mutates = try self.mutatesClause(names.items, bound);
+        try self.rejectMutatesClause();
         const span: Span = .join(first, self.tokens[self.cursor.pos - 1].span);
         try self.syntax.types.callbacks.append(allocator, .{
             .span = span,
@@ -542,7 +543,6 @@ pub const Parser = struct {
             .parameter_names = try names.toOwnedSlice(allocator),
             .return_type = result,
             .effect_bound = bound,
-            .mutates = mutates,
             .mut_parameters = try mut_parameters.toOwnedSlice(allocator),
         });
         return span;
@@ -904,9 +904,7 @@ pub const Parser = struct {
         }
         const effect_bound = try self.effectBound();
         if (host) |span| if (effect_bound.?.allowed & effects.bit(.host) == 0) return self.sink.fail("E_HOST_EFFECTS", span, "host declarations must include the host effect");
-        var parameter_names: std.ArrayList(?Span) = .empty;
-        for (parameters.parameters.items) |parameter| try parameter_names.append(self.arena.allocator(), parameter.name);
-        const mutates = try self.mutatesClause(parameter_names.items, effect_bound);
+        try self.rejectMutatesClause();
         if (c_abi and !annotated_return) return self.sink.fail("E_EXTERN_SIGNATURE", name.span, "extern functions require an explicit return type (unit for C void)");
         // A foreign call is the one ambient authority left, so every `extern def`
         // and `host def` takes the `Host` capability as a visible first parameter.
@@ -918,6 +916,9 @@ pub const Parser = struct {
             );
         }
         const body = if (host != null) try self.addStatement(.{ .span = (try self.expect(.semicolon)).span, .data = .{ .block = &.{} } }) else try self.block(name.span);
+        // The `mut` positions are read from the parameter list before it is
+        // handed over, because `toOwnedSlice` empties the list it returns.
+        const mut_positions = try ast.mutPositions(self.arena.allocator(), try self.declaredMutFlags(parameters.parameters.items));
         return .{
             .policy = .{
                 .host = host,
@@ -931,7 +932,7 @@ pub const Parser = struct {
                 .type_parameters = type_parameters,
                 .parameters = try parameters.parameters.toOwnedSlice(self.arena.allocator()),
                 .return_type = return_type,
-                .mutates = mutates,
+                .mut_positions = mut_positions,
                 .keyword_only_from = parameters.keyword_only_from,
             },
             .name = name.span,
@@ -1163,45 +1164,22 @@ pub const Parser = struct {
         _ = try self.expect(.rparen);
         return .{ .name = name, .parameters = try parameters.toOwnedSlice(self.arena.allocator()), .return_type = result, .effect_bound = bound };
     }
-    /// Parse one optional `mutates(name, ...)` clause and normalize names to
-    /// zero-based parameter positions. Absence and `mutates()` both yield the
-    /// empty footprint. Without a ceiling the clause means unbounded effects
-    /// with this footprint; with a ceiling it requires the mutation bit.
-    fn mutatesClause(self: *Parser, names: []const ?Span, bound: ?effects.Bound) diagnostic.Error![]const u16 {
+    /// Reject the retired `mutates(name, ...)` clause where a signature could
+    /// still spell it. The clause was how a write was declared before
+    /// `name: mut T`, so the rejection names that replacement at the clause's own
+    /// span and never reads the positional names inside it.
+    fn rejectMutatesClause(self: *Parser) diagnostic.Error!void {
         const token = self.current();
-        if (token.tag != .ident or !std.mem.eql(u8, self.src.text(token.span), "mutates")) return &.{};
-        self.cursor.pos += 1;
-        _ = try self.expect(.lparen);
-        var positions: [16]u16 = undefined;
-        var count: usize = 0;
-        if (self.current().tag != .rparen) while (true) {
-            const name = try self.expect(.ident);
-            var position: ?u16 = null;
-            for (names, 0..) |candidate, index| {
-                if (candidate == null) continue;
-                if (!std.mem.eql(u8, self.src.text(candidate.?), self.src.text(name.span))) continue;
-                position = @intCast(index);
-                break;
-            }
-            const at = position orelse return self.sink.fail("E_UNKNOWN_MUTATES", name.span, "`mutates` names a parameter binder in this signature");
-            var duplicate = false;
-            for (positions[0..count]) |previous| if (previous == at) {
-                duplicate = true;
-                break;
-            };
-            if (!duplicate) {
-                if (count == positions.len) return self.sink.fail(eGenericLimit, name.span, "mutates accepts at most 16 input positions");
-                positions[count] = at;
-                count += 1;
-            }
-            if (!self.take(.comma) or self.current().tag == .rparen) break;
-        };
-        _ = try self.expect(.rparen);
-        if (bound) |declared| {
-            if (declared.allowed & effects.bit(.mutation) == 0) return self.sink.fail("E_MUTATES_EFFECT", token.span, "`mutates(...)` requires the mutation effect in the preceding effects ceiling");
-        }
-        std.mem.sort(u16, positions[0..count], {}, std.sort.asc(u16));
-        return self.arena.allocator().dupe(u16, positions[0..count]) catch return error.OutOfMemory;
+        if (token.tag != .ident or !std.mem.eql(u8, self.src.text(token.span), "mutates")) return;
+        return self.sink.fail(removed_spelling_code, token.span, "`mutates(...)` was removed; mark each written parameter `name: mut T`");
+    }
+    /// The `mut` flag list one declared parameter list records, in source order.
+    /// Positions come from `ast.mutPositions` so the declaration side and the
+    /// callback-type side cannot drift apart.
+    fn declaredMutFlags(self: *Parser, parameters: []const ast.Parameter) std.mem.Allocator.Error![]const bool {
+        const flags = try self.arena.allocator().alloc(bool, parameters.len);
+        for (parameters, flags) |parameter, *flag| flag.* = parameter.mut;
+        return flags;
     }
     fn effectBound(self: *Parser) diagnostic.Error!?effects.Bound {
         const sets = effects;
@@ -1465,6 +1443,12 @@ pub const Parser = struct {
     /// and the value stay reachable from one node. A bare `x, y` with no `=` is
     /// not a value and is rejected here.
     fn destructuringAssignment(self: *Parser, first: lex.Token) diagnostic.Error!ast.NodeId {
+        const name = try self.append(.{ .span = first.span, .data = .{ .name = first.span } });
+        self.cursor.pos += 1;
+        return self.destructuringFrom(name);
+    }
+    /// The rest of a destructuring assignment whose first target is parsed.
+    fn destructuringFrom(self: *Parser, first: ast.NodeId) diagnostic.Error!ast.NodeId {
         const targets = try self.destructuringTargets(first);
         const target_span = self.syntax.nodes.items[@backingInt(targets)].span;
         if (!self.take(.equal)) return self.sink.fail(syntax_code, target_span, "a bare comma list is not an expression; write `x, y = value` or parenthesize it as a tuple");
@@ -1474,29 +1458,41 @@ pub const Parser = struct {
             .data = .{ .field_assignment = .{ .target = targets, .value = value } },
         });
     }
-    /// The target list of a destructuring assignment: two or more names separated
-    /// by commas, with an optional trailing comma after the last one. One name
-    /// is never a tuple, so `x, = pair` is rejected.
-    fn destructuringTargets(self: *Parser, first: lex.Token) diagnostic.Error!ast.NodeId {
+    /// The target list of a destructuring assignment: two or more targets
+    /// separated by commas, with an optional trailing comma after the last one.
+    /// A target is a name, an element `xs[i]` or a field `r.f`
+    /// (`PY-DESTRUCTURE-PLACE-1`). One target is never a tuple, so `x, = pair`
+    /// is rejected.
+    fn destructuringTargets(self: *Parser, first: ast.NodeId) diagnostic.Error!ast.NodeId {
         const allocator = self.arena.allocator();
         var elements: std.ArrayList(ast.NodeId) = .empty;
-        try elements.append(allocator, try self.append(.{ .span = first.span, .data = .{ .name = first.span } }));
-        var last = first.span;
+        try elements.append(allocator, first);
+        const first_span = self.syntax.nodes.items[@backingInt(first)].span;
+        var last = first_span;
         var comma_span: ?Span = null;
-        self.cursor.pos += 1;
         while (self.current().tag == .comma) {
             comma_span = self.current().span;
             _ = self.take(.comma);
             if (self.current().tag == .equal or self.terminatorAhead()) break;
-            const name = try self.expect(.ident);
-            last = name.span;
-            try elements.append(allocator, try self.append(.{ .span = name.span, .data = .{ .name = name.span } }));
+            const target = try self.expression(0);
+            const node = self.syntax.nodes.items[@backingInt(target)];
+            switch (node.data) {
+                .name, .index, .field => {},
+                else => return self.sink.fail("E_ASSIGNMENT_TARGET", node.span, "a destructuring target is a name, an element `xs[i]` or a field `r.f`"),
+            }
+            last = node.span;
+            try elements.append(allocator, target);
         }
-        if (elements.items.len < 2) return self.sink.fail(syntax_code, comma_span orelse first.span, "a one-element target list is not a tuple; bind the name directly");
-        return self.append(.{ .span = .join(first.span, last), .data = .{ .tuple = try elements.toOwnedSlice(allocator) } });
+        if (elements.items.len < 2) return self.sink.fail(syntax_code, comma_span orelse first_span, "a one-element target list is not a tuple; bind the name directly");
+        return self.append(.{ .span = .join(first_span, last), .data = .{ .tuple = try elements.toOwnedSlice(allocator) } });
     }
     fn assignmentExpression(self: *Parser) diagnostic.Error!ast.NodeId {
         const value = try self.expression(0);
+        // `a[i], a[j] = a[j], a[i]`: a target list that starts with a place.
+        if (self.current().tag == .comma) switch (self.syntax.nodes.items[@backingInt(value)].data) {
+            .index, .field => return self.destructuringFrom(value),
+            else => {},
+        };
         const operator = self.current();
         const op = assignmentOperation(operator.tag) orelse return value;
         self.cursor.pos += 1;
@@ -1758,15 +1754,11 @@ pub const Parser = struct {
         if (self.current().tag == .kw_unwrap) return self.hintHere(.option_unwrap);
         const name: lex.Token = .{ .tag = .ident, .span = try self.declaredName() };
         if (self.take(.lparen)) {
-            var arguments: std.ArrayList(ast.NodeId) = .empty;
-            if (self.current().tag != .rparen) while (true) {
-                try arguments.append(self.arena.allocator(), try self.argumentValue());
-                if (!self.take(.comma) or self.current().tag == .rparen) break;
-            };
+            const arguments = try self.callArguments();
             const close = try self.callClose();
             return self.append(.{
                 .span = .join(self.syntax.nodes.items[@backingInt(left)].span, close.span),
-                .data = .{ .method_call = .{ .base = left, .name = name.span, .arguments = try arguments.toOwnedSlice(self.arena.allocator()) } },
+                .data = .{ .method_call = .{ .base = left, .name = name.span, .arguments = arguments.values, .argument_names = arguments.names } },
             });
         } else return self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, name.span), .data = .{ .field = .{ .base = left, .name = name.span } } });
     }
@@ -1862,7 +1854,7 @@ pub const Parser = struct {
 
     /// Parse one interpolation as an ordinary expression over its own token range.
     fn formatHole(self: *Parser, span: Span) diagnostic.Error!ast.NodeId {
-        const tokens = try lex.lexRangeWithMarkers(self.arena.allocator(), self.src.bytes, span, self.src.mutation_markers, self.sink);
+        const tokens = try lex.lexRange(self.arena.allocator(), self.src.bytes, span, self.sink);
         const outer = self.tokens;
         const position = self.cursor.pos;
         const delimiters = self.cursor.delimiters;
@@ -2144,33 +2136,25 @@ pub const Parser = struct {
         }
         return false;
     }
-    const Arguments = struct { values: []const ast.NodeId, names: []const ?Span, markers: []const bool = &.{} };
+    const Arguments = struct { values: []const ast.NodeId, names: []const ?Span };
     fn callArguments(self: *Parser) diagnostic.Error!Arguments {
         var values: std.ArrayList(ast.NodeId) = .empty;
         var names: std.ArrayList(?Span) = .empty;
-        var markers: std.ArrayList(bool) = .empty;
-        var marker_seen = false;
         var keyword_seen = false;
         if (self.current().tag != .rparen) while (true) {
-            var marked = self.take(.ampersand);
             const named = self.current().tag == .ident or self.current().tag == .kw_len or self.current().tag == .kw_replace;
             const keyword = named and self.tokens[self.cursor.pos + 1].tag == .equal;
             const name = if (keyword) self.current().span else null;
             if (keyword) self.cursor.pos += 2;
-            // A keyword argument may spell the marker after `=`: `f(x=&y)`.
-            if (self.take(.ampersand)) marked = true;
-            marker_seen = marker_seen or marked;
             if (keyword_seen and !keyword) return self.sink.fail("E_CALL_ARGUMENT", self.current().span, "positional arguments must precede keyword arguments");
             keyword_seen = keyword_seen or keyword;
             try names.append(self.arena.allocator(), name);
-            try markers.append(self.arena.allocator(), marked);
             try values.append(self.arena.allocator(), try self.argumentValue());
             if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
         return .{
             .values = try values.toOwnedSlice(self.arena.allocator()),
             .names = if (keyword_seen) try names.toOwnedSlice(self.arena.allocator()) else &.{},
-            .markers = if (marker_seen) try markers.toOwnedSlice(self.arena.allocator()) else &.{},
         };
     }
     /// Recognize `Owner.name[T](…)`, a member call carrying explicit type arguments.
@@ -2241,7 +2225,6 @@ pub const Parser = struct {
                 .name = member,
                 .arguments = arguments.values,
                 .argument_names = arguments.names,
-                .argument_markers = arguments.markers,
             } } });
         }
         if (token.tag == .ident and self.appliedConstructorAhead()) {
@@ -2249,7 +2232,7 @@ pub const Parser = struct {
             _ = try self.expect(.lparen);
             const arguments = try self.callArguments();
             const close = try self.callClose();
-            return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .name = name, .arguments = arguments.values, .argument_names = arguments.names, .argument_markers = arguments.markers } } });
+            return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .name = name, .arguments = arguments.values, .argument_names = arguments.names } } });
         }
         self.cursor.pos += 1;
         var owner: ?Span = null;
@@ -2263,7 +2246,7 @@ pub const Parser = struct {
         if (callable_name and self.sameExpressionLine() and self.take(.lparen)) {
             const arguments = try self.callArguments();
             const close = try self.callClose();
-            return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .owner = owner, .name = name, .arguments = arguments.values, .argument_names = arguments.names, .argument_markers = arguments.markers } } });
+            return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .owner = owner, .name = name, .arguments = arguments.values, .argument_names = arguments.names } } });
         }
         return self.append(.{ .span = name, .data = switch (token.tag) {
             .integer => .{ .integer = token.span },

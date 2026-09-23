@@ -174,7 +174,7 @@ pub fn find(types: []const Value, name: []const u8) ?usize {
 }
 /// Manifest kind names in their stable numeric order; the index is the number
 /// the generated adapter switches on.
-const kind_names = [_][]const u8{ "scalar", "record", "array", "variant", "domain", "text", "list" };
+const kind_names = [_][]const u8{ "scalar", "record", "array", "variant", "domain", "text", "list", "niche" };
 /// The manifest kind number of a user list, carried as one wire node per element.
 const list_kind: u8 = 6;
 fn kindNumber(name: []const u8) Error!u8 {

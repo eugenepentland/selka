@@ -1,0 +1,231 @@
+{
+ "mylang": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem/bin/mylang",
+ "cpu": 2,
+ "rounds": 9,
+ "warmups": 2,
+ "started": "2026-09-23T07:40:25Z",
+ "load_start": [
+  1.2587890625,
+  2.79931640625,
+  3.64599609375
+ ],
+ "benchmarks": {
+  "scan_split": {
+   "arms": {
+    "my": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/lib/scan_split.my",
+     "build": {
+      "cmd": [
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem/bin/mylang",
+       "build",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/lib/scan_split.my",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/split/scan_split.my",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/split/mycache"
+      ],
+      "ok": true,
+      "seconds": 0.7575824300001841,
+      "stderr": ""
+     },
+     "stdout_sha256": "acd0b3e0d83a905f4007e5ade083a9293c977a9e53239489b3ab0b8c5f951a0d",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "a91eedb5da0da02f502ad71fff144d8b314d077b3950bf559b331250434935ee",
+     "peak_rss_kb": 52888,
+     "wall": [
+      0.168930606,
+      0.1694437,
+      0.174168958,
+      0.172371793,
+      0.16922347,
+      0.174513747,
+      0.162795609,
+      0.171174241,
+      0.168791496
+     ],
+     "cpu": [
+      0.16864099999999999,
+      0.169021,
+      0.17382399999999998,
+      0.171732,
+      0.169016,
+      0.17421899999999998,
+      0.16245199999999999,
+      0.170879,
+      0.168552
+     ],
+     "wall_median": 0.1694437,
+     "cpu_median": 0.169021,
+     "ratio_wall": {
+      "median": 4.198681050228606,
+      "lo": 3.87267349139095,
+      "hi": 4.531349411407835
+     },
+     "ratio_cpu": {
+      "median": 4.225313980597128,
+      "lo": 3.898869665513264,
+      "hi": 4.553051593403681
+     }
+    },
+    "zig-fast": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/lib/scan_split.zig",
+     "build": {
+      "cmd": [
+       "zig",
+       "build-exe",
+       "scan_split.zig",
+       "-O",
+       "ReleaseFast",
+       "-femit-bin=/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/split/scan_split.zig-fast",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/split/zigcache",
+       "--global-cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/split/zigcache-global"
+      ],
+      "ok": true,
+      "seconds": 14.381428037013393,
+      "stderr": ""
+     },
+     "stdout_sha256": "acd0b3e0d83a905f4007e5ade083a9293c977a9e53239489b3ab0b8c5f951a0d",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "c0e355ea3c02425577550622fc080fd6aff8d3e0200e65e86911487b329ed801",
+     "peak_rss_kb": 4500,
+     "wall": [
+      0.038866117,
+      0.039174386,
+      0.042693944,
+      0.038039837,
+      0.043696808,
+      0.037765467,
+      0.040807349,
+      0.044819841,
+      0.040201076
+     ],
+     "cpu": [
+      0.038603,
+      0.038869999999999995,
+      0.042342,
+      0.037717999999999995,
+      0.04335,
+      0.037515,
+      0.040483,
+      0.044489,
+      0.039890999999999996
+     ],
+     "wall_median": 0.040201076,
+     "cpu_median": 0.039890999999999996,
+     "ratio_wall": {
+      "median": 1.0,
+      "lo": 1.0,
+      "hi": 1.0
+     },
+     "ratio_cpu": {
+      "median": 1.0,
+      "lo": 1.0,
+      "hi": 1.0
+     }
+    },
+    "loops": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/lib/scan_split.my",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "acd0b3e0d83a905f4007e5ade083a9293c977a9e53239489b3ab0b8c5f951a0d",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "e304eb364d62ad0bda69308292b28f3e3c97945e95331eee349539b8fb59f977",
+     "peak_rss_kb": 65900,
+     "wall": [
+      0.128760087,
+      0.132687432,
+      0.127654419,
+      0.128610887,
+      0.133312738,
+      0.128228909,
+      0.134293674,
+      0.128983591,
+      0.130393359
+     ],
+     "cpu": [
+      0.128522,
+      0.132314,
+      0.127413,
+      0.12827,
+      0.132965,
+      0.12789899999999998,
+      0.13368,
+      0.128735,
+      0.130185
+     ],
+     "wall_median": 0.128983591,
+     "cpu_median": 0.128735,
+     "ratio_wall": {
+      "median": 3.2909188489553682,
+      "lo": 2.9899889080287356,
+      "hi": 3.387096660557743
+     },
+     "ratio_cpu": {
+      "median": 3.3021268186646244,
+      "lo": 3.0091398611307922,
+      "hi": 3.4040133779264217
+     }
+    },
+    "mem": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/lib/scan_split.my",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "acd0b3e0d83a905f4007e5ade083a9293c977a9e53239489b3ab0b8c5f951a0d",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "a91eedb5da0da02f502ad71fff144d8b314d077b3950bf559b331250434935ee",
+     "peak_rss_kb": 53016,
+     "wall": [
+      0.169237366,
+      0.16813813,
+      0.169733788,
+      0.174200224,
+      0.169135731,
+      0.171419762,
+      0.173810072,
+      0.165890848,
+      0.170703303
+     ],
+     "cpu": [
+      0.16893299999999997,
+      0.16779399999999997,
+      0.169522,
+      0.173847,
+      0.16880099999999998,
+      0.17119299999999998,
+      0.173535,
+      0.165575,
+      0.170411
+     ],
+     "wall_median": 0.169733788,
+     "cpu_median": 0.169522,
+     "ratio_wall": {
+      "median": 4.259283591296264,
+      "lo": 3.8706655872895803,
+      "hi": 4.539061095153412
+     },
+     "ratio_cpu": {
+      "median": 4.28661413432799,
+      "lo": 3.893910034602076,
+      "hi": 4.563321338131414
+     }
+    }
+   },
+   "reference_stdout": "660003 11438130 1320003 565620 8704428\n"
+  }
+ },
+ "load_end": [
+  2.14013671875,
+  2.89501953125,
+  3.65869140625
+ ]
+}

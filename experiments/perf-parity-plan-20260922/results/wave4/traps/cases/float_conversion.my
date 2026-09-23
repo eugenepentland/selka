@@ -1,0 +1,13 @@
+def convert(x: float) -> int:
+    return int(x * 1e300 * 1e300)
+
+
+def loop(n: int) -> int:
+    total = 0
+    for i in range(n):
+        total = total + convert(float(i) + 0.5)
+    return total
+
+
+def main() -> int:
+    return loop(3)

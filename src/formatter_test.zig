@@ -39,6 +39,45 @@ fn expectCanonicalModule(allocator: std.mem.Allocator, input: []const u8, expect
     try t.expectEqualStrings(expected, twice);
 }
 
+// spec: FMT-CLAUSE-SPACE-1
+test "formatter keeps the space between a bracketed return type and its effect clause" {
+    try expectCanonicalModule(t.allocator,
+        \\module m
+        \\
+        \\
+        \\public def find(values: list[int]) -> Option[int] effects():
+        \\    return None
+        \\
+        \\
+        \\def keys(pick: def(int) -> Option[int] effects(), xs: list[int]) -> list[int] noalloc:
+        \\    return xs
+        \\
+        \\
+        \\def first(xs: list[Point]) -> int:
+        \\    return xs[0].x
+    ,
+        \\module m
+        \\
+        \\public def find(values: list[int]) -> Option[int] effects():
+        \\    return None
+        \\
+        \\
+        \\def keys(pick: def(int) -> Option[int] effects(), xs: list[int]) -> list[int] noalloc:
+        \\    return xs
+        \\
+        \\
+        \\def first(xs: list[Point]) -> int:
+        \\    return xs[0].x
+        \\
+    );
+    // The standard library's own signatures are already canonical.
+    const sort_source = @embedFile("stdlib/sort.my");
+    const formatted = try formatModuleOnce(t.allocator, "sort.my", sort_source);
+    defer t.allocator.free(formatted);
+    try t.expect(std.mem.indexOf(u8, formatted, "]effects(") == null);
+    try t.expect(std.mem.indexOf(u8, formatted, "-> Option[int] effects():") != null);
+}
+
 // spec: TOOL-5
 test "formatter canonicalizes operator and assignment spacing" {
     try expectCanonical(t.allocator,
@@ -257,14 +296,31 @@ test "formatter still rejects invalid syntax and reports its source diagnostic" 
     try t.expectError(error.SourceError, compilation.format(t.allocator));
 }
 
-// spec-case: TOOL-5
-test "formatter keeps the mutates clause separated from the effect ceiling" {
+// spec: MUT-PARAM-6
+test "formatter keeps the mut parameter and the mut argument marker canonical" {
     const expected =
-        \\def replace_first(values: list[int], replacement: int) -> None effects(mutation) mutates(values):
+        \\def replace_first(values: mut list[int], replacement: int) -> None effects(mutation):
         \\    values[0] = replacement
         \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    replace_first(mut values, replacement=2)
+        \\    return values[0] - 2
+        \\
     ;
-    try expectCanonical(t.allocator, "def replace_first(values: list[int], replacement: int) -> None effects(mutation)  mutates(values):\n    values[0] = replacement\n", expected);
+    const unformatted =
+        \\def replace_first(values:  mut   list[int],  replacement: int) -> None   effects(mutation):
+        \\    values[0] = replacement
+        \\
+        \\
+        \\def main() -> int:
+        \\    values = [1]
+        \\    replace_first(  mut   values , replacement = 2 )
+        \\    return values[0] - 2
+        \\
+    ;
+    try expectCanonical(t.allocator, unformatted, expected);
 }
 
 // spec: ATTR-1

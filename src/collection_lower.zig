@@ -101,7 +101,7 @@ pub fn operationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Spa
         .contains => .bool,
         .length, .capacity => .u64,
         .append, .write, .iteration_check => .unit,
-        .extend, .insert, .remove, .reverse, .sort, .clear => .unit,
+        .extend, .insert, .remove, .reverse, .sort, .sort_keyed, .clear => .unit,
         .slice_step => owner,
         else => error.InternalError,
     };

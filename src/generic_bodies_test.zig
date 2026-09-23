@@ -147,13 +147,7 @@ test "generic body contracts reject undeclared operations mismatches and invalid
         \\def f[T: integer](x: T) -> T:
         \\    return x + 1
         , .code = "E_GENERIC_TYPE" },
-        // Assignment binds, so a loop variable is the binding that stays immutable.
-        .{ .text =
-        \\def f[T](x: T) -> T:
-        \\    for i in range(0, 2):
-        \\        i = 1
-        \\    return x
-        , .code = "E_IMMUTABLE" },
+        // A loop variable is assignable (PY-FOR-REBIND-1), so no loop case here.
         .{ .text =
         \\def f[T](x: T) -> T:
         \\    if True:
@@ -406,4 +400,118 @@ test "a generic body constructs and destructures a parenthesized case with a def
     defer compilation.deinit();
     try compilation.check();
     try t.expectEqual(@as(usize, 0), compilation.diagnostics.items.len);
+}
+
+fn conditionalScenario(allocator: std.mem.Allocator) !void {
+    const text =
+        \\def pick[T](left: T, right: T, choose_left: bool) -> T:
+        \\    return left if choose_left else right
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return pick(1, 2, True)
+    ;
+    var compilation = try language.Compilation.init(allocator, "generic.my", text);
+    defer compilation.deinit();
+    try compilation.parse();
+    var sink: diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
+    try bodies.check(allocator, compilation.src, compilation.syntax.?, &sink);
+    try t.expectEqual(@as(usize, 0), sink.items.items.len);
+    try compilation.check();
+    try t.expectEqual(@as(i64, 1), (try @import("native_execute.zig").run(&compilation)).value);
+}
+// spec-case: CONDITIONAL-EXPR-4
+test "a generic body checks a conditional expression symbolically" {
+    try conditionalScenario(t.allocator);
+}
+
+fn sortingScenario(allocator: std.mem.Allocator) !void {
+    const text =
+        \\def ranked(keys: list[int]) -> list[int]:
+        \\    words = [k for k in keys]
+        \\    words.sort()
+        \\    return words
+        \\
+        \\
+        \\def smallest_key[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> int:
+        \\    names = ["b", "a"]
+        \\    names.sort()
+        \\    scores = [2.5, 0.5]
+        \\    scores.sort()
+        \\    return ranked([key(value) for value in values])[0] + len(names[0]) + int(scores[0] * 2.0)
+        \\
+        \\
+        \\def negated(value: int) -> int effects():
+        \\    return 0 - value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return smallest_key([3, 9, 4], negated) + 50
+    ;
+    var compilation = try language.Compilation.init(allocator, "generic_sort.my", text);
+    defer compilation.deinit();
+    try compilation.parse();
+    var sink: diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
+    try bodies.check(allocator, compilation.src, compilation.syntax.?, &sink);
+    try t.expectEqual(@as(usize, 0), sink.items.items.len);
+    try compilation.check();
+    try t.expectEqual(@as(i64, 43), (try @import("native_execute.zig").run(&compilation)).value);
+}
+// spec: GENERIC-BODY-3
+test "a generic body and its helpers sort concrete lists and reject a symbolic element" {
+    try sortingScenario(t.allocator);
+    try reject(
+        \\def ordered[T: copy + storable](values: list[T]) -> list[T]:
+        \\    copy = values[:]
+        \\    copy.sort()
+        \\    return copy
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_COLLECTION_METHOD");
+    try reject(
+        \\def last[T: copy + storable](values: list[T]) -> int:
+        \\    stack = [1, 2]
+        \\    _ = stack.pop()
+        \\    return len(values)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_GENERIC_BODY_UNSUPPORTED");
+}
+/// Check `text`, expect exactly one diagnostic, and compare its code and message.
+fn rejectOnly(text: []const u8, code: []const u8, message: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, "invalid.my", text);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqual(@as(usize, 1), compilation.diagnostics.items.len);
+    try t.expectEqualStrings(code, compilation.diagnostics.items[0].code);
+    try t.expectEqualStrings(message, compilation.diagnostics.items[0].message);
+}
+// spec: GENERIC-LAMBDA-1
+test "a lambda inside a generic body is one located unsupported diagnostic naming the fix" {
+    // A sort key: the case the keyed-sort audit found reported as an unknown name.
+    try rejectOnly(
+        \\def order[T: copy + storable](values: list[T]) -> list[T]:
+        \\    return sorted(values, key=lambda value: 0)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return len(order([3, 1]))
+    , "E_GENERIC_BODY_UNSUPPORTED", bodies.lambda_in_generic_body);
+    // Any callback argument, even one whose type mentions no type parameter.
+    try rejectOnly(
+        \\def apply(f: def(int) -> int effects(), x: int) -> int:
+        \\    return f(x)
+        \\
+        \\
+        \\def count[T: copy + storable](values: list[T]) -> int:
+        \\    return apply(lambda x: x + 1, len(values))
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return count([3, 1])
+    , "E_GENERIC_BODY_UNSUPPORTED", bodies.lambda_in_generic_body);
 }

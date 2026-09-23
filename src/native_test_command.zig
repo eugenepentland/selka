@@ -146,6 +146,14 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
         try std.Io.File.stdout().writeStreamingAll(process.io, options.usage);
         return 0;
     }
+    // QBE-UNCHECKED-1: `--unchecked` is refused here by name rather than as an
+    // unknown flag. A guest test asserts that invalid input traps, and every
+    // test child runs under a finite step and memory budget, so a build with no
+    // guards and no frame protocol has nothing left for a test to observe.
+    for (args) |argument| if (std.mem.eql(u8, argument, "--unchecked")) {
+        try std.Io.File.stderr().writeStreamingAll(process.io, "mylang test: --unchecked is refused: tests need the traps it removes. Run the tests checked, then `mylang build --unchecked` the program they passed on.\n");
+        return 2;
+    };
     var opts = options.parse(args) catch {
         try std.Io.File.stderr().writeStreamingAll(process.io, options.usage);
         return 2;
@@ -258,7 +266,8 @@ pub fn run(process: std.process.Init, args: []const []const u8) Error!u8 {
         if (opts.flags.pure_skip and is_pure) try receipts.writeOutcome(context, directory, result);
     };
     if (opts.flags.output.report) try emitWorkReport(context, &work, results, replayed);
-    const test_status = try report(context, results, replayed, opts.flags.output.json);
+    const loaded = try snapshot.sourcesOf(context, prepared, production);
+    const test_status = try report(context, .{ .results = results, .replayed = replayed, .loaded = loaded }, opts.flags.output.json);
     return finish(context, opts, bench_states, &bench_context, test_status, test_failed);
 }
 
@@ -917,13 +926,18 @@ fn reportAffected(context: fs.Context, selection: language.affected_tests.Select
     }
 }
 
-fn report(context: fs.Context, results: []const receipts.Result, replayed: []const bool, json: bool) Error!u8 {
+/// What one invocation's report prints: each case's result, whether it was
+/// replayed from a receipt, and the project sources the check loaded, which a
+/// directory run uses to prove no test-declaring source went unloaded.
+const Report = struct { results: []const receipts.Result, replayed: []const bool, loaded: []const []const u8 };
+fn report(context: fs.Context, printed: Report, json: bool) Error!u8 {
+    const results = printed.results;
     var passed: usize = 0;
     var failed: usize = 0;
     var skipped: usize = 0;
     var cached: usize = 0;
     var executed: usize = 0;
-    for (results, replayed) |result, was_replayed| {
+    for (results, printed.replayed) |result, was_replayed| {
         const was_passed = std.mem.eql(u8, result.status, "passed");
         const was_failed = std.mem.eql(u8, result.status, "failed");
         if (was_passed) passed += 1;
@@ -943,6 +957,7 @@ fn report(context: fs.Context, results: []const receipts.Result, replayed: []con
         .skipped = skipped,
         .cached = cached,
         .executed = executed,
+        .modules = printed.loaded,
     }, .{}) else try std.fmt.allocPrint(context.allocator, "{d} passed, {d} cached, {d} failed, {d} skipped", .{ passed, cached, failed, skipped });
     try std.Io.File.stdout().writeStreamingAll(context.io, try std.fmt.allocPrint(context.allocator, "{s}\n", .{output}));
     if (failed != 0) return 1;

@@ -1,0 +1,127 @@
+module source
+
+# Owned source bytes, the display path, and byte line starts. The lexer works on
+# `bytes` so half-open offsets match the stage-0 oracle exactly; `text` and
+# `lines` retain the decoded source for human-readable locations.
+
+
+public record Location:
+    line: int
+    column: int
+    text: str
+
+
+public record Source:
+    path: str
+    raw: bytes
+    text: str
+    line_starts: list[int]
+    lines: list[str]
+    # Empty on the ASCII fast path, where byte offsets and scalar offsets agree.
+    # Otherwise scalar_marks[k] is the decoded scalar index at byte offset
+    # k * SLICE_STRIDE, so a lookup scans at most SLICE_STRIDE bytes forward
+    # from a sample instead of rescanning from byte zero. The table has one
+    # entry per 32 source bytes, never one per byte.
+    scalar_marks: list[int]
+
+
+# Byte stride between decoded-scalar samples in the non-ASCII offset table.
+const SLICE_STRIDE: int = 32
+
+
+# Retain the path, raw bytes, decoded text and the byte offset of every line.
+public def make(path: str, raw: bytes, text: str) -> Source:
+    lines = text.split("\n")
+    starts: list[int] = [0]
+    marks: list[int] = []
+    if len(raw) == len(text):
+        # ASCII fast path: scalar counts and byte counts agree, so the line byte
+        # starts follow from the decoded pieces without rescanning every byte.
+        offset = 0
+        index = 0
+        while index + 1 < len(lines):
+            offset += len(lines[index]) + 1
+            starts.append(offset)
+            index += 1
+    else:
+        index = 0
+        while index < len(raw):
+            if raw[index] == 10:
+                starts.append(index + 1)
+            index += 1
+        marks = build_scalar_marks(raw)
+    return Source(path=path, raw=raw, text=text, line_starts=starts, lines=lines, scalar_marks=marks)
+
+
+# Sample decoded scalar offsets every SLICE_STRIDE raw bytes. One full scan of
+# the source builds the table; the final sample covers an offset equal to the
+# source length when that length is itself a stride boundary.
+def build_scalar_marks(raw: bytes) -> list[int]:
+    marks: list[int] = []
+    count = 0
+    index = 0
+    limit = len(raw)
+    while index < limit:
+        if index % SLICE_STRIDE == 0:
+            marks.append(count)
+        byte = raw[index]
+        if byte < 128 or byte >= 192:
+            count += 1
+        index += 1
+    if limit % SLICE_STRIDE == 0:
+        marks.append(count)
+    return marks
+
+
+# Index of the last line start at or before an offset.
+def line_index(starts: list[int], offset: int) -> int:
+    low = 0
+    high = len(starts)
+    while low + 1 < high:
+        middle = low + (high - low) // 2
+        if starts[middle] <= offset:
+            low = middle
+        else:
+            high = middle
+    return low
+
+
+# Byte offset of the line containing an offset.
+public def line_start_at(src: Source, offset: int) -> int:
+    return src.line_starts[line_index(src.line_starts, offset)]
+
+
+# 1-based line/column and source line text for one byte offset.
+public def locate(src: Source, offset: int) -> Location:
+    index = line_index(src.line_starts, offset)
+    start = src.line_starts[index]
+    text = src.lines[index]
+    if text.endswith("\r"):
+        text = text[0:len(text) - 1]
+    return Location(line=index + 1, column=offset - start + 1, text=text)
+
+
+# Scalar index of a byte offset in validated UTF-8: count every byte that is
+# not a continuation byte (0x80..0xbf). ASCII sources own no sample table and
+# every byte is its own scalar; non-ASCII sources start from the nearest sample.
+def scalar_index(src: Source, offset: int) -> int:
+    marks = src.scalar_marks
+    if len(marks) == 0:
+        return offset
+    index = offset // SLICE_STRIDE
+    count = marks[index]
+    at = index * SLICE_STRIDE
+    raw = src.raw
+    while at < offset:
+        byte = raw[at]
+        if byte < 128 or byte >= 192:
+            count += 1
+        at += 1
+    return count
+
+
+# Decoded text view for a half-open byte range; offsets stay byte offsets.
+public def slice(src: Source, start: int, end: int) -> str:
+    if len(src.scalar_marks) == 0:
+        return src.text[start:end]
+    return src.text[scalar_index(src, start):scalar_index(src, end)]

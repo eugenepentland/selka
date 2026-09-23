@@ -1,0 +1,10 @@
+def build(n: int) -> int:
+    total = 0
+    with arena():
+        items = [i for i in range(n)]
+        total = items[n]
+    return total
+
+
+def main() -> int:
+    return build(4)

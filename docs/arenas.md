@@ -3,8 +3,9 @@
 `with arena() as name:` opens a region for the managed values described in
 [managed memory](managed-memory.md). Lists, strings, dictionaries and records
 keep the same types. Native allocation uses aligned, zero-filled bump storage
-inside shared chunks, without a garbage-collector header before each payload.
-The chunks are released together when the block ends.
+inside shared chunks. Each payload follows a two-word header, the same size as a
+garbage-collected object's, that records its arena depth. The chunks are
+released together when the block ends.
 
 This is the language's only manual-memory control. There is no explicit storage
 tier, no allocator parameter to thread and no borrow annotation to write: an
@@ -64,7 +65,8 @@ out. `name.escape(value)` deep-copies the part of the graph reachable from `valu
 that lives in the current arena into the enclosing region — the parent arena, or
 the ordinary heap when there is no parent. Objects that already live in an older
 region are shared, not copied, and sharing and cycles inside the copied part are
-preserved.
+preserved. `class` instances are copied the same way as lists, strings and
+dictionaries, so a graph of class nodes built in the arena comes out whole.
 
 ```mylang
 # doc: expect 34
@@ -186,6 +188,12 @@ That program checks cleanly and traps with `R_ARENA_ESCAPE` on the
 Depth comparison is enough because every live object belongs to an arena that is
 still on the stack.
 
+The check reads each object's depth from the header in front of it. It does not
+search the arena's chunks, so a store costs the same however large the arena has
+grown, and filling a list with N values inside a block takes time linear in N. A
+container that already lives in the innermost open arena accepts any value
+without examining it, because no live object is younger.
+
 At the end of a block the runtime also rescans the bindings declared before it and
 traps if any of them still reaches arena storage, then frees the arena. Normal
 exit, `return`, `?` propagation, `break` and `continue` out of the block, and
@@ -219,16 +227,16 @@ heap, and `--gc-stress` still collects at allocation safepoints inside an arena.
 Arena allocations remain alive until scope exit, including old collection backing
 after growth. They are never individually swept or queued for graph marking.
 
-An arena may hold the last reference to an older GC object. Compact side
-descriptors let a collection scan arena contents for these references, retaining
-the GC objects safely. This scan retains references from all allocations in the
+An arena may hold the last reference to an older GC object. The header in front
+of each arena allocation lets a collection scan arena contents for these
+references, retaining the GC objects safely. This scan retains references from all allocations in the
 live arena, including values the program no longer uses. A pure arena workload
 does not trigger automatic collection just because its arena grows: the normal
 collection threshold measures GC bytes. Chunk growth can request collection to
 recover GC bytes before reporting a memory-budget failure.
 
 The memory budget charges the actual reserved chunks, including alignment,
-descriptor space and unused capacity. Small budgets use smaller chunks; a failed
+headers and unused capacity. Small budgets use smaller chunks; a failed
 reservation does not consume budget. Runtime statistics separately count scopes,
 arena allocations, objects bulk released, escape copies, host chunk
 reservations, chunks reused from the retention cache below, and current/peak
@@ -244,9 +252,12 @@ block itself needs no effect.
 
 Current limits:
 
-- Allocation metadata still occupies compact side records in each chunk. GC can
-  scan those records to preserve older references; this is not a proof that every
-  arena is isolated from the GC heap.
+- Every arena allocation carries a two-word header recording its depth, element
+  descriptor and element count. GC scans those headers to preserve older
+  references; this is not a proof that every arena is isolated from the GC heap.
+- One header holds depths up to 4,194,303 nested scopes and element counts up to
+  2^38 − 1 per arena allocation. Past either bound, the scope or the allocation
+  fails as an allocation failure. A native stack cannot reach that nesting depth.
 - Arena backing is retained until scope exit. A long-lived arena can use more
   memory than ordinary GC; use shorter scopes for repeated temporary work.
 - `with` supports only `with arena()`. It is not yet the general resource

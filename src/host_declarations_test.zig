@@ -21,6 +21,28 @@ fn reject(bytes: []const u8, code: []const u8) !void {
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
+// spec-case: HOST-PACKED-2
+test "host signatures carry whole bytes payloads and still refuse other managed storage" {
+    var c = try language.Compilation.init(t.allocator, "host-bytes.my",
+        \\host def read_document(host: Host, file: i64) -> bytes effects(host)
+        \\
+        \\
+        \\host def write_bytes(host: Host, payload: bytes) -> i64 effects(host)
+        \\
+        \\
+        \\def main(host: Host) -> i64:
+        \\    return write_bytes(host, read_document(host, 0))
+    );
+    defer c.deinit();
+    try c.emit();
+    try t.expectEqual(@as(usize, 0), c.diagnostics.items.len);
+    try reject(
+        \\host def take(host: Host, payload: list[i64]) -> i64 effects(host)
+    ++ main_source, "E_HOST_SIGNATURE");
+    try reject(
+        \\host def give(host: Host) -> byte_buffer effects(host)
+    ++ main_source, "E_HOST_SIGNATURE");
+}
 test "a host call is rejected under an effect bound that withholds host authority" {
     var c = try language.Compilation.init(t.allocator, "host-eval.my", declaration ++
         \\def bounded(host: Host) -> i64 effects():
@@ -175,4 +197,28 @@ test "host source declarations require explicit value signatures effects and gue
     try reject(
         \\host def main(host: Host) -> i64 effects(host)
     , "E_MAIN");
+}
+
+// spec: FLOAT-NAN-OBSERVED-6
+test "host metadata marks the builtin float domain so the bridge canonicalizes its NaNs" {
+    var c = try language.Compilation.init(t.allocator, "host-float.my",
+        \\domain Code: u64:
+        \\    def of(value: u64) -> Code:
+        \\        return wrap[Code](value)
+        \\
+        \\
+        \\host def scale(host: Host, x: float, code: Code) -> float effects(host)
+        \\
+        \\
+        \\def main(host: Host) -> i64:
+        \\    return int(scale(host, 1.5, Code.of(3u64)))
+    );
+    defer c.deinit();
+    try c.emit();
+    const manifest = try c.emitQbe(t.allocator);
+    defer t.allocator.free(manifest);
+    // The float domain is the one domain with a width; a user integer domain
+    // keeps width zero, so its NaN-shaped words cross unchanged.
+    try t.expect(std.mem.indexOf(u8, manifest, "{\"name\":\"float\",\"kind\":\"domain\",\"size\":8,\"alignment\":8,\"bits\":64,") != null);
+    try t.expect(std.mem.indexOf(u8, manifest, "{\"name\":\"Code\",\"kind\":\"domain\",\"size\":8,\"alignment\":8,\"bits\":0,") != null);
 }

@@ -52,6 +52,18 @@ Zig ReleaseSafe, the like-for-like comparator (checks on), runs at about 1.1×
 ReleaseFast on these workloads, so "≤ 1.2× ReleaseFast" is "≈ parity with
 ReleaseSafe".
 
+**Re-measured 2026-09-22 on the schematic render** in
+[the schematic audit](audits/schematic-parity-gap-2026-09-22.md): the default
+build is **1.84× Zig / 1.60× Rust** (2.40 ms against 1.31 / 1.50), but the
+shipped `schematic-svg` runner pins QBE with `--qbe PATH` and asks for step
+accounting, so the tool itself runs at **5.8×**; stripping every check and the
+frame protocol by manifest rewrite reaches only 1.64×, and per phase the guest's
+own work is 4.3× Zig (model construction 7.2×, SVG emission 5.7×, parsing 5.0×,
+placement 2.5×, routing 1.4×). The remaining levers are item 6's in-place
+aggregate reads and return-slot forwarding, alias metadata so container headers
+stay in registers, `bytes`-carrying bulk host I/O, and an output-emission fast
+path; item 8's step-accounting cost is 4.75 of the bounded build's 7.15 ms.
+
 ## The order
 
 The items are ranked by measured price divided by the size of the change, with
@@ -130,6 +142,13 @@ and every arm's stdout byte-identical. One negative result worth keeping:
 `noinline` alone did **not** work — LLVM still folded the diamond into a blend —
 which is why the helper's volatile read is load-bearing.
 
+*Superseded 2026-09-22 by `FLOAT-NAN-OBSERVED-1`:* the language now canonicalizes
+a NaN where its bits can be observed (text, foreign-call arguments, the host
+bridge) instead of after every operation, so the branch, the cold call and
+`myl_qbe_float_canonical` itself are gone and a float operation is the bare
+instruction. See [NaN payloads](floating-point.md#nan-payloads) and
+`docs/audits/nan-when-observed-2026-09-22.md`.
+
 Two measured negatives from the same work redirect what is left. The printer's
 `str(value)`-to-measure width path is real but **under 0.6%** of render samples
 (only 10,160 of 120,840 AST nodes are numeric), so it cannot close the parser's
@@ -191,6 +210,23 @@ the smallest credible next step is a driver-side pass annotating each call site
 with a distinct symbol (or an IL extension giving each call site a label
 reference), after which the map is built and read only on a trap.
 
+**Landed, 2026-09-22 (wave 4, `perf/frame-return-map`).** The record is gone
+from the fast protocol (`QBE-FRAMEMAP-1`). Every call is positioned with
+`dbgloc`. The build turns QBE's `.loc` lines, and LLVM's pseudo-probe call sites
+with their inline stacks, into a return-address table (`QBE-FRAMEMAP-ASM-1`).
+Full LTO goes through `ld.lld --lto-emit-asm` for this. A trap walks the guest
+stack: by call-frame information for LLVM (static libunwind, guest `uwtable`,
+no frame pointer) and by frame pointers for QBE.
+
+- LLVM keeps inlining guest code, and inlined frames are still reported.
+- Traps are byte-identical over a 280-case corpus.
+- The floor test stays, now two instructions against `%rsp`.
+- `fib` is 3.35× → 2.08× Zig ReleaseFast. That is not ≤ 1.9×: the checked
+  add's lowering is what is left.
+- `raytrace` −23.5%, the suite geomean −2.6%, the parser −5–6%.
+
+See [the lane report](audits/frame-return-map-2026-09-22.md).
+
 ### 3. Shrink what an allocation touches, and replace the collector's allocator and sweep
 
 *Runtime ABI. Size: large.*
@@ -242,6 +278,18 @@ the elements through the header object's own descriptor, and the frozen
 `{ptr, len}` slice is a representation the compiler must choose and every
 consumer must understand, so it is left for a change that can pay its own way on
 both the fast paths item 5 and item 6 already read.
+
+**Superseded in part, 2026-09-22** (`QBE-INLINE-ALLOC-1`, `GC-GENERATIONS-1`,
+`QBE-GEN-BARRIER-1`; [audit](audits/alloc-gc-2026-09-22.md)). The per-class
+free lists are gone: a sweep threads *holes* — runs of free slots — and every
+allocator bumps a window over one. Classes up to 8 KiB live in aligned 64 KiB
+segments with side mark bits, so a sweep reads bitmaps rather than slots, and
+charges round to 16 bytes instead of 32. Small `class` bodies are allocated
+inline from a prepaid per-class window. The collector is generational with
+sticky mark bits: minor collections trace young objects only, rescanning old
+runtime storage and the class bodies a store barrier reported. `binary_trees`
+went from 2.26× to 0.89× Zig and the collector from 71% to about 14% of its
+samples.
 
 ### 4. Store strings as UTF-8
 
@@ -435,13 +483,51 @@ array-typed record fields through `update_record`, and return-slot forwarding
 `layout_routes::build` profile share and schematic `peek` numbers were not
 measured, so no claim is made about them.
 
+**Second half landed, 2026-09-22** (lane 5,
+[schematic-lane-aggregates](audits/schematic-lane-aggregates-2026-09-22.md)).
+Two of the named changes are done, and the lane adds two more:
+- the by-reference destination local: `QBE-ELEMREF-2` for `x = xs[i]` and
+  the loop variable, over the borrow's real live range;
+- return-slot forwarding in both directions: `QBE-RETFWD-1` returns
+  `xs[i]` from the receiver's storage, and `QBE-CALLREF-1` keeps a call's
+  record result in the call's own buffer;
+- added, `QBE-CTORREAD-1`: a constructor reads a whole-record field operand
+  where it lives;
+- added, `QBE-LISTSET-1`: `xs[i] = v` is an inline bounds test and store
+  instead of a `myl_native_list_set` call. That call was a safepoint and pushed
+  every live traced root.
+
+The last one is the large effect. Measured by
+[the parity plan audit](audits/performance-parity-plan-2026-09-22.md) (§4.1,
+§6.1) on a ReleaseFast build of the lane, interleaved against Zig, output
+byte-identical:
+- thirteen-program geomean **5.79× → 2.97×**;
+- `nbody` 71.7× → 4.9×, `matmul` 41.3× → 7.1×, `fannkuch_redux`
+  15.8× → 1.27×, `sieve` 7.1× → 1.8×, `sort_quick` 1.89× → 1.32×;
+- schematic render **1.98× → 1.73×**;
+- the parser and the micro-kernels unchanged (census 1.73×, render 2.22×,
+  micro geomean 1.36×).
+
+**Acceptance is still not met.** `list_records` is 1.43×, not ≤ 1.3×, and
+the `layout_routes::build` profile share was not re-measured. One program got
+slower: `raytrace`, by 2–4.5%, because a loop variable handed to a call is now
+copied where the old, narrower proof borrowed it.
+
+Still to do:
+- array-typed record fields through `update_record`;
+- folding `xs[i].f = v`'s update into the in-place write (it still copies the
+  record twice);
+- admitting integer casts and provably non-aliasing calls inside a borrow's
+  live range.
+
 ### 7. Dictionary follow-ups
 
 *Runtime. Size: small.*
 
-`pop` rebuilds the index and is O(n), so a pop loop is O(n²); dictionary
-equality in `native_equal.c` is still O(n²); the hash is unseeded FNV-1a, so
-adversarial keys can degrade it (a keyed hash needs a per-process seed, which
+`pop` renumbers the index in place and is O(n), so a pop loop is O(n²);
+dictionary equality in `native_equal.c` is still O(n²); the hash is an
+unseeded word-at-a-time multiply ([PY-DICT-3], 2026-09-22), so adversarial
+keys can degrade it (a keyed hash needs a per-process seed, which
 means a sanctioned entropy source for the runtime). Do these when a workload
 shows them; none is on the parity path.
 

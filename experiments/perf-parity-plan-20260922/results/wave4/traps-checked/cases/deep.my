@@ -1,0 +1,15 @@
+def level3(x: int) -> int:
+    values = [1]
+    return values[x]
+
+
+def level2(x: int) -> int:
+    return level3(x)
+
+
+def level1(x: int) -> int:
+    return level2(x)
+
+
+def main() -> int:
+    return level1(4)

@@ -56,7 +56,10 @@ pub const Node = struct {
         field_assignment: struct { target: NodeId, value: NodeId, op: AssignmentOp = .set },
         index_assignment: struct { target: NodeId, op: AssignmentOp, value: NodeId },
         list_literal: []const NodeId,
-        method_call: struct { base: NodeId, name: Span, arguments: []const NodeId },
+        /// `receiver.name(arguments)` on an expression receiver, with the keyword
+        /// of each named argument (null for a positional one; empty when none is
+        /// named).
+        method_call: struct { base: NodeId, name: Span, arguments: []const NodeId, argument_names: []const ?Span = &.{} },
         list_operation: struct { base: NodeId, kind: @import("buffer_operations.zig").Kind, arguments: []const NodeId },
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: Span, arguments: []const NodeId },
         file_operation: struct { kind: @import("file_operations.zig").Method, owner: Span, argument: ?NodeId },
@@ -100,7 +103,7 @@ pub const Node = struct {
         length: NodeId,
         record: struct { name: Span, fields: []const FieldInit },
         field: struct { base: NodeId, name: Span },
-        call: struct { argument_names: []const ?Span = &.{}, evaluation_order: []const usize = &.{}, owner: ?Span = null, type_arguments: []const Span = &.{}, name: Span, arguments: []const NodeId, argument_markers: []const bool = &.{} },
+        call: struct { argument_names: []const ?Span = &.{}, evaluation_order: []const usize = &.{}, owner: ?Span = null, type_arguments: []const Span = &.{}, name: Span, arguments: []const NodeId },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
         /// A parenthesized or bare tuple value; two to eight elements.
@@ -131,6 +134,26 @@ pub const Statement = struct {
         assignment: struct { name: Span, value: NodeId, op: AssignmentOp, op_span: Span },
     },
 };
+/// Append the statements nested directly inside `statement` — a block's
+/// children, both branches, every match arm, and the body of a loop, `for` or
+/// `with` — so a worklist walk reaches every statement of a body.
+pub fn appendNested(allocator: std.mem.Allocator, work: *std.ArrayList(StatementId), statement: Statement) std.mem.Allocator.Error!void {
+    switch (statement.data) {
+        .block => |children| try work.appendSlice(allocator, children),
+        .branch => |branch| {
+            try work.append(allocator, branch.then_body);
+            if (branch.else_body) |other| try work.append(allocator, other);
+        },
+        .match => |match| for (match.arms) |arm| {
+            try work.append(allocator, arm.body);
+        },
+        .loop => |loop| try work.append(allocator, loop.body),
+        .for_each => |each| try work.append(allocator, each.body),
+        .for_range => |range| try work.append(allocator, range.body),
+        .with_scope => |scope| try work.append(allocator, scope.body),
+        .assertion, .ret, .loop_exit, .discard, .binding, .assignment => {},
+    }
+}
 /// One generator with an optional filter, producing a value per retained element.
 pub const Comprehension = struct {
     output: NodeId,
@@ -217,8 +240,9 @@ pub const FunctionSignature = struct {
     type_parameters: []const TypeParameter = &.{},
     parameters: []const Parameter,
     return_type: Span,
-    /// Normalized parameter positions from an optional `mutates(...)` clause.
-    mutates: []const u16 = &.{},
+    /// Sorted zero-based positions of the parameters declared `name: mut T`.
+    /// This set is the declared mutation footprint of the function.
+    mut_positions: []const u16 = &.{},
     /// Abstract-checked direct input positions, retained for interface consumers.
     inferred_mutates: []const u16 = &.{},
     /// Whether the abstract body performed a managed receiver write.
@@ -297,6 +321,20 @@ pub fn docstringOf(program: Program, declaration: Span) ?DeclarationDoc {
     return null;
 }
 
+/// Zero-based positions of the parameters one flag list marks `mut`, in source
+/// order. Consumes the per-parameter flag list a callback type records; the
+/// caller owns the returned slice.
+pub fn mutPositions(allocator: std.mem.Allocator, flags: []const bool) std.mem.Allocator.Error![]const u16 {
+    var positions: [16]u16 = undefined;
+    var count: usize = 0;
+    for (flags, 0..) |flag, index| {
+        if (!flag or count == positions.len) continue;
+        positions[count] = @intCast(index);
+        count += 1;
+    }
+    return allocator.dupe(u16, positions[0..count]);
+}
+
 /// Expression-bodied anonymous function with contextually typed parameters and result.
 pub const Lambda = struct { span: Span, parameters: []const Span, body: NodeId };
 /// Source type declarations collected separately from function bodies and expression tables.
@@ -326,10 +364,8 @@ pub const CallbackType = struct {
     parameter_names: []const ?Span = &.{},
     return_type: Span,
     effect_bound: effect_set.Bound,
-    /// Normalized parameter positions from an optional `mutates(...)` clause.
-    mutates: []const u16 = &.{},
     /// One flag per parameter in source order, true where the declared type was
-    /// preceded by `mut`.
+    /// preceded by `mut`. The set is the callable's declared mutation footprint.
     mut_parameters: []const bool = &.{},
 };
 /// One `tuple[T1, ..., Tn]` type spelling with its element type spans.

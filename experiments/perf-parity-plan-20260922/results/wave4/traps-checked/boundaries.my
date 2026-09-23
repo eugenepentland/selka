@@ -1,0 +1,107 @@
+# checked + - * at every width, operands from the command line
+
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+def wide(x: int) -> u64:
+    if x >= 0:
+        return u64(x)
+    return u64(x + 9223372036854775807 + 1) + 9223372036854775808u64
+
+
+def signed64(op: str, x: int, y: int) -> int:
+    if op == "add":
+        return x + y
+    if op == "sub":
+        return x - y
+    return x * y
+
+
+def unsigned64(op: str, x: u64, y: u64) -> u64:
+    if op == "add":
+        return x + y
+    if op == "sub":
+        return x - y
+    return x * y
+
+
+def signed32(op: str, x: i32, y: i32) -> i32:
+    if op == "add":
+        return x + y
+    if op == "sub":
+        return x - y
+    return x * y
+
+
+def unsigned32(op: str, x: u32, y: u32) -> u32:
+    if op == "add":
+        return x + y
+    if op == "sub":
+        return x - y
+    return x * y
+
+
+def signed16(op: str, x: i16, y: i16) -> i16:
+    if op == "add":
+        return x + y
+    if op == "sub":
+        return x - y
+    return x * y
+
+
+def unsigned16(op: str, x: u16, y: u16) -> u16:
+    if op == "add":
+        return x + y
+    if op == "sub":
+        return x - y
+    return x * y
+
+
+def signed8(op: str, x: i8, y: i8) -> i8:
+    if op == "add":
+        return x + y
+    if op == "sub":
+        return x - y
+    return x * y
+
+
+def unsigned8(op: str, x: u8, y: u8) -> u8:
+    if op == "add":
+        return x + y
+    if op == "sub":
+        return x - y
+    return x * y
+
+
+def report(out: Stream, args: list[str]) -> int:
+    width = args[0]
+    op = args[1]
+    x = number(args[2])
+    y = number(args[3])
+    if width == "i64":
+        out.print(signed64(op, x, y))
+    if width == "u64":
+        out.print(unsigned64(op, wide(x), wide(y)))
+    if width == "i32":
+        out.print(signed32(op, i32(x), i32(y)))
+    if width == "u32":
+        out.print(unsigned32(op, u32(x), u32(y)))
+    if width == "i16":
+        out.print(signed16(op, i16(x), i16(y)))
+    if width == "u16":
+        out.print(unsigned16(op, u16(x), u16(y)))
+    if width == "i8":
+        out.print(signed8(op, i8(x), i8(y)))
+    if width == "u8":
+        out.print(unsigned8(op, u8(x), u8(y)))
+    return 0
+
+
+def main(args: list[str], out: Stream) -> int:
+    return report(out, args)

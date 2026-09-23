@@ -27,76 +27,76 @@ public record Pin:
     decoupling: bool
 
 
-def instanceForm(host: Host, nodes: list[s.Node], index: int) -> bool:
-    return s.form(host, nodes, index, b"instance")
+def instanceForm(nodes: list[s.Node], index: int) -> bool:
+    return s.form(nodes, index, b"instance")
 
 
-def blockForm(host: Host, nodes: list[s.Node], index: int) -> bool:
-    return s.form(host, nodes, index, b"design-block")
+def blockForm(nodes: list[s.Node], index: int) -> bool:
+    return s.form(nodes, index, b"design-block")
 
 
-def moduleForm(host: Host, nodes: list[s.Node], index: int) -> bool:
-    return s.form(host, nodes, index, b"defmodule")
+def moduleForm(nodes: list[s.Node], index: int) -> bool:
+    return s.form(nodes, index, b"defmodule")
 
 
-def pinForm(host: Host, nodes: list[s.Node], index: int) -> bool:
-    return s.form(host, nodes, index, b"pin")
+def pinForm(nodes: list[s.Node], index: int) -> bool:
+    return s.form(nodes, index, b"pin")
 
 
-def ncForm(host: Host, nodes: list[s.Node], index: int) -> bool:
-    return s.form(host, nodes, index, b"nc-ok")
+def ncForm(nodes: list[s.Node], index: int) -> bool:
+    return s.form(nodes, index, b"nc-ok")
 
 
-def groupForm(host: Host, nodes: list[s.Node], index: int) -> bool:
-    return s.form(host, nodes, index, b"group")
+def groupForm(nodes: list[s.Node], index: int) -> bool:
+    return s.form(nodes, index, b"group")
 
 
-public def body(host: Host, nodes: list[s.Node]) -> int effects(host, managed_allocation):
+public def body(nodes: list[s.Node]) -> int:
     i = 1
     while i < len(nodes):
-        if blockForm(host, nodes, i):
+        if blockForm(nodes, i):
             return i
-        if moduleForm(host, nodes, i):
+        if moduleForm(nodes, i):
             i += 1
         else:
             i = s.at(nodes, i).next
     return - 1
 
 
-public def title(host: Host, nodes: list[s.Node]) -> text.Span effects(host, managed_allocation):
-    b = body(host, nodes)
+public def title(nodes: list[s.Node]) -> text.Span:
+    b = body(nodes)
     if b < 0:
         return text.empty()
     return s.at(nodes, b + 2).span
 
 
-def kind(host: Host, family: text.Span) -> int:
-    if text.matches(host, family, b"cap-0402"):
+def kind(family: text.Span) -> int:
+    if text.matches(family, b"cap-0402"):
         return 1
-    if text.matches(host, family, b"cap-0603"):
+    if text.matches(family, b"cap-0603"):
         return 1
-    if text.matches(host, family, b"res-0402"):
+    if text.matches(family, b"res-0402"):
         return 2
-    if text.matches(host, family, b"ind-0402"):
+    if text.matches(family, b"ind-0402"):
         return 3
     return 0
 
 
-public def collectParts(host: Host, nodes: list[s.Node]) -> Result[list[Part], int] effects(host, managed_allocation):
+public def collectParts(host: Host, nodes: list[s.Node]) -> Result[list[Part], int]:
     out: list[Part] = []
-    b = body(host, nodes)
+    b = body(nodes)
     if b < 0:
         _ = io.issue(host, 10, 0, 0)
         return Err(10)
     i = b + 3
     while i < s.at(nodes, b).next:
-        if instanceForm(host, nodes, i):
+        if instanceForm(nodes, i):
             ref = s.at(nodes, i + 2)
             spec = s.at(nodes, i + 3)
             if i + 3 >= s.at(nodes, i).next:
                 _ = io.issue(host, 11, 0, ref.span.start)
                 return Err(11)
-            if not text.identifier(host, ref.span) or ref.kind != s.Kind.string:
+            if not text.identifier(ref.span) or ref.kind != s.Kind.string:
                 _ = io.issue(host, 11, 0, ref.span.start)
                 return Err(11)
             family = spec.span
@@ -109,7 +109,7 @@ public def collectParts(host: Host, nodes: list[s.Node]) -> Result[list[Part], i
                 return Err(5)
             j = 0
             while j < len(out):
-                if text.equal(host, out[j].ref, ref.span):
+                if text.equal(out[j].ref, ref.span):
                     _ = io.issue(host, 12, 0, ref.span.start)
                     return Err(12)
                 j += 1
@@ -118,7 +118,7 @@ public def collectParts(host: Host, nodes: list[s.Node]) -> Result[list[Part], i
                 ref=ref.span,
                 family=family,
                 value=value,
-                kind=kind(host, family),
+                kind=kind(family),
                 pin1=- 1,
                 pin2=- 1
             ))
@@ -126,24 +126,24 @@ public def collectParts(host: Host, nodes: list[s.Node]) -> Result[list[Part], i
     return Ok(out)
 
 
-public def label(host: Host, pinout: list[s.Node], number: int) -> text.Span effects(host, managed_allocation):
+public def label(pinout: list[s.Node], number: int) -> text.Span:
     i = 1
     while i < len(pinout):
-        if pinForm(host, pinout, i) and text.number(host, s.at(pinout, i + 2).span) == number:
+        if pinForm(pinout, i) and text.number(s.at(pinout, i + 2).span) == number:
             return s.at(pinout, i + 3).span
         i += 1
     return text.empty()
 
 
-public def collectPins(host: Host, nodes: list[s.Node], parts: list[Part], pinout: list[s.Node]) -> Result[list[Pin], int] effects(host, managed_allocation):
+public def collectPins(host: Host, nodes: list[s.Node], parts: list[Part], pinout: list[s.Node]) -> Result[list[Pin], int]:
     out: list[Pin] = []
     part = 0
     while part < len(parts):
         item = parts[part]
         f = s.at(nodes, item.node + 3).next
         while f < s.at(nodes, item.node).next:
-            nc = ncForm(host, nodes, f)
-            if pinForm(host, nodes, f) or nc:
+            nc = ncForm(nodes, f)
+            if pinForm(nodes, f) or nc:
                 netindex = f + 2
                 while netindex < s.at(nodes, f).next and s.at(nodes, netindex).kind != s.Kind.string:
                     netindex = s.at(nodes, netindex).next
@@ -151,15 +151,15 @@ public def collectPins(host: Host, nodes: list[s.Node], parts: list[Part], pinou
                     _ = io.issue(host, 13, 0, s.at(nodes, f).span.start)
                     return Err(13)
                 net = s.at(nodes, netindex).span
-                if (not nc and not text.identifier(host, net)) or net.start == net.end:
+                if (not nc and not text.identifier(net)) or net.start == net.end:
                     _ = io.issue(host, 13, 0, net.start)
                     return Err(13)
                 p = f + 2
                 while p < netindex:
-                    number = text.number(host, s.at(nodes, p).span)
+                    number = text.number(s.at(nodes, p).span)
                     valid = number == 1 or number == 2
                     if item.kind == 0:
-                        named = label(host, pinout, number)
+                        named = label(pinout, number)
                         valid = named.end > named.start
                     if not valid:
                         _ = io.issue(host, 14, 0, s.at(nodes, p).span.start)
@@ -192,13 +192,13 @@ public def collectPins(host: Host, nodes: list[s.Node], parts: list[Part], pinou
     return Ok(out)
 
 
-public def group(host: Host, nodes: list[s.Node], reference: text.Span) -> text.Span effects(host, managed_allocation):
+public def group(nodes: list[s.Node], reference: text.Span) -> text.Span:
     i = 1
     while i < len(nodes):
-        if groupForm(host, nodes, i):
+        if groupForm(nodes, i):
             child = i + 3
             while child < s.at(nodes, i).next:
-                if text.equal(host, s.at(nodes, child).span, reference):
+                if text.equal(s.at(nodes, child).span, reference):
                     return s.at(nodes, i + 2).span
                 child = s.at(nodes, child).next
         i += 1
@@ -206,7 +206,7 @@ public def group(host: Host, nodes: list[s.Node], reference: text.Span) -> text.
 # Netlisp per-pad supply branches fold only when the named host pad and trunk exist.
 
 
-public def displayNet(host: Host, net: text.Span, parts: list[Part], pins: list[Pin]) -> text.Span effects(host):
+public def displayNet(net: text.Span, parts: list[Part], pins: list[Pin]) -> text.Span:
     last = - 1
     previous = - 1
     i = net.start
@@ -224,16 +224,16 @@ public def displayNet(host: Host, net: text.Span, parts: list[Part], pins: list[
     ref.end = last
     number_span = net
     number_span.start = last + 1
-    number = text.number(host, number_span)
+    number = text.number(number_span)
     trunk = False
     named_host = False
     i = 0
     while i < len(pins):
         pin = pins[i]
         if not pin.nc:
-            if text.equal(host, pin.net, base):
+            if text.equal(pin.net, base):
                 trunk = True
-            if pin.number == number and text.equal(host, pin.net, net) and text.equal(host, parts[pin.part].ref, ref):
+            if pin.number == number and text.equal(pin.net, net) and text.equal(parts[pin.part].ref, ref):
                 named_host = True
         i += 1
     if trunk and named_host:
@@ -241,8 +241,8 @@ public def displayNet(host: Host, net: text.Span, parts: list[Part], pins: list[
     return net
 
 
-def railKind(host: Host, span: text.Span) -> int:
-    if text.matches(host, span, b"GND"):
+def railKind(span: text.Span) -> int:
+    if text.matches(span, b"GND"):
         return 1
     if span.end - span.start >= 2 and span.source[span.start] == 86 and span.source[span.start + 1] == 95:
         return 2
@@ -251,12 +251,12 @@ def railKind(host: Host, span: text.Span) -> int:
 
 # Resolve textual identities and topology facts once. Layout and routing retain
 # the original source spans for metadata, but compare these compact identities.
-public def normalize(host: Host, parts: list[Part], pins: list[Pin]) effects(host, managed_allocation, mutation) mutates(parts, pins):
+public def normalize(parts: mut list[Part], pins: mut list[Pin]):
     i = 0
     while i < len(pins):
-        pins[i].display = displayNet(host, pins[i].net, parts, pins)
-        pins[i].raw_rail = railKind(host, pins[i].net)
-        pins[i].rail = railKind(host, pins[i].display)
+        pins[i].display = displayNet(pins[i].net, parts, pins)
+        pins[i].raw_rail = railKind(pins[i].net)
+        pins[i].rail = railKind(pins[i].display)
         if pins[i].number == 1:
             parts[pins[i].part].pin1 = i
         if pins[i].number == 2:
@@ -264,7 +264,7 @@ public def normalize(host: Host, parts: list[Part], pins: list[Pin]) effects(hos
         raw_id = - 1
         j = 0
         while j < i:
-            if raw_id < 0 and text.equal(host, pins[j].net, pins[i].net):
+            if raw_id < 0 and text.equal(pins[j].net, pins[i].net):
                 raw_id = pins[j].net_id
             j += 1
         if raw_id < 0:
@@ -276,12 +276,12 @@ public def normalize(host: Host, parts: list[Part], pins: list[Pin]) effects(hos
         display_id = - 1
         j = 0
         while j < len(pins):
-            if display_id < 0 and text.equal(host, pins[j].net, pins[i].display):
+            if display_id < 0 and text.equal(pins[j].net, pins[i].display):
                 display_id = pins[j].net_id
             j += 1
         j = 0
         while j < i:
-            if display_id < 0 and text.equal(host, pins[j].display, pins[i].display):
+            if display_id < 0 and text.equal(pins[j].display, pins[i].display):
                 display_id = pins[j].display_id
             j += 1
         if display_id < 0:

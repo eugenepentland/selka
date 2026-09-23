@@ -1,0 +1,21 @@
+# Diagnostic repro (agent-a), part 2 of 2: agent_a_diag_overlap_hint.my after
+# following E_MUTATION_OVERLAP's "make both inputs writable" hint. Expected
+# today: E_MUTATION_MARKER "`v` is declared `mut` but never written; remove
+# `mut`", which sends the reader straight back to part 1.
+def mul_av(v: mut list[float], out: mut list[float]) -> None:
+    for i in range(len(v)):
+        out[i] = v[i] * 2.0
+
+
+def mul_twice(v: mut list[float], out: mut list[float], tmp: mut list[float]) -> None:
+    mul_av(mut v, mut tmp)
+    mul_av(mut tmp, mut out)
+
+
+def main(out: Stream) -> int:
+    u = [1.0 for _ in range(4)]
+    w = [0.0 for _ in range(4)]
+    tmp = [0.0 for _ in range(4)]
+    mul_twice(mut u, mut w, mut tmp)
+    out.print(w[0])
+    return 0

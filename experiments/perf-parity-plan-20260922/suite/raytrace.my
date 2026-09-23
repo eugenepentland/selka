@@ -1,0 +1,108 @@
+# raytrace: small value records returned from small functions (SUITE.md
+# section 10). Vec3 and Sphere are value records; the spheres live in a
+# list[Sphere] and every vector operation returns a fresh Vec3.
+
+
+record Vec3:
+    x: float
+    y: float
+    z: float
+
+
+record Sphere:
+    center: Vec3
+    radius: float
+    color: Vec3
+
+
+def add(a: Vec3, b: Vec3) -> Vec3:
+    return Vec3(a.x + b.x, a.y + b.y, a.z + b.z)
+
+
+def sub(a: Vec3, b: Vec3) -> Vec3:
+    return Vec3(a.x - b.x, a.y - b.y, a.z - b.z)
+
+
+def scale(v: Vec3, s: float) -> Vec3:
+    return Vec3(v.x * s, v.y * s, v.z * s)
+
+
+def dot(a: Vec3, b: Vec3) -> float:
+    return a.x * b.x + a.y * b.y + a.z * b.z
+
+
+def normalize(v: Vec3) -> Vec3:
+    return scale(v, 1.0 / sqrt(dot(v, v)))
+
+
+def intersect(origin: Vec3, direction: Vec3, s: Sphere) -> float:
+    oc = sub(origin, s.center)
+    b = dot(oc, direction)
+    c = dot(oc, oc) - s.radius * s.radius
+    disc = b * b - c
+    if disc < 0.0:
+        return -1.0
+    root = sqrt(disc)
+    t = (0.0 - b) - root
+    if t > 0.001:
+        return t
+    t = (0.0 - b) + root
+    if t > 0.001:
+        return t
+    return -1.0
+
+
+def shade(origin: Vec3, direction: Vec3, spheres: list[Sphere], light: Vec3) -> Vec3:
+    best = -1.0
+    hit_index = -1
+    for k, s in enumerate(spheres):
+        t = intersect(origin, direction, s)
+        if t > 0.0 and (hit_index < 0 or t < best):
+            best = t
+            hit_index = k
+    if hit_index < 0:
+        return Vec3(0.6, 0.7, 0.9)
+    hit = spheres[hit_index]
+    point = add(origin, scale(direction, best))
+    normal = normalize(sub(point, hit.center))
+    diffuse = dot(normal, light)
+    if diffuse < 0.0:
+        diffuse = 0.0
+    if diffuse > 0.0:
+        for q in spheres:
+            if intersect(point, light, q) > 0.0:
+                diffuse = 0.0
+                break
+    return scale(hit.color, 0.1 + 0.9 * diffuse)
+
+
+def mix(c: int, v: int) -> int:
+    return (c * 31 + v) % 1000000007
+
+
+def main(out: Stream) -> int:
+    spheres = [
+        Sphere(Vec3(0.0, -1000.0, 0.0), 999.0, Vec3(0.5, 0.5, 0.5)),
+        Sphere(Vec3(0.0, 0.0, -3.0), 1.0, Vec3(1.0, 0.2, 0.2)),
+        Sphere(Vec3(-2.0, 0.0, -4.0), 1.0, Vec3(0.2, 1.0, 0.2)),
+        Sphere(Vec3(2.0, 0.0, -4.0), 1.0, Vec3(0.2, 0.2, 1.0)),
+        Sphere(Vec3(0.0, 2.0, -6.0), 1.5, Vec3(1.0, 1.0, 0.2)),
+        Sphere(Vec3(-1.5, -0.5, -2.0), 0.5, Vec3(0.2, 1.0, 1.0)),
+    ]
+    light = normalize(Vec3(1.0, 1.0, 1.0))
+    width = 1920
+    height = 1080
+    aspect = float(width) / float(height)
+    origin = Vec3(0.0, 0.0, 0.0)
+    checksum = 0
+    for y in range(height):
+        for x in range(width):
+            u = (2.0 * (float(x) + 0.5) / float(width) - 1.0) * aspect
+            v = 1.0 - 2.0 * (float(y) + 0.5) / float(height)
+            c = shade(origin, normalize(Vec3(u, v, -1.5)), spheres, light)
+            r = int(min(c.x, 1.0) * 255.0)
+            g = int(min(c.y, 1.0) * 255.0)
+            b = int(min(c.z, 1.0) * 255.0)
+            checksum = mix(checksum, r * 65536 + g * 256 + b)
+    out.print(checksum)
+    return 0

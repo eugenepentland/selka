@@ -55,6 +55,79 @@ $ mylang build examples/factorial.my --mode Debug -o /tmp/factorial-debug --cach
 $ mylang build examples/factorial.my --backend qbe -o /tmp/factorial-qbe --cache-dir /tmp/cache
 ```
 
+### Very large functions
+
+QBE keeps one bit set of every temporary per block, so its memory grows with the
+square of a function's size: about 1.6 bytes per block x temporary pair. A
+straight-line function of 2 000 checked statements (12 000 bytecode
+instructions, 8 000 QBE blocks, 76 000 temporaries) takes about 1 GB and 9 s;
+4 000 statements take 3.7 GB and 72 s, and 8 000 would need about 14 GiB.
+Before QBE starts, a function whose estimate exceeds three quarters of the
+address-space ceiling QBE inherits from
+the compiler (`MYLANG_HOST_MEMORY_LIMIT`, 8 GiB by default) is refused with a
+message that names it and the two ways out — split the function, or build it
+with `--backend llvm` — instead of failing minutes later inside QBE's `emalloc`.
+The LLVM backend's dominator analysis is linear, so it builds a
+120 000-instruction function (20 000 statements) in about 2.6 GB.
+
+### What the LLVM backend is allowed to assume
+
+The adapter states no fact that a check the frontend emitted is about to
+establish. It emits no `nsw`/`nuw`/`exact`/fast-math flag, no `inbounds`, no
+TBAA and no `noalias` pointer attribute, because every overflow, bounds, cast
+and allocation check is explicit code in the IL: the emitted sequence computes
+the wrapped result and *then* tests it, so an arithmetic flag would make the
+test that follows dead.
+
+It does state one aliasing fact, and that fact never depends on a check having
+run. Memory an emitted unit touches falls into two classes the adapter can place
+without looking at a guard:
+
+- **frame** — storage this activation itself obtained: every `alloc4/8/16` of
+  the unit (the local slots, the operand scratch, the aggregate scratch, the root
+  records and the frame record), the private copy an aggregate parameter arrives
+  in, and, for a unit whose frame is too large for the stack, the block
+  `myl_qbe_frame_allocate` freshly allocates on entry and releases on exit;
+- **foreign** — storage some other allocation owns: a value the caller computed
+  (a scalar parameter such as `%ctx`), a global's address, the context's embedded
+  heap record that `myl_qbe_heap` answers, and every address the emitter marked
+  `# myl-obj %temp` — a managed container's header and the element storage that
+  header points at, both from `myl_native_heap_alloc`.
+
+The two are disjoint because everything in **frame** is an allocation this
+activation made after it was entered: no value that existed before the call can
+point into it, no managed object is allocated inside it, and it is released
+before the activation returns. So the adapter gives each placed access
+`!alias.scope`/`!noalias` saying the two classes never meet. It carries a class
+through `copy` and offsetting `add`, and
+through a stack slot whose address never leaves the unit — either because every
+store to it agrees on one class and one of those stores dominates every load, or,
+inside one block, from the last value stored above the load. Everything else is
+left unplaced and carries no metadata, which keeps it aliasing both classes the
+way every access behaved before. This is what lets a loop keep a container's
+length and storage pointer in registers instead of reloading the header on every
+element; `MYLANG_QBE_LLVM_ALIAS=0` turns the metadata off for an A/B run.
+
+The `# myl-obj` markers are comment lines of their own. QBE's lexer drops a `#`
+comment to end of line, so the QBE backend's assembly is byte-identical with and
+without them.
+
+The adapter does lower one kind of check differently, without assuming anything
+about it: a checked 64-bit `+`, `-` or `*` becomes
+`llvm.{s,u}{add,sub,mul}.with.overflow.i64`, so it reaches the machine as the
+operation and one flag branch (`add; jo`, `sub; jb`, `imul; jo`) rather than the
+frontend's xor/and sign test or its four-limb high product. The adapter evaluates
+each block symbolically and replaces a flag only when its value is *exactly* one
+of the frontend's overflow formulas over an `add`, `sub` or `mul` earlier in the
+block. Each formula equals the intrinsic's overflow bit for every pair of 64-bit
+operands, so this is a change of spelling, not a new fact: the branch, the cold
+block and its `myl_qbe_fail_overflow_op` call (same operands, width and
+position) are untouched, and a trap reports exactly what it did before. A
+narrower width's range test and the single compare against a literal operand
+are already one compare and stay as they are. `LLVM-OVERFLOW-INTRINSIC-1` in
+`SPEC.md` states the rule; `experiments/llvm-backend/llvm_emit.OverflowChecks`
+implements it.
+
 ## `mylang build`
 
 `mylang build <file.my> -o <output>` checks the program, lowers it, compiles one
@@ -96,14 +169,126 @@ library, and a `run` that named `--max-steps=N` carry exact per-instruction
 accounting, so the ceiling stops the program at the instruction it names. A
 `ReleaseFast` executable that was never asked for a ceiling carries none: it
 emits no step check, which is what makes the default `mylang run` and
-`mylang build --mode ReleaseFast` output small and fast. The per-instruction
-position marker is kept only where a diagnostic can read it — an instruction that
-can fail, an `assert`, or a call site — because that is what trap traces and
-`assert` messages read.
-Because such a binary cannot honor a ceiling, giving it `--max-steps=` in
-`MYLANG_OPTIONS` reports `R_NO_STEP_ACCOUNTING` and names how to get a bounded
-run, rather than silently ignoring the option. `--max-frames`, `--timeout` and `--max-memory` are
-enforced by the runtime and are unaffected.
+`mylang build --mode ReleaseFast` output small and fast. It links no frame
+record either: see [trap traces without a frame record](#trap-traces-without-a-frame-record).
+Because such a binary cannot honor a ceiling, giving it `--max-steps=` at runtime (or in `MYLANG_OPTIONS`)
+reports `R_NO_STEP_ACCOUNTING` and names how to get a bounded run, rather than
+silently ignoring the flag; `--max-frames=` likewise reports
+`R_NO_FRAME_ACCOUNTING`. `--timeout` and `--max-memory` are enforced by the
+runtime and are unaffected.
+
+## Trap traces without a frame record
+
+A build with step or frame accounting — `Debug`, a library, the guest-test
+runner, a run or build given `--max-steps` or `--max-frames` — links a 32-byte
+frame record into `ctx->active_frame` on every call and stores the current
+instruction's position into it, and a trap's `in f at file:line` trace is that
+chain. A checked `ReleaseFast` executable and `mylang run` without a ceiling do
+neither (`QBE-FRAMEMAP-1`): no guest call loads, stores or links anything for
+the trace, and positions are recovered from return addresses only when a trap
+fires.
+
+- **In the IL.** Each unit starts with `dbgfile "SYMBOL"` and every call is
+  preceded by `dbgloc PC+1`, the bytecode instruction the call belongs to. The
+  prologue keeps only the execution-stack floor test; its `myl_qbe_fail_frame`
+  call is `dbgloc 1, 1`, the entry-guard mark.
+- **QBE** prints each `dbgloc` as a `.loc` line. QBE never inlines, so a call's
+  `.loc` is its whole position.
+- **LLVM.** The adapter gives each call a debug location whose line is the
+  position and whose discriminator is a pseudo-probe call index equal to it,
+  and names every unit in `llvm.pseudo_probe_desc`. LLVM prints
+  `.pseudoprobe GUID INDEX … @ CALLER_GUID:INDEX …` right before each call, the
+  `@` list naming every guest function the call was inlined through — so LLVM
+  keeps inlining guest code freely and the trace still names each logical frame
+  at its own call site. A runtime helper LLVM inlines has no debug information,
+  so its calls carry the probe of the call it replaced: a trap inside the helper
+  reports the helper's call site, exactly as the record's position did. Calls
+  are `nomerge` (two call sites never fold into one position),
+  `"disable-tail-calls"` keeps a call from replacing its caller's frame, and
+  `uwtable` gives every such function unwind tables, so guest code keeps no
+  frame pointer. A position past the 16-bit probe index is `noinline` at its
+  call and on its function.
+- **The table.** Before an object is assembled — per unit for QBE and LLVM
+  without LTO, and for full LTO on the assembly LLD produces for the whole
+  program (`--lto-emit-asm`, then an ordinary native link) —
+  `src/qbe_frame_map.zig` puts a label after every positioned call, removes the
+  `.file`/`.loc`/`.pseudoprobe` directives and probe descriptors (no DWARF
+  reaches the object), and appends a retained `mylang_frame_map` section with
+  one entry per logical frame of each call site, innermost first: the return
+  address, the position with an entry-guard and an inlined-caller bit, and the
+  unit's metadata, each as a 32-bit self-relative offset; an entry from
+  assembly that carries call-frame information (LLVM's) also has an unwind bit.
+- **At a trap.** The runtime (`fail` in `src/qbe_runtime.c`) sorts the table
+  once, walks the guest stack from its own frame, reports every return address
+  found in the table (skipping an entry guard's frame, which was never
+  entered) and expands bytecode-inliner splices as before. An LLVM program is
+  unwound by its call-frame information: the executable links Zig's libunwind
+  statically and the runtime calls `_Unwind_Backtrace`. A QBE program follows
+  the frame-pointer chain: QBE keeps a frame pointer in every function that
+  calls, and so do the generated C and every runtime unit that can reach
+  `fail`; the heap, collector and container units, which only return a status,
+  keep every register.
+
+A trap's code, message, trace, `MYLANG-TRAP` record, `assert` message and exit
+status are byte-identical to the linked-record protocol, including for a callee
+LLVM inlined, a trap inside an inlined runtime helper, a callback, deep
+recursion and a stack-floor failure.
+
+## Unchecked release builds
+
+`--unchecked` is a release policy for a program already known to be correct: it
+tells the emitter to leave out the code that turns an invalid value into a named
+trap. On the schematic renderer it is worth about 13% of the render
+([the parity audit's strip ladder](../audits/schematic-parity-gap-2026-09-22.md#2-what-safety-costs-the-strip-ladder)
+priced the same omissions at 15%), and the program's output is byte-identical.
+
+```console
+$ mylang build examples/factorial.my -o /tmp/factorial-unchecked --unchecked --cache-dir /tmp/qbe-cache
+$ /tmp/factorial-unchecked
+120
+```
+
+**What it omits.** Integer-overflow guards on `+`, `-`, `*`, unary `-`;
+narrowing integer casts (`u8(...)`, `i32(...)` and friends); index-bounds guards
+on lists, fixed arrays, `bytes`, `str` and dictionary position reads
+(`key_at`/`value_at`), and the empty-container guard on `pop()`. When the build
+also carries no ceiling — the default for a `ReleaseFast` executable — it
+additionally omits the per-call frame record, the stack-floor test, the function
+metadata store and every instruction-position store.
+
+**What it keeps.** Allocation failure (out of memory still exits 1 with
+`R_MEMORY_BUDGET` or `R_ALLOCATION`), the memory budget itself, GC roots and
+everything else the collector traces, host-call and capability validation,
+`assert`, division by zero and signed `MIN // -1` (both fault the hardware
+divider, so removing them would trade a named trap for `SIGFPE`), shift-count
+range tests, arena escape checks, dictionary missing-key and list
+concurrent-modification errors.
+
+**What is no longer detected.** Under `--unchecked` each of the following is
+undefined behaviour rather than a trap, and the program may produce wrong values,
+corrupt memory or crash:
+
+| was reported | now |
+|---|---|
+| `R_INT_OVERFLOW` on add, subtract, multiply, negate | the wrapped or out-of-range 64-bit result is used |
+| `R_INT_CAST` narrowing out of range | the un-narrowed value is used |
+| `R_LIST_BOUNDS`, `R_ARRAY_BOUNDS`, `R_TEXT_BOUNDS` | memory next to the container is read or written |
+| `R_LIST_BOUNDS` from `pop()` on an empty list | an undefined element is produced |
+| `R_FRAME_LIMIT` from runaway recursion | the process overruns its stack and takes `SIGSEGV` |
+| a trap's source location and call trace | a trap that still fires (out of memory, division by zero) reports no frames and no `assert` message text |
+
+**Where it is refused.** `mylang test --unchecked` is refused by name: a test
+asserts that invalid input traps, so there would be nothing left to assert.
+`--mode Debug` and `--library` are refused too — a Debug build exists to report
+failures, and a library is embedded by hosts (the embed API, the guest-test
+runner) that always run their guest under a finite budget.
+
+**What it composes with.** A build that also asked for `--max-steps=N`,
+`--max-frames=N` or `--step-accounting` keeps the frame protocol and the
+accounting that enforces the ceiling, and gives up only the value guards; that
+combination is supported and measured. A build with neither ceiling is the one
+that also drops the frame record, and giving such a binary `--max-steps=` in
+`MYLANG_OPTIONS` still reports `R_NO_STEP_ACCOUNTING` rather than ignoring it.
 
 ## Object cache and link
 

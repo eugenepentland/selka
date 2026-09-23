@@ -2,247 +2,247 @@
   "fixture": {
     "netlisp-llvm-fast": {
       "peak_rss_kib": [
-        3724,
-        3724,
-        3724,
-        3724,
-        3724
+        3716,
+        3716,
+        3716,
+        3556,
+        3556
       ],
-      "median_peak_rss_kib": 3724
+      "median_peak_rss_kib": 3716
     },
     "netlisp-llvm-safe": {
       "peak_rss_kib": [
-        3616,
-        3616,
-        3616,
-        3616,
-        3616
+        3440,
+        3440,
+        3440,
+        3440,
+        3440
       ],
-      "median_peak_rss_kib": 3616
+      "median_peak_rss_kib": 3440
     },
     "mylang-o3": {
       "peak_rss_kib": [
-        3220,
-        3236,
-        3236,
-        3268,
-        3152
+        4348,
+        4400,
+        4364,
+        4356,
+        4352
       ],
-      "median_peak_rss_kib": 3236
+      "median_peak_rss_kib": 4356
     },
     "mylang-o3-lto": {
       "peak_rss_kib": [
-        3144,
-        3316,
-        3132,
-        3236,
-        3268
+        4420,
+        4456,
+        4456,
+        4424,
+        4412
       ],
-      "median_peak_rss_kib": 3236
+      "median_peak_rss_kib": 4424
     },
     "mylang-o3-bounded": {
       "peak_rss_kib": [
-        3536,
-        3716,
-        3604,
-        3536,
-        3552
+        4796,
+        4956,
+        5020,
+        4796,
+        5004
       ],
-      "median_peak_rss_kib": 3552
+      "median_peak_rss_kib": 4956
     },
     "rust-o3": {
       "peak_rss_kib": [
-        2392,
-        2376,
-        2392,
-        2536,
+        2360,
+        2356,
+        2520,
+        2360,
         2360
       ],
-      "median_peak_rss_kib": 2392
+      "median_peak_rss_kib": 2360
     },
     "go-fast": {
       "peak_rss_kib": [
-        2204,
-        2204,
-        2204,
-        2204,
-        2204
+        2092,
+        2092,
+        2092,
+        2092,
+        2092
       ],
-      "median_peak_rss_kib": 2204
+      "median_peak_rss_kib": 2092
     },
     "zig-o3": {
       "peak_rss_kib": [
-        2012,
-        2016,
-        2016,
-        2044,
-        2016
+        2024,
+        2024,
+        2024,
+        2024,
+        2024
       ],
-      "median_peak_rss_kib": 2016
+      "median_peak_rss_kib": 2024
     }
   },
   "changed-net": {
     "netlisp-llvm-fast": {
       "peak_rss_kib": [
-        3884,
-        3724,
-        3724,
-        3884,
-        3724
+        3716,
+        3556,
+        3716,
+        3556,
+        3556
       ],
-      "median_peak_rss_kib": 3724
+      "median_peak_rss_kib": 3556
     },
     "netlisp-llvm-safe": {
       "peak_rss_kib": [
-        3616,
-        3616,
-        3616,
-        3616,
-        3616
+        3440,
+        3440,
+        3440,
+        3440,
+        3440
       ],
-      "median_peak_rss_kib": 3616
+      "median_peak_rss_kib": 3440
     },
     "mylang-o3": {
       "peak_rss_kib": [
-        3252,
-        3240,
-        3240,
-        3260,
-        3288
+        4436,
+        4248,
+        4440,
+        4344,
+        4368
       ],
-      "median_peak_rss_kib": 3252
+      "median_peak_rss_kib": 4368
     },
     "mylang-o3-lto": {
       "peak_rss_kib": [
-        3144,
-        3348,
-        3108,
-        3340,
-        3332
+        4412,
+        4412,
+        4432,
+        4412,
+        4400
       ],
-      "median_peak_rss_kib": 3332
+      "median_peak_rss_kib": 4412
     },
     "mylang-o3-bounded": {
       "peak_rss_kib": [
-        3760,
-        3536,
-        3736,
-        3716,
-        3760
+        5028,
+        4972,
+        4868,
+        4864,
+        4796
       ],
-      "median_peak_rss_kib": 3736
+      "median_peak_rss_kib": 4868
     },
     "rust-o3": {
       "peak_rss_kib": [
-        2328,
-        2376,
-        2536,
-        2408,
-        2408
+        2392,
+        2392,
+        2520,
+        2360,
+        2376
       ],
-      "median_peak_rss_kib": 2408
+      "median_peak_rss_kib": 2392
     },
     "go-fast": {
       "peak_rss_kib": [
-        2204,
-        2204,
-        2204,
-        2204,
-        2204
+        2092,
+        2092,
+        2092,
+        2092,
+        2092
       ],
-      "median_peak_rss_kib": 2204
+      "median_peak_rss_kib": 2092
     },
     "zig-o3": {
       "peak_rss_kib": [
-        2016,
-        2016,
-        2016,
-        2016,
-        2016
+        2024,
+        2024,
+        2024,
+        2024,
+        2024
       ],
-      "median_peak_rss_kib": 2016
+      "median_peak_rss_kib": 2024
     }
   },
   "changed-value": {
     "netlisp-llvm-fast": {
       "peak_rss_kib": [
-        3884,
-        3884,
-        3884,
-        3884,
-        3884
+        3556,
+        3556,
+        3716,
+        3716,
+        3556
       ],
-      "median_peak_rss_kib": 3884
+      "median_peak_rss_kib": 3556
     },
     "netlisp-llvm-safe": {
       "peak_rss_kib": [
-        3616,
-        3616,
-        3616,
-        3616,
-        3616
+        3440,
+        3440,
+        3440,
+        3440,
+        3440
       ],
-      "median_peak_rss_kib": 3616
+      "median_peak_rss_kib": 3440
     },
     "mylang-o3": {
       "peak_rss_kib": [
-        3152,
-        3288,
-        3264,
-        3248,
-        3252
+        4360,
+        4392,
+        4356,
+        4320,
+        4320
       ],
-      "median_peak_rss_kib": 3252
+      "median_peak_rss_kib": 4356
     },
     "mylang-o3-lto": {
       "peak_rss_kib": [
-        3108,
-        3124,
-        3236,
-        3340,
-        3228
+        4404,
+        4504,
+        4496,
+        4404,
+        4420
       ],
-      "median_peak_rss_kib": 3228
+      "median_peak_rss_kib": 4420
     },
     "mylang-o3-bounded": {
       "peak_rss_kib": [
-        3728,
-        3760,
-        3544,
-        3736,
-        3760
+        5004,
+        5012,
+        4972,
+        5004,
+        4804
       ],
-      "median_peak_rss_kib": 3736
+      "median_peak_rss_kib": 5004
     },
     "rust-o3": {
       "peak_rss_kib": [
         2392,
-        2376,
-        2408,
+        2360,
         2520,
-        2536
+        2392,
+        2392
       ],
-      "median_peak_rss_kib": 2408
+      "median_peak_rss_kib": 2392
     },
     "go-fast": {
       "peak_rss_kib": [
-        2204,
-        2204,
-        2204,
-        2204,
-        2204
+        2092,
+        2092,
+        2092,
+        2092,
+        2092
       ],
-      "median_peak_rss_kib": 2204
+      "median_peak_rss_kib": 2092
     },
     "zig-o3": {
       "peak_rss_kib": [
-        2016,
-        2016,
-        2016,
-        2016,
-        2016
+        2024,
+        2020,
+        2024,
+        2024,
+        2024
       ],
-      "median_peak_rss_kib": 2016
+      "median_peak_rss_kib": 2024
     }
   }
 }

@@ -260,7 +260,7 @@ const Context = struct {
         out.contract.signature.result = self.src.text(declaration.signature.return_type);
         if (declaration.policy.effect_bound) |bound| {
             out.contract.signature.declared_effects = try self.effectNames(bound.allowed);
-            out.contract.signature.declared_mutates = declaration.signature.mutates;
+            out.contract.signature.declared_mutates = declaration.signature.mut_positions;
             out.contract.signature.return_origin = "unknown";
         }
         return out;

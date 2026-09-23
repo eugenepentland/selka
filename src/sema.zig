@@ -4,6 +4,9 @@ const ManagedKind = @import("runtime_values.zig").ManagedKind;
 const BufferKind = buffer_operations.Kind;
 const collections = @import("collection_lower.zig");
 const option_flow = @import("option_flow.zig");
+const loop_rebinding = @import("loop_rebinding.zig");
+/// A parsed `for` loop over a collection, `enumerate`, `reversed` or `zip`.
+const ForEach = @FieldType(@FieldType(ast.Statement, "data"), "for_each");
 const needs_list = "operation requires a managed list";
 const eListType = @import("collection_lower.zig").list_type_error;
 const call_arguments = @import("call_arguments.zig");
@@ -17,7 +20,6 @@ const lambda_context_code = "E_LAMBDA_CONTEXT";
 const call_argument_code = "E_CALL_ARGUMENT";
 /// Stable code for a call-site `&` mutation marker that does not match the
 /// callee's declared `mutates(...)` footprint.
-const mutation_marker_code = "E_MUTATION_MARKER";
 const eResultOperation = diagnostic.result_operation;
 const eOwnedConsumed = diagnostic.owned_consumed;
 const eResultPath = diagnostic.result_path;
@@ -90,8 +92,13 @@ const eResourceIoResult = "E_RESOURCE_IO_RESULT";
 const eResultLoop = diagnostic.result_loop;
 const bindingDeclaredHere = "binding declared here";
 const eImmutable = diagnostic.immutable;
+/// Diagnostic code for an assignment whose target cannot be written as spelled.
+const eAssignmentTarget = "E_ASSIGNMENT_TARGET";
 const eResultDiscard = diagnostic.result_discard;
 const eCellEquality = "E_CELL_EQUALITY";
+/// One diagnostic for every rejected `Option` operation, so the intrinsic
+/// methods and the `is None` test report the same code.
+const eOptionTest = "E_OPTION_TEST";
 const eEnvironmentName = "E_ENVIRONMENT_NAME";
 const variantDeclaredHere = "variant declared here";
 const std = @import("std");
@@ -111,11 +118,14 @@ fn augmentedOperator(op: ast.AssignmentOp) ast.BinaryOp {
     };
 }
 const eTextOperator = "E_TEXT_OPERATOR";
-/// Temporary rejection for the syntax the foundation parser accepts before its
-/// lane implements the check: tuple values and destructuring, the conditional
-/// expression, and the `mut` argument marker. Every use carries a `// lane:`
-/// comment and is deleted by that lane.
-const eNotImplemented = "E_NOT_IMPLEMENTED";
+/// A missing, unneeded or unauthorizable `mut` marker is one diagnostic code.
+const mutation_marker_code = @import("origins.zig").mutation_marker_code;
+const eTupleArity = diagnostic.tuple_arity;
+/// The accepted spelling beside a rejected tuple arity.
+const tuple_arity_alternative = "a tuple has between 2 and 8 elements; declare a record for a larger group";
+/// The accepted spelling beside a rejected tuple index, which is the only way
+/// to reach a tuple's values.
+const tuple_index_alternative = "a tuple has no elements to index; bind its values with `head, rest = ...`";
 const unsupported_collection = "operation is not supported by this collection";
 const unsupported_list = "operation is not supported by lists";
 const method_arity = "collection method argument count differs from its signature";
@@ -128,11 +138,20 @@ const dictionary_get_alternative = "a dictionary `get` always takes its fallback
 /// The accepted callee for a bare `print` or `eprint`: `Stream`'s printing
 /// method, with the optional `sep` and `end` keywords the I/O builtins accept.
 const print_signature = buffer_operations.stream_print_signature;
-/// The accepted callee of the `sorted` prelude builtin; Python's `reverse=` is
-/// rejected with `reversed(sorted(...))` instead.
+/// The accepted callee of the `sorted` prelude builtin, with Python's `key=`
+/// and `reverse=` keywords.
 const sorted_signature = buffer_operations.sorted_signature;
-/// The accepted spelling for Python's `sorted(..., reverse=True)`.
-const sorted_reverse_alternative = "sorted orders ascending only; write `reversed(sorted(values))` for a descending order";
+/// The accepted signature of a list's `sort` method with its keywords.
+const list_sort_signature = buffer_operations.list_sort_signature;
+/// The accepted spelling for Python 2's `cmp=` comparison function.
+const sort_cmp_alternative = "there is no comparison-function form; key= maps each element to the value compared instead, such as key=lambda item: (item.rank, item.name)";
+/// One sort call's operands as written: the callee name the diagnostics point
+/// at, the operands and their keywords, how many leading operands are the
+/// positional list, and the signature a rejection shows.
+const SortSite = struct { name: source.Span, arguments: []const ast.NodeId, names: []const ?source.Span, positional: usize, signature: []const u8 };
+/// The `key=` and `reverse=` operands of one sort call, and whether `reverse=`
+/// was written first.
+const SortKeywords = struct { key: ?ast.NodeId = null, reverse: ?ast.NodeId = null, reverse_first: bool = false };
 /// The accepted spelling of a Python method form this language rejects, or null
 /// when it has none. Only deliberate, known gaps appear here; a rejected call
 /// with no entry prints its signature or its accepted methods and stops.
@@ -186,6 +205,7 @@ const typed = @import("typed.zig");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const records = @import("records.zig");
+const record_layouts = @import("record_layouts.zig");
 const Error = diagnostic.Error;
 const instances = @import("generic_instances.zig");
 const semantic_cache = @import("semantic_cache.zig");
@@ -215,6 +235,22 @@ fn scopedDirectoryPath(bytes: []const u8) bool {
 const Pending = struct { available: bool, transfer_span: ?source.Span };
 const Work = struct { default_value: bool = false, id: ast.NodeId, emit: bool = false, checkpoint: ?option_flow.Guard = null, sorted_key: bool = false, verify: ?struct { pending: []const Pending, facts: []const usize } = null };
 const FieldDestination = struct { owner: typed.LocalId, index: ?typed.NodeId, value: typed.NodeId, refresh: ?typed.StatementId };
+/// One step of an assignment path below the value it rebuilds: a record field,
+/// or an element of the fixed array or enum table the path has reached.
+const PlaceStep = union(enum) { field: source.Span, element: ast.NodeId };
+/// An assignment target that writes inside a fixed array or table: the root it
+/// rebuilds — a binding name, or the last list or dictionary slot on the path —
+/// and the steps below that root in source order.
+const ArrayPlace = struct { root: ast.NodeId, steps: []const PlaceStep };
+/// The operator and source value of one element assignment.
+const PlaceWrite = struct { op: ast.AssignmentOp, value: ast.NodeId };
+/// A fixed-array index after the negative-index rule (`PY-ARRAY-NEGATIVE-1`):
+/// the key to read and rebuild with, and whether the backend must still count
+/// a negative value from the end.
+const ArrayKey = struct { key: typed.NodeId, from_end: bool };
+/// How a loop reads its source: a collection kind, a fixed array read by
+/// index, or a dictionary view's projection.
+const IterationShape = struct { kind: ManagedKind, fixed: ?typed.Array = null, projection: ?@import("dictionary_views.zig").Kind = null };
 /// An already-evaluated managed receiver and the source arguments of its method.
 const ManagedAccess = struct { base: typed.NodeId, kind: BufferKind, inputs: []const ast.NodeId, receiver: ?typed.LocalId = null };
 /// One list method call whose receiver and arguments are already evaluated.
@@ -239,6 +275,10 @@ const variant_calls = @import("variant_calls.zig");
 const truncating = @import("truncating_math.zig");
 
 const LambdaCapture = struct { name: []const u8 };
+/// The `lambda_types` entry of a sort-key lambda whose key type could not be
+/// inferred (LAMBDA-KEY-INFER-1). No callback type is `unit`, so the marker
+/// never collides with a real slot; its `E_SORT_KEY` already names the lambda.
+const uninferred_lambda: typed.Type = .unit;
 
 const Checker = struct {
     allocator: std.mem.Allocator,
@@ -273,9 +313,20 @@ const Checker = struct {
     current_function: ?typed.FunctionId = null,
     current_lambda: ?usize = null,
     lambda_start: usize = 0,
+    /// One flag per instance key: the declaration carried a `mut` parameter whose
+    /// type cannot carry a write. Its call-site markers are not checked against
+    /// the footprint it never declared.
+    mut_parameter_rejected: std.ArrayList(bool) = .empty,
+    /// Instance key currently being checked, for per-instance bookkeeping.
+    checked_index: usize = 0,
     lambda_types: []?typed.Type = &.{},
     lambda_captures: []?[]const LambdaCapture = &.{},
     loops: struct { active: std.ArrayList(LoopScope) = .empty, next: usize = 0 } = .{},
+    /// Loop counters that are never negative while their loop runs: `range`
+    /// induction variables from a non-negative start and `enumerate`
+    /// positions. Each is immutable — a loop whose body assigns its variable
+    /// counts on a hidden local instead (`PY-FOR-REBIND-1`).
+    counters: std.AutoHashMapUnmanaged(typed.LocalId, void) = .empty,
     return_type: typed.Type = .i64,
     arenas: std.ArrayList(ArenaScope) = .empty,
     catalog: records.Catalog,
@@ -284,10 +335,9 @@ const Checker = struct {
     owner: ?typed.Type = null,
     /// The `with open(...)` head whose failure traps instead of yielding a result.
     trapping_open: ?source.Span = null,
-    /// Opt-in D3 experiment: enforce call-site `&` markers against `mutates(...)`.
-    mutation_markers: bool = false,
 
     fn checkFunction(self: *Checker, i: usize) Error!typed.Function {
+        self.checked_index = i;
         if (i >= self.lambda_start and i < self.lambda_start + self.syntax.lambdas.len)
             return self.checkLambdaFunction(i - self.lambda_start);
         const allocator = self.allocator;
@@ -304,6 +354,7 @@ const Checker = struct {
         self.expected_types.clearRetainingCapacity();
         self.option_facts.clear();
         self.locals = .empty;
+        self.counters.clearRetainingCapacity();
         self.active.clearRetainingCapacity();
         self.owner = if (function.policy.owner) |owner| try self.ty(owner) else null;
         self.return_type = try self.ty(function.signature.return_type);
@@ -372,9 +423,12 @@ const Checker = struct {
                 .constant_arguments = self.instance_keys.items[i].lengths,
                 .return_type = self.return_type,
                 .parameter_count = function.signature.parameters.len,
-                .mutates = function.signature.mutates,
+                .mutates = &.{},
                 .return_origin = .unknown,
-                .declared_mutates = function.signature.mutates,
+                // The declared footprint is the `mut` parameter set itself: a
+                // written position and a `name: mut T` declaration are the same
+                // fact, so there is no separate clause to reconcile.
+                .declared_mutates = function.signature.mut_positions,
             },
             .scope = .{
                 .body = body.id,
@@ -386,10 +440,23 @@ const Checker = struct {
             .declaration = function.name,
         };
     }
+    /// Whether `span` lies inside the body of a generic function declaration,
+    /// where a lambda never receives a callback type (GENERIC-LAMBDA-1).
+    fn inGenericBody(self: *Checker, span: source.Span) bool {
+        for (self.syntax.functions) |function| {
+            if (function.signature.type_parameters.len == 0) continue;
+            const body = self.syntax.statements.items[@backingInt(function.body)].span;
+            if (body.start <= span.start and span.end <= body.end) return true;
+        }
+        return false;
+    }
     fn checkLambdaFunction(self: *Checker, index: usize) Error!typed.Function {
         const lambda = self.syntax.lambdas[index];
-        const lambda_type = self.lambda_types[index] orelse
+        const lambda_type = self.lambda_types[index] orelse {
+            if (self.inGenericBody(lambda.span)) return self.sink.fail("E_GENERIC_BODY_UNSUPPORTED", lambda.span, @import("generic_bodies.zig").lambda_in_generic_body);
             return self.sink.fail(lambda_context_code, lambda.span, "lambda requires an expected callback type");
+        };
+        if (lambda_type == uninferred_lambda) return error.SourceError;
         const contract = callables.signature(lambda_type, self.catalog.records) orelse return error.InternalError;
         self.current_function = null;
         self.current_lambda = index;
@@ -398,6 +465,7 @@ const Checker = struct {
         self.expected_types.clearRetainingCapacity();
         self.option_facts.clear();
         self.locals = .empty;
+        self.counters.clearRetainingCapacity();
         self.active.clearRetainingCapacity();
         self.owner = null;
         self.return_type = contract.return_type;
@@ -448,6 +516,16 @@ const Checker = struct {
     fn ty(self: *Checker, span: source.Span) Error!typed.Type {
         if (self.current_function) |id| return self.functionType(id, span);
         return self.catalog.resolve(self.src, span, self.sink);
+    }
+    /// Record that the function currently being checked declared a `mut`
+    /// parameter of a type that cannot carry a write. The array is filled lazily
+    /// because only a rejected declaration pays for it.
+    fn markMutRejected(self: *Checker) Error!void {
+        if (self.mut_parameter_rejected.items.len != self.instance_keys.items.len) {
+            try self.mut_parameter_rejected.resize(self.allocator, self.instance_keys.items.len);
+            @memset(self.mut_parameter_rejected.items, false);
+        }
+        self.mut_parameter_rejected.items[self.checked_index] = true;
     }
     fn syntaxFunction(self: *Checker, id: typed.FunctionId) ast.Function {
         return self.syntax.functions[@backingInt(self.instance_keys.items[@backingInt(id)].declaration)];
@@ -556,7 +634,7 @@ const Checker = struct {
         const descriptors = try self.allocator.alloc([]const u8, arguments.len);
         for (arguments, 0..) |argument, i| descriptors[i] = try semantic_key.argumentDescriptor(self.allocator, argument, if (i < lengths.len) lengths[i] else null, self.catalog.records);
         const provider = try semantic_key.providerIdentity(self.allocator, arguments, self.catalog.records);
-        const contract = semantic_key.declaredContractDigest(function.policy.effect_bound, function.signature.mutates);
+        const contract = semantic_key.declaredContractDigest(function.policy.effect_bound, function.signature.mut_positions);
         const canonical = try semantic_key.specializationFingerprint(self.allocator, .{
             .template_identity = prepared.keys[declaration],
             .arguments = descriptors,
@@ -980,7 +1058,7 @@ const Checker = struct {
                 .message = "private function declared here",
             },
         );
-        const bound = try call_arguments.bind(self.allocator, self.src, call, signature.signature.parameters, self.sink);
+        const bound = try call_arguments.bind(self.allocator, self.src, self.syntax.nodes.items, call, signature.signature, self.sink);
         return .{ .declaration = function, .call = bound };
     }
     fn requireDomainAccess(self: *Checker, domain_type: typed.Type, span: source.Span) Error!void {
@@ -1372,8 +1450,8 @@ const Checker = struct {
         if (!try self.preludeName(call)) return false;
         const name = self.src.text(call.name);
         if (std.mem.eql(u8, name, "sorted")) {
-            try self.validateSortedArguments(call);
-            if (call.arguments.len == 2) {
+            const keywords = try self.sortedKeywords(call);
+            if (keywords.key != null or keywords.reverse != null) {
                 try work.append(self.allocator, .{ .id = call_id, .sorted_key = true });
                 try work.append(self.allocator, .{ .id = call.arguments[0] });
                 return true;
@@ -1393,7 +1471,11 @@ const Checker = struct {
     fn checkPreludeCall(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!bool {
         if (!try self.preludeName(call)) return false;
         const name = self.src.text(call.name);
-        if (std.mem.eql(u8, name, "sorted")) try self.validateSortedArguments(call) else try call_arguments.positional(call, self.sink);
+        if (std.mem.eql(u8, name, "sorted")) {
+            out.* = try self.checkSortedCall(node.span, call);
+            return true;
+        }
+        try call_arguments.positional(call, self.sink);
         const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
         if (prelude_builtins.materializes(name) and call.arguments.len == 1) {
             if (try self.rangeSource(call.arguments[0])) |range| {
@@ -1410,24 +1492,172 @@ const Checker = struct {
         out.* = (try builtins.build(node.span, name, values)) orelse return false;
         return true;
     }
-    fn validateSortedArguments(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!void {
-        if (call.arguments.len == 0 or call.arguments.len > 2) return self.sink.failCallSite("E_ARITY", call.name, "sorted requires a list and optional key callback", null, sorted_signature);
-        if (call.argument_names.len == 0) {
-            if (call.arguments.len == 2) return self.sink.failCallSite(call_argument_code, self.syntax.nodes.items[@backingInt(call.arguments[1])].span, "sorted key must be written as key=callback", null, sorted_signature);
-            return;
+    /// Bind the operands of one sort call by name. `site.positional` leading
+    /// operands are the list (one for `sorted`, none for `values.sort`); every
+    /// other operand is `key=` or `reverse=`, each at most once and only by
+    /// keyword, as Python spells them.
+    fn sortKeywords(self: *Checker, site: SortSite) Error!SortKeywords {
+        var out: SortKeywords = .{};
+        for (site.arguments, 0..) |argument, index| {
+            const keyword = if (site.names.len == 0) null else site.names[index];
+            if (index < site.positional) {
+                if (keyword) |name| return self.sink.failCallSite(call_argument_code, name, "the sorted list is positional", null, site.signature);
+                continue;
+            }
+            const name = keyword orelse
+                return self.sink.failCallSite(call_argument_code, self.syntax.nodes.items[@backingInt(argument)].span, "key and reverse are keyword-only: write key=callback and reverse=flag", null, site.signature);
+            const text = self.src.text(name);
+            const repeated = if (std.mem.eql(u8, text, "key")) out.key != null else if (std.mem.eql(u8, text, "reverse")) out.reverse != null else null;
+            const is_repeat = repeated orelse {
+                // Python 2's comparison function has a mechanical repair, so it
+                // is named; any other keyword only gets the signature.
+                const related: ?diagnostic.Related = if (std.mem.eql(u8, text, "cmp")) .{ .span = name, .message = sort_cmp_alternative, .role = .alternative } else null;
+                return self.sink.failCallSite(call_argument_code, site.name, "sorting accepts only the named arguments key= and reverse=", related, site.signature);
+            };
+            if (is_repeat) return self.sink.failCallSite(call_argument_code, name, "this sort argument is given more than once", null, site.signature);
+            if (std.mem.eql(u8, text, "key")) out.key = argument else {
+                out.reverse = argument;
+                out.reverse_first = out.key == null;
+            }
         }
-        if (call.argument_names[0] != null) return self.sink.failCallSite(call_argument_code, call.argument_names[0].?, "the sorted list is positional", null, sorted_signature);
-        if (call.arguments.len != 2 or call.argument_names[1] == null or !std.mem.eql(u8, self.src.text(call.argument_names[1].?), "key")) {
-            // `reverse=` is a Python keyword this surface does not accept, and the
-            // repair is mechanical: `reversed` is already a prelude builtin.
-            if (call.argument_names.len > 1) if (call.argument_names[1]) |keyword| if (std.mem.eql(u8, self.src.text(keyword), "reverse"))
-                return self.sink.failCallSite(call_argument_code, call.name, "sorted accepts only the named argument key=callback", .{ .span = keyword, .message = sorted_reverse_alternative, .role = .alternative }, sorted_signature);
-            return self.sink.failCallSite(call_argument_code, call.name, "sorted accepts only the named argument key=callback", null, sorted_signature);
+        return out;
+    }
+    /// The named operands of one `sorted(...)` call, after its positional list.
+    fn sortedKeywords(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!SortKeywords {
+        if (call.arguments.len == 0) return self.sink.failCallSite("E_ARITY", call.name, "sorted requires a list", null, sorted_signature);
+        return self.sortKeywords(.{ .name = call.name, .arguments = call.arguments, .names = call.argument_names, .positional = 1, .signature = sorted_signature });
+    }
+    /// Hint the operands of one keyword sort over a list of `element`:
+    /// `reverse` is a `bool`, and a lambda key is
+    /// `def(element) -> K effects(managed_allocation)` with `K` read off its
+    /// body or, failing that, its body's own type (LAMBDA-KEY-INFER-1). The
+    /// slot has exactly the type that spelling interns, return-origin bound
+    /// included, so it is one type with every other callback of that signature.
+    /// It admits allocation because its one call site is the keyed sort the
+    /// enclosing function already charges `managed_allocation` for, so a key
+    /// that builds a `str` is exact rather than exempt (LAMBDA-KEY-INFER-1).
+    fn hintSortKeywords(self: *Checker, keywords: SortKeywords, element: typed.Type) Error!void {
+        if (keywords.reverse) |flag| try self.hint(flag, .bool);
+        const key = keywords.key orelse return;
+        const node = self.syntax.nodes.items[@backingInt(key)];
+        if (node.data != .name) return;
+        const result = if (self.lambdaIndex(node.span)) |index| lambda: {
+            const lambda = self.syntax.lambdas[index];
+            // Any other arity is the lambda's own E_ARITY against the one-element slot.
+            if (lambda.parameters.len != 1) break :lambda .i64;
+            const read = try self.lambdaKeyType(lambda.body, self.src.text(lambda.parameters[0]), element);
+            break :lambda read orelse self.inferLambdaKey(lambda, element) catch |err| {
+                // Its E_SORT_KEY stands for the lambda too: its own check adds nothing.
+                if (err == error.SourceError) self.lambda_types[index] = uninferred_lambda;
+                return err;
+            };
+        } else try self.namedKeyResult(node.span) orelse return;
+        const parameters = try self.allocator.dupe(typed.Type, &.{element});
+        const slot: typed.Callable = .{ .parameters = parameters, .return_type = result, .effects = effect_set.bit(.managed_allocation), .mutates = &.{}, .return_origin = .unknown };
+        const callback = try callables.intern(self.allocator, &self.catalog, slot, node.span, self.sink);
+        try self.hint(key, callback);
+    }
+    /// The declared result of a top-level function named as a sort key, so an
+    /// unannotated key function fills the key slot with the empty ceiling its
+    /// one element parameter derives, exactly as it fills any callback
+    /// parameter; null for a local or anything but a nongeneric function.
+    fn namedKeyResult(self: *Checker, name: source.Span) Error!?typed.Type {
+        const text = self.src.text(name);
+        if (self.active.contains(text) or std.mem.indexOf(u8, text, "::") != null) return null;
+        const key = if (self.catalog.module_names) |names| module: {
+            if (!try names.topLevel(name)) return null;
+            break :module try names.reference(name, .function, null, null, self.sink);
+        } else text;
+        const declaration = self.functions.get(key) orelse return null;
+        const function = self.syntax.functions[@backingInt(declaration)];
+        if (function.policy.owner != null or function.signature.type_parameters.len != 0) return null;
+        const result = try self.catalog.resolve(self.src, function.signature.return_type, self.sink);
+        return result;
+    }
+    /// LAMBDA-KEY-INFER-1: the key type of a one-parameter sort-key lambda whose
+    /// body is not a shape `lambdaKeyType` reads is the body's ordinary type. The
+    /// body is checked once here with its parameter bound to the list's element,
+    /// and every trace of that trial — typed nodes, statements, locals, resolved
+    /// entries, the parameter binding, option facts, ownership state and
+    /// diagnostics — is undone, so the lambda is checked for real, against the
+    /// slot this type fixes, exactly once later. A body that does not type on
+    /// its own is `E_SORT_KEY` quoting why, never a guessed `int`.
+    fn inferLambdaKey(self: *Checker, lambda: ast.Lambda, element: typed.Type) Error!typed.Type {
+        const saved_nodes = self.nodes.items.len;
+        const saved_statements = self.statements.items.len;
+        const saved_locals = self.locals.items.len;
+        const saved_resolved = self.resolved_nodes.items.len;
+        const saved_diagnostics = self.sink.items.items.len;
+        const pending = try self.pendingState(saved_locals);
+        const facts = try self.option_facts.snapshot(self.allocator);
+        const parameter = lambda.parameters[0];
+        const name = self.src.text(parameter);
+        const shadowed = self.active.get(name);
+        try self.locals.append(self.allocator, .{
+            .name = name,
+            .declaration = parameter,
+            .ty = element,
+            .mutable = false,
+            .ownership = .{ .initialized = true, .transfer_available = self.transfers(element) },
+        });
+        try self.active.put(self.allocator, name, @fromBackingInt(saved_locals));
+        const outcome = self.expression(lambda.body);
+        const key_type: ?typed.Type = if (outcome) |value| self.nodes.items[@backingInt(value)].ty else |err| switch (err) {
+            error.SourceError => null,
+            else => |failure| return failure,
+        };
+        for (self.resolved_nodes.items[saved_resolved..]) |index| self.resolved[index] = null;
+        self.resolved_nodes.shrinkRetainingCapacity(saved_resolved);
+        self.nodes.shrinkRetainingCapacity(saved_nodes);
+        self.statements.shrinkRetainingCapacity(saved_statements);
+        self.locals.shrinkRetainingCapacity(saved_locals);
+        if (shadowed) |slot| try self.active.put(self.allocator, name, slot) else _ = self.active.remove(name);
+        self.restorePending(pending);
+        self.option_facts.restore(facts);
+        var reason: ?diagnostic.Diagnostic = null;
+        for (self.sink.items.items[saved_diagnostics..]) |item| if (item.severity == .err) {
+            reason = item;
+            break;
+        };
+        self.sink.items.shrinkRetainingCapacity(saved_diagnostics);
+        if (key_type) |found| return found;
+        const why = reason orelse return error.InternalError;
+        const message = try std.fmt.allocPrint(self.allocator, "this lambda's key type cannot be inferred from its body ({s}: {s}); write a top-level key function with a declared result and pass it by name", .{ why.code, why.message });
+        return self.sink.fail("E_SORT_KEY", lambda.span, message);
+    }
+    /// The key type a sort-key lambda's body returns, read off the body when it
+    /// is the parameter itself, a field path from it, a negation, arithmetic or
+    /// `len` of one, or a tuple of those; null when the body does not say.
+    fn lambdaKeyType(self: *Checker, body: ast.NodeId, parameter: []const u8, element: typed.Type) Error!?typed.Type {
+        const node = self.syntax.nodes.items[@backingInt(body)];
+        switch (node.data) {
+            .name => |name| return if (std.mem.eql(u8, self.src.text(name), parameter)) element else null,
+            .field => |field| {
+                const base = try self.lambdaKeyType(field.base, parameter, element) orelse return null;
+                if (!base.isAggregate() or base.recordIndex() >= self.catalog.records.len) return null;
+                const slot = self.catalog.field_names.items[base.recordIndex()].get(self.src.text(field.name)) orelse return null;
+                const declared = self.catalog.records[base.recordIndex()].fields;
+                return if (slot < declared.len) declared[slot].ty else null;
+            },
+            .unary => |unary| return if (unary.op == .neg) self.lambdaKeyType(unary.operand, parameter, element) else null,
+            .binary => |binary| return switch (binary.op) {
+                .add, .sub, .mul, .div, .floor_div, .rem => try self.lambdaKeyType(binary.left, parameter, element) orelse try self.lambdaKeyType(binary.right, parameter, element),
+                else => null,
+            },
+            .length => return .i64,
+            .tuple => |items| {
+                if (items.len < 2 or items.len > 8) return null;
+                const types = try self.allocator.alloc(typed.Type, items.len);
+                for (items, types) |item, *slot| slot.* = try self.lambdaKeyType(item, parameter, element) orelse return null;
+                const tuple = try self.catalog.tupleType(types);
+                return tuple;
+            },
+            else => return null,
         }
     }
-    fn hintSortedArguments(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!void {
-        try self.validateSortedArguments(call);
-        if (call.arguments.len != 2) return;
+    /// Hint the operands of one keyword `sorted(values, ...)` once the list
+    /// operand is checked.
+    fn hintSortedArguments(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call"), keywords: SortKeywords) Error!void {
         const input = self.syntax.nodes.items[@backingInt(call.arguments[0])];
         const input_type = if (self.resolved[@backingInt(call.arguments[0])]) |value|
             self.nodes.items[@backingInt(value)].ty
@@ -1435,14 +1665,104 @@ const Checker = struct {
             const slot = self.active.get(self.src.text(input.data.name)) orelse return;
             break :name self.locals.items[@backingInt(slot)].ty;
         } else return;
-        if (!input_type.isAggregate()) return self.sink.fail("E_PRELUDE_TYPE", input.span, "sorted key requires a list input");
+        try self.hintSortKeywords(keywords, try self.sortedElement(input_type, input.span));
+    }
+    /// The element type of the list a keyword `sorted` call sorts.
+    fn sortedElement(self: *Checker, input_type: typed.Type, span: source.Span) Error!typed.Type {
+        if (!input_type.isAggregate()) return self.sink.fail("E_PRELUDE_TYPE", span, "sorted key requires a list input");
         const input_schema = self.catalog.records[input_type.recordIndex()];
         if (!input_schema.isCollection() or input_schema.collection.kind != .list)
-            return self.sink.fail("E_PRELUDE_TYPE", input.span, "sorted key requires a list input");
-        const element = input_schema.shape.buffer.?;
-        const parameters = try self.allocator.dupe(typed.Type, &.{element});
-        const callback = try callables.intern(self.allocator, &self.catalog, .{ .parameters = parameters, .return_type = .i64, .effects = 0, .mutates = &.{}, .return_origin = .fresh }, call.argument_names[1].?, self.sink);
-        try self.hint(call.arguments[1], callback);
+            return self.sink.fail("E_PRELUDE_TYPE", span, "sorted key requires a list input");
+        return input_schema.shape.buffer.?;
+    }
+    /// Check the already checked operands of one keyword sort of a list of
+    /// `element` in `owner`: the key maps one element to an ordered key, a
+    /// sort without a key needs an ordered element, and `reverse` is a `bool`.
+    fn checkedSort(self: *Checker, span: source.Span, element: typed.Type, keywords: SortKeywords, owner: typed.LocalId) Error!prelude_builtins.KeyedSort {
+        const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
+        var sort: prelude_builtins.KeyedSort = .{ .span = span, .owner = owner, .reverse_first = keywords.reverse_first };
+        if (keywords.key) |id| {
+            sort.key = self.resolved[@backingInt(id)].?;
+            _ = try builtins.sortKey(self.syntax.nodes.items[@backingInt(id)].span, element, sort.key.?);
+        } else if (keywords.reverse != null) try self.requireSortable(element, span);
+        if (keywords.reverse) |id| {
+            sort.reverse = self.resolved[@backingInt(id)].?;
+            if (self.nodes.items[@backingInt(sort.reverse.?)].ty != .bool)
+                return self.sink.fail("E_TYPE", self.syntax.nodes.items[@backingInt(id)].span, "reverse= takes a bool: reverse=True sorts in descending order");
+        }
+        return sort;
+    }
+    /// `sorted(values, key=..., reverse=...)`: check the named operands and
+    /// build the sorted copy.
+    fn checkSortedCall(self: *Checker, span: source.Span, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!typed.Node {
+        const keywords = try self.sortedKeywords(call);
+        const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
+        const input = self.resolved[@backingInt(call.arguments[0])].?;
+        if (keywords.key == null and keywords.reverse == null) return builtins.sorted(.{ .input = input, .sort = .{ .span = span, .owner = undefined } });
+        const element = try self.sortedElement(self.nodes.items[@backingInt(input)].ty, self.syntax.nodes.items[@backingInt(call.arguments[0])].span);
+        return builtins.sorted(.{ .input = input, .sort = try self.checkedSort(span, element, keywords, undefined) });
+    }
+    /// The list local of a `values.sort(...)` call that passes arguments, the
+    /// Python keyword form; null for any other call. A bare `values.sort()`
+    /// stays the plain buffer operation.
+    fn listSortOwner(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) ?typed.LocalId {
+        const owner = call.owner orelse return null;
+        if (call.arguments.len == 0 or !std.mem.eql(u8, self.src.text(call.name), "sort")) return null;
+        const slot = self.active.get(self.src.text(owner)) orelse return null;
+        return if (self.listLocal(slot)) slot else null;
+    }
+    fn listLocal(self: *Checker, slot: typed.LocalId) bool {
+        const local_type = self.locals.items[@backingInt(slot)].ty;
+        if (!local_type.isAggregate()) return false;
+        const schema = self.catalog.records[local_type.recordIndex()];
+        return schema.isCollection() and schema.collection.kind == .list;
+    }
+    fn listSortKeywords(self: *Checker, name: source.Span, arguments: []const ast.NodeId, names: []const ?source.Span) Error!SortKeywords {
+        return self.sortKeywords(.{ .name = name, .arguments = arguments, .names = names, .positional = 0, .signature = list_sort_signature });
+    }
+    /// Queue the operands of one `values.sort(key=..., reverse=...)` call in
+    /// source order, hinted by the list's element type.
+    fn queueListSort(self: *Checker, work: *std.ArrayList(Work), call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
+        const slot = self.listSortOwner(call) orelse return false;
+        const keywords = try self.listSortKeywords(call.name, call.arguments, call.argument_names);
+        try self.hintSortKeywords(keywords, self.catalog.records[self.locals.items[@backingInt(slot)].ty.recordIndex()].shape.buffer.?);
+        var index = call.arguments.len;
+        while (index > 0) {
+            index -= 1;
+            try work.append(self.allocator, .{ .id = call.arguments[index] });
+        }
+        return true;
+    }
+    /// `values.sort(key=..., reverse=...)` on a list local: sort it in place.
+    fn checkListSort(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), slot: typed.LocalId, out: *typed.Node) Error!void {
+        const keywords = try self.listSortKeywords(call.name, call.arguments, call.argument_names);
+        const local = &self.locals.items[@backingInt(slot)];
+        local.usage.reads += 1;
+        local.usage.writes += 1;
+        const element = self.catalog.records[local.ty.recordIndex()].shape.buffer.?;
+        const sort = try self.checkedSort(node.span, element, keywords, slot);
+        const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+        out.* = try b.block(try builtins.keyedSort(sort), try b.node(.unit, .unit));
+    }
+    /// `receiver.sort(key=..., reverse=...)` on any list expression: the
+    /// receiver is checked already; hint and check the named operands in
+    /// source order, then sort the list the receiver evaluated to in place.
+    fn checkMethodListSort(self: *Checker, node: ast.Node, base: typed.NodeId, temporaries: []const typed.Type) Error!typed.Node {
+        const call = node.data.method_call;
+        const keywords = try self.listSortKeywords(call.name, call.arguments, call.argument_names);
+        const list = self.nodes.items[@backingInt(base)].ty;
+        const element = try self.listElement(list, node.span);
+        try self.hintSortKeywords(keywords, element);
+        for (call.arguments) |argument| _ = try self.expressionWithTemporaries(argument, temporaries);
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+        const owner = try b.local(list);
+        const sort = try self.checkedSort(node.span, element, keywords, owner);
+        const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
+        var statements: std.ArrayList(typed.StatementId) = .empty;
+        try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = owner, .value = base } }));
+        try statements.appendSlice(self.allocator, try builtins.keyedSort(sort));
+        return b.block(statements.items, try b.node(.unit, .unit));
     }
     /// Whole-path file helpers are reserved under the same shadowing rule as `print`.
     fn fileAccessBuiltin(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?file_operations.Access {
@@ -1730,6 +2050,9 @@ const Checker = struct {
                     node.data = .{ .file_operation = .{ .kind = kind, .owner = owner, .argument = if (call.arguments.len == 0) null else call.arguments[0] } };
                     return node;
                 }
+                // `values.sort(key=..., reverse=...)` stays a call: its operands
+                // are named, and it lowers to a keyed sort, not one operation.
+                if (self.listSortOwner(call) != null) return node;
                 if (value_type.isAggregate() and self.catalog.records[value_type.recordIndex()].isCollection()) {
                     try call_arguments.positional(call, self.sink);
                     const name = self.src.text(call.name);
@@ -1749,7 +2072,8 @@ const Checker = struct {
                             .arguments = call.arguments.len,
                         });
                     node.data = .{ .buffer_operation = .{ .kind = kind, .owner = owner, .arguments = call.arguments } };
-                }
+                } else if (record_layouts.tupleRecord(self.catalog.records, value_type) != null)
+                    return self.sink.fail("E_TYPE", call.name, "a tuple has no methods; take it apart with `head, rest = value`");
             };
         }
         if (node.data == .field) {
@@ -1771,13 +2095,150 @@ const Checker = struct {
     fn requiresCellEquality(self: *Checker, ty_value: typed.Type) bool {
         return ty_value.isAggregate() and self.catalog.records[ty_value.recordIndex()].collection.contains_cell;
     }
+    /// Check one `(a, b)` tuple value. The expected-type rule reaches literals:
+    /// a destination that already demands a tuple type checks each element
+    /// against its positional type, and any other context infers the element
+    /// types and interns their tuple.
+    fn checkTuple(self: *Checker, node: ast.Node, inputs: []const ast.NodeId, temporaries: []const typed.Type, out: *typed.Node) Error!void {
+        if (inputs.len < 2 or inputs.len > 8) return self.sink.fail(eTupleArity, node.span, tuple_arity_alternative);
+        const expected = if (self.expected_types.get(node.span)) |demanded| record_layouts.tupleRecord(self.catalog.records, demanded) else null;
+        if (expected) |schema| if (schema.fields.len != inputs.len) return self.sink.fail(
+            eTupleArity,
+            node.span,
+            try std.fmt.allocPrint(self.allocator, "this tuple has {d} elements but {s} has {d}; write {d} elements", .{
+                inputs.len,
+                try typed.surfaceTypeName(self.allocator, schema.id, self.catalog.records),
+                schema.fields.len,
+                schema.fields.len,
+            }),
+        );
+        const values = try self.allocator.alloc(typed.NodeId, inputs.len);
+        const types = try self.allocator.alloc(typed.Type, inputs.len);
+        for (inputs, 0..) |input, index| {
+            if (expected) |schema| try self.hint(input, schema.fields[index].ty);
+            const value = try self.expressionWithTemporaries(input, temporaries);
+            const actual = self.nodes.items[@backingInt(value)].ty;
+            if (expected) |schema| try self.require(actual, schema.fields[index].ty, self.syntax.nodes.items[@backingInt(input)].span);
+            values[index] = value;
+            types[index] = if (expected) |schema| schema.fields[index].ty else actual;
+        }
+        out.ty = if (expected) |schema| schema.id else try self.catalog.tupleType(types);
+        const initializers = try self.allocator.alloc(typed.FieldInit, values.len);
+        for (initializers, values, 0..) |*initializer, value, index| initializer.* = .{ .index = index, .value = value };
+        out.data = .{ .record = initializers };
+    }
+    /// Bind the names of a `x, y = value` target list to the positional fields of
+    /// one tuple value. The value is evaluated once into its own slot before any
+    /// name is written, which is what makes `a, b = b, a` swap.
+    fn checkTupleAssignment(self: *Checker, assignment: @FieldType(@FieldType(ast.Node, "data"), "field_assignment"), temporaries: []const typed.Type) Error!typed.Node {
+        const target = self.syntax.nodes.items[@backingInt(assignment.target)];
+        const names = target.data.tuple;
+        const checked = try self.expressionWithTemporaries(assignment.value, temporaries);
+        const value_type = self.nodes.items[@backingInt(checked)].ty;
+        const schema = record_layouts.tupleRecord(self.catalog.records, value_type) orelse {
+            const found = try typed.surfaceTypeName(self.allocator, value_type, self.catalog.records);
+            const message = try std.fmt.allocPrint(self.allocator, "a destructuring assignment binds the values of a tuple; `{s}` is not one — bind it with one name instead", .{found});
+            return self.sink.fail("E_TYPE", self.nodes.items[@backingInt(checked)].span, message);
+        };
+        if (schema.fields.len != names.len) return self.sink.fail(eTupleArity, target.span, try self.destructuringMessage(assignment.value, schema.fields.len));
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = target.span };
+        var statements: std.ArrayList(typed.StatementId) = .empty;
+        const value_slot = try b.local(value_type);
+        try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = value_slot, .value = checked } }));
+        for (names, 0..) |target_id, index| {
+            const element = try b.node(schema.fields[index].ty, .{ .field = .{ .base = try b.read(value_slot), .index = index } });
+            switch (self.syntax.nodes.items[@backingInt(target_id)].data) {
+                .name => |name| try self.bindDestructured(name, element, &statements),
+                else => try statements.append(self.allocator, try b.stmt(.{ .discard = try self.destructuredPlace(target_id, element, temporaries) })),
+            }
+        }
+        return b.block(statements.items, try b.node(.unit, .unit));
+    }
+    /// PY-DESTRUCTURE-PLACE-1: write one element of an already-evaluated tuple
+    /// into an element or field target exactly as `target = value` would, so
+    /// `a[i], a[j] = a[j], a[i]` swaps. The target's own node is never checked
+    /// as an expression, so its resolution carries the element in as the
+    /// assigned value; the target's receiver and indices are evaluated here,
+    /// after the whole right-hand side, in target order, as Python does.
+    fn destructuredPlace(self: *Checker, target_id: ast.NodeId, element: typed.NodeId, temporaries: []const typed.Type) Error!typed.NodeId {
+        const target = self.syntax.nodes.items[@backingInt(target_id)];
+        self.resolved[@backingInt(target_id)] = element;
+        try self.resolved_nodes.append(self.allocator, @backingInt(target_id));
+        const write = switch (target.data) {
+            .field => try self.checkFieldAssignment(.{ .span = target.span, .data = .{ .field_assignment = .{ .target = target_id, .value = target_id } } }, temporaries),
+            .index => |access| if (try self.arrayPlace(access.base, access.index)) |place|
+                try self.checkArrayPlace(target, place, .{ .op = .set, .value = target_id }, temporaries)
+            else
+                try self.checkListAccess(target, .{ .base = access.base, .kind = .write, .inputs = try self.allocator.dupe(ast.NodeId, &.{ access.index, target_id }) }, temporaries),
+            else => return error.InternalError,
+        };
+        const id: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, write);
+        return id;
+    }
+    /// The accepted arity a destructuring names, naming the value's source when
+    /// it is a call so the message tells the reader what returned that many.
+    fn destructuringMessage(self: *Checker, value: ast.NodeId, elements: usize) Error![]const u8 {
+        const node = self.syntax.nodes.items[@backingInt(value)];
+        const origin = if (node.data == .call and node.data.call.owner == null)
+            try std.fmt.allocPrint(self.allocator, "`{s}` returns {d} values", .{ self.src.text(node.data.call.name), elements })
+        else
+            try std.fmt.allocPrint(self.allocator, "the value has {d} values", .{elements});
+        return std.fmt.allocPrint(self.allocator, "{s}; bind {d} names, or `_` for one you do not need", .{ origin, elements });
+    }
+    /// The accepted arity a two-name `for` needs, naming the one-name loop.
+    fn twoNameLoopMessage(self: *Checker, elements: usize) Error![]const u8 {
+        return std.fmt.allocPrint(
+            self.allocator,
+            "a two-name `for` destructures a two-value tuple; this one has {d} values — bind it with one name and destructure it in the body",
+            .{elements},
+        );
+    }
+    /// Bind one destructuring target: a fresh function-scoped local for a name
+    /// that is not bound yet, an assignment into the existing binding otherwise,
+    /// and nothing at all for `_`, which needs no slot and reads no element.
+    fn bindDestructured(self: *Checker, name: source.Span, value: typed.NodeId, statements: *std.ArrayList(typed.StatementId)) Error!void {
+        const text = self.src.text(name);
+        if (std.mem.eql(u8, text, "_")) return;
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = name };
+        const value_type = self.nodes.items[@backingInt(value)].ty;
+        if (self.active.get(text)) |slot| {
+            if (!self.locals.items[@backingInt(slot)].mutable) return self.sink.fail(eImmutable, name, "this binding cannot be assigned");
+            try self.requireRebindable(slot, name);
+            try self.requireArenaAssignment(slot, value);
+            if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
+                if (self.pendingObligation(self.locals.items[@backingInt(slot)])) return self.sink.fail("E_RESULT_OVERWRITE", name, "assignment would overwrite an unhandled result-bearing value");
+                self.locals.items[@backingInt(slot)].ownership.transfer_available = true;
+                self.locals.items[@backingInt(slot)].ownership.transfer_span = null;
+            }
+            self.locals.items[@backingInt(slot)].usage.writes += 1;
+            self.locals.items[@backingInt(slot)].ownership.initialized = true;
+            self.locals.items[@backingInt(slot)].ownership.arena_confined = false;
+            self.option_facts.forget(@backingInt(slot));
+            try statements.append(self.allocator, try b.stmt(.{ .assign = .{ .slot = slot, .value = value } }));
+            return;
+        }
+        if (try self.topLevel(name)) return self.sink.fail(eShadowing, name, "binding shadows an active local or top-level function");
+        for (self.arenas.items) |scope| if (std.mem.eql(u8, scope.name, text)) return self.sink.fail(eShadowing, name, "binding shadows an active arena name");
+        const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
+        try self.locals.append(self.allocator, .{
+            .ownership = .{ .initialized = true, .transfer_available = self.transfers(value_type) },
+            .name = text,
+            .declaration = name,
+            .ty = value_type,
+            .mutable = true,
+        });
+        try self.active.put(self.allocator, text, slot);
+        try self.requireArenaStore(slot, value);
+        try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = slot, .value = value } }));
+    }
     fn checkFieldAssignment(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
         const assignment = node.data.field_assignment;
-        // lane: tuples (item 4): a multi-target assignment parses to a `.tuple`
-        // target here, and this arm is replaced by the binding check the tuple
-        // lane adds.
         if (self.syntax.nodes.items[@backingInt(assignment.target)].data == .tuple)
-            return self.sink.fail(eNotImplemented, node.span, "tuple destructuring parses but is not checked yet");
+            return self.checkTupleAssignment(assignment, temporaries);
+        // PY-ARRAY-WRITE-2: `a[i].f op= v` keeps its operator.
+        if (try self.arrayPlace(assignment.target, null)) |place|
+            return self.checkArrayPlace(node, place, .{ .op = assignment.op, .value = assignment.value }, temporaries);
         const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
         var path_fields: std.ArrayList(source.Span) = .empty;
         var root = assignment.target;
@@ -1876,10 +2337,12 @@ const Checker = struct {
     /// the operator's ordinary rules and writing the result back through the same slot.
     fn checkIndexAugmented(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
         const assignment = node.data.index_assignment;
+        if (try self.arrayPlace(assignment.target, null)) |place|
+            return self.checkArrayPlace(node, place, .{ .op = assignment.op, .value = assignment.value }, temporaries);
         const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
         var statements: std.ArrayList(typed.StatementId) = .empty;
         const destination = try self.fieldDestination(self.syntax.nodes.items[@backingInt(assignment.target)], &statements, temporaries);
-        const index = destination.index orelse return self.sink.fail("E_ASSIGNMENT_TARGET", node.span, "augmented assignment requires a list slot or dictionary entry");
+        const index = destination.index orelse return self.sink.fail(eAssignmentTarget, node.span, "augmented assignment requires a list slot or dictionary entry");
         const element = self.nodes.items[@backingInt(destination.value)].ty;
         try self.hint(assignment.value, element);
         const right = try self.expressionWithTemporaries(assignment.value, temporaries);
@@ -1957,11 +2420,11 @@ const Checker = struct {
             try statements.append(self.allocator, refresh);
             return .{ .owner = owner, .index = null, .value = try b.read(saved), .refresh = refresh };
         }
-        if (root.data != .index) return self.sink.fail("E_ASSIGNMENT_TARGET", root.span, "field assignment requires a mutable local record or list slot");
+        if (root.data != .index) return self.sink.fail(eAssignmentTarget, root.span, "field assignment requires a mutable local record or list slot");
         const access = root.data.index;
         const base = try self.expressionWithTemporaries(access.base, temporaries);
         const ty_value = self.nodes.items[@backingInt(base)].ty;
-        if (!ty_value.isAggregate() or !self.catalog.records[ty_value.recordIndex()].isCollection()) return self.sink.fail(eCollectionMethod, root.span, "indexed field assignment requires a list or dictionary");
+        if (!self.collectionType(ty_value)) return self.sink.fail(eCollectionMethod, root.span, "indexed field assignment requires a list, dictionary or fixed array reached from a variable");
         const schema = self.catalog.records[ty_value.recordIndex()];
         if (schema.collection.kind == .string or schema.collection.kind == .bytes) return self.sink.fail(eCollectionMethod, root.span, "str and bytes are immutable");
         const element = schema.shape.buffer.?;
@@ -1977,6 +2440,285 @@ const Checker = struct {
         const refresh = try b.stmt(.{ .initialize = .{ .slot = saved, .value = try b.operation(owner, .read, &.{index}) } });
         try statements.append(self.allocator, refresh);
         return .{ .owner = owner, .index = index, .value = try b.read(saved), .refresh = refresh };
+    }
+    /// Whether local `slot` is a `mut` fixed-array parameter of the function
+    /// being checked. It names the caller's array for the whole call, so an
+    /// element write through it reaches the caller.
+    fn referenceParameter(self: *Checker, slot: typed.LocalId) bool {
+        if (self.current_lambda != null) return false;
+        const id = self.current_function orelse return false;
+        const index = @backingInt(slot);
+        const signature = self.syntaxFunction(id).signature;
+        if (index >= signature.parameters.len or !markerPositionDeclared(signature.mut_positions, @intCast(index))) return false;
+        return typed.referenceArray(self.catalog.records, self.locals.items[index].ty);
+    }
+    /// Refuse rebinding a `mut` fixed-array parameter as a whole. The name is
+    /// the caller's array, so `values = other` would either silently stay local
+    /// (the list rule) or overwrite the caller's array (the element rule); the
+    /// program says which it means by writing elements or copying to a local.
+    fn requireRebindable(self: *Checker, slot: typed.LocalId, name: source.Span) Error!void {
+        if (!self.referenceParameter(slot)) return;
+        const text = self.src.text(name);
+        return self.sink.fail(eAssignmentTarget, name, try std.fmt.allocPrint(
+            self.allocator,
+            "`{s}` is a `mut` array parameter and names the caller's array; write its elements (`{s}[i] = value`), or copy it into a local first",
+            .{ text, text },
+        ));
+    }
+    /// The array place an assignment target names, or null when its path writes
+    /// no fixed array or table element and the list, dictionary and record rules
+    /// own it. `trailing` is the final index of `target[trailing] = value`, which
+    /// the parser keeps apart from the target expression.
+    ///
+    /// The walk reads declared types only, so it reports nothing: a path it
+    /// cannot follow falls back to the ordinary rules and their diagnostics.
+    /// A list or dictionary slot on the path is a reference, so the value below
+    /// the last such slot is rebuilt from that slot, and everything above it is
+    /// an ordinary read of the collection.
+    fn arrayPlace(self: *Checker, target: ast.NodeId, trailing: ?ast.NodeId) Error!?ArrayPlace {
+        var chain: std.ArrayList(ast.NodeId) = .empty;
+        var cursor = target;
+        while (true) switch (self.syntax.nodes.items[@backingInt(cursor)].data) {
+            .field => |field| {
+                try chain.append(self.allocator, cursor);
+                cursor = field.base;
+            },
+            .index => |index| {
+                try chain.append(self.allocator, cursor);
+                cursor = index.base;
+            },
+            .name => break,
+            else => return null,
+        };
+        const slot = self.active.get(self.src.text(self.syntax.nodes.items[@backingInt(cursor)].data.name)) orelse return null;
+        var reached = self.locals.items[@backingInt(slot)].ty;
+        const count = chain.items.len + @intFromBool(trailing != null);
+        const steps = try self.allocator.alloc(PlaceStep, count);
+        var root = cursor;
+        var first: usize = 0;
+        var element_below = false;
+        for (steps, 0..) |*step, position| {
+            const id: ?ast.NodeId = if (position < chain.items.len) chain.items[chain.items.len - 1 - position] else null;
+            if (!reached.isAggregate()) return null;
+            const record = self.catalog.records[reached.recordIndex()];
+            if (id) |node_id| if (self.syntax.nodes.items[@backingInt(node_id)].data == .field) {
+                const name = self.syntax.nodes.items[@backingInt(node_id)].data.field.name;
+                if (!record.isRecord() or record.shape.tuple) return null;
+                const index = self.catalog.field_names.items[reached.recordIndex()].get(self.src.text(name)) orelse return null;
+                step.* = .{ .field = name };
+                reached = record.fields[index].ty;
+                continue;
+            };
+            step.* = .{ .element = if (id) |node_id| self.syntax.nodes.items[@backingInt(node_id)].data.index.index else trailing.? };
+            if (record.shape.array) |array| {
+                element_below = true;
+                reached = array.element;
+                continue;
+            }
+            if (!record.isCollection()) return null;
+            if (record.collection.kind != .list and record.collection.kind != .dictionary) return null;
+            root = id orelse return null;
+            first = position + 1;
+            element_below = false;
+            reached = record.shape.buffer.?;
+        }
+        if (!element_below) return null;
+        return .{ .root = root, .steps = steps[first..] };
+    }
+    /// Whether a checked value can neither trap nor have an effect, so when it
+    /// is evaluated relative to the rest of an assignment cannot be observed.
+    fn inertValue(self: *Checker, id: typed.NodeId) bool {
+        return switch (self.nodes.items[@backingInt(id)].data) {
+            .integer, .boolean, .unit, .local => true,
+            else => false,
+        };
+    }
+    /// Whether a checked value has no effect other than a possible trap, so it
+    /// may be evaluated twice — once to read a path, once to rebuild it — and
+    /// cannot write the binding an element assignment is rebuilding.
+    fn effectFreeValue(self: *Checker, id: typed.NodeId, depth: usize) bool {
+        if (depth == 16) return false;
+        return switch (self.nodes.items[@backingInt(id)].data) {
+            .integer, .boolean, .unit, .local => true,
+            .binary => |binary| self.effectFreeValue(binary.left, depth + 1) and self.effectFreeValue(binary.right, depth + 1),
+            .unary => |unary| self.effectFreeValue(unary.operand, depth + 1),
+            .field => |field| self.effectFreeValue(field.base, depth + 1),
+            .index => |index| self.effectFreeValue(index.base, depth + 1) and self.effectFreeValue(index.index, depth + 1),
+            .cast => |operand| self.effectFreeValue(operand, depth + 1),
+            else => false,
+        };
+    }
+    /// The value of a checked integer constant index, `k` or `-k`.
+    fn constantIndex(self: *Checker, id: typed.NodeId) ?i128 {
+        return switch (self.nodes.items[@backingInt(id)].data) {
+            .integer => |value| value,
+            .unary => |unary| if (unary.op == .neg) switch (self.nodes.items[@backingInt(unary.operand)].data) {
+                .integer => |value| -value,
+                else => null,
+            } else null,
+            else => null,
+        };
+    }
+    /// Whether a checked integer value can never be negative, from facts the
+    /// checker already holds: an unsigned type, a non-negative constant, a
+    /// loop counter, a length, and the checked operators that keep a
+    /// non-negative pair non-negative (an overflow traps rather than wraps).
+    /// A loop counter is immutable (`PY-FOR-REBIND-1`), so the fact holds for
+    /// every read of it inside its loop.
+    fn nonNegative(self: *Checker, id: typed.NodeId, depth: usize) bool {
+        if (depth == 8) return false;
+        const node = self.nodes.items[@backingInt(id)];
+        if (node.ty.integer()) |info| if (!info.signed) return true;
+        return switch (node.data) {
+            .integer => |value| value >= 0,
+            .length => true,
+            .buffer_operation => |operation| operation.kind == .length,
+            // `len(xs)` roots its receiver in a block around the length read.
+            .block_value => |block| self.nonNegative(block.value, depth + 1),
+            .cast => |operand| self.nonNegative(operand, depth + 1),
+            .local => |slot| self.counters.contains(slot),
+            .binary => |binary| switch (binary.op) {
+                .add, .mul, .div, .floor_div, .rem => self.nonNegative(binary.left, depth + 1) and self.nonNegative(binary.right, depth + 1),
+                // Python's `%` takes the divisor's sign.
+                .floor_rem => if (self.constantIndex(binary.right)) |divisor| divisor > 0 else self.nonNegative(binary.left, depth + 1) and self.nonNegative(binary.right, depth + 1),
+                .bit_and => self.nonNegative(binary.left, depth + 1) or self.nonNegative(binary.right, depth + 1),
+                .shift_right => self.nonNegative(binary.left, depth + 1),
+                else => false,
+            },
+            else => false,
+        };
+    }
+    /// Apply `PY-ARRAY-NEGATIVE-1` to one fixed-array index. A table key is an
+    /// enumeration member and never negative. A constant in `-N .. -1` is
+    /// folded to its position from the start, so `a[-1]` costs what `a[N - 1]`
+    /// does; any other index the checker cannot prove non-negative is marked
+    /// for the backend to count back from the end.
+    fn arrayKey(self: *Checker, schema: typed.Array, key: typed.NodeId) Error!ArrayKey {
+        if (schema.key != null) return .{ .key = key, .from_end = false };
+        if (self.constantIndex(key)) |value| {
+            if (value >= 0) return .{ .key = key, .from_end = false };
+            const length: i128 = @intCast(schema.length);
+            if (value < -length) return .{ .key = key, .from_end = true };
+            const b: collections.Builder(Checker) = .{ .checker = self, .span = self.nodes.items[@backingInt(key)].span };
+            return .{ .key = try b.node(.i64, .{ .integer = value + length }), .from_end = false };
+        }
+        return .{ .key = key, .from_end = !self.nonNegative(key, 0) };
+    }
+    /// Evaluate `value` into a fresh temporary now, answering a read of it.
+    fn spillValue(self: *Checker, b: collections.Builder(Checker), value: typed.NodeId, statements: *std.ArrayList(typed.StatementId)) Error!typed.NodeId {
+        const slot = try b.local(self.nodes.items[@backingInt(value)].ty);
+        try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = slot, .value = value } }));
+        return b.read(slot);
+    }
+    /// Check an assignment that writes inside a fixed array or table:
+    /// `a[i] = v`, `a[i].f = v`, `a[i][j] = v`, `r.cells[i] = v`, `xs[k][j] = v`
+    /// and their augmented forms.
+    ///
+    /// The place is rebuilt from its root with `replace` for each element step and
+    /// a record update for each field step, then stored back where it came from:
+    /// into the binding, with the store marked as an element write, or into the
+    /// list or dictionary slot the path runs through. `a[i] = v` on a local is
+    /// therefore exactly `a = replace(a, i, v)`, which the backend writes in
+    /// place, and value semantics are those of `replace`: a copy taken earlier
+    /// keeps its value. The assigned value is evaluated before the target's
+    /// indices, as Python does; an index used to both read and rebuild the path
+    /// is evaluated once, and nothing the right-hand side does can be lost,
+    /// because a value that could write the binding is computed before the
+    /// binding is read.
+    fn checkArrayPlace(self: *Checker, node: ast.Node, place: ArrayPlace, write: PlaceWrite, temporaries: []const typed.Type) Error!typed.Node {
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+        const root_node = self.syntax.nodes.items[@backingInt(place.root)];
+        var root_statements: std.ArrayList(typed.StatementId) = .empty;
+        var owner: typed.LocalId = undefined;
+        var slot_index: ?typed.NodeId = null;
+        var current: typed.NodeId = undefined;
+        if (root_node.data == .name) {
+            owner = try self.resolve(root_node.data.name);
+            try self.requireReadable(owner, root_node.data.name);
+            const local = &self.locals.items[@backingInt(owner)];
+            if (!local.mutable) return self.sink.fail(eImmutable, root_node.span, "element assignment requires a mutable binding");
+            if (self.transfers(local.ty)) return self.sink.fail(eResultOperation, root_node.span, "element assignment requires a copyable value without pending results");
+            local.usage.writes += 1;
+            local.usage.reads += 1;
+            current = try b.read(owner);
+        } else {
+            const destination = try self.fieldDestination(root_node, &root_statements, temporaries);
+            owner = destination.owner;
+            slot_index = destination.index;
+            current = destination.value;
+        }
+        const bases = try self.allocator.alloc(typed.NodeId, place.steps.len);
+        const keys = try self.allocator.alloc(ArrayKey, place.steps.len);
+        const members = try self.allocator.alloc(usize, place.steps.len);
+        var key_statements: std.ArrayList(typed.StatementId) = .empty;
+        var keys_inert = true;
+        for (place.steps, 0..) |step, i| {
+            bases[i] = current;
+            const base_type = self.nodes.items[@backingInt(current)].ty;
+            switch (step) {
+                .field => |name| {
+                    const schema = try self.catalog.record(base_type, name, self.sink);
+                    if (self.transfers(base_type)) return self.sink.fail(eResultOperation, name, "field assignment requires a copyable record without pending results");
+                    members[i] = try self.catalog.field(base_type, self.src, name, self.sink);
+                    current = try b.node(schema.fields[members[i]].ty, .{ .field = .{ .base = current, .index = members[i] } });
+                },
+                .element => |key_node| {
+                    const key_span = self.syntax.nodes.items[@backingInt(key_node)].span;
+                    const schema = try self.catalog.array(base_type, key_span, self.sink);
+                    if (self.requiresHandling(schema.element)) return self.sink.fail(eResultOperation, node.span, "replacement would drop an unhandled result-bearing element");
+                    if (schema.key) |key| try self.hint(key_node, key);
+                    const checked = try self.expressionWithTemporaries(key_node, temporaries);
+                    try self.requireIndex(schema, self.nodes.items[@backingInt(checked)].ty, key_span);
+                    // PY-ARRAY-NEGATIVE-1: decided on the key as written, then
+                    // carried by whatever temporary holds it.
+                    var key = try self.arrayKey(schema, checked);
+                    if (!self.effectFreeValue(key.key, 0)) key.key = try self.spillValue(b, key.key, &key_statements);
+                    keys_inert = keys_inert and self.inertValue(key.key);
+                    keys[i] = key;
+                    current = try b.node(schema.element, .{ .index = .{ .base = current, .index = key.key, .from_end = key.from_end } });
+                },
+            }
+        }
+        const leaf_type = self.nodes.items[@backingInt(current)].ty;
+        try self.hint(write.value, leaf_type);
+        const right = try self.expressionWithTemporaries(write.value, temporaries);
+        try self.require(self.nodes.items[@backingInt(right)].ty, leaf_type, node.span);
+        var statements: std.ArrayList(typed.StatementId) = .empty;
+        var value = right;
+        if (write.op == .set) {
+            // A binding root reads the binding only at the store, so an inert
+            // index cannot be reordered against the value; a slot root is read
+            // by the statements that locate it, which Python runs after the value.
+            const spill = !self.inertValue(right) and (slot_index != null or !keys_inert or !self.effectFreeValue(right, 0));
+            if (spill) value = try self.spillValue(b, right, &statements);
+            try statements.appendSlice(self.allocator, root_statements.items);
+            try statements.appendSlice(self.allocator, key_statements.items);
+        } else {
+            // Python reads the element, then evaluates the operand, then stores.
+            try statements.appendSlice(self.allocator, root_statements.items);
+            try statements.appendSlice(self.allocator, key_statements.items);
+            value = try self.augmented(write.op, current, right, node.span);
+            if (!self.effectFreeValue(right, 0)) value = try self.spillValue(b, value, &statements);
+        }
+        if (slot_index == null) try self.requireArenaStore(owner, if (write.op == .set) right else value);
+        var i = place.steps.len;
+        while (i > 0) {
+            i -= 1;
+            const base_type = self.nodes.items[@backingInt(bases[i])].ty;
+            value = switch (place.steps[i]) {
+                .field => try b.node(base_type, .{ .update = .{
+                    .base = bases[i],
+                    .fields = try self.allocator.dupe(typed.FieldInit, &.{.{ .index = members[i], .value = value }}),
+                } }),
+                .element => try b.node(base_type, .{ .replace = .{ .base = bases[i], .index = keys[i].key, .value = value, .from_end = keys[i].from_end } }),
+            };
+        }
+        const stored = if (slot_index) |index|
+            try b.stmt(.{ .discard = try b.operation(owner, .write, &.{ index, value }) })
+        else
+            try b.stmt(.{ .assign = .{ .slot = owner, .value = value, .element = true } });
+        try statements.append(self.allocator, stored);
+        return b.block(statements.items, try b.node(.unit, .unit));
     }
     /// Build a fixed array from a list literal whose context already demands `[N]T`.
     fn checkFixedArray(self: *Checker, node: ast.Node, inputs: []const ast.NodeId, temporaries: []const typed.Type, expected: typed.Type) Error!typed.Node {
@@ -2030,9 +2772,10 @@ const Checker = struct {
         const projected = view != null and view.? != .item;
         const iterable = if (projected) try dictionary_views.owner(Checker, self, node.span, source_value) else source_value;
         const iterable_type = self.nodes.items[@backingInt(iterable)].ty;
-        if (!iterable_type.isAggregate() or !self.catalog.records[iterable_type.recordIndex()].isCollection()) return self.sink.fail(eCollectionMethod, node.span, "iteration requires a list, str, or dictionary");
+        const fixed = arrays.fixed(self.catalog, iterable_type);
+        if (fixed == null and !self.collectionType(iterable_type)) return self.sink.fail(eCollectionMethod, node.span, "iteration requires a list, str, fixed array or dictionary");
         const schema = self.catalog.records[iterable_type.recordIndex()];
-        const element = if (projected) try dictionary_views.element(&self.catalog, iterable_type, view.?, node.span) else switch (schema.collection.kind) {
+        const element = if (fixed) |shape| shape.element else if (projected) try dictionary_views.element(&self.catalog, iterable_type, view.?, node.span) else switch (schema.collection.kind) {
             .list => schema.shape.buffer.?,
             .string => iterable_type,
             .bytes => typed.Type.i64,
@@ -2050,6 +2793,7 @@ const Checker = struct {
             .kind = schema.collection.kind,
             .reserve = each.filter == null,
             .projection = if (projected) view else null,
+            .fixed = fixed,
         };
         return self.comprehensionLoop(b, slots, parts.body, source_values);
     }
@@ -2086,7 +2830,14 @@ const Checker = struct {
         try self.require(self.nodes.items[@backingInt(end)].ty, element, self.syntax.nodes.items[@backingInt(bounds.end)].span);
         const index = try b.local(element);
         const limit = try b.local(element);
+        // PY-ARRAY-NEGATIVE-1: the running index never drops below its start,
+        // and an expression cannot assign it.
+        self.locals.items[@backingInt(index)].mutable = false;
+        if (self.nonNegative(start, 0)) try self.counters.put(self.allocator, index, {});
         const parts = try self.comprehensionBody(b, node, each, index);
+        // A trial check of a sort key's lambda discards its locals, so a
+        // counter's slot must not outlive its loop.
+        _ = self.counters.remove(index);
         const i = try b.read(index);
         const step = try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.node(element, .{ .integer = 1 }), element) } });
         const loop_id = self.loops.next;
@@ -2108,6 +2859,8 @@ const Checker = struct {
         kind: ManagedKind,
         reserve: bool,
         projection: ?dictionary_views.Kind = null,
+        /// Set when the source is a fixed array, which is read by index.
+        fixed: ?typed.Array = null,
     };
     fn comprehensionLoop(
         self: *Checker,
@@ -2117,17 +2870,22 @@ const Checker = struct {
         source_values: ComprehensionSource,
     ) Error!typed.Node {
         const i = try b.read(slots.index);
-        const guard = try b.stmt(.{ .discard = try b.operation(slots.owner, .iteration_check, &.{try b.read(slots.limit)}) });
-        const value = try self.projectedIterationValue(b, slots.owner, i, source_values.kind, source_values.projection);
-        const iteration = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
-            guard,
-            try b.stmt(.{ .initialize = .{ .slot = slots.slot, .value = value } }),
-            body,
-        }) });
-        const step = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
-            guard,
-            try b.stmt(.{ .assign = .{ .slot = slots.index, .value = try b.binary(.add, i, try b.integer(1), .i64) } }),
-        }) });
+        const initialize = try b.stmt(.{ .initialize = .{ .slot = slots.slot, .value = try self.iterationRead(b, slots.owner, i, .{
+            .kind = source_values.kind,
+            .fixed = source_values.fixed,
+            .projection = source_values.projection,
+        }) } });
+        const advance = try b.stmt(.{ .assign = .{ .slot = slots.index, .value = try b.binary(.add, i, try b.integer(1), .i64) } });
+        // A fixed array cannot change length, so it needs no iteration guard.
+        const guard = if (source_values.fixed == null) try b.stmt(.{ .discard = try b.operation(slots.owner, .iteration_check, &.{try b.read(slots.limit)}) }) else null;
+        const iteration = try b.stmt(.{ .block = if (guard) |guarded|
+            try self.allocator.dupe(typed.StatementId, &.{ guarded, initialize, body })
+        else
+            try self.allocator.dupe(typed.StatementId, &.{ initialize, body }) });
+        const step = try b.stmt(.{ .block = if (guard) |guarded|
+            try self.allocator.dupe(typed.StatementId, &.{ guarded, advance })
+        else
+            try self.allocator.dupe(typed.StatementId, &.{advance}) });
         const loop_id = self.loops.next;
         self.loops.next += 1;
         const output_capacity = if (source_values.reserve) try b.read(slots.limit) else try b.integer(0);
@@ -2136,7 +2894,7 @@ const Checker = struct {
         return b.block(&.{
             try b.stmt(.{ .initialize = .{ .slot = slots.owner, .value = source_values.iterable } }),
             try b.stmt(.{ .initialize = .{ .slot = slots.index, .value = try b.integer(0) } }),
-            try b.stmt(.{ .initialize = .{ .slot = slots.limit, .value = try b.length(slots.owner) } }),
+            try b.stmt(.{ .initialize = .{ .slot = slots.limit, .value = if (source_values.fixed) |shape| try b.integer(@intCast(shape.length)) else try b.length(slots.owner) } }),
             try b.stmt(.{ .initialize = .{ .slot = source_values.output, .value = acquire_output } }),
             try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, i, try b.read(slots.limit), .bool), .body = iteration, .step = step } }),
         }, try b.read(source_values.output));
@@ -2196,6 +2954,71 @@ const Checker = struct {
         try self.nodes.append(self.allocator, value);
         return self.checkCollectionAccess(node, .{ .base = base, .receiver = slot, .kind = kind, .inputs = call.arguments, .temporaries = temporaries });
     }
+    /// Check one intrinsic `Option[T]` method against an already checked
+    /// receiver. `unwrap_or`'s default is checked against the payload with the
+    /// ordinary literal inference, so an integer-literal default adopts the
+    /// payload type exactly as it does in a binding. Presence tests lower to the
+    /// tag test and `unwrap_or` to a two-arm match, both through `option_flow`.
+    fn checkOptionMethod(self: *Checker, node: ast.Node, base: typed.NodeId, name: source.Span, arguments: []const ast.NodeId, temporaries: []const typed.Type) Error!typed.Node {
+        const text = self.src.text(name);
+        const receiver_type = self.nodes.items[@backingInt(base)].ty;
+        // A narrowed local has already projected its payload, so the receiver
+        // type decides: an Option here still needs its tag, a payload does not.
+        const shape = prelude.optionShape(receiver_type, self.catalog.records);
+        const payload = if (shape) |present| present.element else receiver_type;
+        const intrinsic = option_flow.methodNamed(text) orelse return self.sink.fail(eCollectionMethod, name, option_flow.method_spellings);
+        if (intrinsic == .unwrap_or and arguments.len != 1)
+            return self.sink.fail("E_ARITY", node.span, "`unwrap_or` takes exactly one argument: `unwrap_or(default)`");
+        if (intrinsic != .unwrap_or and arguments.len != 0) {
+            const message = try std.fmt.allocPrint(self.allocator, "`{s}` takes no arguments", .{text});
+            return self.sink.fail("E_ARITY", node.span, message);
+        }
+        if (shape != null and self.transfers(receiver_type))
+            return self.sink.fail(eOptionTest, name, "use match for an Option carrying an owned value or checked Result");
+        if (intrinsic == .unwrap_or) {
+            const argument = arguments[0];
+            try self.hint(argument, payload);
+            const fallback = try self.expressionWithTemporaries(argument, temporaries);
+            const actual = self.nodes.items[@backingInt(fallback)].ty;
+            if (actual != payload) {
+                const expected_name = try typed.surfaceTypeName(self.allocator, payload, self.catalog.records);
+                const actual_name = try typed.surfaceTypeName(self.allocator, actual, self.catalog.records);
+                const message = try std.fmt.allocPrint(self.allocator, "`unwrap_or` default must be `{s}` (the Option's payload), found {s}", .{ expected_name, actual_name });
+                return self.sink.fail("E_TYPE", self.syntax.nodes.items[@backingInt(argument)].span, message);
+            }
+            // A proven-present receiver is its own payload; the default is
+            // checked for its type but is dead on every path that reaches here.
+            if (shape == null) return self.nodes.items[@backingInt(base)];
+            return option_flow.defaultValue(Checker, self, base, shape.?, fallback, node.span);
+        }
+        if (shape == null) return .{ .span = node.span, .ty = .bool, .data = .{ .boolean = intrinsic == .is_some } };
+        const presence = try option_flow.testValue(self, base, shape.?, node.span);
+        if (intrinsic == .is_none) return presence;
+        const test_id: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, presence);
+        return .{ .span = node.span, .ty = .bool, .data = .{ .unary = .{ .op = .not, .operand = test_id, .op_span = node.span } } };
+    }
+    /// Whether a call whose receiver is a plain name belongs to the intrinsic
+    /// `Option` methods: the name is an active binding declared as an `Option`,
+    /// and either the name is one of the three methods or the payload is not a
+    /// narrowed collection, whose own methods this receiver keeps.
+    fn optionReceiverMethod(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) bool {
+        const owner = call.owner orelse return false;
+        const slot = self.active.get(self.src.text(owner)) orelse return false;
+        if (prelude.optionShape(self.locals.items[@backingInt(slot)].ty, self.catalog.records) == null) return false;
+        return option_flow.methodNamed(self.src.text(call.name)) != null or self.narrowedCollection(call) == null;
+    }
+    /// Check the intrinsic `Option` method one named local receiver calls. The
+    /// caller has already established that this call is one of them.
+    fn checkOptionReceiverMethod(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), temporaries: []const typed.Type) Error!typed.Node {
+        try call_arguments.positional(call, self.sink);
+        const owner = call.owner.?;
+        var value: typed.Node = .{ .span = owner, .ty = .unit, .data = .unit };
+        try self.checkName(.{ .span = owner, .data = .{ .name = owner } }, owner, &value);
+        const base: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, value);
+        return self.checkOptionMethod(node, base, call.name, call.arguments, temporaries);
+    }
     fn checkCollectionMethod(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
         const call = node.data.method_call;
         const name = self.src.text(call.name);
@@ -2204,7 +3027,13 @@ const Checker = struct {
         // `checkListAccess` reads the same cached checked node.
         const base = try self.expressionWithTemporaries(call.base, temporaries);
         const owner_type = self.nodes.items[@backingInt(base)].ty;
+        if (prelude.optionShape(owner_type, self.catalog.records) != null)
+            return self.checkOptionMethod(node, base, call.name, call.arguments, temporaries);
         if (owner_type == .stream_cap) return self.checkStreamReceiverMethod(node, base, temporaries);
+        // Only a list's `sort` takes named operands, and passing any operand
+        // to it is the Python keyword form.
+        if (std.mem.eql(u8, name, "sort") and call.arguments.len != 0) return self.checkMethodListSort(node, base, temporaries);
+        if (call.argument_names.len != 0) return self.sink.fail(call_argument_code, call.name, "collection methods take their arguments by position; only a list's sort takes key= and reverse=");
         const kind = buffer_operations.methodFor(name, call.arguments.len) orelse {
             const managed = owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].isCollection();
             const family: ?ManagedKind = if (managed) self.catalog.records[owner_type.recordIndex()].collection.kind else null;
@@ -2316,9 +3145,7 @@ const Checker = struct {
             .names = try self.signatureNames(owner_type),
             .arguments = inputs.len,
         });
-        if (kind == .sort and !(element.isInteger() or numeric_surface.isFloat(element, self.catalog.records))) {
-            return self.sink.fail(eCollectionMethod, node.span, "sort requires an integer or float element type");
-        }
+        if (kind == .sort) try self.requireSortable(element, node.span);
         const names = try self.signatureNames(owner_type);
         const arguments = try self.allocator.alloc(typed.NodeId, inputs.len);
         switch (kind) {
@@ -2512,6 +3339,7 @@ const Checker = struct {
         }
     }
     fn queueBuiltinCall(self: *Checker, work: *std.ArrayList(Work), call_id: ast.NodeId, call: @FieldType(@FieldType(ast.Node, "data"), "call"), node: ast.Node) Error!bool {
+        if (try self.queueListSort(work, call)) return true;
         if (try self.queuePreludeCall(work, call_id, call)) return true;
         if (try self.floatIntrinsic(call) != null) {
             try call_arguments.positional(call, self.sink);
@@ -2789,6 +3617,10 @@ const Checker = struct {
             },
             .call => |call| {
                 if (self.narrowedCollection(call) != null) return false;
+                // An intrinsic `Option` method on a named local is checked in
+                // place, like a narrowed collection method: its receiver and its
+                // one argument are the call's own, not queued temporaries.
+                if (self.optionReceiverMethod(call)) return false;
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 if (try self.queueCapabilityCall(work, call)) return true;
                 if (self.environmentMethod(call) != null) return true;
@@ -2843,6 +3675,13 @@ const Checker = struct {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 try work.append(self.allocator, .{ .id = b.right, .checkpoint = if (b.op == .logical_and or b.op == .logical_or) .{ .condition = b.left, .truth = b.op == .logical_and } else null });
                 try work.append(self.allocator, .{ .id = b.left });
+                return true;
+            },
+            // A `mut` marker is transparent: the value it wraps is checked on its
+            // own, and the node itself reuses the resolved target's type and data.
+            .mut_argument => |inner| {
+                try work.append(self.allocator, .{ .id = id, .emit = true });
+                try work.append(self.allocator, .{ .id = inner });
                 return true;
             },
             else => {},
@@ -3092,9 +3931,7 @@ const Checker = struct {
             .names = try self.signatureNames(owner_type),
             .arguments = operation.arguments.len,
         });
-        if (kind == .sort and !(element.isInteger() or numeric_surface.isFloat(element, self.catalog.records))) {
-            return self.sink.fail(eCollectionMethod, operation.owner, "sort requires an integer or float element type");
-        }
+        if (kind == .sort) try self.requireSortable(element, operation.owner);
         const names = try self.signatureNames(owner_type);
         const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
         for (operation.arguments, arguments, 0..) |input, *argument, index| {
@@ -3163,6 +4000,26 @@ const Checker = struct {
         out.ty = self.catalog.records[record_type.recordIndex()].fields[field_index].ty;
         out.data = .{ .field = .{ .base = base, .index = field_index } };
     }
+    /// CALLBACK-SLOT-1: a generic callee's callback parameter is only concrete
+    /// once its type arguments are inferred from the checked arguments, so an
+    /// unannotated function value passed there was typed before its slot was
+    /// known and carries the unbounded ceiling. Give it the slot's type, exactly
+    /// as `functionValue` does for a slot known up front; the effect pass then
+    /// holds the function's inferred body to that ceiling.
+    fn adoptSlotCeiling(self: *Checker, value: typed.NodeId, expected: typed.Type) void {
+        const node = &self.nodes.items[@backingInt(value)];
+        if (node.ty == expected) return;
+        const target = switch (node.data) {
+            .function_value => |id| id,
+            else => return,
+        };
+        if (self.syntaxFunction(target).policy.effect_bound != null) return;
+        const actual = callables.signature(node.ty, self.catalog.records) orelse return;
+        const slot = callables.signature(expected, self.catalog.records) orelse return;
+        if (actual.return_type != slot.return_type or !std.mem.eql(typed.Type, actual.parameters, slot.parameters)) return;
+        if (!callables.positionSubset(actual.mutates, slot.mutates)) return;
+        node.ty = expected;
+    }
     fn functionValue(self: *Checker, name: source.Span, out: *typed.Node) Error!bool {
         const key = if (self.catalog.module_names) |names| module: {
             if (!try names.topLevel(name) and std.mem.indexOf(u8, self.src.text(name), "::") == null) return false;
@@ -3176,6 +4033,8 @@ const Checker = struct {
         for (function.signature.parameters, parameters) |input, *parameter| {
             parameter.* = try self.catalog.resolve(self.src, input.ty, self.sink);
         }
+        for (function.signature.mut_positions) |position| if (position < parameters.len and typed.referenceArray(self.catalog.records, parameters[position]))
+            return self.sink.fail(callback_type_code, name, "a function with a `mut` fixed-array parameter writes the caller's own array and cannot be used as a value; call it directly");
         const result = try self.catalog.resolve(self.src, function.signature.return_type, self.sink);
         const expected_type = self.expected_types.get(name);
         const destination = if (expected_type) |expected| callables.signature(expected, self.catalog.records) else null;
@@ -3190,7 +4049,7 @@ const Checker = struct {
             .parameters = parameters,
             .return_type = result,
             .effects = allowed,
-            .mutates = function.signature.mutates,
+            .mutates = function.signature.mut_positions,
             .return_origin = .unknown,
         };
         // Reuse the destination's interned schema when only its return-origin bound
@@ -3212,7 +4071,7 @@ const Checker = struct {
         const slot = try self.resolve(call.name);
         const contract = callables.signature(self.locals.items[@backingInt(slot)].ty, self.catalog.records) orelse return self.sink.fail(callback_type_code, call.name, "called local is not a function value");
         if (call.type_arguments.len != 0 or call.arguments.len != contract.parameters.len) return self.sink.fail("E_ARITY", call.name, "callback argument count must match its signature");
-        try self.checkMutationMarkers(call.arguments, call.argument_markers, contract.mutates);
+        try self.checkMutationMarkers(call.name, call.arguments, contract.mutates);
         self.locals.items[@backingInt(slot)].usage.reads += 1;
         const callee: typed.NodeId = @fromBackingInt(self.nodes.items.len);
         try self.nodes.append(self.allocator, .{ .span = call.name, .ty = self.locals.items[@backingInt(slot)].ty, .data = .{ .local = slot } });
@@ -3528,7 +4387,7 @@ const Checker = struct {
     /// record update rather than the positional three-argument list intrinsic.
     /// A declared, imported or local name called `replace` keeps its own meaning.
     fn recordUpdateCall(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
-        if (call.owner != null or call.argument_names.len == 0 or call.argument_markers.len != 0) return false;
+        if (call.owner != null or call.argument_names.len == 0 or self.callCarriesMutMarker(call)) return false;
         if (!std.mem.eql(u8, self.src.text(call.name), "replace")) return false;
         if (self.active.contains(self.src.text(call.name))) return false;
         return !try self.topLevel(call.name);
@@ -3546,12 +4405,13 @@ const Checker = struct {
         out.data = .{ .update = .{ .base = base, .fields = try self.fields(record_type, initializers, false, node.span) } };
     }
     fn checkCall(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
-        // A call carrying `&` markers must resolve to a declared function or a
-        // callable value: only those expose a `mutates(...)` footprint. Skipping
-        // the builtin/constructor dispatch for such a call routes it through the
-        // ordinary resolution below, where a marker on a non-declaring callee is
-        // reported instead of silently accepted.
-        const markers_present = input.argument_markers.len != 0;
+        // A call carrying a `mut` marker must resolve to a declared function or a
+        // callable value: only those expose a `mut` parameter set. Skipping the
+        // builtin and constructor dispatch for such a call routes it through the
+        // ordinary resolution below, where the marker is checked positionally
+        // instead of silently accepted and dropped.
+        if (self.listSortOwner(input)) |slot| return self.checkListSort(node, input, slot, out);
+        const markers_present = self.callCarriesMutMarker(input);
         if (!markers_present) {
             if (try self.checkCapabilityNarrowing(node, input, out)) return;
             if (try self.checkNetworkHost(node, input, out)) return;
@@ -3601,12 +4461,14 @@ const Checker = struct {
         const function = try self.specialize(target.declaration, call, node.span);
         const signature = self.syntaxFunction(function);
         try self.warnDeprecated(function, input);
-        try self.checkMutationMarkers(call.arguments, call.argument_markers, signature.signature.mutates);
+        if (!self.mutFootprintRejected(function)) try self.checkMutationMarkers(call.name, call.arguments, signature.signature.mut_positions);
         var arguments: std.ArrayList(typed.NodeId) = .empty;
         for (call.arguments, signature.signature.parameters) |arg, parameter| {
             const argument = self.syntax.nodes.items[@backingInt(arg)];
             const value = self.resolved[@backingInt(arg)].?;
-            try self.require(self.nodes.items[@backingInt(value)].ty, try self.functionType(function, parameter.ty), argument.span);
+            const expected = try self.functionType(function, parameter.ty);
+            self.adoptSlotCeiling(value, expected);
+            try self.require(self.nodes.items[@backingInt(value)].ty, expected, argument.span);
             try arguments.append(self.allocator, value);
         }
         out.ty = try self.functionType(function, signature.signature.return_type);
@@ -3642,28 +4504,109 @@ const Checker = struct {
         });
         try self.sink.items.append(self.allocator, .{ .severity = .warning, .code = "W_DEPRECATED", .span = input.name, .message = message });
     }
-    /// Enforce the opt-in D3 call-site `&` marker against a resolved callee's
-    /// declared `mutates(...)` parameter positions. `arguments` is already in
-    /// parameter order and `markers` is aligned with it. A marker is required on
-    /// every declared position, rejected on an undeclared one, and rejected on a
-    /// target that cannot be assigned through.
-    fn checkMutationMarkers(self: *Checker, arguments: []const ast.NodeId, markers: []const bool, mutates: []const u16) Error!void {
-        if (!self.mutation_markers) return;
+    /// Enforce the `mut` call-site marker for one resolved call. `arguments` is in
+    /// parameter order and `mut_positions` is the callee's declared `mut` set, so
+    /// the marker is required exactly where the callee declares a write, rejected
+    /// where it declares none, and rejected on a target that cannot be assigned
+    /// through. Each rejection spells the replacement in its own message.
+    fn checkMutationMarkers(self: *Checker, call_name: source.Span, arguments: []const ast.NodeId, mut_positions: []const u16) Error!void {
         for (arguments, 0..) |argument, position| {
-            const declared = markerPositionDeclared(mutates, @intCast(position));
-            const marked = markers.len != 0 and markers[position];
+            const declared = markerPositionDeclared(mut_positions, @intCast(position));
             const arg_node = self.syntax.nodes.items[@backingInt(argument)];
-            const text = self.src.text(arg_node.span);
-            if (declared and !marked) {
-                const message = try std.fmt.allocPrint(self.allocator, "argument {d} is declared writable by `mutates(...)`; add the `&` marker so the call shows the write: `&{s}`", .{ position + 1, text });
+            if (arg_node.data != .mut_argument) {
+                if (!declared) continue;
+                const marked = try self.markedCallText(arguments, position);
+                const message = try std.fmt.allocPrint(
+                    self.allocator,
+                    "`{s}` writes `{s}`; write `{s}`",
+                    .{ self.src.text(call_name), self.src.text(arg_node.span), marked },
+                );
                 return self.sink.fail(mutation_marker_code, arg_node.span, message);
             }
-            if (marked and !declared) {
-                const message = try std.fmt.allocPrint(self.allocator, "`&` marks a write, but the callee does not declare this position in `mutates(...)`; remove the marker: `{s}`", .{text});
+            const target = self.syntax.nodes.items[@backingInt(arg_node.data.mut_argument)];
+            if (!declared) {
+                const plain = try self.unmarkedCallText(arguments, position);
+                const message = try std.fmt.allocPrint(
+                    self.allocator,
+                    "`{s}` does not write `{s}`; remove `mut`: `{s}`",
+                    .{ self.src.text(call_name), self.src.text(target.span), plain },
+                );
                 return self.sink.fail(mutation_marker_code, arg_node.span, message);
             }
-            if (marked and !self.markerTarget(arg_node)) return self.sink.fail(mutation_marker_code, arg_node.span, "`&` requires an assignable argument (a variable, field, or list slot); assign it to a local first");
+            if (!self.markerTarget(target)) return self.sink.fail(
+                mutation_marker_code,
+                arg_node.span,
+                "`mut` requires an assignable argument (a variable, field or list slot); assign it to a local first",
+            );
+            try self.requireArrayMarkerTarget(argument, target);
         }
+    }
+    /// A `mut` fixed array crosses the call as the caller's own storage, so its
+    /// argument must be a variable the caller can write: a local array or a
+    /// `mut` array parameter being passed on. A field or element is a part of
+    /// some other value, and the call would have nowhere of its own to write.
+    fn requireArrayMarkerTarget(self: *Checker, argument: ast.NodeId, target: ast.Node) Error!void {
+        const checked = self.resolved[@backingInt(argument)] orelse return;
+        const node = self.nodes.items[@backingInt(checked)];
+        if (!typed.referenceArray(self.catalog.records, node.ty)) return;
+        if (target.data != .name or node.data != .local) return self.sink.fail(
+            mutation_marker_code,
+            target.span,
+            "`mut` on a fixed array passes a variable itself; copy the field or element into a local, pass `mut` that local, and store it back",
+        );
+        if (!self.locals.items[@backingInt(node.data.local)].mutable) return self.sink.fail(eImmutable, target.span, "`mut` on a fixed array requires a mutable binding");
+        // The callee writes the variable itself (`PY-ARRAY-ITER-2` reads this).
+        self.locals.items[@backingInt(node.data.local)].usage.writes += 1;
+    }
+    /// The call's own source text with `mut ` inserted before argument `target`,
+    /// so a missing-marker diagnostic carries the whole corrected call rather
+    /// than the one argument that needed it.
+    fn markedCallText(self: *Checker, arguments: []const ast.NodeId, target: usize) Error![]const u8 {
+        return self.callTextWithMarker(arguments, target, true);
+    }
+    /// The same text with the `mut ` before argument `target` removed, for the
+    /// diagnostic that reports a marker the callee does not write.
+    fn unmarkedCallText(self: *Checker, arguments: []const ast.NodeId, target: usize) Error![]const u8 {
+        return self.callTextWithMarker(arguments, target, false);
+    }
+    /// Rebuild one call's argument list from source, adding or dropping a single
+    /// `mut ` marker at `target`. Each argument keeps its own spelling, so a named
+    /// operand stays `name=value`; a call with no arguments returns empty.
+    fn callTextWithMarker(self: *Checker, arguments: []const ast.NodeId, target: usize, add: bool) Error![]const u8 {
+        if (arguments.len == 0 or target >= arguments.len) return "";
+        var out: std.ArrayList(u8) = .empty;
+        try out.append(self.allocator, '(');
+        for (arguments, 0..) |argument, position| {
+            if (position != 0) try out.appendSlice(self.allocator, ", ");
+            const node = self.syntax.nodes.items[@backingInt(argument)];
+            if (position == target) {
+                if (add) {
+                    // The argument is unmarked (that is why this diagnostic
+                    // exists), so its span is the operand as written and
+                    // inserting `mut ` keeps a `name=value` spelling intact.
+                    try out.appendSlice(self.allocator, "mut ");
+                    try out.appendSlice(self.allocator, self.src.text(node.span));
+                } else {
+                    // Dropping a marker: the node wraps the operand, so only the
+                    // wrapped expression belongs in the repaired call.
+                    const target_node = self.syntax.nodes.items[@backingInt(node.data.mut_argument)];
+                    try out.appendSlice(self.allocator, self.src.text(target_node.span));
+                }
+                continue;
+            }
+            // A non-target argument may itself carry a marker the caller wrote;
+            // its span then includes the keyword, which is the text to keep.
+            try out.appendSlice(self.allocator, self.src.text(node.span));
+        }
+        try out.append(self.allocator, ')');
+        return out.items;
+    }
+    /// Whether any argument of one call is wrapped in a `mut` marker. A marker
+    /// belongs to a call that declares a `mut` position to check it against, so a
+    /// call carrying one skips the builtin and constructor dispatch.
+    fn callCarriesMutMarker(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) bool {
+        for (call.arguments) |argument| if (self.syntax.nodes.items[@backingInt(argument)].data == .mut_argument) return true;
+        return false;
     }
     /// Whether an argument expression names a place a callee could write to:
     /// a variable, or a field/index chain rooted at one.
@@ -3675,7 +4618,14 @@ const Checker = struct {
             else => false,
         };
     }
-    /// Whether one zero-based position appears in a normalized `mutates(...)` set.
+    /// Whether one zero-based position appears in a normalized `mut` set.
+    /// Whether the declaration behind one instance key was rejected for a `mut`
+    /// type that cannot carry a write. A call to it is not judged against a
+    /// footprint the declaration never had.
+    fn mutFootprintRejected(self: *Checker, id: typed.FunctionId) bool {
+        const index = @backingInt(id);
+        return index < self.mut_parameter_rejected.items.len and self.mut_parameter_rejected.items[index];
+    }
     fn markerPositionDeclared(positions: []const u16, position: u16) bool {
         for (positions) |candidate| if (candidate == position) return true;
         return false;
@@ -3729,8 +4679,8 @@ const Checker = struct {
         const operand = self.resolved[@backingInt(u.operand)].?;
         const operand_ty = self.nodes.items[@backingInt(operand)].ty;
         if (u.op == .is_none) {
-            const shape = prelude.optionShape(operand_ty, self.catalog.records) orelse return self.sink.fail("E_OPTION_TEST", u.op_span, "is None requires an Option value");
-            if (self.transfers(operand_ty)) return self.sink.fail("E_OPTION_TEST", u.op_span, "use match for an Option carrying an owned value or checked Result");
+            const shape = prelude.optionShape(operand_ty, self.catalog.records) orelse return self.sink.fail(eOptionTest, u.op_span, "is None requires an Option value");
+            if (self.transfers(operand_ty)) return self.sink.fail(eOptionTest, u.op_span, "use match for an Option carrying an owned value or checked Result");
             return option_flow.testValue(self, operand, shape, node.span);
         }
         out.ty = if (u.op == .not) .bool else operand_ty;
@@ -3871,6 +4821,90 @@ const Checker = struct {
             .op_span = b.op_span,
         } };
     }
+    /// `value_if_true if condition else value_if_false`. Both arms are checked
+    /// against the contextual expected type when there is one and must agree
+    /// otherwise, and the result is desugared to an if/else that assigns a fresh
+    /// temporary: only the chosen arm runs, while definite assignment, option
+    /// narrowing, effect, origin and ownership analysis see the two-branch
+    /// statement they already understand.
+    fn checkConditional(self: *Checker, node: ast.Node, conditional: @FieldType(@FieldType(ast.Node, "data"), "conditional")) Error!typed.Node {
+        const condition = try self.expressionExpected(conditional.condition, .bool);
+        try self.require(self.nodes.items[@backingInt(condition)].ty, .bool, self.syntax.nodes.items[@backingInt(conditional.condition)].span);
+        const expected = self.expected_types.get(node.span);
+        const before = try self.pendingState(self.locals.items.len);
+        const init_before = try self.initSnapshot();
+        const facts_before = try self.option_facts.snapshot(self.allocator);
+        try self.assumeOption(conditional.condition, true);
+        const then_value = try self.conditionalArm(conditional.then_value, expected);
+        const facts_then = try self.option_facts.snapshot(self.allocator);
+        const then_state = try self.pendingState(before.len);
+        const init_then = try self.initSnapshot();
+        self.restorePending(before);
+        self.initRestore(init_before);
+        self.option_facts.restore(facts_before);
+        try self.assumeOption(conditional.condition, false);
+        const else_value = try self.conditionalArm(conditional.else_value, expected orelse self.nodes.items[@backingInt(then_value)].ty);
+        try self.requireConditionalArms(expected, then_value, else_value);
+        // Both arms continue, so the facts and ownership state they agree on
+        // survive the expression exactly as they survive an `if`/`else`.
+        self.option_facts.intersect(facts_then);
+        self.initIntersect(init_then);
+        try self.samePending(then_state, node.span, eResultPath);
+        self.restorePending(then_state);
+        const value_type = expected orelse self.nodes.items[@backingInt(then_value)].ty;
+        return self.conditionalValue(node, condition, then_value, else_value, value_type);
+    }
+    /// One conditional arm, checked against the expected result type when the
+    /// context supplies one and on its own otherwise.
+    fn conditionalArm(self: *Checker, id: ast.NodeId, expected: ?typed.Type) Error!typed.NodeId {
+        return if (expected) |ty_value| self.expressionExpected(id, ty_value) else self.expression(id);
+    }
+    /// Both arms of a conditional have one type: the contextual expected type
+    /// when there is one, and otherwise the then arm's own type. Integer literal
+    /// arms adopt the expected width through the ordinary hint, and no numeric
+    /// widening happens between arms.
+    fn requireConditionalArms(self: *Checker, expected: ?typed.Type, then_value: typed.NodeId, else_value: typed.NodeId) Error!void {
+        const then_type = self.nodes.items[@backingInt(then_value)].ty;
+        if (expected) |ty_value| {
+            try self.require(then_type, ty_value, self.nodes.items[@backingInt(then_value)].span);
+            return self.require(self.nodes.items[@backingInt(else_value)].ty, ty_value, self.nodes.items[@backingInt(else_value)].span);
+        }
+        const else_type = self.nodes.items[@backingInt(else_value)].ty;
+        if (then_type == else_type) return;
+        const then_name = try typed.surfaceTypeName(self.allocator, then_type, self.catalog.records);
+        const else_name = try typed.surfaceTypeName(self.allocator, else_type, self.catalog.records);
+        const message = try std.fmt.allocPrint(self.allocator, "conditional arms must agree: `{s}` here, `{s}` in the else arm", .{ then_name, else_name });
+        return self.sink.fail("E_TYPE", self.nodes.items[@backingInt(then_value)].span, message);
+    }
+    /// The desugared conditional: a fresh unnamed temporary each arm assigns,
+    /// read as the block's value. The temporary is not a source binding, so no
+    /// name can resolve to it and no pending obligation outlives its read.
+    fn conditionalValue(self: *Checker, node: ast.Node, condition: typed.NodeId, then_value: typed.NodeId, else_value: typed.NodeId, value_type: typed.Type) Error!typed.Node {
+        const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
+        try self.locals.append(self.allocator, .{
+            .ownership = .{ .initialized = true, .transfer_available = self.transfers(value_type) },
+            .name = "<conditional>",
+            .declaration = node.span,
+            .ty = value_type,
+            .mutable = false,
+            .usage = .{ .reads = 1, .temporary = true },
+        });
+        const then_assign = try self.conditionalAssign(self.nodes.items[@backingInt(then_value)].span, slot, then_value);
+        const else_assign = try self.conditionalAssign(self.nodes.items[@backingInt(else_value)].span, slot, else_value);
+        const branch: typed.StatementId = @fromBackingInt(self.statements.items.len);
+        try self.statements.append(self.allocator, .{ .span = node.span, .terminates = false, .data = .{ .branch = .{ .condition = condition, .then_body = then_assign, .else_body = else_assign } } });
+        const body: typed.StatementId = @fromBackingInt(self.statements.items.len);
+        try self.statements.append(self.allocator, .{ .span = node.span, .terminates = false, .data = .{ .block = try self.allocator.dupe(typed.StatementId, &.{branch}) } });
+        const read: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = node.span, .ty = value_type, .data = .{ .local = slot } });
+        return .{ .span = node.span, .ty = value_type, .data = .{ .block_value = .{ .body = body, .value = read } } };
+    }
+    /// One arm of the desugared conditional: the value stored into its temporary.
+    fn conditionalAssign(self: *Checker, span: source.Span, slot: typed.LocalId, value: typed.NodeId) Error!typed.StatementId {
+        const id: typed.StatementId = @fromBackingInt(self.statements.items.len);
+        try self.statements.append(self.allocator, .{ .span = span, .terminates = false, .data = .{ .assign = .{ .slot = slot, .value = value } } });
+        return id;
+    }
     fn checkMembership(self: *Checker, node: ast.Node, membership: @FieldType(@FieldType(ast.Node, "data"), "membership"), temporaries: []const typed.Type) Error!typed.Node {
         const needle = try self.expressionWithTemporaries(membership.needle, temporaries);
         const container = try self.expressionWithTemporaries(membership.container, temporaries);
@@ -3949,11 +4983,14 @@ const Checker = struct {
             out.* = try (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, .read, &.{index_value}, false);
             return;
         }
+        if (record_layouts.tupleRecord(self.catalog.records, receiver_type) != null)
+            return self.sink.fail("E_TUPLE_INDEX", node.span, tuple_index_alternative);
         const schema = try self.catalog.array(receiver_type, node.span, self.sink);
         try self.requireIndex(schema, self.nodes.items[@backingInt(index_value)].ty, self.syntax.nodes.items[@backingInt(access.index)].span);
         if (self.requiresHandling(schema.element) and schema.length != 1) return self.sink.fail(eResultOperation, node.span, "indexing would drop other result-bearing elements; handle or transfer the entire array");
+        const key = try self.arrayKey(schema, index_value);
         out.ty = schema.element;
-        out.data = .{ .index = .{ .base = base, .index = index_value } };
+        out.data = .{ .index = .{ .base = base, .index = key.key, .from_end = key.from_end } };
     }
     fn checkedExpression(self: *Checker, node: ast.Node, minimum_literal: ?Literal, temporaries: []const typed.Type) Error!typed.Node {
         var out: typed.Node = .{ .span = node.span, .ty = .i64, .data = undefined };
@@ -3968,7 +5005,11 @@ const Checker = struct {
             .list_literal => |inputs| return self.checkListLiteral(node, inputs, temporaries),
             .format => |parts| return self.checkFormat(node, parts, temporaries),
             .comprehension => |each| return self.checkComprehension(node, each, temporaries),
-            .list_operation => |op| return self.checkListAccess(node, .{ .base = op.base, .kind = op.kind, .inputs = op.arguments }, temporaries),
+            .list_operation => |op| {
+                if (op.kind == .write and op.arguments.len == 2) if (try self.arrayPlace(op.base, op.arguments[0])) |place|
+                    return self.checkArrayPlace(node, place, .{ .op = .set, .value = op.arguments[1] }, temporaries);
+                return self.checkListAccess(node, .{ .base = op.base, .kind = op.kind, .inputs = op.arguments }, temporaries);
+            },
             .method_call => return self.checkCollectionMethod(node, temporaries),
             .slice => return self.checkCollectionSlice(node, temporaries),
             .buffer_operation => |operation| try self.checkBufferOperation(node, operation, &out),
@@ -4025,8 +5066,9 @@ const Checker = struct {
                         try self.require(input.error_type, output.error_type, node.span);
                     element = input.ok_type;
                 } else if (prelude.optionShape(input_ty, self.catalog.records)) |input| {
-                    const output = prelude.optionShape(self.return_type, self.catalog.records) orelse return self.sink.fail("E_TRY_RETURN", node.span, "try requires a function returning an Option type");
-                    try self.require(input.element, output.element, node.span);
+                    // OPTION-TRY-3: `None` carries no payload, so it propagates
+                    // into any enclosing `Option[U]`, whatever the operand's `T`.
+                    _ = prelude.optionShape(self.return_type, self.catalog.records) orelse return self.sink.fail("E_TRY_RETURN", node.span, "try requires a function returning an Option type");
                     element = input.element;
                 } else return self.sink.fail("E_TRY_TYPE", node.span, "try requires a declared result or option");
                 try self.requireHandled(0, node.span);
@@ -4082,7 +5124,8 @@ const Checker = struct {
                 if (self.requiresHandling(schema.element)) return self.sink.fail(eResultOperation, node.span, "replacement would drop an unhandled result-bearing element");
                 try self.requireIndex(schema, self.nodes.items[@backingInt(index_value)].ty, self.syntax.nodes.items[@backingInt(replace.index)].span);
                 try self.require(self.nodes.items[@backingInt(value)].ty, schema.element, self.syntax.nodes.items[@backingInt(replace.value)].span);
-                out.data = .{ .replace = .{ .base = base, .index = index_value, .value = value } };
+                const key = try self.arrayKey(schema, index_value);
+                out.data = .{ .replace = .{ .base = base, .index = key.key, .value = value, .from_end = key.from_end } };
             },
             .length => |input| return self.checkLength(node, input),
             .membership => |membership| return self.checkMembership(node, membership, temporaries),
@@ -4130,20 +5173,26 @@ const Checker = struct {
             },
             .name => |name| try self.checkName(node, name, &out),
             .call => |call| {
+                // An intrinsic `Option` method outranks the narrowed-collection
+                // reading, so a proven-present `Option[list[T]]` receiver still
+                // answers `unwrap_or` while keeping `append` and the rest.
+                if (self.optionReceiverMethod(call)) return self.checkOptionReceiverMethod(node, call, temporaries);
                 if (self.narrowedCollection(call)) |slot| return self.checkNarrowedMethod(node, slot, temporaries);
                 try self.checkCall(node, call, &out);
             },
             .unary => |u| return self.checkUnary(node, u),
             .binary => |b| try self.checkValueBinary(b, &out),
-            // lane: tuples (item 4): this arm is replaced by the record-backed
-            // tuple check the tuple lane adds.
-            .tuple => return self.sink.fail(eNotImplemented, node.span, "tuple values parse but are not checked yet"),
-            // lane: conditional expression (item 6): this arm is replaced by the
-            // two-branch check the simple lane adds.
-            .conditional => return self.sink.fail(eNotImplemented, node.span, "conditional expressions parse but are not checked yet"),
-            // lane: mut marker (item 1): this arm is replaced by the
-            // mutation-marker check the `mut` lane adds.
-            .mut_argument => return self.sink.fail(eNotImplemented, node.span, "the `mut` argument marker parses but is not checked yet"),
+            .tuple => |elements| try self.checkTuple(node, elements, temporaries, &out),
+            .conditional => |conditional| return self.checkConditional(node, conditional),
+            // A `mut` marker is transparent in expression position: the value it
+            // wraps keeps its own type and node. The call that owns the marker
+            // checks the position, and a marker anywhere else has no call to be
+            // checked against.
+            .mut_argument => |inner| {
+                const value = self.resolved[@backingInt(inner)].?;
+                out.ty = self.nodes.items[@backingInt(value)].ty;
+                out.data = self.nodes.items[@backingInt(value)].data;
+            },
         }
         return out;
     }
@@ -4156,6 +5205,8 @@ const Checker = struct {
             const mapping = try dictionary_views.owner(Checker, self, node.span, base);
             return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(mapping, .length, &.{}, false);
         };
+        if (record_layouts.tupleRecord(self.catalog.records, receiver_type) != null)
+            return self.sink.fail("E_TYPE", node.span, "a tuple has no length; take it apart with `head, rest = value`");
         if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].collection.kind != .list) {
             return .{ .span = node.span, .ty = .i64, .data = .{ .length = base } };
         }
@@ -4185,6 +5236,8 @@ const Checker = struct {
         );
         const lambda = self.syntax.lambdas[index];
         if (lambda.parameters.len != contract.parameters.len) return self.sink.fail("E_ARITY", node.span, "lambda parameter count must match its expected callback type");
+        for (contract.mutates) |position| if (position < contract.parameters.len and typed.referenceArray(self.catalog.records, contract.parameters[position]))
+            return self.sink.fail(lambda_context_code, node.span, "a callback with a `mut` fixed-array parameter cannot be a lambda; write a function and call it directly");
         if (self.lambda_types[index]) |previous| {
             const old = callables.signature(previous, self.catalog.records) orelse return error.InternalError;
             if (!callables.equal(old, contract)) return self.sink.fail(lambda_context_code, node.span, "one lambda expression cannot have conflicting callback types");
@@ -4198,6 +5251,11 @@ const Checker = struct {
     }
     fn consumedTemporaries(self: *Checker, node: ast.Node, out: typed.Node) Error!usize {
         if (node.data == .unary and node.data.unary.op == .is_none) return 1;
+        // An intrinsic `Option` method is checked in place: its receiver and its
+        // one argument are the call's own and never reached this stack, so
+        // neither the tag test nor the two-arm match consumes a temporary.
+        if (node.data == .method_call and option_flow.methodNamed(self.src.text(node.data.method_call.name)) != null) return 0;
+        if (node.data == .call and self.optionReceiverMethod(node.data.call)) return 0;
         // `print`/`write` through a `Stream` field checks its receiver and
         // arguments in place, so none of them reached this stack either.
         if (node.data == .method_call and (out.data == .print or out.data == .stream_write)) return 0;
@@ -4236,7 +5294,9 @@ const Checker = struct {
                 (if (variant.value) |record_node| self.nodes.items[@backingInt(record_node)].data.record.len else 0)
             else if (variant.value != null) 1 else 0,
             .array => |values| values.len,
-            .record => |initializers| initializers.len,
+            // A tuple's elements are checked in place and consume no temporary;
+            // only a named construction draws on sorted-argument temporaries.
+            .record => |initializers| if (node.data == .tuple) 0 else initializers.len,
             .update => |update| update.fields.len + 1,
             .invoke => |call| call.arguments.len,
             .call => |call| call.arguments.len,
@@ -4259,8 +5319,14 @@ const Checker = struct {
             if (task.sorted_key) {
                 const parent = self.syntax.nodes.items[@backingInt(task.id)];
                 std.debug.assert(parent.data == .call);
-                try self.hintSortedArguments(parent.data.call);
-                try work.append(self.allocator, .{ .id = parent.data.call.arguments[1] });
+                const call = parent.data.call;
+                try self.hintSortedArguments(call, try self.sortedKeywords(call));
+                // The named operands are checked in source order, after the list.
+                var index = call.arguments.len;
+                while (index > 1) {
+                    index -= 1;
+                    try work.append(self.allocator, .{ .id = call.arguments[index] });
+                }
                 continue;
             }
             if (task.verify) |state| {
@@ -4797,7 +5863,7 @@ const Checker = struct {
         flow.looping = flow.terminates;
         return .{ .loop = .{ .id = loop_id, .condition = condition, .body = body.id } };
     }
-    fn statementForEach(self: *Checker, stmt: ast.Statement, each: @FieldType(@FieldType(ast.Statement, "data"), "for_each")) Error!@FieldType(typed.Statement, "data") {
+    fn statementForEach(self: *Checker, stmt: ast.Statement, each: ForEach) Error!@FieldType(typed.Statement, "data") {
         try self.invalidateOptions(each.body);
         const loop_facts = try self.option_facts.snapshot(self.allocator);
         defer self.option_facts.restore(loop_facts);
@@ -4808,23 +5874,27 @@ const Checker = struct {
         const projected = view != null and view.? != .item;
         const iterable = if (projected) try dictionary_views.owner(Checker, self, stmt.span, source_value) else source_value;
         const iterable_type = self.nodes.items[@backingInt(iterable)].ty;
-        if (!iterable_type.isAggregate() or !self.catalog.records[iterable_type.recordIndex()].isCollection()) return self.sink.fail(eCollectionMethod, stmt.span, "iteration requires a collection or dictionary view");
-        const schema = self.catalog.records[iterable_type.recordIndex()];
-        const kind = schema.collection.kind;
-        const element = if (projected) try dictionary_views.element(&self.catalog, iterable_type, view.?, stmt.span) else switch (kind) {
-            .list => schema.shape.buffer.?,
-            .string => iterable_type,
-            .bytes => typed.Type.i64,
-            .dictionary => schema.collection.key.?,
-        };
+        // A fixed array iterates like a list over the value it had when the
+        // loop began: the loop reads a copy, so element writes in the body
+        // change the array but not the elements this loop visits.
+        const fixed = arrays.fixed(self.catalog, iterable_type);
+        if (fixed == null and !self.collectionType(iterable_type)) return self.sink.fail(eCollectionMethod, stmt.span, "iteration requires a collection, fixed array or dictionary view");
+        const kind = self.catalog.records[iterable_type.recordIndex()].collection.kind;
+        const element = try self.iterationElement(iterable_type, fixed, if (projected) view else null, stmt.span);
         const unpack = each.index_name != null and !each.enumerated;
-        if (unpack and dictionary_views.identify(self.catalog, element) != .item) return self.sink.fail("E_ITERATION", stmt.span, "two iteration names require dictionary items, enumerate or zip");
+        if (unpack and dictionary_views.identify(self.catalog, element) != .item) {
+            const pair = record_layouts.tupleRecord(self.catalog.records, element) orelse
+                return self.sink.fail("E_ITERATION", stmt.span, "two iteration names require dictionary items, enumerate, zip or a list of two-value tuples");
+            if (pair.fields.len != 2) return self.sink.fail(eTupleArity, stmt.span, try self.twoNameLoopMessage(pair.fields.len));
+        }
         const first_type = if (unpack) self.catalog.records[element.recordIndex()].fields[0].ty else element;
-        const owner = try b.local(iterable_type);
+        // PY-ARRAY-ITER-2: a fixed array's copy is made only if the body writes it.
+        var source_walk = try self.beginWalk(b, iterable, fixed);
         const index = try b.local(.i64);
         const limit = try b.local(.i64);
         const first_slot = try b.local(first_type);
-        const second_slot = if (unpack) try b.local(self.catalog.records[element.recordIndex()].fields[1].ty) else index;
+        const position = try self.loopPosition(b, each, index);
+        const second_slot = if (unpack) try b.local(self.catalog.records[element.recordIndex()].fields[1].ty) else position.slot;
         const names = if (unpack) [_]?source.Span{ each.index_name, each.name } else [_]?source.Span{ each.name, each.index_name };
         const slots = [_]typed.LocalId{ first_slot, second_slot };
         for (names) |maybe_name| if (maybe_name) |name| {
@@ -4848,14 +5918,17 @@ const Checker = struct {
         defer _ = self.loops.active.pop();
         const init_before = try self.initSnapshot();
         const body = try self.statement(each.body);
+        _ = self.counters.remove(index);
+        const owner = try self.endWalk(b, &source_walk);
         self.initRestore(init_before);
         if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
         self.restorePending(before);
         const i = try b.read(index);
-        const iteration_check = try b.stmt(.{ .discard = try b.operation(owner, .iteration_check, &.{try b.read(limit)}) });
+        // A fixed array's length is its type's, and nothing can resize it.
+        const iteration_check = if (fixed == null) try b.stmt(.{ .discard = try b.operation(owner, .iteration_check, &.{try b.read(limit)}) }) else null;
         var iteration_statements: std.ArrayList(typed.StatementId) = .empty;
-        try iteration_statements.append(self.allocator, iteration_check);
-        const value = try self.projectedIterationValue(b, owner, i, kind, if (projected) view else null);
+        if (iteration_check) |guarded| try iteration_statements.append(self.allocator, guarded);
+        const value = try self.iterationRead(b, owner, i, .{ .kind = kind, .fixed = fixed, .projection = if (projected) view else null });
         if (unpack) {
             const pair = try b.local(element);
             try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = pair, .value = value } }));
@@ -4865,22 +5938,99 @@ const Checker = struct {
             try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = first_value } }));
             try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = second_slot, .value = second_value } }));
         } else try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = value } }));
+        try self.appendRebinding(b, &iteration_statements, position, i);
         try iteration_statements.append(self.allocator, body.id);
         const iteration = try b.stmt(.{ .block = try iteration_statements.toOwnedSlice(self.allocator) });
-        const step = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
-            iteration_check,
-            try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.integer(1), .i64) } }),
-        }) });
-        return .{ .block = try self.allocator.dupe(typed.StatementId, &.{
+        const advance = try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.integer(1), .i64) } });
+        const step = try b.stmt(.{ .block = if (iteration_check) |guarded|
+            try self.allocator.dupe(typed.StatementId, &.{ guarded, advance })
+        else
+            try self.allocator.dupe(typed.StatementId, &.{advance}) });
+        const setup = [_]typed.StatementId{
             try b.stmt(.{ .initialize = .{ .slot = owner, .value = iterable } }),
             try b.stmt(.{ .initialize = .{ .slot = index, .value = try b.integer(0) } }),
-            try b.stmt(.{ .initialize = .{ .slot = limit, .value = try b.length(owner) } }),
+            try b.stmt(.{ .initialize = .{ .slot = limit, .value = if (fixed) |shape| try b.integer(@intCast(shape.length)) else try b.length(owner) } }),
             try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, i, try b.read(limit), .bool), .body = iteration, .step = step } }),
-        }) };
+        };
+        // Walking the array in place, the loop reads the variable itself.
+        return .{ .block = try self.allocator.dupe(typed.StatementId, setup[@intFromBool(source_walk.in_place)..]) };
+    }
+    /// PY-FOR-REBIND-1: whether a loop body can assign `name`.
+    fn bodyAssigns(self: *Checker, body: ast.StatementId, name: []const u8) Error!bool {
+        return loop_rebinding.assigns(self.allocator, .{ .program = self.syntax, .src = self.src }, body, name);
+    }
+    /// The slot a `for` loop's position binds — only `enumerate` binds one —
+    /// and whether it is a variable of its own rather than the loop's counter.
+    const Position = struct { slot: typed.LocalId, rebound: bool };
+    /// PY-FOR-REBIND-1: an `enumerate` position the body never assigns is the
+    /// loop's counter itself, immutable and never negative
+    /// (`PY-ARRAY-NEGATIVE-1`); one the body assigns is a variable of its own,
+    /// copied from the counter at the top of every iteration.
+    fn loopPosition(self: *Checker, b: collections.Builder(Checker), each: ForEach, counter: typed.LocalId) Error!Position {
+        if (!each.enumerated) return .{ .slot = counter, .rebound = false };
+        if (try self.bodyAssigns(each.body, self.src.text(each.index_name.?))) return .{ .slot = try b.local(.i64), .rebound = true };
+        self.locals.items[@backingInt(counter)].mutable = false;
+        try self.counters.put(self.allocator, counter, {});
+        return .{ .slot = counter, .rebound = false };
+    }
+    /// Copy the loop's counter into a position variable of its own at the top
+    /// of an iteration; a position that is the counter needs nothing.
+    fn appendRebinding(self: *Checker, b: collections.Builder(Checker), statements: *std.ArrayList(typed.StatementId), position: Position, counter: typed.NodeId) Error!void {
+        if (position.rebound) try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = position.slot, .value = counter } }));
+    }
+    /// The source a `for` loop reads its elements from, decided around its body.
+    const Walk = struct { owner: ?typed.LocalId, variable: ?typed.LocalId, writes: usize, ty: typed.Type, in_place: bool = false };
+    /// Start deciding a loop's source. A managed collection is a reference, so
+    /// the loop's copy of it is only a pointer and is taken as before. A fixed
+    /// array held in a local variable waits for the body.
+    fn beginWalk(self: *Checker, b: collections.Builder(Checker), iterable: typed.NodeId, fixed: ?typed.Array) Error!Walk {
+        const source_type = self.nodes.items[@backingInt(iterable)].ty;
+        if (fixed == null) return .{ .owner = try b.local(source_type), .variable = null, .writes = 0, .ty = source_type };
+        const variable = switch (self.nodes.items[@backingInt(iterable)].data) {
+            // A `mut` array parameter may be one of two writable names for the
+            // same array, so a write through the other would show.
+            .local => |slot| if (self.referenceParameter(slot)) null else slot,
+            else => null,
+        };
+        const writes = if (variable) |slot| self.locals.items[@backingInt(slot)].usage.writes else 0;
+        return .{ .owner = null, .variable = variable, .writes = writes, .ty = source_type };
+    }
+    /// PY-ARRAY-ITER-2: once the body is checked, a fixed array the body never
+    /// writes is walked where it lives, so the loop copies nothing; otherwise
+    /// the loop reads a copy taken when it began, as `PY-ARRAY-ITER-1` says.
+    fn endWalk(self: *Checker, b: collections.Builder(Checker), walk: *Walk) Error!typed.LocalId {
+        if (walk.owner) |owner| return owner;
+        if (walk.variable) |slot| if (self.locals.items[@backingInt(slot)].usage.writes == walk.writes) {
+            walk.in_place = true;
+            return slot;
+        };
+        return b.local(walk.ty);
+    }
+    /// Read the element at `index` of the loop's source copy in `owner`.
+    fn iterationRead(self: *Checker, b: collections.Builder(Checker), owner: typed.LocalId, index: typed.NodeId, source_shape: IterationShape) Error!typed.NodeId {
+        if (source_shape.fixed) |shape| return b.node(shape.element, .{ .index = .{ .base = try b.read(owner), .index = index } });
+        return self.projectedIterationValue(b, owner, index, source_shape.kind, source_shape.projection);
+    }
+    /// Whether a type is a managed collection a loop can walk by position.
+    fn collectionType(self: *Checker, candidate: typed.Type) bool {
+        return candidate.isAggregate() and self.catalog.records[candidate.recordIndex()].isCollection();
+    }
+    /// The value one `for` iteration binds: a fixed array's element, a
+    /// dictionary view's projection, or the collection's own element kind.
+    fn iterationElement(self: *Checker, iterable_type: typed.Type, fixed: ?typed.Array, projection: ?dictionary_views.Kind, span: source.Span) Error!typed.Type {
+        if (fixed) |shape| return shape.element;
+        if (projection) |view| return dictionary_views.element(&self.catalog, iterable_type, view, span);
+        const schema = self.catalog.records[iterable_type.recordIndex()];
+        return switch (schema.collection.kind) {
+            .list => schema.shape.buffer.?,
+            .string => iterable_type,
+            .bytes => typed.Type.i64,
+            .dictionary => schema.collection.key.?,
+        };
     }
     /// `for x in reversed(xs):` and `for a, b in zip(xs, ys):` walk their sources
     /// directly, so no intermediate list is materialised.
-    fn preludeIteration(self: *Checker, stmt: ast.Statement, each: @FieldType(@FieldType(ast.Statement, "data"), "for_each")) Error!?[]const typed.StatementId {
+    fn preludeIteration(self: *Checker, stmt: ast.Statement, each: ForEach) Error!?[]const typed.StatementId {
         const node = self.syntax.nodes.items[@backingInt(each.iterable)];
         if (node.data != .call) return null;
         const call = node.data.call;
@@ -4959,11 +6109,26 @@ const Checker = struct {
         const element = self.nodes.items[@backingInt(start)].ty;
         try self.requireInteger(element, range.name);
         try self.require(self.nodes.items[@backingInt(end)].ty, element, self.syntax.nodes.items[@backingInt(range.end)].span);
+        // PY-FOR-REBIND-1: a body that assigns the name gets its own variable,
+        // copied from a hidden counter at the top of every iteration, so the
+        // assignment never changes which iteration comes next.
+        const rebound = try self.bodyAssigns(range.body, name);
         const index: typed.LocalId = @fromBackingInt(self.locals.items.len);
-        try self.locals.append(self.allocator, .{ .name = name, .declaration = range.name, .ty = element, .mutable = false, .ownership = .{ .initialized = true }, .usage = .{ .reads = 1 } });
+        try self.locals.append(self.allocator, .{
+            .name = if (rebound) "<range-index>" else name,
+            .declaration = range.name,
+            .ty = element,
+            .mutable = false,
+            .ownership = .{ .initialized = true },
+            .usage = .{ .reads = 1, .temporary = rebound },
+        });
+        // PY-ARRAY-NEGATIVE-1: an immutable induction variable counting up
+        // from a non-negative start never holds a negative value.
+        if (!rebound and self.nonNegative(start, 0)) try self.counters.put(self.allocator, index, {});
         const limit: typed.LocalId = @fromBackingInt(self.locals.items.len);
         try self.locals.append(self.allocator, .{ .name = "<range-limit>", .declaration = range.name, .ty = element, .mutable = false, .usage = .{ .reads = 1, .temporary = true } });
-        try self.active.put(self.allocator, name, index);
+        const variable: typed.LocalId = if (rebound) try self.reboundVariable(range.name, element) else index;
+        try self.active.put(self.allocator, name, variable);
         defer _ = self.active.remove(name);
         const index_node: typed.NodeId = @fromBackingInt(self.nodes.items.len);
         try self.nodes.append(self.allocator, .{ .span = range.name, .ty = element, .data = .{ .local = index } });
@@ -4992,9 +6157,24 @@ const Checker = struct {
         try self.statements.append(self.allocator, .{ .span = range.name, .terminates = false, .data = .{ .initialize = .{ .slot = index, .value = start } } });
         children[1] = @fromBackingInt(self.statements.items.len);
         try self.statements.append(self.allocator, .{ .span = range.name, .terminates = false, .data = .{ .initialize = .{ .slot = limit, .value = end } } });
+        const iteration = if (rebound) try self.rebindFirst(range.name, variable, index_node, body.id) else body.id;
         children[2] = @fromBackingInt(self.statements.items.len);
-        try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = false, .data = .{ .loop = .{ .id = loop_id, .condition = condition, .body = body.id, .step = step } } });
+        try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = false, .data = .{ .loop = .{ .id = loop_id, .condition = condition, .body = iteration, .step = step } } });
         return .{ .block = children };
+    }
+    /// PY-FOR-REBIND-1: the visible loop variable of a counting loop whose body
+    /// assigns it: an ordinary mutable local, bound for the whole body.
+    fn reboundVariable(self: *Checker, name: source.Span, element: typed.Type) Error!typed.LocalId {
+        const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
+        try self.locals.append(self.allocator, .{ .name = self.src.text(name), .declaration = name, .ty = element, .mutable = true, .ownership = .{ .initialized = true }, .usage = .{ .reads = 1 }, .origin = .iteration });
+        return slot;
+    }
+    /// One iteration of a counting loop whose body assigns its variable: the
+    /// variable takes the hidden counter's value, then the body runs.
+    fn rebindFirst(self: *Checker, span: source.Span, variable: typed.LocalId, counter: typed.NodeId, body: typed.StatementId) Error!typed.StatementId {
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = span };
+        const copy = try b.stmt(.{ .initialize = .{ .slot = variable, .value = counter } });
+        return b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{ copy, body }) });
     }
     fn statementLoopExit(self: *Checker, stmt: ast.Statement, continuing: bool, flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         if (self.loops.active.items.len == 0) return self.sink.fail("E_LOOP_EXIT", stmt.span, "break and continue require an enclosing loop");
@@ -5085,6 +6265,7 @@ const Checker = struct {
         const slot = try self.resolve(a.name);
         if (!self.locals.items[@backingInt(slot)].mutable)
             return self.sink.fail(eImmutable, a.name, "this binding cannot be assigned");
+        try self.requireRebindable(slot, a.name);
         var value = try self.expressionExpected(a.value, self.locals.items[@backingInt(slot)].ty);
         if (a.op != .set) {
             try self.requireReadable(slot, a.name);
@@ -5141,6 +6322,34 @@ const Checker = struct {
             if (try self.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "parameter shadows a top-level function");
             const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
             const parameter_type = try self.ty(parameter.ty);
+            // `mut` promises a write the caller can observe, so it is accepted
+            // only on a type that can carry one. Rejecting it here, before any
+            // body or call is checked, keeps the declaration out of the published
+            // footprint: the call site reports the missing marker instead.
+            const reference = parameter.mut and typed.referenceArray(self.catalog.records, parameter_type);
+            if (reference) {
+                if (function.policy.host != null or function.policy.c_abi) {
+                    try markMutRejected(self);
+                    return sink.fail(mutation_marker_code, parameter.ty, "a host or C ABI function cannot take a `mut` fixed array; pass the array and return the changed copy");
+                }
+                if (self.transfers(parameter_type)) {
+                    try markMutRejected(self);
+                    return sink.fail(mutation_marker_code, parameter.ty, "a `mut` fixed array needs copyable elements without pending results");
+                }
+            }
+            const writable = reference or typed.carriesWritableStorage(self.catalog.records, parameter_type);
+            if (parameter.mut and !writable) {
+                try markMutRejected(self);
+                return sink.fail(
+                    mutation_marker_code,
+                    parameter.ty,
+                    try std.fmt.allocPrint(
+                        allocator,
+                        "`mut` on `{s}` has nothing to write; only a list, dict, class, Cell, array, byte buffer or a record holding one can be `mut`",
+                        .{typed.typeName(parameter_type, self.catalog.records)},
+                    ),
+                );
+            }
             if (parameter.default_value) |value| {
                 const checked = try self.expressionExpected(value, parameter_type);
                 try self.require(self.nodes.items[@backingInt(checked)].ty, parameter_type, parameter.ty);
@@ -5431,7 +6640,6 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         .ordinary_ids = ordinary_ids,
         .lambda_types = lambda_types,
         .lambda_captures = lambda_captures,
-        .mutation_markers = src.mutation_markers,
     };
     defer allocator.free(checker.managed_types);
     // C3 reuse: prepared declaration facts and fresh identity maps are
@@ -5524,7 +6732,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     const exported = try exportedFunctions(allocator, module_names, checked.functions);
     timingAdd(timing, "entry_adaptation", entry_start);
     const effects_start = timingStart(timing);
-    try @import("effects.zig").check(allocator, checked, exported, sink);
+    try @import("effects.zig").check(allocator, checked, .{ .exported = exported, .src = src, .syntax = program, .sink = sink });
     timingAdd(timing, "effect_origin_passes", effects_start);
     const codecs_start = timingStart(timing);
     try @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink);
@@ -5589,9 +6797,9 @@ fn literalText(bytes: []const u8, span: source.Span) []const u8 {
 }
 
 fn checkHostType(allocator: std.mem.Allocator, catalog: []const typed.Record, ty: typed.Type, span: source.Span, sink: *diagnostic.Sink) Error!void {
-    @import("data_type.zig").check(allocator, catalog, ty, true) catch |err| switch (err) {
+    @import("data_type.zig").checkHost(allocator, catalog, ty) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
-        else => return sink.fail("E_HOST_SIGNATURE", span, "host signatures require ordinary data without capabilities or runtime-owned storage"),
+        else => return sink.fail("E_HOST_SIGNATURE", span, "host signatures require ordinary data, or `bytes`, without capabilities or other runtime-owned storage"),
     };
 }
 
@@ -5613,6 +6821,23 @@ fn warnBindings(allocator: std.mem.Allocator, functions: []const typed.Function,
                 });
             }
             if (local.usage.temporary or local.usage.reads != 0) continue;
+            // A capability parameter is the signature's whole claim to an
+            // effect: a body that never reads it promises authority it does not
+            // use, so the over-claim is rejected rather than warned about.
+            if (local.origin == .parameter and local.ty.capabilityIndex() != null) {
+                const message = try std.fmt.allocPrint(
+                    allocator,
+                    "`{s}` is never used, so this signature claims an effect the body cannot have; remove the parameter or use it",
+                    .{local.name},
+                );
+                try sink.items.append(allocator, .{
+                    .severity = .err,
+                    .code = @import("effects.zig").unused_capability_code,
+                    .span = local.declaration,
+                    .message = message,
+                });
+                continue;
+            }
             try sink.items.append(allocator, .{
                 .severity = .warning,
                 .code = "W_UNUSED_BINDING",

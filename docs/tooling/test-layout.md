@@ -55,8 +55,9 @@ below is the backlog of existing Zig tests that belong there too.
 The recipe lives in `tests/lang/README.md` under "Converting one Zig test".
 The points that trip people up:
 
-- One `.my` file per Zig file, named after it, `module <stem>` first and
-  `def main() -> int: return 0` last. A Zig test that ran several guest
+- One `.my` file per Zig file, named after it, `module <stem>` first. No
+  `main` is needed; the directory runner selects any file that declares a test
+  and that no other program imports. A Zig test that ran several guest
   sources becomes several `test_` functions with a `_1`, `_2` suffix.
 - The `// spec: TAG` above the Zig test becomes `# spec: TAG` above the `.my`
   test. Guardian reads both. For a split test, only one side may carry

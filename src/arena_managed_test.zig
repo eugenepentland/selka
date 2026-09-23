@@ -42,7 +42,7 @@ const build =
     \\
 ;
 
-// spec: ARENA-MANAGED-1
+// spec-case: ARENA-MANAGED-1
 test "ARENA-MANAGED-1 nested arenas redirect helper allocation and release each scope in bulk" {
     const source = build ++
         \\def main() -> int:
@@ -70,7 +70,7 @@ test "ARENA-MANAGED-1 an anonymous arena scope still bulk releases its allocatio
     try t.expectEqual(@as(i64, 5), try value(source));
 }
 
-// spec: ARENA-MANAGED-2
+// spec-case: ARENA-MANAGED-2
 test "ARENA-MANAGED-2 escape copies a shared subgraph once into the enclosing region" {
     const source =
         \\def main() -> int:
@@ -136,14 +136,14 @@ test "ARENA-MANAGED-2 escape shares objects that already live in the enclosing r
 // spec: ARENA-MANAGED-3
 test "ARENA-MANAGED-3 the store barrier traps when a helper stores arena storage outward" {
     const source =
-        \\def stash(outer: list[list[int]], inner: list[int]) -> None:
+        \\def stash(outer: mut list[list[int]], inner: list[int]) -> None:
         \\    outer.append(inner)
         \\
         \\def main() -> int:
         \\    keeper: list[list[int]] = []
         \\    with arena() as scratch:
         \\        temp: list[int] = [1]
-        \\        stash(keeper, temp)
+        \\        stash(mut keeper, temp)
         \\    return len(keeper)
     ;
     const outcome = try run(source, false);
@@ -153,13 +153,13 @@ test "ARENA-MANAGED-3 the store barrier traps when a helper stores arena storage
 // spec-case: ARENA-MANAGED-3
 test "ARENA-MANAGED-3 the store barrier covers dictionary values written through a helper" {
     const source =
-        \\def stash(outer: dict[int, list[int]], inner: list[int]) -> None:
+        \\def stash(outer: mut dict[int, list[int]], inner: list[int]) -> None:
         \\    outer[1] = inner
         \\
         \\def main() -> int:
         \\    keeper: dict[int, list[int]] = {}
         \\    with arena() as scratch:
-        \\        stash(keeper, [3])
+        \\        stash(mut keeper, [3])
         \\    return 0
     ;
     const outcome = try run(source, false);
@@ -273,7 +273,7 @@ test "ARENA-MANAGED-4 the escape rejection renders complete JSON provenance" {
     try t.expectEqualStrings("value declared here", notes[1].object.get("message").?.string);
 }
 
-// spec: ARENA-MANAGED-5
+// spec-case: ARENA-MANAGED-5
 test "ARENA-MANAGED-5 result propagation out of an arena releases its storage in bulk" {
     const source =
         \\def risky(flag: int) -> Result[int, int]:
@@ -329,7 +329,7 @@ test "ARENA-MANAGED-5 break and continue out of an arena close the scope exactly
     try t.expectEqual(@as(i64, 6), try value(source));
 }
 
-// spec: ARENA-MANAGED-6
+// spec-case: ARENA-MANAGED-6
 test "ARENA-MANAGED-6 stress collection inside an arena preserves its values until bulk release" {
     const source =
         \\def waste() -> int:
@@ -381,7 +381,7 @@ test "ARENA-MANAGED-7 arena scopes and escape copies unwind on every allocation 
 // spec: ARENA-MANAGED-8
 test "ARENA-MANAGED-8 the native backend lowers arena scopes, the barrier and escape" {
     const source =
-        \\def stash(outer: list[list[int]], inner: list[int]) -> None:
+        \\def stash(outer: mut list[list[int]], inner: list[int]) -> None:
         \\    outer.append(inner)
         \\
         \\def main() -> int:
@@ -389,7 +389,7 @@ test "ARENA-MANAGED-8 the native backend lowers arena scopes, the barrier and es
         \\    with arena() as scratch:
         \\        inner: list[int] = [7]
         \\        holder: list[list[int]] = [inner, inner]
-        \\        stash(holder, inner)
+        \\        stash(mut holder, inner)
         \\        kept = scratch.escape(holder[0])
         \\    return kept[0]
     ;
@@ -589,4 +589,100 @@ test "ARENA-MANAGED-10 a chunk reused after an escape copy keeps the escaped val
     try t.expectEqual(@as(i64, 4025), try value(source));
     const stressed = try run(source, true);
     try t.expectEqual(@as(i64, 4025), stressed.value);
+}
+
+// spec-case: ARENA-MANAGED-11
+test "ARENA-MANAGED-11 the header barrier traps a younger store after the arena spans many chunks" {
+    const fill =
+        \\def stash(outer: mut list[list[int]], inner: list[int]) -> None:
+        \\    outer.append(inner)
+        \\
+        \\def fill(count: int) -> list[list[int]]:
+        \\    rows: list[list[int]] = []
+        \\    for index in range(count):
+        \\        rows.append([index])
+        \\    return rows
+        \\
+    ;
+    // Thousands of small lists put the outer arena's container and the value
+    // stored into it in different chunks; each depth comes from its header.
+    const into_older_arena = try run(fill ++
+        \\def main() -> int:
+        \\    kept = 0
+        \\    with arena():
+        \\        keeper = fill(3000)
+        \\        with arena():
+        \\            stash(mut keeper, [1])
+        \\        kept = len(keeper)
+        \\    return kept
+    , false);
+    try t.expectEqualStrings("R_ARENA_ESCAPE", into_older_arena.trap.code);
+    const into_collected = try run(fill ++
+        \\def main() -> int:
+        \\    keeper: list[list[int]] = []
+        \\    with arena():
+        \\        rows = fill(3000)
+        \\        stash(mut keeper, rows[2999])
+        \\    return len(keeper)
+    , false);
+    try t.expectEqualStrings("R_ARENA_ESCAPE", into_collected.trap.code);
+    // At the same scale an arena container accepts its own arena's values, and
+    // a younger container accepts older ones.
+    try t.expectEqual(@as(i64, 3004), try value(fill ++
+        \\def main() -> int:
+        \\    kept = 0
+        \\    with arena():
+        \\        keeper = fill(3000)
+        \\        stash(mut keeper, [7])
+        \\        with arena():
+        \\            younger = fill(2)
+        \\            stash(mut younger, keeper[2999])
+        \\            kept = len(younger)
+        \\        kept = kept + len(keeper)
+        \\    return kept
+    ));
+}
+
+const stash_text =
+    \\def stash(outer: mut list[str], value: str) -> None:
+    \\    outer.append(value)
+    \\
+    \\def text() -> str:
+    \\    return "".join(["row " + str(i) + "," for i in range(40)])
+    \\
+;
+
+/// The trap code of storing `piece`, a piece of an outer text made inside an
+/// arena, into an outer list through a helper, under collection stress.
+fn storeOutward(piece: []const u8) ![]const u8 {
+    const source = try std.fmt.allocPrint(t.allocator, stash_text ++
+        \\def main() -> int:
+        \\    keeper: list[str] = []
+        \\    source = text()
+        \\    with arena() as scratch:
+        \\        stash(mut keeper, {s})
+        \\    return len(keeper)
+    , .{piece});
+    defer t.allocator.free(source);
+    return (try run(source, true)).trap.code;
+}
+
+// spec-case: TEXT-VIEW-2
+test "TEXT-VIEW-2 a piece made inside an arena traps when a helper stores it outward, as a copy did" {
+    // A long slice of an outer text is a view allocated in the arena; the whole
+    // outer text answered as a piece inside the arena is one too, and a short
+    // split piece is an arena copy.
+    try t.expectEqualStrings("R_ARENA_ESCAPE", try storeOutward("source[4:200]"));
+    try t.expectEqualStrings("R_ARENA_ESCAPE", try storeOutward("source[0:len(source)]"));
+    try t.expectEqualStrings("R_ARENA_ESCAPE", try storeOutward("source.strip()"));
+    try t.expectEqualStrings("R_ARENA_ESCAPE", try storeOutward("source.split(\",\")[3]"));
+    // `escape` hands the same pieces out as text of their own octets.
+    try t.expectEqual(@as(i64, 196 + 270 + 5), try value(stash_text ++
+        \\def main() -> int:
+        \\    keeper: list[str] = []
+        \\    source = text()
+        \\    with arena() as scratch:
+        \\        keeper = scratch.escape([source[4:200], source.strip(), source.split(",")[3]])
+        \\    return len(keeper[0]) + len(keeper[1]) + len(keeper[2])
+    ));
 }

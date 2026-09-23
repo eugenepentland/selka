@@ -19,6 +19,14 @@ pub fn present(program: bytecode.Program) bool {
     return false;
 }
 
+/// Whether returning from this function closes an arena scope this frame
+/// opened. Everything such a scope owns is released before the result leaves,
+/// so an address into storage the scope could own stops naming a live value at
+/// that point and the result must already be a copy.
+pub fn releasesOnReturn(arenas: bool, function: bytecode.Function) bool {
+    return arenas and opens(function);
+}
+
 /// Whether this frame can change the arena depth. Callees restore their own
 /// depth, so only a function that opens a scope needs frame bookkeeping.
 fn opens(function: bytecode.Function) bool {

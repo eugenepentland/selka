@@ -5,7 +5,7 @@ import io
 # SCHEMATIC-BULK-1: the decimal fast path must spell the full signed range.
 public def test_minimum_integer_decimal() -> bool:
     out = io.output()
-    io.appendInt(out, -9223372036854775808)
+    io.appendInt(mut out, -9223372036854775808)
     return not out.failed and out.buffer == b"-9223372036854775808"
 
 
@@ -19,12 +19,22 @@ public def test_output_limit_fails_without_oversized_buffer() -> bool:
     block = b"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     i = 0
     while i < 16384:
-        io.append(out, block)
+        io.append(mut out, block)
         i += 1
     if out.failed or len(out.buffer) != 4194304:
         return False
-    io.appendByte(out, 120u8)
+    io.appendByte(mut out, 120u8)
     return out.failed and len(out.buffer) == 4194304
+
+
+# SCHEMATIC-BULK-2: one payload call must carry the buffer the appends filled.
+public def test_payload_snapshot_matches_the_appended_buffer() -> bool:
+    out = io.output()
+    io.append(mut out, b"<svg")
+    io.appendInt(mut out, - 42)
+    io.appendByte(mut out, 62u8)
+    payload = bytes(out.buffer)
+    return not out.failed and payload == b"<svg-42>" and len(payload) == len(out.buffer)
 
 
 public def test_decimal_uses_exact_remaining_capacity() -> bool:
@@ -32,11 +42,11 @@ public def test_decimal_uses_exact_remaining_capacity() -> bool:
     block = b"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     i = 0
     while i < 16383:
-        io.append(out, block)
+        io.append(mut out, block)
         i += 1
     tail = b"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-    io.append(out, tail)
+    io.append(mut out, tail)
     if out.failed or len(out.buffer) != 4194301:
         return False
-    io.appendInt(out, - 99)
+    io.appendInt(mut out, - 99)
     return not out.failed and len(out.buffer) == 4194304 and out.buffer[4194301:4194304] == b"-99"

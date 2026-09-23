@@ -33,8 +33,13 @@ void myl_print_array(MylPrint *out, const void *value, unsigned depth, size_t co
 void myl_print_record(MylPrint *out, const void *value, unsigned depth, const char *name, const MylPrintField *fields, size_t count);
 /* A class renders like a record whose fields live behind the pointer in `slot`. */
 void myl_print_class(MylPrint *out, const void *slot, unsigned depth, const char *name, const MylPrintField *fields, size_t count);
+/* A tuple renders as its bracketed elements; the field spellings are ignored. */
+void myl_print_tuple(MylPrint *out, const void *value, unsigned depth, const MylPrintField *elements, size_t count);
 void myl_print_domain(MylPrint *out, const void *value, unsigned depth, const char *name, MylPrintFn inner);
 /* Case names already carry their printed spelling, bare for results, options
    and `None`, and `Owner.case` for an enum or ordinary union. */
 void myl_print_variant(MylPrint *out, const void *value, unsigned depth, const MylPrintField *cases, size_t count);
+/* An `Option` of a managed reference stored as that reference alone: the null
+   word prints the payload-free case, any other word the case with a payload. */
+void myl_print_niche(MylPrint *out, const void *value, unsigned depth, const MylPrintField *cases, size_t count);
 #endif

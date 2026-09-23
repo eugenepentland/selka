@@ -77,9 +77,9 @@ const managed_literals =
     \\const DATA: Octets = b"\x00\xff\n"
     \\const EMPTY_TEXT: str = ""
     \\const EMPTY_DATA: bytes = b""
-    \\def read[T]() -> int effects(managed_allocation):
+    \\def read[T]() -> int:
     \\    return len(TEXT) + len(DATA) + len(EMPTY_TEXT) + len(EMPTY_DATA)
-    \\def main() -> int effects(managed_allocation):
+    \\def main() -> int:
     \\    if TEXT != "hé🙂\n\0" or DATA != b"\x00\xff\n":
     \\        return 1
     \\    return read[bool]() + read[int]() + DATA[1]

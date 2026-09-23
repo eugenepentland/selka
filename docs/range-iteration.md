@@ -20,10 +20,27 @@ ranges perform no iterations. The upper endpoint is excluded, so incrementing
 the final iteration never needs to exceed the upper endpoint's representable
 value.
 
-The iteration binding is immutable and exists only inside the loop body. Each
-`continue` cleans up the exited scopes and increments the index before testing
-the bound again. `break` cleans up those scopes and skips the increment. Nested
-loops always receive their own nearest `break` or `continue`.
+The iteration binding exists only inside the loop body. As in Python, the loop
+rebinds it from its own hidden count at the top of every iteration, so the body
+may assign it without changing which iteration comes next or how many run:
+
+```mylang
+# doc: expect 5
+def main() -> i64:
+    runs = 0
+    for i in range(5):
+        i = 10
+        runs += i // 10
+    return runs
+```
+
+The same holds for every `for` form — an `enumerate` position, a collection or
+fixed-array element, `reversed`, `zip` and a destructured pair. A loop whose body
+never assigns its variable counts on that variable directly, so the rule costs
+nothing there. Each `continue` cleans up the exited scopes and increments the
+index before testing the bound again. `break` cleans up those scopes and skips
+the increment. Nested loops always receive their own nearest `break` or
+`continue`.
 
 Range loops use the same conservative outer-ownership rules and result
 obligations as while loops. They support owned values and per-iteration

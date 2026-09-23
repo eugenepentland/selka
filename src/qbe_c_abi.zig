@@ -15,6 +15,15 @@ fn abi(ty: typed.Type, records: []const typed.Record) []const u8 {
         else => unreachable,
     };
 }
+/// FLOAT-NAN-OBSERVED-3: foreign code can read a double's bits, so a float
+/// argument crosses as the canonical quiet NaN when it is any NaN. The select is
+/// straight-line mask arithmetic: `%m` is all ones exactly when the operand is
+/// unordered with itself, and picks the canonical word over the operand's own.
+fn canonicalArgument(self: anytype, i: usize) Error!void {
+    const canonical = @import("floats.zig").canonical_nan;
+    try self.print(" %d{d} =d cast %a{d}\n %u{d} =l cuod %d{d}, %d{d}\n %m{d} =l sub 0, %u{d}\n %k{d} =l xor %m{d}, -1\n", .{ i, i, i, i, i, i, i, i, i });
+    try self.print(" %x{d} =l and %a{d}, %k{d}\n %y{d} =l and %m{d}, {d}\n %b{d} =l or %x{d}, %y{d}\n %c{d} =d cast %b{d}\n", .{ i, i, i, i, i, canonical, i, i, i, i, i });
+}
 /// Emit one stable guest-callable wrapper; the external call has no guest context.
 pub fn emit(self: anytype, name: []const u8) Error![]u8 {
     const f = self.function;
@@ -25,7 +34,7 @@ pub fn emit(self: anytype, name: []const u8) Error![]u8 {
     try self.print(") {{\n@entry\n", .{});
     for (parameters, 0..) |local, i| {
         if (packed_args) try self.print(" %slot{d} =l add %packed, {d}\n %a{d} =l loadl %slot{d}\n", .{ i, i * 8, i, i });
-        if (contract.isFloat(local.ty, self.program.records)) try self.print(" %c{d} =d cast %a{d}\n", .{ i, i });
+        if (contract.isFloat(local.ty, self.program.records)) try canonicalArgument(self, i);
     }
     const result = f.signature.return_type;
     const float_result = contract.isFloat(result, self.program.records);
@@ -47,8 +56,9 @@ pub fn emit(self: anytype, name: []const u8) Error![]u8 {
     if (result == .unit) {
         try self.print(" ret 0\n", .{});
     } else if (float_result) {
-        // Canonicalize foreign NaNs just like ordinary language float operations.
-        try self.print(" %nan =w cned %result, %result\n jnz %nan, @nan, @value\n@nan\n ret {d}\n@value\n %bits =l cast %result\n ret %bits\n", .{@import("floats.zig").canonical_nan});
+        // FLOAT-NAN-OBSERVED-1: a foreign NaN enters like any produced NaN,
+        // payload and all; it is canonicalized where it is observed.
+        try self.print(" %bits =l cast %result\n ret %bits\n", .{});
     } else if (result == .bool) {
         try self.print(" %truth =w cnew %result, 0\n %wide =l extuw %truth\n ret %wide\n", .{});
     } else if (result.integer().?.bits < 64) {

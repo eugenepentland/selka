@@ -83,19 +83,19 @@ import byte_builder
 
 def main() -> int:
     output = byte_builder.create()
-    byte_builder.append_text(output, "λ")
-    if not byte_builder.append_byte(output, 0):
+    byte_builder.append_text(mut output, "λ")
+    if not byte_builder.append_byte(mut output, 0):
         return 1
-    if not byte_builder.append_spaces(output, 3):
+    if not byte_builder.append_spaces(mut output, 3):
         return 2
     smallest = -9223372036854775808
-    byte_builder.append_int(output, smallest)
-    if not byte_builder.append_range(output, b"0123456789", 4, 6):
+    byte_builder.append_int(mut output, smallest)
+    if not byte_builder.append_range(mut output, b"0123456789", 4, 6):
         return 3
     snapshot = byte_builder.finish(output)
-    if byte_builder.append_range(output, b"0123456789", 6, 99):
+    if byte_builder.append_range(mut output, b"0123456789", 6, 99):
         return 4
-    if not byte_builder.reserve(output, 128):
+    if not byte_builder.reserve(mut output, 128):
         return 5
     if byte_builder.finish(output) != snapshot:
         return 6
@@ -241,19 +241,29 @@ unique_strs(values: list[str]) -> list[str]
 ```
 
 The concrete `sort_ints`, `sort_floats` and `sort_strs` wrappers delegate to the
-same stable merge engine as `sorted`, returning a new list and leaving the input
-untouched. That engine uses one reusable work buffer rather than recursive slices.
+same stable merge engine as `sorted` and `values.sort()`, returning a new list and
+leaving the input untouched. That engine keeps the ascending runs a list already
+has, reverses strictly descending ones, extends short runs by insertion and merges
+through one scratch buffer of at most half the list, with a comparison compiled
+for each element type, so an ordered or reversed list sorts in linear time.
 Not-a-number follows every ordered float, equal values and signed zeros retain
 their input order, and text compares its stored Unicode scalar values directly.
 `compare_strs` and `min_str` therefore allocate no temporary encodings. A generic
 sort over an arbitrary element type needs an integer key function, because the
 language has no ordering contract: `copy`, `equality`, `integer`, `codec` and
-`storable` are the only generic requirements. `sort_by_key` retains its recursive
-merge so existing callback comparison and trap order do not change; keyed
-`sorted` retains its bottom-up order but now reuses one scratch list across every
-pass. Sorting NaNs last is a deliberate regularization: the earlier comparator
-treated a NaN as tied with every value, so its position could depend on merge
-boundaries rather than one ordering contract.
+`storable` are the only generic requirements.
+
+`sort_by_key` is a thin forwarder to Python's keyed sort: it returns
+`sorted(values, key=key)`, which computes each element's key exactly once, in
+list order, and gathers the elements into the new list with the native keyed sort
+(see [keyed sorting](python-syntax.md#keyed-sorting) for `key=`, `reverse=` and
+the `float`, `str` and tuple keys the method and `sorted` accept). A key
+function that traps on several elements reports the first of them in list order;
+before the keyed sort existed, `sort_by_key` asked for keys in the order a
+recursive merge first needed them. Sorting NaNs last is a deliberate
+regularization: the earlier comparator treated a NaN as tied with every value,
+so its position could depend on merge boundaries rather than one ordering
+contract.
 
 ```mylang
 # doc: expect 42
@@ -517,11 +527,11 @@ import pool
 def main() -> int:
     seed: list[int] = []
     store = pool.create(seed)
-    first = pool.insert(store, 10)
-    second = pool.insert(store, 32)
-    if not pool.remove(store, first) or pool.remove(store, first):
+    first = pool.insert(mut store, 10)
+    second = pool.insert(mut store, 32)
+    if not pool.remove(mut store, first) or pool.remove(mut store, first):
         return 1
-    third = pool.insert(store, 10)
+    third = pool.insert(mut store, 10)
     if pool.capacity(store) != 2 or pool.count(store) != 2:
         return 2
     match pool.get(store, first):
@@ -618,7 +628,7 @@ def main() -> int:
     generator = random.seeded(7)
     index = 0
     while index < 100:
-        match random.randint(generator, 0 - 5, 5):
+        match random.randint(mut generator, 0 - 5, 5):
             case Ok(value):
                 if value < 0 - 5 or value > 5:
                     return 1
@@ -626,11 +636,11 @@ def main() -> int:
                 return 0 - len(message)
         index += 1
     items = [1, 2, 3, 4, 5]
-    random.shuffle(generator, items)
+    random.shuffle(mut generator, mut items)
     total = 0
     for value in items:
         total += value
-    if random.random(generator) >= 1.0:
+    if random.random(mut generator) >= 1.0:
         return 2
     return total + 27
 ```

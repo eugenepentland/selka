@@ -52,11 +52,11 @@ int main(void) {
     number_at(&out, 1.0 / 0.0); matches("inf");
     number_at(&out, -1.0 / 0.0); matches("-inf");
     number_at(&out, 0.0 / 0.0); matches("nan");
-    /* A value the VM's formatting frame cannot hold is unprintable on both. */
-    double huge = 1e100;
-    myl_print_float(&out, &huge, 0);
-    assert(out.unprintable);
-    reset();
+    /* IO-14: the float frame holds the longest finite double, so even 1e100
+       prints whole, in its shortest round-tripping digits,
+       instead of being unprintable. */
+    number_at(&out, 1e100);
+    matches("10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.0");
     /* Text prints raw at the top level and repr-quoted inside a container. */
     myl_native_text *text = myl_native_text_from_utf8(&heap, (const unsigned char *)"h\xc3\xa9'\\\n", 6);
     assert(text);

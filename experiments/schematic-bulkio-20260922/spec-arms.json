@@ -1,0 +1,4 @@
+{
+ "gc-lto": {"backend": "llvm", "opt": "3", "lto": true, "bounded": false},
+ "o3": {"backend": "llvm", "opt": "3", "lto": false, "bounded": false, "manifest_from": "gc-lto"}
+}

@@ -1,0 +1,12 @@
+# Deep recursion under a logical frame ceiling: both backends must trap at the
+# same frame, with the same located message and status, rather than exhaust the
+# physical stack first.  The stack-floor guard is what has to hold here, and its
+# budget is a runtime property, so the two arms must agree exactly.
+def descend(depth: int) -> int:
+    if depth == 0:
+        return 0
+    return 1 + descend(depth - 1)
+
+
+def main() -> int:
+    return descend(20000)

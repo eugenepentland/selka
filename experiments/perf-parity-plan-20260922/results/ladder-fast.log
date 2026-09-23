@@ -1,0 +1,20 @@
+binary_trees: 17 qualified arms: my my-unchecked zig-fast zig-safe rust lad-nr arena:lad-nr lad-l5 arena:lad-l5 lad-l5-nr arena:lad-l5-nr lad-l5-nr-lang arena:lad-l5-nr-lang lad-l5-nr-lang-fr arena:lad-l5-nr-lang-fr lad-l5-all arena:lad-l5-all
+spectral_norm: 11 qualified arms: my my-unchecked zig-fast zig-safe rust lad-nr lad-l5 lad-l5-nr lad-l5-nr-lang lad-l5-nr-lang-fr lad-l5-all
+mandelbrot: 11 qualified arms: my my-unchecked zig-fast zig-safe rust lad-nr lad-l5 lad-l5-nr lad-l5-nr-lang lad-l5-nr-lang-fr lad-l5-all
+raytrace: 11 qualified arms: my my-unchecked zig-fast zig-safe rust lad-nr lad-l5 lad-l5-nr lad-l5-nr-lang lad-l5-nr-lang-fr lad-l5-all
+knucleotide: 17 qualified arms: my my-unchecked zig-fast zig-safe rust lad-nr tuned:lad-nr lad-l5 tuned:lad-l5 lad-l5-nr tuned:lad-l5-nr lad-l5-nr-lang tuned:lad-l5-nr-lang lad-l5-nr-lang-fr tuned:lad-l5-nr-lang-fr lad-l5-all tuned:lad-l5-all
+text_ops: 11 qualified arms: my my-unchecked zig-fast zig-safe rust lad-nr lad-l5 lad-l5-nr lad-l5-nr-lang lad-l5-nr-lang-fr lad-l5-all
+sort_builtin: 11 qualified arms: my my-unchecked zig-fast zig-safe rust lad-nr lad-l5 lad-l5-nr lad-l5-nr-lang lad-l5-nr-lang-fr lad-l5-all
+sort_quick: 11 qualified arms: my my-unchecked zig-fast zig-safe rust lad-nr lad-l5 lad-l5-nr lad-l5-nr-lang lad-l5-nr-lang-fr lad-l5-all
+sort_records: 11 qualified arms: my my-unchecked zig-fast zig-safe rust lad-nr lad-l5 lad-l5-nr lad-l5-nr-lang lad-l5-nr-lang-fr lad-l5-all
+sieve: 11 qualified arms: my my-unchecked zig-fast zig-safe rust lad-nr lad-l5 lad-l5-nr lad-l5-nr-lang lad-l5-nr-lang-fr lad-l5-all
+binary_trees: ref 227.4 ms | my=2.01x  my-unchecked=1.93x  zig-fast=1.00x  zig-safe=1.07x  rust=1.75x  lad-nr=1.98x  arena:lad-nr=1.30x  lad-l5=2.03x  arena:lad-l5=1.33x  lad-l5-nr=2.01x  arena:lad-l5-nr=1.28x  lad-l5-nr-lang=1.99x  arena:lad-l5-nr-lang=1.28x  lad-l5-nr-lang-fr=1.89x  arena:lad-l5-nr-lang-fr=1.16x  lad-l5-all=1.92x  arena:lad-l5-all=1.16x
+spectral_norm: ref 156.6 ms | my=3.63x  my-unchecked=1.18x  zig-fast=1.00x  zig-safe=1.36x  rust=1.02x  lad-nr=2.14x  lad-l5=3.68x  lad-l5-nr=2.00x  lad-l5-nr-lang=1.76x  lad-l5-nr-lang-fr=1.65x  lad-l5-all=1.02x
+mandelbrot: ref 123.8 ms | my=1.32x  my-unchecked=1.29x  zig-fast=1.00x  zig-safe=1.00x  rust=1.02x  lad-nr=1.32x  lad-l5=1.31x  lad-l5-nr=1.32x  lad-l5-nr-lang=1.02x  lad-l5-nr-lang-fr=1.02x  lad-l5-all=1.03x
+raytrace: ref 68.1 ms | my=4.68x  my-unchecked=2.68x  zig-fast=1.00x  zig-safe=1.05x  rust=0.98x  lad-nr=4.29x  lad-l5=4.89x  lad-l5-nr=4.55x  lad-l5-nr-lang=2.19x  lad-l5-nr-lang-fr=1.55x  lad-l5-all=1.41x
+knucleotide: ref 101.2 ms | my=4.95x  my-unchecked=4.93x  zig-fast=1.00x  zig-safe=1.15x  rust=1.67x  lad-nr=4.91x  tuned:lad-nr=2.85x  lad-l5=4.94x  tuned:lad-l5=2.89x  lad-l5-nr=4.90x  tuned:lad-l5-nr=2.89x  lad-l5-nr-lang=4.90x  tuned:lad-l5-nr-lang=2.83x  lad-l5-nr-lang-fr=4.90x  tuned:lad-l5-nr-lang-fr=2.80x  lad-l5-all=4.85x  tuned:lad-l5-all=2.86x
+text_ops: ref 28.6 ms | my=6.51x  my-unchecked=6.78x  zig-fast=1.00x  zig-safe=0.85x  rust=1.59x  lad-nr=6.87x  lad-l5=6.77x  lad-l5-nr=6.93x  lad-l5-nr-lang=6.98x  lad-l5-nr-lang-fr=6.88x  lad-l5-all=7.00x
+sort_builtin: ref 243.7 ms | my=1.60x  my-unchecked=1.61x  zig-fast=1.00x  zig-safe=1.17x  rust=0.31x  lad-nr=1.68x  lad-l5=1.61x  lad-l5-nr=1.67x  lad-l5-nr-lang=1.69x  lad-l5-nr-lang-fr=1.60x  lad-l5-all=1.62x
+sort_quick: ref 189.1 ms | my=1.87x  my-unchecked=1.53x  zig-fast=1.00x  zig-safe=1.18x  rust=0.95x  lad-nr=1.70x  lad-l5=1.31x  lad-l5-nr=1.28x  lad-l5-nr-lang=1.13x  lad-l5-nr-lang-fr=1.12x  lad-l5-all=0.99x
+sort_records: ref 113.9 ms | my=5.33x  my-unchecked=4.85x  zig-fast=1.00x  zig-safe=1.18x  rust=0.40x  lad-nr=5.38x  lad-l5=5.28x  lad-l5-nr=5.41x  lad-l5-nr-lang=5.31x  lad-l5-nr-lang-fr=4.95x  lad-l5-all=4.74x
+sieve: ref 53.6 ms | my=7.19x  my-unchecked=6.17x  zig-fast=1.00x  zig-safe=1.34x  rust=1.02x  lad-nr=6.91x  lad-l5=1.79x  lad-l5-nr=1.82x  lad-l5-nr-lang=1.90x  lad-l5-nr-lang-fr=1.65x  lad-l5-all=1.38x

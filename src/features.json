@@ -2,6 +2,11 @@
   "language_version": "0.1.0",
   "primary_backend": "qbe",
   "implemented": {
+    "tuples": {
+      "kind": "language",
+      "summary": "`tuple[T1, ..., Tn]` (two to eight elements) is an immutable, fixed-arity anonymous record: it is built with `(a, b)` and the bare forms after `return`, taken apart only by destructuring (`x, y = value`, `for a, b in pairs`, `_` for a value not needed), compares structurally, prints as `(1, 'a')`, and is rejected when indexed, named by field, called as a method or measured with `len`.",
+      "doc": "docs/tuples.md#tuples"
+    },
     "typed-hole-obligations": {
       "kind": "tooling",
       "summary": "`mylang check --diagnostics=json` attaches a versioned `typed-hole-obligation` record to each `E_TYPED_HOLE` diagnostic: snapshot identity and hole range, declared and contextual expected types, usable bindings, generic requirements, effect ceiling and mutation footprint, with whole-program facts a hole cannot promise named in an `unavailable` list.",
@@ -51,6 +56,11 @@
       "kind": "tooling",
       "summary": "`mylang build` drives QBE, the assembler and the linker itself, with no Python installer in the loop.",
       "doc": "docs/tooling/native-build.md#mylang-build"
+    },
+    "unchecked-release-builds": {
+      "kind": "tooling",
+      "summary": "`mylang build --unchecked` omits the integer-overflow, narrowing-cast and index-bounds guards and, when the build carries no step or frame ceiling, the per-call frame record and its position stores; allocation failure, the memory budget, the collector and host-call validation are kept, and the policy is refused for `mylang test`, `--mode Debug` and `--library`.",
+      "doc": "docs/tooling/native-build.md#unchecked-release-builds"
     },
     "python-free-native-guest-tests": {
       "kind": "tooling",
@@ -142,6 +152,31 @@
       "summary": "A list literal becomes a fixed `[N]T` array and a dict literal an enum-indexed `[Kind]T` table when the context demands one.",
       "doc": "docs/records-and-unions.md#fixed-arrays-and-enum-tables"
     },
+    "fixed-array-element-writes": {
+      "kind": "language",
+      "summary": "`a[i] = v`, `a[i] += v`, `a[i].f = v`, `grid[r][c] = v` and `r.cells[i] = v` write one element of a fixed array or table in place while assignment still copies the array.",
+      "doc": "docs/records-and-unions.md#writing-array-elements"
+    },
+    "mut-fixed-array-parameters": {
+      "kind": "language",
+      "summary": "A `values: mut [N]T` parameter names the caller's array, so `f(mut values)` lets the callee write its elements; an array parameter without `mut` is the callee's own copy.",
+      "doc": "docs/records-and-unions.md#passing-an-array-to-be-written"
+    },
+    "fixed-array-iteration": {
+      "kind": "language",
+      "summary": "`for x in a`, `enumerate(a)` and comprehensions walk a fixed array over the value it had when the loop began, copying it only when the body writes it.",
+      "doc": "docs/records-and-unions.md#iterating-a-fixed-array"
+    },
+    "fixed-array-negative-indices": {
+      "kind": "language",
+      "summary": "`a[-1]` is a fixed array's last element for reads, every element write and `replace`, exactly as for a list; an index outside `-N <= i < N` traps `R_LIST_BOUNDS`.",
+      "doc": "docs/records-and-unions.md#negative-indices"
+    },
+    "destructuring-element-targets": {
+      "kind": "language",
+      "summary": "A destructuring target may be an element or a field, so `a[i], a[j] = a[j], a[i]` swaps two elements of an array or list.",
+      "doc": "docs/tuples.md#element-and-field-targets"
+    },
     "python-call-type-arguments": {
       "kind": "language",
       "summary": "`identity[int](2)` supplies a generic call's type arguments explicitly in Python syntax.",
@@ -201,6 +236,11 @@
       "kind": "language",
       "summary": "Bare Python `sum`, `min`, `max`, `sorted`, `abs`, `round`, `any`, `all`, `reversed`, `list` and `zip` work without an import.",
       "doc": "docs/python-syntax.md#prelude-builtins"
+    },
+    "keyed-sorting": {
+      "kind": "language",
+      "summary": "`values.sort(key=..., reverse=...)` sorts in place and `sorted(values, key=..., reverse=...)` sorts a copy, stably, with `int`, `float`, `str`, `bool` or tuple keys computed once per element.",
+      "doc": "docs/python-syntax.md#keyed-sorting"
     },
     "string-to-number-parsing": {
       "kind": "language",
@@ -271,6 +311,11 @@
       "kind": "language",
       "summary": "`float` is IEEE binary64 with ordinary literals, operators, comparisons and integer conversions.",
       "doc": "docs/floating-point.md#binary64-floating-point"
+    },
+    "float-nan-when-observed": {
+      "kind": "language",
+      "summary": "A NaN's payload and sign are never observable: arithmetic propagates NaNs as IEEE does, and text, foreign-call arguments, equality and sorting see the canonical quiet NaN.",
+      "doc": "docs/floating-point.md#nan-payloads"
     },
     "contextual-option-constructors": {
       "kind": "language",
@@ -381,6 +426,11 @@
       "kind": "language",
       "summary": "Local Option payloads are available on paths guarded by `is None` or `is not None`.",
       "doc": "docs/results-and-options.md#flow-sensitive-option-guards"
+    },
+    "option-methods": {
+      "kind": "language",
+      "summary": "`Option[T]` answers `unwrap_or(default)`, `is_none()` and `is_some()`; the default is checked against the payload and an integer literal adopts it, the methods are pure, allocation-free and usable in generic bodies, and the `sentinel-int` lint names the `Option[int]` rewrite for a `-1` convention.",
+      "doc": "docs/results-and-options.md#option-methods"
     },
     "const-length-generics": {
       "kind": "language",
@@ -574,13 +624,13 @@
     },
     "checked-mutation-contracts": {
       "kind": "language",
-      "summary": "effects(mutation) with mutates(...) permits only declared caller-owned managed writes; deep origins, return aliasing and conservative overlap rejection are checked through calls, generics and callbacks.",
+      "summary": "A parameter a function writes through is declared `name: mut T`, that set is the function's mutation footprint, and every argument bound to one is written `mut argument`, so a call shows exactly what it changes; deep origins, return aliasing and conservative overlap rejection are checked through calls, generics and callbacks.",
       "doc": "docs/effects.md#mutation-contracts"
     },
-    "mutation-markers": {
-      "kind": "tooling",
-      "summary": "Opt-in `--mutation-markers` flag: a call-site `&` marks an argument passed to a callee parameter declared in `mutates(...)`, and a marker on an undeclared position, a non-assignable argument, or a missing marker is a located `E_MUTATION_MARKER` with a concrete replacement; off by default, so `&` remains a removed spelling.",
-      "doc": "docs/effects.md#mutation-contracts"
+    "mut-parameters": {
+      "kind": "language",
+      "summary": "`name: mut T` declares a written parameter and `mut argument` marks the call site, in both directions: a write through an unmarked parameter and a `mut` the body never writes are `E_MUTATION_MARKER` with the exact replacement, `mut` is accepted only on a type with writable storage, and receivers stay unmarked.",
+      "doc": "docs/effects.md#declaration-site-mutation-errors"
     },
     "per-function-body-reuse": {
       "kind": "tooling",
@@ -596,6 +646,11 @@
       "kind": "tooling",
       "summary": "`--max-steps=N` and `--max-frames=N` impose opt-in instruction and call-depth ceilings on an otherwise unbounded guest run, and each trap names the flag that raises it.",
       "doc": "docs/tooling/runtime-budgets.md#instruction-and-frame-budgets"
+    },
+    "host-application-guest-bounds": {
+      "kind": "tooling",
+      "summary": "A host application bounds its guest with the ceilings its build can enforce: `schematic-svg` renders under a call-depth and wall-clock ceiling with no instruction accounting, and `--bounded` restores the instruction ceiling.",
+      "doc": "docs/tooling/runtime-budgets.md#host-application-guests"
     },
     "memory-bounded-test-fanout": {
       "kind": "tooling",
@@ -792,11 +847,6 @@
       "summary": "`mylang run`, `run-project` and `build --run` accept repeatable `--allow-endpoint=IP:PORT` grants that provision a literal-only TCP provider for a `Network` entry point under `--restrict`; without the grant the entry point is refused.",
       "doc": "docs/effects.md#network-host"
     },
-    "mandatory-mutation-footprint-warning": {
-      "kind": "language",
-      "summary": "A function with no effect ceiling that writes caller-reachable storage without a `mutates(...)` clause is warned with the inferred footprint printed verbatim, except for reference-typed `class` parameters, which are exempt because writing through the reference is their purpose; `mutates(...)` without a ceiling means unbounded effects with that footprint.",
-      "doc": "docs/effects.md#mandatory-mutation-footprint"
-    },
     "host-capability-foreign-calls": {
       "kind": "tooling",
       "summary": "Every `extern def` and `host def` takes `host: Host` as its first parameter; the checker verifies it at each call and the C ABI drops it before the foreign call, with `--allow-host` under `--restrict`.",
@@ -841,6 +891,21 @@
       "kind": "tooling",
       "summary": "`mylang invoke <entry.my> --function 'module::name' --describe` reports the selected export's checked argument and result contract, wire representation, effects, required capabilities and invocation eligibility without running it, and `--input=FILE` executes exactly one call in a bounded native child and writes one `native-invocation-v1` JSON object on stdout, where a returned `Result.Err` is a completed call and traps, timeouts and malformed requests are distinguished from it.",
       "doc": "docs/tooling/invocation.md#mylang-invoke"
+    },
+    "keyword-only-parameters": {
+      "kind": "language",
+      "summary": "A bare `*` in a parameter list makes every following parameter keyword-only, so it binds by name in any order, and a call that passes one positionally is `E_KEYWORD_ONLY` with the whole call rewritten using the parameter names.",
+      "doc": "docs/functions.md#keyword-only-parameters"
+    },
+    "conditional-expression": {
+      "kind": "language",
+      "summary": "`value_if_true if condition else value_if_false` is one expression whose condition is bool, whose arms take the expected type when the context supplies one, and of which only the chosen arm is evaluated.",
+      "doc": "docs/python-syntax.md#conditional-expressions"
+    },
+    "derived-effect-ceilings": {
+      "kind": "language",
+      "summary": "A function's effect ceiling is derived from its parameter list - a capability parameter permits its effect, a `mut` parameter `mutation`, a callback parameter its declared ceiling, and allocation is always permitted - so a body that exceeds it is rejected in that body with the parameter to add; `noalloc`, `noio` and `effects(...)` only narrow it, a clause that restates it warns `W_DERIVED_EFFECTS`, a clause naming an effect no parameter supplies is `E_DERIVED_EFFECTS`, and a capability parameter the body never reads is `E_UNUSED_CAPABILITY`.",
+      "doc": "docs/effects.md#the-signature-is-the-ceiling"
     }
   },
   "unsupported": [
@@ -858,7 +923,7 @@
     "noalloc": "managed-backing-operations-only",
     "type_aliases": "non-parameterized",
     "constants": "bounded-scalar-expressions-and-nongeneric-source-functions-plus-str-bytes-literals",
-    "iteration": "range(end/start,end), list/str/dict foreach and enumerate; fixed bounds and structural mutation checks",
+    "iteration": "range(end/start,end), list/str/dict/fixed-array foreach and enumerate; fixed bounds and structural mutation checks",
     "native_runtime": "QBE only; host effects require explicit ABI registration",
     "workers": "no host worker facility and no guest spawn syntax; parallelism is one guest process per task",
     "floating_point": "float literals, ordinary operators, signed int conversions; IEEE binary64; standard sqrt is the correctly rounded binary64 operation, decimal parsing is accurate rather than correctly rounded; no transcendentals",
@@ -917,6 +982,10 @@
     "memory-accounting-categories": {
       "date": "2026-09-14",
       "note": "mylang-io --memory-report, --max-runtime-bytes, --max-vm-bytes and --max-host-bytes, and the runtime-memory-v1 split of VM bytes into guest backing and bookkeeping. There is no VM allocator to split; guest-memory-ceilings bounds a guest process instead."
+    },
+    "mandatory-mutation-footprint-warning": {
+      "date": "2026-09-21",
+      "note": "`W_MUTATES_MISSING` and the reference-typed `class` exemption, with the `mutates(...)` clause and the opt-in `&` / `--mutation-markers` marker beside them. A parameter a function writes through is declared `name: mut T` and every argument bound to one is written `mut argument`; see the implemented `mut-parameters` entry."
     }
   }
 }

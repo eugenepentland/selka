@@ -64,5 +64,49 @@ public def test_chr_rejects_surrogates_and_out_of_range_code_points() -> bool:
     return is_chr_err(strings.chr(0 - 1))
 
 
+def repeated(text: str, times: int) -> str:
+    match strings.repeat(text, times):
+        case Ok(value):
+            return value
+        case Err(_):
+            return "error"
+
+
+def rejects_negative() -> bool:
+    match strings.repeat("a", 0 - 1):
+        case Ok(_):
+            return False
+        case Err(_):
+            return True
+
+
+# The copies one at a time, the reference the doubling must match.
+def appended(text: str, times: int) -> str:
+    out = ""
+    for _ in range(times):
+        out = out + text
+    return out
+
+
+# spec: STANDARD-STRINGS-2
+public def test_repeat_builds_long_texts_in_linear_time() -> bool:
+    # 300,000 copies: appending one copy at a time copied the growing answer
+    # every time, about 135 GB for this count.
+    long = repeated("abc", 300000)
+    ok = len(long) == 900000 and long[:6] == "abcabc" and long[-4:] == "cabc"
+    ok = ok and long.count("abc") == 300000
+    wide = repeated("é€", 100001)
+    return ok and len(wide) == 200002 and wide[-3:] == "€é€" and wide.count("é€") == 100001
+
+
+# spec-case: STANDARD-STRINGS-2
+public def test_repeat_answers_every_count_exactly() -> bool:
+    ok = repeated("", 1000000000) == "" and repeated("xy", 0) == "" and rejects_negative()
+    for times in range(0, 40):
+        ok = ok and repeated("ab", times) == appended("ab", times)
+        ok = ok and repeated("ü", times) == appended("ü", times)
+    return ok and repeated("0", 4) + "7" == "00007"
+
+
 def main() -> int:
     return 0

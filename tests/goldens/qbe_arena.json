@@ -38,7 +38,7 @@
   },
   "2e5ea8dcb32e5b610b35e0fcacded0df": {
    "case": [
-    "def stash(outer: list[list[int]], inner: list[int]) -> None:\n    outer.append(inner)\n\ndef main() -> int:\n    keeper: list[list[int]] = []\n    with arena() as scratch:\n        temp: list[int] = [1]\n        stash(keeper, temp)\n    return len(keeper)\n",
+    "def stash(outer: mut list[list[int]], inner: list[int]) -> None:\n    outer.append(inner)\n\ndef main() -> int:\n    keeper: list[list[int]] = []\n    with arena() as scratch:\n        temp: list[int] = [1]\n        stash(mut keeper, temp)\n    return len(keeper)\n",
     []
    ],
    "returncode": 1,
@@ -47,7 +47,7 @@
   },
   "3414b3535e41008e519ccf3ff3b77874": {
    "case": [
-    "record Holder:\n    samples: list[int]\n\ndef stash(outer: list[Holder], inner: Holder) -> None:\n    outer[0] = inner\n\ndef main() -> int:\n    keeper: list[Holder] = [Holder(samples=[0])]\n    with arena() as scratch:\n        temp = Holder(samples=[1])\n        stash(keeper, temp)\n    return len(keeper)\n",
+    "record Holder:\n    samples: list[int]\n\ndef stash(outer: mut list[Holder], inner: Holder) -> None:\n    outer[0] = inner\n\ndef main() -> int:\n    keeper: list[Holder] = [Holder(samples=[0])]\n    with arena() as scratch:\n        temp = Holder(samples=[1])\n        stash(mut keeper, temp)\n    return len(keeper)\n",
     []
    ],
    "returncode": 1,
@@ -56,7 +56,7 @@
   },
   "6c55b0021d5ed868571a0a8ebed536d2": {
    "case": [
-    "def grow(outer: list[int], count: int) -> None:\n    for index in range(count):\n        outer.append(index)\n\ndef main() -> int:\n    keeper: list[int] = []\n    with arena() as scratch:\n        grow(keeper, 40)\n        noise: list[int] = []\n        for index in range(40):\n            noise.append(index)\n    total = 0\n    for value in keeper:\n        total = total + value\n    return total\n",
+    "def grow(outer: mut list[int], count: int) -> None:\n    for index in range(count):\n        outer.append(index)\n\ndef main() -> int:\n    keeper: list[int] = []\n    with arena() as scratch:\n        grow(mut keeper, 40)\n        noise: list[int] = []\n        for index in range(40):\n            noise.append(index)\n    total = 0\n    for value in keeper:\n        total = total + value\n    return total\n",
     []
    ],
    "returncode": 12,
@@ -65,7 +65,7 @@
   },
   "6e52fe21c1654619f755a88c87b174bf": {
    "case": [
-    "def stash(outer: list[list[int]], inner: list[int]) -> None:\n    outer.append(inner)\n\ndef main() -> int:\n    keeper: list[list[int]] = []\n    older: list[int] = [3]\n    with arena() as scratch:\n        stash(keeper, older)\n        temp: list[int] = [1]\n    return len(keeper) + keeper[0][0]\n",
+    "def stash(outer: mut list[list[int]], inner: list[int]) -> None:\n    outer.append(inner)\n\ndef main() -> int:\n    keeper: list[list[int]] = []\n    older: list[int] = [3]\n    with arena() as scratch:\n        stash(mut keeper, older)\n        temp: list[int] = [1]\n    return len(keeper) + keeper[0][0]\n",
     []
    ],
    "returncode": 4,
@@ -92,7 +92,7 @@
   },
   "88ed2fc9123768ce676f074a6ec3f102": {
    "case": [
-    "def stash(outer: dict[str, list[int]], inner: list[int]) -> None:\n    outer[\"kept\"] = inner\n\ndef main() -> int:\n    keeper: dict[str, list[int]] = {}\n    with arena() as scratch:\n        temp: list[int] = [1]\n        stash(keeper, temp)\n    return len(keeper)\n",
+    "def stash(outer: mut dict[str, list[int]], inner: list[int]) -> None:\n    outer[\"kept\"] = inner\n\ndef main() -> int:\n    keeper: dict[str, list[int]] = {}\n    with arena() as scratch:\n        temp: list[int] = [1]\n        stash(mut keeper, temp)\n    return len(keeper)\n",
     []
    ],
    "returncode": 1,

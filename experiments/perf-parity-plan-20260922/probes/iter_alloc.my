@@ -1,0 +1,37 @@
+# iter_alloc: list iteration (generation checks) and an allocating loop (GC roots).
+
+
+record Pair:
+    a: int
+    b: int
+
+
+def total(xs: list[int]) -> int:
+    t = 0
+    for x in xs:
+        t = t + x
+    return t
+
+
+def pairs(n: int) -> list[Pair]:
+    out: list[Pair] = []
+    for i in range(n):
+        out.append(Pair(a=i, b=i + 1))
+    return out
+
+
+def label(n: int) -> list[str]:
+    names: list[str] = []
+    for i in range(n):
+        names.append(f"n{i}")
+    return names
+
+
+def main(out: Stream) -> int:
+    xs: list[int] = []
+    for i in range(1000):
+        xs.append(i)
+    ps = pairs(100)
+    ns = label(10)
+    out.print(total(xs) + len(ps) + len(ns))
+    return 0

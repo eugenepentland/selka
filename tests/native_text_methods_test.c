@@ -33,6 +33,75 @@ static void keep(myl_native_heap *heap,myl_native_text *value) {
     assert(myl_native_list_append(heap,bag,&value));
     myl_native_root_pop(heap,&root);
 }
+static size_t find(const char *haystack,const char *needle) {
+    return myl_native_octets_find((const unsigned char *)haystack,strlen(haystack),(const unsigned char *)needle,strlen(needle));
+}
+static size_t tally(const char *haystack,const char *needle) {
+    return myl_native_octets_count((const unsigned char *)haystack,strlen(haystack),(const unsigned char *)needle,strlen(needle));
+}
+/* spec-case: TEXT-SCAN-1. The bulk search answers exactly what a comparison at
+   every offset answered: the first match, at either end, past any number of
+   first-octet candidates that fail (more than the in-place budget hands the rest
+   to `memmem`), and non-overlapping counts. */
+static void octet_search(void) {
+    assert(find("abc","")==0 && find("","")==0);
+    assert(find("","a")==SIZE_MAX && find("ab","abc")==SIZE_MAX);
+    assert(find("abc","a")==0 && find("abc","c")==2 && find("abc","z")==SIZE_MAX);
+    assert(find("abcab","ab")==0 && find("xxab","ab")==2 && find("abc","abc")==0);
+    assert(find("aaaaaaaaaaaaaaaaaaaaaab","ab")==21);
+    assert(find("aaaaaaaaaaaaaaaaaaaaaaa","aab")==SIZE_MAX);
+    assert(find("abababababababababababx","abx")==20);
+    assert(find("h\xc3\xa9llo \xc3\xa9","\xc3\xa9 ")==SIZE_MAX && find("h\xc3\xa9llo \xc3\xa9","o \xc3\xa9")==5);
+    assert(tally("aaa","aa")==1 && tally("aaaa","aa")==2 && tally("abababa","aba")==2);
+    assert(tally("a,b,,c,",",")==4 && tally("",",")==0 && tally("abc","")==0 && tally("ab","abc")==0);
+    assert(tally("aaaaaaaaaaaaaaaaaaaaaabaab","aab")==2);
+    /* A one-octet tally spans several 64 KiB blocks. */
+    static unsigned char large[200001];
+    memset(large,'x',sizeof large);
+    for (size_t i=0;i<sizeof large;i+=7) large[i]=',';
+    assert(myl_native_octets_count(large,sizeof large,(const unsigned char *)",",1)==200001/7+1);
+    assert(myl_native_octets_count(large,sizeof large,(const unsigned char *)",x",2)==200001/7+1);
+    assert(myl_native_octets_count(large,sizeof large,(const unsigned char *)"x,",2)==200001/7);
+    assert(myl_native_octets_find(large+1,sizeof large-1,(const unsigned char *)",",1)==6);
+}
+static myl_native_list *pieces(myl_native_heap *heap,myl_native_root *root,const char *text,const char *separator) {
+    myl_native_list *parts=myl_native_text_split(heap,raw(heap,text),raw(heap,separator));
+    assert(parts);
+    myl_native_root_push(heap,root,&parts,&pointer);
+    return parts;
+}
+/* spec-case: TEXT-SCAN-3. Separator splits keep every empty piece and the count
+   of cuts the list was sized for, and a non-ASCII receiver's pieces measure
+   their own scalars. */
+static void separator_split(myl_native_heap *heap) {
+    myl_native_root root;
+    myl_native_list *parts=pieces(heap,&root,"a,b,,c,",",");
+    myl_native_text **items=parts->storage;
+    assert(parts->length==5 && parts->capacity==5);
+    equals(items[0],"a"); equals(items[1],"b"); equals(items[2],""); equals(items[3],"c"); equals(items[4],"");
+    myl_native_root_pop(heap,&root);
+    parts=pieces(heap,&root,"",",");
+    assert(parts->length==1); equals(((myl_native_text **)parts->storage)[0],"");
+    myl_native_root_pop(heap,&root);
+    parts=pieces(heap,&root,"abc","abcd");
+    assert(parts->length==1); equals(((myl_native_text **)parts->storage)[0],"abc");
+    myl_native_root_pop(heap,&root);
+    parts=pieces(heap,&root,"aaa","aa");
+    items=parts->storage;
+    assert(parts->length==2); equals(items[0],""); equals(items[1],"a");
+    myl_native_root_pop(heap,&root);
+    parts=pieces(heap,&root,"aaaaaaaaaaaaaaaaaaaab--c--","--");
+    items=parts->storage;
+    assert(parts->length==3); equals(items[0],"aaaaaaaaaaaaaaaaaaaab"); equals(items[1],"c"); equals(items[2],"");
+    myl_native_root_pop(heap,&root);
+    parts=pieces(heap,&root,"\xc3\xa9|\xf0\x9f\x99\x82\xc3\xa9|x","|");
+    items=parts->storage;
+    assert(parts->length==3);
+    assert(items[0]->length==1 && items[1]->length==2 && items[2]->length==1);
+    assert(!(items[0]->flags&MYL_TEXT_ASCII) && (items[2]->flags&MYL_TEXT_ASCII));
+    equals(items[1],"\xf0\x9f\x99\x82\xc3\xa9");
+    myl_native_root_pop(heap,&root);
+}
 int main(void) {
     myl_native_heap heap;
     myl_native_heap_init(&heap,1<<20); heap.stress=1;
@@ -92,6 +161,21 @@ int main(void) {
     equals(myl_native_text_replace(&heap,line,raw(&heap,"zz"),raw(&heap,"y")),"banana");
     equals(myl_native_text_replace(&heap,empty,raw(&heap,"a"),raw(&heap,"b")),"");
     assert(!myl_native_text_replace(&heap,line,empty,raw(&heap,"b")));
+    /* Runs between matches are copied whole, matches at either end included,
+       and a first octet that recurs without matching changes nothing. */
+    equals(myl_native_text_replace(&heap,raw(&heap,"abxab"),raw(&heap,"ab"),empty),"x");
+    equals(myl_native_text_replace(&heap,raw(&heap,"aaaaaaaaaaaaaaaaaaaaaab"),raw(&heap,"ab"),raw(&heap,"X")),"aaaaaaaaaaaaaaaaaaaaaX");
+    myl_native_text *accented=myl_native_text_replace(&heap,raw(&heap,"h\xc3\xa9llo \xc3\xa9t\xc3\xa9"),raw(&heap,"\xc3\xa9"),raw(&heap,"e"));
+    equals(accented,"hello ete");
+    assert(accented->length==9);
+    myl_native_text *widened=myl_native_text_replace(&heap,raw(&heap,"a-b"),raw(&heap,"-"),raw(&heap,"\xf0\x9f\x99\x82"));
+    equals(widened,"a\xf0\x9f\x99\x82" "b");
+    assert(widened->length==3 && widened->bytes==6);
+    assert(myl_native_text_count(raw(&heap,"h\xc3\xa9llo \xc3\xa9"),raw(&heap,"\xc3\xa9"))==2);
+    assert(myl_native_text_count(raw(&heap,"aaaaaaaaaaaaaaaaaaaaaabaab"),raw(&heap,"aab"))==2);
+    assert(myl_native_text_find(raw(&heap,"\xc3\xa9t\xc3\xa9"),raw(&heap,"t"))==1);
+    octet_search();
+    separator_split(&heap);
     /* splitlines drops the terminators and yields no line for empty text. */
     myl_native_list *lines=myl_native_text_lines(&heap,raw(&heap,"a\nb\r\nc\rd"));
     assert(lines && lines->length==4);

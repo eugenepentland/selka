@@ -1,0 +1,62 @@
+round -3 done
+round -2 done
+round -1 done
+round 0 done
+round 1 done
+round 2 done
+round 3 done
+round 4 done
+round 5 done
+round 6 done
+round 7 done
+round 8 done
+round 9 done
+round 10 done
+round 11 done
+round 12 done
+round 13 done
+round 14 done
+round 15 done
+round 16 done
+round 17 done
+round 18 done
+round 19 done
+round 20 done
+round 21 done
+round 22 done
+round 23 done
+round 24 done
+round 25 done
+round 26 done
+round 27 done
+round 28 done
+round 29 done
+round 30 done
+== fixture
+  zig-o3                          1.487 ms  min   1.280  x1.00 [1.00,1.00]
+  rust-o3                         1.669 ms  min   1.503  x1.12 [1.09,1.19]
+  a3:gc-lto                       2.937 ms  min   2.607  x1.98 [1.91,2.08]
+  a3:gc-lto-unchecked             2.523 ms  min   2.299  x1.70 [1.64,1.81]
+  a3:arena-lto                    2.707 ms  min   2.498  x1.82 [1.77,1.93]
+  l5:gc-lto                       2.573 ms  min   2.370  x1.73 [1.68,1.84]
+  l5:gc-lto-unchecked             2.421 ms  min   2.173  x1.63 [1.59,1.73]
+  l5:arena-lto                    2.375 ms  min   2.121  x1.60 [1.54,1.69]
+== changed-net
+  zig-o3                          1.487 ms  min   1.385  x1.00 [1.00,1.00]
+  rust-o3                         1.672 ms  min   1.453  x1.12 [1.07,1.14]
+  a3:gc-lto                       2.948 ms  min   2.692  x1.98 [1.91,2.04]
+  a3:gc-lto-unchecked             2.559 ms  min   2.324  x1.72 [1.65,1.77]
+  a3:arena-lto                    2.730 ms  min   2.551  x1.84 [1.76,1.89]
+  l5:gc-lto                       2.593 ms  min   2.386  x1.74 [1.68,1.78]
+  l5:gc-lto-unchecked             2.343 ms  min   2.168  x1.57 [1.51,1.62]
+  l5:arena-lto                    2.434 ms  min   2.153  x1.64 [1.55,1.67]
+== changed-value
+  zig-o3                          1.502 ms  min   1.278  x1.00 [1.00,1.00]
+  rust-o3                         1.713 ms  min   1.453  x1.14 [1.10,1.17]
+  a3:gc-lto                       2.950 ms  min   2.716  x1.96 [1.89,2.03]
+  a3:gc-lto-unchecked             2.516 ms  min   2.281  x1.68 [1.61,1.72]
+  a3:arena-lto                    2.717 ms  min   2.552  x1.81 [1.73,1.85]
+  l5:gc-lto                       2.634 ms  min   2.324  x1.75 [1.67,1.80]
+  l5:gc-lto-unchecked             2.368 ms  min   2.150  x1.58 [1.52,1.62]
+  l5:arena-lto                    2.384 ms  min   2.192  x1.59 [1.50,1.63]
+rest done

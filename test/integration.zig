@@ -67,26 +67,26 @@ fn managedConstantModes(temporary: *testing.TmpDir, data: []const u8, expected: 
     try expectConstantRun(&.{output}, &stressed, expected);
 }
 
-// A module-entry `run` prints the check phase's diagnostics and the project
-// runner must not print the same warnings again before executing.
+// A module-entry `run` prints the check phase's diagnostics exactly once: a
+// clean project prints none, and the runner has nothing to repeat.
 test "CLI run reports each frontend warning once" {
     const outcome = try runProjectFixture("run",
         \\module main
         \\
         \\
-        \\def touch(values: list[int]) -> None:
+        \\def touch(values: mut list[int]) -> None:
         \\    values[0] = 1
         \\
         \\
         \\def main() -> int:
         \\    values = [1]
-        \\    touch(values)
+        \\    touch(mut values)
         \\    return 0
     , &.{});
     defer testing.allocator.free(outcome.stdout);
     defer testing.allocator.free(outcome.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
-    try testing.expectEqual(@as(usize, 1), std.mem.count(u8, outcome.stderr, "W_MUTATES_MISSING"));
+    try testing.expectEqual(@as(usize, 0), std.mem.count(u8, outcome.stderr, "warning["));
 }
 
 // spec-case: NATIVE-RUN-MANIFEST-CACHE-1
@@ -175,7 +175,7 @@ test "CLI managed constants import run build installed and invalidate warm cache
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
         \\module main
         \\import constants
-        \\def read[T]() -> str effects(managed_allocation):
+        \\def read[T]() -> str:
         \\    return constants.TEXT
         \\def main(out: Stream) -> int:
         \\    out.print(read[int]())
@@ -207,6 +207,27 @@ test "CLI threads a Host capability through an extern call and runs it natively"
     ;
     try invoke("check", source, 0, "", "");
     try invokeOptions("run", source, &.{}, 0, "7\n", "");
+}
+// spec: FLOAT-NAN-OBSERVED-3
+test "CLI passes every NaN to foreign code as the canonical quiet NaN" {
+    // `-(0.0 / 0.0)` carries the sign bit; C's `copysign` reads it, so an
+    // argument that crossed uncanonicalized would answer -1.0. A NaN the
+    // foreign function returns enters the guest and still prints `nan`.
+    const source =
+        \\extern def copysign(host: Host, x: float, y: float) -> float effects(host)
+        \\
+        \\
+        \\def nan_of(zero: float) -> float:
+        \\    return zero / zero
+        \\
+        \\
+        \\def main(host: Host, out: Stream) -> int:
+        \\    nan = nan_of(0.0)
+        \\    out.print(copysign(host, 1.0, nan), copysign(host, 1.0, -nan), copysign(host, 1.0, -2.0))
+        \\    out.print(copysign(host, -nan, 1.0), copysign(host, nan, -1.0))
+        \\    return 0
+    ;
+    try invokeOptions("run", source, &.{}, 0, "1.0 1.0 -1.0\nnan nan\n0\n", "");
 }
 // spec-case: HOST-CAPABILITY-1
 test "CLI withholds Host under restrict and grants it with --allow-host" {
@@ -322,10 +343,9 @@ fn invokeProjectOptions(command: []const u8, text: []const u8, options: []const 
     if (stderr_part.len == 0) try testing.expectEqualStrings("", outcome.stderr) else try testing.expect(std.mem.indexOf(u8, outcome.stderr, stderr_part) != null);
 }
 
-/// `check` a project entry that imports the embedded `random` module. That
-/// module's private `below` helper carries a pre-existing `W_MUTATES_MISSING`
-/// advisory, so the check must succeed without a diagnostic even though stderr
-/// is non-empty; the advisory is not a capability failure.
+/// `check` a project entry that imports the embedded `random` module. Its
+/// private helpers declare the `mut` parameters they write, so the check must
+/// succeed with no diagnostic at all.
 fn checkProjectClean(text: []const u8) !void {
     const outcome = try runProjectFixture("check", text, &.{});
     defer testing.allocator.free(outcome.stdout);
@@ -1000,7 +1020,7 @@ test "build --run detects module projects and installed binaries receive the sam
         \\module helper
         \\
         \\
-        \\public def render(args: list[str]) -> str effects(managed_allocation):
+        \\public def render(args: list[str]) -> str:
         \\    out = ""
         \\    for value in args:
         \\        out = out + "[" + value + "]"
@@ -1391,6 +1411,469 @@ test "an executable built without a frame ceiling refuses a runtime frame budget
     try expectConstantRun(&.{output}, &one_frame, "");
     try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", output, cache_argument, tools[0], tools[1], "--mode=Debug" }, "");
     try expectConstantRun(&.{output}, &one_frame, "");
+}
+/// Build `name` as a ReleaseFast executable twice — with no ceiling, so its
+/// failure paths end in `hlt`, and with a frame ceiling, which keeps the sticky
+/// return through `@failure` — and run both; then run it through `mylang run`
+/// with and without a frame ceiling. Each pair must report the same bytes and
+/// exit status 1, and the executable's report must be `expected` with `{path}`
+/// standing for the entry's absolute path.
+fn expectHaltedTrapIdentical(temporary: *testing.TmpDir, name: []const u8, source: []const u8, expected: []const u8) !void {
+    const a = testing.allocator;
+    const file = try std.fmt.allocPrint(a, "{s}.my", .{name});
+    defer a.free(file);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = file, .data = source });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, file, a);
+    defer a.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const cache_argument = try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{directory});
+    defer a.free(cache_argument);
+    const fast = try std.fmt.allocPrint(a, "{s}/{s}-fast", .{ directory, name });
+    defer a.free(fast);
+    const framed = try std.fmt.allocPrint(a, "{s}/{s}-framed", .{ directory, name });
+    defer a.free(framed);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", fast, cache_argument, tools[0], tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", framed, cache_argument, tools[0], tools[1], "--max-frames=100000" }, "");
+    const wanted = try std.mem.replaceOwned(u8, a, expected, "{path}", entry);
+    defer a.free(wanted);
+    const halted = try std.process.run(a, testing.io, .{ .argv = &.{fast} });
+    defer a.free(halted.stdout);
+    defer a.free(halted.stderr);
+    const sticky = try std.process.run(a, testing.io, .{ .argv = &.{framed} });
+    defer a.free(sticky.stdout);
+    defer a.free(sticky.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, halted.term);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, sticky.term);
+    try testing.expectEqualStrings("", halted.stdout);
+    try testing.expectEqualStrings(wanted, halted.stderr);
+    try testing.expectEqualStrings(halted.stderr, sticky.stderr);
+    // `mylang run` builds the same fast protocol with QBE unless a ceiling asks
+    // for accounting; both report the trap the same way.
+    const run_fast = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "run", entry, cache_argument, tools[0], tools[1] } });
+    defer a.free(run_fast.stdout);
+    defer a.free(run_fast.stderr);
+    const run_framed = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "run", entry, cache_argument, tools[0], tools[1], "--max-frames=100000" } });
+    defer a.free(run_framed.stdout);
+    defer a.free(run_framed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, run_fast.term);
+    try testing.expectEqual(run_fast.term, run_framed.term);
+    try testing.expect(std.mem.indexOf(u8, run_fast.stderr, wanted[0 .. std.mem.indexOfScalar(u8, wanted, '\n') orelse wanted.len]) != null);
+    try testing.expectEqualStrings(run_fast.stderr, run_framed.stderr);
+}
+/// Build `name` with the default release backend — LLVM with full LTO, which
+/// is free to inline guest functions into one another — and with QBE, both
+/// with no ceiling so neither links a frame record, run each, and require exit
+/// status 1 and exactly `expected` on stderr from both, `{path}` standing for
+/// the entry's absolute path.
+fn expectFrameMapTrap(temporary: *testing.TmpDir, name: []const u8, source: []const u8, expected: []const u8) !void {
+    const a = testing.allocator;
+    const file = try std.fmt.allocPrint(a, "{s}.my", .{name});
+    defer a.free(file);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = file, .data = source });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, file, a);
+    defer a.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const cache_argument = try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{directory});
+    defer a.free(cache_argument);
+    const wanted = try std.mem.replaceOwned(u8, a, expected, "{path}", entry);
+    defer a.free(wanted);
+    const llvm = try std.fmt.allocPrint(a, "{s}/{s}-llvm", .{ directory, name });
+    defer a.free(llvm);
+    const qbe = try std.fmt.allocPrint(a, "{s}/{s}-qbe", .{ directory, name });
+    defer a.free(qbe);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", llvm, cache_argument, tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", qbe, cache_argument, tools[0], tools[1] }, "");
+    for ([_][]const u8{ llvm, qbe }) |binary| {
+        const trapped = try std.process.run(a, testing.io, .{ .argv = &.{binary} });
+        defer a.free(trapped.stdout);
+        defer a.free(trapped.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, trapped.term);
+        try testing.expectEqualStrings("", trapped.stdout);
+        try testing.expectEqualStrings(wanted, trapped.stderr);
+    }
+}
+// spec-case: QBE-FRAMEMAP-1
+test "a frame-map trap names every logical frame an inlined callee, a callback, a runtime helper or recursion passes through" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    // LLVM inlines `a` into the loop in `total`; its frame is still reported.
+    try expectFrameMapTrap(&temporary, "inlined",
+        \\# a trap inside a small callee LLVM inlines into a loop
+        \\
+        \\
+        \\def a(i: int, j: int) -> float:
+        \\    return 1.0 / float((i + j) * (i + j + 1) // 2 + i + 1)
+        \\
+        \\
+        \\def total(n: int, start: int) -> float:
+        \\    s = 0.0
+        \\    for i in range(n):
+        \\        s = s + a(start + i, 9223372036854775000)
+        \\    return s
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    out.print(int(total(10, 1)))
+        \\    return 0
+    ,
+        \\{path}:5:32: error[R_OVERFLOW]: native execution failed (mul: left 9223372036854775001, right 9223372036854775002, width 64)
+        \\  in a at {path}:5:32
+        \\  in total at {path}:11:17
+        \\  in main at {path}:16:19
+        \\
+    ++ "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"mul\",\"left\":9223372036854775001,\"right\":9223372036854775002,\"width\":64}\n");
+    // An assertion's message still comes from the innermost frame's position.
+    try expectFrameMapTrap(&temporary, "callback",
+        \\# an assertion inside a key function called back by sorted
+        \\
+        \\
+        \\def key_of(x: int) -> int:
+        \\    assert x != 3, "no threes"
+        \\    return 0 - x
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    ordered = sorted([5, 4, 3, 2, 1], key=key_of)
+        \\    out.print(ordered[0])
+        \\    return 0
+    ,
+        \\{path}:5:12: error[R_ASSERT]: native execution failed: no threes
+        \\  in key_of at {path}:5:12
+        \\  in main at {path}:10:15
+        \\
+    ++ "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"no threes\"}\n");
+    // The runtime helper traps inside itself; the frame is its call site.
+    try expectFrameMapTrap(&temporary, "helper",
+        \\# a conversion the runtime helper refuses, two frames deep
+        \\
+        \\
+        \\def convert(x: float) -> int:
+        \\    return int(x * 1e300 * 1e300)
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    total = 0
+        \\    for i in range(3):
+        \\        total = total + convert(float(i) + 0.5)
+        \\    out.print(total)
+        \\    return 0
+    ,
+        \\{path}:5:12: error[R_FLOAT_CONVERSION]: native execution failed
+        \\  in convert at {path}:5:12
+        \\  in main at {path}:11:25
+        \\
+    );
+    // The stack-floor guard fails in the prologue of the frame it would have
+    // entered, so the trace starts at its caller's call site.
+    const recursion_trace =
+        \\{path}:7:16: error[R_FRAME_LIMIT]: call-depth budget exhausted; raise it with --max-frames=N
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\
+    ;
+    try expectFrameMapTrap(&temporary, "recursion",
+        \\# unbounded recursion reaches the execution-stack floor
+        \\
+        \\
+        \\def descend(depth: int) -> int:
+        \\    if depth == 0:
+        \\        return 0
+        \\    return 1 + descend(depth - 1)
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    out.print(descend(1000000000))
+        \\    return 0
+    , recursion_trace);
+}
+// spec-case: QBE-NORETURN-1
+test "a trap through a halting failure path reports the same code, trace, record and status" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    // A checked add that overflows three frames deep.
+    try expectHaltedTrapIdentical(&temporary, "overflow",
+        \\# an overflow three frames deep
+        \\
+        \\
+        \\def grow(x: int, step: int) -> int:
+        \\    return x + step
+        \\
+        \\
+        \\def climb(x: int) -> int:
+        \\    total = x
+        \\    for i in range(10):
+        \\        total = grow(total, 1000000000000000000)
+        \\    return total
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    out.print(climb(1))
+        \\    return 0
+    ,
+        \\{path}:5:14: error[R_OVERFLOW]: native execution failed (add: left 9000000000000000001, right 1000000000000000000, width 64)
+        \\  in grow at {path}:5:14
+        \\  in climb at {path}:11:17
+        \\  in main at {path}:16:15
+        \\
+    ++ "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9000000000000000001,\"right\":1000000000000000000,\"width\":64}\n");
+    // An out-of-range list write after a loop that succeeded.
+    try expectHaltedTrapIdentical(&temporary, "index",
+        \\# an out-of-range list write after a successful loop
+        \\
+        \\
+        \\def poke(xs: mut list[int], at: int) -> None:
+        \\    xs[at] = 7
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    xs: list[int] = [1, 2, 3]
+        \\    total = 0
+        \\    for x in xs:
+        \\        total = total + x
+        \\    poke(mut xs, total)
+        \\    out.print(total)
+        \\    return 0
+    ,
+        \\{path}:5:5: error[R_LIST_BOUNDS]: native execution failed (index 6, length 3)
+        \\  in poke at {path}:5:5
+        \\  in main at {path}:13:5
+        \\
+    ++ "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":6,\"length\":3}\n");
+}
+/// Checked `+ - *` at every width, operands and width from the command line:
+/// `WIDTH OP X Y` prints `X OP Y` computed in that width, three frames deep.
+const checked_arithmetic_program =
+    \\# checked + - * at every width, operands from the command line
+    \\
+    \\
+    \\def number(text: str) -> int:
+    \\    match int(text):
+    \\        case Some(value):
+    \\            return value
+    \\        case None:
+    \\            return 0
+    \\
+    \\
+    \\def wide(x: int) -> u64:
+    \\    if x >= 0:
+    \\        return u64(x)
+    \\    return u64(x + 9223372036854775807 + 1) + 9223372036854775808u64
+    \\
+    \\
+    \\def signed64(op: str, x: int, y: int) -> int:
+    \\    if op == "add":
+    \\        return x + y
+    \\    if op == "sub":
+    \\        return x - y
+    \\    return x * y
+    \\
+    \\
+    \\def unsigned64(op: str, x: u64, y: u64) -> u64:
+    \\    if op == "add":
+    \\        return x + y
+    \\    if op == "sub":
+    \\        return x - y
+    \\    return x * y
+    \\
+    \\
+    \\def signed32(op: str, x: i32, y: i32) -> i32:
+    \\    if op == "add":
+    \\        return x + y
+    \\    if op == "sub":
+    \\        return x - y
+    \\    return x * y
+    \\
+    \\
+    \\def unsigned32(op: str, x: u32, y: u32) -> u32:
+    \\    if op == "add":
+    \\        return x + y
+    \\    if op == "sub":
+    \\        return x - y
+    \\    return x * y
+    \\
+    \\
+    \\def signed16(op: str, x: i16, y: i16) -> i16:
+    \\    if op == "add":
+    \\        return x + y
+    \\    if op == "sub":
+    \\        return x - y
+    \\    return x * y
+    \\
+    \\
+    \\def unsigned16(op: str, x: u16, y: u16) -> u16:
+    \\    if op == "add":
+    \\        return x + y
+    \\    if op == "sub":
+    \\        return x - y
+    \\    return x * y
+    \\
+    \\
+    \\def signed8(op: str, x: i8, y: i8) -> i8:
+    \\    if op == "add":
+    \\        return x + y
+    \\    if op == "sub":
+    \\        return x - y
+    \\    return x * y
+    \\
+    \\
+    \\def unsigned8(op: str, x: u8, y: u8) -> u8:
+    \\    if op == "add":
+    \\        return x + y
+    \\    if op == "sub":
+    \\        return x - y
+    \\    return x * y
+    \\
+    \\
+    \\def report(out: Stream, args: list[str]) -> int:
+    \\    width = args[0]
+    \\    op = args[1]
+    \\    x = number(args[2])
+    \\    y = number(args[3])
+    \\    if width == "i64":
+    \\        out.print(signed64(op, x, y))
+    \\    if width == "u64":
+    \\        out.print(unsigned64(op, wide(x), wide(y)))
+    \\    if width == "i32":
+    \\        out.print(signed32(op, i32(x), i32(y)))
+    \\    if width == "u32":
+    \\        out.print(unsigned32(op, u32(x), u32(y)))
+    \\    if width == "i16":
+    \\        out.print(signed16(op, i16(x), i16(y)))
+    \\    if width == "u16":
+    \\        out.print(unsigned16(op, u16(x), u16(y)))
+    \\    if width == "i8":
+    \\        out.print(signed8(op, i8(x), i8(y)))
+    \\    if width == "u8":
+    \\        out.print(unsigned8(op, u8(x), u8(y)))
+    \\    return 0
+    \\
+    \\
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    return report(out, args)
+;
+/// One boundary of `checked_arithmetic_program`: `x op ok` is `sum`, the
+/// largest (or smallest) value the width holds, and `x op bad` overflows it. A
+/// `u64` operand spelled negative is its two's-complement pattern.
+const CheckedBoundary = struct { width: []const u8, op: []const u8, x: []const u8, ok: []const u8, bad: []const u8, sum: []const u8, bits: []const u8 };
+const checked_boundaries = [_]CheckedBoundary{
+    .{ .width = "i64", .op = "add", .x = "9223372036854775806", .ok = "1", .bad = "2", .sum = "9223372036854775807", .bits = "64" },
+    .{ .width = "i64", .op = "add", .x = "-9223372036854775807", .ok = "-1", .bad = "-2", .sum = "-9223372036854775808", .bits = "64" },
+    .{ .width = "i64", .op = "sub", .x = "-9223372036854775807", .ok = "1", .bad = "2", .sum = "-9223372036854775808", .bits = "64" },
+    .{ .width = "i64", .op = "sub", .x = "9223372036854775806", .ok = "-1", .bad = "-2", .sum = "9223372036854775807", .bits = "64" },
+    .{ .width = "i64", .op = "mul", .x = "3037000500", .ok = "3037000499", .bad = "3037000500", .sum = "9223372033963249500", .bits = "64" },
+    .{ .width = "i64", .op = "mul", .x = "-4611686018427387904", .ok = "2", .bad = "3", .sum = "-9223372036854775808", .bits = "64" },
+    .{ .width = "i64", .op = "mul", .x = "-1", .ok = "-9223372036854775807", .bad = "-9223372036854775808", .sum = "9223372036854775807", .bits = "64" },
+    .{ .width = "u64", .op = "add", .x = "-2", .ok = "1", .bad = "2", .sum = "18446744073709551615", .bits = "64" },
+    .{ .width = "u64", .op = "sub", .x = "5", .ok = "5", .bad = "6", .sum = "0", .bits = "64" },
+    .{ .width = "u64", .op = "mul", .x = "4294967296", .ok = "4294967295", .bad = "4294967296", .sum = "18446744069414584320", .bits = "64" },
+    .{ .width = "i32", .op = "add", .x = "2147483646", .ok = "1", .bad = "2", .sum = "2147483647", .bits = "32" },
+    .{ .width = "i32", .op = "sub", .x = "-2147483647", .ok = "1", .bad = "2", .sum = "-2147483648", .bits = "32" },
+    .{ .width = "i32", .op = "mul", .x = "46341", .ok = "46340", .bad = "46341", .sum = "2147441940", .bits = "32" },
+    .{ .width = "u32", .op = "add", .x = "4294967294", .ok = "1", .bad = "2", .sum = "4294967295", .bits = "32" },
+    .{ .width = "u32", .op = "sub", .x = "5", .ok = "5", .bad = "6", .sum = "0", .bits = "32" },
+    .{ .width = "u32", .op = "mul", .x = "65536", .ok = "65535", .bad = "65536", .sum = "4294901760", .bits = "32" },
+    .{ .width = "i16", .op = "add", .x = "32766", .ok = "1", .bad = "2", .sum = "32767", .bits = "16" },
+    .{ .width = "i16", .op = "sub", .x = "-32767", .ok = "1", .bad = "2", .sum = "-32768", .bits = "16" },
+    .{ .width = "i16", .op = "mul", .x = "182", .ok = "180", .bad = "181", .sum = "32760", .bits = "16" },
+    .{ .width = "u16", .op = "add", .x = "65534", .ok = "1", .bad = "2", .sum = "65535", .bits = "16" },
+    .{ .width = "u16", .op = "sub", .x = "5", .ok = "5", .bad = "6", .sum = "0", .bits = "16" },
+    .{ .width = "u16", .op = "mul", .x = "256", .ok = "255", .bad = "256", .sum = "65280", .bits = "16" },
+    .{ .width = "i8", .op = "add", .x = "126", .ok = "1", .bad = "2", .sum = "127", .bits = "8" },
+    .{ .width = "i8", .op = "sub", .x = "-127", .ok = "1", .bad = "2", .sum = "-128", .bits = "8" },
+    .{ .width = "i8", .op = "mul", .x = "11", .ok = "11", .bad = "12", .sum = "121", .bits = "8" },
+    .{ .width = "u8", .op = "add", .x = "254", .ok = "1", .bad = "2", .sum = "255", .bits = "8" },
+    .{ .width = "u8", .op = "sub", .x = "5", .ok = "5", .bad = "6", .sum = "0", .bits = "8" },
+    .{ .width = "u8", .op = "mul", .x = "16", .ok = "15", .bad = "16", .sum = "240", .bits = "8" },
+};
+/// Run `WIDTH OP X Y` through the LLVM and the QBE binary and require the same
+/// status, stdout and stderr from both; returns the LLVM run's stderr.
+fn expectSameBoundary(binaries: [2][]const u8, args: [4][]const u8, status: u8, stdout: []const u8) ![]u8 {
+    const a = testing.allocator;
+    const llvm = try std.process.run(a, testing.io, .{ .argv = &.{ binaries[0], args[0], args[1], args[2], args[3] } });
+    defer a.free(llvm.stdout);
+    errdefer a.free(llvm.stderr);
+    const qbe = try std.process.run(a, testing.io, .{ .argv = &.{ binaries[1], args[0], args[1], args[2], args[3] } });
+    defer a.free(qbe.stdout);
+    defer a.free(qbe.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = status }, llvm.term);
+    try testing.expectEqual(llvm.term, qbe.term);
+    try testing.expectEqualStrings(stdout, llvm.stdout);
+    try testing.expectEqualStrings(llvm.stdout, qbe.stdout);
+    try testing.expectEqualStrings(llvm.stderr, qbe.stderr);
+    return llvm.stderr;
+}
+/// Every row of `checked_boundaries`: the in-range operand prints the width's
+/// extreme on both backends, and the next one traps there with the same
+/// `R_OVERFLOW` detail, trace and record.
+fn expectCheckedBoundaries(binaries: [2][]const u8) !void {
+    const a = testing.allocator;
+    for (checked_boundaries) |row| {
+        const printed = try std.fmt.allocPrint(a, "{s}\n", .{row.sum});
+        defer a.free(printed);
+        const quiet = try expectSameBoundary(binaries, .{ row.width, row.op, row.x, row.ok }, 0, printed);
+        defer a.free(quiet);
+        try testing.expectEqualStrings("", quiet);
+        const trapped = try expectSameBoundary(binaries, .{ row.width, row.op, row.x, row.bad }, 1, "");
+        defer a.free(trapped);
+        // TRAP-UNSIGNED-1: an unsigned operand prints unsigned, so a `u64`
+        // operand spelled negative shows its two's-complement value.
+        const left = if (std.mem.eql(u8, row.width, "u64") and row.x[0] == '-')
+            try std.fmt.allocPrint(a, "{d}", .{@as(u64, @bitCast(try std.fmt.parseInt(i64, row.x, 10)))})
+        else
+            try a.dupe(u8, row.x);
+        defer a.free(left);
+        const detail = try std.fmt.allocPrint(a, "error[R_OVERFLOW]: native execution failed ({s}: left {s}, right {s}, width {s})\n", .{ row.op, left, row.bad, row.bits });
+        defer a.free(detail);
+        try testing.expect(std.mem.indexOf(u8, trapped, detail) != null);
+    }
+}
+// spec: LLVM-OVERFLOW-INTRINSIC-1
+test "checked arithmetic at every width reports the same result and trap from the LLVM overflow intrinsics as from QBE" {
+    const a = testing.allocator;
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "checked.my", .data = checked_arithmetic_program });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "checked.my", a);
+    defer a.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const cache_argument = try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{directory});
+    defer a.free(cache_argument);
+    const llvm = try std.fmt.allocPrint(a, "{s}/checked-llvm", .{directory});
+    defer a.free(llvm);
+    const qbe = try std.fmt.allocPrint(a, "{s}/checked-qbe", .{directory});
+    defer a.free(qbe);
+    // The release default (LLVM, full LTO) lowers the 64-bit checks to the
+    // intrinsics; QBE keeps the frontend's formulas and is the reference.
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", llvm, cache_argument, tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", qbe, cache_argument, tools[0], tools[1] }, "");
+    try expectCheckedBoundaries(.{ llvm, qbe });
+    // One trap in full: code, detail, the three frames and the record.
+    const trapped = try expectSameBoundary(.{ llvm, qbe }, .{ "i64", "add", "9223372036854775806", "2" }, 1, "");
+    defer a.free(trapped);
+    const expected =
+        \\{path}:20:18: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775806, right 2, width 64)
+        \\  in signed64 at {path}:20:18
+        \\  in report at {path}:88:19
+        \\  in main at {path}:107:12
+        \\
+    ++ "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775806,\"right\":2,\"width\":64}\n";
+    const wanted = try std.mem.replaceOwned(u8, a, expected, "{path}", entry);
+    defer a.free(wanted);
+    try testing.expectEqualStrings(wanted, trapped);
 }
 // spec-case: QBE-STEP-ACCOUNTING-1
 test "an executable built without a requested ceiling refuses a runtime step budget" {
@@ -3912,13 +4395,13 @@ test "CLI checks array schemas dumps indexing and reports bounds traps" {
         \\    return values[1]
     ;
     try invoke("check", bounds, 0, "", "");
-    try invoke("run", bounds, 1, "", ":3:12: error[R_INDEX_BOUNDS]");
+    try invoke("run", bounds, 1, "", ":3:12: error[R_LIST_BOUNDS]");
     try invoke("run",
         \\def main() -> i64:
         \\    payload: [1]u8 = [7u8]
         \\    _ = replace(payload, 18446744073709551615u64, 8u8)
         \\    return 0
-    , 1, "", "error[R_INDEX_BOUNDS]");
+    , 1, "", "error[R_LIST_BOUNDS]");
 }
 test "CLI checks domain privacy unit mismatches and qualified factory execution" {
     try invoke("run", @embedFile("fixtures/domains.my"), 0, "1003\n", "");
@@ -5532,13 +6015,13 @@ test "CLI nested record alias rejects under effects and runs with a mutation foo
         \\    values: list[int]
         \\
         \\
-        \\def overwrite(box: Box) -> None effects():
+        \\def overwrite(box: mut Box) -> None effects():
         \\    box.values[0] = 7
         \\
         \\
         \\def main() -> int:
         \\    box = Box(values=[1])
-        \\    overwrite(box)
+        \\    overwrite(mut box)
         \\    return box.values[0]
     ;
     try invoke("check", rejected, 1, "", "E_MUTATION_PERMISSION");
@@ -5547,25 +6030,23 @@ test "CLI nested record alias rejects under effects and runs with a mutation foo
         \\    values: list[int]
         \\
         \\
-        \\def overwrite(box: Box) -> None effects(mutation) mutates(box):
+        \\def overwrite(box: mut Box) -> None:
         \\    box.values[0] = 7
         \\
         \\
         \\def main() -> int:
         \\    box = Box(values=[1])
-        \\    overwrite(box)
+        \\    overwrite(mut box)
         \\    return box.values[0]
     ;
     try invoke("run", permitted, 0, "7\n", "");
 }
 
-// spec-case: MUTATION-MARKER-1
-test "CLI mutation markers gate the call-site & spelling" {
-    // Default mode keeps `&` a removed spelling, so the fixture is rejected.
-    try invokeOptions("check", @embedFile("fixtures/mutation-markers.my"), &.{}, 1, "", "E_REMOVED_SPELLING");
-    // With the opt-in flag the marked call checks and runs.
-    try invokeOptions("check", @embedFile("fixtures/mutation-markers.my"), &.{"--mutation-markers"}, 0, "", "");
-    try invokeOptions("run", @embedFile("fixtures/mutation-markers.my"), &.{"--mutation-markers"}, 0, "8\n", "");
+// spec-case: MUT-PARAM-5
+test "CLI the mut spelling checks and runs while the removed flag is rejected" {
+    try invokeOptions("check", @embedFile("fixtures/mutation-markers.my"), &.{}, 0, "", "");
+    try invokeOptions("run", @embedFile("fixtures/mutation-markers.my"), &.{}, 0, "8\n", "");
+    try invokeOptions("check", @embedFile("fixtures/mutation-markers.my"), &.{"--mutation-markers"}, 2, "", "--mutation-markers was removed");
 }
 
 // --- P1: selected test providers validated against declared contracts ---
@@ -5578,7 +6059,20 @@ const p1_production_unfinished =
     \\    def make(discount: int) -> Stub effects():
     \\        return wrap[Stub](discount)
     \\
-    \\    def price(policy: Stub, subtotal: int) -> int effects(mutation) mutates(policy):
+    \\    def price(policy: Stub, ledger: mut list[int], rates: list[int], subtotal: int) -> int effects(mutation):
+    \\        return todo[int]()
+;
+/// Production with the whole derived ceiling written out, so a replacement can
+/// narrow the clause while keeping the signature.
+const p1_production_allocating =
+    \\module production
+    \\
+    \\
+    \\public domain Stub: int:
+    \\    def make(discount: int) -> Stub effects():
+    \\        return wrap[Stub](discount)
+    \\
+    \\    def price(policy: Stub, ledger: mut list[int], rates: list[int], subtotal: int) -> int effects(mutation, managed_allocation):
     \\        return todo[int]()
 ;
 const p1_production_bad_interface =
@@ -5589,7 +6083,7 @@ const p1_production_bad_interface =
     \\    def make(discount: int) -> Stub effects():
     \\        return wrap[Stub](discount)
     \\
-    \\    def price(policy: Stub, subtotal: int) -> int effects():
+    \\    def price(policy: Stub, ledger: list[int], rates: list[int], subtotal: int) -> int effects():
     \\        return subtotal
 ;
 const p1_main =
@@ -5601,19 +6095,26 @@ const p1_main =
     \\    return 0
     \\
     \\
-    \\public def test_checkout() -> bool effects():
+    \\public def test_checkout() -> bool:
     \\    policy = production.Stub.make(250)
-    \\    return production.Stub.price(policy, 2000) == 1750
+    \\    ledger: list[int] = [0]
+    \\    rates: list[int] = [0]
+    \\    return production.Stub.price(policy, mut ledger, rates, 2000) == 1750
 ;
-fn p1Fake(perm: []const u8, body: []const u8) ![]const u8 {
+/// A replacement `production.Stub.price` whose managed parameters, effect
+/// clause and first body line vary; `ledger` is the production footprint.
+fn p1Fake(parameters: []const u8, perm: []const u8, body: []const u8) ![]const u8 {
     return std.fmt.allocPrint(
         testing.allocator,
         "module production\n\n\npublic domain Stub: int:\n" ++
             "    def make(discount: int) -> Stub effects():\n        return wrap[Stub](discount)\n\n" ++
-            "    def price(policy: Stub, subtotal: int) -> int {s}:\n        {s}\n        return subtotal - unwrap(policy)\n",
-        .{ perm, body },
+            "    def price(policy: Stub, {s}, subtotal: int) -> int {s}:\n        {s}\n        return subtotal - unwrap(policy)\n",
+        .{ parameters, perm, body },
     );
 }
+/// The production footprint: `ledger` written, `rates` read-only.
+const p1_footprint = "ledger: mut list[int], rates: list[int]";
+const p1_write = "ledger[0] = subtotal";
 fn p1WriteCases(dir: *std.testing.TmpDir, name: []const u8, key: []const u8, source: []const u8) !void {
     const a = testing.allocator;
     var providers: std.json.ObjectMap = .empty;
@@ -5655,7 +6156,7 @@ test "P1 selects a validated fake while the unfinished production body is never 
     const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
     defer testing.allocator.free(cache);
 
-    const fake = try p1Fake("effects(mutation) mutates(policy)", "_ = subtotal");
+    const fake = try p1Fake(p1_footprint, "effects(mutation)", p1_write);
     defer testing.allocator.free(fake);
     try p1WriteCases(&temp, "cases.json", "production.my", fake);
 
@@ -5677,7 +6178,7 @@ test "P1 selects a validated fake while the unfinished production body is never 
     try testing.expect(std.mem.indexOf(u8, warm.stdout, "\"cached\":1") != null);
 
     // Changing the fake value changes its identity and forces a fresh execution.
-    const changed = try p1Fake("effects(mutation) mutates(policy)", "_ = subtotal");
+    const changed = try p1Fake(p1_footprint, "effects(mutation)", p1_write);
     defer testing.allocator.free(changed);
     const mutated = try std.mem.replaceOwned(u8, testing.allocator, changed, "return subtotal - unwrap(policy)", "return subtotal - unwrap(policy) + 1");
     defer testing.allocator.free(mutated);
@@ -5702,7 +6203,7 @@ test "P1 rejects stronger or malformed replacements and a bad production interfa
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try writeProjectFile(&temp, "main.my", p1_main);
-    try writeProjectFile(&temp, "production.my", p1_production_unfinished);
+    try writeProjectFile(&temp, "production.my", p1_production_allocating);
     const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
     defer testing.allocator.free(entry);
     const root = std.fs.path.dirname(entry).?;
@@ -5711,8 +6212,8 @@ test "P1 rejects stronger or malformed replacements and a bad production interfa
     const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
     defer testing.allocator.free(cache);
 
-    // A narrower mutation footprint is accepted.
-    const narrow = try p1Fake("effects(mutation)", "_ = subtotal");
+    // A narrower effect clause is accepted.
+    const narrow = try p1Fake(p1_footprint, "effects(mutation)", p1_write);
     defer testing.allocator.free(narrow);
     try p1WriteCases(&temp, "cases.json", "production.my", narrow);
     const accepted = try p1Invoke(entry, cases_path, cache);
@@ -5720,15 +6221,22 @@ test "P1 rejects stronger or malformed replacements and a bad production interfa
     defer testing.allocator.free(accepted.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, accepted.term);
 
-    // A stronger mutation footprint rejects.
-    const wide = try p1Fake("effects(mutation) mutates(policy, subtotal)", "_ = subtotal");
-    defer testing.allocator.free(wide);
-    try p1WriteCases(&temp, "cases.json", "production.my", wide);
-    const rejected = try p1Invoke(entry, cases_path, cache);
-    defer testing.allocator.free(rejected.stdout);
-    defer testing.allocator.free(rejected.stderr);
-    try testing.expect(rejected.term != .exited or rejected.term.exited != 0);
-    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "IncompatibleProvider") != null);
+    // The `mut` footprint is part of the signature every caller writes against
+    // (`price(policy, mut ledger, rates, ...)`), so a replacement may neither
+    // drop a `mut` nor add one.
+    for ([_][2][]const u8{
+        .{ "ledger: list[int], rates: list[int]", "_ = subtotal" },
+        .{ "ledger: mut list[int], rates: mut list[int]", "ledger[0] = subtotal\n        rates[0] = subtotal" },
+    }) |footprint| {
+        const changed = try p1Fake(footprint[0], "effects(mutation)", footprint[1]);
+        defer testing.allocator.free(changed);
+        try p1WriteCases(&temp, "cases.json", "production.my", changed);
+        const rejected = try p1Invoke(entry, cases_path, cache);
+        defer testing.allocator.free(rejected.stdout);
+        defer testing.allocator.free(rejected.stderr);
+        try testing.expect(rejected.term != .exited or rejected.term.exited != 0);
+        try testing.expect(std.mem.indexOf(u8, rejected.stderr, "IncompatibleProvider") != null);
+    }
 
     // An unknown replacement path rejects without touching a production body.
     try p1WriteCases(&temp, "cases.json", "nope.my", narrow);
@@ -5762,14 +6270,14 @@ test "P1 rejects every incompatible replacement dimension" {
     const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
     defer testing.allocator.free(cache);
 
-    const base = try p1Fake("effects(mutation) mutates(policy)", "_ = subtotal");
+    const base = try p1Fake(p1_footprint, "effects(mutation)", p1_write);
     defer testing.allocator.free(base);
     const variants = [_]struct { label: []const u8, from: []const u8, to: []const u8 }{
         .{ .label = "parameter type", .from = "subtotal: int) -> int", .to = "subtotal: bool) -> int" },
         .{ .label = "parameter default", .from = "subtotal: int) -> int", .to = "subtotal: int = 0) -> int" },
         .{ .label = "nominal identity", .from = "Stub", .to = "Other" },
         .{ .label = "generic requirement", .from = "def price(policy:", .to = "def price[T: copy](policy:" },
-        .{ .label = "effects too wide", .from = "effects(mutation) mutates(policy)", .to = "effects(mutation, output) mutates(policy)" },
+        .{ .label = "effects too wide", .from = "effects(mutation)", .to = "effects(mutation, managed_allocation)" },
     };
     for (variants) |variant| {
         const changed = try std.mem.replaceOwned(u8, testing.allocator, base, variant.from, variant.to);
@@ -5801,7 +6309,7 @@ test "P1 ignores an unselected production body type error while its declarations
         \\    def make(discount: int) -> Stub effects():
         \\        return wrap[Stub](discount)
         \\
-        \\    def price(policy: Stub, subtotal: int) -> int effects(mutation) mutates(policy):
+        \\    def price(policy: Stub, ledger: mut list[int], rates: list[int], subtotal: int) -> int effects(mutation):
         \\        return True
     ;
     try writeProjectFile(&temp, "main.my", p1_main);
@@ -5814,7 +6322,7 @@ test "P1 ignores an unselected production body type error while its declarations
     const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
     defer testing.allocator.free(cache);
 
-    const fake = try p1Fake("effects(mutation) mutates(policy)", "_ = subtotal");
+    const fake = try p1Fake(p1_footprint, "effects(mutation)", p1_write);
     defer testing.allocator.free(fake);
     try p1WriteCases(&temp, "cases.json", "production.my", fake);
     const selected = try p1Invoke(entry, cases_path, cache);
@@ -7491,6 +7999,87 @@ test "a directory run discovers project roots instead of every module" {
     try testing.expect(std.mem.indexOf(u8, run.stderr, "E_MODULE_NAME") == null);
 }
 
+const directory_orphan_inner =
+    \\module inner
+    \\
+    \\
+    \\public def base() -> int effects():
+    \\    return 40
+    \\
+    \\
+    \\public def test_inner() -> bool effects():
+    \\    return base() == 40
+;
+
+const directory_orphan_outer =
+    \\module outer
+    \\import inner
+    \\
+    \\
+    \\public def test_outer() -> bool effects():
+    \\    return inner.base() + 2 == 42
+;
+
+const directory_helper_with_test =
+    \\module helper
+    \\
+    \\
+    \\public def value() -> int effects():
+    \\    return 7
+    \\
+    \\
+    \\public def test_helper() -> bool effects():
+    \\    return value() == 7
+;
+
+// spec: NATIVE-TEST-14
+test "a directory run runs a main-less test library no root imports, and every test once" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try writeProjectFile(&temporary, "suite/main.my", directory_project_main);
+    try writeProjectFile(&temporary, "suite/helper.my", directory_helper_with_test);
+    try writeProjectFile(&temporary, "suite/inner.my", directory_orphan_inner);
+    try writeProjectFile(&temporary, "suite/outer.my", directory_orphan_outer);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const suite = try std.fs.path.join(a, &.{ root, "suite" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const run = try guestTestRun(a, suite, &.{"--json"}, cache);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, run.term);
+    const report = (try std.json.parseFromSlice(std.json.Value, a, run.stdout, .{})).value;
+    // `main.my` carries `helper`; `outer.my` carries `inner`, so `inner.my` is
+    // not a program of its own and none of the four tests runs twice.
+    try testing.expectEqual(@as(i64, 2), report.object.get("programs").?.integer);
+    try testing.expectEqual(@as(i64, 4), report.object.get("passed").?.integer);
+    try testing.expectEqual(@as(i64, 0), report.object.get("unloaded").?.integer);
+    for ([_][]const u8{ "main::test_main", "helper::test_helper", "inner::test_inner", "outer::test_outer" }) |name| {
+        try testing.expectEqual(@as(usize, 1), std.mem.count(u8, run.stdout, name));
+    }
+}
+
+// spec-case: NATIVE-TEST-15
+test "a single-entry test report lists the project sources its check loaded" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try writeProjectFile(&temporary, "suite/main.my", directory_project_main);
+    try writeProjectFile(&temporary, "suite/helper.my", directory_project_helper);
+    try writeProjectFile(&temporary, "suite/unrelated.my", directory_orphan_inner);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    const entry = try std.fs.path.join(a, &.{ root, "suite", "main.my" });
+    const run = try guestTestRun(a, entry, &.{"--json"}, try std.fs.path.join(a, &.{ root, "cache" }));
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, run.term);
+    const report = (try std.json.parseFromSlice(std.json.Value, a, run.stdout, .{})).value;
+    const modules = report.object.get("modules").?.array.items;
+    try testing.expectEqual(@as(usize, 2), modules.len);
+    try testing.expectEqualStrings(try std.fs.path.join(a, &.{ root, "suite", "helper.my" }), modules[0].string);
+    try testing.expectEqualStrings(entry, modules[1].string);
+}
+
 // spec-case: LINT-5
 test "CLI list-interfaces prints a tests column from the shared reachability index" {
     var temp = testing.tmpDir(.{});
@@ -7547,11 +8136,11 @@ const invoke_app =
     \\    return x
     \\
     \\
-    \\public def shift(p: Point, dx: i64) -> Point effects(managed_allocation):
+    \\public def shift(p: Point, dx: i64) -> Point:
     \\    return Point(x=p.x + dx, y=p.y)
     \\
     \\
-    \\public def origin(x: i64) -> Point effects(managed_allocation):
+    \\public def origin(x: i64) -> Point:
     \\    return Point(x=x, y=0)
     \\
     \\
@@ -7574,7 +8163,7 @@ const invoke_app =
     \\    return x
     \\
     \\
-    \\public def text_len(text: str) -> i64 effects(managed_allocation):
+    \\public def text_len(text: str) -> i64:
     \\    return len(text)
     \\
     \\
@@ -7609,23 +8198,23 @@ const invoke_text =
     \\module app
     \\
     \\
-    \\public def letter(n: i64) -> str effects(managed_allocation):
+    \\public def letter(n: i64) -> str:
     \\    return chr(n)
     \\
     \\
-    \\public def greeting() -> str effects(managed_allocation):
+    \\public def greeting() -> str:
     \\    return "h\u00e9llo \u4e16\u754c \U0001F600"
     \\
     \\
-    \\public def frozen() -> str effects(managed_allocation):
+    \\public def frozen() -> str:
     \\    return "literal"
     \\
     \\
-    \\public def shout(n: i64) -> str effects(managed_allocation):
+    \\public def shout(n: i64) -> str:
     \\    return chr(n) + "!"
     \\
     \\
-    \\public def repeated(n: i64) -> str effects(managed_allocation):
+    \\public def repeated(n: i64) -> str:
     \\    text = ""
     \\    i = 0
     \\    while i < n:
@@ -7634,7 +8223,7 @@ const invoke_text =
     \\    return text
     \\
     \\
-    \\public def count(text: str) -> i64 effects(managed_allocation):
+    \\public def count(text: str) -> i64:
     \\    return len(text)
 ;
 
@@ -7999,4 +8588,80 @@ fn expectValueStrings(value: std.json.Value, expected: []const []const u8) !void
 fn expectNoCapturedOutput(outcome: std.json.Value) !void {
     const captured: []const u8 = outcomeOutput(outcome) orelse "";
     try testing.expectEqual(@as(usize, 0), captured.len);
+}
+
+// spec-case: QBE-UNCHECKED-1
+test "an unchecked executable computes the same results and refuses a runtime ceiling" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "unchecked.my", .data =
+        \\def scale(xs: list[i64], at: i64, factor: i64) -> u8:
+        \\    return u8(xs[at] * factor + 1)
+        \\
+        \\def main() -> i64:
+        \\    fixed: [3]i64 = [10, 20, 30]
+        \\    xs: list[i64] = []
+        \\    xs.append(fixed[1])
+        \\    return i64(scale(xs, 0, 2)) + len(xs)
+    });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "unchecked.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const checked = try std.fs.path.join(testing.allocator, &.{ directory, "checked-bin" });
+    defer testing.allocator.free(checked);
+    const bare = try std.fs.path.join(testing.allocator, &.{ directory, "unchecked-bin" });
+    defer testing.allocator.free(bare);
+    const cache = try std.fs.path.join(testing.allocator, &.{ directory, "cache" });
+    defer testing.allocator.free(cache);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_argument);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", checked, cache_argument, tools[0], tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", bare, cache_argument, tools[0], tools[1], "--unchecked" }, "");
+    // Valid input reaches the same answer under both policies: 20 * 2 + 1 = 41,
+    // plus the one appended element, returned as the process status too.
+    const guarded = try runExecutable(&.{checked}, "--print-result");
+    defer testing.allocator.free(guarded.stdout);
+    defer testing.allocator.free(guarded.stderr);
+    const unguarded = try runExecutable(&.{bare}, "--print-result");
+    defer testing.allocator.free(unguarded.stdout);
+    defer testing.allocator.free(unguarded.stderr);
+    try testing.expectEqualStrings("42\n", guarded.stdout);
+    try testing.expectEqualStrings(guarded.stdout, unguarded.stdout);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 42 }, guarded.term);
+    try testing.expectEqual(guarded.term, unguarded.term);
+    try testing.expectEqualStrings("", unguarded.stderr);
+    // The unchecked build is unbounded, so a ceiling it cannot enforce is
+    // refused loudly rather than silently ignored.
+    const refused = try runExecutable(&.{bare}, "--max-steps=1");
+    defer testing.allocator.free(refused.stdout);
+    defer testing.allocator.free(refused.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, refused.term);
+    try testing.expect(std.mem.indexOf(u8, refused.stderr, "R_NO_STEP_ACCOUNTING") != null);
+}
+
+// spec-case: QBE-UNCHECKED-1
+test "the unchecked policy is refused where its traps are still needed" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "refused.my", .data =
+        \\def main() -> i64:
+        \\    return 0
+    });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "refused.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const output = try std.fs.path.join(testing.allocator, &.{ directory, "refused-bin" });
+    defer testing.allocator.free(output);
+    // `mylang test` names the refusal instead of reporting an unknown flag.
+    const tested = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", entry, "--unchecked" } });
+    defer testing.allocator.free(tested.stdout);
+    defer testing.allocator.free(tested.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, tested.term);
+    try testing.expect(std.mem.indexOf(u8, tested.stderr, "--unchecked is refused") != null);
+    // A Debug build exists to report failures, so it does not accept the policy.
+    const debug = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "build", entry, "-o", output, "--unchecked", "--mode=Debug" } });
+    defer testing.allocator.free(debug.stdout);
+    defer testing.allocator.free(debug.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, debug.term);
+    try testing.expect(std.mem.indexOf(u8, debug.stderr, "--unchecked") != null);
 }

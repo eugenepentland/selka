@@ -1,0 +1,107 @@
+# raytrace_tuned: the same image as raytrace.my with the vector algebra written
+# out on float locals. What changed, and why:
+# - intersect takes the ray as six floats and does sub/dot inline, so no Vec3 is
+#   built, passed or returned inside the 6-12 intersections per pixel.
+# - shade inlines add/scale/sub/normalize/dot the same way and returns one Vec3
+#   per pixel; main normalizes the primary ray inline.
+# - The scene is unchanged (record Vec3, record Sphere, list[Sphere]).
+# Every expression keeps the operation order of the Vec3 helpers exactly —
+# dot is ((x*x' + y*y') + z*z'), normalize multiplies by 1.0 / sqrt(dot), add
+# of a scaled vector is origin + dir * t — so the checksum is bit-identical.
+# The difference from raytrace.my is what the small record-returning helper
+# calls cost; what remains against Zig is per-operation code generation.
+
+
+record Vec3:
+    x: float
+    y: float
+    z: float
+
+
+record Sphere:
+    center: Vec3
+    radius: float
+    color: Vec3
+
+
+def intersect(ox: float, oy: float, oz: float, dx: float, dy: float, dz: float, s: Sphere) -> float:
+    ocx = ox - s.center.x
+    ocy = oy - s.center.y
+    ocz = oz - s.center.z
+    b = ocx * dx + ocy * dy + ocz * dz
+    c = ocx * ocx + ocy * ocy + ocz * ocz - s.radius * s.radius
+    disc = b * b - c
+    if disc < 0.0:
+        return -1.0
+    root = sqrt(disc)
+    t = (0.0 - b) - root
+    if t > 0.001:
+        return t
+    t = (0.0 - b) + root
+    if t > 0.001:
+        return t
+    return -1.0
+
+
+def shade(ox: float, oy: float, oz: float, dx: float, dy: float, dz: float, spheres: list[Sphere], light: Vec3) -> Vec3:
+    best = -1.0
+    hit_index = -1
+    for k, s in enumerate(spheres):
+        t = intersect(ox, oy, oz, dx, dy, dz, s)
+        if t > 0.0 and (hit_index < 0 or t < best):
+            best = t
+            hit_index = k
+    if hit_index < 0:
+        return Vec3(0.6, 0.7, 0.9)
+    hit = spheres[hit_index]
+    px = ox + dx * best
+    py = oy + dy * best
+    pz = oz + dz * best
+    nx = px - hit.center.x
+    ny = py - hit.center.y
+    nz = pz - hit.center.z
+    inv = 1.0 / sqrt(nx * nx + ny * ny + nz * nz)
+    diffuse = nx * inv * light.x + ny * inv * light.y + nz * inv * light.z
+    if diffuse < 0.0:
+        diffuse = 0.0
+    if diffuse > 0.0:
+        for q in spheres:
+            if intersect(px, py, pz, light.x, light.y, light.z, q) > 0.0:
+                diffuse = 0.0
+                break
+    f = 0.1 + 0.9 * diffuse
+    return Vec3(hit.color.x * f, hit.color.y * f, hit.color.z * f)
+
+
+def mix(c: int, v: int) -> int:
+    return (c * 31 + v) % 1000000007
+
+
+def main(out: Stream) -> int:
+    spheres = [
+        Sphere(Vec3(0.0, -1000.0, 0.0), 999.0, Vec3(0.5, 0.5, 0.5)),
+        Sphere(Vec3(0.0, 0.0, -3.0), 1.0, Vec3(1.0, 0.2, 0.2)),
+        Sphere(Vec3(-2.0, 0.0, -4.0), 1.0, Vec3(0.2, 1.0, 0.2)),
+        Sphere(Vec3(2.0, 0.0, -4.0), 1.0, Vec3(0.2, 0.2, 1.0)),
+        Sphere(Vec3(0.0, 2.0, -6.0), 1.5, Vec3(1.0, 1.0, 0.2)),
+        Sphere(Vec3(-1.5, -0.5, -2.0), 0.5, Vec3(0.2, 1.0, 1.0)),
+    ]
+    light_inv = 1.0 / sqrt(1.0 * 1.0 + 1.0 * 1.0 + 1.0 * 1.0)
+    light = Vec3(1.0 * light_inv, 1.0 * light_inv, 1.0 * light_inv)
+    width = 1920
+    height = 1080
+    aspect = float(width) / float(height)
+    w = -1.5
+    checksum = 0
+    for y in range(height):
+        for x in range(width):
+            u = (2.0 * (float(x) + 0.5) / float(width) - 1.0) * aspect
+            v = 1.0 - 2.0 * (float(y) + 0.5) / float(height)
+            inv = 1.0 / sqrt(u * u + v * v + w * w)
+            c = shade(0.0, 0.0, 0.0, u * inv, v * inv, w * inv, spheres, light)
+            r = int(min(c.x, 1.0) * 255.0)
+            g = int(min(c.y, 1.0) * 255.0)
+            b = int(min(c.z, 1.0) * 255.0)
+            checksum = mix(checksum, r * 65536 + g * 256 + b)
+    out.print(checksum)
+    return 0

@@ -5,17 +5,17 @@ record Box:
     values: list[int]
 
 
-def write_text(pieces: list[str], box: Box) -> None effects(mutation, managed_allocation) mutates(pieces):
+def write_text(pieces: mut list[str], box: Box) -> None:
     pieces.append("x")
     _ = box
 
 
-def use(pieces: list[str], box: Box) -> None effects(mutation, managed_allocation) mutates(pieces):
-    write_text(pieces, box)
+def use(pieces: mut list[str], box: Box) -> None:
+    write_text(mut pieces, box)
 
 
 public def program() -> int:
     pieces: list[str] = []
     box = Box(values=[1])
-    use(pieces, box)
+    use(mut pieces, box)
     return 0

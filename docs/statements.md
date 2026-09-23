@@ -23,7 +23,9 @@ Because every `for` or `while` loop may execute zero times, an assignment made o
 in the loop body does not bind the name after the loop; predeclare it before the
 loop when it is read afterward. An assignment in every continuing `if`/`elif`/`else`
 branch does bind the name afterwards. The `for` loop variable itself, a `match`
-payload binding, and a move-only resource stay scoped to their own block. A `record` declares a value record with annotated fields and named
+payload binding, and a move-only resource stay scoped to their own block; the
+loop rebinds its variable at the top of every iteration, so assigning it in the
+body never changes which iteration comes next. A `record` declares a value record with annotated fields and named
 construction, and assigning a record copies its fields, so the copy's scalar
 fields move independently of the original. That copy is shallow: a managed field
 — a list, dictionary, string or record holding one — still refers to the same

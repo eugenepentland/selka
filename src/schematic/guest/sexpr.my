@@ -15,7 +15,7 @@ public record Node:
     next: int
 
 
-public def at(nodes: list[Node], index: int) -> Node effects(managed_allocation):
+public def at(nodes: list[Node], index: int) -> Node:
     if index < 0 or index >= len(nodes):
         return Node(
             kind=Kind.atom,
@@ -25,14 +25,14 @@ public def at(nodes: list[Node], index: int) -> Node effects(managed_allocation)
     return nodes[index]
 
 
-public def form(host: Host, nodes: list[Node], index: int, name: bytes) -> bool effects(host, managed_allocation):
+public def form(nodes: list[Node], index: int, name: bytes) -> bool:
     item = at(nodes, index)
     if item.kind != Kind.list or item.next == index + 1:
         return False
-    return text.matches(host, at(nodes, index + 1).span, name)
+    return text.matches(at(nodes, index + 1).span, name)
 
 
-public def parse(host: Host, document: io.Document) -> Result[list[Node], int] effects(host, managed_allocation):
+public def parse(host: Host, document: io.Document) -> Result[list[Node], int]:
     file = io.id(document)
     source = document.source
     nodes: list[Node] = []

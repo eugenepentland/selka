@@ -88,8 +88,11 @@ pub const Node = struct {
         variant: struct { tag: usize, value: ?NodeId },
         unwrap: NodeId,
         array: []const NodeId,
-        index: struct { base: NodeId, index: NodeId },
-        replace: struct { base: NodeId, index: NodeId, value: NodeId },
+        /// `from_end` asks a fixed array to count a negative index back from its
+        /// end first (`PY-ARRAY-NEGATIVE-1`); it is false where the checker proved
+        /// the index non-negative, and managed receivers ignore it.
+        index: struct { base: NodeId, index: NodeId, from_end: bool = false },
+        replace: struct { base: NodeId, index: NodeId, value: NodeId, from_end: bool = false },
         length: NodeId,
         record: []const FieldInit,
         update: struct { base: NodeId, fields: []const FieldInit },
@@ -182,6 +185,10 @@ pub const RecordShape = struct {
     resource: ?external_resources.Kind = null,
     /// The builtin Cell: a managed record with closed field and content rules.
     builtin_cell: bool = false,
+    /// An anonymous tuple: positional fields no source can name, taken apart by
+    /// destructuring only. It keeps the plain record representation, so
+    /// construction, field reads, equality and layout are the record ones.
+    tuple: bool = false,
     /// Identify representations carrying a managed collection or resource identity.
     pub fn hasRuntimeIdentity(self: RecordShape) bool {
         return self.buffer != null or self.resource != null;
@@ -239,6 +246,27 @@ pub const RecordContract = struct {
     storable: bool = true,
     requires_handling: bool = false,
 };
+/// The already-interned tuple record for a concrete element list, or null when
+/// the catalog has not materialized that list yet. The spelling path and the
+/// value path both ask here first, so one element list is one record.
+pub fn internedTuple(records: []const Record, elements: []const Type) ?Type {
+    for (records, 0..) |schema, index| {
+        if (!schema.shape.tuple or schema.fields.len != elements.len) continue;
+        var same = true;
+        for (schema.fields, elements) |field, element| if (field.ty != element) {
+            same = false;
+            break;
+        };
+        if (same) return @fromBackingInt(Type.record_base + index);
+    }
+    return null;
+}
+/// The positional field name of one tuple element. The `$` makes every tuple
+/// field unnameable from source, so no program can reach an element except by
+/// destructuring and no declared field can collide with one.
+pub fn positionalFieldName(allocator: std.mem.Allocator, index: usize) std.mem.Allocator.Error![]const u8 {
+    return std.fmt.allocPrint(allocator, "${d}", .{index});
+}
 /// Payload types and case tags of a checked ok/err result schema.
 pub const ResultShape = struct { ok_type: Type, error_type: Type, ok_tag: usize, error_tag: usize };
 /// Recognize a valid fallible result and return its payload types and tags.
@@ -323,6 +351,57 @@ pub fn requiresHandling(ty: Type, records: []const Record) bool {
 pub fn typeName(ty: Type, records: []const Record) []const u8 {
     return if (ty.isAggregate()) records[ty.recordIndex()].name else @tagName(ty);
 }
+/// Whether a parameter of this type can be written through at all. `list`,
+/// `dict`, `class`, `Cell`, `[N]T`, `byte_buffer` and any record, union, option
+/// or result holding one carry mutable managed storage; scalars, `str`, `bytes`
+/// and records built only from those do not, so `mut` on them would promise a
+/// write that cannot reach the caller.
+pub fn carriesWritableStorage(records: []const Record, ty: Type) bool {
+    return writableDepth(records, ty, 0);
+}
+
+/// Whether a `mut` parameter of this type crosses the call as the caller's own
+/// storage: a fixed array `[N]T` or enum table `[Kind]T`. Every other writable
+/// parameter is a reference already, so only these value types need the
+/// callee to write through the caller's address for an element write to reach
+/// the caller.
+pub fn referenceArray(records: []const Record, ty: Type) bool {
+    return ty.isAggregate() and ty.recordIndex() < records.len and records[ty.recordIndex()].shape.array != null;
+}
+
+/// Whether a managed byte-kind schema is the immutable byte string rather than
+/// the mutable octet buffer. The two share one collection kind, so the builtin
+/// name -- repeated here rather than imported, because the template index that
+/// declares it depends on this module -- is what tells them apart.
+fn isImmutableBytes(record: Record) bool {
+    if (record.collection.kind == .string) return true;
+    return isByteString(record);
+}
+
+/// Whether a managed schema is the immutable `bytes` byte string rather than the
+/// mutable `byte_buffer` or the separate `str` kind. The distinction is nominal,
+/// like `isImmutableBytes`, because both byte kinds share one collection kind.
+pub fn isByteString(record: Record) bool {
+    return record.managed and record.collection.kind == .bytes and !std.mem.eql(u8, record.name, "byte_buffer");
+}
+
+fn writableDepth(records: []const Record, ty: Type, depth: usize) bool {
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len or depth == 64) return false;
+    const record = records[ty.recordIndex()];
+    if (record.managed) {
+        // `str`, `bytes` and a byte kind that is not the octet buffer are
+        // immutable; every other managed schema -- a collection, `byte_buffer`,
+        // `Cell`, or a user `class` -- keeps writable storage.
+        return !isImmutableBytes(record);
+    }
+    if (record.shape.array) |array| if (writableDepth(records, array.element, depth + 1)) return true;
+    if (record.shape.variants) |variants| for (variants.cases) |case| {
+        if (case.payload) |payload| if (writableDepth(records, payload, depth + 1)) return true;
+    };
+    for (record.fields) |field| if (writableDepth(records, field.ty, depth + 1)) return true;
+    return false;
+}
+
 /// Render a type the way source spells it, for user-facing diagnostics.
 pub fn surfaceTypeName(allocator: std.mem.Allocator, ty: Type, records: []const Record) std.mem.Allocator.Error![]const u8 {
     return surfaceTypeText(allocator, typeName(ty, records));
@@ -448,7 +527,10 @@ fn nameLessThan(_: void, left: []const u8, right: []const u8) bool {
     return std.mem.lessThan(u8, left, right);
 }
 /// Resolved local assignment target and the expression being stored.
-pub const Store = struct { slot: LocalId, value: NodeId };
+/// `element` marks the store an element write such as `a[i] = v` lowers to:
+/// the value rebuilds the local from its own current value with one element
+/// changed, so the write is a mutation of the binding rather than a rebinding.
+pub const Store = struct { slot: LocalId, value: NodeId, element: bool = false };
 /// Checked control flow, ownership operations, and expression statements.
 pub const Statement = struct {
     span: Span,

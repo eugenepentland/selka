@@ -26,7 +26,35 @@ void myl_qbe_frame_release(void *context,void *payload) {
     (void)context; tracked_free(payload);
 }
 
+/* The byte-string half of the bridge, standing in for the managed heap: the
+   published octets are copied into a private buffer the assertions inspect. */
+static myl_native_heap fake_heap;
+static int refuse_allocation;
+static unsigned char published[4096];
+static size_t published_length;
+static myl_native_list published_bytes;
+myl_native_heap *myl_qbe_heap(void *context) {
+    (void)context; return &fake_heap;
+}
+void myl_qbe_fail_allocation(void *context) {
+    myl_qbe_fail(context,"R_ALLOCATION");
+}
+myl_native_bytes *myl_native_bytes_new(myl_native_heap *heap,const unsigned char *raw,size_t length) {
+    assert(heap==&fake_heap);
+    if (refuse_allocation || length>sizeof published) return NULL;
+    if (length) memcpy(published,raw,length);
+    published_length=length;
+    published_bytes=(myl_native_list){.length=length,.capacity=length,.storage=published};
+    return &published_bytes;
+}
+const unsigned char *myl_native_bytes_range(const myl_native_bytes *input,int64_t start,int64_t end,size_t *length) {
+    assert(start==0 && end==INT64_MAX);
+    *length=input->length;
+    return input->storage;
+}
+
 static const size_t array_child[]={0},byte_array_child[]={2},byte_array_offset[]={0};
+static const size_t float_child[]={9};
 static const QbeHostType qbe_host_types[]={
     {"i64",8,0,0,1,64,1,NULL,NULL},
     {"Nine",72,9,8,3,0,0,array_child,NULL},
@@ -35,12 +63,18 @@ static const QbeHostType qbe_host_types[]={
     {"Bytes256",256,256,1,3,0,0,byte_array_child,byte_array_offset},
     {"BadBytes256",255,256,1,3,0,0,byte_array_child,byte_array_offset},
     {"Bytes2048",2048,2048,1,3,0,0,byte_array_child,byte_array_offset},
+    {"bytes",sizeof(myl_native_bytes *),0,0,6,0,0,NULL,NULL},
+    {"BadPayload",4,0,0,6,0,0,NULL,NULL},
+    {"u64",8,0,0,1,64,0,NULL,NULL},
+    {"float",8,1,0,5,64,0,float_child,byte_array_offset},
+    {"Code",8,1,0,5,0,0,float_child,byte_array_offset},
 };
 static const size_t scalar_parameter[]={0};
 static const size_t u8_parameter[]={2},i8_parameter[]={3};
 static const size_t seven_parameters[]={0,0,0,0,0,0,0};
 static const size_t eight_parameters[]={0,0,0,0,0,0,0,0};
 static const size_t bytes_parameter[]={4},bad_bytes_parameter[]={5},large_bytes_parameter[]={6};
+static const size_t payload_parameter[]={7},bad_payload_parameter[]={8};
 static const QbeHostDeclaration qbe_host_declarations[]={
     {"f0",scalar_parameter,1,0,1}, {"f1",scalar_parameter,1,0,1},
     {"f2",scalar_parameter,1,0,1}, {"f3",scalar_parameter,1,0,1},
@@ -52,6 +86,8 @@ static const QbeHostDeclaration qbe_host_declarations[]={
     {"f13",seven_parameters,7,0,1}, {"f14",eight_parameters,8,0,1},
     {"f15",bytes_parameter,1,4,1}, {"f16",bad_bytes_parameter,1,5,1},
     {"f17",large_bytes_parameter,1,6,1},
+    {"f18",scalar_parameter,1,7,1}, {"f19",payload_parameter,1,0,1},
+    {"f20",bad_payload_parameter,1,0,1},
 };
 static const size_t qbe_host_declaration_count=sizeof(qbe_host_declarations)/sizeof(qbe_host_declarations[0]);
 
@@ -193,16 +229,52 @@ static const char *packed_bytes(void *opaque,MylangHostPackedCall *call) {
     return NULL;
 }
 
+/* Owned-payload callbacks: `payload_mode` selects one contract violation. */
+static int payload_mode;
+static unsigned char argument_octets[8]={1,2,3,4,5,6,7,8};
+static myl_native_list argument_bytes;
+static const unsigned char published_octets[3]={7,8,9};
+static const char *packed_read(void *opaque,MylangHostPackedCall *call) {
+    packed_invocations++;
+    assert(call->argument_count==1 && call->arguments[0].size==8);
+    assert(!call->output.bytes && !call->output.size && !call->output_written);
+    if (!mylang_host_packed_charge(call,1)) return "HostWorkLimit";
+    call->output.bytes=(void *)(uintptr_t)published_octets;
+    call->output.size=sizeof published_octets;
+    call->output_written=sizeof published_octets;
+    if (payload_mode==1) call->output_written=2;
+    if (payload_mode==2) call->output.bytes=NULL;
+    if (payload_mode==3) return "HostFailure";
+    if (payload_mode==4) { call->output.bytes=NULL; call->output.size=0; call->output_written=0; }
+    if (payload_mode==5) {
+        MylQbeContext *ctx=opaque; uint64_t input=1,result=0;
+        const void *arguments[]={&input}; qbe_host_invoke(ctx,0,arguments,&result);
+    }
+    return NULL;
+}
+static const char *packed_write(void *opaque,MylangHostPackedCall *call) {
+    (void)opaque;
+    packed_invocations++;
+    assert(call->argument_count==1 && call->output.size==8);
+    if (!mylang_host_packed_charge(call,1)) return "HostWorkLimit";
+    unsigned char *copy=call->arguments[0].bytes;
+    uint64_t total=call->arguments[0].size;
+    for (size_t i=0;i<call->arguments[0].size;i++) copy[i]=0xee; /* must reach only scratch */
+    memcpy(call->output.bytes,&total,8);
+    call->output_written=8;
+    return NULL;
+}
 static const char *i64_parameters[]={"i64"};
 static const char *u8_parameters[]={"u8"},*i8_parameters[]={"i8"};
 static const char *seven_i64_parameters[]={"i64","i64","i64","i64","i64","i64","i64"};
 static const char *eight_i64_parameters[]={"i64","i64","i64","i64","i64","i64","i64","i64"};
 static const char *bytes_parameters[]={"Bytes256"},*bad_bytes_parameters[]={"BadBytes256"},*large_bytes_parameters[]={"Bytes2048"};
-static MylangHostBinding bindings[18];
+static const char *payload_parameters[]={"bytes"},*bad_payload_parameters[]={"BadPayload"};
+static MylangHostBinding bindings[21];
 static MylangNativeProviders providers;
 
 static void reset_bindings(void) {
-    static const char *names[]={"f0","f1","f2","f3","f4","f5","f6","f7","f8","f9","f10","f11","f12","f13","f14","f15","f16","f17"};
+    static const char *names[]={"f0","f1","f2","f3","f4","f5","f6","f7","f8","f9","f10","f11","f12","f13","f14","f15","f16","f17","f18","f19","f20"};
     memset(bindings,0,sizeof(bindings));
     for (size_t i=0;i<9;i++) bindings[i]=(MylangHostBinding){names[i],i64_parameters,1,"i64",1,1,NULL,scalar,NULL};
     bindings[9]=(MylangHostBinding){names[9],NULL,0,"Nine",1,1,NULL,large,NULL};
@@ -214,11 +286,18 @@ static void reset_bindings(void) {
     bindings[15]=(MylangHostBinding){names[15],bytes_parameters,1,"Bytes256",1,1,NULL,packed_fallback,packed_bytes};
     bindings[16]=(MylangHostBinding){names[16],bad_bytes_parameters,1,"BadBytes256",1,1,NULL,packed_fallback,packed_bytes};
     bindings[17]=(MylangHostBinding){names[17],large_bytes_parameters,1,"Bytes2048",1,1,NULL,packed_fallback,packed_bytes};
-    providers=(MylangNativeProviders){.host={.bindings=bindings,.count=18}};
+    bindings[18]=(MylangHostBinding){names[18],i64_parameters,1,"bytes",1,1,NULL,packed_fallback,packed_read};
+    bindings[19]=(MylangHostBinding){names[19],payload_parameters,1,"i64",1,1,NULL,packed_fallback,packed_write};
+    bindings[20]=(MylangHostBinding){names[20],bad_payload_parameters,1,"i64",1,1,NULL,packed_fallback,packed_write};
+    providers=(MylangNativeProviders){.host={.bindings=bindings,.count=21}};
     failure_code=NULL;
     scalar_invocations=0;
     invalid_u8=0;
     packed_invocations=packed_fallback_invocations=0; packed_mode=0;
+    payload_mode=0; refuse_allocation=0; published_length=0;
+    memset(published,0,sizeof published);
+    for (size_t i=0;i<sizeof argument_octets;i++) argument_octets[i]=(unsigned char)(i+1);
+    argument_bytes=(myl_native_list){.length=sizeof argument_octets,.capacity=sizeof argument_octets,.storage=argument_octets};
 }
 static void dispose(MylQbeContext *ctx) {
     tracked_free(ctx->host_state);
@@ -310,6 +389,56 @@ int main(void) {
     assert(!ctx.trap && large_packed_output[0]==91 && large_packed_output[2047]==91);
     assert(allocations==before_large_allocations+1 && frees==before_large_frees+1); dispose(&ctx);
 
+    /* spec-case: HOST-PACKED-2 */
+    myl_native_bytes *source_object=&argument_bytes,*result_object=NULL;
+    const void *payload_arguments[]={&source_object};
+    int64_t file=0; const void *read_arguments[]={&file},*null_arguments[]={&result_object};
+    int64_t written=-1;
+    reset_bindings(); ctx=context(); myl_qbe_host_begin(&ctx);
+    qbe_host_invoke(&ctx,18,read_arguments,&result_object);
+    assert(!ctx.trap && packed_invocations==1 && !packed_fallback_invocations);
+    assert(result_object==&published_bytes && published_length==3);
+    assert(published[0]==7 && published[1]==8 && published[2]==9);
+    qbe_host_invoke(&ctx,19,payload_arguments,&written);
+    assert(!ctx.trap && written==8 && packed_invocations==2);
+    for (size_t i=0;i<sizeof argument_octets;i++) assert(argument_octets[i]==(unsigned char)(i+1)); /* only the copy was written */
+    dispose(&ctx);
+
+    reset_bindings(); payload_mode=1; ctx=context(); myl_qbe_host_begin(&ctx);
+    result_object=NULL; qbe_host_invoke(&ctx,18,read_arguments,&result_object);
+    assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_CONTRACT") && !result_object); dispose(&ctx);
+    reset_bindings(); payload_mode=2; ctx=context(); myl_qbe_host_begin(&ctx);
+    result_object=NULL; qbe_host_invoke(&ctx,18,read_arguments,&result_object);
+    assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_CONTRACT") && !result_object); dispose(&ctx);
+    reset_bindings(); payload_mode=3; ctx=context(); myl_qbe_host_begin(&ctx);
+    result_object=NULL; qbe_host_invoke(&ctx,18,read_arguments,&result_object);
+    assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_FAILURE") && !result_object && !published_length); dispose(&ctx);
+    reset_bindings(); payload_mode=4; ctx=context(); myl_qbe_host_begin(&ctx);
+    result_object=NULL; qbe_host_invoke(&ctx,18,read_arguments,&result_object);
+    assert(!ctx.trap && result_object==&published_bytes && published_length==0); dispose(&ctx);
+    reset_bindings(); payload_mode=5; ctx=context(); bindings[18].context=&ctx; myl_qbe_host_begin(&ctx);
+    result_object=NULL; qbe_host_invoke(&ctx,18,read_arguments,&result_object);
+    assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_CONTRACT") && !result_object); dispose(&ctx);
+    reset_bindings(); refuse_allocation=1; ctx=context(); myl_qbe_host_begin(&ctx);
+    result_object=NULL; qbe_host_invoke(&ctx,18,read_arguments,&result_object);
+    assert(ctx.trap && !strcmp(ctx.trap,"R_ALLOCATION") && !result_object); dispose(&ctx);
+    reset_bindings(); providers.host.max_payload=2; ctx=context(); myl_qbe_host_begin(&ctx);
+    result_object=NULL; qbe_host_invoke(&ctx,18,read_arguments,&result_object);
+    assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_LIMIT") && !result_object && packed_invocations==1); dispose(&ctx);
+    reset_bindings(); providers.host.max_payload=4; ctx=context(); myl_qbe_host_begin(&ctx);
+    written=-1; qbe_host_invoke(&ctx,19,payload_arguments,&written);
+    assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_LIMIT") && written==-1 && !packed_invocations);
+    assert(argument_octets[0]==1); dispose(&ctx);
+    reset_bindings(); ctx=context(); myl_qbe_host_begin(&ctx);
+    result_object=NULL; written=-1; qbe_host_invoke(&ctx,19,null_arguments,&written);
+    assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_CONTRACT") && written==-1 && !packed_invocations); dispose(&ctx);
+    /* A payload schema the guest ABI cannot carry keeps the checked node bridge. */
+    reset_bindings(); ctx=context(); myl_qbe_host_begin(&ctx);
+    written=-1; qbe_host_invoke(&ctx,20,payload_arguments,&written);
+    assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_CONTRACT") && !packed_invocations); dispose(&ctx);
+    reset_bindings(); providers.host.max_payload=64u*1024u*1024u+1; ctx=context(); myl_qbe_host_begin(&ctx);
+    assert(ctx.trap && !strcmp(ctx.trap,"HostInvalidBudget")); dispose(&ctx);
+
     reset_bindings(); ctx=context(); myl_qbe_host_begin(&ctx);
     qbe_host_invoke(&ctx,16,packed_arguments,packed_output);
     assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_FAILURE") && !packed_invocations && packed_fallback_invocations==1); dispose(&ctx);
@@ -384,5 +513,23 @@ int main(void) {
     qbe_host_invoke(&ctx,0,arguments,&result);
     assert(ctx.trap && !strcmp(ctx.trap,"R_HOST_FAILURE")); dispose(&ctx);
     assert(allocations==frees);
+
+    /* FLOAT-NAN-OBSERVED-6: a binary64 domain crosses to the host with any NaN
+       canonical; its finite bits, and a plain u64 domain's NaN-shaped word,
+       cross unchanged. */
+    QbeHostState bits_state={0};
+    bits_state.value_limit=8; bits_state.depth_limit=4;
+    const uint64_t words[]={UINT64_C(0xfff8000000000000),UINT64_C(0x7ff0000000000001),UINT64_C(0x7ff8000000000000),UINT64_C(0xbff0000000000000),UINT64_C(0x7ff0000000000000)};
+    const uint64_t crossed[]={UINT64_C(0x7ff8000000000000),UINT64_C(0x7ff8000000000000),UINT64_C(0x7ff8000000000000),UINT64_C(0xbff0000000000000),UINT64_C(0x7ff0000000000000)};
+    MylQbeContext bits_ctx=context();
+    for (size_t i=0;i<sizeof words/sizeof words[0];i++) {
+        MylangHostNode nodes[2]={{0}}; size_t cursor=0;
+        assert(qbe_host_write(&bits_ctx,&bits_state,10,&words[i],nodes,&cursor,0) && cursor==2);
+        assert(!strcmp(nodes[0].type,"float") && nodes[0].children==1 && nodes[1].bits==crossed[i]);
+        cursor=0;
+        assert(qbe_host_write(&bits_ctx,&bits_state,11,&words[i],nodes,&cursor,0) && cursor==2);
+        assert(nodes[1].bits==words[i]);
+    }
+    assert(!bits_ctx.trap);
     return 0;
 }

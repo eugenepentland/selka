@@ -1,0 +1,563 @@
+{
+ "schema": "mylang-parity-thresholds-v1",
+ "note": "Pooled from two 9-round batches on CPU 2 (idle SMT sibling) of perf/parity-integration 8a289c96, 2026-09-23, after the parity plan's lanes landed.",
+ "metric": "wall",
+ "reference": "zig-fast",
+ "default_tolerance": 0.15,
+ "batches": {
+  "2026-09-22-cpu10-loaded": {
+   "label": "loaded",
+   "compiler": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-ksort/bin/mylang",
+   "compiler_sha256": "f430917a25d715db1a815a195a527043e18a46baa26927a06e9b573cefcd6085",
+   "commit": "79835b133cbc3c0a68fe30808fa094bdd8b8740c",
+   "runs": [
+    {
+     "started": "2026-09-22T23:49:49Z",
+     "cpu": 10,
+     "rounds": 9,
+     "load": [
+      [
+       28.3876953125,
+       18.19775390625,
+       13.53515625
+      ],
+      [
+       15.63037109375,
+       19.9921875,
+       18.72314453125
+      ]
+     ]
+    },
+    {
+     "started": "2026-09-23T00:04:33Z",
+     "cpu": 10,
+     "rounds": 9,
+     "load": [
+      [
+       14.51708984375,
+       19.1689453125,
+       18.49072265625
+      ],
+      [
+       18.5712890625,
+       23.56103515625,
+       20.00244140625
+      ]
+     ]
+    },
+    {
+     "started": "2026-09-23T00:18:49Z",
+     "cpu": 10,
+     "rounds": 9,
+     "load": [
+      [
+       12.3935546875,
+       20.31396484375,
+       19.23681640625
+      ],
+      [
+       15.8818359375,
+       14.044921875,
+       16.2880859375
+      ]
+     ]
+    }
+   ]
+  },
+  "2026-09-23-cpu10-loaded": {
+   "label": "loaded",
+   "compiler": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-ksort/bin/mylang",
+   "compiler_sha256": "f430917a25d715db1a815a195a527043e18a46baa26927a06e9b573cefcd6085",
+   "commit": "79835b133cbc3c0a68fe30808fa094bdd8b8740c",
+   "runs": [
+    {
+     "started": "2026-09-23T00:31:27Z",
+     "cpu": 10,
+     "rounds": 9,
+     "load": [
+      [
+       10.6396484375,
+       12.9423828125,
+       15.72216796875
+      ],
+      [
+       5.50439453125,
+       7.41943359375,
+       11.54833984375
+      ]
+     ]
+    },
+    {
+     "started": "2026-09-23T00:41:33Z",
+     "cpu": 10,
+     "rounds": 9,
+     "load": [
+      [
+       5.806640625,
+       7.30126953125,
+       11.3759765625
+      ],
+      [
+       4.7158203125,
+       6.3623046875,
+       9.28173828125
+      ]
+     ]
+    }
+   ]
+  },
+  "2026-09-23-cpu2-quiet": {
+   "label": "quiet",
+   "compiler": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem2/bin/mylang",
+   "compiler_sha256": "e6c5877d08c9872426babf257dbaec5684c28688e795507a8c1f8c9883284332",
+   "commit": "8a289c96e81f3665336336db771e264fcd64dcda",
+   "runs": [
+    {
+     "started": "2026-09-23T08:48:24Z",
+     "cpu": 2,
+     "rounds": 9,
+     "load": [
+      [
+       1.06103515625,
+       1.564453125,
+       2.72119140625
+      ],
+      [
+       1.1572265625,
+       1.92529296875,
+       2.6162109375
+      ]
+     ]
+    },
+    {
+     "started": "2026-09-23T08:54:54Z",
+     "cpu": 2,
+     "rounds": 9,
+     "load": [
+      [
+       1.1572265625,
+       1.92529296875,
+       2.6162109375
+      ],
+      [
+       1.169921875,
+       2.03662109375,
+       2.55810546875
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ "benchmarks": {
+  "alloc_churn": {
+   "my": {
+    "ratio": 1.927,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 1.959,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-arena": {
+    "ratio": 1.576,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "binary_trees": {
+   "my": {
+    "ratio": 0.471,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 0.444,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-arena": {
+    "ratio": 0.765,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "bytes_scan": {
+   "my": {
+    "ratio": 1.347,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 1.351,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-wrapping": {
+    "ratio": 1.348,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "calls": {
+   "my": {
+    "ratio": 0.998,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 1.048,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "dict_count": {
+   "my": {
+    "ratio": 1.11,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 1.075,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "fannkuch_redux": {
+   "my": {
+    "ratio": 1.136,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 0.949,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-array": {
+    "ratio": 0.867,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-tuned": {
+    "ratio": 0.965,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "fib": {
+   "my": {
+    "ratio": 2.115,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 1.034,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "float_loop": {
+   "my": {
+    "ratio": 1.008,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 1.008,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "intloop": {
+   "my": {
+    "ratio": 0.942,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 0.941,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "knucleotide": {
+   "my": {
+    "ratio": 1.49,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 1.458,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-arena": {
+    "ratio": 3.205,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-tuned": {
+    "ratio": 1.358,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "list_append_sum": {
+   "my": {
+    "ratio": 1.165,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 1.173,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "list_records": {
+   "my": {
+    "ratio": 1.372,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 1.189,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-wrapping": {
+    "ratio": 1.171,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "mandelbrot": {
+   "my": {
+    "ratio": 1.017,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 1.03,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "matmul": {
+   "my": {
+    "ratio": 3.829,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 2.896,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-flat": {
+    "ratio": 2.732,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-tuned": {
+    "ratio": 4.462,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "nbody": {
+   "my": {
+    "ratio": 1.993,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 1.716,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-class": {
+    "ratio": 1.66,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "raytrace": {
+   "my": {
+    "ratio": 1.425,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 1.32,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-tuned": {
+    "ratio": 1.255,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "records": {
+   "my": {
+    "ratio": 0.928,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 1.045,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "scan_count": {
+   "my": {
+    "ratio": 0.676,
+    "tolerance": 0.5,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 0.677,
+    "tolerance": 0.5,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "scan_replace": {
+   "my": {
+    "ratio": 0.348,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 0.351,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "scan_split": {
+   "my": {
+    "ratio": 3.431,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 3.401,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "sieve": {
+   "my": {
+    "ratio": 1.79,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 1.478,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-tuned": {
+    "ratio": 1.82,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "sort_builtin": {
+   "my": {
+    "ratio": 0.495,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 0.495,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "sort_quick": {
+   "my": {
+    "ratio": 1.285,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 1.089,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "sort_records": {
+   "my": {
+    "ratio": 0.258,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 0.259,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-keyed": {
+    "ratio": 0.339,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-sorted": {
+    "ratio": 0.256,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "spectral_norm": {
+   "my": {
+    "ratio": 1.13,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 0.991,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-tuned": {
+    "ratio": 1.024,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "str_build": {
+   "my": {
+    "ratio": 1.166,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 1.176,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  },
+  "text_ops": {
+   "my": {
+    "ratio": 3.756,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-unchecked": {
+    "ratio": 3.766,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   },
+   "my-tuned": {
+    "ratio": 0.655,
+    "tolerance": 0.15,
+    "batch": "2026-09-23-cpu2-quiet"
+   }
+  }
+ }
+}

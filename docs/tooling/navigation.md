@@ -10,8 +10,8 @@ sources and compiler that produced it. The design record is
 
 The command prints one `navigation-v1` JSON document: `symbols` for module-
 qualified declarations and locals, each with its original source range,
-signature, checked type name, named effects, the normalized `mutates` input
-positions, a `return_origin` bound (`fresh`, `params` or `unknown`), whether the
+signature, checked type name, the published effect ceiling, the declared `mut`
+parameter positions, a `return_origin` bound (`fresh`, `params` or `unknown`), whether the
 body performs any managed write (`mutation_writes`), and a bounded snippet; `references` for
 resolved call, read, write, field and type edges; and `snapshot` for every loaded
 module's path, byte length and SHA-256 alongside the compiler's own identity.
@@ -29,8 +29,8 @@ Every symbol also carries the analysis behind its facts, so an unavailable
 inference is never an empty fact: see [Fact status](#fact-status-in-interface-and-navigation-output).
 A symbol whose bodies were checked keeps exactly the field set and values it
 published before — for a private helper the inferred summary, and for an exported
-function with a declared ceiling that ceiling, which E2 has always reported in
-`effects` with `return_origin` as the bound `unknown`. A symbol whose bodies were
+function the ceiling its signature implies narrowed by any clause it wrote, which
+E2 has always reported in `effects` with `return_origin` as the bound `unknown`. A symbol whose bodies were
 not checked publishes `analysis` and `null` for those four fields instead, and a
 consumer must read `null` as "not known here" rather than as "none".
 
@@ -48,9 +48,9 @@ $ python3 scripts/navigate.py --compiler zig-out/bin/mylang --entry examples/mod
 `mylang list-interfaces` is the declaration-only view of a project: it parses
 and resolves names but does not require bodies to type-check. Each exported
 callable prints its whole signature, with capability parameters in their Python
-spelling, the inferred `effects(...)` set when the bodies check, any
-`mutates(...)` parameters by name, a declared ceiling when the source wrote
-one, and a `tests(N)` column: the number of discovered tests that reach the
+spelling, the inferred `effects(...)` set when the bodies check, its `mut`
+parameters by name, the `ceiling(...)` its signature implies (narrowed by a
+clause when the source wrote one), and a `tests(N)` column: the number of discovered tests that reach the
 callable, directly or transitively, from the same index `tests-for` reads. A
 body that fails to check leaves the declaration listed and reports no body
 diagnostic.
@@ -58,8 +58,9 @@ diagnostic.
 An inferred summary exists only when checking produced one. When it did not, the
 line prints the literal `effects(unavailable)` with an `analysis(STATUS)` clause
 instead of the conservative full mask, so a bound the checker keeps internally is
-never published as a fact, and a declared ceiling — including an explicitly empty
-`ceiling()` — stays visible either way. `analysis(declaration-only)` means the
+never published as a fact, and the `ceiling(...)` — including an explicitly empty
+`ceiling()` — stays visible either way, because it follows from the parameters
+alone. `analysis(declaration-only)` means the
 bodies were not checked; `analysis(template)` means the project checked but no
 call instantiated this generic declaration; the `tests` column becomes
 `tests(unavailable)` for the whole-listing case. A declaration with a checked

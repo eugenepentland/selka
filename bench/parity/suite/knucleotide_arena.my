@@ -1,0 +1,55 @@
+# knucleotide (arena variant): the same program and output as knucleotide.my,
+# but every counting phase — the dictionary, its slice keys, the sorted
+# reports — runs inside its own `with arena():` block and is released in bulk
+# at block exit instead of being traced. The generated sequence stays on the
+# collecting heap. Only scalars and printed text leave a block.
+
+
+record Entry:
+    key: str
+    count: int
+
+
+def generate(length: int) -> str:
+    bases = "ACGT"
+    parts: list[str] = []
+    seed = 42
+    for _ in range(length):
+        seed = (seed * 3877 + 29573) % 139968
+        parts.append(bases[seed * 4 // 139968])
+    return "".join(parts)
+
+
+def frequencies(seq: str, k: int) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for i in range(len(seq) - k + 1):
+        key = seq[i:i + k]
+        counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
+def report_frequencies(out: Stream, seq: str, k: int) -> int:
+    counts = frequencies(seq, k)
+    # Two stable passes: key ascending, then count descending.
+    by_key = [Entry(key=key, count=counts[key]) for key in sorted(list(counts.keys()))]
+    for entry in sorted(by_key, key=lambda entry: -entry.count):
+        out.print(entry.key, entry.count)
+    return len(by_key)
+
+
+def count_of(seq: str, key: str) -> int:
+    counts = frequencies(seq, len(key))
+    return counts.get(key, 0)
+
+
+def main(out: Stream) -> int:
+    seq = generate(1000000)
+    for k in [1, 2]:
+        with arena():
+            _ = report_frequencies(out, seq, k)
+    for key in ["GGT", "GGTA", "GGTATT", "GGTATTTTAATT", "GGTATTTTAATTTATAGT"]:
+        found = 0
+        with arena():
+            found = count_of(seq, key)
+        out.print(f"{found}\t{key}")
+    return 0

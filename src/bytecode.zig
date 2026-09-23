@@ -11,6 +11,8 @@ pub const Predicate = model.Predicate;
 pub const Equality = model.Equality;
 pub const SwitchArm = model.SwitchArm;
 pub const Instruction = model.Instruction;
+/// An element read or replace and whether it counts a negative index from the end.
+pub const Access = model.Access;
 pub const Function = model.Function;
 pub const FunctionScope = model.FunctionScope;
 pub const Program = model.Program;
@@ -142,7 +144,7 @@ fn validateHost(allocator: std.mem.Allocator, program: Program, function: Functi
     }
 }
 fn validateHostType(allocator: std.mem.Allocator, records: []const typed.Record, ty: typed.Type) Error!void {
-    @import("data_type.zig").check(allocator, records, ty, true) catch |err| switch (err) {
+    @import("data_type.zig").checkHost(allocator, records, ty) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return error.InternalError,
     };
@@ -235,6 +237,12 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         .load_local, .store_local, .move_local, .drop_local => |slot| if (@backingInt(slot) >= function.scope.locals.len) {
             return error.InternalError;
         },
+        // Only a fixed array crosses a call as its caller's own storage.
+        .ref_local => |slot| if (@backingInt(slot) >= function.scope.locals.len or
+            !typed.referenceArray(program.records, function.scope.locals[@backingInt(slot)].ty))
+        {
+            return error.InternalError;
+        },
         .wrap_domain, .unwrap_domain => |ty| {
             if (function.policy.owner != ty and !@import("numeric_surface.zig").isFloat(ty, program.records)) return error.InternalError;
             if (!ty.isAggregate()) return error.InternalError;
@@ -242,7 +250,12 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
             if (program.records[ty.recordIndex()].shape.domain == null) return error.InternalError;
         },
         .make_record => |record| try validateOpMakeRecord(allocator, program, record),
-        .get_index, .replace_index, .array_length => |ty| {
+        .get_index, .replace_index, .array_length => {
+            const ty = switch (instruction.op) {
+                .get_index, .replace_index => |access| access.ty,
+                .array_length => |array| array,
+                else => unreachable,
+            };
             if (!ty.isAggregate()) return error.InternalError;
             if (!validType(ty, program)) return error.InternalError;
             const schema = program.records[ty.recordIndex()];
@@ -322,7 +335,7 @@ fn validateManagedListOperation(local: typed.Local, schema: typed.Record, operat
         .index_of => .i64,
         .copy => local.ty,
         .append, .write, .iteration_check => .unit,
-        .extend, .insert, .remove, .reverse, .sort, .clear => .unit,
+        .extend, .insert, .remove, .reverse, .sort, .sort_keyed, .clear => .unit,
         .contains => .bool,
         .slice_step => local.ty,
         else => return error.InternalError,
@@ -533,9 +546,9 @@ fn validateOpTryResult(program: Program, function: Function, propagate: @FieldTy
         if (input.error_type != output.error_type and typed.wrappingCase(program.records, output.error_type, input.error_type) == null) return error.InternalError;
         return;
     }
-    if (prelude.optionShape(propagate.input, program.records)) |input| {
-        const output = prelude.optionShape(propagate.output, program.records) orelse return error.InternalError;
-        if (input.element != output.element) return error.InternalError;
+    if (prelude.optionShape(propagate.input, program.records) != null) {
+        // A propagated `None` is rebuilt in the output type, so the elements may differ.
+        if (prelude.optionShape(propagate.output, program.records) == null) return error.InternalError;
         return;
     }
     return error.InternalError;
@@ -563,7 +576,7 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
         const instruction = function.scope.instructions[pc];
         var height = heights[pc].?;
         switch (instruction.op) {
-            .function_value, .push_unit, .push_i64, .push_bool, .push_integer, .load_local, .move_local => height += 1,
+            .function_value, .push_unit, .push_i64, .push_bool, .push_integer, .load_local, .ref_local, .move_local => height += 1,
             .drop_local, .begin_arena, .end_arena => {},
             .resource_io => |io| {
                 height = try resourceIoHeight(io, height);

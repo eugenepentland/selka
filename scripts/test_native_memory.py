@@ -24,6 +24,7 @@ def main():
             ("native_arena_chunks", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c", "native_bytes.c", "native_regions.c"]),
             ("native_print", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_print.c"]),
             ("native_text_methods", ["native_heap.c", "native_collections.c", "native_text.c", "native_text_methods.c"]),
+            ("native_text_views", ["native_heap.c", "native_collections.c", "native_text.c", "native_text_methods.c", "native_dictionary.c", "native_equal.c", "native_regions.c"]),
             ("native_scoped", ["native_scoped.c"]),
         ):
             executable = Path(directory) / suite

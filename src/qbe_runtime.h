@@ -54,6 +54,10 @@ typedef struct {
 #define MYL_QBE_TRAP_PRESENT_LEFT   UINT32_C(4)
 #define MYL_QBE_TRAP_PRESENT_RIGHT  UINT32_C(8)
 #define MYL_QBE_TRAP_PRESENT_WIDTH  UINT32_C(16)
+/* TRAP-UNSIGNED-1: `left` and `right` hold the bit patterns of unsigned
+ * operands, so both renderers print them unsigned. Never set for a signed
+ * operation, whose detail stays byte-identical. */
+#define MYL_QBE_TRAP_PRESENT_UNSIGNED UINT32_C(32)
 /* Marker beginning the one-line machine record a native child appends to
  * stderr after its human-readable trap diagnostic. The record JSON carries the
  * same `MylQbeTrapDetail` fields. */
@@ -119,6 +123,11 @@ typedef struct {
        points, which keep the sticky behavior. Appended after the frozen ABI
        prefix, so generated-code offsets stay unchanged. */
     void *unwind;
+    /* One past the highest address of the guest-stack mapping while generated
+       code runs, zero otherwise. With `native_stack_bottom` it bounds the
+       frame-pointer walk a frame-map trap performs (QBE-FRAMEMAP-1). Appended
+       after the frozen ABI prefix. */
+    uintptr_t native_stack_top;
 } MylQbeContext;
 typedef struct {
     uint64_t value, steps;
@@ -171,7 +180,12 @@ void myl_qbe_fail_pop_bounds(void *context, uint64_t length);
 void myl_qbe_fail_pop_at_bounds(void *context, int64_t index, uint64_t length);
 void myl_qbe_fail_text_bounds_detail(void *context, int64_t index, uint64_t length);
 void myl_qbe_fail_array_bounds(void *context, int64_t index, uint64_t length);
-/* `binary_op` is the typed.BinaryOp ordinal (0=add, 1=sub, 2=mul, 3=div, ...). */
+/* `binary_op` is the typed.BinaryOp ordinal (0=add, 1=sub, 2=mul, 3=div, ...).
+ * Generated code ORs MYL_QBE_UNSIGNED_OPERANDS into `binary_op` (division) or
+ * `width` (overflow, cast) when the captured operands are unsigned; a signed
+ * site passes the plain value. `unsigned_operands` in src/qbe_scalar.zig
+ * spells the same bit. */
+#define MYL_QBE_UNSIGNED_OPERANDS UINT64_C(0x100)
 void myl_qbe_fail_division(void *context, uint64_t binary_op, int64_t left, int64_t right);
 void myl_qbe_fail_overflow_op(void *context, uint64_t binary_op, int64_t left, int64_t right, uint64_t width);
 /* Cold path of an inlined checked integer cast: the value's raw bits and the
@@ -180,10 +194,6 @@ void myl_qbe_fail_cast(void *context, int64_t value, uint64_t width);
 myl_native_heap *myl_qbe_heap(void *context);
 uint64_t myl_qbe_failed(void *context);
 void myl_qbe_float_check(void *context);
-/* Cold path of an inlined binary64 operation whose result is a NaN: the
- * canonical bit pattern that result takes, kept out of line so the finite path
- * stays a compare plus a predicted branch with no select on its critical path. */
-uint64_t myl_qbe_float_canonical(void *context);
 void myl_qbe_fail_step(void *context);
 void myl_qbe_fail_overflow(void *context);
 /* Cold path of the generated frame prologue: the logical depth ceiling or the

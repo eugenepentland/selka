@@ -1,0 +1,140 @@
+{
+ "binary": "knucleotide_tuned.base",
+ "runs": 5,
+ "samples": 4079,
+ "outside": 1169,
+ "functions": [
+  {
+   "function": "find",
+   "samples": 2204,
+   "share": 0.5403285118901692
+  },
+  {
+   "function": "<outside: shared libraries>",
+   "samples": 1169,
+   "share": 0.2865898504535425
+  },
+  {
+   "function": "myl_f_d3087354d69a831fd67f1a10ade0c2dcb0016bc3b52dc9f3e2a9a93f7e21876c",
+   "samples": 528,
+   "share": 0.12944349105172837
+  },
+  {
+   "function": "_fini",
+   "samples": 112,
+   "share": 0.027457710223093897
+  },
+  {
+   "function": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+   "samples": 46,
+   "share": 0.01127727384162785
+  },
+  {
+   "function": "trace",
+   "samples": 10,
+   "share": 0.002451581269919098
+  }
+ ],
+ "hot_pcs": [
+  {
+   "pc": "0x102bb22",
+   "samples": 830,
+   "share": 0.20348124540328513
+  },
+  {
+   "pc": "0x102b8cd",
+   "samples": 75,
+   "share": 0.018386859524393232
+  },
+  {
+   "pc": "0x102ba47",
+   "samples": 75,
+   "share": 0.018386859524393232
+  },
+  {
+   "pc": "0x102ba2f",
+   "samples": 71,
+   "share": 0.017406227016425593
+  },
+  {
+   "pc": "0x102e080",
+   "samples": 66,
+   "share": 0.016180436381466046
+  },
+  {
+   "pc": "0x102b6d0",
+   "samples": 49,
+   "share": 0.01201274822260358
+  },
+  {
+   "pc": "0x102b8a6",
+   "samples": 49,
+   "share": 0.01201274822260358
+  },
+  {
+   "pc": "0x102b8c0",
+   "samples": 48,
+   "share": 0.01176759009561167
+  },
+  {
+   "pc": "0x102b8da",
+   "samples": 47,
+   "share": 0.01152243196861976
+  },
+  {
+   "pc": "0x102b8e7",
+   "samples": 47,
+   "share": 0.01152243196861976
+  },
+  {
+   "pc": "0x102b713",
+   "samples": 46,
+   "share": 0.01127727384162785
+  },
+  {
+   "pc": "0x102df00",
+   "samples": 45,
+   "share": 0.011032115714635941
+  },
+  {
+   "pc": "0x102b8b3",
+   "samples": 44,
+   "share": 0.01078695758764403
+  },
+  {
+   "pc": "0x102bb8b",
+   "samples": 41,
+   "share": 0.0100514832066683
+  },
+  {
+   "pc": "0x10264bf",
+   "samples": 38,
+   "share": 0.009316008825692572
+  },
+  {
+   "pc": "0x102b86c",
+   "samples": 38,
+   "share": 0.009316008825692572
+  },
+  {
+   "pc": "0x102bb88",
+   "samples": 38,
+   "share": 0.009316008825692572
+  },
+  {
+   "pc": "0x102bb63",
+   "samples": 35,
+   "share": 0.008580534444716842
+  },
+  {
+   "pc": "0x102b831",
+   "samples": 34,
+   "share": 0.008335376317724933
+  },
+  {
+   "pc": "0x102b888",
+   "samples": 30,
+   "share": 0.007354743809757294
+  }
+ ]
+}

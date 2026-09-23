@@ -204,6 +204,13 @@ a list literal becomes the array and a dict literal keyed by `Kind.case` becomes
 table whenever the surrounding annotation, parameter, field or result demands one. The
 array length is checked statically and the table requires every case exactly once.
 
+A tuple groups two to eight values without declaring a record: `(a, b)` builds one, the
+type is written `tuple[str, int]`, and the bare forms `return a, b` and `x, y = a, b`
+are accepted, so `a, b = b, a` is the swap. A tuple has no fields, no indexing, no
+methods and no `len`; take it apart by destructuring, `x, y = value` or `for x, y in
+pairs`, and bind `_` for a value you do not need. It compares structurally, prints as
+`(1, 'a')`, and is one structural type everywhere. See [tuples](tuples.md).
+
 ```mylang
 # doc: expect 42
 enum Status:
@@ -330,6 +337,43 @@ Write `heartbeat,` and `count: int,`. The parser still stops at the first syntax
 error; these four messages are targeted at the shapes above rather than general
 error recovery.
 
+## Conditional expressions
+
+`value_if_true if condition else value_if_false` is one expression with Python's
+precedence, read to the right when it nests. The condition must be `bool`, and
+both arms have one type — the expected type where the context supplies one, for
+instance a binding annotation, a return type or a call parameter, and otherwise
+the then arm's own type, with an integer literal arm adopting the expected width.
+Nothing widens between the arms, so arms that disagree are rejected with `E_TYPE`
+(`conditional arms must agree: ...`). Only the chosen arm is evaluated, so a
+guard on the left genuinely prevents a trap on the right, while both arms are
+still checked: each contributes its effects, and a name no path reaching an arm
+assigns is still `E_UNBOUND`.
+
+```mylang
+# doc: expect 42
+def maybe(value: int) -> Option[int]:
+    return Some(value) if value > 0 else None
+
+
+def pick(side: int) -> int:
+    return 532 if side == 1 else 42
+
+
+def main() -> int:
+    match maybe(pick(2)):
+        case Some(value):
+            return value
+        case None:
+            return 0
+```
+
+`Some(value) if value > 0 else None` takes the `Option[int]` its return type
+demands, so both arms are constructed contextually. The expression is accepted
+in every expression position — an assignment value, a `return` value, a call or
+keyword argument, a record-constructor field, a list element and an f-string
+hole — and `a if p else b if q else c` nests in the else arm.
+
 ## Statement forms Python spells differently
 
 The same targeted messaging covers the everyday statement shapes a Python first
@@ -431,13 +475,16 @@ and a local binding or declared function of the same name still wins. `sum`,
 `min` and `max` accept a list of the element type they name; text extrema compare
 the stored Unicode scalars without allocating an encoding. `sorted` accepts a
 list of `int`, `float` or `str` and returns a new stable ascending list without
-changing its input. It and `values.sort()` use a stable merge with one reusable
-work buffer, so reverse-ordered large lists retain `O(n log n)` behavior. For
+changing its input. It and `values.sort()` use a stable merge that keeps the runs
+a list already has, with one work buffer of at most half the list, so ordered
+and reverse-ordered lists sort in linear time and every list in `O(n log n)`. For
 floats, NaNs follow ordered values while equal values and signed zeros retain
 their input order. `reversed(xs)` copies a list or string from last to first
 and, like `zip(a, b)`, is also a `for` source; `zip` stops at the shorter list and the
 Boolean folds stop as soon as their answer is known.
 `list(range(end))` and `list(range(start, end))` materialize their range.
+`sorted` and `values.sort()` also take Python's `key=` and `reverse=`; see
+[keyed sorting](#keyed-sorting).
 
 `round(value)` answers the nearest integral `float`, with halves away from zero
 and NaN or infinities unchanged. `abs` is total for `int` except the signed
@@ -453,6 +500,72 @@ def main() -> int:
 
 Byte-oriented code uses the managed `bytes` type; see
 [managed byte strings](bytes.md) for its literals, operations and conversions.
+
+## Keyed sorting
+
+`values.sort(key=f, reverse=b)` sorts a list in place and
+`sorted(values, key=f, reverse=b)` returns a sorted copy, spelled as in Python:
+both keywords are optional and keyword-only. The key maps one element to the
+value it is ordered by — any integer type, `bool`, `float`, `str`, or a tuple of
+those, compared field by field.
+
+```mylang
+# doc: expect 42
+record Player:
+    name: str
+    team: int
+    score: float
+
+def by_name(player: Player) -> str:
+    return player.name
+
+def main() -> int:
+    players = [Player(name="cy", team=2, score=7.5), Player(name="al", team=1, score=9.0), Player(name="bo", team=2, score=9.0)]
+    players.sort(key=lambda p: p.score, reverse=True)
+    if players[0].name != "al" or players[1].name != "bo":
+        return 1
+    by_team = sorted(players, key=lambda p: (p.team, p.name))
+    if by_team[0].name != "al" or by_team[2].name != "cy":
+        return 2
+    alphabetical = sorted(players, key=by_name)
+    return len(alphabetical[2].name) * 21
+```
+
+The rules, which match Python's wherever Python defines them:
+
+- **The key is called exactly once per element, in list order**, before any
+  element moves. A key that traps stops the program with that trap, raised by the
+  first element in list order whose key traps, and the list has not changed.
+- **The sort is stable, with and without `reverse`.** Elements whose keys are
+  equal keep their original order. `reverse=True` orders the keys descending and
+  still keeps equal keys in their original order, so it is not the same as
+  sorting and then calling `reverse()`: `[(1, "a"), (1, "b")]` stays in that
+  order under either direction.
+- **Floats** order as `values.sort()` orders them: `-0.0` equals `0.0`, and
+  every NaN sorts after every other value, so `reverse=True` puts the NaNs first.
+  Python leaves NaN ordering undefined; this is the one total order the language
+  uses everywhere.
+- **Without a key**, `values.sort(reverse=True)` and `sorted(values, reverse=True)`
+  order an `int`, `float` or `str` list by its elements, stably.
+- **In place means in place**: the list keeps its identity, so every alias of it
+  sees the new order, and no second list of the elements is built. The extra
+  memory is one key per element plus the sort's scratch. `sorted` builds its
+  new list directly in sorted order rather than copying and then sorting.
+
+A lambda key gets its key type from its body when the body is the element itself,
+a field path from it (`lambda p: p.score`), arithmetic or a negation of one, `len`
+of one, or a tuple of those; for any other body write a named function whose
+return type says what the key is. The checker rejects a key that does not take
+one element of the list's type, one that declares its argument `mut`, and one
+whose result has no order (`E_SORT_KEY`), a `reverse=` that is not a `bool`
+(`E_TYPE`), and a positional or unknown argument (`E_CALL_ARGUMENT`). There is
+no `cmp=`: map each element to a tuple instead.
+
+`sort.sort_by_key(values, key)` is the same keyed sort on a copy. Because keys
+are now computed in list order, a key function that traps on several elements
+reports the first of them in list order; the module's earlier recursive merge
+asked for keys in a different order.
+
 
 A brace dialect — `fn`, `let`, `struct`, `new T { … }`, `alias::name`,
 `f::<T>(x)`, `cast<T>(x)`, `//` comments — was accepted until 2026-09-13 and is

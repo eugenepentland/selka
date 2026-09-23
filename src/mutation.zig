@@ -76,6 +76,12 @@ pub fn localInput(program: typed.Program, function: typed.Function, slot: typed.
     return @intCast(index);
 }
 
+/// The local slot an expression reads through fields, indexes and element
+/// replacements, or null when it is not a path rooted at a local.
+pub fn nodeRoot(program: typed.Program, node_id: typed.NodeId) ?typed.LocalId {
+    return rootLocal(program, node_id, 0);
+}
+
 /// Resolve an expression's root local to an enclosing parameter position.
 pub fn nodeInput(program: typed.Program, function: typed.Function, node_id: typed.NodeId) ?u16 {
     return if (rootLocal(program, node_id, 0)) |slot| localInput(program, function, slot) else null;
@@ -112,7 +118,8 @@ pub fn typedNode(program: typed.Program, function: typed.Function, node: typed.N
 /// Classify one instruction from the checked bytecode model.
 pub fn instruction(program: model.Program, function: model.Function, op: @FieldType(model.Instruction, "op"), span: source.Span) ?Witness {
     switch (op) {
-        .replace_index => |ty| {
+        .replace_index => |access| {
+            const ty = access.ty;
             if (!ty.isAggregate()) return null;
             if (ty.recordIndex() >= program.records.len) return null;
             if (!program.records[ty.recordIndex()].managed) return null;

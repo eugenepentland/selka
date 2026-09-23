@@ -1,0 +1,24 @@
+# float_dot: a float reduction over two lists; shows per-operation float lowering.
+
+
+def dot(xs: list[float], ys: list[float]) -> float:
+    total = 0.0
+    i = 0
+    n = len(xs)
+    while i < n:
+        total = total + xs[i] * ys[i]
+        i += 1
+    return total
+
+
+def main(out: Stream) -> int:
+    xs: list[float] = []
+    ys: list[float] = []
+    for i in range(1000):
+        xs.append(float(i) * 0.5)
+        ys.append(float(i) * 0.25)
+    acc = 0.0
+    for r in range(20000):
+        acc = acc + dot(xs, ys)
+    out.print(int(acc))
+    return 0

@@ -54,11 +54,11 @@ test "standard modules compose with one another inside a single project" {
         "    encoded = base64.b64encode(path.basename(\"/tmp/answer.txt\").encode())\n" ++
         "    match encoded.decode():\n" ++
         "        case Ok(text):\n" ++
-        "            return rendered(text)\n" ++
+        "            fields: dict[str, json.Json] = {}\n" ++
+        "            return rendered(text, mut fields)\n" ++
         "        case Err(_):\n" ++
         "            return 1\n" ++
-        "def rendered(text: str) -> int:\n" ++
-        "    fields: dict[str, json.Json] = {}\n" ++
+        "def rendered(text: str, fields: mut dict[str, json.Json]) -> int:\n" ++
         "    fields[\"name\"] = json.text(text)\n" ++
         "    document = json.dumps(json.object(fields))\n" ++
         "    if document != \"{\\\"name\\\":\\\"YW5zd2VyLnR4dA==\\\"}\":\n" ++

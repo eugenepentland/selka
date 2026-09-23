@@ -1,0 +1,15 @@
+# trap_index: an out-of-range list write after a successful loop.
+
+
+def poke(xs: mut list[int], at: int) -> None:
+    xs[at] = 7
+
+
+def main(out: Stream) -> int:
+    xs: list[int] = [1, 2, 3]
+    total = 0
+    for x in xs:
+        total = total + x
+    poke(mut xs, total)
+    out.print(total)
+    return 0

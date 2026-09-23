@@ -1,0 +1,8 @@
+binary_trees: 9 qualified arms: my my-unchecked my-arena zig-fast zig-safe rust loops arena:loops before
+knucleotide: 11 qualified arms: my my-unchecked my-arena my-tuned zig-fast zig-safe rust loops arena:loops tuned:loops before
+text_ops: 9 qualified arms: my my-unchecked my-tuned zig-fast zig-safe rust loops tuned:loops before
+sort_records: 11 qualified arms: my my-unchecked my-keyed my-sorted zig-fast zig-safe rust loops keyed:loops sorted:loops before
+binary_trees: ref 257.0 ms | my=0.46x  my-unchecked=0.43x  my-arena=0.77x  zig-fast=1.00x  zig-safe=1.11x  rust=1.56x  loops=0.52x  arena:loops=0.80x  before=1.92x
+knucleotide: ref 107.1 ms | my=1.49x  my-unchecked=1.47x  my-arena=3.06x  my-tuned=1.35x  zig-fast=1.00x  zig-safe=1.12x  rust=1.41x  loops=1.48x  arena:loops=3.16x  tuned:loops=1.34x  before=4.95x
+text_ops: ref 29.0 ms | my=3.60x  my-unchecked=3.68x  my-tuned=0.64x  zig-fast=1.00x  zig-safe=0.81x  rust=1.48x  loops=3.78x  tuned:loops=0.65x  before=6.60x
+sort_records: ref 118.9 ms | my=0.28x  my-unchecked=0.28x  my-keyed=0.37x  my-sorted=0.27x  zig-fast=1.00x  zig-safe=1.15x  rust=0.41x  loops=0.28x  keyed:loops=0.38x  sorted:loops=0.28x  before=5.32x

@@ -44,7 +44,7 @@ def new_counter() -> FieldCounter:
 # spec: AUGMENTED-FIELD-1
 public def test_augmented_assignment_updates_a_class_field() -> bool:
     c = new_counter()
-    if bump(c) != 2:
+    if bump(mut c) != 2:
         return False
     return c.n == 2 and c.total == 0.75 and c.label == "a!"
 
@@ -77,7 +77,7 @@ public def test_augmented_addition_to_a_list_field_extends_in_place() -> bool:
 # spec-case: AUGMENTED-FIELD-1
 public def test_augmented_field_reads_the_field_before_the_right_side() -> bool:
     c = new_counter()
-    c.n += reset(c)
+    c.n += reset(mut c)
     return c.n == 2
 
 

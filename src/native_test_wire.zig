@@ -497,7 +497,7 @@ test "local mutation and output both reuse a receipt" {
         \\
         \\public def test_local_mutation() -> bool:
         \\    xs: list[int] = [1]
-        \\    change(xs)
+        \\    change(mut xs)
         \\    return xs[0] == 2
         \\
         \\public def test_external_output(out: Stream) -> bool:
@@ -529,4 +529,14 @@ test "a record, an array, a nested record, a zero-length and a large argument ro
     try runFixture(a, resolved, "aggref_arguments", "7 passed");
     try std.testing.expect(resolved.root.len != 0);
     try std.testing.expect(std.mem.endsWith(u8, resolved.compiler, "mylang"));
+}
+
+// spec: QBE-NICHE-3
+test "an optional text, list and optional optional cross the copied-value boundary as case nodes" {
+    const a = std.testing.allocator;
+    const resolved = try tools(a);
+    defer a.free(resolved.compiler);
+    defer a.free(resolved.root);
+    try runFixture(a, resolved, "option_niche_boundary", "6 passed");
+    try std.testing.expect(resolved.root.len != 0);
 }

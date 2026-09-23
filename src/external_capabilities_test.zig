@@ -158,7 +158,8 @@ test "clock and random bounds propagate through calls independently of noio and 
         \\    return random_u64[Random](r)
         \\
         \\
-        \\def main(r: Entropy) -> i64 effects(clock):
+        \\def main(r: Entropy, c: Clock) -> i64 effects(clock):
+        \\    _ = c
         \\    _ = read(r)
         \\    return 0
     , "E_EFFECT_BOUND");

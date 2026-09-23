@@ -1,0 +1,190 @@
+{
+ "binary": "knucleotide.final",
+ "runs": 5,
+ "samples": 4399,
+ "outside": 305,
+ "functions": [
+  {
+   "function": "probe_text",
+   "samples": 1217,
+   "share": 0.27665378495112525
+  },
+  {
+   "function": "myl_native_heap_alloc_at",
+   "samples": 812,
+   "share": 0.18458740622868833
+  },
+  {
+   "function": "myl_f_d3087354d69a831fd67f1a10ade0c2dcb0016bc3b52dc9f3e2a9a93f7e21876c",
+   "samples": 773,
+   "share": 0.17572175494430553
+  },
+  {
+   "function": "<outside: shared libraries>",
+   "samples": 305,
+   "share": 0.06933393953171176
+  },
+  {
+   "function": "myl_native_text_hash",
+   "samples": 290,
+   "share": 0.06592407365310297
+  },
+  {
+   "function": "myl_native_heap_collect",
+   "samples": 254,
+   "share": 0.05774039554444192
+  },
+  {
+   "function": "read_walk",
+   "samples": 199,
+   "share": 0.04523755398954308
+  },
+  {
+   "function": "myl_native_dictionary_read",
+   "samples": 131,
+   "share": 0.029779495339849967
+  },
+  {
+   "function": "slot_take",
+   "samples": 119,
+   "share": 0.027051602636962945
+  },
+  {
+   "function": "trace",
+   "samples": 98,
+   "share": 0.02227779040691066
+  },
+  {
+   "function": "insert",
+   "samples": 60,
+   "share": 0.0136394635144351
+  },
+  {
+   "function": "myl_f_0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+   "samples": 54,
+   "share": 0.012275517162991589
+  },
+  {
+   "function": "_fini",
+   "samples": 37,
+   "share": 0.008411002500568312
+  },
+  {
+   "function": "myl_native_list_append",
+   "samples": 20,
+   "share": 0.004546487838145033
+  },
+  {
+   "function": "myl_native_text_join",
+   "samples": 17,
+   "share": 0.003864514662423278
+  },
+  {
+   "function": "write_walk",
+   "samples": 12,
+   "share": 0.00272789270288702
+  }
+ ],
+ "hot_pcs": [
+  {
+   "pc": "0x102971d",
+   "samples": 544,
+   "share": 0.1236644691975449
+  },
+  {
+   "pc": "0x1027cf6",
+   "samples": 250,
+   "share": 0.05683109797681291
+  },
+  {
+   "pc": "0x1027a22",
+   "samples": 170,
+   "share": 0.03864514662423278
+  },
+  {
+   "pc": "0x102978d",
+   "samples": 132,
+   "share": 0.030006819731757218
+  },
+  {
+   "pc": "0x1029780",
+   "samples": 105,
+   "share": 0.023869061150261422
+  },
+  {
+   "pc": "0x1027dbf",
+   "samples": 76,
+   "share": 0.017276653784951124
+  },
+  {
+   "pc": "0x1027da0",
+   "samples": 64,
+   "share": 0.014548761082064106
+  },
+  {
+   "pc": "0x102975a",
+   "samples": 48,
+   "share": 0.01091157081154808
+  },
+  {
+   "pc": "0x1027c80",
+   "samples": 37,
+   "share": 0.008411002500568312
+  },
+  {
+   "pc": "0x1029750",
+   "samples": 37,
+   "share": 0.008411002500568312
+  },
+  {
+   "pc": "0x1028b39",
+   "samples": 35,
+   "share": 0.007956353716753808
+  },
+  {
+   "pc": "0x1024763",
+   "samples": 31,
+   "share": 0.007047056149124801
+  },
+  {
+   "pc": "0x1029040",
+   "samples": 30,
+   "share": 0.00681973175721755
+  },
+  {
+   "pc": "0x1028b02",
+   "samples": 29,
+   "share": 0.006592407365310297
+  },
+  {
+   "pc": "0x102c850",
+   "samples": 29,
+   "share": 0.006592407365310297
+  },
+  {
+   "pc": "0x102976a",
+   "samples": 25,
+   "share": 0.005683109797681291
+  },
+  {
+   "pc": "0x102976f",
+   "samples": 23,
+   "share": 0.005228461013866788
+  },
+  {
+   "pc": "0x102475a",
+   "samples": 22,
+   "share": 0.005001136621959537
+  },
+  {
+   "pc": "0x1028a40",
+   "samples": 22,
+   "share": 0.005001136621959537
+  },
+  {
+   "pc": "0x1028116",
+   "samples": 21,
+   "share": 0.004773812230052284
+  }
+ ]
+}

@@ -30,12 +30,27 @@ const eTryReturn = "E_TRY_RETURN";
 const eArgument = diagnostic.generic_argument;
 const eListType = @import("collection_lower.zig").list_type_error;
 const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
+/// The one message a lambda written inside a generic function body reports,
+/// from the template checker and from the unchecked lambda alike, so the two
+/// merge into a single diagnostic.
+pub const lambda_in_generic_body = "a lambda is not supported inside a generic function body; declare a top-level function and pass it by name";
+/// A misplaced or unknown call operand, the concrete checker's code for it.
+const eCallArgument = "E_CALL_ARGUMENT";
+const eTupleArity = diagnostic.tuple_arity;
+/// The accepted arity beside a rejected tuple in a template body.
+const tuple_arity_message = symbolic_shapes.tuple_arity_message;
 const Catalog = @import("records.zig").Catalog;
 const symbolic = @import("symbolic_types.zig");
+const symbolic_shapes = @import("symbolic_shapes.zig");
 const provider_shapes = @import("symbolic_providers.zig");
 const generic_cache = @import("generic_cache.zig");
 const Symbolic = symbolic.Value;
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
+/// Whether a call on a named receiver is a list's `sort` with operands, the
+/// Python keyword form whose operands are named rather than positional.
+fn keywordSort(self: anytype, input_call: Call) bool {
+    return input_call.owner != null and input_call.arguments.len != 0 and std.mem.eql(u8, self.src.text(input_call.name), "sort");
+}
 /// Reject a literal `dir()` path that could leave a scoped root, mirroring `scopedPath`.
 fn scopedDirectoryPath(bytes: []const u8) bool {
     if (bytes.len == 0) return true;
@@ -110,7 +125,7 @@ const Checker = struct {
         if (!terminates and !implicit_unit) return sink.fail("E_MISSING_RETURN", function.name, "template may fall through without returning its declared type");
         if (!terminates) try self.requireHandled(0, function.name);
     }
-    fn shapes(self: *Checker) @import("symbolic_shapes.zig").Context {
+    fn shapes(self: *Checker) symbolic_shapes.Context {
         return .{
             .arena = &self.field_arena,
             .catalog = self.catalog,
@@ -154,6 +169,13 @@ const Checker = struct {
             const length: Symbolic = if (template.length_parameter) |at| try self.lengthType(at) else .{ .length = template.length };
             return self.arrayWithLength(length, try self.ty(template.syntax.element), span);
         }
+        if (self.catalog.templates.store) |store| if (store.index.syntax.tuples.get(span.start)) |syntax| {
+            try self.enter(span);
+            defer self.depth -= 1;
+            const elements = try self.field_arena.allocator().alloc(Symbolic, syntax.elements.len);
+            for (syntax.elements, elements) |element, *out| out.* = try self.ty(element);
+            return self.symbolicTuple(elements, span);
+        };
         const text = self.src.text(span);
         switch (requirements.matchScope(self.requirement_aliases, self.src, span)) {
             .subject => |index| {
@@ -176,7 +198,7 @@ const Checker = struct {
             .parameters = parameters,
             .result = result,
             .effects = syntax.effect_bound.allowed,
-            .mutates = syntax.mutates,
+            .mutates = try ast.mutPositions(self.field_arena.allocator(), syntax.mut_parameters),
             .return_origin = .unknown,
         };
         return .{ .callback = signature };
@@ -323,6 +345,13 @@ const Checker = struct {
         }
     }
     fn local(self: *Checker, span: source.Span) Error!*Local {
+        // GENERIC-LAMBDA-1: a lambda is one synthesized function with one
+        // callback type, so it cannot follow a template body's type parameters
+        // into each specialization. Say so instead of failing its name lookup.
+        // The parser names a lambda by its `lambda` keyword; the diagnostic
+        // covers the whole lambda, as the unchecked lambda's own report does.
+        for (self.program.lambdas) |lambda| if (lambda.span.start == span.start)
+            return self.sink.fail(eUnsupported, lambda.span, lambda_in_generic_body);
         const index = self.active.get(self.src.text(span)) orelse return self.sink.fail("E_UNKNOWN_NAME", span, "name is not defined in this template scope");
         return &self.locals.items[index];
     }
@@ -522,6 +551,8 @@ const Checker = struct {
     /// The dictionary receiver of one `items()` iteration source in a template body.
     fn fieldAssignment(self: *Checker, node: ast.Node) Error!Symbolic {
         const assignment = node.data.field_assignment;
+        if (self.program.nodes.items[@backingInt(assignment.target)].data == .tuple)
+            return self.tupleAssignment(assignment, node.span);
         var root = assignment.target;
         while (self.program.nodes.items[@backingInt(root)].data == .field) root = self.program.nodes.items[@backingInt(root)].data.field.base;
         const root_node = self.program.nodes.items[@backingInt(root)];
@@ -535,6 +566,103 @@ const Checker = struct {
         if (assignment.op != .set) try self.augmentedTarget(assignment.op, expected, node.span);
         try self.compatible(try self.expressionExpected(assignment.value, expected), expected, node.span);
         return .{ .concrete = .unit };
+    }
+    /// Build a symbolic tuple value from its element values. Concrete elements
+    /// are interned in the catalog, so a value and a `tuple[...]` spelling of
+    /// the same elements are one identity; anything else keeps the elements as
+    /// ordered arguments, which is what makes `tuple[T, int]` spellable.
+    // twin-drift-ok: the shape-only copy in `symbolic_shapes.Context.tuple`
+    // carries a catalog by value, so it may look an interned tuple up but never
+    // create one; this one holds the checker's catalog and interns on demand.
+    fn symbolicTuple(self: *Checker, elements: []const Symbolic, span: source.Span) Error!Symbolic {
+        if (elements.len < 2 or elements.len > 8) return self.sink.fail(eTupleArity, span, tuple_arity_message);
+        var concrete: [8]typed.Type = undefined;
+        var all_concrete = true;
+        for (elements, 0..) |element, index| {
+            if (element != .concrete) {
+                all_concrete = false;
+                break;
+            }
+            concrete[index] = element.concrete;
+        }
+        if (all_concrete) return .{ .concrete = try self.catalog.tupleType(concrete[0..elements.len]) };
+        const declaration = self.catalog.templates.store.?.index.tupleDeclaration(elements.len) orelse return error.InternalError;
+        return self.shapes().nominal(declaration, elements);
+    }
+    /// Check one `(a, b)` value in a template body. A destination that already
+    /// demands a tuple type checks each element against its positional type;
+    /// otherwise the element types are inferred and interned.
+    fn tupleValue(self: *Checker, span: source.Span, elements: []const ast.NodeId) Error!Symbolic {
+        const demanded = self.expected_types.get(span);
+        const expected = if (demanded) |value| symbolic_shapes.tupleArity(self.catalog, value) else null;
+        if (expected) |arity| if (arity != elements.len) return self.sink.fail(
+            eTupleArity,
+            span,
+            try std.fmt.allocPrint(self.allocator, "this tuple has {d} elements but the destination has {d}; write {d} elements", .{ elements.len, arity, arity }),
+        );
+        const values = try self.field_arena.allocator().alloc(Symbolic, elements.len);
+        for (elements, 0..) |element, index| {
+            if (demanded) |value| {
+                const wanted = symbolic_shapes.tupleElement(self.catalog, value, index).?;
+                values[index] = try self.expressionExpected(element, wanted);
+                try self.compatible(values[index], wanted, span);
+            } else values[index] = try self.expression(element);
+        }
+        return self.symbolicTuple(values, span);
+    }
+    /// The accepted arity a two-name `for` needs, naming the one-name loop.
+    fn twoNameLoopMessage(self: *Checker, elements: usize) Error![]const u8 {
+        return std.fmt.allocPrint(
+            self.allocator,
+            "a two-name `for` destructures a two-value tuple; this one has {d} values — bind it with one name and destructure it in the body",
+            .{elements},
+        );
+    }
+    /// `x, y = value` inside a template body: the value must be a tuple whose
+    /// arity matches the names, and each name binds one positional element.
+    fn tupleAssignment(self: *Checker, assignment: @FieldType(@FieldType(ast.Node, "data"), "field_assignment"), span: source.Span) Error!Symbolic {
+        const names = self.program.nodes.items[@backingInt(assignment.target)].data.tuple;
+        const value = try self.expression(assignment.value);
+        const arity = symbolic_shapes.tupleArity(self.catalog, value) orelse {
+            const found = try self.symbolicText(value);
+            const message = try std.fmt.allocPrint(self.allocator, "a destructuring assignment binds the values of a tuple; `{s}` is not one — bind it with one name instead", .{found});
+            return self.sink.fail("E_TYPE", span, message);
+        };
+        if (arity != names.len) return self.sink.fail(eTupleArity, span, "a destructuring assignment binds one name per tuple element");
+        for (names, 0..) |name_id, index| {
+            const element = symbolic_shapes.tupleElement(self.catalog, value, index).?;
+            if (self.program.nodes.items[@backingInt(name_id)].data != .name) {
+                try self.placeTarget(name_id, element, span);
+                continue;
+            }
+            const name = self.program.nodes.items[@backingInt(name_id)].data.name;
+            if (std.mem.eql(u8, self.src.text(name), "_")) continue;
+            if (self.active.contains(self.src.text(name))) {
+                const target = try self.local(name);
+                if (!target.mutable) return self.sink.fail(diagnostic.immutable, name, "assignment requires a mutable binding");
+                try self.compatible(element, target.ty, name);
+                self.option_facts.forget(self.active.get(self.src.text(name)).?);
+            } else try self.bind(name, element, true);
+        }
+        return .{ .concrete = .unit };
+    }
+    /// PY-DESTRUCTURE-PLACE-1: an element or field destructuring target takes
+    /// the tuple element the way `target = value` does in a template body.
+    fn placeTarget(self: *Checker, target: ast.NodeId, element: Symbolic, span: source.Span) Error!void {
+        var root = target;
+        while (true) switch (self.program.nodes.items[@backingInt(root)].data) {
+            .field => |field| root = field.base,
+            .index => |access| root = access.base,
+            else => break,
+        };
+        const root_node = self.program.nodes.items[@backingInt(root)];
+        if (root_node.data == .name) {
+            const binding = try self.local(root_node.data.name);
+            if (!binding.mutable) return self.sink.fail(diagnostic.immutable, root_node.span, "element or field assignment requires a mutable binding");
+            try self.runtimeOwner(root_node.data.name, true);
+        }
+        self.seedManagedWrite(self.parameterIndex(target, 0));
+        try self.compatible(element, try self.expression(target), span);
     }
     /// Build an enum-indexed table from a dict literal whose context already demands `[Kind]T`.
     fn tableLiteral(self: *Checker, node: ast.Node, entries: []const ast.NodeId, expected: Symbolic, key: typed.Type) Error!Symbolic {
@@ -576,7 +704,7 @@ const Checker = struct {
     /// produced values.
     fn comprehensionValue(self: *Checker, each: ast.Comprehension, span: source.Span) Error!Symbolic {
         const element = switch (each.source) {
-            .iterable => |iterable| try self.collectionElement(try self.expression(iterable), span),
+            .iterable => |iterable| try self.comprehensionElement(try self.expression(iterable), span),
             .range => |bounds| try self.rangeElement(bounds, each.name, span),
         };
         const text = self.src.text(each.name);
@@ -589,6 +717,17 @@ const Checker = struct {
         try self.supports(produced, .storable, span);
         self.seedEffect(.managed_allocation);
         return self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{produced});
+    }
+    /// The element a comprehension over a collection or fixed array binds.
+    fn comprehensionElement(self: *Checker, source_type: Symbolic, span: source.Span) Error!Symbolic {
+        if (self.walkableArray(source_type)) |shape| return shape.element;
+        return self.collectionElement(source_type, span);
+    }
+    /// The shape of a fixed array a loop may walk by position; an enum table
+    /// is indexed by its key, not by position, so it is not one.
+    fn walkableArray(self: *Checker, value: Symbolic) ?symbolic.Array {
+        const shape = symbolic.array(value, self.catalog.records) orelse return null;
+        return if (shape.key == null) shape else null;
     }
     /// Resolve a `range(...)` comprehension source to its integer element type, mirroring the
     /// generic `for` range bounds check: a unit start is zero, and both bounds share one type.
@@ -652,6 +791,11 @@ const Checker = struct {
             .append, .write => .{ .concrete = .unit },
             .keys, .values, .split => try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{if (kind == .keys) key else if (kind == .split) owner else element}),
             .join => owner,
+            .copy => if (family == .list) owner else return self.sink.fail(eUnsupported, operation.span, "unsupported collection operation in generic body"),
+            .sort => sorted: {
+                if (family != .list or !self.sortable(element)) return self.sink.fail("E_COLLECTION_METHOD", operation.span, "sort requires an integer, float or str element type");
+                break :sorted .{ .concrete = .unit };
+            },
             else => return self.sink.fail(eUnsupported, operation.span, "unsupported collection operation in generic body"),
         };
         const numeric_parse = kind == .parse_int or kind == .parse_float or kind == .parse_int_range or kind == .parse_float_range;
@@ -673,11 +817,35 @@ const Checker = struct {
         return output;
     }
     fn listOperation(self: *Checker, node: ast.Node, operation: @FieldType(@FieldType(ast.Node, "data"), "list_operation")) Error!Symbolic {
-        return self.collectionOperation(try self.expression(operation.base), .{ .kind = operation.kind, .inputs = operation.arguments, .span = node.span, .owner_node = operation.base });
+        const owner = try self.expression(operation.base);
+        if (operation.kind == .write and operation.arguments.len == 2 and symbolic.array(owner, self.catalog.records) != null)
+            return self.arrayWrite(owner, operation, node.span);
+        return self.collectionOperation(owner, .{ .kind = operation.kind, .inputs = operation.arguments, .span = node.span, .owner_node = operation.base });
+    }
+    /// `values[index] = value` on a fixed array in a template body: the index
+    /// and element follow the array's own rules, and the binding the path is
+    /// rooted at must be one the body may modify, as for a record field write.
+    fn arrayWrite(self: *Checker, owner: Symbolic, operation: @FieldType(@FieldType(ast.Node, "data"), "list_operation"), span: source.Span) Error!Symbolic {
+        const shape = try self.arrayIndex(owner, operation.arguments[0], span);
+        try self.compatible(try self.expressionExpected(operation.arguments[1], shape.element), shape.element, span);
+        var root = operation.base;
+        while (true) switch (self.program.nodes.items[@backingInt(root)].data) {
+            .field => |field| root = field.base,
+            .index => |index| root = index.base,
+            else => break,
+        };
+        const root_node = self.program.nodes.items[@backingInt(root)];
+        if (root_node.data == .name) try self.runtimeOwner(root_node.data.name, true);
+        self.seedManagedWrite(self.parameterIndex(root, 0));
+        return .{ .concrete = .unit };
     }
     fn listMethod(self: *Checker, node: ast.Node) Error!Symbolic {
         const method = node.data.method_call;
         const name = self.src.text(method.name);
+        if (option_flow.methodNamed(name) != null) {
+            const receiver = try self.expression(method.base);
+            if (try self.optionMethod(receiver, name, method.arguments, node.span)) |value| return value;
+        }
         if (std.mem.eql(u8, name, "read_only")) {
             if (method.arguments.len != 0) return self.sink.fail("E_ARITY", node.span, "read_only takes no arguments");
             const value = try self.expression(method.base);
@@ -685,6 +853,9 @@ const Checker = struct {
             return value;
         }
         if (std.mem.eql(u8, name, "push")) return self.sink.fail("E_REMOVED_SPELLING", method.name, "`push` was removed; use `append(value)`");
+        if (std.mem.eql(u8, name, "sort") and method.arguments.len != 0)
+            return self.keyedSort(try self.expression(method.base), .{ .arguments = method.arguments, .names = method.argument_names, .span = node.span, .owner_node = method.base });
+        if (method.argument_names.len != 0) return self.sink.fail(eCallArgument, method.name, "collection methods take their arguments by position; only a list's sort takes key= and reverse=");
         const kind = buffer_operations.method(name) orelse return self.sink.fail("E_LIST_METHOD", method.name, "unknown collection method");
         if (method.arguments.len == 0 and (kind == .parse_int or kind == .parse_float))
             if (try self.immediateNumericRange(method.base, kind, node.span)) |output| return output;
@@ -776,10 +947,41 @@ const Checker = struct {
         self.seedEffect(.managed_allocation);
         return owner;
     }
+    /// One intrinsic `Option[T]` method checked over a symbolic receiver, or
+    /// null when the receiver is not an `Option` or the name is no such method.
+    /// The three are pure, allocate nothing and contribute no effect, so a
+    /// generic body may call them under a `noalloc` ceiling.
+    fn optionMethod(self: *Checker, receiver: Symbolic, name: []const u8, arguments: []const ast.NodeId, span: source.Span) Error!?Symbolic {
+        const shape = (try self.shapes().matchOption(receiver, span)) orelse return null;
+        const method = option_flow.methodNamed(name) orelse return null;
+        if (method == .unwrap_or and arguments.len != 1)
+            return self.sink.fail("E_ARITY", span, "`unwrap_or` takes exactly one argument: `unwrap_or(default)`");
+        if (method != .unwrap_or and arguments.len != 0) {
+            const message = try std.fmt.allocPrint(self.allocator, "`{s}` takes no arguments", .{name});
+            return self.sink.fail("E_ARITY", span, message);
+        }
+        if (method == .unwrap_or) try self.compatible(try self.expressionExpected(arguments[0], shape.element), shape.element, span);
+        return if (method == .unwrap_or) shape.element else .{ .concrete = .bool };
+    }
+    /// The intrinsic `Option` method a call on a named local spells, or null
+    /// when the receiver is not an `Option` binding or another receiver's
+    /// methods win. A narrowed collection payload keeps its own methods, exactly
+    /// as the concrete checker decides.
+    fn optionReceiverCall(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
+        const owner = input_call.owner orelse return null;
+        const slot = self.active.get(self.src.text(owner)) orelse return null;
+        const name = self.src.text(input_call.name);
+        if (option_flow.methodNamed(name) == null and self.shapes().managed(self.locals.items[slot].ty)) return null;
+        return self.optionMethod(self.locals.items[slot].ty, name, input_call.arguments, span);
+    }
     fn managedMethod(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
         if (input_call.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
             const receiver = if (self.option_facts.has(slot)) try self.optionElement(self.locals.items[slot].ty, owner) else self.locals.items[slot].ty;
             if (self.shapes().managed(receiver)) {
+                if (keywordSort(self, input_call)) {
+                    const sorted = try self.keyedSort(receiver, .{ .arguments = input_call.arguments, .names = input_call.argument_names, .span = span });
+                    return sorted;
+                }
                 const kind = buffer_operations.method(self.src.text(input_call.name)) orelse return self.sink.fail("E_LIST_METHOD", input_call.name, "unknown collection method");
                 if (input_call.type_arguments.len != 0) return self.sink.fail("E_ARITY", span, "collection methods do not take explicit type arguments");
                 const result = try self.collectionOperation(receiver, .{ .kind = kind, .inputs = input_call.arguments, .span = span });
@@ -788,11 +990,59 @@ const Checker = struct {
         };
         return null;
     }
+    /// `sorted(values, key=..., reverse=...)` in a generic body, when no
+    /// binding or declaration claims the name: a new list of the argument's
+    /// type, its named operands checked as `values.sort(...)` checks them.
+    fn sortedCall(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
+        if (input_call.owner != null or input_call.type_arguments.len != 0) return null;
+        if (!std.mem.eql(u8, self.src.text(input_call.name), "sorted")) return null;
+        if (self.active.contains("sorted") or try self.topLevel(input_call.name)) return null;
+        if (input_call.arguments.len == 0) return self.sink.fail("E_ARITY", span, "sorted requires a list");
+        const names = input_call.argument_names;
+        if (names.len != 0 and names[0] != null) return self.sink.fail(eCallArgument, names[0].?, "the sorted list is positional");
+        const receiver = try self.expression(input_call.arguments[0]);
+        _ = try self.keyedSort(receiver, .{ .arguments = input_call.arguments[1..], .names = if (names.len == 0) names else names[1..], .span = span });
+        return receiver;
+    }
+    /// The operands of one `values.sort(key=..., reverse=...)` in a generic body.
+    const SortOperands = struct { arguments: []const ast.NodeId, names: []const ?source.Span, span: source.Span, owner_node: ?ast.NodeId = null };
+    /// `values.sort(key=..., reverse=...)` in a generic body: the operands are
+    /// checked in source order, `reverse` as a `bool`, and the receiver is
+    /// written. Each specialization checks the key against its concrete
+    /// element type; without a key the element needs a native order.
+    fn keyedSort(self: *Checker, receiver: Symbolic, sort: SortOperands) Error!Symbolic {
+        if (self.shapes().collectionKind(receiver) != .list) return self.sink.fail(eListType, sort.span, "sort requires a list receiver");
+        var keyed = false;
+        for (sort.arguments, 0..) |argument, index| {
+            const keyword = if (sort.names.len == 0) null else sort.names[index];
+            const text = if (keyword) |name| self.src.text(name) else "";
+            if (std.mem.eql(u8, text, "reverse")) {
+                const flag: Symbolic = .{ .concrete = .bool };
+                try self.compatible(try self.expressionExpected(argument, flag), flag, sort.span);
+            } else if (std.mem.eql(u8, text, "key")) {
+                _ = try self.expression(argument);
+                keyed = true;
+            } else return self.sink.fail(eCallArgument, keyword orelse sort.span, "sort takes only key= and reverse=, by keyword");
+        }
+        if (!keyed and !self.sortable(try self.collectionElement(receiver, sort.span)))
+            return self.sink.fail("E_COLLECTION_METHOD", sort.span, "sort requires an integer, float or str element type");
+        self.seedEffect(.managed_allocation);
+        self.seedCollectionWrite(.sort, false, if (sort.owner_node) |node_id| self.parameterIndex(node_id, 0) else null);
+        return .{ .concrete = .unit };
+    }
     fn floatType(self: *Checker) Symbolic {
         return .{ .concrete = self.catalog.names.get("float").? };
     }
     fn isFloat(self: *Checker, value: Symbolic) bool {
         return value == .concrete and numeric_surface.isFloat(value.concrete, self.catalog.records);
+    }
+    /// Whether a list of `element` has a native order for `sort`: a concrete
+    /// integer, float or str element, the same set the concrete checker accepts.
+    fn sortable(self: *Checker, element: Symbolic) bool {
+        if (element != .concrete) return false;
+        if (element.concrete.isInteger() or self.isFloat(element)) return true;
+        const text = self.catalog.names.get("str") orelse return false;
+        return element.concrete == text;
     }
     /// `T(x)` converts between integer widths wherever `T` names a type parameter of this
     /// template or a declared integer type, rather than a function.
@@ -1008,7 +1258,9 @@ const Checker = struct {
         }
         if (try self.truncatingHelper(input_call, span)) |value| return value;
         if (try self.variantConstruction(input_call, span)) |value| return value;
+        if (try self.optionReceiverCall(input_call, span)) |value| return value;
         if (try self.managedMethod(input_call, span)) |value| return value;
+        if (try self.sortedCall(input_call, span)) |value| return value;
         if (try self.cellConstructor(input_call, span)) |value| return value;
         if (try self.contextualResult(input_call, span)) |value| return value;
         if (try self.contextualOption(input_call, span)) |value| return value;
@@ -1132,13 +1384,14 @@ const Checker = struct {
     }
     fn call(self: *Checker, input_call: Call, span: source.Span) Error!Symbolic {
         if (try self.specialCall(input_call, span)) |value| {
-            if (!std.mem.eql(u8, self.src.text(input_call.name), "Cell")) try call_arguments.positional(input_call, self.sink);
+            const named = std.mem.eql(u8, self.src.text(input_call.name), "Cell") or keywordSort(self, input_call) or std.mem.eql(u8, self.src.text(input_call.name), "sorted");
+            if (!named) try call_arguments.positional(input_call, self.sink);
             return value;
         }
         const resolved = try self.resolveCall(input_call);
         const function = try self.callTarget(resolved, input_call.name);
         const signature = function.signature;
-        const invocation = try call_arguments.bind(self.field_arena.allocator(), self.src, resolved, signature.parameters, self.sink);
+        const invocation = try call_arguments.bind(self.field_arena.allocator(), self.src, self.program.nodes.items, resolved, signature, self.sink);
         if (function.policy.conversion) return self.sink.fail(eUnsupported, span, "generic conversions still need abstract checking");
         if (invocation.type_arguments.len != 0 and invocation.type_arguments.len != signature.type_parameters.len) return self.sink.fail("E_GENERIC_ARITY", span, "explicit type argument count does not match generic parameters");
         if (invocation.arguments.len != signature.parameters.len) return self.sink.fail("E_ARITY", span, "argument count does not match function parameters");
@@ -1426,13 +1679,38 @@ const Checker = struct {
                 try self.supports(target, .integer, cast.ty);
                 break :result target;
             },
-            // lane: tuples (item 4), conditional expression (item 6) and the
-            // `mut` marker (item 1): the lanes add real support for the ones
-            // that can appear in a generic body.
-            .tuple => return self.sink.fail(eUnsupported, node.span, "tuple values are not supported inside generic function bodies yet"),
-            .conditional => return self.sink.fail(eUnsupported, node.span, "conditional expressions are not supported inside generic function bodies yet"),
-            .mut_argument => return self.sink.fail(eUnsupported, node.span, "the `mut` argument marker is not supported inside generic function bodies yet"),
+            // A tuple value is checked element-wise against its schema, and a
+            // conditional with the same condition and arm agreement rules as an
+            // ordinary function body.
+            .tuple => |elements| try self.tupleValue(node.span, elements),
+            .conditional => |conditional| try self.conditionalValue(node, conditional),
+            // A `mut` argument marker is transparent here. What the template must
+            // agree on is the marked value's symbolic type; whether the marker
+            // belongs at this position is decided by the concrete specialization,
+            // which re-checks every call with the declared footprint and the
+            // full origin analysis.
+            .mut_argument => |inner| try self.expression(inner),
         };
+    }
+    /// `value_if_true if condition else value_if_false` inside a template body:
+    /// the condition is bool, both arms agree on one symbolic type, and only the
+    /// chosen arm runs, so the value carries the then arm's type.
+    fn conditionalValue(self: *Checker, node: ast.Node, conditional: @FieldType(@FieldType(ast.Node, "data"), "conditional")) Error!Symbolic {
+        const condition = try self.expressionExpected(conditional.condition, .{ .concrete = .bool });
+        try self.compatible(condition, .{ .concrete = .bool }, self.program.nodes.items[@backingInt(conditional.condition)].span);
+        const facts = try self.option_facts.snapshot(self.field_arena.allocator());
+        defer self.option_facts.restore(facts);
+        const expected = self.expected_types.get(node.span);
+        try self.assumeOption(conditional.condition, true);
+        const then_value = if (expected) |ty_value| try self.expressionExpected(conditional.then_value, ty_value) else try self.expression(conditional.then_value);
+        self.option_facts.restore(facts);
+        try self.assumeOption(conditional.condition, false);
+        const else_value = try self.expressionExpected(conditional.else_value, expected orelse then_value);
+        if (expected) |ty_value| {
+            try self.compatible(then_value, ty_value, self.program.nodes.items[@backingInt(conditional.then_value)].span);
+            try self.compatible(else_value, ty_value, self.program.nodes.items[@backingInt(conditional.else_value)].span);
+        } else try self.same(else_value, then_value, self.program.nodes.items[@backingInt(conditional.else_value)].span);
+        return then_value;
     }
     fn externalValue(self: *Checker, read: @FieldType(@FieldType(ast.Node, "data"), "external_read")) Error!Symbolic {
         const success: typed.Type = if (read.kind == .clock) .i64 else .u64;
@@ -1551,8 +1829,9 @@ const Checker = struct {
             return input.ok_type;
         }
         if (try self.shapes().matchOption(value, span)) |input| {
-            const output = (try self.shapes().matchOption(self.result, span)) orelse return self.sink.fail(eTryReturn, span, "try requires a function returning an Option type");
-            try self.same(input.element, output.element, span);
+            // OPTION-TRY-3: a propagated `None` carries no payload, so the
+            // enclosing Option's element need not match the operand's.
+            _ = (try self.shapes().matchOption(self.result, span)) orelse return self.sink.fail(eTryReturn, span, "try requires a function returning an Option type");
             try self.requireHandled(0, span);
             if (temporaries != 0) return self.sink.fail("E_RESULT_PROPAGATION", span, "propagation could drop an already evaluated result temporary");
             return input.element;
@@ -1924,17 +2203,24 @@ const Checker = struct {
                 const view = dictionary_views.symbolicKind(self.catalog, source_type);
                 const projected = view != null and view.? != .item;
                 const owner = if (projected) try dictionary_views.symbolicOwner(self.shapes(), source_type, statement_value.span) else source_type;
-                if (!self.shapes().managed(owner)) return self.sink.fail(eListType, statement_value.span, "iteration requires a collection or dictionary view");
-                const element = try self.iterationElement(source_type, owner, statement_value.span);
+                const fixed = self.walkableArray(owner);
+                if (fixed == null and !self.shapes().managed(owner)) return self.sink.fail(eListType, statement_value.span, "iteration requires a collection, fixed array or dictionary view");
+                const element = if (fixed) |shape| shape.element else try self.iterationElement(source_type, owner, statement_value.span);
                 const first = self.locals.items.len;
                 if (each.index_name != null and !each.enumerated) {
-                    if (dictionary_views.symbolicKind(self.catalog, element) != .item) return self.sink.fail("E_ITERATION", statement_value.span, "two iteration names require dictionary items, enumerate or zip");
-                    const shape = try self.shapes().schema(element, statement_value.span);
-                    try self.bind(each.index_name.?, shape.fields[0].ty.?, false);
-                    try self.bind(each.name, shape.fields[1].ty.?, false);
+                    if (symbolic_shapes.tupleArity(self.catalog, element)) |arity| {
+                        if (arity != 2) return self.sink.fail(eTupleArity, statement_value.span, try self.twoNameLoopMessage(arity));
+                        try self.bind(each.index_name.?, symbolic_shapes.tupleElement(self.catalog, element, 0).?, true);
+                        try self.bind(each.name, symbolic_shapes.tupleElement(self.catalog, element, 1).?, true);
+                    } else {
+                        if (dictionary_views.symbolicKind(self.catalog, element) != .item) return self.sink.fail("E_ITERATION", statement_value.span, "two iteration names require dictionary items, enumerate or zip");
+                        const shape = try self.shapes().schema(element, statement_value.span);
+                        try self.bind(each.index_name.?, shape.fields[0].ty.?, true);
+                        try self.bind(each.name, shape.fields[1].ty.?, true);
+                    }
                 } else {
-                    try self.bind(each.name, element, false);
-                    if (each.index_name) |name| try self.bind(name, .{ .concrete = .i64 }, false);
+                    try self.bind(each.name, element, true);
+                    if (each.index_name) |name| try self.bind(name, .{ .concrete = .i64 }, true);
                 }
                 defer self.endScope(first);
                 const before = try self.pendingState(self.locals.items.len);
@@ -1953,7 +2239,7 @@ const Checker = struct {
                 try self.supports(element, .integer, range.name);
                 try self.compatible(try self.expression(range.end), element, range.name);
                 const first = self.locals.items.len;
-                try self.bind(range.name, element, false);
+                try self.bind(range.name, element, true);
                 defer self.endScope(first);
                 const before = try self.pendingState(self.locals.items.len);
                 defer self.allocator.free(before);
@@ -2050,7 +2336,7 @@ fn resolveTemplate(context: TemplateCheck, function: ast.Function) Error!?Resolv
         error.SourceError => return null,
         else => return err,
     };
-    const parameters = @import("symbolic_shapes.zig").normalizeRequirements(allocator, context.catalog, context.src, raw, context.sink) catch |err| switch (err) {
+    const parameters = symbolic_shapes.normalizeRequirements(allocator, context.catalog, context.src, raw, context.sink) catch |err| switch (err) {
         error.SourceError => {
             requirements.deinitResolved(allocator, raw);
             return null;

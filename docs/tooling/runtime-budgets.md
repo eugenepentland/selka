@@ -66,6 +66,34 @@ These counters bound *compiler-generated work*, not elapsed time: one step is a
 dispatch, so a program that calls into a linked C function can spend arbitrary time
 inside that call. The separate byte ceiling below bounds memory, not time.
 
+## Host application guests
+
+A host application — `schematic-svg`, `mylang-io`, `board-trial` — compiles its
+guest and runs it in a private child process, so it chooses that child's
+ceilings itself rather than taking them from a command line. `schematic-svg`
+bounds one render with a **call-depth ceiling and the wall clock** and counts no
+instructions, because instruction accounting triples an optimized render while
+these two cost nothing measurable. A runaway guest still stops: recursion at the
+depth ceiling, a loop that never leaves at the timeout, an allocation at the
+byte ceiling.
+
+`--bounded` restores the instruction ceiling for an invocation that wants an
+exact, deterministic bound on generated work, and `--backend qbe` builds the
+guest with the debug assembler instead of the release code generator:
+
+```bash
+# the shipped policy: release code generator, depth and wall-clock ceilings
+schematic-svg --project src/schematic/guest circuit.sexp pinout.sexp interface.sexp > out.svg
+# count instructions instead, the way a bounded `mylang run` does
+schematic-svg --bounded --project src/schematic/guest circuit.sexp pinout.sexp interface.sexp > out.svg
+# build the guest with QBE (faster cold build, slower render)
+schematic-svg --backend qbe --project src/schematic/guest circuit.sexp pinout.sexp interface.sexp > out.svg
+```
+
+The ceilings a host passes always match the accounting it built the guest with,
+so a guest is never handed a `--max-steps=` it would refuse with
+`R_NO_STEP_ACCOUNTING`.
+
 ## Guest memory ceilings
 
 The budgets above bound what one embedded allocator hands out. A *ceiling*

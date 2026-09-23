@@ -11,49 +11,26 @@ public def compare_strs(a: str, b: str) -> int effects():
 
 
 # A new ascending list of integers; the input list is not modified.
-public def sort_ints(values: list[int]) -> list[int] effects(managed_allocation):
+public def sort_ints(values: list[int]) -> list[int]:
     return sorted(values)
 
 
 # A new ascending list of floats; NaNs follow ordered values and the input is unchanged.
-public def sort_floats(values: list[float]) -> list[float] effects(managed_allocation):
+public def sort_floats(values: list[float]) -> list[float]:
     return sorted(values)
 
 
 # A new list of texts in Unicode code point order; the input is not modified.
-public def sort_strs(values: list[str]) -> list[str] effects(managed_allocation):
+public def sort_strs(values: list[str]) -> list[str]:
     return sorted(values)
 
 
-# Merge two runs ordered by an integer key, preserving equal-key order.
-def merge_by_key[T: copy + storable](left: list[T], right: list[T], key: def(T) -> int effects()) -> list[T]:
-    out: list[T] = []
-    a = 0
-    b = 0
-    while a < len(left) and b < len(right):
-        if key(right[b]) < key(left[a]):
-            out.append(right[b])
-            b += 1
-        else:
-            out.append(left[a])
-            a += 1
-    while a < len(left):
-        out.append(left[a])
-        a += 1
-    while b < len(right):
-        out.append(right[b])
-        b += 1
-    return out
-
-
-# A new list ordered by an integer key function; the ordering is stable.
-public def sort_by_key[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[T] effects(managed_allocation):
-    if len(values) <= 1:
-        return values[:]
-    middle = len(values) // 2
-    left = sort_by_key(values[0:middle], key)
-    right = sort_by_key(values[middle:len(values)], key)
-    return merge_by_key(left, right, key)
+# A new list ordered by an integer key function; the ordering is stable and
+# the input is unchanged. It is `sorted(values, key=key)`: each key is
+# computed exactly once, in input order, and the native keyed sort gathers the
+# elements into the new list in key order.
+public def sort_by_key[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[T]:
+    return sorted(values, key=key)
 
 
 # Whether a list of integers is already in ascending order.
@@ -115,7 +92,7 @@ public def min_str(values: list[str]) -> Option[str] effects():
 
 
 # Integers with later duplicates removed, keeping first-occurrence order.
-public def unique_ints(values: list[int]) -> list[int] effects(managed_allocation):
+public def unique_ints(values: list[int]) -> list[int]:
     seen: dict[int, bool] = {}
     out: list[int] = []
     for value in values:
@@ -126,7 +103,7 @@ public def unique_ints(values: list[int]) -> list[int] effects(managed_allocatio
 
 
 # Texts with later duplicates removed, keeping first-occurrence order.
-public def unique_strs(values: list[str]) -> list[str] effects(managed_allocation):
+public def unique_strs(values: list[str]) -> list[str]:
     seen: dict[str, bool] = {}
     out: list[str] = []
     for value in values:

@@ -119,7 +119,7 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
             try index.checkArguments(expression, scope.parameters);
         }
     }
-    inline for (.{ "applications", "arrays", "callbacks" }) |category| for (@field(program.types.expressions, category)) |syntax| {
+    inline for (.{ "applications", "arrays", "tuples", "callbacks" }) |category| for (@field(program.types.expressions, category)) |syntax| {
         // `f[T](x)` parses as an application in call position; its base names a function, not a type.
         if (comptime std.mem.eql(u8, category, "applications")) {
             if (try @import("call_type_arguments.zig").functionApplication(src, program, index.context.names, syntax, sink)) continue;
@@ -130,6 +130,10 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
         try index.checkArguments(expression, parameters);
         if (templates.depends(expression)) {
             if (scope.?.nominal) continue;
+            // A dependent tuple is resolved from its spelling's element spans by
+            // the generic substitution and symbolic body checkers, which read
+            // `Index.syntax.tuples`, so it needs no template entry here.
+            if (comptime std.mem.eql(u8, category, "tuples")) continue;
             if (expression == .application) {
                 try result.nominal_templates.put(allocator, syntax.span.start, expression.application);
                 continue;

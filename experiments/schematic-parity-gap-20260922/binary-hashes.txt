@@ -1,0 +1,7 @@
+39c0dc49c8f0dec11fa70b9c5b488827b6769af9b435f1082e241088545c16af  /home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/install/bin/mylang
+074a4c32ce62068a6dae9f48d8d5fd9b09ea5b50259d02413317e26ab707805b  /home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/arms/gc-lto
+cd1f7c808662fe15f8e4141b9d5b4cb0ff510ac8fcd0707fe3ce4a6e2ba06dc5  /home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/arms/s-all
+9af83e29a1a832d9e35e8525efa6c28451623b500372bd42b37e6e5033ca8e58  /home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/arms/qbe-bounded
+1034432336c9110e9a1731c0706407cd9aa0f074f83ad99f2a9e5524e145847d  /home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/prod/prod-default
+0a80f2fa747d033ef979110109a1fbc4155d738d76018c930738847b3f358a63  /home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/zig-o3
+57a931f718fd234f54ec8b7775267eff6cac08c628308614d2502d483bccb39d  /home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/rust-o3

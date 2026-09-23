@@ -1,7 +1,7 @@
 module main
 
 # Assignment shares a managed list; helpers can grow it without borrowing.
-def add_pin(pins: list[int], pin: int):
+def add_pin(pins: mut list[int], pin: int):
     pins.append(pin)
 
 
@@ -9,6 +9,6 @@ def main() -> int:
     pins: list[int] = []
     alias = pins
     for pin in range(100):
-        add_pin(alias, pin)
+        add_pin(mut alias, pin)
     alias[0] = 42
     return pins[0] + len(pins)

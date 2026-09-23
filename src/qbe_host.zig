@@ -44,6 +44,12 @@ pub fn describe(allocator: std.mem.Allocator, program: bc.Program, catalog: *nat
             item.kind = "scalar";
             item.bits = 1;
         } else if (ty.isAggregate()) {
+            // The immutable byte string is the one managed shape the boundary
+            // carries: one owned payload the packed bridge copies whole.
+            if (typed.isByteString(program.records[ty.recordIndex()])) {
+                item.kind = "bytes";
+                continue;
+            }
             if (layout.trace or layout.drop) continue;
             if (program.records[ty.recordIndex()].contract.callback != null) continue;
             if (program.records[ty.recordIndex()].shape.hasRuntimeIdentity()) continue;
@@ -56,6 +62,10 @@ pub fn describe(allocator: std.mem.Allocator, program: bc.Program, catalog: *nat
                 item.fields = fields;
             } else {
                 item.kind = if (record.shape.domain != null) "domain" else if (record.shape.array != null) "array" else "record";
+                // FLOAT-NAN-OBSERVED-6: the builtin binary64 domain is the one
+                // domain whose width is set, so the copied bridge knows which
+                // backing words to canonicalize before a host reads them.
+                if (@import("numeric_surface.zig").isFloat(ty, program.records)) item.bits = 64;
                 item.count = if (record.shape.array != null) layout.count else layout.fields.len;
                 item.stride = layout.stride;
                 const fields = try allocator.alloc(Field, layout.fields.len);

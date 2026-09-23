@@ -181,8 +181,9 @@ const Writer = struct {
         } else if (self.force_space_after_colon) {
             if (!isCloser(tag)) try self.space();
             self.force_space_after_colon = false;
-        } else if (!named_equal and (self.needSpaceBefore(tag) or self.isMutationClause(token))) {
-            try self.space();
+        } else if (!named_equal) {
+            const separate_word = self.isMutationClause(token) or self.followsApplication(index);
+            if (self.needSpaceBefore(tag) or separate_word) try self.space();
         }
 
         if (named_equal) {
@@ -217,6 +218,27 @@ const Writer = struct {
     fn isMutationClause(self: *const Writer, token: lex.Token) bool {
         if (token.tag != .ident or self.prev_tag != .rparen) return false;
         return std.mem.eql(u8, self.bytes[token.span.start..token.span.end], "mutates");
+    }
+
+    /// FMT-CLAUSE-SPACE-1: an identifier right after a `]` that closes a type
+    /// application or subscript — `-> Option[int] effects()`, `-> list[T] noalloc`
+    /// — is a separate word. Only the `]` of an array length prefix (`[2]u.Value`)
+    /// binds the identifier after it, and that bracket's role is not `subscript`.
+    fn followsApplication(self: *const Writer, index: usize) bool {
+        if (self.tokens[index].tag != .ident or self.prev_tag != .rbracket) return false;
+        var cursor = self.prev_real[index] orelse return false;
+        var depth: usize = 0;
+        while (true) {
+            switch (self.tokens[cursor].tag) {
+                .rbracket => depth += 1,
+                .lbracket => {
+                    depth -= 1;
+                    if (depth == 0) return self.bracketRole(cursor) == .subscript;
+                },
+                else => {},
+            }
+            cursor = self.prev_real[cursor] orelse return false;
+        }
     }
 
     fn isNamedArgumentEqual(self: *const Writer) bool {

@@ -148,7 +148,156 @@ test "sorted key lambdas order records stably and diagnose invalid inputs" {
         \\    return ordered[0].position * 100 + ordered[1].position * 10 + ordered[2].position
     , 102);
     try reject("def main() -> int:\n    return len(sorted(1, key=lambda value: value))\n", "E_PRELUDE_TYPE");
-    try reject("def main() -> int:\n    xs = [1]\n    return len(sorted(xs, key=lambda value: True))\n", "E_TYPE");
+    // A `bool` key is ordered, False first; its body's own type is the key type.
+    try run("def main() -> int:\n    ys = sorted([3, 1, 2], key=lambda v: v > 1)\n    return ys[0] * 100 + ys[1] * 10 + ys[2]\n", 132);
+    try run("def main() -> int:\n    ys = sorted([3, 1, 2], key=lambda v: 0 - v, reverse=True)\n    return ys[0] * 100 + ys[1] * 10 + ys[2]\n", 123);
+}
+
+// spec: QBE-INVOKE-ROOTS-1
+test "a callback that allocates keeps the caller's managed locals alive" {
+    try run(
+        \\record Entry:
+        \\    name: str
+        \\    id: int
+        \\
+        \\
+        \\def label(e: Entry) -> int:
+        \\    return len(e.name + "!") + e.id
+        \\
+        \\
+        \\def main() -> int:
+        \\    entries: list[Entry] = []
+        \\    for i in range(300):
+        \\        entries.append(Entry(name=chr(19968 + (i * 37) % 11), id=i))
+        \\    k = label
+        \\    keys: list[int] = []
+        \\    for i in range(len(entries)):
+        \\        e = entries[i]
+        \\        keys.append(k(e))
+        \\    for i in range(300):
+        \\        if len(entries[i].name) != 1:
+        \\            return 1
+        \\    return 42 + len(keys) - 300
+    , 42);
+}
+
+// spec: LIST-SORT-KEY-2
+test "keyed sorts reject bad keys, a non-bool reverse and misplaced operands" {
+    const entry = "record Entry:\n    rank: int\n    id: int\n\n\n";
+    // The key must take one element and return an ordered key.
+    try reject(entry ++ "def main() -> int:\n    xs = [Entry(rank=1, id=0)]\n    xs.sort(key=lambda e: e)\n    return 0\n", "E_SORT_KEY");
+    try reject(entry ++ "def whole(e: Entry) -> Entry:\n    return e\n\n\ndef main() -> int:\n    xs = [Entry(rank=1, id=0)]\n    xs.sort(key=whole)\n    return 0\n", "E_SORT_KEY");
+    try reject(entry ++ "def pair(a: Entry, b: Entry) -> int:\n    return a.rank\n\n\ndef main() -> int:\n    xs = [Entry(rank=1, id=0)]\n    xs.sort(key=pair)\n    return 0\n", "E_SORT_KEY");
+    try reject("def length(s: str) -> int:\n    return len(s)\n\n\ndef main() -> int:\n    xs = [1, 2]\n    return len(sorted(xs, key=length))\n", "E_SORT_KEY");
+    try reject(entry ++ "def main() -> int:\n    xs = [Entry(rank=1, id=0)]\n    xs.sort(key=5)\n    return 0\n", "E_SORT_KEY");
+    // `reverse` is a bool, and both operands are keyword-only and single.
+    try reject("def main() -> int:\n    xs = [2, 1]\n    xs.sort(reverse=1)\n    return xs[0]\n", "E_TYPE");
+    try reject("def main() -> int:\n    xs = [2, 1]\n    xs.sort(True)\n    return xs[0]\n", "E_CALL_ARGUMENT");
+    try reject("def main() -> int:\n    xs = [2, 1]\n    xs.sort(reverse=True, reverse=False)\n    return xs[0]\n", "E_CALL_ARGUMENT");
+    try reject("def main() -> int:\n    xs = [2, 1]\n    return len(sorted(xs, order=True))\n", "E_CALL_ARGUMENT");
+    try reject("def main() -> int:\n    xs = [2, 1]\n    return len(sorted(xs, lambda v: v))\n", "E_CALL_ARGUMENT");
+    // A sort with no key needs elements with a native order.
+    try reject(entry ++ "def main() -> int:\n    xs = [Entry(rank=1, id=0)]\n    xs.sort(reverse=True)\n    return 0\n", "E_COLLECTION_METHOD");
+    // Only `sort` takes named operands among the collection methods.
+    try reject(entry ++ "record Holder:\n    items: list[int]\n\n\ndef main() -> int:\n    h = Holder(items=[1])\n    h.items.append(value=2)\n    return 0\n", "E_CALL_ARGUMENT");
+}
+
+// spec-case: LIST-SORT-KEY-2
+test "a mut key and a comparison function are rejected with their repair" {
+    try reject("class Box:\n    n: int\n\n\ndef grow(b: mut Box) -> int effects(mutation):\n    b.n = b.n + 1\n    return b.n\n\n\ndef main() -> int:\n    xs = [Box(n=1)]\n    xs.sort(key=grow)\n    return 0\n", "E_SORT_KEY");
+    var compilation = try language.Compilation.init(t.allocator, "cmp.my", "def order(a: int) -> int:\n    return a\n\n\ndef main() -> int:\n    xs = [2, 1]\n    xs.sort(cmp=order)\n    return xs[0]\n");
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    const item = compilation.diagnostics.items[0];
+    try t.expectEqualStrings("E_CALL_ARGUMENT", item.code);
+    try t.expectEqualStrings("cmp", compilation.src.text(item.related.?.span));
+    try t.expectEqualStrings("list[T].sort(*, key: def(T) -> K = None, reverse: bool = False) -> None", item.provenance.requirement.?.message);
+}
+
+// spec-case: LAMBDA-KEY-INFER-1
+test "hintSortKeywords: a lambda key whose body does not type on its own is one E_SORT_KEY quoting why" {
+    const program =
+        \\record Entry:
+        \\    rank: int
+        \\
+        \\
+        \\def main() -> int:
+        \\    xs = [Entry(rank=1)]
+        \\    xs.sort(key=lambda e: e.missing)
+        \\    return 0
+    ;
+    var compilation = try language.Compilation.init(t.allocator, "key.my", program);
+    defer compilation.deinit();
+    // `hintSortKeywords` catches the failed inference's error.SourceError and
+    // marks the lambda, so the never-typed lambda adds no E_LAMBDA_CONTEXT.
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqual(@as(usize, 1), compilation.diagnostics.items.len);
+    const item = compilation.diagnostics.items[0];
+    try t.expectEqualStrings("E_SORT_KEY", item.code);
+    try t.expectEqualStrings("lambda e: e.missing", compilation.src.text(item.span));
+    try t.expect(std.mem.startsWith(u8, item.message, "this lambda's key type cannot be inferred from its body (E_"));
+    try t.expect(std.mem.endsWith(u8, item.message, "); write a top-level key function with a declared result and pass it by name"));
+    // A body that types on its own but has no order is the ordinary no-order E_SORT_KEY.
+    try reject("record Entry:\n    rank: int\n\n\ndef main() -> int:\n    xs = [Entry(rank=1)]\n    xs.sort(key=lambda e: [e.rank])\n    return 0\n", "E_SORT_KEY");
+}
+
+// spec: LIST-SORT-KEY-3
+test "keyed sorts keep text keys rooted and traps come from the first element in input order" {
+    try run(
+        \\record Entry:
+        \\    name: str
+        \\    id: int
+        \\
+        \\
+        \\def label(e: Entry) -> str:
+        \\    return e.name + "!"
+        \\
+        \\
+        \\def main() -> int:
+        \\    entries: list[Entry] = []
+        \\    for i in range(300):
+        \\        entries.append(Entry(name=chr(19968 + (i * 37) % 11), id=i))
+        \\    entries.sort(key=label, reverse=True)
+        \\    for i in range(1, 300):
+        \\        if ord(entries[i - 1].name) < ord(entries[i].name):
+        \\            return 1
+        \\        if entries[i - 1].name == entries[i].name and entries[i - 1].id > entries[i].id:
+        \\            return 2
+        \\    copied = sorted(entries, key=lambda e: (e.name, 0 - e.id))
+        \\    if copied[0].name != chr(19968) or copied[299].name != chr(19978):
+        \\        return 3
+        \\    return 42
+    , 42);
+    // Element 1 overflows and element 2 divides by zero: keys are computed in
+    // input order, so the overflow is the trap, before any element moves.
+    try trapped(
+        \\def fragile(value: int) -> int:
+        \\    if value == 1:
+        \\        return 9223372036854775807 + value
+        \\    if value == 2:
+        \\        return 10 // (value - 2)
+        \\    return value
+        \\
+        \\
+        \\def main() -> int:
+        \\    xs = [2, 0, 1, 3]
+        \\    xs.sort(key=fragile)
+        \\    return xs[0]
+    , "R_DIVISION_BY_ZERO");
+    try trapped(
+        \\def fragile(value: int) -> int:
+        \\    if value == 1:
+        \\        return 9223372036854775807 + value
+        \\    if value == 2:
+        \\        return 10 // (value - 2)
+        \\    return value
+        \\
+        \\
+        \\def main() -> int:
+        \\    xs = [0, 1, 2, 3]
+        \\    ys = sorted(xs, key=fragile, reverse=True)
+        \\    return ys[0]
+    , "R_OVERFLOW");
 }
 
 // spec: PRELUDE-ABS-1
@@ -224,7 +373,7 @@ test "removed names and punctuation report their canonical migration" {
     try rejectMigration("def main() -> int:\n    values: List[int] = []\n    return len(values)\n", "list[", "List");
     try rejectMigration("def main() -> int:\n    values = [1]\n    values.push(2)\n    return 0\n", "append", "push");
     try rejectMigration("def main() -> int:\n    values = {\"a\": 1}\n    if values.contains(\"a\"):\n        return 1\n    return 0\n", "in", "contains");
-    try rejectMigration("def main() -> int:\n    return 1 & 1\n", "no replacement", "&");
+    try rejectMigration("def touch(values: mut list[int]) -> None:\n    values[0] = 1\n\n\ndef main() -> int:\n    values = [1]\n    touch(&values)\n    return 0\n", "write `mut value`", "&");
     try rejectMigration("def main() -> int:\n    return 1 => 1\n", "no replacement", "=>");
 }
 

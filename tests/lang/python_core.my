@@ -5,22 +5,22 @@ def float_add(x: float, y: float) -> float:
     return x + y
 
 
-def operand(log: list[int], value: int) -> float effects(mutation, managed_allocation) mutates(log):
+def operand(log: mut list[int], value: int) -> float:
     log.append(value)
     return float(value)
 
 
-def receiver(log: list[int], values: list[int]) -> list[int] effects(mutation, managed_allocation) mutates(log):
+def receiver(log: mut list[int], values: list[int]) -> list[int]:
     log.append(2)
     return values
 
 
-def log_index(log: list[int]) -> int effects(mutation, managed_allocation) mutates(log):
+def log_index(log: mut list[int]) -> int:
     log.append(3)
     return 0
 
 
-def emit_value(log: list[int]) -> int effects(mutation, managed_allocation) mutates(log):
+def emit_value(log: mut list[int]) -> int:
     log.append(1)
     return 42
 
@@ -73,7 +73,7 @@ record Pair:
     n: int
 
 
-def bump(counter: Counter) effects(mutation) mutates(counter):
+def bump(counter: mut Counter) effects(mutation):
     counter.n = counter.n + 1
 
 
@@ -96,8 +96,8 @@ public def test_floating_literals_operators_and_comparisons_use_numeric_binary64
 # spec-case: PYTHON-CORE-4
 public def test_floating_comparisons_and_remainder_preserve_operand_evaluation_once_in_source_order() -> bool:
     log: list[int] = []
-    if operand(log, 5) > operand(log, 2):
-        value = operand(log, 7) % operand(log, 3)
+    if operand(mut log, 5) > operand(mut log, 2):
+        value = operand(mut log, 7) % operand(mut log, 3)
         if value != 1.0:
             return False
     if len(log) != 4:
@@ -109,7 +109,7 @@ public def test_floating_comparisons_and_remainder_preserve_operand_evaluation_o
 public def test_python_indexed_assignment_evaluates_rhs_before_receiver_and_index_exactly_once() -> bool:
     log: list[int] = []
     values = [0]
-    receiver(log, values)[log_index(log)] = emit_value(log)
+    receiver(mut log, values)[log_index(mut log)] = emit_value(mut log)
     if len(log) != 3 or values[0] != 42:
         return False
     return log[0] * 100 + log[1] * 10 + log[2] == 123
@@ -169,7 +169,7 @@ public def test_class_is_a_shared_managed_reference_while_record_copies() -> boo
     a = Counter(n=1)
     b = a
     b.n = 7
-    bump(a)
+    bump(mut a)
     pair = Pair(n=1)
     copy = pair
     copy.n = 9

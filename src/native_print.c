@@ -229,6 +229,15 @@ void myl_print_class(MylPrint *out, const void *slot, unsigned depth, const char
     memcpy(&body, slot, sizeof body);
     myl_print_record(out, body, depth, name, fields, count);
 }
+void myl_print_tuple(MylPrint *out, const void *value, unsigned depth, const MylPrintField *elements, size_t count) {
+    if (myl_print_deep(out, depth)) return;
+    byte(out, '(');
+    for (size_t i = 0; i < count; ++i) {
+        if (i) literal(out, ", ");
+        elements[i].render(out, (const unsigned char *)value + elements[i].offset, depth + 1);
+    }
+    byte(out, ')');
+}
 void myl_print_domain(MylPrint *out, const void *value, unsigned depth, const char *name, MylPrintFn inner) {
     if (myl_print_deep(out, depth)) return;
     literal(out, name);
@@ -242,6 +251,22 @@ void myl_print_variant(MylPrint *out, const void *value, unsigned depth, const M
     memcpy(&tag, value, sizeof tag);
     for (size_t i = 0; i < count; ++i) {
         if (cases[i].tag != tag) continue;
+        literal(out, cases[i].name);
+        if (!cases[i].render) return;
+        byte(out, '(');
+        cases[i].render(out, (const unsigned char *)value + cases[i].offset, depth + 1);
+        byte(out, ')');
+        return;
+    }
+    literal(out, "...");
+}
+void myl_print_niche(MylPrint *out, const void *value, unsigned depth, const MylPrintField *cases, size_t count) {
+    if (myl_print_deep(out, depth)) return;
+    const void *reference = NULL;
+    memcpy(&reference, value, sizeof reference);
+    /* The one case with a payload renderer is `Some`; the null word is the other. */
+    for (size_t i = 0; i < count; ++i) {
+        if ((cases[i].render != NULL) != (reference != NULL)) continue;
         literal(out, cases[i].name);
         if (!cases[i].render) return;
         byte(out, '(');

@@ -219,6 +219,57 @@ test "an explicit narrow callback ceiling still rejects a wider function value" 
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings("E_TYPE", compilation.diagnostics.items[0].code);
 }
+// spec-case: CALLBACK-SLOT-1
+test "an unannotated function whose body exceeds the slot it fills is rejected at the value" {
+    // A direct call fixes the slot up front; `run` is noio, so accepting the
+    // value would let `output` through a callback its bound never sees.
+    try expectMessage(
+        \\def key(out: Stream, x: int) -> int:
+        \\    out.print(x)
+        \\    return x
+        \\
+        \\
+        \\def run(out: Stream, f: def(Stream, int) -> int effects(), x: int) -> int noio:
+        \\    return f(out, x)
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    return run(out, key, 1)
+    , "E_EFFECT_BOUND", "`key` fills a callback slot of type `def(stream_cap, int) -> int effects()`, but its body has effect `output`: key; keep the body within the slot's ceiling, or widen the callback type's `effects(...)`");
+    // A generic callee's slot is concrete only after inference; the same rule
+    // holds there, with the witness path through the helper the body calls.
+    try expectMessage(
+        \\def show(out: Stream, x: int) -> int:
+        \\    out.print(x)
+        \\    return x
+        \\
+        \\
+        \\def key(out: Stream, x: int) -> int:
+        \\    return show(out, x)
+        \\
+        \\
+        \\def run[T: copy + storable](out: Stream, f: def(Stream, T) -> int effects(), x: T) -> int:
+        \\    return f(out, x)
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    return run(out, key, 1)
+    , "E_EFFECT_BOUND", "`key` fills a callback slot of type `def(stream_cap, int) -> int effects()`, but its body has effect `output`: key -> show; keep the body within the slot's ceiling, or widen the callback type's `effects(...)`");
+    // Allocation is held to the slot too: `run` is noalloc and calls through
+    // an `effects()` slot, so an allocating helper cannot fill it.
+    try expectMessage(
+        \\def key(x: int) -> int:
+        \\    return len(str(x))
+        \\
+        \\
+        \\def run(f: def(int) -> int effects(), x: int) -> int noalloc:
+        \\    return f(x)
+        \\
+        \\
+        \\def main() -> int:
+        \\    return run(key, 123)
+    , "E_EFFECT_BOUND", "`key` fills a callback slot of type `def(int) -> int effects()`, but its body has effect `managed_allocation`: key; keep the body within the slot's ceiling, or widen the callback type's `effects(...)`");
+}
 // spec: DEAD-RECORD-WRITE-1
 test "dead record writes reject loop and parameter copies but not fresh locals" {
     var loop = try language.Compilation.init(t.allocator, "dead-loop.my",
@@ -377,4 +428,88 @@ test "a dict get without its fallback names the operand the accepted call carrie
         \\    v = d.get("b")
         \\    return v
     , "E_ARITY", "a dictionary `get` always takes its fallback: `d.get(key, default)`");
+}
+
+// spec: CONDITIONAL-EXPR-1
+test "conditional arms must agree on one type without widening between them" {
+    try expectMessage(
+        \\def main() -> int:
+        \\    x = 1 if True else "a"
+        \\    return 0
+    , "E_TYPE", "conditional arms must agree: `int` here, `str` in the else arm");
+}
+
+// spec: CONDITIONAL-EXPR-2
+test "a conditional condition is bool" {
+    try expectMessage(
+        \\def main() -> int:
+        \\    x = 1 if 2 else 3
+        \\    return 0
+    , "E_TYPE", "expected bool, found int");
+}
+
+// spec: CONDITIONAL-EXPR-3
+test "only the chosen conditional arm runs and a standalone conditional needs a discard" {
+    try run(
+        \\def fails() -> int:
+        \\    zero = 0
+        \\    return 1 // zero
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 42 if True else fails()
+    , 42);
+    try expectMessage(
+        \\def main() -> int:
+        \\    1 if True else 2
+        \\    return 0
+    , "E_EXPLICIT_DISCARD_REQUIRED", "a standalone non-unit value requires `_ =` or result handling");
+}
+
+// spec-case: CONDITIONAL-EXPR-3
+test "both conditional arms count for definite assignment and for effects" {
+    try expectMessage(
+        \\def main() -> int:
+        \\    if True:
+        \\        y = 1
+        \\    return 0 if False else y
+    , "E_UNBOUND", "name may be read before it is assigned; some control-flow path reaching here leaves it unbound");
+    try expectMessage(
+        \\def shout(out: Stream) -> int effects():
+        \\    _ = out.print("a") if False else out.print("b")
+        \\    return 0
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    return shout(out)
+    , "E_EFFECT_BOUND", "effect `output` exceeds declared bound: shout; inferred bound is effects(output)");
+}
+
+// spec: CONDITIONAL-EXPR-4
+test "a conditional takes its type from the expected type and nests in its else arm" {
+    try run(
+        \\def pick(value: bool) -> u8:
+        \\    return 1 if value else 2
+        \\
+        \\
+        \\def lookup(found: bool) -> Option[int]:
+        \\    return Some(7) if found else None
+        \\
+        \\
+        \\def describe(value: int) -> int:
+        \\    return value + 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    x: u8 = pick(True)
+        \\    y = 9 if False else 8 if False else 7
+        \\    label = f"{y} {'item' if y == 1 else 'items'}"
+        \\    if label != "7 items":
+        \\        return 0
+        \\    match lookup(True):
+        \\        case Some(index):
+        \\            return describe(index if True else 0) + int(x) - 1
+        \\        case None:
+        \\            return 0
+    , 8);
 }

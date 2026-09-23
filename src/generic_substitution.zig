@@ -1,10 +1,12 @@
 //! Concrete composite signatures share nominal identities and specialization limits.
 const std = @import("std");
+const ast = @import("ast.zig");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
 const generic_requirements = @import("generic_requirements.zig");
+const nominal_catalog = @import("nominal_catalog.zig");
 /// Declaration parameters and concrete arguments for one source signature.
 pub const Binding = struct {
     span: Span,
@@ -56,7 +58,7 @@ pub fn resolve(allocator: std.mem.Allocator, catalog: *@import("type_catalog.zig
             .parameters = inputs[0..callback.parameters.len],
             .return_type = result,
             .effects = callback.effect_bound.allowed,
-            .mutates = callback.mutates,
+            .mutates = try ast.mutPositions(allocator, callback.mut_parameters),
             .return_origin = .unknown,
         }, span, sink);
     };
@@ -70,18 +72,30 @@ pub fn resolve(allocator: std.mem.Allocator, catalog: *@import("type_catalog.zig
                 values[i] = .u64;
             } else values[i] = try resolve(allocator, catalog, src, sink, .{ .span = argument, .parameters = parameters, .arguments = arguments, .lengths = binding.lengths, .aliases = binding.aliases, .depth = depth + 1 });
         }
-        return @import("nominal_catalog.zig").instantiateLengths(catalog, template.declaration, values[0..template.arguments.len], lengths[0..template.arguments.len], span);
+        return nominal_catalog.instantiateLengths(catalog, template.declaration, values[0..template.arguments.len], lengths[0..template.arguments.len], span);
     }
     if (catalog.arrays.templates.get(span.start)) |template| {
         const element = try resolve(allocator, catalog, src, sink, .{ .span = template.syntax.element, .parameters = parameters, .arguments = arguments, .lengths = binding.lengths, .aliases = binding.aliases, .depth = depth + 1 });
         const length = if (template.length_parameter) |at| try @import("generic_lengths.zig").resolve(src, at, parameters, binding.lengths, sink) else template.length;
         return catalog.instantiateArray(allocator, element, length, span, sink);
     }
+    if (catalog.templates.store) |store| if (store.index.syntax.tuples.get(span.start)) |syntax| {
+        var elements: [8]typed.Type = undefined;
+        for (syntax.elements, 0..) |element, index| elements[index] = try resolve(allocator, catalog, src, sink, .{
+            .span = element,
+            .parameters = parameters,
+            .arguments = arguments,
+            .lengths = binding.lengths,
+            .aliases = binding.aliases,
+            .depth = depth + 1,
+        });
+        return nominal_catalog.instantiateTuple(catalog, elements[0..syntax.elements.len], span);
+    };
     // A prelude type named without an import — the mutable octet buffer — is
     // declared with the prelude but materialized on its first mention, so a
     // module-local declaration of that name still wins its own scope.
     const name = src.text(span);
     if (std.mem.eql(u8, name, @import("nominal_templates.zig").byte_buffer_name) and !(catalog.module_names != null and try catalog.module_names.?.topLevel(span)))
-        if (try @import("nominal_catalog.zig").materializePrelude(catalog, name, span)) |ty| return ty;
+        if (try nominal_catalog.materializePrelude(catalog, name, span)) |ty| return ty;
     return catalog.resolve(src, span, sink);
 }

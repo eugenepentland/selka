@@ -2,12 +2,12 @@ module base64
 
 
 # The sixty-four symbols of RFC 4648 section 4, in value order.
-public def standard_alphabet() -> bytes effects(managed_allocation):
+public def standard_alphabet() -> bytes:
     return b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
 
 # The sixty-four symbols of RFC 4648 section 5, in value order.
-public def urlsafe_alphabet() -> bytes effects(managed_allocation):
+public def urlsafe_alphabet() -> bytes:
     return b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 
 
@@ -99,20 +99,20 @@ def decode_with(data: bytes, alphabet: bytes) -> Result[bytes, str]:
 
 
 # Bytes encoded with the standard alphabet and canonical padding.
-public def b64encode(data: bytes) -> bytes effects(managed_allocation):
+public def b64encode(data: bytes) -> bytes:
     return encode_with(data, standard_alphabet())
 
 
 # Standard-alphabet base64 decoded, rejecting invalid symbols and padding.
-public def b64decode(data: bytes) -> Result[bytes, str] effects(managed_allocation):
+public def b64decode(data: bytes) -> Result[bytes, str]:
     return decode_with(data, standard_alphabet())
 
 
 # Bytes encoded with the URL and filename safe alphabet.
-public def urlsafe_b64encode(data: bytes) -> bytes effects(managed_allocation):
+public def urlsafe_b64encode(data: bytes) -> bytes:
     return encode_with(data, urlsafe_alphabet())
 
 
 # URL-safe base64 decoded, rejecting invalid symbols and padding.
-public def urlsafe_b64decode(data: bytes) -> Result[bytes, str] effects(managed_allocation):
+public def urlsafe_b64decode(data: bytes) -> Result[bytes, str]:
     return decode_with(data, urlsafe_alphabet())

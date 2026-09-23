@@ -1,0 +1,187 @@
+module dictionary_range_keys
+
+# A slice read only as the key of a `str`-keyed dictionary is described rather
+# than built (SPEC.md DICT-RANGE-KEY-1..2). None of that is observable: every
+# answer below is compared with the same work done on slices that are built,
+# because each one also has another reader (`built` returns it). This module
+# opens no arena, so the lowering applies to every function in it. The runner
+# collects at every allocation (`--gc-stress`), so each key a write inserts is
+# read back after many collections of the text it was cut from.
+
+
+# The slice itself, as a value with a reader other than a dictionary: the
+# reference spelling every described key is checked against.
+def built(text: str, start: int, stop: int) -> str:
+    return text[start:stop]
+
+
+def dna(length: int) -> str:
+    bases = "ACGT"
+    parts: list[str] = []
+    seed = 42
+    for _ in range(length):
+        seed = (seed * 3877 + 29573) % 139968
+        parts.append(bases[seed * 4 // 139968])
+    return "".join(parts)
+
+
+def described_counts(seq: str, k: int) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for i in range(len(seq) - k + 1):
+        key = seq[i:i + k]
+        counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
+def built_counts(seq: str, k: int) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for i in range(len(seq) - k + 1):
+        key = built(seq, i, i + k)
+        counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
+def augmented_counts(seq: str, k: int) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for i in range(len(seq) - k + 1):
+        if seq[i:i + k] in counts:
+            counts[seq[i:i + k]] += 1
+        else:
+            counts[seq[i:i + k]] = 1
+    return counts
+
+
+def same_counts(left: dict[str, int], right: dict[str, int]) -> bool:
+    if len(left) != len(right):
+        return False
+    left_keys = list(left.keys())
+    right_keys = list(right.keys())
+    for index in range(len(left_keys)):
+        if left_keys[index] != right_keys[index] or left[left_keys[index]] != right[right_keys[index]]:
+            return False
+    return True
+
+
+def churn(rounds: int) -> int:
+    total = 0
+    for index in range(rounds):
+        total += len(f"garbage {index} {index * 7}")
+    return total
+
+
+# spec-case: DICT-RANGE-KEY-1
+public def test_counting_by_described_slices_matches_counting_by_built_ones() -> bool:
+    seq = dna(600)
+    ok = True
+    for k in [1, 2, 7, 18]:
+        reference = built_counts(seq, k)
+        ok = ok and same_counts(described_counts(seq, k), reference)
+        ok = ok and same_counts(augmented_counts(seq, k), reference)
+    return ok
+
+
+# spec-case: DICT-RANGE-KEY-1
+public def test_every_key_spelling_answers_as_the_built_slice() -> bool:
+    s = "abcdef"
+    d: dict[str, int] = {"bc": 1, "ab": 2, "cd": 3, "bcd": 4}
+    total = d[s[1:3]] + d.get(s[0:2], 50) + d.get(s[3:5], 60)
+    ok = total == 1 + 2 + 60
+    ok = ok and s[2:4] in d and not (s[3:5] in d) and s[3:5] not in d
+    d[s[0:3]] = d.get(s[0:3], 0) + 1
+    d[s[1:4]] += 2
+    d[s[2:5]] = 7
+    key = s[0:2]
+    d[key] += 10
+    ok = ok and d["abc"] == 1 and d["bcd"] == 6 and d["cde"] == 7 and d["ab"] == 12
+    order = list(d.keys())
+    return ok and len(order) == 6 and order[4] == "abc" and order[5] == "cde"
+
+
+# spec-case: DICT-RANGE-KEY-1
+public def test_described_slices_clamp_and_count_like_built_ones() -> bool:
+    s = "héllo wörld €uro"
+    d: dict[str, int] = {}
+    starts: list[int] = [0 - 20, 0 - 5, 0 - 1, 0, 1, 2, 5, 15, 16, 30]
+    for a in starts:
+        for b in starts:
+            d[s[a:b]] = d.get(s[a:b], 0) + 1
+    reference: dict[str, int] = {}
+    for a in starts:
+        for b in starts:
+            piece = built(s, a, b)
+            reference[piece] = reference.get(piece, 0) + 1
+    ok = same_counts(d, reference) and d[""] == reference[""]
+    ok = ok and d[s[1:2]] == reference["é"] and d[s[15:16]] == reference["o"]
+    return ok and s[12:13] not in d and d.get(s[12:13], 0) == 0 and d[s[5:15]] == reference[" wörld €ur"]
+
+
+# spec-case: DICT-RANGE-KEY-1
+public def test_inserted_keys_outlive_the_text_they_were_cut_from() -> bool:
+    counts = described_counts(dna(3000) + "ÅÅÅ", 3)
+    _ = churn(2000)
+    reference = built_counts(dna(3000) + "ÅÅÅ", 3)
+    keys = sorted(list(counts.keys()))
+    ok = same_counts(counts, reference) and keys[len(keys) - 1] == "ÅÅÅ"
+    ok = ok and len(keys[len(keys) - 1]) == 3 and counts["ÅÅÅ"] == 1 and counts.get("TÅÅ", 0) + counts.get("GÅÅ", 0) + counts.get("CÅÅ", 0) + counts.get("AÅÅ", 0) == 1
+    long_keys = described_counts(dna(400), 200)
+    return ok and len(long_keys) == 201 and len(list(long_keys.keys())[0]) == 200
+
+
+# spec-case: DICT-RANGE-KEY-1
+public def test_described_and_owned_keys_hash_and_compare_alike() -> bool:
+    text = "the quick brown fox jumps over the lazy dog"
+    d: dict[str, int] = {"quick": 1, "the lazy dog": 2, "": 3, "x": 4}
+    ok = d[text[4:9]] == 1 and d[text[31:43]] == 2 and d[text[5:5]] == 3
+    ok = ok and text[16:19] not in d and d.get(text[16:19], 9) == 9
+    d[text[16:19]] = 5
+    return ok and d["fox"] == 5 and "fox" in d and d[built(text, 16, 19)] == 5
+
+
+# spec: DICT-RANGE-KEY-2
+public def test_a_recorded_absence_never_hides_a_key_written_since() -> bool:
+    s = "abcabc"
+    d: dict[str, int] = {"abcabc": 1}
+    key = s[0:2]
+    missed = d.get(key, 0)
+    d["ab"] = 5
+    d[key] = d.get(key, 0) + 1
+    ok = missed == 0 and d["ab"] == 6
+    other = s[3:5]
+    ok = ok and d.get(s[1:3], 0) == 0 and d[other] == 6
+    whole = s[0:6]
+    ok = ok and d.get(s[0:3], 0) == 0 and s in d and d[whole] == 1
+    gone = d.get(s[2:4], 0)
+    _ = churn(500)
+    d[s[2:4]] = gone + 3
+    return ok and d["ca"] == 3 and len(d) == 3
+
+
+# spec-case: DICT-RANGE-KEY-2
+public def test_an_absence_is_not_believed_across_a_pop_or_clear() -> bool:
+    s = "xyzxyz"
+    d: dict[str, int] = {"xy": 1, "yz": 2}
+    miss = d.get(s[2:4], 0)
+    popped = d.pop("xy")
+    d[s[2:4]] = 7
+    ok = miss == 0 and popped == 1 and d["zx"] == 7 and s[0:2] not in d
+    d.clear()
+    ok = ok and d.get(s[0:2], 0) == 0
+    d[s[0:2]] = 8
+    return ok and d["xy"] == 8 and len(d) == 1
+
+
+# spec-case: DICT-RANGE-KEY-1
+public def test_a_slice_key_beside_negative_indices_answers_as_the_built_slice() -> bool:
+    # A range-keyed lookup sits in the same function as reads that count from
+    # the end of a list and of a fixed array (PY-ARRAY-NEGATIVE-1).
+    s = "gattaca"
+    names = ["ta", "ca"]
+    marks: [3]int = [4, 5, 6]
+    d: dict[str, int] = {"ta": 1, "ca": 2}
+    d[s[3:5]] += marks[-1]
+    total = d[s[-2:]] + d[names[-2]] + marks[-3]
+    return d["ta"] == 7 and total == 2 + 7 + 4
+
+
+def main() -> int:
+    return 0

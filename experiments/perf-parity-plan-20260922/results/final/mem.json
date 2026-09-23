@@ -1,0 +1,2355 @@
+{
+ "mylang": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem/bin/mylang",
+ "cpu": 2,
+ "rounds": 11,
+ "warmups": 2,
+ "started": "2026-09-23T07:22:32Z",
+ "load_start": [
+  1.408203125,
+  3.86767578125,
+  4.26806640625
+ ],
+ "benchmarks": {
+  "binary_trees": {
+   "arms": {
+    "my": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/binary_trees.my",
+     "build": {
+      "cmd": [
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem/bin/mylang",
+       "build",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/binary_trees.my",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/binary_trees.my",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/mycache"
+      ],
+      "ok": true,
+      "seconds": 0.7564116109861061,
+      "stderr": ""
+     },
+     "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "fd78c1fb024384d4d37040998eb3dbeaa4d2cd353d33be161de20fb599f33958",
+     "peak_rss_kb": 16524,
+     "wall": [
+      0.120137285,
+      0.119489103,
+      0.119552348,
+      0.119039455,
+      0.120198892,
+      0.119650364,
+      0.119082061,
+      0.117107941,
+      0.118718425,
+      0.11816366,
+      0.119381579
+     ],
+     "cpu": [
+      0.11979399999999998,
+      0.11924299999999999,
+      0.119257,
+      0.118753,
+      0.11981699999999999,
+      0.119379,
+      0.11880399999999999,
+      0.11654799999999998,
+      0.118514,
+      0.11778899999999999,
+      0.1191
+     ],
+     "wall_median": 0.119381579,
+     "cpu_median": 0.1191,
+     "ratio_wall": {
+      "median": 0.46486994013244115,
+      "lo": 0.4594119587809052,
+      "hi": 0.47086466034199886
+     },
+     "ratio_cpu": {
+      "median": 0.4644739353476649,
+      "lo": 0.45885548728169573,
+      "hi": 0.47065785032068463
+     }
+    },
+    "my-unchecked": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/binary_trees.my",
+     "build": {
+      "cmd": [
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem/bin/mylang",
+       "build",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/binary_trees.my",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/binary_trees.my-unchecked",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/mycache",
+       "--unchecked"
+      ],
+      "ok": true,
+      "seconds": 0.6224309990066104,
+      "stderr": ""
+     },
+     "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "54c428192f5997daa15e1714c55d61e479d4774719887bfd85a151ea0c95f6fa",
+     "peak_rss_kb": 16560,
+     "wall": [
+      0.109768609,
+      0.111743488,
+      0.110497282,
+      0.11026658,
+      0.109993576,
+      0.112158865,
+      0.11176929,
+      0.110877478,
+      0.112709242,
+      0.110751868,
+      0.109535722
+     ],
+     "cpu": [
+      0.109491,
+      0.11146299999999999,
+      0.11020999999999999,
+      0.109908,
+      0.109715,
+      0.11187,
+      0.111482,
+      0.11059999999999999,
+      0.11241799999999999,
+      0.110456,
+      0.109177
+     ],
+     "wall_median": 0.110751868,
+     "cpu_median": 0.110456,
+     "ratio_wall": {
+      "median": 0.4344261972472016,
+      "lo": 0.4265350324791042,
+      "hi": 0.4438678281131169
+     },
+     "ratio_cpu": {
+      "median": 0.4335706818674924,
+      "lo": 0.42596950428087793,
+      "hi": 0.4431499045143068
+     }
+    },
+    "my-arena": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/binary_trees_arena.my",
+     "build": {
+      "cmd": [
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem/bin/mylang",
+       "build",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/binary_trees_arena.my",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/binary_trees.my-arena",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/mycache"
+      ],
+      "ok": true,
+      "seconds": 0.747079965978628,
+      "stderr": ""
+     },
+     "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "30dc66e35b4f9ef9098ac44f8e18df85b283cae11b96853238943a1de0aadb27",
+     "peak_rss_kb": 11736,
+     "wall": [
+      0.198196336,
+      0.199308308,
+      0.197612143,
+      0.195937224,
+      0.199249146,
+      0.199986618,
+      0.199289729,
+      0.200541115,
+      0.197607954,
+      0.19775909,
+      0.198418179
+     ],
+     "cpu": [
+      0.19786499999999999,
+      0.19905,
+      0.197343,
+      0.19533199999999998,
+      0.198958,
+      0.19966899999999999,
+      0.199057,
+      0.200225,
+      0.197312,
+      0.197193,
+      0.198079
+     ],
+     "wall_median": 0.198418179,
+     "cpu_median": 0.198079,
+     "ratio_wall": {
+      "median": 0.7727661717421129,
+      "lo": 0.768848674569092,
+      "hi": 0.7837587311412474
+     },
+     "ratio_cpu": {
+      "median": 0.7727411191301902,
+      "lo": 0.768782465965048,
+      "hi": 0.7835904767578086
+     }
+    },
+    "zig-fast": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/binary_trees.zig",
+     "build": {
+      "cmd": [
+       "zig",
+       "build-exe",
+       "binary_trees.zig",
+       "-O",
+       "ReleaseFast",
+       "-femit-bin=/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/binary_trees.zig-fast",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/zigcache",
+       "--global-cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/zigcache-global"
+      ],
+      "ok": true,
+      "seconds": 12.494206157018198,
+      "stderr": ""
+     },
+     "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "b5831cac243b9a4c4c324da7c6389891da4399c77f5810beba68fbb764d1bf3d",
+     "peak_rss_kb": 4708,
+     "wall": [
+      0.256476465,
+      0.257037706,
+      0.260264738,
+      0.253821203,
+      0.260834926,
+      0.257782467,
+      0.259205401,
+      0.259949288,
+      0.252128552,
+      0.249515421,
+      0.246590519
+     ],
+     "cpu": [
+      0.256056,
+      0.25672700000000004,
+      0.259901,
+      0.253495,
+      0.26053499999999996,
+      0.25739399999999996,
+      0.25892499999999996,
+      0.259643,
+      0.251805,
+      0.249252,
+      0.24612499999999998
+     ],
+     "wall_median": 0.257037706,
+     "cpu_median": 0.25672700000000004,
+     "ratio_wall": {
+      "median": 1.0,
+      "lo": 1.0,
+      "hi": 1.0
+     },
+     "ratio_cpu": {
+      "median": 1.0,
+      "lo": 1.0,
+      "hi": 1.0
+     }
+    },
+    "zig-safe": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/binary_trees.zig",
+     "build": {
+      "cmd": [
+       "zig",
+       "build-exe",
+       "binary_trees.zig",
+       "-O",
+       "ReleaseSafe",
+       "-femit-bin=/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/binary_trees.zig-safe",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/zigcache",
+       "--global-cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/zigcache-global"
+      ],
+      "ok": true,
+      "seconds": 9.769908858987037,
+      "stderr": ""
+     },
+     "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "4cb511c2f7735db13cd4fe3d8efa8cf61343be0f7ed469abb93049ad3eb0e215",
+     "peak_rss_kb": 4748,
+     "wall": [
+      0.282271713,
+      0.285408394,
+      0.286788495,
+      0.280606361,
+      0.285617123,
+      0.286777595,
+      0.282917315,
+      0.281645065,
+      0.285880962,
+      0.281982784,
+      0.279587823
+     ],
+     "cpu": [
+      0.281789,
+      0.28513199999999994,
+      0.28649499999999994,
+      0.280308,
+      0.285221,
+      0.28643499999999994,
+      0.282638,
+      0.28125,
+      0.28557899999999997,
+      0.281597,
+      0.279202
+     ],
+     "wall_median": 0.282917315,
+     "cpu_median": 0.282638,
+     "ratio_wall": {
+      "median": 1.1055276615326737,
+      "lo": 1.095011037747299,
+      "hi": 1.1301216689128004
+     },
+     "ratio_cpu": {
+      "median": 1.1057732894139922,
+      "lo": 1.0947511850615081,
+      "hi": 1.1297682666538282
+     }
+    },
+    "rust": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/binary_trees.rs",
+     "build": {
+      "cmd": [
+       "/home/epentland/.cargo/bin/rustc",
+       "--edition",
+       "2021",
+       "-C",
+       "opt-level=3",
+       "-C",
+       "codegen-units=1",
+       "-C",
+       "target-cpu=native",
+       "-C",
+       "panic=abort",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/binary_trees.rust",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/binary_trees.rs"
+      ],
+      "ok": true,
+      "seconds": 0.6132779439794831,
+      "stderr": ""
+     },
+     "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "83ebd16b36a7f4a97614b049e8598a021304038da3c83d3c60f0e11155e557fa",
+     "peak_rss_kb": 10508,
+     "wall": [
+      0.401323244,
+      0.400475769,
+      0.404970049,
+      0.398838992,
+      0.412461132,
+      0.398772338,
+      0.400125734,
+      0.398247679,
+      0.398542541,
+      0.395387026,
+      0.396540298
+     ],
+     "cpu": [
+      0.40085899999999997,
+      0.40011,
+      0.404394,
+      0.39851,
+      0.411872,
+      0.39844599999999997,
+      0.399812,
+      0.397938,
+      0.39828299999999994,
+      0.394963,
+      0.39622999999999997
+     ],
+     "wall_median": 0.398838992,
+     "cpu_median": 0.39851,
+     "ratio_wall": {
+      "median": 1.5647566103190016,
+      "lo": 1.5469335158469097,
+      "hi": 1.581310978269835
+     },
+     "ratio_cpu": {
+      "median": 1.5655130127784544,
+      "lo": 1.5480003418883115,
+      "hi": 1.5817120390778576
+     }
+    },
+    "loops": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/binary_trees.my",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "2cb9d809ab0972b880c7d88d2fbd8fe77cd52557599ee2cebd6c69f27c077f6e",
+     "peak_rss_kb": 29808,
+     "wall": [
+      0.134494553,
+      0.136759572,
+      0.134961884,
+      0.133211184,
+      0.136742869,
+      0.136244317,
+      0.1353618,
+      0.134697245,
+      0.133791188,
+      0.133997155,
+      0.133806313
+     ],
+     "cpu": [
+      0.134153,
+      0.136485,
+      0.134728,
+      0.132932,
+      0.136505,
+      0.135942,
+      0.134795,
+      0.134413,
+      0.133439,
+      0.133685,
+      0.13352399999999998
+     ],
+     "wall_median": 0.134697245,
+     "cpu_median": 0.134413,
+     "ratio_wall": {
+      "median": 0.5248229163896919,
+      "lo": 0.5222182851043293,
+      "hi": 0.5320603507097904
+     },
+     "ratio_cpu": {
+      "median": 0.524396930905935,
+      "lo": 0.5205947668243701,
+      "hi": 0.5316347715666836
+     }
+    },
+    "arena:loops": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/binary_trees_arena.my",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "bbc1c0b39a9321fe08e066bc02cb44862bcb5ac35c55847dd756f74b67fec24f",
+     "peak_rss_kb": 12004,
+     "wall": [
+      0.210278239,
+      0.204633508,
+      0.206693091,
+      0.202363752,
+      0.20656415,
+      0.208109166,
+      0.206161032,
+      0.205017928,
+      0.204971233,
+      0.204555507,
+      0.213118402
+     ],
+     "cpu": [
+      0.20965099999999998,
+      0.20432699999999998,
+      0.20639,
+      0.202096,
+      0.206051,
+      0.207809,
+      0.205887,
+      0.204844,
+      0.204588,
+      0.20426999999999998,
+      0.201015
+     ],
+     "wall_median": 0.206161032,
+     "cpu_median": 0.204844,
+     "ratio_wall": {
+      "median": 0.797268902708652,
+      "lo": 0.794164790007012,
+      "hi": 0.819811080935154
+     },
+     "ratio_cpu": {
+      "median": 0.797238604311722,
+      "lo": 0.7941100649862832,
+      "hi": 0.8167191467750128
+     }
+    },
+    "before": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/binary_trees.my",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "3b9e63e2b3523d282d08c35b889a2343c0ee7a24a2540ce6a41bc58f782cd7ff",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "56b307a0ee629134f3d504e4d0174651d24bd57f7bf480b994c6ca2a4626992e",
+     "peak_rss_kb": 51748,
+     "wall": [
+      0.49155822,
+      0.492177153,
+      0.496210102,
+      0.492096523,
+      0.493310282,
+      0.495090576,
+      0.493935253,
+      0.489479372,
+      0.49291208,
+      0.483785391,
+      0.48736637
+     ],
+     "cpu": [
+      0.49080199999999996,
+      0.491432,
+      0.49586099999999994,
+      0.49175399999999997,
+      0.49297899999999995,
+      0.494496,
+      0.49358799999999997,
+      0.48920099999999994,
+      0.492226,
+      0.4835,
+      0.487035
+     ],
+     "wall_median": 0.492177153,
+     "cpu_median": 0.49175399999999997,
+     "ratio_wall": {
+      "median": 1.9165821706096893,
+      "lo": 1.9055746951816024,
+      "hi": 1.9388997644358024
+     },
+     "ratio_cpu": {
+      "median": 1.916776017746118,
+      "lo": 1.9062971903060735,
+      "hi": 1.9398962504191402
+     }
+    }
+   },
+   "reference_stdout": "stretch tree of depth 17\t check: 262143\n65536\t trees of depth 4\t check: 2031616\n16384\t trees of depth 6\t check: 2080768\n4096\t trees of depth 8\t check: 2093056\n1024\t trees of depth 10\t check: 2096128\n256\t trees of depth 12\t check: 2096896\n64\t trees of depth 14\t check: 2097088\n16\t trees of depth 16\t check: 2097136\nlong lived tree of depth 16\t check: 131071\n"
+  },
+  "knucleotide": {
+   "arms": {
+    "my": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/knucleotide.my",
+     "build": {
+      "cmd": [
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem/bin/mylang",
+       "build",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/knucleotide.my",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/knucleotide.my",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/mycache"
+      ],
+      "ok": true,
+      "seconds": 1.1624669499869924,
+      "stderr": ""
+     },
+     "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "2beb8d162f2e42125807454a9a00cd663a51b02ae8e457556eac8b0e54518934",
+     "peak_rss_kb": 25964,
+     "wall": [
+      0.16016035,
+      0.164906321,
+      0.15843401,
+      0.160643325,
+      0.15852639,
+      0.162993249,
+      0.158352734,
+      0.15894627,
+      0.158721922,
+      0.165937998,
+      0.159534484
+     ],
+     "cpu": [
+      0.159874,
+      0.164633,
+      0.15814999999999999,
+      0.160377,
+      0.158293,
+      0.16268799999999997,
+      0.158063,
+      0.158665,
+      0.15831399999999998,
+      0.165262,
+      0.15930899999999998
+     ],
+     "wall_median": 0.159534484,
+     "cpu_median": 0.15930899999999998,
+     "ratio_wall": {
+      "median": 1.4869521342863399,
+      "lo": 1.4801974981188748,
+      "hi": 1.536132752473922
+     },
+     "ratio_cpu": {
+      "median": 1.4876898210795368,
+      "lo": 1.4823801541443864,
+      "hi": 1.5371852411773042
+     }
+    },
+    "my-unchecked": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/knucleotide.my",
+     "build": {
+      "cmd": [
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem/bin/mylang",
+       "build",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/knucleotide.my",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/knucleotide.my-unchecked",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/mycache",
+       "--unchecked"
+      ],
+      "ok": true,
+      "seconds": 1.0133989860187285,
+      "stderr": ""
+     },
+     "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "be3edf2b16aa8f76f746c070d55c5e71a921bd5e7a1fe06501a07abe4b163e57",
+     "peak_rss_kb": 25984,
+     "wall": [
+      0.160751098,
+      0.155811415,
+      0.153912283,
+      0.15442079,
+      0.157024448,
+      0.15847927,
+      0.157516296,
+      0.156051857,
+      0.157307005,
+      0.156154783,
+      0.156036157
+     ],
+     "cpu": [
+      0.160466,
+      0.155498,
+      0.1536,
+      0.15413000000000002,
+      0.15673399999999998,
+      0.157907,
+      0.15714899999999998,
+      0.155765,
+      0.157009,
+      0.15584699999999999,
+      0.155751
+     ],
+     "wall_median": 0.156154783,
+     "cpu_median": 0.15584699999999999,
+     "ratio_wall": {
+      "median": 1.4661735189522538,
+      "lo": 1.4482241300934808,
+      "hi": 1.4799591878378255
+     },
+     "ratio_cpu": {
+      "median": 1.4677804519445978,
+      "lo": 1.4491249587244681,
+      "hi": 1.4809967697277342
+     }
+    },
+    "my-arena": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/knucleotide_arena.my",
+     "build": {
+      "cmd": [
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem/bin/mylang",
+       "build",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/knucleotide_arena.my",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/knucleotide.my-arena",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/mycache"
+      ],
+      "ok": true,
+      "seconds": 1.1319198129931465,
+      "stderr": ""
+     },
+     "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "92b78d3cb0d0b171695b0fe6f4bce5183187cf3505d0ede8f7b1de660254021c",
+     "peak_rss_kb": 84864,
+     "wall": [
+      0.326740468,
+      0.32201732,
+      0.329552165,
+      0.332362505,
+      0.328055407,
+      0.328977661,
+      0.320666205,
+      0.327768256,
+      0.331278744,
+      0.314380821,
+      0.327641209
+     ],
+     "cpu": [
+      0.326415,
+      0.32170899999999997,
+      0.32921999999999996,
+      0.331888,
+      0.327781,
+      0.328651,
+      0.320324,
+      0.327476,
+      0.330983,
+      0.314055,
+      0.327349
+     ],
+     "wall_median": 0.327768256,
+     "cpu_median": 0.327476,
+     "ratio_wall": {
+      "median": 3.0631290644148854,
+      "lo": 3.008144663839441,
+      "hi": 3.1008921976522705
+     },
+     "ratio_cpu": {
+      "median": 3.069599093488664,
+      "lo": 3.0125980618366404,
+      "hi": 3.1102747707111718
+     }
+    },
+    "my-tuned": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/knucleotide_tuned.my",
+     "build": {
+      "cmd": [
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem/bin/mylang",
+       "build",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/knucleotide_tuned.my",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/knucleotide.my-tuned",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/mycache"
+      ],
+      "ok": true,
+      "seconds": 1.0584991110081319,
+      "stderr": ""
+     },
+     "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "79570a3e5a009c464cdd7ed9ce7cff70199b314772562ce4604b284c3ee89137",
+     "peak_rss_kb": 26392,
+     "wall": [
+      0.143123693,
+      0.144543361,
+      0.14625115,
+      0.143366811,
+      0.141683919,
+      0.147783999,
+      0.14387207,
+      0.141606335,
+      0.1485004,
+      0.145461007,
+      0.144967974
+     ],
+     "cpu": [
+      0.14279799999999998,
+      0.144255,
+      0.145933,
+      0.14305600000000002,
+      0.141406,
+      0.14748099999999997,
+      0.14331,
+      0.14126799999999998,
+      0.148207,
+      0.14518799999999998,
+      0.144599
+     ],
+     "wall_median": 0.144543361,
+     "cpu_median": 0.144255,
+     "ratio_wall": {
+      "median": 1.3485896651825395,
+      "lo": 1.3229354584273147,
+      "hi": 1.3911940073556772
+     },
+     "ratio_cpu": {
+      "median": 1.3479030919954886,
+      "lo": 1.3242370040174936,
+      "hi": 1.3927135017290635
+     }
+    },
+    "zig-fast": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/knucleotide.zig",
+     "build": {
+      "cmd": [
+       "zig",
+       "build-exe",
+       "knucleotide.zig",
+       "-O",
+       "ReleaseFast",
+       "-femit-bin=/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/knucleotide.zig-fast",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/zigcache",
+       "--global-cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/zigcache-global"
+      ],
+      "ok": true,
+      "seconds": 11.40018778402009,
+      "stderr": ""
+     },
+     "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "59a3e93cd49b8a28c6036a0fd6c8e21ce5a263cc4c190ebd395a5016a29d6a85",
+     "peak_rss_kb": 9676,
+     "wall": [
+      0.108618602,
+      0.107165028,
+      0.106276563,
+      0.107314037,
+      0.107098134,
+      0.106106226,
+      0.106683355,
+      0.1088424,
+      0.106743128,
+      0.10078009,
+      0.107683914
+     ],
+     "cpu": [
+      0.10835,
+      0.10686499999999999,
+      0.10599499999999999,
+      0.106514,
+      0.10678299999999999,
+      0.10583499999999998,
+      0.106403,
+      0.10853299999999999,
+      0.106416,
+      0.10052499999999999,
+      0.10727699999999998
+     ],
+     "wall_median": 0.107098134,
+     "cpu_median": 0.106514,
+     "ratio_wall": {
+      "median": 1.0,
+      "lo": 1.0,
+      "hi": 1.0
+     },
+     "ratio_cpu": {
+      "median": 1.0,
+      "lo": 1.0,
+      "hi": 1.0
+     }
+    },
+    "zig-safe": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/knucleotide.zig",
+     "build": {
+      "cmd": [
+       "zig",
+       "build-exe",
+       "knucleotide.zig",
+       "-O",
+       "ReleaseSafe",
+       "-femit-bin=/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/knucleotide.zig-safe",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/zigcache",
+       "--global-cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/zigcache-global"
+      ],
+      "ok": true,
+      "seconds": 10.777172172995051,
+      "stderr": ""
+     },
+     "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "c735babab900107a8c3df6a262c4f0ec6ea6e73c381a6761687c1df83f37a8fb",
+     "peak_rss_kb": 9768,
+     "wall": [
+      0.121030536,
+      0.120978756,
+      0.120839086,
+      0.120437072,
+      0.122840267,
+      0.119172156,
+      0.124876188,
+      0.1200847,
+      0.119275329,
+      0.122766221,
+      0.120089238
+     ],
+     "cpu": [
+      0.12079399999999998,
+      0.120712,
+      0.120546,
+      0.12014799999999999,
+      0.122555,
+      0.11887199999999999,
+      0.12462999999999999,
+      0.11985699999999999,
+      0.118987,
+      0.122456,
+      0.119806
+     ],
+     "wall_median": 0.120839086,
+     "cpu_median": 0.120546,
+     "ratio_wall": {
+      "median": 1.1231400879341427,
+      "lo": 1.1152012732375236,
+      "hi": 1.146987929780364
+     },
+     "ratio_cpu": {
+      "median": 1.1280019527949376,
+      "lo": 1.1167911108625335,
+      "hi": 1.1477014131462875
+     }
+    },
+    "rust": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/knucleotide.rs",
+     "build": {
+      "cmd": [
+       "/home/epentland/.cargo/bin/rustc",
+       "--edition",
+       "2021",
+       "-C",
+       "opt-level=3",
+       "-C",
+       "codegen-units=1",
+       "-C",
+       "target-cpu=native",
+       "-C",
+       "panic=abort",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/knucleotide.rust",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/knucleotide.rs"
+      ],
+      "ok": true,
+      "seconds": 0.32179418599116616,
+      "stderr": ""
+     },
+     "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "ba166014b3c101b4ffbc31d94ef35970420cc721bbdf7462105dc42d495a3750",
+     "peak_rss_kb": 16060,
+     "wall": [
+      0.151864326,
+      0.150551981,
+      0.155164752,
+      0.151766368,
+      0.152185844,
+      0.151401603,
+      0.151907798,
+      0.14917473,
+      0.14990941,
+      0.149042891,
+      0.150840524
+     ],
+     "cpu": [
+      0.151579,
+      0.15025299999999997,
+      0.15459799999999999,
+      0.151477,
+      0.151979,
+      0.151081,
+      0.151603,
+      0.14884299999999998,
+      0.149632,
+      0.14876299999999998,
+      0.150435
+     ],
+     "wall_median": 0.151401603,
+     "cpu_median": 0.151081,
+     "ratio_wall": {
+      "median": 1.414226621630123,
+      "lo": 1.40077118667882,
+      "hi": 1.426887080122895
+     },
+     "ratio_cpu": {
+      "median": 1.4221323018570329,
+      "lo": 1.4023043149976233,
+      "hi": 1.4275145273302785
+     }
+    },
+    "loops": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/knucleotide.my",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "0b3b6bd08a9f7f5af5384025573acbf679761be2a0fd437ad03c4affac6e1823",
+     "peak_rss_kb": 29240,
+     "wall": [
+      0.158205946,
+      0.156879496,
+      0.157702026,
+      0.157197701,
+      0.164249913,
+      0.159216501,
+      0.156357359,
+      0.156185895,
+      0.159075003,
+      0.157311187,
+      0.158933831
+     ],
+     "cpu": [
+      0.15790099999999999,
+      0.156694,
+      0.157441,
+      0.156899,
+      0.163965,
+      0.15881499999999998,
+      0.15606899999999999,
+      0.155881,
+      0.158735,
+      0.156997,
+      0.158623
+     ],
+     "wall_median": 0.157702026,
+     "cpu_median": 0.157441,
+     "ratio_wall": {
+      "median": 1.4759291810288395,
+      "lo": 1.4639057062533498,
+      "hi": 1.5005387242780646
+     },
+     "ratio_cpu": {
+      "median": 1.4786300884625783,
+      "lo": 1.4662798858372714,
+      "hi": 1.5005905418812302
+     }
+    },
+    "arena:loops": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/knucleotide_arena.my",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "b3b20a797d79d272bd4ba82dfee29219d80447b822e8f0db76cd36b53836f89c",
+     "peak_rss_kb": 92832,
+     "wall": [
+      0.334712952,
+      0.338958336,
+      0.340590924,
+      0.333945121,
+      0.337193271,
+      0.335852382,
+      0.334646615,
+      0.335857715,
+      0.341042224,
+      0.337642337,
+      0.340036919
+     ],
+     "cpu": [
+      0.33413000000000004,
+      0.33838,
+      0.340229,
+      0.333609,
+      0.336617,
+      0.33554399999999995,
+      0.334054,
+      0.335541,
+      0.340671,
+      0.337317,
+      0.339676
+     ],
+     "wall_median": 0.337193271,
+     "cpu_median": 0.336617,
+     "ratio_wall": {
+      "median": 3.1577317945556844,
+      "lo": 3.1118493939427516,
+      "hi": 3.1949806080256518
+     },
+     "ratio_cpu": {
+      "median": 3.166345069306562,
+      "lo": 3.1320671461028597,
+      "hi": 3.201313712223726
+     }
+    },
+    "tuned:loops": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/knucleotide_tuned.my",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "24f333fe28848ebe0778fb22bbf73f4354d9cdb65b06411df50a4cc2e4979b67",
+     "peak_rss_kb": 26888,
+     "wall": [
+      0.144183452,
+      0.144834604,
+      0.142560437,
+      0.144490319,
+      0.14156227,
+      0.142048381,
+      0.160526839,
+      0.142184949,
+      0.145244754,
+      0.144840751,
+      0.144452362
+     ],
+     "cpu": [
+      0.143902,
+      0.14456499999999997,
+      0.14217999999999997,
+      0.14413499999999999,
+      0.141251,
+      0.14179599999999998,
+      0.14824600000000002,
+      0.1416,
+      0.144924,
+      0.144551,
+      0.144176
+     ],
+     "wall_median": 0.144452362,
+     "cpu_median": 0.14413499999999999,
+     "ratio_wall": {
+      "median": 1.3414479157954826,
+      "lo": 1.327428721647513,
+      "hi": 1.3606941891378712
+     },
+     "ratio_cpu": {
+      "median": 1.343960028710721,
+      "lo": 1.3281218274111675,
+      "hi": 1.3618628777627424
+     }
+    },
+    "before": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/knucleotide.my",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "85ef61714a76ad7ce4c0b54cc49ec081c54c2966978de102da6a53e2d208c0bb",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "e9457ba1f0ce521e2c16195f979881f73ff22d9f5af9f0d36d900019b863dca3",
+     "peak_rss_kb": 78276,
+     "wall": [
+      0.530077881,
+      0.527739102,
+      0.537024343,
+      0.526914422,
+      0.534907854,
+      0.533606324,
+      0.533690212,
+      0.547125488,
+      0.527874046,
+      0.497883039,
+      0.529386985
+     ],
+     "cpu": [
+      0.5294409999999999,
+      0.5274110000000001,
+      0.536702,
+      0.526484,
+      0.53456,
+      0.533252,
+      0.533332,
+      0.5465979999999999,
+      0.527149,
+      0.497302,
+      0.528651
+     ],
+     "wall_median": 0.530077881,
+     "cpu_median": 0.5294409999999999,
+     "ratio_wall": {
+      "median": 4.945274285010647,
+      "lo": 4.91611945865935,
+      "hi": 5.026767950725085
+     },
+     "ratio_cpu": {
+      "median": 4.953662983010074,
+      "lo": 4.935301548682919,
+      "hi": 5.03623782628325
+     }
+    }
+   },
+   "reference_stdout": "G 250155\nT 250058\nC 249923\nA 249864\nGT 62591\nCG 62559\nGG 62557\nTG 62543\nGA 62535\nTT 62521\nTA 62509\nCC 62498\nAG 62496\nTC 62484\nAT 62480\nGC 62472\nAC 62468\nCT 62466\nAA 62420\nCA 62400\n15691\tGGT\n3912\tGGTA\n231\tGGTATT\n0\tGGTATTTTAATT\n0\tGGTATTTTAATTTATAGT\n"
+  },
+  "text_ops": {
+   "arms": {
+    "my": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/text_ops.my",
+     "build": {
+      "cmd": [
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem/bin/mylang",
+       "build",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/text_ops.my",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/text_ops.my",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/mycache"
+      ],
+      "ok": true,
+      "seconds": 3.5027976330020465,
+      "stderr": ""
+     },
+     "stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "ef616af8bf5d584e59f05aebc6c77f8b8bf06bd1614b920da694f1c528d227da",
+     "peak_rss_kb": 35140,
+     "wall": [
+      0.104794734,
+      0.105183736,
+      0.103171332,
+      0.102604898,
+      0.105121646,
+      0.104152447,
+      0.104870059,
+      0.103486842,
+      0.105070819,
+      0.106441576,
+      0.102598386
+     ],
+     "cpu": [
+      0.104542,
+      0.104916,
+      0.10288299999999999,
+      0.10238199999999999,
+      0.104919,
+      0.10385899999999999,
+      0.10458699999999999,
+      0.103215,
+      0.10472999999999999,
+      0.106202,
+      0.10233199999999999
+     ],
+     "wall_median": 0.104794734,
+     "cpu_median": 0.104542,
+     "ratio_wall": {
+      "median": 3.6012278788911503,
+      "lo": 3.551228193668506,
+      "hi": 3.6904716558774893
+     },
+     "ratio_cpu": {
+      "median": 3.62903393172149,
+      "lo": 3.5723756150902135,
+      "hi": 3.7237363996943342
+     }
+    },
+    "my-unchecked": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/text_ops.my",
+     "build": {
+      "cmd": [
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem/bin/mylang",
+       "build",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/text_ops.my",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/text_ops.my-unchecked",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/mycache",
+       "--unchecked"
+      ],
+      "ok": true,
+      "seconds": 2.0943246059759986,
+      "stderr": ""
+     },
+     "stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "840b98c3f953756ebe2730ac4e5a3a38ec54a642dda6f10b3b19d062c8e6fc71",
+     "peak_rss_kb": 35032,
+     "wall": [
+      0.105500027,
+      0.106279646,
+      0.107107966,
+      0.107114624,
+      0.107194023,
+      0.106417252,
+      0.106664873,
+      0.107864613,
+      0.098247487,
+      0.104441818,
+      0.105759283
+     ],
+     "cpu": [
+      0.105197,
+      0.10599399999999999,
+      0.10684699999999998,
+      0.106903,
+      0.106631,
+      0.106166,
+      0.106347,
+      0.107316,
+      0.098055,
+      0.10414899999999999,
+      0.10541500000000001
+     ],
+     "wall_median": 0.106417252,
+     "cpu_median": 0.106166,
+     "ratio_wall": {
+      "median": 3.680994900197926,
+      "lo": 3.6018963061248295,
+      "hi": 3.7291550112962115
+     },
+     "ratio_cpu": {
+      "median": 3.7201319668678923,
+      "lo": 3.6199688304648325,
+      "hi": 3.7474761736674904
+     }
+    },
+    "my-tuned": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/text_ops_tuned.my",
+     "build": {
+      "cmd": [
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem/bin/mylang",
+       "build",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/text_ops_tuned.my",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/text_ops.my-tuned",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/mycache"
+      ],
+      "ok": true,
+      "seconds": 0.9388242140121292,
+      "stderr": ""
+     },
+     "stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "d0adba92fbf2c1a536572e4b7fbc8422440a5d76dde561dc630d6662b441ff12",
+     "peak_rss_kb": 10476,
+     "wall": [
+      0.018788542,
+      0.018517751,
+      0.018140066,
+      0.017515938,
+      0.018661441,
+      0.01862243,
+      0.018803835,
+      0.01818757,
+      0.018540941,
+      0.017451943,
+      0.018620346
+     ],
+     "cpu": [
+      0.018547,
+      0.018321999999999998,
+      0.017863,
+      0.017306,
+      0.018445999999999997,
+      0.018434,
+      0.018521,
+      0.017929,
+      0.018296,
+      0.017293,
+      0.018355999999999997
+     ],
+     "wall_median": 0.018540941,
+     "cpu_median": 0.018321999999999998,
+     "ratio_wall": {
+      "median": 0.636696115554097,
+      "lo": 0.6150842106324202,
+      "hi": 0.65258148328255
+     },
+     "ratio_cpu": {
+      "median": 0.6337821213778021,
+      "lo": 0.6184685812381531,
+      "hi": 0.6506883162725027
+     }
+    },
+    "zig-fast": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/text_ops.zig",
+     "build": {
+      "cmd": [
+       "zig",
+       "build-exe",
+       "text_ops.zig",
+       "-O",
+       "ReleaseFast",
+       "-femit-bin=/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/text_ops.zig-fast",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/zigcache",
+       "--global-cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/zigcache-global"
+      ],
+      "ok": true,
+      "seconds": 10.52550255699316,
+      "stderr": ""
+     },
+     "stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "5a2a7a5d22fc0eb8949761596f2c04189e4935b1a79962e19c3dc87509e704b1",
+     "peak_rss_kb": 8020,
+     "wall": [
+      0.029509434,
+      0.028707016,
+      0.029736549,
+      0.029210386,
+      0.029190501,
+      0.028536559,
+      0.028416438,
+      0.028977311,
+      0.029516581,
+      0.028373258,
+      0.027739555
+     ],
+     "cpu": [
+      0.029264,
+      0.028492,
+      0.029515999999999997,
+      0.028937,
+      0.028911,
+      0.028329999999999998,
+      0.028079999999999997,
+      0.028700999999999997,
+      0.029269,
+      0.027961,
+      0.027481
+     ],
+     "wall_median": 0.028977311,
+     "cpu_median": 0.028700999999999997,
+     "ratio_wall": {
+      "median": 1.0,
+      "lo": 1.0,
+      "hi": 1.0
+     },
+     "ratio_cpu": {
+      "median": 1.0,
+      "lo": 1.0,
+      "hi": 1.0
+     }
+    },
+    "zig-safe": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/text_ops.zig",
+     "build": {
+      "cmd": [
+       "zig",
+       "build-exe",
+       "text_ops.zig",
+       "-O",
+       "ReleaseSafe",
+       "-femit-bin=/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/text_ops.zig-safe",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/zigcache",
+       "--global-cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/zigcache-global"
+      ],
+      "ok": true,
+      "seconds": 10.280786624003667,
+      "stderr": ""
+     },
+     "stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "edc53d2d3b7cf94b99a0af2edcfcff63da81645266af752c3d177733c6cfbbd8",
+     "peak_rss_kb": 8344,
+     "wall": [
+      0.023589028,
+      0.023744773,
+      0.023303761,
+      0.024553674,
+      0.023529382,
+      0.023319606,
+      0.022144758,
+      0.022919277,
+      0.022179787,
+      0.023277539,
+      0.023060547
+     ],
+     "cpu": [
+      0.023398,
+      0.023466,
+      0.023052999999999997,
+      0.02436,
+      0.023325,
+      0.023052999999999997,
+      0.021855,
+      0.022654,
+      0.021984,
+      0.023062,
+      0.022757
+     ],
+     "wall_median": 0.023303761,
+     "cpu_median": 0.023052999999999997,
+     "ratio_wall": {
+      "median": 0.8060629723347331,
+      "lo": 0.783674023505552,
+      "hi": 0.8271418039408903
+     },
+     "ratio_cpu": {
+      "median": 0.806786344298018,
+      "lo": 0.7810340154492479,
+      "hi": 0.8247916741175209
+     }
+    },
+    "rust": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/text_ops.rs",
+     "build": {
+      "cmd": [
+       "/home/epentland/.cargo/bin/rustc",
+       "--edition",
+       "2021",
+       "-C",
+       "opt-level=3",
+       "-C",
+       "codegen-units=1",
+       "-C",
+       "target-cpu=native",
+       "-C",
+       "panic=abort",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/text_ops.rust",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/text_ops.rs"
+      ],
+      "ok": true,
+      "seconds": 0.21973318597883917,
+      "stderr": ""
+     },
+     "stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "fb4b410b283b72a929c35706772923fbb6bee3c574db524c5165516ad733ad34",
+     "peak_rss_kb": 17100,
+     "wall": [
+      0.042778053,
+      0.043312397,
+      0.042720701,
+      0.042240706,
+      0.043141276,
+      0.04161033,
+      0.042163122,
+      0.044545533,
+      0.040472588,
+      0.042324597,
+      0.042618614
+     ],
+     "cpu": [
+      0.042497,
+      0.043051,
+      0.042453,
+      0.04199,
+      0.04292,
+      0.041407,
+      0.041959,
+      0.044351,
+      0.040119999999999996,
+      0.042051,
+      0.042358999999999994
+     ],
+     "wall_median": 0.042618614,
+     "cpu_median": 0.042358999999999994,
+     "ratio_wall": {
+      "median": 1.4779217389931059,
+      "lo": 1.4460851698433563,
+      "hi": 1.5087739178464248
+     },
+     "ratio_cpu": {
+      "median": 1.4845560513299436,
+      "lo": 1.4510833880499014,
+      "hi": 1.5109855398006458
+     }
+    },
+    "loops": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/text_ops.my",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "5ce33af7eff1c36efe77259e1db6b5076e13c7f43853b022efc89c1d0d5ca24c",
+     "peak_rss_kb": 45136,
+     "wall": [
+      0.109025184,
+      0.114360705,
+      0.110206791,
+      0.110291472,
+      0.109323362,
+      0.108635149,
+      0.109048252,
+      0.105803637,
+      0.110221312,
+      0.109325775,
+      0.109094143
+     ],
+     "cpu": [
+      0.108777,
+      0.114079,
+      0.10992199999999999,
+      0.11001099999999998,
+      0.10907099999999999,
+      0.10841899999999999,
+      0.108762,
+      0.10550199999999998,
+      0.110012,
+      0.10905699999999999,
+      0.108814
+     ],
+     "wall_median": 0.109323362,
+     "cpu_median": 0.10905699999999999,
+     "ratio_wall": {
+      "median": 3.775762223751511,
+      "lo": 3.7061056076143872,
+      "hi": 3.8531273003614883
+     },
+     "ratio_cpu": {
+      "median": 3.8017417147596495,
+      "lo": 3.7241496137688035,
+      "hi": 3.900325453309967
+     }
+    },
+    "tuned:loops": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/text_ops_tuned.my",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "873723adfba1c4ca2d3749b1ff0d2f5638cf49dc0b2afed19218ae8043aaf02c",
+     "peak_rss_kb": 10924,
+     "wall": [
+      0.018746136,
+      0.019200646,
+      0.018526548,
+      0.018831584,
+      0.018902317,
+      0.019456113,
+      0.018454348,
+      0.018883427,
+      0.018254659,
+      0.018882557,
+      0.018702326
+     ],
+     "cpu": [
+      0.01856,
+      0.018626,
+      0.018390999999999998,
+      0.018576,
+      0.018729,
+      0.019193,
+      0.018231999999999998,
+      0.018609,
+      0.018068999999999998,
+      0.018615,
+      0.018517
+     ],
+     "wall_median": 0.018831584,
+     "cpu_median": 0.018576,
+     "ratio_wall": {
+      "median": 0.6494250968400754,
+      "lo": 0.6352590835866252,
+      "hi": 0.6688485490794306
+     },
+     "ratio_cpu": {
+      "median": 0.6483746210933418,
+      "lo": 0.6342263531984691,
+      "hi": 0.6657487214334251
+     }
+    },
+    "before": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/text_ops.my",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "0967b572d16c244fceff04c57b479c96e1e0fc0580feae10a3dbaa6c6e0a76bf",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "607f86127a4f1b7eaef6a848c812c93c82274819002e69d546d0bf5b459b4a86",
+     "peak_rss_kb": 80304,
+     "wall": [
+      0.194320994,
+      0.193158729,
+      0.190973306,
+      0.192713009,
+      0.191479154,
+      0.19473893,
+      0.195619877,
+      0.189841418,
+      0.187414877,
+      0.193253309,
+      0.190754628
+     ],
+     "cpu": [
+      0.19401,
+      0.19291199999999997,
+      0.190658,
+      0.19235999999999998,
+      0.19117399999999998,
+      0.194416,
+      0.195276,
+      0.189582,
+      0.18691299999999997,
+      0.192913,
+      0.19047
+     ],
+     "wall_median": 0.192713009,
+     "cpu_median": 0.19235999999999998,
+     "ratio_wall": {
+      "median": 6.597413981451665,
+      "lo": 6.551381458410686,
+      "hi": 6.824191031581629
+     },
+     "ratio_cpu": {
+      "median": 6.647544665998548,
+      "lo": 6.605414445489705,
+      "hi": 6.899359822610064
+     }
+    }
+   },
+   "reference_stdout": "10000066287 599994 20000\n4066669 3666669 22228\n"
+  },
+  "sort_records": {
+   "arms": {
+    "my": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/sort_records.my",
+     "build": {
+      "cmd": [
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem/bin/mylang",
+       "build",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/sort_records.my",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/sort_records.my",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/mycache"
+      ],
+      "ok": true,
+      "seconds": 1.0694909520098008,
+      "stderr": ""
+     },
+     "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "d961c6600f95fd620ac6d5a09d1dc2ab535f51196348a3cfd4e4198b7c4e4f71",
+     "peak_rss_kb": 41848,
+     "wall": [
+      0.0336947,
+      0.03297226,
+      0.033434057,
+      0.031244589,
+      0.032755206,
+      0.033849469,
+      0.032882887,
+      0.033020509,
+      0.032735297,
+      0.034362995,
+      0.033158344
+     ],
+     "cpu": [
+      0.033491,
+      0.03258,
+      0.033163,
+      0.031072,
+      0.032498,
+      0.033538,
+      0.032681999999999996,
+      0.032756,
+      0.032457,
+      0.034086,
+      0.032979999999999995
+     ],
+     "wall_median": 0.033020509,
+     "cpu_median": 0.032756,
+     "ratio_wall": {
+      "median": 0.27968470199848494,
+      "lo": 0.27429604049318573,
+      "hi": 0.2831537291879841
+     },
+     "ratio_cpu": {
+      "median": 0.2788063234423873,
+      "lo": 0.27340268710777915,
+      "hi": 0.28213638852617834
+     }
+    },
+    "my-unchecked": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/sort_records.my",
+     "build": {
+      "cmd": [
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem/bin/mylang",
+       "build",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/sort_records.my",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/sort_records.my-unchecked",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/mycache",
+       "--unchecked"
+      ],
+      "ok": true,
+      "seconds": 0.8699615980149247,
+      "stderr": ""
+     },
+     "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "36f120d2e518f53f2eecf10629cf2d1d32024dc1c720e77ff6b1d5ebf6fb6aef",
+     "peak_rss_kb": 41816,
+     "wall": [
+      0.032217278,
+      0.033629297,
+      0.032342285,
+      0.03303017,
+      0.032415699,
+      0.033934829,
+      0.032322586,
+      0.031504255,
+      0.032244942,
+      0.033610619,
+      0.03262107
+     ],
+     "cpu": [
+      0.031951,
+      0.033336,
+      0.032096,
+      0.032674,
+      0.032215,
+      0.033643,
+      0.032017,
+      0.031340999999999994,
+      0.032001,
+      0.033333,
+      0.032354999999999995
+     ],
+     "wall_median": 0.032415699,
+     "cpu_median": 0.032215,
+     "ratio_wall": {
+      "median": 0.2751528918881389,
+      "lo": 0.2701872512881867,
+      "hi": 0.279935273760162
+     },
+     "ratio_cpu": {
+      "median": 0.27352269845295457,
+      "lo": 0.2691630512615307,
+      "hi": 0.27835955506563786
+     }
+    },
+    "my-keyed": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/sort_records_keyed.my",
+     "build": {
+      "cmd": [
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem/bin/mylang",
+       "build",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/sort_records_keyed.my",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/sort_records.my-keyed",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/mycache"
+      ],
+      "ok": true,
+      "seconds": 0.7829430639976636,
+      "stderr": ""
+     },
+     "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "35efc5964e2ba70160c46e76714c5408ee6b93a7a58cf7340f011bbf6e599336",
+     "peak_rss_kb": 26412,
+     "wall": [
+      0.043012969,
+      0.044175908,
+      0.044622582,
+      0.04405172,
+      0.045941429,
+      0.047060178,
+      0.043823558,
+      0.043961848,
+      0.044176422,
+      0.044522684,
+      0.044902646
+     ],
+     "cpu": [
+      0.042796,
+      0.043966,
+      0.044344,
+      0.043803,
+      0.045670999999999996,
+      0.046778999999999994,
+      0.043604,
+      0.043664,
+      0.043876,
+      0.044340000000000004,
+      0.044483999999999996
+     ],
+     "wall_median": 0.044176422,
+     "cpu_median": 0.043966,
+     "ratio_wall": {
+      "median": 0.3717548780432592,
+      "lo": 0.3700499575904043,
+      "hi": 0.378745789158031
+     },
+     "ratio_cpu": {
+      "median": 0.3709240620597144,
+      "lo": 0.36846013636670494,
+      "hi": 0.3760588384478823
+     }
+    },
+    "my-sorted": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/sort_records_sorted.my",
+     "build": {
+      "cmd": [
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem/bin/mylang",
+       "build",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/sort_records_sorted.my",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/sort_records.my-sorted",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/mycache"
+      ],
+      "ok": true,
+      "seconds": 0.7460112270200625,
+      "stderr": ""
+     },
+     "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "7e90aee007f2e868cdaddd35bcceab567a0b58f268b48df72f883b653124dda5",
+     "peak_rss_kb": 41984,
+     "wall": [
+      0.031950934,
+      0.032849395,
+      0.032507682,
+      0.032345047,
+      0.031969883,
+      0.033076929,
+      0.032212153,
+      0.031459743,
+      0.032154473,
+      0.033341519,
+      0.032834556
+     ],
+     "cpu": [
+      0.031682,
+      0.03258899999999999,
+      0.032096,
+      0.032073000000000004,
+      0.03176,
+      0.032793,
+      0.031874,
+      0.031092,
+      0.031888,
+      0.033148,
+      0.032583
+     ],
+     "wall_median": 0.032345047,
+     "cpu_median": 0.032073000000000004,
+     "ratio_wall": {
+      "median": 0.273438886980129,
+      "lo": 0.2684999751634279,
+      "hi": 0.2769536081208569
+     },
+     "ratio_cpu": {
+      "median": 0.2709071879536784,
+      "lo": 0.26689692936270587,
+      "hi": 0.2754501648490997
+     }
+    },
+    "zig-fast": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/sort_records.zig",
+     "build": {
+      "cmd": [
+       "zig",
+       "build-exe",
+       "sort_records.zig",
+       "-O",
+       "ReleaseFast",
+       "-femit-bin=/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/sort_records.zig-fast",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/zigcache",
+       "--global-cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/zigcache-global"
+      ],
+      "ok": true,
+      "seconds": 10.731098966003628,
+      "stderr": ""
+     },
+     "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "23b934f087b95b126a3f76e0780522a568189e2e936cc03ddc3d764fdccf5a22",
+     "peak_rss_kb": 16032,
+     "wall": [
+      0.118997903,
+      0.118830742,
+      0.118884634,
+      0.119188706,
+      0.12046543,
+      0.116826179,
+      0.11676139,
+      0.118799765,
+      0.119342944,
+      0.12006568,
+      0.118556159
+     ],
+     "cpu": [
+      0.118705,
+      0.11853099999999998,
+      0.118476,
+      0.11890799999999999,
+      0.12025399999999999,
+      0.116512,
+      0.116489,
+      0.118504,
+      0.11871499999999999,
+      0.119748,
+      0.11828999999999999
+     ],
+     "wall_median": 0.118884634,
+     "cpu_median": 0.11853099999999998,
+     "ratio_wall": {
+      "median": 1.0,
+      "lo": 1.0,
+      "hi": 1.0
+     },
+     "ratio_cpu": {
+      "median": 1.0,
+      "lo": 1.0,
+      "hi": 1.0
+     }
+    },
+    "zig-safe": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/sort_records.zig",
+     "build": {
+      "cmd": [
+       "zig",
+       "build-exe",
+       "sort_records.zig",
+       "-O",
+       "ReleaseSafe",
+       "-femit-bin=/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/sort_records.zig-safe",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/zigcache",
+       "--global-cache-dir",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/zigcache-global"
+      ],
+      "ok": true,
+      "seconds": 10.75569445398287,
+      "stderr": ""
+     },
+     "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "728d5abdd6f9d91ecaccb91aa22dcae73f427b44074d7ff275c032785a7e26e5",
+     "peak_rss_kb": 16212,
+     "wall": [
+      0.137834128,
+      0.136496409,
+      0.137508649,
+      0.137258275,
+      0.136521394,
+      0.138398706,
+      0.133280183,
+      0.13693012,
+      0.134485866,
+      0.137968692,
+      0.135833022
+     ],
+     "cpu": [
+      0.137566,
+      0.136183,
+      0.13722800000000002,
+      0.136959,
+      0.136236,
+      0.13799,
+      0.132989,
+      0.13665,
+      0.134187,
+      0.137238,
+      0.135546
+     ],
+     "wall_median": 0.13693012,
+     "cpu_median": 0.13665,
+     "ratio_wall": {
+      "median": 1.1491101537092032,
+      "lo": 1.1414747888835513,
+      "hi": 1.1566561999930118
+     },
+     "ratio_cpu": {
+      "median": 1.1489230665395551,
+      "lo": 1.1416442754251475,
+      "hi": 1.1582767817954693
+     }
+    },
+    "rust": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/sort_records.rs",
+     "build": {
+      "cmd": [
+       "/home/epentland/.cargo/bin/rustc",
+       "--edition",
+       "2021",
+       "-C",
+       "opt-level=3",
+       "-C",
+       "codegen-units=1",
+       "-C",
+       "target-cpu=native",
+       "-C",
+       "panic=abort",
+       "-o",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/mem/sort_records.rust",
+       "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/sort_records.rs"
+      ],
+      "ok": true,
+      "seconds": 0.19952872200519778,
+      "stderr": ""
+     },
+     "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "8db38b527f07bb0bd8203e7bc2f0d290eae4b540b54ed0a738ae9e9a5ba58388",
+     "peak_rss_kb": 25712,
+     "wall": [
+      0.049363079,
+      0.047846314,
+      0.050089459,
+      0.048823286,
+      0.047508033,
+      0.049810822,
+      0.048849774,
+      0.048259931,
+      0.048776573,
+      0.049346617,
+      0.049175529
+     ],
+     "cpu": [
+      0.049039,
+      0.047636,
+      0.049794,
+      0.048247,
+      0.047243,
+      0.049527999999999996,
+      0.048493999999999995,
+      0.047998,
+      0.048493,
+      0.049042999999999996,
+      0.048888999999999995
+     ],
+     "wall_median": 0.048849774,
+     "cpu_median": 0.048493999999999995,
+     "ratio_wall": {
+      "median": 0.41099685605411973,
+      "lo": 0.4062291789886958,
+      "hi": 0.418372665827291
+     },
+     "ratio_cpu": {
+      "median": 0.4095517252897752,
+      "lo": 0.40503274151083507,
+      "hi": 0.41629681772527877
+     }
+    },
+    "loops": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/sort_records.my",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "c85febbe7e99b50782bf6e2f1670e3daf8c3e27efe4c1b2e707c7b2d5d968b0d",
+     "peak_rss_kb": 42448,
+     "wall": [
+      0.032387302,
+      0.03318562,
+      0.033444255,
+      0.032427572,
+      0.032832907,
+      0.033173372,
+      0.033208789,
+      0.032081434,
+      0.033016313,
+      0.032453198,
+      0.033165707
+     ],
+     "cpu": [
+      0.032076,
+      0.032919,
+      0.033142,
+      0.032201999999999995,
+      0.032572000000000004,
+      0.032906,
+      0.032972,
+      0.031813999999999995,
+      0.032665,
+      0.032279,
+      0.032898
+     ],
+     "wall_median": 0.033016313,
+     "cpu_median": 0.032665,
+     "ratio_wall": {
+      "median": 0.27665073353645436,
+      "lo": 0.27206916735886033,
+      "hi": 0.2813168857465633
+     },
+     "ratio_cpu": {
+      "median": 0.27515478246219943,
+      "lo": 0.27021608188366114,
+      "hi": 0.2797359802829265
+     }
+    },
+    "keyed:loops": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/sort_records_keyed.my",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "b55dd365dd818dbc21b822acc669e91c701e0fafd760064e4c72d5f9d142cde9",
+     "peak_rss_kb": 26924,
+     "wall": [
+      0.043722082,
+      0.043980902,
+      0.04375095,
+      0.044782256,
+      0.045945849,
+      0.045416074,
+      0.047060762,
+      0.045569528,
+      0.045183036,
+      0.044425468,
+      0.044679936
+     ],
+     "cpu": [
+      0.043456999999999996,
+      0.0437,
+      0.043461,
+      0.044454999999999995,
+      0.045659,
+      0.04523099999999999,
+      0.046862,
+      0.045302999999999996,
+      0.044914,
+      0.044154,
+      0.044334
+     ],
+     "wall_median": 0.044782256,
+     "cpu_median": 0.044454999999999995,
+     "ratio_wall": {
+      "median": 0.3768672701348228,
+      "lo": 0.3700097146828303,
+      "hi": 0.38358264429226774
+     },
+     "ratio_cpu": {
+      "median": 0.3747907684504185,
+      "lo": 0.3686799233955675,
+      "hi": 0.38229089313440895
+     }
+    },
+    "sorted:loops": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/sort_records_sorted.my",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "ffa3d3fa69ed60569aa705b9a115eddb5cdd837684b2260cca044e5b55fb1b38",
+     "peak_rss_kb": 42360,
+     "wall": [
+      0.033226503,
+      0.033022282,
+      0.034062503,
+      0.03271541,
+      0.032898821,
+      0.033338823,
+      0.032431446,
+      0.032609917,
+      0.033176131,
+      0.0330463,
+      0.032247506
+     ],
+     "cpu": [
+      0.032959,
+      0.032737999999999996,
+      0.033861999999999996,
+      0.032409,
+      0.032649,
+      0.033129,
+      0.032158,
+      0.032348999999999996,
+      0.032902,
+      0.032777,
+      0.031979999999999995
+     ],
+     "wall_median": 0.033022282,
+     "cpu_median": 0.032737999999999996,
+     "ratio_wall": {
+      "median": 0.2777583069197789,
+      "lo": 0.27448414449603975,
+      "hi": 0.27921923128342857
+     },
+     "ratio_cpu": {
+      "median": 0.2760604005528419,
+      "lo": 0.2725552528004844,
+      "hi": 0.27765469019839095
+     }
+    },
+    "before": {
+     "src": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/integration/experiments/perf-parity-plan-20260922/suite/sort_records.my",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "70b262bab78d435e643072f077431ebca2c4bb096339676bcf5ecd475d0934d1",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "f177ce9d3bca8daa6678502677aaaf7067d0878ee233de56275f7a4f521df5eb",
+     "peak_rss_kb": 224776,
+     "wall": [
+      0.633264008,
+      0.632306483,
+      0.638415014,
+      0.634271451,
+      0.632956438,
+      0.637344558,
+      0.632503755,
+      0.631872552,
+      0.631055072,
+      0.636538799,
+      0.635931808
+     ],
+     "cpu": [
+      0.632926,
+      0.631691,
+      0.6380379999999999,
+      0.633853,
+      0.632345,
+      0.636965,
+      0.6318699999999999,
+      0.6315059999999999,
+      0.630386,
+      0.636223,
+      0.6355459999999999
+     ],
+     "wall_median": 0.633264008,
+     "cpu_median": 0.632926,
+     "ratio_wall": {
+      "median": 5.321573429952331,
+      "lo": 5.301588255694717,
+      "hi": 5.37003809928876
+     },
+     "ratio_cpu": {
+      "median": 5.330616947556094,
+      "lo": 5.313015666232421,
+      "hi": 5.385377629224483
+     }
+    }
+   },
+   "reference_stdout": "0 99999\n551029697\n"
+  }
+ },
+ "load_end": [
+  2.09912109375,
+  2.89208984375,
+  3.787109375
+ ]
+}

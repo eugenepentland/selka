@@ -238,11 +238,13 @@ const Builder = struct {
         self.symbols.items[slot].details.analysis = .checked;
         if (function.type_arguments.len == 0) self.symbols.items[slot].details.type_name = typed.typeName(function.signature.return_type, program.records);
         var effects: std.ArrayList([]const u8) = .empty;
-        // E2: navigation reports the declared public ceiling for exported
-        // functions. Private helpers keep their inferred summary because they
-        // have no published contract to fingerprint.
+        // E2: navigation reports the published ceiling for exported functions.
+        // That ceiling is the signature's own — the effects the parameter list
+        // implies, narrowed by an explicit clause — so a body edit that stays
+        // inside it cannot change what the index publishes. Private helpers keep
+        // their inferred summary because they have no published contract.
         const navigation_mask = if (self.symbols.items[slot].exported)
-            (if (function.policy.effect_bound) |bound| bound.allowed else function.policy.effects)
+            @import("effects.zig").effectiveCeiling(program.records, function)
         else
             function.policy.effects;
         var merged = navigation_mask;

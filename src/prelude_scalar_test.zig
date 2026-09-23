@@ -295,12 +295,12 @@ test "a call-site rejection carries the accepted callee as a signature note" {
     const print_text = try diagnostic_output.render(t.allocator, print_diag, printed.src, .text);
     defer t.allocator.free(print_text);
     try t.expect(std.mem.indexOf(u8, print_text, "signature: stream.print(values..., sep: str, end: str) -> None") != null);
-    var sorted = try language.Compilation.init(t.allocator, "signature.my", "def main() -> int:\n    xs = sorted([3, 1, 2], reverse=True)\n    return xs[0]\n");
+    var sorted = try language.Compilation.init(t.allocator, "signature.my", "def main() -> int:\n    xs = sorted([3, 1, 2], cmp=True)\n    return xs[0]\n");
     defer sorted.deinit();
     try t.expectError(error.SourceError, sorted.check());
     const sorted_diag = sorted.diagnostics.items[0];
     try t.expectEqualStrings("E_CALL_ARGUMENT", sorted_diag.code);
-    try t.expectEqualStrings("sorted(values: list[T], key: callback) -> list[T]", sorted_diag.provenance.requirement.?.message);
+    try t.expectEqualStrings("sorted(values: list[T], *, key: def(T) -> K = None, reverse: bool = False) -> list[T]", sorted_diag.provenance.requirement.?.message);
     try t.expectEqual(diagnostic_role(.alternative), sorted_diag.related.?.role);
     const sorted_json = try diagnostic_output.render(t.allocator, sorted_diag, sorted.src, .json);
     defer t.allocator.free(sorted_json);

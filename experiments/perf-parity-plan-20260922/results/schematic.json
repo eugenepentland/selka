@@ -1,0 +1,1402 @@
+{
+ "cpu": 6,
+ "rounds": 31,
+ "warmups": 3,
+ "seed": 20260922,
+ "reference": "zig-o3",
+ "arms": {
+  "zig-o3": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/zig-o3",
+   "kind": "native"
+  },
+  "rust-o3": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/rust-o3",
+   "kind": "native"
+  },
+  "a3:gc-lto": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/schematic/a3/gc-lto",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  },
+  "a3:gc-lto-unchecked": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/schematic/a3/gc-lto-unchecked",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  },
+  "a3:arena-lto": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/schematic/a3/arena-lto",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  },
+  "l5:gc-lto": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/schematic/l5/gc-lto",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  },
+  "l5:gc-lto-unchecked": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/schematic/l5/gc-lto-unchecked",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  },
+  "l5:arena-lto": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/work/schematic/l5/arena-lto",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  }
+ },
+ "hashes": {
+  "fixture": {
+   "zig-o3": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "rust-o3": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "a3:gc-lto": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "a3:gc-lto-unchecked": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "a3:arena-lto": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "l5:gc-lto": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "l5:gc-lto-unchecked": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "l5:arena-lto": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388"
+  },
+  "changed-net": {
+   "zig-o3": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "rust-o3": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "a3:gc-lto": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "a3:gc-lto-unchecked": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "a3:arena-lto": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "l5:gc-lto": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "l5:gc-lto-unchecked": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "l5:arena-lto": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90"
+  },
+  "changed-value": {
+   "zig-o3": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "rust-o3": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "a3:gc-lto": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "a3:gc-lto-unchecked": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "a3:arena-lto": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "l5:gc-lto": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "l5:gc-lto-unchecked": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "l5:arena-lto": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+  }
+ },
+ "summary": {
+  "fixture": {
+   "median_ms": {
+    "zig-o3": 1.486735,
+    "rust-o3": 1.668657,
+    "a3:gc-lto": 2.937234,
+    "a3:gc-lto-unchecked": 2.523048,
+    "a3:arena-lto": 2.706704,
+    "l5:gc-lto": 2.573018,
+    "l5:gc-lto-unchecked": 2.4211,
+    "l5:arena-lto": 2.375322
+   },
+   "p10_p90": {
+    "zig-o3": [
+     1.365073,
+     1.647481
+    ],
+    "rust-o3": [
+     1.54545,
+     1.836621
+    ],
+    "a3:gc-lto": [
+     2.813079,
+     3.203744
+    ],
+    "a3:gc-lto-unchecked": [
+     2.379194,
+     2.760602
+    ],
+    "a3:arena-lto": [
+     2.598193,
+     2.889439
+    ],
+    "l5:gc-lto": [
+     2.468359,
+     2.73234
+    ],
+    "l5:gc-lto-unchecked": [
+     2.232464,
+     3.373893
+    ],
+    "l5:arena-lto": [
+     2.220916,
+     3.387481
+    ]
+   },
+   "min_ms": {
+    "zig-o3": 1.280495,
+    "rust-o3": 1.503231,
+    "a3:gc-lto": 2.607108,
+    "a3:gc-lto-unchecked": 2.298701,
+    "a3:arena-lto": 2.497544,
+    "l5:gc-lto": 2.370477,
+    "l5:gc-lto-unchecked": 2.172753,
+    "l5:arena-lto": 2.120859
+   },
+   "ratio_to_zig-o3": {
+    "rust-o3": {
+     "ratio": 1.1223634339677213,
+     "ci95": [
+      1.0880429431415173,
+      1.1879519694347047
+     ]
+    },
+    "a3:gc-lto": {
+     "ratio": 1.9756271292463017,
+     "ci95": [
+      1.9109489928902983,
+      2.078849697962527
+     ]
+    },
+    "a3:gc-lto-unchecked": {
+     "ratio": 1.697039485853229,
+     "ci95": [
+      1.6355725222039035,
+      1.8082566863474514
+     ]
+    },
+    "a3:arena-lto": {
+     "ratio": 1.8205692339253468,
+     "ci95": [
+      1.7683065847104378,
+      1.9258067541346404
+     ]
+    },
+    "l5:gc-lto": {
+     "ratio": 1.730650048596421,
+     "ci95": [
+      1.6816045470895666,
+      1.8362055164984812
+     ]
+    },
+    "l5:gc-lto-unchecked": {
+     "ratio": 1.628467749800738,
+     "ci95": [
+      1.5851963099956952,
+      1.7340208714830372
+     ]
+    },
+    "l5:arena-lto": {
+     "ratio": 1.5976767883987397,
+     "ci95": [
+      1.5399051089861433,
+      1.6899828031872088
+     ]
+    }
+   }
+  },
+  "changed-net": {
+   "median_ms": {
+    "zig-o3": 1.48739,
+    "rust-o3": 1.67179,
+    "a3:gc-lto": 2.948281,
+    "a3:gc-lto-unchecked": 2.559119,
+    "a3:arena-lto": 2.729622,
+    "l5:gc-lto": 2.593242,
+    "l5:gc-lto-unchecked": 2.3426,
+    "l5:arena-lto": 2.433743
+   },
+   "p10_p90": {
+    "zig-o3": [
+     1.408841,
+     1.608817
+    ],
+    "rust-o3": [
+     1.507644,
+     1.826702
+    ],
+    "a3:gc-lto": [
+     2.76136,
+     3.906814
+    ],
+    "a3:gc-lto-unchecked": [
+     2.425834,
+     2.858259
+    ],
+    "a3:arena-lto": [
+     2.621243,
+     2.957295
+    ],
+    "l5:gc-lto": [
+     2.454845,
+     2.76701
+    ],
+    "l5:gc-lto-unchecked": [
+     2.230457,
+     2.686868
+    ],
+    "l5:arena-lto": [
+     2.249705,
+     3.426758
+    ]
+   },
+   "min_ms": {
+    "zig-o3": 1.384928,
+    "rust-o3": 1.452547,
+    "a3:gc-lto": 2.691942,
+    "a3:gc-lto-unchecked": 2.324227,
+    "a3:arena-lto": 2.551221,
+    "l5:gc-lto": 2.385582,
+    "l5:gc-lto-unchecked": 2.167909,
+    "l5:arena-lto": 2.152855
+   },
+   "ratio_to_zig-o3": {
+    "rust-o3": {
+     "ratio": 1.1239755544947863,
+     "ci95": [
+      1.0703897246154852,
+      1.1422456123704214
+     ]
+    },
+    "a3:gc-lto": {
+     "ratio": 1.9821842287496891,
+     "ci95": [
+      1.910608099225957,
+      2.04184093562395
+     ]
+    },
+    "a3:gc-lto-unchecked": {
+     "ratio": 1.7205433679129212,
+     "ci95": [
+      1.6490634995031281,
+      1.7731514935626687
+     ]
+    },
+    "a3:arena-lto": {
+     "ratio": 1.8351757104727073,
+     "ci95": [
+      1.7567447122812878,
+      1.888218288411244
+     ]
+    },
+    "l5:gc-lto": {
+     "ratio": 1.743484896362084,
+     "ci95": [
+      1.6762081078893345,
+      1.782465968125087
+     ]
+    },
+    "l5:gc-lto-unchecked": {
+     "ratio": 1.5749736114939592,
+     "ci95": [
+      1.5069495921134064,
+      1.621253467958339
+     ]
+    },
+    "l5:arena-lto": {
+     "ratio": 1.6362507479544708,
+     "ci95": [
+      1.547372429845114,
+      1.6675676316797192
+     ]
+    }
+   }
+  },
+  "changed-value": {
+   "median_ms": {
+    "zig-o3": 1.501836,
+    "rust-o3": 1.71344,
+    "a3:gc-lto": 2.950454,
+    "a3:gc-lto-unchecked": 2.515912,
+    "a3:arena-lto": 2.717139,
+    "l5:gc-lto": 2.634077,
+    "l5:gc-lto-unchecked": 2.368212,
+    "l5:arena-lto": 2.384385
+   },
+   "p10_p90": {
+    "zig-o3": [
+     1.392667,
+     1.631606
+    ],
+    "rust-o3": [
+     1.552978,
+     1.905253
+    ],
+    "a3:gc-lto": [
+     2.832443,
+     3.902783
+    ],
+    "a3:gc-lto-unchecked": [
+     2.363844,
+     2.721945
+    ],
+    "a3:arena-lto": [
+     2.610747,
+     2.860123
+    ],
+    "l5:gc-lto": [
+     2.431148,
+     2.973993
+    ],
+    "l5:gc-lto-unchecked": [
+     2.245085,
+     2.506161
+    ],
+    "l5:arena-lto": [
+     2.201964,
+     2.531396
+    ]
+   },
+   "min_ms": {
+    "zig-o3": 1.278084,
+    "rust-o3": 1.452999,
+    "a3:gc-lto": 2.716462,
+    "a3:gc-lto-unchecked": 2.280805,
+    "a3:arena-lto": 2.552,
+    "l5:gc-lto": 2.324462,
+    "l5:gc-lto-unchecked": 2.150443,
+    "l5:arena-lto": 2.191654
+   },
+   "ratio_to_zig-o3": {
+    "rust-o3": {
+     "ratio": 1.140896875557651,
+     "ci95": [
+      1.0960521526489013,
+      1.1736605861590195
+     ]
+    },
+    "a3:gc-lto": {
+     "ratio": 1.9645647061330267,
+     "ci95": [
+      1.8909828155675723,
+      2.026264052768401
+     ]
+    },
+    "a3:gc-lto-unchecked": {
+     "ratio": 1.6752241922553464,
+     "ci95": [
+      1.6134796356945413,
+      1.7223934111091042
+     ]
+    },
+    "a3:arena-lto": {
+     "ratio": 1.8092115250932859,
+     "ci95": [
+      1.7253878193142398,
+      1.8460620513506094
+     ]
+    },
+    "l5:gc-lto": {
+     "ratio": 1.7539045541590428,
+     "ci95": [
+      1.6720138799216722,
+      1.7994946513412893
+     ]
+    },
+    "l5:gc-lto-unchecked": {
+     "ratio": 1.5768779014486272,
+     "ci95": [
+      1.5207776358031488,
+      1.6226101748808937
+     ]
+    },
+    "l5:arena-lto": {
+     "ratio": 1.587646720414213,
+     "ci95": [
+      1.5037118277869996,
+      1.6332399714777135
+     ]
+    }
+   }
+  }
+ },
+ "rows": [
+  {
+   "fixture": {
+    "l5:gc-lto": 2.820354,
+    "l5:arena-lto": 2.192545,
+    "l5:gc-lto-unchecked": 3.360443,
+    "a3:gc-lto-unchecked": 2.41096,
+    "a3:arena-lto": 2.551157,
+    "zig-o3": 1.35707,
+    "a3:gc-lto": 2.84088,
+    "rust-o3": 2.309963
+   },
+   "changed-net": {
+    "rust-o3": 1.482431,
+    "a3:gc-lto": 3.906814,
+    "a3:arena-lto": 2.563458,
+    "l5:gc-lto-unchecked": 2.167909,
+    "l5:arena-lto": 3.438031,
+    "l5:gc-lto": 2.629948,
+    "a3:gc-lto-unchecked": 2.53211,
+    "zig-o3": 1.46017
+   },
+   "changed-value": {
+    "rust-o3": 1.705873,
+    "a3:arena-lto": 2.610747,
+    "l5:arena-lto": 2.191654,
+    "l5:gc-lto": 2.514129,
+    "zig-o3": 1.43657,
+    "a3:gc-lto-unchecked": 2.355424,
+    "a3:gc-lto": 2.832443,
+    "l5:gc-lto-unchecked": 2.417404
+   }
+  },
+  {
+   "fixture": {
+    "l5:arena-lto": 2.220916,
+    "a3:arena-lto": 2.66198,
+    "zig-o3": 1.371167,
+    "a3:gc-lto": 2.696206,
+    "a3:gc-lto-unchecked": 2.572045,
+    "l5:gc-lto": 2.466193,
+    "rust-o3": 1.606188,
+    "l5:gc-lto-unchecked": 2.249589
+   },
+   "changed-net": {
+    "a3:gc-lto": 2.732136,
+    "rust-o3": 1.484208,
+    "a3:gc-lto-unchecked": 2.479378,
+    "l5:arena-lto": 2.316348,
+    "a3:arena-lto": 2.551221,
+    "l5:gc-lto": 2.497614,
+    "l5:gc-lto-unchecked": 2.256118,
+    "zig-o3": 1.475455
+   },
+   "changed-value": {
+    "a3:arena-lto": 2.577689,
+    "rust-o3": 1.56579,
+    "zig-o3": 1.278084,
+    "a3:gc-lto": 3.776137,
+    "l5:gc-lto": 2.639836,
+    "a3:gc-lto-unchecked": 2.515912,
+    "l5:gc-lto-unchecked": 2.31832,
+    "l5:arena-lto": 2.510526
+   }
+  },
+  {
+   "fixture": {
+    "l5:gc-lto": 2.479205,
+    "a3:gc-lto-unchecked": 2.379194,
+    "a3:gc-lto": 2.87741,
+    "a3:arena-lto": 2.706704,
+    "zig-o3": 1.655277,
+    "l5:gc-lto-unchecked": 2.488182,
+    "rust-o3": 2.822144,
+    "l5:arena-lto": 2.667619
+   },
+   "changed-net": {
+    "l5:arena-lto": 2.265115,
+    "a3:arena-lto": 2.692401,
+    "a3:gc-lto-unchecked": 2.516442,
+    "a3:gc-lto": 3.053799,
+    "l5:gc-lto-unchecked": 2.562257,
+    "rust-o3": 1.757583,
+    "l5:gc-lto": 2.708911,
+    "zig-o3": 1.605449
+   },
+   "changed-value": {
+    "rust-o3": 1.592054,
+    "a3:arena-lto": 2.624751,
+    "a3:gc-lto-unchecked": 2.290974,
+    "l5:gc-lto-unchecked": 2.177207,
+    "zig-o3": 1.689407,
+    "a3:gc-lto": 4.17134,
+    "l5:arena-lto": 2.535824,
+    "l5:gc-lto": 2.936437
+   }
+  },
+  {
+   "fixture": {
+    "l5:arena-lto": 3.534949,
+    "l5:gc-lto": 2.563478,
+    "a3:gc-lto-unchecked": 2.572735,
+    "zig-o3": 1.468347,
+    "a3:gc-lto": 2.923794,
+    "rust-o3": 1.668657,
+    "l5:gc-lto-unchecked": 2.342164,
+    "a3:arena-lto": 2.609093
+   },
+   "changed-net": {
+    "a3:gc-lto-unchecked": 2.496604,
+    "zig-o3": 1.481432,
+    "l5:arena-lto": 2.231358,
+    "a3:gc-lto": 2.837015,
+    "rust-o3": 1.526744,
+    "a3:arena-lto": 2.699452,
+    "l5:gc-lto-unchecked": 2.351996,
+    "l5:gc-lto": 2.592174
+   },
+   "changed-value": {
+    "zig-o3": 1.449633,
+    "rust-o3": 1.620459,
+    "a3:gc-lto-unchecked": 2.509406,
+    "a3:gc-lto": 2.865692,
+    "l5:arena-lto": 2.387362,
+    "a3:arena-lto": 2.55341,
+    "l5:gc-lto": 3.673596,
+    "l5:gc-lto-unchecked": 2.449342
+   }
+  },
+  {
+   "fixture": {
+    "l5:gc-lto": 2.558602,
+    "a3:gc-lto-unchecked": 2.447781,
+    "l5:arena-lto": 2.225418,
+    "l5:gc-lto-unchecked": 3.373893,
+    "zig-o3": 1.365073,
+    "a3:gc-lto": 2.912614,
+    "a3:arena-lto": 3.71407,
+    "rust-o3": 1.567217
+   },
+   "changed-net": {
+    "l5:arena-lto": 2.392757,
+    "a3:arena-lto": 2.639996,
+    "zig-o3": 1.473825,
+    "rust-o3": 1.758391,
+    "l5:gc-lto-unchecked": 2.3426,
+    "l5:gc-lto": 2.385582,
+    "a3:gc-lto": 3.012612,
+    "a3:gc-lto-unchecked": 2.543389
+   },
+   "changed-value": {
+    "a3:gc-lto": 2.861271,
+    "l5:gc-lto-unchecked": 2.357693,
+    "a3:gc-lto-unchecked": 2.521202,
+    "zig-o3": 1.501836,
+    "a3:arena-lto": 2.749121,
+    "rust-o3": 1.711423,
+    "l5:arena-lto": 2.34624,
+    "l5:gc-lto": 3.565395
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.486735,
+    "l5:gc-lto-unchecked": 3.300841,
+    "a3:arena-lto": 2.799005,
+    "a3:gc-lto-unchecked": 2.59795,
+    "rust-o3": 1.696736,
+    "a3:gc-lto": 3.057143,
+    "l5:arena-lto": 2.426594,
+    "l5:gc-lto": 2.543178
+   },
+   "changed-net": {
+    "a3:gc-lto": 2.86135,
+    "a3:arena-lto": 2.643384,
+    "l5:gc-lto-unchecked": 3.616725,
+    "rust-o3": 1.654844,
+    "zig-o3": 1.597445,
+    "a3:gc-lto-unchecked": 2.526732,
+    "l5:arena-lto": 3.426758,
+    "l5:gc-lto": 2.518704
+   },
+   "changed-value": {
+    "a3:gc-lto-unchecked": 2.363844,
+    "l5:arena-lto": 2.458904,
+    "zig-o3": 1.62618,
+    "l5:gc-lto-unchecked": 2.333942,
+    "rust-o3": 1.597475,
+    "a3:gc-lto": 2.902097,
+    "a3:arena-lto": 2.640096,
+    "l5:gc-lto": 2.65533
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.655243,
+    "rust-o3": 1.779442,
+    "l5:gc-lto": 2.670742,
+    "a3:arena-lto": 2.951193,
+    "a3:gc-lto-unchecked": 2.747808,
+    "a3:gc-lto": 3.12119,
+    "l5:gc-lto-unchecked": 2.546369,
+    "l5:arena-lto": 2.485096
+   },
+   "changed-net": {
+    "zig-o3": 1.532608,
+    "a3:gc-lto": 2.973062,
+    "l5:arena-lto": 2.597346,
+    "a3:arena-lto": 2.957295,
+    "a3:gc-lto-unchecked": 2.669961,
+    "rust-o3": 1.844356,
+    "l5:gc-lto": 2.709838,
+    "l5:gc-lto-unchecked": 2.796556
+   },
+   "changed-value": {
+    "zig-o3": 1.68726,
+    "l5:arena-lto": 2.64817,
+    "rust-o3": 1.746929,
+    "l5:gc-lto": 2.667542,
+    "a3:gc-lto": 3.098072,
+    "l5:gc-lto-unchecked": 2.465499,
+    "a3:gc-lto-unchecked": 2.772067,
+    "a3:arena-lto": 2.838885
+   }
+  },
+  {
+   "fixture": {
+    "a3:gc-lto-unchecked": 2.611497,
+    "l5:gc-lto": 2.685017,
+    "l5:gc-lto-unchecked": 2.404692,
+    "rust-o3": 1.902283,
+    "l5:arena-lto": 2.410294,
+    "a3:gc-lto": 3.238779,
+    "zig-o3": 1.636611,
+    "a3:arena-lto": 2.822375
+   },
+   "changed-net": {
+    "a3:gc-lto-unchecked": 2.729229,
+    "l5:gc-lto-unchecked": 2.496678,
+    "zig-o3": 1.495116,
+    "a3:arena-lto": 2.827338,
+    "rust-o3": 1.799456,
+    "l5:arena-lto": 2.355447,
+    "a3:gc-lto": 3.048488,
+    "l5:gc-lto": 2.689048
+   },
+   "changed-value": {
+    "zig-o3": 1.635769,
+    "l5:gc-lto": 2.7035,
+    "a3:gc-lto": 3.051508,
+    "l5:gc-lto-unchecked": 2.487118,
+    "l5:arena-lto": 2.514932,
+    "a3:gc-lto-unchecked": 2.736483,
+    "rust-o3": 1.846701,
+    "a3:arena-lto": 2.852292
+   }
+  },
+  {
+   "fixture": {
+    "a3:arena-lto": 2.820059,
+    "a3:gc-lto": 3.061419,
+    "l5:gc-lto-unchecked": 2.465368,
+    "a3:gc-lto-unchecked": 2.64031,
+    "l5:arena-lto": 2.515972,
+    "l5:gc-lto": 2.648287,
+    "rust-o3": 1.836621,
+    "zig-o3": 1.582194
+   },
+   "changed-net": {
+    "zig-o3": 1.628175,
+    "l5:gc-lto": 2.629961,
+    "a3:arena-lto": 2.880327,
+    "rust-o3": 1.847184,
+    "l5:gc-lto-unchecked": 2.502338,
+    "l5:arena-lto": 2.556667,
+    "a3:gc-lto": 2.964981,
+    "a3:gc-lto-unchecked": 2.6463
+   },
+   "changed-value": {
+    "rust-o3": 2.02549,
+    "l5:gc-lto": 2.638696,
+    "a3:arena-lto": 2.932693,
+    "a3:gc-lto": 3.212743,
+    "zig-o3": 1.560778,
+    "l5:gc-lto-unchecked": 2.43538,
+    "a3:gc-lto-unchecked": 2.562693,
+    "l5:arena-lto": 2.384385
+   }
+  },
+  {
+   "fixture": {
+    "l5:gc-lto-unchecked": 2.622444,
+    "zig-o3": 1.587062,
+    "a3:gc-lto-unchecked": 2.785865,
+    "l5:gc-lto": 2.694438,
+    "rust-o3": 1.784832,
+    "l5:arena-lto": 2.530033,
+    "a3:arena-lto": 2.808436,
+    "a3:gc-lto": 3.007429
+   },
+   "changed-net": {
+    "zig-o3": 1.568941,
+    "l5:gc-lto": 2.94711,
+    "rust-o3": 1.831696,
+    "a3:arena-lto": 2.925249,
+    "l5:gc-lto-unchecked": 2.583441,
+    "l5:arena-lto": 2.595787,
+    "a3:gc-lto-unchecked": 2.66173,
+    "a3:gc-lto": 3.005997
+   },
+   "changed-value": {
+    "a3:gc-lto-unchecked": 2.687846,
+    "rust-o3": 1.733812,
+    "zig-o3": 1.61042,
+    "a3:gc-lto": 3.174307,
+    "l5:gc-lto-unchecked": 2.584263,
+    "l5:gc-lto": 2.788074,
+    "l5:arena-lto": 2.433429,
+    "a3:arena-lto": 2.901694
+   }
+  },
+  {
+   "fixture": {
+    "a3:arena-lto": 2.827273,
+    "l5:gc-lto": 2.679584,
+    "zig-o3": 1.647481,
+    "l5:gc-lto-unchecked": 2.577381,
+    "l5:arena-lto": 2.460265,
+    "rust-o3": 1.664773,
+    "a3:gc-lto-unchecked": 2.729949,
+    "a3:gc-lto": 2.952566
+   },
+   "changed-net": {
+    "l5:gc-lto-unchecked": 2.666676,
+    "l5:arena-lto": 2.460421,
+    "zig-o3": 1.575357,
+    "a3:gc-lto-unchecked": 2.788386,
+    "l5:gc-lto": 2.76701,
+    "a3:arena-lto": 2.762987,
+    "a3:gc-lto": 3.093409,
+    "rust-o3": 1.826702
+   },
+   "changed-value": {
+    "l5:gc-lto": 2.647111,
+    "l5:arena-lto": 2.517204,
+    "rust-o3": 1.745509,
+    "zig-o3": 1.498513,
+    "a3:gc-lto": 3.054758,
+    "l5:gc-lto-unchecked": 2.421393,
+    "a3:gc-lto-unchecked": 2.721945,
+    "a3:arena-lto": 2.714258
+   }
+  },
+  {
+   "fixture": {
+    "l5:gc-lto-unchecked": 2.454944,
+    "a3:arena-lto": 2.889439,
+    "a3:gc-lto-unchecked": 2.592581,
+    "l5:arena-lto": 2.375322,
+    "rust-o3": 1.718097,
+    "zig-o3": 1.558886,
+    "a3:gc-lto": 2.982857,
+    "l5:gc-lto": 2.710578
+   },
+   "changed-net": {
+    "l5:arena-lto": 2.455295,
+    "zig-o3": 1.608817,
+    "a3:gc-lto": 3.043887,
+    "l5:gc-lto": 2.54619,
+    "a3:arena-lto": 2.788598,
+    "rust-o3": 1.67179,
+    "l5:gc-lto-unchecked": 2.307918,
+    "a3:gc-lto-unchecked": 2.858259
+   },
+   "changed-value": {
+    "l5:gc-lto": 2.767201,
+    "l5:arena-lto": 2.547406,
+    "l5:gc-lto-unchecked": 2.506161,
+    "a3:arena-lto": 2.824808,
+    "a3:gc-lto": 2.959494,
+    "rust-o3": 1.793716,
+    "a3:gc-lto-unchecked": 2.719106,
+    "zig-o3": 1.587236
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 2.604488,
+    "rust-o3": 1.747566,
+    "a3:arena-lto": 2.687562,
+    "l5:gc-lto-unchecked": 3.440115,
+    "a3:gc-lto": 3.05689,
+    "l5:arena-lto": 2.354099,
+    "l5:gc-lto": 2.736631,
+    "a3:gc-lto-unchecked": 2.481103
+   },
+   "changed-net": {
+    "zig-o3": 1.812616,
+    "l5:gc-lto-unchecked": 2.48417,
+    "l5:gc-lto": 2.636015,
+    "rust-o3": 1.634891,
+    "l5:arena-lto": 3.501066,
+    "a3:gc-lto": 3.059485,
+    "a3:gc-lto-unchecked": 3.676752,
+    "a3:arena-lto": 2.710416
+   },
+   "changed-value": {
+    "a3:gc-lto-unchecked": 2.713614,
+    "l5:gc-lto": 2.708009,
+    "zig-o3": 1.509241,
+    "rust-o3": 1.756034,
+    "a3:arena-lto": 2.676042,
+    "l5:arena-lto": 2.384578,
+    "l5:gc-lto-unchecked": 2.371241,
+    "a3:gc-lto": 2.914505
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.493794,
+    "l5:arena-lto": 2.381935,
+    "l5:gc-lto": 2.497011,
+    "l5:gc-lto-unchecked": 2.390642,
+    "rust-o3": 1.760853,
+    "a3:arena-lto": 2.605243,
+    "a3:gc-lto-unchecked": 2.414739,
+    "a3:gc-lto": 2.850357
+   },
+   "changed-net": {
+    "l5:arena-lto": 2.328198,
+    "a3:gc-lto-unchecked": 3.759726,
+    "zig-o3": 1.416021,
+    "l5:gc-lto-unchecked": 2.343417,
+    "l5:gc-lto": 2.705129,
+    "rust-o3": 1.557215,
+    "a3:arena-lto": 2.688334,
+    "a3:gc-lto": 2.691942
+   },
+   "changed-value": {
+    "a3:gc-lto": 2.916999,
+    "a3:arena-lto": 2.727517,
+    "l5:gc-lto-unchecked": 2.294653,
+    "zig-o3": 1.489831,
+    "a3:gc-lto-unchecked": 2.514032,
+    "l5:arena-lto": 2.253087,
+    "rust-o3": 1.653091,
+    "l5:gc-lto": 2.517007
+   }
+  },
+  {
+   "fixture": {
+    "l5:gc-lto-unchecked": 2.172753,
+    "a3:arena-lto": 2.497544,
+    "l5:arena-lto": 2.230162,
+    "rust-o3": 1.509025,
+    "l5:gc-lto": 2.370477,
+    "zig-o3": 1.280495,
+    "a3:gc-lto": 2.607108,
+    "a3:gc-lto-unchecked": 3.457392
+   },
+   "changed-net": {
+    "l5:gc-lto-unchecked": 3.264932,
+    "a3:gc-lto": 2.792597,
+    "a3:arena-lto": 3.719557,
+    "l5:arena-lto": 2.264494,
+    "a3:gc-lto-unchecked": 2.425834,
+    "rust-o3": 1.578509,
+    "zig-o3": 1.452477,
+    "l5:gc-lto": 2.55122
+   },
+   "changed-value": {
+    "a3:gc-lto": 2.716462,
+    "a3:gc-lto-unchecked": 2.44746,
+    "rust-o3": 1.452999,
+    "l5:gc-lto": 3.452326,
+    "l5:gc-lto-unchecked": 2.283082,
+    "a3:arena-lto": 2.552,
+    "zig-o3": 1.392667,
+    "l5:arena-lto": 2.358273
+   }
+  },
+  {
+   "fixture": {
+    "a3:gc-lto": 2.949661,
+    "zig-o3": 1.450387,
+    "a3:gc-lto-unchecked": 2.298701,
+    "l5:gc-lto": 2.473385,
+    "a3:arena-lto": 2.652925,
+    "l5:gc-lto-unchecked": 2.268939,
+    "rust-o3": 1.611362,
+    "l5:arena-lto": 2.406355
+   },
+   "changed-net": {
+    "zig-o3": 1.408841,
+    "a3:arena-lto": 3.732589,
+    "a3:gc-lto": 2.800731,
+    "l5:gc-lto-unchecked": 2.274865,
+    "l5:arena-lto": 2.249705,
+    "rust-o3": 1.685332,
+    "a3:gc-lto-unchecked": 2.324227,
+    "l5:gc-lto": 2.626893
+   },
+   "changed-value": {
+    "l5:gc-lto": 2.452579,
+    "a3:gc-lto-unchecked": 2.280805,
+    "rust-o3": 1.541789,
+    "a3:arena-lto": 2.615982,
+    "l5:gc-lto-unchecked": 2.343082,
+    "a3:gc-lto": 3.902783,
+    "zig-o3": 1.485601,
+    "l5:arena-lto": 2.312291
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 1.589506,
+    "l5:arena-lto": 2.248314,
+    "l5:gc-lto-unchecked": 2.232464,
+    "zig-o3": 1.382013,
+    "a3:arena-lto": 2.598193,
+    "l5:gc-lto": 2.580774,
+    "a3:gc-lto-unchecked": 2.523048,
+    "a3:gc-lto": 2.806763
+   },
+   "changed-net": {
+    "l5:gc-lto": 2.461914,
+    "rust-o3": 1.593313,
+    "l5:gc-lto-unchecked": 2.256789,
+    "a3:gc-lto": 2.916113,
+    "a3:gc-lto-unchecked": 2.431108,
+    "l5:arena-lto": 2.284743,
+    "zig-o3": 1.443945,
+    "a3:arena-lto": 2.583367
+   },
+   "changed-value": {
+    "a3:gc-lto-unchecked": 2.550111,
+    "a3:gc-lto": 2.885763,
+    "a3:arena-lto": 2.639331,
+    "l5:gc-lto-unchecked": 2.25569,
+    "l5:arena-lto": 2.26263,
+    "rust-o3": 1.772752,
+    "zig-o3": 1.459911,
+    "l5:gc-lto": 2.483239
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.386003,
+    "a3:arena-lto": 2.580772,
+    "l5:gc-lto-unchecked": 2.325058,
+    "rust-o3": 1.503231,
+    "l5:gc-lto": 2.485769,
+    "l5:arena-lto": 2.120859,
+    "a3:gc-lto": 2.838025,
+    "a3:gc-lto-unchecked": 2.3116
+   },
+   "changed-net": {
+    "zig-o3": 1.384928,
+    "l5:gc-lto": 2.454845,
+    "a3:arena-lto": 2.686417,
+    "l5:arena-lto": 2.279491,
+    "a3:gc-lto": 2.918893,
+    "rust-o3": 1.528062,
+    "a3:gc-lto-unchecked": 2.61352,
+    "l5:gc-lto-unchecked": 2.230457
+   },
+   "changed-value": {
+    "a3:gc-lto": 2.817901,
+    "l5:arena-lto": 2.258237,
+    "l5:gc-lto-unchecked": 2.307558,
+    "rust-o3": 1.520819,
+    "l5:gc-lto": 2.471111,
+    "a3:arena-lto": 2.68461,
+    "a3:gc-lto-unchecked": 2.478086,
+    "zig-o3": 1.358744
+   }
+  },
+  {
+   "fixture": {
+    "l5:gc-lto-unchecked": 2.362048,
+    "rust-o3": 1.628217,
+    "zig-o3": 1.378899,
+    "a3:arena-lto": 2.717721,
+    "a3:gc-lto": 2.937477,
+    "a3:gc-lto-unchecked": 2.438933,
+    "l5:arena-lto": 2.381812,
+    "l5:gc-lto": 2.692402
+   },
+   "changed-net": {
+    "rust-o3": 1.518353,
+    "l5:arena-lto": 2.456379,
+    "a3:arena-lto": 2.628107,
+    "zig-o3": 1.482812,
+    "l5:gc-lto-unchecked": 2.258035,
+    "l5:gc-lto": 2.584952,
+    "a3:gc-lto": 2.856772,
+    "a3:gc-lto-unchecked": 2.567781
+   },
+   "changed-value": {
+    "l5:gc-lto": 2.406437,
+    "l5:arena-lto": 2.27856,
+    "rust-o3": 1.71379,
+    "zig-o3": 1.534703,
+    "a3:gc-lto": 2.879878,
+    "l5:gc-lto-unchecked": 2.368212,
+    "a3:gc-lto-unchecked": 3.771709,
+    "a3:arena-lto": 2.729877
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.530022,
+    "rust-o3": 1.801235,
+    "a3:arena-lto": 3.779054,
+    "l5:gc-lto-unchecked": 3.497495,
+    "a3:gc-lto-unchecked": 2.572857,
+    "a3:gc-lto": 2.937234,
+    "l5:gc-lto": 2.584907,
+    "l5:arena-lto": 2.241635
+   },
+   "changed-net": {
+    "a3:gc-lto": 4.014111,
+    "l5:arena-lto": 2.401293,
+    "l5:gc-lto-unchecked": 2.423962,
+    "a3:gc-lto-unchecked": 2.559119,
+    "a3:arena-lto": 2.774327,
+    "zig-o3": 1.551852,
+    "l5:gc-lto": 3.622239,
+    "rust-o3": 1.72088
+   },
+   "changed-value": {
+    "l5:arena-lto": 2.259675,
+    "l5:gc-lto": 2.60919,
+    "a3:gc-lto": 2.865974,
+    "l5:gc-lto-unchecked": 2.465357,
+    "a3:gc-lto-unchecked": 2.698896,
+    "zig-o3": 1.631606,
+    "a3:arena-lto": 2.632313,
+    "rust-o3": 1.710385
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 1.74166,
+    "a3:gc-lto-unchecked": 2.507775,
+    "l5:arena-lto": 2.173719,
+    "a3:arena-lto": 2.737916,
+    "l5:gc-lto-unchecked": 2.378199,
+    "zig-o3": 1.617849,
+    "l5:gc-lto": 2.629856,
+    "a3:gc-lto": 2.887112
+   },
+   "changed-net": {
+    "a3:gc-lto-unchecked": 2.613315,
+    "zig-o3": 1.389076,
+    "rust-o3": 1.681086,
+    "a3:arena-lto": 2.729622,
+    "l5:gc-lto": 2.602716,
+    "l5:arena-lto": 2.460736,
+    "a3:gc-lto": 3.92044,
+    "l5:gc-lto-unchecked": 2.337911
+   },
+   "changed-value": {
+    "a3:gc-lto-unchecked": 2.48064,
+    "rust-o3": 1.690848,
+    "a3:arena-lto": 2.780161,
+    "a3:gc-lto": 3.01066,
+    "l5:arena-lto": 2.282815,
+    "zig-o3": 1.55098,
+    "l5:gc-lto-unchecked": 2.150443,
+    "l5:gc-lto": 2.407635
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.537558,
+    "a3:arena-lto": 2.674302,
+    "rust-o3": 1.648718,
+    "a3:gc-lto-unchecked": 2.452085,
+    "l5:gc-lto": 2.573018,
+    "a3:gc-lto": 4.030035,
+    "l5:gc-lto-unchecked": 2.404378,
+    "l5:arena-lto": 3.563829
+   },
+   "changed-net": {
+    "l5:gc-lto": 2.64148,
+    "rust-o3": 1.61717,
+    "l5:gc-lto-unchecked": 2.314476,
+    "a3:gc-lto": 2.880051,
+    "l5:arena-lto": 2.491489,
+    "a3:arena-lto": 2.675631,
+    "zig-o3": 1.488516,
+    "a3:gc-lto-unchecked": 2.412846
+   },
+   "changed-value": {
+    "l5:gc-lto": 2.458366,
+    "a3:gc-lto-unchecked": 2.591045,
+    "a3:gc-lto": 3.018791,
+    "l5:arena-lto": 2.300064,
+    "rust-o3": 1.782429,
+    "l5:gc-lto-unchecked": 3.557135,
+    "zig-o3": 1.440829,
+    "a3:arena-lto": 2.717139
+   }
+  },
+  {
+   "fixture": {
+    "l5:gc-lto": 2.511622,
+    "a3:arena-lto": 2.66164,
+    "rust-o3": 1.552796,
+    "l5:gc-lto-unchecked": 2.222782,
+    "l5:arena-lto": 2.328929,
+    "a3:gc-lto": 2.867439,
+    "a3:gc-lto-unchecked": 2.407391,
+    "zig-o3": 1.312279
+   },
+   "changed-net": {
+    "l5:gc-lto": 2.716849,
+    "rust-o3": 1.691013,
+    "a3:arena-lto": 2.621243,
+    "l5:arena-lto": 2.651083,
+    "l5:gc-lto-unchecked": 2.21288,
+    "a3:gc-lto-unchecked": 2.472551,
+    "a3:gc-lto": 2.76136,
+    "zig-o3": 1.503373
+   },
+   "changed-value": {
+    "a3:arena-lto": 2.642625,
+    "l5:gc-lto-unchecked": 2.245085,
+    "l5:gc-lto": 2.476807,
+    "a3:gc-lto-unchecked": 2.434922,
+    "a3:gc-lto": 2.834256,
+    "l5:arena-lto": 2.219096,
+    "rust-o3": 2.734058,
+    "zig-o3": 1.558143
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.370419,
+    "a3:gc-lto-unchecked": 2.415272,
+    "l5:gc-lto": 2.468359,
+    "l5:arena-lto": 2.252255,
+    "l5:gc-lto-unchecked": 3.341308,
+    "rust-o3": 1.615095,
+    "a3:arena-lto": 2.64431,
+    "a3:gc-lto": 2.837117
+   },
+   "changed-net": {
+    "a3:arena-lto": 2.755591,
+    "rust-o3": 1.595131,
+    "l5:gc-lto": 2.441497,
+    "l5:gc-lto-unchecked": 2.207006,
+    "a3:gc-lto": 2.83139,
+    "l5:arena-lto": 2.206299,
+    "zig-o3": 1.415229,
+    "a3:gc-lto-unchecked": 2.455585
+   },
+   "changed-value": {
+    "rust-o3": 1.609344,
+    "l5:gc-lto": 2.431148,
+    "l5:arena-lto": 2.201964,
+    "l5:gc-lto-unchecked": 2.254894,
+    "a3:gc-lto": 2.849982,
+    "a3:gc-lto-unchecked": 2.454302,
+    "a3:arena-lto": 2.721707,
+    "zig-o3": 1.429597
+   }
+  },
+  {
+   "fixture": {
+    "l5:gc-lto": 2.409665,
+    "l5:arena-lto": 2.309762,
+    "rust-o3": 1.54545,
+    "l5:gc-lto-unchecked": 2.195734,
+    "zig-o3": 1.390017,
+    "a3:gc-lto": 2.849279,
+    "a3:gc-lto-unchecked": 2.445506,
+    "a3:arena-lto": 2.762889
+   },
+   "changed-net": {
+    "zig-o3": 1.405059,
+    "rust-o3": 1.452547,
+    "a3:arena-lto": 3.73851,
+    "l5:gc-lto-unchecked": 2.250778,
+    "a3:gc-lto": 2.735617,
+    "l5:arena-lto": 2.152855,
+    "a3:gc-lto-unchecked": 2.527531,
+    "l5:gc-lto": 2.528239
+   },
+   "changed-value": {
+    "a3:arena-lto": 2.631534,
+    "a3:gc-lto-unchecked": 2.400554,
+    "rust-o3": 1.552978,
+    "l5:arena-lto": 2.194091,
+    "l5:gc-lto": 2.324462,
+    "zig-o3": 1.384254,
+    "l5:gc-lto-unchecked": 2.155308,
+    "a3:gc-lto": 2.825034
+   }
+  },
+  {
+   "fixture": {
+    "a3:arena-lto": 2.666535,
+    "l5:arena-lto": 2.252481,
+    "zig-o3": 1.515306,
+    "a3:gc-lto": 2.813079,
+    "rust-o3": 1.619809,
+    "a3:gc-lto-unchecked": 2.338087,
+    "l5:gc-lto-unchecked": 2.4211,
+    "l5:gc-lto": 2.587467
+   },
+   "changed-net": {
+    "l5:gc-lto": 2.448758,
+    "l5:arena-lto": 2.251295,
+    "rust-o3": 1.507644,
+    "a3:gc-lto": 2.834059,
+    "a3:gc-lto-unchecked": 2.407914,
+    "l5:gc-lto-unchecked": 2.351308,
+    "zig-o3": 1.599379,
+    "a3:arena-lto": 2.67151
+   },
+   "changed-value": {
+    "l5:arena-lto": 2.199331,
+    "a3:gc-lto": 3.938237,
+    "a3:arena-lto": 2.653441,
+    "zig-o3": 1.608701,
+    "a3:gc-lto-unchecked": 2.570794,
+    "rust-o3": 1.755094,
+    "l5:gc-lto-unchecked": 2.43335,
+    "l5:gc-lto": 2.687726
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 1.812192,
+    "l5:gc-lto-unchecked": 2.381282,
+    "a3:arena-lto": 2.700285,
+    "a3:gc-lto": 2.911482,
+    "a3:gc-lto-unchecked": 3.6273,
+    "l5:gc-lto": 2.50239,
+    "l5:arena-lto": 3.387481,
+    "zig-o3": 1.406448
+   },
+   "changed-net": {
+    "a3:arena-lto": 2.833046,
+    "a3:gc-lto": 3.160762,
+    "rust-o3": 1.682206,
+    "zig-o3": 1.48739,
+    "l5:gc-lto-unchecked": 2.234408,
+    "l5:arena-lto": 2.255715,
+    "a3:gc-lto-unchecked": 3.625244,
+    "l5:gc-lto": 2.572407
+   },
+   "changed-value": {
+    "l5:arena-lto": 2.403987,
+    "l5:gc-lto": 2.634077,
+    "rust-o3": 1.905253,
+    "l5:gc-lto-unchecked": 2.360736,
+    "zig-o3": 1.493609,
+    "a3:gc-lto-unchecked": 2.386893,
+    "a3:arena-lto": 2.753145,
+    "a3:gc-lto": 2.950934
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 1.595642,
+    "l5:arena-lto": 2.375259,
+    "zig-o3": 1.405493,
+    "l5:gc-lto": 3.597144,
+    "a3:gc-lto-unchecked": 2.609054,
+    "a3:gc-lto": 4.124118,
+    "a3:arena-lto": 2.607789,
+    "l5:gc-lto-unchecked": 2.313074
+   },
+   "changed-net": {
+    "a3:gc-lto-unchecked": 2.674734,
+    "a3:arena-lto": 2.766446,
+    "l5:gc-lto-unchecked": 2.276383,
+    "l5:gc-lto": 2.541372,
+    "l5:arena-lto": 2.433743,
+    "a3:gc-lto": 2.880437,
+    "zig-o3": 1.444023,
+    "rust-o3": 1.627011
+   },
+   "changed-value": {
+    "l5:gc-lto-unchecked": 2.310757,
+    "a3:arena-lto": 2.799617,
+    "l5:arena-lto": 2.420502,
+    "a3:gc-lto": 2.950454,
+    "a3:gc-lto-unchecked": 2.499125,
+    "zig-o3": 1.45695,
+    "l5:gc-lto": 2.539264,
+    "rust-o3": 1.736263
+   }
+  },
+  {
+   "fixture": {
+    "l5:gc-lto": 2.506618,
+    "rust-o3": 1.512676,
+    "l5:arena-lto": 2.345232,
+    "a3:gc-lto": 2.945304,
+    "zig-o3": 1.512352,
+    "a3:gc-lto-unchecked": 2.509203,
+    "a3:arena-lto": 2.82599,
+    "l5:gc-lto-unchecked": 3.582718
+   },
+   "changed-net": {
+    "l5:gc-lto": 2.593242,
+    "a3:gc-lto-unchecked": 2.610669,
+    "l5:gc-lto-unchecked": 2.686868,
+    "zig-o3": 1.440708,
+    "a3:gc-lto": 2.948281,
+    "l5:arena-lto": 2.464542,
+    "rust-o3": 1.684058,
+    "a3:arena-lto": 2.644308
+   },
+   "changed-value": {
+    "zig-o3": 1.421818,
+    "a3:gc-lto": 2.844933,
+    "l5:gc-lto-unchecked": 2.390961,
+    "l5:arena-lto": 2.468199,
+    "l5:gc-lto": 2.973993,
+    "rust-o3": 1.71344,
+    "a3:gc-lto-unchecked": 2.687889,
+    "a3:arena-lto": 2.870765
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.484982,
+    "a3:gc-lto-unchecked": 2.543219,
+    "a3:gc-lto": 2.943297,
+    "l5:gc-lto": 2.52358,
+    "rust-o3": 1.774471,
+    "a3:arena-lto": 2.726466,
+    "l5:arena-lto": 2.376962,
+    "l5:gc-lto-unchecked": 2.472637
+   },
+   "changed-net": {
+    "l5:gc-lto-unchecked": 2.334472,
+    "l5:gc-lto": 2.562421,
+    "a3:gc-lto-unchecked": 2.512843,
+    "rust-o3": 1.789481,
+    "a3:gc-lto": 3.943209,
+    "a3:arena-lto": 2.93859,
+    "zig-o3": 1.598228,
+    "l5:arena-lto": 2.504906
+   },
+   "changed-value": {
+    "a3:gc-lto": 3.152865,
+    "zig-o3": 1.560496,
+    "l5:gc-lto-unchecked": 2.470553,
+    "l5:gc-lto": 2.568002,
+    "a3:gc-lto-unchecked": 2.459808,
+    "l5:arena-lto": 2.531396,
+    "rust-o3": 1.630444,
+    "a3:arena-lto": 2.780372
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.516963,
+    "l5:gc-lto-unchecked": 2.509181,
+    "l5:arena-lto": 3.641809,
+    "a3:arena-lto": 2.831148,
+    "rust-o3": 1.787783,
+    "a3:gc-lto": 3.203744,
+    "l5:gc-lto": 2.73234,
+    "a3:gc-lto-unchecked": 2.760602
+   },
+   "changed-net": {
+    "zig-o3": 1.661062,
+    "a3:gc-lto": 3.05694,
+    "l5:gc-lto": 2.779744,
+    "a3:gc-lto-unchecked": 2.61549,
+    "l5:gc-lto-unchecked": 2.364315,
+    "rust-o3": 1.70163,
+    "l5:arena-lto": 3.638583,
+    "a3:arena-lto": 2.808517
+   },
+   "changed-value": {
+    "l5:gc-lto": 2.601406,
+    "a3:gc-lto-unchecked": 2.532547,
+    "l5:gc-lto-unchecked": 3.4766,
+    "zig-o3": 1.51812,
+    "l5:arena-lto": 2.444525,
+    "a3:arena-lto": 2.860123,
+    "rust-o3": 1.913715,
+    "a3:gc-lto": 4.297895
+   }
+  }
+ ]
+}

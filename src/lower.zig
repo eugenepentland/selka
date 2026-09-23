@@ -46,12 +46,27 @@ const Emitter = struct {
     fn emitCall(self: *Emitter, span: Span, call: @FieldType(@FieldType(typed.Node, "data"), "call")) !void {
         if (call.evaluation) |evaluation| for (evaluation.cleanup) |slot| try self.instruction(span, .{ .drop_local = slot });
         try self.instruction(span, .{ .call = call.function });
+        const callee = self.program.functions[@backingInt(call.function)];
         var i = call.arguments.len;
         while (i > 0) {
             i -= 1;
-            try self.push(.{ .expression = call.arguments[i] });
+            // A `mut` fixed array crosses as the caller's own variable, which
+            // the checker proved the argument names.
+            if (referencePosition(self.program, callee, i)) {
+                const argument = self.program.nodes[@backingInt(call.arguments[i])];
+                if (argument.data != .local) return error.InternalError;
+                try self.instruction(argument.span, .{ .ref_local = argument.data.local });
+            } else try self.push(.{ .expression = call.arguments[i] });
         }
         if (call.evaluation) |evaluation| try self.push(.{ .statement = evaluation.body });
+    }
+    /// Whether parameter `position` of `callee` is a `mut` fixed array, which
+    /// receives the address of the caller's variable instead of a copy.
+    fn referencePosition(program: typed.Program, callee: typed.Function, position: usize) bool {
+        if (position >= callee.signature.parameter_count) return false;
+        for (callee.signature.declared_mutates) |declared| if (declared == position)
+            return typed.referenceArray(program.records, callee.scope.locals[position].ty);
+        return false;
     }
     /// Values evaluate in source order, then `sep=` and finally `end=`. A stream
     /// receiver evaluates first and sits at the stack bottom. A dropped `debug`
@@ -251,12 +266,12 @@ const Emitter = struct {
                 }
             },
             .index => |access| {
-                try self.instruction(node.span, .{ .get_index = self.program.nodes[@backingInt(access.base)].ty });
+                try self.instruction(node.span, .{ .get_index = .{ .ty = self.program.nodes[@backingInt(access.base)].ty, .from_end = access.from_end } });
                 try self.push(.{ .expression = access.index });
                 try self.push(.{ .expression = access.base });
             },
             .replace => |replace| {
-                try self.instruction(node.span, .{ .replace_index = node.ty });
+                try self.instruction(node.span, .{ .replace_index = .{ .ty = node.ty, .from_end = replace.from_end } });
                 try self.push(.{ .expression = replace.value });
                 try self.push(.{ .expression = replace.index });
                 try self.push(.{ .expression = replace.base });

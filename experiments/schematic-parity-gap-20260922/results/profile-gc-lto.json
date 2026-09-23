@@ -1,0 +1,453 @@
+{
+ "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/arms/gc-lto",
+ "runs": 4000,
+ "samples": 1774,
+ "outside_main_executable": 470,
+ "percent_outside": 26.49379932356257,
+ "unmapped_inside": 16,
+ "overflow": 0,
+ "functions": [
+  {
+   "name": "sexpr::at",
+   "samples": 151,
+   "percent": 8.511837655016912
+  },
+  {
+   "name": "io::flush",
+   "samples": 145,
+   "percent": 8.173618940248026
+  },
+  {
+   "name": "text::write",
+   "samples": 119,
+   "percent": 6.708004509582864
+  },
+  {
+   "name": "layout::partPin",
+   "samples": 98,
+   "percent": 5.52423900789177
+  },
+  {
+   "name": "sexpr::form",
+   "samples": 97,
+   "percent": 5.467869222096956
+  },
+  {
+   "name": "text::escaped",
+   "samples": 84,
+   "percent": 4.735062006764374
+  },
+  {
+   "name": "layout_routes::build",
+   "samples": 78,
+   "percent": 4.3968432919954905
+  },
+  {
+   "name": "text::decimal",
+   "samples": 77,
+   "percent": 4.340473506200676
+  },
+  {
+   "name": "svg::passive",
+   "samples": 56,
+   "percent": 3.156708004509583
+  },
+  {
+   "name": "circuit::label",
+   "samples": 47,
+   "percent": 2.6493799323562572
+  },
+  {
+   "name": "layout::innerPin",
+   "samples": 43,
+   "percent": 2.4239007891770012
+  },
+  {
+   "name": "layout::nearest",
+   "samples": 34,
+   "percent": 1.9165727170236753
+  },
+  {
+   "name": "svg::render",
+   "samples": 26,
+   "percent": 1.4656144306651635
+  },
+  {
+   "name": "layout::branch",
+   "samples": 19,
+   "percent": 1.0710259301014655
+  },
+  {
+   "name": "qbe_host_invoke",
+   "samples": 18,
+   "percent": 1.0146561443066517
+  },
+  {
+   "name": "buffer_ready_rooted",
+   "samples": 18,
+   "percent": 1.0146561443066517
+  },
+  {
+   "name": "layout::collectRows",
+   "samples": 14,
+   "percent": 0.7891770011273957
+  },
+  {
+   "name": "layout::groundBranch",
+   "samples": 13,
+   "percent": 0.7328072153325818
+  },
+  {
+   "name": "ports::equal",
+   "samples": 13,
+   "percent": 0.7328072153325818
+  },
+  {
+   "name": "svg::pinStart",
+   "samples": 13,
+   "percent": 0.7328072153325818
+  },
+  {
+   "name": "layout::depth",
+   "samples": 11,
+   "percent": 0.6200676437429538
+  },
+  {
+   "name": "circuit::pinForm",
+   "samples": 10,
+   "percent": 0.5636978579481398
+  },
+  {
+   "name": "draw::line",
+   "samples": 10,
+   "percent": 0.5636978579481398
+  },
+  {
+   "name": "layout::bridge",
+   "samples": 10,
+   "percent": 0.5636978579481398
+  },
+  {
+   "name": "svg::chip",
+   "samples": 9,
+   "percent": 0.5073280721533259
+  },
+  {
+   "name": "layout::build",
+   "samples": 9,
+   "percent": 0.5073280721533259
+  },
+  {
+   "name": "circuit::normalize",
+   "samples": 9,
+   "percent": 0.5073280721533259
+  },
+  {
+   "name": "draw::labelStart",
+   "samples": 8,
+   "percent": 0.4509582863585118
+  },
+  {
+   "name": "layout_routes::blocked",
+   "samples": 8,
+   "percent": 0.4509582863585118
+  },
+  {
+   "name": "svg::instanceStart",
+   "samples": 6,
+   "percent": 0.3382187147688839
+  },
+  {
+   "name": "myl_native_heap_alloc_at",
+   "samples": 5,
+   "percent": 0.2818489289740699
+  },
+  {
+   "name": "main",
+   "samples": 4,
+   "percent": 0.2254791431792559
+  },
+  {
+   "name": "layout_graph::build",
+   "samples": 4,
+   "percent": 0.2254791431792559
+  },
+  {
+   "name": "svg::finishGroup",
+   "samples": 3,
+   "percent": 0.16910935738444194
+  },
+  {
+   "name": "draw::labelEnd",
+   "samples": 2,
+   "percent": 0.11273957158962795
+  },
+  {
+   "name": "svg::ports",
+   "samples": 2,
+   "percent": 0.11273957158962795
+  },
+  {
+   "name": "svg::displayRef",
+   "samples": 2,
+   "percent": 0.11273957158962795
+  },
+  {
+   "name": "write_block_packed",
+   "samples": 2,
+   "percent": 0.11273957158962795
+  },
+  {
+   "name": "myl_native_list_append",
+   "samples": 2,
+   "percent": 0.11273957158962795
+  },
+  {
+   "name": "myl_native_bytes_buffer_append_range",
+   "samples": 1,
+   "percent": 0.05636978579481398
+  },
+  {
+   "name": "release",
+   "samples": 1,
+   "percent": 0.05636978579481398
+  },
+  {
+   "name": "myl_qbe_host_begin",
+   "samples": 1,
+   "percent": 0.05636978579481398
+  },
+  {
+   "name": "layout::height",
+   "samples": 1,
+   "percent": 0.05636978579481398
+  },
+  {
+   "name": "layout::pinGroup",
+   "samples": 1,
+   "percent": 0.05636978579481398
+  },
+  {
+   "name": "myl_native_heap_extend",
+   "samples": 1,
+   "percent": 0.05636978579481398
+  },
+  {
+   "name": "draw::label",
+   "samples": 1,
+   "percent": 0.05636978579481398
+  },
+  {
+   "name": "svg::portName",
+   "samples": 1,
+   "percent": 0.05636978579481398
+  },
+  {
+   "name": "myl_native_list_set",
+   "samples": 1,
+   "percent": 0.05636978579481398
+  }
+ ],
+ "top_pcs": [
+  {
+   "address": "0x10b280a",
+   "samples": 94,
+   "percent": 5.2987598647125145
+  },
+  {
+   "address": "0x107c488",
+   "samples": 48,
+   "percent": 2.705749718151071
+  },
+  {
+   "address": "0x10857dc",
+   "samples": 44,
+   "percent": 2.480270574971815
+  },
+  {
+   "address": "0x107c46a",
+   "samples": 41,
+   "percent": 2.3111612175873733
+  },
+  {
+   "address": "0x107c483",
+   "samples": 26,
+   "percent": 1.4656144306651635
+  },
+  {
+   "address": "0x10c22e4",
+   "samples": 20,
+   "percent": 1.1273957158962795
+  },
+  {
+   "address": "0x10b280f",
+   "samples": 19,
+   "percent": 1.0710259301014655
+  },
+  {
+   "address": "0x10dba20",
+   "samples": 15,
+   "percent": 0.8455467869222097
+  },
+  {
+   "address": "0x1085441",
+   "samples": 15,
+   "percent": 0.8455467869222097
+  },
+  {
+   "address": "0x10bcc98",
+   "samples": 13,
+   "percent": 0.7328072153325818
+  },
+  {
+   "address": "0x10855ab",
+   "samples": 12,
+   "percent": 0.6764374295377678
+  },
+  {
+   "address": "0x1071bfb",
+   "samples": 12,
+   "percent": 0.6764374295377678
+  },
+  {
+   "address": "0x10858f3",
+   "samples": 11,
+   "percent": 0.6200676437429538
+  },
+  {
+   "address": "0x107f425",
+   "samples": 9,
+   "percent": 0.5073280721533259
+  },
+  {
+   "address": "0x10b2720",
+   "samples": 8,
+   "percent": 0.4509582863585118
+  },
+  {
+   "address": "0x10bcca8",
+   "samples": 8,
+   "percent": 0.4509582863585118
+  },
+  {
+   "address": "0x1085362",
+   "samples": 8,
+   "percent": 0.4509582863585118
+  },
+  {
+   "address": "0x10857e8",
+   "samples": 8,
+   "percent": 0.4509582863585118
+  },
+  {
+   "address": "0x10c20dc",
+   "samples": 8,
+   "percent": 0.4509582863585118
+  },
+  {
+   "address": "0x10b2805",
+   "samples": 7,
+   "percent": 0.3945885005636979
+  },
+  {
+   "address": "0x10c2223",
+   "samples": 7,
+   "percent": 0.3945885005636979
+  },
+  {
+   "address": "0x10b297d",
+   "samples": 6,
+   "percent": 0.3382187147688839
+  },
+  {
+   "address": "0x107f563",
+   "samples": 6,
+   "percent": 0.3382187147688839
+  },
+  {
+   "address": "0x10857b4",
+   "samples": 6,
+   "percent": 0.3382187147688839
+  },
+  {
+   "address": "0x1085413",
+   "samples": 6,
+   "percent": 0.3382187147688839
+  },
+  {
+   "address": "0x108dca2",
+   "samples": 6,
+   "percent": 0.3382187147688839
+  },
+  {
+   "address": "0x1080a27",
+   "samples": 6,
+   "percent": 0.3382187147688839
+  },
+  {
+   "address": "0x10d9691",
+   "samples": 6,
+   "percent": 0.3382187147688839
+  },
+  {
+   "address": "0x10c2010",
+   "samples": 6,
+   "percent": 0.3382187147688839
+  },
+  {
+   "address": "0x10c21e3",
+   "samples": 6,
+   "percent": 0.3382187147688839
+  },
+  {
+   "address": "0x107c47e",
+   "samples": 6,
+   "percent": 0.3382187147688839
+  },
+  {
+   "address": "0x10c3fdc",
+   "samples": 6,
+   "percent": 0.3382187147688839
+  },
+  {
+   "address": "0x107f98f",
+   "samples": 5,
+   "percent": 0.2818489289740699
+  },
+  {
+   "address": "0x107c471",
+   "samples": 5,
+   "percent": 0.2818489289740699
+  },
+  {
+   "address": "0x108e37b",
+   "samples": 5,
+   "percent": 0.2818489289740699
+  },
+  {
+   "address": "0x1085710",
+   "samples": 5,
+   "percent": 0.2818489289740699
+  },
+  {
+   "address": "0x10852c0",
+   "samples": 5,
+   "percent": 0.2818489289740699
+  },
+  {
+   "address": "0x10730ad",
+   "samples": 5,
+   "percent": 0.2818489289740699
+  },
+  {
+   "address": "0x10b34b0",
+   "samples": 5,
+   "percent": 0.2818489289740699
+  },
+  {
+   "address": "0x1080b6f",
+   "samples": 5,
+   "percent": 0.2818489289740699
+  }
+ ]
+}

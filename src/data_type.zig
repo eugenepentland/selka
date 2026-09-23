@@ -12,6 +12,14 @@ const typed = @import("typed.zig");
 pub fn check(allocator: std.mem.Allocator, records: []const typed.Record, root: typed.Type, allow_domains: bool) CheckError!void {
     return checkMode(allocator, records, root, if (allow_domains) .backing else .reject);
 }
+/// Validate one trusted host-boundary type. Ordinary data crosses as copied
+/// values; the immutable `bytes` byte string crosses as one owned payload the
+/// packed bridge copies whole, so it is accepted at the boundary itself but not
+/// as a field of some larger copied graph.
+pub fn checkHost(allocator: std.mem.Allocator, records: []const typed.Record, root: typed.Type) CheckError!void {
+    if (root.isAggregate() and root.recordIndex() < records.len and typed.isByteString(records[root.recordIndex()])) return;
+    return check(allocator, records, root, true);
+}
 /// Validate the complete wire graph, requiring explicit codecs for every encountered domain.
 pub fn checkCodecs(allocator: std.mem.Allocator, records: []const typed.Record, root: typed.Type) CheckError!void {
     return checkMode(allocator, records, root, .wire);
@@ -36,6 +44,9 @@ fn checkMode(allocator: std.mem.Allocator, records: []const typed.Record, root: 
         const record = records[ty.recordIndex()];
         if (record.contract.callback != null) return error.NotDataType;
         if (record.managed or record.shape.hasRuntimeIdentity() or record.contract.move_only) return error.NotDataType;
+        // A tuple is taken apart by destructuring, not by a wire field name, so
+        // it has no implicit codec: the boundary rejects it like a managed graph.
+        if (record.shape.tuple) return error.NotDataType;
         if (record.shape.domain) |backing| {
             const next = switch (mode) {
                 .reject => return error.NotDataType,

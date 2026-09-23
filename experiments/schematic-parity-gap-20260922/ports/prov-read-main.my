@@ -1,0 +1,11 @@
+module main
+import schematic_inputs
+import sexpr
+import schematic
+import svg
+
+def main(host: Host) -> Result[None, int]:
+    inputs = schematic_inputs.load(host)?
+    if len(inputs.circuit.source) == 0:
+        return Err(1)
+    return Ok(None)

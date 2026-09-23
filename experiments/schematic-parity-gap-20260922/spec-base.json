@@ -1,0 +1,7 @@
+{
+ "gc-lto": {"backend": "llvm", "opt": "3", "lto": true, "bounded": false},
+ "gc-lto-bounded": {"backend": "llvm", "opt": "3", "lto": true, "bounded": true},
+ "qbe-bounded": {"backend": "qbe", "bounded": true},
+ "qbe": {"backend": "qbe", "bounded": false},
+ "arena-lto": {"backend": "llvm", "opt": "3", "lto": true, "bounded": false, "guest": "arena"}
+}

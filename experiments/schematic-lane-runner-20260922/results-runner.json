@@ -1,0 +1,273 @@
+{
+ "cpu": 2,
+ "rounds": 21,
+ "warmups": 3,
+ "seed": 20260922,
+ "reference": "runner-before",
+ "arms": {
+  "runner-before": {
+   "kind": "runner",
+   "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-before/bin/schematic-svg",
+   "project": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/guest",
+   "args": []
+  },
+  "runner-after": {
+   "kind": "runner",
+   "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-after/bin/schematic-svg",
+   "project": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/guest",
+   "args": []
+  },
+  "runner-after-qbe": {
+   "kind": "runner",
+   "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-after/bin/schematic-svg",
+   "project": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/guest",
+   "args": [
+    "--backend",
+    "qbe"
+   ]
+  },
+  "runner-after-lto": {
+   "kind": "runner",
+   "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/.tmp/install-after/bin/schematic-svg",
+   "project": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-af2406eb277c64387/src/schematic/guest",
+   "args": [
+    "--lto"
+   ]
+  }
+ },
+ "hashes": {
+  "fixture": {
+   "runner-before": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "runner-after": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "runner-after-qbe": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "runner-after-lto": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388"
+  }
+ },
+ "summary": {
+  "fixture": {
+   "median_ms": {
+    "runner-before": 1045.054496,
+    "runner-after": 1067.847654,
+    "runner-after-qbe": 1029.750931,
+    "runner-after-lto": 7923.345754
+   },
+   "p10_p90": {
+    "runner-before": [
+     927.752028,
+     1246.047151
+    ],
+    "runner-after": [
+     952.329518,
+     1298.697238
+    ],
+    "runner-after-qbe": [
+     907.268874,
+     1186.91627
+    ],
+    "runner-after-lto": [
+     7050.88644,
+     9105.683195
+    ]
+   },
+   "min_ms": {
+    "runner-before": 895.997266,
+    "runner-after": 935.49682,
+    "runner-after-qbe": 899.244723,
+    "runner-after-lto": 6891.718836
+   },
+   "ratio_to_runner-before": {
+    "runner-after": {
+     "ratio": 1.021810497047993,
+     "ci95": [
+      0.9506091128408927,
+      1.071552650694695
+     ]
+    },
+    "runner-after-qbe": {
+     "ratio": 0.9853562038548467,
+     "ci95": [
+      0.9299082846463466,
+      1.0356260978132512
+     ]
+    },
+    "runner-after-lto": {
+     "ratio": 7.581753663877831,
+     "ci95": [
+      7.0776145546753995,
+      8.253166894900197
+     ]
+    }
+   }
+  }
+ },
+ "rows": [
+  {
+   "fixture": {
+    "runner-after": 950.457143,
+    "runner-before": 927.752028,
+    "runner-after-qbe": 950.71607,
+    "runner-after-lto": 7050.88644
+   }
+  },
+  {
+   "fixture": {
+    "runner-after-lto": 9538.107287,
+    "runner-after-qbe": 967.132318,
+    "runner-before": 953.332079,
+    "runner-after": 964.81755
+   }
+  },
+  {
+   "fixture": {
+    "runner-after-qbe": 899.244723,
+    "runner-before": 950.077507,
+    "runner-after-lto": 7137.986877,
+    "runner-after": 958.559945
+   }
+  },
+  {
+   "fixture": {
+    "runner-before": 914.800538,
+    "runner-after-lto": 6934.408434,
+    "runner-after": 952.329518,
+    "runner-after-qbe": 907.268874
+   }
+  },
+  {
+   "fixture": {
+    "runner-after-lto": 6891.718836,
+    "runner-after-qbe": 901.665371,
+    "runner-after": 952.597724,
+    "runner-before": 895.997266
+   }
+  },
+  {
+   "fixture": {
+    "runner-after": 935.49682,
+    "runner-after-qbe": 909.652854,
+    "runner-after-lto": 7176.541284,
+    "runner-before": 1246.047151
+   }
+  },
+  {
+   "fixture": {
+    "runner-before": 1093.397203,
+    "runner-after-qbe": 1025.201027,
+    "runner-after": 1067.847654,
+    "runner-after-lto": 7360.929979
+   }
+  },
+  {
+   "fixture": {
+    "runner-after-lto": 7201.660819,
+    "runner-after-qbe": 1141.599116,
+    "runner-before": 1030.690841,
+    "runner-after": 1029.17646
+   }
+  },
+  {
+   "fixture": {
+    "runner-after-lto": 8148.226275,
+    "runner-before": 1051.927095,
+    "runner-after": 988.661796,
+    "runner-after-qbe": 931.990974
+   }
+  },
+  {
+   "fixture": {
+    "runner-after-lto": 7530.477596,
+    "runner-after-qbe": 984.355909,
+    "runner-before": 968.082113,
+    "runner-after": 1298.697238
+   }
+  },
+  {
+   "fixture": {
+    "runner-after-lto": 8882.99884,
+    "runner-after-qbe": 1159.770938,
+    "runner-before": 1317.837932,
+    "runner-after": 1180.000082
+   }
+  },
+  {
+   "fixture": {
+    "runner-after-lto": 8537.894591,
+    "runner-after-qbe": 1048.20485,
+    "runner-before": 1069.18903,
+    "runner-after": 1159.786966
+   }
+  },
+  {
+   "fixture": {
+    "runner-after-qbe": 1104.938797,
+    "runner-after-lto": 8715.22062,
+    "runner-before": 1008.026709,
+    "runner-after": 1080.153692
+   }
+  },
+  {
+   "fixture": {
+    "runner-after-lto": 8647.550409,
+    "runner-after": 1545.242848,
+    "runner-after-qbe": 1608.690499,
+    "runner-before": 1611.780138
+   }
+  },
+  {
+   "fixture": {
+    "runner-after-lto": 9257.081936,
+    "runner-before": 1127.402451,
+    "runner-after": 1188.688471,
+    "runner-after-qbe": 1077.07506
+   }
+  },
+  {
+   "fixture": {
+    "runner-after-lto": 8602.370332,
+    "runner-after-qbe": 1061.074409,
+    "runner-after": 1081.241519,
+    "runner-before": 1045.054496
+   }
+  },
+  {
+   "fixture": {
+    "runner-after": 1113.694921,
+    "runner-after-lto": 9105.683195,
+    "runner-before": 1047.785719,
+    "runner-after-qbe": 1044.200835
+   }
+  },
+  {
+   "fixture": {
+    "runner-after": 1058.572284,
+    "runner-after-lto": 7923.345754,
+    "runner-before": 1060.212888,
+    "runner-after-qbe": 1249.123096
+   }
+  },
+  {
+   "fixture": {
+    "runner-after-qbe": 1186.91627,
+    "runner-after-lto": 8458.78369,
+    "runner-before": 1040.02979,
+    "runner-after": 1087.011345
+   }
+  },
+  {
+   "fixture": {
+    "runner-before": 1035.340629,
+    "runner-after-lto": 7751.853926,
+    "runner-after-qbe": 993.288018,
+    "runner-after": 1060.896062
+   }
+  },
+  {
+   "fixture": {
+    "runner-after-qbe": 1029.750931,
+    "runner-before": 1056.896878,
+    "runner-after-lto": 7827.909727,
+    "runner-after": 1360.151026
+   }
+  }
+ ]
+}

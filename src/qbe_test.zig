@@ -193,7 +193,7 @@ test "a build with no requested ceiling emits no step check but keeps the positi
         \\    return total
     );
     defer c.deinit();
-    const manifest = try c.emitQbeWithOptions(a, false, false, true);
+    const manifest = try c.emitQbeWithOptions(a, .{ .step_checks = false });
     defer a.free(manifest);
     var parsed = try std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer parsed.deinit();
@@ -219,7 +219,7 @@ test "a build without a frame ceiling omits depth accounting and refuses one at 
     ;
     var without = try language.Compilation.init(a, "qbe.my", source);
     defer without.deinit();
-    const bare = try without.emitQbeWithOptions(a, false, true, false);
+    const bare = try without.emitQbeWithOptions(a, .{ .frame_checks = false });
     defer a.free(bare);
     var parsed = try std.json.parseFromSlice(Manifest, a, bare, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer parsed.deinit();
@@ -236,7 +236,7 @@ test "a build without a frame ceiling omits depth accounting and refuses one at 
 
     var with = try language.Compilation.init(a, "qbe.my", source);
     defer with.deinit();
-    const accounted = try with.emitQbeWithOptions(a, false, true, true);
+    const accounted = try with.emitQbeWithOptions(a, .{});
     defer a.free(accounted);
     var full = try std.json.parseFromSlice(Manifest, a, accounted, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer full.deinit();
@@ -266,14 +266,14 @@ test "a leaf skips the stack-floor guard while a calling function keeps it" {
     // Accounting is off so the floor test is the only user of the frame-failure
     // helper: a leaf's frame is bounded at compile time and its caller proved the
     // headroom, so the guard is redundant; a function that calls may recurse.
-    const manifest = try c.emitQbeWithOptions(a, false, true, false);
+    const manifest = try c.emitQbeWithOptions(a, .{ .frame_checks = false });
     defer a.free(manifest);
     var parsed = try std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer parsed.deinit();
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, named(parsed.value, "leaf").?.il, "myl_qbe_fail_frame"));
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, named(parsed.value, "rec").?.il, "myl_qbe_fail_frame"));
 
-    const unaccounted = try c.emitQbeWithOptions(a, false, true, false);
+    const unaccounted = try c.emitQbeWithOptions(a, .{ .frame_checks = false });
     defer a.free(unaccounted);
     var unaccounted_parsed = try std.json.parseFromSlice(Manifest, a, unaccounted, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer unaccounted_parsed.deinit();
@@ -454,7 +454,14 @@ test "aggregate projections load scalars directly while escaping records retain 
     }
     const snapshot = named(parsed.value, "snapshot").?.il;
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, snapshot, "myl_native_list_get"));
-    try std.testing.expect(std.mem.indexOf(u8, snapshot, "blit ") != null);
+    // The escaping record leaves by value: the function returns an aggregate
+    // type, so the return copies the checked element into storage the caller
+    // owns. That copy is the snapshot (`QBE-RETFWD-1`); no second one is made
+    // in per-pc scratch first. The spec-case below checks the snapshot keeps
+    // its value across an element write, growth and collection.
+    try std.testing.expect(std.mem.indexOf(u8, snapshot, "export function :") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, snapshot, "%agg"));
+    try std.testing.expect(std.mem.indexOf(u8, snapshot, "myl_qbe_fail_normalized_index_bounds") != null);
 }
 
 // spec-case: QBE-AGGREGATE-READ-1
@@ -494,7 +501,7 @@ test "a build without a ceiling stores a position only where a diagnostic reads 
         \\    return 7
     );
     defer plain.deinit();
-    const elided = try plain.emitQbeWithOptions(a, false, false, true);
+    const elided = try plain.emitQbeWithOptions(a, .{ .step_checks = false });
     defer a.free(elided);
     var parsed = try std.json.parseFromSlice(Manifest, a, elided, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer parsed.deinit();
@@ -511,7 +518,7 @@ test "a build without a ceiling stores a position only where a diagnostic reads 
         \\    return 0
     );
     defer calls.deinit();
-    const observable = try calls.emitQbeWithOptions(a, false, false, true);
+    const observable = try calls.emitQbeWithOptions(a, .{ .step_checks = false });
     defer a.free(observable);
     var kept = try std.json.parseFromSlice(Manifest, a, observable, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer kept.deinit();
@@ -654,7 +661,7 @@ test "the fast protocol drops the per-call sticky test and keeps the trace posit
     ;
     var fast = try language.Compilation.init(a, "qbe.my", source);
     defer fast.deinit();
-    const bare = try fast.emitQbeWithOptions(a, false, false, false);
+    const bare = try fast.emitQbeWithOptions(a, .{ .step_checks = false, .frame_checks = false });
     defer a.free(bare);
     var parsed = try std.json.parseFromSlice(Manifest, a, bare, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer parsed.deinit();
@@ -665,18 +672,235 @@ test "the fast protocol drops the per-call sticky test and keeps the trace posit
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, reader, "loadl %trap"));
     const caller = named(parsed.value, "main").?.il;
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, caller, "loadl %trap"));
-    // A call site keeps its position: a callee's trace names this pc, and the
-    // missing sticky branch no longer marks the body observable by itself.
-    try std.testing.expect(std.mem.indexOf(u8, caller, ", %position") != null);
-    try std.testing.expect(std.mem.indexOf(u8, caller, "call $myl_f_") != null);
+    // A call site keeps its position: a callee's trace names this pc. The fast
+    // protocol names it on the call itself for the frame map (QBE-FRAMEMAP-1)
+    // rather than storing it.
+    const site = std.mem.indexOf(u8, caller, "call $myl_f_") orelse return error.TestUnexpectedResult;
+    const line = std.mem.lastIndexOfScalar(u8, caller[0..site], '\n') orelse return error.TestUnexpectedResult;
+    const previous = std.mem.lastIndexOfScalar(u8, caller[0..line], '\n') orelse return error.TestUnexpectedResult;
+    try std.testing.expect(std.mem.startsWith(u8, caller[previous + 1 ..], " dbgloc "));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, caller, "%position"));
     // An accounting build keeps the flag test, so its trap delivery is unchanged.
     var accounted = try language.Compilation.init(a, "qbe.my", source);
     defer accounted.deinit();
-    const full = try accounted.emitQbeWithOptions(a, false, false, true);
+    const full = try accounted.emitQbeWithOptions(a, .{ .step_checks = false });
     defer a.free(full);
     var full_parsed = try std.json.parseFromSlice(Manifest, a, full, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer full_parsed.deinit();
     try std.testing.expect(std.mem.indexOf(u8, named(full_parsed.value, "main").?.il, "loadl %trap") != null);
+}
+/// The unit named `name` in a manifest emitted from `source` under `policy`.
+fn emittedUnder(a: std.mem.Allocator, source: []const u8, policy: language.native_interface.Policy, name: []const u8) ![]u8 {
+    var program = try language.Compilation.init(a, "qbe.my", source);
+    defer program.deinit();
+    const manifest = try program.emitQbeWithOptions(a, policy);
+    defer a.free(manifest);
+    var parsed = try std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer parsed.deinit();
+    return a.dupe(u8, (named(parsed.value, name) orelse return error.TestUnexpectedResult).il);
+}
+// spec: QBE-NORETURN-1
+test "the fast protocol ends each fail helper's path in hlt and accounting keeps the sticky exit" {
+    const a = std.testing.allocator;
+    const halting_source =
+        \\def grow(x: int, step: int) -> int:
+        \\    return x + step
+        \\
+        \\
+        \\def poke(xs: mut list[int], at: int) -> None:
+        \\    xs[at] = 7
+        \\
+        \\
+        \\def flip(x: int, s: int) -> int:
+        \\    return -shift_left(x, s)
+        \\
+        \\
+        \\def main() -> int:
+        \\    xs: list[int] = [1, 2, 3]
+        \\    poke(mut xs, 1)
+        \\    return grow(1, flip(2, 1))
+    ;
+    // Neither accounting: the overflow and the list-bounds failure paths end in
+    // `hlt` right after their helper, and no fail call is followed by the jump
+    // into the shared exit.
+    const fast_grow = try emittedUnder(a, halting_source, .{ .step_checks = false, .frame_checks = false }, "grow");
+    defer a.free(fast_grow);
+    const fast_poke = try emittedUnder(a, halting_source, .{ .step_checks = false, .frame_checks = false }, "poke");
+    defer a.free(fast_poke);
+    try std.testing.expect(std.mem.indexOf(u8, fast_grow, "call $myl_qbe_fail_overflow_op(") != null);
+    try std.testing.expectEqual(std.mem.count(u8, fast_grow, "call $myl_qbe_fail_"), std.mem.count(u8, fast_grow, "\n hlt\n"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, fast_grow, "jmp @failure"));
+    try std.testing.expect(std.mem.indexOf(u8, fast_poke, "myl_qbe_fail_") != null);
+    try std.testing.expectEqual(std.mem.count(u8, fast_poke, "call $myl_qbe_fail_"), std.mem.count(u8, fast_poke, "\n hlt\n"));
+    // The negation's and the shift's cold blocks call a value helper that
+    // always traps there, so they end in `hlt` as well.
+    const fast_flip = try emittedUnder(a, halting_source, .{ .step_checks = false, .frame_checks = false }, "flip");
+    defer a.free(fast_flip);
+    try std.testing.expect(std.mem.indexOf(u8, fast_flip, "call $myl_qbe_int_neg(") != null);
+    try std.testing.expect(std.mem.indexOf(u8, fast_flip, "call $myl_qbe_int_binary(") != null);
+    try std.testing.expectEqual(std.mem.count(u8, fast_flip, "call $myl_qbe_fail_") + 2, std.mem.count(u8, fast_flip, "\n hlt\n"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, fast_flip, "jmp @failure"));
+    // Frame accounting alone keeps the sticky protocol, and with it the return
+    // through `@failure` after every helper; so does the fully accounted
+    // program a library and the guest-test runner build.
+    const framed = try emittedUnder(a, halting_source, .{ .step_checks = false }, "grow");
+    defer a.free(framed);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, framed, " hlt"));
+    try std.testing.expect(std.mem.indexOf(u8, framed, ")\n jmp @failure\n") != null);
+    const accounted = try emittedUnder(a, halting_source, .{}, "poke");
+    defer a.free(accounted);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, accounted, " hlt"));
+    try std.testing.expect(std.mem.indexOf(u8, accounted, ")\n jmp @failure\n") != null);
+}
+/// The checked-arithmetic sequence of `il`: from the first `%v = OP %v, %v`
+/// whose operands are both temporaries through the `jnz` that tests its flag,
+/// with every temporary renamed `%tN` in order of first appearance and the
+/// branch cut after its condition.
+fn canonicalCheck(allocator: std.mem.Allocator, il: []const u8, op: []const u8) ![]u8 {
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const marker = try std.fmt.allocPrint(a, " =l {s} %v", .{op});
+    var out: std.ArrayList(u8) = .empty;
+    var names: std.ArrayList([]const u8) = .empty;
+    var started = false;
+    var lines = std.mem.splitScalar(u8, il, '\n');
+    while (lines.next()) |line| {
+        started = started or (std.mem.startsWith(u8, line, " %v") and std.mem.indexOf(u8, line, marker) != null and std.mem.count(u8, line, "%v") == 3);
+        if (!started) continue;
+        const jump = std.mem.startsWith(u8, line, " jnz ");
+        const text = if (jump) line[0 .. std.mem.indexOfScalar(u8, line, ',') orelse line.len] else line;
+        var index: usize = 0;
+        while (index < text.len) {
+            if (!std.mem.startsWith(u8, text[index..], "%v")) {
+                try out.append(a, text[index]);
+                index += 1;
+                continue;
+            }
+            var end = index + 2;
+            while (end < text.len and std.ascii.isDigit(text[end])) end += 1;
+            const name = text[index..end];
+            var number: usize = names.items.len;
+            for (names.items, 0..) |seen, position| {
+                if (std.mem.eql(u8, seen, name)) number = position;
+            }
+            if (number == names.items.len) try names.append(a, name);
+            try out.print(a, "%t{d}", .{number});
+            index = end;
+        }
+        try out.append(a, '\n');
+        if (jump) break;
+    }
+    return allocator.dupe(u8, out.items);
+}
+/// `canonicalCheck` of function `name` in `source` under the fast protocol.
+fn fastCheck(a: std.mem.Allocator, source: []const u8, name: []const u8, op: []const u8) ![]u8 {
+    const il = try emittedUnder(a, source, .{ .step_checks = false, .frame_checks = false }, name);
+    defer a.free(il);
+    return canonicalCheck(a, il, op);
+}
+// spec-case: LLVM-OVERFLOW-INTRINSIC-1
+test "a checked 64-bit add, subtract and multiply emit the exact flag formulas the LLVM adapter lowers to overflow intrinsics" {
+    // `experiments/llvm-backend/llvm_emit.overflow_formulas` rewrites exactly
+    // these values (and `test_adapter.CHECK_BODIES` spells them), so a change
+    // here must change the adapter too, or the checks silently go back to the
+    // xor/and sign test and the four-limb product.
+    const a = std.testing.allocator;
+    const source =
+        \\def sadd(x: int, y: int) -> int:
+        \\    return x + y
+        \\
+        \\
+        \\def ssub(x: int, y: int) -> int:
+        \\    return x - y
+        \\
+        \\
+        \\def smul(x: int, y: int) -> int:
+        \\    return x * y
+        \\
+        \\
+        \\def uadd(x: u64, y: u64) -> u64:
+        \\    return x + y
+        \\
+        \\
+        \\def usub(x: u64, y: u64) -> u64:
+        \\    return x - y
+        \\
+        \\
+        \\def umul(x: u64, y: u64) -> u64:
+        \\    return x * y
+        \\
+        \\
+        \\def main() -> int:
+        \\    return sadd(1, 2) + ssub(3, 1) + smul(2, 2) + int(uadd(1u64, 2u64) + usub(3u64, 1u64) + umul(2u64, 2u64))
+    ;
+    const signed_add = try fastCheck(a, source, "sadd", "add");
+    defer a.free(signed_add);
+    try std.testing.expectEqualStrings(
+        \\ %t0 =l add %t1, %t2
+        \\ %t3 =l xor %t1, %t0
+        \\ %t4 =l xor %t2, %t0
+        \\ %t5 =l and %t3, %t4
+        \\ %t6 =l csltl %t5, 0
+        \\ jnz %t6
+        \\
+    , signed_add);
+    const signed_sub = try fastCheck(a, source, "ssub", "sub");
+    defer a.free(signed_sub);
+    try std.testing.expectEqualStrings(
+        \\ %t0 =l sub %t1, %t2
+        \\ %t3 =l xor %t1, %t2
+        \\ %t4 =l xor %t1, %t0
+        \\ %t5 =l and %t3, %t4
+        \\ %t6 =l csltl %t5, 0
+        \\ jnz %t6
+        \\
+    , signed_sub);
+    const unsigned_add = try fastCheck(a, source, "uadd", "add");
+    defer a.free(unsigned_add);
+    try std.testing.expectEqualStrings(" %t0 =l add %t1, %t2\n %t3 =l cultl %t0, %t1\n jnz %t3\n", unsigned_add);
+    const unsigned_sub = try fastCheck(a, source, "usub", "sub");
+    defer a.free(unsigned_sub);
+    try std.testing.expectEqualStrings(" %t0 =l sub %t1, %t2\n %t3 =l cultl %t1, %t2\n jnz %t3\n", unsigned_sub);
+    const high =
+        \\ %t0 =l mul %t1, %t2
+        \\ %t3 =l and %t1, 4294967295
+        \\ %t4 =l shr %t1, 32
+        \\ %t5 =l and %t2, 4294967295
+        \\ %t6 =l shr %t2, 32
+        \\ %t7 =l mul %t3, %t5
+        \\ %t8 =l shr %t7, 32
+        \\ %t9 =l mul %t4, %t5
+        \\ %t10 =l add %t9, %t8
+        \\ %t11 =l and %t10, 4294967295
+        \\ %t12 =l shr %t10, 32
+        \\ %t13 =l mul %t3, %t6
+        \\ %t14 =l add %t13, %t11
+        \\ %t15 =l shr %t14, 32
+        \\ %t16 =l mul %t4, %t6
+        \\ %t17 =l add %t16, %t12
+        \\ %t18 =l add %t17, %t15
+        \\
+    ;
+    const unsigned_mul = try fastCheck(a, source, "umul", "mul");
+    defer a.free(unsigned_mul);
+    try std.testing.expectEqualStrings(high ++ " %t19 =l cnel %t18, 0\n jnz %t19\n", unsigned_mul);
+    const signed_mul = try fastCheck(a, source, "smul", "mul");
+    defer a.free(signed_mul);
+    try std.testing.expectEqualStrings(high ++
+        \\ %t19 =l csltl %t1, 0
+        \\ %t20 =l csltl %t2, 0
+        \\ %t21 =l neg %t19
+        \\ %t22 =l neg %t20
+        \\ %t23 =l and %t2, %t21
+        \\ %t24 =l and %t1, %t22
+        \\ %t25 =l sub %t18, %t23
+        \\ %t25 =l sub %t25, %t24
+        \\ %t26 =l sar %t0, 63
+        \\ %t27 =l cnel %t25, %t26
+        \\ jnz %t27
+        \\
+    , signed_mul);
 }
 // spec: QBE-POSITION-2
 test "a trap position stores on the cold path and a call site keeps its own" {
@@ -690,7 +914,7 @@ test "a trap position stores on the cold path and a call site keeps its own" {
         \\    return pick(b"abc", 1)
     );
     defer program.deinit();
-    const manifest = try program.emitQbeWithOptions(a, false, false, true);
+    const manifest = try program.emitQbeWithOptions(a, .{ .step_checks = false });
     defer a.free(manifest);
     var parsed = try std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer parsed.deinit();
@@ -714,7 +938,7 @@ test "a requested ceiling keeps the exact per-instruction step check" {
         \\    return 7
     );
     defer c.deinit();
-    const manifest = try c.emitQbeWithOptions(a, false, true, true);
+    const manifest = try c.emitQbeWithOptions(a, .{});
     defer a.free(manifest);
     try std.testing.expect(std.mem.indexOf(u8, manifest, "@step_limit") != null);
     try std.testing.expect(std.mem.indexOf(u8, manifest, "%maxsteps") != null);
@@ -740,14 +964,14 @@ test "QBE-PURE-READ-1 a read-only collection probe pushes no roots" {
         \\    return counts.get(key, 0)
         \\
         \\
-        \\def bump(counts: dict[str, i64], key: str) -> i64:
+        \\def bump(counts: mut dict[str, i64], key: str) -> i64:
         \\    counts[key] = 1
         \\    return len(counts)
         \\
         \\
         \\def main() -> i64:
         \\    counts: dict[str, i64] = {}
-        \\    return probe(counts, "k") + bump(counts, "k")
+        \\    return probe(counts, "k") + bump(mut counts, "k")
     );
     defer parsed.deinit();
     const probe = named(parsed.value, "probe").?.il;
@@ -797,7 +1021,8 @@ test "roots are linked and restored with inline stores" {
         \\
         \\def main() -> i64:
         \\    values = grow(1)
-        \\    return values[0]
+        \\    more = grow(2)
+        \\    return values[0] + more[0]
     );
     defer program.deinit();
     const manifest = try program.emitQbe(a);
@@ -828,7 +1053,8 @@ test "a scalar root is traced through a value copy, not the slot it came from" {
         \\
         \\def main() -> i64:
         \\    values = grow(1)
-        \\    return values[0]
+        \\    more = grow(2)
+        \\    return values[0] + more[0]
     );
     defer program.deinit();
     const manifest = try program.emitQbe(a);
@@ -1036,26 +1262,32 @@ test "float arithmetic lowers without a per-operation environment check" {
     try std.testing.expect(std.mem.indexOf(u8, body, "=d div %v") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "myl_qbe_float_unary") != null);
 }
-// spec: QBE-FLOAT-CANON-1
-test "a float result canonicalizes its NaN off the finite path" {
+// spec: FLOAT-NAN-OBSERVED-1
+test "a float result is the bare IEEE operation with no NaN canonicalization" {
     var parsed = try emitted(std.testing.allocator,
         \\def main() -> int:
         \\    a = 1.5
         \\    b = 2.5
         \\    c = a * b
         \\    d = c + a
-        \\    if d > b:
+        \\    e = d - b
+        \\    f = e / a
+        \\    if f > b:
         \\        return 1
         \\    return 0
     );
     defer parsed.deinit();
     const body = named(parsed.value, "main").?.il;
-    // The finite result reaches the merge through the fall-through block, and
-    // the canonical bits arrive only on the NaN path.
-    try std.testing.expect(std.mem.count(u8, body, "myl_qbe_float_canonical") == 2);
-    try std.testing.expect(std.mem.count(u8, body, "=l cuod %v") == 2);
+    // Each operation is the arithmetic and the cast back to its bit word: no
+    // unordered self-compare, no branch and no out-of-line call beside it, so
+    // nothing in a float loop can write memory or needs a source position.
+    try std.testing.expect(std.mem.indexOf(u8, body, "=d mul %v") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "=d add %v") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "=d sub %v") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "=d div %v") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "cuod") == null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "float_canonical") == null);
     try std.testing.expect(std.mem.indexOf(u8, body, "9221120237041090560") == null);
-    try std.testing.expect(std.mem.indexOf(u8, body, "call $myl_qbe_float_canonical(l %ctx)\n jmp @float") != null);
 }
 // spec-case: QBE-FLOAT-ENV-1
 test "a C FFI call boundary re-verifies the floating environment" {
@@ -1132,6 +1364,46 @@ test "QBE-BUFFER-APPEND-1 a byte-buffer append lowers its fitting path inline an
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "=w call $myl_native_bytes_buffer_append_range("));
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "=w call $myl_native_bytes_buffer_append_byte("));
     try std.testing.expect(std.mem.indexOf(u8, body, "%root0") != null);
+}
+
+// spec: QBE-ALIAS-CLASS-1
+test "QBE-ALIAS-CLASS-1 a managed receiver and its element storage are marked as memory outside the frame" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def total(values: list[i64]) -> i64:
+        \\    sum = 0
+        \\    i = 0
+        \\    while i < len(values):
+        \\        sum = sum + values[i]
+        \\        i = i + 1
+        \\    return sum
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return total([1, 2, 3])
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "total").?.il;
+    // Each `len` receiver, the element read's receiver and the storage word
+    // that read loads are marked, and nothing else is.
+    try std.testing.expectEqual(@as(usize, 6), std.mem.count(u8, body, "myl-obj"));
+    // Every marker is its own comment line, which QBE's lexer drops whole, so
+    // the QBE backend's assembly is byte-identical with and without them.
+    try std.testing.expectEqual(@as(usize, 6), std.mem.count(u8, body, "\n # myl-obj %v"));
+}
+
+// spec-case: QBE-ALIAS-CLASS-1
+test "QBE-ALIAS-CLASS-1 a function that touches no managed container is marked nowhere" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def twice(value: i64) -> i64:
+        \\    return value + value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return twice(21)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "twice").?.il;
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl-obj"));
 }
 
 // spec: QBE-APPEND-FAST-1
@@ -1460,7 +1732,8 @@ test "an iteration local keeps its copy when a call sits before its last read" {
         \\
         \\
         \\def doubled(value: i64) -> i64:
-        \\    return value * 2
+        \\    scratch = [value, value]
+        \\    return scratch[1] * 2
         \\
         \\
         \\def main() -> i64:
@@ -1472,8 +1745,10 @@ test "an iteration local keeps its copy when a call sits before its last read" {
     );
     defer parsed.deinit();
     const body = named(parsed.value, "main").?.il;
-    // The call runs between the store and the variable's last read, so the
-    // element could move under the address: the loop variable keeps its copy.
+    // The call runs between the store and the variable's last read and can
+    // allocate, so the element could move under the address: the loop variable
+    // keeps its copy. (A callee that cannot allocate and takes only plain data
+    // keeps the borrow instead; see `QBE-ELEMREF-4`.)
     try std.testing.expect(std.mem.indexOf(u8, body, "blit ") != null);
 }
 
@@ -1761,4 +2036,818 @@ test "a list element the loop variable copies is read through its own address" {
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_list_get"));
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
     try std.testing.expect(std.mem.indexOf(u8, body, "myl_qbe_fail_normalized_index_bounds") != null);
+}
+
+// spec: QBE-CTORREAD-1
+test "QBE-CTORREAD-1 a constructor field read out of a local names the local" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Point:
+        \\    x: i64
+        \\    y: i64
+        \\
+        \\
+        \\record Pair:
+        \\    tag: i64
+        \\    left: Point
+        \\    right: Point
+        \\
+        \\
+        \\def pack(a: Point, b: Point, tag: i64) -> i64:
+        \\    made = Pair(tag=tag, left=a, right=b)
+        \\    return made.left.x + made.right.y
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return pack(Point(x=1, y=2), Point(x=3, y=4), 5)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "pack").?.il;
+    // Both field operands name their own slot, so the only copies left are the
+    // two the constructor makes into the record it is building.
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, body, "blit "));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%agg"));
+}
+
+// spec: QBE-RETFWD-1
+test "QBE-RETFWD-1 an element returned straight back crosses the boundary once" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def at(rows: list[Row], index: i64) -> Row:
+        \\    return rows[index]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return at([Row(a=1, b=2)], 0).b
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "at").?.il;
+    // The element address reaches the `ret` directly, so the copy into per-pc
+    // scratch and the reload out of it are both gone; the caller's own copy is
+    // the only one left and it is made by the return itself.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%agg"));
+    try std.testing.expect(std.mem.indexOf(u8, body, "myl_qbe_fail_normalized_index_bounds") != null);
+}
+
+// spec-case: QBE-RETFWD-1
+test "QBE-RETFWD-1 a frame that closes an arena scope keeps the element copy" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def at(rows: list[Row], index: i64) -> Row:
+        \\    with arena():
+        \\        _ = len(rows)
+        \\    return rows[index]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return at([Row(a=1, b=2)], 0).b
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "at").?.il;
+    // The epilogue closes the scope before the result is copied out, so the
+    // element is snapshotted while the scope is still open.
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit ") != null);
+}
+
+// spec: QBE-CALLREF-1
+test "QBE-CALLREF-1 a record result the caller only reads stays in the call's buffer" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def at(rows: list[Row], index: i64) -> Row:
+        \\    return rows[index]
+        \\
+        \\
+        \\def total(rows: list[Row]) -> i64:
+        \\    row = at(rows, 0)
+        \\    return row.a + row.b
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return total([Row(a=1, b=2)])
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "total").?.il;
+    // `row` holds the address of the call's own result buffer, so the caller
+    // makes no copy at all and its slot is one word.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+    try std.testing.expect(std.mem.indexOf(u8, body, " %l1 =l alloc8 8\n") != null);
+}
+
+// spec-case: QBE-CALLREF-1
+test "QBE-CALLREF-1 a result the body reassigns keeps its own copy" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def at(rows: list[Row], index: i64) -> Row:
+        \\    return rows[index]
+        \\
+        \\
+        \\def total(rows: list[Row]) -> i64:
+        \\    row = at(rows, 0)
+        \\    row = Row(a=row.b, b=row.a)
+        \\    return row.a + row.b
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return total([Row(a=1, b=2)])
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "total").?.il;
+    // The second store is another write of the same local, so the slot holds
+    // the value and the call's result is copied into it.
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit ") != null);
+}
+
+// spec: QBE-ELEMREF-2
+test "QBE-ELEMREF-2 an indexed element local is named in place across branches" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def find(rows: list[Row], key: i64) -> i64:
+        \\    i = 0
+        \\    while i < len(rows):
+        \\        row = rows[i]
+        \\        if row.a == key:
+        \\            return row.b
+        \\        i += 1
+        \\    return - 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return find([Row(a=1, b=2)], 1)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "find").?.il;
+    // Every instruction the borrow is live across — the field reads, the
+    // comparison, the branch and the return — is inert, so the element is
+    // never copied out of the list.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_list_get"));
+}
+
+// spec-case: QBE-ELEMREF-2
+test "QBE-ELEMREF-2 a temporary reused by two element reads is borrowed for both" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def span(rows: list[Row], i: i64, j: i64) -> i64:
+        \\    left = rows[i]
+        \\    total = left.a + left.b
+        \\    left = rows[j]
+        \\    return total + left.a + left.b
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return span([Row(a=1, b=2), Row(a=3, b=4)], 0, 1)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "span").?.il;
+    // Both writes store an element address, so the slot holds an address for
+    // the whole function and neither read copies.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+    try std.testing.expect(std.mem.indexOf(u8, body, " %l3 =l alloc8 8\n") != null);
+}
+
+// spec-case: QBE-ELEMREF-2
+test "QBE-ELEMREF-2 a local one write fills from a copy keeps its value" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def span(rows: list[Row], i: i64) -> i64:
+        \\    left = rows[i]
+        \\    total = left.a
+        \\    left = Row(a=9, b=9)
+        \\    return total + left.b
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return span([Row(a=1, b=2)], 0)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "span").?.il;
+    // The constructor's write is not an address, so the slot holds the value
+    // and the element read copies into it.
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit ") != null);
+}
+
+// spec-case: QBE-ELEMREF-2
+test "QBE-ELEMREF-2 a borrowed element that traces is never pushed as a root" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    name: str
+        \\    count: i64
+        \\
+        \\
+        \\def find(rows: list[Row], key: i64) -> i64:
+        \\    i = 0
+        \\    while i < len(rows):
+        \\        row = rows[i]
+        \\        if row.count == key:
+        \\            return len(row.name)
+        \\        i += 1
+        \\    return - 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return find([Row(name="a", count=1)], 1)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "find").?.il;
+    // The element's `str` is reachable through the receiver, and the inert run
+    // admits no collection, so the borrow costs neither a copy nor a root.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "=l add %root"));
+}
+
+// spec-case: QBE-ELEMREF-2
+test "QBE-ELEMREF-2 a frame that opens an arena scope keeps the element copy" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def find(rows: list[Row], key: i64) -> i64:
+        \\    with arena():
+        \\        _ = len(rows)
+        \\    row = rows[0]
+        \\    return row.a + key
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return find([Row(a=1, b=2)], 1)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "find").?.il;
+    // Closing the scope scans every local declared before it through its slot,
+    // which a borrowed element's one-word slot cannot answer.
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit ") != null);
+}
+
+// spec-case: QBE-ELEMREF-2
+test "QBE-ELEMREF-2 a call inside the live range keeps the element copy" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def grow(rows: mut list[Row]) -> i64:
+        \\    rows.append(Row(a=9, b=9))
+        \\    return len(rows)
+        \\
+        \\
+        \\def find(rows: mut list[Row]) -> i64:
+        \\    row = rows[0]
+        \\    _ = grow(mut rows)
+        \\    return row.b
+        \\
+        \\
+        \\def main() -> i64:
+        \\    rows = [Row(a=1, b=2)]
+        \\    return find(mut rows)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "find").?.il;
+    // The append can reallocate the backing storage, so the element is
+    // snapshotted before the call and `row` keeps the value it read.
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit ") != null);
+}
+
+// spec: QBE-LISTSET-1
+test "QBE-LISTSET-1 a list element write stores through the element address" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def store(values: mut list[i64], value: i64):
+        \\    values[1] = value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values = [1, 2, 3]
+        \\    store(mut values, 30)
+        \\    return values[1]
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "store").?.il;
+    // The runtime helper was a bounds test and one `copy_element`; both are
+    // emitted here, so nothing calls into the runtime for the write.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_list_set"));
+    try std.testing.expect(std.mem.indexOf(u8, body, "cultl") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "myl_qbe_fail_normalized_index_bounds") != null);
+    // With no allocating callee left in the write, the frame pushes no root
+    // record across it.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%root0"));
+}
+
+// spec-case: QBE-LISTSET-1
+test "QBE-LISTSET-1 a record element write over traced elements pushes no root" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    name: str
+        \\    count: i64
+        \\
+        \\
+        \\def relabel(rows: mut list[Row], row: Row):
+        \\    rows[0] = row
+        \\
+        \\
+        \\def main() -> i64:
+        \\    rows = [Row(name="a", count=1)]
+        \\    relabel(mut rows, Row(name="b", count=2))
+        \\    return rows[0].count
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "relabel").?.il;
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "myl_native_list_set"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%root0"));
+    // The element itself lands in the receiver's storage through one copy of
+    // its own size, the one the runtime helper used to make.
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit ") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, " =l mul ") != null);
+}
+
+/// Every lowered unit's text for one emission policy, joined so a test can
+/// count guard sites across the whole program in one straight-line assertion.
+fn lowered(a: std.mem.Allocator, input: []const u8, policy: language.native_interface.Policy) ![]u8 {
+    var c = try language.Compilation.init(a, "qbe.my", input);
+    defer c.deinit();
+    const manifest = try c.emitQbeWithOptions(a, policy);
+    defer a.free(manifest);
+    var parsed = try std.json.parseFromSlice(Manifest, a, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
+    defer parsed.deinit();
+    var text: std.ArrayList(u8) = .empty;
+    errdefer text.deinit(a);
+    for (parsed.value.functions) |unit| try text.appendSlice(a, unit.il);
+    return text.toOwnedSlice(a);
+}
+
+/// A program reaching every guard class the unchecked policy removes: a checked
+/// add and multiply, a narrowing cast, a fixed-array index and a list index,
+/// plus an append whose allocation failure the policy keeps.
+const unchecked_program =
+    \\def scale(xs: list[i64], at: i64, factor: i64) -> u8:
+    \\    return u8(xs[at] * factor + 1)
+    \\
+    \\def main() -> i64:
+    \\    fixed: [3]i64 = [1, 2, 3]
+    \\    xs: list[i64] = []
+    \\    xs.append(fixed[1])
+    \\    return i64(scale(xs, 0, 2))
+;
+
+// spec: QBE-UNCHECKED-1
+test "the unchecked policy emits no overflow cast or bounds guard and no frame record" {
+    const a = std.testing.allocator;
+    const guarded = try lowered(a, unchecked_program, .{ .step_checks = false, .frame_checks = false });
+    defer a.free(guarded);
+    const bare = try lowered(a, unchecked_program, .{ .step_checks = false, .frame_checks = false, .checks = false });
+    defer a.free(bare);
+    // The default unbounded policy carries every guard class, and every call
+    // names its position for the frame map (QBE-FRAMEMAP-1) instead of storing
+    // it into a linked frame record.
+    try std.testing.expect(std.mem.indexOf(u8, guarded, "myl_qbe_fail_overflow_op") != null);
+    try std.testing.expect(std.mem.indexOf(u8, guarded, "myl_qbe_fail_cast") != null);
+    try std.testing.expect(std.mem.indexOf(u8, guarded, "myl_qbe_fail_normalized_index_bounds") != null);
+    try std.testing.expect(std.mem.indexOf(u8, guarded, "myl_qbe_fail_array_bounds") != null);
+    try std.testing.expect(std.mem.indexOf(u8, guarded, " dbgloc ") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, guarded, "%position"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "dbgloc"));
+    // The unchecked policy carries none of them.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_overflow_op"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_cast"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_index_bounds"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_normalized_index_bounds"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_array_bounds"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "%position"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "_meta"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_frame"));
+    try std.testing.expect(bare.len < guarded.len);
+}
+
+// spec-case: QBE-UNCHECKED-1
+test "the unchecked policy keeps allocation failure division by zero and the collector" {
+    const a = std.testing.allocator;
+    const bare = try lowered(a, unchecked_program, .{ .step_checks = false, .frame_checks = false, .checks = false });
+    defer a.free(bare);
+    const divide = try lowered(a,
+        \\def half(left: i64, right: i64) -> i64:
+        \\    return left // right
+        \\
+        \\def main() -> i64:
+        \\    return half(8, 2)
+    , .{ .step_checks = false, .frame_checks = false, .checks = false });
+    defer a.free(divide);
+    // Out of memory must still fail cleanly, so every allocating call keeps its
+    // failure test and the collector keeps the heap handle it traces through.
+    try std.testing.expect(std.mem.indexOf(u8, bare, "myl_qbe_fail_allocation") != null);
+    try std.testing.expect(std.mem.indexOf(u8, bare, "%heap") != null);
+    // A zero divisor and a signed `MIN // -1` fault the hardware divider, so
+    // both tests stay even here; only their reported detail could be lost.
+    try std.testing.expect(std.mem.indexOf(u8, divide, "myl_qbe_fail_division") != null);
+    try std.testing.expect(std.mem.indexOf(u8, divide, "myl_qbe_fail_overflow_op") != null);
+}
+
+// spec-case: QBE-UNCHECKED-1
+test "an unchecked build that was given a ceiling keeps the accounting that enforces it" {
+    const a = std.testing.allocator;
+    const bounded = try lowered(a, unchecked_program, .{ .checks = false });
+    defer a.free(bounded);
+    // Step and depth accounting are orthogonal to the value guards: the frame
+    // record, the position stores and the step limit survive, while the
+    // overflow, cast and bounds guards are gone.
+    try std.testing.expect(std.mem.indexOf(u8, bounded, ", %position") != null);
+    try std.testing.expect(std.mem.indexOf(u8, bounded, "_meta") != null);
+    try std.testing.expect(std.mem.indexOf(u8, bounded, "@step_limit") != null);
+    try std.testing.expect(std.mem.indexOf(u8, bounded, "myl_qbe_fail_frame") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bounded, "myl_qbe_fail_cast"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bounded, "myl_qbe_fail_overflow_op"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bounded, "myl_qbe_fail_array_bounds"));
+}
+
+/// The number of root records each root push in `il` links, in program order.
+/// A push loads the chain head right after computing the heap's root-field
+/// address, and each record in it computes its descriptor field once; the push
+/// ends at the safepoint's own call or at the next label.
+fn rootsPerPush(a: std.mem.Allocator, il: []const u8) ![]usize {
+    var counts: std.ArrayList(usize) = .empty;
+    errdefer counts.deinit(a);
+    var lines = std.mem.splitScalar(u8, il, '\n');
+    var open = false;
+    var previous: []const u8 = "";
+    while (lines.next()) |line| {
+        defer previous = line;
+        if (std.mem.endsWith(u8, previous, "=l add %heap, 16") and std.mem.indexOf(u8, line, "=l loadl") != null) {
+            try counts.append(a, 0);
+            open = true;
+            continue;
+        }
+        if (!open) continue;
+        if (std.mem.indexOf(u8, line, "call ") != null or (line.len > 0 and line[0] == '@')) {
+            open = false;
+        } else if (std.mem.indexOf(u8, line, "=l add %root") != null and std.mem.endsWith(u8, line, ", 16")) {
+            counts.items[counts.items.len - 1] += 1;
+        }
+    }
+    return counts.toOwnedSlice(a);
+}
+
+// spec: QBE-ROOTLIVE-1
+test "QBE-ROOTLIVE-1 a safepoint publishes only the locals live across it" {
+    const a = std.testing.allocator;
+    var parsed = try emitted(a,
+        \\def make(n: i64) -> list[i64]:
+        \\    return [n, n + 1]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    first = make(1)
+        \\    second = make(2)
+        \\    third = make(len(first))
+        \\    return len(second) + len(third)
+    );
+    defer parsed.deinit();
+    const pushes = try rootsPerPush(a, named(parsed.value, "main").?.il);
+    defer a.free(pushes);
+    // `make(1)` runs before any list exists; `make(2)` runs while `first` is
+    // still to be read; `make(len(first))` runs after `first`'s last read and
+    // while `second` is still to be read. `third` is never live at a call.
+    try std.testing.expectEqualSlices(usize, &.{ 1, 1 }, pushes);
+}
+
+// spec-case: QBE-ROOTLIVE-1
+test "QBE-ROOTLIVE-1 hidden receiver temporaries die after their read" {
+    const a = std.testing.allocator;
+    var parsed = try emitted(a,
+        \\def fresh(n: i64) -> list[i64]:
+        \\    return [n, n]
+        \\
+        \\
+        \\def bump(xs: mut list[i64], n: i64) -> i64:
+        \\    total = 0
+        \\    i = 0
+        \\    while i < n:
+        \\        xs[i] = xs[i] + xs[i + 1] + xs[i + 2]
+        \\        extra = fresh(i)
+        \\        total += xs[i] + extra[1]
+        \\        i += 1
+        \\    return total
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values = [1, 2, 3, 4, 5]
+        \\    return bump(mut values, 2)
+    );
+    defer parsed.deinit();
+    const pushes = try rootsPerPush(a, named(parsed.value, "bump").?.il);
+    defer a.free(pushes);
+    // The one allocating call publishes `xs`, which the loop reads again; the
+    // receiver temporaries of the four `xs[...]` expressions before it are
+    // dead, and `extra` is written by the call.
+    try std.testing.expectEqualSlices(usize, &.{1}, pushes);
+}
+
+// spec-case: QBE-ROOTLIVE-1
+test "QBE-ROOTLIVE-1 an operand held only on the stack stays published" {
+    const a = std.testing.allocator;
+    var parsed = try emitted(a,
+        \\def make(n: i64) -> list[i64]:
+        \\    return [n, n + 1]
+        \\
+        \\
+        \\def pair(left: list[i64], right: list[i64]) -> i64:
+        \\    return left[0] + right[1]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return pair(make(1), make(2))
+    );
+    defer parsed.deinit();
+    const pushes = try rootsPerPush(a, named(parsed.value, "main").?.il);
+    defer a.free(pushes);
+    // The first list lives only in an operand slot while `make(2)` runs; the
+    // call to `pair` allocates nothing, so it needs no push.
+    try std.testing.expectEqualSlices(usize, &.{1}, pushes);
+}
+
+// spec-case: QBE-ROOTLIVE-1
+test "QBE-ROOTLIVE-1 a closing arena scope keeps the locals it scans published" {
+    const a = std.testing.allocator;
+    var parsed = try emitted(a,
+        \\def make(n: i64) -> list[i64]:
+        \\    return [n, n + 1]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    keep = make(1)
+        \\    n = 0
+        \\    with arena():
+        \\        scratch = make(2)
+        \\        n = len(scratch)
+        \\    return n
+    );
+    defer parsed.deinit();
+    const pushes = try rootsPerPush(a, named(parsed.value, "main").?.il);
+    defer a.free(pushes);
+    // `keep` is never read again, but closing the scope scans it for a
+    // reference into the region, so it is published at the call inside it.
+    try std.testing.expectEqualSlices(usize, &.{1}, pushes);
+}
+
+// spec-case: QBE-ROOTLIVE-1
+test "QBE-ROOTLIVE-1 a value read after a propagating call stays published" {
+    const a = std.testing.allocator;
+    var parsed = try emitted(a,
+        \\def make(n: i64) -> list[i64]:
+        \\    return [n, n + 1]
+        \\
+        \\
+        \\def risky(n: i64) -> Result[i64, i64]:
+        \\    if n == 0:
+        \\        return Err(7)
+        \\    return Ok(n)
+        \\
+        \\
+        \\def run(n: i64) -> Result[i64, i64]:
+        \\    keep = make(n)
+        \\    other = make(n + 1)
+        \\    got = risky(len(other))?
+        \\    return Ok(got + keep[0])
+        \\
+        \\
+        \\def main() -> i64:
+        \\    match run(1):
+        \\        case Ok(v):
+        \\            return v
+        \\        case Err(e):
+        \\            return e
+    );
+    defer parsed.deinit();
+    const pushes = try rootsPerPush(a, named(parsed.value, "run").?.il);
+    defer a.free(pushes);
+    // `keep` is live across the second allocation; `other` is dead after its
+    // length is taken, and `risky` cannot allocate, so it needs no push.
+    try std.testing.expectEqualSlices(usize, &.{1}, pushes);
+}
+
+// spec: QBE-INVOKE-SAFEPOINT-1
+test "QBE-INVOKE-SAFEPOINT-1 invoking a function value publishes the live roots" {
+    const a = std.testing.allocator;
+    var parsed = try emitted(a,
+        \\def churn(n: int) -> int:
+        \\    ys = [n, n + 1]
+        \\    return ys[1]
+        \\
+        \\
+        \\def apply(f: def(int) -> int, n: int) -> int:
+        \\    keep = [n, n + 1, n + 2]
+        \\    r = f(n)
+        \\    return r + keep[2]
+        \\
+        \\
+        \\def main() -> int:
+        \\    return apply(churn, 5)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "apply").?.il;
+    // The indirect call is preceded by a push of `keep`, the one list the
+    // caller reads after it, and followed by the restore.
+    const call = std.mem.indexOf(u8, body, " call %").?;
+    const pushes = try rootsPerPush(a, body[0..call]);
+    defer a.free(pushes);
+    try std.testing.expectEqual(@as(usize, 1), pushes[pushes.len - 1]);
+    try std.testing.expect(std.mem.indexOf(u8, body[call..], "storel %root_mark, ") != null);
+}
+
+// spec: QBE-ELEMREF-3
+test "QBE-ELEMREF-3 a second read with a runtime index keeps the borrow" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Row:
+        \\    a: i64
+        \\    b: i64
+        \\
+        \\
+        \\def pick(rows: list[Row], counts: list[i64], i: i64) -> i64:
+        \\    row = rows[i]
+        \\    return row.a + counts[row.b]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return pick([Row(a=1, b=0)], [5], 0)
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "pick").?.il;
+    // The negative-index normalization of `counts[row.b]` converts the
+    // receiver length with an integer cast, which only traps.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+}
+
+// spec: QBE-ELEMREF-4
+test "QBE-ELEMREF-4 a call that cannot reach the receiver keeps the borrow" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Vec:
+        \\    x: float
+        \\    y: float
+        \\
+        \\
+        \\record Ball:
+        \\    center: Vec
+        \\    radius: float
+        \\
+        \\
+        \\def reach(origin: Vec, ball: Ball) -> float:
+        \\    dx = ball.center.x - origin.x
+        \\    dy = ball.center.y - origin.y
+        \\    return dx * dx + dy * dy - ball.radius
+        \\
+        \\
+        \\def nearest(origin: Vec, balls: list[Ball]) -> i64:
+        \\    best = -1
+        \\    for k, ball in enumerate(balls):
+        \\        if reach(origin, ball) < 0.0:
+        \\            best = k
+        \\    return best
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return nearest(Vec(x=0.0, y=0.0), [Ball(center=Vec(x=0.0, y=0.0), radius=1.0)])
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "nearest").?.il;
+    // `reach` allocates nothing and takes only plain data, so each ball is
+    // handed to it where it lives instead of being copied per iteration.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+}
+
+// spec-case: QBE-ELEMREF-4
+test "QBE-ELEMREF-4 a call that takes a traced parameter keeps the copy" {
+    var parsed = try emitted(std.testing.allocator,
+        \\record Vec:
+        \\    x: float
+        \\    y: float
+        \\
+        \\
+        \\def reach(origin: Vec, ball: Vec, names: list[str]) -> float:
+        \\    return ball.x - origin.x + float(len(names))
+        \\
+        \\
+        \\def nearest(origin: Vec, balls: list[Vec], names: list[str]) -> i64:
+        \\    best = -1
+        \\    for k, ball in enumerate(balls):
+        \\        if reach(origin, ball, names) < 0.0:
+        \\            best = k
+        \\    return best
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return nearest(Vec(x=0.0, y=0.0), [Vec(x=0.0, y=0.0)], ["a"])
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "nearest").?.il;
+    // `names` could alias the receiver as far as the types say, so the element
+    // is snapshotted before the call.
+    try std.testing.expect(std.mem.indexOf(u8, body, "blit ") != null);
+}
+
+const barrier_program =
+    \\class Node:
+    \\    next: Option[Node]
+    \\    value: int
+    \\
+    \\
+    \\def link(node: mut Node, other: Node) effects(mutation):
+    \\    node.next = Some(other)
+    \\
+    \\
+    \\def bump(node: mut Node) effects(mutation):
+    \\    node.value = node.value + 1
+    \\
+    \\
+    \\def main() -> int:
+    \\    first = Node(next=None, value=1)
+    \\    second = Node(next=None, value=2)
+    \\    link(mut first, second)
+    \\    bump(mut first)
+    \\    return first.value
+;
+
+// spec: QBE-GEN-BARRIER-1
+test "QBE-GEN-BARRIER-1 a reference store into a class body runs the barrier and a scalar store does not" {
+    const a = std.testing.allocator;
+    var parsed = try emitted(a, barrier_program);
+    defer parsed.deinit();
+    const link = named(parsed.value, "link").?.il;
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, link, "call $myl_native_heap_remember(l %heap, "));
+    try std.testing.expect(std.mem.indexOf(u8, link, " =l and ") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, named(parsed.value, "bump").?.il, "myl_native_heap_remember"));
+}
+
+// spec-case: QBE-INLINE-ALLOC-1
+test "QBE-INLINE-ALLOC-1 a small class body is popped inline and only the refill call publishes roots" {
+    const a = std.testing.allocator;
+    var parsed = try emitted(a, barrier_program);
+    defer parsed.deinit();
+    const body = named(parsed.value, "main").?.il;
+    // Node is 16 bytes (its `Option[Node]` is a niche pointer, QBE-NICHE-1), so
+    // header and body share the 32-byte class, index 1: its window sits at the
+    // frozen inline offset plus one window.
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, body, ", 1296\n"));
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, body, "call $myl_native_heap_alloc_small(l %heap, "));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "call $myl_native_heap_alloc("));
+    // The second constructor runs while `first` is live: its root push sits on
+    // the refill branch, between the branch label and the call, and nowhere
+    // before the first refill branch.
+    const slow = std.mem.lastIndexOf(u8, body, "@cell_slow").?;
+    const call = std.mem.indexOfPos(u8, body, slow, "call $myl_native_heap_alloc_small").?;
+    try std.testing.expect(std.mem.indexOf(u8, body[slow..call], "=l add %heap, 16\n") != null);
+    const first_slow = std.mem.indexOf(u8, body, "@cell_slow").?;
+    try std.testing.expect(std.mem.indexOf(u8, body[0..first_slow], "=l add %heap, 16\n") == null);
+    // A program that never opens an arena has no arena window check.
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, ", 1472\n"));
+}
+
+// spec-case: QBE-INLINE-ALLOC-1
+test "QBE-INLINE-ALLOC-1 a program with arenas bumps the arena window before calling the runtime" {
+    const a = std.testing.allocator;
+    var parsed = try emitted(a,
+        \\class Node:
+        \\    next: Option[Node]
+        \\    value: int
+        \\
+        \\
+        \\def main() -> int:
+        \\    total = 0
+        \\    with arena():
+        \\        first = Node(next=None, value=1)
+        \\        total = first.value
+        \\    return total
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "main").?.il;
+    const arena = std.mem.indexOf(u8, body, ", 1472\n").?;
+    const call = std.mem.indexOf(u8, body, "call $myl_native_heap_alloc_small").?;
+    try std.testing.expect(std.mem.indexOf(u8, body, "@cell_slow").? < arena and arena < call);
+    try std.testing.expect(std.mem.indexOf(u8, body, "@cell_arena") != null);
 }

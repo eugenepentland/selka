@@ -117,7 +117,7 @@ const Evaluator = struct {
             if (!std.mem.eql(u8, name, target)) continue;
             if (function.policy.host != null or function.signature.type_parameters.len != 0)
                 return self.context.sink.fail(eEffect, span, "compile-time calls cannot use host functions or generics");
-            const bound = try call_arguments.bind(self.context.sink.allocator, self.context.src, call, function.signature.parameters, self.context.sink);
+            const bound = try call_arguments.bind(self.context.sink.allocator, self.context.src, self.context.program.nodes.items, call, function.signature, self.context.sink);
             call_arguments.release(self.context.sink.allocator, call, bound);
             _ = try self.scalar(function.signature.return_type);
             for (function.signature.parameters) |parameter| {
@@ -178,7 +178,7 @@ const Evaluator = struct {
                 try self.validateExpression(range.end, depth + 1);
                 const before = self.frame.locals.items.len;
                 defer self.frame.locals.shrinkRetainingCapacity(before);
-                try self.bind(range.name, null, false);
+                try self.bind(range.name, null, true);
                 try self.validateStatement(range.body, depth + 1);
             },
             else => return self.context.sink.fail(eEffect, stmt.span, "compile-time function bodies permit scalar locals, branches and loops; runtime memory and effects are excluded"),
@@ -187,7 +187,7 @@ const Evaluator = struct {
     fn executeCall(self: *Evaluator, input: Call, span: source.Span, depth: usize) Error!typed.Value {
         const index = try self.callIndex(input, span);
         const function = self.context.program.functions[index];
-        const invocation = try call_arguments.bind(self.context.sink.allocator, self.context.src, input, function.signature.parameters, self.context.sink);
+        const invocation = try call_arguments.bind(self.context.sink.allocator, self.context.src, self.context.program.nodes.items, input, function.signature, self.context.sink);
         defer call_arguments.release(self.context.sink.allocator, input, invocation);
         const arguments = try self.context.sink.allocator.alloc(typed.Value, invocation.arguments.len);
         defer self.context.sink.allocator.free(arguments);
@@ -280,7 +280,7 @@ const Evaluator = struct {
         if (!start.typeOf().isInteger() or start.typeOf() != end.typeOf()) return self.context.sink.fail("E_TYPE", range.name, "compile-time range requires matching integers");
         const before = self.frame.locals.items.len;
         defer self.frame.locals.shrinkRetainingCapacity(before);
-        try self.bind(range.name, start, false);
+        try self.bind(range.name, start, true);
         while (integer(start) < integer(end)) {
             self.frame.locals.items[before].value = start;
             const flow = try self.statement(range.body, depth + 1);

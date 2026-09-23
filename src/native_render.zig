@@ -121,6 +121,7 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
         return body(writer, item.name, try std.fmt.allocPrint(a, "myl_print_domain(o, v, d, {s}, {s});", .{ try quoted(a, shortName(record.name)), inner }));
     }
     if (record.contract.callback != null or record.shape.hasRuntimeIdentity()) return body(writer, item.name, "myl_print_unprintable(o, v, d);");
+    if (record.shape.tuple) return tuple(a, writer, catalog, item, record);
     return fields(a, writer, catalog, item, record);
 }
 
@@ -160,6 +161,20 @@ fn collection(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Cat
     }
 }
 
+/// Emit a tuple renderer: the same bracketed element list `src/io_render.zig`
+/// writes, with no field names, because a tuple's fields are positional.
+fn tuple(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, item: Item, record: typed.Record) Error!void {
+    const layout = try catalog.layout(item.ty);
+    writer.print("static const MylPrintField {s}_elements[] = {{\n", .{item.name}) catch return error.OutOfMemory;
+    for (record.fields, 0..) |field, index| {
+        const child = try symbol(a, catalog, field.ty);
+        writer.print(" {{{d}, {s}, NULL, 0}},\n", .{ layout.fields[index].offset, child }) catch return error.OutOfMemory;
+    }
+    writer.writeAll("};\n") catch return error.OutOfMemory;
+    const call = try std.fmt.allocPrint(a, "myl_print_tuple(o, v, d, {s}_elements, {d});", .{ item.name, record.fields.len });
+    return body(writer, item.name, call);
+}
+
 /// Emit a record renderer. A class value's slot holds its body pointer, so a
 /// class renders through `myl_print_class`, which loads that pointer before
 /// reading fields at their heap offsets; every container, record field, union
@@ -190,7 +205,10 @@ fn variant(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalo
         writer.print(" {{{d}, {s}, {s}, {d}}},\n", .{ layout.payload_offset, render, try quoted(a, label), tag }) catch return error.OutOfMemory;
     }
     writer.writeAll("};\n") catch return error.OutOfMemory;
-    const call = try std.fmt.allocPrint(a, "myl_print_variant(o, v, d, {s}_cases, {d});", .{ item.name, variants.cases.len });
+    // QBE-NICHE-1: a niche optional has no tag word; its case is whether the
+    // reference word is null, so it prints through its own entry point.
+    const entry = if (layout.kind == .niche) "myl_print_niche" else "myl_print_variant";
+    const call = try std.fmt.allocPrint(a, "{s}(o, v, d, {s}_cases, {d});", .{ entry, item.name, variants.cases.len });
     return body(writer, item.name, call);
 }
 

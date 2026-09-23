@@ -13,9 +13,18 @@ driver expects.
 Design rules, in the order they constrain the code:
 
 * Correctness first.  No `nsw`/`nuw`/`exact`/fast-math flags, no `inbounds`, no
-  `noalias`, no TBAA: the frontend already emits every overflow, bounds, cast and
-  allocation check as explicit code, and this translator must not introduce
-  undefined behaviour ahead of a guard.
+  TBAA, and no `noalias` on any pointer: the frontend already emits every
+  overflow, bounds, cast and allocation check as explicit code, and this
+  translator must not introduce undefined behaviour ahead of a guard.  An
+  arithmetic flag is the sharpest case — the emitted IL computes the wrapped
+  result *and then* tests it, so `nsw` would make the test that follows dead.
+  The one aliasing fact this translator does state is the one it can prove
+  without looking at a guard at all: a load or store it can place in the running
+  activation's own stack storage, and one it can place outside it, carry scoped
+  `!alias.scope`/`!noalias` metadata saying so (`llvm_emit.MemoryClasses`).  The
+  classification is deliberately partial — an address it cannot place carries no
+  metadata and keeps aliasing everything — and it never depends on a check having
+  run, so no guard can become dead because of it.
 * QBE temporaries are mutable cells. Each gets a private entry-block slot;
   LLVM's promotion and SROA passes recover SSA where possible. Address arithmetic
   uses GEP only when conservative provenance checks establish an object origin.
@@ -247,16 +256,24 @@ class Function:
         self.blocks = blocks            # list of Block, in source order
         self.export = export
         self.line = line
+        # Temporaries the frontend marked `# myl-obj`: addresses it knows name
+        # memory outside this function's stack frame.
+        self.object_hints = set()
 
 
 class Unit:
     """A parsed QBE unit: the aggregate definitions plus one function."""
 
-    def __init__(self, function, aggregates, aggregate_alignments=None):
+    def __init__(self, function, aggregates, aggregate_alignments=None, debug_file=None):
         self.function = function
         self.aggregates = aggregates    # :name -> byte size
         self.aggregate_alignments = aggregate_alignments or {
             name: 8 for name in aggregates}
+        #: The unit's `dbgfile` name, set only for a frame-map unit
+        #: (QBE-FRAMEMAP-1): its calls carry `dbgloc` positions that become
+        #: debug locations, and the build turns those into a return-address
+        #: table.  None for every other protocol.
+        self.debug_file = debug_file
 
     @property
     def name(self):
@@ -329,6 +346,12 @@ def parse_unit(text, unit="unit"):
         aggregates[match.group(1)] = size
         alignments[match.group(1)] = aggregate_alignment(match.group(2))
     body = re.sub(r"^type\s+:\S+\s*=.*$", "", text, flags=re.M)
+    # QBE-FRAMEMAP-1: a top-level `dbgfile "SYMBOL"` names the file every
+    # `dbgloc` in the function refers to.
+    debug_file = None
+    for match in re.finditer(r'^dbgfile\s+"([^"\n]*)"\s*$', body, re.M):
+        debug_file = match.group(1)
+    body = re.sub(r'^dbgfile\s+".*"\s*$', "", body, flags=re.M)
     lines = body.split("\n")
     index = 0
     while index < len(lines) and not lines[index].strip():
@@ -337,10 +360,10 @@ def parse_unit(text, unit="unit"):
         raise ParseError("unit contains no function", unit)
     header = lines[index].strip()
     function, index = parse_header(header, lines, index, unit)
-    function.blocks = parse_blocks(lines, index, unit)
+    function.blocks = parse_blocks(lines, index, unit, function.object_hints)
     if not function.blocks:
         raise ParseError("function contains no blocks", unit, function.line, header)
-    return Unit(function, aggregates, alignments)
+    return Unit(function, aggregates, alignments, debug_file)
 
 
 def parse_header(header, lines, index, unit):
@@ -374,12 +397,30 @@ def parse_header(header, lines, index, unit):
                     line_number), index
 
 
-def parse_blocks(lines, index, unit):
-    """Parse the block list of one function body."""
+#: Marker line the frontend writes before an address it knows names memory
+#: outside the running function's stack frame — a managed object's header or its
+#: element storage.  QBE's lexer drops `#` to end of line, so the marker leaves
+#: its assembly byte-identical; this translator reads it to classify memory (see
+#: `llvm_emit.classify_memory`).  Format: `# myl-obj %temp`.
+OBJECT_MARKER = "# myl-obj "
+
+
+def parse_blocks(lines, index, unit, object_hints=None):
+    """Parse the block list of one function body.
+
+    `object_hints`, when given, collects the temporaries the frontend marked as
+    holding an address outside this function's stack frame.
+    """
     blocks, current = [], None
     while index < len(lines):
         raw = lines[index]
         index += 1
+        stripped = raw.strip()
+        if object_hints is not None and stripped.startswith(OBJECT_MARKER):
+            marked = stripped[len(OBJECT_MARKER):].strip()
+            if marked.startswith("%"):
+                object_hints.add(marked[1:])
+            continue
         line = strip_comment(raw)
         if not line:
             continue
@@ -470,7 +511,20 @@ def build_instruction(opcode, qbe_type, dest, operands, number, unit, raw):
         args = [one(operands)]
     elif opcode in INTEGER_OPS or opcode in COMPARISONS or opcode in CONVERSIONS:
         args = [one(item) for item in split_operands(operands)]
-    elif opcode in ("hlt", "vastart", "vaarg"):
+    elif opcode == "dbgloc":
+        # QBE-FRAMEMAP-1: `dbgloc LINE[, COLUMN]` positions the calls after it;
+        # it defines nothing and emits no code.
+        parts = split_operands(operands)
+        if dest is not None or not 1 <= len(parts) <= 2 or not all(p.strip().isdigit() for p in parts):
+            fail("dbgloc takes a line and an optional column")
+        extra = (int(parts[0]), int(parts[1]) if len(parts) == 2 else 0)
+    elif opcode == "hlt":
+        # QBE-NORETURN-1: a failure path whose `myl_qbe_fail_*` helper leaves
+        # through the runtime's non-local exit ends here; `on_hlt` lowers it to
+        # `unreachable`.
+        if operands.strip() or dest is not None:
+            fail("hlt takes no operands and defines nothing")
+    elif opcode in ("vastart", "vaarg"):
         fail(f"unsupported opcode `{opcode}`")
     else:
         fail(f"unknown opcode `{opcode}`")

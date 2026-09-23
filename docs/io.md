@@ -198,9 +198,10 @@ A native trap keeps its original code, primary location, call stack and omitted
 frame count. Where the failing operation already evaluated the values, the trap
 also carries a bounded versioned detail: bounds failures report the original
 index (negative values preserved) and the receiver length; integer division and
-checked overflow report the evaluated operands and width where available. A trap
-is sticky: the first trap's detail is retained even if later operations would
-also fail.
+checked overflow report the evaluated operands and width where available, in the
+operation's own signedness: a `u64` overflow reads `left 18446744073709551614`,
+not `left -2`, and its record carries `"unsigned":true`. A trap is sticky: the
+first trap's detail is retained even if later operations would also fail.
 
 `mylang run` renders that detail in text and, with `--diagnostics json`, under
 `trap_detail` in the structured diagnostic. Both come from the same captured

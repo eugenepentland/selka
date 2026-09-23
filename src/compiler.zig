@@ -28,6 +28,8 @@ pub const embedded_project = @import("embedded_project.zig");
 pub const dependency_report = @import("dependency_report.zig");
 pub const project_files = @import("project_files.zig");
 pub const project_compile = @import("project_compile.zig");
+/// Export snapshot and the safety/accounting policy one native emission runs under.
+pub const native_interface = @import("native_interface.zig");
 const project_syntax = @import("project_syntax.zig");
 pub const interfaces = @import("interfaces.zig");
 pub const check_cache = @import("check_cache.zig");
@@ -46,7 +48,9 @@ pub const diagnostic_output = @import("diagnostic_output.zig");
 /// Parse-only top-level declaration listing for store and tooling consumers.
 pub const declarations = @import("declarations.zig");
 /// Checked mechanical translation from the legacy brace surface to Python syntax.
-const lexer = @import("lexer.zig");
+pub const lexer = @import("lexer.zig");
+/// `tokens-v1` machine output used as the stage-0 lexer oracle.
+pub const tokens_dump = @import("tokens_dump.zig");
 const parser = @import("parser.zig");
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
@@ -118,7 +122,7 @@ pub const Compilation = struct {
         }
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        self.tokens = try lexer.lexWithMarkers(sink.allocator, self.src.bytes, self.src.mutation_markers, &sink);
+        self.tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
         var p: parser.Parser = .{ .src = self.src, .arena = &self.arena, .tokens = self.tokens.?, .sink = &sink };
         self.syntax = try p.parse();
         if (cache) |disk| try disk.rememberSyntax(self.src, 0, self.syntax.?);
@@ -133,7 +137,7 @@ pub const Compilation = struct {
     pub fn formatModule(self: *Compilation, allocator: std.mem.Allocator) FormatError![]u8 {
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        const tokens = try lexer.lexWithMarkers(sink.allocator, self.src.bytes, self.src.mutation_markers, &sink);
+        const tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
         var p: parser.Parser = .{ .src = self.src, .arena = &self.arena, .tokens = tokens, .sink = &sink };
         const syntax = try p.parseModule();
         return @import("formatter.zig").format(allocator, self.src.bytes, tokens, syntax.types);
@@ -143,7 +147,7 @@ pub const Compilation = struct {
     pub fn listDeclarations(self: *Compilation, allocator: std.mem.Allocator) declarations.Error![]u8 {
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        const tokens = try lexer.lexWithMarkers(sink.allocator, self.src.bytes, self.src.mutation_markers, &sink);
+        const tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
         return declarations.render(allocator, &self.arena, self.src, tokens, &sink);
     }
 
@@ -188,15 +192,15 @@ pub const Compilation = struct {
 
     /// Allocate independently compilable scalar QBE units after full checking.
     pub fn emitQbe(self: *Compilation, allocator: std.mem.Allocator) EmitNativeError![]u8 {
-        return self.emitQbeWithOptions(allocator, false, true, true);
+        return self.emitQbeWithOptions(allocator, .{});
     }
 
-    /// Emit QBE units under an explicit `debug` policy and step-accounting choice.
-    pub fn emitQbeWithOptions(self: *Compilation, allocator: std.mem.Allocator, drop_debug: bool, step_checks: bool, frame_checks: bool) EmitNativeError![]u8 {
-        try self.emitWithOptions(drop_debug);
+    /// Emit QBE units under an explicit debug, accounting and safety policy.
+    pub fn emitQbeWithOptions(self: *Compilation, allocator: std.mem.Allocator, policy: @import("native_interface.zig").Policy) EmitNativeError![]u8 {
+        try self.emitWithOptions(policy.drop_debug);
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        return @import("qbe.zig").generateWithInterface(allocator, self.code.?, self.src, &sink, .{ .step_checks = step_checks, .frame_checks = frame_checks });
+        return @import("qbe.zig").generateWithInterface(allocator, self.code.?, self.src, &sink, .{ .policy = policy });
     }
 
     /// Allocate a source-annotated disassembly of the lowered program.

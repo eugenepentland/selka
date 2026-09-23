@@ -50,7 +50,7 @@
   },
   "345eca99acaaa8b6a0c48b309953f20a": {
    "case": [
-    "def main(fs: Filesystem, clock: Clock, entropy: Entropy, names: Environment, out: Stream) -> int:\n    out.print(exists(fs, \"greeting.txt\"))\n    return 0\n",
+    "def main(fs: Filesystem, clock: Clock, entropy: Entropy, names: Environment, out: Stream) -> int:\n    _ = clock\n    _ = entropy\n    _ = names\n    out.print(exists(fs, \"greeting.txt\"))\n    return 0\n",
     [],
     []
    ],
@@ -154,7 +154,7 @@
   },
   "9ea76b2a9c728163af3be477a9ececa0": {
    "case": [
-    "def main(fs: Filesystem, clock: Clock, entropy: Entropy, names: Environment, out: Stream) -> int:\n    out.print(exists(fs, \"greeting.txt\"))\n    return 0\n",
+    "def main(fs: Filesystem, clock: Clock, entropy: Entropy, names: Environment, out: Stream) -> int:\n    _ = clock\n    _ = entropy\n    _ = names\n    out.print(exists(fs, \"greeting.txt\"))\n    return 0\n",
     [],
     [
      "--gc-stress"

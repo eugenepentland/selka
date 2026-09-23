@@ -1,0 +1,139 @@
+module checked_arithmetic
+
+# Checked `+ - *` reach every width's extreme without trapping; the operation
+# one step past it traps (pinned in `test/integration.zig`, "checked arithmetic
+# at every width ..."). The 64-bit checks are the ones the LLVM adapter lowers
+# to overflow intrinsics (LLVM-OVERFLOW-INTRINSIC-1); `wrapping_*` and
+# `saturating_*` are not checked operations and keep their own results.
+
+
+def add64(x: int, y: int) -> int:
+    return x + y
+
+
+def sub64(x: int, y: int) -> int:
+    return x - y
+
+
+def mul64(x: int, y: int) -> int:
+    return x * y
+
+
+def addu64(x: u64, y: u64) -> u64:
+    return x + y
+
+
+def subu64(x: u64, y: u64) -> u64:
+    return x - y
+
+
+def mulu64(x: u64, y: u64) -> u64:
+    return x * y
+
+
+def signed64_extremes() -> bool:
+    if add64(9223372036854775806, 1) != 9223372036854775807:
+        return False
+    if add64(-9223372036854775807, -1) != -9223372036854775808:
+        return False
+    if add64(9223372036854775807, -9223372036854775808) != -1:
+        return False
+    if sub64(-9223372036854775807, 1) != -9223372036854775808:
+        return False
+    if sub64(9223372036854775806, -1) != 9223372036854775807:
+        return False
+    if sub64(-1, 9223372036854775807) != -9223372036854775808:
+        return False
+    if mul64(3037000500, 3037000499) != 9223372033963249500:
+        return False
+    if mul64(-4611686018427387904, 2) != -9223372036854775808:
+        return False
+    if mul64(-1, -9223372036854775807) != 9223372036854775807:
+        return False
+    if mul64(-3037000499, 3037000499) != -9223372030926249001:
+        return False
+    return mul64(4294967296, 2147483647) == 9223372032559808512
+
+
+def unsigned64_extremes() -> bool:
+    if addu64(18446744073709551614u64, 1u64) != 18446744073709551615u64:
+        return False
+    if addu64(9223372036854775808u64, 9223372036854775807u64) != 18446744073709551615u64:
+        return False
+    if subu64(5u64, 5u64) != 0u64:
+        return False
+    if subu64(18446744073709551615u64, 18446744073709551615u64) != 0u64:
+        return False
+    if mulu64(4294967296u64, 4294967295u64) != 18446744069414584320u64:
+        return False
+    return mulu64(4294967295u64, 4294967297u64) == 18446744073709551615u64
+
+
+def narrow_extremes() -> bool:
+    if 2147483646i32 + 1i32 != 2147483647i32 or -2147483647i32 - 1i32 != -2147483648i32:
+        return False
+    if 46341i32 * 46340i32 != 2147441940i32:
+        return False
+    if 4294967294u32 + 1u32 != 4294967295u32 or 5u32 - 5u32 != 0u32 or 65536u32 * 65535u32 != 4294901760u32:
+        return False
+    if 32766i16 + 1i16 != 32767i16 or -32767i16 - 1i16 != -32768i16 or 182i16 * 180i16 != 32760i16:
+        return False
+    if 65534u16 + 1u16 != 65535u16 or 5u16 - 5u16 != 0u16 or 256u16 * 255u16 != 65280u16:
+        return False
+    if 126i8 + 1i8 != 127i8 or -127i8 - 1i8 != -128i8 or 11i8 * 11i8 != 121i8:
+        return False
+    return 254u8 + 1u8 == 255u8 and 5u8 - 5u8 == 0u8 and 16u8 * 15u8 == 240u8
+
+
+def explicit_overflow_behaviour() -> bool:
+    if wrapping_add(9223372036854775807, 1) != -9223372036854775808:
+        return False
+    if wrapping_sub(-9223372036854775808, 1) != 9223372036854775807:
+        return False
+    if wrapping_mul(4294967296, 4294967296) != 0:
+        return False
+    if wrapping_add(18446744073709551615u64, 1u64) != 0u64:
+        return False
+    if saturating_add(9223372036854775807, 1) != 9223372036854775807:
+        return False
+    if saturating_sub(-9223372036854775808, 1) != -9223372036854775808:
+        return False
+    if saturating_mul(4294967296, -4294967296) != -9223372036854775808:
+        return False
+    return saturating_mul(4294967296u64, 4294967296u64) == 18446744073709551615u64
+
+
+def main() -> int:
+    if not signed64_extremes():
+        return 1
+    if not unsigned64_extremes():
+        return 2
+    if not narrow_extremes():
+        return 3
+    if not explicit_overflow_behaviour():
+        return 4
+    return 0
+
+
+# spec-case: LLVM-OVERFLOW-INTRINSIC-1
+public def test_signed_64_bit_add_sub_mul_reach_both_extremes() -> bool:
+    return signed64_extremes()
+
+
+# spec-case: LLVM-OVERFLOW-INTRINSIC-1
+public def test_unsigned_64_bit_add_sub_mul_reach_both_extremes() -> bool:
+    return unsigned64_extremes()
+
+
+# spec-case: LLVM-OVERFLOW-INTRINSIC-1
+public def test_narrow_widths_reach_their_extremes() -> bool:
+    return narrow_extremes()
+
+
+# spec-case: LLVM-OVERFLOW-INTRINSIC-1
+public def test_wrapping_and_saturating_keep_their_own_results() -> bool:
+    return explicit_overflow_behaviour()
+
+
+public def test_the_program_passes_every_group() -> bool:
+    return main() == 0

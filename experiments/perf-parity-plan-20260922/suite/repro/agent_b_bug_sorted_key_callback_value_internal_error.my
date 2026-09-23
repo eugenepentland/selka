@@ -1,0 +1,38 @@
+# Compiler bug: `sorted(values, key=...)` fails to lower when the program also
+# materializes a callback *value* of the key's type, `def(T) -> int effects()`,
+# anywhere else. Here a different function (`twice`) is assigned to a local;
+# passing any such function to a `def(T) -> int effects()` parameter, e.g.
+# sort.sort_by_key(xs, f), fails the same way, and so does key=lambda.
+#
+#   mylang check this.my          -> exit 0 (accepted)
+#   mylang dump-bytecode this.my  -> exit 0 (bytecode lowering succeeds)
+#   mylang emit-qbe this.my       -> "mylang: host failure: InternalError", exit 2
+#   mylang run this.my --print-result
+#   mylang build this.my -o x     -> same InternalError, --backend llvm and qbe
+#
+# So the failure is in the bytecode -> QBE IL step both backends go through
+# (the identity-key repro fails one step earlier, in dump-bytecode).
+#
+# Expected: prints 9 (twice(3) = 6; sorted by -v gives [3, 2, 1]).
+# Dropping `effects()` from `twice` (a different callback type) makes it build
+# and print 9. Practical effect: one program cannot use both
+# sort.sort_by_key(records, f) and sorted(records, key=g) for the same element
+# type, even with f != g, which is how this was found.
+# Seen with install-a3 (tree 4d81f680); .tmp/perf-audit-20260922/install and the
+# main checkout's zig-out/bin/mylang fail identically.
+
+
+def neg(v: int) -> int effects():
+    return 0 - v
+
+
+def twice(v: int) -> int effects():
+    return v * 2
+
+
+def main() -> int:
+    xs = [3, 1, 2]
+    f = twice
+    a = f(xs[0])
+    b = sorted(xs, key=neg)
+    return a + b[0]

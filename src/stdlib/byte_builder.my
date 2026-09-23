@@ -12,14 +12,14 @@ public class Builder:
 
 
 # An empty byte builder.
-public def create() -> Builder effects(managed_allocation):
+public def create() -> Builder:
     empty: list[int] = []
     return Builder(buffer=byte_buffer(empty))
 
 
 # Append one octet directly into the buffer's capacity. An out-of-range value
 # leaves the builder unchanged.
-public def append_byte(builder: Builder, value: int) -> bool effects(mutation, managed_allocation) mutates(builder):
+public def append_byte(builder: mut Builder, value: int) -> bool:
     return builder.buffer.append_byte(value)
 
 
@@ -28,18 +28,18 @@ public def append_byte(builder: Builder, value: int) -> bool effects(mutation, m
 # `len(data)` is rejected with `False` before anything is written, so a rejected
 # range leaves the builder unchanged. An empty range succeeds and changes
 # nothing. `data` may be any byte string or another buffer.
-public def append_range(builder: Builder, data: bytes, start: int, end: int) -> bool effects(mutation, managed_allocation) mutates(builder):
+public def append_range(builder: mut Builder, data: bytes, start: int, end: int) -> bool:
     return builder.buffer.append_range(data, start, end)
 
 
 # Append every octet of `data` in order. An empty span changes nothing.
-public def append(builder: Builder, data: bytes) effects(mutation, managed_allocation) mutates(builder):
+public def append(builder: mut Builder, data: bytes):
     _ = builder.buffer.append_range(data, 0, len(data))
 
 
 # Append the UTF-8 encoding of `text`, which the encoder writes straight into
 # the buffer's capacity: no intermediate `bytes` value is built for the text.
-public def append_text(builder: Builder, text: str) effects(mutation, managed_allocation) mutates(builder):
+public def append_text(builder: mut Builder, text: str):
     _ = builder.buffer.append_utf8(text)
 
 
@@ -47,7 +47,7 @@ public def append_text(builder: Builder, text: str) effects(mutation, managed_al
 # the buffer's capacity: no intermediate `str` or `bytes` value is built. Every
 # `int` value has a spelling, including the minimum signed value, which has no
 # positive counterpart.
-public def append_int(builder: Builder, value: int) effects(mutation, managed_allocation) mutates(builder):
+public def append_int(builder: mut Builder, value: int):
     _ = builder.buffer.append_int(value)
 
 
@@ -56,13 +56,13 @@ public def append_int(builder: Builder, value: int) effects(mutation, managed_al
 # has no fractional part, and `nan`, `inf` and `-inf` for the non-finite values.
 # The spelling is formatted into the buffer's own capacity, so no temporary text
 # or byte value is built for it.
-public def append_float(builder: Builder, value: float) -> bool effects(mutation, managed_allocation) mutates(builder):
+public def append_float(builder: mut Builder, value: float) -> bool:
     return builder.buffer.append_float(value)
 
 
 # Append `count` ASCII spaces, copying them out of one shared literal span. A
 # negative count leaves the builder unchanged.
-public def append_spaces(builder: Builder, count: int) -> bool effects(mutation, managed_allocation) mutates(builder):
+public def append_spaces(builder: mut Builder, count: int) -> bool:
     if count < 0:
         return False
     spaces = b"                                                                "
@@ -80,7 +80,7 @@ public def append_spaces(builder: Builder, count: int) -> bool effects(mutation,
 # Grow the buffer's capacity so `extra` more octets fit without reallocating,
 # without changing the finished length. A negative count is rejected with
 # `False` and leaves the builder unchanged.
-public def reserve(builder: Builder, extra: int) -> bool effects(mutation, managed_allocation) mutates(builder):
+public def reserve(builder: mut Builder, extra: int) -> bool:
     return builder.buffer.reserve(extra)
 
 
@@ -88,5 +88,5 @@ public def reserve(builder: Builder, extra: int) -> bool effects(mutation, manag
 # snapshot is a fresh copy that shares no storage with the builder, so later
 # appends — including an append of the snapshot itself — never change an earlier
 # result, and the builder stays usable.
-public def finish(builder: Builder) -> bytes effects(managed_allocation):
+public def finish(builder: Builder) -> bytes:
     return bytes(builder.buffer)

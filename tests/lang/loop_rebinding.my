@@ -1,0 +1,242 @@
+module loop_rebinding
+
+# A `for` loop variable is rebound from the loop at the top of every
+# iteration, as in Python (PY-FOR-REBIND-1): assigning it in the body changes
+# the variable for the rest of that iteration and never which iteration comes
+# next. Every loop form is pinned here; the traced elements run under
+# `--gc-stress`.
+
+
+record Pair:
+    left: i64
+    right: i64
+
+
+def label(index: i64) -> str:
+    return "w" + str(index)
+
+
+def churn(rounds: i64) -> i64:
+    total = 0
+    for round in range(rounds):
+        words = [label(round), label(round + 1)]
+        total += len(words[0]) + len(words[1])
+    return total
+
+
+def pair(left: i64, right: i64) -> tuple[i64, i64]:
+    return left, right
+
+
+def first_of[T: copy + storable](values: list[T], fallback: T) -> T:
+    seen = fallback
+    count = 0
+    for index, value in enumerate(values):
+        if index == 0:
+            seen = value
+        index = 100
+        value = fallback
+        count += 1
+    for position in range(len(values)):
+        position += 50
+        count += 1
+    return seen if count == 2 * len(values) else fallback
+
+
+def rebinding_steps() -> i64:
+    steps = 0
+    for index in range(4):
+        index = index * 10
+        steps += index
+    return steps
+
+
+const REBOUND_STEPS: i64 = rebinding_steps()
+
+
+# spec: PY-FOR-REBIND-1
+public def test_assigning_a_range_variable_does_not_end_the_loop() -> bool:
+    runs = 0
+    seen: list[i64] = []
+    for index in range(5):
+        seen.append(index)
+        index = 10
+        runs += 1
+        seen.append(index)
+    return runs == 5 and seen == [0, 10, 1, 10, 2, 10, 3, 10, 4, 10]
+
+
+# spec-case: PY-FOR-REBIND-1
+public def test_a_two_bound_range_takes_every_value_after_an_augmented_write() -> bool:
+    seen: list[i64] = []
+    for index in range(2, 6):
+        index += 100
+        seen.append(index)
+    return seen == [102, 103, 104, 105]
+
+
+# spec-case: PY-FOR-REBIND-1
+public def test_an_enumerate_position_the_body_assigns_does_not_end_the_loop() -> bool:
+    values = [label(1), label(2), label(3), label(4)]
+    positions: list[i64] = []
+    words: list[str] = []
+    for position, word in enumerate(values):
+        positions.append(position)
+        position = 10
+        word = word + "!"
+        _ = churn(2)
+        words.append(word)
+        positions.append(position)
+    return positions == [0, 10, 1, 10, 2, 10, 3, 10] and words == ["w1!", "w2!", "w3!", "w4!"]
+
+
+# spec-case: PY-FOR-REBIND-1
+public def test_a_destructuring_write_to_an_enumerate_position_does_not_end_the_loop() -> bool:
+    runs = 0
+    total = 0
+    for position, value in enumerate([5, 6, 7]):
+        total += position
+        position, value = pair(7, 8)
+        total += position + value
+        runs += 1
+    return runs == 3 and total == 0 + 1 + 2 + 3 * 15
+
+
+# spec-case: PY-FOR-REBIND-1
+public def test_an_enumerate_position_over_a_fixed_array_is_rebound() -> bool:
+    values: [4]i64 = [1, 2, 3, 4]
+    total = 0
+    for position, value in enumerate(values):
+        position = position - 4
+        # A negative position counts from the end (PY-ARRAY-NEGATIVE-1).
+        total += values[position] * value
+    return total == 1 + 4 + 9 + 16
+
+
+# spec-case: PY-FOR-REBIND-1
+public def test_continue_after_a_write_still_advances_the_loop() -> bool:
+    seen: list[i64] = []
+    for index in range(6):
+        if index % 2 == 0:
+            index = -1
+            continue
+        seen.append(index)
+    for position, value in enumerate([10, 11, 12, 13]):
+        if value == 11:
+            position = 99
+            continue
+        seen.append(position)
+    return seen == [1, 3, 5, 0, 2, 3]
+
+
+# spec-case: PY-FOR-REBIND-1
+public def test_break_after_a_write_leaves_the_written_value() -> bool:
+    last = 0
+    for index in range(10):
+        index = index * 3
+        last = index
+        if last >= 6:
+            break
+    return last == 6
+
+
+# spec-case: PY-FOR-REBIND-1
+public def test_element_variables_are_rebound_every_iteration() -> bool:
+    words = [label(1), label(2), label(3)]
+    kept: list[str] = []
+    for word in words:
+        word = word + "?"
+        _ = churn(2)
+        kept.append(word)
+    letters = ""
+    for letter in "abc":
+        letter = letter + letter
+        letters += letter
+    numbers: [3]i64 = [4, 5, 6]
+    total = 0
+    for number in numbers:
+        number += 1
+        total += number
+    octets = 0
+    for octet in b"AB":
+        octet = 0
+        octets += 1
+    return kept == ["w1?", "w2?", "w3?"] and words == ["w1", "w2", "w3"] and letters == "aabbcc" and total == 18 and numbers[0] == 4 and octets == 2
+
+
+# spec-case: PY-FOR-REBIND-1
+public def test_reversed_and_zip_names_are_rebound() -> bool:
+    backwards: list[str] = []
+    for word in reversed([label(1), label(2), label(3)]):
+        backwards.append(word)
+        word = "gone"
+        _ = churn(2)
+    total = 0
+    runs = 0
+    for left, right in zip([1, 2, 3], [4, 5, 6]):
+        total += left * right
+        left = 0
+        right = 0
+        runs += 1
+    return backwards == ["w3", "w2", "w1"] and total == 32 and runs == 3
+
+
+# spec-case: PY-FOR-REBIND-1
+public def test_dictionary_and_tuple_names_are_rebound() -> bool:
+    counts: dict[str, i64] = {label(1): 1, label(2): 2, label(3): 3}
+    keys = ""
+    total = 0
+    for key in counts:
+        keys += key
+        key = "zz"
+    for name, count in counts.items():
+        total += count
+        name = "zz"
+        count = 0
+        _ = churn(2)
+    pairs: list[tuple[i64, i64]] = [(1, 2), (3, 4)]
+    sums = 0
+    for left, right in pairs:
+        sums += left + right
+        left = 100
+    return keys == "w1w2w3" and total == 6 and sums == 10 and len(counts) == 3
+
+
+# spec-case: PY-FOR-REBIND-1
+public def test_nested_loops_rebind_each_variable() -> bool:
+    runs = 0
+    for row in range(3):
+        for column in range(3):
+            column = 99
+            runs += 1
+        row = 99
+        for position, value in enumerate([1, 2]):
+            position = -1
+            runs += value
+    return runs == 9 + 3 * 3
+
+
+# spec-case: PY-FOR-REBIND-1
+public def test_a_generic_body_may_assign_its_loop_variables() -> bool:
+    return first_of([label(7), label(8)], "none") == "w7" and first_of([3, 4, 5], 0) == 3
+
+
+# spec-case: PY-FOR-REBIND-1
+public def test_a_compile_time_range_loop_may_assign_its_variable() -> bool:
+    return REBOUND_STEPS == 0 + 10 + 20 + 30
+
+
+# spec-case: PY-FOR-REBIND-1
+public def test_a_loop_that_never_assigns_its_variable_still_counts() -> bool:
+    values: [4]i64 = [1, 2, 3, 4]
+    total = 0
+    for index in range(4):
+        total += values[index]
+    for position, value in enumerate(values):
+        total += values[position] * value
+    squares = [values[index] * values[index] for index in range(4)]
+    return total == 10 + 30 and squares == [1, 4, 9, 16]
+
+
+def main() -> int:
+    return 0

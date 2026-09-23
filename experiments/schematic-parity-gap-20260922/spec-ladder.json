@@ -1,0 +1,9 @@
+{
+ "s-overflow": {"backend": "llvm", "opt": "3", "lto": true, "bounded": false, "manifest_from": "gc-lto", "strip": "overflow"},
+ "s-cast": {"backend": "llvm", "opt": "3", "lto": true, "bounded": false, "manifest_from": "gc-lto", "strip": "cast"},
+ "s-bounds": {"backend": "llvm", "opt": "3", "lto": true, "bounded": false, "manifest_from": "gc-lto", "strip": "bounds"},
+ "s-alloc": {"backend": "llvm", "opt": "3", "lto": true, "bounded": false, "manifest_from": "gc-lto", "strip": "alloc"},
+ "s-frames": {"backend": "llvm", "opt": "3", "lto": true, "bounded": false, "manifest_from": "gc-lto", "strip": "frames,positions"},
+ "s-checks": {"backend": "llvm", "opt": "3", "lto": true, "bounded": false, "manifest_from": "gc-lto", "strip": "overflow,cast,bounds,alloc"},
+ "s-all": {"backend": "llvm", "opt": "3", "lto": true, "bounded": false, "manifest_from": "gc-lto", "strip": "overflow,cast,bounds,alloc,frames,positions"}
+}

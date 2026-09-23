@@ -162,7 +162,7 @@ test "generic array runtime indexing retains traps and source locations" {
     );
     defer compilation.deinit();
     const result = try native.run(&compilation);
-    try t.expectEqualStrings("R_INDEX_BOUNDS", result.trap.code);
+    try t.expectEqualStrings("R_LIST_BOUNDS", result.trap.code);
     try t.expectEqualStrings("bounds.my", result.trap.path);
     try t.expectEqual(@as(u64, 15), result.trap.line);
     try t.expectEqualStrings("at[i64]", result.trap.frames[0].function);

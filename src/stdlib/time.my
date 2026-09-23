@@ -28,17 +28,17 @@ public def nanoseconds(count: int) -> Duration effects():
 
 
 # A duration of whole microseconds, rejecting counts beyond the signed range.
-public def microseconds(count: int) -> Result[Duration, str] effects(managed_allocation):
+public def microseconds(count: int) -> Result[Duration, str]:
     return scaled(count, 1000)
 
 
 # A duration of whole milliseconds, rejecting counts beyond the signed range.
-public def milliseconds(count: int) -> Result[Duration, str] effects(managed_allocation):
+public def milliseconds(count: int) -> Result[Duration, str]:
     return scaled(count, 1000000)
 
 
 # A duration of whole seconds, rejecting counts beyond the signed range.
-public def seconds(count: int) -> Result[Duration, str] effects(managed_allocation):
+public def seconds(count: int) -> Result[Duration, str]:
     return scaled(count, 1000000000)
 
 
@@ -51,7 +51,7 @@ def scaled(count: int, unit: int) -> Result[Duration, str]:
 
 
 # Two durations added, rejecting a total outside the nanosecond range.
-public def sum(first: Duration, second: Duration) -> Result[Duration, str] effects(managed_allocation):
+public def sum(first: Duration, second: Duration) -> Result[Duration, str]:
     if second.nanoseconds > 0 and first.nanoseconds > limit() - second.nanoseconds:
         return Err("duration sum does not fit a 64-bit nanosecond count")
     if second.nanoseconds < 0 and first.nanoseconds < (0 - limit() - 1) - second.nanoseconds:
@@ -60,7 +60,7 @@ public def sum(first: Duration, second: Duration) -> Result[Duration, str] effec
 
 
 # The second duration subtracted from the first, rejecting range overflow.
-public def difference(first: Duration, second: Duration) -> Result[Duration, str] effects(managed_allocation):
+public def difference(first: Duration, second: Duration) -> Result[Duration, str]:
     if second.nanoseconds == 0 - limit() - 1:
         return Err("duration difference does not fit a 64-bit nanosecond count")
     return sum(first, Duration(nanoseconds=0 - second.nanoseconds))
@@ -90,7 +90,7 @@ public def to_milliseconds(value: Duration) -> int effects():
 
 
 # The current wall-clock instant, read through an explicit clock capability.
-public def now(clock: Clock) -> Result[Instant, str] effects(clock, managed_allocation):
+public def now(clock: Clock) -> Result[Instant, str]:
     match clock_now[Reading](clock):
         case Reading.ok(count):
             return Ok(Instant(unix_nanoseconds=count))
@@ -108,7 +108,7 @@ public def from_unix_nanoseconds(count: int) -> Instant effects():
 
 
 # An instant advanced by a duration, rejecting a result outside the epoch range.
-public def after(start: Instant, duration: Duration) -> Result[Instant, str] effects(managed_allocation):
+public def after(start: Instant, duration: Duration) -> Result[Instant, str]:
     if duration.nanoseconds > 0 and start.unix_nanoseconds > limit() - duration.nanoseconds:
         return Err("instant does not fit a 64-bit Unix nanosecond count")
     if duration.nanoseconds < 0 and start.unix_nanoseconds < (0 - limit() - 1) - duration.nanoseconds:
@@ -117,7 +117,7 @@ public def after(start: Instant, duration: Duration) -> Result[Instant, str] eff
 
 
 # The nonnegative span between two instants, rejecting a reversed pair.
-public def elapsed(start: Instant, end: Instant) -> Result[Duration, str] effects(managed_allocation):
+public def elapsed(start: Instant, end: Instant) -> Result[Duration, str]:
     if end.unix_nanoseconds < start.unix_nanoseconds:
         return Err("elapsed needs an end at or after its start")
     if start.unix_nanoseconds < 0 and end.unix_nanoseconds > limit() + start.unix_nanoseconds:

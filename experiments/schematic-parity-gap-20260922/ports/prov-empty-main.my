@@ -1,0 +1,11 @@
+module main
+import io
+import schematic_inputs
+import sexpr
+import schematic
+import svg
+
+def main(host: Host) -> Result[None, int]:
+    if io.length(host, 0) < 0:
+        return Err(1)
+    return Ok(None)

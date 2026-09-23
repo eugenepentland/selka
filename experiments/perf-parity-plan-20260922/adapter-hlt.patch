@@ -1,0 +1,15 @@
+--- ../perf-audit-20260922/install-a3/lib/mylang-llvm/qbe_llvm.py	2026-09-22 15:54:27.820412771 +0000
++++ work/adapter-hlt/qbe_llvm.py	2026-09-22 18:55:06.951296766 +0000
+@@ -500,7 +500,11 @@
+         args = [one(operands)]
+     elif opcode in INTEGER_OPS or opcode in COMPARISONS or opcode in CONVERSIONS:
+         args = [one(item) for item in split_operands(operands)]
+-    elif opcode in ("hlt", "vastart", "vaarg"):
++    elif opcode == "hlt":
++        # AUDIT PATCH (perf-parity-plan-20260922): accept QBE's `hlt` terminator,
++        # which llvm_emit.on_hlt already lowers to `unreachable`.
++        pass
++    elif opcode in ("vastart", "vaarg"):
+         fail(f"unsupported opcode `{opcode}`")
+     else:
+         fail(f"unknown opcode `{opcode}`")

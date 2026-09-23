@@ -1,0 +1,21 @@
+# Diagnostic repro (agent-a): a fixed array of records updated in place through
+# a parameter. On the 2026-09-22 base `mut [2]P` was rejected with a message
+# whose own list of mutable kinds included "array", `ps[i].x = ...` was
+# E_COLLECTION_METHOD ("indexed field assignment requires a list or
+# dictionary") and `for p in ps` was E_COLLECTION_METHOD ("iteration requires a
+# collection or dictionary view"). Since wave 3 (`lang/fixed-array-writes`,
+# PY-ARRAY-WRITE-1 / PY-ARRAY-MUT-1 / PY-ARRAY-ITER-1) all three are accepted:
+# `ps` names the caller's array, the write lands there, and this prints 1.0.
+record P:
+    x: float
+
+
+def bump(ps: mut [2]P) -> None:
+    ps[0].x = ps[0].x + 1.0
+
+
+def main(out: Stream) -> int:
+    ps: [2]P = [P(x=0.0), P(x=1.0)]
+    bump(mut ps)
+    out.print(ps[0].x)
+    return 0

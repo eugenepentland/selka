@@ -1,0 +1,26 @@
+binary_trees: 7 qualified arms: my my-arena zig-fast l5 arena:l5 l5-nan arena:l5-nan
+spectral_norm: 5 qualified arms: my my-tuned zig-fast l5 l5-nan
+mandelbrot: 4 qualified arms: my zig-fast l5 l5-nan
+raytrace: 5 qualified arms: my my-tuned zig-fast l5 l5-nan
+knucleotide: 7 qualified arms: my my-tuned zig-fast l5 tuned:l5 l5-nan tuned:l5-nan
+text_ops: 5 qualified arms: my my-tuned zig-fast l5 l5-nan
+sort_builtin: 4 qualified arms: my zig-fast l5 l5-nan
+sort_quick: 4 qualified arms: my zig-fast l5 l5-nan
+sort_records: 4 qualified arms: my zig-fast l5 l5-nan
+sieve: 5 qualified arms: my my-tuned zig-fast l5 l5-nan
+nbody: 7 qualified arms: my my-class zig-fast l5 class:l5 l5-nan class:l5-nan
+fannkuch_redux: 5 qualified arms: my my-tuned zig-fast l5 l5-nan
+matmul: 8 qualified arms: my my-flat my-tuned zig-fast l5 flat:l5 l5-nan flat:l5-nan
+binary_trees: ref 388.3 ms | my=1.97x  my-arena=1.37x  zig-fast=1.00x  l5=1.94x  arena:l5=1.32x  l5-nan=1.92x  arena:l5-nan=1.31x
+spectral_norm: ref 310.5 ms | my=4.14x  my-tuned=1.24x  zig-fast=1.00x  l5=4.42x  l5-nan=3.55x
+mandelbrot: ref 201.4 ms | my=1.02x  zig-fast=1.00x  l5=1.32x  l5-nan=1.03x
+raytrace: ref 108.8 ms | my=2.37x  my-tuned=1.46x  zig-fast=1.00x  l5=4.52x  l5-nan=2.46x
+knucleotide: ref 147.3 ms | my=5.23x  my-tuned=2.89x  zig-fast=1.00x  l5=5.46x  tuned:l5=2.84x  l5-nan=5.32x  tuned:l5-nan=2.98x
+text_ops: ref 63.7 ms | my=7.54x  my-tuned=0.72x  zig-fast=1.00x  l5=7.51x  l5-nan=7.55x
+sort_builtin: ref 443.6 ms | my=1.46x  zig-fast=1.00x  l5=1.48x  l5-nan=1.41x
+sort_quick: ref 319.8 ms | my=1.22x  zig-fast=1.00x  l5=1.26x  l5-nan=1.24x
+sort_records: ref 166.9 ms | my=5.21x  zig-fast=1.00x  l5=5.26x  l5-nan=5.30x
+sieve: ref 89.1 ms | my=1.70x  my-tuned=1.87x  zig-fast=1.00x  l5=1.67x  l5-nan=1.70x
+nbody: ref 232.9 ms | my=2.01x  my-class=1.65x  zig-fast=1.00x  l5=5.00x  class:l5=4.98x  l5-nan=2.16x  class:l5-nan=1.96x
+fannkuch_redux: ref 305.8 ms | my=1.24x  my-tuned=0.87x  zig-fast=1.00x  l5=1.25x  l5-nan=1.24x
+matmul: ref 66.5 ms | my=3.92x  my-flat=2.74x  my-tuned=6.14x  zig-fast=1.00x  l5=7.32x  flat:l5=4.05x  l5-nan=4.07x  flat:l5-nan=2.83x

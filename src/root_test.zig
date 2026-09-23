@@ -11,6 +11,7 @@ test {
     _ = @import("native_test_wire.zig");
 
     _ = @import("doc_coverage.zig");
+    _ = @import("tokens_dump_test.zig");
     _ = @import("doc_coverage_command.zig");
     _ = @import("doctest_command.zig");
     _ = @import("reference_test.zig");
@@ -32,6 +33,8 @@ test {
     _ = @import("qbe_build_options.zig");
     _ = @import("qbe_build_outputs.zig");
     _ = @import("qbe_build_io.zig");
+    _ = @import("qbe_frame_map.zig");
+    _ = @import("qbe_frame_map_test.zig");
     // The manifest's own tables were described here but never reached this root,
     // so the QBE-TEXT/QBE-LIST checks that pin them existed without running.
     _ = @import("qbe_wire.zig");
@@ -107,6 +110,7 @@ test {
     _ = @import("import_policy_test.zig");
     _ = @import("lint_config_test.zig");
     _ = @import("lint_test.zig");
+    _ = @import("lint_sentinel_test.zig");
     _ = @import("lint_reach_test.zig");
     _ = @import("lint_store_test.zig");
     _ = @import("source_map_test.zig");
@@ -134,6 +138,7 @@ test {
     _ = @import("records_test.zig");
     _ = @import("integers_test.zig");
     _ = @import("arrays_test.zig");
+    _ = @import("array_places_test.zig");
     _ = @import("domains_test.zig");
     _ = @import("variants_test.zig");
     _ = @import("tables_test.zig");
@@ -149,6 +154,7 @@ test {
     _ = @import("resource_io_test.zig");
     _ = @import("results_test.zig");
     _ = @import("propagation_test.zig");
+    _ = @import("option_methods_test.zig");
     _ = @import("domain_codecs_test.zig");
     _ = @import("runtime_values_test.zig");
     _ = @import("managed_values_test.zig");
@@ -170,6 +176,7 @@ test {
     _ = @import("managed_cell_test.zig");
     _ = @import("for_range_test.zig");
     _ = @import("type_aliases_test.zig");
+    _ = @import("tuples_test.zig");
 }
 test {
     _ = @import("surface_statements_test.zig");
@@ -182,7 +189,9 @@ test {
     _ = @import("qbe.zig");
     _ = @import("qbe_test.zig");
     _ = @import("qbe_text_test.zig");
+    _ = @import("qbe_range_keys_test.zig");
     _ = @import("qbe_literals_test.zig");
+    _ = @import("qbe_alloc.zig");
     _ = @import("aggref_abi_test.zig");
 }
 

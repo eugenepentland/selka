@@ -1,0 +1,8 @@
+def key_of(x: int) -> int:
+    return 100 // (x - 3)
+
+
+def main() -> int:
+    values = [5, 4, 3, 2, 1]
+    ordered = sorted(values, key=key_of)
+    return ordered[0]

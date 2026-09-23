@@ -32,6 +32,27 @@ per primitive with a matched kernel suite, and ranks what closes it.
 [The performance roadmap](performance-roadmap.md) turns that ranking into the
 ordered list of changes to make next, each with its measured price and its
 acceptance test.
+The [22 September 2026 schematic audit](audits/schematic-parity-gap-2026-09-22.md)
+measures the schematic SVG tool against its byte-identical Zig and Rust ports
+phase by phase: the default build is 1.84× Zig, the shipped runner's QBE plus
+step-accounting policy 5.8×, stripping every check and the frame protocol still
+leaves 1.64×, and on the guest's own work the gap is 4.3× — aggregate copies,
+container-header reloads, byte-granular I/O and the checked append path, ranked.
+The [22 September 2026 parity plan](audits/performance-parity-plan-2026-09-22.md)
+widens the comparison to thirteen idiomatic programs ported to Zig and Rust
+(5.8× Zig on the geometric mean today, 1.02× for Rust). It prices each
+language rule and lowering protocol separately by rewriting the emitted code,
+and it orders the fixes into five waves. Among them: the aggregate lane,
+failure paths that end in `unreachable`, canonicalizing NaN only when observed,
+and runtime library algorithms. Its composed, measured ladder reaches 2.2×, and
+the projection with the library work is about 1.6×.
+[The aggregate lane](audits/schematic-lane-aggregates-2026-09-22.md) is the
+first wave's code. It writes and reads a list element where the element lives,
+so `xs[i] = v` is a bounds test and one store instead of a runtime call behind
+the frame's GC roots. On the same thirteen programs it takes the geometric mean
+from 5.8× to 3.0× Zig: `nbody` 72× → 4.9×, `matmul` 41× → 7.1×,
+`fannkuch_redux` 16× → 1.3×, `sieve` 7.1× → 1.8×. The schematic render goes
+from 1.98× to 1.73×. Its [results](audits/performance-parity-results-2026-09-23.md): the suite went from 5.81× to 1.20× Zig on the default LLVM build and from 8.40× to 2.41× on QBE.
 
 ## What is fast without trying
 
@@ -53,6 +74,14 @@ used. A program matching its description with 1,000 distinct keys was measured
 on both sides of that change, same binary pair, interleaved: **127 ms before and
 3 ms after**. Dictionary reads and writes are no longer linear in the key count;
 see [the dictionary index audit](audits/dict-hash-index-2026-09-21.md).
+
+Counting slices of one text by dictionary key — `key = seq[i:i + k]` followed by
+`counts[key] = counts.get(key, 0) + 1` — builds no `str` per slice: a slice whose
+only reader is a dictionary key is looked up by the octet range it names, and a
+key is built only when it is new. A write of a key that is already present
+publishes no GC roots. Together they take the `knucleotide` benchmark from about
+3.4× Zig to about 1.4× Zig; see
+[the text and dictionary leftovers report](audits/text-dict-leftovers-2026-09-23.md).
 
 The first row is the floor: about 4 ms of process start-up and 1.7 MB of resident
 memory before the program does anything, so a program that finishes in tens of
@@ -93,8 +122,13 @@ address, a short-lived local is named by its own slot, a record constructed
 straight into a local is built there rather than in scratch and then copied, and a
 match arm whose binding owns nothing reads the payload where it already lives, so
 field reads, tag tests and payload projections are loads through a pointer rather
-than aggregate copies. Writes still get their own storage, and a write to a copied
-value stays a copy's write.
+than aggregate copies. A list element works the same way. `x = xs[i]`, the
+loop variable of `for x in xs`, and `return xs[i]` name the element inside
+the list instead of a copy when nothing between the read and its last use can
+move or change the list. A record a call returns
+stays in the call's own result buffer when the caller only reads it, and
+`xs[i] = v` writes the element in place. Writes still get their own storage,
+and a write to a copied value stays a copy's write.
 
 ```mylang
 # doc: expect 42
@@ -191,6 +225,41 @@ cap how much a guest may hold; the collector enforces the cap. Measured on twent
 **0.25 s** with `MYLANG_MEMORY_LIMIT=16M` — no measurable difference while the live
 set fits. At `MYLANG_MEMORY_LIMIT=4M`, below the live set, the same program traps
 `R_MEMORY_BUDGET` rather than merely slowing down.
+
+## What safety costs, and how to stop paying it
+
+The language's traps are code the emitter generates: a comparison and a cold
+branch per checked arithmetic operation, per narrowing cast and per container
+index, plus a 32-byte frame record linked on every call and one store of the
+current instruction position. The
+[schematic parity audit](audits/schematic-parity-gap-2026-09-22.md#2-what-safety-costs-the-strip-ladder)
+priced each class separately on a 2.4 ms SVG render, by rewriting the emitted IL
+and rebuilding — every arm produced the byte-identical 49,617-byte output:
+
+| removed from the render | static sites | render, ms | vs default |
+|---|---:|---:|---:|
+| nothing (the default build) | — | 2.390 | — |
+| add/sub/neg/div overflow guards | 736 | 2.385 | −0.2% |
+| narrowing-cast guards | 290 | 2.348 | −1.8% |
+| list and array index guards | 313 | 2.354 | −1.5% |
+| allocation and capacity guards | 86 | 2.395 | +0.2% |
+| all four check classes | 1,425 | 2.288 | **−4.3%** |
+| frame record, floor test, 1,909 position stores | 3,872 IL lines | 2.083 | **−12.8%** |
+| both | — | 2.030 | **−15.1%** |
+
+Two things follow. The value checks are cheap — a correctly predicted branch on
+a path the optimizer already knows is cold — so removing them is not where a
+slow program gets fast. The per-call frame protocol is three times as expensive
+as all of them together, because it is unconditional work on every call and it
+inflates every function body past the inliner's threshold.
+
+`mylang build --unchecked` takes both omissions at emission time; see
+[unchecked release builds](tooling/native-build.md#unchecked-release-builds) for
+exactly what stops being detected. It is a policy for a program whose tests
+already pass, not a debugging tool: under it an overflow, an out-of-range cast
+or an out-of-bounds index is undefined behaviour instead of a named trap.
+Allocation failure, the memory ceiling, the collector and capability validation
+are unaffected, so a program that runs out of memory still exits cleanly.
 
 ## Fixed arrays are values you can write in place
 
@@ -391,6 +460,34 @@ busy one, which is why every table here quotes a best-of-five. `--timings=json`
 reports the same interval as the `native_execution` record in phase-timings JSON
 Lines when a script needs to read it; `mylang test` reports pass/fail outcomes, not
 per-case timings.
+
+## Track parity with Zig and Rust
+
+`zig build bench-parity` is the standing benchmark behind the parity plan: the
+eleven-program suite with its variants, the runtime-library scans and the
+micro-kernels under `bench/parity/`, each written in mylang, Zig and Rust and
+required to print the same bytes. It builds every arm with the compiler this
+checkout installs (or `-Dbench-mylang=PATH`), times fresh processes pinned to one
+CPU in interleaved rounds, and fails when a program's ratio to Zig ReleaseFast
+grows past its threshold in `bench/parity/thresholds.json`. Ratios, not
+milliseconds, are checked, because both sides of a ratio ran in the same round.
+The step is opt-in; `zig build test` never runs it.
+
+```bash
+zig build bench-parity -Dbench-filter=sieve -Dbench-cpu=10 -Dbench-rounds=7
+zig build bench-parity -Dbench-filter=micro/ -- --json parity-micro.json
+python3 bench/parity/bench_parity.py rebaseline .mylang-cache/bench-parity/result.json --label quiet
+```
+
+It prints one table row per program (Zig milliseconds, then `zig-safe`, `rust`,
+`rust-checked`, `my`, its limit, `my-unchecked` and the variants as ratios), the
+suite's geometric means beside the plan's targets, and one line per regression
+naming the program, arm, ratio and threshold. A program over its limit is timed
+a second time, and the step fails only when both passes exceed it. Rust arms are skipped with a notice
+when `rustc` is missing, and instruction and cycle counts are recorded only when
+`kernel.perf_event_paranoid` allows `perf stat`. Rewriting the thresholds is a
+separate, deliberate command; `bench/parity/README.md` gives the tolerance policy
+and the layout.
 
 ## Prove a hot function does not allocate
 

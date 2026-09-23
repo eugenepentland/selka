@@ -1,0 +1,14 @@
+def even(n: int) -> int:
+    if n == 0:
+        return 1
+    return odd(n - 1) + 0
+
+
+def odd(n: int) -> int:
+    if n == 0:
+        return 0
+    return even(n - 1) + 0
+
+
+def main() -> int:
+    return even(1000000001)

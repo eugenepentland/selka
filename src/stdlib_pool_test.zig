@@ -14,11 +14,11 @@ test "standard pool handles stay valid across collection of the released values"
         "def main() -> int:\n" ++
         "    seed: list[str] = []\n" ++
         "    store = pool.create(seed)\n" ++
-        "    kept = pool.insert(store, \"kept\")\n" ++
+        "    kept = pool.insert(mut store, \"kept\")\n" ++
         "    index = 0\n" ++
         "    while index < 200:\n" ++
-        "        temporary = pool.insert(store, \"temporary\")\n" ++
-        "        if not pool.remove(store, temporary):\n" ++
+        "        temporary = pool.insert(mut store, \"temporary\")\n" ++
+        "        if not pool.remove(mut store, temporary):\n" ++
         "            return 1\n" ++
         "        index += 1\n" ++
         "    if pool.count(store) != 1 or pool.capacity(store) != 2:\n" ++

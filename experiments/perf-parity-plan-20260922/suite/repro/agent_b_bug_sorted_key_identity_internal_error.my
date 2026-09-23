@@ -1,0 +1,21 @@
+# Compiler bug: `sorted(values, key=f)` over a list[int] where f returns its
+# argument unchanged makes every lowering command fail with an internal error.
+#
+#   mylang check this.my          -> exit 0 (accepted)
+#   mylang run this.my --print-result
+#   mylang build this.my -o x     -> "mylang: host failure: InternalError", exit 2
+#   mylang dump-bytecode this.my  -> same, so the failure is before QBE/LLVM
+#
+# Expected: prints 1. `key=lambda v: v` fails the same way; `key=lambda v: 0 - v`
+# and a non-identity named key over the same list build and run correctly.
+# Seen with install-a3 (tree 4d81f680), --backend llvm and --backend qbe alike.
+
+
+def by_value(v: int) -> int effects():
+    return v
+
+
+def main() -> int:
+    xs = [3, 1, 2]
+    ordered = sorted(xs, key=by_value)
+    return ordered[0]

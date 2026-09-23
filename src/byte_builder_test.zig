@@ -21,11 +21,11 @@ test "standard byte builder keeps its published call surface unchanged" {
         \\
         \\def build() -> bool:
         \\    out = byte_builder.create()
-        \\    byte_builder.append(out, b"ab")
-        \\    byte_builder.append_text(out, "cd")
-        \\    if not byte_builder.append_byte(out, 101):
+        \\    byte_builder.append(mut out, b"ab")
+        \\    byte_builder.append_text(mut out, "cd")
+        \\    if not byte_builder.append_byte(mut out, 101):
         \\        return False
-        \\    if not byte_builder.append_spaces(out, 2):
+        \\    if not byte_builder.append_spaces(mut out, 2):
         \\        return False
         \\    return byte_builder.finish(out) == b"abcde  "
         \\
@@ -45,19 +45,19 @@ test "standard byte builder freezes a snapshot that is appended back into its bu
         \\
         \\def main() -> int:
         \\    out = byte_builder.create()
-        \\    byte_builder.append_text(out, "λ")
+        \\    byte_builder.append_text(mut out, "λ")
         \\    first = byte_builder.finish(out)
-        \\    byte_builder.append(out, first)
-        \\    if not byte_builder.append_range(out, first, 1, 2):
+        \\    byte_builder.append(mut out, first)
+        \\    if not byte_builder.append_range(mut out, first, 1, 2):
         \\        return 1
         \\    smallest = -9223372036854775808
-        \\    byte_builder.append_int(out, smallest)
+        \\    byte_builder.append_int(mut out, smallest)
         \\    expected = b"\xce\xbb\xce\xbb\xbb-9223372036854775808"
         \\    if first != b"\xce\xbb":
         \\        return 2
         \\    if byte_builder.finish(out) != expected:
         \\        return 3
-        \\    if not byte_builder.reserve(out, 64):
+        \\    if not byte_builder.reserve(mut out, 64):
         \\        return 4
         \\    if byte_builder.finish(out) != expected:
         \\        return 5
@@ -198,7 +198,7 @@ test "byte buffer methods compile and run in discard position" {
         \\
         \\def main() -> int:
         \\    out = byte_builder.create()
-        \\    byte_builder.append(out, b"seed")
+        \\    byte_builder.append(mut out, b"seed")
         \\    empty: list[int] = []
         \\    data = byte_buffer(empty)
         \\    _ = data.append_range(b"hello", 1, 3)
@@ -208,7 +208,7 @@ test "byte buffer methods compile and run in discard position" {
         \\    _ = data.reserve(64)
         \\    if data != b"el\xce\xbb-42A":
         \\        return 1
-        \\    _ = byte_builder.append_range(out, b"tail", 0, 4)
+        \\    _ = byte_builder.append_range(mut out, b"tail", 0, 4)
         \\    if byte_builder.finish(out) != b"seedtail":
         \\        return 2
         \\    return 42
@@ -308,11 +308,11 @@ test "PY-BYTES-SNAPSHOT-1 a published snapshot survives the builder's later writ
         \\
         \\def main() -> int:
         \\    out = byte_builder.create()
-        \\    byte_builder.append_text(out, "abc")
+        \\    byte_builder.append_text(mut out, "abc")
         \\    first = byte_builder.finish(out)
         \\    # The snapshot reads the buffer's own octets; the append that follows
         \\    # moves them into a private block, so `first` cannot change.
-        \\    byte_builder.append_text(out, "def")
+        \\    byte_builder.append_text(mut out, "def")
         \\    second = byte_builder.finish(out)
         \\    if first != b"abc" or len(first) != 3:
         \\        return 1
@@ -320,7 +320,7 @@ test "PY-BYTES-SNAPSHOT-1 a published snapshot survives the builder's later writ
         \\        return 2
         \\    # Appending an earlier snapshot back into its own builder reads the
         \\    # detached block, which the snapshot retains.
-        \\    byte_builder.append(out, first)
+        \\    byte_builder.append(mut out, first)
         \\    third = byte_builder.finish(out)
         \\    if third != b"abcdefabc":
         \\        return 3
@@ -333,9 +333,9 @@ test "PY-BYTES-SNAPSHOT-1 a published snapshot survives the builder's later writ
         \\    blank = byte_builder.finish(other)
         \\    if len(blank) != 0:
         \\        return 6
-        \\    if not byte_builder.reserve(other, 32):
+        \\    if not byte_builder.reserve(mut other, 32):
         \\        return 7
-        \\    if not byte_builder.append_byte(other, 90):
+        \\    if not byte_builder.append_byte(mut other, 90):
         \\        return 8
         \\    if blank != b"" or byte_builder.finish(other) != b"Z":
         \\        return 9
@@ -354,14 +354,14 @@ test "a snapshot taken under collection keeps its octets across later appends" {
         \\    out = byte_builder.create()
         \\    index = 0
         \\    while index < 64:
-        \\        byte_builder.append_text(out, "piece")
+        \\        byte_builder.append_text(mut out, "piece")
         \\        index += 1
         \\    published = byte_builder.finish(out)
         \\    if len(published) != 320:
         \\        return 1
         \\    index = 0
         \\    while index < 8:
-        \\        byte_builder.append_text(out, "tail")
+        \\        byte_builder.append_text(mut out, "tail")
         \\        index += 1
         \\    if len(published) != 320 or published[0] != 112 or published[319] != 101:
         \\        return 2

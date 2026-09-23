@@ -1,0 +1,1 @@
+{"o3-s-all": {"backend": "llvm", "opt": "3", "lto": false, "bounded": false, "manifest_from": "s-all"}}

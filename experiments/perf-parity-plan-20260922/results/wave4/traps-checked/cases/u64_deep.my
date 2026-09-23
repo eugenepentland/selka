@@ -1,0 +1,22 @@
+# an unsigned 64-bit add that overflows four frames deep, inside a loop
+
+
+def step(x: u64, y: u64) -> u64:
+    return x + y
+
+
+def accumulate(x: u64, n: int) -> u64:
+    total = x
+    for i in range(n):
+        total = step(total, 4611686018427387904u64)
+    return total
+
+
+def through(n: int) -> u64:
+    return accumulate(1u64, n)
+
+
+def main(out: Stream) -> int:
+    out.print(through(2))
+    out.print(through(5))
+    return 0

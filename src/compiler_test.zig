@@ -892,13 +892,13 @@ test "a class field write mutates the receiver in place without copying it" {
         \\    n: int
         \\
         \\
-        \\def bump(b: Box, v: int):
+        \\def bump(b: mut Box, v: int):
         \\    b.n = v
         \\
         \\
         \\def main() -> int:
         \\    box = Box(n=1)
-        \\    bump(box, 5)
+        \\    bump(mut box, 5)
         \\    return box.n
     ;
     var compilation = try language.Compilation.init(testing.allocator, "class_write.my", source);

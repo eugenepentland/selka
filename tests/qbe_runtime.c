@@ -88,7 +88,8 @@ int main(int argc, char **argv) {
     assert(myl_qbe_int_binary(&context, 19, 1, 64, (uint64_t)-7, 1) == (uint64_t)-4);
     assert(myl_qbe_int_cast(&context, 1, 1, 8, (uint64_t)-128) == (uint64_t)-128);
     assert(myl_qbe_int_neg(&context, 1, 8, 127) == (uint64_t)-127);
-    assert(myl_qbe_float_binary(&context, 29, 0, 0) == UINT64_C(0x7ff8000000000000));
+    /* FLOAT-NAN-OBSERVED-1: 0/0 is some NaN; its payload and sign are the hardware's. */
+    assert((myl_qbe_float_binary(&context, 29, 0, 0) & UINT64_C(0x7ff8000000000000)) == UINT64_C(0x7ff8000000000000));
     assert(myl_qbe_float_unary(&context, 10, (uint64_t)-1) == UINT64_C(0xbff0000000000000));
     assert(myl_qbe_float_unary(&context, 11, UINT64_C(0xbff8000000000000)) == (uint64_t)-1);
     return 0;

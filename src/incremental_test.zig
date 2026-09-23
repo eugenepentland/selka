@@ -259,12 +259,13 @@ test "effect-bound edits change the function interface hash" {
         \\module main
         \\
         \\
-        \\def touch() -> i64 effects(clock):
+        \\def touch(clock: Clock) -> i64 effects(clock):
+        \\    _ = clock
         \\    return 0
         \\
         \\
-        \\def main() -> i64:
-        \\    return touch()
+        \\def main(clock: Clock) -> i64:
+        \\    return touch(clock)
         },
     };
     const first = try describe(&entries, t.allocator);
@@ -278,17 +279,66 @@ test "effect-bound edits change the function interface hash" {
         \\module main
         \\
         \\
-        \\def touch() -> i64 effects(random):
+        \\def touch(entropy: Entropy) -> i64 effects(random):
+        \\    _ = entropy
         \\    return 0
         \\
         \\
-        \\def main() -> i64:
-        \\    return touch()
+        \\def main(entropy: Entropy) -> i64:
+        \\    return touch(entropy)
     ;
     const second = try describe(&entries, t.allocator);
     defer incremental.deinit(second, t.allocator);
     try t.expectEqualStrings(identity, declaration(second, "main", "touch").identity);
     try t.expect(!std.mem.eql(u8, interface, declaration(second, "main", "touch").interface_sha256.?));
+}
+
+// spec: DERIVED-EFFECTS-4
+test "an unannotated body edit inside the derived ceiling preserves the API fingerprint and still changes the body hash" {
+    // The published ceiling is what the parameter list implies, so it is already
+    // in the fingerprint's signature text. A body that starts allocating inside
+    // that ceiling therefore leaves the declaration interface -- and every
+    // caller's type check -- untouched.
+    const printing_body =
+        \\module main
+        \\
+        \\
+        \\public def emit(out: Stream) -> i64:
+        \\    out.print("x")
+        \\    return 0
+        \\
+        \\
+        \\def main(out: Stream) -> i64:
+        \\    return emit(out)
+    ;
+    const allocating_body =
+        \\module main
+        \\
+        \\
+        \\public def emit(out: Stream) -> i64:
+        \\    items: list[i64] = []
+        \\    items.append(1)
+        \\    out.print("x")
+        \\    return items[0]
+        \\
+        \\
+        \\def main(out: Stream) -> i64:
+        \\    return emit(out)
+    ;
+    var entries = [_]File{.{ .path = "main.my", .bytes = printing_body }};
+    const first = try describe(&entries, t.allocator);
+    defer incremental.deinit(first, t.allocator);
+    const first_interface = try t.allocator.dupe(u8, declaration(first, "main", "emit").interface_sha256.?);
+    defer t.allocator.free(first_interface);
+    const first_body = try t.allocator.dupe(u8, declaration(first, "main", "emit").body_sha256.?);
+    defer t.allocator.free(first_body);
+
+    entries[0].bytes = allocating_body;
+    const second = try describe(&entries, t.allocator);
+    defer incremental.deinit(second, t.allocator);
+    try t.expectEqualStrings(first_interface, declaration(second, "main", "emit").interface_sha256.?);
+    try t.expectEqualStrings(first.project_interface_sha256, second.project_interface_sha256);
+    try t.expect(!std.mem.eql(u8, first_body, declaration(second, "main", "emit").body_sha256.?));
 }
 
 // spec-case: EFFECT-CEILING-1
@@ -312,6 +362,7 @@ test "an exported body edit inside its declared ceiling preserves the API finger
         \\public def emit(out: Stream) -> i64 effects(output, managed_allocation):
         \\    items: list[i64] = []
         \\    items.append(1)
+        \\    out.print("x")
         \\    return items[0]
         \\
         \\
@@ -338,13 +389,13 @@ test "an exported body edit inside its declared ceiling preserves the API finger
     try t.expect(!std.mem.eql(u8, first_body, declaration(second, "main", "emit").body_sha256.?));
 }
 
-test "declared mutation positions and normalized clause spellings change function and project fingerprints" {
+test "declared mut positions change function and project fingerprints while write order does not" {
     const mutates_a =
         \\module main
         \\
         \\
-        \\public def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(a):
-        \\    pass
+        \\public def change(a: mut list[int], b: list[int]) -> None:
+        \\    a[0] = b[0]
         \\
         \\
         \\def main() -> int:
@@ -354,32 +405,33 @@ test "declared mutation positions and normalized clause spellings change functio
         \\module main
         \\
         \\
-        \\public def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(b):
-        \\    pass
+        \\public def change(a: list[int], b: mut list[int]) -> None:
+        \\    b[0] = a[0]
         \\
         \\
         \\def main() -> int:
         \\    return 0
     ;
-    const a_interface = try functionInterfaceHash(t.allocator, mutates_a, "change");
-    defer t.allocator.free(a_interface);
-    const b_interface = try functionInterfaceHash(t.allocator, mutates_b, "change");
-    defer t.allocator.free(b_interface);
-    const a_project = try projectInterfaceHash(t.allocator, mutates_a);
-    defer t.allocator.free(a_project);
-    const b_project = try projectInterfaceHash(t.allocator, mutates_b);
-    defer t.allocator.free(b_project);
-    try t.expect(!std.mem.eql(u8, a_interface, b_interface));
-    try t.expect(!std.mem.eql(u8, a_project, b_project));
+    const mutates_a_interface = try functionInterfaceHash(t.allocator, mutates_a, "change");
+    defer t.allocator.free(mutates_a_interface);
+    const mutates_b_interface = try functionInterfaceHash(t.allocator, mutates_b, "change");
+    defer t.allocator.free(mutates_b_interface);
+    const mutates_a_project = try projectInterfaceHash(t.allocator, mutates_a);
+    defer t.allocator.free(mutates_a_project);
+    const mutates_b_project = try projectInterfaceHash(t.allocator, mutates_b);
+    defer t.allocator.free(mutates_b_project);
+    try t.expect(!std.mem.eql(u8, mutates_a_interface, mutates_b_interface));
+    try t.expect(!std.mem.eql(u8, mutates_a_project, mutates_b_project));
 
-    // M1 requires sorted, duplicate-free positions: spelling order and repeated
-    // binders are not part of the contract identity.
+    // The footprint is the set of `mut` parameters, so the order the body
+    // writes them in is not part of the contract identity.
     const ordered =
         \\module main
         \\
         \\
-        \\public def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(a, b):
-        \\    pass
+        \\public def change(a: mut list[int], b: mut list[int]) -> None:
+        \\    a[0] = 1
+        \\    b[0] = 2
         \\
         \\
         \\def main() -> int:
@@ -389,8 +441,9 @@ test "declared mutation positions and normalized clause spellings change functio
         \\module main
         \\
         \\
-        \\public def change(a: list[int], b: list[int]) -> None effects(mutation) mutates(b, a, b):
-        \\    pass
+        \\public def change(a: mut list[int], b: mut list[int]) -> None:
+        \\    b[0] = 2
+        \\    a[0] = 1
         \\
         \\
         \\def main() -> int:
@@ -407,50 +460,16 @@ test "declared mutation positions and normalized clause spellings change functio
     try t.expectEqualStrings(ordered_interface, reordered_interface);
     try t.expectEqualStrings(ordered_project, reordered_project);
 
-    // Explicit `mutates()` normalizes exactly like omission: both are the empty
-    // footprint and neither contributes a clause region to the declaration hash.
-    const empty =
-        \\module main
-        \\
-        \\
-        \\public def change(a: list[int], b: list[int]) -> None effects(mutation) mutates():
-        \\    pass
-        \\
-        \\
-        \\def main() -> int:
-        \\    return 0
-    ;
-    const omitted =
-        \\module main
-        \\
-        \\
-        \\public def change(a: list[int], b: list[int]) -> None effects(mutation):
-        \\    pass
-        \\
-        \\
-        \\def main() -> int:
-        \\    return 0
-    ;
-    const empty_interface = try functionInterfaceHash(t.allocator, empty, "change");
-    defer t.allocator.free(empty_interface);
-    const omitted_interface = try functionInterfaceHash(t.allocator, omitted, "change");
-    defer t.allocator.free(omitted_interface);
-    const empty_project = try projectInterfaceHash(t.allocator, empty);
-    defer t.allocator.free(empty_project);
-    const omitted_project = try projectInterfaceHash(t.allocator, omitted);
-    defer t.allocator.free(omitted_project);
-    try t.expectEqualStrings(empty_interface, omitted_interface);
-    try t.expectEqualStrings(empty_project, omitted_project);
-
     // Generic templates use the AST declaration region because they do not have
-    // a checked ordinary-function body in the manifest. The clause must still
+    // a checked ordinary-function body in the manifest. The marker must still
     // participate there.
     const generic_a =
         \\module main
         \\
         \\
-        \\public def pick[T](value: T, a: list[int], b: list[int]) -> list[int] effects(mutation) mutates(a):
-        \\    return a
+        \\public def pick[T](value: T, a: mut list[int], b: list[int]) -> list[int]:
+        \\    a[0] = b[0]
+        \\    return b
         \\
         \\
         \\def main() -> int:
@@ -460,8 +479,9 @@ test "declared mutation positions and normalized clause spellings change functio
         \\module main
         \\
         \\
-        \\public def pick[T](value: T, a: list[int], b: list[int]) -> list[int] effects(mutation) mutates(b):
-        \\    return a
+        \\public def pick[T](value: T, a: list[int], b: mut list[int]) -> list[int]:
+        \\    b[0] = a[0]
+        \\    return b
         \\
         \\
         \\def main() -> int:
@@ -696,27 +716,31 @@ test "project interface follows exported constants and effect ceilings but not c
     defer incremental.deinit(c1, t.allocator);
     try t.expect(!std.mem.eql(u8, c0.project_interface_sha256, c1.project_interface_sha256));
 
+    // The ceiling is the signature's own, so a different capability parameter is
+    // what makes a different published ceiling -- and a different fingerprint.
     const effect_clock =
         \\module main
         \\
         \\
-        \\public def tick() -> i64 effects(clock):
+        \\public def tick(clock: Clock) -> i64 effects(clock):
+        \\    _ = clock
         \\    return 1
         \\
         \\
-        \\def main() -> i64:
-        \\    return tick()
+        \\def main(clock: Clock) -> i64:
+        \\    return tick(clock)
     ;
     const effect_random =
         \\module main
         \\
         \\
-        \\public def tick() -> i64 effects(random):
+        \\public def tick(entropy: Entropy) -> i64 effects(random):
+        \\    _ = entropy
         \\    return 1
         \\
         \\
-        \\def main() -> i64:
-        \\    return tick()
+        \\def main(entropy: Entropy) -> i64:
+        \\    return tick(entropy)
     ;
     var effects = [_]File{.{ .path = "main.my", .bytes = effect_clock }};
     const e0 = try describe(&effects, t.allocator);

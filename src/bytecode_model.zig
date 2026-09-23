@@ -15,6 +15,10 @@ pub const SwitchArm = struct { target: usize, slot: ?typed.LocalId };
 /// location entry is the call site. The emitter groups consecutive instructions
 /// sharing a callee and call site into one inline-frame record.
 pub const InlineOrigin = struct { callee: typed.FunctionId, callee_pc: usize, call_position: usize };
+/// An element read or replace: the receiver type, and whether a fixed array
+/// first counts a negative index back from its end (`PY-ARRAY-NEGATIVE-1`).
+/// Managed receivers normalize their own indices and ignore `from_end`.
+pub const Access = struct { ty: typed.Type, from_end: bool = false };
 /// Source-located operation in the checked instruction stream.
 pub const Instruction = struct {
     span: Span,
@@ -36,8 +40,8 @@ pub const Instruction = struct {
         make_record: struct { ty: typed.Type, fields: usize, order: []const usize = &.{} },
         update_record: struct { ty: typed.Type, indices: []const usize },
         get_field: usize,
-        get_index: typed.Type,
-        replace_index: typed.Type,
+        get_index: Access,
+        replace_index: Access,
         array_length: typed.Type,
         begin_arena: typed.LocalId,
         end_arena: typed.LocalId,
@@ -61,6 +65,10 @@ pub const Instruction = struct {
         move_local: typed.LocalId,
         drop_local: typed.LocalId,
         load_local: typed.LocalId,
+        /// Push the address of a local's own storage rather than its value: the
+        /// argument a `mut` fixed-array parameter receives, which the callee
+        /// writes the caller's array through.
+        ref_local: typed.LocalId,
         store_local: typed.LocalId,
         add_i64_checked,
         sub_i64_checked,

@@ -1,0 +1,99 @@
+module float_nan
+
+# FLOAT-NAN-OBSERVED-1 lets a NaN keep the payload and sign its operation gave
+# it. `negated` is the reliable non-canonical NaN: negation flips the sign bit
+# whatever the operand's payload, so it is `0xfff8...` (or another negative
+# NaN) and never the canonical `0x7ff8000000000000`. Each test drives it
+# through one family of observation points and requires the canonical answer.
+
+
+record Sample:
+    value: float
+    label: int
+
+
+union Reading:
+    missing,
+    measured: float
+
+
+def quotient(top: float, bottom: float) -> float:
+    return top / bottom
+
+
+def negated() -> float:
+    return -quotient(0.0, 0.0)
+
+
+# spec-case: FLOAT-NAN-OBSERVED-1
+public def test_a_payload_nan_propagates_and_compares_unordered() -> bool:
+    nan = negated()
+    if nan == nan or not (nan != nan):
+        return False
+    if nan < 1.0 or nan > 1.0 or nan <= nan or nan >= nan:
+        return False
+    total = nan * 2.0 + 1.0 - nan / 3.0
+    if total == total:
+        return False
+    root = sqrt(nan)
+    if root == root or abs(nan) == abs(nan) or floor(nan) == floor(nan):
+        return False
+    return -nan != -nan
+
+
+# spec: FLOAT-NAN-OBSERVED-2
+public def test_text_spells_every_nan_as_nan() -> bool:
+    nan = negated()
+    if str(nan) != "nan" or f"{nan}" != "nan" or f"<{-nan}>" != "<nan>":
+        return False
+    if str(sqrt(-1.0)) != "nan" or str(-sqrt(-1.0)) != "nan":
+        return False
+    empty: list[int] = []
+    buffer = byte_buffer(empty)
+    if not buffer.append_float(nan):
+        return False
+    if not buffer.append_float(-nan):
+        return False
+    return bytes(buffer) == b"nannan"
+
+
+# spec: FLOAT-NAN-OBSERVED-4
+public def test_aggregate_equality_compares_nans_as_numbers() -> bool:
+    nan = negated()
+    canonical = quotient(0.0, 0.0)
+    if [nan] == [canonical] or [nan] == [nan]:
+        return False
+    if Sample(value=nan, label=1) == Sample(value=canonical, label=1):
+        return False
+    left: [2]float = [nan, 1.0]
+    right: [2]float = [canonical, 1.0]
+    if left == right:
+        return False
+    some_nan: Option[float] = Some(nan)
+    some_canonical: Option[float] = Some(canonical)
+    if some_nan == some_canonical:
+        return False
+    if Reading.measured(nan) == Reading.measured(canonical):
+        return False
+    values: list[float] = [1.0, canonical]
+    if nan in values or canonical in values:
+        return False
+    return [1.0, 2.0] == [1.0, 2.0]
+
+
+# spec: FLOAT-NAN-OBSERVED-5
+public def test_sorting_places_every_nan_after_the_ordered_values() -> bool:
+    nan = negated()
+    canonical = quotient(0.0, 0.0)
+    values: list[float] = [nan, 2.0, canonical, -1.0, -nan, 0.5]
+    values.sort()
+    if values[0] != -1.0 or values[1] != 0.5 or values[2] != 2.0:
+        return False
+    if str(values[3]) != "nan" or str(values[4]) != "nan" or str(values[5]) != "nan":
+        return False
+    ordered = sorted([canonical, -3.0, nan])
+    return ordered[0] == -3.0 and ordered[1] != ordered[1] and ordered[2] != ordered[2]
+
+
+def main() -> int:
+    return 0

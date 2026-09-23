@@ -22,7 +22,7 @@ union RenderItem:
 
 # A class reached through any slot renders its own fields: every renderer is
 # handed the slot, and a class slot holds the body pointer, so the payload of a
-# union, an option, a record or class field, an array element, and a
+# union, an option, a record or class field, a tuple or an array element, and a
 # list or dictionary element all read the class body rather than the pointer.
 # spec: IO-13
 public def test_a_class_renders_its_fields_wherever_it_is_nested() -> bool:
@@ -38,6 +38,9 @@ public def test_a_class_renders_its_fields_wherever_it_is_nested() -> bool:
         return False
     items = [RenderItem.box(RenderBox(n=7)), RenderItem.empty]
     if f"{items}" != "[RenderItem.box(RenderBox(n=7)), RenderItem.empty]":
+        return False
+    pair: tuple[int, RenderBox] = (8, RenderBox(n=9))
+    if f"{pair}" != "(8, RenderBox(n=9))":
         return False
     fixed: [2]RenderBox = [RenderBox(n=10), RenderBox(n=11)]
     if f"{fixed}" != "[RenderBox(n=10), RenderBox(n=11)]":

@@ -17,17 +17,17 @@ class ReceiverPoint:
     x: i64
 
 
-def logged_receiver(log: list[i64], rows: list[ReceiverPoint]) -> list[ReceiverPoint] effects(mutation, managed_allocation) mutates(log):
+def logged_receiver(log: mut list[i64], rows: list[ReceiverPoint]) -> list[ReceiverPoint]:
     log.append(1)
     return rows
 
 
-def log_index(log: list[i64]) -> i64 effects(mutation, managed_allocation) mutates(log):
+def log_index(log: mut list[i64]) -> i64:
     log.append(2)
     return 0
 
 
-def emit_value(log: list[i64]) -> i64 effects(mutation, managed_allocation) mutates(log):
+def emit_value(log: mut list[i64]) -> i64:
     log.append(3)
     return 42
 
@@ -36,7 +36,7 @@ class Cell[T]:
     value: T
 
 
-def set_cell[T](cells: list[Cell[T]], value: T) effects(mutation) mutates(cells):
+def set_cell[T](cells: mut list[Cell[T]], value: T) effects(mutation):
     cells[0].value = value
 
 
@@ -45,7 +45,7 @@ class WritebackPoint:
     y: i64
 
 
-def writeback(rows: list[WritebackPoint]) -> i64 effects(mutation) mutates(rows):
+def writeback(rows: mut list[WritebackPoint]) -> i64 effects(mutation):
     rows[0].y = 2
     return 40
 
@@ -127,7 +127,7 @@ public def test_record_fields_update_values_and_list_slots_without_changing_prio
 public def test_field_receiver_index_and_right_side_run_once_in_order_under_collection_stress() -> bool:
     log: list[i64] = []
     rows = [ReceiverPoint(x=0)]
-    logged_receiver(log, rows)[log_index(log)].x = emit_value(log)
+    logged_receiver(mut log, rows)[log_index(mut log)].x = emit_value(mut log)
     if len(log) != 3:
         return False
     if log[0] != 3 or log[1] != 1 or log[2] != 2:
@@ -138,7 +138,7 @@ public def test_field_receiver_index_and_right_side_run_once_in_order_under_coll
 # spec: PY-COLLECTIONS-9
 public def test_generic_record_slot_updates_and_list_aliases_remain_copyable() -> bool:
     cells: list[Cell[i64]] = [Cell[i64](value=1)]
-    set_cell(cells, 42)
+    set_cell(mut cells, 42)
     return cells[0].value == 42
 
 
@@ -313,7 +313,7 @@ public def test_range_end_syntax_agrees_in_constant_and_runtime_evaluation() -> 
 # spec: PY-COLLECTIONS-13
 public def test_field_writeback_preserves_sibling_changes_made_by_its_right_hand_side() -> bool:
     rows = [WritebackPoint(x=0, y=0)]
-    rows[0].x = writeback(rows)
+    rows[0].x = writeback(mut rows)
     return rows[0].x + rows[0].y == 42
 
 

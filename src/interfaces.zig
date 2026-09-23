@@ -311,6 +311,13 @@ pub const Index = struct {
             if (array.index == .enum_type) try self.signatureType(module, array.index.enum_type);
             return self.signatureType(module, array.element);
         }
+        // A tuple is structural: its element spans are checked in place and the
+        // whole spelling names no declaration of its own.
+        for (syntax.types.expressions.tuples) |tuple| {
+            if (tuple.span.start != span.start or tuple.span.end != span.end) continue;
+            for (tuple.elements) |element| try self.signatureType(module, element);
+            return;
+        }
         const src = self.project.modules.items[module].src;
         if (typed.Type.fromName(src.text(span)) != null) return;
         if (!self.units[module].names.contains(src.text(span)) and prelude.scalar(src.text(span))) return;
@@ -335,6 +342,22 @@ pub const Index = struct {
         const tokens = try lexer.lex(allocator, src.text(span), &sink);
         const qualified = lexer.qualifiedName(src.text(span), tokens) orelse return error.InternalError;
         return self.resolve(.{ .from = module, .alias = qualified.alias, .name = qualified.name, .kind = .type, .owner = null, .span = span });
+    }
+    /// `typeIdentity` for a caller that recovers from an unresolved name.
+    ///
+    /// A signature names types the module index cannot resolve on purpose — a
+    /// type parameter, a builtin — and the effect and resource scans simply
+    /// skip those. `resolve` reports its refusal by recording a project
+    /// problem, which is a diagnostic the project owns, not this scan's; left
+    /// behind it makes the whole project read as failed to anything that asks
+    /// later. The lookup therefore restores whatever problem the project
+    /// already had.
+    fn optionalTypeIdentity(self: *Index, module: usize, span: source.Span) ?Identity {
+        const existing = self.project.problem;
+        return self.typeIdentity(module, span) catch {
+            self.project.problem = existing;
+            return null;
+        };
     }
     fn requirePublicType(self: *Index, module: usize, span: source.Span, id: Identity) diagnostic.Error!void {
         const symbol = self.units[id.module].symbols.items[id.symbol];
@@ -447,6 +470,11 @@ pub const Index = struct {
             if (array.span.start != span.start or array.span.end != span.end) continue;
             if (array.index == .enum_type) try self.genericSignatureType(module, array.index.enum_type, parameters);
             return self.genericSignatureType(module, array.element, parameters);
+        }
+        for (self.units[module].syntax.types.expressions.tuples) |tuple| {
+            if (tuple.span.start != span.start or tuple.span.end != span.end) continue;
+            for (tuple.elements) |element| try self.genericSignatureType(module, element, parameters);
+            return;
         }
         try self.signatureType(module, span);
     }
@@ -566,6 +594,79 @@ pub const Index = struct {
         }
         return output.toOwnedSlice();
     }
+    /// Effects one declaration's parameter list permits by construction. It is
+    /// read from the signature alone — resolved capability parameter types, the
+    /// `mut` markers, every callback parameter's declared ceiling, and the
+    /// effects an external resource type carries in the parameters or the
+    /// result — plus `managed_allocation`, which is always ambient. A checked
+    /// body may not exceed it, and an explicit `noalloc`/`noio`/`effects(...)`
+    /// clause only narrows it, so this is the ceiling the interface publishes for
+    /// a declaration whose body was never checked.
+    fn derivedCeiling(self: *Index, module: usize, signature: ast.FunctionSignature) ContractError!effect_set.Mask {
+        var mask = effect_set.bit(.managed_allocation);
+        mask |= try self.resourceTypeEffect(module, signature.return_type);
+        for (signature.parameters) |parameter| {
+            if (parameter.mut) mask |= effect_set.bit(.mutation);
+            mask |= try self.typeAuthority(module, parameter.ty, signature.type_parameters, 0);
+        }
+        return mask;
+    }
+
+    /// Authority one parameter type carries, read from the declaration alone: a
+    /// capability type permits its effect, a callback type the bounded ceiling it
+    /// declares, an external `resource` the family it belongs to, and a local
+    /// record whatever its own fields carry, so a record holding an
+    /// `Environment` publishes `environment` exactly as the capability does.
+    fn typeAuthority(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter, depth: usize) ContractError!effect_set.Mask {
+        if (depth == 32) return 0;
+        var mask: effect_set.Mask = 0;
+        const text = try self.contractTypeText(module, span, parameters);
+        if (capabilityEffect(text)) |effect| mask |= effect_set.bit(effect);
+        mask |= try self.resourceTypeEffect(module, span);
+        for (self.units[module].syntax.types.expressions.callbacks) |callback| {
+            if (callback.span.start != span.start or callback.span.end != span.end) continue;
+            // An omitted callback ceiling is the unbounded `all` mask, which
+            // declares nothing and therefore contributes nothing.
+            if (callback.effect_bound.allowed != effect_set.all) mask |= callback.effect_bound.allowed;
+        }
+        const identity = self.optionalTypeIdentity(module, span) orelse return mask;
+        const symbol = self.units[identity.module].symbols.items[identity.symbol];
+        for (self.units[identity.module].syntax.types.records) |record| {
+            if (record.type_parameters.len != 0) continue;
+            if (record.name.start != symbol.span.start or record.name.end != symbol.span.end) continue;
+            for (record.fields) |field| {
+                mask |= try self.typeAuthority(identity.module, field.ty, &.{}, depth + 1);
+            }
+        }
+        return mask;
+    }
+
+    /// The effect an external `resource NAME: kind` type carries when it appears
+    /// in a signature, or zero for every other type. Only a directly named
+    /// resource is read here; a resource nested inside a record is caught by the
+    /// checked program, which walks the whole record catalog.
+    fn resourceTypeEffect(self: *Index, module: usize, span: source.Span) ContractError!effect_set.Mask {
+        const identity = self.optionalTypeIdentity(module, span) orelse return 0;
+        const symbol = self.units[identity.module].symbols.items[identity.symbol];
+        const source_text = self.project.modules.items[identity.module].src;
+        for (self.units[identity.module].syntax.types.resources) |resource| {
+            if (resource.name.start != symbol.span.start or resource.name.end != symbol.span.end) continue;
+            const kind = source_text.text(resource.backing);
+            if (std.mem.eql(u8, kind, "filesystem")) return effect_set.bit(.filesystem);
+            if (std.mem.eql(u8, kind, "network")) return effect_set.bit(.network);
+        }
+        return 0;
+    }
+
+    /// Ceiling the interface publishes for one declaration: the derived set, and
+    /// the source's own clause when it narrows that set. A `host def`/`extern
+    /// def` has no body to derive from, so its clause is its ceiling as written.
+    fn effectiveCeiling(self: *Index, module: usize, function: ast.Function) ContractError!effect_set.Mask {
+        const declared = if (function.policy.effect_bound) |bound| bound.allowed else null;
+        if (function.policy.host != null or function.policy.c_abi) return declared orelse effect_set.all;
+        const derived = try self.derivedCeiling(module, function.signature);
+        return if (declared) |mask| mask & derived else derived;
+    }
     /// Render one exported function as `export function NAME def(...) effects(...)
     /// [analysis(STATUS)] [mutates(names)] [ceiling(...)] [tests(N)]
     /// [# first docstring line]`.
@@ -596,15 +697,15 @@ pub const Index = struct {
         }
         writer.writeAll(")") catch return error.OutOfMemory;
         if (inferred == null) writer.print(" analysis({s})", .{fact_status.name(unavailableAnalysis(self.program, function))}) catch return error.OutOfMemory;
-        const mutates = try self.mutatesNamesText(origin.module, function.signature);
-        if (mutates.len != 0) writer.print(" mutates({s})", .{mutates}) catch return error.OutOfMemory;
-        if (function.policy.effect_bound) |bound| {
-            writer.writeAll(" ceiling(") catch return error.OutOfMemory;
-            var ceiling: std.ArrayList(u8) = .empty;
-            try appendEffectNames(&ceiling, allocator, bound.allowed);
-            writer.writeAll(ceiling.items) catch return error.OutOfMemory;
-            writer.writeAll(")") catch return error.OutOfMemory;
-        }
+        // The ceiling is the signature's own contract: the derived set, narrowed
+        // by the source's clause when it wrote one. It is published for every
+        // declaration, checked body or not, because it follows from the
+        // parameters alone.
+        writer.writeAll(" ceiling(") catch return error.OutOfMemory;
+        var ceiling: std.ArrayList(u8) = .empty;
+        try appendEffectNames(&ceiling, allocator, try self.effectiveCeiling(origin.module, function));
+        writer.writeAll(ceiling.items) catch return error.OutOfMemory;
+        writer.writeAll(")") catch return error.OutOfMemory;
         if (tests) |index| {
             if (try self.programFunction(origin.module, origin.symbol.name)) |id| {
                 const answer = index.answer(id);
@@ -669,23 +770,6 @@ pub const Index = struct {
             .display = symbol.name,
         };
         return .{ .module = module, .symbol = symbol, .display = symbol.name };
-    }
-    /// Render one declared `mutates` footprint by source parameter name, falling
-    /// back to the numeric position only if the declaration is malformed.
-    fn mutatesNamesText(self: *Index, module: usize, signature: ast.FunctionSignature) ContractError![]const u8 {
-        if (signature.mutates.len == 0) return "";
-        const allocator = self.project.arena.allocator();
-        const src = self.project.modules.items[module].src;
-        var out: std.ArrayList(u8) = .empty;
-        for (signature.mutates, 0..) |position, index| {
-            if (index != 0) try out.appendSlice(allocator, ",");
-            if (position < signature.parameters.len) {
-                try out.appendSlice(allocator, src.text(signature.parameters[position].name));
-            } else {
-                try out.appendSlice(allocator, try std.fmt.allocPrint(allocator, "{d}", .{position}));
-            }
-        }
-        return out.toOwnedSlice(allocator);
     }
     /// Render exported declarations, plus the unexported `test_` declarations
     /// that already have the defaulting test shape, as a canonical
@@ -762,24 +846,16 @@ pub const Index = struct {
     }
     fn contractFunction(self: *Index, module: usize, symbol: Symbol) ContractError!ContractDeclaration {
         const function = self.findFunction(self.units[module], symbol.span) orelse return error.InternalError;
-        // An explicit `noalloc`/`noio`/`effects(...)` is an opt-in narrowing and
-        // is published exactly as declared. Without one, publish the ceiling the
-        // checker already inferred for the body; pure interface pre-validation
-        // falls back to the unbounded `all` mask, which is what an omitted
-        // ceiling promises.
-        //
-        // F1 keeps that fallback here rather than publishing an unknown token:
-        // the manifest is the directional declared bound a provider replaces
-        // (`interface-contracts-v2`, consumed by `native_test_contracts.zig`'s
-        // subset relation), and unannotated functions carry `origin=unknown` for
-        // the return origin they never checked. The interface listing and
-        // `index-project`, which do publish inferred summaries, report the
-        // unavailable case explicitly instead.
-        const mask = if (function.policy.effect_bound) |bound| bound.allowed else self.publishedEffects(module, symbol) orelse effect_set.all;
+        // The declared bound is the signature's own: the ceiling the parameter
+        // list implies, narrowed by an explicit `noalloc`/`noio`/`effects(...)`
+        // clause. A `host def`/`extern def` declares its authority directly.
+        // Pure interface pre-validation therefore has a real bound to publish
+        // instead of the unbounded `all` mask an omitted ceiling used to mean.
+        const mask = try self.effectiveCeiling(module, function);
         var out: ContractDeclaration = .{ .name = symbol.name, .kind = "function" };
         out.generics = try self.contractGenericsText(module, function.signature.type_parameters);
         out.signature = try self.contractSignatureText(module, function.signature);
-        out.permissions = try permissionsText(self.project.arena.allocator(), mask, function.signature.mutates, "unknown");
+        out.permissions = try permissionsText(self.project.arena.allocator(), mask, function.signature.mut_positions, "unknown");
         if (ast.hasAttribute(self.units[module].syntax, function.name, .@"test")) out.@"test" = true;
         return out;
     }
@@ -815,8 +891,11 @@ pub const Index = struct {
         try out.appendSlice(allocator, "def(");
         for (signature.parameters, 0..) |parameter, index| {
             if (index != 0) try out.appendSlice(allocator, ",");
+            // The bare `*` is part of the signature text: every parameter after
+            // it binds by name.
+            if (signature.keyword_only_from == index) try out.appendSlice(allocator, "*,");
             try out.appendSlice(allocator, src.text(parameter.name));
-            try out.appendSlice(allocator, ":");
+            try out.appendSlice(allocator, if (parameter.mut) ":mut " else ":");
             try out.appendSlice(allocator, try self.contractTypeText(module, parameter.ty, signature.type_parameters));
             if (parameter.default_value) |value| {
                 const span = self.units[module].syntax.nodes.items[@backingInt(value)].span;
@@ -1004,6 +1083,20 @@ pub const Index = struct {
         }
         return error.InternalError;
     }
+    /// Render one `tuple[T1, ..., Tn]` spelling as its canonical descriptor.
+    /// Element descriptors are already canonical, so a tuple renders as
+    /// `tuple[i64,str]` and the surface rewriter turns it into source spelling.
+    fn contractTupleText(self: *Index, module: usize, tuple: ast.TupleType, parameters: []const ast.TypeParameter, path: *std.ArrayList(Identity)) ContractError![]const u8 {
+        const allocator = self.project.arena.allocator();
+        var out: std.ArrayList(u8) = .empty;
+        try out.appendSlice(allocator, "tuple[");
+        for (tuple.elements, 0..) |element, index| {
+            if (index != 0) try out.appendSlice(allocator, ",");
+            try out.appendSlice(allocator, try self.contractTypeTextPath(module, element, parameters, path));
+        }
+        try out.appendSlice(allocator, "]");
+        return out.toOwnedSlice(allocator);
+    }
     fn contractTypeText(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter) ContractError![]const u8 {
         var path: std.ArrayList(Identity) = .empty;
         defer path.deinit(self.project.arena.allocator());
@@ -1026,6 +1119,7 @@ pub const Index = struct {
             try out.appendSlice(allocator, "def(");
             for (callback.parameters, 0..) |parameter, index| {
                 if (index != 0) try out.appendSlice(allocator, ",");
+                if (index < callback.mut_parameters.len and callback.mut_parameters[index]) try out.appendSlice(allocator, "mut ");
                 try out.appendSlice(allocator, try self.contractTypeTextPath(module, parameter, parameters, path));
             }
             try out.appendSlice(allocator, ")->");
@@ -1033,14 +1127,6 @@ pub const Index = struct {
             try out.appendSlice(allocator, " effects(");
             try appendEffectNames(&out, allocator, callback.effect_bound.allowed);
             try out.appendSlice(allocator, ")");
-            if (callback.mutates.len != 0) {
-                try out.appendSlice(allocator, " mutates(");
-                for (callback.mutates, 0..) |position, index| {
-                    if (index != 0) try out.appendSlice(allocator, ",");
-                    try out.appendSlice(allocator, try std.fmt.allocPrint(allocator, "{d}", .{position}));
-                }
-                try out.appendSlice(allocator, ")");
-            }
             return out.toOwnedSlice(allocator);
         }
         for (self.units[module].syntax.types.expressions.arrays) |array| {
@@ -1054,6 +1140,10 @@ pub const Index = struct {
             try out.appendSlice(allocator, "]");
             try out.appendSlice(allocator, try self.contractTypeTextPath(module, array.element, parameters, path));
             return out.toOwnedSlice(allocator);
+        }
+        for (self.units[module].syntax.types.expressions.tuples) |tuple| {
+            if (tuple.span.start != span.start or tuple.span.end != span.end) continue;
+            return self.contractTupleText(module, tuple, parameters, path);
         }
         if (typed.Type.fromName(text)) |builtin| return allocator.dupe(u8, prelude.reservedTypeName(builtin) orelse typed.typeName(builtin, &.{}));
         if (!self.units[module].names.contains(text)) {
@@ -1150,6 +1240,22 @@ fn moduleLess(_: void, a: ContractModule, b: ContractModule) bool {
 }
 fn tokenLess(_: void, a: []const u8, b: []const u8) bool {
     return std.mem.lessThan(u8, a, b);
+}
+/// The effect one canonical capability parameter descriptor permits, or null for
+/// a value type. The descriptors come from `contractTypeText`, which resolves
+/// aliases and prints capabilities under their reserved spellings.
+fn capabilityEffect(text: []const u8) ?effect_set.Effect {
+    const table = [_]struct { []const u8, effect_set.Effect }{
+        .{ "filesystem_cap", .filesystem },
+        .{ "network_cap", .network },
+        .{ "clock_cap", .clock },
+        .{ "random_cap", .random },
+        .{ "environment_cap", .environment },
+        .{ "stream_cap", .output },
+        .{ "host_cap", .host },
+    };
+    inline for (table) |entry| if (std.mem.eql(u8, text, entry[0])) return entry[1];
+    return null;
 }
 fn appendUniqueToken(allocator: std.mem.Allocator, list: *std.ArrayList([]const u8), token: []const u8) !void {
     for (list.items) |existing| if (std.mem.eql(u8, existing, token)) return;
@@ -1333,7 +1439,7 @@ fn moduleSyntax(project: *graph.Project, module_id: usize, cache: ?*SyntaxCache,
 }
 fn parseModule(project: *graph.Project, module_id: usize, sink: *diagnostic.Sink) diagnostic.Error!ast.Program {
     const module = project.modules.items[module_id];
-    const tokens = try lexer.lexWithMarkers(project.arena.allocator(), module.src.bytes, module.src.mutation_markers, sink);
+    const tokens = try lexer.lex(project.arena.allocator(), module.src.bytes, sink);
     var parse: parser.Parser = .{ .src = module.src, .arena = &project.arena, .tokens = tokens, .sink = sink };
     return parse.parseModule();
 }

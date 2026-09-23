@@ -8,6 +8,15 @@ const neg_instruction = " %v{d} =l neg %v{d}\n";
 const signed_negative = " %v{d} =l csltl %v{d}, 0\n";
 const low_word_mask = " %v{d} =l and %v{d}, 4294967295\n";
 const high_word_shift = " %v{d} =l shr %v{d}, 32\n";
+/// TRAP-UNSIGNED-1: the bit `MYL_QBE_UNSIGNED_OPERANDS` in src/qbe_runtime.h.
+/// A cold trap call ORs it into its width (overflow, cast) or operation
+/// (division) argument when the captured operands are unsigned, so the
+/// runtime renders them unsigned; a signed site passes the plain value.
+pub const unsigned_operands: u64 = 0x100;
+/// The width argument of an overflow or cast trap for `bits` of the given signedness.
+fn trapWidth(bits: u16, signed: bool) u64 {
+    return if (signed) bits else bits | unsigned_operands;
+}
 /// Operands and destination of one lowered scalar instruction.
 const Operands = struct { left: usize, right: usize, result: usize };
 const typed = @import("typed.zig");
@@ -53,7 +62,10 @@ pub fn Lower(comptime E: type) type {
             const operand = try self.load("s", height - 1);
             const source = extremes(from);
             const target = extremes(to);
-            if (source.min >= target.min and source.max <= target.max) {
+            // QBE-UNCHECKED-1: an unchecked build narrows exactly as one whose
+            // source range already fits — the operand travels on untouched —
+            // so the two range compares and the cold `myl_qbe_fail_cast` go.
+            if (!self.checks or (source.min >= target.min and source.max <= target.max)) {
                 try self.store(height - 1, operand);
                 return;
             }
@@ -73,7 +85,8 @@ pub fn Lower(comptime E: type) type {
                 } else overflow = high;
             }
             const label = self.temp();
-            try self.print(" jnz %v{d}, @cast_overflow{d}, @cast_ok{d}\n@cast_overflow{d}\n call $myl_qbe_fail_cast(l %ctx, l %v{d}, l {d})\n jmp @failure\n@cast_ok{d}\n", .{ overflow.?, label, label, label, operand, to.bits, label });
+            const width = trapWidth(to.bits, from.signed);
+            try self.print(" jnz %v{d}, @cast_overflow{d}, @cast_ok{d}\n@cast_overflow{d}\n call $myl_qbe_fail_cast(l %ctx, l %v{d}, l {d})\n jmp @failure\n@cast_ok{d}\n", .{ overflow.?, label, label, label, operand, width, label });
             try self.store(height - 1, operand);
         }
         /// Lower scalar arithmetic with explicit overflow and canonical binary64 results.
@@ -113,6 +126,9 @@ pub fn Lower(comptime E: type) type {
             const result = self.temp();
             const flag = self.temp();
             try self.print(neg_instruction, .{ result, operand });
+            // QBE-UNCHECKED-1: the negate is the whole operation; only the test
+            // for the one value that cannot be negated is dropped.
+            if (!self.checks) return self.store(height - 1, result);
             const minimum: i64 = if (info.signed) @intCast(-(@as(i128, 1) << @intCast(info.bits - 1))) else 0;
             try self.print(immediate_instruction, .{ flag, if (info.signed) "ceql" else "cnel", operand, minimum });
             try self.print(" jnz %v{d}, @neg_overflow{d}, @neg_checked{d}\n@neg_overflow{d}\n", .{ flag, result, result, result });
@@ -136,19 +152,13 @@ pub fn Lower(comptime E: type) type {
             if (op == .f64_eq or op == .f64_lt or op == .f64_le) {
                 try self.print(binary_instruction, .{ values.result, instruction, left, right });
             } else {
-                // The result is canonicalized only when the operation produced a
-                // NaN, and the canonical bits arrive through an out-of-line call.
-                // A call cannot be speculated, so the finite result stays on the
-                // fall-through path: one compare and one predicted branch beside
-                // the arithmetic, instead of a select that depends on it.
+                // FLOAT-NAN-OBSERVED-1: the IEEE result is the whole operation. A
+                // NaN keeps whatever payload and sign the hardware gave it; it is
+                // canonicalized only where its bits can be observed, so the
+                // operation carries no compare, branch or call beside it.
                 const value = self.temp();
-                const nan = self.temp();
-                const canonical = self.temp();
-                const raw = self.temp();
                 try self.print(" %v{d} =d {s} %v{d}, %v{d}\n", .{ value, instruction, left, right });
-                try self.print(" %v{d} =l cuod %v{d}, %v{d}\n jnz %v{d}, @nan{d}, @finite{d}\n", .{ nan, value, value, nan, value, value });
-                try self.print("@nan{d}\n %v{d} =l call $myl_qbe_float_canonical(l %ctx)\n jmp @float{d}\n@finite{d}\n %v{d} =l cast %v{d}\n jmp @float{d}\n", .{ value, canonical, value, value, raw, value, value });
-                try self.print("@float{d}\n %v{d} =l phi @nan{d} %v{d}, @finite{d} %v{d}\n", .{ value, values.result, value, canonical, value, raw });
+                try self.print(" %v{d} =l cast %v{d}\n", .{ values.result, value });
             }
         }
     };
@@ -175,7 +185,7 @@ fn constantAddSub(comptime E: type, self: *E, op: typed.BinaryOp, literal: i64, 
     const bound = overflowBound(op, literal);
     const flag = self.temp();
     try self.print(immediate_instruction, .{ flag, if (bound.upward) "csgtl" else "csltl", values.left, bound.limit });
-    try overflowTrap(E, self, op, values, 64, flag);
+    try overflowTrap(E, self, op, values, trapWidth(64, true), flag);
 }
 
 fn checkedAddSub(comptime E: type, self: *E, op: typed.BinaryOp, signed: bool, bits: u16, values: Operands) Error!void {
@@ -183,6 +193,10 @@ fn checkedAddSub(comptime E: type, self: *E, op: typed.BinaryOp, signed: bool, b
     const right = values.right;
     const result = values.result;
     try self.print(binary_instruction, .{ result, if (op == .add) "add" else "sub", left, right });
+    // QBE-UNCHECKED-1: the sum is the whole operation. A narrower width relies
+    // on operands already inside its range, exactly as the checked lowering
+    // does on the path where the range test passes, so nothing is normalized.
+    if (!self.checks) return;
     if (bits == 64 and signed) if (self.pushedLiteral(self.pc)) |literal| {
         try constantAddSub(E, self, op, literal, values);
         return;
@@ -206,13 +220,13 @@ fn checkedAddSub(comptime E: type, self: *E, op: typed.BinaryOp, signed: bool, b
     }
     try self.print(" jnz %v{d}, @overflow{d}, @checked{d}\n@overflow{d}\n", .{ overflow, result, result, result });
     // Capture the already-evaluated operands and width for the sticky trap detail.
-    try self.print(" call $myl_qbe_fail_overflow_op(l %ctx, l {d}, l %v{d}, l %v{d}, l {d})\n jmp @failure\n@checked{d}\n", .{ @backingInt(op), left, right, bits, result });
+    try self.print(" call $myl_qbe_fail_overflow_op(l %ctx, l {d}, l %v{d}, l %v{d}, l {d})\n jmp @failure\n@checked{d}\n", .{ @backingInt(op), left, right, trapWidth(bits, signed), result });
 }
 
 /// Emit the cold branch that reports one checked-operation overflow.
-fn overflowTrap(comptime E: type, self: *E, op: typed.BinaryOp, values: Operands, bits: u16, flag: usize) Error!void {
+fn overflowTrap(comptime E: type, self: *E, op: typed.BinaryOp, values: Operands, width: u64, flag: usize) Error!void {
     try self.print(" jnz %v{d}, @overflow{d}, @checked{d}\n@overflow{d}\n", .{ flag, values.result, values.result, values.result });
-    try self.print(" call $myl_qbe_fail_overflow_op(l %ctx, l {d}, l %v{d}, l %v{d}, l {d})\n jmp @failure\n@checked{d}\n", .{ @backingInt(op), values.left, values.right, bits, values.result });
+    try self.print(" call $myl_qbe_fail_overflow_op(l %ctx, l {d}, l %v{d}, l %v{d}, l {d})\n jmp @failure\n@checked{d}\n", .{ @backingInt(op), values.left, values.right, width, values.result });
 }
 /// Compare a 64-bit result against the width's mathematical range.
 fn rangeCheck(comptime E: type, self: *E, op: typed.BinaryOp, info: typed.Type.Integer, values: Operands) Error!void {
@@ -228,7 +242,7 @@ fn rangeCheck(comptime E: type, self: *E, op: typed.BinaryOp, info: typed.Type.I
         try self.print(or_instruction, .{ both, low, high });
         flag = both;
     }
-    try overflowTrap(E, self, op, values, info.bits, flag);
+    try overflowTrap(E, self, op, values, trapWidth(info.bits, info.signed), flag);
 }
 /// The unsigned high 64 bits of a 64x64 product, from four 32-bit limbs.
 fn unsignedHigh(comptime E: type, self: *E, left: usize, right: usize) Error!usize {
@@ -269,12 +283,15 @@ fn unsignedHigh(comptime E: type, self: *E, left: usize, right: usize) Error!usi
 /// Lower checked multiplication; only 64-bit needs a true 128-bit test.
 fn checkedMul(comptime E: type, self: *E, op: typed.BinaryOp, info: typed.Type.Integer, values: Operands) Error!void {
     try self.print(binary_instruction, .{ values.result, "mul", values.left, values.right });
+    // QBE-UNCHECKED-1: the product is the whole operation; the width test and,
+    // at 64 bits, the four-limb high half that feeds it are both dropped.
+    if (!self.checks) return;
     if (info.bits < 64) return rangeCheck(E, self, op, info, values);
     const high = try unsignedHigh(E, self, values.left, values.right);
     if (!info.signed) {
         const flag = self.temp();
         try self.print(immediate_instruction, .{ flag, "cnel", high, 0 });
-        return overflowTrap(E, self, op, values, info.bits, flag);
+        return overflowTrap(E, self, op, values, trapWidth(info.bits, info.signed), flag);
     }
     const left_negative = self.temp();
     const right_negative = self.temp();
@@ -295,14 +312,21 @@ fn checkedMul(comptime E: type, self: *E, op: typed.BinaryOp, info: typed.Type.I
     try self.print(binary_instruction, .{ adjusted, "sub", adjusted, right_term });
     try self.print(" %v{d} =l sar %v{d}, 63\n", .{ sign, values.result });
     try self.print(binary_instruction, .{ flag, "cnel", adjusted, sign });
-    try overflowTrap(E, self, op, values, info.bits, flag);
+    try overflowTrap(E, self, op, values, trapWidth(info.bits, info.signed), flag);
 }
 /// Lower truncating or flooring division and remainder with exact traps.
+///
+/// QBE-UNCHECKED-1 keeps both tests here even in an unchecked build. A zero
+/// divisor and a signed `MIN // -1` both fault the hardware divider, so
+/// dropping them would turn a reported trap into SIGFPE rather than into the
+/// fast path an unchecked build is asking for; they are four static sites in
+/// the schematic render and cost nothing measurable.
 fn checkedDivRem(comptime E: type, self: *E, op: typed.BinaryOp, info: typed.Type.Integer, values: Operands) Error!void {
     const zero = self.temp();
     try self.print(" %v{d} =l ceql %v{d}, 0\n", .{ zero, values.right });
     try self.print(" jnz %v{d}, @division{d}, @nonzero{d}\n@division{d}\n", .{ zero, values.result, values.result, values.result });
-    try self.print(" call $myl_qbe_fail_division(l %ctx, l {d}, l %v{d}, l %v{d})\n jmp @failure\n@nonzero{d}\n", .{ @backingInt(op), values.left, values.right, values.result });
+    const operation: u64 = if (info.signed) @backingInt(op) else @backingInt(op) | unsigned_operands;
+    try self.print(" call $myl_qbe_fail_division(l %ctx, l {d}, l %v{d}, l %v{d})\n jmp @failure\n@nonzero{d}\n", .{ operation, values.left, values.right, values.result });
     const quotient = op == .div or op == .floor_div;
     const floored = op == .floor_div or op == .floor_rem;
     var divisor = values.right;
@@ -315,7 +339,7 @@ fn checkedDivRem(comptime E: type, self: *E, op: typed.BinaryOp, info: typed.Typ
         try self.print(" %v{d} =l ceql %v{d}, -1\n", .{ right_neg, values.right });
         try self.print(and_instruction, .{ guard, left_min, right_neg });
         if (quotient) {
-            try overflowTrap(E, self, op, values, info.bits, guard);
+            try overflowTrap(E, self, op, values, trapWidth(info.bits, info.signed), guard);
         } else {
             // `MIN % -1` is zero but faults x86 division, so swap in one.
             const mask = self.temp();

@@ -3,7 +3,7 @@ def lookup(env: Environment) -> Option[str] effects(environment):
     return env.get("K")
 
 
-def main(env: Environment) -> int noio:
+def main(env: Environment) -> int:
     match lookup(env):
         case Some(value):
             return len(value)

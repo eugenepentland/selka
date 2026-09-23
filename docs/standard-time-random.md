@@ -72,20 +72,20 @@ import random
 
 def main() -> int:
     first = random.seeded(0)
-    if random.next_word(first) != 16294208416658607535u64:
+    if random.next_word(mut first) != 16294208416658607535u64:
         return 1
-    if random.next_word(first) != 7960286522194355700u64:
+    if random.next_word(mut first) != 7960286522194355700u64:
         return 2
     replay = random.seeded(0)
-    if random.next_word(replay) != 16294208416658607535u64:
+    if random.next_word(mut replay) != 16294208416658607535u64:
         return 3
     alias = replay
-    if random.next_word(alias) != 7960286522194355700u64:
+    if random.next_word(mut alias) != 7960286522194355700u64:
         return 4
     fresh = random.seeded(0)
-    _ = random.next_word(fresh)
-    _ = random.next_word(fresh)
-    if random.next_word(replay) != random.next_word(fresh):
+    _ = random.next_word(mut fresh)
+    _ = random.next_word(mut fresh)
+    if random.next_word(mut replay) != random.next_word(mut fresh):
         return 5
     return sampled()
 
@@ -95,7 +95,7 @@ def sampled() -> int:
     highest = 42
     index = 0
     while index < 200:
-        match random.randint(generator, 42, 43):
+        match random.randint(mut generator, 42, 43):
             case Ok(value):
                 if value < lowest:
                     lowest = value

@@ -1,0 +1,35 @@
+# sort_records_keyed: sort_records through Python's in-place keyed sort,
+# records.sort(key=lambda r: r.key), instead of the sort module's
+# sort_by_key. Same data, same stable order, same output; the list is sorted in
+# place, so no second list of records exists (plan §5.5, wave 3).
+
+
+record Rec:
+    key: int
+    id: int
+
+
+def xorshift(x: u64) -> u64:
+    x = bit_xor(x, shift_left(x, 13u64))
+    x = bit_xor(x, shift_right(x, 7u64))
+    return bit_xor(x, shift_left(x, 17u64))
+
+
+def mix(c: int, v: int) -> int:
+    return (c * 31 + v) % 1000000007
+
+
+def main(out: Stream) -> int:
+    n = 1000000
+    state = 88172645463325252u64
+    records: list[Rec] = []
+    for i in range(n):
+        state = xorshift(state)
+        records.append(Rec(key=int(shift_right(state, 33u64)) % 100000, id=i))
+    records.sort(key=lambda r: r.key)
+    out.print(records[0].key, records[n - 1].key)
+    c = 0
+    for r in records:
+        c = mix(c, r.id)
+    out.print(c)
+    return 0

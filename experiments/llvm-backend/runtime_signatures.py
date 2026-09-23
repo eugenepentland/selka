@@ -12,9 +12,14 @@ I64 = "i64"
 I32 = "i32"
 V = "void"
 
-# This getter only computes the address of the context's embedded heap. It
-# neither reads nor writes the context. Keep attributes narrowly proven rather
-# than inferring memory effects from language-level `noalloc` declarations.
+# Keep attributes narrowly proven rather than inferring memory effects from
+# language-level `noalloc` declarations.
+#
+# - `myl_qbe_heap` only computes the address of the context's embedded heap. It
+#   neither reads nor writes the context.
+#
+# The `myl_qbe_fail_*` helpers are handled in llvm_emit.declaration_attributes:
+# `cold` everywhere, `noreturn` only where the unit ends each call in `hlt`.
 ATTRIBUTES = {"myl_qbe_heap": "memory(none) nounwind willreturn"}
 
 SIGNATURES = {
@@ -62,7 +67,6 @@ SIGNATURES = {
     "myl_qbe_fail_step": ((P,), V),
     "myl_qbe_fail_text_bounds_detail": ((P, I64, I64), V),
     "myl_qbe_file_access": ((P, I64, I32, P, P, P), I32),
-    "myl_qbe_float_canonical": ((P,), I64),
     "myl_qbe_float_unary": ((P, I64, I64), I64),
     "myl_qbe_frame_allocate": ((P, I64), P),
     "myl_qbe_frame_release": ((P, P), V),

@@ -16,7 +16,12 @@ pub const OptionShape = struct { element: typed.Type, some: usize, none: usize }
 /// Recognize optional values without conflating them with checked errors.
 pub fn optionShape(ty: typed.Type, records: []const typed.Record) ?OptionShape {
     if (!ty.isAggregate()) return null;
-    const variants = records[ty.recordIndex()].shape.variants orelse return null;
+    return optionCases(records[ty.recordIndex()].shape.variants orelse return null);
+}
+
+/// The some/none shape of one variant schema, or null when it is not an
+/// optional value. Layout reads this directly, before any type identity exists.
+pub fn optionCases(variants: typed.Variants) ?OptionShape {
     if (!variants.is_union or variants.fallible or variants.cases.len != 2) return null;
     var result: OptionShape = undefined;
     var found: u2 = 0;

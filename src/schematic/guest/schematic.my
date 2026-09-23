@@ -13,7 +13,7 @@ public record Schematic:
     connections: list[ports.Port]
 
 
-public def build(host: Host, nodes: list[sexpr.Node], pinout: list[sexpr.Node], interface: list[sexpr.Node]) -> Result[Schematic, int] effects(host, managed_allocation):
+public def build(host: Host, nodes: list[sexpr.Node], pinout: list[sexpr.Node], interface: list[sexpr.Node]) -> Result[Schematic, int]:
     source_error = validate.source(host, nodes)
     if source_error != 0:
         return Err(source_error)
@@ -25,7 +25,7 @@ public def build(host: Host, nodes: list[sexpr.Node], pinout: list[sexpr.Node], 
     model_error = validate.model(host, nodes, parts, pins, pinout)
     if model_error != 0:
         return Err(model_error)
-    circuit.normalize(host, parts, pins)
+    circuit.normalize(mut parts, mut pins)
     connections = ports.collect(host, nodes, interface)?
     ports_error = ports.validate(host, connections, pins)
     if ports_error != 0:

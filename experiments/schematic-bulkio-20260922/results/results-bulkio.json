@@ -1,0 +1,838 @@
+{
+ "cpu": 10,
+ "rounds": 31,
+ "warmups": 3,
+ "seed": 20260922,
+ "reference": "zig-o3",
+ "arms": {
+  "zig-o3": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/zig-o3",
+   "kind": "native"
+  },
+  "rust-o3": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/rust-o3",
+   "kind": "native"
+  },
+  "before-gc-lto": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/perf-audit-20260922/arms/gc-lto",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::write_block,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  },
+  "after-gc-lto": {
+   "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-ace808d4899b6a8ab/.tmp/audit/arms/gc-lto",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  }
+ },
+ "hashes": {
+  "fixture": {
+   "zig-o3": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "rust-o3": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "before-gc-lto": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "after-gc-lto": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388"
+  },
+  "changed-net": {
+   "zig-o3": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "rust-o3": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "before-gc-lto": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "after-gc-lto": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90"
+  },
+  "changed-value": {
+   "zig-o3": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "rust-o3": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "before-gc-lto": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "after-gc-lto": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+  }
+ },
+ "summary": {
+  "fixture": {
+   "median_ms": {
+    "zig-o3": 1.238622,
+    "rust-o3": 1.399333,
+    "before-gc-lto": 2.334244,
+    "after-gc-lto": 2.331851
+   },
+   "p10_p90": {
+    "zig-o3": [
+     1.103905,
+     1.399509
+    ],
+    "rust-o3": [
+     1.237214,
+     1.591676
+    ],
+    "before-gc-lto": [
+     2.17444,
+     2.83561
+    ],
+    "after-gc-lto": [
+     2.137491,
+     2.778065
+    ]
+   },
+   "min_ms": {
+    "zig-o3": 1.019314,
+    "rust-o3": 1.176444,
+    "before-gc-lto": 2.111089,
+    "after-gc-lto": 2.103737
+   },
+   "ratio_to_zig-o3": {
+    "rust-o3": {
+     "ratio": 1.129749834897168,
+     "ci95": [
+      1.084373553828746,
+      1.1872094442672463
+     ]
+    },
+    "before-gc-lto": {
+     "ratio": 1.8845491199090605,
+     "ci95": [
+      1.8366123951088569,
+      2.0076238896003815
+     ]
+    },
+    "after-gc-lto": {
+     "ratio": 1.8826171342023637,
+     "ci95": [
+      1.8269965729406,
+      2.0257425208452045
+     ]
+    }
+   }
+  },
+  "changed-net": {
+   "median_ms": {
+    "zig-o3": 1.282684,
+    "rust-o3": 1.360679,
+    "before-gc-lto": 2.444205,
+    "after-gc-lto": 2.387177
+   },
+   "p10_p90": {
+    "zig-o3": [
+     1.073423,
+     1.464158
+    ],
+    "rust-o3": [
+     1.235104,
+     1.606294
+    ],
+    "before-gc-lto": [
+     2.20418,
+     3.199511
+    ],
+    "after-gc-lto": [
+     2.18809,
+     2.779408
+    ]
+   },
+   "min_ms": {
+    "zig-o3": 1.009551,
+    "rust-o3": 1.206656,
+    "before-gc-lto": 2.092783,
+    "after-gc-lto": 2.126408
+   },
+   "ratio_to_zig-o3": {
+    "rust-o3": {
+     "ratio": 1.0608060909779806,
+     "ci95": [
+      1.0275852820617764,
+      1.1672990836154407
+     ]
+    },
+    "before-gc-lto": {
+     "ratio": 1.9055394781567403,
+     "ci95": [
+      1.8408310752364978,
+      2.048417031369406
+     ]
+    },
+    "after-gc-lto": {
+     "ratio": 1.8610795800056756,
+     "ci95": [
+      1.8113159593477428,
+      1.996889577402901
+     ]
+    }
+   }
+  },
+  "changed-value": {
+   "median_ms": {
+    "zig-o3": 1.284964,
+    "rust-o3": 1.385856,
+    "before-gc-lto": 2.373103,
+    "after-gc-lto": 2.351081
+   },
+   "p10_p90": {
+    "zig-o3": [
+     1.102146,
+     1.427438
+    ],
+    "rust-o3": [
+     1.234725,
+     1.621594
+    ],
+    "before-gc-lto": [
+     2.136454,
+     2.959068
+    ],
+    "after-gc-lto": [
+     2.107336,
+     2.804841
+    ]
+   },
+   "min_ms": {
+    "zig-o3": 1.057403,
+    "rust-o3": 1.18036,
+    "before-gc-lto": 2.096164,
+    "after-gc-lto": 2.086561
+   },
+   "ratio_to_zig-o3": {
+    "rust-o3": {
+     "ratio": 1.0785173748058312,
+     "ci95": [
+      1.0244170712524319,
+      1.1221010437543923
+     ]
+    },
+    "before-gc-lto": {
+     "ratio": 1.846824502476334,
+     "ci95": [
+      1.7529826496277416,
+      2.0114901533172653
+     ]
+    },
+    "after-gc-lto": {
+     "ratio": 1.8296862791486768,
+     "ci95": [
+      1.7379060395143788,
+      1.9334232479706914
+     ]
+    }
+   }
+  }
+ },
+ "rows": [
+  {
+   "fixture": {
+    "after-gc-lto": 2.281101,
+    "zig-o3": 1.238622,
+    "rust-o3": 1.422362,
+    "before-gc-lto": 2.334244
+   },
+   "changed-net": {
+    "zig-o3": 1.279224,
+    "after-gc-lto": 2.303024,
+    "before-gc-lto": 2.314108,
+    "rust-o3": 1.606294
+   },
+   "changed-value": {
+    "after-gc-lto": 2.421022,
+    "rust-o3": 1.385856,
+    "zig-o3": 1.272916,
+    "before-gc-lto": 2.342303
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 1.41829,
+    "before-gc-lto": 2.396989,
+    "zig-o3": 1.251952,
+    "after-gc-lto": 2.382793
+   },
+   "changed-net": {
+    "before-gc-lto": 2.443646,
+    "rust-o3": 1.320723,
+    "after-gc-lto": 2.323346,
+    "zig-o3": 1.282684
+   },
+   "changed-value": {
+    "rust-o3": 1.288908,
+    "zig-o3": 1.229408,
+    "before-gc-lto": 2.371477,
+    "after-gc-lto": 2.30234
+   }
+  },
+  {
+   "fixture": {
+    "before-gc-lto": 3.372101,
+    "zig-o3": 1.129877,
+    "rust-o3": 1.240947,
+    "after-gc-lto": 2.287495
+   },
+   "changed-net": {
+    "before-gc-lto": 2.406986,
+    "after-gc-lto": 2.397407,
+    "zig-o3": 1.131476,
+    "rust-o3": 1.348361
+   },
+   "changed-value": {
+    "rust-o3": 1.497082,
+    "after-gc-lto": 2.29965,
+    "zig-o3": 1.365367,
+    "before-gc-lto": 2.288245
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 1.378322,
+    "after-gc-lto": 2.250718,
+    "before-gc-lto": 2.35385,
+    "zig-o3": 1.253204
+   },
+   "changed-net": {
+    "before-gc-lto": 2.225768,
+    "zig-o3": 1.26964,
+    "rust-o3": 1.414035,
+    "after-gc-lto": 2.590837
+   },
+   "changed-value": {
+    "zig-o3": 1.320685,
+    "after-gc-lto": 2.345957,
+    "before-gc-lto": 2.533392,
+    "rust-o3": 1.354039
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.091139,
+    "before-gc-lto": 2.266204,
+    "rust-o3": 1.176444,
+    "after-gc-lto": 2.241583
+   },
+   "changed-net": {
+    "after-gc-lto": 2.2713,
+    "rust-o3": 1.32473,
+    "before-gc-lto": 3.288802,
+    "zig-o3": 1.096219
+   },
+   "changed-value": {
+    "rust-o3": 1.490218,
+    "zig-o3": 1.284964,
+    "after-gc-lto": 2.139353,
+    "before-gc-lto": 2.602614
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 1.349845,
+    "before-gc-lto": 2.17444,
+    "after-gc-lto": 2.217387,
+    "zig-o3": 1.111519
+   },
+   "changed-net": {
+    "after-gc-lto": 2.156649,
+    "rust-o3": 1.235104,
+    "before-gc-lto": 2.092783,
+    "zig-o3": 1.073423
+   },
+   "changed-value": {
+    "rust-o3": 1.276626,
+    "zig-o3": 1.102146,
+    "before-gc-lto": 2.123879,
+    "after-gc-lto": 2.102005
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 1.185072,
+    "zig-o3": 1.118196,
+    "before-gc-lto": 2.182801,
+    "after-gc-lto": 2.103737
+   },
+   "changed-net": {
+    "before-gc-lto": 3.314844,
+    "rust-o3": 1.532859,
+    "after-gc-lto": 2.30863,
+    "zig-o3": 1.116168
+   },
+   "changed-value": {
+    "after-gc-lto": 2.090299,
+    "rust-o3": 1.37952,
+    "zig-o3": 1.147079,
+    "before-gc-lto": 2.289902
+   }
+  },
+  {
+   "fixture": {
+    "before-gc-lto": 2.181182,
+    "rust-o3": 1.240876,
+    "after-gc-lto": 2.331851,
+    "zig-o3": 1.186364
+   },
+   "changed-net": {
+    "rust-o3": 1.223395,
+    "before-gc-lto": 2.527173,
+    "zig-o3": 1.208454,
+    "after-gc-lto": 2.479138
+   },
+   "changed-value": {
+    "rust-o3": 1.278428,
+    "after-gc-lto": 2.328657,
+    "zig-o3": 1.224662,
+    "before-gc-lto": 2.562812
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 1.4238,
+    "zig-o3": 1.248523,
+    "after-gc-lto": 2.774337,
+    "before-gc-lto": 2.375844
+   },
+   "changed-net": {
+    "rust-o3": 1.506152,
+    "before-gc-lto": 2.476176,
+    "zig-o3": 1.290288,
+    "after-gc-lto": 2.421036
+   },
+   "changed-value": {
+    "before-gc-lto": 2.330207,
+    "zig-o3": 1.352824,
+    "rust-o3": 1.380474,
+    "after-gc-lto": 2.804841
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.269765,
+    "rust-o3": 1.520179,
+    "after-gc-lto": 2.56192,
+    "before-gc-lto": 2.486631
+   },
+   "changed-net": {
+    "zig-o3": 1.353226,
+    "rust-o3": 1.334261,
+    "before-gc-lto": 2.479194,
+    "after-gc-lto": 2.740774
+   },
+   "changed-value": {
+    "zig-o3": 1.400448,
+    "rust-o3": 1.386144,
+    "after-gc-lto": 2.519621,
+    "before-gc-lto": 2.560458
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 1.350774,
+    "zig-o3": 1.119826,
+    "after-gc-lto": 2.855499,
+    "before-gc-lto": 2.728722
+   },
+   "changed-net": {
+    "zig-o3": 1.360145,
+    "after-gc-lto": 2.41968,
+    "before-gc-lto": 2.404263,
+    "rust-o3": 1.419723
+   },
+   "changed-value": {
+    "after-gc-lto": 2.466716,
+    "rust-o3": 1.411938,
+    "zig-o3": 1.244143,
+    "before-gc-lto": 2.843188
+   }
+  },
+  {
+   "fixture": {
+    "before-gc-lto": 2.678402,
+    "after-gc-lto": 2.764595,
+    "zig-o3": 1.366635,
+    "rust-o3": 1.591676
+   },
+   "changed-net": {
+    "rust-o3": 1.360679,
+    "after-gc-lto": 2.634253,
+    "before-gc-lto": 2.66682,
+    "zig-o3": 1.409969
+   },
+   "changed-value": {
+    "after-gc-lto": 2.543609,
+    "rust-o3": 1.490758,
+    "before-gc-lto": 2.740924,
+    "zig-o3": 1.402779
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.233804,
+    "after-gc-lto": 2.682213,
+    "before-gc-lto": 2.757606,
+    "rust-o3": 1.527737
+   },
+   "changed-net": {
+    "before-gc-lto": 2.724206,
+    "after-gc-lto": 2.685692,
+    "rust-o3": 1.531831,
+    "zig-o3": 1.292568
+   },
+   "changed-value": {
+    "zig-o3": 1.312896,
+    "before-gc-lto": 2.60991,
+    "after-gc-lto": 2.62692,
+    "rust-o3": 1.621594
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.393313,
+    "before-gc-lto": 2.863086,
+    "rust-o3": 1.70916,
+    "after-gc-lto": 2.787145
+   },
+   "changed-net": {
+    "rust-o3": 1.814501,
+    "zig-o3": 1.513629,
+    "after-gc-lto": 2.779408,
+    "before-gc-lto": 2.685869
+   },
+   "changed-value": {
+    "rust-o3": 1.448137,
+    "zig-o3": 1.602974,
+    "after-gc-lto": 2.621276,
+    "before-gc-lto": 2.718592
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.344417,
+    "rust-o3": 1.527747,
+    "after-gc-lto": 2.778065,
+    "before-gc-lto": 2.868487
+   },
+   "changed-net": {
+    "before-gc-lto": 2.623902,
+    "after-gc-lto": 3.146482,
+    "zig-o3": 1.464158,
+    "rust-o3": 1.512395
+   },
+   "changed-value": {
+    "after-gc-lto": 3.015399,
+    "before-gc-lto": 2.868626,
+    "rust-o3": 1.397516,
+    "zig-o3": 1.388182
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.363508,
+    "rust-o3": 1.437432,
+    "after-gc-lto": 2.644419,
+    "before-gc-lto": 2.633801
+   },
+   "changed-net": {
+    "zig-o3": 1.321225,
+    "rust-o3": 1.455428,
+    "before-gc-lto": 3.869892,
+    "after-gc-lto": 2.865087
+   },
+   "changed-value": {
+    "after-gc-lto": 2.692967,
+    "zig-o3": 1.417657,
+    "before-gc-lto": 3.102071,
+    "rust-o3": 1.927642
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.44243,
+    "before-gc-lto": 2.747361,
+    "rust-o3": 1.507477,
+    "after-gc-lto": 2.711952
+   },
+   "changed-net": {
+    "before-gc-lto": 2.800891,
+    "after-gc-lto": 3.780305,
+    "zig-o3": 1.709964,
+    "rust-o3": 1.767796
+   },
+   "changed-value": {
+    "after-gc-lto": 2.883077,
+    "zig-o3": 1.489596,
+    "before-gc-lto": 2.977103,
+    "rust-o3": 1.698999
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.399509,
+    "before-gc-lto": 2.544711,
+    "after-gc-lto": 2.328674,
+    "rust-o3": 1.531932
+   },
+   "changed-net": {
+    "zig-o3": 1.307517,
+    "rust-o3": 1.369067,
+    "after-gc-lto": 2.357767,
+    "before-gc-lto": 2.40162
+   },
+   "changed-value": {
+    "rust-o3": 1.484187,
+    "after-gc-lto": 2.317691,
+    "before-gc-lto": 2.455984,
+    "zig-o3": 1.430196
+   }
+  },
+  {
+   "fixture": {
+    "rust-o3": 1.448527,
+    "after-gc-lto": 2.46345,
+    "zig-o3": 1.410918,
+    "before-gc-lto": 2.344928
+   },
+   "changed-net": {
+    "rust-o3": 1.512731,
+    "after-gc-lto": 2.387177,
+    "before-gc-lto": 2.444205,
+    "zig-o3": 1.429841
+   },
+   "changed-value": {
+    "rust-o3": 1.533705,
+    "before-gc-lto": 2.353493,
+    "zig-o3": 1.427438,
+    "after-gc-lto": 2.351081
+   }
+  },
+  {
+   "fixture": {
+    "before-gc-lto": 2.317831,
+    "after-gc-lto": 2.403268,
+    "zig-o3": 1.087097,
+    "rust-o3": 1.387071
+   },
+   "changed-net": {
+    "rust-o3": 1.512206,
+    "after-gc-lto": 2.309911,
+    "before-gc-lto": 2.274385,
+    "zig-o3": 1.20943
+   },
+   "changed-value": {
+    "after-gc-lto": 2.298543,
+    "before-gc-lto": 2.373103,
+    "zig-o3": 1.227023,
+    "rust-o3": 1.214524
+   }
+  },
+  {
+   "fixture": {
+    "after-gc-lto": 2.275617,
+    "before-gc-lto": 2.30165,
+    "rust-o3": 1.310218,
+    "zig-o3": 1.284441
+   },
+   "changed-net": {
+    "zig-o3": 1.290072,
+    "after-gc-lto": 2.387219,
+    "before-gc-lto": 2.330489,
+    "rust-o3": 1.280806
+   },
+   "changed-value": {
+    "zig-o3": 1.268435,
+    "before-gc-lto": 2.278288,
+    "rust-o3": 1.318998,
+    "after-gc-lto": 2.420051
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.264621,
+    "before-gc-lto": 2.277084,
+    "after-gc-lto": 2.457018,
+    "rust-o3": 1.550315
+   },
+   "changed-net": {
+    "rust-o3": 1.29538,
+    "zig-o3": 1.303787,
+    "after-gc-lto": 2.456133,
+    "before-gc-lto": 2.470826
+   },
+   "changed-value": {
+    "zig-o3": 1.293643,
+    "before-gc-lto": 2.212622,
+    "rust-o3": 1.39637,
+    "after-gc-lto": 2.449496
+   }
+  },
+  {
+   "fixture": {
+    "before-gc-lto": 2.83561,
+    "zig-o3": 1.588442,
+    "after-gc-lto": 2.793491,
+    "rust-o3": 1.63152
+   },
+   "changed-net": {
+    "zig-o3": 1.557801,
+    "rust-o3": 1.768732,
+    "after-gc-lto": 2.66084,
+    "before-gc-lto": 2.560017
+   },
+   "changed-value": {
+    "after-gc-lto": 2.675187,
+    "rust-o3": 1.663771,
+    "zig-o3": 1.399569,
+    "before-gc-lto": 2.959068
+   }
+  },
+  {
+   "fixture": {
+    "after-gc-lto": 2.370494,
+    "before-gc-lto": 2.299966,
+    "zig-o3": 1.310746,
+    "rust-o3": 1.637397
+   },
+   "changed-net": {
+    "after-gc-lto": 2.364091,
+    "zig-o3": 1.395399,
+    "rust-o3": 1.489024,
+    "before-gc-lto": 2.469636
+   },
+   "changed-value": {
+    "after-gc-lto": 2.405455,
+    "before-gc-lto": 2.305157,
+    "zig-o3": 1.41549,
+    "rust-o3": 1.470672
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.163821,
+    "before-gc-lto": 2.2565,
+    "rust-o3": 1.399333,
+    "after-gc-lto": 2.191536
+   },
+   "changed-net": {
+    "rust-o3": 1.325659,
+    "before-gc-lto": 2.288646,
+    "zig-o3": 1.020724,
+    "after-gc-lto": 2.210645
+   },
+   "changed-value": {
+    "after-gc-lto": 3.716555,
+    "rust-o3": 1.346226,
+    "zig-o3": 1.118708,
+    "before-gc-lto": 2.231375
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.019314,
+    "after-gc-lto": 2.119165,
+    "rust-o3": 1.237214,
+    "before-gc-lto": 2.210971
+   },
+   "changed-net": {
+    "after-gc-lto": 2.126408,
+    "zig-o3": 1.156113,
+    "before-gc-lto": 2.297269,
+    "rust-o3": 1.265022
+   },
+   "changed-value": {
+    "zig-o3": 1.12265,
+    "before-gc-lto": 2.432547,
+    "after-gc-lto": 2.15354,
+    "rust-o3": 1.213097
+   }
+  },
+  {
+   "fixture": {
+    "before-gc-lto": 2.135715,
+    "rust-o3": 1.247196,
+    "after-gc-lto": 2.106543,
+    "zig-o3": 1.170141
+   },
+   "changed-net": {
+    "before-gc-lto": 2.166568,
+    "zig-o3": 1.129972,
+    "rust-o3": 1.226776,
+    "after-gc-lto": 2.212306
+   },
+   "changed-value": {
+    "zig-o3": 1.116398,
+    "before-gc-lto": 2.096164,
+    "rust-o3": 1.266522,
+    "after-gc-lto": 2.168137
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.148785,
+    "after-gc-lto": 2.197531,
+    "rust-o3": 1.284562,
+    "before-gc-lto": 2.221279
+   },
+   "changed-net": {
+    "zig-o3": 1.210307,
+    "after-gc-lto": 2.187506,
+    "before-gc-lto": 2.234122,
+    "rust-o3": 1.206656
+   },
+   "changed-value": {
+    "before-gc-lto": 3.300392,
+    "zig-o3": 1.057403,
+    "after-gc-lto": 2.107336,
+    "rust-o3": 1.234725
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.103905,
+    "rust-o3": 1.252544,
+    "before-gc-lto": 2.164982,
+    "after-gc-lto": 2.137491
+   },
+   "changed-net": {
+    "zig-o3": 1.072358,
+    "after-gc-lto": 2.18809,
+    "before-gc-lto": 2.20418,
+    "rust-o3": 1.318676
+   },
+   "changed-value": {
+    "after-gc-lto": 2.086561,
+    "before-gc-lto": 2.136454,
+    "zig-o3": 1.082542,
+    "rust-o3": 1.32216
+   }
+  },
+  {
+   "fixture": {
+    "after-gc-lto": 2.172227,
+    "zig-o3": 1.196048,
+    "before-gc-lto": 2.178151,
+    "rust-o3": 1.268918
+   },
+   "changed-net": {
+    "before-gc-lto": 3.199511,
+    "after-gc-lto": 2.204981,
+    "zig-o3": 1.009551,
+    "rust-o3": 1.305729
+   },
+   "changed-value": {
+    "rust-o3": 1.18036,
+    "zig-o3": 1.084585,
+    "before-gc-lto": 2.105155,
+    "after-gc-lto": 2.196706
+   }
+  },
+  {
+   "fixture": {
+    "after-gc-lto": 2.210825,
+    "zig-o3": 1.204452,
+    "before-gc-lto": 2.111089,
+    "rust-o3": 1.236555
+   },
+   "changed-net": {
+    "zig-o3": 1.093721,
+    "before-gc-lto": 2.170687,
+    "after-gc-lto": 2.310511,
+    "rust-o3": 1.279496
+   },
+   "changed-value": {
+    "rust-o3": 1.239414,
+    "before-gc-lto": 2.280087,
+    "zig-o3": 1.200822,
+    "after-gc-lto": 2.144698
+   }
+  }
+ ]
+}

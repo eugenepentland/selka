@@ -1,0 +1,24 @@
+# Performance repro (agent-a), part 1 of 2. Correct output, slow code: 100M
+# `xs[j] = xs[j] + 1.0` writes into a list[float] with one list live.
+# Default ReleaseFast build prints 200000 and took 0.60 s (rough, E-core,
+# unpinned-load), about 6 ns per write. Each slot write is an out-of-line
+# `myl_native_list_set` call (a size-dispatched copy) preceded by re-storing a
+# chain of GC root records for the live list values. Part 2
+# (agent_a_perf_slot_write_six_live.my) runs the identical loop with five more
+# lists live and took 1.5-1.6 s (about 15 ns per write): the cost grows with the
+# number of live rooted values, although `list_set` never allocates. In
+# nbody.my's `advance` the chain holds up to 35 root slots, every one a copy of
+# the same `bodies` list pointer (one per `bodies[...]` expression), and the
+# nine field writes per pair loop cost about 37 ns each.
+def bump(xs: mut list[float], rounds: int) -> None:
+    n = len(xs)
+    for r in range(rounds):
+        for j in range(n):
+            xs[j] = xs[j] + 1.0
+
+
+def main(out: Stream) -> int:
+    xs = [0.0 for _ in range(1000)]
+    bump(mut xs, 100000)
+    out.print(int(xs[0] + xs[999]))
+    return 0

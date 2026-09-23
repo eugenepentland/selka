@@ -1,0 +1,23 @@
+# scan_count: str.count over LIB.md's 4 MB text.
+
+
+def shared_text() -> str:
+    block = "".join([f"item{i},{(i * 7919) % 100003},{'xxxxxx'[:i % 7]}\n" for i in range(2000)])
+    return "".join([block for _ in range(110)])
+
+
+def main(out: Stream) -> int:
+    text = shared_text()
+    total = 0
+    a = 0
+    b = 0
+    c = 0
+    d = 0
+    for _ in range(12):
+        a = text.count(",1")
+        b = text.count("\n")
+        c = text.count("item1")
+        d = text.count("x\nitem")
+        total += a + b + c + d
+    out.print(f"{len(text)} {a} {b} {c} {d} {total}")
+    return 0

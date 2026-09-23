@@ -79,6 +79,14 @@ pub const Kind = enum {
     index_of,
     reverse,
     sort,
+    /// Internal: the in-place keyed sort `values.sort(key=..., reverse=...)`,
+    /// `sorted(values, key=...)` and `sort.sort_by_key` lower to after the
+    /// guest has computed every key once, in input order, into a key list.
+    /// Its three arguments are the list whose elements are sorted — the
+    /// receiver itself for an in-place sort, or the original list whose
+    /// sorted copy the empty receiver gathers — that key list and the
+    /// `reverse` flag; no source spelling names it.
+    sort_keyed,
     copy,
     clear,
     items,
@@ -135,6 +143,7 @@ pub const Kind = enum {
             .iteration_check, .key_at, .value_at, .read, .append, .take, .truncate, .contains, .split, .join, .starts_with, .ends_with, .find => 1,
             .text_chr => 1,
             .write, .resize, .reserve, .get, .slice, .find_any, .view => 2,
+            .sort_keyed => 3,
             .parse_int_range, .parse_float_range, .scalar_count_range => 2,
             .slice_step => 3,
         };
@@ -278,8 +287,10 @@ pub fn spelling(kind: Kind) ?[]const u8 {
 /// not collection methods, so every rejection renders the accepted callee through
 /// one spelling table rather than a string literal at each site.
 pub const stream_print_signature = "stream.print(values..., sep: str, end: str) -> None";
-/// The `sorted` prelude builtin, whose only keyword is `key=`.
-pub const sorted_signature = "sorted(values: list[T], key: callback) -> list[T]";
+/// The `sorted` prelude builtin with Python's keyword-only `key=` and `reverse=`.
+pub const sorted_signature = "sorted(values: list[T], *, key: def(T) -> K = None, reverse: bool = False) -> list[T]";
+/// A list's `sort` method in its Python keyword form, sorting in place.
+pub const list_sort_signature = "list[T].sort(*, key: def(T) -> K = None, reverse: bool = False) -> None";
 /// The `range` iteration source: one bound or two, never a first-class value.
 pub const range_signature = "range(end: int) -> iterable[int], or range(start: int, end: int) -> iterable[int]";
 /// `min` and `max`, which fold a list or compare two values.
