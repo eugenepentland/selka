@@ -107,6 +107,7 @@ test {
     _ = @import("semantic_key.zig");
     _ = @import("sema_builtins.zig");
     _ = @import("sema_places.zig");
+    _ = @import("sema_collections.zig");
     _ = @import("invalidation_matrix_test.zig");
     _ = @import("semantic_project_test.zig");
     _ = @import("import_policy_test.zig");

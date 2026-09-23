@@ -1,5 +1,7 @@
 //! Declarations the semantic checker's modules share: diagnostic codes and
 //! messages, and the small value types that cross module boundaries.
+const std = @import("std");
+const byte_buffer_name = @import("nominal_templates.zig").byte_buffer_name;
 const source = @import("source.zig");
 const typed = @import("typed.zig");
 const ast = @import("ast.zig");
@@ -20,3 +22,14 @@ pub fn markerPositionDeclared(positions: []const u16, position: u16) bool {
     for (positions) |candidate| if (candidate == position) return true;
     return false;
 }
+/// Whether a managed byte-kind schema is the mutable octet buffer rather than an
+/// immutable byte string.
+pub fn isMutableBytes(schema: typed.Record) bool {
+    return schema.collection.kind == .bytes and std.mem.eql(u8, schema.name, byte_buffer_name);
+}
+pub const eCellEquality = "E_CELL_EQUALITY";
+/// One diagnostic for every rejected `Option` operation, so the intrinsic
+/// methods and the `is None` test report the same code.
+pub const eOptionTest = "E_OPTION_TEST";
+pub const bufferOperation = "buffer_operation";
+pub const eArenaBinding = "E_ARENA_BINDING";
