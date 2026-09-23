@@ -2167,6 +2167,72 @@ test "element loops over lists, nested lists, records and bytes compute and trap
     try testing.expect(std.mem.indexOf(u8, trapped, "error[R_LIST_BOUNDS]: native execution failed (index 20, length 20)") != null);
     try testing.expect(std.mem.indexOf(u8, trapped, "  in prefix at ") != null);
 }
+/// Loops LLVM vectorizes once their checks are proven (`QBE-LOOP-VERSION-1`):
+/// a byte count and a row update, sized and shifted from the command line.
+const vector_loops_program =
+    \\def number(text: str) -> int:
+    \\    match int(text):
+    \\        case Some(value):
+    \\            return value
+    \\        case None:
+    \\            return 0
+    \\
+    \\
+    \\def scan(data: bytes) -> int:
+    \\    count = 0
+    \\    for i in range(len(data)):
+    \\        if data[i] == 109:
+    \\            count += 1
+    \\    return count
+    \\
+    \\
+    \\def axpy(c: mut list[float], b: list[float], a: float, shift: int) -> None:
+    \\    for j in range(len(c)):
+    \\        c[j] = c[j] + a * b[j + shift]
+    \\
+    \\
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    n = number(args[0])
+    \\    text = ""
+    \\    for i in range(n):
+    \\        text = text + "mylang "
+    \\    b = [float(i) for i in range(n)]
+    \\    c = [1.0 for i in range(n)]
+    \\    axpy(mut c, b, 0.5, number(args[1]))
+    \\    total = 0.0
+    \\    for x in c:
+    \\        total = total + x
+    \\    out.print(scan(text.encode()))
+    \\    out.print(int(total))
+    \\    return 0
+;
+// spec-case: QBE-LOOP-VERSION-1
+test "versioned loops LLVM vectorizes compute and trap exactly as QBE does" {
+    const a = testing.allocator;
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "vector.my", .data = vector_loops_program });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "vector.my", a);
+    defer a.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const cache_argument = try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{directory});
+    defer a.free(cache_argument);
+    const llvm = try std.fmt.allocPrint(a, "{s}/vector-llvm", .{directory});
+    defer a.free(llvm);
+    const qbe = try std.fmt.allocPrint(a, "{s}/vector-qbe", .{directory});
+    defer a.free(qbe);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", llvm, cache_argument, tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", qbe, cache_argument, tools[0], tools[1] }, "");
+    // Every index proven: 1000 words of "mylang ", and 1000 + 0.5 * (0 + ... + 999).
+    const quiet = try expectSameBoundary(.{ llvm, qbe }, .{ "1000", "0", "", "" }, 0, "1000\n250750\n");
+    defer a.free(quiet);
+    try testing.expectEqualStrings("", quiet);
+    // `b[j + 1]` fails the guard, so the original loop traps at its last row.
+    const trapped = try expectSameBoundary(.{ llvm, qbe }, .{ "1000", "1", "", "" }, 1, "");
+    defer a.free(trapped);
+    try testing.expect(std.mem.indexOf(u8, trapped, "index 1000, length 1000") != null);
+    try testing.expect(std.mem.indexOf(u8, trapped, "  in axpy at ") != null);
+}
 // spec-case: QBE-STEP-ACCOUNTING-1
 test "an executable built without a requested ceiling refuses a runtime step budget" {
     var temporary = testing.tmpDir(.{});

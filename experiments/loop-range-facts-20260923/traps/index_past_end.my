@@ -1,0 +1,10 @@
+def shifted(xs: list[int]) -> int:
+    t = 0
+    for i in range(len(xs)):
+        t += xs[i + 1]
+    return t
+
+
+def main(out: Stream) -> int:
+    out.print("start")
+    return shifted([i for i in range(20)])
