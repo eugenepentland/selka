@@ -1,0 +1,104 @@
+bench-parity: building 179 arms of 27 benchmark(s) with 4 job(s)
+binary_trees: zig-fast 213.3 ms | my=0.47x  my-unchecked=0.44x  my-arena=0.77x  zig-fast=1.00x  zig-safe=1.12x  zig-gpa=1.02x  rust=1.68x  rust-checked=1.73x
+fannkuch_redux: zig-fast 181.2 ms | my=1.13x  my-unchecked=0.95x  my-array=0.87x  my-tuned=0.96x  zig-fast=1.00x  zig-safe=1.20x  rust=1.05x  rust-checked=1.01x
+knucleotide: zig-fast 93.7 ms | my=1.50x  my-unchecked=1.44x  my-arena=3.21x  my-tuned=1.35x  zig-fast=1.00x  zig-safe=1.12x  rust=1.35x  rust-checked=1.37x
+mandelbrot: zig-fast 115.2 ms | my=1.02x  my-unchecked=1.03x  zig-fast=1.00x  zig-safe=1.00x  rust=1.02x  rust-checked=1.03x
+matmul: zig-fast 37.5 ms | my=3.86x  my-unchecked=2.91x  my-flat=2.72x  my-tuned=4.37x  zig-fast=1.00x  zig-safe=1.55x  rust=2.11x  rust-checked=2.79x
+nbody: zig-fast 129.6 ms | my=1.99x  my-unchecked=1.73x  my-class=1.68x  zig-fast=1.00x  zig-safe=1.00x  rust=1.15x  rust-checked=1.14x
+raytrace: zig-fast 63.1 ms | my=1.42x  my-unchecked=1.31x  my-tuned=1.23x  zig-fast=1.00x  zig-safe=1.05x  rust=0.98x  rust-checked=1.00x
+sieve: zig-fast 48.7 ms | my=1.66x  my-unchecked=1.46x  my-tuned=1.77x  zig-fast=1.00x  zig-safe=1.35x  rust=1.01x  rust-checked=1.18x
+sort_builtin: zig-fast 186.4 ms | my=0.50x  my-unchecked=0.50x  zig-fast=1.00x  zig-safe=1.18x  rust=0.30x  rust-checked=0.30x
+sort_quick: zig-fast 156.4 ms | my=1.27x  my-unchecked=1.08x  zig-fast=1.00x  zig-safe=1.16x  rust=0.91x  rust-checked=0.94x
+sort_records: zig-fast 105.4 ms | my=0.26x  my-unchecked=0.26x  my-keyed=0.34x  my-sorted=0.26x  zig-fast=1.00x  zig-safe=1.16x  rust=0.39x  rust-checked=0.38x
+spectral_norm: zig-fast 145.3 ms | my=1.14x  my-unchecked=0.98x  my-tuned=1.03x  zig-fast=1.00x  zig-safe=1.35x  rust=0.98x  rust-checked=1.16x
+text_ops: zig-fast 23.9 ms | my=3.72x  my-unchecked=3.75x  my-tuned=0.64x  zig-fast=1.00x  zig-safe=0.83x  rust=1.54x  rust-checked=1.56x
+scan_count: zig-fast 120.2 ms | my=0.65x  my-unchecked=0.67x  zig-fast=1.00x  zig-safe=1.99x
+scan_replace: zig-fast 141.9 ms | my=0.35x  my-unchecked=0.35x  zig-fast=1.00x  zig-safe=1.80x
+scan_split: zig-fast 31.3 ms | my=3.38x  my-unchecked=3.35x  zig-fast=1.00x  zig-safe=1.56x
+alloc_churn: zig-fast 63.8 ms | my=1.92x  my-unchecked=1.95x  my-arena=1.56x  zig-fast=1.00x  zig-safe=1.08x  zig-gpa=0.88x  rust=1.29x  rust-checked=1.27x  rust-reuse=0.72x
+bytes_scan: zig-fast 33.7 ms | my=1.44x  my-unchecked=1.36x  my-wrapping=1.36x  zig-fast=1.00x  zig-safe=1.27x  rust=0.37x  rust-checked=1.47x
+calls: zig-fast 102.9 ms | my=1.00x  my-unchecked=1.05x  zig-fast=1.00x  zig-safe=1.02x  zig-inline=1.09x  rust=0.80x  rust-checked=0.82x
+dict_count: zig-fast 30.0 ms | my=1.04x  my-unchecked=1.06x  zig-fast=1.00x  zig-safe=1.30x  zig-getorput=0.56x  rust=2.15x  rust-checked=2.08x  rust-entry=1.15x
+fib: zig-fast 33.8 ms | my=2.04x  my-unchecked=1.02x  zig-fast=1.00x  zig-safe=2.08x  rust=1.11x  rust-checked=2.31x
+float_loop: zig-fast 39.7 ms | my=0.99x  my-unchecked=1.01x  zig-fast=1.00x  zig-safe=0.99x  rust=1.01x  rust-checked=0.99x
+intloop: zig-fast 129.5 ms | my=0.94x  my-unchecked=0.94x  zig-fast=1.00x  zig-safe=1.00x  rust=0.95x  rust-checked=0.85x
+list_append_sum: zig-fast 48.9 ms | my=1.18x  my-unchecked=1.18x  zig-fast=1.00x  zig-safe=1.05x  rust=1.09x  rust-checked=1.13x
+list_records: zig-fast 48.3 ms | my=1.44x  my-unchecked=1.22x  my-wrapping=1.23x  zig-fast=1.00x  zig-safe=1.11x  rust=0.97x  rust-checked=1.14x
+records: zig-fast 102.0 ms | my=0.92x  my-unchecked=1.05x  zig-fast=1.00x  zig-safe=0.90x  rust=0.83x  rust-checked=0.75x
+str_build: zig-fast 45.0 ms | my=1.17x  my-unchecked=1.16x  zig-fast=1.00x  zig-safe=1.29x  rust=1.09x  rust-checked=1.09x
+| group | benchmark | zig ms | zig-safe | rust | rust-checked | my | limit | my-unchecked | variants | check |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|---|
+| suite | binary_trees | 213.3 | 1.12 | 1.68 | 1.73 | 0.47 | 0.54 | 0.44 | arena 0.77 | ok |
+| suite | fannkuch_redux | 181.2 | 1.20 | 1.05 | 1.01 | 1.13 | 1.31 | 0.95 | array 0.87, tuned 0.96 | ok |
+| suite | knucleotide | 93.7 | 1.12 | 1.35 | 1.37 | 1.50 | 1.71 | 1.44 | arena 3.21, tuned 1.35 | ok |
+| suite | mandelbrot | 115.2 | 1.00 | 1.02 | 1.03 | 1.02 | 1.17 | 1.03 |  | ok |
+| suite | matmul | 37.5 | 1.55 | 2.11 | 2.79 | 3.86 | 4.40 | 2.91 | flat 2.72, tuned 4.37 | ok |
+| suite | nbody | 129.6 | 1.00 | 1.15 | 1.14 | 1.99 | 2.29 | 1.73 | class 1.68 | ok |
+| suite | raytrace | 63.1 | 1.05 | 0.98 | 1.00 | 1.42 | 1.64 | 1.31 | tuned 1.23 | ok |
+| suite | sieve | 48.7 | 1.35 | 1.01 | 1.18 | 1.66 | 2.06 | 1.46 | tuned 1.77 | ok |
+| suite | sort_builtin | 186.4 | 1.18 | 0.30 | 0.30 | 0.50 | 0.57 | 0.50 |  | ok |
+| suite | sort_quick | 156.4 | 1.16 | 0.91 | 0.94 | 1.27 | 1.48 | 1.08 |  | ok |
+| suite | sort_records | 105.4 | 1.16 | 0.39 | 0.38 | 0.26 | 0.30 | 0.26 | keyed 0.34, sorted 0.26 | ok |
+| suite | spectral_norm | 145.3 | 1.35 | 0.98 | 1.16 | 1.14 | 1.30 | 0.98 | tuned 1.03 | ok |
+| suite | text_ops | 23.9 | 0.83 | 1.54 | 1.56 | 3.72 | 4.32 | 3.75 | tuned 0.64 | ok |
+| lib | scan_count | 120.2 | 1.99 |  |  | 0.65 | 1.01 | 0.67 |  | ok |
+| lib | scan_replace | 141.9 | 1.80 |  |  | 0.35 | 0.40 | 0.35 |  | ok |
+| lib | scan_split | 31.3 | 1.56 |  |  | 3.38 | 3.95 | 3.35 |  | ok |
+| micro | alloc_churn | 63.8 | 1.08 | 1.29 | 1.27 | 1.92 | 2.22 | 1.95 | arena 1.56 | ok |
+| micro | bytes_scan | 33.7 | 1.27 | 0.37 | 1.47 | 1.44 | 1.55 | 1.36 | wrapping 1.36 | ok |
+| micro | calls | 102.9 | 1.02 | 0.80 | 0.82 | 1.00 | 1.15 | 1.05 |  | ok |
+| micro | dict_count | 30.0 | 1.30 | 2.15 | 2.08 | 1.04 | 1.28 | 1.06 |  | ok |
+| micro | fib | 33.8 | 2.08 | 1.11 | 2.31 | 2.04 | 2.43 | 1.02 |  | ok |
+| micro | float_loop | 39.7 | 0.99 | 1.01 | 0.99 | 0.99 | 1.16 | 1.01 |  | ok |
+| micro | intloop | 129.5 | 1.00 | 0.95 | 0.85 | 0.94 | 1.08 | 0.94 |  | ok |
+| micro | list_append_sum | 48.9 | 1.05 | 1.09 | 1.13 | 1.18 | 1.34 | 1.18 |  | ok |
+| micro | list_records | 48.3 | 1.11 | 0.97 | 1.14 | 1.44 | 1.58 | 1.22 | wrapping 1.23 | ok |
+| micro | records | 102.0 | 0.90 | 0.83 | 0.75 | 0.92 | 1.07 | 1.05 |  | ok |
+| micro | str_build | 45.0 | 1.29 | 1.09 | 1.09 | 1.17 | 1.34 | 1.16 |  | ok |
+
+geomean suite my              1.20x over 13 benchmark(s)  (plan target <= 1.2)
+worst   suite my              3.86x  (plan target <= 1.5)
+geomean suite my-unchecked    1.09x over 13 benchmark(s)  (plan target <= 1.1)
+geomean suite zig-safe        1.15x over 13 benchmark(s)
+geomean suite rust            1.00x over 13 benchmark(s)
+geomean suite rust-checked    1.05x over 13 benchmark(s)
+geomean lib   my              0.91x over 3 benchmark(s)
+geomean lib   my-unchecked    0.92x over 3 benchmark(s)
+geomean lib   zig-safe        1.77x over 3 benchmark(s)
+geomean micro my              1.23x over 11 benchmark(s)
+geomean micro my-unchecked    1.16x over 11 benchmark(s)
+geomean micro zig-safe        1.16x over 11 benchmark(s)
+geomean micro rust            0.98x over 11 benchmark(s)
+geomean micro rust-checked    1.19x over 11 benchmark(s)
+
+| group | benchmark | instr my/zig | instr my/rust | IPC my | IPC zig | IPC rust | br-miss/ki my | br-miss/ki zig | cache-miss/ki my | cache-miss/ki zig |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| suite | binary_trees | 0.81 | 0.22 | 3.24 | 1.60 | 4.66 | 0.23 | 0.06 | 0.07 | 0.03 |
+| suite | fannkuch_redux | 1.75 | 1.94 | 2.89 | 1.84 | 1.58 | 5.53 | 9.15 | 0.00 | 0.00 |
+| suite | knucleotide | 1.85 | 0.96 | 3.66 | 2.88 | 3.97 | 1.50 | 3.17 | 0.16 | 0.14 |
+| suite | mandelbrot | 0.93 | 0.92 | 1.49 | 1.63 | 1.63 | 0.28 | 0.26 | 0.01 | 0.00 |
+| suite | matmul | 6.35 | 1.79 | 5.13 | 3.22 | 5.49 | 0.08 | 0.00 | 0.05 | 0.11 |
+| suite | nbody | 3.71 | 3.80 | 5.25 | 2.48 | 2.09 | 0.00 | 0.00 | 0.00 | 0.00 |
+| suite | raytrace | 2.15 | 2.56 | 3.10 | 1.94 | 1.66 | 0.01 | 0.02 | 0.00 | 0.00 |
+| suite | sieve | 4.13 | 3.29 | 2.84 | 1.16 | 1.42 | 2.01 | 0.01 | 1.58 | 6.82 |
+| suite | sort_builtin | 0.79 | 1.34 | 1.85 | 1.15 | 2.43 | 4.60 | 22.14 | 0.82 | 0.38 |
+| suite | sort_quick | 1.31 | 2.07 | 1.38 | 1.33 | 0.89 | 16.66 | 21.48 | 0.30 | 0.30 |
+| suite | sort_records | 0.24 | 0.43 | 1.77 | 1.47 | 2.27 | 0.03 | 14.56 | 5.14 | 1.31 |
+| suite | spectral_norm | 1.89 | 1.91 | 6.14 | 3.56 | 3.53 | 0.02 | 0.04 | 0.00 | 0.00 |
+| suite | text_ops | 5.18 | 2.70 | 4.68 | 2.99 | 4.05 | 0.30 | 0.36 | 0.56 | 0.10 |
+| lib | scan_count | 0.95 |  | 3.10 | 3.36 |  | 0.30 | 0.31 | 0.03 | 0.07 |
+| lib | scan_replace | 0.49 |  | 3.58 | 2.34 |  | 0.32 | 0.22 | 0.03 | 0.03 |
+| lib | scan_split | 7.19 |  | 4.24 | 1.61 |  | 0.14 | 0.07 | 1.90 | 0.54 |
+| micro | alloc_churn | 3.60 | 1.37 | 3.77 | 1.87 | 4.10 | 0.01 | 0.00 | 0.01 | 0.00 |
+| micro | bytes_scan | 1.20 | 3.63 | 3.67 | 4.04 | 3.81 | 1.48 | 0.00 | 0.14 | 0.11 |
+| micro | calls | 0.72 | 0.95 | 1.16 | 1.60 | 1.54 | 0.01 | 0.00 | 0.00 | 0.00 |
+| micro | dict_count | 1.20 | 0.55 | 5.10 | 4.42 | 4.48 | 0.75 | 0.55 | 0.00 | 0.00 |
+| micro | fib | 1.89 | 1.99 | 3.89 | 4.18 | 3.59 | 0.03 | 0.50 | 0.01 | 0.00 |
+| micro | float_loop | 1.56 | 1.52 | 1.16 | 0.75 | 0.76 | 0.02 | 0.00 | 0.04 | 0.00 |
+| micro | intloop | 1.20 | 1.65 | 1.53 | 1.20 | 0.91 | 0.01 | 0.00 | 0.01 | 0.00 |
+| micro | list_append_sum | 2.39 | 2.37 | 3.57 | 2.09 | 1.83 | 0.01 | 0.00 | 5.08 | 12.91 |
+| micro | list_records | 3.32 | 2.81 | 1.05 | 0.51 | 0.62 | 0.02 | 0.00 | 49.83 | 156.44 |
+| micro | records | 1.77 | 2.25 | 1.96 | 1.02 | 0.96 | 0.01 | 0.00 | 0.01 | 0.00 |
+| micro | str_build | 1.60 | 1.46 | 3.78 | 3.59 | 3.11 | 0.02 | 0.00 | 0.64 | 0.92 |
+notice: the SMT sibling of CPU 2 (CPU 3) was over 25% busy while 1 program(s) were timed (dict_count); a busy sibling moves some ratios by tens of percent — prefer a core whose sibling is idle
+bench-parity: PASS — 71 thresholded arm(s) checked, 0 failure(s); result /home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/final/perf-counters.json

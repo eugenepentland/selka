@@ -277,11 +277,50 @@ def peak_rss_kb(binary: Path) -> int | None:
         return None
 
 
-def counters(binary: Path) -> dict | None:
-    done = subprocess.run(["perf", "stat", "-x,", "-e", "instructions:u,cycles:u", "--", str(binary)],
+COUNTER_EVENTS = "instructions:u,cycles:u,branches:u,branch-misses:u,cache-misses:u"
+
+
+def counters(binary: Path, cpu: int) -> dict | None:
+    """User-space hardware counts for one run of `binary`, pinned to `cpu`.
+
+    Pinned like the timed rounds, so on a hybrid part every count comes from the
+    same core type (a P-core's cycles and an E-core's are not comparable)."""
+    done = subprocess.run(["taskset", "-c", str(cpu), "perf", "stat", "-x,", "-e", COUNTER_EVENTS, "--", str(binary)],
                           stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True, timeout=600)
     found = parse_perf(done.stderr)
     return found or None
+
+
+def counter_table(result: dict) -> str:
+    """Per benchmark: mylang's instruction count against Zig's, and each arm's
+    instructions per cycle and branch and last-level-cache misses per thousand
+    instructions. Empty when no counters were recorded."""
+    arms = ("my", "zig-fast", "rust")
+    lines = ["| group | benchmark | instr my/zig | instr my/rust | IPC my | IPC zig | IPC rust | br-miss/ki my | br-miss/ki zig | cache-miss/ki my | cache-miss/ki zig |",
+             "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
+    rows = 0
+    for name, bench in result["benchmarks"].items():
+        found = {a: bench["arms"].get(a, {}).get("counters") or {} for a in arms}
+        if not found["my"].get("instructions") or not found["zig-fast"].get("instructions"):
+            continue
+
+        def ratio(a: str, b: str) -> str:
+            x, y = found[a].get("instructions"), found[b].get("instructions")
+            return f"{x / y:.2f}" if x and y else ""
+
+        def ipc(a: str) -> str:
+            c = found[a]
+            return f"{c['instructions'] / c['cycles']:.2f}" if c.get("instructions") and c.get("cycles") else ""
+
+        def per_ki(a: str, event: str) -> str:
+            c = found[a]
+            return f"{1000 * c[event] / c['instructions']:.2f}" if c.get(event) is not None and c.get("instructions") else ""
+
+        lines.append(f"| {bench['group']} | {name} | {ratio('my', 'zig-fast')} | {ratio('my', 'rust')} | {ipc('my')} | "
+                     f"{ipc('zig-fast')} | {ipc('rust')} | {per_ki('my', 'branch-misses')} | "
+                     f"{per_ki('zig-fast', 'branch-misses')} | {per_ki('my', 'cache-misses')} | {per_ki('zig-fast', 'cache-misses')} |")
+        rows += 1
+    return "\n".join(lines) if rows else ""
 
 
 def bootstrap(pairs: list[float], reps: int = 2000, seed: int = 7) -> dict | None:
@@ -607,6 +646,9 @@ def command_run(opts: argparse.Namespace) -> int:
     print()
     for line in geomeans(result):
         print(line)
+    if counter_table(result):
+        print()
+        print(counter_table(result))
     for notice in notices:
         print(f"notice: {notice}")
     for verdict in verdicts:
@@ -632,7 +674,7 @@ def time_benchmark(entry: dict, arms: list[dict], opts: argparse.Namespace, rng:
         data = entry["arms"][job["arm"]]
         data["peak_rss_kb"] = peak_rss_kb(job["bin"])
         if with_perf:
-            data["counters"] = counters(job["bin"])
+            data["counters"] = counters(job["bin"], opts.cpu)
     sibling_cpus = siblings(opts.cpu)
     before = cpu_times(sibling_cpus)
     samples = measure(arms, opts, rng)
@@ -750,6 +792,9 @@ def command_table(opts: argparse.Namespace) -> int:
     print()
     for line in geomeans(result):
         print(line)
+    if counter_table(result):
+        print()
+        print(counter_table(result))
     return 0
 
 

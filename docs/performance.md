@@ -484,8 +484,10 @@ It prints one table row per program (Zig milliseconds, then `zig-safe`, `rust`,
 suite's geometric means beside the plan's targets, and one line per regression
 naming the program, arm, ratio and threshold. A program over its limit is timed
 a second time, and the step fails only when both passes exceed it. Rust arms are skipped with a notice
-when `rustc` is missing, and instruction and cycle counts are recorded only when
-`kernel.perf_event_paranoid` allows `perf stat`. Rewriting the thresholds is a
+when `rustc` is missing. When `kernel.perf_event_paranoid` allows `perf stat`,
+each arm also gets instruction, cycle, branch-miss and cache-miss counts,
+printed as a second table of instruction ratios to Zig and Rust, IPC and misses
+per thousand instructions. Rewriting the thresholds is a
 separate, deliberate command; `bench/parity/README.md` gives the tolerance policy
 and the layout.
 

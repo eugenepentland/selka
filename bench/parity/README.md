@@ -138,10 +138,21 @@ file's `note`; a re-baseline without one drops the old note.
 ## Hardware counters
 
 With `perf` installed and `kernel.perf_event_paranoid <= 2`, the harness runs
-each qualified arm once more under `perf stat -e instructions:u,cycles:u` and
-records the counts in the JSON (`counters`); otherwise it prints a notice and
-records none. The plan asks for `<= 1` so kernel time can be counted as well.
-Lowering the setting needs root (`sysctl kernel.perf_event_paranoid=1`); the
+each qualified arm once more under `perf stat -e
+instructions:u,cycles:u,branches:u,branch-misses:u,cache-misses:u`. That run is
+pinned to the timing CPU, because on a hybrid part a P-core's cycles and an
+E-core's are not comparable. The counts go in the JSON (`counters`). A second
+table after the ratio table gives, per benchmark:
+
+- mylang's instruction count against Zig's and Rust's;
+- each arm's instructions per cycle;
+- branch misses and last-level-cache misses per thousand instructions.
+
+Instruction counts do not depend on machine load the way wall time does, so they
+separate "does more work" from "runs slower on the same work". Without counters
+the harness prints a notice and records none. The plan asks for `<= 1` so kernel
+time can be counted as well. Lowering the setting needs root (`sysctl
+kernel.perf_event_paranoid=1`, or a file in `/etc/sysctl.d/` to keep it); the
 harness never changes it.
 
 ## Not covered
