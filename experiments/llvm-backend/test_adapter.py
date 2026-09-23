@@ -675,6 +675,58 @@ export function l $myl_f_0123456789abcdef(l %ctx, l %a) {
                 cwd=HERE, env=environment, check=True, capture_output=True, text=True)
             self.assertEqual(result.stdout.strip(), "(('ptr', 'i64'), 'i32')")
 
+    def test_dominators_match_the_set_definition_and_scale_linearly(self):
+        # The immediate-dominator tree answers exactly what per-block dominator
+        # sets answered, on hand graphs and random ones, including unreachable
+        # blocks and loops, and a 60 000-block function no longer exhausts memory.
+        import random
+        from llvm_emit import Dominators
+
+        def by_sets(entry, edges):
+            reachable, pending = {entry}, [entry]
+            while pending:
+                for successor in edges[pending.pop()]:
+                    if successor not in reachable:
+                        reachable.add(successor)
+                        pending.append(successor)
+            predecessors = {label: [] for label in edges}
+            for label, successors in edges.items():
+                for successor in successors:
+                    predecessors[successor].append(label)
+            sets = {label: ({entry} if label == entry else set(reachable)) for label in reachable}
+            changed = True
+            while changed:
+                changed = False
+                for label in reachable - {entry}:
+                    incoming = [sets[p] for p in predecessors[label] if p in reachable]
+                    merged = set.intersection(*incoming) | {label}
+                    if merged != sets[label]:
+                        sets[label], changed = merged, True
+            return sets
+
+        rng = random.Random(7)
+        graphs = [
+            ("a", {"a": ["b", "c"], "b": ["d"], "c": ["d"], "d": [], "dead": ["d"]}),
+            ("a", {"a": ["b"], "b": ["c", "e"], "c": ["b"], "e": []}),
+        ]
+        for _ in range(200):
+            count = rng.randint(1, 12)
+            labels = [f"n{i}" for i in range(count)]
+            graphs.append(("n0", {label: rng.sample(labels, rng.randint(0, min(3, count))) for label in labels}))
+        for entry, edges in graphs:
+            expected = by_sets(entry, edges)
+            relation = Dominators(entry, edges)
+            for a in edges:
+                for b in edges:
+                    self.assertEqual(relation.dominates(a, b), a in expected.get(b, ()), (edges, a, b))
+        chain = {f"b{i}": [f"b{i + 1}", f"x{i}"] for i in range(30000)}
+        chain.update({f"x{i}": [f"b{i + 1}"] for i in range(30000)})
+        chain["b30000"] = []
+        relation = Dominators("b0", chain)
+        self.assertTrue(relation.dominates("b0", "b30000"))
+        self.assertTrue(relation.dominates("b29999", "x29999"))
+        self.assertFalse(relation.dominates("x5", "b6"))
+
     def test_benchmark_runtime_registry_is_complete(self):
         evidence = json.loads((HERE / "evidence" / "runtime-symbols.json").read_text())
         missing = []
