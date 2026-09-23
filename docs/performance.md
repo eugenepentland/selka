@@ -535,6 +535,16 @@ grows past its threshold in `bench/parity/thresholds.json`. Ratios, not
 milliseconds, are checked, because both sides of a ratio ran in the same round.
 The step is opt-in; `zig build test` never runs it.
 
+A plain `zig build bench-parity` times the guest binaries of the Debug compiler it
+installs. That is deliberate. The compiler's own optimization mode does not change
+what it emits: `python3 bench/parity/bench_parity.py same-binaries --other
+PATH/bin/mylang` builds every mylang arm with both compilers and requires
+identical bytes. So a ReleaseFast compiler build buys nothing here. Timed processes run
+on the first of `MYLANG_TIMING_CPUS` (default CPU 2) unless `-Dbench-cpu` says
+otherwise. That is a core `scripts/build-slot.sh` keeps free of builds
+([many agents on one machine](tooling/many-agents.md)). The harness warns before
+timing when that core or its SMT sibling is already busy.
+
 ```bash
 zig build bench-parity -Dbench-filter=sieve -Dbench-cpu=10 -Dbench-rounds=7
 zig build bench-parity -Dbench-filter=micro/ -- --json parity-micro.json
