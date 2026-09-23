@@ -52,6 +52,47 @@ const Leases = struct {
         }
     }
 };
+/// The marker file an owned scratch directory carries. The process that created
+/// the directory holds an exclusive advisory lock on it until it removes the
+/// directory; the kernel drops that lock when the process exits in any way —
+/// a normal exit, a panic, a trap or a `SIGKILL` — so a marker whose lock
+/// another process can take proves the directory's creator is gone. A
+/// directory without this marker proves nothing and is never reclaimed.
+pub const owner_name = ".owner";
+/// The POSIX default scratch root (`P_tmpdir`), used only when `TMPDIR` is unset
+/// or empty. Every host-scratch caller goes through `Context.scratchRoot`, so
+/// this is the single place the fallback is spelled.
+pub const default_scratch_root = "/tmp";
+/// Owned scratch directories this process is using, each with the open marker
+/// whose exclusive lock proves it alive. Keyed by a hash of the directory path so
+/// `Context.remove`, which only receives a path, can release the lock after the
+/// tree is gone. A table that cannot grow keeps the lock until the process exits,
+/// which is still correct: the directory is removed either way, only the
+/// descriptor lives on.
+const Owners = struct {
+    const Held = struct { key: u64, file: std.Io.File };
+    var mutex: std.Io.Mutex = .init;
+    var held: std.ArrayList(Held) = .empty;
+    /// Record the locked marker for `directory` until `release`.
+    fn hold(io: std.Io, directory: []const u8, file: std.Io.File) void {
+        mutex.lockUncancelable(io);
+        defer mutex.unlock(io);
+        // The marker outlives the build context and the arena that named its
+        // directory, so the table belongs to the process. // allocator-ok
+        held.append(std.heap.page_allocator, .{ .key = std.hash.Wyhash.hash(0, directory), .file = file }) catch return;
+    }
+    /// Take back the marker recorded for `directory`, if this process holds one.
+    fn release(io: std.Io, directory: []const u8) ?std.Io.File {
+        const key = std.hash.Wyhash.hash(0, directory);
+        mutex.lockUncancelable(io);
+        defer mutex.unlock(io);
+        for (held.items, 0..) |entry, index| {
+            if (entry.key != key) continue;
+            return held.swapRemove(index).file;
+        }
+        return null;
+    }
+};
 /// One sibling generation's eviction claim: the exclusive lease handle to hold
 /// while the tree is deleted, or none when the entry carries no lease file at all
 /// (a loose file, or a generation from a compiler that predates leasing). `held`
@@ -162,7 +203,94 @@ pub const Context = struct {
     /// tmpfs points `TMPDIR` at disk, and per-run scratch must follow it there.
     pub fn scratchRoot(self: Context) []const u8 {
         const configured = self.environ.get("TMPDIR") orelse "";
-        return if (configured.len == 0) "/tmp" else configured;
+        return if (configured.len == 0) default_scratch_root else configured;
+    }
+    /// A private staging directory beneath `parent/.pending/` that this process
+    /// provably owns until `remove`: it carries a `.owner` marker held under an
+    /// exclusive lock. Before creating it, siblings whose markers are no longer
+    /// locked — scratch a killed or crashed invocation could not remove — are
+    /// reclaimed. A sweeper can win the marker between its creation and its lock;
+    /// that attempt is abandoned to the sweeper and a fresh directory is staged.
+    /// A filesystem without advisory locks yields an unmarked directory, which is
+    /// the ordinary `temporary` behaviour.
+    pub fn owned(self: Context, parent: []const u8) Error![]const u8 {
+        self.reclaim(parent);
+        var attempt: usize = 0;
+        while (attempt < staging_attempts) : (attempt += 1) {
+            const directory = try self.temporary(parent);
+            if (try self.mark(directory)) return directory;
+            self.remove(directory);
+        }
+        return error.FileNotFound;
+    }
+    /// Create and lock `directory`'s owner marker. False means a concurrent sweep
+    /// claimed the fresh directory first; the directory is then the sweeper's.
+    fn mark(self: Context, directory: []const u8) Error!bool {
+        const marker = try std.fs.path.join(self.allocator, &.{ directory, owner_name });
+        // Owner-only permissions: a sweep by another user cannot open, let alone
+        // lock, this marker, so it never reclaims someone else's scratch.
+        const file = std.Io.Dir.cwd().createFile(self.io, marker, .{ .exclusive = true, .permissions = .fromMode(0o600) }) catch |err| switch (err) {
+            error.FileNotFound, error.PathAlreadyExists => return false,
+            else => return err,
+        };
+        const taken = file.tryLock(self.io, .exclusive) catch {
+            // No advisory locks here: fall back to an unmarked directory, which
+            // no sweep will ever touch.
+            file.close(self.io);
+            std.Io.Dir.cwd().deleteFile(self.io, marker) catch |err| switch (err) {
+                error.FileNotFound => return false,
+                else => return err,
+            };
+            return true;
+        };
+        if (!taken) {
+            file.close(self.io);
+            return false;
+        }
+        // A sweep that took the marker, deleted the directory and released the
+        // lock before this `tryLock` leaves the lock on an unlinked marker; only a
+        // marker still reachable at its path is a live claim.
+        const opened = file.stat(self.io) catch {
+            file.close(self.io);
+            return false;
+        };
+        const current = std.Io.Dir.cwd().statFile(self.io, marker, .{}) catch {
+            file.close(self.io);
+            return false;
+        };
+        if (opened.inode != current.inode) {
+            file.close(self.io);
+            return false;
+        }
+        Owners.hold(self.io, directory, file);
+        return true;
+    }
+    /// Remove every directory under `parent/.pending/` whose owner marker this
+    /// process can lock exclusively: its creator has exited without removing it.
+    /// An entry with no marker, a marker another process still holds, a marker
+    /// this user cannot open and anything that is not a plain directory are all
+    /// left alone, so the sweep deletes only scratch an owned-scratch caller
+    /// created and abandoned. Best effort, like `remove` and `sweep`.
+    pub fn reclaim(self: Context, parent: []const u8) void {
+        const staging = std.fs.path.join(self.allocator, &.{ parent, staging_name }) catch return;
+        var directory = std.Io.Dir.cwd().openDir(self.io, staging, .{ .iterate = true, .follow_symlinks = false }) catch return;
+        defer directory.close(self.io);
+        var names: std.ArrayList([]const u8) = .empty;
+        var iterator = directory.iterate();
+        while (iterator.next(self.io) catch null) |entry| {
+            if (entry.kind != .directory) continue;
+            names.append(self.allocator, self.allocator.dupe(u8, entry.name) catch return) catch return;
+        }
+        for (names.items) |name| {
+            const marker = std.fs.path.join(self.allocator, &.{ name, owner_name }) catch return;
+            const file = directory.openFile(self.io, marker, .{}) catch continue;
+            defer file.close(self.io);
+            const taken = file.tryLock(self.io, .exclusive) catch false;
+            if (!taken) continue;
+            // The lock is held across the delete, so a concurrent sweep skips the
+            // entry instead of racing this one through the same tree.
+            directory.deleteTree(self.io, name) catch continue;
+        }
     }
     /// Private directories isolate concurrent compilers and failed tool output.
     /// Every invocation in one parent shares a single `.pending/` folder, and
@@ -207,8 +335,11 @@ pub const Context = struct {
     /// Remove only this invocation's private staging directory, then the shared
     /// `.pending/` folder when nothing else is using it. Removal stays best
     /// effort: a failed or interrupted one leaves scratch inside that single
-    /// folder, where it is contained and can be swept as a unit.
+    /// folder, where it is contained and can be swept as a unit. An owned
+    /// directory's marker lock is released only after its tree is gone, so no
+    /// sweep can see it half-deleted and unowned.
     pub fn remove(self: Context, path: []const u8) void {
+        defer if (Owners.release(self.io, path)) |file| file.close(self.io);
         // The staging child may already have been renamed into place, which
         // `deleteTree` treats as success; a non-empty or non-staging parent is
         // simply left alone.
@@ -408,6 +539,50 @@ test "scratch staging follows a non-empty TMPDIR and falls back to /tmp" {
     const staged = try context.temporary(context.scratchRoot());
     defer context.remove(staged);
     try std.testing.expectEqualStrings(try std.fs.path.join(context.allocator, &.{ configured, staging_name }), std.fs.path.dirname(staged).?);
+}
+// spec: NATIVE-SCRATCH-OWNER-1
+test "owned scratch reclaims abandoned marked siblings, keeps live and unmarked ones, and releases its marker on removal" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const parent = try temporary.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const staging = at(context, &.{ parent, staging_name });
+    // An abandoned run: a marked directory whose marker nobody holds, the state
+    // a killed or crashed owner leaves behind.
+    const abandoned = at(context, &.{ staging, "abandoned" });
+    try context.mkdir(at(context, &.{ abandoned, "snapshot" }));
+    try context.write(at(context, &.{ abandoned, owner_name }), "");
+    try context.write(at(context, &.{ abandoned, "snapshot", "main.my" }), "module main\n");
+    // A live run in another process: its marker is locked through a separate
+    // open file description, which conflicts with a sweeper's exclusive lock.
+    const live = at(context, &.{ staging, "live" });
+    try context.mkdir(live);
+    try context.write(at(context, &.{ live, owner_name }), "");
+    const holder = try std.Io.Dir.cwd().openFile(std.testing.io, at(context, &.{ live, owner_name }), .{});
+    defer holder.close(std.testing.io);
+    try std.testing.expect(try holder.tryLock(std.testing.io, .exclusive));
+    // Unmarked scratch — an ordinary build's staging or an older compiler's — is
+    // never provably abandoned, so it is never reclaimed.
+    const unmarked = at(context, &.{ staging, "unmarked" });
+    try context.mkdir(unmarked);
+    const first = try context.owned(parent);
+    try std.testing.expect(!context.exists(abandoned));
+    try std.testing.expect(context.exists(live));
+    try std.testing.expect(context.exists(unmarked));
+    try std.testing.expectEqualStrings(staging, std.fs.path.dirname(first).?);
+    try std.testing.expect(context.exists(at(context, &.{ first, owner_name })));
+    // This process's own live scratch survives another owned creation's sweep.
+    const second = try context.owned(parent);
+    try std.testing.expect(context.exists(first));
+    context.remove(second);
+    context.remove(first);
+    try std.testing.expect(!context.exists(first));
+    // Removal closed the marker descriptor instead of leaking one per run.
+    try std.testing.expect(Owners.release(std.testing.io, first) == null);
+    try std.testing.expect(Owners.release(std.testing.io, second) == null);
 }
 // spec: NATIVE-STAGING-1
 test "one staging folder per directory contains concurrent and abandoned scratch" {

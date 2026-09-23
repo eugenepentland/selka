@@ -26,6 +26,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 MAX_SIZE = 4096
@@ -92,7 +93,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--compiler", type=Path, default=Path("zig-out/bin/mylang"))
     parser.add_argument("--sizes", type=int, nargs="+", default=[128, 256, 512])
-    parser.add_argument("--work-dir", type=Path, default=Path("/tmp/mylang-r4-population"))
+    parser.add_argument("--work-dir", type=Path, default=Path(tempfile.gettempdir()) / "mylang-r4-population")
     parser.add_argument("--max-size", type=int, default=MAX_SIZE)
     args = parser.parse_args()
 

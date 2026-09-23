@@ -38,7 +38,14 @@ static void put(const char *directory, const char *name, const char *contents) {
 }
 int main(void) {
     (void)mylang_host_charge;
-    char root[] = "/tmp/mylang-scoped-XXXXXX";
+    /* Scratch follows TMPDIR like every other runner, so a quota-bound /tmp
+       cannot fail this suite; /tmp is only the POSIX fallback. */
+    const char *scratch = getenv("TMPDIR");
+    if (!scratch || !*scratch) scratch = "/tmp";
+    char root[256];
+    int written = snprintf(root, sizeof root, "%s/mylang-scoped-XXXXXX", scratch);
+    assert(written > 0 && written < (int)sizeof root);
+    (void)written;
     assert(mkdtemp(root));
     put(root, "greeting.txt", "hello\n");
     mylang_scoped_init(&scoped);
