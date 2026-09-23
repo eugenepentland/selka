@@ -1,0 +1,24 @@
+agents=29 wall=45.0h model=15.7h (35%)
+foreground tool time 28.0h (62%); remainder (idle awaiting background notifications) 1.3h
+  run:release build/install            7.93 h  n=  201 avg  142.0s  (17.6% of wall)
+  quick shell (read/grep/edit)         5.62 h  n= 4568 avg    4.4s  (12.5% of wall)
+  wait for:benchmark                   3.15 h  n=   42 avg  270.4s  ( 7.0% of wall)
+  wait for:guest-tests                 2.79 h  n=   51 avg  197.2s  ( 6.2% of wall)
+  wait for:release-build               2.24 h  n=   47 avg  171.3s  ( 5.0% of wall)
+  wait for:gate                        1.78 h  n=   47 avg  136.1s  ( 4.0% of wall)
+  run:guest build/run/emit             1.14 h  n=  271 avg   15.2s  ( 2.5% of wall)
+  run:benchmark                        0.97 h  n=  368 avg    9.5s  ( 2.2% of wall)
+  run:guest tests                      0.54 h  n=  143 avg   13.7s  ( 1.2% of wall)
+  run:debug build                      0.40 h  n=   96 avg   15.1s  ( 0.9% of wall)
+  run:native C tests                   0.25 h  n=  125 avg    7.3s  ( 0.6% of wall)
+  run:focused zig tests                0.23 h  n=   47 avg   17.7s  ( 0.5% of wall)
+  wait for:debug-build                 0.20 h  n=    4 avg  176.5s  ( 0.4% of wall)
+  run:full test gate                   0.17 h  n=   11 avg   54.3s  ( 0.4% of wall)
+  git                                  0.14 h  n=  191 avg    2.7s  ( 0.3% of wall)
+  tool:Agent                           0.14 h  n=    5 avg   98.1s  ( 0.3% of wall)
+  wait for:other                       0.12 h  n=   19 avg   23.6s  ( 0.3% of wall)
+  run:test-qbe                         0.10 h  n=    1 avg  354.6s  ( 0.2% of wall)
+  tool:Monitor                         0.02 h  n=   91 avg    0.8s  ( 0.0% of wall)
+background jobs, launch->completion:
+  quick shell (read/grep/edit)       n=  1 total  0.06h median   3.7 min max   3.7 min
+  run:guest tests                    n=  1 total  0.03h median   1.8 min max   1.8 min
