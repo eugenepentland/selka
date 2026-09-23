@@ -75,6 +75,14 @@ on both sides of that change, same binary pair, interleaved: **127 ms before and
 3 ms after**. Dictionary reads and writes are no longer linear in the key count;
 see [the dictionary index audit](audits/dict-hash-index-2026-09-21.md).
 
+Counting slices of one text by dictionary key — `key = seq[i:i + k]` followed by
+`counts[key] = counts.get(key, 0) + 1` — builds no `str` per slice: a slice whose
+only reader is a dictionary key is looked up by the octet range it names, and a
+key is built only when it is new. A write of a key that is already present
+publishes no GC roots. Together they take the `knucleotide` benchmark from about
+3.4× Zig to about 1.4× Zig; see
+[the text and dictionary leftovers report](audits/text-dict-leftovers-2026-09-23.md).
+
 The first row is the floor: about 4 ms of process start-up and 1.7 MB of resident
 memory before the program does anything, so a program that finishes in tens of
 milliseconds is mostly start-up and its memory figure means little. The last three

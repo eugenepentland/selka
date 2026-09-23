@@ -699,11 +699,63 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, request: Requ
         if (function.signature.mutation_facts.external) function.policy.effects |= sets.bit(.mutation);
     }
     var violated = mutation_violated;
+    if (try checkSlotCeilings(allocator, .{ .program = program, .graph = &graph }, sink)) violated = true;
     const context: CeilingContext = .{ .allocator = allocator, .program = program, .graph = &graph, .src = request.src, .sink = sink };
     for (program.functions, 0..) |_, index| {
         if (try checkSignatureCeiling(context, index)) violated = true;
     }
     if (violated) return error.SourceError;
+}
+
+/// CALLBACK-SLOT-1: an unannotated function used as a value takes the ceiling
+/// of the callback slot it fills (`Checker.functionValue`, and a generic call's
+/// instantiated parameter), so a call through that slot is charged only that
+/// ceiling. Its inferred body set is what keeps that honest: every function
+/// value whose target declares no clause of its own must fit the ceiling its
+/// value type carries, or an effect would reach a caller through a callback
+/// its bound never sees. Reports each violation and returns whether any.
+fn checkSlotCeilings(allocator: std.mem.Allocator, ctx: BoundContext, sink: *diagnostic.Sink) diagnostic.Error!bool {
+    const program = ctx.program;
+    var violated = false;
+    for (program.nodes) |node| {
+        const target = switch (node.data) {
+            .function_value => |id| @backingInt(id),
+            else => continue,
+        };
+        if (target >= program.functions.len) return error.InternalError;
+        const function = program.functions[target];
+        if (function.policy.effect_bound != null) continue;
+        const contract = callables.signature(node.ty, program.records) orelse return error.InternalError;
+        // `mutation` belongs to the mutation analysis. A sort key that builds a
+        // `str` (LIST-SORT-KEY-3) fits because the key slot itself admits
+        // `managed_allocation` (LAMBDA-KEY-INFER-1).
+        const forbidden = ctx.graph.states[target].mask & ~contract.effects & ~sets.bit(.mutation);
+        if (forbidden == 0) continue;
+        const effect = for (std.meta.tags(sets.Effect)) |effect| {
+            if (forbidden & sets.bit(effect) != 0) break effect;
+        } else unreachable;
+        var path: std.Io.Writer.Allocating = .init(allocator);
+        defer path.deinit();
+        const slot = try typed.surfaceTypeName(allocator, node.ty, program.records);
+        path.writer.print("`{s}` fills a callback slot of type `{s}`, but its body has effect `{s}`: {s}", .{ function.name, slot, @tagName(effect), function.name }) catch return error.OutOfMemory;
+        var cursor = target;
+        var steps: usize = 0;
+        while (ctx.graph.states[cursor].witnesses[@backingInt(effect)].?.via) |callee| {
+            path.writer.print(" -> {s}", .{program.functions[callee].name}) catch return error.OutOfMemory;
+            cursor = callee;
+            steps += 1;
+            std.debug.assert(steps < program.functions.len);
+        }
+        path.writer.writeAll("; keep the body within the slot's ceiling, or widen the callback type's `effects(...)`") catch return error.OutOfMemory;
+        sink.items.append(allocator, .{
+            .code = bound_code,
+            .span = node.span,
+            .message = allocator.dupe(u8, path.written()) catch return error.OutOfMemory,
+            .related = .{ .span = ctx.graph.states[cursor].witnesses[@backingInt(effect)].?.span, .message = "effect originates at this operation or owned type" },
+        }) catch return error.OutOfMemory;
+        violated = true;
+    }
+    return violated;
 }
 
 /// Everything one per-function ceiling check reads: the allocator, the checked
@@ -867,7 +919,7 @@ fn seedInstructionEffects(
         .binary_integer => |binary| if (binary.op == .add and allocatingSequence(program.records, binary.ty)) {
             graph.direct(index, .managed_allocation, instruction.span);
         },
-        .get_index => |ty| if (allocatingElement(program.records, ty)) {
+        .get_index => |access| if (allocatingElement(program.records, access.ty)) {
             graph.direct(index, .managed_allocation, instruction.span);
         },
         .acquire_buffer => |ty| if (try managedType(program.records, ty)) graph.direct(index, .managed_allocation, instruction.span) else return error.InternalError,

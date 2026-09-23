@@ -1,0 +1,20 @@
+# a signed multiply that overflows at the bottom of a recursion, and an
+# unsigned one after it would have
+
+
+def factorial(n: int) -> int:
+    if n <= 1:
+        return 1
+    return n * factorial(n - 1)
+
+
+def square(x: u64) -> u64:
+    return x * x
+
+
+def main(out: Stream) -> int:
+    out.print(factorial(20))
+    out.print(square(4294967295u64))
+    out.print(factorial(21))
+    out.print(square(4294967296u64))
+    return 0

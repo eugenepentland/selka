@@ -47,6 +47,32 @@ def main() -> int:
 This returns `21`. A name you do not need is written `_`, which binds nothing and reads
 nothing: `head, _ = split_first("key=value", "=")` binds only `head`.
 
+### Element and field targets
+
+A target can also be an element or a field — `xs[i]`, `table[key]`, `point.x`,
+`grid[r][c]` — so two elements swap the way two names do. The whole value is still
+evaluated first; then each target, in order, evaluates its own receiver and index and
+takes its value exactly as `target = value` would.
+
+```mylang
+# doc: expect 3142
+record Point:
+    x: int
+    y: int
+
+def main() -> int:
+    values: [4]int = [1, 2, 3, 4]
+    values[0], values[2] = values[2], values[0]
+    items = [4, 1]
+    items[0], items[-1] = items[-1], items[0]
+    point = Point(x=0, y=0)
+    point.x, point.y = items[0], items[1]
+    return values[0] * 1000 + point.x * 100 + point.y * 10 + values[-3]
+```
+
+This returns `3142`: the array swap puts `3` first, the list swap turns `[4, 1]` into
+`[1, 4]`, the two fields take those values, and `values[-3]` is the untouched `2`.
+
 A tuple holding a managed value is itself managed-bearing, so a `list` inside a tuple
 confines the tuple to an arena block exactly as the list alone would, and `escape`
 copies the whole tuple out:

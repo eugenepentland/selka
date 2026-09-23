@@ -696,6 +696,24 @@ pub fn build(b: *std.Build) void {
     boundary_run.has_side_effects = true;
     boundary_step.dependOn(&boundary_run.step);
     test_step.dependOn(boundary_step);
+    // The LLVM adapter's unit tests pin its IL parsing, overflow-intrinsic
+    // rewrites, frame map and declaration attributes. Nothing else fails if the
+    // adapter silently stops matching a shape, so they run in the gate.
+    const adapter_step = b.step("test-llvm-adapter", "Run the LLVM adapter's unit tests");
+    const adapter_run = bounded(b.addSystemCommand(&.{ "python3", "-m", "unittest", "test_adapter" }), rss.driver);
+    adapter_run.setCwd(b.path("experiments/llvm-backend"));
+    adapter_run.has_side_effects = true;
+    adapter_step.dependOn(&adapter_run.step);
+    test_step.dependOn(adapter_step);
+    // The C runtime's own suites (heap, collections, text, dictionary, regions,
+    // print, text views) under UBSan. Two of them broke silently in merges when
+    // only lanes ran them by hand, so they run in the gate.
+    const native_memory_step = b.step("test-native-memory", "Run the C runtime suites under UBSan");
+    const native_memory_run = bounded(b.addSystemCommand(&.{ "python3", "scripts/test_native_memory.py" }), rss.driver);
+    native_memory_run.setCwd(b.path("."));
+    native_memory_run.has_side_effects = true;
+    native_memory_step.dependOn(&native_memory_run.step);
+    test_step.dependOn(native_memory_step);
     const doc_coverage = bounded(b.addRunArtifact(exe), rss.driver);
     doc_coverage.addArgs(&.{ "doc-coverage", "." });
     doc_coverage.setCwd(b.path("."));

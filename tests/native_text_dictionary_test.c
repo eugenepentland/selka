@@ -270,6 +270,14 @@ static void absent_records_are_dropped_by_every_change(void) {
     assert(myl_native_dictionary_setdefault(&heap,dict,&fresh,&fallback,&out) && out==9);
     assert(myl_native_dictionary_setdefault(&heap,dict,&fresh,&one,&out) && out==9);
     assert(myl_native_dictionary_length(dict)==2);
+    /* spec-case: DICT-OVERWRITE-1 -- an overwrite that misses records the
+       absence and inserts nothing; the write after it inserts at that slot. */
+    int64_t newcomer=77;
+    assert(!myl_native_dictionary_overwrite(dict,&newcomer,&two) && myl_native_dictionary_length(dict)==2);
+    assert(myl_native_dictionary_write(&heap,dict,&newcomer,&two));
+    index_sound(dict);
+    assert(myl_native_dictionary_overwrite(dict,&newcomer,&one) && myl_native_dictionary_read(dict,&newcomer,&out) && out==1);
+    assert(myl_native_dictionary_length(dict)==3);
     assert(myl_native_root_pop(&heap,&root));
     myl_native_heap_destroy(&heap);
 }
@@ -311,7 +319,115 @@ static void pops_close_collision_runs(void) {
     myl_native_heap_destroy(&heap);
 }
 
+/* spec-case: DICT-RANGE-KEY-1 -- a described slice is the built slice: the same
+   octets under the same clamping, the same hash, and a dictionary keyed by it
+   stores, finds and orders exactly what writes of the built slices would. The
+   heap collects at every allocation, so each inserted key is read back after
+   the text it was cut from went through many collections. */
+static void span_keys_answer_as_built_slices(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,1<<22); heap.stress=1;
+    myl_native_root roots[4];
+    myl_native_text *source=text(&heap,"héllo wörld €uro héllo"); assert(source);
+    myl_native_root_push(&heap,&roots[0],&source,&pointer);
+    myl_native_dictionary *spans=myl_native_dictionary_new(&heap,&pointer,&number,1); assert(spans);
+    myl_native_root_push(&heap,&roots[1],&spans,&pointer);
+    myl_native_dictionary *built=myl_native_dictionary_new(&heap,&pointer,&number,1); assert(built);
+    myl_native_root_push(&heap,&roots[2],&built,&pointer);
+    myl_native_text *piece=NULL;
+    myl_native_root_push(&heap,&roots[3],&piece,&pointer);
+    const int64_t ends[]={INT64_MIN,-30,-6,-1,0,1,2,5,6,11,17,22,23,40,INT64_MAX};
+    const size_t count=sizeof ends/sizeof ends[0];
+    for (size_t i=0;i<count;++i) for (size_t j=0;j<count;++j) {
+        myl_native_text_span span;
+        myl_native_text_range(source,ends[i],ends[j],&span);
+        piece=myl_native_text_slice(&heap,source,ends[i],ends[j]); assert(piece);
+        assert(span.bytes==piece->bytes && span.offset+span.bytes<=source->bytes);
+        assert(!memcmp(myl_native_text_storage(source)+span.offset,myl_native_text_storage(piece),span.bytes));
+        assert(myl_native_octets_hash(myl_native_text_storage(source)+span.offset,span.bytes)==myl_native_text_hash(piece));
+        int64_t seen=0, again=0;
+        int present=myl_native_dictionary_read(built,&piece,&seen);
+        assert(present==myl_native_dictionary_contains_range(&heap,spans,source,&span));
+        assert(present==myl_native_dictionary_read_range(&heap,spans,source,&span,&again) && seen==again);
+        seen++;
+        assert(myl_native_dictionary_write(&heap,built,&piece,&seen));
+        assert(myl_native_dictionary_write_range(&heap,spans,source,&span,&seen));
+        index_sound(spans);
+    }
+    assert(myl_native_dictionary_length(spans)==myl_native_dictionary_length(built));
+    myl_native_heap_collect(&heap);
+    for (size_t at=0;at<myl_native_dictionary_length(spans);++at) {
+        myl_native_text *mine, *theirs;
+        int64_t left, right;
+        assert(myl_native_dictionary_key_at(spans,at,&mine) && myl_native_dictionary_key_at(built,at,&theirs));
+        assert(myl_native_text_equal(mine,theirs) && mine->length==theirs->length);
+        assert(!(mine->flags&MYL_TEXT_VIEW) && (mine->flags&MYL_TEXT_ASCII)==(theirs->flags&MYL_TEXT_ASCII));
+        assert(!(mine->flags&MYL_TEXT_HASHED) || mine->hash==myl_native_text_hash(theirs));
+        assert(myl_native_dictionary_value_at(spans,at,&left) && myl_native_dictionary_value_at(built,at,&right) && left==right);
+    }
+    for (int i=3;i>=0;--i) assert(myl_native_root_pop(&heap,&roots[i]));
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: DICT-RANGE-KEY-2 -- a slice's recorded absence answers only the
+   same span of the same text while no collection has run, never a lookup of the
+   whole text it was cut from, and never after an insertion. */
+static void span_absences_are_dated_and_kept_apart(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,1<<22);
+    myl_native_root roots[3];
+    myl_native_text *source=text(&heap,"abcabc"); assert(source);
+    myl_native_root_push(&heap,&roots[0],&source,&pointer);
+    myl_native_dictionary *dict=myl_native_dictionary_new(&heap,&pointer,&number,1); assert(dict);
+    myl_native_root_push(&heap,&roots[1],&dict,&pointer);
+    myl_native_text *other=text(&heap,"ab"); assert(other);
+    myl_native_root_push(&heap,&roots[2],&other,&pointer);
+    int64_t one=1,two=2,out=-1;
+    assert(myl_native_dictionary_write(&heap,dict,&source,&one));
+    myl_native_text_span front={.offset=0,.bytes=2};
+    /* A miss records the span's absence; the whole text is still found. */
+    assert(!myl_native_dictionary_read_range(&heap,dict,source,&front,&out) && out==-1);
+    assert(dict->last.state==4 && dict->last.key==(uint64_t)(uintptr_t)source && dict->last.offset==0 && dict->last.epoch==heap.collections);
+    assert(myl_native_dictionary_contains(dict,&source));
+    assert(myl_native_dictionary_read(dict,&source,&out) && out==1);
+    /* A miss, then an insertion of the same octets by another text, then the
+       span's write: the insertion dropped the record, so the write finds it. */
+    assert(!myl_native_dictionary_contains_range(&heap,dict,source,&front));
+    assert(myl_native_dictionary_write(&heap,dict,&other,&one));
+    assert(myl_native_dictionary_write_range(&heap,dict,source,&front,&two));
+    assert(myl_native_dictionary_length(dict)==2 && myl_native_dictionary_read(dict,&other,&out) && out==2);
+    /* A miss, a collection, then the write: the record is no longer believed. */
+    myl_native_text_span back={.offset=1,.bytes=2};
+    assert(!myl_native_dictionary_read_range(&heap,dict,source,&back,&out));
+    size_t epoch=dict->last.epoch;
+    myl_native_heap_collect(&heap);
+    assert(heap.collections!=epoch);
+    assert(!myl_native_dictionary_contains_range(&heap,dict,source,&back));
+    assert(dict->last.epoch==heap.collections);
+    assert(myl_native_dictionary_write_range(&heap,dict,source,&back,&two));
+    index_sound(dict);
+    assert(myl_native_dictionary_length(dict)==3 && myl_native_dictionary_read_range(&heap,dict,source,&back,&out) && out==2);
+    /* A found record answers a different span only when its octets match. */
+    myl_native_text_span later={.offset=3,.bytes=2}, shifted={.offset=4,.bytes=2};
+    assert(myl_native_dictionary_read_range(&heap,dict,source,&later,&out) && out==2);
+    assert(myl_native_dictionary_read_range(&heap,dict,source,&shifted,&out) && out==2);
+    assert(!myl_native_dictionary_contains_range(&heap,dict,source,&(myl_native_text_span){.offset=2,.bytes=2}));
+    /* The allocation-free halves of the writes replace present values only. */
+    int64_t nine=9;
+    myl_native_text_span middle={.offset=2,.bytes=2};
+    assert(!myl_native_dictionary_overwrite_range(&heap,dict,source,&middle,&nine));
+    assert(myl_native_dictionary_length(dict)==3);
+    assert(myl_native_dictionary_overwrite_range(&heap,dict,source,&later,&nine));
+    assert(myl_native_dictionary_read(dict,&other,&out) && out==9);
+    int64_t ten=10;
+    assert(myl_native_dictionary_overwrite(dict,&source,&ten) && myl_native_dictionary_read(dict,&source,&out) && out==10);
+    myl_native_text *fresh=text(&heap,"zz"); assert(fresh);
+    assert(!myl_native_dictionary_overwrite(dict,&fresh,&ten) && myl_native_dictionary_length(dict)==3);
+    for (int i=2;i>=0;--i) assert(myl_native_root_pop(&heap,&roots[i]));
+    myl_native_heap_destroy(&heap);
+}
 int main(void) {
+    span_keys_answer_as_built_slices();
+    span_absences_are_dated_and_kept_apart();
     repeated_probes_survive_a_shift();
     absent_records_are_dropped_by_every_change();
     pops_close_collision_runs();

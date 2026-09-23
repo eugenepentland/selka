@@ -65,7 +65,8 @@ out. `name.escape(value)` deep-copies the part of the graph reachable from `valu
 that lives in the current arena into the enclosing region — the parent arena, or
 the ordinary heap when there is no parent. Objects that already live in an older
 region are shared, not copied, and sharing and cycles inside the copied part are
-preserved.
+preserved. `class` instances are copied the same way as lists, strings and
+dictionaries, so a graph of class nodes built in the arena comes out whole.
 
 ```mylang
 # doc: expect 34

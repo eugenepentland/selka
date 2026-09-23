@@ -11,6 +11,8 @@ pub const Predicate = model.Predicate;
 pub const Equality = model.Equality;
 pub const SwitchArm = model.SwitchArm;
 pub const Instruction = model.Instruction;
+/// An element read or replace and whether it counts a negative index from the end.
+pub const Access = model.Access;
 pub const Function = model.Function;
 pub const FunctionScope = model.FunctionScope;
 pub const Program = model.Program;
@@ -248,7 +250,12 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
             if (program.records[ty.recordIndex()].shape.domain == null) return error.InternalError;
         },
         .make_record => |record| try validateOpMakeRecord(allocator, program, record),
-        .get_index, .replace_index, .array_length => |ty| {
+        .get_index, .replace_index, .array_length => {
+            const ty = switch (instruction.op) {
+                .get_index, .replace_index => |access| access.ty,
+                .array_length => |array| array,
+                else => unreachable,
+            };
             if (!ty.isAggregate()) return error.InternalError;
             if (!validType(ty, program)) return error.InternalError;
             const schema = program.records[ty.recordIndex()];
@@ -539,9 +546,9 @@ fn validateOpTryResult(program: Program, function: Function, propagate: @FieldTy
         if (input.error_type != output.error_type and typed.wrappingCase(program.records, output.error_type, input.error_type) == null) return error.InternalError;
         return;
     }
-    if (prelude.optionShape(propagate.input, program.records)) |input| {
-        const output = prelude.optionShape(propagate.output, program.records) orelse return error.InternalError;
-        if (input.element != output.element) return error.InternalError;
+    if (prelude.optionShape(propagate.input, program.records) != null) {
+        // A propagated `None` is rebuilt in the output type, so the elements may differ.
+        if (prelude.optionShape(propagate.output, program.records) == null) return error.InternalError;
         return;
     }
     return error.InternalError;

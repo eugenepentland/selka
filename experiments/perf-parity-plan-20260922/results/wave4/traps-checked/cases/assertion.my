@@ -1,0 +1,4 @@
+def main() -> int:
+    value = 1
+    assert value == 2, "value must be two"
+    return 0

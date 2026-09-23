@@ -134,6 +134,26 @@ pub const Statement = struct {
         assignment: struct { name: Span, value: NodeId, op: AssignmentOp, op_span: Span },
     },
 };
+/// Append the statements nested directly inside `statement` — a block's
+/// children, both branches, every match arm, and the body of a loop, `for` or
+/// `with` — so a worklist walk reaches every statement of a body.
+pub fn appendNested(allocator: std.mem.Allocator, work: *std.ArrayList(StatementId), statement: Statement) std.mem.Allocator.Error!void {
+    switch (statement.data) {
+        .block => |children| try work.appendSlice(allocator, children),
+        .branch => |branch| {
+            try work.append(allocator, branch.then_body);
+            if (branch.else_body) |other| try work.append(allocator, other);
+        },
+        .match => |match| for (match.arms) |arm| {
+            try work.append(allocator, arm.body);
+        },
+        .loop => |loop| try work.append(allocator, loop.body),
+        .for_each => |each| try work.append(allocator, each.body),
+        .for_range => |range| try work.append(allocator, range.body),
+        .with_scope => |scope| try work.append(allocator, scope.body),
+        .assertion, .ret, .loop_exit, .discard, .binding, .assignment => {},
+    }
+}
 /// One generator with an optional filter, producing a value per retained element.
 pub const Comprehension = struct {
     output: NodeId,

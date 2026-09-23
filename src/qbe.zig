@@ -5,6 +5,7 @@ const zero_local = @import("qbe_format.zig").zero_local;
 const arena_lower = @import("qbe_arena.zig");
 const borrow_lower = @import("qbe_borrow.zig");
 const liveness = @import("qbe_liveness.zig");
+const range_keys = @import("qbe_range_keys.zig");
 const managed_lower = @import("qbe_managed.zig");
 const std = @import("std");
 const bytecode = @import("bytecode.zig");
@@ -713,6 +714,15 @@ const pure_callees = [_][]const u8{
     // root record around them.
     "myl_native_dictionary_read",
     "myl_native_dictionary_contains",
+    // A described slice (`DICT-RANGE-KEY-1`): the span computation and the two
+    // lookups by span read the heap's collection count and nothing else of it.
+    "myl_native_text_range",
+    "myl_native_dictionary_read_range",
+    "myl_native_dictionary_contains_range",
+    // The allocation-free half of a dictionary write (`DICT-OVERWRITE-1`): it
+    // replaces a present key's value and never inserts.
+    "myl_native_dictionary_overwrite",
+    "myl_native_dictionary_overwrite_range",
     "myl_native_dictionary_length",
     "myl_native_dictionary_key_at",
     "myl_native_dictionary_value_at",
@@ -1254,6 +1264,9 @@ const Emitter = struct {
     /// Per instruction, the locals a safepoint there publishes as roots
     /// (`QBE-ROOTLIVE-1`); null publishes every traced local.
     live_roots: ?liveness.Roots = null,
+    /// The slices lowered as described dictionary keys and where their spans
+    /// live (`DICT-RANGE-KEY-1`).
+    range_keys: range_keys.Plan = .{},
 
     /// Shared lowering primitive for target operation emitters.
     pub fn reject(self: *Emitter, pc: usize) GenerateError {
@@ -1390,6 +1403,7 @@ const Emitter = struct {
         self.states = ir.states;
         self.branch_targets = try self.collectBranchTargets();
         self.by_reference = try self.addressLocals();
+        self.range_keys = try self.planRangeKeys();
         try self.findRoots();
         if (self.has_roots and self.has_safepoints) self.live_roots = try self.rootLiveness();
         const capacity = ir.stack_capacity;
@@ -1490,6 +1504,18 @@ const Emitter = struct {
         self.small_leaf = false;
         self.fused = null;
     }
+    /// Find the slices this function can describe instead of build.
+    fn planRangeKeys(self: *Emitter) GenerateError!range_keys.Plan {
+        const addressed = try self.allocator.alloc(bool, self.function.scope.locals.len);
+        for (addressed, 0..) |*flag, index| flag.* = self.byReference(index) or self.callerStorage(index);
+        return range_keys.plan(self.allocator, .{
+            .program = self.program,
+            .function = self.function,
+            .states = self.states,
+            .branch_targets = self.branch_targets,
+            .by_reference = addressed,
+        }, self.arenas);
+    }
     fn findRoots(self: *Emitter) GenerateError!void {
         const f = self.function;
         for (f.scope.locals) |local| self.has_roots = self.has_roots or (try self.layout(local.ty)).trace;
@@ -1515,6 +1541,8 @@ const Emitter = struct {
             if (placeholder != 0) try self.allocateIndex("lz", i, placeholder);
         }
         for (0..capacity) |i| try self.allocateIndex("s", i, 8);
+        for (self.range_keys.locals, 0..) |used, i| if (used) try self.allocateIndex("rl", i, 16);
+        for (self.range_keys.heights, 0..) |used, i| if (used) try self.allocateIndex("rs", i, 16);
         if (self.has_roots) for (0..f.scope.locals.len + capacity) |i| try self.allocateIndex("root", i, 32);
     }
     fn allocateNativeStorage(self: *Emitter, capacity: usize) GenerateError!void {
@@ -2378,6 +2406,7 @@ const Emitter = struct {
             size = try addFrame(size, try self.placeholderBytes(i, local.ty));
         }
         size = try addFrame(size, temporaries);
+        size = try addFrame(size, self.range_keys.frameBytes());
         if (self.has_roots) size = try addFrame(size, @as(u64, self.function.scope.locals.len + capacity) * 32);
         // A result that crosses through the caller's storage occupies nothing
         // here; any other aggregate result has its zeroed copy and, in a heap
@@ -2870,6 +2899,7 @@ const Emitter = struct {
                 const index = @backingInt(slot);
                 const ty = self.function.scope.locals[index].ty;
                 try self.readLocal(index, h);
+                if (self.range_keys.role(self.pc) == .load) try range_keys.Lower(Emitter).load(self, index, h);
                 if (op == .move_local and (try self.layout(ty)).drop) try self.zeroTracedLocal(index, ty);
             },
             .store_local => |slot| {
@@ -2899,6 +2929,7 @@ const Emitter = struct {
                     }
                     if (scalar(ty, self.program.records)) try self.print(" storel %v{d}, %l{d}\n", .{ v, index }) else try self.print(" blit %v{d}, %l{d}, {d}\n", .{ v, index, (try self.layout(ty)).size });
                 }
+                if (self.range_keys.role(self.pc) == .store) try range_keys.Lower(Emitter).store(self, index, h - 1);
             },
             .drop_local => |slot| {
                 const ty = self.function.scope.locals[@backingInt(slot)].ty;

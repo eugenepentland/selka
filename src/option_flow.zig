@@ -121,23 +121,15 @@ pub const State = struct {
         var work: std.ArrayList(ast.StatementId) = .empty;
         defer work.deinit(allocator);
         try work.append(allocator, body);
-        while (work.pop()) |id| switch (context.program.statements.items[@backingInt(id)].data) {
-            .assignment => |assignment| if (active.get(context.src.text(assignment.name))) |slot| self.forget(slot),
-            .binding => |binding| if (active.get(context.src.text(binding.name))) |slot| self.forget(slot),
-            .block => |children| try work.appendSlice(allocator, children),
-            .branch => |branch| {
-                try work.append(allocator, branch.then_body);
-                if (branch.else_body) |other| try work.append(allocator, other);
-            },
-            .match => |match| for (match.arms) |arm| {
-                try work.append(allocator, arm.body);
-            },
-            .loop => |loop| try work.append(allocator, loop.body),
-            .for_each => |each| try work.append(allocator, each.body),
-            .for_range => |range| try work.append(allocator, range.body),
-            .with_scope => |scope| try work.append(allocator, scope.body),
-            else => {},
-        };
+        while (work.pop()) |id| {
+            const statement = context.program.statements.items[@backingInt(id)];
+            switch (statement.data) {
+                .assignment => |assignment| if (active.get(context.src.text(assignment.name))) |slot| self.forget(slot),
+                .binding => |binding| if (active.get(context.src.text(binding.name))) |slot| self.forget(slot),
+                else => {},
+            }
+            try ast.appendNested(allocator, &work, statement);
+        }
     }
 };
 /// Evaluate a presence test once through the normal exhaustive match representation.

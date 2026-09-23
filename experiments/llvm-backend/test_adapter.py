@@ -675,16 +675,283 @@ export function l $myl_f_0123456789abcdef(l %ctx, l %a) {
                 cwd=HERE, env=environment, check=True, capture_output=True, text=True)
             self.assertEqual(result.stdout.strip(), "(('ptr', 'i64'), 'i32')")
 
+    def test_dominators_match_the_set_definition_and_scale_linearly(self):
+        # The immediate-dominator tree answers exactly what per-block dominator
+        # sets answered, on hand graphs and random ones, including unreachable
+        # blocks and loops, and a 60 000-block function no longer exhausts memory.
+        import random
+        from llvm_emit import Dominators
+
+        def by_sets(entry, edges):
+            reachable, pending = {entry}, [entry]
+            while pending:
+                for successor in edges[pending.pop()]:
+                    if successor not in reachable:
+                        reachable.add(successor)
+                        pending.append(successor)
+            predecessors = {label: [] for label in edges}
+            for label, successors in edges.items():
+                for successor in successors:
+                    predecessors[successor].append(label)
+            sets = {label: ({entry} if label == entry else set(reachable)) for label in reachable}
+            changed = True
+            while changed:
+                changed = False
+                for label in reachable - {entry}:
+                    incoming = [sets[p] for p in predecessors[label] if p in reachable]
+                    merged = set.intersection(*incoming) | {label}
+                    if merged != sets[label]:
+                        sets[label], changed = merged, True
+            return sets
+
+        rng = random.Random(7)
+        graphs = [
+            ("a", {"a": ["b", "c"], "b": ["d"], "c": ["d"], "d": [], "dead": ["d"]}),
+            ("a", {"a": ["b"], "b": ["c", "e"], "c": ["b"], "e": []}),
+        ]
+        for _ in range(200):
+            count = rng.randint(1, 12)
+            labels = [f"n{i}" for i in range(count)]
+            graphs.append(("n0", {label: rng.sample(labels, rng.randint(0, min(3, count))) for label in labels}))
+        for entry, edges in graphs:
+            expected = by_sets(entry, edges)
+            relation = Dominators(entry, edges)
+            for a in edges:
+                for b in edges:
+                    self.assertEqual(relation.dominates(a, b), a in expected.get(b, ()), (edges, a, b))
+        chain = {f"b{i}": [f"b{i + 1}", f"x{i}"] for i in range(30000)}
+        chain.update({f"x{i}": [f"b{i + 1}"] for i in range(30000)})
+        chain["b30000"] = []
+        relation = Dominators("b0", chain)
+        self.assertTrue(relation.dominates("b0", "b30000"))
+        self.assertTrue(relation.dominates("b29999", "x29999"))
+        self.assertFalse(relation.dominates("x5", "b6"))
+
     def test_benchmark_runtime_registry_is_complete(self):
         evidence = json.loads((HERE / "evidence" / "runtime-symbols.json").read_text())
+        # The evidence is a 2026-09-19 snapshot; a helper the runtime has since
+        # removed (myl_native_text_points went with the UTF-8 text rewrite) is
+        # no longer something the adapter can be asked to declare.
+        runtime = "".join(p.read_text(errors="replace") for p in (HERE.parents[1] / "src").glob("*.[ch]"))
         missing = []
         for name, entry in evidence["symbols"].items():
-            if not entry.get("il_call_shapes"):
+            if not entry.get("il_call_shapes") or name not in runtime:
                 continue
             if name.startswith(("myl_native_", "myl_qbe_", "myl_r_")):
                 if runtime_signature(name) is None:
                     missing.append(name)
         self.assertEqual(missing, [])
+
+
+#: The checked 64-bit shapes `src/qbe_scalar.zig` emits, verbatim in form: the
+#: operation, the flag formula and the cold block with its fail call.  `OP` is
+#: the operation's `typed.BinaryOp` code as the fail call passes it.
+CHECK_BODIES = {
+    ("add", True): """ %r =l add %a, %b
+ %x =l xor %a, %r
+ %y =l xor %b, %r
+ %both =l and %x, %y
+ %flag =l csltl %both, 0
+""",
+    ("sub", True): """ %r =l sub %a, %b
+ %x =l xor %a, %b
+ %y =l xor %a, %r
+ %both =l and %x, %y
+ %flag =l csltl %both, 0
+""",
+    ("add", False): """ %r =l add %a, %b
+ %flag =l cultl %r, %a
+""",
+    ("sub", False): """ %r =l sub %a, %b
+ %flag =l cultl %a, %b
+""",
+}
+_HIGH = """ %al =l and %a, 4294967295
+ %ah =l shr %a, 32
+ %bl =l and %b, 4294967295
+ %bh =l shr %b, 32
+ %base =l mul %al, %bl
+ %carry =l shr %base, 32
+ %cross =l mul %ah, %bl
+ %middle =l add %cross, %carry
+ %lm =l and %middle, 4294967295
+ %hm =l shr %middle, 32
+ %other =l mul %al, %bh
+ %sum =l add %other, %lm
+ %c2 =l shr %sum, 32
+ %top =l mul %ah, %bh
+ %partial =l add %top, %hm
+ %high =l add %partial, %c2
+"""
+CHECK_BODIES[("mul", False)] = " %r =l mul %a, %b\n" + _HIGH + " %flag =l cnel %high, 0\n"
+CHECK_BODIES[("mul", True)] = (" %r =l mul %a, %b\n" + _HIGH + """ %ln =l csltl %a, 0
+ %rn =l csltl %b, 0
+ %lmask =l neg %ln
+ %rmask =l neg %rn
+ %lt =l and %b, %lmask
+ %rt =l and %a, %rmask
+ %adj =l sub %high, %lt
+ %adj =l sub %adj, %rt
+ %sign =l sar %r, 63
+ %flag =l cnel %adj, %sign
+""")
+STEMS = {("add", True): "sadd", ("sub", True): "ssub", ("mul", True): "smul",
+         ("add", False): "uadd", ("sub", False): "usub", ("mul", False): "umul"}
+OPCODES = {"add": 0, "sub": 1, "mul": 2}
+
+
+def checked_unit(op, signed, body=None, ending=" hlt\n"):
+    """One unit `$f_<op>(ctx, a, b)` returning `a <op> b` or calling the fail helper."""
+    name = f"f_{op}_{'s' if signed else 'u'}"
+    return (f"export function l ${name}(l %ctx, l %a, l %b) {{\n@start\n"
+            + (body if body is not None else CHECK_BODIES[(op, signed)])
+            + " jnz %flag, @overflow, @checked\n@overflow\n"
+            f" call $myl_qbe_fail_overflow_op(l %ctx, l {OPCODES[op]}, l %a, l %b, l 64)\n"
+            + ending + "@checked\n ret %r\n}\n")
+
+
+class CheckedArithmeticTests(unittest.TestCase):
+    """LLVM-OVERFLOW-INTRINSIC-1: checked `+ - *` reach LLVM as overflow intrinsics."""
+
+    compile_units = AdapterTests.compile_units
+
+    def test_each_shape_lowers_to_its_intrinsic(self):
+        for (op, signed), stem in STEMS.items():
+            with self.subTest(op=op, signed=signed):
+                ir = translate_text(checked_unit(op, signed), f"{op}{signed}")
+                self.assertIn(f"call {{ i64, i1 }} @llvm.{stem}.with.overflow.i64(", ir)
+                self.assertIn(f"declare {{ i64, i1 }} @llvm.{stem}.with.overflow.i64(i64, i64)", ir)
+                self.assertEqual(ir.count(".with.overflow.i64("), 2)
+                # The flag is the intrinsic's bit; the fail call is untouched.
+                self.assertRegex(ir, r"zext i1 %ov\d+ to i64")
+                self.assertIn(f"call void @myl_qbe_fail_overflow_op(ptr %", ir)
+                self.assertIn(f", i64 {OPCODES[op]}, i64 %", ir)
+
+    def test_each_shape_compiles_to_the_flag_branch(self):
+        # The machine code is the operation and one flag branch.
+        for (op, signed), jump in {("add", True): "jo", ("sub", True): "jo",
+                                   ("mul", True): "jo", ("add", False): "jb",
+                                   ("sub", False): "jb", ("mul", False): "jo"}.items():
+            with self.subTest(op=op, signed=signed):
+                ir = translate_text(checked_unit(op, signed), "shape")
+                with tempfile.TemporaryDirectory() as directory:
+                    ll = Path(directory, "u.ll")
+                    ll.write_text(ir)
+                    asm = Path(directory, "u.s")
+                    subprocess.run(["zig", "cc", "-S", "-O2", "-fPIC", "-g0", str(ll), "-o",
+                                    str(asm)], check=True, capture_output=True, text=True)
+                    code = asm.read_text().split(f"f_{op}_{'s' if signed else 'u'}:")[1]
+                self.assertRegex(code, rf"\n\s+{jump}\s")
+                self.assertNotIn("shrq", code)
+                self.assertNotIn("sarq", code)
+
+    def test_results_and_traps_match_the_exact_operation(self):
+        # Every shape against the compiler's own overflow builtins, on the
+        # boundaries of both signed and unsigned 64-bit ranges.
+        units = {f"{op}{signed}": checked_unit(op, signed) for op, signed in STEMS}
+        edges = [0, 1, 2, 3, -1, -2, -3, 2**31 - 1, 2**31, -2**31, 2**32 - 1, 2**32,
+                 3037000499, 3037000500, -3037000499, -3037000500, 4294967296 + 7,
+                 2**62, -2**62, 2**63 - 1, 2**63 - 2, -2**63, -2**63 + 1]
+        table = ", ".join(f"{e}LL" if e != -2**63 else "INT64_MIN" for e in edges)
+        calls = []
+        for op, signed in STEMS:
+            name = f"f_{op}_{'s' if signed else 'u'}"
+            builtin = f"__builtin_{op}_overflow"
+            kind = "int64_t" if signed else "uint64_t"
+            calls.append(
+                f'for(int i=0;i<N;i++)for(int j=0;j<N;j++){{{kind} want;int64_t got;'
+                f'int over={builtin}(({kind})V[i],({kind})V[j],&want);'
+                f'trapped=0;if(setjmp(out)==0)got={name}(&ctx,V[i],V[j]);'
+                f'if(over!=trapped||(!over&&got!=(int64_t)want)){{printf("{name} %lld %lld\\n",'
+                f'(long long)V[i],(long long)V[j]);bad++;}}'
+                f'if(over&&(seen_l!=V[i]||seen_r!=V[j]||seen_op!={OPCODES[op]}))bad++;count++;}}')
+        declarations = "".join(f"extern int64_t f_{op}_{'s' if s else 'u'}(void*,int64_t,int64_t);"
+                               for op, s in STEMS)
+        main = ('#include <setjmp.h>\n#include <stdio.h>\n#include <stdint.h>\n'
+                + declarations + '\nstatic jmp_buf out;static volatile int trapped;'
+                'static int64_t seen_op,seen_l,seen_r;\n'
+                'void myl_qbe_fail_overflow_op(void *c,int64_t op,int64_t l,int64_t r,int64_t w)'
+                '{(void)c;(void)w;seen_op=op;seen_l=l;seen_r=r;trapped=1;longjmp(out,1);}\n'
+                f'static const int64_t V[]={{{table}}};\n'
+                'int main(void){int ctx;int bad=0,count=0;const int N=sizeof V/sizeof V[0];'
+                + "".join(calls) + 'printf("%d %d\\n",bad,count);return 0;}\n')
+        self.assertEqual(self.compile_units(units, main), f"0 {len(edges) ** 2 * 6}\n")
+
+    def test_only_the_exact_formula_is_rewritten(self):
+        near_misses = {
+            # the formula over a different operation's result
+            "operands swapped in the flag": CHECK_BODIES[("add", True)].replace(
+                "xor %b, %r", "xor %r, %b"),
+            "a reassigned between the operation and the flag": CHECK_BODIES[("add", True)].replace(
+                " %x =l", " %a =l add %a, 1\n %x =l"),
+            "the wrong compare": CHECK_BODIES[("add", True)].replace("csltl %both, 0",
+                                                                    "cslel %both, 0"),
+            "a 32-bit flag": CHECK_BODIES[("add", False)].replace("cultl %r, %a", "cultw %r, %a"),
+            "a word operation": CHECK_BODIES[("add", True)].replace("%r =l add", "%r =w add"),
+            "a range test": " %r =l add %a, %b\n %lo =l csltl %r, -2147483648\n"
+                            " %hi =l csgtl %r, 2147483647\n %flag =l or %lo, %hi\n",
+            "the signed product off by one limb": CHECK_BODIES[("mul", True)].replace(
+                "%sign =l sar %r, 63", "%sign =l sar %r, 62"),
+        }
+        for label, body in near_misses.items():
+            with self.subTest(label):
+                op = "mul" if "product" in label else "add"
+                ir = translate_text(checked_unit(op, True, body), "miss")
+                self.assertNotIn("with.overflow", ir)
+        # A redefinition of the result's name after the flag does not matter,
+        # and one before the flag does.
+        late = CHECK_BODIES[("add", True)] + " %a =l copy 0\n"
+        self.assertIn("sadd.with.overflow", translate_text(checked_unit("add", True, late), "late"))
+        # The sticky protocol is matched the same way.
+        sticky = translate_text(checked_unit("sub", True, ending=" jmp @failure\n@failure\n ret 0\n"), "sticky")
+        self.assertIn("ssub.with.overflow", sticky)
+
+    def test_the_formulas_are_identities_on_every_input(self):
+        # The rewrite needs no fact about the operands: each formula the
+        # matcher accepts equals the intrinsic's overflow bit for all inputs.
+        import random
+        from llvm_emit import overflow_formulas
+        mask = (1 << 64) - 1
+
+        def signed(v):
+            return v - (1 << 64) if v >> 63 else v
+
+        def evaluate(node, env):
+            head = node[0]
+            if head == "const":
+                return node[1]
+            if head == "entry":
+                return env[node[1]]
+            args = [evaluate(child, env) for child in node[1:]]
+            if head == "neg":
+                return (-args[0]) & mask
+            a, b = args
+            return {"add": (a + b) & mask, "sub": (a - b) & mask, "mul": (a * b) & mask,
+                    "and": a & b, "xor": a ^ b, "shr": a >> (b & 63),
+                    "sar": (signed(a) >> (b & 63)) & mask,
+                    "csltl": int(signed(a) < signed(b)), "cultl": int(a < b),
+                    "cnel": int(a != b)}[head]
+
+        exact = {"sadd": lambda a, b: not -2**63 <= signed(a) + signed(b) < 2**63,
+                 "ssub": lambda a, b: not -2**63 <= signed(a) - signed(b) < 2**63,
+                 "smul": lambda a, b: not -2**63 <= signed(a) * signed(b) < 2**63,
+                 "uadd": lambda a, b: a + b > mask, "usub": lambda a, b: a < b,
+                 "umul": lambda a, b: a * b > mask}
+        edges = [0, 1, 2, 3, 2**31, 2**32 - 1, 2**32, 2**32 + 1, 3037000499, 3037000500,
+                 2**62, 2**63 - 1, 2**63, 2**63 + 1, 2**64 - 1, 2**64 - 2, 2**64 - 2**32]
+        edges += [(-e) & mask for e in edges]
+        generator = random.Random(20260923)
+        pairs = [(a, b) for a in edges for b in edges]
+        pairs += [(generator.getrandbits(generator.choice((8, 32, 33, 63, 64))),
+                   generator.getrandbits(generator.choice((8, 32, 33, 63, 64))))
+                  for _ in range(20000)]
+        a_leaf, b_leaf = ("entry", "a"), ("entry", "b")
+        for op in ("add", "sub", "mul"):
+            for stem, flag in overflow_formulas((op, a_leaf, b_leaf)):
+                with self.subTest(stem=stem):
+                    for a, b in pairs:
+                        self.assertEqual(bool(evaluate(flag, {"a": a, "b": b})),
+                                         exact[stem](a, b), (stem, a, b))
 
 
 if __name__ == "__main__":

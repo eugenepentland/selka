@@ -1,0 +1,7 @@
+def lookup(table: dict[str, int], name: str) -> int:
+    return table[name]
+
+
+def main() -> int:
+    table = {"a": 1, "b": 2}
+    return lookup(table, "a") + lookup(table, "zz")

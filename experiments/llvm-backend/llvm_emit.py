@@ -220,6 +220,82 @@ ALIAS_SUFFIX = {FRAME: ", !alias.scope !3, !noalias !4",
                 FOREIGN: ", !alias.scope !4, !noalias !3"}
 
 
+class Dominators:
+    """The dominance relation of one control-flow graph, by block label.
+
+    `edges` maps every label to its successor labels and `entry` is where
+    control starts.  The immediate dominators come from the iterative
+    algorithm of Cooper, Harvey and Kennedy over reverse postorder; one walk of
+    the dominator tree then numbers every block on entry and exit, so a query
+    is two comparisons.  A block dominates itself; a block control cannot
+    reach neither dominates nor is dominated.
+    """
+
+    def __init__(self, entry, edges):
+        postorder, seen, stack = [], {entry}, [(entry, iter(edges.get(entry, ())))]
+        while stack:
+            label, successors = stack[-1]
+            advanced = False
+            for successor in successors:
+                if successor not in seen:
+                    seen.add(successor)
+                    stack.append((successor, iter(edges.get(successor, ()))))
+                    advanced = True
+                    break
+            if not advanced:
+                postorder.append(label)
+                stack.pop()
+        rank = {label: index for index, label in enumerate(postorder)}
+        predecessors = {label: [] for label in postorder}
+        for label in postorder:
+            for successor in edges.get(label, ()):
+                predecessors[successor].append(label)
+        idom = {entry: entry}
+        reverse = list(reversed(postorder))
+        changed = True
+        while changed:
+            changed = False
+            for label in reverse[1:]:
+                chosen = None
+                for predecessor in predecessors[label]:
+                    if predecessor not in idom:
+                        continue
+                    chosen = predecessor if chosen is None else self._meet(idom, rank, predecessor, chosen)
+                if chosen is not None and idom.get(label) != chosen:
+                    idom[label] = chosen
+                    changed = True
+        children = {label: [] for label in idom}
+        for label, parent in idom.items():
+            if label != entry:
+                children[parent].append(label)
+        self.enter, self.leave, clock, walk = {}, {}, 0, [(entry, False)]
+        while walk:
+            label, done = walk.pop()
+            if done:
+                self.leave[label] = clock
+            else:
+                self.enter[label] = clock
+                walk.append((label, True))
+                walk.extend((child, False) for child in children[label])
+            clock += 1
+
+    @staticmethod
+    def _meet(idom, rank, left, right):
+        """The nearest common dominator of two processed blocks."""
+        while left != right:
+            while rank[left] < rank[right]:
+                left = idom[left]
+            while rank[right] < rank[left]:
+                right = idom[right]
+        return left
+
+    def dominates(self, dominator, block):
+        """Whether every path from the entry to `block` passes `dominator`."""
+        if dominator not in self.enter or block not in self.enter:
+            return False
+        return self.enter[dominator] <= self.enter[block] and self.leave[block] <= self.leave[dominator]
+
+
 class MemoryClasses:
     """Which memory class each temporary of one unit addresses.
 
@@ -399,7 +475,7 @@ class MemoryClasses:
     def _established(writes, reads, dominators):
         """Whether one of `writes` runs before every one of `reads`, on every path."""
         for label, index in writes:
-            if all(label in dominators.get(read_label, ()) and
+            if all(dominators.dominates(label, read_label) and
                    (label != read_label or index < read_index)
                    for read_label, read_index in reads):
                 return True
@@ -419,49 +495,30 @@ class MemoryClasses:
         return [following] if following else []
 
     def _dominators(self):
-        """The dominator set of every reachable block, by label.
+        """The dominance relation of the function's reachable blocks.
 
         A QBE block is entered only at its label and runs straight through, so a
         block that dominates a load's block has run its own instructions before
         that load.  Unreachable blocks are left out and dominate nothing.
+
+        Linear in the number of blocks and edges (the immediate-dominator tree of
+        Cooper, Harvey and Kennedy, then one tree walk), where the per-block
+        dominator sets it replaces were quadratic in space: a function past about
+        20 000 blocks — every checked operation adds two — ran the adapter out of
+        memory.
         """
         if self.dominator_sets is not None:
             return self.dominator_sets
         blocks = self.function.blocks
         order = [block.label for block in blocks]
+        known = set(order)
         edges = {}
         for index, block in enumerate(blocks):
             following = blocks[index + 1].label if index + 1 < len(blocks) else None
             edges[block.label] = [label for label in self._successors(block, following)
-                                  if label in set(order)]
-        entry = order[0]
-        reachable, pending = {entry}, [entry]
-        while pending:
-            for successor in edges[pending.pop()]:
-                if successor not in reachable:
-                    reachable.add(successor)
-                    pending.append(successor)
-        predecessors = {label: [] for label in order}
-        for label in order:
-            for successor in edges[label]:
-                predecessors[successor].append(label)
-        universe = set(label for label in order if label in reachable)
-        dominators = {label: (set([entry]) if label == entry else set(universe))
-                      for label in universe}
-        changed = True
-        while changed:
-            changed = False
-            for label in order:
-                if label not in universe or label == entry:
-                    continue
-                incoming = [dominators[p] for p in predecessors[label] if p in universe]
-                merged = set.intersection(*incoming) if incoming else set()
-                merged.add(label)
-                if merged != dominators[label]:
-                    dominators[label] = merged
-                    changed = True
-        self.dominator_sets = dominators
-        return dominators
+                                  if label in known]
+        self.dominator_sets = Dominators(order[0], edges)
+        return self.dominator_sets
 
     def _slot_store_target(self, instruction):
         """The simple slot one `storel` writes, or None."""
@@ -480,6 +537,148 @@ class MemoryClasses:
         if is_temporary(source) and source.kind == "temp" and source.name in self.slots:
             return source.name
         return None
+
+
+# ---------------------------------------------------------------------------
+# Checked arithmetic (LLVM-OVERFLOW-INTRINSIC-1)
+# ---------------------------------------------------------------------------
+# The frontend checks a 64-bit `+ - *` with plain integer code: it computes the
+# wrapped result and then an overflow flag from it (`src/qbe_scalar.zig`,
+# `checkedAddSub`/`checkedMul`).  LLVM does not recognise those idioms — a
+# signed add reaches the machine as `add; mov; xor; mov; xor; test; js`, and the
+# 64-bit multiply as a four-limb high product — so this pass finds each flag
+# whose value is *exactly* one of the frontend's formulas over one `add`, `sub`
+# or `mul` of the same block, and lowers that instruction to
+# `llvm.{s,u}{add,sub,mul}.with.overflow.i64`: its first result replaces the
+# wrapped value and its second replaces the flag.  Nothing else changes — the
+# old flag computation is still emitted (LLVM deletes it once nothing reads it),
+# the branch, the cold block and its `myl_qbe_fail_overflow_op` call with the
+# same operands and position are untouched.
+#
+# The match is by value, not by text.  Every temporary of one block is
+# evaluated symbolically in order: a pure `l` operation becomes a tuple of its
+# opcode and its operands' values, a literal becomes its 64-bit pattern, and
+# anything else (a load, a call, a phi, a value from another block) becomes a
+# leaf that only equals itself.  Tuples compare structurally, so two operands
+# are "the same" exactly when they are the same computation over the same
+# leaves, whatever the temporaries were called and however often a name was
+# reassigned in between.  A flag is rewritten only when its value tuple equals
+# the formula below, built over the operands of an arithmetic instruction that
+# precedes it in the block.  Each formula is an identity for every pair of
+# 64-bit inputs (`test_adapter.OverflowFormulaTests` checks them exhaustively on
+# the boundaries and on random operands), so the rewrite needs no fact about the
+# operands' ranges and no fact about the check.  A narrower width's range check
+# (`r < min or r > max` over the exact 64-bit result) is not an overflow
+# intrinsic without assuming the operands already lie in that width, which the
+# IL cannot show, so it is left as it is; so is the one-compare test the
+# frontend emits against a literal operand, which is already a single compare.
+
+#: Pure 64-bit opcodes the symbolic evaluation models (everything the formulas
+#: below use).  Any other definition is a leaf.
+OVERFLOW_PURE = {"add", "sub", "mul", "and", "xor", "shr", "sar", "neg",
+                 "csltl", "cultl", "cnel"}
+
+_MASK64 = (1 << 64) - 1
+
+
+def _k(value):
+    """The symbolic value of a 64-bit literal."""
+    return ("const", value & _MASK64)
+
+
+def _unsigned_high(a, b):
+    """`qbe_scalar.unsignedHigh`: the high 64 bits of `a * b`, four 32-bit limbs."""
+    def low(v):
+        return ("and", v, _k(0xFFFFFFFF))
+
+    def high(v):
+        return ("shr", v, _k(32))
+    base = ("mul", low(a), low(b))
+    middle = ("add", ("mul", high(a), low(b)), high(base))
+    total = ("add", ("mul", low(a), high(b)), low(middle))
+    return ("add", ("add", ("mul", high(a), high(b)), high(middle)), high(total))
+
+
+def overflow_formulas(result):
+    """(intrinsic stem, flag value) pairs the frontend derives from `result`.
+
+    `result` is the symbolic value of one `add`, `sub` or `mul`; each pair names
+    the `llvm.<stem>.with.overflow.i64` whose overflow bit equals the flag.
+    """
+    opcode, a, b = result
+    zero = _k(0)
+    if opcode == "add":
+        return (("sadd", ("csltl", ("and", ("xor", a, result), ("xor", b, result)), zero)),
+                ("uadd", ("cultl", result, a)))
+    if opcode == "sub":
+        return (("ssub", ("csltl", ("and", ("xor", a, b), ("xor", a, result)), zero)),
+                ("usub", ("cultl", a, b)))
+    high = _unsigned_high(a, b)
+    signed_high = ("sub", ("sub", high, ("and", b, ("neg", ("csltl", a, zero)))),
+                   ("and", a, ("neg", ("csltl", b, zero))))
+    return (("umul", ("cnel", high, zero)),
+            ("smul", ("cnel", signed_high, ("sar", result, _k(63)))))
+
+
+class OverflowChecks:
+    """The checked 64-bit operations of one unit, found by value.
+
+    `producers` maps an arithmetic instruction (by `id`) to the intrinsic stems
+    it must also compute; `flags` maps a flag definition to the arithmetic
+    instruction and stem whose overflow bit it is.  `excluded` names the
+    temporaries that hold object addresses: an `add` of one is lowered as a
+    `getelementptr` (`Emitter.on_arithmetic`), so it is left alone.
+    """
+
+    @staticmethod
+    def _address(instruction, excluded):
+        return instruction.opcode == "add" and any(
+            is_temporary(argument) and (argument.kind == "global" or argument.name in excluded)
+            for argument in instruction.args)
+
+    def __init__(self, function, excluded=frozenset()):
+        self.producers = {}
+        self.flags = {}
+        for block in function.blocks:
+            self._scan(block, excluded)
+
+    def _scan(self, block, excluded):
+        values, expected = {}, {}
+
+        def value(argument):
+            if is_temporary(argument):
+                if argument.kind == "global":
+                    return ("global", argument.name)
+                return values.get(argument.name, ("entry", argument.name))
+            if is_constant(argument) and argument.qbe_type != "extern":
+                try:
+                    return _k(int(argument.text, 0))
+                except ValueError:
+                    pass
+            return ("leaf", id(argument))
+
+        for instruction in block.instructions:
+            if instruction.dest is None:
+                continue
+            opcode, args = instruction.opcode, instruction.args
+            arity = 1 if opcode == "neg" else 2
+            if (opcode in OVERFLOW_PURE and instruction.qbe_type == "l"
+                    and len(args) == arity):
+                node = (opcode, *(value(argument) for argument in args))
+            else:
+                node = ("leaf", id(instruction))
+            match = expected.get(node)
+            if match is not None:
+                producer, stem = match
+                self.flags[id(instruction)] = (id(producer), stem)
+                stems = self.producers.setdefault(id(producer), [])
+                if stem not in stems:
+                    stems.append(stem)
+            values[instruction.dest.name] = node
+            if opcode in ("add", "sub", "mul") and node[0] == opcode \
+                    and not self._address(instruction, excluded):
+                for stem, flag in overflow_formulas(node):
+                    expected[flag] = (instruction, stem)
 
 
 #: The runtime's failure helpers: each records a trap and calls `fail`.
@@ -656,6 +855,9 @@ class Emitter:
         self.call_result_buffers = {}
         self.pointer_values = self.find_pointer_values()
         self.stack_guard_compare = self.find_stack_guard_compare()
+        self.overflow = OverflowChecks(self.function, self.pointer_values)
+        #: (id(arithmetic instruction), stem) -> the LLVM `i1` overflow bit.
+        self.overflow_bits = {}
         self.assign_slots()
         self.phi_stores = self.collect_phi_stores()
         self.memory = (MemoryClasses(self.function, self.sizes)
@@ -1443,15 +1645,38 @@ class Emitter:
                      (argument.kind == "global" or argument.name in self.pointer_values))):
                     pointer_index = index
                     break
+        stems = self.overflow.producers.get(id(instruction))
         if pointer_index is not None:
             base, offset = (left, right) if pointer_index == 0 else (right, left)
             base_pointer = self.address(lines, base)
             gep = self.fresh("gep")
             lines.append(f"  %{gep} = getelementptr i8, ptr {base_pointer}, i64 {offset}")
             lines.append(f"  %{result} = ptrtoint ptr %{gep} to i64")
+        elif stems and kind == "int" and llvm == "i64":
+            self.checked_arithmetic(instruction, stems, lines, (left, right, result))
         else:
             lines.append(f"  %{result} = {operation} {llvm} {left}, {right}")
         return self.define(instruction, lines, f"%{result}")
+
+    def checked_arithmetic(self, instruction, stems, lines, values):
+        """Compute a checked `add`/`sub`/`mul` with its overflow intrinsics.
+
+        LLVM-OVERFLOW-INTRINSIC-1: the first intrinsic's wrapped value is the
+        instruction's result — the plain operation's value, bit for bit — and
+        each stem's overflow bit waits for the flag `OverflowChecks` matched it
+        to, which `on_compare` stores in place of the frontend's formula.
+        """
+        left, right, result = values
+        for stem in stems:
+            intrinsic = f"llvm.{stem}.with.overflow.i64"
+            self.declare_intrinsic(intrinsic, ["i64", "i64"], "{ i64, i1 }")
+            pair = self.fresh("ovpair")
+            bit = self.fresh("ov")
+            lines.append(f"  %{pair} = call {{ i64, i1 }} @{intrinsic}(i64 {left}, i64 {right})")
+            if stem == stems[0]:
+                lines.append(f"  %{result} = extractvalue {{ i64, i1 }} %{pair}, 0")
+            lines.append(f"  %{bit} = extractvalue {{ i64, i1 }} %{pair}, 1")
+            self.overflow_bits[(id(instruction), stem)] = f"%{bit}"
 
     def on_compare(self, instruction):
         """One comparison, whose result is an integer holding 0 or 1."""
@@ -1459,6 +1684,12 @@ class Emitter:
         llvm = self.llvm_of(instruction.dest.name)
         width = bit_width(operand_llvm) or (64 if operand_llvm == "double" else 32)
         lines = []
+        matched = self.overflow.flags.get(id(instruction))
+        if matched is not None and (matched in self.overflow_bits):
+            # LLVM-OVERFLOW-INTRINSIC-1: this flag is exactly the overflow bit
+            # of an intrinsic its arithmetic instruction already computed.
+            return self.define(instruction, lines,
+                               self.widen(lines, self.overflow_bits[matched], "i1", llvm))
         if instruction is self.stack_guard_compare:
             self.declare_intrinsic("llvm.stacksave", [], "ptr")
             stack = self.fresh("stack")

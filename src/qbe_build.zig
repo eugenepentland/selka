@@ -646,6 +646,66 @@ fn validate(manifest: std.json.Value) !void {
 /// One sorted manifest unit and the object-cache state it reached, kept together
 /// so a failed wave can reclaim the scratch of every job it started.
 const Unit = struct { value: std.json.Value, staged: cache_api.Staged = undefined, object: cache_api.Object = undefined };
+/// One function's QBE footprint: its blocks, its temporaries, and the bytes
+/// QBE is estimated to need for them.
+const QbeFootprint = struct { blocks: u64, temporaries: u64, bytes: u64 };
+/// QBE-SIZE-LIMIT-1: QBE's liveness and register allocation keep one bit set of
+/// every temporary per block, so its memory grows as blocks x temporaries —
+/// measured at about 1.6 bytes per pair (0.97 GB at 8k x 76k, 3.7 GB at
+/// 16k x 152k). The footprint of one function's IL when that estimate exceeds
+/// three quarters of `address_space` bytes, or null when it fits. Blocks are the
+/// labels; temporaries are the highest `%v`, `%s` and `%l` numbers, which the
+/// emitter hands out densely.
+fn qbeRefusal(il: []const u8, address_space: u64) ?QbeFootprint {
+    var blocks: u64 = 0;
+    var highest = [_]u64{ 0, 0, 0 };
+    for (il, 0..) |byte, at| {
+        if (byte == '@' and (at == 0 or il[at - 1] == '\n')) blocks += 1;
+        if (byte != '%' or at + 2 >= il.len) continue;
+        const class: usize = switch (il[at + 1]) {
+            'v' => 0,
+            's' => 1,
+            'l' => 2,
+            else => continue,
+        };
+        var end = at + 2;
+        var number: u64 = 0;
+        while (end < il.len and std.ascii.isDigit(il[end])) : (end += 1) number = number *| 10 +| (il[end] - '0');
+        if (end > at + 2) highest[class] = @max(highest[class], number + 1);
+    }
+    const temporaries = highest[0] + highest[1] + highest[2];
+    const bytes = blocks *| temporaries / 5 *| 8;
+    if (bytes <= address_space / 4 * 3) return null;
+    return .{ .blocks = blocks, .temporaries = temporaries, .bytes = bytes };
+}
+
+// spec: QBE-SIZE-LIMIT-1
+test "qbeRefusal estimates a function's QBE memory and refuses only past the ceiling" {
+    const il = "function $f() {\n@start\n %v0 =l add 1, 2\n %v9 =l add %v0, %s3\n@next\n storel %v9, %l4\n ret\n}\n";
+    // Two blocks; temporaries %v0..%v9, %s0..%s3 and %l0..%l4: 19; 2 x 19 x 1.6 rounds to 56 bytes.
+    const refused = qbeRefusal(il, 64).?;
+    try std.testing.expectEqual(@as(u64, 2), refused.blocks);
+    try std.testing.expectEqual(@as(u64, 19), refused.temporaries);
+    try std.testing.expectEqual(@as(u64, 56), refused.bytes);
+    try std.testing.expectEqual(@as(?QbeFootprint, null), qbeRefusal(il, 1 << 20));
+    // 4 000 checked statements (16k x 152k, 3.7 GB measured) fit the default
+    // 8 GiB ceiling; 8 000 (32k x 304k, which ran QBE out of memory) do not.
+    const default_ceiling: u64 = (8 << 30) + (256 << 20);
+    const fits = try syntheticIl(std.testing.allocator, 16006, 152015);
+    defer std.testing.allocator.free(fits);
+    try std.testing.expectEqual(@as(?QbeFootprint, null), qbeRefusal(fits, default_ceiling));
+    const large = try syntheticIl(std.testing.allocator, 32006, 304015);
+    defer std.testing.allocator.free(large);
+    try std.testing.expectEqual(@as(u64, 304016), qbeRefusal(large, default_ceiling).?.temporaries);
+}
+/// IL with `blocks` labels whose highest temporary is `%v<highest>`.
+fn syntheticIl(allocator: std.mem.Allocator, blocks: usize, highest: u64) ![]u8 {
+    var text: std.ArrayList(u8) = .empty;
+    errdefer text.deinit(allocator);
+    for (0..blocks) |_| try text.appendSlice(allocator, "@a\n");
+    try text.print(allocator, "%v{d}\n", .{highest});
+    return text.toOwnedSlice(allocator);
+}
 /// How many LLVM units one wave translates at once: the core count, capped so a
 /// hundred-unit build does not start a hundred Python processes and compilers.
 fn concurrency() usize {
@@ -718,8 +778,27 @@ const State = struct {
             }
             for (misses) |index| units[index].object = try self.cache.publish(units[index].staged.miss);
         } else {
+            for (misses) |index| try self.fitsQbe(units[index]);
             for (misses) |index| units[index].object = try self.cache.finish(units[index].staged.miss);
         }
+    }
+    /// QBE-SIZE-LIMIT-1: refuse, before QBE starts, a function whose QBE memory
+    /// estimate (`qbeRefusal`) exceeds the address-space ceiling QBE inherits
+    /// from this process, naming the function and the two ways out, instead of
+    /// letting QBE die in `emalloc` minutes later. No ceiling, no refusal.
+    fn fitsQbe(self: *State, unit: Unit) fs.Error!void {
+        const address_space = std.posix.getrlimit(.AS) catch return;
+        if (address_space.cur == std.math.maxInt(u64)) return;
+        const refusal = qbeRefusal(v.text(v.get(unit.value, "il")), address_space.cur) orelse return;
+        const gib: f64 = 1024.0 * 1024.0 * 1024.0;
+        const message = try std.fmt.allocPrint(
+            self.context.allocator,
+            "mylang: function `{s}` is too large for the QBE backend: {d} blocks x {d} temporaries need about {d:.1} GiB in QBE, " ++
+                "over the {d:.1} GiB address-space ceiling it inherits (MYLANG_HOST_MEMORY_LIMIT); split the function, or build with `--backend llvm`\n",
+            .{ v.text(v.get(unit.value, "name")), refusal.blocks, refusal.temporaries, @as(f64, @floatFromInt(refusal.bytes)) / gib, @as(f64, @floatFromInt(address_space.cur)) / gib },
+        );
+        std.Io.File.stderr().writeStreamingAll(self.context.io, message) catch return error.NativeToolFailed;
+        return error.NativeToolFailed;
     }
     /// Start one wave's tools at once and reap them all. Diagnostics stream to
     /// this process's stderr; the first failure is reported only after every

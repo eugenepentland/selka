@@ -1654,6 +1654,227 @@ test "a trap through a halting failure path reports the same code, trace, record
         \\
     ++ "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":6,\"length\":3}\n");
 }
+/// Checked `+ - *` at every width, operands and width from the command line:
+/// `WIDTH OP X Y` prints `X OP Y` computed in that width, three frames deep.
+const checked_arithmetic_program =
+    \\# checked + - * at every width, operands from the command line
+    \\
+    \\
+    \\def number(text: str) -> int:
+    \\    match int(text):
+    \\        case Some(value):
+    \\            return value
+    \\        case None:
+    \\            return 0
+    \\
+    \\
+    \\def wide(x: int) -> u64:
+    \\    if x >= 0:
+    \\        return u64(x)
+    \\    return u64(x + 9223372036854775807 + 1) + 9223372036854775808u64
+    \\
+    \\
+    \\def signed64(op: str, x: int, y: int) -> int:
+    \\    if op == "add":
+    \\        return x + y
+    \\    if op == "sub":
+    \\        return x - y
+    \\    return x * y
+    \\
+    \\
+    \\def unsigned64(op: str, x: u64, y: u64) -> u64:
+    \\    if op == "add":
+    \\        return x + y
+    \\    if op == "sub":
+    \\        return x - y
+    \\    return x * y
+    \\
+    \\
+    \\def signed32(op: str, x: i32, y: i32) -> i32:
+    \\    if op == "add":
+    \\        return x + y
+    \\    if op == "sub":
+    \\        return x - y
+    \\    return x * y
+    \\
+    \\
+    \\def unsigned32(op: str, x: u32, y: u32) -> u32:
+    \\    if op == "add":
+    \\        return x + y
+    \\    if op == "sub":
+    \\        return x - y
+    \\    return x * y
+    \\
+    \\
+    \\def signed16(op: str, x: i16, y: i16) -> i16:
+    \\    if op == "add":
+    \\        return x + y
+    \\    if op == "sub":
+    \\        return x - y
+    \\    return x * y
+    \\
+    \\
+    \\def unsigned16(op: str, x: u16, y: u16) -> u16:
+    \\    if op == "add":
+    \\        return x + y
+    \\    if op == "sub":
+    \\        return x - y
+    \\    return x * y
+    \\
+    \\
+    \\def signed8(op: str, x: i8, y: i8) -> i8:
+    \\    if op == "add":
+    \\        return x + y
+    \\    if op == "sub":
+    \\        return x - y
+    \\    return x * y
+    \\
+    \\
+    \\def unsigned8(op: str, x: u8, y: u8) -> u8:
+    \\    if op == "add":
+    \\        return x + y
+    \\    if op == "sub":
+    \\        return x - y
+    \\    return x * y
+    \\
+    \\
+    \\def report(out: Stream, args: list[str]) -> int:
+    \\    width = args[0]
+    \\    op = args[1]
+    \\    x = number(args[2])
+    \\    y = number(args[3])
+    \\    if width == "i64":
+    \\        out.print(signed64(op, x, y))
+    \\    if width == "u64":
+    \\        out.print(unsigned64(op, wide(x), wide(y)))
+    \\    if width == "i32":
+    \\        out.print(signed32(op, i32(x), i32(y)))
+    \\    if width == "u32":
+    \\        out.print(unsigned32(op, u32(x), u32(y)))
+    \\    if width == "i16":
+    \\        out.print(signed16(op, i16(x), i16(y)))
+    \\    if width == "u16":
+    \\        out.print(unsigned16(op, u16(x), u16(y)))
+    \\    if width == "i8":
+    \\        out.print(signed8(op, i8(x), i8(y)))
+    \\    if width == "u8":
+    \\        out.print(unsigned8(op, u8(x), u8(y)))
+    \\    return 0
+    \\
+    \\
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    return report(out, args)
+;
+/// One boundary of `checked_arithmetic_program`: `x op ok` is `sum`, the
+/// largest (or smallest) value the width holds, and `x op bad` overflows it. A
+/// `u64` operand spelled negative is its two's-complement pattern.
+const CheckedBoundary = struct { width: []const u8, op: []const u8, x: []const u8, ok: []const u8, bad: []const u8, sum: []const u8, bits: []const u8 };
+const checked_boundaries = [_]CheckedBoundary{
+    .{ .width = "i64", .op = "add", .x = "9223372036854775806", .ok = "1", .bad = "2", .sum = "9223372036854775807", .bits = "64" },
+    .{ .width = "i64", .op = "add", .x = "-9223372036854775807", .ok = "-1", .bad = "-2", .sum = "-9223372036854775808", .bits = "64" },
+    .{ .width = "i64", .op = "sub", .x = "-9223372036854775807", .ok = "1", .bad = "2", .sum = "-9223372036854775808", .bits = "64" },
+    .{ .width = "i64", .op = "sub", .x = "9223372036854775806", .ok = "-1", .bad = "-2", .sum = "9223372036854775807", .bits = "64" },
+    .{ .width = "i64", .op = "mul", .x = "3037000500", .ok = "3037000499", .bad = "3037000500", .sum = "9223372033963249500", .bits = "64" },
+    .{ .width = "i64", .op = "mul", .x = "-4611686018427387904", .ok = "2", .bad = "3", .sum = "-9223372036854775808", .bits = "64" },
+    .{ .width = "i64", .op = "mul", .x = "-1", .ok = "-9223372036854775807", .bad = "-9223372036854775808", .sum = "9223372036854775807", .bits = "64" },
+    .{ .width = "u64", .op = "add", .x = "-2", .ok = "1", .bad = "2", .sum = "18446744073709551615", .bits = "64" },
+    .{ .width = "u64", .op = "sub", .x = "5", .ok = "5", .bad = "6", .sum = "0", .bits = "64" },
+    .{ .width = "u64", .op = "mul", .x = "4294967296", .ok = "4294967295", .bad = "4294967296", .sum = "18446744069414584320", .bits = "64" },
+    .{ .width = "i32", .op = "add", .x = "2147483646", .ok = "1", .bad = "2", .sum = "2147483647", .bits = "32" },
+    .{ .width = "i32", .op = "sub", .x = "-2147483647", .ok = "1", .bad = "2", .sum = "-2147483648", .bits = "32" },
+    .{ .width = "i32", .op = "mul", .x = "46341", .ok = "46340", .bad = "46341", .sum = "2147441940", .bits = "32" },
+    .{ .width = "u32", .op = "add", .x = "4294967294", .ok = "1", .bad = "2", .sum = "4294967295", .bits = "32" },
+    .{ .width = "u32", .op = "sub", .x = "5", .ok = "5", .bad = "6", .sum = "0", .bits = "32" },
+    .{ .width = "u32", .op = "mul", .x = "65536", .ok = "65535", .bad = "65536", .sum = "4294901760", .bits = "32" },
+    .{ .width = "i16", .op = "add", .x = "32766", .ok = "1", .bad = "2", .sum = "32767", .bits = "16" },
+    .{ .width = "i16", .op = "sub", .x = "-32767", .ok = "1", .bad = "2", .sum = "-32768", .bits = "16" },
+    .{ .width = "i16", .op = "mul", .x = "182", .ok = "180", .bad = "181", .sum = "32760", .bits = "16" },
+    .{ .width = "u16", .op = "add", .x = "65534", .ok = "1", .bad = "2", .sum = "65535", .bits = "16" },
+    .{ .width = "u16", .op = "sub", .x = "5", .ok = "5", .bad = "6", .sum = "0", .bits = "16" },
+    .{ .width = "u16", .op = "mul", .x = "256", .ok = "255", .bad = "256", .sum = "65280", .bits = "16" },
+    .{ .width = "i8", .op = "add", .x = "126", .ok = "1", .bad = "2", .sum = "127", .bits = "8" },
+    .{ .width = "i8", .op = "sub", .x = "-127", .ok = "1", .bad = "2", .sum = "-128", .bits = "8" },
+    .{ .width = "i8", .op = "mul", .x = "11", .ok = "11", .bad = "12", .sum = "121", .bits = "8" },
+    .{ .width = "u8", .op = "add", .x = "254", .ok = "1", .bad = "2", .sum = "255", .bits = "8" },
+    .{ .width = "u8", .op = "sub", .x = "5", .ok = "5", .bad = "6", .sum = "0", .bits = "8" },
+    .{ .width = "u8", .op = "mul", .x = "16", .ok = "15", .bad = "16", .sum = "240", .bits = "8" },
+};
+/// Run `WIDTH OP X Y` through the LLVM and the QBE binary and require the same
+/// status, stdout and stderr from both; returns the LLVM run's stderr.
+fn expectSameBoundary(binaries: [2][]const u8, args: [4][]const u8, status: u8, stdout: []const u8) ![]u8 {
+    const a = testing.allocator;
+    const llvm = try std.process.run(a, testing.io, .{ .argv = &.{ binaries[0], args[0], args[1], args[2], args[3] } });
+    defer a.free(llvm.stdout);
+    errdefer a.free(llvm.stderr);
+    const qbe = try std.process.run(a, testing.io, .{ .argv = &.{ binaries[1], args[0], args[1], args[2], args[3] } });
+    defer a.free(qbe.stdout);
+    defer a.free(qbe.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = status }, llvm.term);
+    try testing.expectEqual(llvm.term, qbe.term);
+    try testing.expectEqualStrings(stdout, llvm.stdout);
+    try testing.expectEqualStrings(llvm.stdout, qbe.stdout);
+    try testing.expectEqualStrings(llvm.stderr, qbe.stderr);
+    return llvm.stderr;
+}
+/// Every row of `checked_boundaries`: the in-range operand prints the width's
+/// extreme on both backends, and the next one traps there with the same
+/// `R_OVERFLOW` detail, trace and record.
+fn expectCheckedBoundaries(binaries: [2][]const u8) !void {
+    const a = testing.allocator;
+    for (checked_boundaries) |row| {
+        const printed = try std.fmt.allocPrint(a, "{s}\n", .{row.sum});
+        defer a.free(printed);
+        const quiet = try expectSameBoundary(binaries, .{ row.width, row.op, row.x, row.ok }, 0, printed);
+        defer a.free(quiet);
+        try testing.expectEqualStrings("", quiet);
+        const trapped = try expectSameBoundary(binaries, .{ row.width, row.op, row.x, row.bad }, 1, "");
+        defer a.free(trapped);
+        // TRAP-UNSIGNED-1: an unsigned operand prints unsigned, so a `u64`
+        // operand spelled negative shows its two's-complement value.
+        const left = if (std.mem.eql(u8, row.width, "u64") and row.x[0] == '-')
+            try std.fmt.allocPrint(a, "{d}", .{@as(u64, @bitCast(try std.fmt.parseInt(i64, row.x, 10)))})
+        else
+            try a.dupe(u8, row.x);
+        defer a.free(left);
+        const detail = try std.fmt.allocPrint(a, "error[R_OVERFLOW]: native execution failed ({s}: left {s}, right {s}, width {s})\n", .{ row.op, left, row.bad, row.bits });
+        defer a.free(detail);
+        try testing.expect(std.mem.indexOf(u8, trapped, detail) != null);
+    }
+}
+// spec: LLVM-OVERFLOW-INTRINSIC-1
+test "checked arithmetic at every width reports the same result and trap from the LLVM overflow intrinsics as from QBE" {
+    const a = testing.allocator;
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "checked.my", .data = checked_arithmetic_program });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "checked.my", a);
+    defer a.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const cache_argument = try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{directory});
+    defer a.free(cache_argument);
+    const llvm = try std.fmt.allocPrint(a, "{s}/checked-llvm", .{directory});
+    defer a.free(llvm);
+    const qbe = try std.fmt.allocPrint(a, "{s}/checked-qbe", .{directory});
+    defer a.free(qbe);
+    // The release default (LLVM, full LTO) lowers the 64-bit checks to the
+    // intrinsics; QBE keeps the frontend's formulas and is the reference.
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", llvm, cache_argument, tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", qbe, cache_argument, tools[0], tools[1] }, "");
+    try expectCheckedBoundaries(.{ llvm, qbe });
+    // One trap in full: code, detail, the three frames and the record.
+    const trapped = try expectSameBoundary(.{ llvm, qbe }, .{ "i64", "add", "9223372036854775806", "2" }, 1, "");
+    defer a.free(trapped);
+    const expected =
+        \\{path}:20:18: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775806, right 2, width 64)
+        \\  in signed64 at {path}:20:18
+        \\  in report at {path}:88:19
+        \\  in main at {path}:107:12
+        \\
+    ++ "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775806,\"right\":2,\"width\":64}\n";
+    const wanted = try std.mem.replaceOwned(u8, a, expected, "{path}", entry);
+    defer a.free(wanted);
+    try testing.expectEqualStrings(wanted, trapped);
+}
 // spec-case: QBE-STEP-ACCOUNTING-1
 test "an executable built without a requested ceiling refuses a runtime step budget" {
     var temporary = testing.tmpDir(.{});
@@ -4174,13 +4395,13 @@ test "CLI checks array schemas dumps indexing and reports bounds traps" {
         \\    return values[1]
     ;
     try invoke("check", bounds, 0, "", "");
-    try invoke("run", bounds, 1, "", ":3:12: error[R_INDEX_BOUNDS]");
+    try invoke("run", bounds, 1, "", ":3:12: error[R_LIST_BOUNDS]");
     try invoke("run",
         \\def main() -> i64:
         \\    payload: [1]u8 = [7u8]
         \\    _ = replace(payload, 18446744073709551615u64, 8u8)
         \\    return 0
-    , 1, "", "error[R_INDEX_BOUNDS]");
+    , 1, "", "error[R_LIST_BOUNDS]");
 }
 test "CLI checks domain privacy unit mismatches and qualified factory execution" {
     try invoke("run", @embedFile("fixtures/domains.my"), 0, "1003\n", "");

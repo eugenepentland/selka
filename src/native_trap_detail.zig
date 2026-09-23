@@ -19,6 +19,8 @@ pub const present_left: u32 = 4;
 pub const present_right: u32 = 8;
 /// Present bit for the element or integer width.
 pub const present_width: u32 = 16;
+/// TRAP-UNSIGNED-1: `left` and `right` hold unsigned operands' bit patterns.
+pub const present_unsigned: u32 = 32;
 
 /// Allocation failures while copying a cleaned diagnostic.
 pub const StripError = std.mem.Allocator.Error;
@@ -69,6 +71,12 @@ pub const Detail = struct {
         return self.present & bit != 0;
     }
 
+    /// One captured arithmetic operand as the program saw it: its bit pattern
+    /// read unsigned when the operation was unsigned, signed otherwise.
+    pub fn operand(self: Detail, bits: i64) i128 {
+        return if (self.has(present_unsigned)) @as(u64, @bitCast(bits)) else bits;
+    }
+
     /// Map a bounded operation name to the known set.
     pub fn operationFromName(name: []const u8) Operation {
         return std.meta.stringToEnum(Operation, name) orelse .operation;
@@ -88,8 +96,8 @@ pub const Detail = struct {
             try writer.print(" (length {d})", .{values.length});
         } else if (self.present & (present_left | present_right | present_width) != 0) {
             try writer.print(" ({s}:", .{self.operation.name()});
-            if (self.has(present_left)) try writer.print(" left {d}", .{values.left});
-            if (self.has(present_right)) try writer.print(", right {d}", .{values.right});
+            if (self.has(present_left)) try writer.print(" left {d}", .{self.operand(values.left)});
+            if (self.has(present_right)) try writer.print(", right {d}", .{self.operand(values.right)});
             if (self.has(present_width)) try writer.print(", width {d}", .{values.width});
             try writer.writeAll(")");
         }
@@ -102,9 +110,10 @@ const Transport = struct {
     operation: ?[]const u8 = null,
     index: ?i64 = null,
     length: ?u64 = null,
-    left: ?i64 = null,
-    right: ?i64 = null,
+    left: ?i128 = null,
+    right: ?i128 = null,
     width: ?u64 = null,
+    unsigned: ?bool = null,
 };
 
 /// The JSON body of the first record line, or null when the text carries none.
@@ -132,19 +141,28 @@ pub fn parse(allocator: std.mem.Allocator, text: []const u8) ?Detail {
         detail.present |= present_length;
         detail.values.length = length;
     }
+    const unsigned = value.unsigned orelse false;
+    if (unsigned) detail.present |= present_unsigned;
     if (value.left) |left| {
         detail.present |= present_left;
-        detail.values.left = left;
+        detail.values.left = operandBits(left, unsigned) orelse return null;
     }
     if (value.right) |right| {
         detail.present |= present_right;
-        detail.values.right = right;
+        detail.values.right = operandBits(right, unsigned) orelse return null;
     }
     if (value.width) |width| {
         detail.present |= present_width;
         detail.values.width = width;
     }
     return detail;
+}
+
+/// The stored bit pattern of one transported operand, or null when it is out
+/// of range for its signedness (a malformed record).
+fn operandBits(value: i128, unsigned: bool) ?i64 {
+    if (unsigned) return @bitCast(std.math.cast(u64, value) orelse return null);
+    return std.math.cast(i64, value);
 }
 
 /// Remove record lines from captured stderr, preserving every ordinary
@@ -187,4 +205,22 @@ test "trap detail text renders the same values as the structured fields" {
     const detail = Detail{ .version = 1, .present = present_index | present_length, .operation = .index, .values = .{ .index = -3, .length = 5 } };
     try detail.writeText(&buffer.writer);
     try std.testing.expectEqualStrings(" (index -3, length 5)", buffer.written());
+}
+
+// spec-case: TRAP-UNSIGNED-1
+test "an unsigned record carries unsigned operands and renders them unsigned" {
+    const captured = marker ++ "{\"version\":1,\"operation\":\"add\",\"unsigned\":true,\"left\":18446744073709551614,\"right\":5,\"width\":64}\n";
+    const detail = parse(std.testing.allocator, captured).?;
+    try std.testing.expect(detail.has(present_unsigned));
+    try std.testing.expectEqual(@as(i64, -2), detail.values.left);
+    try std.testing.expectEqual(@as(i128, 18446744073709551614), detail.operand(detail.values.left));
+    var buffer: std.Io.Writer.Allocating = .init(std.testing.allocator);
+    defer buffer.deinit();
+    try detail.writeText(&buffer.writer);
+    try std.testing.expectEqualStrings(" (add: left 18446744073709551614, right 5, width 64)", buffer.written());
+    // A signed record keeps its signed reading; an out-of-range operand is malformed.
+    const signed = parse(std.testing.allocator, marker ++ "{\"version\":1,\"operation\":\"add\",\"left\":-2,\"right\":5,\"width\":64}\n").?;
+    try std.testing.expect(!signed.has(present_unsigned));
+    try std.testing.expectEqual(@as(i128, -2), signed.operand(signed.values.left));
+    try std.testing.expectEqual(@as(?Detail, null), parse(std.testing.allocator, marker ++ "{\"version\":1,\"left\":18446744073709551614}\n"));
 }

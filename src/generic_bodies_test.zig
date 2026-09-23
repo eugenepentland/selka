@@ -147,13 +147,7 @@ test "generic body contracts reject undeclared operations mismatches and invalid
         \\def f[T: integer](x: T) -> T:
         \\    return x + 1
         , .code = "E_GENERIC_TYPE" },
-        // Assignment binds, so a loop variable is the binding that stays immutable.
-        .{ .text =
-        \\def f[T](x: T) -> T:
-        \\    for i in range(0, 2):
-        \\        i = 1
-        \\    return x
-        , .code = "E_IMMUTABLE" },
+        // A loop variable is assignable (PY-FOR-REBIND-1), so no loop case here.
         .{ .text =
         \\def f[T](x: T) -> T:
         \\    if True:
@@ -486,4 +480,38 @@ test "a generic body and its helpers sort concrete lists and reject a symbolic e
         \\def main() -> i64:
         \\    return 0
     , "E_GENERIC_BODY_UNSUPPORTED");
+}
+/// Check `text`, expect exactly one diagnostic, and compare its code and message.
+fn rejectOnly(text: []const u8, code: []const u8, message: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, "invalid.my", text);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqual(@as(usize, 1), compilation.diagnostics.items.len);
+    try t.expectEqualStrings(code, compilation.diagnostics.items[0].code);
+    try t.expectEqualStrings(message, compilation.diagnostics.items[0].message);
+}
+// spec: GENERIC-LAMBDA-1
+test "a lambda inside a generic body is one located unsupported diagnostic naming the fix" {
+    // A sort key: the case the keyed-sort audit found reported as an unknown name.
+    try rejectOnly(
+        \\def order[T: copy + storable](values: list[T]) -> list[T]:
+        \\    return sorted(values, key=lambda value: 0)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return len(order([3, 1]))
+    , "E_GENERIC_BODY_UNSUPPORTED", bodies.lambda_in_generic_body);
+    // Any callback argument, even one whose type mentions no type parameter.
+    try rejectOnly(
+        \\def apply(f: def(int) -> int effects(), x: int) -> int:
+        \\    return f(x)
+        \\
+        \\
+        \\def count[T: copy + storable](values: list[T]) -> int:
+        \\    return apply(lambda x: x + 1, len(values))
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return count([3, 1])
+    , "E_GENERIC_BODY_UNSUPPORTED", bodies.lambda_in_generic_body);
 }

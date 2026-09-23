@@ -96,6 +96,14 @@ def descending_by[T: copy + storable](values: list[T], key: def(T) -> int effect
     return ordered
 
 
+def ascending_by[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[T]:
+    return sorted(values, key=key)
+
+
+def plain_rank(e: Entry) -> int:
+    return e.rank
+
+
 # spec: LIST-SORT-KEY-1
 public def test_sort_key_orders_in_place_and_keeps_equal_keys_in_input_order() -> bool:
     entries = spread_entries()
@@ -239,6 +247,12 @@ public def test_a_generic_body_sorts_with_key_and_reverse() -> bool:
     ordered = descending_by(spread_entries(), pure_rank)
     numbers = descending_by([4, 8, 1], by_value)
     return ids(ordered) == [0, 2, 1, 4, 3] and numbers == [8, 4, 1]
+
+
+# spec-case: GENERIC-BODY-4
+public def test_a_generic_body_calls_sorted_with_an_unannotated_key_function() -> bool:
+    ordered = ascending_by(spread_entries(), plain_rank)
+    return ids(ordered) == [3, 1, 4, 0, 2]
 
 
 # spec: SYNTAX-METHOD-KEYWORDS-1

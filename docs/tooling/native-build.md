@@ -55,6 +55,21 @@ $ mylang build examples/factorial.my --mode Debug -o /tmp/factorial-debug --cach
 $ mylang build examples/factorial.my --backend qbe -o /tmp/factorial-qbe --cache-dir /tmp/cache
 ```
 
+### Very large functions
+
+QBE keeps one bit set of every temporary per block, so its memory grows with the
+square of a function's size: about 1.6 bytes per block x temporary pair. A
+straight-line function of 2 000 checked statements (12 000 bytecode
+instructions, 8 000 QBE blocks, 76 000 temporaries) takes about 1 GB and 9 s;
+4 000 statements take 3.7 GB and 72 s, and 8 000 would need about 14 GiB.
+Before QBE starts, a function whose estimate exceeds three quarters of the
+address-space ceiling QBE inherits from
+the compiler (`MYLANG_HOST_MEMORY_LIMIT`, 8 GiB by default) is refused with a
+message that names it and the two ways out — split the function, or build it
+with `--backend llvm` — instead of failing minutes later inside QBE's `emalloc`.
+The LLVM backend's dominator analysis is linear, so it builds a
+120 000-instruction function (20 000 statements) in about 2.6 GB.
+
 ### What the LLVM backend is allowed to assume
 
 The adapter states no fact that a check the frontend emitted is about to
@@ -96,6 +111,22 @@ element; `MYLANG_QBE_LLVM_ALIAS=0` turns the metadata off for an A/B run.
 The `# myl-obj` markers are comment lines of their own. QBE's lexer drops a `#`
 comment to end of line, so the QBE backend's assembly is byte-identical with and
 without them.
+
+The adapter does lower one kind of check differently, without assuming anything
+about it: a checked 64-bit `+`, `-` or `*` becomes
+`llvm.{s,u}{add,sub,mul}.with.overflow.i64`, so it reaches the machine as the
+operation and one flag branch (`add; jo`, `sub; jb`, `imul; jo`) rather than the
+frontend's xor/and sign test or its four-limb high product. The adapter evaluates
+each block symbolically and replaces a flag only when its value is *exactly* one
+of the frontend's overflow formulas over an `add`, `sub` or `mul` earlier in the
+block. Each formula equals the intrinsic's overflow bit for every pair of 64-bit
+operands, so this is a change of spelling, not a new fact: the branch, the cold
+block and its `myl_qbe_fail_overflow_op` call (same operands, width and
+position) are untouched, and a trap reports exactly what it did before. A
+narrower width's range test and the single compare against a literal operand
+are already one compare and stay as they are. `LLVM-OVERFLOW-INTRINSIC-1` in
+`SPEC.md` states the rule; `experiments/llvm-backend/llvm_emit.OverflowChecks`
+implements it.
 
 ## `mylang build`
 

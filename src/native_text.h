@@ -58,6 +58,62 @@ extern const myl_native_type myl_native_text_view_type;
  * texts hash equally; the value is internal to one process and never persisted,
  * so the function it comes from may change. */
 uint32_t myl_native_text_hash(const myl_native_text *);
+/* The high and low halves of one full 64×64-bit product folded together, so
+ * every output bit depends on every input bit of both factors. */
+static inline uint64_t myl_native_hash_fold(uint64_t a, uint64_t b) {
+    unsigned __int128 product=(unsigned __int128)a*b;
+    return (uint64_t)product^(uint64_t)(product>>64);
+}
+/* The hash of `length` octets, which a text caches as its payload's hash: equal
+ * octets hash equally whether they are a text's whole payload or a range of
+ * another's, so a dictionary can probe for a slice it never builds. The payload
+ * is read eight octets at a time: each word is folded into a running state by
+ * one multiply, a payload of at most eight octets is read as two overlapping
+ * halves and folded once, and a longer one ends on the word that finishes
+ * exactly at its last octet, so no read passes the payload and every octet
+ * reaches the answer. The length seeds the state, so payloads of different
+ * lengths start apart. Fixed constants, no seed: the runtime has no sanctioned
+ * randomness and a dictionary must behave identically on every run. Inline,
+ * because the probe for a described slice hashes a few octets per lookup. */
+static inline uint32_t myl_native_octets_hash(const unsigned char *bytes, size_t length) {
+    const uint64_t word_key=0xa0761d6478bd642fULL, state_key=0xe7037ed1a0b428dbULL;
+    uint64_t state=0x243f6a8885a308d3ULL^length, hash;
+    if (length<=8) {
+        uint64_t low=0, high=0;
+        if (length>=4) {
+            uint32_t first, last;
+            memcpy(&first,bytes,4); memcpy(&last,bytes+length-4,4);
+            low=first; high=last;
+        } else if (length) {
+            low=(uint64_t)bytes[0]<<16|(uint64_t)bytes[length>>1]<<8|bytes[length-1];
+        }
+        hash=myl_native_hash_fold(low^word_key,high^state^state_key);
+    } else {
+        uint64_t word;
+        for (size_t at=0;at+8<length;at+=8) {
+            memcpy(&word,bytes+at,8);
+            state=myl_native_hash_fold(word^word_key,state^state_key);
+        }
+        memcpy(&word,bytes+length-8,8);
+        hash=myl_native_hash_fold(word^word_key,state^state_key);
+    }
+    return (uint32_t)(hash^(hash>>32));
+}
+/* A slice described instead of built: `bytes` octets of a text's payload from
+ * octet `offset` on. Generated code keeps one in its frame beside the receiver
+ * it ranges over, which it holds as the slice's value so the collector keeps
+ * the receiver alive (DICT-RANGE-KEY-1). */
+typedef struct {
+    size_t offset, bytes;
+} myl_native_text_span;
+/* The octets `input[start:end]` would hold, clamped exactly as
+ * `myl_native_text_slice` clamps its scalar endpoints. Allocates nothing. */
+void myl_native_text_range(const myl_native_text *input, int64_t start, int64_t end, myl_native_text_span *);
+/* An owned text holding the span's octets of `input`, allocated at arena depth
+ * `region` with `input` rooted across the allocation: the key a dictionary
+ * stores when a described slice turns out to be a new key. NULL once the
+ * budget is exhausted. */
+myl_native_text *myl_native_text_piece_at(myl_native_heap *, myl_native_text *input, const myl_native_text_span *, unsigned region);
 /* The element descriptor a text object carries in its managed header. A text is
  * a leaf whose payload holds no traced pointer, so this descriptor only names
  * the object for the allocator and the budget. */

@@ -25,6 +25,7 @@ const iteration_failure = "myl_qbe_fail_iteration";
 const bytes_lower = @import("qbe_bytes.zig");
 const text_lower = @import("qbe_text.zig");
 const arena_lower = @import("qbe_arena.zig");
+const range_keys = @import("qbe_range_keys.zig");
 const io_lower = @import("qbe_io.zig");
 const render = @import("native_render.zig");
 const dictionary_write = " %v{d} =w call $myl_native_dictionary_write(l %heap, l %v{d}, l %v{d}, l %v{d})\n";
@@ -584,13 +585,17 @@ fn emitIndex(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Ty
         const at = try self.load("s", base + 1);
         try textAt(E, self, input, at, stack[base + 1], result, base);
     } else if (schema.collection.kind == .dictionary) {
+        if (!replacing and self.range_keys.role(self.pc) == .key) {
+            try range_keys.Lower(E).access(self, .{ .kind = .read, .dictionary = input, .key = base + 1, .result = result });
+            try self.require(result, missing_key_failure);
+            return self.store(base, try self.readValue(try self.aggregatePointer(), schema.shape.buffer.?));
+        }
         const key = try operandPointer(E, self, schema.collection.key.?, base + 1);
         if (replacing) {
             const value = try operandPointer(E, self, schema.shape.buffer.?, base + 2);
             try arena_lower.Lower(E).barrier(self, input, schema.collection.key.?, key);
             try arena_lower.Lower(E).barrier(self, input, schema.shape.buffer.?, value);
-            try self.print(dictionary_write, .{ result, input, key, value });
-            try self.require(result, allocation_failure);
+            try guardedWrite(E, self, stack, .{ .plain = .{ .dictionary = input, .key = key, .value = value } });
             try self.store(base, input);
         } else {
             try self.print(" %v{d} =w call $myl_native_dictionary_read(l %v{d}, l %v{d}, l %agg{d})\n", .{ result, input, key, self.pc });
@@ -828,6 +833,7 @@ fn textOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try self.print(store_unit, .{base});
         },
         .slice => {
+            if (self.range_keys.role(self.pc) == .slice) return range_keys.Lower(E).slice(self, input, base);
             const start = try self.load("s", base);
             const end = try self.load("s", base + 1);
             try self.print(" %v{d} =l call $myl_native_text_slice(l %heap, l %v{d}, l %v{d}, l %v{d})\n", .{ result, input, start, end });
@@ -852,6 +858,82 @@ fn textOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
         .encode, .from_hex => return bytes_lower.Lower(E).textual(self, op, stack),
         // The Python string methods and the number grammar lower on their own.
         else => return text_lower.Lower(E).operation(self, op, stack),
+    }
+}
+/// Leave in operand slot `base` the value a dictionary call that answered
+/// `found` copied out — through `pointer`, or this pc's aggregate scratch when it
+/// is null — or, on a miss, the default operand at `base + 1`.
+fn foundOrDefault(comptime E: type, self: *E, found: usize, pointer: ?usize, base: usize, output: typed.Type) Error!void {
+    const label = self.temp();
+    try self.print(" jnz %v{d}, @found{d}, @missing{d}\n@found{d}\n", .{ found, label, label, label });
+    try self.store(base, try self.readValue(pointer orelse try self.aggregatePointer(), output));
+    try self.print(" jmp @got{d}\n@missing{d}\n", .{ label, label });
+    try self.store(base, try self.load("s", base + 1));
+    try self.print(" jmp @got{d}\n@got{d}\n", .{ label, label });
+}
+/// Lower a dictionary write as its allocation-free half — `overwrite`, which
+/// replaces a present key's value — and, only when that answered absent, the
+/// allocating `write` inside its own root push (`DICT-OVERWRITE-1`). A write of
+/// a key already present, every write of a counting loop but the first, then
+/// publishes no root at all.
+fn guardedWrite(comptime E: type, self: *E, stack: []const typed.Type, write: Write) Error!void {
+    const found = self.temp();
+    try writeCall(E, self, write, found, true);
+    const label = self.temp();
+    try self.print(" jnz %v{d}, @put_done{d}, @put_new{d}\n@put_new{d}\n", .{ found, label, label, label });
+    const pushed = try self.roots(stack);
+    const result = self.temp();
+    try writeCall(E, self, write, result, false);
+    try self.require(result, allocation_failure);
+    if (pushed) try self.restoreRoots();
+    try self.print(" jmp @put_done{d}\n@put_done{d}\n", .{ label, label });
+    self.inline_roots = true;
+}
+/// One dictionary write's operands: an ordinary key operand's pointer, or a
+/// described slice's key height (`DICT-RANGE-KEY-1`).
+const Write = union(enum) {
+    plain: struct { dictionary: usize, key: usize, value: usize },
+    range: range_keys.Access,
+};
+/// Print the allocation-free half of a write (`overwrite`) or the whole write
+/// into `result`.
+fn writeCall(comptime E: type, self: *E, write: Write, result: usize, overwrite: bool) Error!void {
+    switch (write) {
+        .plain => |operands| if (overwrite) {
+            try self.print(" %v{d} =w call $myl_native_dictionary_overwrite(l %v{d}, l %v{d}, l %v{d})\n", .{ result, operands.dictionary, operands.key, operands.value });
+        } else try self.print(dictionary_write, .{ result, operands.dictionary, operands.key, operands.value }),
+        .range => |access| {
+            var call = access;
+            call.kind = if (overwrite) .overwrite else .write;
+            call.result = result;
+            try range_keys.Lower(E).access(self, call);
+        },
+    }
+}
+/// A dictionary lookup or write whose key operand is a described slice
+/// (`DICT-RANGE-KEY-1`): the same answers, traps and stores as the lowering
+/// below, through the entry points that read the slice's octets in place.
+fn rangeKeyOperation(comptime E: type, self: *E, op: BufferOperation, input: usize, stack: []const typed.Type) Error!void {
+    const schema = self.program.records[self.function.scope.locals[@backingInt(op.owner)].ty.recordIndex()];
+    const base = stack.len - op.kind.arity();
+    const result = self.temp();
+    switch (op.kind) {
+        .write => {
+            const value = try operandPointer(E, self, schema.shape.buffer.?, base + 1);
+            try arena_lower.Lower(E).barrier(self, input, schema.shape.buffer.?, value);
+            try guardedWrite(E, self, stack, .{ .range = .{ .kind = .write, .dictionary = input, .key = base, .value = value, .result = result } });
+            try self.print(store_unit, .{base});
+        },
+        .contains => {
+            try range_keys.Lower(E).access(self, .{ .kind = .contains, .dictionary = input, .key = base, .result = result });
+            try boolean(E, self, result, base);
+        },
+        else => {
+            try range_keys.Lower(E).access(self, .{ .kind = .read, .dictionary = input, .key = base, .result = result });
+            if (op.kind == .get) return foundOrDefault(E, self, result, null, base, op.output);
+            try self.require(result, missing_key_failure);
+            try self.store(base, try self.readValue(try self.aggregatePointer(), op.output));
+        },
     }
 }
 fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const typed.Type) Error!void {
@@ -885,6 +967,7 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
             try self.store(base, try self.readValue(try self.aggregatePointer(), op.output));
         },
         .read, .get, .contains, .write => {
+            if (self.range_keys.role(self.pc) == .key) return rangeKeyOperation(E, self, op, input, stack);
             const key = try operandPointer(E, self, schema.collection.key.?, base);
             if (op.kind == .contains) {
                 try self.print(" %v{d} =w call $myl_native_dictionary_contains(l %v{d}, l %v{d})\n", .{ result, input, key });
@@ -893,18 +976,12 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
                 const value = try operandPointer(E, self, schema.shape.buffer.?, base + 1);
                 try arena_lower.Lower(E).barrier(self, input, schema.collection.key.?, key);
                 try arena_lower.Lower(E).barrier(self, input, schema.shape.buffer.?, value);
-                try self.print(dictionary_write, .{ result, input, key, value });
-                try self.require(result, allocation_failure);
+                try guardedWrite(E, self, stack, .{ .plain = .{ .dictionary = input, .key = key, .value = value } });
                 try self.print(store_unit, .{base});
             } else {
                 try self.print(" %v{d} =w call $myl_native_dictionary_read(l %v{d}, l %v{d}, l %agg{d})\n", .{ result, input, key, self.pc });
                 if (op.kind == .get) {
-                    const label = self.temp();
-                    try self.print(" jnz %v{d}, @found{d}, @missing{d}\n@found{d}\n", .{ result, label, label, label });
-                    try self.store(base, try self.readValue(try self.aggregatePointer(), op.output));
-                    try self.print(" jmp @got{d}\n@missing{d}\n", .{ label, label });
-                    try self.store(base, try self.load("s", base + 1));
-                    try self.print(" jmp @got{d}\n@got{d}\n", .{ label, label });
+                    try foundOrDefault(E, self, result, null, base, op.output);
                 } else {
                     try self.require(result, missing_key_failure);
                     try self.store(base, try self.readValue(try self.aggregatePointer(), op.output));
@@ -922,14 +999,7 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
             if (op.kind == .pop_key) {
                 try self.require(result, missing_key_failure);
                 try self.store(base, try self.readValue(pointer, op.output));
-            } else {
-                const label = self.temp();
-                try self.print(" jnz %v{d}, @found{d}, @missing{d}\n@found{d}\n", .{ result, label, label, label });
-                try self.store(base, try self.readValue(pointer, op.output));
-                try self.print(" jmp @got{d}\n@missing{d}\n", .{ label, label });
-                try self.store(base, try self.load("s", base + 1));
-                try self.print(" jmp @got{d}\n@got{d}\n", .{ label, label });
-            }
+            } else try foundOrDefault(E, self, result, pointer, base, op.output);
         },
         .update => {
             const other = try self.load("s", base);

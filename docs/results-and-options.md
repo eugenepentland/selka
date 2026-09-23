@@ -140,8 +140,8 @@ a compatible `Result` — the error payloads are matched by case, and an error o
 unrelated type is rejected, so a function whose errors are `int` cannot propagate a `str`
 error. The one implicit conversion is the wrapping case: when the enclosing error union
 carries the propagated error type as a case payload, the error converts into that case
-and no hand-written translation helper is needed. `?` on a value that is not a
-result is rejected, as is `?` in a function that returns a plain value. The early return
+and no hand-written translation helper is needed. `?` on a value that is neither a
+result nor an option is rejected, as is `?` in a function that returns a plain value. The early return
 releases the scope it leaves the way an ordinary `return` does, including closing an open
 file or ending an arena block.
 
@@ -219,6 +219,29 @@ def main() -> int:
 becomes the payload of `AppError.Detail`, so `rate(True)` returns `8` and the program
 prints `20`. A propagated error type that is not a case payload of the enclosing union
 still fails with `E_TYPE`.
+
+`?` also works on an `Option[T]` inside a function returning an `Option`: `Some(value)`
+unwraps to `value` and `None` returns `None` from the enclosing function at once. `None`
+carries no payload, so the enclosing function's element type does not have to match: a
+function returning `Option[int]` can walk an `Option[Node]` with `?`.
+
+```mylang
+# doc: expect 4
+class Node:
+    value: int
+    left: Option[Node]
+
+
+def left_value(node: Node) -> Option[int]:
+    child = node.left?
+    return Some(child.value)
+
+
+def main() -> int:
+    leaf = Node(value=4, left=None)
+    root = Node(value=1, left=Some(leaf))
+    return left_value(root).unwrap_or(0) + left_value(leaf).unwrap_or(0)
+```
 
 ## Option constructors
 

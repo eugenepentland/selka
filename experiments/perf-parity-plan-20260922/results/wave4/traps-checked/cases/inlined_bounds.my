@@ -1,0 +1,15 @@
+def cell(values: list[int], index: int) -> int:
+    return values[index] + 1
+
+
+def walk(values: list[int]) -> int:
+    total = 0
+    index = 0
+    while index < 8:
+        total = total + cell(values, index)
+        index = index + 1
+    return total
+
+
+def main() -> int:
+    return walk([1, 2, 3])

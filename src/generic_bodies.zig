@@ -30,6 +30,10 @@ const eTryReturn = "E_TRY_RETURN";
 const eArgument = diagnostic.generic_argument;
 const eListType = @import("collection_lower.zig").list_type_error;
 const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
+/// The one message a lambda written inside a generic function body reports,
+/// from the template checker and from the unchecked lambda alike, so the two
+/// merge into a single diagnostic.
+pub const lambda_in_generic_body = "a lambda is not supported inside a generic function body; declare a top-level function and pass it by name";
 /// A misplaced or unknown call operand, the concrete checker's code for it.
 const eCallArgument = "E_CALL_ARGUMENT";
 const eTupleArity = diagnostic.tuple_arity;
@@ -341,6 +345,13 @@ const Checker = struct {
         }
     }
     fn local(self: *Checker, span: source.Span) Error!*Local {
+        // GENERIC-LAMBDA-1: a lambda is one synthesized function with one
+        // callback type, so it cannot follow a template body's type parameters
+        // into each specialization. Say so instead of failing its name lookup.
+        // The parser names a lambda by its `lambda` keyword; the diagnostic
+        // covers the whole lambda, as the unchecked lambda's own report does.
+        for (self.program.lambdas) |lambda| if (lambda.span.start == span.start)
+            return self.sink.fail(eUnsupported, lambda.span, lambda_in_generic_body);
         const index = self.active.get(self.src.text(span)) orelse return self.sink.fail("E_UNKNOWN_NAME", span, "name is not defined in this template scope");
         return &self.locals.items[index];
     }
@@ -619,9 +630,13 @@ const Checker = struct {
         };
         if (arity != names.len) return self.sink.fail(eTupleArity, span, "a destructuring assignment binds one name per tuple element");
         for (names, 0..) |name_id, index| {
+            const element = symbolic_shapes.tupleElement(self.catalog, value, index).?;
+            if (self.program.nodes.items[@backingInt(name_id)].data != .name) {
+                try self.placeTarget(name_id, element, span);
+                continue;
+            }
             const name = self.program.nodes.items[@backingInt(name_id)].data.name;
             if (std.mem.eql(u8, self.src.text(name), "_")) continue;
-            const element = symbolic_shapes.tupleElement(self.catalog, value, index).?;
             if (self.active.contains(self.src.text(name))) {
                 const target = try self.local(name);
                 if (!target.mutable) return self.sink.fail(diagnostic.immutable, name, "assignment requires a mutable binding");
@@ -630,6 +645,24 @@ const Checker = struct {
             } else try self.bind(name, element, true);
         }
         return .{ .concrete = .unit };
+    }
+    /// PY-DESTRUCTURE-PLACE-1: an element or field destructuring target takes
+    /// the tuple element the way `target = value` does in a template body.
+    fn placeTarget(self: *Checker, target: ast.NodeId, element: Symbolic, span: source.Span) Error!void {
+        var root = target;
+        while (true) switch (self.program.nodes.items[@backingInt(root)].data) {
+            .field => |field| root = field.base,
+            .index => |access| root = access.base,
+            else => break,
+        };
+        const root_node = self.program.nodes.items[@backingInt(root)];
+        if (root_node.data == .name) {
+            const binding = try self.local(root_node.data.name);
+            if (!binding.mutable) return self.sink.fail(diagnostic.immutable, root_node.span, "element or field assignment requires a mutable binding");
+            try self.runtimeOwner(root_node.data.name, true);
+        }
+        self.seedManagedWrite(self.parameterIndex(target, 0));
+        try self.compatible(element, try self.expression(target), span);
     }
     /// Build an enum-indexed table from a dict literal whose context already demands `[Kind]T`.
     fn tableLiteral(self: *Checker, node: ast.Node, entries: []const ast.NodeId, expected: Symbolic, key: typed.Type) Error!Symbolic {
@@ -1796,8 +1829,9 @@ const Checker = struct {
             return input.ok_type;
         }
         if (try self.shapes().matchOption(value, span)) |input| {
-            const output = (try self.shapes().matchOption(self.result, span)) orelse return self.sink.fail(eTryReturn, span, "try requires a function returning an Option type");
-            try self.same(input.element, output.element, span);
+            // OPTION-TRY-3: a propagated `None` carries no payload, so the
+            // enclosing Option's element need not match the operand's.
+            _ = (try self.shapes().matchOption(self.result, span)) orelse return self.sink.fail(eTryReturn, span, "try requires a function returning an Option type");
             try self.requireHandled(0, span);
             if (temporaries != 0) return self.sink.fail("E_RESULT_PROPAGATION", span, "propagation could drop an already evaluated result temporary");
             return input.element;
@@ -2176,17 +2210,17 @@ const Checker = struct {
                 if (each.index_name != null and !each.enumerated) {
                     if (symbolic_shapes.tupleArity(self.catalog, element)) |arity| {
                         if (arity != 2) return self.sink.fail(eTupleArity, statement_value.span, try self.twoNameLoopMessage(arity));
-                        try self.bind(each.index_name.?, symbolic_shapes.tupleElement(self.catalog, element, 0).?, false);
-                        try self.bind(each.name, symbolic_shapes.tupleElement(self.catalog, element, 1).?, false);
+                        try self.bind(each.index_name.?, symbolic_shapes.tupleElement(self.catalog, element, 0).?, true);
+                        try self.bind(each.name, symbolic_shapes.tupleElement(self.catalog, element, 1).?, true);
                     } else {
                         if (dictionary_views.symbolicKind(self.catalog, element) != .item) return self.sink.fail("E_ITERATION", statement_value.span, "two iteration names require dictionary items, enumerate or zip");
                         const shape = try self.shapes().schema(element, statement_value.span);
-                        try self.bind(each.index_name.?, shape.fields[0].ty.?, false);
-                        try self.bind(each.name, shape.fields[1].ty.?, false);
+                        try self.bind(each.index_name.?, shape.fields[0].ty.?, true);
+                        try self.bind(each.name, shape.fields[1].ty.?, true);
                     }
                 } else {
-                    try self.bind(each.name, element, false);
-                    if (each.index_name) |name| try self.bind(name, .{ .concrete = .i64 }, false);
+                    try self.bind(each.name, element, true);
+                    if (each.index_name) |name| try self.bind(name, .{ .concrete = .i64 }, true);
                 }
                 defer self.endScope(first);
                 const before = try self.pendingState(self.locals.items.len);
@@ -2205,7 +2239,7 @@ const Checker = struct {
                 try self.supports(element, .integer, range.name);
                 try self.compatible(try self.expression(range.end), element, range.name);
                 const first = self.locals.items.len;
-                try self.bind(range.name, element, false);
+                try self.bind(range.name, element, true);
                 defer self.endScope(first);
                 const before = try self.pendingState(self.locals.items.len);
                 defer self.allocator.free(before);

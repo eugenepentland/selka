@@ -266,12 +266,12 @@ const Emitter = struct {
                 }
             },
             .index => |access| {
-                try self.instruction(node.span, .{ .get_index = self.program.nodes[@backingInt(access.base)].ty });
+                try self.instruction(node.span, .{ .get_index = .{ .ty = self.program.nodes[@backingInt(access.base)].ty, .from_end = access.from_end } });
                 try self.push(.{ .expression = access.index });
                 try self.push(.{ .expression = access.base });
             },
             .replace => |replace| {
-                try self.instruction(node.span, .{ .replace_index = node.ty });
+                try self.instruction(node.span, .{ .replace_index = .{ .ty = node.ty, .from_end = replace.from_end } });
                 try self.push(.{ .expression = replace.value });
                 try self.push(.{ .expression = replace.index });
                 try self.push(.{ .expression = replace.base });

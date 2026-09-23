@@ -197,8 +197,8 @@ int64_t myl_native_bytes_find(const myl_native_bytes *input, const myl_native_by
 /* The first index at or after `start` of any octet in the set `values`, or -1.
    `values` is a set, not a sequence: an empty one finds nothing and a repeated
    octet costs one bit. A one- or two-octet set is exactly `memchr` — one call,
-   or two whose earlier hit wins — so the delimiter pairs a parser scans for cost
-   one vectorized pass rather than a bit test per octet. A wider set builds a
+   or two per window whose earlier hit wins — so the delimiter pairs a parser
+   scans for cost one vectorized pass rather than a bit test per octet. A wider set builds a
    256-bit membership table on the stack and scans the remaining octets with it,
    so the search itself is a load, a shift and a test per octet. `start` clamps
    negative to zero and a start at or past the end finds nothing, so this is a
@@ -214,11 +214,22 @@ int64_t myl_native_bytes_find_any(const myl_native_bytes *input, const myl_nativ
         return found ? (int64_t)(found-bytes) : -1;
     }
     if (values->length==2 && set[0]!=set[1]) {
-        const unsigned char *first=memchr(bytes+at,set[0],length-at);
-        const unsigned char *second=memchr(bytes+at,set[1],length-at);
-        if (!first) return second ? (int64_t)(second-bytes) : -1;
-        if (!second) return (int64_t)(first-bytes);
-        return (int64_t)((first<second ? first : second)-bytes);
+        /* A window at a time, doubling from 64 octets, and the second octet only
+           up to the first's hit: a search stops within twice the distance to its
+           answer, so a loop of searches over input missing one octet stays
+           linear instead of rescanning to the end on every call. */
+        size_t window=64;
+        while (at<length) {
+            size_t span=length-at<window ? length-at : window;
+            const unsigned char *first=memchr(bytes+at,set[0],span);
+            size_t bound=first ? (size_t)(first-(bytes+at)) : span;
+            const unsigned char *second=bound ? memchr(bytes+at,set[1],bound) : NULL;
+            if (second) return (int64_t)(second-bytes);
+            if (first) return (int64_t)(first-bytes);
+            at+=span;
+            if (window<=SIZE_MAX/2) window*=2;
+        }
+        return -1;
     }
     uint64_t members[4]={0,0,0,0};
     for (size_t i=0;i<values->length;i++) members[set[i]>>6]|=(uint64_t)1<<(set[i]&63);
