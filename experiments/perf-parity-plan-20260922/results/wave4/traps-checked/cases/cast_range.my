@@ -1,0 +1,9 @@
+def narrow(x: int) -> u8:
+    return u8(x)
+
+
+def main() -> int:
+    total = 0
+    for i in range(250, 260):
+        total = total + int(narrow(i))
+    return total

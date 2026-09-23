@@ -20,3 +20,21 @@ for the guest frame-pointer attribute.
 | `traps/` | the byte-for-byte trap corpus: `compare.py BEFORE AFTER CASES --modes ...`, the cases, and both runs (280/280 and 240/240 identical) |
 | `paired.py`, `table_r6.py` | paired ratios with bootstrap intervals, the report's table |
 | `make_rewrite.py`, `make_adapter_*.py`, `e1_build.sh`, `r6.sh`, `r7.sh`, `buildtime.sh` | how the arms were built (written for this worktree's `.tmp/`) |
+
+# Wave 4, lane `perf/checked-arith-intrinsics` — evidence
+
+Report: [`docs/audits/checked-arith-intrinsics-2026-09-23.md`](../../../../docs/audits/checked-arith-intrinsics-2026-09-23.md).
+`bench.py`, CPU 0, loaded machine, wall time. Arms: `my` = the base compiler
+with this lane's adapter, `before` = the base `625420ce` with the stock adapter
+(prebuilt into the work directory), `my-unchecked`, `zig-fast`, `zig-safe`.
+
+| file | what |
+|---|---|
+| `checkedadd-r1-{suite,micro}.json`, `checkedadd-r2-{suite,micro}.json` | two 11-round runs (r1 with the gate running alongside) |
+| `checkedadd-r3-micro.json` | `dict_count`, `records`, `list_records`, `fib` re-measured, 21 rounds |
+| `checkedadd-fib-placement.json` | `fib` built from six source paths (three code placements), lane/base per placement |
+| `checkedadd-placement-suite.json` | five programs at two placements, lane/base |
+| `checkedadd-census.txt`, `checked_census.py` | every overflow check in the fast-protocol IL, classified by shape and by what the adapter does with it |
+| `checkedadd_table.py` | the report's tables |
+| `checkedadd-measure.sh`, `checkedadd-placement.sh` | how the runs and the placement builds were made (paths are the lane worktree's `.tmp/`) |
+| `traps-checked/` | the trap corpus, base against lane (`compare.log`: 195/195 identical, run with `../traps/compare.py`), and the width × op boundary program (`boundaries.{my,py,log}`: 56/56 identical across base LLVM, lane LLVM and QBE) |

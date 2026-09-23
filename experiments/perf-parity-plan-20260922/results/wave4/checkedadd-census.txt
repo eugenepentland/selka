@@ -1,0 +1,22 @@
+binary_trees.my              intrinsic:sadd 4, intrinsic:ssub 1, literal 5
+spectral_norm.my             divide 1, intrinsic:sadd 11, intrinsic:smul 1, intrinsic:ssub 6, intrinsic:uadd 6, literal 14
+mandelbrot.my                intrinsic:sadd 2, intrinsic:smul 2, intrinsic:ssub 1, literal 4
+raytrace.my                  intrinsic:sadd 4, intrinsic:smul 3, literal 4
+knucleotide.my               divide 1, intrinsic:sadd 1, intrinsic:smul 2, intrinsic:ssub 1, literal 12
+sort_builtin.my              divide 1, intrinsic:sadd 4, intrinsic:smul 1, literal 3
+sort_quick.my                divide 2, intrinsic:sadd 12, intrinsic:smul 1, intrinsic:ssub 3, literal 8
+sieve.my                     intrinsic:sadd 5, intrinsic:smul 2, intrinsic:ssub 2, intrinsic:uadd 2, literal 6
+nbody.my                     intrinsic:sadd 38, literal 9
+fannkuch_redux.my            intrinsic:sadd 17, intrinsic:ssub 8, intrinsic:uadd 6, literal 17
+matmul.my                    intrinsic:sadd 12, intrinsic:smul 2, intrinsic:ssub 4, intrinsic:uadd 4, literal 14
+fib.my                       intrinsic:sadd 1, literal 2
+intloop.my                   intrinsic:sadd 1, intrinsic:smul 1, literal 1
+calls.my                     intrinsic:sadd 1, literal 1
+dict_count.my                intrinsic:sadd 2, intrinsic:smul 2, literal 4
+bytes_scan.my                intrinsic:sadd 1, literal 4
+list_records.my              intrinsic:sadd 2, literal 6
+records.my                   intrinsic:sadd 3, literal 3
+list_append_sum.my           intrinsic:sadd 1, literal 2
+float_loop.my                literal 1
+boundaries.my                intrinsic:sadd 5, intrinsic:smul 1, intrinsic:ssub 1, intrinsic:uadd 4, intrinsic:umul 1, intrinsic:usub 1, literal 6, range16 6, range32 6, range8 6
+TOTAL                        divide 5, intrinsic:sadd 127, intrinsic:smul 18, intrinsic:ssub 27, intrinsic:uadd 22, intrinsic:umul 1, intrinsic:usub 1, literal 126, range16 6, range32 6, range8 6
