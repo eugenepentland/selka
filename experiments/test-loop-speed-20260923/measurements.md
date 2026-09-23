@@ -17,8 +17,9 @@ memory. Load is the 1-minute load average at start → end.
 | before (c) `tests/lang/python_core.my` + comment line | 150 s | 984 s | 10.5 → 8.5 |
 | before (c) `docs/io.md` + paragraph | 134 s | 684 s | 8.5 → 7.8 |
 | after (a) clean cache | 182 s | 1459 s | 10.0 → 21.3 |
-| after (a) clean cache, final gate after merging `d18304c1` | 199 s | | 9.2 → 17.2 |
+| after (a) clean cache, final gate after merging `d18304c1` | 201 s | | 13.6 → 18.7 |
 | after (b) unchanged rerun | 5.7 s / 4.7 s | 25 s / 21 s | 20.5 → 8.4, 8.0 → 7.5 |
+| after (b), with the make-phase input manifests | 5.6 s / 5.7 s | | 21.7 → 18.1 |
 | after (c) `src/sema.zig` | 114 s | 1002 s | 6.7 → 15.7 |
 | after (c) `src/qbe.zig` | 112 s | 955 s | 14.7 → 15.3 |
 | after (c) `src/native_text.c` | 161 s | 1438 s | 15.3 → 19.4 |
@@ -83,11 +84,13 @@ Focused `qbe_test.test.` after a `src/qbe.zig` edit: `test-units` (one process)
 
 ## Final gate (clean cache, after merging `d18304c1`), against `split-*.log`
 
+The extra step in each is the input-manifest walk every cached test step now depends on.
+
 | step | this branch | base | gate_diff |
 |---|---|---|---|
-| `test` | 88/88 steps, 1809/20199 tests, 199 s | 83/83 steps, 1809/20199 | 0 new |
-| `test-qbe` | 50/50 steps, 322/322 tests, 62 s | 50/50, 322/322 | 0 new |
-| `test-qbe-build` | 32/32 | 32/32 | 0 new |
-| `test-byte-io` | 28/28 | 28/28 | 0 new |
-| `test-schematic` | 29/29 | 29/29 | 0 new |
+| `test` | 90/90 steps, 1809/20199 tests, 201 s | 83/83 steps, 1809/20199 | 0 new |
+| `test-qbe` | 51/51 steps, 322/322 tests, 68 s | 50/50, 322/322 | 0 new |
+| `test-qbe-build` | 33/33 | 32/32 | 0 new |
+| `test-byte-io` | 29/29 | 28/28 | 0 new |
+| `test-schematic` | 30/30 | 29/29 | 0 new |
 | `fmt-check` | 2/2 | 2/2 | 0 new |

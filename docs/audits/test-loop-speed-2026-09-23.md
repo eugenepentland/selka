@@ -16,7 +16,7 @@ file. Treat single numbers as ±20 %.
 | case | before (`e54d1bd7`) | after | load (1 min), before → after |
 |---|---:|---:|---|
 | (a) clean cache, `zig build test` | 253 s | 182 s | 1.5–14 → 10–21 |
-| (b) nothing changed since the last run | 125 s | **4.7–5.7 s** | 9–11 → 8–20 |
+| (b) nothing changed since the last run | 125 s | **4.7–5.7 s** | 9–11 → 8–21 |
 | (c) one-line edit, `src/sema.zig` | 135 s | 114 s | 2–6 → 7–16 |
 | (c) one-line edit, `src/qbe.zig` | 143 s | 112 s | 7–10 → 15 |
 | (c) one-line edit, `src/native_text.c` | 196 s | 161 s | 7–11 → 15–19 |
@@ -158,8 +158,9 @@ new checks. No compiler source changed.
    - `affected-compiler` installs just `mylang` and `qbe` to `zig-out/focus`.
 
 Nothing left the gate. Every step `zig build test` ran before still runs on a
-clean cache. The final gate matched its base: 1,809 tests in `test` and 322 in
-`test-qbe`, with no new failures in any step. Two steps joined the gate:
+clean cache. The final clean-cache gate (201 s for `test`, 68 s for `test-qbe`,
+load 14–19) matched its base: 1,809 tests in `test` and 322 in `test-qbe`, with
+no new failures in any step. Two steps joined the gate:
 `test-inputs-coverage` and `test-affected-selection`.
 
 ## The inner loop: `scripts/affected_tests.py`
