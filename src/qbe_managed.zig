@@ -528,7 +528,7 @@ fn inlineAppend(comptime E: type, self: *E, list: usize, element: typed.Type, va
     const storage = try self.address(list, list_storage_offset);
     const backing = self.temp();
     try self.print(load_pointer, .{ backing, storage });
-    try self.markObject(backing);
+    try self.markElements(backing, element);
     const destination = self.temp();
     if (width == 1) {
         try self.print(" %v{d} =l add %v{d}, %v{d}\n", .{ destination, backing, length });
@@ -772,7 +772,7 @@ fn elementAddress(comptime E: type, self: *E, list: usize, index: usize, element
     const address = self.temp();
     try self.markObject(list);
     try self.print(" %v{d} =l add %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ header, list, list_storage_offset, storage, header });
-    try self.markObject(storage);
+    try self.markElements(storage, element);
     const stride = (try self.layout(element)).size;
     if (stride == 1) {
         try self.print(" %v{d} =l add %v{d}, %v{d}\n", .{ address, storage, index });
