@@ -508,18 +508,19 @@ STORAGE
 """
 
     def test_marked_element_address_is_a_getelementptr(self):
-        # LLVM-OBJECT-GEP-1: storage marked as a managed object is a base the
-        # element address is derived from with `getelementptr`, so a loop
+        # LLVM-OBJECT-GEP-1: storage a loop guard marked `# myl-gep` is a base
+        # the element address is derived from with `getelementptr`, so a loop
         # vectorizer sees it advance with the index.
-        ir = translate_text(self.ELEMENT_PROBE.replace("STORAGE", " # myl-obj %storage"), "element")
-        self.assertEqual(2, ir.count("getelementptr i8"))
-        self.assertEqual(self.compile_units({"element": self.ELEMENT_PROBE.replace("STORAGE", " # myl-obj %storage")},
+        marked = self.ELEMENT_PROBE.replace("STORAGE", " # myl-obj %storage\n # myl-gep %storage")
+        ir = translate_text(marked, "element")
+        self.assertEqual(1, ir.count("getelementptr i8"))
+        self.assertEqual(self.compile_units({"element": marked},
             '#include <stdio.h>\nextern long test(void *, void *, long);\n'
             'int main(void){long data[3]={5,6,7};long header[5]={0,0,0,0,(long)data};'
             'long *p=header;printf("%ld\\n",test(0,&p,2));}\n'), "7\n")
-        # An unmarked storage word keeps integer arithmetic for the element.
-        plain = translate_text(self.ELEMENT_PROBE.replace("STORAGE\n", ""), "element")
-        self.assertEqual(1, plain.count("getelementptr i8"))
+        # An address only marked as a managed object keeps integer arithmetic.
+        plain = translate_text(self.ELEMENT_PROBE.replace("STORAGE", " # myl-obj %storage"), "element")
+        self.assertEqual(0, plain.count("getelementptr i8"))
 
     def test_unmarked_address_from_memory_carries_no_class(self):
         ir = translate_text(self.OBJECT_PROBE.replace("MARKER\n", ""), "obj")

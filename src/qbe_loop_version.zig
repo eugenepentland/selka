@@ -154,8 +154,24 @@ pub fn Lower(comptime E: type) type {
             try self.markObject(header);
             try self.print(" %v{d} =l add %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ field, header, storage_offset, temp, field });
             try self.markObject(temp);
+            // LLVM-OBJECT-GEP-1: every element the copy addresses through this
+            // storage is one the guard proved in bounds, so the LLVM adapter
+            // may derive those addresses with `getelementptr`. Only scalar
+            // elements qualify: a record element is copied whole, and wide
+            // copies through it defeat store forwarding to its field reads.
+            if (self.isScalar(try elementType(self, id))) try self.print(" # myl-gep %v{d}\n", .{temp});
             active.storages[id] = temp;
             return temp;
+        }
+
+        /// The element type of the list or byte string plan node `id` names.
+        fn elementType(self: *E, id: facts.NodeId) Error!@import("typed.zig").Type {
+            const collection = switch (self.loop_plan.nodes[id]) {
+                .leaf => |leaf| self.function.scope.locals[leaf.slot].ty,
+                .element => |element| self.program.records[element.collection.recordIndex()].shape.buffer.?,
+                else => return error.InternalError,
+            };
+            return self.program.records[collection.recordIndex()].shape.buffer orelse error.InternalError;
         }
     };
 }
