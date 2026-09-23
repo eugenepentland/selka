@@ -96,8 +96,22 @@ void myl_native_arena_reclaim(myl_native_heap *heap) {
     heap->arena.cached = 0;
     heap->arena.cached_bytes = 0;
 }
+/* Make room in the per-depth chunk lists for depth `region`. Zero when the
+ * host refuses the growth. */
+static int depth_room(myl_native_heap *heap, unsigned region) {
+    if (region < heap->arena_depth_capacity) return 1;
+    size_t capacity = heap->arena_depth_capacity ? heap->arena_depth_capacity : 8;
+    while (capacity <= region) capacity *= 2;
+    myl_native_arena_chunk **grown = realloc(heap->arena_chunks, capacity * sizeof *grown);
+    if (!grown) return 0;
+    memset(grown + heap->arena_depth_capacity, 0, (capacity - heap->arena_depth_capacity) * sizeof *grown);
+    heap->arena_chunks = grown;
+    heap->arena_depth_capacity = capacity;
+    return 1;
+}
 static myl_native_arena_chunk *new_chunk(myl_native_heap *heap, size_t payload, unsigned region, size_t previous) {
     const size_t mask = alignof(max_align_t) - 1;
+    if (!depth_room(heap, region)) return NULL;
     size_t overhead = sizeof(myl_native_arena_chunk) + sizeof(myl_native_object);
     if (payload > SIZE_MAX - overhead - mask) return NULL;
     size_t minimum = (overhead + payload + mask) & ~mask;
@@ -124,9 +138,10 @@ static myl_native_arena_chunk *new_chunk(myl_native_heap *heap, size_t payload, 
         chunk->bytes = bytes;
         heap->arena.chunks++;
     }
-    chunk->next = heap->arena_chunks;
+    chunk->next = heap->arena_chunks[region];
     chunk->region = region;
-    heap->arena_chunks = chunk;
+    heap->arena_chunks[region] = chunk;
+    if (heap->arena_depths <= region) heap->arena_depths = (size_t)region + 1;
     heap->bytes += chunk->bytes;
     heap->arena.chunks_live++;
     heap->arena.reserved_bytes += chunk->bytes;
@@ -185,8 +200,9 @@ void *myl_native_arena_alloc(myl_native_heap *heap, const myl_native_type *eleme
     }
     /* The window's free tail is exactly where this allocation may land. */
     myl_native_arena_sync(heap);
-    chunk = heap->arena_chunks;
-    while (chunk && chunk->region != region) chunk = chunk->next;
+    /* The depth's current chunk is the head of its own list: one load,
+     * however many chunks deeper or shallower scopes hold. */
+    chunk = region < heap->arena_depths ? heap->arena_chunks[region] : NULL;
     size_t offset = 0;
     if (!chunk || !fits(chunk, payload, &offset)) {
         chunk = new_chunk(heap, payload, region, chunk ? chunk->bytes : 0);
@@ -213,7 +229,8 @@ void *myl_native_arena_alloc(myl_native_heap *heap, const myl_native_type *eleme
 void myl_native_arena_trace(myl_native_heap *heap, void (*trace)(myl_native_heap *, const myl_native_type *, const void *)) {
     const size_t mask = alignof(max_align_t) - 1;
     myl_native_arena_sync(heap);
-    for (myl_native_arena_chunk *chunk = heap->arena_chunks; chunk; chunk = chunk->next) {
+    for (size_t depth = 0; depth < heap->arena_depths; ++depth)
+    for (myl_native_arena_chunk *chunk = heap->arena_chunks[depth]; chunk; chunk = chunk->next) {
         size_t offset = 0;
         while (offset < chunk->used) {
             const myl_native_object *header = (const myl_native_object *)(chunk->data + offset);
@@ -232,16 +249,22 @@ void myl_native_arena_release(myl_native_heap *heap, unsigned region) {
     /* A reused chunk is zeroed up to `used`, which must cover what generated
      * code bumped out of the window. */
     myl_native_arena_sync(heap);
-    myl_native_arena_chunk **link = &heap->arena_chunks;
-    while (*link) {
-        myl_native_arena_chunk *chunk = *link;
-        if (chunk->region < region) { link = &chunk->next; continue; }
-        *link = chunk->next;
-        heap->bytes -= chunk->bytes;
-        heap->objects_live -= chunk->count;
-        heap->arena.released += chunk->count;
-        heap->arena.reserved_bytes -= chunk->bytes;
-        heap->arena.chunks_live--;
-        if (!cache(heap, chunk)) free(chunk);
+    /* Only the lists of `region` and deeper are visited, deepest first, so
+     * closing a scope costs the chunks it frees, not every open chunk. */
+    while (heap->arena_depths > region) {
+        size_t depth = --heap->arena_depths;
+        myl_native_arena_chunk *chunk = heap->arena_chunks[depth];
+        heap->arena_chunks[depth] = NULL;
+        while (chunk) {
+            myl_native_arena_chunk *next = chunk->next;
+            heap->bytes -= chunk->bytes;
+            heap->objects_live -= chunk->count;
+            heap->arena.released += chunk->count;
+            heap->arena.reserved_bytes -= chunk->bytes;
+            heap->arena.chunks_live--;
+            if (!cache(heap, chunk)) free(chunk);
+            chunk = next;
+        }
     }
+    while (heap->arena_depths && !heap->arena_chunks[heap->arena_depths - 1]) heap->arena_depths--;
 }

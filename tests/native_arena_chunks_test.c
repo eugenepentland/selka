@@ -297,7 +297,7 @@ static void header_regions(void) {
     assert(myl_native_region_begin(&heap));
     void *inner=myl_native_heap_alloc(&heap,&octet,3);
     assert(inner && heap.arena.chunks_live>=3);
-    myl_native_arena_chunk *chunks=heap.arena_chunks;
+    myl_native_arena_chunk **chunks=heap.arena_chunks;
     heap.arena_chunks=NULL;
     for (size_t i=0;i<count;i++) {
         assert(myl_native_object_region(&heap,outer[i])==1);
@@ -436,6 +436,44 @@ static void inline_arena_window(void) {
     assert(!heap.bytes);
     myl_native_heap_destroy(&heap);
 }
+/* spec-case: ARENA-CHUNKS-1. Each arena depth keeps its own chunk list: an
+   allocation at any depth finds that depth's current chunk at the head of its
+   list, and closing a scope frees exactly its own list. The outer depth's list
+   is replaced by an unmapped address while the inner scope allocates and
+   closes, so a walk of it would crash; then the inner list is, while the outer
+   depth allocates. */
+static void per_depth_chunks(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap,64u<<20);
+    assert(myl_native_region_begin(&heap));
+    enum { outer_count=2048 };
+    for (size_t i=0;i<outer_count;i++) assert(myl_native_heap_alloc(&heap,&wide,64));
+    size_t outer_chunks=heap.arena.chunks_live;
+    assert(outer_chunks>=8);
+    myl_native_arena_chunk *outer=heap.arena_chunks[1];
+    myl_native_arena_chunk *poison=(myl_native_arena_chunk *)(uintptr_t)16;
+    for (size_t round=0;round<100;round++) {
+        assert(myl_native_region_begin(&heap));
+        heap.arena_chunks[1]=poison;
+        unsigned char *inner=myl_native_heap_alloc(&heap,&octet,3000);
+        assert(inner && myl_native_header_region(inner)==2 && inner[2999]==0);
+        myl_native_region_end(&heap);
+        heap.arena_chunks[1]=outer;
+        assert(heap.region_depth==1 && heap.arena.chunks_live==outer_chunks && heap.arena_depths==2);
+    }
+    assert(myl_native_region_begin(&heap));
+    unsigned char *inner=myl_native_heap_alloc(&heap,&octet,16);
+    assert(inner);
+    myl_native_arena_chunk *inner_list=heap.arena_chunks[2];
+    heap.arena_chunks[2]=poison;
+    void *late=myl_native_heap_alloc_at(&heap,&wide,1,1);
+    assert(late && myl_native_header_region(late)==1 && heap.arena_chunks[1]==outer);
+    heap.arena_chunks[2]=inner_list;
+    myl_native_region_end(&heap);
+    myl_native_region_end(&heap);
+    assert(!heap.region_depth && !heap.arena_depths && !heap.arena.chunks_live && !heap.bytes);
+    myl_native_heap_destroy(&heap);
+}
 int main(void) {
     inline_arena_window();
     chunked_objects();
@@ -454,5 +492,6 @@ int main(void) {
     barrier_by_header();
     scan_across_chunks();
     header_bounds();
+    per_depth_chunks();
     return 0;
 }

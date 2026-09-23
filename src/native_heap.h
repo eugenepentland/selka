@@ -117,6 +117,8 @@ static inline unsigned myl_native_header_region(const void *payload) {
  * its address. One mark bit covers each 16-byte granule of the block. */
 #define MYL_NATIVE_SEGMENT_BYTES ((size_t)1 << 16)
 #define MYL_NATIVE_SEGMENT_MARK_WORDS (MYL_NATIVE_SEGMENT_BYTES / 16 / 64)
+/* Entries of the heap's pool-region lookup cache (a power of two). */
+#define MYL_NATIVE_POOL_HITS 128
 /* The mark word bit that tells an object with a one-slot segment of its own
  * (an oversized object) from a size-classed one: an oversized object keeps its
  * collector mark in its header's bit 0, a size-classed object in its segment's
@@ -142,11 +144,24 @@ typedef struct myl_native_segment {
     size_t live;
     struct myl_native_segment *available;
     unsigned char dirty, listed;
+    /* Set when the segment's slots are not zero-filled: a spare segment taken
+     * back into service by another class holds its previous objects' bytes,
+     * so its never-used tail is not fresh storage and every slot handed out
+     * from it is cleared the way a reused hole's slot is. */
+    unsigned char stale;
     /* The collector's mark bits of a size-classed segment, one per 16-byte
      * granule of the segment's aligned block, set at an object's first
      * granule. An oversized segment keeps its one object's mark in the
      * object's header instead and leaves this unused. */
     uint64_t marks[MYL_NATIVE_SEGMENT_MARK_WORDS];
+    /* Aging bits (`GC-AGING-1`), one per granule like `marks`. Outside a
+     * collection a set bit names a young object that survived exactly one
+     * minor collection without being promoted: its mark bit is clear again,
+     * so the next minor collection traces it like any young object and
+     * promotes it if it is still reachable. While a collection marks, a set
+     * bit on a marked object means "kept young by this collection". Only a
+     * dirty segment carries set bits; its next sweep recomputes them. */
+    uint64_t ages[MYL_NATIVE_SEGMENT_MARK_WORDS];
     max_align_t payload_alignment;
     unsigned char data[];
 } myl_native_segment;
@@ -227,10 +242,20 @@ typedef struct {
     /* Set when a set above could not grow or a collection was abandoned, so
      * the next collection must be full to stay sound. */
     int force_full;
+    /* Collection-local state of a minor collection's aging (`GC-AGING-1`):
+     * `aging` is set while a minor collection marks, so a young object
+     * reached for the first time is kept young rather than promoted, and
+     * `young_edge` records that the object being scanned references an object
+     * that stays young, which obliges a promoted `cell` body to be
+     * remembered. */
+    unsigned char aging, young_edge;
     size_t minor_collections, full_collections;
     /* Tracing-heap bytes the last collection kept: the old generation,
      * including garbage a minor collection cannot reclaim. */
     size_t old_bytes;
+    /* Tracing-heap bytes the last collection kept young (aged, not promoted);
+     * part of the live bytes, not of `old_bytes`. */
+    size_t young_bytes;
 } myl_native_generations;
 typedef struct {
     /* Every size-classed slab the heap ever reserved; the sweep walks this list
@@ -265,9 +290,13 @@ typedef struct {
      * ordinary copy. */
     void *text_scalars[128];
     int text_scalars_ready;
-    /* Region payloads and their compact side descriptors share bulk chunks.
-     * Appended fields preserve generated code's fixed root-chain offset. */
-    myl_native_arena_chunk *arena_chunks;
+    /* The chunks of every open arena, one list per depth (`ARENA-CHUNKS-1`):
+     * `arena_chunks[d]` lists depth d's chunks newest first, so its head is
+     * the chunk that depth allocates from and closing the scope frees exactly
+     * that list. Entries at and above `arena_depths` are empty; the array
+     * holds `arena_depth_capacity` entries and grows on demand. Appended
+     * fields preserve generated code's fixed root-chain offset. */
+    myl_native_arena_chunk **arena_chunks;
     /* Chunks a closed scope released, kept for the next scope's first
      * allocation so a loop of short scopes does not reserve and zero a fresh
      * chunk per iteration. Bounded in count and bytes, never reachable from
@@ -309,15 +338,40 @@ typedef struct {
     /* The arena chunk `arena_window` belongs to, or NULL when it is closed. */
     myl_native_arena_chunk *arena_window_chunk;
     /* Size-classed segments are carved from aligned host mappings of
-     * `MYL_NATIVE_SEGMENT_POOL` segments: the unused rest of the newest one
-     * runs from `pool_next` to `pool_end`, and every mapping is listed in
-     * `pools` so destroying the heap unmaps it. */
+     * `MYL_NATIVE_SEGMENT_POOL` segments, each one 2 MiB-aligned private
+     * anonymous mapping that reads as zeros until written: the unused rest of
+     * the newest one runs from `pool_next` to `pool_end`, and every mapping is
+     * listed in `pools` so destroying the heap unmaps it. */
     unsigned char *pool_next, *pool_end;
     void **pools;
     size_t pool_count, pool_capacity;
     /* The collector's cache of element descriptors flattened into their
      * reference slots, allocated on first use; see native_heap.c. */
     struct myl_native_scan_plan *scan_plans;
+    /* Spare segments (`GC-SPARE-1`): size-classed blocks a sweep found with
+     * no object in them, unlinked from their class and from `segments`, and
+     * handed to the next class that needs a fresh segment, whatever its
+     * stride. Each entry is the block's address, with bit 0 set when its pages
+     * were returned to the host (so they read as zero) and clear when they
+     * still hold stale bytes; `spare_resident` counts the bytes of the latter.
+     * A full collection returns the pages of every entry that sat unused
+     * since the previous one. */
+    uintptr_t *spare;
+    size_t spare_length, spare_capacity, spare_resident;
+    /* The fewest entries the spare list held since the last full collection:
+     * entries below it sat unused for that whole interval. */
+    size_t spare_idle;
+    /* See `arena_chunks`. */
+    size_t arena_depths, arena_depth_capacity;
+    /* The 2 MiB regions (address >> 21) of every pool mapping, in an
+     * open-addressed table of `pool_set_capacity` slots (a power of two, zero
+     * meaning empty), so the collector can tell a size-classed object from its
+     * address alone (`GC-POOLSET-1`). */
+    uintptr_t *pool_set;
+    size_t pool_set_capacity;
+    /* A direct-mapped cache of pool regions lookups found, indexed by the
+     * region's low bits; zero is empty. A few regions hold most references. */
+    uintptr_t pool_hits[MYL_NATIVE_POOL_HITS];
 } myl_native_heap;
 /* Frozen byte offsets of `inline_windows` and `arena_window`, read by generated
  * inline allocation; src/native_heap.c asserts them and src/qbe_alloc.zig

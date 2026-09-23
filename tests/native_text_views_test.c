@@ -153,7 +153,7 @@ static void arenas(myl_native_heap *heap) {
     myl_native_text *lonely=myl_native_text_substring(heap,unrooted,3,40);
     assert(is_view(lonely) && myl_native_header_region(lonely)==1);
     myl_native_heap_collect(heap);
-    assert(!(((myl_native_object *)unrooted-1)->mark&MYL_NATIVE_OBJECT_FREE));
+    assert(((myl_native_object *)unrooted-1)->mark&MYL_NATIVE_OBJECT_MARKED);
     assert(reads(lonely,"outer text only an arena view refers ",37));
     myl_native_text *piece=myl_native_text_substring(heap,owner,6,count);
     assert(is_view(piece) && myl_native_header_region(piece)==1 && myl_native_header_region(owner)==0);

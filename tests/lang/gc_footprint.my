@@ -1,0 +1,163 @@
+module gc_footprint
+
+# The collector's footprint rules: an object is promoted only after it
+# survives two minor collections, empty segments serve any size class, a
+# coallocated text's payload is not cleared before its builder fills it, a
+# minor collection tells an old object from its address, and each arena depth
+# keeps its own chunks. None of them may change a value. These programs build
+# structures across many collections — trees under construction, lists whose
+# element sizes change from phase to phase, texts made from stale storage,
+# nested arenas that open and close under a large outer one — and check every
+# value. The runner also runs them under `--gc-stress`, where every allocation
+# collects and every third collection is full.
+
+
+class Node:
+    left: Option[Node]
+    right: Option[Node]
+    value: int
+
+
+def tree(depth: int, value: int) -> Node:
+    if depth == 0:
+        return Node(left=None, right=None, value=value)
+    return Node(left=Some(tree(depth - 1, value * 2)), right=Some(tree(depth - 1, value * 2 + 1)), value=value)
+
+
+# The trees are perfect, so a node has both children or neither.
+def total(node: Node) -> int:
+    left = node.left
+    right = node.right
+    if left is None or right is None:
+        return node.value
+    return node.value + total(left) + total(right)
+
+
+# About 8 KB of short-lived text per round, so a few hundred rounds run minor
+# collections within a test's instruction budget.
+def churn(rounds: int) -> int:
+    done = 0
+    for _ in range(rounds):
+        text = "abcdefgh"
+        for doubling in range(9):
+            text = text + text
+        done += len(text) // 4096
+    return done
+
+
+def words(prefix: str, count: int) -> list[str]:
+    items: list[str] = []
+    for index in range(count):
+        items.append(f"{prefix}{index}")
+    return items
+
+
+def joined_length(items: list[str]) -> int:
+    size = 0
+    for item in items:
+        size += len(item)
+    return size
+
+
+# A tree that churns garbage while it is being built, so minor collections run
+# with parts of it finished and parts still on the stack.
+def churning_tree(depth: int, value: int) -> Node:
+    if depth >= 6:
+        _ = churn(8)
+    if depth == 0:
+        return Node(left=None, right=None, value=value)
+    left = churning_tree(depth - 1, value * 2)
+    return Node(left=Some(left), right=Some(churning_tree(depth - 1, value * 2 + 1)), value=value)
+
+
+# Trees of 2^11 nodes are built one after another, each still under
+# construction when minor collections run: a subtree the first one finds is
+# kept young, the next promotes what is still reachable, and a finished tree
+# that died young is reclaimed without ever being promoted.
+# spec: GC-AGING-1
+public def test_trees_built_across_minor_collections_keep_every_node() -> bool:
+    ok = True
+    for round in range(6):
+        node = churning_tree(10, 1)
+        ok = ok and total(node) == (2048 * 2047) // 2
+    kept = tree(8, 1)
+    _ = churn(600)
+    return ok and total(kept) == (512 * 511) // 2
+
+
+# spec-case: GC-AGING-1
+public def test_a_young_subtree_hung_on_an_old_node_survives_two_minor_collections() -> bool:
+    old = tree(4, 1)
+    _ = churn(600)
+    young = tree(5, 1)
+    old.left = Some(young)
+    _ = churn(300)
+    young = tree(1, 1)
+    _ = churn(600)
+    match old.left:
+        case Some(left):
+            return total(left) == (64 * 63) // 2 and total(young) == 6
+        case None:
+            return False
+
+
+# Short texts fill one size class, die, and the storage is reused by texts of
+# a longer class and by nodes; every value reads back.
+# spec: GC-SPARE-1
+public def test_storage_freed_by_one_size_class_serves_another() -> bool:
+    short = words("s", 3000)
+    short_size = joined_length(short)
+    short = words("t", 1)
+    long = words("a much longer prefix for every element ", 3000)
+    trees: list[Node] = []
+    for index in range(40):
+        trees.append(tree(4, index))
+    sum = 0
+    for node in trees:
+        sum += total(node)
+    # "s0" to "s2999": 3000 prefixes and 10 + 180 + 2700 + 8000 digits; a
+    # depth-4 tree rooted at v holds 341 * v + 155.
+    return short_size == 13890 and long[2999] == "a much longer prefix for every element 2999" and sum == 341 * 780 + 40 * 155
+
+
+# Texts built after the heap has churned through many other texts reuse their
+# slots without clearing them first; equality, hashing and slicing must see
+# only the octets each text was built with.
+# spec: GC-NOZERO-1
+public def test_texts_built_on_reused_slots_compare_and_hash_by_their_own_octets() -> bool:
+    _ = churn(400)
+    counts: dict[str, int] = {}
+    for index in range(4000):
+        key = f"k{index % 37}"
+        counts[key] = counts.get(key, 0) + 1
+    probe = f"k{3}"
+    return counts[probe] == 109 and counts["k36"] == 108 and len(counts) == 37 and probe[1:] == "3"
+
+
+# An old list of many texts is rescanned by every minor collection while young
+# texts are appended to it and old slots are replaced.
+# spec: GC-POOLSET-1
+public def test_an_old_list_of_texts_keeps_young_texts_through_rescans() -> bool:
+    items = words("w", 5000)
+    _ = churn(600)
+    for index in range(500):
+        items.append(f"young{index}")
+        items[index * 7] = f"new{index}"
+    _ = churn(600)
+    return len(items) == 5500 and items[5499] == "young499" and items[7] == "new1" and items[8] == "w8"
+
+
+# Short inner scopes open and close many times under an outer arena holding
+# many chunks, and the outer scope keeps allocating while an inner one is open.
+# spec: ARENA-CHUNKS-1
+public def test_inner_arenas_open_and_close_under_a_large_outer_arena() -> bool:
+    ok = False
+    with arena():
+        outer = words("outer", 3000)
+        inner_total = 0
+        for round in range(300):
+            with arena():
+                inner = words("i", 20)
+                inner_total += len(inner) + len(inner[19])
+        ok = len(outer) == 3000 and outer[2999] == "outer2999" and inner_total == 300 * (20 + 3)
+    return ok

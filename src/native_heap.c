@@ -1,4 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
+/* madvise(MADV_DONTNEED), which returns a spare segment's pages to the host. */
+#define _DEFAULT_SOURCE 1
 #include "native_heap.h"
 #include "native_arena.h"
 #include <stdlib.h>
@@ -6,6 +8,7 @@
 #include <stdalign.h>
 #include <limits.h>
 #include <sys/resource.h>
+#include <sys/mman.h>
 #if defined(__SANITIZE_ADDRESS__) || defined(__SANITIZE_THREAD__)
 #define MYL_NATIVE_SANITIZED 1
 #elif defined(__has_feature)
@@ -139,8 +142,64 @@ static size_t segment_slots(size_t stride, size_t class_index) {
     size_t slots = (((size_t)64) << 10) / stride;
     return slots < 1 ? 1 : slots;
 }
+/* Bytes of one pool mapping: MYL_NATIVE_SEGMENT_POOL segments, aligned to its
+ * own size so its 2 MiB region number names it. */
+#define MYL_NATIVE_POOL_BYTES (MYL_NATIVE_SEGMENT_BYTES * MYL_NATIVE_SEGMENT_POOL)
+#define MYL_NATIVE_POOL_SHIFT 21
+_Static_assert(MYL_NATIVE_POOL_BYTES == ((size_t)1 << MYL_NATIVE_POOL_SHIFT), "a pool is one 2 MiB region");
+/* Slot of region `region` in the pool set: its own when present, else the
+ * empty slot an insertion would fill. The table is never full. */
+static size_t pool_slot(const myl_native_heap *heap, uintptr_t region) {
+    size_t mask = heap->pool_set_capacity - 1;
+    size_t at = (size_t)((region * UINT64_C(0x9E3779B97F4A7C15)) >> 32) & mask;
+    while (heap->pool_set[at] && heap->pool_set[at] != region) at = (at + 1) & mask;
+    return at;
+}
+/* Whether a header lies in a pool mapping, so it is a size-classed object
+ * whose mark lives in its segment's bitmap. Answered from the address alone:
+ * no read of the object itself. */
+static inline int in_pool(myl_native_heap *heap, const void *object) {
+    uintptr_t region = (uintptr_t)object >> MYL_NATIVE_POOL_SHIFT;
+    uintptr_t *cached = &heap->pool_hits[region & (MYL_NATIVE_POOL_HITS - 1)];
+    if (*cached == region) return 1;
+    if (!heap->pool_set_capacity || heap->pool_set[pool_slot(heap, region)] != region) return 0;
+    *cached = region;
+    return 1;
+}
+/* Record one pool mapping's region, growing the table to stay at most half
+ * full. Zero when the host refuses the growth. */
+static int pool_record(myl_native_heap *heap, uintptr_t region) {
+    if ((heap->pool_count + 1) * 2 > heap->pool_set_capacity) {
+        size_t capacity = heap->pool_set_capacity ? heap->pool_set_capacity * 2 : 64;
+        uintptr_t *grown = calloc(capacity, sizeof *grown);
+        if (!grown) return 0;
+        uintptr_t *old = heap->pool_set;
+        size_t old_capacity = heap->pool_set_capacity;
+        heap->pool_set = grown;
+        heap->pool_set_capacity = capacity;
+        for (size_t i = 0; i < old_capacity; ++i)
+            if (old[i]) heap->pool_set[pool_slot(heap, old[i])] = old[i];
+        free(old);
+    }
+    heap->pool_set[pool_slot(heap, region)] = region;
+    return 1;
+}
+/* One 2 MiB-aligned, zero-filled pool mapping: twice the size is mapped and
+ * the unaligned head and tail are unmapped again. NULL when the host
+ * refuses. */
+static unsigned char *pool_map(void) {
+    size_t bytes = MYL_NATIVE_POOL_BYTES;
+    unsigned char *raw = mmap(NULL, 2 * bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (raw == MAP_FAILED) return NULL;
+    uintptr_t start = ((uintptr_t)raw + bytes - 1) & ~(uintptr_t)(bytes - 1);
+    unsigned char *pool = (unsigned char *)start;
+    if (pool != raw) munmap(raw, (size_t)(pool - raw));
+    if (pool + bytes != raw + 2 * bytes) munmap(pool + bytes, (size_t)(raw + 2 * bytes - (pool + bytes)));
+    return pool;
+}
 /* One aligned, zero-filled block for a bitmap segment, carved from the newest
- * pool reservation or from a fresh one. NULL when the host refuses. */
+ * pool mapping or from a fresh one. A fresh mapping reads as zeros, so the
+ * block needs no clearing. NULL when the host refuses. */
 static myl_native_segment *pool_take(myl_native_heap *heap) {
     if (heap->pool_next == heap->pool_end) {
         if (heap->pool_count == heap->pool_capacity) {
@@ -150,25 +209,85 @@ static myl_native_segment *pool_take(myl_native_heap *heap) {
             heap->pools = grown;
             heap->pool_capacity = capacity;
         }
-        unsigned char *pool = aligned_alloc(MYL_NATIVE_SEGMENT_BYTES, MYL_NATIVE_SEGMENT_BYTES * MYL_NATIVE_SEGMENT_POOL);
+        unsigned char *pool = pool_map();
         if (!pool) return NULL;
+        if (!pool_record(heap, (uintptr_t)pool >> MYL_NATIVE_POOL_SHIFT)) {
+            munmap(pool, MYL_NATIVE_POOL_BYTES);
+            return NULL;
+        }
         heap->pools[heap->pool_count++] = pool;
         heap->pool_next = pool;
-        heap->pool_end = pool + MYL_NATIVE_SEGMENT_BYTES * MYL_NATIVE_SEGMENT_POOL;
+        heap->pool_end = pool + MYL_NATIVE_POOL_BYTES;
     }
     myl_native_segment *segment = (myl_native_segment *)heap->pool_next;
     heap->pool_next += MYL_NATIVE_SEGMENT_BYTES;
-    memset(segment, 0, MYL_NATIVE_SEGMENT_BYTES);
     return segment;
 }
-/* Reserve one zero-filled segment and link it into the heap. It is zeroed on
- * reservation, which is what lets the bump path hand out object payload
- * without a memset. */
+/* Bit 0 of a spare entry: the block's pages went back to the host, so it
+ * reads as zero-filled storage again. */
+#define SPARE_RELEASED ((uintptr_t)1)
+/* The most recently spared block, with its header cleared, or NULL when there
+ * is none. A block whose pages are still resident keeps its previous objects'
+ * bytes and is marked stale; a released one reads as zeros and is fresh. */
+static myl_native_segment *spare_take(myl_native_heap *heap) {
+    if (!heap->spare_length) return NULL;
+    uintptr_t entry = heap->spare[--heap->spare_length];
+    if (heap->spare_idle > heap->spare_length) heap->spare_idle = heap->spare_length;
+    myl_native_segment *segment = (myl_native_segment *)(entry & ~SPARE_RELEASED);
+    int released = (entry & SPARE_RELEASED) != 0;
+    if (!released) {
+        heap->spare_resident -= MYL_NATIVE_SEGMENT_BYTES;
+        memset(segment, 0, offsetof(myl_native_segment, data));
+        segment->stale = 1;
+    }
+    return segment;
+}
+/* Give one empty bitmap segment to the spare list; zero when the list could not
+ * grow, in which case the caller keeps the segment where it is. */
+static int spare_put(myl_native_heap *heap, myl_native_segment *segment) {
+    if (heap->spare_length == heap->spare_capacity) {
+        size_t capacity = heap->spare_capacity ? heap->spare_capacity * 2 : 64;
+        uintptr_t *grown = realloc(heap->spare, capacity * sizeof *grown);
+        if (!grown) return 0;
+        heap->spare = grown;
+        heap->spare_capacity = capacity;
+    }
+    heap->spare[heap->spare_length++] = (uintptr_t)segment;
+    heap->spare_resident += MYL_NATIVE_SEGMENT_BYTES;
+    return 1;
+}
+/* Return to the host the pages of every spare block that sat unused since the
+ * previous full collection: the entries below the list's low-water mark,
+ * which blocks taken since never reached. A block the next full collection
+ * spares is kept resident until the one after, so a program that frees a
+ * phase's storage and refills it at once reuses its pages without faulting
+ * them in again; only storage that stayed idle for a whole interval goes
+ * back. A block the host refuses to release simply stays resident. Then the
+ * mark restarts at the whole list. */
+static void spare_trim(myl_native_heap *heap) {
+    size_t idle = heap->spare_idle < heap->spare_length ? heap->spare_idle : heap->spare_length;
+    for (size_t i = 0; i < idle; ++i) {
+        if (heap->spare[i] & SPARE_RELEASED) continue;
+        if (madvise((void *)heap->spare[i], MYL_NATIVE_SEGMENT_BYTES, MADV_DONTNEED)) continue;
+        heap->spare[i] |= SPARE_RELEASED;
+        heap->spare_resident -= MYL_NATIVE_SEGMENT_BYTES;
+    }
+    heap->spare_idle = heap->spare_length;
+}
+/* Reserve one segment and link it into the heap: a spare block if there is
+ * one (`GC-SPARE-1`), else a fresh zero-filled one. Fresh storage is what
+ * lets the bump path hand out object payload without a memset; a spare block
+ * whose pages stayed resident is stale, and its slots are cleared as they are
+ * handed out, like a reused hole's. */
 static myl_native_segment *segment_new(myl_native_heap *heap, size_t stride, size_t class_index) {
     size_t slots = segment_slots(stride, class_index);
     if (slots > (SIZE_MAX - sizeof(myl_native_segment)) / stride) return NULL;
     size_t bytes = sizeof(myl_native_segment) + slots * stride;
-    myl_native_segment *segment = bitmap_class(class_index) ? pool_take(heap) : calloc(1, bytes);
+    myl_native_segment *segment = NULL;
+    if (bitmap_class(class_index)) {
+        segment = spare_take(heap);
+        if (!segment) segment = pool_take(heap);
+    } else segment = calloc(1, bytes);
     if (!segment) return NULL;
     segment->stride = stride;
     segment->slots = slots;
@@ -219,7 +338,7 @@ static int hole_take(myl_native_heap *heap, size_t class_index, int grow, hole_s
         }
         segment->dirty = 1;
         *span = (hole_span){segment->data + segment->used * segment->stride,
-                            segment->data + segment->slots * segment->stride, segment, 1};
+                            segment->data + segment->slots * segment->stride, segment, !segment->stale};
         segment->used = segment->slots;
         return 1;
     }
@@ -243,8 +362,9 @@ static void hole_return(myl_native_heap *heap, myl_native_segment *segment, unsi
  * otherwise the next slot of the class's runtime window, opening a window on
  * the next hole or on fresh storage when it is empty. Returns NULL when the
  * host refuses. A reused slot's payload is zeroed because its previous owner
- * wrote it; fresh storage is already zero. */
-static myl_native_object *slot_take(myl_native_heap *heap, size_t stride, size_t class_index) {
+ * wrote it — unless `zero` is clear, for a payload the caller overwrites in
+ * full and the collector never interprets; fresh storage is already zero. */
+static myl_native_object *slot_take(myl_native_heap *heap, size_t stride, size_t class_index, int zero) {
     if (class_index >= MYL_NATIVE_CLASS_COUNT) {
         myl_native_segment *segment = segment_new(heap, stride, class_index);
         if (!segment) return NULL;
@@ -260,7 +380,7 @@ static myl_native_object *slot_take(myl_native_heap *heap, size_t stride, size_t
     }
     myl_native_object *object = (myl_native_object *)state->runtime.cursor;
     state->runtime.cursor += stride;
-    if (!state->runtime_fresh) memset(object + 1, 0, stride - sizeof(myl_native_object));
+    if (zero && !state->runtime_fresh) memset(object + 1, 0, stride - sizeof(myl_native_object));
     object->mark = 0;
     return object;
 }
@@ -297,13 +417,14 @@ void myl_native_region_end(myl_native_heap *heap) {
     heap->region_depth--;
 }
 /* The mark bit of a size-classed object: its segment is the aligned block
- * around it, and the bit indexes the object's first 16-byte granule. */
-typedef struct { uint64_t *word; uint64_t bit; } mark_slot;
+ * around it, and the bit indexes the object's first 16-byte granule. `age` is
+ * the same bit's word in the segment's aging bits. */
+typedef struct { uint64_t *word, *age; uint64_t bit; } mark_slot;
 static mark_slot mark_bit(const myl_native_object *object) {
     uintptr_t address = (uintptr_t)object;
     myl_native_segment *segment = (myl_native_segment *)(address & ~(uintptr_t)(MYL_NATIVE_SEGMENT_BYTES - 1));
     size_t granule = (size_t)(address - (uintptr_t)segment) >> 4;
-    return (mark_slot){&segment->marks[granule >> 6], (uint64_t)1 << (granule & 63)};
+    return (mark_slot){&segment->marks[granule >> 6], &segment->ages[granule >> 6], (uint64_t)1 << (granule & 63)};
 }
 /* Whether an object is marked: in its header when it is large, else in its
  * segment's mark bits. Outside a collection a marked object is old. */
@@ -316,22 +437,50 @@ static void trace(myl_native_heap *, const myl_native_type *, const void *);
 static void mark(myl_native_heap *heap, void *payload) {
     if (!payload) return;
     myl_native_object *object = (myl_native_object *)payload - 1;
+    myl_native_generations *generations = &heap->generations;
+    if (in_pool(heap, object)) {
+        /* A size-classed object: its mark and age bits answer without a read
+         * of the object, so rescanning references to old objects costs the
+         * bitmap, not a load of every child's header. */
+        mark_slot slot = mark_bit(object);
+        if (*slot.word & slot.bit) {
+            /* Marked already. Its age bit is set exactly when this collection
+             * keeps it young (see below). */
+            if (*slot.age & slot.bit) generations->young_edge = 1;
+            return;
+        }
+        if (!worklist_push(heap, object)) { heap->scratch_failed = 1; return; }
+        *slot.word |= slot.bit;
+        /* Aging: a minor collection promotes a young object only the second
+         * time it finds it reachable. The first time its age bit is set and
+         * its header bit 0 stays clear; the sweep clears its mark bit again,
+         * so it stays young. Promotion clears the age bit and sets header bit
+         * 0, the store barrier's "old" flag. While a collection marks, a set
+         * age bit on a marked object therefore means "kept young"; on an
+         * unmarked one, "survived the last minor collection". A full
+         * collection promotes every survivor. */
+        if (generations->aging) {
+            if (!(*slot.age & slot.bit)) {
+                *slot.age |= slot.bit;
+                generations->young_edge = 1;
+                return;
+            }
+            *slot.age &= ~slot.bit;
+        }
+        object->mark |= MYL_NATIVE_OBJECT_MARKED;
+        return;
+    }
     uintptr_t word = object->mark;
     /* Immortal payloads live in the image, not the heap: they can never be
      * collected, so re-tracing one would only queue static storage. Region
      * storage is retained wholesale; its outgoing GC edges are scanned once
-     * separately, so arena cycles never enter the collector's work list. */
+     * separately, so arena cycles never enter the collector's work list.
+     * Everything else outside the pools is a large object, marked in its
+     * header and never kept young. */
     if (word & (MYL_NATIVE_OBJECT_IMMORTAL | MYL_NATIVE_OBJECT_ARENA)) return;
-    if (word & MYL_NATIVE_OBJECT_LARGE) {
-        if (word & MYL_NATIVE_OBJECT_MARKED) return;
-        if (!worklist_push(heap, object)) { heap->scratch_failed = 1; return; }
-        object->mark = word | MYL_NATIVE_OBJECT_MARKED;
-        return;
-    }
-    mark_slot slot = mark_bit(object);
-    if (*slot.word & slot.bit) return;
+    if (word & MYL_NATIVE_OBJECT_MARKED) return;
     if (!worklist_push(heap, object)) { heap->scratch_failed = 1; return; }
-    *slot.word |= slot.bit;
+    object->mark = word | MYL_NATIVE_OBJECT_MARKED;
 }
 static void trace(myl_native_heap *heap, const myl_native_type *type, const void *address) {
     const unsigned char *bytes = address;
@@ -490,6 +639,7 @@ static void clear_marks(myl_native_heap *heap) {
     for (myl_native_segment *segment = heap->segments; segment; segment = segment->next) {
         if (bitmap_class(segment->class_index)) {
             memset(segment->marks, 0, sizeof segment->marks);
+            memset(segment->ages, 0, sizeof segment->ages);
             continue;
         }
         for (size_t i = 0; i < segment->used; ++i) {
@@ -510,20 +660,45 @@ static void clear_marks(myl_native_heap *heap) {
  * reuse it before the sweep that follows makes it a hole. */
 static void mark_old_references(myl_native_heap *heap) {
     myl_native_generations *generations = &heap->generations;
+    /* An entry that is no longer marked names a slot released since, which
+     * is dropped: every entry left names a live object, so no entry can point
+     * into a segment this collection's sweep empties and spares. */
+    size_t kept = 0;
     for (size_t i = 0; i < generations->rescan.length; ++i) {
-        const myl_native_object *object = generations->rescan.items[i];
-        if (marked(object)) scan_payload(heap, object);
+        myl_native_object *object = generations->rescan.items[i];
+        if (!marked(object)) continue;
+        generations->rescan.items[kept++] = object;
+        scan_payload(heap, object);
     }
+    generations->rescan.length = kept;
     for (myl_native_segment *segment = heap->segments; segment; segment = segment->next) {
         if (segment->class_index < MYL_NATIVE_CLASS_COUNT) continue;
         const myl_native_object *object = (const myl_native_object *)segment->data;
         if ((object->mark & MYL_NATIVE_OBJECT_MARKED) && rescanned(object)) scan_payload(heap, object);
     }
+    /* Every listed body is old again before any is traced, so a reference
+     * from one listed body to another is not mistaken for a young one. A
+     * listed body's bit 0 is clear until this point, so a set bit names an
+     * entry already kept, or a large body a root reached first, which the
+     * drain traces; either way the entry is dropped here. */
+    size_t listed = 0;
+    myl_native_object **items = generations->remembered.items;
     for (size_t i = 0; i < generations->remembered.length; ++i) {
-        myl_native_object *object = generations->remembered.items[i];
-        if (!object->element) continue;
+        myl_native_object *object = items[i];
+        if (!object->element || (object->mark & MYL_NATIVE_OBJECT_MARKED)) continue;
         object->mark |= MYL_NATIVE_OBJECT_MARKED;
+        items[listed++] = object;
+    }
+    generations->remembered.length = 0;
+    for (size_t i = 0; i < listed; ++i) {
+        myl_native_object *object = items[i];
+        if (!object->element) continue;
+        generations->young_edge = 0;
         scan_payload(heap, object);
+        /* A body that still references an object this collection keeps young
+         * stays listed, or the next minor collection would miss that object.
+         * The list only shrinks here, so the push never reallocates. */
+        if (generations->young_edge) stack_push(&generations->remembered, object);
     }
 }
 /* Collection policy: a minor collection runs once the young generation grows
@@ -539,7 +714,9 @@ static void schedule(myl_native_heap *heap, int full) {
     size_t young = live / 2;
     if (young < MYL_NATIVE_YOUNG_FLOOR) young = MYL_NATIVE_YOUNG_FLOOR;
     heap->next_collection = saturating_add(live, young);
-    heap->generations.old_bytes = live;
+    /* An object kept young is not old: only promotion grows the old
+     * generation toward the full threshold. */
+    heap->generations.old_bytes = live - heap->generations.young_bytes;
     if (full) {
         size_t grown = live > SIZE_MAX / 2 ? SIZE_MAX : live * 2;
         heap->generations.full_threshold = saturating_add(grown, MYL_NATIVE_FULL_FLOOR);
@@ -593,12 +770,29 @@ static size_t sweep_bitmap(myl_native_segment *segment, unsigned char *end, hole
     hole_append(chain, cursor, end);
     return live;
 }
-static void sweep_segment(myl_native_segment *segment) {
+/* After a bitmap segment's holes are rebuilt, the objects this collection
+ * kept young lose their mark bit again: their age bit is set, and every other
+ * age bit (an object that died young, or one promoted since) is cleared. A
+ * segment holding a young object stays dirty, so the next minor collection
+ * sweeps it. Returns the number of objects kept young. */
+static size_t settle_ages(myl_native_segment *segment) {
+    size_t young = 0;
+    for (size_t word = 0; word < MYL_NATIVE_SEGMENT_MARK_WORDS; ++word) {
+        uint64_t ages = segment->ages[word] & segment->marks[word];
+        segment->ages[word] = ages;
+        segment->marks[word] &= ~ages;
+        young += (size_t)__builtin_popcountll(ages);
+    }
+    return young;
+}
+static size_t sweep_segment(myl_native_segment *segment) {
     hole_chain chain = {NULL, NULL};
-    size_t live = 0;
+    size_t live = 0, young = 0;
     unsigned char *end = segment->data + segment->used * segment->stride;
-    if (bitmap_class(segment->class_index)) live = sweep_bitmap(segment, end, &chain);
-    else {
+    if (bitmap_class(segment->class_index)) {
+        live = sweep_bitmap(segment, end, &chain);
+        young = settle_ages(segment);
+    } else {
         unsigned char *cursor = segment->data;
         for (unsigned char *slot = segment->data; slot < end; slot += segment->stride) {
             if (!(((myl_native_object *)slot)->mark & MYL_NATIVE_OBJECT_MARKED)) continue;
@@ -610,7 +804,8 @@ static void sweep_segment(myl_native_segment *segment) {
     }
     segment->holes = chain.first;
     segment->live = live;
-    segment->dirty = 0;
+    segment->dirty = young != 0;
+    return young;
 }
 /* The sweep walks segments, not a link chain. A full collection sweeps every
  * segment; a minor one sweeps only the dirty ones — those storage was handed
@@ -621,7 +816,7 @@ static void sweep_segment(myl_native_segment *segment) {
  * objects are recounted from what survived: that discharges every freed
  * object, and every prepaid slot of a window nobody took, exactly once. */
 static void sweep(myl_native_heap *heap, int full) {
-    size_t bytes = 0, objects = 0;
+    size_t bytes = 0, objects = 0, young = 0;
     myl_native_segment **link = &heap->segments;
     while (*link) {
         myl_native_segment *segment = *link;
@@ -637,7 +832,16 @@ static void sweep(myl_native_heap *heap, int full) {
             }
             continue;
         }
-        if (full || segment->dirty) sweep_segment(segment);
+        if (full || segment->dirty) young += sweep_segment(segment) * segment->stride;
+        /* A bitmap segment with no object left in it serves whichever class
+         * next needs a fresh one: every such segment is one aligned block of
+         * the same size. The bump segment of its class stays, and a spare
+         * list that cannot grow leaves the segment where it is. */
+        if (!segment->live && bitmap_class(segment->class_index) &&
+            heap->classes[segment->class_index].current != segment && spare_put(heap, segment)) {
+            *link = segment->next;
+            continue;
+        }
         bytes += segment->live * segment->stride;
         objects += segment->live;
         segment->available = NULL;
@@ -652,6 +856,7 @@ static void sweep(myl_native_heap *heap, int full) {
     heap->bytes = heap->arena.reserved_bytes + bytes;
     heap->objects_live = heap->objects_live - heap->gc_objects + objects;
     heap->gc_objects = objects;
+    heap->generations.young_bytes = young;
 }
 /* One collection. A full one clears every mark first and reclaims every
  * unreachable object; a minor one keeps the old generation marked, follows
@@ -682,6 +887,7 @@ static void collect(myl_native_heap *heap, int full) {
         generations->force_full = 0;
         generations->full_collections++;
     } else generations->minor_collections++;
+    generations->aging = !full;
     for (myl_native_root *root = heap->roots; root; root = root->previous)
         trace(heap, root->type, root->address);
     /* The immortal one-scalar ASCII table is rooted here, not on the root stack:
@@ -689,8 +895,34 @@ static void collect(myl_native_heap *heap, int full) {
      * lazily pushed entry. */
     for (size_t i = 0; i < 128; i++) if (heap->text_scalars[i]) mark(heap, heap->text_scalars[i]);
     if (heap->segments) myl_native_arena_trace(heap, trace);
-    if (!full) mark_old_references(heap);
-    generations->remembered.length = 0;
+    /* A young object first reached through an old one — stored into an old
+     * list, dictionary or class body — is promoted at once rather than aged:
+     * the old container will keep it, and aging it would only trace it twice.
+     * Aging is for what the stack and the young generation hold. This also
+     * lists the remembered bodies that must stay listed and empties the rest. */
+    if (!full) {
+        generations->aging = 0;
+        mark_old_references(heap);
+        generations->aging = 1;
+    }
+    /* Every object marked by this collection passes through the worklist once,
+     * so the objects a later minor collection must rescan are listed here: a
+     * promoted size-classed survivor whose references no barrier watches. A
+     * promoted `cell` body that references an object this collection keeps
+     * young is listed as remembered instead, exactly as if a store had
+     * reached it. An object kept young is neither: the next minor collection
+     * traces it anyway. */
+    while (heap->pending_len) {
+        myl_native_object *object = heap->pending[--heap->pending_len];
+        generations->young_edge = 0;
+        scan_payload(heap, object);
+        if (!(object->mark & MYL_NATIVE_OBJECT_MARKED) || !traced_payload(object)) continue;
+        if (!object->element->cell) {
+            if (!oversized(object) && !stack_push(&generations->rescan, object)) generations->force_full = 1;
+        } else if (generations->young_edge && !stack_push(&generations->remembered, object))
+            generations->force_full = 1;
+    }
+    generations->aging = 0;
     /* A refused worklist reservation leaves the graph partly marked. Clearing
      * every mark and returning unwinds to an allocator that refuses the request,
      * so a partial mark is never swept and the heap stays consistent; with the
@@ -701,22 +933,17 @@ static void collect(myl_native_heap *heap, int full) {
         generations->force_full = 1;
         return;
     }
-    /* Every object marked by this collection passes through the worklist once,
-     * so the objects a later minor collection must rescan are listed here: a
-     * size-classed survivor whose references no barrier watches. */
-    while (heap->pending_len) {
-        myl_native_object *object = heap->pending[--heap->pending_len];
-        /* The header bit is the store barrier's "old" flag (and a large
-         * object's mark, already set): every survivor is old from here on. */
-        object->mark |= MYL_NATIVE_OBJECT_MARKED;
-        if (rescanned(object) && !oversized(object) && !stack_push(&generations->rescan, object))
-            generations->force_full = 1;
-        scan_payload(heap, object);
-    }
     sweep(heap, full);
+    /* A listed body keeps header bit 0 clear until the next minor collection
+     * traces it, as the store barrier leaves it, so a later store does not
+     * list it twice. A large body's bit 0 is its mark; the next minor
+     * collection sets it again before its sweep, as for a barrier's entry. */
+    for (size_t i = 0; i < generations->remembered.length; ++i)
+        generations->remembered.items[i]->mark &= ~(uintptr_t)MYL_NATIVE_OBJECT_MARKED;
     /* Collection timing is unobservable (no destructors, no counter a program
      * can read) and `--gc-stress` bypasses these triggers entirely. */
     schedule(heap, full);
+    if (full) spare_trim(heap);
 }
 void myl_native_heap_collect(myl_native_heap *heap) {
     collect(heap, 1);
@@ -724,12 +951,13 @@ void myl_native_heap_collect(myl_native_heap *heap) {
 /* The collection an allocation of `bytes` more runs when it is due. Budget
  * pressure always runs a full one, because only a full collection reclaims
  * old garbage and the request is refused if even that is not enough. Under
- * `--gc-stress` minor and full collections alternate, so both are exercised
- * at every allocation. Otherwise a minor collection runs unless the tracing
+ * `--gc-stress` every third collection is full and the two between are
+ * minor, so both kinds run at every allocation and an object a minor
+ * collection kept young is promoted by the next one. Otherwise a minor collection runs unless the tracing
  * heap has reached the full threshold. */
 static void collect_due(myl_native_heap *heap, size_t bytes) {
     int pressure = heap->bytes > heap->limit || bytes > heap->limit - heap->bytes;
-    int full = heap->stress ? (int)(heap->collections & 1) : heap->generations.old_bytes >= heap->generations.full_threshold;
+    int full = heap->stress ? heap->collections % 3 == 0 : heap->generations.old_bytes >= heap->generations.full_threshold;
     collect(heap, full || pressure);
 }
 /* Whether an allocation charging `bytes` more must first collect: always
@@ -758,9 +986,14 @@ void *myl_native_heap_alloc(myl_native_heap *heap, const myl_native_type *elemen
 static const myl_native_type block_type = {
     .size = 1, .alignment = 1, .kind = MYL_NATIVE_PLAIN
 };
+static void *alloc_object(myl_native_heap *heap, const myl_native_type *element, size_t count, unsigned region, int zero);
+/* A block's payload is not cleared (`GC-NOZERO-1`): its caller writes every
+ * octet it will read before the next safepoint, and its PLAIN descriptor keeps
+ * the collector out of it, so stale bytes of a reused slot are never
+ * observed. An arena block is carved from a zero-filled chunk as before. */
 void *myl_native_heap_alloc_block(myl_native_heap *heap, size_t prefix, size_t extra) {
     if (prefix > SIZE_MAX - extra) return NULL;
-    return myl_native_heap_alloc_at(heap, &block_type, prefix + extra, heap->region_depth);
+    return alloc_object(heap, &block_type, prefix + extra, heap->region_depth, 0);
 }
 /* The list slot naming the one-slot segment whose whole payload is `payload`, or
  * NULL when the payload is anything else. Only an oversized segment — one whose
@@ -830,6 +1063,9 @@ void *myl_native_heap_extend(myl_native_heap *heap, void *payload, size_t count)
     return grown->data + sizeof(myl_native_object);
 }
 void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *element, size_t count, unsigned region) {
+    return alloc_object(heap, element, count, region, 1);
+}
+static void *alloc_object(myl_native_heap *heap, const myl_native_type *element, size_t count, unsigned region, int zero) {
     if (!element || !element->alignment || element->alignment > alignof(max_align_t)) return NULL;
     if ((element->alignment & (element->alignment - 1)) || element->size % element->alignment) return NULL;
     if (region > heap->region_depth) return NULL;
@@ -852,10 +1088,10 @@ void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *ele
         heap->exhausted = 1;
         return NULL;
     }
-    myl_native_object *object = slot_take(heap, stride, class_index);
+    myl_native_object *object = slot_take(heap, stride, class_index, zero);
     /* Chunks the arena retained for reuse are host bytes no live allocation
      * needs, so a refused reservation spends them before reporting failure. */
-    if (!object && heap->arena.cached) { myl_native_arena_reclaim(heap); object = slot_take(heap, stride, class_index); }
+    if (!object && heap->arena.cached) { myl_native_arena_reclaim(heap); object = slot_take(heap, stride, class_index, zero); }
     if (!object) return NULL;
     object->mark = ((uintptr_t)count << MYL_NATIVE_OBJECT_COUNT_SHIFT) | (bitmap_class(class_index) ? 0 : MYL_NATIVE_OBJECT_LARGE);
     object->element = element;
@@ -963,15 +1199,18 @@ void myl_native_heap_remember(myl_native_heap *heap, void *payload) {
 void myl_native_heap_destroy(myl_native_heap *heap) {
     myl_native_arena_release(heap, 0);
     myl_native_arena_reclaim(heap);
+    free(heap->arena_chunks);
     while (heap->segments) {
         myl_native_segment *segment = heap->segments;
         heap->segments = segment->next;
         /* A bitmap segment is part of a pool reservation, freed below. */
         if (!bitmap_class(segment->class_index)) free(segment);
     }
-    for (size_t i = 0; i < heap->pool_count; ++i) free(heap->pools[i]);
+    for (size_t i = 0; i < heap->pool_count; ++i) munmap(heap->pools[i], MYL_NATIVE_POOL_BYTES);
+    free(heap->pool_set);
     free(heap->pools);
     free(heap->scan_plans);
+    free(heap->spare);
     free(heap->pending);
     free(heap->generations.rescan.items);
     free(heap->generations.remembered.items);

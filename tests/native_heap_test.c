@@ -361,6 +361,145 @@ static void stride_rounding_test(void) {
     assert(myl_native_heap_alloc_small(&heap, &three, 2) && heap.inline_windows[2].cursor);
     myl_native_heap_destroy(&heap);
 }
+/* Whether header bit 0, the barrier's "old" flag, is set. */
+static int old_flag(const void *payload) {
+    return (((const myl_native_object *)payload - 1)->mark & MYL_NATIVE_OBJECT_MARKED) != 0;
+}
+/* spec-case: GC-AGING-1. A minor collection promotes a young object only the
+   second time it finds it reachable: the first one keeps it young (unflagged,
+   counted in `young_bytes`, not in `old_bytes`) and the next promotes it. An
+   object that dies after surviving one minor collection is reclaimed by the
+   next minor collection, never promoted. A full collection promotes every
+   survivor at once. */
+static void aging_test(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 64 << 20);
+    myl_native_heap_collect(&heap);
+    Node *kept = myl_native_heap_alloc(&heap, &node_type, 1);
+    Node *brief = myl_native_heap_alloc(&heap, &node_type, 1);
+    kept->value = 5;
+    myl_native_root kept_root, brief_root;
+    myl_native_root_push(&heap, &kept_root, &kept, &pointer_type);
+    myl_native_root_push(&heap, &brief_root, &brief, &pointer_type);
+    size_t minors = heap.generations.minor_collections;
+    allocate_due(&heap, &node_type);
+    assert(heap.generations.minor_collections == minors + 1);
+    assert(!old_flag(kept) && !old_flag(brief) && heap.generations.young_bytes == 2 * 32);
+    assert(heap.generations.old_bytes == 0 && heap.objects_live == 3);
+    assert(myl_native_root_pop(&heap, &brief_root));
+    brief = NULL;
+    allocate_due(&heap, &node_type);
+    assert(heap.generations.minor_collections == minors + 2);
+    /* `kept` is promoted; `brief` and the first filler died young. */
+    assert(old_flag(kept) && kept->value == 5 && heap.generations.old_bytes == 32);
+    assert(heap.objects_live == 2);
+    Node *fresh = myl_native_heap_alloc(&heap, &node_type, 1);
+    myl_native_root fresh_root;
+    myl_native_root_push(&heap, &fresh_root, &fresh, &pointer_type);
+    myl_native_heap_collect(&heap);
+    assert(old_flag(fresh) && heap.generations.young_bytes == 0);
+    assert(myl_native_root_pop(&heap, &fresh_root));
+    assert(myl_native_root_pop(&heap, &kept_root));
+    myl_native_heap_collect(&heap);
+    assert(heap.objects_live == 0 && heap.bytes == 0);
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: GC-AGING-1. A class body promoted while it references an object
+   the same minor collection keeps young is listed as remembered, so the next
+   minor collection still traces the edge after the young object's only other
+   reference is gone; that collection promotes the object and unlists the
+   body. A young object first reached through an old object is promoted at
+   once. */
+static void aging_edges_test(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 64 << 20);
+    myl_native_heap_collect(&heap);
+    Node *body = myl_native_heap_alloc(&heap, &cell_type, 1);
+    myl_native_root body_root;
+    myl_native_root_push(&heap, &body_root, &body, &pointer_type);
+    allocate_due(&heap, &node_type);
+    assert(!old_flag(body));
+    /* The body survived one minor collection; its child is brand new and is
+       reached from its own root before the body is traced. */
+    Node *child = myl_native_heap_alloc(&heap, &node_type, 1);
+    child->value = 42;
+    body->next = child;
+    myl_native_root child_root;
+    myl_native_root_push(&heap, &child_root, &child, &pointer_type);
+    size_t minors = heap.generations.minor_collections;
+    allocate_due(&heap, &node_type);
+    assert(heap.generations.minor_collections == minors + 1);
+    assert(heap.generations.remembered.length == 1 && heap.generations.remembered.items[0] == (myl_native_object *)body - 1);
+    assert(!old_flag(body) && !old_flag(child));
+    assert(myl_native_root_pop(&heap, &child_root));
+    child = NULL;
+    allocate_due(&heap, &node_type);
+    assert(heap.generations.remembered.length == 0 && old_flag(body) && old_flag(body->next));
+    assert(body->next->value == 42);
+    /* Stored into the old body (the barrier lists it), a new object reachable
+       only from there is promoted by the first minor collection that sees it. */
+    myl_native_heap_remember(&heap, body);
+    body->next = myl_native_heap_alloc(&heap, &node_type, 1);
+    body->next->value = 7;
+    allocate_due(&heap, &node_type);
+    assert(old_flag(body->next) && body->next->value == 7 && heap.generations.remembered.length == 0);
+    assert(myl_native_root_pop(&heap, &body_root));
+    myl_native_heap_collect(&heap);
+    assert(heap.objects_live == 0);
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: GC-SPARE-1. A size-classed segment a sweep leaves empty becomes a
+   spare that any class takes before a new pool is mapped; its resident bytes
+   are stale, so a slot handed out from it is cleared like a reused hole's.
+   Spares that stayed unused from one full collection to the next give their
+   pages back, and a block taken after that reads as zero. */
+static void spare_test(void) {
+    typedef struct { uint64_t words[10]; } Wide;
+    const myl_native_type wide = { .size = sizeof(Wide), .alignment = _Alignof(Wide), .kind = MYL_NATIVE_PLAIN,
+                                   .trace_mode = MYL_NATIVE_TRACE_NONE };
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 64 << 20);
+    heap.next_collection = SIZE_MAX;
+    for (int i = 0; i < 20000; ++i) {
+        Node *node = myl_native_heap_alloc(&heap, &node_type, 1);
+        node->next = (Node *)(uintptr_t)0xdeadbeef;
+        node->value = -1;
+    }
+    size_t pools = heap.pool_count;
+    myl_native_heap_collect(&heap);
+    size_t spares = heap.spare_length;
+    assert(spares >= 8 && heap.bytes == 0);
+    for (int i = 0; i < 2000; ++i) {
+        Wide *item = myl_native_heap_alloc(&heap, &wide, 1);
+        for (int w = 0; w < 10; ++w) assert(item->words[w] == 0);
+        item->words[9] = 1;
+    }
+    assert(heap.spare_length < spares && heap.pool_count == pools);
+    /* Two full collections with the spares untouched release their pages. */
+    myl_native_heap_collect(&heap);
+    myl_native_heap_collect(&heap);
+    assert(heap.spare_resident == 0 && heap.spare_length > 0);
+    myl_native_heap_destroy(&heap);
+}
+/* spec-case: GC-NOZERO-1. A coallocated block's payload is not cleared when
+   its slot is reused — its caller writes every octet it reads — while an
+   ordinary allocation from the same stale storage is zeroed. */
+static void block_reuse_test(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 64 << 20);
+    unsigned char *block = myl_native_heap_alloc_block(&heap, 8, 40);
+    assert(block);
+    memset(block, 0xab, 48);
+    block = NULL;
+    myl_native_heap_collect(&heap);
+    unsigned char *again = myl_native_heap_alloc_block(&heap, 8, 40);
+    assert(again && again[0] == 0xab && again[47] == 0xab);
+    const myl_native_type octets = { .size = 1, .alignment = 1, .kind = MYL_NATIVE_PLAIN, .trace_mode = MYL_NATIVE_TRACE_NONE };
+    unsigned char *plain = myl_native_heap_alloc(&heap, &octets, 48);
+    assert(plain);
+    for (int i = 0; i < 48; ++i) assert(plain[i] == 0);
+    myl_native_heap_destroy(&heap);
+}
 static void automatic_collection_test(void) {
     myl_native_heap heap;
     myl_native_heap_init(&heap,SIZE_MAX);
@@ -533,5 +672,9 @@ int main(void) {
     pressure_collects_fully_test();
     inline_list_test();
     stride_rounding_test();
+    aging_test();
+    aging_edges_test();
+    spare_test();
+    block_reuse_test();
     puts("native heap tests passed");
 }

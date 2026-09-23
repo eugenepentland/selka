@@ -7,8 +7,8 @@ module gc_generations
 # (the store barrier), an append to an old list and a store into an old list
 # slot (rescanned without a barrier) — before churning enough garbage to run
 # more collections. A young object an old one references must survive them.
-# Under `--gc-stress` minor and full collections alternate at every
-# allocation.
+# Under `--gc-stress` every allocation collects, and every third collection
+# is full.
 
 
 class Node:
