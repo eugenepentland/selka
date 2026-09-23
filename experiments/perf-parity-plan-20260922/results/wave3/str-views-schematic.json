@@ -1,0 +1,751 @@
+{
+ "cpu": 8,
+ "rounds": 21,
+ "warmups": 3,
+ "seed": 20260922,
+ "reference": "zig-o3",
+ "arms": {
+  "zig-o3": {
+   "binary": "/home/epentland/ai/canopy/mylang/.tmp/full-svg-benchmark-20260921/zig-o3",
+   "kind": "native"
+  },
+  "gc-lto-before": {
+   "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-ab8933ab39feefa34/.tmp/arms-base/gc-lto",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  },
+  "arena-lto-before": {
+   "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-ab8933ab39feefa34/.tmp/arms-base/arena-lto",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  },
+  "gc-lto-this": {
+   "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-ab8933ab39feefa34/.tmp/arms-new/gc-lto",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  },
+  "arena-lto-this": {
+   "binary": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-ab8933ab39feefa34/.tmp/arms-new/arena-lto",
+   "kind": "mylang",
+   "bounded": false,
+   "declared": "io::circuit_input,io::pinout_input,io::interface_input,io::length,io::read_block,io::read_document,io::write_block,io::write_bytes,io::finish,io::output_limit,io::byte,io::put,io::issue"
+  }
+ },
+ "hashes": {
+  "fixture": {
+   "zig-o3": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "gc-lto-before": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "arena-lto-before": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "gc-lto-this": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388",
+   "arena-lto-this": "68157ea785ee3766c039714d1d081ea1c7a55def6cf9124660495f8b797ed388"
+  },
+  "changed-net": {
+   "zig-o3": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "gc-lto-before": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "arena-lto-before": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "gc-lto-this": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90",
+   "arena-lto-this": "e3679477d2861edb64ed6985006bbe1aa9963e7d75b2f984df7b40116e88dc90"
+  },
+  "changed-value": {
+   "zig-o3": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "gc-lto-before": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "arena-lto-before": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "gc-lto-this": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6",
+   "arena-lto-this": "19fdda810d0a0ede38c9780a7084f0da2a7153fb38a3862982a5596291f53ed6"
+  }
+ },
+ "summary": {
+  "fixture": {
+   "median_ms": {
+    "zig-o3": 1.538138,
+    "gc-lto-before": 2.584818,
+    "arena-lto-before": 2.201019,
+    "gc-lto-this": 2.645776,
+    "arena-lto-this": 2.229562
+   },
+   "p10_p90": {
+    "zig-o3": [
+     1.452894,
+     1.698171
+    ],
+    "gc-lto-before": [
+     2.471966,
+     2.748331
+    ],
+    "arena-lto-before": [
+     2.120346,
+     3.27096
+    ],
+    "gc-lto-this": [
+     2.397442,
+     2.848081
+    ],
+    "arena-lto-this": [
+     2.119476,
+     2.38679
+    ]
+   },
+   "min_ms": {
+    "zig-o3": 1.373009,
+    "gc-lto-before": 2.428875,
+    "arena-lto-before": 2.064518,
+    "gc-lto-this": 2.350598,
+    "arena-lto-this": 2.059103
+   },
+   "ratio_to_zig-o3": {
+    "gc-lto-before": {
+     "ratio": 1.6804851060177954,
+     "ci95": [
+      1.606347155156701,
+      1.776975415174319
+     ]
+    },
+    "arena-lto-before": {
+     "ratio": 1.430963281578116,
+     "ci95": [
+      1.377336051994302,
+      1.536287381236274
+     ]
+    },
+    "gc-lto-this": {
+     "ratio": 1.7201161404243313,
+     "ci95": [
+      1.6451336689496137,
+      1.7902993558165972
+     ]
+    },
+    "arena-lto-this": {
+     "ratio": 1.4495201340841979,
+     "ci95": [
+      1.382093218465894,
+      1.5103071444079006
+     ]
+    }
+   }
+  },
+  "changed-net": {
+   "median_ms": {
+    "zig-o3": 1.569663,
+    "gc-lto-before": 2.584536,
+    "arena-lto-before": 2.264267,
+    "gc-lto-this": 2.629271,
+    "arena-lto-this": 2.32607
+   },
+   "p10_p90": {
+    "zig-o3": [
+     1.446836,
+     1.758807
+    ],
+    "gc-lto-before": [
+     2.46597,
+     2.736054
+    ],
+    "arena-lto-before": [
+     2.100813,
+     2.419066
+    ],
+    "gc-lto-this": [
+     2.455343,
+     3.74173
+    ],
+    "arena-lto-this": [
+     2.154228,
+     3.142806
+    ]
+   },
+   "min_ms": {
+    "zig-o3": 1.409475,
+    "gc-lto-before": 2.299939,
+    "arena-lto-before": 2.019239,
+    "gc-lto-this": 2.409581,
+    "arena-lto-this": 2.024251
+   },
+   "ratio_to_zig-o3": {
+    "gc-lto-before": {
+     "ratio": 1.6465547063286832,
+     "ci95": [
+      1.5580315725320057,
+      1.7238084578192743
+     ]
+    },
+    "arena-lto-before": {
+     "ratio": 1.4425179162661028,
+     "ci95": [
+      1.3437309167150437,
+      1.500710959681999
+     ]
+    },
+    "gc-lto-this": {
+     "ratio": 1.675054454363771,
+     "ci95": [
+      1.572830048222171,
+      1.7251347641928787
+     ]
+    },
+    "arena-lto-this": {
+     "ratio": 1.4818913359109567,
+     "ci95": [
+      1.3659540729276924,
+      1.5264433823772035
+     ]
+    }
+   }
+  },
+  "changed-value": {
+   "median_ms": {
+    "zig-o3": 1.510835,
+    "gc-lto-before": 2.580811,
+    "arena-lto-before": 2.219726,
+    "gc-lto-this": 2.610491,
+    "arena-lto-this": 2.211365
+   },
+   "p10_p90": {
+    "zig-o3": [
+     1.403413,
+     1.723863
+    ],
+    "gc-lto-before": [
+     2.482272,
+     3.439282
+    ],
+    "arena-lto-before": [
+     2.08248,
+     2.463806
+    ],
+    "gc-lto-this": [
+     2.436314,
+     3.658508
+    ],
+    "arena-lto-this": [
+     2.106622,
+     2.310861
+    ]
+   },
+   "min_ms": {
+    "zig-o3": 1.35896,
+    "gc-lto-before": 2.4249,
+    "arena-lto-before": 2.023425,
+    "gc-lto-this": 2.416234,
+    "arena-lto-this": 2.095751
+   },
+   "ratio_to_zig-o3": {
+    "gc-lto-before": {
+     "ratio": 1.708201755982619,
+     "ci95": [
+      1.5603607550802534,
+      1.778147609362935
+     ]
+    },
+    "arena-lto-before": {
+     "ratio": 1.469204777490593,
+     "ci95": [
+      1.3356483853051717,
+      1.5142410805648407
+     ]
+    },
+    "gc-lto-this": {
+     "ratio": 1.7278465219564016,
+     "ci95": [
+      1.5693762271596507,
+      1.7872780874440184
+     ]
+    },
+    "arena-lto-this": {
+     "ratio": 1.4636707516042453,
+     "ci95": [
+      1.3317959566874387,
+      1.508557876077175
+     ]
+    }
+   }
+  }
+ },
+ "rows": [
+  {
+   "fixture": {
+    "arena-lto-before": 2.174129,
+    "arena-lto-this": 2.274482,
+    "gc-lto-this": 2.689658,
+    "zig-o3": 1.633303,
+    "gc-lto-before": 2.58734
+   },
+   "changed-net": {
+    "gc-lto-this": 3.676162,
+    "gc-lto-before": 2.542743,
+    "zig-o3": 2.771491,
+    "arena-lto-this": 2.244068,
+    "arena-lto-before": 2.437638
+   },
+   "changed-value": {
+    "arena-lto-this": 2.22287,
+    "arena-lto-before": 2.2293,
+    "gc-lto-this": 2.747007,
+    "zig-o3": 1.669077,
+    "gc-lto-before": 2.675525
+   }
+  },
+  {
+   "fixture": {
+    "arena-lto-before": 2.13417,
+    "gc-lto-this": 2.685041,
+    "gc-lto-before": 2.739014,
+    "arena-lto-this": 2.153533,
+    "zig-o3": 1.458048
+   },
+   "changed-net": {
+    "zig-o3": 1.434702,
+    "gc-lto-before": 2.541461,
+    "arena-lto-before": 2.271115,
+    "arena-lto-this": 3.279626,
+    "gc-lto-this": 2.471145
+   },
+   "changed-value": {
+    "arena-lto-before": 2.463806,
+    "gc-lto-before": 2.528549,
+    "arena-lto-this": 2.163376,
+    "gc-lto-this": 2.501121,
+    "zig-o3": 1.445681
+   }
+  },
+  {
+   "fixture": {
+    "gc-lto-before": 2.498739,
+    "gc-lto-this": 2.350598,
+    "arena-lto-this": 2.059103,
+    "arena-lto-before": 2.094852,
+    "zig-o3": 1.475787
+   },
+   "changed-net": {
+    "arena-lto-before": 2.100813,
+    "gc-lto-before": 2.357925,
+    "gc-lto-this": 2.41034,
+    "arena-lto-this": 3.142806,
+    "zig-o3": 1.53837
+   },
+   "changed-value": {
+    "zig-o3": 1.35896,
+    "gc-lto-this": 2.492629,
+    "arena-lto-before": 2.107722,
+    "arena-lto-this": 2.248602,
+    "gc-lto-before": 2.482272
+   }
+  },
+  {
+   "fixture": {
+    "arena-lto-before": 2.158439,
+    "zig-o3": 1.427437,
+    "gc-lto-before": 2.623701,
+    "arena-lto-this": 2.081036,
+    "gc-lto-this": 2.522668
+   },
+   "changed-net": {
+    "arena-lto-this": 2.024251,
+    "gc-lto-this": 2.409581,
+    "arena-lto-before": 2.019239,
+    "gc-lto-before": 2.546469,
+    "zig-o3": 1.545623
+   },
+   "changed-value": {
+    "gc-lto-this": 2.436314,
+    "zig-o3": 2.595275,
+    "gc-lto-before": 3.519245,
+    "arena-lto-this": 2.242859,
+    "arena-lto-before": 2.079606
+   }
+  },
+  {
+   "fixture": {
+    "arena-lto-before": 3.217601,
+    "gc-lto-before": 2.476056,
+    "arena-lto-this": 2.158247,
+    "gc-lto-this": 2.397442,
+    "zig-o3": 1.538138
+   },
+   "changed-net": {
+    "gc-lto-before": 2.474315,
+    "gc-lto-this": 2.455343,
+    "zig-o3": 1.409475,
+    "arena-lto-this": 2.154228,
+    "arena-lto-before": 2.108293
+   },
+   "changed-value": {
+    "zig-o3": 1.4659,
+    "gc-lto-this": 2.444712,
+    "gc-lto-before": 3.439282,
+    "arena-lto-this": 2.169042,
+    "arena-lto-before": 2.08248
+   }
+  },
+  {
+   "fixture": {
+    "gc-lto-before": 2.471966,
+    "gc-lto-this": 2.591115,
+    "arena-lto-this": 2.192027,
+    "arena-lto-before": 2.125584,
+    "zig-o3": 1.373009
+   },
+   "changed-net": {
+    "arena-lto-this": 2.071581,
+    "arena-lto-before": 2.097381,
+    "gc-lto-before": 2.664358,
+    "zig-o3": 1.489268,
+    "gc-lto-this": 2.569188
+   },
+   "changed-value": {
+    "gc-lto-this": 3.539281,
+    "zig-o3": 1.489776,
+    "arena-lto-before": 2.134261,
+    "arena-lto-this": 2.102405,
+    "gc-lto-before": 2.494937
+   }
+  },
+  {
+   "fixture": {
+    "gc-lto-before": 2.514959,
+    "gc-lto-this": 2.586398,
+    "arena-lto-this": 2.119476,
+    "arena-lto-before": 2.064518,
+    "zig-o3": 1.470702
+   },
+   "changed-net": {
+    "gc-lto-before": 2.299939,
+    "arena-lto-this": 2.231387,
+    "arena-lto-before": 2.190386,
+    "gc-lto-this": 3.74173,
+    "zig-o3": 1.446836
+   },
+   "changed-value": {
+    "gc-lto-this": 2.418489,
+    "arena-lto-before": 2.131425,
+    "gc-lto-before": 2.580811,
+    "zig-o3": 1.397926,
+    "arena-lto-this": 2.095751
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.58713,
+    "arena-lto-before": 2.140684,
+    "gc-lto-before": 2.428875,
+    "arena-lto-this": 2.389443,
+    "gc-lto-this": 2.785645
+   },
+   "changed-net": {
+    "gc-lto-before": 2.497704,
+    "zig-o3": 1.489897,
+    "gc-lto-this": 2.579992,
+    "arena-lto-before": 2.344455,
+    "arena-lto-this": 2.32607
+   },
+   "changed-value": {
+    "gc-lto-before": 2.436301,
+    "zig-o3": 1.403413,
+    "gc-lto-this": 2.618621,
+    "arena-lto-before": 2.291946,
+    "arena-lto-this": 2.296195
+   }
+  },
+  {
+   "fixture": {
+    "arena-lto-before": 2.245342,
+    "gc-lto-this": 2.609143,
+    "gc-lto-before": 2.584818,
+    "arena-lto-this": 2.240006,
+    "zig-o3": 1.698171
+   },
+   "changed-net": {
+    "zig-o3": 1.766751,
+    "arena-lto-this": 2.303772,
+    "gc-lto-before": 2.636548,
+    "gc-lto-this": 3.762412,
+    "arena-lto-before": 2.182007
+   },
+   "changed-value": {
+    "arena-lto-this": 2.185656,
+    "arena-lto-before": 2.335592,
+    "zig-o3": 1.663394,
+    "gc-lto-this": 2.590916,
+    "gc-lto-before": 2.526823
+   }
+  },
+  {
+   "fixture": {
+    "gc-lto-before": 2.759576,
+    "arena-lto-before": 2.363022,
+    "zig-o3": 1.554145,
+    "arena-lto-this": 2.247112,
+    "gc-lto-this": 2.848081
+   },
+   "changed-net": {
+    "zig-o3": 1.540875,
+    "gc-lto-this": 2.645846,
+    "arena-lto-before": 2.328788,
+    "arena-lto-this": 2.195641,
+    "gc-lto-before": 2.584497
+   },
+   "changed-value": {
+    "arena-lto-this": 2.241825,
+    "zig-o3": 1.62049,
+    "gc-lto-this": 2.577007,
+    "gc-lto-before": 2.570558,
+    "arena-lto-before": 2.546082
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.669901,
+    "arena-lto-before": 3.27096,
+    "gc-lto-before": 2.431331,
+    "gc-lto-this": 2.684622,
+    "arena-lto-this": 2.38679
+   },
+   "changed-net": {
+    "gc-lto-this": 2.55492,
+    "zig-o3": 1.606951,
+    "arena-lto-this": 2.345457,
+    "gc-lto-before": 2.674941,
+    "arena-lto-before": 2.322875
+   },
+   "changed-value": {
+    "gc-lto-before": 2.622084,
+    "zig-o3": 1.43382,
+    "gc-lto-this": 2.628767,
+    "arena-lto-this": 2.211365,
+    "arena-lto-before": 2.28009
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.452894,
+    "gc-lto-this": 2.947338,
+    "gc-lto-before": 2.885305,
+    "arena-lto-this": 2.450674,
+    "arena-lto-before": 2.414736
+   },
+   "changed-net": {
+    "zig-o3": 1.47384,
+    "arena-lto-before": 2.293466,
+    "arena-lto-this": 2.170319,
+    "gc-lto-this": 3.853609,
+    "gc-lto-before": 2.869115
+   },
+   "changed-value": {
+    "arena-lto-this": 2.106622,
+    "gc-lto-this": 3.781241,
+    "arena-lto-before": 2.229893,
+    "gc-lto-before": 2.854924,
+    "zig-o3": 1.91181
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.757138,
+    "arena-lto-before": 2.287959,
+    "gc-lto-before": 2.71358,
+    "arena-lto-this": 2.210835,
+    "gc-lto-this": 2.652451
+   },
+   "changed-net": {
+    "zig-o3": 1.658847,
+    "arena-lto-before": 2.229044,
+    "gc-lto-before": 2.687662,
+    "arena-lto-this": 2.332938,
+    "gc-lto-this": 2.674458
+   },
+   "changed-value": {
+    "arena-lto-this": 2.310861,
+    "zig-o3": 1.675161,
+    "gc-lto-this": 2.610491,
+    "arena-lto-before": 2.219726,
+    "gc-lto-before": 2.716441
+   }
+  },
+  {
+   "fixture": {
+    "gc-lto-this": 2.611041,
+    "zig-o3": 1.730748,
+    "gc-lto-before": 2.695454,
+    "arena-lto-before": 2.37503,
+    "arena-lto-this": 2.257377
+   },
+   "changed-net": {
+    "arena-lto-this": 2.372304,
+    "zig-o3": 1.758807,
+    "arena-lto-before": 2.264267,
+    "gc-lto-this": 2.767338,
+    "gc-lto-before": 2.656292
+   },
+   "changed-value": {
+    "arena-lto-this": 2.328866,
+    "zig-o3": 1.720007,
+    "gc-lto-this": 2.662644,
+    "arena-lto-before": 2.474478,
+    "gc-lto-before": 2.4249
+   }
+  },
+  {
+   "fixture": {
+    "gc-lto-this": 3.706308,
+    "zig-o3": 1.500153,
+    "arena-lto-before": 3.454106,
+    "arena-lto-this": 2.363384,
+    "gc-lto-before": 2.747659
+   },
+   "changed-net": {
+    "zig-o3": 1.728202,
+    "gc-lto-this": 2.642615,
+    "arena-lto-before": 2.359731,
+    "arena-lto-this": 2.464572,
+    "gc-lto-before": 2.736054
+   },
+   "changed-value": {
+    "gc-lto-before": 2.527079,
+    "gc-lto-this": 2.669766,
+    "arena-lto-this": 2.179934,
+    "arena-lto-before": 2.085326,
+    "zig-o3": 1.422198
+   }
+  },
+  {
+   "fixture": {
+    "zig-o3": 1.552087,
+    "arena-lto-this": 2.229562,
+    "gc-lto-before": 2.665735,
+    "gc-lto-this": 2.527918,
+    "arena-lto-before": 3.393225
+   },
+   "changed-net": {
+    "gc-lto-this": 2.780374,
+    "arena-lto-before": 2.105873,
+    "zig-o3": 1.664958,
+    "arena-lto-this": 2.226308,
+    "gc-lto-before": 2.741131
+   },
+   "changed-value": {
+    "zig-o3": 1.723863,
+    "arena-lto-this": 2.349797,
+    "arena-lto-before": 2.22732,
+    "gc-lto-before": 2.622444,
+    "gc-lto-this": 3.660991
+   }
+  },
+  {
+   "fixture": {
+    "arena-lto-this": 2.367703,
+    "arena-lto-before": 2.301936,
+    "gc-lto-before": 2.748331,
+    "gc-lto-this": 2.662282,
+    "zig-o3": 1.532363
+   },
+   "changed-net": {
+    "zig-o3": 1.693392,
+    "arena-lto-before": 2.419066,
+    "gc-lto-this": 2.634237,
+    "arena-lto-this": 2.327705,
+    "gc-lto-before": 2.584536
+   },
+   "changed-value": {
+    "gc-lto-before": 2.684565,
+    "gc-lto-this": 2.652712,
+    "arena-lto-this": 2.226552,
+    "arena-lto-before": 2.23608,
+    "zig-o3": 1.610011
+   }
+  },
+  {
+   "fixture": {
+    "gc-lto-this": 2.650353,
+    "zig-o3": 1.541975,
+    "arena-lto-before": 2.167293,
+    "arena-lto-this": 2.168878,
+    "gc-lto-before": 2.581833
+   },
+   "changed-net": {
+    "gc-lto-before": 2.540333,
+    "zig-o3": 1.633481,
+    "arena-lto-this": 3.37415,
+    "gc-lto-this": 2.555275,
+    "arena-lto-before": 3.307294
+   },
+   "changed-value": {
+    "zig-o3": 1.5879,
+    "arena-lto-before": 2.168198,
+    "gc-lto-before": 2.605805,
+    "gc-lto-this": 2.523495,
+    "arena-lto-this": 2.139042
+   }
+  },
+  {
+   "fixture": {
+    "gc-lto-before": 2.472489,
+    "arena-lto-before": 2.120346,
+    "zig-o3": 1.483146,
+    "gc-lto-this": 2.363737,
+    "arena-lto-this": 2.247021
+   },
+   "changed-net": {
+    "zig-o3": 1.534317,
+    "gc-lto-before": 2.46597,
+    "gc-lto-this": 2.476223,
+    "arena-lto-before": 2.208356,
+    "arena-lto-this": 2.394789
+   },
+   "changed-value": {
+    "gc-lto-before": 3.558885,
+    "arena-lto-before": 2.167643,
+    "zig-o3": 1.502932,
+    "gc-lto-this": 2.477953,
+    "arena-lto-this": 2.162307
+   }
+  },
+  {
+   "fixture": {
+    "gc-lto-this": 2.564278,
+    "zig-o3": 1.66072,
+    "arena-lto-this": 2.177163,
+    "arena-lto-before": 2.201019,
+    "gc-lto-before": 2.521749
+   },
+   "changed-net": {
+    "gc-lto-this": 2.629271,
+    "arena-lto-this": 2.359306,
+    "zig-o3": 1.569663,
+    "gc-lto-before": 2.666734,
+    "arena-lto-before": 2.155893
+   },
+   "changed-value": {
+    "arena-lto-before": 2.182985,
+    "gc-lto-this": 3.658508,
+    "arena-lto-this": 2.188309,
+    "zig-o3": 1.5021,
+    "gc-lto-before": 2.482768
+   }
+  },
+  {
+   "fixture": {
+    "arena-lto-this": 2.152577,
+    "gc-lto-before": 2.561805,
+    "gc-lto-this": 2.645776,
+    "zig-o3": 1.47784,
+    "arena-lto-before": 2.167349
+   },
+   "changed-net": {
+    "arena-lto-this": 2.219867,
+    "zig-o3": 1.651701,
+    "arena-lto-before": 2.312408,
+    "gc-lto-before": 2.608443,
+    "gc-lto-this": 2.461737
+   },
+   "changed-value": {
+    "arena-lto-before": 2.023425,
+    "zig-o3": 1.510835,
+    "arena-lto-this": 2.262021,
+    "gc-lto-before": 2.508867,
+    "gc-lto-this": 2.416234
+   }
+  }
+ ]
+}

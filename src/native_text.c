@@ -115,9 +115,12 @@ uint32_t myl_native_text_hash(const myl_native_text *input) {
         memcpy(&word,bytes+length-8,8);
         hash=fold_multiply(word^TEXT_HASH_WORD,state^TEXT_HASH_STATE);
     }
-    text->hash=(uint32_t)(hash^(hash>>32));
+    uint32_t folded=(uint32_t)(hash^(hash>>32));
+    /* A view's hash word is its offset, so its hash is recomputed per request. */
+    if (text->flags&MYL_TEXT_VIEW) return folded;
+    text->hash=folded;
     text->flags|=MYL_TEXT_HASHED;
-    return text->hash;
+    return folded;
 }
 /* Scalars in `bytes` and whether all of them are below 0x80, or -1 for a
  * malformed payload. Octets of a continuation byte never begin a scalar, so the
@@ -137,7 +140,8 @@ static int measure(const unsigned char *bytes, size_t length, size_t *scalars, i
 static myl_native_text *build(myl_native_heap *heap, const unsigned char *bytes, size_t length, size_t scalars, int plain) {
     myl_native_text *text=myl_native_text_build(heap,length);
     if (!text) return NULL;
-    if (length) memcpy((unsigned char *)myl_native_text_storage(text),bytes,length);
+    /* A text being built is owned, so its payload is the header's tail. */
+    if (length) memcpy((unsigned char *)(text+1),bytes,length);
     myl_native_text_publish(text,scalars,plain);
     return text;
 }
@@ -211,15 +215,99 @@ static size_t scalars_in(const unsigned char *bytes, size_t count) {
     for (size_t i=0;i<count;i++) scalars+=(bytes[i]&0xc0u)!=0x80u;
     return scalars;
 }
+/* The element descriptor a view is allocated with: a 32-byte record whose one
+ * traced field is its owner, so the collector, the arena scan and the budget
+ * see an ordinary one-pointer record and nothing else in the runtime has to know
+ * a view exists. */
+static const myl_native_field view_fields[]={
+    { .offset=offsetof(myl_native_text_view,owner), .type=&pointer_type }
+};
+const myl_native_type myl_native_text_view_type={
+    .size=sizeof(myl_native_text_view), .alignment=_Alignof(myl_native_text_view),
+    .kind=MYL_NATIVE_RECORD, .fields=view_fields, .field_count=1,
+    .trace_fields=view_fields, .trace_field_count=1, .trace_mode=MYL_NATIVE_TRACE_FIELDS
+};
+_Static_assert(sizeof(myl_native_text_view)==32, "a text view is four words");
+/* Whether a piece of `count` octets at octet `offset` of `owner` is shared as a
+ * view rather than copied; see MYL_TEXT_VIEW_MIN and MYL_TEXT_VIEW_RATIO. A
+ * view's offset lives in the header's 32-bit hash word, so a piece that starts
+ * beyond 4 GiB is copied, and a view never lives in a shallower arena than its
+ * owner: the store barrier reads only one hop, so an owner younger than the
+ * view would be released under it. The allocation depth is the innermost open
+ * arena, which no live owner is younger than, so that test only guards the
+ * invariant. */
+static int shares(const myl_native_heap *heap, const myl_native_text *owner, size_t offset, size_t count) {
+    if (count<MYL_TEXT_VIEW_MIN || offset>UINT32_MAX) return 0;
+    if (count<owner->bytes/MYL_TEXT_VIEW_RATIO) return 0;
+    return myl_native_header_region(owner)<=heap->region_depth;
+}
+/* One view of `count` octets of `input`'s owner from octet `offset` on. `input`
+ * is rooted across the allocation because it is what keeps the owner alive
+ * until the view records it. */
+static myl_native_text *view(myl_native_heap *heap, myl_native_text *input, size_t offset, size_t count, size_t scalars, int plain) {
+    myl_native_root root;
+    myl_native_root_push(heap,&root,&input,&pointer_type);
+    myl_native_text_view *result=myl_native_heap_alloc(heap,&myl_native_text_view_type,1);
+    myl_native_root_pop(heap,&root);
+    if (!result) return NULL;
+    result->text.length=scalars;
+    result->text.bytes=count;
+    result->text.flags=MYL_TEXT_VIEW|(plain ? MYL_TEXT_ASCII : 0);
+    result->text.hash=(uint32_t)offset;
+    result->owner=myl_native_text_owner(input);
+    return &result->text;
+}
+/* A copied piece: the `count` octets at `bytes`, which lie inside a receiver
+ * whose ASCII flag is `ascii`. An ASCII receiver's piece is its own octet count
+ * of scalars; any other piece counts the scalars of its own octets, and is
+ * ASCII when every octet begins one. */
+static inline myl_native_text *copy_piece(myl_native_heap *heap, const unsigned char *bytes, size_t count, int ascii) {
+    size_t scalars=ascii ? count : scalars_in(bytes,count);
+    return build(heap,bytes,count,scalars,ascii || scalars==count);
+}
+/* The shortest piece of `input` the policy could share: a piece below it is a
+ * copy without further tests. Computed once per receiver by the loops that cut
+ * one text into many pieces. */
+static inline size_t share_threshold(const myl_native_text *input) {
+    size_t quarter=myl_native_text_owner(input)->bytes/MYL_TEXT_VIEW_RATIO;
+    return quarter>MYL_TEXT_VIEW_MIN ? quarter : MYL_TEXT_VIEW_MIN;
+}
+/* A piece long enough, against its owner, for the policy to share: the
+ * receiver itself when it is the whole of it and already lives in the innermost
+ * open arena, else a view of the receiver's owner or a copy, as `shares`
+ * decides. Kept out of line so the copy path of `myl_native_text_substring`
+ * stays small enough to inline into the loops that cut a text into many short
+ * pieces. */
+static __attribute__((noinline)) myl_native_text *long_piece(myl_native_heap *heap, myl_native_text *input, size_t from, size_t count) {
+    if (count==input->bytes && myl_native_header_region(input)==heap->region_depth) return input;
+    const myl_native_text *owner=myl_native_text_owner(input);
+    const unsigned char *bytes=myl_native_text_storage(input);
+    size_t offset=(size_t)(bytes+from-(const unsigned char *)(owner+1));
+    int ascii=(int)(input->flags&MYL_TEXT_ASCII);
+    if (!shares(heap,owner,offset,count)) return copy_piece(heap,bytes+from,count,ascii);
+    size_t scalars=ascii ? count : scalars_in(bytes+from,count);
+    return view(heap,input,offset,count,scalars,ascii || scalars==count);
+}
 /* A piece of non-ASCII text counts only its own octets: counting from the start
  * of the receiver at both ends made every split, splitlines and word split of a
  * non-ASCII text quadratic in its length. A piece whose every octet begins a
- * scalar is ASCII, and says so, so later operations on it index by octet. */
+ * scalar is ASCII, and says so, so later operations on it index by octet. A
+ * piece shorter than MYL_TEXT_VIEW_MIN octets is always a copy; a longer one may
+ * be the receiver itself or a view (`long_piece`), and every form reads the same
+ * octets. Every piece belongs to the innermost open arena, as a copy always did,
+ * so the store barrier traps exactly where it did. The body is forced inline
+ * into this file's slicing and splitting loops, where a copied piece used to be
+ * inlined whole. */
+static inline __attribute__((always_inline)) myl_native_text *cut(myl_native_heap *heap, myl_native_text *input, size_t from, size_t to) {
+    const size_t count=to-from;
+    /* Only a piece the policy could share leaves the inline copy path: a short
+       field of a long line never pays for the call, and a piece shorter than the
+       minimum never reads the receiver's header for it. */
+    if (count>=MYL_TEXT_VIEW_MIN && count>=share_threshold(input)) return long_piece(heap,input,from,count);
+    return copy_piece(heap,myl_native_text_storage(input)+from,count,(int)(input->flags&MYL_TEXT_ASCII));
+}
 myl_native_text *myl_native_text_substring(myl_native_heap *heap, myl_native_text *input, size_t from, size_t to) {
-    const unsigned char *bytes=myl_native_text_storage(input);
-    int plain=input->flags&MYL_TEXT_ASCII;
-    size_t scalars=plain ? to-from : scalars_in(bytes+from,to-from);
-    return build(heap,bytes+from,to-from,scalars,plain || scalars==to-from);
+    return cut(heap,input,from,to);
 }
 uint32_t myl_native_text_point_at(const myl_native_text *text, size_t index) {
     size_t at=myl_native_text_offset(text,index);
@@ -231,9 +319,26 @@ myl_native_text *myl_native_text_copy(myl_native_heap *heap, myl_native_text *in
     size_t from=myl_native_text_offset(input,start), to=myl_native_text_offset(input,start+count);
     myl_native_root root;
     myl_native_root_push(heap,&root,&input,&pointer_type);
-    myl_native_text *result=myl_native_text_substring(heap,input,from,to);
+    myl_native_text *result=cut(heap,input,from,to);
     myl_native_root_pop(heap,&root);
     return result;
+}
+/* A text block's payload is raw octets: the same one-octet plain element the
+ * heap's own block allocation uses, so an owned copy placed at an explicit depth
+ * is charged and traced exactly as one built at the current depth. */
+static const myl_native_type octet_type = { .size=1,.alignment=1,.kind=MYL_NATIVE_PLAIN };
+myl_native_text *myl_native_text_own_at(myl_native_heap *heap, myl_native_text *input, unsigned region) {
+    if (!(input->flags&MYL_TEXT_VIEW)) return input;
+    myl_native_root root;
+    myl_native_root_push(heap,&root,&input,&pointer_type);
+    myl_native_text *text=myl_native_heap_alloc_at(heap,&octet_type,sizeof(myl_native_text)+input->bytes,region);
+    myl_native_root_pop(heap,&root);
+    if (!text) return NULL;
+    text->bytes=input->bytes;
+    text->hash=0;
+    if (input->bytes) memcpy((unsigned char *)(text+1),myl_native_text_storage(input),input->bytes);
+    myl_native_text_publish(text,input->length,input->flags&MYL_TEXT_ASCII);
+    return text;
 }
 myl_native_text *myl_native_text_clone(myl_native_heap *heap, const myl_native_text *input) {
     return build(heap,myl_native_text_storage(input),input->bytes,input->length,input->flags&MYL_TEXT_ASCII);
@@ -460,11 +565,14 @@ myl_native_list *myl_native_text_split(myl_native_heap *heap, myl_native_text *i
     if (result) {
         const unsigned char *haystack=myl_native_text_storage(input);
         const unsigned char *needle=myl_native_text_storage(separator);
+        const size_t threshold=share_threshold(input);
+        const int ascii=(int)(input->flags&MYL_TEXT_ASCII);
         size_t start=0;
         for (size_t left=pieces; left; left--) {
             size_t hit=left>1 ? myl_native_octets_find(haystack+start,input->bytes-start,needle,width) : SIZE_MAX;
             size_t end=hit==SIZE_MAX ? input->bytes : start+hit;
-            myl_native_text *piece=myl_native_text_substring(heap,input,start,end);
+            myl_native_text *piece=end-start>=threshold ? long_piece(heap,input,start,end-start)
+                                                         : copy_piece(heap,haystack+start,end-start,ascii);
             if (!piece) { result=NULL; break; }
             /* The reserved slot is written in place, exactly as an append that
                finds room writes it: the collector traces the whole reservation,

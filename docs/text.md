@@ -14,9 +14,10 @@ A `str` holds validated UTF-8 and is indexed by Unicode scalar value, not by byt
 and not by grapheme cluster, so `len` counts scalar values and `text[0]` answers a
 one-scalar `str`. Strings are immutable: there is no `text[i] = c` and no
 `append`, and every operation that produces text — `+`, a slice, `split`, `join`,
-a method — allocates a fresh string and carries the `managed_allocation` effect.
-Assignment shares one traced object, which is safe precisely because nothing can
-change it. An index outside the string traps with `R_TEXT_BOUNDS`, while slices
+a method — answers a new string value and carries the `managed_allocation`
+effect. Assignment shares one traced object, which is safe precisely because
+nothing can change it; for the same reason a slice may share its receiver's
+octets rather than copy them ([below](#slices-share-their-receivers-octets)). An index outside the string traps with `R_TEXT_BOUNDS`, while slices
 clamp both endpoints and produce an empty string for a reversed interval, exactly
 as list and byte-string slices do. Literals accept ordinary escapes including
 `é`, and `str(value)` converts a scalar using Python's spellings.
@@ -52,6 +53,50 @@ def main() -> int:
         return 11
     return len(joined) * 4 - len(greeting) + 3
 ```
+
+## Slices share their receiver's octets
+
+A slice `text[a:b]`, a piece of `split(separator)`, `split()` or `splitlines()`,
+and the result of `strip`, `lstrip` or `rstrip` can be a *view*: a small header
+that reads a range of an existing string's UTF-8 octets instead of a copy of
+them. Nothing observable changes — a view compares, hashes, prints, indexes,
+parses and crosses every file, stream, host and codec boundary exactly as a copy
+does, and it outlives every other reference to the string it reads — so the
+choice is the runtime's, made per piece:
+
+- a piece shorter than 9 octets is copied, because its copy is no larger than a
+  view;
+- a longer piece is a view when it is at least a quarter of the string that owns
+  the octets, and a copy otherwise, so a live piece keeps at most four times its
+  own octets reachable and a short piece of a large text never keeps the large
+  text alive;
+- a piece that is the whole receiver is the receiver itself;
+- a piece of a view reads the first string's octets directly, so views never
+  chain.
+
+The practical effect is that walking a long text by repeatedly slicing off its
+front costs time proportional to the text, not to its square, and a stripped or
+halved large text does not duplicate it:
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    text = "".join([f"line {i}\n" for i in range(10000)])
+    rest = text
+    lines = 0
+    while len(rest) > 0:
+        end = rest.find("\n")
+        rest = rest[end + 1:]
+        lines += 1
+    half = text[len(text) // 2:]
+    if lines != 10000 or not half.startswith("5055\nline"):
+        return 1
+    return len(text.strip().splitlines()[9999]) - 7 + 40
+```
+
+Inside `with arena()` every piece still belongs to the arena, as a copy would, so
+the arena's store barrier traps where it always did, and `escape` copies a view
+into a string of its own octets.
 
 ## String methods
 

@@ -2,17 +2,20 @@
 #define MYLANG_NATIVE_TEXT_H
 #include "native_collections.h"
 #include <string.h>
-/* One immutable `str` value: a four-word header followed, in the same managed
- * block, by the value's UTF-8 payload. `length` counts Unicode scalars and stays
- * at offset 0 because generated code loads that word directly as `len(text)`;
- * `bytes` counts the payload's octets, so every boundary that already holds
- * UTF-8 copies octets instead of decoding and re-encoding scalars. Bit 0 of
- * `flags` records that every scalar is below 0x80, which makes a scalar offset a
- * byte offset and every text operation a bulk byte operation. `hash` caches the
- * payload's hash once a dictionary has computed it — it is the fourth word's
- * whole purpose, so the header stays 24 bytes and a text is never rehashed. The
- * payload holds no pointer, so the collector treats a text as a leaf and never
- * walks it. */
+/* One immutable `str` value. An owned text is a four-word header followed, in
+ * the same managed block, by the value's UTF-8 payload; a view is the same
+ * header followed by one traced pointer to the owned text whose payload it
+ * reads. `length` counts Unicode scalars and stays at offset 0 because generated
+ * code loads that word directly as `len(text)`; `bytes` counts the payload's
+ * octets, so every boundary that already holds UTF-8 copies octets instead of
+ * decoding and re-encoding scalars. Bit 0 of `flags` records that every scalar is
+ * below 0x80, which makes a scalar offset a byte offset and every text operation
+ * a bulk byte operation. On an owned text `hash` caches the payload's hash once a
+ * dictionary has computed it, so the header stays 24 bytes and a text is never
+ * rehashed; on a view the same word is the octet offset of its payload inside its
+ * owner's, and a view's hash is recomputed per request. Every reader reaches the
+ * octets through `myl_native_text_storage`, so no consumer can tell the two
+ * apart. */
 typedef struct myl_native_text {
     size_t length;
     size_t bytes;
@@ -21,8 +24,33 @@ typedef struct myl_native_text {
 } myl_native_text;
 /* `flags` bit 0: every scalar of the payload is below 0x80. */
 #define MYL_TEXT_ASCII 1u
-/* `flags` bit 1: `hash` holds this text's payload hash. */
+/* `flags` bit 1: `hash` holds this text's payload hash. Never set on a view. */
 #define MYL_TEXT_HASHED 2u
+/* `flags` bit 2: the text is a view. It owns no octets: its payload is `bytes`
+ * octets of `owner`'s payload starting at octet `hash`. */
+#define MYL_TEXT_VIEW 4u
+/* A view: a text header whose payload is a range of another text's. `owner` is
+ * always an owned text (a view of a view points at the first view's owner), so
+ * reading a view's octets is one hop, and the collector keeps the owner alive
+ * through the element descriptor the view is allocated with, which traces this
+ * one pointer. A view lives in an arena depth no shallower than its owner's, so
+ * the store barrier's one-hop reach stays exact. 32 bytes: a view occupies the
+ * 48-byte size class, the class a copied piece of up to 8 octets already takes. */
+typedef struct myl_native_text_view {
+    myl_native_text text;
+    const myl_native_text *owner;
+} myl_native_text_view;
+/* The element descriptor every view is allocated with: one traced pointer, its
+ * owner. */
+extern const myl_native_type myl_native_text_view_type;
+/* Retention policy. A piece of a text shorter than MYL_TEXT_VIEW_MIN octets is
+ * copied: its copy takes no more memory than a view (both fit the 48-byte size
+ * class), is contiguous and caches its hash. A longer piece is a view unless it
+ * is shorter than 1/MYL_TEXT_VIEW_RATIO of its owner's octets, so a live view
+ * keeps at most MYL_TEXT_VIEW_RATIO times its own octets reachable — the bound
+ * that stops one short slice of a large text from retaining all of it. */
+#define MYL_TEXT_VIEW_MIN ((size_t)9)
+#define MYL_TEXT_VIEW_RATIO ((size_t)4)
 /* Byte offset of `bytes` inside one text header, which the number grammar reads
  * without a second call. */
 #define MYL_TEXT_BYTES_OFFSET ((size_t)sizeof(size_t))
@@ -34,10 +62,22 @@ uint32_t myl_native_text_hash(const myl_native_text *);
  * a leaf whose payload holds no traced pointer, so this descriptor only names
  * the object for the allocator and the budget. */
 extern const myl_native_type myl_native_text_leaf;
-/* The UTF-8 payload of a text, which is co-allocated directly behind its header;
- * never NULL, and never dereferenced past `bytes`. */
+/* The UTF-8 payload of a text: the octets co-allocated directly behind an owned
+ * text's header, or the range of its owner's that a view reads. Never NULL, and
+ * never dereferenced past `bytes`. The address is stable for as long as the
+ * text is reachable, because a managed object never moves and a view keeps its
+ * owner alive. */
 static inline const unsigned char *myl_native_text_storage(const myl_native_text *text) {
+    if (text->flags & MYL_TEXT_VIEW) {
+        const myl_native_text_view *view = (const myl_native_text_view *)text;
+        return (const unsigned char *)(view->owner + 1) + text->hash;
+    }
     return (const unsigned char *)(text + 1);
+}
+/* The owned text whose block holds a text's octets: the text itself unless it
+ * is a view. */
+static inline const myl_native_text *myl_native_text_owner(const myl_native_text *text) {
+    return (text->flags & MYL_TEXT_VIEW) ? ((const myl_native_text_view *)text)->owner : text;
 }
 /* The same payload address as a real callee, which generated code and a boundary
  * that reads the octets in place call by name. It allocates nothing. */
@@ -97,6 +137,11 @@ myl_native_text *myl_native_text_copy(myl_native_heap *, myl_native_text *, size
  * NULL for a zero step or a refused allocation. A stepped slice gathers scalars,
  * so it cannot read a stride of the UTF-8 payload. */
 myl_native_text *myl_native_text_slice_step(myl_native_heap *, myl_native_text *, int64_t start, int64_t stop, int64_t step);
+/* `text` itself when it owns its octets; for a view, an owned copy of the view's
+ * octets allocated at arena depth `region`, with the view rooted across the
+ * allocation. NULL once the budget is exhausted. A dictionary stores its text
+ * keys this way, so a stored key's octets are always its header's tail. */
+myl_native_text *myl_native_text_own_at(myl_native_heap *, myl_native_text *, unsigned region);
 /* A copy of one text inside the heap's current arena depth, payload and all: the
  * arena escape copier clones a text wholesale because its payload holds no
  * pointer to patch. */

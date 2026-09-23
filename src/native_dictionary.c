@@ -93,13 +93,16 @@ static inline int same_octets(const unsigned char *a, const unsigned char *b, si
 }
 /* Exactly the comparison `find` used before the index existed: text content for
  * `str` keys and the raw key bytes for every other key type. One text object is
- * always equal to itself, which settles most matches without a payload read. */
-static inline int same_text(const myl_native_text *a, const myl_native_text *b) {
-    return a==b || (a->bytes==b->bytes && same_octets(myl_native_text_storage(a),myl_native_text_storage(b),a->bytes));
+ * always equal to itself, which settles most matches without a payload read.
+ * `stored` is an entry's key, which `insert` keeps owned, so its octets are its
+ * header's tail; `octets` are the queried text's, resolved once per lookup
+ * because the queried text may be a view. */
+static inline int same_text(const myl_native_text *stored, const myl_native_text *query, const unsigned char *octets) {
+    return stored==query || (stored->bytes==query->bytes && same_octets((const unsigned char *)(stored+1),octets,stored->bytes));
 }
 static inline int same_key(const myl_native_dictionary *dict, const void *entry, const void *key) {
     switch (dict->key_kind) {
-    case KEY_TEXT: return same_text(text_of(entry),text_of(key));
+    case KEY_TEXT: return same_text(text_of(entry),text_of(key),myl_native_text_storage(text_of(key)));
     case KEY_WIDE: return same_octets(entry,key,dict->key->size);
     default: return scalar_bits(entry,dict->key->size)==scalar_bits(key,dict->key->size);
     }
@@ -200,13 +203,14 @@ typedef struct { size_t entry; uint32_t slot, hash; } located;
  * the key, so its entry is never loaded. */
 static located probe_text(const myl_native_dictionary *dict, const myl_native_text *text) {
     uint32_t hash=text_hash(text);
+    const unsigned char *octets=myl_native_text_storage(text);
     const uint64_t *slots=dict->index.slots;
     const unsigned char *storage=dict->entries->storage;
     size_t mask=dict->index.capacity-1, at=hash&mask, stride=dict->entry_type.size;
     for (uint64_t slot;(slot=slots[at]);at=(at+1)&mask) {
         if ((uint32_t)(slot>>32)!=hash) continue;
         size_t entry=MYL_NATIVE_DICTIONARY_SLOT_ENTRY(slot)-1;
-        if (same_text(text_of(storage+entry*stride),text)) return (located){entry,(uint32_t)at,hash};
+        if (same_text(text_of(storage+entry*stride),text,octets)) return (located){entry,(uint32_t)at,hash};
     }
     return (located){NO_ENTRY,(uint32_t)at,hash};
 }
@@ -283,7 +287,7 @@ static inline __attribute__((always_inline)) size_t recall(const myl_native_dict
     if (last->state!=PROBE_FOUND || !record_key(dict,key,&bits) || bits!=last->key) return NO_ENTRY;
     if (last->entry>=dict->entries->length) return NO_ENTRY;
     const unsigned char *entry=entry_at(dict,last->entry);
-    if (dict->key_kind==KEY_TEXT) return same_text(text_of(entry),text_of(key))?last->entry:NO_ENTRY;
+    if (dict->key_kind==KEY_TEXT) return same_key(dict,entry,key)?last->entry:NO_ENTRY;
     record_key(dict,entry,&held);
     return held==bits?last->entry:NO_ENTRY;
 }
@@ -356,6 +360,19 @@ static __attribute__((noinline)) int insert(myl_native_heap *heap, myl_native_di
     myl_native_root owner_root, entry_root;
     myl_native_root_push(heap,&owner_root,&dict,&pointer_type);
     myl_native_root_push(heap,&entry_root,entry,&dict->entry_type);
+    /* A text key that is a view is stored as an owned copy of its octets, in the
+     * dictionary's own region: every stored key then reads its octets from its
+     * header's tail (`same_text`), and a key never keeps a larger text alive. */
+    if (dict->key_kind==KEY_TEXT && (text_of(entry)->flags&MYL_TEXT_VIEW)) {
+        myl_native_text *owned=myl_native_text_own_at(heap,(myl_native_text *)text_of(entry),myl_native_object_region(heap,dict));
+        if (!owned) {
+            myl_native_root_pop(heap,&entry_root);
+            myl_native_root_pop(heap,&owner_root);
+            if (entry!=inline_entry) free(entry);
+            return 0;
+        }
+        memcpy(entry,&owned,sizeof owned);
+    }
     const uint64_t *slots=dict->index.slots;
     index_reserve(heap,dict,dict->entries->length+1);
     int unchanged=dict->index.slots==slots && at.slot!=NO_SLOT;
