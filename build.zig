@@ -88,8 +88,8 @@ var install_qbe_focus: ?*std.Build.Step = null;
 var install_exe_focus: ?*std.Build.Step = null;
 /// The qualified LLVM adapter source a test driver names through
 /// `MYLANG_LLVM_ADAPTER`: a test binary runs the compiler from a cache directory
-/// that has no `lib/mylang-llvm` beside it, and a ReleaseFast build defaults to
-/// the LLVM arm, so the adapter must be found the way `qbe` is.
+/// that has no `lib/mylang-llvm` beside it, and a `--release` build uses the
+/// LLVM arm, so the adapter must be found the way `qbe` is.
 var tool_llvm_adapter: []const u8 = "";
 /// Declare a step's resident-memory ceiling, and give it the native tools a guest
 /// build needs; harmless on steps that build no guest.
@@ -293,8 +293,8 @@ pub fn build(b: *std.Build) void {
     tool_qbe = b.pathJoin(&.{ root, "zig-out", "bin", "qbe" });
     tool_zig = b.graph.zig_exe;
     // A test binary runs the compiler from a cache directory with no
-    // `lib/mylang-llvm` beside it, and a ReleaseFast build now defaults to the
-    // LLVM arm, so name the adapter source the same way `qbe` is named.
+    // `lib/mylang-llvm` beside it, and a `--release` build uses the LLVM arm,
+    // so name the adapter source the same way `qbe` is named.
     tool_llvm_adapter = b.pathJoin(&.{ root, "experiments", "llvm-backend", "qbe_llvm.py" });
     // Focused tests need `qbe` on disk but must stay off the gated install graph.
     // A separate, unattached install of the same compile step gives them a stable

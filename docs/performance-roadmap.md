@@ -11,7 +11,7 @@ with those harnesses; do not add an item's projected gain to another's.
 
 ## Where we are (2026-09-21, `perf/lever-search` at `59bbce0a`)
 
-| workload | mylang, LLVM O3 + LTO (the ReleaseFast default since item 1) | mylang, QBE (Debug and explicit `--backend qbe`) | target |
+| workload | mylang, LLVM O3 + LTO (`--release`; the ReleaseFast default from item 1 until 2026-09-23) | mylang, QBE (Debug and explicit `--backend qbe`) | target |
 |---|---:|---:|---:|
 | integer loop, records, checked multiply | 0.9–1.0× Zig | 2.2–2.4× Zig | ≤ 1.2× |
 | schematic SVG render | 2.06× Zig, 1.84× Rust | not measured | ≤ 1.2× |

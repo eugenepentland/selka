@@ -11,29 +11,41 @@ when to reach for a native build, what the optimize mode costs, and how to
 measure the result, see the [performance page](../performance.md).
 
 Bytecode is still part of the compiler, but only as that internal IR. Nothing
-executes it: there is no interpreter. QBE is the inner-loop backend and the
-`Debug` default; the `ReleaseFast` default is the qualified LLVM backend at
-`-O3` with full LTO. `mylang run` is this same pipeline followed by running the
-result, and `dump-bytecode` disassembles the IR for inspection rather than for
-execution.
+executes it: there is no interpreter. QBE is the default backend in every mode,
+because an edit-build loop wants the compile that takes a second; `--release`
+asks for the qualified LLVM backend at `-O3` with full LTO. `mylang run` is this
+same pipeline followed by running the result, and `dump-bytecode` disassembles
+the IR for inspection rather than for execution.
 
 ## Backends
 
-A native build names no backend by default, and the optimize mode decides:
+A native build that names no backend uses QBE, in `--mode ReleaseFast` (the
+default for `mylang build` and `mylang run`) and in `--mode Debug` alike. The
+optimized build is asked for by name, the way `cargo build --release` is:
 
-- **`--mode ReleaseFast`** (the default for `mylang build` and `mylang run`)
-  uses the qualified LLVM backend at `-O3` with full LTO — exactly
-  `--backend llvm --llvm-opt 3 --lto`.
-- **`--mode Debug`** keeps QBE, because unoptimized LLVM buys nothing over it,
-  and `mylang test` keeps its own `Debug` default for the same reason.
+- **`--release`** is the shorthand for `--mode ReleaseFast --backend llvm
+  --llvm-opt 3 --lto`: the qualified LLVM backend at `-O3` with full LTO. It
+  works on `build`, `build --run`, `run`, `run-project` and `test`. An
+  `--llvm-adapter PATH` written after it still applies and `--unchecked` is
+  accepted with it; written beside `--mode`, `--backend`, `--qbe`,
+  `--llvm-opt` or `--lto` it is a usage error, because it already names them.
+- **`--backend llvm [--llvm-opt 0|1|2|3|s|z] [--lto]`** picks the LLVM
+  backend with any other optimization level, with or without LTO.
 
-An explicit choice is never upgraded. `--backend qbe` and `--qbe PATH` select
+An explicit choice is never changed. `--backend qbe` and `--qbe PATH` select
 QBE whatever the mode, and the LLVM-only controls (`--llvm-adapter`,
-`--llvm-opt 0|1|2|3|s|z`, `--lto`) are rejected until `--backend llvm` names
+`--llvm-opt`, `--lto`) are rejected until `--backend llvm` or `--release` names
 that backend. `--report` states the resolved `backend`, `optimization` and
 `lto` for every build. `mylang test` follows the same policy through the child
-build it spawns: a `ReleaseFast` test run uses the LLVM release path, a `Debug`
-run uses QBE, and `--qbe PATH` forces QBE.
+build it spawns: its builds are QBE in either mode (`Debug` by default), and
+`mylang test --release` builds the LLVM release path.
+
+The price of each, on the 4,200-line Lox interpreter port (a Debug build of the
+compiler, warm object cache, one function edited): the QBE build relinks in
+well under a second, while the `--release` build pays the LTO link again on
+every edit. Build with QBE while editing and testing, and with `--release` for
+the executable you ship or time. The measurements are in
+[the lane report](../audits/devspeed-defaults-and-docs-2026-09-23.md).
 
 The LLVM backend is the Python adapter installed beside the compiler at
 `lib/mylang-llvm/qbe_llvm.py` (its helpers `llvm_emit.py`,
@@ -41,18 +53,20 @@ The LLVM backend is the Python adapter installed beside the compiler at
 `--llvm-adapter PATH` overrides it, `MYLANG_LLVM_ADAPTER` names it for a
 compiler that runs from a directory with no install beside it (the build's own
 test drivers set it), and `MYLANG_QBE_LLVM_*` variables select the
-optimization, Zig driver, runtime sources and target CPU policy. A ReleaseFast
-build that names the LLVM backend and cannot resolve the adapter **fails with a
-tool error**; it never silently falls back to QBE. The adapter needs a
+optimization, Zig driver, runtime sources and target CPU policy. A build that
+names the LLVM backend and cannot resolve the adapter **fails with a tool
+error**; it never silently falls back to QBE. The adapter needs a
 `python3` interpreter at build time. Guest units are content-addressed and
 cached per function, so a Python process runs only for a unit whose IL actually
 changed (see *Concurrent code generation* below).
 
 ```console
 $ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/cache --report
-{"version":"qbe-build-v1",...,"backend":"llvm","optimization":"3","lto":true,...}
+{"version":"qbe-build-v1",...,"mode":"ReleaseFast",...,"backend":"qbe","optimization":"default","lto":false}
+$ mylang build examples/factorial.my --release -o /tmp/factorial-release --cache-dir /tmp/cache --report
+{"version":"qbe-build-v1",...,"mode":"ReleaseFast",...,"backend":"llvm","optimization":"3","lto":true}
 $ mylang build examples/factorial.my --mode Debug -o /tmp/factorial-debug --cache-dir /tmp/cache
-$ mylang build examples/factorial.my --backend qbe -o /tmp/factorial-qbe --cache-dir /tmp/cache
+$ mylang run examples/factorial.my --release
 ```
 
 ### Very large functions
@@ -380,7 +394,7 @@ the published file without running the linker. The check is deliberately
 conservative: a `--provider` or any explicit native link input (`--link`,
 `--link-library`, `--library-path`) disables reuse, because such an input can
 change without changing a guest object. This is what keeps an unchanged
-ReleaseFast rebuild from paying the LTO link again.
+`--release` rebuild from paying the LTO link again.
 
 A cached object or archive is accepted only when a fingerprint over its length
 and contents matches the one stored beside it in a `.digest` file. Damaged bytes
@@ -424,8 +438,8 @@ only the QBE flavors, which keeps a Python-less prebuild working.
 A cold `mylang build` computes the hash its runtime needs and, if a matching
 archive is installed, links it directly and skips compiling the runtime from
 source — `--report` shows `"runtime_installed": true`. This is what makes a
-plain `ReleaseFast` build affordable: it links the `llvm-lto` bitcode archive
-instead of compiling twenty runtime translation units with LTO itself. The
+`--release` build affordable: it links the `llvm-lto` bitcode archive instead of
+compiling twenty runtime translation units with LTO itself. The
 prebuilt hash excludes the Zig and QBE tool file stamps that object-cache keys
 carry, so an installed archive still matches a build that resolved those tools
 from a different path. A missing archive (a cross-target build, or a relocated

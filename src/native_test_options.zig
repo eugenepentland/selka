@@ -2,6 +2,7 @@
 const std = @import("std");
 const execute = @import("native_test_execute.zig");
 const budget = @import("memory_budget");
+const build_options = @import("qbe_build_options.zig");
 /// Invalid native test command arguments.
 pub const Error = error{InvalidTestArguments};
 /// Boolean mode switches, grouped to keep the options surface bounded.
@@ -86,7 +87,8 @@ pub const usage = "usage: mylang test <entry.my|directory> [--filter SUBSTRING|G
     "  --affected --against REF  run only tests reaching a declaration changed since REF\n" ++
     "  --link FILE --link-library NAME --library-path DIR (repeatable)\n" ++
     "  --cache-dir DIR --force --no-cache --report --json --pure-skip --qbe PATH --zig PATH\n" ++
-    "  a ReleaseFast test build uses the LLVM release path; --qbe PATH forces QBE\n" ++
+    "  a test build uses QBE in either mode; --release builds the LLVM release path\n" ++
+    "    (ReleaseFast, --llvm-opt 3 --lto) and refuses --mode and --qbe\n" ++
     "  --gc-stress  run every collected test under the runtime's stress collector\n" ++
     "  --mode Debug|ReleaseFast\n" ++
     "  --max-steps N --max-frames N --max-calls N --timeout-ms N\n" ++
@@ -142,6 +144,13 @@ pub fn parse(args: []const []const u8) Error!Options {
             result.flags.gc_stress = true;
             continue;
         }
+        // `--release` rides in `link_arguments`, where the session finds it and
+        // hands it to the child build, so the frozen Options field set does not
+        // grow. It is a ReleaseFast build, and the mode keys every receipt.
+        if (std.mem.eql(u8, arg, build_options.release_flag)) {
+            result.mode = "ReleaseFast";
+            continue;
+        }
         const split = std.mem.indexOfScalar(u8, arg, '=') orelse arg.len;
         const flag = std.meta.stringToEnum(Flag, arg[0..split]) orelse return error.InvalidTestArguments;
         const value = if (split < arg.len) arg[split + 1 ..] else value: {
@@ -154,6 +163,7 @@ pub fn parse(args: []const []const u8) Error!Options {
         try assign(&result, flag, value);
     }
     if (result.source.len == 0) return error.InvalidTestArguments;
+    if (build_options.release(args) and build_options.restatesRelease(args)) return error.InvalidTestArguments;
     if (!std.mem.eql(u8, result.mode, "Debug") and !std.mem.eql(u8, result.mode, "ReleaseFast")) return error.InvalidTestArguments;
     const wanted = result.bench.only or result.bench.output != null or result.bench.baseline != null or result.bench.policy != null;
     if (wanted and result.bench.pattern == null) return error.InvalidTestArguments;
@@ -297,6 +307,19 @@ test "affected selection needs both switches and a reference" {
     try std.testing.expect(!(try parse(&.{"main.my"})).flags.affected);
     try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--against", "HEAD" }));
     try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--affected" }));
+}
+
+// spec-case: BUILD-RELEASE-1
+test "a test run's --release is a ReleaseFast build that refuses --mode and --qbe" {
+    const asked = try parse(&.{ "main.my", "--release" });
+    try std.testing.expectEqualStrings("ReleaseFast", asked.mode);
+    try std.testing.expect(build_options.release(asked.link_arguments));
+    try std.testing.expectEqualStrings("Debug", (try parse(&.{"main.my"})).mode);
+    try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--release", "--mode", "Debug" }));
+    try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--mode=ReleaseFast", "--release" }));
+    try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--qbe", "/opt/qbe", "--release" }));
+    try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--release=yes" }));
+    try std.testing.expect(std.mem.indexOf(u8, usage, "--release builds the LLVM release path") != null);
 }
 
 // spec: GUEST-TEST-GC-STRESS-1

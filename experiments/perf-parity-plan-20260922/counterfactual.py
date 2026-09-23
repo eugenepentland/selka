@@ -62,8 +62,11 @@ def main() -> int:
             continue
         manifest.write_text(p.stdout)
         extra = ["--project"] if project else []
+        # The release path (ReleaseFast, LLVM O3 + LTO) was the plain build's
+        # default until 2026-09-23; name it so every arm still measures it.
+        extra += ["--backend", "llvm", "--llvm-opt", "3", "--lto"]
         if opts.adapter:
-            extra += ["--backend", "llvm", "--llvm-opt", "3", "--lto", "--llvm-adapter", str(opts.adapter)]
+            extra += ["--llvm-adapter", str(opts.adapter)]
         record = {"name": name, "project": project, "arms": {}}
         # control: the unmodified manifest must rebuild the plain binary exactly
         plain, control = work / f"{name}.cf-plain", work / f"{name}.cf-control"

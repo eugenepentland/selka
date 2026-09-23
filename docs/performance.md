@@ -52,7 +52,7 @@ so `xs[i] = v` is a bounds test and one store instead of a runtime call behind
 the frame's GC roots. On the same thirteen programs it takes the geometric mean
 from 5.8× to 3.0× Zig: `nbody` 72× → 4.9×, `matmul` 41× → 7.1×,
 `fannkuch_redux` 16× → 1.3×, `sieve` 7.1× → 1.8×. The schematic render goes
-from 1.98× to 1.73×. Its [results](audits/performance-parity-results-2026-09-23.md): the suite went from 5.81× to 1.20× Zig on the default LLVM build and from 8.40× to 2.41× on QBE.
+from 1.98× to 1.73×. Its [results](audits/performance-parity-results-2026-09-23.md): the suite went from 5.81× to 1.20× Zig on the LLVM release build (`--release`; the default build until 2026-09-23) and from 8.40× to 2.41× on QBE.
 
 ## What is fast without trying
 
@@ -186,6 +186,20 @@ no mode flag, so comparing modes means building twice and running the binaries; 
 guest test run keeps its own `Debug` default, which `mylang test --mode ReleaseFast`
 overrides. The mode is part of the object-cache key and of the run identity, so
 switching modes never reuses another mode's objects.
+
+The backend is a separate choice, and every mode builds with QBE unless asked
+otherwise, because a build that finishes in a second is what an edit-test loop
+needs. The fastest executable is `--release` — ReleaseFast through the LLVM
+backend at `-O3` with full LTO, the build the parity benchmark times — on
+`mylang build`, `mylang run` and `mylang test` alike:
+
+```bash
+mylang build loop10.my -o loop10-release --release       # LLVM -O3 + LTO
+mylang run loop10.my --release
+```
+
+It costs an LTO link on every rebuild that changed a function, so keep it for the
+executable you ship or measure ([native builds](tooling/native-build.md#backends)).
 
 ## Budgets are opt-in
 

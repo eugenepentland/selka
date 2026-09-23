@@ -10,7 +10,8 @@ for pad in a bb cccc dddddddd eeeeeeeeeeeeeeee ffffffffffffffffffffffffffffffff;
   mkdir -p $D/$pad
   cp $W/experiments/perf-parity-audit-20260921/micro/fib.my $D/$pad/fib.my
   for arm in base lane; do
-    $W/.tmp/install-$arm/bin/mylang build $D/$pad/fib.my -o $D/fib-$arm-$pad --cache-dir $W/.tmp/cache-$arm
+    $W/.tmp/install-$arm/bin/mylang build $D/$pad/fib.my -o $D/fib-$arm-$pad --cache-dir $W/.tmp/cache-$arm \
+      --backend llvm --llvm-opt 3 --lto  # the default build when this ran (2026-09-23)
     addr=$(objdump -d --no-show-raw-insn $D/fib-$arm-$pad | grep -B4 "cmp    %rsp,0x40(%rdi)" | head -1 | awk '{print $1}')
     echo "$arm $pad $addr"
   done

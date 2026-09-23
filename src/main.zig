@@ -89,7 +89,8 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "run-project is the explicit project-entry alias\n  run/run-project: unbounded in instructions and frames by default; " ++
     "--max-steps=N and --max-frames=N impose a ceiling and --timeout=SECONDS caps elapsed time; " ++
     "--max-memory=BYTES --gc-stress --print-result --cache-dir=DIR --qbe=PATH --zig=PATH " ++
-    "(native objects default to .mylang-cache/qbe, shared with build)\n  " ++
+    "(native objects default to .mylang-cache/qbe, shared with build); the build is QBE unless " ++
+    "--release asks for LLVM -O3 with LTO\n  " ++
     "run/run-project: --max-memory takes K/M/G suffixes and caps the guest process's address space; " ++
     "MYLANG_MEMORY_LIMIT names the same ceiling and MYLANG_HOST_MEMORY_LIMIT replaces the " ++
     "compiler's own 8G ceiling (0 removes it)\n  " ++
@@ -1101,8 +1102,8 @@ const ArgumentParser = struct {
             if (!self.executes() or self.reporting.print_result) return error.Usage;
             self.reporting.print_result = true;
             try self.forward(arg);
-        } else if (std.mem.startsWith(u8, arg, "--qbe=")) {
-            self.native.codegen = .{ .qbe = try self.value(arg, "--qbe=") };
+        } else if (try self.codegenOption(arg)) {
+            return true;
         } else if (std.mem.startsWith(u8, arg, "--zig=")) {
             self.native.zig = try self.value(arg, "--zig=");
         } else if (std.mem.startsWith(u8, arg, select_file_prefix)) {
@@ -1120,6 +1121,21 @@ const ArgumentParser = struct {
         } else if (try self.uncheckedOption(arg)) {
             return true;
         } else return false;
+        return true;
+    }
+
+    /// The code generator a `run` builds with: QBE unless `--release` names the
+    /// LLVM O3 build with LTO (`run` is already ReleaseFast), or `--qbe=PATH`
+    /// names another QBE. The two contradict each other in either order.
+    fn codegenOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (std.mem.eql(u8, arg, native_options.release_flag)) {
+            if (!self.executes() or self.native.codegen != .auto) return error.Usage;
+            self.native.codegen = native_options.release_codegen;
+            return true;
+        }
+        if (!std.mem.startsWith(u8, arg, "--qbe=")) return false;
+        if (self.native.codegen == .llvm) return error.Usage;
+        self.native.codegen = .{ .qbe = try self.value(arg, "--qbe=") };
         return true;
     }
 

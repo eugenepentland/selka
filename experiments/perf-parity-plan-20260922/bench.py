@@ -10,7 +10,7 @@ and nothing is built while anything is timed. Wall time and the child's own CPU
 time (user + system, from wait4) are both recorded.
 
 Arms per source file:
-  .my   my (mylang build default: ReleaseFast, LLVM O3 + LTO)
+  .my   my (ReleaseFast, LLVM O3 + LTO: what `mylang build --release` builds)
         my-unchecked (+ --unchecked), my-qbe (--backend qbe, opt-in)
   .zig  zig-fast (ReleaseFast), zig-safe (ReleaseSafe)
   .rs   rust (-C opt-level=3 codegen-units=1 target-cpu=native panic=abort)
@@ -64,14 +64,20 @@ def discover(name: str, dirs: list[Path]) -> list[tuple[str, Path, str]]:
     return found
 
 
+# `mylang build` built this (ReleaseFast, LLVM O3 + LTO) by default until 2026-09-23;
+# it now defaults to QBE, so the release path is named. Spelled out rather than
+# `--release` so a compiler from before the shorthand builds the same arm.
+RELEASE_FLAGS = ["--backend", "llvm", "--llvm-opt", "3", "--lto"]
+
+
 def arms_for(ports, opts) -> list[dict]:
     arms = []
     for lang, path, variant in ports:
         tag = f"-{variant}" if variant else ""
         if lang == "my":
-            arms.append({"arm": f"my{tag}", "lang": lang, "src": path, "flags": []})
+            arms.append({"arm": f"my{tag}", "lang": lang, "src": path, "flags": RELEASE_FLAGS})
             if not variant or opts.variants_unchecked:
-                arms.append({"arm": f"my{tag}-unchecked", "lang": lang, "src": path, "flags": ["--unchecked"]})
+                arms.append({"arm": f"my{tag}-unchecked", "lang": lang, "src": path, "flags": [*RELEASE_FLAGS, "--unchecked"]})
             if opts.qbe and not variant:
                 arms.append({"arm": "my-qbe", "lang": lang, "src": path, "flags": ["--backend", "qbe"]})
         elif lang == "zig":
