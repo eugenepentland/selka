@@ -40,11 +40,12 @@ that backend. `--report` states the resolved `backend`, `optimization` and
 build it spawns: its builds are QBE in either mode (`Debug` by default), and
 `mylang test --release` builds the LLVM release path.
 
-The price of each, on the 4,200-line Lox interpreter port (a Debug build of the
-compiler, warm object cache, one function edited): the QBE build relinks in
-well under a second, while the `--release` build pays the LTO link again on
-every edit. Build with QBE while editing and testing, and with `--release` for
-the executable you ship or time. The measurements are in
+The price of each, on the 4,200-line Lox interpreter port with a ReleaseFast
+compiler and a warm object cache: after a one-function edit the QBE build takes
+0.7–0.9 s and the `--release` build 4.1–5.1 s, about 3 s of which is the LTO
+link it pays on every rebuild that changes anything, a comment included (0.4–0.9 s
+against 3.0–3.9 s). Build with QBE while editing and testing, and with
+`--release` for the executable you ship or time. The measurements are in
 [the lane report](../audits/devspeed-defaults-and-docs-2026-09-23.md).
 
 The LLVM backend is the Python adapter installed beside the compiler at
