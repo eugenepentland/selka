@@ -4355,7 +4355,40 @@ test "CLI help answers on stdout with the everyday commands first and exits 0" {
         const everyday = std.mem.indexOf(u8, result.stdout, "mylang check FILE.my").?;
         const reference = std.mem.indexOf(u8, result.stdout, "usage: mylang test").?;
         try testing.expect(everyday < reference);
+        // The guides and the large-project commands are on the first screen too.
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "mylang docs primer").? < everyday);
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "mylang docs [TOPIC]").? < reference);
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "--release").? < reference);
+        const large = std.mem.indexOf(u8, result.stdout, "Working in a large project:").?;
+        try testing.expect(everyday < large and large < reference);
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "mylang context ENTRY.my --symbol=module::name").? < reference);
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "mylang tests-for ENTRY.my module::name").? < reference);
+        try testing.expect(std.mem.indexOf(u8, result.stdout, "--affected --against REF").? < reference);
     }
+}
+// spec-case: CLI-DOCS-1
+test "CLI docs lists the embedded guides and prints one from a directory with no docs" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
+    defer testing.allocator.free(compiler);
+    const listed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler, "docs" }, .cwd = .{ .dir = temporary.dir } });
+    defer testing.allocator.free(listed.stdout);
+    defer testing.allocator.free(listed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, listed.term);
+    try testing.expectEqualStrings("", listed.stderr);
+    try testing.expect(std.mem.indexOf(u8, listed.stdout, "  primer ").? < std.mem.indexOf(u8, listed.stdout, "  build ").?);
+    const primer = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler, "docs", "primer" }, .cwd = .{ .dir = temporary.dir } });
+    defer testing.allocator.free(primer.stdout);
+    defer testing.allocator.free(primer.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, primer.term);
+    try testing.expect(std.mem.startsWith(u8, primer.stdout, "# mylang in one page"));
+    try testing.expect(std.mem.indexOf(u8, primer.stdout, "--release") != null);
+    const unknown = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "docs", "nonsense" } });
+    defer testing.allocator.free(unknown.stdout);
+    defer testing.allocator.free(unknown.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, unknown.term);
+    try testing.expect(std.mem.indexOf(u8, unknown.stderr, "no topic `nonsense`") != null);
 }
 // spec: FEATURE-REPORT-1
 test "CLI features identify installed compiler without source input" {

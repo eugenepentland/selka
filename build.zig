@@ -173,6 +173,16 @@ fn boundedChecks(step: *std.Build.Step) void {
     }
 }
 
+/// Give `module` the user guides `mylang docs` prints: one anonymous import per
+/// topic in `src/user_docs.zig`, named as `src/docs_command.zig` embeds it, so
+/// the guides ship inside the compiler and an edited page rebuilds it.
+fn addUserDocs(b: *std.Build, module: *std.Build.Module) void {
+    const user_docs = @import("src/user_docs.zig");
+    for (user_docs.topics) |topic| {
+        module.addAnonymousImport(b.fmt("{s}{s}", .{ user_docs.import_prefix, topic.name }), .{ .root_source_file = b.path(topic.path) });
+    }
+}
+
 /// `zig build bench-parity`: the standing mylang/Zig/Rust parity benchmark under
 /// `bench/parity`. It builds every arm with the compiler this build installs (or
 /// `-Dbench-mylang=PATH`), requires byte-identical output, times pinned
@@ -270,6 +280,7 @@ pub fn build(b: *std.Build) void {
     // Snapshot identity needs the actual application/test root rather than the
     // generated Zig or Guardian test-runner root exposed by `@import("root")`.
     exe.root_module.addImport("native_test_root", exe.root_module);
+    addUserDocs(b, exe.root_module);
     const build_assets = @import("build_qbe_assets.zig").module(b, target, optimize, .{ .compile = rss.compile, .run = rss.driver });
     exe.root_module.addImport("qbe_build_assets", build_assets);
     const install_exe = b.addInstallArtifact(exe, .{});
@@ -371,6 +382,7 @@ pub fn build(b: *std.Build) void {
     unit.root_module.addImport("native_test_root", unit.root_module);
     unit.root_module.addImport("qbe_build_assets", build_assets);
     unit.root_module.addImport("memory_budget", budget);
+    addUserDocs(b, unit.root_module);
     // Unit tests execute guest programs natively, so they need the same tools and
     // one shared object cache that `mylang build` uses.
     const native_test_options = b.addOptions();

@@ -8,6 +8,28 @@ opt-in escape hatches for performance when a measurement calls for them. That go
 is still a hypothesis; [the plan](docs/plan.md) tracks the application evidence that
 would confirm it. The working language name and `.my` extension are provisional.
 
+## Start here
+
+- **Writing mylang?** Read [the one-page primer](docs/primer.md): the language
+  for a Python programmer, every example checked by `mylang doctest`. The user
+  guides also ship inside the compiler, so they are there outside this
+  repository: `mylang docs` lists them, and `mylang docs primer` (or `syntax`,
+  `io`, `errors`, `tests`, `build`, ...) prints one.
+- **Commands:** `mylang --help` starts with the everyday ones. `run`, `build`
+  and `test` build with QBE, which takes about a second; add `--release` for the
+  optimized LLVM `-O3` + LTO build you ship or time.
+- **Working in a large project:** `mylang context ENTRY.my --symbol=module::name`
+  answers one bounded question about a declaration (`--at=FILE:LINE:COLUMN`
+  about a position), `mylang tests-for ENTRY.my module::name` lists the tests
+  that reach it, `mylang list-interfaces ENTRY.my` prints every module's public
+  surface, and `mylang test ENTRY.my --affected --against REF` runs only the
+  tests an edit since `REF` can change.
+- **All documentation:** [docs/README.md](docs/README.md) indexes the user guides
+  first and keeps the compiler's internal records (audits, experiments,
+  proposals, handoffs) apart.
+
+## Status
+
 The [incremental QBE native backend](docs/experiments/incremental-qbe.md) is the
 default runtime; an opt-in LLVM adapter supports optimized Linux x86-64 builds.
 `mylang build` produces an executable, reusing individual native
