@@ -6,6 +6,15 @@ measurements and gate. Items 1–6 of the lane brief; the memory target of
 [the parity plan](performance-parity-plan-2026-09-22.md) (§1, §3.4) is peak
 RSS ≤ 1.5× Zig, with no loss of time.
 
+> **Follow-up (branch `perf/memory-footprint-2`, see the last section).** The
+> first merge (`cfc940bf`) made `lib/scan_split` 1.29× slower. Two of the
+> changes below cost it: the tighter collection trigger (item 2) and returning
+> spare pages to the host (item 4). Both are withdrawn; `GC-TRIGGER-1` no longer
+> exists. The tables in this header and in *Measurements* are the first merge's;
+> the follow-up section has the numbers that ship: text_ops peaks at 38.5 MB and
+> knucleotide at 27.9 MB instead of 34.2 and 25.5, and every program is within
+> 3% of its pre-lane time except `sieve`, a code-layout effect (see there).
+
 **Status: done, gated.** Peak RSS against the integration base (`6a1a9c4d`, the
 branch this lane merges into):
 
@@ -124,7 +133,7 @@ the runtime,
 [`probes/memory-footprint/binary_trees_sim.c`](../../experiments/perf-parity-plan-20260922/probes/memory-footprint/binary_trees_sim.c),
 shows the same (29.5 → 16.1 MB RSS).
 
-### 2. Collection triggers (`GC-TRIGGER-1`)
+### 2. Collection triggers (`GC-TRIGGER-1`, withdrawn in the follow-up)
 
 Three changes to `schedule`, all about garbage in the old generation:
 
@@ -345,7 +354,7 @@ match the integration arm's own ratios.
 - `tests/native_arena_chunks_test.c`: `per_depth_chunks` (the poisoned-list
   scaling check above); `header_regions` adapted to the per-depth array.
 - `tests/lang/gc_footprint.my`: one `# spec:` test per new bullet
-  (`GC-AGING-1`, `GC-TRIGGER-1`, `GC-SPARE-1`, `GC-NOZERO-1`, `GC-POOLSET-1`,
+  (`GC-AGING-1`, `GC-TRIGGER-1` (withdrawn in the follow-up), `GC-SPARE-1`, `GC-NOZERO-1`, `GC-POOLSET-1`,
   `ARENA-CHUNKS-1`) plus a `GC-AGING-1` case; `gc_generations.my`'s comment
   updated for the new stress pattern.
 - `mylang test tests/lang`: 569 passed; with `--gc-stress`: 569 passed.
@@ -384,3 +393,123 @@ Against the coordinator's logs of the integration base (`loops-*.log`, commit
 - **Aging depth.** One survived minor collection is enough for these programs;
   a structure alive across exactly two young intervals is still promoted. A
   second age bit would cost another 512 bytes per segment.
+
+## Follow-up: the scan_split regression (`perf/memory-footprint-2`)
+
+The coordinator's batch after the merge: `lib/scan_split` took 169.7 ms with
+this lane (`install-mem`, `cfc940bf`) against 129.0 ms before it
+(`install-loops`, `6a1a9c4d`), and `bench-parity` flagged it at 4.44× Zig
+against a 3.48× threshold. The suite and micro-kernels in my own measurements
+did not include `lib/`.
+
+**The cause.** scan_split splits a 4 MB text three times into about 2.5 M short
+`str` pieces kept in lists while each loop runs, so its live set is large and
+grows in steps, and every minor collection rescans those old lists (no card
+marking). A/B of each change on the `cfc940bf` runtime, one binary with each
+change switchable from the environment (paired CPU time against
+`install-loops`, 9 rounds, CPU 8):
+
+| change switched off | scan_split / pre-lane |
+|---|---:|
+| none (as merged) | 1.307–1.314 |
+| aging | 1.309 |
+| clearing text blocks restored | 1.348 |
+| pool-classified marking | 1.369 |
+| spare segments | 1.253 |
+| page return of idle spares | 1.238 |
+| tighter trigger (back to 2× + 4 MiB) | 1.140 |
+| trigger and page return | **0.955** |
+| trigger, page return and spares | 0.964 |
+| everything (the pre-lane collector) | 0.992 |
+
+- **The trigger** doubled the collections: 14 full and 29 minor against 6 and
+  13. Full collections that ran as soon as promotion reached the 1.5×
+  threshold found nothing to free (the old generation was growing with live
+  pieces, not garbage), and the cap on the young interval while promoting
+  added minor collections, each rescanning the old piece lists.
+- **The page return** released spares between two full collections that the
+  next phase refilled at once: 25% more page faults (24.7 k against 19.7 k).
+
+**Nothing in between worked.** Every variant of the trigger (1.5× alone, full at
+once alone, the cap alone, the cap bounded below by twice the bytes the last
+minor rescanned, a threshold that grows at 2× after a full collection that
+freed less than a quarter of the heap) kept scan_split 5–15% slower. Every
+variant of the page return (idle spares only, idle spares above the next young
+interval, all spares above it) cost it 9–19%, and none lowered a peak. So the
+trigger is back to 2× the last full collection's live bytes plus 4 MiB, and a
+spare keeps its pages. What that gives back, against `cfc940bf`: text_ops'
+peak 34.2 → 38.5 MB and knucleotide's 25.5 → 27.9 MB (both still below the
+pre-lane 43.9 and 28.5 MB), and knucleotide_arena 82.7 → 89.9 MB (pre-lane
+90.6). binary_trees keeps 16.2 MB. scan_split's peak goes back to 65.0 MB
+(64.4 before the lane, 51.6 with it).
+
+**Measurements.** `bench.py` over `bench/parity/{suite,lib,micro}`, 9 rounds,
+CPU 8, arms `my` (this branch, `25e438ec`), `loops` (`install-loops`) and `mem`
+(`install-mem`), load average 1.1–2.9. Raw rounds:
+[`results/leftovers/memory-footprint-2-parity.json`](../../experiments/perf-parity-plan-20260922/results/leftovers/memory-footprint-2-parity.json).
+Paired CPU-time ratios with 95% bootstrap intervals and peak RSS:
+
+| program | vs pre-lane | vs `cfc940bf` | RSS pre-lane | RSS `cfc940bf` | RSS now | Zig |
+|---|---|---|---:|---:|---:|---:|
+| **scan_split** | **0.960** [0.955, 0.965] | **0.735** [0.729, 0.739] | 64.4 | 51.6 | 65.0 | 4.4 |
+| scan_count | 0.999 [0.992, 1.014] | 0.995 | 7.2 | 7.1 | 7.0 | 4.4 |
+| scan_replace | 1.001 [0.995, 1.010] | 0.984 | 11.4 | 11.4 | 11.3 | 15.3 |
+| binary_trees | 0.876 [0.868, 0.882] | 0.996 | 29.1 | 16.1 | 16.2 | 4.4 |
+| binary_trees_arena | 0.999 [0.991, 1.003] | 0.999 | 11.7 | 11.5 | 11.5 | 4.4 |
+| knucleotide | 1.001 [0.988, 1.009] | 0.991 | 28.5 | 25.5 | 27.9 | 9.4 |
+| knucleotide_arena | 1.000 [0.995, 1.005] | 1.038 | 90.6 | 82.7 | 89.9 | 9.4 |
+| knucleotide_tuned | 0.985 [0.980, 0.995] | 0.989 | 26.3 | 25.8 | 25.7 | 9.4 |
+| text_ops | 0.947 [0.943, 0.952] | 0.972 | 43.9 | 34.2 | 38.5 | 7.8 |
+| text_ops_tuned | 0.983 [0.978, 1.024] | 1.000 | 10.7 | 10.2 | 10.2 | 7.8 |
+| sort_records | 0.991 [0.977, 1.001] | 0.997 | 41.4 | 40.9 | 41.0 | 15.6 |
+| sort_records_keyed | 1.009 [0.973, 1.041] | 1.014 | 26.3 | 25.8 | 25.8 | 15.6 |
+| sort_records_sorted | 0.993 [0.982, 1.001] | 0.995 | 41.3 | 40.9 | 40.9 | 15.6 |
+| fannkuch_redux | 0.954 [0.950, 0.958] | 0.997 | 2.6 | 2.4 | 2.4 | 2.0 |
+| fannkuch_redux_array | 0.980 [0.978, 0.989] | 0.995 | 2.7 | 2.5 | 2.3 | 2.0 |
+| fannkuch_redux_tuned | 0.995 [0.994, 0.999] | 0.994 | 2.6 | 2.4 | 2.4 | 2.0 |
+| mandelbrot | 0.999 [0.994, 1.001] | 0.998 | 2.7 | 2.6 | 2.4 | 2.0 |
+| matmul | 0.987 [0.981, 0.990] | 1.003 | 12.4 | 10.4 | 10.4 | 6.1 |
+| matmul_flat | 0.985 [0.976, 0.992] | 1.010 | 9.1 | 8.4 | 8.6 | 6.1 |
+| matmul_tuned | 1.002 [0.992, 1.011] | 1.006 | 19.1 | 14.4 | 14.4 | 6.1 |
+| nbody | 0.995 [0.990, 1.006] | 0.994 | 2.6 | 2.5 | 2.4 | 2.0 |
+| nbody_class | 1.001 [0.999, 1.002] | 1.001 | 2.5 | 2.5 | 2.5 | 2.0 |
+| raytrace | 0.997 [0.992, 1.000] | 0.997 | 2.4 | 2.4 | 2.5 | 2.0 |
+| raytrace_tuned | 0.995 [0.990, 1.001] | 0.996 | 2.4 | 2.5 | 2.4 | 2.0 |
+| sieve | 1.044 [1.035, 1.050] | 1.046 | 21.6 | 21.4 | 21.5 | 19.4 |
+| sieve_tuned | 1.018 [1.013, 1.025] | 1.013 | 21.4 | 21.4 | 21.6 | 19.4 |
+| sort_builtin | 1.002 [0.988, 1.014] | 1.003 | 26.0 | 25.5 | 25.5 | 15.7 |
+| sort_quick | 1.000 [0.997, 1.004] | 1.000 | 18.5 | 18.1 | 18.0 | 15.8 |
+| spectral_norm | 1.001 [0.993, 1.007] | 0.990 | 3.0 | 3.0 | 3.0 | 2.0 |
+| spectral_norm_tuned | 1.004 [1.001, 1.010] | 1.003 | 3.0 | 3.0 | 3.0 | 2.0 |
+| alloc_churn | 1.008 [1.001, 1.014] | 1.009 | 6.6 | 6.6 | 6.6 | 2.0 |
+| alloc_churn_arena | 0.996 [0.992, 1.002] | 0.990 | 2.3 | 2.4 | 2.4 | 2.0 |
+| bytes_scan | 0.984 [0.943, 1.046] | 0.986 | 11.3 | 10.8 | 10.8 | 8.3 |
+| bytes_scan_wrapping | 0.999 [0.966, 1.009] | 0.998 | 11.1 | 10.8 | 10.8 | 8.3 |
+| calls | 0.999 [0.994, 1.000] | 0.999 | 2.3 | 2.3 | 2.5 | 2.0 |
+| dict_count | 0.978 [0.955, 0.984] | 0.972 | 3.0 | 2.7 | 2.7 | 2.0 |
+| fib | 0.997 [0.995, 1.007] | 0.997 | 2.3 | 2.4 | 2.4 | 2.0 |
+| float_loop | 1.001 [0.988, 1.003] | 0.999 | 2.4 | 2.5 | 2.4 | 2.0 |
+| intloop | 1.003 [0.997, 1.004] | 1.002 | 2.4 | 2.3 | 2.3 | 2.0 |
+| list_append_sum | 1.015 [0.988, 1.033] | 1.015 | 125.3 | 125.0 | 125.0 | 122.3 |
+| list_records | 0.994 [0.978, 1.032] | 1.026 | 64.3 | 63.8 | 63.8 | 61.2 |
+| list_records_wrapping | 0.999 [0.989, 1.015] | 0.999 | 64.3 | 63.8 | 63.8 | 61.2 |
+| records | 1.001 [0.997, 1.009] | 1.000 | 2.5 | 2.4 | 2.5 | 2.0 |
+| str_build | 0.985 [0.967, 1.001] | 0.986 | 125.4 | 125.0 | 125.0 | 122.3 |
+
+**sieve (1.044 against pre-lane) is code layout, not collection.** sieve runs
+exactly one collection (the first, at 1 MiB, with nothing live), under every
+policy. A 21-round rerun gives 1.035 against both `loops` and `mem` (whose
+sieve runs identically). The `cfc940bf` runtime with its trigger and page
+return switched on and off from the environment, one binary, gives 1.000,
+1.004, 1.001 and 1.000 for the four combinations, so the policy the follow-up
+changes does not reach sieve's time; the difference between the `mem` and
+this branch's binaries is the runtime code LTO lays out next to the hot guest
+loop (42 lines of disassembly). `list_records` (1.026 against `mem`) reran at
+1.010 [0.995, 1.025] against pre-lane and 1.003 against `mem`.
+
+**Gate** (`gate_diff.py` against the coordinator's `mem-*.log`, all green):
+`zig build test` 77/77 steps, 0 failures; `test-qbe` 308/308; `test-qbe-build`,
+`test-schematic`, `test-byte-io`, `fmt-check` green — **no new failures**
+anywhere. `mylang test tests/lang` 569 passed, 569 under `--gc-stress`; the
+native C suites pass under UBSan and ASan + UBSan (`native_print` excepted, as
+before).
