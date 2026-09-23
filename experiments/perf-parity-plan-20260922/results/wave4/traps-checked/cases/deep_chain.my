@@ -1,0 +1,82 @@
+def f20(x: int) -> int:
+    return 10 // x
+
+
+def f19(x: int) -> int:
+    return f20(x) + 1
+
+
+def f18(x: int) -> int:
+    return f19(x) + 1
+
+
+def f17(x: int) -> int:
+    return f18(x) + 1
+
+
+def f16(x: int) -> int:
+    return f17(x) + 1
+
+
+def f15(x: int) -> int:
+    return f16(x) + 1
+
+
+def f14(x: int) -> int:
+    return f15(x) + 1
+
+
+def f13(x: int) -> int:
+    return f14(x) + 1
+
+
+def f12(x: int) -> int:
+    return f13(x) + 1
+
+
+def f11(x: int) -> int:
+    return f12(x) + 1
+
+
+def f10(x: int) -> int:
+    return f11(x) + 1
+
+
+def f9(x: int) -> int:
+    return f10(x) + 1
+
+
+def f8(x: int) -> int:
+    return f9(x) + 1
+
+
+def f7(x: int) -> int:
+    return f8(x) + 1
+
+
+def f6(x: int) -> int:
+    return f7(x) + 1
+
+
+def f5(x: int) -> int:
+    return f6(x) + 1
+
+
+def f4(x: int) -> int:
+    return f5(x) + 1
+
+
+def f3(x: int) -> int:
+    return f4(x) + 1
+
+
+def f2(x: int) -> int:
+    return f3(x) + 1
+
+
+def f1(x: int) -> int:
+    return f2(x) + 1
+
+
+def main() -> int:
+    return f1(0)

@@ -1,0 +1,8 @@
+def recurse(depth: int) -> int:
+    if depth == 0:
+        return 0
+    return 1 + recurse(depth - 1)
+
+
+def main() -> int:
+    return recurse(50)

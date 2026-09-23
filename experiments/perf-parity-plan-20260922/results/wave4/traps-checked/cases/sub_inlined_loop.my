@@ -1,0 +1,18 @@
+# a signed subtract inside a small callee LLVM inlines into a hot loop
+
+
+def lower(x: int, y: int) -> int:
+    return x - y
+
+
+def sweep(start: int, n: int) -> int:
+    total = start
+    for i in range(n):
+        total = lower(total, 1000000000000000000 + i)
+    return total
+
+
+def main(out: Stream) -> int:
+    out.print(sweep(0, 3))
+    out.print(sweep(0, 20))
+    return 0

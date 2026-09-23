@@ -1,0 +1,13 @@
+def a(i: int, j: int) -> float:
+    return 1.0 / float((i + j) * (i + j + 1) // 2 + i + 1)
+
+
+def total(n: int, start: int) -> float:
+    s = 0.0
+    for i in range(n):
+        s = s + a(start + i, 9223372036854775000)
+    return s
+
+
+def main() -> int:
+    return int(total(10, 1))
