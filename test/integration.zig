@@ -1829,7 +1829,14 @@ fn expectCheckedBoundaries(binaries: [2][]const u8) !void {
         try testing.expectEqualStrings("", quiet);
         const trapped = try expectSameBoundary(binaries, .{ row.width, row.op, row.x, row.bad }, 1, "");
         defer a.free(trapped);
-        const detail = try std.fmt.allocPrint(a, "error[R_OVERFLOW]: native execution failed ({s}: left {s}, right {s}, width {s})\n", .{ row.op, row.x, row.bad, row.bits });
+        // TRAP-UNSIGNED-1: an unsigned operand prints unsigned, so a `u64`
+        // operand spelled negative shows its two's-complement value.
+        const left = if (std.mem.eql(u8, row.width, "u64") and row.x[0] == '-')
+            try std.fmt.allocPrint(a, "{d}", .{@as(u64, @bitCast(try std.fmt.parseInt(i64, row.x, 10)))})
+        else
+            try a.dupe(u8, row.x);
+        defer a.free(left);
+        const detail = try std.fmt.allocPrint(a, "error[R_OVERFLOW]: native execution failed ({s}: left {s}, right {s}, width {s})\n", .{ row.op, left, row.bad, row.bits });
         defer a.free(detail);
         try testing.expect(std.mem.indexOf(u8, trapped, detail) != null);
     }
