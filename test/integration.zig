@@ -1460,6 +1460,146 @@ fn expectHaltedTrapIdentical(temporary: *testing.TmpDir, name: []const u8, sourc
     try testing.expect(std.mem.indexOf(u8, run_fast.stderr, wanted[0 .. std.mem.indexOfScalar(u8, wanted, '\n') orelse wanted.len]) != null);
     try testing.expectEqualStrings(run_fast.stderr, run_framed.stderr);
 }
+/// Build `name` with the default release backend — LLVM with full LTO, which
+/// is free to inline guest functions into one another — and with QBE, both
+/// with no ceiling so neither links a frame record, run each, and require exit
+/// status 1 and exactly `expected` on stderr from both, `{path}` standing for
+/// the entry's absolute path.
+fn expectFrameMapTrap(temporary: *testing.TmpDir, name: []const u8, source: []const u8, expected: []const u8) !void {
+    const a = testing.allocator;
+    const file = try std.fmt.allocPrint(a, "{s}.my", .{name});
+    defer a.free(file);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = file, .data = source });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, file, a);
+    defer a.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const cache_argument = try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{directory});
+    defer a.free(cache_argument);
+    const wanted = try std.mem.replaceOwned(u8, a, expected, "{path}", entry);
+    defer a.free(wanted);
+    const llvm = try std.fmt.allocPrint(a, "{s}/{s}-llvm", .{ directory, name });
+    defer a.free(llvm);
+    const qbe = try std.fmt.allocPrint(a, "{s}/{s}-qbe", .{ directory, name });
+    defer a.free(qbe);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", llvm, cache_argument, tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", qbe, cache_argument, tools[0], tools[1] }, "");
+    for ([_][]const u8{ llvm, qbe }) |binary| {
+        const trapped = try std.process.run(a, testing.io, .{ .argv = &.{binary} });
+        defer a.free(trapped.stdout);
+        defer a.free(trapped.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, trapped.term);
+        try testing.expectEqualStrings("", trapped.stdout);
+        try testing.expectEqualStrings(wanted, trapped.stderr);
+    }
+}
+// spec-case: QBE-FRAMEMAP-1
+test "a frame-map trap names every logical frame an inlined callee, a callback, a runtime helper or recursion passes through" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    // LLVM inlines `a` into the loop in `total`; its frame is still reported.
+    try expectFrameMapTrap(&temporary, "inlined",
+        \\# a trap inside a small callee LLVM inlines into a loop
+        \\
+        \\
+        \\def a(i: int, j: int) -> float:
+        \\    return 1.0 / float((i + j) * (i + j + 1) // 2 + i + 1)
+        \\
+        \\
+        \\def total(n: int, start: int) -> float:
+        \\    s = 0.0
+        \\    for i in range(n):
+        \\        s = s + a(start + i, 9223372036854775000)
+        \\    return s
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    out.print(int(total(10, 1)))
+        \\    return 0
+    ,
+        \\{path}:5:32: error[R_OVERFLOW]: native execution failed (mul: left 9223372036854775001, right 9223372036854775002, width 64)
+        \\  in a at {path}:5:32
+        \\  in total at {path}:11:17
+        \\  in main at {path}:16:19
+        \\
+    ++ "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"mul\",\"left\":9223372036854775001,\"right\":9223372036854775002,\"width\":64}\n");
+    // An assertion's message still comes from the innermost frame's position.
+    try expectFrameMapTrap(&temporary, "callback",
+        \\# an assertion inside a key function called back by sorted
+        \\
+        \\
+        \\def key_of(x: int) -> int:
+        \\    assert x != 3, "no threes"
+        \\    return 0 - x
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    ordered = sorted([5, 4, 3, 2, 1], key=key_of)
+        \\    out.print(ordered[0])
+        \\    return 0
+    ,
+        \\{path}:5:12: error[R_ASSERT]: native execution failed: no threes
+        \\  in key_of at {path}:5:12
+        \\  in main at {path}:10:15
+        \\
+    ++ "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"no threes\"}\n");
+    // The runtime helper traps inside itself; the frame is its call site.
+    try expectFrameMapTrap(&temporary, "helper",
+        \\# a conversion the runtime helper refuses, two frames deep
+        \\
+        \\
+        \\def convert(x: float) -> int:
+        \\    return int(x * 1e300 * 1e300)
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    total = 0
+        \\    for i in range(3):
+        \\        total = total + convert(float(i) + 0.5)
+        \\    out.print(total)
+        \\    return 0
+    ,
+        \\{path}:5:12: error[R_FLOAT_CONVERSION]: native execution failed
+        \\  in convert at {path}:5:12
+        \\  in main at {path}:11:25
+        \\
+    );
+    // The stack-floor guard fails in the prologue of the frame it would have
+    // entered, so the trace starts at its caller's call site.
+    const recursion_trace =
+        \\{path}:7:16: error[R_FRAME_LIMIT]: call-depth budget exhausted; raise it with --max-frames=N
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\  in descend at {path}:7:16
+        \\
+    ;
+    try expectFrameMapTrap(&temporary, "recursion",
+        \\# unbounded recursion reaches the execution-stack floor
+        \\
+        \\
+        \\def descend(depth: int) -> int:
+        \\    if depth == 0:
+        \\        return 0
+        \\    return 1 + descend(depth - 1)
+        \\
+        \\
+        \\def main(out: Stream) -> int:
+        \\    out.print(descend(1000000000))
+        \\    return 0
+    , recursion_trace);
+}
 // spec-case: QBE-NORETURN-1
 test "a trap through a halting failure path reports the same code, trace, record and status" {
     var temporary = testing.tmpDir(.{});

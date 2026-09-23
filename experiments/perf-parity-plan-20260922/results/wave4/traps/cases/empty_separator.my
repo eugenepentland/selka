@@ -1,0 +1,6 @@
+def pieces(text: str, sep: str) -> int:
+    return len(text.split(sep))
+
+
+def main() -> int:
+    return pieces("a,b,c", ",") + pieces("abc", "")

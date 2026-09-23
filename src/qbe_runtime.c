@@ -15,6 +15,7 @@
 #include <fenv.h>
 #include <time.h>
 #include <unistd.h>
+#include <unwind.h>
 #if defined(__FAST_MATH__) || FLT_RADIX != 2 || DBL_MANT_DIG != 53 || DBL_MAX_EXP != 1024
 #error "mylang binary64 requires strict IEEE binary64 arithmetic"
 #endif
@@ -209,7 +210,151 @@ static void trace_frame(Context *ctx, const MylQbeFunction *function, uint64_t p
     trace_frame(ctx, record->callee, record->callee_start + (position - record->start), depth + 1, logical);
     trace_emit(ctx, function, record->call_position, logical);
 }
-static uint64_t fail(void *context, const char *code) {
+/* QBE-FRAMEMAP-1. A fast executable links no frame record: every guest call is
+   followed by a label the build recorded in the `mylang_frame_map` section
+   (`src/qbe_frame_map.zig`). A call site owns one entry per logical frame,
+   innermost first, each {return address, position word, metadata} with every
+   field a 32-bit offset from itself; a site LLVM inlined through other guest
+   functions carries one more entry per caller, marked with the caller bit. The
+   linker defines the section bounds; a program lowered under any other
+   protocol has no such section, so both are null. The guard bit marks an entry
+   guard's call, whose frame was never entered. */
+extern const int32_t __start_mylang_frame_map[] __attribute__((weak, visibility("hidden")));
+extern const int32_t __stop_mylang_frame_map[] __attribute__((weak, visibility("hidden")));
+#define MYL_QBE_FRAME_MAP_GUARD UINT32_C(0x80000000)
+#define MYL_QBE_FRAME_MAP_CALLER UINT32_C(0x40000000)
+#define MYL_QBE_FRAME_MAP_UNWIND UINT32_C(0x20000000)
+#define MYL_QBE_FRAME_MAP_POSITION UINT32_C(0x1fffffff)
+/* One call site: its return address and its run of raw entries. */
+typedef struct { uintptr_t ret; const int32_t *first; size_t count; } FrameSite;
+/* The call sites, sorted by return address the first time a trap needs them. A
+   trap is fatal and runs once per execution, so this is built at most once per
+   process; if the index cannot be allocated the raw table is scanned instead. */
+static FrameSite *frame_sites;
+static size_t frame_site_count;
+static int frame_sites_ready;
+static uintptr_t entry_address(const int32_t *field) {
+    return (uintptr_t)field + (uintptr_t)(intptr_t)*field;
+}
+static size_t raw_entry_count(void) {
+    if (!__start_mylang_frame_map || !__stop_mylang_frame_map || __stop_mylang_frame_map <= __start_mylang_frame_map) return 0;
+    return (size_t)(__stop_mylang_frame_map - __start_mylang_frame_map) / 3;
+}
+/* The call site whose entries start at raw entry `index`, and how many there are. */
+static FrameSite site_from(size_t index, size_t entries) {
+    const int32_t *first = __start_mylang_frame_map + 3 * index;
+    size_t count = 1;
+    while (index + count < entries && ((uint32_t)first[3 * count + 1] & MYL_QBE_FRAME_MAP_CALLER)) ++count;
+    return (FrameSite){ .ret = entry_address(first), .first = first, .count = count };
+}
+static int site_order(const void *left, const void *right) {
+    uintptr_t a = ((const FrameSite *)left)->ret, b = ((const FrameSite *)right)->ret;
+    return a < b ? -1 : a > b;
+}
+static void prepare_sites(void) {
+    if (frame_sites_ready) return;
+    frame_sites_ready = 1;
+    size_t entries = raw_entry_count();
+    if (!entries || entries > SIZE_MAX / sizeof(FrameSite)) return;
+    frame_sites = malloc(entries * sizeof(FrameSite));
+    if (!frame_sites) return;
+    size_t count = 0;
+    for (size_t index = 0; index < entries;) {
+        frame_sites[count] = site_from(index, entries);
+        index += frame_sites[count].count;
+        ++count;
+    }
+    qsort(frame_sites, count, sizeof(FrameSite), site_order);
+    frame_site_count = count;
+}
+/* The call site whose label is exactly `ret`, or 0 when `ret` returns into code
+   with no recorded call site (the runtime, the entry wrapper, libc). */
+static int find_site(uintptr_t ret, FrameSite *found) {
+    prepare_sites();
+    if (frame_sites) {
+        size_t low = 0, high = frame_site_count;
+        while (low < high) {
+            size_t middle = low + (high - low) / 2;
+            if (frame_sites[middle].ret < ret) low = middle + 1;
+            else high = middle;
+        }
+        if (low < frame_site_count && frame_sites[low].ret == ret) { *found = frame_sites[low]; return 1; }
+        return 0;
+    }
+    size_t entries = raw_entry_count();
+    for (size_t index = 0; index < entries;) {
+        FrameSite site = site_from(index, entries);
+        if (site.ret == ret) { *found = site; return 1; }
+        index += site.count;
+    }
+    return 0;
+}
+/* Report the frames one return address stands for: every entry of its call
+   site, innermost first, except an entry guard's, which names a frame whose
+   prologue failed before it was entered. Returns 0 once `visit` stops. */
+typedef int (*FrameVisit)(Context *, const MylQbeFunction *, uint64_t position, void *state);
+static int visit_return(Context *ctx, uintptr_t ret, FrameVisit visit, void *state) {
+    FrameSite site;
+    if (!find_site(ret, &site)) return 1;
+    for (size_t i = 0; i < site.count; ++i) {
+        const int32_t *entry = site.first + 3 * i;
+        uint32_t word = (uint32_t)entry[1];
+        if (word & MYL_QBE_FRAME_MAP_GUARD) continue;
+        const MylQbeFunction *function = (const MylQbeFunction *)entry_address(&entry[2]);
+        if (!visit(ctx, function, word & MYL_QBE_FRAME_MAP_POSITION, state)) return 0;
+    }
+    return 1;
+}
+/* LLVM keeps no frame pointer in guest code; it gives every guest function
+   unwind tables instead, and the executable links libunwind, whose
+   `_Unwind_Backtrace` reports each frame's return address. The declaration is
+   weak so a program that never links it (QBE, or no frame map) still links. */
+typedef struct { Context *ctx; FrameVisit visit; void *state; int stopped; } UnwindWalk;
+extern _Unwind_Reason_Code _Unwind_Backtrace(_Unwind_Trace_Fn, void *) __attribute__((weak));
+extern uintptr_t _Unwind_GetIP(struct _Unwind_Context *) __attribute__((weak));
+static _Unwind_Reason_Code unwind_step(struct _Unwind_Context *context, void *argument) {
+    UnwindWalk *walk = argument;
+    if (!visit_return(walk->ctx, _Unwind_GetIP(context), walk->visit, walk->state)) {
+        walk->stopped = 1;
+        return _URC_END_OF_STACK;
+    }
+    return _URC_NO_REASON;
+}
+/* Visit every guest frame on the guest stack, innermost first. A return
+   address with a recorded site is a guest frame at that site's position; any
+   other is runtime or entry code and is passed over.
+   - An LLVM program (its table entries carry the unwind bit) is unwound by its
+     call-frame information.
+   - A QBE program follows the frame-pointer chain from this function's own
+     frame: QBE keeps a frame pointer in every function that calls, and so does
+     every runtime unit that can reach `fail`, so each frame's return address
+     is at `fp + 8` and its caller's frame pointer at `fp`. The walk stays
+     inside the guest-stack mapping and stops at the first link that does not
+     move outward, so a frame without a pointer ends the trace early rather
+     than reading anything outside it.
+   `visit` returns 0 to stop the walk. */
+static __attribute__((noinline)) void walk_frames(Context *ctx, FrameVisit visit, void *state) {
+    uintptr_t low = ctx->native_stack_bottom, high = ctx->native_stack_top;
+    if (!low || high <= low || !raw_entry_count()) return;
+    if ((uint32_t)__start_mylang_frame_map[1] & MYL_QBE_FRAME_MAP_UNWIND) {
+        UnwindWalk walk = { .ctx = ctx, .visit = visit, .state = state };
+        if (_Unwind_Backtrace && _Unwind_GetIP) _Unwind_Backtrace(unwind_step, &walk);
+        return;
+    }
+    uintptr_t fp = (uintptr_t)__builtin_frame_address(0);
+    while (fp >= low && fp <= high - 2 * sizeof(uintptr_t) && !(fp & (sizeof(uintptr_t) - 1))) {
+        const uintptr_t *slot = (const uintptr_t *)fp;
+        uintptr_t next = slot[0];
+        if (!visit_return(ctx, slot[1], visit, state)) return;
+        if (next <= fp) return;
+        fp = next;
+    }
+}
+static int trace_visit(Context *ctx, const MylQbeFunction *function, uint64_t position, void *state) {
+    trace_frame(ctx, function, position, 0, state);
+    return 1;
+}
+static __attribute__((noinline)) uint64_t fail(void *context, const char *code) {
     Context *ctx = context;
     if (!ctx->trap) {
         ctx->trap = code;
@@ -218,11 +363,13 @@ static uint64_t fail(void *context, const char *code) {
            the callee frames the inliner spliced into it, innermost first. Frames
            without function metadata (the direct C entry points) are skipped, and
            only the first sixteen frames are kept; `omitted_frames` reports the
-           logical depth beyond them. */
+           logical depth beyond them. A frame-map program links no record, so
+           its frames come from the return addresses on the guest stack. */
         uint64_t logical = 0;
         for (const MylQbeActiveFrame *frame = ctx->active_frame; frame; frame = frame->prev) {
             trace_frame(ctx, frame->function, frame->position, 0, &logical);
         }
+        if (!ctx->active_frame) walk_frames(ctx, trace_visit, &logical);
         ctx->omitted_frames = logical > ctx->trace_count ? logical-ctx->trace_count : 0;
         /* The trace is complete, so leave. Generated code does not test the
            sticky flag after a call; the trampoline armed this jump while the
@@ -318,12 +465,19 @@ void myl_qbe_fail_iteration(void *context) { fail(context, "R_LIST_ITERATION_MUT
    function metadata carries, as the trap's `operation`, so both the human stderr
    line and the structured record name the message. A pc without a message (or a
    frame whose function metadata predates messages) keeps the bare trap. */
+typedef struct { const MylQbeFunction *function; uint64_t position; } InnermostFrame;
+static int innermost_visit(Context *ctx, const MylQbeFunction *function, uint64_t position, void *state) {
+    (void)ctx;
+    *(InnermostFrame *)state = (InnermostFrame){function, position};
+    return 0;
+}
 void myl_qbe_fail_assert(void *context) {
     Context *ctx = context;
-    const MylQbeActiveFrame *frame = ctx->active_frame;
-    if (frame && frame->function && frame->function->messages &&
-        frame->position < frame->function->count) {
-        const char *message = frame->function->messages[frame->position];
+    InnermostFrame frame = {0};
+    if (ctx->active_frame) frame = (InnermostFrame){ctx->active_frame->function, ctx->active_frame->position};
+    else if (!ctx->trap) walk_frames(ctx, innermost_visit, &frame);
+    if (frame.function && frame.function->messages && frame.position < frame.function->count) {
+        const char *message = frame.function->messages[frame.position];
         if (message && *message) {
             fail_detail(context, "R_ASSERT", message, 0, 0, 0, 0, 0, 0);
             return;

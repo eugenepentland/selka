@@ -1,0 +1,515 @@
+{
+ "mylang": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a7fe8727a075af7ba/.tmp/install-base/bin/mylang",
+ "cpu": 0,
+ "rounds": 9,
+ "warmups": 2,
+ "started": "2026-09-22T22:50:00Z",
+ "load_start": [
+  19.6328125,
+  18.76708984375,
+  15.443359375
+ ],
+ "benchmarks": {
+  "fib": {
+   "arms": {
+    "zig-fast": {
+     "src": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a7fe8727a075af7ba/experiments/perf-parity-audit-20260921/micro/fib.zig",
+     "build": {
+      "cmd": [
+       "zig",
+       "build-exe",
+       "fib.zig",
+       "-O",
+       "ReleaseFast",
+       "-femit-bin=/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a7fe8727a075af7ba/.tmp/bench/fib.zig-fast",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a7fe8727a075af7ba/.tmp/bench/zigcache",
+       "--global-cache-dir",
+       "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a7fe8727a075af7ba/.tmp/bench/zigcache-global"
+      ],
+      "ok": true,
+      "seconds": 4.610390179004753,
+      "stderr": ""
+     },
+     "stdout_sha256": "653226562ad6143cebbec0872e5596358984edb431588afde338b77586d860c6",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "4a34a9cac2f43abd6d48bd416de0edccf90b1b390913104f2e7487740e5afcce",
+     "peak_rss_kb": 2032,
+     "wall": [
+      0.046085151,
+      0.046095454,
+      0.04338223,
+      0.046082411,
+      0.046356947,
+      0.046069924,
+      0.046332931,
+      0.045818693,
+      0.045587554
+     ],
+     "cpu": [
+      0.045684999999999996,
+      0.045756,
+      0.04312,
+      0.045753999999999996,
+      0.046058,
+      0.045835,
+      0.046096,
+      0.045606999999999995,
+      0.045313
+     ],
+     "wall_median": 0.046082411,
+     "cpu_median": 0.045753999999999996,
+     "ratio_wall": {
+      "median": 1.0,
+      "lo": 1.0,
+      "hi": 1.0
+     },
+     "ratio_cpu": {
+      "median": 1.0,
+      "lo": 1.0,
+      "hi": 1.0
+     }
+    },
+    "before": {
+     "src": "None",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "653226562ad6143cebbec0872e5596358984edb431588afde338b77586d860c6",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "258b72f9bafb541deb570375634313d11631d16f52d0c67e6c5d6a30457cc467",
+     "peak_rss_kb": 2392,
+     "wall": [
+      0.151982999,
+      0.150206601,
+      0.1510693,
+      0.154577082,
+      0.152151139,
+      0.1515681,
+      0.152771233,
+      0.153847682,
+      0.153029505
+     ],
+     "cpu": [
+      0.151668,
+      0.14996199999999998,
+      0.150733,
+      0.15429199999999998,
+      0.151765,
+      0.151242,
+      0.152533,
+      0.15339699999999998,
+      0.152747
+     ],
+     "wall_median": 0.152151139,
+     "cpu_median": 0.151765,
+     "ratio_wall": {
+      "median": 3.2978735167863507,
+      "lo": 3.2821647853556875,
+      "hi": 3.357749248761854
+     },
+     "ratio_cpu": {
+      "median": 3.3198642880595384,
+      "lo": 3.2950844587259542,
+      "hi": 3.3722078943917473
+     }
+    },
+    "fr": {
+     "src": "None",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "653226562ad6143cebbec0872e5596358984edb431588afde338b77586d860c6",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "ef88749a26d9cbc96d26ef9296c8b44a2133d53ff9e15cbbc4c49546c7051bda",
+     "peak_rss_kb": 2444,
+     "wall": [
+      0.091975448,
+      0.089709277,
+      0.090807465,
+      0.089520469,
+      0.090898938,
+      0.089029393,
+      0.092124562,
+      0.088306798,
+      0.089903132
+     ],
+     "cpu": [
+      0.091746,
+      0.089353,
+      0.09057199999999999,
+      0.08917599999999999,
+      0.090591,
+      0.08868899999999999,
+      0.091847,
+      0.08796999999999999,
+      0.089611
+     ],
+     "wall_median": 0.089903132,
+     "cpu_median": 0.089611,
+     "ratio_wall": {
+      "median": 1.9608482413649888,
+      "lo": 1.9324840431688144,
+      "hi": 1.995771870206089
+     },
+     "ratio_cpu": {
+      "median": 1.966889574015372,
+      "lo": 1.9349623650049086,
+      "hi": 2.008230272518332
+     }
+    },
+    "frk": {
+     "src": "None",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "653226562ad6143cebbec0872e5596358984edb431588afde338b77586d860c6",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "8e39e2222abc5a4697327e12161333167a8d55a05fc6c068f7481df78c93ab2e",
+     "peak_rss_kb": 2388,
+     "wall": [
+      0.093056939,
+      0.092530321,
+      0.092835222,
+      0.091805364,
+      0.092702237,
+      0.092643328,
+      0.094258299,
+      0.09364716,
+      0.092642954
+     ],
+     "cpu": [
+      0.09282599999999999,
+      0.09227099999999999,
+      0.09259899999999999,
+      0.091524,
+      0.092338,
+      0.092436,
+      0.093453,
+      0.09339499999999999,
+      0.092328
+     ],
+     "wall_median": 0.092702237,
+     "cpu_median": 0.092436,
+     "ratio_wall": {
+      "median": 2.0192391037191135,
+      "lo": 1.999748538228801,
+      "hi": 2.043863625704033
+     },
+     "ratio_cpu": {
+      "median": 2.0273559527941685,
+      "lo": 2.004820009553172,
+      "hi": 2.047821606332361
+     }
+    },
+    "frka1": {
+     "src": "None",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "653226562ad6143cebbec0872e5596358984edb431588afde338b77586d860c6",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "4330aee90e3212d904209900a5df9f89f69bdcaec694de0099a2b999e9d04013",
+     "peak_rss_kb": 2428,
+     "wall": [
+      0.119121498,
+      0.116275419,
+      0.116866637,
+      0.117304407,
+      0.118364323,
+      0.118207694,
+      0.118953491,
+      0.118721443,
+      0.11875662
+     ],
+     "cpu": [
+      0.118875,
+      0.116047,
+      0.116612,
+      0.116767,
+      0.118166,
+      0.11791199999999999,
+      0.118599,
+      0.11818399999999998,
+      0.118433
+     ],
+     "wall_median": 0.118364323,
+     "cpu_median": 0.118166,
+     "ratio_wall": {
+      "median": 2.567363825957827,
+      "lo": 2.5455353670622833,
+      "hi": 2.6050228533866937
+     },
+     "ratio_cpu": {
+      "median": 2.57286966331135,
+      "lo": 2.5520610219871487,
+      "hi": 2.6136649526625915
+     }
+    }
+   },
+   "reference_stdout": "14930352\n"
+  },
+  "calls": {
+   "arms": {
+    "zig-fast": {
+     "src": "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a7fe8727a075af7ba/experiments/perf-parity-audit-20260921/micro/calls.zig",
+     "build": {
+      "cmd": [
+       "zig",
+       "build-exe",
+       "calls.zig",
+       "-O",
+       "ReleaseFast",
+       "-femit-bin=/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a7fe8727a075af7ba/.tmp/bench/calls.zig-fast",
+       "--cache-dir",
+       "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a7fe8727a075af7ba/.tmp/bench/zigcache",
+       "--global-cache-dir",
+       "/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-a7fe8727a075af7ba/.tmp/bench/zigcache-global"
+      ],
+      "ok": true,
+      "seconds": 0.2442225000122562,
+      "stderr": ""
+     },
+     "stdout_sha256": "93acd367386ad3b42a26b3815a580aae055ca2f18ea40258ccaa29f7e6921380",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "e37005b4625087b7d795569d49b650f44c0cfdebbecbbb90f6552f9272c766ee",
+     "peak_rss_kb": 2028,
+     "wall": [
+      0.164831044,
+      0.16676646,
+      0.169870317,
+      0.159709468,
+      0.160983619,
+      0.168074664,
+      0.16645511,
+      0.167659112,
+      0.16538078
+     ],
+     "cpu": [
+      0.164415,
+      0.1665,
+      0.16932799999999998,
+      0.15948199999999998,
+      0.160539,
+      0.167788,
+      0.166152,
+      0.167369,
+      0.164896
+     ],
+     "wall_median": 0.16645511,
+     "cpu_median": 0.166152,
+     "ratio_wall": {
+      "median": 1.0,
+      "lo": 1.0,
+      "hi": 1.0
+     },
+     "ratio_cpu": {
+      "median": 1.0,
+      "lo": 1.0,
+      "hi": 1.0
+     }
+    },
+    "before": {
+     "src": "None",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "93acd367386ad3b42a26b3815a580aae055ca2f18ea40258ccaa29f7e6921380",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "dfbb92e0895975584f38926d358b39e0937d986df9996696356dfcf8b37833a3",
+     "peak_rss_kb": 2380,
+     "wall": [
+      0.166507961,
+      0.166105803,
+      0.169022803,
+      0.16600343,
+      0.16904973,
+      0.163746241,
+      0.171736374,
+      0.167557287,
+      0.167787256
+     ],
+     "cpu": [
+      0.16616699999999998,
+      0.165762,
+      0.168739,
+      0.165686,
+      0.168731,
+      0.16350399999999998,
+      0.17146699999999998,
+      0.167294,
+      0.167523
+     ],
+     "wall_median": 0.167557287,
+     "cpu_median": 0.167294,
+     "ratio_wall": {
+      "median": 1.0101735508027239,
+      "lo": 0.9950108175756216,
+      "hi": 1.0394088220242523
+     },
+     "ratio_cpu": {
+      "median": 1.0106559620472584,
+      "lo": 0.9955675675675675,
+      "hi": 1.0389009417990747
+     }
+    },
+    "fr": {
+     "src": "None",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "93acd367386ad3b42a26b3815a580aae055ca2f18ea40258ccaa29f7e6921380",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "9ef89e4f65013688d8e4251f130d66a4f594a8c07685be7d78eb0dbf06f24beb",
+     "peak_rss_kb": 2388,
+     "wall": [
+      0.165665207,
+      0.166744618,
+      0.167492827,
+      0.197644502,
+      0.171598844,
+      0.169107967,
+      0.168502637,
+      0.165264029,
+      0.16685488
+     ],
+     "cpu": [
+      0.16539399999999999,
+      0.16641999999999998,
+      0.167286,
+      0.168427,
+      0.171371,
+      0.168728,
+      0.168258,
+      0.165022,
+      0.166565
+     ],
+     "wall_median": 0.167492827,
+     "cpu_median": 0.167286,
+     "ratio_wall": {
+      "median": 1.0061478808013562,
+      "lo": 0.9860040880479432,
+      "hi": 1.06593978359997
+     },
+     "ratio_cpu": {
+      "median": 1.0059544445458137,
+      "lo": 0.9879405650571672,
+      "hi": 1.0560878343637528
+     }
+    },
+    "frk": {
+     "src": "None",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "93acd367386ad3b42a26b3815a580aae055ca2f18ea40258ccaa29f7e6921380",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "d4bdc067249f221d84acbafd97dba0708f3e16414464e4b03b855bd4f8ba187d",
+     "peak_rss_kb": 2444,
+     "wall": [
+      0.167520445,
+      0.169492373,
+      0.16557481,
+      0.170211461,
+      0.164162663,
+      0.170931601,
+      0.164790331,
+      0.166967374,
+      0.17051358
+     ],
+     "cpu": [
+      0.16724999999999998,
+      0.16924699999999998,
+      0.16522,
+      0.16996999999999998,
+      0.163885,
+      0.170734,
+      0.164179,
+      0.166687,
+      0.170211
+     ],
+     "wall_median": 0.167520445,
+     "cpu_median": 0.16724999999999998,
+     "ratio_wall": {
+      "median": 1.0163456908541442,
+      "lo": 0.9899986308620986,
+      "hi": 1.0310362546361191
+     },
+     "ratio_cpu": {
+      "median": 1.0172429522853752,
+      "lo": 0.9881253310221966,
+      "hi": 1.0322324374150982
+     }
+    },
+    "frka1": {
+     "src": "None",
+     "build": {
+      "ok": true,
+      "prebuilt": true
+     },
+     "stdout_sha256": "93acd367386ad3b42a26b3815a580aae055ca2f18ea40258ccaa29f7e6921380",
+     "status": 0,
+     "matches_reference": true,
+     "binary_sha256": "d2eee29b9381cb2089f9edebbfd14a1fe5fc5554940eaaba4b63622ccd90eda1",
+     "peak_rss_kb": 2424,
+     "wall": [
+      0.176136265,
+      0.173476136,
+      0.175646885,
+      0.179334838,
+      0.174879877,
+      0.174767411,
+      0.181593754,
+      0.174188523,
+      0.175092741
+     ],
+     "cpu": [
+      0.17588299999999998,
+      0.173197,
+      0.17529599999999998,
+      0.17906999999999998,
+      0.1746,
+      0.174445,
+      0.181307,
+      0.173902,
+      0.174649
+     ],
+     "wall_median": 0.175092741,
+     "cpu_median": 0.174649,
+     "ratio_wall": {
+      "median": 1.0587248469864514,
+      "lo": 1.0389445638958175,
+      "hi": 1.0909473070547369
+     },
+     "ratio_cpu": {
+      "median": 1.0591463710459927,
+      "lo": 1.039033512777157,
+      "hi": 1.091211661611055
+     }
+    }
+   },
+   "reference_stdout": "4095\n"
+  }
+ },
+ "load_end": [
+  15.51513671875,
+  17.86865234375,
+  15.23388671875
+ ]
+}

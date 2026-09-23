@@ -264,11 +264,16 @@ class Function:
 class Unit:
     """A parsed QBE unit: the aggregate definitions plus one function."""
 
-    def __init__(self, function, aggregates, aggregate_alignments=None):
+    def __init__(self, function, aggregates, aggregate_alignments=None, debug_file=None):
         self.function = function
         self.aggregates = aggregates    # :name -> byte size
         self.aggregate_alignments = aggregate_alignments or {
             name: 8 for name in aggregates}
+        #: The unit's `dbgfile` name, set only for a frame-map unit
+        #: (QBE-FRAMEMAP-1): its calls carry `dbgloc` positions that become
+        #: debug locations, and the build turns those into a return-address
+        #: table.  None for every other protocol.
+        self.debug_file = debug_file
 
     @property
     def name(self):
@@ -341,6 +346,12 @@ def parse_unit(text, unit="unit"):
         aggregates[match.group(1)] = size
         alignments[match.group(1)] = aggregate_alignment(match.group(2))
     body = re.sub(r"^type\s+:\S+\s*=.*$", "", text, flags=re.M)
+    # QBE-FRAMEMAP-1: a top-level `dbgfile "SYMBOL"` names the file every
+    # `dbgloc` in the function refers to.
+    debug_file = None
+    for match in re.finditer(r'^dbgfile\s+"([^"\n]*)"\s*$', body, re.M):
+        debug_file = match.group(1)
+    body = re.sub(r'^dbgfile\s+".*"\s*$', "", body, flags=re.M)
     lines = body.split("\n")
     index = 0
     while index < len(lines) and not lines[index].strip():
@@ -352,7 +363,7 @@ def parse_unit(text, unit="unit"):
     function.blocks = parse_blocks(lines, index, unit, function.object_hints)
     if not function.blocks:
         raise ParseError("function contains no blocks", unit, function.line, header)
-    return Unit(function, aggregates, alignments)
+    return Unit(function, aggregates, alignments, debug_file)
 
 
 def parse_header(header, lines, index, unit):
@@ -500,6 +511,13 @@ def build_instruction(opcode, qbe_type, dest, operands, number, unit, raw):
         args = [one(operands)]
     elif opcode in INTEGER_OPS or opcode in COMPARISONS or opcode in CONVERSIONS:
         args = [one(item) for item in split_operands(operands)]
+    elif opcode == "dbgloc":
+        # QBE-FRAMEMAP-1: `dbgloc LINE[, COLUMN]` positions the calls after it;
+        # it defines nothing and emits no code.
+        parts = split_operands(operands)
+        if dest is not None or not 1 <= len(parts) <= 2 or not all(p.strip().isdigit() for p in parts):
+            fail("dbgloc takes a line and an optional column")
+        extra = (int(parts[0]), int(parts[1]) if len(parts) == 2 else 0)
     elif opcode == "hlt":
         # QBE-NORETURN-1: a failure path whose `myl_qbe_fail_*` helper leaves
         # through the runtime's non-local exit ends here; `on_hlt` lowers it to

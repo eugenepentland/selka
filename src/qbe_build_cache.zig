@@ -1,6 +1,7 @@
 //! Content-addressed native objects and direct assembler/compiler invocations.
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
+const frame_map = @import("qbe_frame_map.zig");
 /// Cache and native tool failures.
 pub const Error = fs.Error || error{EmptyNativeObject};
 /// Wave-3 contract mirrored for the native-build module.
@@ -64,6 +65,36 @@ fn frame(hash: *std.crypto.hash.sha2.Sha256, bytes: []const u8) void {
     hash.update(bytes);
 }
 
+/// QBE-FRAMEMAP-1: a runtime or generated C function that can sit between a
+/// guest frame and the runtime's `fail` keeps a frame pointer wherever it
+/// calls, so a trap in a frame-map program can walk from `fail` to the guest
+/// frame that called into the runtime. A leaf calls nothing, so it never sits
+/// in between.
+const frame_pointer_flags = [_][]const u8{ "-fno-omit-frame-pointer", "-momit-leaf-frame-pointer" };
+/// Whether the runtime unit `name` can reach `fail` and so needs frame
+/// pointers. Every `qbe_*` unit reports traps; of the `native_*` data-structure
+/// layer only the text methods do (a located `R_TEXT_SCALAR`). The rest —
+/// the heap, the collector, lists, dictionaries, text, bytes, arenas — return
+/// a status the generated code turns into a trap itself, and they keep every
+/// register: the collector and allocator are where an allocation-heavy program
+/// spends its time. `qbe_build.zig`'s bundled-source test keeps this list
+/// honest.
+pub fn keepsFramePointers(name: []const u8) bool {
+    return std.mem.startsWith(u8, name, "qbe_") or std.mem.eql(u8, name, "native_text_methods.c");
+}
+/// Annotate assembly for the frame map, reporting a call positioned in another
+/// unit's function — a guest body inlined into another guest body, whose
+/// caller frame a trace would then miss — as a failed native tool.
+pub fn annotateText(context: fs.Context, text: []const u8) Error![]u8 {
+    return frame_map.annotate(context.allocator, text) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.FrameMapMismatch => {
+            if (context.environ.get("MYLANG_FRAME_MAP_KEEP")) |keep| try context.write(keep, text);
+            try std.Io.File.stderr().writeStreamingAll(context.io, "mylang: a call site's frame-map position names another guest function than the one it was compiled into\n");
+            return error.NativeToolFailed;
+        },
+    };
+}
 /// Native compilation tools and invocation-local runtime source directory.
 pub const Cache = struct {
     context: fs.Context,
@@ -112,8 +143,18 @@ pub const Cache = struct {
     /// the job's private scratch whether or not the tool succeeded.
     fn complete(self: Cache, job: Job) Error!Object {
         defer self.context.remove(job.work);
-        if (job.assemble) |argv| try self.context.command(argv, null);
+        if (job.assemble) |argv| {
+            try self.annotateAssembly(try std.fs.path.join(self.context.allocator, &.{ job.work, "unit.s" }));
+            try self.context.command(argv, null);
+        }
         return self.store(job.key, job.path, job.candidate);
+    }
+    /// Give a unit's assembly its frame-map table before it is assembled
+    /// (QBE-FRAMEMAP-1). Assembly with no call-site positions is left untouched.
+    fn annotateAssembly(self: Cache, path: []const u8) Error!void {
+        const text = try self.context.read(path);
+        const annotated = try annotateText(self.context, text);
+        if (!std.mem.eql(u8, text, annotated)) try self.context.write(path, annotated);
     }
     /// Reclaim a staged job that a failed wave will not finish.
     pub fn discard(self: Cache, job: Job) void {
@@ -218,7 +259,10 @@ pub const Cache = struct {
             for (sources) |name| {
                 const source = try std.fs.path.join(a, &.{ self.assets, name });
                 const member = try std.fs.path.join(a, &.{ work, try std.fmt.allocPrint(a, "{s}.o", .{name}) });
-                try self.compileC(source, member, null);
+                var args: std.ArrayList([]const u8) = .empty;
+                try args.appendSlice(a, try self.cFlags(keepsFramePointers(name)));
+                try args.appendSlice(a, &.{ "-c", source, "-o", member });
+                try self.context.command(args.items, null);
                 try archive.append(a, member);
             }
             try self.context.command(archive.items, null);
@@ -248,15 +292,24 @@ pub const Cache = struct {
         const shared = try std.fmt.allocPrint(a, "-ffile-prefix-map={s}=mylang-runtime", .{self.assets});
         const shared_debug = try std.fmt.allocPrint(a, "-fdebug-prefix-map={s}=mylang-runtime", .{self.assets});
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(a, &.{
-            self.zig,                                 "build-obj",       "-fPIC",     "-lc",
-            zig_mode,                                 "-I",              self.assets, "-cflags",
-            "-std=c11",                               optimization,      "-g0",       "-fno-ident",
-            "-ffunction-sections",                    "-fdata-sections", shared,      shared_debug,
-            "-fdebug-compilation-dir=mylang-runtime", "--",
-        });
+        try argv.appendSlice(a, &.{ self.zig, "build-obj", "-fPIC", "-lc", zig_mode, "-I", self.assets });
+        const common = [_][]const u8{
+            "-std=c11",        optimization, "-g0",        "-fno-ident",                             "-ffunction-sections",
+            "-fdata-sections", shared,       shared_debug, "-fdebug-compilation-dir=mylang-runtime",
+        };
+        // `-cflags ... --` applies to the sources after it, so the units that can
+        // reach `fail` form one group with frame pointers and the rest another.
+        for ([_]bool{ true, false }) |pointers| {
+            var any = false;
+            for (sources) |source| any = any or keepsFramePointers(source) == pointers;
+            if (!any) continue;
+            try argv.append(a, "-cflags");
+            try argv.appendSlice(a, &common);
+            if (pointers) try argv.appendSlice(a, &frame_pointer_flags);
+            try argv.append(a, "--");
+            for (sources) |source| if (keepsFramePointers(source) == pointers) try argv.append(a, try std.fs.path.join(a, &.{ self.assets, source }));
+        }
         if (self.codegen.lto) try argv.append(a, "-flto");
-        for (sources) |source| try argv.append(a, try std.fs.path.join(a, &.{ self.assets, source }));
         try argv.append(a, try std.fmt.allocPrint(a, "-femit-bin={s}", .{output}));
         return argv.items;
     }
@@ -296,6 +349,11 @@ pub const Cache = struct {
     /// names and free of debug information: `-g0` leaves only code and data in every
     /// object, so the cache holds what a program runs and nothing it never reads.
     pub fn flags(self: Cache) Error![]const []const u8 {
+        return self.cFlags(true);
+    }
+    /// `flags`, with the frame-pointer flags only when `pointers` is set: a
+    /// runtime unit that cannot reach `fail` keeps every register.
+    fn cFlags(self: Cache, pointers: bool) Error![]const []const u8 {
         const a = self.context.allocator;
         // A Debug build stays unoptimized on every backend: `zig cc` derives its mode
         // from this flag, and a Debug link is what pulls in the UBSan runtime the
@@ -312,6 +370,7 @@ pub const Cache = struct {
             "-fdebug-compilation-dir=mylang-qbe", debug,   shared,                shared_debug,      "-I",
             self.assets,
         });
+        if (pointers) try result.appendSlice(a, &frame_pointer_flags);
         if (self.codegen.lto) try result.append(a, "-flto");
         return result.toOwnedSlice(a);
     }
@@ -369,6 +428,27 @@ test "the runtime units merge in one build-obj invocation naming every source" {
     try std.testing.expect(std.mem.indexOf(u8, joined, "/assets/native_heap.c") != null);
     try std.testing.expect(std.mem.indexOf(u8, joined, "-O2") != null);
     try std.testing.expectEqualStrings("-femit-bin=/tmp/out.o", argv[argv.len - 1]);
+}
+
+// spec-case: QBE-FRAMEMAP-1
+test "only the runtime units that can reach fail keep frame pointers" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const cache: Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/zig", .mode = "ReleaseFast", .codegen = .{ .tool = "/qbe" } };
+    const joined = try std.mem.join(context.allocator, " ", try cache.mergeCommand(&.{ "native_heap.c", "qbe_runtime.c", "native_text_methods.c" }, "/tmp/out.o"));
+    // One group with frame pointers names the units that report traps; the
+    // heap and collector group keeps every register.
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, joined, "-fno-omit-frame-pointer"));
+    const pointers = std.mem.indexOf(u8, joined, "-fno-omit-frame-pointer").?;
+    const second = std.mem.lastIndexOf(u8, joined, "-cflags").?;
+    try std.testing.expect(pointers < std.mem.indexOf(u8, joined, "/assets/qbe_runtime.c").?);
+    try std.testing.expect(std.mem.indexOf(u8, joined, "/assets/native_text_methods.c").? < second);
+    try std.testing.expect(second < std.mem.indexOf(u8, joined, "/assets/native_heap.c").?);
+    try std.testing.expect(keepsFramePointers("qbe_stack.c") and !keepsFramePointers("native_heap.c"));
+    const loose = try std.mem.join(context.allocator, " ", try cache.flags());
+    try std.testing.expect(std.mem.indexOf(u8, loose, "-fno-omit-frame-pointer") != null);
 }
 
 // spec-case: QBE-STRIP-1

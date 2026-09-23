@@ -2,6 +2,7 @@
 const std = @import("std");
 const v = @import("qbe_build_value.zig");
 const host = @import("qbe_build_host.zig");
+const frame_map = @import("qbe_frame_map.zig");
 /// One packed-argument cleanup shared by every early grant exit.
 const free_arguments = "free(arguments);";
 /// Marker the managed lowering writes into a unit's IL for each frozen
@@ -71,7 +72,25 @@ pub fn metadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]
         if (inlines.len != 0) try w.print("{s}_meta_inlines,{d}", .{ symbol, inlines.len }) else try w.writeAll("NULL,0");
         try w.writeAll("};\n");
     }
+    try frameMapRoots(w, functions);
     return buffer.toOwnedSlice();
+}
+/// QBE-FRAMEMAP-1: a frame-map unit's code never names its metadata; only the
+/// return-address table does, and under full LTO that table is written after
+/// the optimizer has already run. Holding every unit's metadata in one `used`
+/// array keeps each one — under its own name — through LTO for the table to
+/// name. Units lowered under another protocol reference their metadata from
+/// code, so they need nothing here.
+fn frameMapRoots(w: *std.Io.Writer, functions: []const std.json.Value) Error!void {
+    var any = false;
+    for (functions) |unit| {
+        const il = v.get(unit, "il");
+        if (il == .string and frame_map.usesFrameMap(v.text(il))) any = true;
+    }
+    if (!any) return;
+    try w.writeAll("__attribute__((used)) static const MylQbeFunction *const mylang_frame_map_functions[] = {\n");
+    for (functions) |unit| try w.print("&{s}_meta,\n", .{v.text(v.get(unit, "symbol"))});
+    try w.writeAll("};\n");
 }
 /// One frozen image literal parsed from the emitted metadata marker: the data
 /// symbol the generated C defines, the element descriptor its managed header

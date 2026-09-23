@@ -8,6 +8,18 @@ const backend = @import("qbe_build_backend.zig");
 const cache_api = @import("qbe_build_cache.zig");
 const outputs = @import("qbe_build_outputs.zig");
 const v = @import("qbe_build_value.zig");
+const frame_map = @import("qbe_frame_map.zig");
+const native_link = @import("native_link.zig");
+/// The linker flag that drops every section a program never references.
+const gc_sections = "-Wl,--gc-sections";
+/// The manifest array that lists every emitted unit.
+const manifest_functions = "functions";
+/// Zig's bundled LLVM libunwind, linked statically into an LLVM frame-map
+/// executable so a trap can unwind guest frames that keep no frame pointer.
+/// The runtime names `_Unwind_Backtrace` and `_Unwind_GetIP` weakly, so a
+/// program without libunwind still links; a weak reference pulls nothing out of
+/// an archive, so the link asks for both symbols outright.
+const unwind_link = [_][]const u8{ "-lunwind", "-Wl,-u,_Unwind_Backtrace", "-Wl,-u,_Unwind_GetIP" };
 const module_syntax = @import("module_syntax.zig");
 /// Build errors include frontend transport, native tools and manifest validation.
 pub const Error = fs.Error || std.json.ParseError(std.json.Scanner) || outputs.Error ||
@@ -495,6 +507,15 @@ fn runtimeInstalledHash(a: std.mem.Allocator, kind: []const u8, mode: []const u8
     const encoded = try std.json.Stringify.valueAlloc(a, .{ "mylang-runtime-installed-v1", kind, flavor, bundled.content_hash, bundled.zig_version, mode, "amd64_sysv" }, .{});
     return fs.hash(a, encoded);
 }
+/// The LTO optimization flags `zig cc` passes LLD for one `-O` level, so the
+/// frame map's LTO-to-assembly step optimizes exactly as the ordinary link
+/// would: Zig maps `-O1`..`-O3` to ReleaseFast (`--lto-O3`), `-Os`/`-Oz` to a
+/// size mode (`--lto-O2`), and `-O0` to LLD's default.
+fn ltoLevel(optimization: []const u8) []const []const u8 {
+    if (std.mem.eql(u8, optimization, "0")) return &.{};
+    if (std.mem.eql(u8, optimization, "s") or std.mem.eql(u8, optimization, "z")) return &.{ "--lto-O2", "-O2" };
+    return &.{ "--lto-O3", "-O3" };
+}
 /// The backend/flavor tag an archive is keyed by: QBE, LLVM without LTO, or LLVM
 /// with full LTO. The text-formatter object is backend-independent and uses none.
 fn runtimeFlavor(lo: bool, lto: bool) []const u8 {
@@ -607,7 +628,7 @@ fn seconds(context: fs.Context, start: std.Io.Timestamp) f64 {
 fn validate(manifest: std.json.Value) !void {
     if (!std.mem.eql(u8, v.text(v.get(manifest, "version")), "qbe-units-v1")) return error.InvalidNativeManifest;
     if (!std.mem.eql(u8, v.text(v.get(manifest, "abi")), native_abi)) return error.InvalidNativeManifest;
-    const units = v.array(v.get(manifest, "functions"));
+    const units = v.array(v.get(manifest, manifest_functions));
     const entry = v.text(v.get(manifest, "entry"));
     // A selective library manifest has no executable entry; `build --library`
     // emits a stub entry_run instead. Executable manifests still require one.
@@ -646,7 +667,7 @@ const State = struct {
     }
     fn compile(self: *State, parsed: options.Options) !void {
         const a = self.context.allocator;
-        const functions = try a.dupe(std.json.Value, v.array(v.get(self.manifest, "functions")));
+        const functions = try a.dupe(std.json.Value, v.array(v.get(self.manifest, manifest_functions)));
         std.mem.sort(std.json.Value, functions, {}, less);
         const environment = try self.cache.adapterEnvironment();
         const units = try a.alloc(Unit, functions.len);
@@ -749,15 +770,16 @@ const State = struct {
         try args.appendSlice(a, try self.cache.flags());
         if (parsed.library) try args.appendSlice(a, &library_link_arguments);
         try args.appendSlice(a, self.objects.items);
-        try @import("native_link.zig").append(self.context, parsed.link_arguments, &args, false);
+        try native_link.append(self.context, parsed.link_arguments, &args, false);
+        if (self.unwinds(parsed)) try args.appendSlice(a, &unwind_link);
         // Unreferenced runtime sections leave with the archive members nothing pulled.
         // `-s` drops the symbol table and any DWARF an object or an installed archive
         // still carries: traps and their frames read the runtime's own tables. A
         // profile build keeps it so `perf report` can name guest functions.
         if (options.keepSymbols(parsed.link_arguments)) {
-            try args.appendSlice(a, &.{ self.runtime.path, "-lm", "-Wl,--gc-sections", "-o", candidate });
+            try args.appendSlice(a, &.{ self.runtime.path, "-lm", gc_sections, "-o", candidate });
         } else {
-            try args.appendSlice(a, &.{ self.runtime.path, "-lm", "-Wl,--gc-sections", "-s", "-o", candidate });
+            try args.appendSlice(a, &.{ self.runtime.path, "-lm", gc_sections, "-s", "-o", candidate });
         }
         return args.items;
     }
@@ -783,11 +805,69 @@ const State = struct {
     /// and is reported unchanged.
     fn linkOnce(self: *State, parsed: options.Options, candidate: []const u8) !void {
         if (!self.inputsPresent()) try self.recompile(parsed);
-        self.context.command(try self.linkCommand(parsed, candidate), null) catch |err| {
+        self.linkAttempt(parsed, candidate) catch |err| {
             if (self.inputsPresent()) return err;
             try self.recompile(parsed);
-            try self.context.command(try self.linkCommand(parsed, candidate), null);
+            try self.linkAttempt(parsed, candidate);
         };
+    }
+    /// One link: the ordinary single command, or, for a full-LTO executable
+    /// whose units carry frame-map positions, LTO to assembly first.
+    fn linkAttempt(self: *State, parsed: options.Options, candidate: []const u8) !void {
+        if (self.cache.codegen.lto and !parsed.library and self.usesFrameMap()) return self.linkAssembled(parsed, candidate);
+        try self.context.command(try self.linkCommand(parsed, candidate), null);
+    }
+    /// Whether this link is an LLVM frame-map executable, whose guest code keeps
+    /// no frame pointer: its traps unwind by call-frame information, so it
+    /// links libunwind for `_Unwind_Backtrace` (QBE-FRAMEMAP-1).
+    fn unwinds(self: *State, parsed: options.Options) bool {
+        return self.cache.codegen.llvm and !parsed.library and self.usesFrameMap();
+    }
+    /// Whether any unit was lowered for the frame map (QBE-FRAMEMAP-1).
+    fn usesFrameMap(self: *State) bool {
+        for (v.array(v.get(self.manifest, manifest_functions))) |unit| {
+            if (frame_map.usesFrameMap(v.text(v.get(unit, "il")))) return true;
+        }
+        return false;
+    }
+    /// QBE-FRAMEMAP-1 under full LTO. The frame-map table is keyed by each
+    /// call's return address, which only the final code has, and LTO produces
+    /// that code inside the link. So the bitcode is optimized and compiled to
+    /// one assembly file by LLD itself, with the same optimization level and
+    /// entry root the ordinary link gives it; the table is added to that
+    /// assembly, which is assembled and linked natively with the objects that
+    /// were never bitcode. The bitcode inputs are not linked again: everything
+    /// they contribute is in the assembly.
+    fn linkAssembled(self: *State, parsed: options.Options, candidate: []const u8) !void {
+        const a = self.context.allocator;
+        const directory = std.fs.path.dirname(candidate) orelse ".";
+        const base = try std.fs.path.join(a, &.{ directory, "program-lto" });
+        var lto: std.ArrayList([]const u8) = .empty;
+        try lto.appendSlice(a, &.{ self.cache.zig, "ld.lld", "--error-limit=0", "-mllvm", "-float-abi=hard" });
+        try lto.appendSlice(a, ltoLevel(self.cache.codegen.optimization));
+        try lto.appendSlice(a, &.{ "--lto-emit-asm", "--lto-partitions=1", "-m", "elf_x86_64", "--entry", "main", "-o", base });
+        try lto.appendSlice(a, self.objects.items);
+        try lto.append(a, self.runtime.path);
+        try self.context.command(lto.items, null);
+        const assembly = try std.fs.path.join(a, &.{ directory, "program.s" });
+        try self.context.write(assembly, try cache_api.annotateText(self.context, try self.context.read(try std.fmt.allocPrint(a, "{s}.lto.s", .{base}))));
+        const object = try std.fs.path.join(a, &.{ directory, "program.o" });
+        try self.context.command(&.{ self.cache.zig, "cc", "-g0", "-c", assembly, "-o", object }, null);
+        var args: std.ArrayList([]const u8) = .empty;
+        for (try self.cache.flags()) |flag| if (!std.mem.eql(u8, flag, "-flto")) try args.append(a, flag);
+        for (self.objects.items) |path| if (try self.nativeObject(path)) try args.append(a, path);
+        try args.append(a, object);
+        try native_link.append(self.context, parsed.link_arguments, &args, false);
+        try args.appendSlice(a, &unwind_link);
+        try args.appendSlice(a, &.{ "-lm", gc_sections });
+        if (!options.keepSymbols(parsed.link_arguments)) try args.append(a, "-s");
+        try args.appendSlice(a, &.{ "-o", candidate });
+        try self.context.command(args.items, null);
+    }
+    /// Whether an input is already machine code rather than LTO bitcode.
+    fn nativeObject(self: *State, path: []const u8) !bool {
+        const bytes = try self.context.read(path);
+        return std.mem.startsWith(u8, bytes, "\x7fELF");
     }
     fn link(self: *State, parsed: options.Options, output: []const u8) !bool {
         const a = self.context.allocator;
@@ -830,7 +910,7 @@ const State = struct {
     fn reusable(self: *State, parsed: options.Options, output: []const u8) !bool {
         if (!self.context.runnable(output)) return false;
         if (!self.inputsPresent()) return false;
-        if (@import("native_link.zig").hasInputs(parsed.link_arguments)) return false;
+        if (native_link.hasInputs(parsed.link_arguments)) return false;
         const sidecar = try std.fmt.allocPrint(self.context.allocator, "{s}.qbe-manifest.json", .{output});
         const bytes = self.context.read(sidecar) catch return false;
         const published = (try std.json.parseFromSlice(std.json.Value, self.context.allocator, bytes, .{ .allocate = .alloc_always })).value;
@@ -956,6 +1036,19 @@ test "bundled build inputs carry only the native runtime, not compiler tests or 
     try std.testing.expect(bundles("native_arena.c") and bundles("native_arena.h"));
     try std.testing.expect(bundles("native_equal.c") and bundles("native_format.zig"));
     try std.testing.expect(!bundles("sema.zig") and !bundles("qbe_build.zig") and !bundles("json_document.zig"));
+}
+// spec-case: QBE-FRAMEMAP-1
+test "every bundled runtime unit that names a trap helper keeps frame pointers" {
+    // A unit that calls into the `myl_qbe_*` layer can report a trap from
+    // inside itself, so the frame-map walk must be able to cross its frames.
+    for (runtime_units) |unit| {
+        const source = for (bundled.files) |asset| {
+            if (std.mem.eql(u8, asset.path, unit)) break asset.bytes;
+        } else return error.TestUnexpectedResult;
+        const reaches = std.mem.indexOf(u8, source, "myl_qbe_") != null;
+        try std.testing.expect(!reaches or cache_api.keepsFramePointers(unit));
+    }
+    try std.testing.expect(!cache_api.keepsFramePointers("native_heap.c"));
 }
 // spec: QBE-3
 test "the runtime tree is published once per content hash and reused by later builds" {
@@ -1162,7 +1255,6 @@ test "a concurrent wave reports a tool that will not start and one that fails" {
 }
 // spec: BUILD-BACKEND-4
 test "an unchanged executable is reused only while its link identity holds" {
-    const native_link = @import("native_link.zig");
     try std.testing.expect(native_link.hasInputs(&.{ "main.my", "--link", "a.c" }));
     try std.testing.expect(native_link.hasInputs(&.{ "main.my", "--link=a.c" }));
     try std.testing.expect(native_link.hasInputs(&.{ "main.my", "--library-path", "lib" }));

@@ -1,0 +1,10 @@
+def halve(x: int) -> int:
+    return 100 // x
+
+
+def apply(f: def(int) -> int effects(), value: int) -> int:
+    return f(value) + 1
+
+
+def main() -> int:
+    return apply(halve, 5) + apply(halve, 0)

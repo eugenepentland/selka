@@ -52,6 +52,7 @@ uint64_t myl_qbe_on_stack(uint64_t (*entry)(void *),MylQbeContext *ctx) {
     }
     ctx->native_stack_limit=usable-slack;
     ctx->native_stack_bottom=(uintptr_t)bottom;
+    ctx->native_stack_top=(uintptr_t)bottom+usable;
     /* Generated frame records compare their own address against this floor,
        which keeps the same 64 KiB headroom above the guard page the sized C
        entry point used. */
@@ -66,6 +67,7 @@ uint64_t myl_qbe_on_stack(uint64_t (*entry)(void *),MylQbeContext *ctx) {
     else result=call.result;
 done:
     ctx->native_stack_bottom=0;
+    ctx->native_stack_top=0;
     ctx->frame_floor=0;
     munmap(mapping,size);
     return result;
