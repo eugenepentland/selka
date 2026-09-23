@@ -39,3 +39,12 @@ pub const lambda_context_code = "E_LAMBDA_CONTEXT";
 pub const variantDeclaredHere = "variant declared here";
 /// One name a lambda body reads from its enclosing function.
 pub const LambdaCapture = struct { name: []const u8 };
+/// How a checked statement leaves control flow: whether it terminates, loops forever,
+/// and which owned locals it must clean up.
+pub const StatementFlow = struct {
+    terminates: bool = false,
+    /// A loop the checker proved never exits ends control flow without making a
+    /// following statement a mistake, because its exit is inferred, not written.
+    looping: bool = false,
+    owned_cleanup: []const typed.LocalId = &.{},
+};
