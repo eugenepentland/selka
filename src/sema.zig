@@ -3271,6 +3271,22 @@ const Checker = struct {
     fn hintBufferArguments(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation)) Error!void {
         if (self.active.get(self.src.text(operation.owner))) |slot| {
             const owner_type = self.locals.items[@backingInt(slot)].ty;
+            // A list method's operands take the list's element type before they are
+            // checked, so `rows.append([])` and `rows.insert(0, [])` infer the empty
+            // literal exactly as `row: list[int] = []` does.
+            if (owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].collection.kind == .list) {
+                const element = self.catalog.records[owner_type.recordIndex()].shape.buffer.?;
+                switch (operation.kind) {
+                    .append, .remove, .index_of => if (operation.arguments.len == 1) try self.hint(operation.arguments[0], element),
+                    .insert => if (operation.arguments.len == 2) {
+                        try self.hint(operation.arguments[0], .i64);
+                        try self.hint(operation.arguments[1], element);
+                    },
+                    .extend => if (operation.arguments.len == 1) try self.hint(operation.arguments[0], owner_type),
+                    else => {},
+                }
+                return;
+            }
             if (owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].collection.kind != .list) {
                 const schema = self.catalog.records[owner_type.recordIndex()];
                 if (schema.collection.kind == .dictionary) {
@@ -3369,9 +3385,12 @@ const Checker = struct {
             try work.append(self.allocator, .{ .id = call.arguments[0] });
             return true;
         }
-        if (self.byteConversion(call) != null) {
+        if (self.byteConversion(call)) |conversion| {
             try call_arguments.positional(call, self.sink);
             if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "byte conversions require one argument");
+            // `bytes([])` and `byte_buffer([])` build from a `list[int]`, so an empty
+            // literal takes that type instead of needing an annotated local.
+            if (conversion != .from_hex) try self.hintEmptyPreludeList(call.arguments[0], .i64);
             try work.append(self.allocator, .{ .id = call.arguments[0] });
             return true;
         }

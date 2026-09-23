@@ -164,6 +164,24 @@ test "builtin list and declared Result types retain their own nominal identity" 
     );
 }
 
+// spec: BUILTIN-CONTEXT-11
+test "list method operands and byte conversions give an empty list its expected type" {
+    try run(
+        \\def main() -> int:
+        \\    rows: list[list[int]] = []
+        \\    rows.append([])
+        \\    rows.insert(0, [])
+        \\    rows.extend([])
+        \\    rows[0].append(40)
+        \\    buffer = byte_buffer([])
+        \\    _ = buffer.append_byte(1)
+        \\    empty = bytes([])
+        \\    octets: list[u8] = []
+        \\    octets.append(200)
+        \\    return len(rows) + rows[0][0] + len(buffer) + len(empty) - 1 + int(octets[0]) - 200
+    );
+}
+
 // spec: BUILTIN-CONTEXT-6
 test "contextual constructors reject ambiguity mismatched payloads and capability storage" {
     try reject(
