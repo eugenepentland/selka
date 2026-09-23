@@ -117,7 +117,7 @@ const spectral =
     \\
     \\
     \\def main() -> int:
-    \\    v = [1.0, 2.0, 3.0]
+    \\    v = [1.0 + float(k) for k in range(20)]
     \\    return int(row(v, 1) * 1000.0)
 ;
 
@@ -136,9 +136,7 @@ test "a product of counters is proven under a narrower leaf bound" {
     // against 2^31.
     try t.expect(std.mem.indexOf(u8, loop.before, ", 536870912\n") != null);
     try t.expect(std.mem.indexOf(u8, loop.before, ", 2147483648\n") == null);
-    var c = try language.Compilation.init(t.allocator, fixture_path, spectral);
-    defer c.deinit();
-    try t.expectEqual(@as(i64, 1108), (try native.runUnaccounted(&c, .{})).value);
+    try t.expect(!(try sameOutcome(spectral)).failed);
 }
 
 const matmul =
@@ -151,7 +149,7 @@ const matmul =
     \\
     \\
     \\def main() -> int:
-    \\    n = 3
+    \\    n = 20
     \\    a = [[1.0 for j in range(n)] for i in range(n)]
     \\    b = [[2.0 for j in range(n)] for i in range(n)]
     \\    c = [[0.0 for j in range(n)] for i in range(n)]
@@ -171,7 +169,7 @@ test "invariant rows and their element storage are read once by the guard" {
     try t.expectEqual(@as(usize, 0), std.mem.count(u8, loop.copy, "myl_qbe_fail_normalized_index_bounds"));
     var c = try language.Compilation.init(t.allocator, fixture_path, matmul);
     defer c.deinit();
-    try t.expectEqual(@as(i64, 6), (try native.runUnaccounted(&c, .{})).value);
+    try t.expectEqual(@as(i64, 40), (try native.runUnaccounted(&c, .{})).value);
 }
 
 const unversioned =
@@ -194,6 +192,76 @@ const unversioned =
     \\    xs: list[int] = []
     \\    return grow(mut xs, 4) + text(xs)
 ;
+
+const fills =
+    \\def flags(n: int) -> list[bool]:
+    \\    return [True for _ in range(n)]
+    \\
+    \\
+    \\def squares(n: int) -> list[int]:
+    \\    values = [0 for _ in range(n)]
+    \\    values.clear()
+    \\    for i in range(n):
+    \\        values.append(i * i)
+    \\    return values
+    \\
+    \\
+    \\def grown(n: int) -> list[int]:
+    \\    values: list[int] = []
+    \\    for i in range(n):
+    \\        values.append(i)
+    \\    return values
+    \\
+    \\
+    \\def echoed(n: int) -> list[int]:
+    \\    values = [0 for _ in range(n)]
+    \\    for i in range(n):
+    \\        values.append(len(values))
+    \\    return values
+    \\
+    \\
+    \\def main() -> int:
+    \\    marks = flags(40)
+    \\    total = 0
+    \\    for square in squares(40):
+    \\        total += square
+    \\    for value in grown(40):
+    \\        total += value
+    \\    for value in echoed(20):
+    \\        total += value
+    \\    return total + len(marks)
+;
+
+// spec-case: QBE-LOOP-FACTS-1
+test "an append the list's spare capacity holds is a store with no capacity test" {
+    const il = try fastIl(fills, "flags");
+    defer t.allocator.free(il);
+    const loop = try parts(il);
+    // The copy stores the element and bumps the length and generation it
+    // carries; the grow helper and the capacity load are the original's.
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, loop.copy, "myl_native_list_append"));
+    try t.expect(std.mem.count(u8, loop.original, "myl_native_list_append") >= 1);
+    try t.expect(std.mem.indexOf(u8, loop.before, ", 8\n") != null);
+    // A loop that reads the list it appends to keeps one copy: of `echoed`'s
+    // two loops only the comprehension is versioned.
+    const echoed = try fastIl(fills, "echoed");
+    defer t.allocator.free(echoed);
+    try t.expectEqual(@as(usize, 1), std.mem.count(u8, echoed, "\n@oi"));
+}
+
+// spec-case: QBE-LOOP-VERSION-1
+test "presized and growing appends build the same lists" {
+    // 40 flags, squares 0..39 (20540), 0..39 (780), and 20..39 (590).
+    try t.expectEqual(@as(i64, 40 + 20540 + 780 + 590), (try sameOutcome(fills)).value);
+    _ = try sameOutcome(
+        \\def reciprocal(n: int) -> list[int]:
+        \\    return [100 // (i - 17) for i in range(n)]
+        \\
+        \\
+        \\def main() -> int:
+        \\    return len(reciprocal(20))
+    );
+}
 
 /// Require that function `name` of `source` has no check-free copy.
 fn expectUnversioned(source: []const u8, name: []const u8) !void {
@@ -241,6 +309,9 @@ fn sameOutcome(source: []const u8) !native.Run {
     return versioned;
 }
 
+// Every program below runs its loops for at least `min_span` iterations, so
+// the guard reaches its facts instead of stopping at the span test.
+
 // spec: QBE-LOOP-VERSION-1
 test "an index the guard cannot prove traps in the original loop at its own iteration" {
     const outcome = try sameOutcome(
@@ -252,11 +323,11 @@ test "an index the guard cannot prove traps in the original loop at its own iter
         \\
         \\
         \\def main() -> int:
-        \\    return shifted([1, 2, 3, 4])
+        \\    return shifted([i for i in range(20)])
     );
     try t.expectEqualStrings("R_LIST_BOUNDS", outcome.trap.code);
     try t.expectEqual(@as(u64, 4), outcome.trap.line);
-    try t.expect(std.mem.indexOf(u8, outcome.stderr, "index 4, length 4") != null);
+    try t.expect(std.mem.indexOf(u8, outcome.stderr, "index 20, length 20") != null);
 }
 
 // spec-case: QBE-LOOP-VERSION-1
@@ -270,7 +341,11 @@ test "a check the guard does not prove still traps inside the check-free copy" {
         \\
         \\
         \\def main() -> int:
-        \\    return total([9223372036854775000, 500, 500])
+        \\    xs = [0 for _ in range(20)]
+        \\    xs[17] = 9223372036854775000
+        \\    xs[18] = 500
+        \\    xs[19] = 500
+        \\    return total(xs)
     );
     try t.expectEqualStrings("R_OVERFLOW", sum.trap.code);
     try t.expect(std.mem.indexOf(u8, sum.stderr, "left 9223372036854775500, right 500") != null);
@@ -278,12 +353,12 @@ test "a check the guard does not prove still traps inside the check-free copy" {
         \\def ratio(xs: list[int]) -> int:
         \\    t = 0
         \\    for i in range(len(xs)):
-        \\        t += xs[i] // (i - 2)
+        \\        t += xs[i] // (i - 12)
         \\    return t
         \\
         \\
         \\def main() -> int:
-        \\    return ratio([4, 5, 6, 7])
+        \\    return ratio([i for i in range(20)])
     );
     try t.expect(ratio.failed);
     try t.expectEqual(@as(u64, 4), ratio.trap.line);
@@ -301,7 +376,7 @@ test "an accumulator whose bound the guard rejects overflows at the same increme
         \\
         \\
         \\def main() -> int:
-        \\    return count([1, 1, 1, 1], 9223372036854775805)
+        \\    return count([1 for _ in range(20)], 9223372036854775805)
     );
     try t.expectEqualStrings("R_OVERFLOW", outcome.trap.code);
     try t.expect(std.mem.indexOf(u8, outcome.stderr, "left 9223372036854775807, right 1") != null);
@@ -316,17 +391,17 @@ test "a short row traps where the original loop reaches its end" {
         \\
         \\
         \\def main() -> int:
-        \\    c = [[0.0, 0.0, 0.0], [0.0, 0.0]]
-        \\    kernel(mut c, 3)
+        \\    c = [[0.0 for _ in range(20)], [0.0 for _ in range(19)]]
+        \\    kernel(mut c, 20)
         \\    return 0
     );
     try t.expectEqualStrings("R_LIST_BOUNDS", outcome.trap.code);
-    try t.expect(std.mem.indexOf(u8, outcome.stderr, "index 2, length 2") != null);
+    try t.expect(std.mem.indexOf(u8, outcome.stderr, "index 19, length 19") != null);
 }
 
 // spec-case: QBE-LOOP-VERSION-1
-test "negative indices and a negative step take the original loop with Python's meaning" {
-    _ = try sameOutcome(
+test "negative indices and a negative start take the original loop with Python's meaning" {
+    const outcome = try sameOutcome(
         \\def mark(flags: mut list[bool], j0: int, step: int, n: int) -> int:
         \\    j = j0
         \\    marked = 0
@@ -337,21 +412,38 @@ test "negative indices and a negative step take the original loop with Python's 
         \\    return marked
         \\
         \\
-        \\def reverse(values: mut [8]int, k: int) -> int:
-        \\    for i in range(4):
+        \\def reverse(values: mut [32]int, k: int) -> int:
+        \\    for i in range(20):
         \\        values[k - i] = i
-        \\    return values[0] + values[7]
+        \\    return values[0] + values[31]
         \\
         \\
         \\def main() -> int:
-        \\    flags = [True for _ in range(10)]
-        \\    count = mark(mut flags, -3, 2, 5)
-        \\    values: [8]int = [9, 9, 9, 9, 9, 9, 9, 9]
-        \\    total = reverse(mut values, 1) + reverse(mut values, 7)
+        \\    flags = [True for _ in range(40)]
+        \\    count = mark(mut flags, -9, 1, 20) + mark(mut flags, 25, 1, 39)
+        \\    values: [32]int = [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9]
+        \\    total = reverse(mut values, 10) + reverse(mut values, 31)
         \\    left = 0
         \\    for flag in flags:
         \\        if flag:
         \\            left += 1
-        \\    return count * 1000 + left * 100 + total
+        \\    return count * 10000 + left * 100 + total
     );
+    // mark: 30 then 15 flags cleared, 0..20 and 25..39 in all (-9..-1 is
+    // 31..39), so 4 are left; reverse(10) counts from the end below 0 and
+    // returns 10 + 11, reverse(31) stays in bounds and returns 10 + 0.
+    try t.expectEqual(@as(i64, 45 * 10000 + 4 * 100 + 31), outcome.value);
+}
+
+// spec-case: QBE-LOOP-VERSION-1
+test "a loop shorter than the minimum span runs the original loop" {
+    const il = try fastIl(list_sum, "total");
+    defer t.allocator.free(il);
+    // The guard opens with `bound > entry and bound - entry >=u 16`.
+    const guard = (try parts(il)).before;
+    try t.expect(std.mem.indexOf(u8, guard, " csgtl ") != null);
+    try t.expect(std.mem.indexOf(u8, guard, " cugel ") != null);
+    try t.expect(std.mem.indexOf(u8, guard, ", 16\n") != null);
+    // Three elements: the original loop runs, with the same result.
+    try t.expectEqual(@as(i64, 6), (try sameOutcome(list_sum)).value);
 }

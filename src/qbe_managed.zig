@@ -10,6 +10,10 @@ const copy_scratch = " %v{d} =l copy %s{d}\n";
 const load_scratch = " %v{d} =l loadl %s{d}\n";
 /// Load one native word through a computed pointer.
 const load_pointer = " %v{d} =l loadl %v{d}\n";
+/// Advance a counter held in a temporary by one and store it to a word.
+const bump_word = " %v{d} =l add %v{d}, 1\n storel %v{d}, %v{d}\n";
+/// `base + index * stride`, the address of one element.
+const scaled_address = " %v{d} =l mul %v{d}, {d}\n %v{d} =l add %v{d}, %v{d}\n";
 /// Unsigned `index < length` test: the one comparison every bounds-checked
 /// element access — read, write and slice endpoint — is admitted by.
 const unsigned_below = " %v{d} =l cultl %v{d}, %v{d}\n";
@@ -121,7 +125,7 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
         .iteration_check => {
             // QBE-LOOP-VERSION-1: the loop's guard proved the length it
             // compares against is the length on every iteration.
-            if (self.loopAction()) |action| if (action.settled) return self.print(store_unit, .{base});
+            if (self.loopAction()) |action| if (action.effect == .settled) return self.print(store_unit, .{base});
             const expected = try self.load("s", base);
             const actual = self.temp();
             try self.print(" %v{d} =l loadl %v{d}\n %v{d} =l ceql %v{d}, %v{d}\n", .{ actual, list, output, actual, expected });
@@ -159,7 +163,9 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             if (self.isScalar(element)) try self.print(copy_scratch, .{ value_pointer, position }) else try self.print(load_scratch, .{ value_pointer, position });
             try arena_lower.Lower(E).barrier(self, list, element, value_pointer);
             if (op.kind == .append) {
-                if (self.needsRootProtocol()) {
+                if (self.loopAppend()) |presized| {
+                    try presizedAppend(E, self, .{ .list = list, .element = element, .value = value_pointer, .storage = presized.storage, .length = presized.state.length, .generation = presized.state.generation });
+                } else if (self.needsRootProtocol()) {
                     try inlineAppend(E, self, list, element, value_pointer, output, stack);
                 } else {
                     try self.print(list_append_call, .{ output, list, value_pointer });
@@ -492,6 +498,28 @@ fn elementBytes(width: usize, value: i128, scratch: *[8]u8) []const u8 {
     std.mem.writeInt(u64, scratch, @truncate(@as(u128, @bitCast(value))), .little);
     return scratch[0..width];
 }
+/// One append the loop's guard proved fits the list's spare capacity: the
+/// list, the element type and value, the storage the guard loaded, and the
+/// temporaries carrying the list's length and generation across iterations.
+const Presized = struct { list: usize, element: typed.Type, value: usize, storage: usize, length: usize, generation: usize };
+/// QBE-LOOP-VERSION-1: an append whose element the loop's guard proved the
+/// list's spare capacity holds. It is `inlineAppend`'s fast path with the
+/// capacity test and the growth call gone: the element store, then the new
+/// length and generation written to the header exactly as the fast path writes
+/// them. The length and generation live in temporaries the guard loaded, so no
+/// header word is read back inside the loop.
+fn presizedAppend(comptime E: type, self: *E, append: Presized) Error!void {
+    const width = (try self.layout(append.element)).size;
+    const held = try self.readValue(append.value, append.element);
+    const offset = self.temp();
+    const destination = self.temp();
+    try self.print(scaled_address, .{ offset, append.length, width, destination, append.storage, offset });
+    try self.writeValue(destination, held, append.element);
+    try self.markObject(append.list);
+    const generation_field = try self.address(append.list, list_generation_offset);
+    try self.print(bump_word, .{ append.length, append.length, append.length, append.list });
+    try self.print(bump_word, .{ append.generation, append.generation, append.generation, generation_field });
+}
 /// Lower `list.append(value)` with the capacity-sufficient case inline: a
 /// length/capacity compare, one element store and two counter bumps. The grow
 /// helper is reached only when the element does not fit, and the frame's roots
@@ -539,11 +567,11 @@ fn inlineAppend(comptime E: type, self: *E, list: usize, element: typed.Type, va
         try self.print(" %v{d} =l add %v{d}, %v{d}\n", .{ destination, backing, length });
     } else {
         const offset = self.temp();
-        try self.print(" %v{d} =l mul %v{d}, {d}\n %v{d} =l add %v{d}, %v{d}\n", .{ offset, length, width, destination, backing, offset });
+        try self.print(scaled_address, .{ offset, length, width, destination, backing, offset });
     }
     if (width != 0) try self.writeValue(destination, held, element);
     const next_length = self.temp();
-    try self.print(" %v{d} =l add %v{d}, 1\n storel %v{d}, %v{d}\n", .{ next_length, length, next_length, list });
+    try self.print(bump_word, .{ next_length, length, next_length, list });
     const next_generation = self.temp();
     try self.print(" %v{d} =l add %v{d}, 1\n storel %v{d}, %v{d}\n@append_done{d}\n", .{ next_generation, current, next_generation, generation, label });
     self.inline_roots = true;
@@ -791,7 +819,7 @@ fn elementAddress(comptime E: type, self: *E, list: usize, index: usize, element
     if (stride == 1) {
         try self.print(" %v{d} =l add %v{d}, %v{d}\n", .{ address, storage, index });
     } else {
-        try self.print(" %v{d} =l mul %v{d}, {d}\n %v{d} =l add %v{d}, %v{d}\n", .{ offset, index, stride, address, storage, offset });
+        try self.print(scaled_address, .{ offset, index, stride, address, storage, offset });
     }
     return address;
 }

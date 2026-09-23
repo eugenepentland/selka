@@ -267,7 +267,8 @@ A counted loop pays for its checks once, not once per element, when the compiler
 can see that nothing inside it can resize a list. The native emitter plans every
 innermost `for i in range(...)`, `for x in xs`, `enumerate(...)` and
 `while i < n: ...; i = i + step` loop whose body makes no call, allocates
-nothing and never appends, pops, inserts or slices (`QBE-LOOP-FACTS-1`). For
+nothing and never pops, inserts or slices, and appends at most once, to a list
+of numbers it does not otherwise read (`QBE-LOOP-FACTS-1`). For
 such a loop it proves, from values it can compute before the first iteration:
 
 - an index `i`, `i + c`, `k - i` or `i * w + j` is inside the list for every
@@ -278,10 +279,14 @@ such a loop it proves, from values it can compute before the first iteration:
 - `count += 1`, or any accumulator adding a bounded amount once per
   iteration, cannot overflow when its starting value is within the same bound;
 - the length checks of `for x in xs` hold on every iteration;
-- a row `c[i]` read inside `for j in range(n)` is the same row every time.
+- a row `c[i]` read inside `for j in range(n)` is the same row every time;
+- the list a comprehension such as `[True for _ in range(n)]` fills was
+  created with room for every element, so each append is a plain store.
 
 The loop is then compiled twice (`QBE-LOOP-VERSION-1`). A guard in front of it
-checks those conditions once; when they hold, a copy without the proven checks
+checks those conditions once; when they hold and the loop has at least 16
+iterations ahead of it (a shorter loop saves less than the guard costs), a copy
+without the proven checks
 runs — and because nothing is left in it that can exit early, LLVM vectorizes
 it — and when any fails, the original loop runs with every check in place, so a
 bad index still traps at the same iteration with the same message. Nothing

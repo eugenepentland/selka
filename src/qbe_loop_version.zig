@@ -22,8 +22,11 @@ const facts = @import("qbe_loop_facts.zig");
 /// Errors reported while emitting native operations.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 
-/// Where the element storage address sits in a list or byte string header.
+/// Where the element storage address, the capacity and the generation sit in
+/// a list header (`native_collections.h`).
 const storage_offset = 32;
+const capacity_offset = 8;
+const generation_offset = 16;
 
 /// The check-free copy being lowered: its loop, and the temporaries holding the
 /// guard's values and storage addresses, per plan node.
@@ -31,7 +34,13 @@ pub const Active = struct {
     loop: *const facts.Loop,
     values: []?usize,
     storages: []?usize,
+    /// For a loop with a presized append, the temporaries carrying its list's
+    /// length and generation from one iteration to the next.
+    appending: ?Appending = null,
 };
+
+/// The mutable temporaries a presized append advances.
+pub const Appending = struct { length: usize, generation: usize };
 
 /// Bind versioned-loop lowering to the concrete emitter.
 pub fn Lower(comptime E: type) type {
@@ -64,6 +73,7 @@ pub fn Lower(comptime E: type) type {
             for (loop.actions) |action| {
                 if (action.value) |node| _ = try value(self, &active, node);
                 if (action.receiver) |node| _ = try storage(self, &active, node);
+                if (action.effect == .presized) try appendState(self, &active, action.receiver.?);
             }
             try self.print(" jmp @fi{d}\n", .{loop.head});
             const guard_end = self.output.writer.end;
@@ -92,12 +102,60 @@ pub fn Lower(comptime E: type) type {
                     try self.print(" %v{d} =l add %v{d}, {d}\n %v{d} =l culel %v{d}, {d}\n", .{ shifted, try value(self, active, node), bias, flag, shifted, 2 * bias });
                 },
                 .at_least => |bound| try self.print(" %v{d} =l csgel %v{d}, {d}\n", .{ flag, try value(self, active, bound.value), bound.minimum }),
-                .at_most => |pair| try self.print(" %v{d} =l cslel %v{d}, %v{d}\n", .{ flag, try value(self, active, pair.value), try value(self, active, pair.limit) }),
-                .below => |pair| try self.print(" %v{d} =l csltl %v{d}, %v{d}\n", .{ flag, try value(self, active, pair.value), try value(self, active, pair.limit) }),
-                .within => |pair| try self.print(" %v{d} =l cultl %v{d}, %v{d}\n", .{ flag, try value(self, active, pair.value), try value(self, active, pair.limit) }),
-                .equal => |pair| try self.print(" %v{d} =l ceql %v{d}, %v{d}\n", .{ flag, try value(self, active, pair.left), try value(self, active, pair.right) }),
+                .order => |order| {
+                    const comparison: []const u8 = switch (order.relation) {
+                        .at_most => "cslel",
+                        .below => "csltl",
+                        .within => "cultl",
+                        .equal => "ceql",
+                    };
+                    try self.print(" %v{d} =l {s} %v{d}, %v{d}\n", .{ flag, comparison, try value(self, active, order.value), try value(self, active, order.limit) });
+                },
+                .spans => |span| try spans(self, active, span, flag),
+                .room => |room| try spare(self, active, room, flag),
             }
             try self.print(" jnz %v{d}, @guard{d}, @oi{d}\n@guard{d}\n", .{ flag, flag, active.loop.head, flag });
+        }
+
+        /// `flag = bound > entry and bound - entry >=u minimum`: with the
+        /// signed test first, the unsigned difference is exact.
+        fn spans(self: *E, active: *Active, span: @FieldType(facts.Step, "spans"), flag: usize) Error!void {
+            const entry = try value(self, active, span.entry);
+            const bound = try value(self, active, span.bound);
+            const ahead = self.temp();
+            const distance = self.temp();
+            const long = self.temp();
+            try self.print(" %v{d} =l csgtl %v{d}, %v{d}\n %v{d} =l sub %v{d}, %v{d}\n", .{ ahead, bound, entry, distance, bound, entry });
+            try self.print(" %v{d} =l cugel %v{d}, {d}\n %v{d} =l and %v{d}, %v{d}\n", .{ long, distance, span.minimum, flag, ahead, long });
+        }
+
+        /// `flag = capacity - length >=u bound - entry (+1 when inclusive)`.
+        /// It follows the span step, so `bound - entry` is positive and exact,
+        /// and a list's length never exceeds its capacity.
+        fn spare(self: *E, active: *Active, room: @FieldType(facts.Step, "room"), flag: usize) Error!void {
+            const header = try value(self, active, room.list);
+            const capacity_field = self.temp();
+            const capacity = self.temp();
+            const free = self.temp();
+            const trips = self.temp();
+            try self.markObject(header);
+            try self.print(" %v{d} =l add %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ capacity_field, header, capacity_offset, capacity, capacity_field });
+            try self.print(" %v{d} =l loadl %v{d}\n %v{d} =l sub %v{d}, %v{d}\n", .{ free, header, free, capacity, free });
+            try self.print(" %v{d} =l sub %v{d}, %v{d}\n", .{ trips, try value(self, active, room.bound), try value(self, active, room.entry) });
+            if (room.inclusive) try self.print(" %v{d} =l add %v{d}, 1\n", .{ trips, trips });
+            try self.print(" %v{d} =l cugel %v{d}, %v{d}\n", .{ flag, free, trips });
+        }
+
+        /// The running length and generation of the list a presized append
+        /// extends, read once the guard holds; the copy advances both.
+        fn appendState(self: *E, active: *Active, list: facts.NodeId) Error!void {
+            const header = try value(self, active, list);
+            const generation_field = self.temp();
+            const length = self.temp();
+            const generation = self.temp();
+            try self.markObject(header);
+            try self.print(" %v{d} =l loadl %v{d}\n %v{d} =l add %v{d}, {d}\n %v{d} =l loadl %v{d}\n", .{ length, header, generation_field, header, generation_offset, generation, generation_field });
+            active.appending = .{ .length = length, .generation = generation };
         }
 
         /// The temporary holding one plan value, computed on first use.

@@ -2052,7 +2052,7 @@ const Emitter = struct {
     fn conditionalJump(self: *Emitter, target: usize, h: usize) GenerateError!void {
         // QBE-LOOP-VERSION-1: a condition the guard proved false on every
         // iteration (a proven index's `< 0` test) always jumps.
-        if (self.loopAction()) |action| if (action.taken) return self.print(jump_label, .{ self.labelPrefix(target), target });
+        if (self.loopAction()) |action| if (action.effect == .taken) return self.print(jump_label, .{ self.labelPrefix(target), target });
         const v = try self.load("s", h - 1);
         try self.print(" jnz %v{d}, @next{d}, @{s}{d}\n", .{ v, self.serial, self.labelPrefix(target), target });
     }
@@ -2083,6 +2083,15 @@ const Emitter = struct {
         const action = self.loopAction() orelse return null;
         const node = action.value orelse return null;
         return self.version.?.values[node];
+    }
+    /// The storage, length and generation a presized append at the current
+    /// instruction writes through, when the check-free copy may skip its
+    /// capacity test (`QBE-LOOP-VERSION-1`).
+    pub fn loopAppend(self: *const Emitter) ?struct { storage: usize, state: loop_version.Appending } {
+        const action = self.loopAction() orelse return null;
+        if (action.effect != .presized) return null;
+        const storage = self.loopStorage() orelse return null;
+        return .{ .storage = storage, .state = self.version.?.appending orelse return null };
     }
     /// Whether a lowered check-free copy names an allocating callee, which
     /// would make it a safepoint its plan did not allow for.

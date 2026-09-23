@@ -16,9 +16,12 @@
 //!
 //! Every instruction of the loop must come from a short allow-list: no call,
 //! no allocation, no collection operation other than a length, an element read
-//! or write and an iteration check. Such a loop changes no collection's length
-//! and moves no element storage, so every list and byte string it can reach
-//! keeps its length and its storage address for as long as it runs.
+//! or write and an iteration check — plus at most one append of a plain scalar,
+//! in a straight-line body, to a list type the loop otherwise never touches (a
+//! comprehension's fill). Such a loop changes the length of no collection it
+//! reads and moves no element storage, so every list and byte string it reads
+//! keeps its length and its storage address for as long as it runs, and the
+//! appended list keeps its storage while its spare capacity lasts.
 //!
 //! A symbolic pass then names the value of every operand and local in the
 //! body: constants, locals the body never writes (the same value throughout),
@@ -116,14 +119,30 @@ pub const Step = union(enum) {
     bounded: NodeId,
     /// `value >= minimum`.
     at_least: struct { value: NodeId, minimum: i64 },
-    /// `value <= limit`, signed.
-    at_most: struct { value: NodeId, limit: NodeId },
-    /// `value < limit`, signed.
-    below: struct { value: NodeId, limit: NodeId },
-    /// `value < limit`, unsigned: `0 <= value < limit`.
-    within: struct { value: NodeId, limit: NodeId },
-    /// `left == right`.
-    equal: struct { left: NodeId, right: NodeId },
+    /// `value <relation> limit`.
+    order: Order,
+    /// `bound > entry` and `bound - entry >= minimum`, computed without
+    /// wrapping: the counter has at least that many values to run through.
+    spans: struct { entry: NodeId, bound: NodeId, minimum: u32 },
+    /// The list's spare capacity, `capacity - length`, holds one element per
+    /// iteration: at least `bound - entry`, plus one for an inclusive bound.
+    room: struct { list: NodeId, entry: NodeId, bound: NodeId, inclusive: bool },
+};
+
+/// One comparison of a computed value against a limit.
+pub const Order = struct {
+    relation: enum {
+        /// `value <= limit`, signed.
+        at_most,
+        /// `value < limit`, signed.
+        below,
+        /// `value < limit`, unsigned: `0 <= value < limit`.
+        within,
+        /// `value == limit`.
+        equal,
+    },
+    value: NodeId,
+    limit: NodeId,
 };
 
 /// What one instruction of the check-free copy may assume.
@@ -132,10 +151,17 @@ pub const Action = struct {
     unchecked: bool = false,
     /// The index operand is non-negative, so no from-end correction applies.
     nonnegative: bool = false,
-    /// A `jump_if_false` whose condition is false on every iteration.
-    taken: bool = false,
-    /// An iteration check that holds on every iteration.
-    settled: bool = false,
+    /// How the copy lowers the instruction beyond dropping its checks.
+    effect: enum {
+        none,
+        /// A `jump_if_false` whose condition is false on every iteration.
+        taken,
+        /// An iteration check that holds on every iteration.
+        settled,
+        /// An append the list's spare capacity holds: a store and a length
+        /// bump, with no capacity test and no growth path.
+        presized,
+    } = .none,
     /// The stable receiver whose element storage address the guard computed.
     receiver: ?NodeId = null,
     /// The element value the guard read in place of this read.
@@ -178,8 +204,17 @@ pub const Input = struct {
     states: []const ?[]const typed.Type,
 };
 
-/// Loop bodies longer than this are left alone: the copy doubles their code.
-const max_body = 2400;
+/// Loop bodies longer than this many instructions are left alone. The copy
+/// doubles their code, and in a body this long the checks are a small part of
+/// the work: `nbody`'s 730-instruction pair loop ran 7% slower with an
+/// unused copy beside it (the loop runs 4 times per entry) and no faster with
+/// a used one.
+pub const max_body = 200;
+/// The fewest counter values between the entry value and the bound for which
+/// the check-free copy runs. A shorter loop saves fewer checks than its guard
+/// costs, and a check-free copy of a few iterations can become a library call
+/// (`memmove`) that costs more than the loop did.
+pub const min_span = 16;
 /// The largest leaf magnitude a guard asks for, and the smallest it accepts
 /// before giving a check up instead.
 const widest_bits = 60;
@@ -263,6 +298,9 @@ const Writes = struct {
     increments: []?NodeId = &.{},
     /// Collection types whose element slots the body writes.
     elements: std.ArrayList(typed.Type) = .empty,
+    /// The list type the body appends to, and how many appends it has.
+    appended: ?typed.Type = null,
+    appends: u32 = 0,
 };
 
 /// The counter's shape: its local, bound, comparison and step.
@@ -395,6 +433,7 @@ const Analyzer = struct {
             }
         }
         if (self.writes.stores[self.counter.slot] != 1) return false;
+        if (!self.presizable()) return false;
         switch (all[self.head + 1].op) {
             .load_local => |slot| {
                 if (self.writes.written[slotOf(slot)]) return false;
@@ -447,10 +486,49 @@ const Analyzer = struct {
             .buffer_operation => |operation| switch (operation.kind) {
                 .length, .read, .iteration_check => self.sequence(self.localType(slotOf(operation.owner))),
                 .write => try self.elementWrite(self.localType(slotOf(operation.owner)), self.sequence(self.localType(slotOf(operation.owner)))),
+                .append => try self.appendable(self.localType(slotOf(operation.owner))),
                 else => false,
             },
             else => false,
         };
+    }
+    /// Admit an append to a list of plain scalars (an integer, `bool` or
+    /// float), noting its type: `presizable` then requires it to be the only
+    /// append and the only access to lists of that type.
+    fn appendable(self: *Analyzer, ty: typed.Type) Error!bool {
+        if (!ty.isAggregate()) return false;
+        const record = self.input.program.records[ty.recordIndex()];
+        if (!record.isCollection() or record.collection.kind != .list) return false;
+        if (!self.plainScalar(record.shape.buffer.?)) return false;
+        self.writes.appended = ty;
+        self.writes.appends += 1;
+        return self.elementWrite(ty, true);
+    }
+    /// An integer, `bool`, or a domain over an integer (`float`): one word
+    /// the collector never traces.
+    fn plainScalar(self: *const Analyzer, ty: typed.Type) bool {
+        if (ty.integer() != null or ty == .bool) return true;
+        if (!ty.isAggregate()) return false;
+        const record = self.input.program.records[ty.recordIndex()];
+        const backing = record.shape.domain orelse return false;
+        return !record.managed and backing.integer() != null;
+    }
+    /// A loop that appends runs the check-free copy only when the append is
+    /// its one access to lists of that type — so nothing in the loop observes
+    /// the growing length — and runs on every iteration: the body is straight
+    /// line, with no jump that could skip it.
+    fn presizable(self: *const Analyzer) bool {
+        const appended = self.writes.appended orelse return true;
+        if (self.writes.appends != 1) return false;
+        for (self.code()[self.head + 4 .. self.back]) |instruction| switch (instruction.op) {
+            .jump, .jump_if_false => return false,
+            .get_index, .replace_index => |access| if (access.ty == appended) return false,
+            .buffer_operation => |operation| {
+                if (operation.kind != .append and self.localType(slotOf(operation.owner)) == appended) return false;
+            },
+            else => {},
+        };
+        return true;
     }
     /// Admit an element write when `admitted`, noting a collection type whose
     /// slots the loop then writes.
@@ -521,6 +599,9 @@ const Analyzer = struct {
         if (self.constantOf(step)) |value| {
             if (value < 1) return false;
         } else if (!self.isLeaf(step, .local) or self.localType(self.get(step).leaf.slot) != .i64) return false;
+        // An append's room counts one element per counter value, which a
+        // constant step of at least one never exceeds.
+        if (self.writes.appended != null and self.constantOf(step) == null) return false;
         self.counter.step = step;
         return true;
     }
@@ -670,13 +751,13 @@ const Analyzer = struct {
     fn requireBelow(self: *Analyzer, index: Affine, limit: NodeId) Error!void {
         const entry = try self.leaf(.entry, self.counter.slot);
         switch (index.alpha) {
-            0 => try self.require(.{ .within = .{ .value = index.beta, .limit = limit } }),
+            0 => try self.require(.{ .order = .{ .relation = .within, .value = index.beta, .limit = limit } }),
             // beta + last < limit; with last = bound - 1 for `<`, beta + bound <= limit.
             1 => {
                 const top = try self.operate(.add, index.beta, self.counter.bound);
-                try self.require(if (self.counter.inclusive) .{ .below = .{ .value = top, .limit = limit } } else .{ .at_most = .{ .value = top, .limit = limit } });
+                try self.require(.{ .order = .{ .relation = if (self.counter.inclusive) .below else .at_most, .value = top, .limit = limit } });
             },
-            else => try self.require(.{ .below = .{ .value = try self.operate(.sub, index.beta, entry), .limit = limit } }),
+            else => try self.require(.{ .order = .{ .relation = .below, .value = try self.operate(.sub, index.beta, entry), .limit = limit } }),
         }
     }
 
@@ -726,8 +807,8 @@ const Analyzer = struct {
     /// it holds on every iteration when it holds on entry.
     fn iterationCheck(self: *Analyzer, pc: usize, owner: NodeId, expected: NodeId) Error!void {
         if (!self.stable(owner) or !self.computable(expected)) return;
-        try self.require(.{ .equal = .{ .left = try self.node(.{ .length = owner }), .right = expected } });
-        self.actions[pc - self.head].settled = true;
+        try self.require(.{ .order = .{ .relation = .equal, .value = try self.node(.{ .length = owner }), .limit = expected } });
+        self.actions[pc - self.head].effect = .settled;
     }
 
     fn require(self: *Analyzer, step: Step) Error!void {
@@ -814,7 +895,7 @@ const Analyzer = struct {
             accepted += 1;
         }
         var useful = accepted != 0;
-        for (self.actions) |action| useful = useful or action.unchecked or action.settled or action.taken;
+        for (self.actions) |action| useful = useful or action.unchecked or action.effect != .none;
         if (!useful) return null;
         // The body proper starts after the four header instructions; the
         // back jump is reached from the counter's update, which is live.
@@ -822,6 +903,8 @@ const Analyzer = struct {
             action.dead = state == null;
         }
         var guard: std.ArrayList(Step) = .empty;
+        // First, so a short loop pays one comparison and runs the original.
+        try guard.append(self.allocator, .{ .spans = .{ .entry = try self.leaf(.entry, self.counter.slot), .bound = self.counter.bound, .minimum = min_span } });
         for (leaves.items) |id| if (self.get(id) == .leaf) try guard.append(self.allocator, .{ .bounded = id });
         if (self.constantOf(self.counter.step) == null) {
             try guard.append(self.allocator, .{ .at_least = .{ .value = self.counter.step, .minimum = if (self.accumulates(leaves.items)) 1 else 0 } });
@@ -975,7 +1058,7 @@ const Machine = struct {
         const state: State = .{ .stack = self.stack.items, .locals = self.locals };
         try a.flow(target, state);
         if (try a.provenNonNegative(condition)) {
-            a.actions[self.pc - a.head].taken = true;
+            a.actions[self.pc - a.head].effect = .taken;
             return false;
         }
         try a.flow(self.pc + 1, state);
@@ -1003,6 +1086,17 @@ const Machine = struct {
                 try a.iterationCheck(self.pc, owner, expected);
                 try self.push(try a.node(.unknown));
             },
+            // An append to a list the loop holds in one local: the guard
+            // checks its spare capacity holds every iteration's element.
+            .append => {
+                _ = self.pop() orelse return null;
+                if (!a.stable(owner)) return null;
+                try a.require(.{ .room = .{ .list = owner, .entry = try a.leaf(.entry, a.counter.slot), .bound = a.counter.bound, .inclusive = a.counter.inclusive } });
+                const action = &a.actions[self.pc - a.head];
+                action.effect = .presized;
+                action.receiver = owner;
+                try self.push(try a.node(.unknown));
+            },
             else => return null,
         }
         return true;
@@ -1013,10 +1107,8 @@ fn stepValues(step: Step) [2]?NodeId {
     return switch (step) {
         .bounded => |value| .{ value, null },
         .at_least => |bound| .{ bound.value, null },
-        .at_most => |pair| .{ pair.value, pair.limit },
-        .below => |pair| .{ pair.value, pair.limit },
-        .within => |pair| .{ pair.value, pair.limit },
-        .equal => .{ null, null },
+        .order => |order| .{ order.value, order.limit },
+        .spans, .room => .{ null, null },
     };
 }
 
