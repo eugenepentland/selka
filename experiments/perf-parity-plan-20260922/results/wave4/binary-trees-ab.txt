@@ -1,0 +1,5 @@
+zig                          cpu 0.296s  wall 0.296s  rss 13.5MB  cpu-ratio 1.000 [1.000,1.000]
+before                       cpu 0.562s  wall 0.562s  rss 53.8MB  cpu-ratio 1.932 [1.693,2.181]
+after                        cpu 0.244s  wall 0.244s  rss 33.0MB  cpu-ratio 0.876 [0.712,1.068]
+arena-before                 cpu 0.401s  wall 0.401s  rss 17.5MB  cpu-ratio 1.383 [1.249,1.528]
+arena-after                  cpu 0.317s  wall 0.317s  rss 15.7MB  cpu-ratio 1.109 [0.953,1.345]

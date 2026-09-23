@@ -1,0 +1,41 @@
+# barrier_store: 200 million reference stores into class bodies and nothing
+# else, to price the generational store barrier (`QBE-GEN-BARRIER-1`) against
+# the base compiler, which has none. Each store writes an `Option[Node]` field
+# of an existing body; no store allocates. The first rounds run while the
+# bodies are young, and after the collection `warm` triggers they are old, so
+# the barrier's slow half runs once per body per collection and its load and
+# test run on every store.
+
+
+class Node:
+    next: Option[Node]
+    value: int
+
+
+def relink(a: mut Node, b: mut Node, c: mut Node, rounds: int) -> int effects(mutation):
+    total = 0
+    for i in range(rounds):
+        a.next = Some(b)
+        b.next = Some(c)
+        c.next = Some(a)
+        a.next = Some(c)
+        total += a.value + i % 3
+    return total
+
+
+def warm(n: int) -> int:
+    kept = 0
+    for i in range(n):
+        garbage = Node(next=None, value=i)
+        kept += garbage.value % 2
+    return kept
+
+
+def main(out: Stream) -> int:
+    a = Node(next=None, value=1)
+    b = Node(next=None, value=2)
+    c = Node(next=None, value=3)
+    kept = warm(200000)
+    total = relink(mut a, mut b, mut c, 50000000)
+    out.print(f"{total} {kept}")
+    return 0
