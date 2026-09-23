@@ -270,7 +270,7 @@ pub fn build(b: *std.Build) void {
     // Snapshot identity needs the actual application/test root rather than the
     // generated Zig or Guardian test-runner root exposed by `@import("root")`.
     exe.root_module.addImport("native_test_root", exe.root_module);
-    const build_assets = @import("build_qbe_assets.zig").module(b, target, optimize);
+    const build_assets = @import("build_qbe_assets.zig").module(b, target, optimize, .{ .compile = rss.compile, .run = rss.driver });
     exe.root_module.addImport("qbe_build_assets", build_assets);
     const install_exe = b.addInstallArtifact(exe, .{});
     b.getInstallStep().dependOn(&install_exe.step);
@@ -683,6 +683,17 @@ pub fn build(b: *std.Build) void {
     harvest_run.setCwd(b.path("."));
     usefulness_step.dependOn(&harvest_run.step);
     test_step.dependOn(usefulness_step);
+    // The bundled runtime's `content_hash` comes from a make-phase run of
+    // `build_qbe_assets.zig`. This driver runs that file on throwaway trees that
+    // share one Zig cache, the way a stale hash once reached an installed compiler.
+    const identity_step = b.step("test-runtime-identity", "Verify the bundled runtime's identity follows its bytes across trees and edits");
+    const identity_run = bounded(b.addSystemCommand(&.{"python3"}), rss.driver);
+    identity_run.addFileArg(b.path("tests/runtime_identity_cache.py"));
+    identity_run.addArgs(&.{ "--zig", b.graph.zig_exe });
+    identity_run.addFileInput(b.path("build_qbe_assets.zig"));
+    identity_run.expectExitCode(0);
+    identity_step.dependOn(&identity_run.step);
+    test_step.dependOn(identity_step);
     // The boundary matrix runs every carried shape through both native backends
     // and requires one answer, so a shape that satisfies its contract on QBE and
     // not on LLVM fails here instead of on whichever backend nobody ran.

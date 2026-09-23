@@ -447,3 +447,60 @@ per content hash, and where it lands follows the cache selection:
 
 Concurrent builds sharing either location stage the tree into a private directory
 and rename it into place, so no build ever observes a partial tree.
+
+### Where the content hash comes from
+
+Every shared runtime tree and installed archive is named by `content_hash`, so the
+hash must describe the bytes the compiler bundles. A build that finds
+`runtime/<hash>` already present reuses it without looking inside. If the hash
+names other bytes, the build silently links a stale runtime.
+
+`zig build` computes the hash in its make phase. `build_qbe_assets.zig` is
+compiled into a small host tool, and one run of it does all of the following:
+
+- walks `src`;
+- selects the runtime closure (every top-level `.c`/`.h` file plus what
+  `native_format.zig` imports or embeds);
+- copies that closure beside a generated `assets.zig`;
+- writes `content_hash`, `compiler_identity` and `driver_identity` from the bytes
+  it just copied;
+- writes a depfile naming every production source it read.
+
+The run's cache key covers its absolute `src` argument and the contents of every
+file in that depfile. So an edit to any production source re-runs it, and two
+source trees never share its output.
+
+The digests used to be computed in `build.zig`'s configure phase. Zig caches that
+phase under a key that ignores the build root, and it records each
+`dependOnFileContents` input by absolute path. A second tree built with the same
+`ZIG_LOCAL_CACHE_DIR` therefore reused the first tree's configuration. It
+embedded the first tree's `content_hash` beside its own runtime bytes, and none
+of its own later edits invalidated that, because the recorded inputs were the
+first tree's files. Benchmarks then measured the first tree's runtime from the
+shared `~/.cache/mylang/runtime`.
+
+The configure phase still holds absolute paths, for example the LLVM adapter and
+`qbe` locations handed to tests and to `emit-runtime`. So a reused configuration
+is still wrong, even though the hash no longer comes from it. The asset tool
+compares the configured build root with the tree it is building, and fails when
+they differ:
+
+```console
+qbe-build-assets: this build configuration belongs to /path/to/other-tree, not /path/to/this-tree.
+```
+
+Give every source tree its own `ZIG_LOCAL_CACHE_DIR` (or `--cache-dir`). The
+default, `.zig-cache` inside the tree, already is.
+
+Three checks guard this:
+
+- `zig build test-runtime-identity`, also part of `zig build test`, runs
+  `tests/runtime_identity_cache.py`. It builds throwaway trees with the real
+  `build_qbe_assets.zig`: two trees sharing one Zig cache, then in-place
+  edits to a runtime C unit, an imported Zig runtime unit, a frontend source, a
+  driver source and a test-only file. After every build it checks that the
+  embedded hash is the digest of the embedded bytes, and that those bytes are
+  the tree's sources.
+- In `src/qbe_build_test.zig`, one test recomputes `content_hash` from the
+  bundled bytes.
+- A second test there compares every bundled file with `src/<path>` on disk.
