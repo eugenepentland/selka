@@ -700,10 +700,13 @@ static void mark_old_references(myl_native_heap *heap) {
         if (generations->young_edge) stack_push(&generations->remembered, object);
     }
 }
-/* Collection policy: a minor collection runs once the young generation grows
- * by a fraction of the live bytes, never less than the floor, and a full one
- * once the tracing heap reaches `full_threshold`, twice the bytes the last
- * full collection kept plus the floor. */
+/* Collection policy (`GC-TRIGGER-1`): a minor collection runs once the young
+ * generation grows by half the live bytes, never less than the floor. The old
+ * generation may grow to `full_threshold`, one and a half times the bytes the
+ * last full collection kept plus the floor; the collection after the minor one
+ * that finds it there is full and runs at the next allocation. While minor
+ * collections are promoting, the next one runs no later than the threshold,
+ * so the young interval cannot carry the heap far past it first. */
 #define MYL_NATIVE_YOUNG_FLOOR (((size_t)4) << 20)
 #define MYL_NATIVE_FULL_FLOOR (((size_t)4) << 20)
 static size_t saturating_add(size_t a, size_t b) { return a > SIZE_MAX - b ? SIZE_MAX : a + b; }
@@ -715,10 +718,21 @@ static void schedule(myl_native_heap *heap, int full) {
     heap->next_collection = saturating_add(live, young);
     /* An object kept young is not old: only promotion grows the old
      * generation toward the full threshold. */
-    heap->generations.old_bytes = live - heap->generations.young_bytes;
+    myl_native_generations *generations = &heap->generations;
+    size_t old_before = generations->old_bytes;
+    generations->old_bytes = live - generations->young_bytes;
     if (full) {
-        size_t grown = live > SIZE_MAX / 2 ? SIZE_MAX : live * 2;
-        heap->generations.full_threshold = saturating_add(grown, MYL_NATIVE_FULL_FLOOR);
+        generations->full_threshold = saturating_add(saturating_add(live, live / 2), MYL_NATIVE_FULL_FLOOR);
+        return;
+    }
+    if (generations->old_bytes >= generations->full_threshold) {
+        heap->next_collection = live;
+        return;
+    }
+    if (generations->old_bytes > old_before) {
+        size_t cap = saturating_add(live, MYL_NATIVE_YOUNG_FLOOR);
+        if (cap < generations->full_threshold) cap = generations->full_threshold;
+        if (heap->next_collection > cap) heap->next_collection = cap;
     }
 }
 /* Whether an object has a one-slot segment of its own: its charge is past the

@@ -101,6 +101,21 @@ public def test_a_young_subtree_hung_on_an_old_node_survives_two_minor_collectio
             return False
 
 
+# One phase builds a large list and drops it, the next builds another: the
+# first list is garbage in the old generation when the second is built, and
+# the full collection that reclaims it runs before the heap can triple.
+# spec: GC-TRIGGER-1
+public def test_a_dropped_phase_and_the_next_one_both_read_back() -> bool:
+    first = words("first phase element ", 5000)
+    first_size = joined_length(first)
+    _ = churn(400)
+    first = words("x", 1)
+    second = words("second phase element ", 5000)
+    _ = churn(400)
+    # 5000 prefixes of 20 octets and 10 + 180 + 2700 + 16000 digits.
+    return first_size == 118890 and second[4999] == "second phase element 4999" and len(first) == 1
+
+
 # Short texts fill one size class, die, and the storage is reused by texts of
 # a longer class and by nodes; every value reads back.
 # spec: GC-SPARE-1
