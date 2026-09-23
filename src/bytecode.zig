@@ -11,6 +11,8 @@ pub const Predicate = model.Predicate;
 pub const Equality = model.Equality;
 pub const SwitchArm = model.SwitchArm;
 pub const Instruction = model.Instruction;
+/// An element read or replace and whether it counts a negative index from the end.
+pub const Access = model.Access;
 pub const Function = model.Function;
 pub const FunctionScope = model.FunctionScope;
 pub const Program = model.Program;
@@ -248,7 +250,12 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
             if (program.records[ty.recordIndex()].shape.domain == null) return error.InternalError;
         },
         .make_record => |record| try validateOpMakeRecord(allocator, program, record),
-        .get_index, .replace_index, .array_length => |ty| {
+        .get_index, .replace_index, .array_length => {
+            const ty = switch (instruction.op) {
+                .get_index, .replace_index => |access| access.ty,
+                .array_length => |array| array,
+                else => unreachable,
+            };
             if (!ty.isAggregate()) return error.InternalError;
             if (!validType(ty, program)) return error.InternalError;
             const schema = program.records[ty.recordIndex()];

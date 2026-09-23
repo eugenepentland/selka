@@ -164,8 +164,18 @@
     },
     "fixed-array-iteration": {
       "kind": "language",
-      "summary": "`for x in a`, `enumerate(a)` and comprehensions walk a fixed array over the value it had when the loop began.",
+      "summary": "`for x in a`, `enumerate(a)` and comprehensions walk a fixed array over the value it had when the loop began, copying it only when the body writes it.",
       "doc": "docs/records-and-unions.md#iterating-a-fixed-array"
+    },
+    "fixed-array-negative-indices": {
+      "kind": "language",
+      "summary": "`a[-1]` is a fixed array's last element for reads, every element write and `replace`, exactly as for a list; an index outside `-N <= i < N` traps `R_LIST_BOUNDS`.",
+      "doc": "docs/records-and-unions.md#negative-indices"
+    },
+    "destructuring-element-targets": {
+      "kind": "language",
+      "summary": "A destructuring target may be an element or a field, so `a[i], a[j] = a[j], a[i]` swaps two elements of an array or list.",
+      "doc": "docs/tuples.md#element-and-field-targets"
     },
     "python-call-type-arguments": {
       "kind": "language",

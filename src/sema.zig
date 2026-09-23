@@ -241,6 +241,14 @@ const PlaceStep = union(enum) { field: source.Span, element: ast.NodeId };
 const ArrayPlace = struct { root: ast.NodeId, steps: []const PlaceStep };
 /// The operator and source value of one element assignment.
 const PlaceWrite = struct { op: ast.AssignmentOp, value: ast.NodeId };
+/// A fixed-array index after the negative-index rule (`PY-ARRAY-NEGATIVE-1`):
+/// the key to read and rebuild with, whether the backend must still count a
+/// negative value from the end, and the enumerate counter the proof that it
+/// cannot be negative rested on, which a write in the loop body withdraws.
+const ArrayKey = struct { key: typed.NodeId, from_end: bool, counter: ?typed.LocalId = null };
+/// An element-access key proved non-negative from an enumerate counter the
+/// loop body may still assign; the accesses built on it follow the key.
+const CounterAssumption = struct { key: typed.NodeId, counter: typed.LocalId };
 /// How a loop reads its source: a collection kind, a fixed array read by
 /// index, or a dictionary view's projection.
 const IterationShape = struct { kind: ManagedKind, fixed: ?typed.Array = null, projection: ?@import("dictionary_views.zig").Kind = null };
@@ -311,6 +319,11 @@ const Checker = struct {
     lambda_types: []?typed.Type = &.{},
     lambda_captures: []?[]const LambdaCapture = &.{},
     loops: struct { active: std.ArrayList(LoopScope) = .empty, next: usize = 0 } = .{},
+    /// Loop counters that are never negative while their loop runs: `range`
+    /// induction variables from a non-negative start (immutable) and
+    /// `enumerate` positions (whose accesses are recorded in `assumptions`).
+    counters: std.AutoHashMapUnmanaged(typed.LocalId, void) = .empty,
+    assumptions: std.ArrayList(CounterAssumption) = .empty,
     return_type: typed.Type = .i64,
     arenas: std.ArrayList(ArenaScope) = .empty,
     catalog: records.Catalog,
@@ -338,6 +351,8 @@ const Checker = struct {
         self.expected_types.clearRetainingCapacity();
         self.option_facts.clear();
         self.locals = .empty;
+        self.counters.clearRetainingCapacity();
+        self.assumptions.clearRetainingCapacity();
         self.active.clearRetainingCapacity();
         self.owner = if (function.policy.owner) |owner| try self.ty(owner) else null;
         self.return_type = try self.ty(function.signature.return_type);
@@ -435,6 +450,8 @@ const Checker = struct {
         self.expected_types.clearRetainingCapacity();
         self.option_facts.clear();
         self.locals = .empty;
+        self.counters.clearRetainingCapacity();
+        self.assumptions.clearRetainingCapacity();
         self.active.clearRetainingCapacity();
         self.owner = null;
         self.return_type = contract.return_type;
@@ -2052,12 +2069,36 @@ const Checker = struct {
         var statements: std.ArrayList(typed.StatementId) = .empty;
         const value_slot = try b.local(value_type);
         try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = value_slot, .value = checked } }));
-        for (names, 0..) |name_id, index| {
-            const name = self.syntax.nodes.items[@backingInt(name_id)].data.name;
+        for (names, 0..) |target_id, index| {
             const element = try b.node(schema.fields[index].ty, .{ .field = .{ .base = try b.read(value_slot), .index = index } });
-            try self.bindDestructured(name, element, &statements);
+            switch (self.syntax.nodes.items[@backingInt(target_id)].data) {
+                .name => |name| try self.bindDestructured(name, element, &statements),
+                else => try statements.append(self.allocator, try b.stmt(.{ .discard = try self.destructuredPlace(target_id, element, temporaries) })),
+            }
         }
         return b.block(statements.items, try b.node(.unit, .unit));
+    }
+    /// PY-DESTRUCTURE-PLACE-1: write one element of an already-evaluated tuple
+    /// into an element or field target exactly as `target = value` would, so
+    /// `a[i], a[j] = a[j], a[i]` swaps. The target's own node is never checked
+    /// as an expression, so its resolution carries the element in as the
+    /// assigned value; the target's receiver and indices are evaluated here,
+    /// after the whole right-hand side, in target order, as Python does.
+    fn destructuredPlace(self: *Checker, target_id: ast.NodeId, element: typed.NodeId, temporaries: []const typed.Type) Error!typed.NodeId {
+        const target = self.syntax.nodes.items[@backingInt(target_id)];
+        self.resolved[@backingInt(target_id)] = element;
+        try self.resolved_nodes.append(self.allocator, @backingInt(target_id));
+        const write = switch (target.data) {
+            .field => try self.checkFieldAssignment(.{ .span = target.span, .data = .{ .field_assignment = .{ .target = target_id, .value = target_id } } }, temporaries),
+            .index => |access| if (try self.arrayPlace(access.base, access.index)) |place|
+                try self.checkArrayPlace(target, place, .{ .op = .set, .value = target_id }, temporaries)
+            else
+                try self.checkListAccess(target, .{ .base = access.base, .kind = .write, .inputs = try self.allocator.dupe(ast.NodeId, &.{ access.index, target_id }) }, temporaries),
+            else => return error.InternalError,
+        };
+        const id: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, write);
+        return id;
     }
     /// The accepted arity a destructuring names, naming the value's source when
     /// it is a call so the message tells the reader what returned that many.
@@ -2119,8 +2160,9 @@ const Checker = struct {
         const assignment = node.data.field_assignment;
         if (self.syntax.nodes.items[@backingInt(assignment.target)].data == .tuple)
             return self.checkTupleAssignment(assignment, temporaries);
+        // PY-ARRAY-WRITE-2: `a[i].f op= v` keeps its operator.
         if (try self.arrayPlace(assignment.target, null)) |place|
-            return self.checkArrayPlace(node, place, .{ .op = .set, .value = assignment.value }, temporaries);
+            return self.checkArrayPlace(node, place, .{ .op = assignment.op, .value = assignment.value }, temporaries);
         const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
         var path_fields: std.ArrayList(source.Span) = .empty;
         var root = assignment.target;
@@ -2430,6 +2472,116 @@ const Checker = struct {
             else => false,
         };
     }
+    /// The value of a checked integer constant index, `k` or `-k`.
+    fn constantIndex(self: *Checker, id: typed.NodeId) ?i128 {
+        return switch (self.nodes.items[@backingInt(id)].data) {
+            .integer => |value| value,
+            .unary => |unary| if (unary.op == .neg) switch (self.nodes.items[@backingInt(unary.operand)].data) {
+                .integer => |value| -value,
+                else => null,
+            } else null,
+            else => null,
+        };
+    }
+    /// Whether a checked integer value can never be negative, from facts the
+    /// checker already holds: an unsigned type, a non-negative constant, a
+    /// loop counter, a length, and the checked operators that keep a
+    /// non-negative pair non-negative (an overflow traps rather than wraps).
+    /// `counter` receives the one `enumerate` position the answer relied on.
+    fn nonNegative(self: *Checker, id: typed.NodeId, counter: *?typed.LocalId, depth: usize) bool {
+        if (depth == 8) return false;
+        const node = self.nodes.items[@backingInt(id)];
+        if (node.ty.integer()) |info| if (!info.signed) return true;
+        return switch (node.data) {
+            .integer => |value| value >= 0,
+            .length => true,
+            .buffer_operation => |operation| operation.kind == .length,
+            // `len(xs)` roots its receiver in a block around the length read.
+            .block_value => |block| self.nonNegative(block.value, counter, depth + 1),
+            .cast => |operand| self.nonNegative(operand, counter, depth + 1),
+            .local => |slot| {
+                if (!self.counters.contains(slot)) return false;
+                if (!self.locals.items[@backingInt(slot)].mutable) return true;
+                if (counter.*) |relied| return relied == slot;
+                counter.* = slot;
+                return true;
+            },
+            .binary => |binary| switch (binary.op) {
+                .add, .mul, .div, .floor_div, .rem => self.nonNegative(binary.left, counter, depth + 1) and self.nonNegative(binary.right, counter, depth + 1),
+                // Python's `%` takes the divisor's sign.
+                .floor_rem => if (self.constantIndex(binary.right)) |divisor| divisor > 0 else self.nonNegative(binary.left, counter, depth + 1) and self.nonNegative(binary.right, counter, depth + 1),
+                .bit_and => self.nonNegative(binary.left, counter, depth + 1) or self.nonNegative(binary.right, counter, depth + 1),
+                .shift_right => self.nonNegative(binary.left, counter, depth + 1),
+                else => false,
+            },
+            else => false,
+        };
+    }
+    /// Whether a counting loop's start is non-negative without resting on an
+    /// `enumerate` position the enclosing body may still assign.
+    fn nonNegativeStart(self: *Checker, start: typed.NodeId) bool {
+        var counter: ?typed.LocalId = null;
+        return self.nonNegative(start, &counter, 0) and counter == null;
+    }
+    /// Apply `PY-ARRAY-NEGATIVE-1` to one fixed-array index. A table key is an
+    /// enumeration member and never negative. A constant in `-N .. -1` is
+    /// folded to its position from the start, so `a[-1]` costs what `a[N - 1]`
+    /// does; any other index the checker cannot prove non-negative is marked
+    /// for the backend to count back from the end.
+    fn arrayKey(self: *Checker, schema: typed.Array, key: typed.NodeId) Error!ArrayKey {
+        if (schema.key != null) return .{ .key = key, .from_end = false };
+        if (self.constantIndex(key)) |value| {
+            if (value >= 0) return .{ .key = key, .from_end = false };
+            const length: i128 = @intCast(schema.length);
+            if (value < -length) return .{ .key = key, .from_end = true };
+            const b: collections.Builder(Checker) = .{ .checker = self, .span = self.nodes.items[@backingInt(key)].span };
+            return .{ .key = try b.node(.i64, .{ .integer = value + length }), .from_end = false };
+        }
+        var counter: ?typed.LocalId = null;
+        if (self.nonNegative(key, &counter, 0)) return .{ .key = key, .from_end = false, .counter = counter };
+        return .{ .key = key, .from_end = true };
+    }
+    /// Record that the accesses built on `access.key` skipped the negative-index
+    /// rule on the strength of an `enumerate` position.
+    fn assume(self: *Checker, access: ArrayKey) Error!void {
+        if (access.counter) |counter| try self.assumptions.append(self.allocator, .{ .key = access.key, .counter = counter });
+    }
+    /// Register `counter` as a non-negative loop position while its body is
+    /// checked, when `counted`, answering its write count before the body.
+    fn beginCounter(self: *Checker, counter: typed.LocalId, counted: bool) Error!usize {
+        if (counted) try self.counters.put(self.allocator, counter, {});
+        return self.locals.items[@backingInt(counter)].usage.writes;
+    }
+    /// Close a `beginCounter` once the loop body is checked.
+    fn endCounter(self: *Checker, counter: typed.LocalId, counted: bool, writes_before: usize) void {
+        if (counted) self.settleCounter(counter, writes_before);
+    }
+    /// Withdraw the non-negative proofs that rested on `counter` when the loop
+    /// body assigned it, so those accesses count a negative index from the end.
+    fn settleCounter(self: *Checker, counter: typed.LocalId, writes_before: usize) void {
+        _ = self.counters.remove(counter);
+        const written = self.locals.items[@backingInt(counter)].usage.writes != writes_before;
+        var kept: usize = 0;
+        for (self.assumptions.items) |assumption| {
+            if (assumption.counter != counter) {
+                self.assumptions.items[kept] = assumption;
+                kept += 1;
+                continue;
+            }
+            if (!written) continue;
+            // Every access built on the key was created after it.
+            for (self.nodes.items[@backingInt(assumption.key) + 1 ..]) |*node| switch (node.data) {
+                .index => |*access| if (access.index == assumption.key) {
+                    access.from_end = true;
+                },
+                .replace => |*replace| if (replace.index == assumption.key) {
+                    replace.from_end = true;
+                },
+                else => {},
+            };
+        }
+        self.assumptions.shrinkRetainingCapacity(kept);
+    }
     /// Evaluate `value` into a fresh temporary now, answering a read of it.
     fn spillValue(self: *Checker, b: collections.Builder(Checker), value: typed.NodeId, statements: *std.ArrayList(typed.StatementId)) Error!typed.NodeId {
         const slot = try b.local(self.nodes.items[@backingInt(value)].ty);
@@ -2474,7 +2626,7 @@ const Checker = struct {
             current = destination.value;
         }
         const bases = try self.allocator.alloc(typed.NodeId, place.steps.len);
-        const keys = try self.allocator.alloc(typed.NodeId, place.steps.len);
+        const keys = try self.allocator.alloc(ArrayKey, place.steps.len);
         const members = try self.allocator.alloc(usize, place.steps.len);
         var key_statements: std.ArrayList(typed.StatementId) = .empty;
         var keys_inert = true;
@@ -2493,12 +2645,16 @@ const Checker = struct {
                     const schema = try self.catalog.array(base_type, key_span, self.sink);
                     if (self.requiresHandling(schema.element)) return self.sink.fail(eResultOperation, node.span, "replacement would drop an unhandled result-bearing element");
                     if (schema.key) |key| try self.hint(key_node, key);
-                    var key = try self.expressionWithTemporaries(key_node, temporaries);
-                    try self.requireIndex(schema, self.nodes.items[@backingInt(key)].ty, key_span);
-                    if (!self.effectFreeValue(key, 0)) key = try self.spillValue(b, key, &key_statements);
-                    keys_inert = keys_inert and self.inertValue(key);
+                    const checked = try self.expressionWithTemporaries(key_node, temporaries);
+                    try self.requireIndex(schema, self.nodes.items[@backingInt(checked)].ty, key_span);
+                    // PY-ARRAY-NEGATIVE-1: decided on the key as written, then
+                    // carried by whatever temporary holds it.
+                    var key = try self.arrayKey(schema, checked);
+                    if (!self.effectFreeValue(key.key, 0)) key.key = try self.spillValue(b, key.key, &key_statements);
+                    try self.assume(key);
+                    keys_inert = keys_inert and self.inertValue(key.key);
                     keys[i] = key;
-                    current = try b.node(schema.element, .{ .index = .{ .base = current, .index = key } });
+                    current = try b.node(schema.element, .{ .index = .{ .base = current, .index = key.key, .from_end = key.from_end } });
                 },
             }
         }
@@ -2533,7 +2689,7 @@ const Checker = struct {
                     .base = bases[i],
                     .fields = try self.allocator.dupe(typed.FieldInit, &.{.{ .index = members[i], .value = value }}),
                 } }),
-                .element => try b.node(base_type, .{ .replace = .{ .base = bases[i], .index = keys[i], .value = value } }),
+                .element => try b.node(base_type, .{ .replace = .{ .base = bases[i], .index = keys[i].key, .value = value, .from_end = keys[i].from_end } }),
             };
         }
         const stored = if (slot_index) |index|
@@ -2653,7 +2809,12 @@ const Checker = struct {
         try self.require(self.nodes.items[@backingInt(end)].ty, element, self.syntax.nodes.items[@backingInt(bounds.end)].span);
         const index = try b.local(element);
         const limit = try b.local(element);
+        // PY-ARRAY-NEGATIVE-1: the running index never drops below its start,
+        // and an expression cannot assign it, so settling withdraws nothing.
+        const counted = self.nonNegativeStart(start);
+        const writes_before = try self.beginCounter(index, counted);
         const parts = try self.comprehensionBody(b, node, each, index);
+        self.endCounter(index, counted, writes_before);
         const i = try b.read(index);
         const step = try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.node(element, .{ .integer = 1 }), element) } });
         const loop_id = self.loops.next;
@@ -4349,6 +4510,8 @@ const Checker = struct {
             "`mut` on a fixed array passes a variable itself; copy the field or element into a local, pass `mut` that local, and store it back",
         );
         if (!self.locals.items[@backingInt(node.data.local)].mutable) return self.sink.fail(eImmutable, target.span, "`mut` on a fixed array requires a mutable binding");
+        // The callee writes the variable itself (`PY-ARRAY-ITER-2` reads this).
+        self.locals.items[@backingInt(node.data.local)].usage.writes += 1;
     }
     /// The call's own source text with `mut ` inserted before argument `target`,
     /// so a missing-marker diagnostic carries the whole corrected call rather
@@ -4780,8 +4943,10 @@ const Checker = struct {
         const schema = try self.catalog.array(receiver_type, node.span, self.sink);
         try self.requireIndex(schema, self.nodes.items[@backingInt(index_value)].ty, self.syntax.nodes.items[@backingInt(access.index)].span);
         if (self.requiresHandling(schema.element) and schema.length != 1) return self.sink.fail(eResultOperation, node.span, "indexing would drop other result-bearing elements; handle or transfer the entire array");
+        const key = try self.arrayKey(schema, index_value);
+        try self.assume(key);
         out.ty = schema.element;
-        out.data = .{ .index = .{ .base = base, .index = index_value } };
+        out.data = .{ .index = .{ .base = base, .index = key.key, .from_end = key.from_end } };
     }
     fn checkedExpression(self: *Checker, node: ast.Node, minimum_literal: ?Literal, temporaries: []const typed.Type) Error!typed.Node {
         var out: typed.Node = .{ .span = node.span, .ty = .i64, .data = undefined };
@@ -4914,7 +5079,9 @@ const Checker = struct {
                 if (self.requiresHandling(schema.element)) return self.sink.fail(eResultOperation, node.span, "replacement would drop an unhandled result-bearing element");
                 try self.requireIndex(schema, self.nodes.items[@backingInt(index_value)].ty, self.syntax.nodes.items[@backingInt(replace.index)].span);
                 try self.require(self.nodes.items[@backingInt(value)].ty, schema.element, self.syntax.nodes.items[@backingInt(replace.value)].span);
-                out.data = .{ .replace = .{ .base = base, .index = index_value, .value = value } };
+                const key = try self.arrayKey(schema, index_value);
+                try self.assume(key);
+                out.data = .{ .replace = .{ .base = base, .index = key.key, .value = value, .from_end = key.from_end } };
             },
             .length => |input| return self.checkLength(node, input),
             .membership => |membership| return self.checkMembership(node, membership, temporaries),
@@ -5677,7 +5844,8 @@ const Checker = struct {
             if (pair.fields.len != 2) return self.sink.fail(eTupleArity, stmt.span, try self.twoNameLoopMessage(pair.fields.len));
         }
         const first_type = if (unpack) self.catalog.records[element.recordIndex()].fields[0].ty else element;
-        const owner = try b.local(iterable_type);
+        // PY-ARRAY-ITER-2: a fixed array's copy is made only if the body writes it.
+        var source_walk = try self.beginWalk(b, iterable, fixed);
         const index = try b.local(.i64);
         const limit = try b.local(.i64);
         const first_slot = try b.local(first_type);
@@ -5703,8 +5871,14 @@ const Checker = struct {
         self.loops.next += 1;
         try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .arenas = self.arenas.items.len });
         defer _ = self.loops.active.pop();
+        // PY-ARRAY-NEGATIVE-1: an `enumerate` position counts up from zero,
+        // but the body may assign the name; accesses that relied on it are
+        // settled once the body is checked.
+        const writes_before = try self.beginCounter(index, each.enumerated);
         const init_before = try self.initSnapshot();
         const body = try self.statement(each.body);
+        self.endCounter(index, each.enumerated, writes_before);
+        const owner = try self.endWalk(b, &source_walk);
         self.initRestore(init_before);
         if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
         self.restorePending(before);
@@ -5730,12 +5904,42 @@ const Checker = struct {
             try self.allocator.dupe(typed.StatementId, &.{ guarded, advance })
         else
             try self.allocator.dupe(typed.StatementId, &.{advance}) });
-        return .{ .block = try self.allocator.dupe(typed.StatementId, &.{
+        const setup = [_]typed.StatementId{
             try b.stmt(.{ .initialize = .{ .slot = owner, .value = iterable } }),
             try b.stmt(.{ .initialize = .{ .slot = index, .value = try b.integer(0) } }),
             try b.stmt(.{ .initialize = .{ .slot = limit, .value = if (fixed) |shape| try b.integer(@intCast(shape.length)) else try b.length(owner) } }),
             try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, i, try b.read(limit), .bool), .body = iteration, .step = step } }),
-        }) };
+        };
+        // Walking the array in place, the loop reads the variable itself.
+        return .{ .block = try self.allocator.dupe(typed.StatementId, setup[@intFromBool(source_walk.in_place)..]) };
+    }
+    /// The source a `for` loop reads its elements from, decided around its body.
+    const Walk = struct { owner: ?typed.LocalId, variable: ?typed.LocalId, writes: usize, ty: typed.Type, in_place: bool = false };
+    /// Start deciding a loop's source. A managed collection is a reference, so
+    /// the loop's copy of it is only a pointer and is taken as before. A fixed
+    /// array held in a local variable waits for the body.
+    fn beginWalk(self: *Checker, b: collections.Builder(Checker), iterable: typed.NodeId, fixed: ?typed.Array) Error!Walk {
+        const source_type = self.nodes.items[@backingInt(iterable)].ty;
+        if (fixed == null) return .{ .owner = try b.local(source_type), .variable = null, .writes = 0, .ty = source_type };
+        const variable = switch (self.nodes.items[@backingInt(iterable)].data) {
+            // A `mut` array parameter may be one of two writable names for the
+            // same array, so a write through the other would show.
+            .local => |slot| if (self.referenceParameter(slot)) null else slot,
+            else => null,
+        };
+        const writes = if (variable) |slot| self.locals.items[@backingInt(slot)].usage.writes else 0;
+        return .{ .owner = null, .variable = variable, .writes = writes, .ty = source_type };
+    }
+    /// PY-ARRAY-ITER-2: once the body is checked, a fixed array the body never
+    /// writes is walked where it lives, so the loop copies nothing; otherwise
+    /// the loop reads a copy taken when it began, as `PY-ARRAY-ITER-1` says.
+    fn endWalk(self: *Checker, b: collections.Builder(Checker), walk: *Walk) Error!typed.LocalId {
+        if (walk.owner) |owner| return owner;
+        if (walk.variable) |slot| if (self.locals.items[@backingInt(slot)].usage.writes == walk.writes) {
+            walk.in_place = true;
+            return slot;
+        };
+        return b.local(walk.ty);
     }
     /// Read the element at `index` of the loop's source copy in `owner`.
     fn iterationRead(self: *Checker, b: collections.Builder(Checker), owner: typed.LocalId, index: typed.NodeId, source_shape: IterationShape) Error!typed.NodeId {
@@ -5842,6 +6046,9 @@ const Checker = struct {
         try self.require(self.nodes.items[@backingInt(end)].ty, element, self.syntax.nodes.items[@backingInt(range.end)].span);
         const index: typed.LocalId = @fromBackingInt(self.locals.items.len);
         try self.locals.append(self.allocator, .{ .name = name, .declaration = range.name, .ty = element, .mutable = false, .ownership = .{ .initialized = true }, .usage = .{ .reads = 1 } });
+        // PY-ARRAY-NEGATIVE-1: an immutable induction variable counting up
+        // from a non-negative start never holds a negative value.
+        if (self.nonNegativeStart(start)) try self.counters.put(self.allocator, index, {});
         const limit: typed.LocalId = @fromBackingInt(self.locals.items.len);
         try self.locals.append(self.allocator, .{ .name = "<range-limit>", .declaration = range.name, .ty = element, .mutable = false, .usage = .{ .reads = 1, .temporary = true } });
         try self.active.put(self.allocator, name, index);

@@ -88,8 +88,11 @@ pub const Node = struct {
         variant: struct { tag: usize, value: ?NodeId },
         unwrap: NodeId,
         array: []const NodeId,
-        index: struct { base: NodeId, index: NodeId },
-        replace: struct { base: NodeId, index: NodeId, value: NodeId },
+        /// `from_end` asks a fixed array to count a negative index back from its
+        /// end first (`PY-ARRAY-NEGATIVE-1`); it is false where the checker proved
+        /// the index non-negative, and managed receivers ignore it.
+        index: struct { base: NodeId, index: NodeId, from_end: bool = false },
+        replace: struct { base: NodeId, index: NodeId, value: NodeId, from_end: bool = false },
         length: NodeId,
         record: []const FieldInit,
         update: struct { base: NodeId, fields: []const FieldInit },

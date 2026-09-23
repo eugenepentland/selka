@@ -161,7 +161,7 @@ fn allowed(program: bytecode.Program, op: @FieldType(bytecode.Instruction, "op")
         .binary_integer => |binary| binary.ty.isInteger(),
         .cast_integer => |ty| ty.isInteger(),
         .neg_integer => |ty| ty.isInteger(),
-        .get_index => |ty| indexIsAllocationFree(program, ty),
+        .get_index => |access| indexIsAllocationFree(program, access.ty),
         else => false,
     };
 }

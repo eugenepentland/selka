@@ -1443,6 +1443,12 @@ pub const Parser = struct {
     /// and the value stay reachable from one node. A bare `x, y` with no `=` is
     /// not a value and is rejected here.
     fn destructuringAssignment(self: *Parser, first: lex.Token) diagnostic.Error!ast.NodeId {
+        const name = try self.append(.{ .span = first.span, .data = .{ .name = first.span } });
+        self.cursor.pos += 1;
+        return self.destructuringFrom(name);
+    }
+    /// The rest of a destructuring assignment whose first target is parsed.
+    fn destructuringFrom(self: *Parser, first: ast.NodeId) diagnostic.Error!ast.NodeId {
         const targets = try self.destructuringTargets(first);
         const target_span = self.syntax.nodes.items[@backingInt(targets)].span;
         if (!self.take(.equal)) return self.sink.fail(syntax_code, target_span, "a bare comma list is not an expression; write `x, y = value` or parenthesize it as a tuple");
@@ -1452,29 +1458,41 @@ pub const Parser = struct {
             .data = .{ .field_assignment = .{ .target = targets, .value = value } },
         });
     }
-    /// The target list of a destructuring assignment: two or more names separated
-    /// by commas, with an optional trailing comma after the last one. One name
-    /// is never a tuple, so `x, = pair` is rejected.
-    fn destructuringTargets(self: *Parser, first: lex.Token) diagnostic.Error!ast.NodeId {
+    /// The target list of a destructuring assignment: two or more targets
+    /// separated by commas, with an optional trailing comma after the last one.
+    /// A target is a name, an element `xs[i]` or a field `r.f`
+    /// (`PY-DESTRUCTURE-PLACE-1`). One target is never a tuple, so `x, = pair`
+    /// is rejected.
+    fn destructuringTargets(self: *Parser, first: ast.NodeId) diagnostic.Error!ast.NodeId {
         const allocator = self.arena.allocator();
         var elements: std.ArrayList(ast.NodeId) = .empty;
-        try elements.append(allocator, try self.append(.{ .span = first.span, .data = .{ .name = first.span } }));
-        var last = first.span;
+        try elements.append(allocator, first);
+        const first_span = self.syntax.nodes.items[@backingInt(first)].span;
+        var last = first_span;
         var comma_span: ?Span = null;
-        self.cursor.pos += 1;
         while (self.current().tag == .comma) {
             comma_span = self.current().span;
             _ = self.take(.comma);
             if (self.current().tag == .equal or self.terminatorAhead()) break;
-            const name = try self.expect(.ident);
-            last = name.span;
-            try elements.append(allocator, try self.append(.{ .span = name.span, .data = .{ .name = name.span } }));
+            const target = try self.expression(0);
+            const node = self.syntax.nodes.items[@backingInt(target)];
+            switch (node.data) {
+                .name, .index, .field => {},
+                else => return self.sink.fail("E_ASSIGNMENT_TARGET", node.span, "a destructuring target is a name, an element `xs[i]` or a field `r.f`"),
+            }
+            last = node.span;
+            try elements.append(allocator, target);
         }
-        if (elements.items.len < 2) return self.sink.fail(syntax_code, comma_span orelse first.span, "a one-element target list is not a tuple; bind the name directly");
-        return self.append(.{ .span = .join(first.span, last), .data = .{ .tuple = try elements.toOwnedSlice(allocator) } });
+        if (elements.items.len < 2) return self.sink.fail(syntax_code, comma_span orelse first_span, "a one-element target list is not a tuple; bind the name directly");
+        return self.append(.{ .span = .join(first_span, last), .data = .{ .tuple = try elements.toOwnedSlice(allocator) } });
     }
     fn assignmentExpression(self: *Parser) diagnostic.Error!ast.NodeId {
         const value = try self.expression(0);
+        // `a[i], a[j] = a[j], a[i]`: a target list that starts with a place.
+        if (self.current().tag == .comma) switch (self.syntax.nodes.items[@backingInt(value)].data) {
+            .index, .field => return self.destructuringFrom(value),
+            else => {},
+        };
         const operator = self.current();
         const op = assignmentOperation(operator.tag) orelse return value;
         self.cursor.pos += 1;

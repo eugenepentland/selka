@@ -42,9 +42,9 @@ type nesting shares the parser's 256-level budget.
 ## Evaluation, bounds, and copies
 
 `array[index]` accepts any supported signed or unsigned integer width. The base
-and then the index evaluate exactly once. Negative indices and indices greater
-than or equal to the length trap with `R_INDEX_BOUNDS`, a source span, and the
-ordinary guest call trace. Full-range `u64` indices are checked before conversion
+and then the index evaluate exactly once. A negative index counts from the end, as
+for a list; an index below minus the length or at least the length traps with
+`R_LIST_BOUNDS`, a source span, and the ordinary guest call trace. Full-range `u64` indices are checked before conversion
 to host indices. These checks remain active in Debug and ReleaseFast. Indexing
 binds as tightly as field access and permits `grid.rows[i][j].value`.
 

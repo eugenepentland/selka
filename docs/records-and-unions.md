@@ -418,9 +418,35 @@ def main() -> int:
 
 This returns `91234`: every element of `counts` was written, `before` is the
 copy taken before the loop and still holds zeros, and only `points[1]` changed.
-An index is checked exactly as a read is: anything outside `0 <= i < N`, a
-negative index included, traps with `R_INDEX_BOUNDS`. Unlike a list, a fixed
-array does not count a negative index from the end.
+An index is checked exactly as a read is (see negative indices below).
+`points[1].y += 1` keeps its operator, as `point.y += 1` does, and a field of a
+record or `class` holding an array, `window.samples[i] = v`, is written where
+the field lives rather than by copying the array and the record.
+
+### Negative indices
+
+A fixed array counts a negative index from its end, exactly as a list does:
+`a[-1]` is the last element and `a[-N]` the first, for a read, for every write
+above and for `replace`. An index outside `-N <= i < N` traps `R_LIST_BOUNDS`,
+reporting the index as written and the length, the same trap a list raises. An
+enum table is indexed by its key and has no negative positions.
+
+```mylang
+# doc: expect 2144
+def main() -> int:
+    values: [4]int = [1, 2, 3, 4]
+    back = -2
+    values[-1] += 10
+    values[back] = values[-4] * 30
+    values[0], values[-3] = values[-3], values[0]
+    return values[0] * 1000 + values[1] * 100 + values[2] + values[3]
+```
+
+This returns `2144`: `values[-1]` is the `4` that becomes `14`, `values[back]`
+is `values[2]`, and the swap exchanges `values[0]` and `values[-3]`, which is
+`values[1]`. The rule costs nothing where the compiler can see the index is
+never negative — a constant (`a[-1]` is compiled as `a[N - 1]`), a `range` or
+`enumerate` loop counter, a length — and a few branch-free instructions otherwise.
 
 ### Passing an array to be written
 
@@ -473,7 +499,9 @@ def main() -> int:
 
 This returns `124`. The loop saw `3, 1, 4, 1` although it zeroed each element as
 it went, so the weighted sum is 12, and the comprehension afterwards reads the
-four zeros.
+four zeros. That guarantee costs one copy of the array when the loop begins, and
+only when the body writes the array: a loop over a local array its body never
+writes reads the elements where they are.
 
 ## Related pages
 

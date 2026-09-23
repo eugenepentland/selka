@@ -39,27 +39,97 @@ fn trap(source: []const u8, code: []const u8, line: u64) !void {
 }
 
 // spec-case: PY-ARRAY-WRITE-1
-test "an element write out of range or negative traps like a fixed-array read" {
+test "an element write out of range traps like a fixed-array read" {
     try trap(
         \\def main() -> int:
         \\    values: [4]int = [0, 0, 0, 0]
         \\    index = 4
         \\    values[index] = 5
         \\    return values[3]
-    , "R_INDEX_BOUNDS", 4);
+    , "R_LIST_BOUNDS", 4);
     try trap(
         \\def main() -> int:
         \\    values: [4]int = [0, 0, 0, 0]
-        \\    values[-1] = 5
+        \\    values[-5] = 5
         \\    return values[3]
-    , "R_INDEX_BOUNDS", 3);
+    , "R_LIST_BOUNDS", 3);
     try trap(
         \\def main() -> int:
         \\    grid: [2][2]int = [[0, 0], [0, 0]]
         \\    column = 2
         \\    grid[1][column] += 1
         \\    return grid[1][1]
-    , "R_INDEX_BOUNDS", 4);
+    , "R_LIST_BOUNDS", 4);
+}
+
+// spec: PY-ARRAY-NEGATIVE-1
+test "a fixed-array index below minus its length traps where it is written" {
+    try trap(
+        \\def main() -> int:
+        \\    values: [4]int = [1, 2, 3, 4]
+        \\    index = -5
+        \\    return values[index]
+    , "R_LIST_BOUNDS", 4);
+    try trap(
+        \\def main() -> int:
+        \\    values: [4]int = [1, 2, 3, 4]
+        \\    index = -9
+        \\    values = replace(values, index, 0)
+        \\    return values[0]
+    , "R_LIST_BOUNDS", 4);
+    try trap(
+        \\def main() -> int:
+        \\    grid: [2][2]int = [[0, 0], [0, 0]]
+        \\    row = -3
+        \\    grid[row][-1] += 1
+        \\    return grid[1][1]
+    , "R_LIST_BOUNDS", 4);
+    try trap(
+        \\def main() -> int:
+        \\    values: [4]int = [1, 2, 3, 4]
+        \\    total = 0
+        \\    for i, value in enumerate(values):
+        \\        i = i - 9
+        \\        total += values[i] + value
+        \\    return total
+    , "R_LIST_BOUNDS", 6);
+}
+
+/// Count the negative-index adjustments of an `[8]int` a function's IL
+/// carries: the range test of `i + 8` against `16`, which is what an index that
+/// may count from the end is tested with.
+fn adjustments(body: []const u8) usize {
+    return std.mem.count(u8, body, ", 16\n jnz ");
+}
+
+// spec-case: PY-ARRAY-NEGATIVE-1
+test "an index the checker proves non-negative carries no adjustment" {
+    var parsed = try emitted(
+        \\def counted() -> int:
+        \\    values: [8]int = [0, 0, 0, 0, 0, 0, 0, 0]
+        \\    for index in range(8):
+        \\        values[index] = index
+        \\    for position, value in enumerate(values):
+        \\        values[position] += value
+        \\    squares = [values[index] * values[(index + 3) % 8] for index in range(1, 8)]
+        \\    return values[-1] + values[len(squares)] + squares[0]
+        \\
+        \\def adjusted(offset: int) -> int:
+        \\    values: [8]int = [0, 0, 0, 0, 0, 0, 0, 0]
+        \\    values[offset] = 3
+        \\    return values[offset - 1]
+        \\
+        \\def main() -> int:
+        \\    return counted() + adjusted(-2)
+    );
+    defer parsed.deinit();
+    try t.expectEqual(@as(usize, 0), adjustments(try named(parsed.value, "counted")));
+    const adjusted = try named(parsed.value, "adjusted");
+    try t.expectEqual(@as(usize, 2), adjustments(adjusted));
+    // No branch counts from the end: the address takes a sign-masked
+    // correction of `8 * 8` bytes on top of the ordinary one.
+    try t.expectEqual(@as(usize, 2), std.mem.count(u8, adjusted, ", 64\n"));
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, adjusted, " phi "));
 }
 
 // spec-case: PY-ARRAY-WRITE-1
@@ -233,6 +303,82 @@ test "an element write into a local array names no scratch" {
     );
     defer parsed.deinit();
     const body = try named(parsed.value, "main");
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%agg"));
+}
+
+// spec: QBE-ARRAYWRITE-2
+test "an element write through a record or class field copies neither the array nor the record" {
+    var parsed = try emitted(
+        \\record Grid:
+        \\    cells: [4]int
+        \\    tag: int
+        \\
+        \\class Board:
+        \\    cells: [4]int
+        \\
+        \\def grid_write(grid: Grid, index: int) -> int:
+        \\    local = Grid(cells=[0, 0, 0, 0], tag=grid.tag)
+        \\    local.cells[index] = 5
+        \\    local.cells[-1] += local.tag
+        \\    return local.cells[1]
+        \\
+        \\def board_write(board: mut Board, index: int) -> None:
+        \\    board.cells[index] = 5
+        \\    board.cells[1] += 7
+        \\
+        \\def main() -> int:
+        \\    board = Board(cells=[1, 2, 3, 4])
+        \\    board_write(mut board, 2)
+        \\    return grid_write(Grid(cells=[1, 2, 3, 4], tag=3), 2) + board.cells[2]
+    );
+    defer parsed.deinit();
+    const board = try named(parsed.value, "board_write");
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, board, "blit "));
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, board, "%agg"));
+    // Only the array literal is copied into the record under construction.
+    const grid = try named(parsed.value, "grid_write");
+    try t.expectEqual(@as(usize, 1), std.mem.count(u8, grid, "blit "));
+}
+
+// spec: QBE-FIELDARRAY-READ-1
+test "an element read of a class field array loads from the cell without a snapshot" {
+    var parsed = try emitted(
+        \\class Board:
+        \\    cells: [4]int
+        \\
+        \\def total(board: Board) -> int:
+        \\    sum = 0
+        \\    for index in range(4):
+        \\        sum += board.cells[index] * board.cells[(index + 1) % 4]
+        \\    return sum
+        \\
+        \\def main() -> int:
+        \\    return total(Board(cells=[1, 2, 3, 4]))
+    );
+    defer parsed.deinit();
+    const body = try named(parsed.value, "total");
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%agg"));
+}
+
+// spec-case: PY-ARRAY-ITER-2
+test "a loop over an array its body never writes copies nothing" {
+    var parsed = try emitted(
+        \\def walk(values: [8]int) -> int:
+        \\    total = 0
+        \\    for value in values:
+        \\        total += value
+        \\    for position, value in enumerate(values):
+        \\        total += position * value
+        \\    return total
+        \\
+        \\def main() -> int:
+        \\    values: [8]int = [1, 2, 3, 4, 5, 6, 7, 8]
+        \\    return walk(values)
+    );
+    defer parsed.deinit();
+    const body = try named(parsed.value, "walk");
     try t.expectEqual(@as(usize, 0), std.mem.count(u8, body, "blit "));
     try t.expectEqual(@as(usize, 0), std.mem.count(u8, body, "%agg"));
 }
