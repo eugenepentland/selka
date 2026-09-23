@@ -423,10 +423,22 @@ const Checker = struct {
             .declaration = function.name,
         };
     }
+    /// Whether `span` lies inside the body of a generic function declaration,
+    /// where a lambda never receives a callback type (GENERIC-LAMBDA-1).
+    fn inGenericBody(self: *Checker, span: source.Span) bool {
+        for (self.syntax.functions) |function| {
+            if (function.signature.type_parameters.len == 0) continue;
+            const body = self.syntax.statements.items[@backingInt(function.body)].span;
+            if (body.start <= span.start and span.end <= body.end) return true;
+        }
+        return false;
+    }
     fn checkLambdaFunction(self: *Checker, index: usize) Error!typed.Function {
         const lambda = self.syntax.lambdas[index];
-        const lambda_type = self.lambda_types[index] orelse
+        const lambda_type = self.lambda_types[index] orelse {
+            if (self.inGenericBody(lambda.span)) return self.sink.fail("E_GENERIC_BODY_UNSUPPORTED", lambda.span, @import("generic_bodies.zig").lambda_in_generic_body);
             return self.sink.fail(lambda_context_code, lambda.span, "lambda requires an expected callback type");
+        };
         const contract = callables.signature(lambda_type, self.catalog.records) orelse return error.InternalError;
         self.current_function = null;
         self.current_lambda = index;

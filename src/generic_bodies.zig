@@ -30,6 +30,10 @@ const eTryReturn = "E_TRY_RETURN";
 const eArgument = diagnostic.generic_argument;
 const eListType = @import("collection_lower.zig").list_type_error;
 const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
+/// The one message a lambda written inside a generic function body reports,
+/// from the template checker and from the unchecked lambda alike, so the two
+/// merge into a single diagnostic.
+pub const lambda_in_generic_body = "a lambda is not supported inside a generic function body; declare a top-level function and pass it by name";
 /// A misplaced or unknown call operand, the concrete checker's code for it.
 const eCallArgument = "E_CALL_ARGUMENT";
 const eTupleArity = diagnostic.tuple_arity;
@@ -341,6 +345,13 @@ const Checker = struct {
         }
     }
     fn local(self: *Checker, span: source.Span) Error!*Local {
+        // GENERIC-LAMBDA-1: a lambda is one synthesized function with one
+        // callback type, so it cannot follow a template body's type parameters
+        // into each specialization. Say so instead of failing its name lookup.
+        // The parser names a lambda by its `lambda` keyword; the diagnostic
+        // covers the whole lambda, as the unchecked lambda's own report does.
+        for (self.program.lambdas) |lambda| if (lambda.span.start == span.start)
+            return self.sink.fail(eUnsupported, lambda.span, lambda_in_generic_body);
         const index = self.active.get(self.src.text(span)) orelse return self.sink.fail("E_UNKNOWN_NAME", span, "name is not defined in this template scope");
         return &self.locals.items[index];
     }

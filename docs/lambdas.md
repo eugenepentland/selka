@@ -26,6 +26,11 @@ The expected callback type supplies the exact effect ceiling as well as the para
 and result types. A lambda used where no callback type is expected is rejected rather
 than inferred without a bound.
 
+A lambda is one function with one callback type, so it cannot be written inside a
+generic function body, where each specialization would need its own:
+`E_GENERIC_BODY_UNSUPPORTED` says so at the lambda. Declare a top-level function and
+pass it by name instead; a named key works in a generic body's `sorted` and `.sort`.
+
 `sorted(values)` keeps its existing ordering for lists of `int`, `float`, or `str`.
 `sorted(values, key=callback)` accepts an effect-free callback from the element type to
 `int`, evaluates it while performing a stable merge, and leaves the input list unchanged.
