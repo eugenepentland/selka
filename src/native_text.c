@@ -73,49 +73,12 @@ void myl_native_text_publish(myl_native_text *text, size_t scalars, int plain) {
      * written can never survive into the published value. */
     text->flags=plain ? MYL_TEXT_ASCII : 0;
 }
-/* The high and low halves of one full 64×64-bit product folded together, so
- * every output bit depends on every input bit of both factors. */
-static inline uint64_t fold_multiply(uint64_t a, uint64_t b) {
-    unsigned __int128 product=(unsigned __int128)a*b;
-    return (uint64_t)product^(uint64_t)(product>>64);
-}
-#define TEXT_HASH_WORD 0xa0761d6478bd642fULL
-#define TEXT_HASH_STATE 0xe7037ed1a0b428dbULL
-/* The payload read eight octets at a time: each word is folded into a running
- * state by one multiply, a payload of at most eight octets is read as two
- * overlapping halves and folded once, and a longer one ends on the word that
- * finishes exactly at its last octet, so no read passes the payload and every
- * octet reaches the answer. The length seeds the state, so payloads of
- * different lengths start apart. Fixed constants, no seed: the runtime has no
- * sanctioned randomness and a dictionary must behave identically on every run.
- * The answer is cached in the header, because a dictionary hashes the same key
- * text once per lookup and a text can never change under it. */
+/* A text's hash is cached in its header, because a dictionary hashes the same
+ * key text once per lookup and a text can never change under it. */
 uint32_t myl_native_text_hash(const myl_native_text *input) {
     myl_native_text *text=(myl_native_text *)input;
     if (text->flags&MYL_TEXT_HASHED) return text->hash;
-    const unsigned char *bytes=myl_native_text_storage(text);
-    size_t length=text->bytes;
-    uint64_t state=0x243f6a8885a308d3ULL^length, hash;
-    if (length<=8) {
-        uint64_t low=0, high=0;
-        if (length>=4) {
-            uint32_t first, last;
-            memcpy(&first,bytes,4); memcpy(&last,bytes+length-4,4);
-            low=first; high=last;
-        } else if (length) {
-            low=(uint64_t)bytes[0]<<16|(uint64_t)bytes[length>>1]<<8|bytes[length-1];
-        }
-        hash=fold_multiply(low^TEXT_HASH_WORD,high^state^TEXT_HASH_STATE);
-    } else {
-        uint64_t word;
-        for (size_t at=0;at+8<length;at+=8) {
-            memcpy(&word,bytes+at,8);
-            state=fold_multiply(word^TEXT_HASH_WORD,state^TEXT_HASH_STATE);
-        }
-        memcpy(&word,bytes+length-8,8);
-        hash=fold_multiply(word^TEXT_HASH_WORD,state^TEXT_HASH_STATE);
-    }
-    uint32_t folded=(uint32_t)(hash^(hash>>32));
+    uint32_t folded=myl_native_octets_hash(myl_native_text_storage(text),text->bytes);
     /* A view's hash word is its offset, so its hash is recomputed per request. */
     if (text->flags&MYL_TEXT_VIEW) return folded;
     text->hash=folded;
@@ -477,6 +440,29 @@ myl_native_text *myl_native_text_at(myl_native_heap *heap, myl_native_text *inpu
 myl_native_text *myl_native_text_slice(myl_native_heap *heap, myl_native_text *input, int64_t start, int64_t end) {
     size_t first=endpoint(input->length,start), last=endpoint(input->length,end);
     return myl_native_text_copy(heap,input,first,last>first ? last-first : 0);
+}
+void myl_native_text_range(const myl_native_text *input, int64_t start, int64_t end, myl_native_text_span *span) {
+    size_t first=endpoint(input->length,start), last=endpoint(input->length,end);
+    size_t count=last>first ? last-first : 0;
+    if (input->flags&MYL_TEXT_ASCII) { span->offset=first; span->bytes=count; return; }
+    size_t from=myl_native_text_offset(input,first);
+    span->offset=from;
+    span->bytes=myl_native_text_offset(input,first+count)-from;
+}
+myl_native_text *myl_native_text_piece_at(myl_native_heap *heap, myl_native_text *input, const myl_native_text_span *span, unsigned region) {
+    myl_native_root root;
+    myl_native_root_push(heap,&root,&input,&pointer_type);
+    myl_native_text *text=myl_native_heap_alloc_at(heap,&octet_type,sizeof(myl_native_text)+span->bytes,region);
+    myl_native_root_pop(heap,&root);
+    if (!text) return NULL;
+    const unsigned char *bytes=myl_native_text_storage(input)+span->offset;
+    text->bytes=span->bytes;
+    text->hash=0;
+    if (span->bytes) memcpy((unsigned char *)(text+1),bytes,span->bytes);
+    int plain=(int)(input->flags&MYL_TEXT_ASCII);
+    size_t scalars=plain ? span->bytes : scalars_in(bytes,span->bytes);
+    myl_native_text_publish(text,scalars,plain || scalars==span->bytes);
+    return text;
 }
 int myl_native_text_equal(const myl_native_text *a, const myl_native_text *b) {
     return a->bytes==b->bytes && (!a->bytes || !memcmp(myl_native_text_storage(a),myl_native_text_storage(b),a->bytes));

@@ -189,6 +189,7 @@ test {
     _ = @import("qbe.zig");
     _ = @import("qbe_test.zig");
     _ = @import("qbe_text_test.zig");
+    _ = @import("qbe_range_keys_test.zig");
     _ = @import("qbe_literals_test.zig");
     _ = @import("qbe_alloc.zig");
     _ = @import("aggref_abi_test.zig");

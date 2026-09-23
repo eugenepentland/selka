@@ -162,6 +162,55 @@ public def test_find_any_searches_a_two_octet_set_with_one_pass_per_octet() -> b
     return b"\xff\x00".find_any(b"\x00\xff", 0) == 0
 
 
+# `times` copies of `piece` by doubling.
+def doubled(piece: bytes, times: int) -> bytes:
+    out = b""
+    chunk = piece
+    remaining = times
+    while remaining > 0:
+        if remaining % 2 == 1:
+            out = out + chunk
+        remaining = remaining // 2
+        if remaining > 0:
+            chunk = chunk + chunk
+    return out
+
+
+# The number of `\n`-ended records a loop of two-octet searches walks.
+def records(raw: bytes) -> int:
+    count = 0
+    at = raw.find_any(b"\n,", 0)
+    while at >= 0:
+        count += 1
+        at = raw.find_any(b"\n,", at + 1)
+    return count
+
+
+# spec: PY-BYTES-22
+public def test_find_any_walks_an_input_missing_one_octet_in_linear_time() -> bool:
+    # 20,000 records of 200 octets and no comma: each search stops at the next
+    # newline, so the loop scans the 4 MB input about twice, where rescanning to
+    # the end for the absent comma on every call would scan it 10,000 times.
+    line = doubled(b"0123456789", 20)
+    raw = doubled(line[:199] + b"\n", 20000) + b"tail"
+    ok = records(raw) == 20000
+    commas = doubled(line[:199] + b",", 20000)
+    return ok and records(commas) == 20000 and raw.find_any(b",\n", len(raw) - 4) == -1 and raw.find_any(b",\n", len(raw) - 5) == len(raw) - 5
+
+
+# spec-case: PY-BYTES-22
+public def test_find_any_finds_either_octet_across_its_search_windows() -> bool:
+    plain = doubled(b"x", 1000)
+    ok = (plain[:63] + b"," + plain[:63] + b"\n").find_any(b"\n,", 0) == 63
+    ok = ok and (plain[:64] + b"\n" + plain[:10] + b",").find_any(b",\n", 0) == 64
+    ok = ok and (plain[:191] + b",").find_any(b"\n,", 0) == 191
+    ok = ok and (plain[:192] + b"\n").find_any(b"\n,", 0) == 192
+    ok = ok and (plain[:500] + b"\n," + plain[:500]).find_any(b",\n", 100) == 500
+    ok = ok and (plain[:500] + b",\n").find_any(b"\n,", 501) == 501
+    ok = ok and (b"," + plain).find_any(b"\n,", 1) == -1
+    return ok and (plain + b"\n").find_any(b"\n,", 0) == 1000
+
+
 # spec-case: PY-BYTES-3
 public def test_find_any_clamps_start_and_reads_values_as_a_byte_set() -> bool:
     raw = b"a,b;c"

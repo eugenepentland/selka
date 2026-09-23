@@ -128,15 +128,22 @@ public def lines(text: str) -> list[str]:
     return out
 
 
-# Text repeated a nonnegative number of times.
+# Text repeated a nonnegative number of times. The copies double: `out` holds
+# `copies` copies and is appended to itself while that stays within `times`, and
+# one prefix of it tops up the rest, so building the answer copies each octet
+# of it at most three times instead of copying the growing answer once per copy.
 public def repeat(text: str, times: int) -> Result[str, Error]:
     if times < 0:
         return Err(Error.Invalid("repeat count must not be negative"))
-    out = ""
-    remaining = times
-    while remaining > 0:
-        out = out + text
-        remaining -= 1
+    if times == 0 or len(text) == 0:
+        return Ok("")
+    out = text
+    copies = 1
+    while copies <= times - copies:
+        out = out + out
+        copies = copies * 2
+    if copies < times:
+        out = out + out[:len(text) * (times - copies)]
     return Ok(out)
 
 
