@@ -101,10 +101,9 @@ public def test_a_young_subtree_hung_on_an_old_node_survives_two_minor_collectio
             return False
 
 
-# One phase builds a large list and drops it, the next builds another: the
-# first list is garbage in the old generation when the second is built, and
-# the full collection that reclaims it runs before the heap can triple.
-# spec: GC-TRIGGER-1
+# One phase builds a large list and drops it, the next builds another of
+# longer texts from the storage the first one freed.
+# spec-case: GC-SPARE-1
 public def test_a_dropped_phase_and_the_next_one_both_read_back() -> bool:
     first = words("first phase element ", 5000)
     first_size = joined_length(first)

@@ -1,5 +1,5 @@
 #define _POSIX_C_SOURCE 200809L
-/* madvise(MADV_DONTNEED), which returns a spare segment's pages to the host. */
+/* MAP_ANONYMOUS, for the pool mappings. */
 #define _DEFAULT_SOURCE 1
 #include "native_heap.h"
 #include "native_arena.h"
@@ -223,56 +223,30 @@ static myl_native_segment *pool_take(myl_native_heap *heap) {
     heap->pool_next += MYL_NATIVE_SEGMENT_BYTES;
     return segment;
 }
-/* Bit 0 of a spare entry: the block's pages went back to the host, so it
- * reads as zero-filled storage again. */
-#define SPARE_RELEASED ((uintptr_t)1)
-/* The most recently spared block, with its header cleared, or NULL when there
- * is none. A block whose pages are still resident keeps its previous objects'
- * bytes and is marked stale; a released one reads as zeros and is fresh. */
+/* The most recently spared block, with its header cleared and marked stale:
+ * its slots still hold its previous objects' bytes. NULL when there is none. */
 static myl_native_segment *spare_take(myl_native_heap *heap) {
     if (!heap->spare_length) return NULL;
-    uintptr_t entry = heap->spare[--heap->spare_length];
-    if (heap->spare_idle > heap->spare_length) heap->spare_idle = heap->spare_length;
-    myl_native_segment *segment = (myl_native_segment *)(entry & ~SPARE_RELEASED);
-    int released = (entry & SPARE_RELEASED) != 0;
-    if (!released) {
-        heap->spare_resident -= MYL_NATIVE_SEGMENT_BYTES;
-        memset(segment, 0, offsetof(myl_native_segment, data));
-        segment->stale = 1;
-    }
+    myl_native_segment *segment = heap->spare[--heap->spare_length];
+    memset(segment, 0, offsetof(myl_native_segment, data));
+    segment->stale = 1;
     return segment;
 }
 /* Give one empty bitmap segment to the spare list; zero when the list could not
- * grow, in which case the caller keeps the segment where it is. */
+ * grow, in which case the caller keeps the segment where it is. A spare keeps
+ * its pages: returning them to the host after a full collection lowered no
+ * program's peak and cost programs that free a phase's storage and refill it
+ * at once up to 19% in page faults (`scan_split`). */
 static int spare_put(myl_native_heap *heap, myl_native_segment *segment) {
     if (heap->spare_length == heap->spare_capacity) {
         size_t capacity = heap->spare_capacity ? heap->spare_capacity * 2 : 64;
-        uintptr_t *grown = realloc(heap->spare, capacity * sizeof *grown);
+        myl_native_segment **grown = realloc(heap->spare, capacity * sizeof *grown);
         if (!grown) return 0;
         heap->spare = grown;
         heap->spare_capacity = capacity;
     }
-    heap->spare[heap->spare_length++] = (uintptr_t)segment;
-    heap->spare_resident += MYL_NATIVE_SEGMENT_BYTES;
+    heap->spare[heap->spare_length++] = segment;
     return 1;
-}
-/* Return to the host the pages of every spare block that sat unused since the
- * previous full collection: the entries below the list's low-water mark,
- * which blocks taken since never reached. A block the next full collection
- * spares is kept resident until the one after, so a program that frees a
- * phase's storage and refills it at once reuses its pages without faulting
- * them in again; only storage that stayed idle for a whole interval goes
- * back. A block the host refuses to release simply stays resident. Then the
- * mark restarts at the whole list. */
-static void spare_trim(myl_native_heap *heap) {
-    size_t idle = heap->spare_idle < heap->spare_length ? heap->spare_idle : heap->spare_length;
-    for (size_t i = 0; i < idle; ++i) {
-        if (heap->spare[i] & SPARE_RELEASED) continue;
-        if (madvise((void *)heap->spare[i], MYL_NATIVE_SEGMENT_BYTES, MADV_DONTNEED)) continue;
-        heap->spare[i] |= SPARE_RELEASED;
-        heap->spare_resident -= MYL_NATIVE_SEGMENT_BYTES;
-    }
-    heap->spare_idle = heap->spare_length;
 }
 /* Reserve one segment and link it into the heap: a spare block if there is
  * one (`GC-SPARE-1`), else a fresh zero-filled one. Fresh storage is what
@@ -700,13 +674,15 @@ static void mark_old_references(myl_native_heap *heap) {
         if (generations->young_edge) stack_push(&generations->remembered, object);
     }
 }
-/* Collection policy (`GC-TRIGGER-1`): a minor collection runs once the young
- * generation grows by half the live bytes, never less than the floor. The old
- * generation may grow to `full_threshold`, one and a half times the bytes the
- * last full collection kept plus the floor; the collection after the minor one
- * that finds it there is full and runs at the next allocation. While minor
- * collections are promoting, the next one runs no later than the threshold,
- * so the young interval cannot carry the heap far past it first. */
+/* Collection policy: a minor collection runs once the young generation grows
+ * by half the live bytes, never less than the floor, and a full one once the
+ * old generation reaches `full_threshold`, twice the bytes the last full
+ * collection kept plus the floor. A tighter threshold (1.5x, a full collection
+ * as soon as promotion reaches it, and no young interval past it) lowered
+ * text_ops' and knucleotide's peaks by 4 and 2 MB but cost programs with a
+ * large, growing live set more full collections and more minor rescans of
+ * their old lists (scan_split +20%); see
+ * docs/audits/memory-footprint-2026-09-23.md. */
 #define MYL_NATIVE_YOUNG_FLOOR (((size_t)4) << 20)
 #define MYL_NATIVE_FULL_FLOOR (((size_t)4) << 20)
 static size_t saturating_add(size_t a, size_t b) { return a > SIZE_MAX - b ? SIZE_MAX : a + b; }
@@ -718,21 +694,10 @@ static void schedule(myl_native_heap *heap, int full) {
     heap->next_collection = saturating_add(live, young);
     /* An object kept young is not old: only promotion grows the old
      * generation toward the full threshold. */
-    myl_native_generations *generations = &heap->generations;
-    size_t old_before = generations->old_bytes;
-    generations->old_bytes = live - generations->young_bytes;
+    heap->generations.old_bytes = live - heap->generations.young_bytes;
     if (full) {
-        generations->full_threshold = saturating_add(saturating_add(live, live / 2), MYL_NATIVE_FULL_FLOOR);
-        return;
-    }
-    if (generations->old_bytes >= generations->full_threshold) {
-        heap->next_collection = live;
-        return;
-    }
-    if (generations->old_bytes > old_before) {
-        size_t cap = saturating_add(live, MYL_NATIVE_YOUNG_FLOOR);
-        if (cap < generations->full_threshold) cap = generations->full_threshold;
-        if (heap->next_collection > cap) heap->next_collection = cap;
+        size_t grown = live > SIZE_MAX / 2 ? SIZE_MAX : live * 2;
+        heap->generations.full_threshold = saturating_add(grown, MYL_NATIVE_FULL_FLOOR);
     }
 }
 /* Whether an object has a one-slot segment of its own: its charge is past the
@@ -956,7 +921,6 @@ static void collect(myl_native_heap *heap, int full) {
     /* Collection timing is unobservable (no destructors, no counter a program
      * can read) and `--gc-stress` bypasses these triggers entirely. */
     schedule(heap, full);
-    if (full) spare_trim(heap);
 }
 void myl_native_heap_collect(myl_native_heap *heap) {
     collect(heap, 1);

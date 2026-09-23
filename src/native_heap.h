@@ -355,16 +355,9 @@ typedef struct {
     /* Spare segments (`GC-SPARE-1`): size-classed blocks a sweep found with
      * no object in them, unlinked from their class and from `segments`, and
      * handed to the next class that needs a fresh segment, whatever its
-     * stride. Each entry is the block's address, with bit 0 set when its pages
-     * were returned to the host (so they read as zero) and clear when they
-     * still hold stale bytes; `spare_resident` counts the bytes of the latter.
-     * A full collection returns the pages of every entry that sat unused
-     * since the previous one. */
-    uintptr_t *spare;
-    size_t spare_length, spare_capacity, spare_resident;
-    /* The fewest entries the spare list held since the last full collection:
-     * entries below it sat unused for that whole interval. */
-    size_t spare_idle;
+     * stride. A spare keeps its pages, so it holds stale bytes. */
+    myl_native_segment **spare;
+    size_t spare_length, spare_capacity;
     /* See `arena_chunks`. */
     size_t arena_depths, arena_depth_capacity;
     /* The 2 MiB regions (address >> 21) of every pool mapping, in an

@@ -450,9 +450,7 @@ static void aging_edges_test(void) {
 }
 /* spec-case: GC-SPARE-1. A size-classed segment a sweep leaves empty becomes a
    spare that any class takes before a new pool is mapped; its resident bytes
-   are stale, so a slot handed out from it is cleared like a reused hole's.
-   Spares that stayed unused from one full collection to the next give their
-   pages back, and a block taken after that reads as zero. */
+   are stale, so a slot handed out from it is cleared like a reused hole's. */
 static void spare_test(void) {
     typedef struct { uint64_t words[10]; } Wide;
     const myl_native_type wide = { .size = sizeof(Wide), .alignment = _Alignof(Wide), .kind = MYL_NATIVE_PLAIN,
@@ -475,10 +473,6 @@ static void spare_test(void) {
         item->words[9] = 1;
     }
     assert(heap.spare_length < spares && heap.pool_count == pools);
-    /* Two full collections with the spares untouched release their pages. */
-    myl_native_heap_collect(&heap);
-    myl_native_heap_collect(&heap);
-    assert(heap.spare_resident == 0 && heap.spare_length > 0);
     myl_native_heap_destroy(&heap);
 }
 /* spec-case: GC-NOZERO-1. A coallocated block's payload is not cleared when
@@ -523,51 +517,6 @@ static void aging_through_old_references_test(void) {
     assert(old_flag(leaf) && heap.generations.young_bytes == 0 && heap.generations.old_bytes == 3 * 32);
     assert(old->next->next->value == 9);
     assert(myl_native_root_pop(&heap, &root));
-    myl_native_heap_destroy(&heap);
-}
-/* spec-case: GC-TRIGGER-1. A full collection sets the threshold to one and a
-   half times what it kept plus 4 MiB; while minor collections promote, the next
-   one runs no later than that threshold (or one young floor past the live
-   bytes); and once promotion reaches the threshold the next allocation runs a
-   full collection. */
-static void trigger_test(void) {
-    const size_t mib = (size_t)1 << 20;
-    myl_native_heap heap;
-    myl_native_heap_init(&heap, (size_t)256 << 20);
-    const myl_native_type octets = { .size = 1, .alignment = 1, .kind = MYL_NATIVE_PLAIN, .trace_mode = MYL_NATIVE_TRACE_NONE };
-    unsigned char *ballast = myl_native_heap_alloc(&heap, &octets, 12 * mib);
-    myl_native_root ballast_root;
-    myl_native_root_push(&heap, &ballast_root, &ballast, &pointer_type);
-    myl_native_heap_collect(&heap);
-    size_t live = heap.bytes;
-    assert(heap.generations.full_threshold == live + live / 2 + 4 * mib);
-    assert(heap.next_collection == live + live / 2);
-    /* Pretend the old generation is 2 MiB short of the threshold. */
-    heap.generations.full_threshold = live + 2 * mib;
-    Node *young = myl_native_heap_alloc(&heap, &node_type, 1);
-    myl_native_root young_root;
-    myl_native_root_push(&heap, &young_root, &young, &pointer_type);
-    allocate_due(&heap, &node_type);
-    /* What the collection kept; the allocation that ran it is charged after. */
-    live = heap.generations.old_bytes + heap.generations.young_bytes;
-    assert(!old_flag(young) && heap.next_collection == live + live / 2);
-    size_t fulls = heap.generations.full_collections;
-    allocate_due(&heap, &node_type);
-    /* The node was promoted, so the young interval is capped at the floor. */
-    live = heap.generations.old_bytes + heap.generations.young_bytes;
-    assert(old_flag(young) && heap.next_collection == live + 4 * mib);
-    /* One more promoted node crosses the threshold: the minor collection that
-       promotes it leaves the next collection due at once, and full. */
-    heap.generations.full_threshold = heap.generations.old_bytes + 16;
-    young = myl_native_heap_alloc(&heap, &node_type, 1);
-    allocate_due(&heap, &node_type);
-    allocate_due(&heap, &node_type);
-    assert(old_flag(young) && heap.generations.full_collections == fulls);
-    assert(heap.next_collection == heap.generations.old_bytes + heap.generations.young_bytes);
-    assert(myl_native_heap_alloc(&heap, &node_type, 1));
-    assert(heap.generations.full_collections == fulls + 1);
-    assert(myl_native_root_pop(&heap, &young_root));
-    assert(myl_native_root_pop(&heap, &ballast_root));
     myl_native_heap_destroy(&heap);
 }
 static void automatic_collection_test(void) {
@@ -745,7 +694,6 @@ int main(void) {
     aging_test();
     aging_edges_test();
     aging_through_old_references_test();
-    trigger_test();
     spare_test();
     block_reuse_test();
     puts("native heap tests passed");
