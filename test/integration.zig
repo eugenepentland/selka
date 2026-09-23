@@ -8099,11 +8099,20 @@ const bench_cases =
     \\{"main::bench_loop":{"sizes":{"small":{"arguments":{"limit":"10"},"expected":"45"}}}}
 ;
 const bench_sampling = [_][]const u8{ "--bench-warmup", "0", "--bench-batches", "2", "--bench-batch-ms", "1" };
+// Both policies decide by construction, never by how fast the machine is right
+// now. Two 1 ms batches taken during a loaded gate can differ by far more than
+// the default 25% spread budget, and the enforcement run can be many times
+// slower than the run that made the baseline, so a policy that leaves noise or
+// growth reachable fails at random under load (it did in the 2026-09-22 parity
+// gates). The passing policy sets a spread budget and a meaningful-delta floor
+// no measurement of this loop reaches; the ceiling is below any measurement.
+// The growth, noise and confirmation arithmetic has its own deterministic unit
+// tests in `src/native_bench.zig`; this test covers the CLI path end to end.
 const bench_policy_pass =
-    \\{"version":"bench-policy-v1","runner_profile":"default","default":{"allowed_growth_percent":1000,"minimum_meaningful_delta_ns":0,"max_ns_per_op":1000000000},"required":["main::bench_loop[small]"]}
+    \\{"version":"bench-policy-v1","runner_profile":"default","default":{"allowed_growth_percent":1000,"minimum_meaningful_delta_ns":1000000000,"max_ns_per_op":1000000000},"required":["main::bench_loop[small]"],"noise":{"max_relative_spread_percent":1000000000,"near_limit_margin_percent":0}}
 ;
 const bench_policy_ceiling =
-    \\{"version":"bench-policy-v1","runner_profile":"default","default":{"allowed_growth_percent":1000,"minimum_meaningful_delta_ns":0,"max_ns_per_op":0.0000001},"required":["main::bench_loop[small]"]}
+    \\{"version":"bench-policy-v1","runner_profile":"default","default":{"allowed_growth_percent":1000,"minimum_meaningful_delta_ns":0,"max_ns_per_op":0.0000001},"required":["main::bench_loop[small]"],"noise":{"max_relative_spread_percent":1000000000,"near_limit_margin_percent":0}}
 ;
 
 fn benchArgs(allocator: std.mem.Allocator, base: []const []const u8) ![]const []const u8 {
@@ -8136,6 +8145,24 @@ fn benchSpawn(allocator: std.mem.Allocator, args: *std.ArrayList([]const u8), ca
     try args.append(allocator, cache_argument);
     try args.appendSlice(allocator, &tools);
     return std.process.run(allocator, testing.io, .{ .argv = args.items });
+}
+
+/// Expect a benchmark run's exit status and print its stderr when it differs:
+/// an unexpected 2 is a host failure (spawn, disk quota, memory on a loaded
+/// machine), and only that text says which.
+fn expectBenchExit(expected: u8, result: std.process.RunResult) !void {
+    const wanted = std.process.Child.Term{ .exited = expected };
+    if (std.meta.eql(wanted, result.term)) return;
+    std.debug.print("benchmark run ended {any}, wanted exit {d}; stderr:\n{s}\n", .{ result.term, expected, result.stderr });
+    return error.TestUnexpectedResult;
+}
+
+/// The verdict of the one comparison a baseline-checked benchmark report carries.
+fn benchVerdict(allocator: std.mem.Allocator, path: []const u8) ![]const u8 {
+    const report = (try std.json.parseFromSlice(std.json.Value, allocator, try readFile(allocator, path), .{})).value;
+    const comparisons = report.object.get("comparisons").?.array.items;
+    try testing.expectEqual(@as(usize, 1), comparisons.len);
+    return comparisons[0].object.get("verdict").?.string;
 }
 
 fn readFile(allocator: std.mem.Allocator, path: []const u8) ![]const u8 {
@@ -8171,7 +8198,7 @@ test "guest benchmarks write a candidate and enforce an approved baseline immuta
     const ceiling_policy = try std.fs.path.join(a, &.{ root, "ceiling.json" });
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
     const candidate_run = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "Debug", "--bench-output", candidate }));
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, candidate_run.term);
+    try expectBenchExit(0, candidate_run);
     const report = (try std.json.parseFromSlice(std.json.Value, a, try readFile(a, candidate), .{})).value;
     try testing.expectEqualStrings("bench-report-v1", report.object.get("version").?.string);
     try testing.expect(report.object.get("complete").?.bool);
@@ -8184,10 +8211,15 @@ test "guest benchmarks write a candidate and enforce an approved baseline immuta
     const approved_json = (try std.json.parseFromSlice(std.json.Value, a, approved, .{})).value;
     try testing.expectEqualStrings("bench-baseline-v1", approved_json.object.get("version").?.string);
     try testing.expectEqualStrings("testrev", approved_json.object.get("provenance").?.object.get("revision").?.string);
-    const passing = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "Debug", "--bench-baseline", baseline, "--bench-policy", pass_policy }));
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, passing.term);
-    const failing = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "Debug", "--bench-baseline", baseline, "--bench-policy", ceiling_policy }));
-    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, failing.term);
+    const passing_report = try std.fs.path.join(a, &.{ root, "passing.json" });
+    const failing_report = try std.fs.path.join(a, &.{ root, "failing.json" });
+    const passing = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "Debug", "--bench-baseline", baseline, "--bench-policy", pass_policy, "--bench-output", passing_report }));
+    try expectBenchExit(0, passing);
+    try testing.expectEqualStrings("pass", try benchVerdict(a, passing_report));
+    const failing = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "Debug", "--bench-baseline", baseline, "--bench-policy", ceiling_policy, "--bench-output", failing_report }));
+    try expectBenchExit(1, failing);
+    // It fails on the ceiling itself, not on noise or an incompatible baseline.
+    try testing.expectEqualStrings("ceiling", try benchVerdict(a, failing_report));
     // A failed check leaves the approved baseline byte-for-byte unchanged.
     try testing.expectEqualStrings(approved, try readFile(a, baseline));
 }
@@ -8226,7 +8258,7 @@ test "a wrong benchmark result or trap fails the run and reports no measurement"
     const candidate = try std.fs.path.join(a, &.{ root, "candidate.json" });
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
     const run = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "Debug", "--bench-output", candidate }));
-    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, run.term);
+    try expectBenchExit(1, run);
     const report = (try std.json.parseFromSlice(std.json.Value, a, try readFile(a, candidate), .{})).value;
     try testing.expect(!report.object.get("complete").?.bool);
     try testing.expect(!report.object.get("passed").?.bool);
@@ -8268,7 +8300,7 @@ test "a directory benchmark run measures sequentially and stays green without te
     try writeProjectFile(&temporary, "suite/two/main.my", bench_dir_program);
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
     const run = try benchRunDirectory(a, suite, cache, &.{ "--bench", "*", "--mode", "Debug" });
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, run.term);
+    try expectBenchExit(0, run);
 }
 
 // Guest test transport, failure text and entry discovery

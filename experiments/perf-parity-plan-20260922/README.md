@@ -41,9 +41,16 @@ of `~/capbuild` because four concurrent ReleaseFast compiles exceed it):
 ```sh
 ./build_cf_arms.sh binary_trees nbody ...          # per-rule counterfactuals
 ./build_ladder.sh binary_trees nbody ...           # the plan's rungs
-python3 bench.py binary_trees ... --rounds 7 --cpu 6 --cf cf-nan ... --json results/x.json
+python3 bench.py binary_trees ... --rounds 7 --cpu 6 --cf cf-nan ... --mylang ../../.tmp/perf-audit-20260922/install-a3/bin/mylang --json results/x.json
 python3 table.py results/x.json --ms --ci
 ```
+
+Since 2026-09-23, `bench.py` defaults to this checkout's Debug `zig-out/bin/mylang`,
+because a Debug and a ReleaseFast compiler emit byte-identical guest binaries. It
+also defaults to the first reserved timing CPU (`MYLANG_TIMING_CPUS`, CPU 2) and
+to a work directory under `.mylang-cache/`. The recorded results used the explicit
+compiler, CPU and paths shown above
+([many agents on one machine](../../docs/tooling/many-agents.md)).
 
 `build_ladder.sh` needs an LLVM adapter copy that accepts QBE's `hlt`
 terminator (a one-branch parser change, marked `AUDIT PATCH`); the unpatched
