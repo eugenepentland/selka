@@ -1,0 +1,7 @@
+def reciprocal(n: int) -> list[int]:
+    return [100 // (i - 17) for i in range(n)]
+
+
+def main(out: Stream) -> int:
+    out.print(len(reciprocal(16)))
+    return len(reciprocal(20))

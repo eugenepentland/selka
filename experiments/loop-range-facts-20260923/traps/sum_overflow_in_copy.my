@@ -1,0 +1,14 @@
+def total(xs: list[int]) -> int:
+    t = 0
+    for i in range(len(xs)):
+        t += xs[i]
+    return t
+
+
+def main(out: Stream) -> int:
+    xs = [0 for _ in range(20)]
+    xs[17] = 9223372036854775000
+    xs[18] = 500
+    xs[19] = 500
+    out.print("start")
+    return total(xs)
