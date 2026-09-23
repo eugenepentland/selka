@@ -237,13 +237,16 @@ fn forwardFilters(b: *std.Build, step: *std.Build.Step.Run, filters: []const []c
     for (filters) |filter| step.addArg(b.fmt("--guardian-filter={s}", .{filter}));
 }
 /// How to split one test root: its shard count, each shard's resident-memory
-/// ceiling, the repository files its tests read (`build_test_inputs.zig`), and
-/// the whole-root run a count of 1 uses instead.
+/// ceiling, the repository files its tests read (`build_test_inputs.zig`), the
+/// whole-root run a count of 1 uses instead, and — for the focused sharded
+/// steps — the `-Dtest-filter` values to forward and whether to cache verdicts.
 const Shards = struct {
     count: usize,
     bytes: u64,
     inputs: []const []const u8,
     whole: *std.Build.Step.Run,
+    filters: []const []const u8 = &.{},
+    cache: bool = true,
 };
 /// The runs that cover one test root: `count` shards of the same test binary,
 /// each executing the slice of the root's named tests that `--guardian-shard=`
@@ -261,7 +264,8 @@ fn shardRuns(b: *std.Build, compile: *std.Build.Step.Compile, shards: Shards) []
     for (steps, 0..) |*step, index| {
         const run = focused(b.addRunArtifact(compile), shards.bytes);
         guardian.announceShard(run, index, shards.count);
-        cached(run, shards.inputs);
+        forwardFilters(b, run, shards.filters);
+        if (shards.cache) cached(run, shards.inputs);
         step.* = &run.step;
     }
     return steps;
@@ -599,6 +603,14 @@ pub fn build(b: *std.Build) void {
     // so `-Dtest-filter` returns in seconds.
     b.step("test-units", "Run only src/root_test.zig, honouring -Dtest-filter").dependOn(&run_unit.step);
     b.step("test-cli", "Run only test/integration.zig, honouring -Dtest-filter").dependOn(&run_integration.step);
+    // The same focused runs split into `-Dtest-shards` concurrent processes even
+    // under a filter, for `scripts/affected_tests.py`: its selections can name a
+    // hundred slow tests, and it sums the shards' counts itself. They are never
+    // cached, so every run reports what it selected.
+    const units_sharded = b.step("test-units-sharded", "Run src/root_test.zig split into -Dtest-shards processes, honouring -Dtest-filter");
+    const cli_sharded = b.step("test-cli-sharded", "Run test/integration.zig split into -Dtest-shards/2 processes, honouring -Dtest-filter");
+    dependOnAll(units_sharded, shardRuns(b, unit, .{ .count = requested_shards, .bytes = rss.shard_unit, .inputs = &.{}, .whole = run_unit, .filters = test_filters, .cache = false }));
+    dependOnAll(cli_sharded, shardRuns(b, integration, .{ .count = @max(1, requested_shards / 2), .bytes = rss.shard_cli, .inputs = &.{}, .whole = run_integration, .filters = test_filters, .cache = false }));
     const byte_io_step = b.step("test-byte-io", "Verify raw guest stdin/stdout and host bounds");
     const run_byte_io_unit = bounded(b.addRunArtifact(byte_io_unit), rss.host_suite);
     cached(run_byte_io_unit, &test_inputs.byte_io);

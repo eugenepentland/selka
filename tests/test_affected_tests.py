@@ -110,7 +110,7 @@ class Mapping(SyntheticRepo):
     def test_the_plan_filters_each_root_and_builds_the_compiler_for_guests(self) -> None:
         sel = self.select({"src/foo.zig": ["pub fn computeThing() void {}"]})
         builds, guests = at.plan(sel, "zig")
-        units = next(c for c in builds if "test-units" in c.argv)
+        units = next(c for c in builds if "test-units-sharded" in c.argv)
         self.assertIn("-Dtest-filter=foo_test.test.", units.argv)
         self.assertTrue(any("affected-compiler" in c.argv for c in builds))
         lang = next(c for c in guests if "tests/lang/python_core.my" in c.argv)

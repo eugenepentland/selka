@@ -459,15 +459,18 @@ class Command:
         self.log: Path | None = None
 
 
-def plan(sel: Selection, zig: str) -> tuple[list[Command], list[Command]]:
-    """Build commands (run first, concurrently) and guest commands (run after)."""
+def plan(sel: Selection, zig: str, shards: int = 8) -> tuple[list[Command], list[Command]]:
+    """Build commands (run first, concurrently) and guest commands (run after).
+
+    The Zig selections run through the sharded focused steps, so a filter that
+    names a hundred slow tests still finishes in the time of its slowest slice.
+    """
     builds: list[Command] = []
-    if sel.unit:
-        argv = [zig, "build", "test-units", "--summary", "line"] + ["-Dtest-filter=" + f for f in sorted(sel.unit)]
-        builds.append(Command("zig unit tests ({} filter(s))".format(len(sel.unit)), argv))
-    if sel.cli:
-        argv = [zig, "build", "test-cli", "--summary", "line"] + ["-Dtest-filter=" + f for f in sorted(sel.cli)]
-        builds.append(Command("zig CLI tests ({} filter(s))".format(len(sel.cli)), argv))
+    for table, step, label in ((sel.unit, "test-units-sharded", "unit"), (sel.cli, "test-cli-sharded", "CLI")):
+        if table:
+            argv = [zig, "build", step, "--summary", "line", "-Dtest-shards={}".format(shards)]
+            argv += ["-Dtest-filter=" + f for f in sorted(table)]
+            builds.append(Command("zig {} tests ({} filter(s))".format(label, len(table)), argv))
     needs_compiler = bool(sel.guest or sel.llvm or sel.doctest or sel.doc_coverage)
     steps = sorted(sel.steps)
     if needs_compiler:
@@ -493,6 +496,7 @@ def plan(sel: Selection, zig: str) -> tuple[list[Command], list[Command]]:
 
 
 SELECTED = re.compile(r"(\d+) test\(s\) selected")
+MATCHED = re.compile(r"(\d+) match by name")
 GUEST_SUMMARY = re.compile(r"^\d+ passed, \d+ cached, \d+ failed, \d+ skipped.*$", re.M)
 
 
@@ -507,8 +511,12 @@ def execute(command: Command, stamp: str, index: int) -> Command:
     command.log.write_text("$ " + " ".join(command.argv) + "\n" + output, encoding="utf-8")
     selected = SELECTED.findall(output)
     guest = GUEST_SUMMARY.findall(output)
+    matched = MATCHED.findall(output)
     if selected:
-        command.summary = "{} test(s) selected".format(sum(int(n) for n in selected))
+        # Every shard reports its own slice; the name-match count is the root's.
+        command.summary = "{} test(s) selected across {} process(es)".format(sum(int(n) for n in selected), len(selected))
+        if matched:
+            command.summary += ", {} named by the filters".format(matched[0])
     elif guest:
         command.summary = guest[-1]
     elif "cached" in output and command.status == 0 and "zig build" in command.label:
@@ -539,6 +547,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dry-run", action="store_true", help="print the selection and run nothing")
     parser.add_argument("--serial", action="store_true", help="run the zig build commands one at a time")
     parser.add_argument("--guest-full", action="store_true", help="run all of tests/lang instead of the selected guest files")
+    parser.add_argument("--shards", type=int, default=8, help="processes each selected Zig root is split into (default 8)")
     parser.add_argument("--zig", default=None, help="zig driver to invoke (default: $ZIG, else as scripts/focused_test.py)")
     args = parser.parse_args(argv)
 
@@ -561,7 +570,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     zig = args.zig or os.environ.get("ZIG") or focused_test.zig_program()
-    builds, guests = plan(sel, zig)
+    builds, guests = plan(sel, zig, max(1, args.shards))
     stamp = time.strftime("%Y%m%d-%H%M%S")
     started = time.time()
     print("running:")
