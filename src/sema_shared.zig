@@ -33,3 +33,5 @@ pub const eCellEquality = "E_CELL_EQUALITY";
 pub const eOptionTest = "E_OPTION_TEST";
 pub const bufferOperation = "buffer_operation";
 pub const eArenaBinding = "E_ARENA_BINDING";
+pub const eEnvironmentName = "E_ENVIRONMENT_NAME";
+pub const eWithResource = "E_WITH_RESOURCE";
