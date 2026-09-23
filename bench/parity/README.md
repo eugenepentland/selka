@@ -7,7 +7,7 @@ programs and fails when a program's **ratio** to Zig grows past its threshold.
 It is opt-in: `zig build test` never builds or times it.
 
 ```bash
-zig build bench-parity                                  # everything, CPU 2, 7 rounds
+zig build bench-parity -Dcompiler-only=true             # everything, CPU 2, 7 rounds
 zig build bench-parity -Dbench-filter=sieve -Dbench-cpu=10
 zig build bench-parity -Dbench-filter=micro/ -Dbench-rounds=11
 zig build bench-parity -Dbench-mylang=/opt/mylang/bin/mylang   # a prebuilt compiler
@@ -18,7 +18,9 @@ Without `-Dbench-mylang` the step first installs this checkout's compiler (the
 ordinary `zig build`, so a Debug compiler unless `-Doptimize` says otherwise).
 The compiler's own optimization changes only how long the builds take: the
 programs are built with `mylang build`'s default (ReleaseFast, LLVM O3 + LTO),
-and a Debug and a ReleaseFast compiler emit byte-identical binaries.
+and a Debug and a ReleaseFast compiler emit byte-identical binaries. Add
+`-Dcompiler-only=true` so that install skips the three application runners,
+which it would otherwise build without using them.
 
 ## Layout
 

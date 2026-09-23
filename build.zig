@@ -384,22 +384,30 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .imports = host_imports,
     });
+    // `-Dcompiler-only` installs the compiler, QBE and the prebuilt runtime but
+    // not the three application runners. Each runner links its own copy of the
+    // whole compiler, so a ReleaseFast install otherwise optimizes that code four
+    // times; a compiler built only to measure guest programs needs none of them.
+    // The application tests under `tests/application_comparison` and
+    // `tests/development_velocity` read the runners from `zig-out/bin`, so they
+    // need the default install.
+    const compiler_only = b.option(bool, "compiler-only", "Install only mylang, qbe and the runtime, not board-trial, schematic-svg or mylang-io (for measurement installs)") orelse false;
     const board_runner = b.addExecutable(.{ .max_rss = rss.compile, .name = "board-trial", .root_module = board_module });
-    b.installArtifact(board_runner);
+    if (!compiler_only) b.installArtifact(board_runner);
     const schematic_runner = b.addExecutable(.{ .max_rss = rss.compile, .name = "schematic-svg", .root_module = b.createModule(.{
         .root_source_file = b.path("src/schematic/runner.zig"),
         .target = target,
         .optimize = optimize,
         .imports = host_imports,
     }) });
-    b.installArtifact(schematic_runner);
+    if (!compiler_only) b.installArtifact(schematic_runner);
     const byte_io_runner = b.addExecutable(.{ .max_rss = rss.compile, .name = "mylang-io", .root_module = b.createModule(.{
         .root_source_file = b.path("src/byte_io/runner.zig"),
         .target = target,
         .optimize = optimize,
         .imports = host_imports,
     }) });
-    b.installArtifact(byte_io_runner);
+    if (!compiler_only) b.installArtifact(byte_io_runner);
     const byte_io_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
         .root_source_file = b.path("src/byte_io/tests.zig"),
         .target = target,
