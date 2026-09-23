@@ -298,16 +298,30 @@ def select_zig_file(sel: Selection, corpus: Corpus, path: str) -> None:
         sel.add(sel.unit, namespace(path), "tests declared in {}".format(path))
     stem = Path(path).stem
     if not stem.endswith("_test"):
-        companion = str(Path(path).with_name(stem + "_test.zig"))
-        if corpus.unit_tests.get(companion):
-            sel.add(sel.unit, namespace(companion), "{} is the test file for {}".format(companion, path))
-        for importer in sorted(corpus.importers.get(path, ())):
-            if importer.endswith("_test.zig") and corpus.unit_tests.get(importer):
-                sel.add(sel.unit, namespace(importer), "{} imports {}".format(importer, path))
+        # A module split out of a facade (`qbe_frame.zig` behind `qbe.zig`) is
+        # tested through the facade: its test file and the test files importing it.
+        owners = [path] + facade_of(corpus, path)
+        for owner in owners:
+            via = "" if owner == path else " (through {}, which imports {})".format(owner, path)
+            companion = str(Path(owner).with_name(Path(owner).stem + "_test.zig"))
+            if corpus.unit_tests.get(companion):
+                sel.add(sel.unit, namespace(companion), "{} is the test file for {}{}".format(companion, owner, via))
+            for importer in sorted(corpus.importers.get(owner, ())):
+                if importer.endswith("_test.zig") and corpus.unit_tests.get(importer):
+                    sel.add(sel.unit, namespace(importer), "{} imports {}{}".format(importer, owner, via))
         if len(sel.unit) == before:
             sel.notes.append("{}: no test file declares or imports it; only tests the diff names by spec tag, "
                              "diagnostic code or function are selected, and the gate covers the rest".format(path))
         guest_smoke(sel, "compiler source {}".format(path))
+
+
+def facade_of(corpus: Corpus, path: str) -> list[str]:
+    """The family module (`src/qbe.zig` for `src/qbe_frame.zig`) when it imports `path`."""
+    family = Path(path).stem.split("_")[0]
+    facade = str(Path(path).with_name(family + ".zig"))
+    if facade != path and facade in corpus.importers.get(path, set()):
+        return [facade]
+    return []
 
 
 def guest_smoke(sel: Selection, reason: str) -> None:

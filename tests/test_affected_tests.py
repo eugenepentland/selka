@@ -19,7 +19,8 @@ import affected_tests as at  # noqa: E402
 
 FILES = {
     "src/root_test.zig": 'test {\n    _ = @import("foo_test.zig");\n    _ = @import("foo.zig");\n    _ = @import("bar_test.zig");\n}\n',
-    "src/foo.zig": 'pub fn computeThing() void {}\ntest "inline foo" {\n    try t.expect(true);\n}\n',
+    "src/foo.zig": 'const part = @import("foo_part.zig");\npub fn computeThing() void {}\ntest "inline foo" {\n    try t.expect(true);\n}\n',
+    "src/foo_part.zig": 'pub fn part() void {}\n',
     "src/foo_test.zig": 'const foo = @import("foo.zig");\n// spec: FOO-1\ntest "foo works" {\n    foo.computeThing();\n}\n',
     "src/bar_test.zig": '// spec: BAR-2\ntest "bar reports E_BAR_CODE" {\n    try expect("E_BAR_CODE");\n}\n',
     "src/native_text.c": "int x;\n",
@@ -63,6 +64,11 @@ class Mapping(SyntheticRepo):
         self.assertIn("foo_test.test.", sel.unit)
         self.assertIn("foo_test.test.foo works", sel.unit)
         self.assertIn("tests/lang/python_core.my", sel.guest)
+
+    def test_a_module_split_out_of_a_facade_is_tested_through_it(self) -> None:
+        sel = self.select({"src/foo_part.zig": ["pub fn part() void {}"]})
+        self.assertIn("foo_test.test.", sel.unit)
+        self.assertNotIn("foo.test.", sel.unit)
 
     def test_a_spec_tag_in_the_diff_selects_the_tests_carrying_it(self) -> None:
         sel = self.select({"SPEC.md": ["- [BAR-2] bar, reworded"]})
