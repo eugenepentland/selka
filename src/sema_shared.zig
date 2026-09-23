@@ -15,3 +15,8 @@ pub const Work = struct { default_value: bool = false, id: ast.NodeId, emit: boo
 /// inferred (LAMBDA-KEY-INFER-1). No callback type is `unit`, so the marker
 /// never collides with a real slot; its `E_SORT_KEY` already names the lambda.
 pub const uninferred_lambda: typed.Type = .unit;
+/// Whether a callee declares a `mut` footprint at this parameter position.
+pub fn markerPositionDeclared(positions: []const u16, position: u16) bool {
+    for (positions) |candidate| if (candidate == position) return true;
+    return false;
+}
