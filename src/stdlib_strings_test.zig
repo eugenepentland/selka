@@ -83,3 +83,35 @@ test "standard strings error unions expose the category and message of a rejecte
         \\    return 42
     , 42);
 }
+
+// spec: STANDARD-FORMAT-FLOAT-EXACT-1
+test "format_float rounds the exact binary value, not the rounded scaled product" {
+    try fixture.run(t.allocator,
+        \\module main
+        \\import strings
+        \\
+        \\
+        \\def text(produced: Result[str, strings.Error]) -> str:
+        \\    match produced:
+        \\        case Ok(rendered):
+        \\            return rendered
+        \\        case Err(_):
+        \\            return "error"
+        \\
+        \\
+        \\def main() -> int:
+        \\    if text(strings.format_float(2.675, 2)) != "2.67":
+        \\        return 1
+        \\    if text(strings.format_float(0.0 - 8.345, 2)) != "-8.35":
+        \\        return 2
+        \\    if text(strings.format_float(1.005, 2)) != "1.00":
+        \\        return 3
+        \\    if text(strings.format_float(0.125, 2)) != "0.13":
+        \\        return 4
+        \\    if text(strings.format_float(2.5, 0)) != "3":
+        \\        return 5
+        \\    if text(strings.format_float(0.0 - 0.001, 2)) != "0.00":
+        \\        return 6
+        \\    return 42
+    , 42);
+}

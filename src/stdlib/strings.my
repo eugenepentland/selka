@@ -213,7 +213,20 @@ public def format_int(value: int, base: int) -> Result[str, Error]:
     return Ok(out)
 
 
-# Float rendered with a fixed number of decimals, rounding halves away from zero.
+# The exact rounding error of `a * b`, whose rounded value is `product`: Dekker's
+# two-product over Veltkamp halves, exact while no partial product overflows.
+def product_error(a: float, b: float, product: float) -> float:
+    a_split = 134217729.0 * a
+    a_high = a_split - (a_split - a)
+    a_low = a - a_high
+    b_split = 134217729.0 * b
+    b_high = b_split - (b_split - b)
+    b_low = b - b_high
+    return ((a_high * b_high - product) + a_high * b_low + a_low * b_high) + a_low * b_low
+
+
+# Float rendered with a fixed number of decimals, rounding the exact binary value and
+# sending exact halves away from zero.
 public def format_float(value: float, decimals: int) -> Result[str, Error]:
     if decimals < 0 or decimals > 17:
         return Err(Error.Invalid("decimal count must be between 0 and 17"))
@@ -224,9 +237,15 @@ public def format_float(value: float, decimals: int) -> Result[str, Error]:
             return Ok("-inf")
         return Ok("inf")
     magnitude = math.fabs(value)
-    shifted = math.round(magnitude * math.pow(10.0, decimals))
+    scale = math.pow(10.0, decimals)
+    product = magnitude * scale
+    shifted = math.round(product)
     if shifted >= 9223372036854775808.0:
         return Err(Error.Overflow("value is too large to render with fixed decimals"))
+    # A product that rounded onto an exact half (2.675 * 100.0 == 267.5) is only a tie
+    # if the unrounded product is one; below it, the value rounds toward zero.
+    if shifted - product == 0.5 and product_error(magnitude, scale, product) < 0.0:
+        shifted = shifted - 1.0
     scaled = int(shifted)
     body = format_int(scaled, 10)?
     if decimals == 0:

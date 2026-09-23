@@ -219,8 +219,11 @@ def decoded(body: str) -> int:
 use the pinned numeric grammar and parser. This includes surrounding ASCII
 whitespace, single underscores between digits, and `inf`, `infinity`, and `nan`;
 these forms were rejected by the older `strings.to_float` implementation.
-`format_float` rounds halves away from zero and rejects values too large for
-fixed decimals.
+`format_float` rounds the exact binary value, so `format_float(2.675, 2)` is
+`"2.67"` as in C and Python (2.675 is stored as 2.67499999…). A value that is
+exactly halfway rounds away from zero — `format_float(0.125, 2)` is `"0.13"`
+where Python prints `0.12` — and a result that rounds to zero is printed without a
+sign (`"0.00"` for `-0.001`). Values too large for fixed decimals are rejected.
 
 ## sort
 
