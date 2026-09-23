@@ -457,6 +457,7 @@ built. The same identity appears in every receipt's `implementation`, so a recei
 feature report from one compiler always agree. The current reference is
 `docs/current-language.md`; historical checkpoint prose does not supersede it. The
 manifest records implementation coverage, not a test certificate.
+- [CLI-HELP-1] `mylang --help`, `-h` and `help` print to stdout and exit 0: first the everyday commands (`check`, `run`, `build`, `test`, `fmt`, `reference --query`), then the full command reference. Any other malformed invocation still prints the reference to stderr and exits 2.
 - [FEATURE-REPORT-2] The manifest's `implemented` section is a JSON object keyed by feature
 slug. Every entry carries `kind`, either `language` or `tooling`, a one-line `summary`, and a
 `doc` pointer of the form `<page>.md#<heading-anchor>` naming the documentation section that

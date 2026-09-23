@@ -53,6 +53,19 @@ const Reporting = struct {
         return self.timings_json or self.report;
     }
 };
+/// The first screen of `mylang --help`: the commands an everyday edit loop uses.
+const everyday_help =
+    \\mylang: a Python-shaped, statically checked language compiled to native code.
+    \\
+    \\Everyday commands:
+    \\  mylang check FILE.my              type-check without building
+    \\  mylang run FILE.my [-- ARGS...]   build natively and run; arguments after --
+    \\  mylang build FILE.my -o OUT       native executable (add --project for a multi-module entry)
+    \\  mylang test FILE.my|DIR           run the public test_* functions
+    \\  mylang fmt FILE.my [--check]      canonical formatting
+    \\  mylang reference --query TERM     look up a feature or an error code such as E_MODULE_NAME
+    \\
+;
 const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--json] [--force]\n" ++
     "       mylang test <entry.my|directory> --bench GLOB [--bench-output FILE] [--bench-baseline FILE] [--bench-policy FILE]\n" ++
     "       mylang bench-promote --candidate FILE --approver NAME --reason TEXT [--baseline FILE] [--output FILE] [--revision REV]\n" ++
@@ -227,6 +240,12 @@ fn dispatch(process: std.process.Init) !u8 {
     const args = try process.minimal.args.toSlice(process.arena.allocator());
     if (args.len == 2 and std.mem.eql(u8, args[1], "--features")) {
         try featureReport(process);
+        return 0;
+    }
+    // An explicit request for help is not a usage error: answer on stdout with
+    // the everyday commands first, then the full reference, and exit 0.
+    if (args.len == 2 and (std.mem.eql(u8, args[1], "--help") or std.mem.eql(u8, args[1], "-h") or std.mem.eql(u8, args[1], "help"))) {
+        try std.Io.File.stdout().writeStreamingAll(process.io, everyday_help ++ "\nEvery command and option:\n" ++ usage);
         return 0;
     }
     if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return buildCommand(process, args[2..]);

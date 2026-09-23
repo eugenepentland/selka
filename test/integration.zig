@@ -4287,6 +4287,20 @@ test "CLI project-dependencies buildIndex emits checked graph identity and rejec
         \\    return 0
     , 1, "", "error[E_EXPORT_REMOVED]");
 }
+// spec: CLI-HELP-1
+test "CLI help answers on stdout with the everyday commands first and exits 0" {
+    for ([_][]const u8{ "--help", "-h", "help" }) |flag| {
+        const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, flag } });
+        defer testing.allocator.free(result.stdout);
+        defer testing.allocator.free(result.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+        try testing.expectEqualStrings("", result.stderr);
+        try testing.expect(std.mem.startsWith(u8, result.stdout, "mylang: a Python-shaped"));
+        const everyday = std.mem.indexOf(u8, result.stdout, "mylang check FILE.my").?;
+        const reference = std.mem.indexOf(u8, result.stdout, "usage: mylang test").?;
+        try testing.expect(everyday < reference);
+    }
+}
 // spec: FEATURE-REPORT-1
 test "CLI features identify installed compiler without source input" {
     const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "--features" } });
