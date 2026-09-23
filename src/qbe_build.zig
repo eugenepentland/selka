@@ -1007,6 +1007,19 @@ test "bundled build inputs carry only the native runtime, not compiler tests or 
     try std.testing.expect(bundles("native_equal.c") and bundles("native_format.zig"));
     try std.testing.expect(!bundles("sema.zig") and !bundles("qbe_build.zig") and !bundles("json_document.zig"));
 }
+// spec-case: QBE-FRAMEMAP-1
+test "every bundled runtime unit that names a trap helper keeps frame pointers" {
+    // A unit that calls into the `myl_qbe_*` layer can report a trap from
+    // inside itself, so the frame-map walk must be able to cross its frames.
+    for (runtime_units) |unit| {
+        const source = for (bundled.files) |asset| {
+            if (std.mem.eql(u8, asset.path, unit)) break asset.bytes;
+        } else return error.TestUnexpectedResult;
+        const reaches = std.mem.indexOf(u8, source, "myl_qbe_") != null;
+        try std.testing.expect(!reaches or cache_api.keepsFramePointers(unit));
+    }
+    try std.testing.expect(!cache_api.keepsFramePointers("native_heap.c"));
+}
 // spec: QBE-3
 test "the runtime tree is published once per content hash and reused by later builds" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);

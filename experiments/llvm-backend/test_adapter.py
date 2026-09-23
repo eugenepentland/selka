@@ -611,6 +611,58 @@ MARKER
         self.assertEqual(self.compile_units({"halting": self.HALTING_UNIT}, main),
                          "5\ntrap 9223372036854775807 1\n")
 
+    FRAME_MAP_UNIT = """dbgfile "myl_f_0123456789abcdef"
+export function l $myl_f_0123456789abcdef(l %ctx, l %a) {
+@entry
+ jmp @frameadmit1
+@frameadmit1
+ %probe =l alloc8 8
+ %slot =l add %ctx, 64
+ %floor =l loadl %slot
+ %below =l cultl %probe, %floor
+ jnz %below, @floorfail2, @stackadmit2
+@floorfail2
+ dbgloc 1, 1
+ call $myl_qbe_fail_frame(l %ctx)
+ hlt
+@stackadmit2
+ dbgloc 5
+ %r =l call $myl_f_fedcba9876543210(l %ctx, l %a)
+ dbgloc 70000
+ %s =l call $myl_f_fedcba9876543210(l %ctx, l %r)
+ ret %s
+}
+"""
+
+    def test_frame_map_calls_carry_probe_positions(self):
+        # QBE-FRAMEMAP-1: every call carries its position as a debug location
+        # whose discriminator is a pseudo-probe call index, so LLVM prints the
+        # position (and any inline stack) before the call.
+        ir = translate_text(self.FRAME_MAP_UNIT, "framemap")
+        self.assertIn("!llvm.pseudo_probe_desc", ir)
+        self.assertIn('linkageName: "myl_f_0123456789abcdef"', ir)
+        self.assertIn("emissionKind: DebugDirectivesOnly", ir)
+        self.assertIn('"frame-pointer"="non-leaf"', ir)
+        self.assertIn('"disable-tail-calls"="true"', ir)
+        # Position 5 is probe 5; the guard's column-1 call is probe 0.
+        self.assertIn(f"discriminator: {(5 << 3) | (100 << 19) | (2 << 26) | 7})", ir)
+        self.assertIn(f"discriminator: {(100 << 19) | (2 << 26) | 7})", ir)
+        self.assertRegex(ir, r"call i64 @myl_f_fedcba9876543210\([^)]*\) nomerge, !dbg !\d+")
+        # A position past the probe range is `noinline` at its call and on the
+        # function, and its location carries no discriminator.
+        self.assertRegex(ir, r"nomerge noinline, !dbg !\d+")
+        self.assertIn("noinline", ir.split("attributes #0 = {")[1].split("}")[0])
+        self.assertIn("!DILocation(line: 70000, column: 0, scope: !101)", ir)
+        # A frame-map unit that makes no call carries no debug information and
+        # stays inlinable.
+        leaf = ('dbgfile "myl_f_1111111111111111"\nexport function l $myl_f_1111111111111111(l %ctx, l %a) {\n'
+                '@entry\n %b =l add %a, 1\n ret %b\n}\n')
+        leaf_ir = translate_text(leaf, "leaf")
+        self.assertNotIn("DISubprogram", leaf_ir)
+        self.assertNotIn("noinline", leaf_ir)
+        with self.assertRaisesRegex(Exception, "dbgloc takes a line"):
+            translate_text(self.FRAME_MAP_UNIT.replace("dbgloc 5\n", "dbgloc x\n"), "bad")
+
     def test_installed_registry_reads_materialized_runtime(self):
         with tempfile.TemporaryDirectory() as directory:
             Path(directory, "helper.h").write_text(

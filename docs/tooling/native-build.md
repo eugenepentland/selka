@@ -132,14 +132,66 @@ library, and a `run` that named `--max-steps=N` carry exact per-instruction
 accounting, so the ceiling stops the program at the instruction it names. A
 `ReleaseFast` executable that was never asked for a ceiling carries none: it
 emits no step check, which is what makes the default `mylang run` and
-`mylang build --mode ReleaseFast` output small and fast. The per-instruction
-position marker is kept only where a diagnostic can read it — an instruction that
-can fail, an `assert`, or a call site — because that is what trap traces and
-`assert` messages read.
+`mylang build --mode ReleaseFast` output small and fast. It links no frame
+record either: see [trap traces without a frame record](#trap-traces-without-a-frame-record).
 Because such a binary cannot honor a ceiling, giving it `--max-steps=` at runtime
 reports `R_NO_STEP_ACCOUNTING` and names how to get a bounded run, rather than
-silently ignoring the flag. `--max-frames`, `--timeout` and `--max-memory` are
-enforced by the runtime and are unaffected.
+silently ignoring the flag; `--max-frames=` likewise reports
+`R_NO_FRAME_ACCOUNTING`. `--timeout` and `--max-memory` are enforced by the
+runtime and are unaffected.
+
+## Trap traces without a frame record
+
+A build with step or frame accounting — `Debug`, a library, the guest-test
+runner, a run or build given `--max-steps` or `--max-frames` — links a 32-byte
+frame record into `ctx->active_frame` on every call and stores the current
+instruction's position into it, and a trap's `in f at file:line` trace is that
+chain. A checked `ReleaseFast` executable and `mylang run` without a ceiling do
+neither (`QBE-FRAMEMAP-1`): no guest call loads, stores or links anything for
+the trace, and positions are recovered from return addresses only when a trap
+fires.
+
+- **In the IL.** Each unit starts with `dbgfile "SYMBOL"` and every call is
+  preceded by `dbgloc PC+1`, the bytecode instruction the call belongs to. The
+  prologue keeps only the execution-stack floor test; its `myl_qbe_fail_frame`
+  call is `dbgloc 1, 1`, the entry-guard mark.
+- **QBE** prints each `dbgloc` as a `.loc` line. QBE never inlines, so a call's
+  `.loc` is its whole position.
+- **LLVM.** The adapter gives each call a debug location whose line is the
+  position and whose discriminator is a pseudo-probe call index equal to it,
+  and names every unit in `llvm.pseudo_probe_desc`. LLVM prints
+  `.pseudoprobe GUID INDEX … @ CALLER_GUID:INDEX …` right before each call, the
+  `@` list naming every guest function the call was inlined through — so LLVM
+  keeps inlining guest code freely and the trace still names each logical frame
+  at its own call site. A runtime helper LLVM inlines has no debug information,
+  so its calls carry the probe of the call it replaced: a trap inside the helper
+  reports the helper's call site, exactly as the record's position did. Calls
+  are `nomerge` (two call sites never fold into one position),
+  `"disable-tail-calls"` keeps a call from replacing its caller's frame, and
+  `"frame-pointer"="non-leaf"` keeps the chain the runtime walks. A position
+  past the 16-bit probe index is `noinline` at its call and on its function.
+- **The table.** Before an object is assembled — per unit for QBE and LLVM
+  without LTO, and for full LTO on the assembly LLD produces for the whole
+  program (`--lto-emit-asm`, then an ordinary native link) —
+  `src/qbe_frame_map.zig` puts a label after every positioned call, removes the
+  `.file`/`.loc`/`.pseudoprobe` directives and probe descriptors (no DWARF
+  reaches the object), and appends a retained `mylang_frame_map` section with
+  one entry per logical frame of each call site, innermost first: the return
+  address, the position with an entry-guard and an inlined-caller bit, and the
+  unit's metadata, each as a 32-bit self-relative offset.
+- **At a trap.** The runtime (`fail` in `src/qbe_runtime.c`) sorts the table
+  once, follows the frame-pointer chain from its own frame across the guest
+  stack mapping, reports every return address found in the table (skipping an
+  entry guard's frame, which was never entered) and expands bytecode-inliner
+  splices as before. The runtime and the generated C are compiled with frame
+  pointers in every function that calls — the runtime only in the units that
+  can reach `fail`, so the heap and collector keep every register — and the
+  chain crosses runtime frames.
+
+A trap's code, message, trace, `MYLANG-TRAP` record, `assert` message and exit
+status are byte-identical to the linked-record protocol, including for a callee
+LLVM inlined, a trap inside an inlined runtime helper, a callback, deep
+recursion and a stack-floor failure.
 
 ## Unchecked release builds
 

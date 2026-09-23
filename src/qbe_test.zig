@@ -672,10 +672,14 @@ test "the fast protocol drops the per-call sticky test and keeps the trace posit
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, reader, "loadl %trap"));
     const caller = named(parsed.value, "main").?.il;
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, caller, "loadl %trap"));
-    // A call site keeps its position: a callee's trace names this pc, and the
-    // missing sticky branch no longer marks the body observable by itself.
-    try std.testing.expect(std.mem.indexOf(u8, caller, ", %position") != null);
-    try std.testing.expect(std.mem.indexOf(u8, caller, "call $myl_f_") != null);
+    // A call site keeps its position: a callee's trace names this pc. The fast
+    // protocol names it on the call itself for the frame map (QBE-FRAMEMAP-1)
+    // rather than storing it.
+    const site = std.mem.indexOf(u8, caller, "call $myl_f_") orelse return error.TestUnexpectedResult;
+    const line = std.mem.lastIndexOfScalar(u8, caller[0..site], '\n') orelse return error.TestUnexpectedResult;
+    const previous = std.mem.lastIndexOfScalar(u8, caller[0..line], '\n') orelse return error.TestUnexpectedResult;
+    try std.testing.expect(std.mem.startsWith(u8, caller[previous + 1 ..], " dbgloc "));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, caller, "%position"));
     // An accounting build keeps the flag test, so its trap delivery is unchanged.
     var accounted = try language.Compilation.init(a, "qbe.my", source);
     defer accounted.deinit();
@@ -2271,14 +2275,16 @@ test "the unchecked policy emits no overflow cast or bounds guard and no frame r
     defer a.free(guarded);
     const bare = try lowered(a, unchecked_program, .{ .step_checks = false, .frame_checks = false, .checks = false });
     defer a.free(bare);
-    // The default unbounded policy carries every guard class and the frame
-    // record the position stores are written into.
+    // The default unbounded policy carries every guard class, and every call
+    // names its position for the frame map (QBE-FRAMEMAP-1) instead of storing
+    // it into a linked frame record.
     try std.testing.expect(std.mem.indexOf(u8, guarded, "myl_qbe_fail_overflow_op") != null);
     try std.testing.expect(std.mem.indexOf(u8, guarded, "myl_qbe_fail_cast") != null);
     try std.testing.expect(std.mem.indexOf(u8, guarded, "myl_qbe_fail_normalized_index_bounds") != null);
     try std.testing.expect(std.mem.indexOf(u8, guarded, "myl_qbe_fail_array_bounds") != null);
-    try std.testing.expect(std.mem.indexOf(u8, guarded, ", %position") != null);
-    try std.testing.expect(std.mem.indexOf(u8, guarded, "_meta") != null);
+    try std.testing.expect(std.mem.indexOf(u8, guarded, " dbgloc ") != null);
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, guarded, "%position"));
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "dbgloc"));
     // The unchecked policy carries none of them.
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_overflow_op"));
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_cast"));

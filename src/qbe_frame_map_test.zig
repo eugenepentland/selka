@@ -52,8 +52,11 @@ test "the fast protocol links no frame record and positions every call instead" 
     try std.testing.expect(std.mem.count(u8, rec.il, " dbgloc ") >= std.mem.count(u8, rec.il, "call $"));
     // The floor guard stays, and its failure call carries the guard column.
     try std.testing.expect(std.mem.indexOf(u8, rec.il, " dbgloc 1, 1\n call $myl_qbe_fail_frame(l %ctx)") != null);
-    // A leaf makes no call, so it carries no position at all.
-    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, named(parsed.value, "leaf").?.il, "dbgloc"));
+    // A leaf keeps no floor guard; its only calls are its checks' fail helpers,
+    // each positioned at its own instruction.
+    const leaf = named(parsed.value, "leaf").?.il;
+    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, leaf, "myl_qbe_fail_frame"));
+    try std.testing.expectEqual(std.mem.count(u8, leaf, "call $"), std.mem.count(u8, leaf, " dbgloc "));
 }
 
 // spec-case: QBE-FRAMEMAP-1
