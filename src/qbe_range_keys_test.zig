@@ -95,7 +95,7 @@ test "a slice key is described beside indices that count from the end" {
     const a = std.testing.allocator;
     const source =
         \\def mixed(s: str, names: list[str], marks: [3]int, d: mut dict[str, int]) -> int:
-        \\    d[s[2:4]] += marks[-1]
+        \\    d[s[3:5]] += marks[-1]
         \\    return d[s[0:2]] + d[names[-2]] + marks[-3]
         \\
         \\

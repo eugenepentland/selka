@@ -178,7 +178,7 @@ public def test_a_slice_key_beside_negative_indices_answers_as_the_built_slice()
     names = ["ta", "ca"]
     marks: [3]int = [4, 5, 6]
     d: dict[str, int] = {"ta": 1, "ca": 2}
-    d[s[2:4]] += marks[-1]
+    d[s[3:5]] += marks[-1]
     total = d[s[-2:]] + d[names[-2]] + marks[-3]
     return d["ta"] == 7 and total == 2 + 7 + 4
 
