@@ -280,7 +280,7 @@ pub fn build(b: *std.Build) void {
     b.getInstallStep().dependOn(&install_qbe_step.step);
     // LLVM's adapter is optional at run time; keep its imported modules beside
     // its entry point so an installed compiler needs no source checkout.
-    for ([_][]const u8{ "qbe_llvm.py", "llvm_emit.py", "runtime_signatures.py", "amd64_sysv.py" }) |file| {
+    for ([_][]const u8{ "qbe_llvm.py", "llvm_emit.py", "runtime_signatures.py", "amd64_sysv.py", "sticky_loops.py" }) |file| {
         const source = b.path(b.pathJoin(&.{ "experiments", "llvm-backend", file }));
         const install = b.addInstallFileWithDir(source, .lib, b.pathJoin(&.{ "mylang-llvm", file }));
         b.getInstallStep().dependOn(&install.step);

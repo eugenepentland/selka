@@ -402,8 +402,8 @@ fn inlineAppendRange(comptime E: type, self: *E, stack: []const typed.Type, appe
         " %v{d} =l loadl %v{d}\n %v{d} =l add %v{d}, %v{d}\n %v{d} =l loadl %v{d}\n %v{d} =l add %v{d}, %v{d}\n",
         .{ storage, storage_pointer, destination, storage, length, source_storage, data_storage_pointer, source, source_storage, start },
     );
-    try self.markObject(storage);
-    try self.markObject(source_storage);
+    try self.markElements(storage, append.element);
+    try self.markElements(source_storage, append.element);
     try self.print(" call $myl_native_bytes_copy_octets(l %v{d}, l %v{d}, l %v{d})\n", .{ destination, source, count });
     try self.print(
         " %v{d} =l add %v{d}, %v{d}\n storel %v{d}, %v{d}\n" ++ store_true ++ " jmp @buf_done{d}\n@buf_refused{d}\n" ++ store_false ++ " jmp @buf_done{d}\n@buf_done{d}\n",
@@ -449,7 +449,7 @@ fn inlineAppendByte(comptime E: type, self: *E, stack: []const typed.Type, appen
     const destination = self.temp();
     const next_length = self.temp();
     try self.print(" %v{d} =l loadl %v{d}\n %v{d} =l add %v{d}, %v{d}\n", .{ storage, storage_pointer, destination, storage, length });
-    try self.markObject(storage);
+    try self.markElements(storage, append.element);
     try self.writeValue(destination, value, append.element);
     try self.print(
         " %v{d} =l add %v{d}, 1\n storel %v{d}, %v{d}\n" ++ store_true ++ " jmp @byte_done{d}\n@byte_refused{d}\n" ++ store_false ++ " jmp @byte_done{d}\n@byte_done{d}\n",

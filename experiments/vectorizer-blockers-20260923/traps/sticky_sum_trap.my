@@ -1,0 +1,15 @@
+# a checked sum that overflows at the 40th element, inside a versioned loop
+
+
+def total_of(values: list[int], start: int) -> int:
+    total = start
+    for v in values:
+        total += v
+    return total
+
+
+def main(out: Stream) -> int:
+    values = [1000 + i for i in range(100)]
+    out.print(total_of(values, 0))
+    out.print(total_of(values, 9223372036854775807 - 40000))
+    return 0
