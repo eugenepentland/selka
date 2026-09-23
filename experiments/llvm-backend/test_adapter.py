@@ -729,9 +729,13 @@ export function l $myl_f_0123456789abcdef(l %ctx, l %a) {
 
     def test_benchmark_runtime_registry_is_complete(self):
         evidence = json.loads((HERE / "evidence" / "runtime-symbols.json").read_text())
+        # The evidence is a 2026-09-19 snapshot; a helper the runtime has since
+        # removed (myl_native_text_points went with the UTF-8 text rewrite) is
+        # no longer something the adapter can be asked to declare.
+        runtime = "".join(p.read_text(errors="replace") for p in (HERE.parents[1] / "src").glob("*.[ch]"))
         missing = []
         for name, entry in evidence["symbols"].items():
-            if not entry.get("il_call_shapes"):
+            if not entry.get("il_call_shapes") or name not in runtime:
                 continue
             if name.startswith(("myl_native_", "myl_qbe_", "myl_r_")):
                 if runtime_signature(name) is None:
