@@ -459,14 +459,13 @@ static void mark(myl_native_heap *heap, void *payload) {
          * age bit on a marked object therefore means "kept young"; on an
          * unmarked one, "survived the last minor collection". A full
          * collection promotes every survivor. */
-        if (generations->aging) {
-            if (!(*slot.age & slot.bit)) {
-                *slot.age |= slot.bit;
-                generations->young_edge = 1;
-                return;
-            }
-            *slot.age &= ~slot.bit;
+        if (generations->aging == MYL_NATIVE_AGING_KEEP && !(*slot.age & slot.bit)) {
+            *slot.age |= slot.bit;
+            generations->young_edge = 1;
+            return;
         }
+        /* A full collection zeroed every age bit before marking. */
+        if (generations->aging != MYL_NATIVE_AGING_OFF) *slot.age &= ~slot.bit;
         object->mark |= MYL_NATIVE_OBJECT_MARKED;
         return;
     }
@@ -887,7 +886,7 @@ static void collect(myl_native_heap *heap, int full) {
         generations->force_full = 0;
         generations->full_collections++;
     } else generations->minor_collections++;
-    generations->aging = !full;
+    generations->aging = full ? MYL_NATIVE_AGING_OFF : MYL_NATIVE_AGING_KEEP;
     for (myl_native_root *root = heap->roots; root; root = root->previous)
         trace(heap, root->type, root->address);
     /* The immortal one-scalar ASCII table is rooted here, not on the root stack:
@@ -901,9 +900,9 @@ static void collect(myl_native_heap *heap, int full) {
      * Aging is for what the stack and the young generation hold. This also
      * lists the remembered bodies that must stay listed and empties the rest. */
     if (!full) {
-        generations->aging = 0;
+        generations->aging = MYL_NATIVE_AGING_PROMOTE;
         mark_old_references(heap);
-        generations->aging = 1;
+        generations->aging = MYL_NATIVE_AGING_KEEP;
     }
     /* Every object marked by this collection passes through the worklist once,
      * so the objects a later minor collection must rescan are listed here: a
@@ -922,7 +921,7 @@ static void collect(myl_native_heap *heap, int full) {
         } else if (generations->young_edge && !stack_push(&generations->remembered, object))
             generations->force_full = 1;
     }
-    generations->aging = 0;
+    generations->aging = MYL_NATIVE_AGING_OFF;
     /* A refused worklist reservation leaves the graph partly marked. Clearing
      * every mark and returning unwinds to an allocator that refuses the request,
      * so a partial mark is never swept and the heap stays consistent; with the

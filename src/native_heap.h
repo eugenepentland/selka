@@ -234,6 +234,7 @@ typedef struct {
  * collection; the barrier clears such a body's mark bit, so a minor collection
  * marks it and traces it like a young object. A full collection clears every
  * mark first and reclaims old garbage too. */
+enum { MYL_NATIVE_AGING_OFF, MYL_NATIVE_AGING_KEEP, MYL_NATIVE_AGING_PROMOTE };
 typedef struct {
     myl_native_object_stack rescan, remembered;
     /* Old-generation bytes (`old_bytes`) at which the next collection is a
@@ -243,11 +244,14 @@ typedef struct {
      * the next collection must be full to stay sound. */
     int force_full;
     /* Collection-local state of a minor collection's aging (`GC-AGING-1`):
-     * `aging` is set while a minor collection marks, so a young object
-     * reached for the first time is kept young rather than promoted, and
-     * `young_edge` records that the object being scanned references an object
-     * that stays young, which obliges a promoted `cell` body to be
-     * remembered. */
+     * `aging` says how a young object this collection reaches is treated —
+     * MYL_NATIVE_AGING_OFF in a full collection, where no age bit is set;
+     * MYL_NATIVE_AGING_KEEP while a minor collection marks from roots and
+     * young objects, where a first survivor is kept young; and
+     * MYL_NATIVE_AGING_PROMOTE while it marks from old objects, where every
+     * survivor is promoted at once and its age bit cleared. `young_edge`
+     * records that the object being scanned references an object that stays
+     * young, which obliges a promoted `cell` body to be remembered. */
     unsigned char aging, young_edge;
     size_t minor_collections, full_collections;
     /* Tracing-heap bytes the last collection kept: the old generation,

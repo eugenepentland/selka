@@ -500,6 +500,31 @@ static void block_reuse_test(void) {
     for (int i = 0; i < 48; ++i) assert(plain[i] == 0);
     myl_native_heap_destroy(&heap);
 }
+/* spec-case: GC-AGING-1. An object kept young because it was first reached
+   through a young object is promoted, and stays promoted, when the next minor
+   collection reaches it through an old object's rescan: promotion from an old
+   reference clears its age bit, so its mark survives the sweep. */
+static void aging_through_old_references_test(void) {
+    myl_native_heap heap;
+    myl_native_heap_init(&heap, 64 << 20);
+    Node *old = myl_native_heap_alloc(&heap, &node_type, 1);
+    myl_native_root root;
+    myl_native_root_push(&heap, &root, &old, &pointer_type);
+    myl_native_heap_collect(&heap);
+    old->next = myl_native_heap_alloc(&heap, &node_type, 1);
+    old->next->next = myl_native_heap_alloc(&heap, &node_type, 1);
+    old->next->next->value = 9;
+    allocate_due(&heap, &node_type);
+    Node *middle = old->next, *leaf = middle->next;
+    assert(old_flag(middle) && !old_flag(leaf) && heap.generations.young_bytes == 32);
+    allocate_due(&heap, &node_type);
+    assert(old_flag(leaf) && heap.generations.young_bytes == 0);
+    allocate_due(&heap, &node_type);
+    assert(old_flag(leaf) && heap.generations.young_bytes == 0 && heap.generations.old_bytes == 3 * 32);
+    assert(old->next->next->value == 9);
+    assert(myl_native_root_pop(&heap, &root));
+    myl_native_heap_destroy(&heap);
+}
 static void automatic_collection_test(void) {
     myl_native_heap heap;
     myl_native_heap_init(&heap,SIZE_MAX);
@@ -674,6 +699,7 @@ int main(void) {
     stride_rounding_test();
     aging_test();
     aging_edges_test();
+    aging_through_old_references_test();
     spare_test();
     block_reuse_test();
     puts("native heap tests passed");
