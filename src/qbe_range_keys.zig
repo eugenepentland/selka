@@ -228,7 +228,7 @@ fn keyOperand(input: Input, op: Op, depth: usize) ?usize {
             if (!textKeyed(input.program, input.function.scope.locals[@backingInt(operation.owner)].ty)) return null;
             return depth - arity;
         },
-        .get_index => |ty| return if (textKeyed(input.program, ty)) depth - 1 else null,
+        .get_index => |access| return if (textKeyed(input.program, access.ty)) depth - 1 else null,
         else => return null,
     }
 }

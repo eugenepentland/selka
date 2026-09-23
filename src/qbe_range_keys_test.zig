@@ -87,6 +87,29 @@ test "a slice with any other reader is still built" {
     try std.testing.expectEqual(@as(usize, 1), count(kept, "$myl_native_dictionary_write("));
 }
 
+// spec-case: DICT-RANGE-KEY-1
+test "a slice key is described beside indices that count from the end" {
+    // `get_index` carries an `Access` (PY-ARRAY-NEGATIVE-1); a dictionary read
+    // through a slice key must still be recognized next to list and array
+    // reads that normalize a negative index.
+    const a = std.testing.allocator;
+    const source =
+        \\def mixed(s: str, names: list[str], marks: [3]int, d: mut dict[str, int]) -> int:
+        \\    d[s[2:4]] += marks[-1]
+        \\    return d[s[0:2]] + d[names[-2]] + marks[-3]
+        \\
+        \\
+        \\def main() -> int:
+        \\    d: dict[str, int] = {"ta": 1, "ga": 2, "ca": 3}
+        \\    return mixed("gattaca", ["ta", "ca"], [4, 5, 6], mut d)
+    ;
+    const mixed = try lowered(a, source, "mixed");
+    defer a.free(mixed);
+    try std.testing.expectEqual(@as(usize, 0), count(mixed, "$myl_native_text_slice("));
+    try std.testing.expectEqual(@as(usize, 2), count(mixed, "$myl_native_text_range("));
+    try std.testing.expectEqual(@as(usize, 1), count(mixed, "$myl_native_dictionary_write_range("));
+}
+
 /// The text of `il` from `from` up to the first `until` after it.
 fn between(il: []const u8, from: []const u8, until: []const u8) []const u8 {
     const start = std.mem.indexOf(u8, il, from) orelse return "";
