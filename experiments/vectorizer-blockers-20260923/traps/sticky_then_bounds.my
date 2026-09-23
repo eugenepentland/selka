@@ -1,0 +1,15 @@
+# an overflow deferred by the fast copy, then a bounds error later in the same loop
+
+
+def walk(values: list[int], n: int) -> int:
+    total = 0
+    for i in range(n):
+        total = total + values[i]
+    return total
+
+
+def main(out: Stream) -> int:
+    values = [9223372036854775000 for i in range(10)]
+    out.print(walk([1, 2, 3], 3))
+    out.print(walk(values, 20))
+    return 0

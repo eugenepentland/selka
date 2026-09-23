@@ -1,0 +1,78 @@
+# element loops over lists, nested lists, records in lists and bytes; sizes from the command line
+
+
+record Body:
+    x: float
+    v: float
+
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+def dot(a: list[float], b: list[float]) -> float:
+    s = 0.0
+    for i in range(len(a)):
+        s = s + a[i] * b[i]
+    return s
+
+
+def product(n: int) -> float:
+    a = [[float(i + j) for j in range(n)] for i in range(n)]
+    b = [[float(i * j % 7) for j in range(n)] for i in range(n)]
+    c = [[0.0 for j in range(n)] for i in range(n)]
+    for i in range(n):
+        for k in range(n):
+            aik = a[i][k]
+            for j in range(n):
+                c[i][j] = c[i][j] + aik * b[k][j]
+    total = 0.0
+    for i in range(n):
+        for j in range(n):
+            total = total + c[i][j]
+    return total
+
+
+def advance(bodies: mut list[Body], steps: int) -> None:
+    for s in range(steps):
+        for i in range(len(bodies)):
+            bodies[i].x = bodies[i].x + bodies[i].v
+            bodies[i].v = bodies[i].v * 0.5
+
+
+def scan(n: int) -> int:
+    empty: list[int] = []
+    buffer = byte_buffer(empty)
+    for i in range(n):
+        _ = buffer.append_byte(i % 256)
+    data = bytes(buffer)
+    count = 0
+    for i in range(len(data)):
+        if data[i] == 109:
+            count += 1
+    return count
+
+
+def prefix(values: list[int], at: int) -> int:
+    total = 0
+    for i in range(at):
+        total += values[i]
+    return total
+
+
+def main(args: list[str], out: Stream) -> int:
+    n = number(args[0])
+    at = number(args[1])
+    out.print(int(product(n)))
+    bodies = [Body(x=float(i), v=1.0) for i in range(n)]
+    advance(mut bodies, 10)
+    out.print(int(bodies[n - 1].x * 1000.0))
+    out.print(scan(n * 100))
+    values = [i * 3 for i in range(n)]
+    out.print(int(dot([float(v) for v in values], [1.5 for v in values])))
+    out.print(prefix(values, at))
+    return 0

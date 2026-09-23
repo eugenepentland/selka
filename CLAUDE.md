@@ -18,7 +18,10 @@ any other toolchain.
   installation used by application agents or performance measurements. Default
   `zig build` produces a Debug compiler; cached guest tests still pay its parsing,
   JSON and dependency-planning costs. This setting optimizes the compiler itself,
-  independently of the guest program's backend and optimization flags.
+  independently of the guest program's backend and optimization flags. Add
+  `-Dcompiler-only=true` when you only need `mylang` (performance measurements,
+  `zig build bench-parity`): it skips installing `board-trial`, `schematic-svg` and
+  `mylang-io`, each of which re-optimizes the whole compiler.
 - Never point two source trees (a base checkout and a worktree) at one
   `ZIG_LOCAL_CACHE_DIR`. Zig reuses the cached configure phase across them, and its
   absolute paths name the first tree. The build now fails with "this build

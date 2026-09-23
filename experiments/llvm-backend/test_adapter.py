@@ -21,7 +21,7 @@ from runtime_signatures import ATTRIBUTES  # noqa: E402
 
 
 class AdapterTests(unittest.TestCase):
-    def compile_units(self, units, main):
+    def compile_units(self, units, main, environments=None):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             assemblies = []
@@ -33,7 +33,8 @@ class AdapterTests(unittest.TestCase):
                 unit = parse_unit(text, name)
                 signatures[unit.function.name] = signature_map(unit)
             for name, text in units.items():
-                ir = translate_text(text, name, signatures)
+                with patch.dict(os.environ, (environments or {}).get(name, {})):
+                    ir = translate_text(text, name, signatures)
                 ll = root / f"{name}.ll"
                 asm = root / f"{name}.s"
                 ll.write_text(ir)
@@ -482,8 +483,12 @@ MARKER
     def test_marked_object_address_is_not_this_frame(self):
         ir = translate_text(self.OBJECT_PROBE.replace("MARKER", " # myl-obj %obj"), "obj")
         # Both the parameter-derived load and the marked header load are foreign;
-        # the scratch slot's store and load are frame.
-        self.assertEqual(2, ir.count("!alias.scope !4, !noalias !3"))
+        # the scratch slot's store and load are frame.  The marked header is
+        # further placed as an object (LLVM-ELEMENT-CLASS-1), whose `!noalias`
+        # names the frame scope too.
+        self.assertEqual(1, ir.count("!alias.scope !4, !noalias !3"))
+        self.assertEqual(1, ir.count("!alias.scope !6, !noalias !7"))
+        self.assertIn("!7 = !{!1}", ir)
         self.assertIn("!alias.scope !3, !noalias !4", ir)
         self.assertIn('!0 = distinct !{!0, !"mylang memory classes"}', ir)
         self.assertEqual(1, ir.count('!1 = distinct !{!1, !0, !"frame"}'))
@@ -952,6 +957,362 @@ class CheckedArithmeticTests(unittest.TestCase):
                     for a, b in pairs:
                         self.assertEqual(bool(evaluate(flag, {"a": a, "b": b})),
                                          exact[stem](a, b), (stem, a, b))
+
+#: A frontend-shaped checked sum: `total += data[i]` for i in 0..n, with the
+#: accumulator and the counter in frame cells and the signed-add flag formula
+#: of `checkedAddSub`.  START is the accumulator's first value.
+SUM_UNIT = """export function l $NAME(l %ctx, l %data, l %n, l %start) {
+@entry
+ %l0 =l alloc8 8
+ %l1 =l alloc8 8
+ %s0 =l alloc8 8
+ storel %start, %l0
+ storel 0, %l1
+ jmp @head
+@head
+ %i =l loadl %l1
+ %more =l csltl %i, %n
+ jnz %more, @body, @done
+@body
+ %off =l mul %i, 8
+ %at =l add %data, %off
+ %x =l loadl %at
+ %t0 =l loadl %l0
+ storel %t0, %s0
+ %t =l loadl %s0
+ %r =l add %t, %x
+ %a =l xor %t, %r
+ %b =l xor %x, %r
+ %both =l and %a, %b
+ %flag =l csltl %both, 0
+ jnz %flag, @overflow, @checked
+@overflow
+ dbgloc 5
+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %t, l %x, l 64)
+ hlt
+@checked
+ storel %r, %s0
+ %r1 =l loadl %s0
+ storel %r1, %l0
+ %i1 =l loadl %l1
+ %next =l add %i1, 1
+ storel %next, %l1
+ jmp @head
+@done
+ %answer =l loadl %l0
+ ret %answer
+}
+"""
+
+#: A frontend-shaped conditional count: `if data[i] == 109: count += 1` with
+#: the one-compare check `constantAddSub` emits for a literal operand, the
+#: literal passed through an operand-stack cell as the frontend does.
+COUNT_UNIT = """export function l $NAME(l %ctx, l %data, l %n, l %start) {
+@entry
+ %l0 =l alloc8 8
+ %l1 =l alloc8 8
+ %s1 =l alloc8 8
+ storel %start, %l0
+ storel 0, %l1
+ jmp @head
+@head
+ %i =l loadl %l1
+ %more =l csltl %i, %n
+ jnz %more, @body, @done
+@body
+ %at =l add %data, %i
+ %byte =l loadub %at
+ %hit =l ceql %byte, 109
+ jnz %hit, @bump, @step
+@bump
+ storel 1, %s1
+ %one =l loadl %s1
+ %t =l loadl %l0
+ %r =l add %t, %one
+ %flag =l csgtl %t, 9223372036854775806
+ jnz %flag, @overflow, @checked
+@overflow
+ dbgloc 7
+ call $myl_qbe_fail_overflow_op(l %ctx, l 0, l %t, l %one, l 64)
+ hlt
+@checked
+ storel %r, %l0
+@step
+ %i1 =l loadl %l1
+ %next =l add %i1, 1
+ storel %next, %l1
+ jmp @head
+@done
+ %answer =l loadl %l0
+ ret %answer
+}
+"""
+
+
+def sticky_verdicts(text):
+    """The sticky-loop verdict of every innermost loop of one unit."""
+    import sticky_loops
+    from qbe_llvm import parse_unit
+    return [verdict for _header, verdict in sticky_loops.version_loops(parse_unit(text, "probe"))]
+
+
+class StickyReductionTests(unittest.TestCase):
+    """LLVM-STICKY-REDUCTION-1: checked reductions run without a branch per check."""
+
+    compile_units = AdapterTests.compile_units
+
+    def test_a_checked_sum_and_count_are_versioned(self):
+        self.assertEqual(sticky_verdicts(SUM_UNIT.replace("NAME", "s")),
+                         ["versioned: 1 reduction(s), 0 sticky, 0 kept"])
+        self.assertEqual(sticky_verdicts(COUNT_UNIT.replace("NAME", "c")),
+                         ["versioned: 1 reduction(s), 0 sticky, 0 kept"])
+        ir = translate_text(SUM_UNIT.replace("NAME", "s"), "sum")
+        # The fast copy, its exit test and the fallback exist; the original
+        # loop and its trap are untouched.
+        for label in ("bb_sk0_entry", "bb_sk0_head", "bb_sk0_exit_done", "bb_sk0_fallback"):
+            self.assertIn(f"{label}:", ir)
+        self.assertEqual(1, ir.count("call void @myl_qbe_fail_overflow_op("))
+        with patch.dict(os.environ, {"MYLANG_QBE_LLVM_STICKY": "0"}):
+            self.assertNotIn("bb_sk0", translate_text(SUM_UNIT.replace("NAME", "s"), "sum"))
+
+    def harness(self, unit, cases, element="int64_t", reference=None):
+        """Build `unit` with and without the rewrite; run both on every case.
+
+        Each case is (values, start).  Both builds and a C reference of the
+        checked loop must agree on the result, on whether it trapped, and on
+        the trap's operation and operands.  Prints `bad total`.
+        """
+        fast = unit.replace("NAME", "fast")
+        with patch.dict(os.environ, {"MYLANG_QBE_LLVM_STICKY": "0"}):
+            slow_ir = translate_text(unit.replace("NAME", "slow"), "slow")
+        self.assertIn("bb_sk0_fallback", translate_text(fast, "fast"))
+        self.assertNotIn("bb_sk0", slow_ir)
+        rows = []
+        for values, start in cases:
+            body = ", ".join(f"{v}LL" if v != -2**63 else "INT64_MIN" for v in values) or "0"
+            rows.append(f"{{{{{body}}}, {len(values)}, {start}LL}}" if start != -2**63
+                        else f"{{{{{body}}}, {len(values)}, INT64_MIN}}")
+        width = max(1, max(len(values) for values, _ in cases))
+        main = ('#include <setjmp.h>\n#include <stdio.h>\n#include <stdint.h>\n'
+                'extern int64_t fast(void*,void*,int64_t,int64_t);\n'
+                'extern int64_t slow(void*,void*,int64_t,int64_t);\n'
+                'static jmp_buf out;static volatile int trapped;static int64_t seen[3];\n'
+                'void myl_qbe_fail_overflow_op(void *c,int64_t op,int64_t l,int64_t r,int64_t w)'
+                '{(void)c;(void)w;seen[0]=op;seen[1]=l;seen[2]=r;trapped=1;longjmp(out,1);}\n'
+                f'struct row{{int64_t v[{width}];int64_t n;int64_t start;}};\n'
+                f'static const struct row R[]={{{", ".join(rows)}}};\n'
+                + reference +
+                'static void run(int64_t(*f)(void*,void*,int64_t,int64_t),const struct row *w,'
+                'int64_t *res,int *trap,int64_t *s){' + f'{element} buf[{width}];'
+                'for(int i=0;i<w->n;i++)buf[i]=(' + element + ')w->v[i];int ctx;trapped=0;'
+                'if(setjmp(out)==0){*res=f(&ctx,buf,w->n,w->start);}*trap=trapped;'
+                's[0]=seen[0];s[1]=seen[1];s[2]=seen[2];}\n'
+                'int main(void){int bad=0;int n=sizeof R/sizeof R[0];for(int k=0;k<n;k++){'
+                'int64_t a=0,b=0,sa[3],sb[3],er,es[3];int ta,tb,et;'
+                'run(fast,&R[k],&a,&ta,sa);run(slow,&R[k],&b,&tb,sb);et=expect(&R[k],&er,es);'
+                'if(ta!=et||tb!=et){printf("trap mismatch %d\\n",k);bad++;continue;}'
+                'if(!et&&(a!=er||b!=er)){printf("result mismatch %d\\n",k);bad++;}'
+                'if(et&&(sa[1]!=es[1]||sa[2]!=es[2]||sb[1]!=es[1]||sb[2]!=es[2]||sa[0]!=0))'
+                '{printf("operand mismatch %d\\n",k);bad++;}}'
+                'printf("%d %d\\n",bad,n);return 0;}\n')
+        return self.compile_units({"fast": fast, "slow": unit.replace("NAME", "slow")}, main,
+                                  environments={"slow": {"MYLANG_QBE_LLVM_STICKY": "0"}})
+
+    def test_results_and_traps_match_the_checked_sum(self):
+        big, top = 2**62, 2**63 - 1
+        cases = [([], 0), ([1, 2, 3], 0), ([5] * 40, -7), ([top, 1], 0), ([1, top], 0),
+                 ([big, big, -big, -big], 0), ([big, big], 0), ([-big, -big, -1], 0),
+                 ([top, -top, top, -top], 0), ([3, -2**63], 0), ([-2**63], -1),
+                 ([-2**63 + 1, -1], 0), ([1] * 37, top - 36), ([1] * 37, top - 37),
+                 ([2**40] * 33 + [-(2**45)], top - 2**40 * 20), ([7, -7] * 20, -2**63),
+                 ([2**33 + 5] * 50, 0), ([-3] * 50, -2**63 + 149), ([-3] * 50, -2**63 + 150)]
+        reference = ('static int expect(const struct row *w,int64_t *res,int64_t *s){'
+                     'int64_t t=w->start;for(int i=0;i<w->n;i++){int64_t r;'
+                     'if(__builtin_add_overflow(t,w->v[i],&r)){s[1]=t;s[2]=w->v[i];return 1;}t=r;}'
+                     '*res=t;return 0;}\n')
+        self.assertEqual(self.harness(SUM_UNIT, cases, reference=reference), f"0 {len(cases)}\n")
+
+    def test_results_and_traps_match_the_checked_count(self):
+        top = 2**63 - 1
+        hits = [109, 1, 109, 109, 0, 109] * 6
+        cases = [([], 5), (hits, 0), (hits, top - 30), (hits, top - 24), (hits, top - 23),
+                 (hits, top), ([0] * 30, top), ([109], top), ([109], top - 1), (hits, -2**63)]
+        reference = ('static int expect(const struct row *w,int64_t *res,int64_t *s){'
+                     'int64_t t=w->start;for(int i=0;i<w->n;i++){if((uint8_t)w->v[i]!=109)continue;'
+                     'if(t==INT64_MAX){s[1]=t;s[2]=1;return 1;}t++;}*res=t;return 0;}\n')
+        self.assertEqual(self.harness(COUNT_UNIT, cases, element="uint8_t", reference=reference),
+                         f"0 {len(cases)}\n")
+
+    def test_the_fast_copy_has_no_check_branch_and_vectorizes(self):
+        for name, unit in (("sum", SUM_UNIT), ("count", COUNT_UNIT)):
+            with self.subTest(name):
+                ir = translate_text(unit.replace("NAME", name), name)
+                with tempfile.TemporaryDirectory() as directory:
+                    ll = Path(directory, "u.ll")
+                    ll.write_text(ir)
+                    optimized = Path(directory, "o.ll")
+                    subprocess.run(["zig", "cc", "-S", "-emit-llvm", "-O3", "-fPIC", "-g0",
+                                    str(ll), "-o", str(optimized)], check=True,
+                                   capture_output=True, text=True)
+                    text = optimized.read_text()
+                self.assertIn("vector.body", text)
+
+    def test_loops_it_cannot_prove_are_left_alone(self):
+        sum_unit = SUM_UNIT.replace("NAME", "s")
+        declined = {
+            "a store outside the frame": (sum_unit.replace(
+                " storel %r1, %l0\n", " storel %r1, %l0\n storel %r1, %data\n"), "stores outside"),
+            "a call in the loop": (sum_unit.replace(
+                " %i1 =l loadl %l1\n", " call $observe(l %ctx)\n %i1 =l loadl %l1\n"), "makes a call"),
+            "the total decides a branch": (sum_unit.replace(
+                " %i1 =l loadl %l1\n", " %big =l csgtl %r1, 100\n jnz %big, @done, @more\n"
+                "@more\n %i1 =l loadl %l1\n"), "decides control"),
+            "the total addresses memory": (sum_unit.replace(
+                " %i1 =l loadl %l1\n", " %peek =l add %data, %r1\n %seen =l loadl %peek\n"
+                " %i1 =l loadl %l1\n"), "decides control or an address"),
+            # The operand-stack cell the total passes through is handed to a
+            # call after the loop, so something could read it back unseen.
+            "the total passes through an escaping cell": (sum_unit.replace(
+                "\n@done\n", "\n@done\n call $observe(l %s0)\n"), "decides control or an address"),
+        }
+        for label, (text, reason) in declined.items():
+            with self.subTest(label):
+                verdicts = sticky_verdicts(text)
+                self.assertEqual(len(verdicts), 1)
+                self.assertTrue(verdicts[0].startswith("declined"), verdicts)
+                self.assertIn(reason, verdicts[0])
+                self.assertNotIn("bb_sk0", translate_text(text, "declined"))
+        # A total also assigned another way is no reduction, but its check can
+        # still be sticky: its wrapped value reaches nothing but the total.
+        reset = sum_unit.replace(" storel %r1, %l0\n", " storel %r1, %l0\n storel 0, %l0\n")
+        self.assertEqual(sticky_verdicts(reset), ["versioned: 0 reduction(s), 1 sticky, 0 kept"])
+
+
+#: A load of element `i` from a marked storage word, a header load at a
+#: constant offset from the marked object, and a copy of the element.
+ELEMENT_UNIT = """export function l $test(l %ctx, l %list, l %i) {
+@entry
+ %scratch =l alloc8 8
+ # myl-obj %list
+ %len =l loadl %list
+ %word =l add %list, 32
+ %storage =l loadl %word
+ # myl-elem %storage KIND
+ %off =l mul %i, 8
+ %at =l add %storage, %off
+ %x =l loadl %at
+ blit %at, %scratch, 8
+ %y =l loadl %scratch
+ %s =l add %x, %y
+ %answer =l add %s, %len
+ ret %answer
+}
+"""
+
+
+class ElementAddressTests(unittest.TestCase):
+    """LLVM-ELEMENT-GEP-1 and LLVM-ELEMENT-CLASS-1."""
+
+    compile_units = AdapterTests.compile_units
+
+    def test_an_element_access_is_a_gep_from_the_storage_word(self):
+        ir = translate_text(ELEMENT_UNIT.replace("KIND", "8v"), "element")
+        load = next(line for line in ir.splitlines() if "load i64, ptr %egep" in line)
+        self.assertIn("!alias.scope", load)
+        self.assertEqual(1, ir.count("getelementptr i8, ptr %p"))
+        # The header word keeps its integer address, and so does the copy.
+        self.assertRegex(ir, r"call void @llvm\.memmove\.p0\.p0\.i64\(ptr %p\d+, ptr %p\d+")
+        with patch.dict(os.environ, {"MYLANG_QBE_LLVM_ELEMENT_GEP": "0"}):
+            self.assertNotIn("egep", translate_text(ELEMENT_UNIT.replace("KIND", "8v"), "off"))
+
+    def test_the_same_address_in_another_block_keeps_the_integer_form(self):
+        text = ELEMENT_UNIT.replace("KIND", "8v").replace(" %x =l loadl %at\n",
+                                                           " jmp @next\n@next\n %x =l loadl %at\n")
+        self.assertNotIn("egep", translate_text(text, "split"))
+
+    def test_objects_and_element_kinds_get_scopes_that_exclude_each_other(self):
+        ir = translate_text(ELEMENT_UNIT.replace("KIND", "8r"), "element")
+        header = next(line for line in ir.splitlines() if "load i64" in line and "!alias.scope !6" in line)
+        self.assertIn("!noalias !7", header)
+        element = next(line for line in ir.splitlines() if "load i64, ptr %egep" in line)
+        self.assertIn("!alias.scope !12, !noalias !13", element)
+        self.assertIn('!5 = distinct !{!5, !0, !"object"}', ir)
+        self.assertIn('!11 = distinct !{!11, !0, !"element 8r"}', ir)
+        self.assertIn("!7 = !{!1, !11}", ir)
+        self.assertIn("!13 = !{!1, !5}", ir)
+        # A second element kind excludes the first and the reverse.
+        two = ELEMENT_UNIT.replace("KIND", "8r").replace(
+            " %s =l add %x, %y\n",
+            " %word2 =l add %list, 40\n %other =l loadl %word2\n # myl-elem %other 8v\n"
+            " %z =l loadl %other\n %s0 =l add %x, %y\n %s =l add %s0, %z\n")
+        ir = translate_text(two, "two")
+        self.assertIn('!14 = distinct !{!14, !0, !"element 8v"}', ir)
+        self.assertIn("!13 = !{!1, !5, !14}", ir)
+        self.assertIn("!16 = !{!1, !5, !11}", ir)
+        self.assertIn("!7 = !{!1, !11, !14}", ir)
+
+    def test_a_contradiction_drops_the_refinement(self):
+        text = ELEMENT_UNIT.replace("KIND", "8v").replace(
+            " %answer =l add %s, %len\n", " %mixed =l add %storage, %list\n %m =l loadl %mixed\n"
+            " %answer =l add %s, %m\n")
+        ir = translate_text(text, "mixed")
+        self.assertNotIn("!alias.scope !6", ir)
+        self.assertNotIn("!alias.scope !12", ir)
+        self.assertIn("!alias.scope !4, !noalias !3", ir)
+
+    def test_element_programs_compute_the_same_values(self):
+        main = ('#include <stdio.h>\n#include <stdint.h>\n'
+                'extern int64_t test(void*,void*,int64_t);\n'
+                'int main(void){int64_t st[4]={10,20,30,40};int64_t h[5]={4,4,0,0,(int64_t)st};'
+                'int64_t t=0;for(int i=0;i<4;i++)t+=test(0,h,i);printf("%lld\\n",(long long)t);}\n')
+        self.assertEqual(self.compile_units({"element": ELEMENT_UNIT.replace("KIND", "8v")}, main),
+                         "216\n")
+
+    def test_a_scan_over_element_storage_vectorizes(self):
+        unit = """export function l $count(l %ctx, l %list) {
+@entry
+ %l0 =l alloc8 8
+ %l1 =l alloc8 8
+ storel 0, %l0
+ storel 0, %l1
+ # myl-obj %list
+ %n =l loadl %list
+@head
+ %i =l loadl %l1
+ %more =l csltl %i, %n
+ jnz %more, @body, @done
+@body
+ %word =l add %list, 32
+ %storage =l loadl %word
+ # myl-elem %storage 1v
+ %at =l add %storage, %i
+ %byte =l loadub %at
+ %hit =l ceql %byte, 109
+ %t =l loadl %l0
+ %r =l add %t, %hit
+ storel %r, %l0
+ %next =l add %i, 1
+ storel %next, %l1
+ jmp @head
+@done
+ %answer =l loadl %l0
+ ret %answer
+}
+"""
+        for gep in ("1", "0"):
+            with self.subTest(gep=gep), patch.dict(os.environ, {"MYLANG_QBE_LLVM_ELEMENT_GEP": gep}):
+                ir = translate_text(unit, "scan")
+                with tempfile.TemporaryDirectory() as directory:
+                    ll = Path(directory, "u.ll")
+                    ll.write_text(ir)
+                    optimized = Path(directory, "o.ll")
+                    subprocess.run(["zig", "cc", "-S", "-emit-llvm", "-O3", "-fPIC", "-g0",
+                                    str(ll), "-o", str(optimized)], check=True,
+                                   capture_output=True, text=True)
+                    text = optimized.read_text()
+                # With the element address a GEP the loop loads whole vectors;
+                # as an integer it can at best gather one byte at a time.
+                self.assertEqual("load <" in text, gep == "1")
 
 
 if __name__ == "__main__":

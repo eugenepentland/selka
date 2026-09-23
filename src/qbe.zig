@@ -2781,6 +2781,18 @@ const Emitter = struct {
     pub fn markObject(self: *Emitter, value: usize) GenerateError!void {
         try self.print(" # myl-obj %v{d}\n", .{value});
     }
+    /// Record that `%v{value}` is the storage word of a managed container, the
+    /// start of its element storage block, whose elements have `element`'s
+    /// layout (LLVM-ELEMENT-CLASS-1). It says everything `markObject` says, and
+    /// also that the block is an allocation of its own that no object header
+    /// or payload overlaps, and that it only ever holds elements of one size
+    /// and one kind: GC references (`r`) or plain values (`v`). The LLVM
+    /// adapter gives such accesses their own alias scope per kind. A comment
+    /// line, so QBE's assembly is byte-identical with or without it.
+    pub fn markElements(self: *Emitter, value: usize, element: typed.Type) GenerateError!void {
+        const shape = try self.layout(element);
+        try self.print(" # myl-elem %v{d} {d}{s}\n", .{ value, shape.size, if (shape.copy == .reference) "r" else "v" });
+    }
     /// Select case `tag` of the variant of type `ty` stored at `pointer`. A
     /// tagged variant stores the tag word at its start. A niche optional
     /// (QBE-NICHE-1) has no tag word: `None` is the null reference, stored
