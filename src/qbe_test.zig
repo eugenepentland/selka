@@ -2660,9 +2660,10 @@ test "QBE-INLINE-ALLOC-1 a small class body is popped inline and only the refill
     var parsed = try emitted(a, barrier_program);
     defer parsed.deinit();
     const body = named(parsed.value, "main").?.il;
-    // Node is 24 bytes, so header and body share the 48-byte class, index 2:
-    // its window sits at the frozen inline offset plus two windows.
-    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, body, ", 1312\n"));
+    // Node is 16 bytes (its `Option[Node]` is a niche pointer, QBE-NICHE-1), so
+    // header and body share the 32-byte class, index 1: its window sits at the
+    // frozen inline offset plus one window.
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, body, ", 1296\n"));
     try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, body, "call $myl_native_heap_alloc_small(l %heap, "));
     try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, body, "call $myl_native_heap_alloc("));
     // The second constructor runs while `first` is live: its root push sits on
