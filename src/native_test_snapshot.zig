@@ -314,25 +314,33 @@ pub fn materialize(context: fs.Context, snapshot: Snapshot, directory: []const u
     };
 }
 
-/// Return a snapshot whose entry file declares a stub `main` when it has none,
-/// so a library module or `*_test.my` file can be checked and tested as a
-/// project. A file with a `main` and every other file are returned unchanged.
-/// A patched projection carries the identity of its patched bytes, because that
-/// is what the checker and `verify` see; the caller keeps the user's snapshot.
+/// Return a snapshot whose entry file is a project module with a `main`, so a
+/// library module, a `*_test.my` file or a headerless script can be checked and
+/// tested as a project: a stub `main` is appended when there is none, and a
+/// `module` header is written in front of the first line when there is none —
+/// on that same line, so every diagnostic and trap keeps the line number of the
+/// user's file. A headered file with a `main` and every other file are returned
+/// unchanged. A patched projection carries the identity of its patched bytes,
+/// because that is what the checker and `verify` see; the caller keeps the
+/// user's snapshot.
 pub fn withTestEntry(context: fs.Context, snapshot: Snapshot) Error!Snapshot {
     const index = find(snapshot.files, snapshot.entry) orelse return error.InvalidTestSnapshot;
     const original = snapshot.files[index].data;
-    if (declaresMain(original)) return snapshot;
+    const has_main = declaresMain(original);
+    const has_header = hasModuleHeader(original);
+    if (has_main and has_header) return snapshot;
     var patched: std.ArrayList(u8) = .empty;
-    if (!hasModuleHeader(original)) {
+    if (!has_header) {
         const stem = snapshot.entry[0 .. snapshot.entry.len - ".my".len];
         try patched.appendSlice(context.allocator, "module ");
         for (stem) |byte| try patched.append(context.allocator, if (byte == std.fs.path.sep) '.' else byte);
-        try patched.append(context.allocator, '\n');
+        try patched.appendSlice(context.allocator, "; ");
     }
     try patched.appendSlice(context.allocator, original);
-    if (original.len != 0 and original[original.len - 1] != '\n') try patched.append(context.allocator, '\n');
-    try patched.appendSlice(context.allocator, main_stub);
+    if (!has_main) {
+        if (original.len != 0 and original[original.len - 1] != '\n') try patched.append(context.allocator, '\n');
+        try patched.appendSlice(context.allocator, main_stub);
+    }
     const files = try context.allocator.dupe(File, snapshot.files);
     files[index] = .{ .path = snapshot.files[index].path, .data = patched.items, .hash = try fs.hash(context.allocator, patched.items) };
     return .{
@@ -544,7 +552,7 @@ test "a library test entry gains a stub main and a program entry is untouched" {
     try context.write(bare, "public def test_x() -> bool effects():\n    return True\n");
     const patched_bare = try withTestEntry(context, try capture(context, bare));
     const bare_index = find(patched_bare.files, "bare_test.my").?;
-    try std.testing.expect(std.mem.startsWith(u8, patched_bare.files[bare_index].data, "module bare_test\n"));
+    try std.testing.expect(std.mem.startsWith(u8, patched_bare.files[bare_index].data, "module bare_test; public def test_x"));
     const program = try std.fs.path.join(context.allocator, &.{ root, "app.my" });
     try context.write(program, "module app\ndef main() -> int:\n    return 0\n");
     const app = try capture(context, program);
@@ -553,6 +561,28 @@ test "a library test entry gains a stub main and a program entry is untouched" {
     try std.testing.expectEqualStrings(app.files[app_index].data, untouched.files[app_index].data);
     try std.testing.expect(declaresMain("def main() -> int:\n    return 0\n"));
     try std.testing.expect(!declaresMain("def mainstreet() -> int:\n    return 0\n"));
+}
+
+// spec: NATIVE-TEST-HEADERLESS-1
+test "a headerless test entry gains its header on the first line, keeping every line number" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary_dir = std.testing.tmpDir(.{});
+    defer temporary_dir.cleanup();
+    const root = try temporary_dir.dir.realPathFileAlloc(context.io, ".", context.allocator);
+    const script = try std.fs.path.join(context.allocator, &.{ root, "calc.my" });
+    const text = "record Token:\n    kind: int\n\ndef main() -> int:\n    return 0\n\npublic def test_kind() -> bool:\n    return True\n";
+    try context.write(script, text);
+    const prepared = try withTestEntry(context, try capture(context, script));
+    const data = prepared.files[find(prepared.files, "calc.my").?].data;
+    try std.testing.expectEqualStrings("module calc; " ++ text, data);
+    try std.testing.expectEqual(std.mem.count(u8, text, "\n"), std.mem.count(u8, data, "\n"));
+    var mirror = std.testing.tmpDir(.{});
+    defer mirror.cleanup();
+    const mirror_root = try mirror.dir.realPathFileAlloc(context.io, ".", context.allocator);
+    try verify(context, try materialize(context, prepared, mirror_root));
 }
 
 test "source snapshots exclude generated sources and configured cache subtrees" {
@@ -601,7 +631,7 @@ test "a subdirectory test entry captures its whole project and gains a dotted mo
     try std.testing.expect(find(captured.files, "sexpr/parser.my") != null);
     const prepared = try withTestEntry(context, captured);
     const index = find(prepared.files, "tests/parser_test.my").?;
-    try std.testing.expect(std.mem.startsWith(u8, prepared.files[index].data, "module tests.parser_test\n"));
+    try std.testing.expect(std.mem.startsWith(u8, prepared.files[index].data, "module tests.parser_test; import sexpr.parser"));
 }
 
 // spec-case: NATIVE-TEST-9

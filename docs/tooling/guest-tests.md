@@ -44,8 +44,11 @@ A test entry is a `.my` file, not necessarily a program. A library module withou
 `main`, or a standalone file named `*_test.my`, is accepted: the runner checks a
 private copy with a stub `def main() -> int: return 0` appended, so the exported
 `test_` functions run without editing the source or weakening the `main`
-requirement for ordinary `run`. A bare `*_test.my` file without a `module`
-declaration also gains a matching header in the private copy.
+requirement for ordinary `run`. Any file without a `module` declaration — a bare
+`*_test.my`, or a single-file script with its own `main` and `test_` functions —
+also gains a matching header in the private copy, written in front of the first
+line so that every diagnostic and failure keeps the line number of your file.
+`mylang test` therefore accepts every file that `check`, `run` and `build` accept.
 
 A standalone `*_test.my` may sit in a subdirectory of the project. The runner
 resolves its `import`s and its module name from the enclosing project root: the
