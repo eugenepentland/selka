@@ -16,8 +16,8 @@ all arms interleaved. Lower is better, and 1.00× is Zig's time.
 
 | | before (plan's baseline) | now |
 |---|---:|---:|
-| **13-program suite, LLVM (the default build)** | **5.79×** | **1.19×** |
-| same, without `sort_records` and `sort_builtin` | 6.54× | 1.47× |
+| **13-program suite, LLVM (the default build)** | **5.81×** | **1.20×** |
+| same, without `sort_records` and `sort_builtin` | 6.58× | 1.48× |
 | 13-program suite, QBE backend | 8.40× | 2.41× |
 | suite, `--unchecked` | — | 1.10× |
 | Rust / Rust with overflow checks | 1.01× / 1.04× | same |
@@ -30,12 +30,12 @@ all arms interleaved. Lower is better, and 1.00× is Zig's time.
   - unchecked build ≤ 1.1×;
   - peak memory ≤ 1.5×.
 - **Which were met.** The checked and unchecked geomean targets are met. The
-  worst-program bound is not: `text_ops` is 3.60× and `matmul` 3.75×. The memory
-  target is met on 9 of 13 programs.
+  worst-program bound is not: `text_ops` is 3.68× and `matmul` 3.75×. The memory
+  target is met on 7 of 13 programs.
 - **Against the plan's projection.** The plan projected about 1.6×. The result is
   better for three reasons:
   - the library lanes overshot their targets (sorting 0.51×, keyed sorting 0.28×);
-  - the allocation and collector lanes put `binary_trees` below Zig (0.46×);
+  - the allocation and collector lanes put `binary_trees` below Zig (0.48×);
   - the lanes not in the plan (range-keyed dictionary lookups, overflow
     intrinsics) together took another ~8% off the geomean.
 - **Two of the programs beat Zig by choosing a different algorithm,** so the table
@@ -47,13 +47,16 @@ all arms interleaved. Lower is better, and 1.00× is Zig's time.
 
 - **Compilers.**
   - *Before* is `install-a3`, the plan's measured compiler.
-  - *Now* is the ReleaseFast install of `perf/parity-integration`:
-    - `6a1a9c4d` for the full batch;
-    - `cfc940bf` for the memory-lane re-time of the four programs it affects,
-      taken in its own interleaved batch against the `6a1a9c4d` binaries.
+  - *Now* is the ReleaseFast install of `perf/parity-integration` `8a289c96`, the
+    final tree. Most rows come from the full batch of `6a1a9c4d`. The memory lanes
+    landed after it, so the rows they can change were re-timed in their own
+    interleaved batch against the `6a1a9c4d` binaries and the plan's compiler:
+    - `binary_trees`, `knucleotide`, `text_ops`, `sort_records` and `sieve`;
+    - `scan_split`.
 
-  The suite rows for `binary_trees` and `text_ops` below use the `cfc940bf`
-  numbers; the geomean applies their same-batch ratio.
+    Those rows show that batch, so their Zig times differ. Their QBE columns are
+    from the full batch. The geomean is computed over the table as shown
+    (`results/final/mem2-suite.json`, `mem2-lib.json`).
 - **Timing.**
   - One CPU (2), whose hyperthread sibling was idle, measured before and during
     the run.
@@ -72,20 +75,20 @@ all arms interleaved. Lower is better, and 1.00× is Zig's time.
 
 | program | Zig ms | before, LLVM | now, LLVM | before, QBE | now, QBE | now, `--unchecked` | Rust | Zig safe | peak RSS × Zig (before → now) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| binary_trees | 273.3 | 1.95× | **0.46×** | 2.08× | 0.65× | 0.43× | 1.69× | 1.11× | 11.0 → 3.5 |
+| binary_trees | 209.5 | 2.06× | **0.48×** | 2.08× | 0.65× | 0.46× | 1.70× | 1.15× | 11.0 → 3.5 |
 | fannkuch_redux | 220.7 | 16.89× | 1.12× | 19.30× | 1.78× | 0.97× | 1.03× | 1.19× | 1.3 → 1.3 |
-| knucleotide | 112.0 | 5.01× | 1.48× | 6.22× | 1.90× | 1.46× | 1.40× | 1.13× | 8.1 → 2.7 |
+| knucleotide | 94.3 | 4.94× | 1.50× | 6.22× | 1.90× | 1.46× | 1.37× | 1.13× | 8.1 → 3.0 |
 | mandelbrot | 139.1 | 1.32× | 1.00× | 4.17× | 3.07× | 1.02× | 1.03× | 1.01× | 1.3 → 1.3 |
 | matmul | 41.4 | 42.94× | 3.75× | 71.63× | 8.74× | 2.84× | 2.11× | 1.53× | 2.0 → 2.0 |
 | nbody | 149.6 | 71.93× | 1.92× | 103.03× | 10.54× | 1.71× | 1.16× | 1.01× | 1.3 → 1.3 |
 | raytrace | 77.3 | 4.28× | 1.38× | 8.11× | 5.20× | 1.29× | 0.98× | 1.06× | 1.3 → 1.2 |
-| sieve | 57.9 | 7.38× | 1.73× | 10.27× | 2.41× | 1.44× | 1.03× | 1.36× | 1.1 → 1.1 |
+| sieve | 50.2 | 7.25× | 1.74× | 10.27× | 2.41× | 1.43× | 1.03× | 1.35× | 1.1 → 1.1 |
 | sort_builtin | 212.3 | 1.64× | 0.51× | 1.15× | 0.56× | 0.53× | 0.32× | 1.17× | 2.1 → 1.7 |
 | sort_quick | 177.4 | 1.84× | 1.27× | 2.59× | 1.64× | 1.06× | 0.97× | 1.17× | 1.2 → 1.2 |
-| sort_records | 120.4 | 5.35× | 0.28× | 7.30× | 0.33× | 0.28× | 0.41× | 1.15× | 14.0 → 2.6 |
+| sort_records | 106.8 | 5.33× | 0.28× | 7.30× | 0.33× | 0.27× | 0.40× | 1.15× | 13.9 → 2.6 |
 | spectral_norm | 154.4 | 3.59× | 1.13× | 10.67× | 9.29× | 1.01× | 1.00× | 1.32× | 1.5 → 1.5 |
-| text_ops | 29.0 | 6.66× | **3.60×** | 7.00× | 4.07× | 3.68× | 1.49× | 0.80× | 10.0 → 4.4 |
-| **geomean** | | **5.79×** | **1.19×** | **8.40×** | **2.41×** | **1.10×** | **1.01×** | **1.14×** | |
+| text_ops | 24.4 | 6.94× | **3.68×** | 7.00× | 4.07× | 3.68× | 1.55× | 0.84× | 10.0 → 4.9 |
+| **geomean** | | **5.81×** | **1.20×** | **8.40×** | **2.41×** | **1.10×** | **1.01×** | **1.14×** | |
 
 **Variants now.** These are spellings of the same program that the language
 already accepts. They show where the obvious spelling still costs:
@@ -130,7 +133,7 @@ already accepts. They show where the obvious spelling still costs:
 |---|---:|---:|---:|---:|---:|---:|---|
 | scan_count | 94.9 | 5.50× | 1.01× | 4.06× | 1.02× | 2.96× | 1.6 → 1.6 |
 | scan_replace | 156.7 | 1.68× | 0.34× | 1.20× | 0.32× | 1.74× | 1.2 → 0.7 |
-| scan_split | 35.9 | 6.09× | 3.31× | 5.56× | 3.24× | 1.50× | 38.6 → 14.6 |
+| scan_split | 32.2 | 6.61× | 3.34× | 5.56× | 3.24× | 1.60× | 38.6 → 14.8 |
 | slice_walk | 1.7 | 247.36× | 2.88× | 264.93× | 2.86× | 1.14× | 47.1 → 3.7 |
 | **geomean** | | **10.87×** | **1.34×** | **9.20×** | **1.32×** | **1.72×** | |
 
@@ -146,15 +149,17 @@ already accepts. They show where the obvious spelling still costs:
 - *Status.* It is the largest instance of a code-layout sensitivity several lanes
   saw at 2–7% (`dict_count`, `fannkuch_redux`, `text_ops`). It is not fixed.
 
-**`scan_split`, 3.29× → 4.26× after the memory-footprint lane.**
-- *When.* After this table was taken: the table's 3.31× is the `6a1a9c4d`
-  compiler.
-- *Measured.* The memory-footprint lane (`cfc940bf`) takes it from 129 ms to
-  170 ms in one batch of the two compilers
-  (`results/final/scan_split-mem.json`), while its peak memory falls from 64 to
-  51 MB.
-- *Status.* The standing `bench-parity` step caught it in both quiet batches. It
-  is being fixed on `perf/memory-footprint-2`.
+**`scan_split` was fixed after the memory-footprint lane regressed it.**
+- *The regression.* `cfc940bf` took it from 129 ms to 170 ms in one batch of the
+  two compilers (`results/final/scan_split-mem.json`).
+- *How it was found.* The standing `bench-parity` step caught it in both quiet
+  batches.
+- *The fix.* `perf/memory-footprint-2` withdrew the two changes that caused it:
+  - the 1.5× full-collection trigger, which doubled collections over a growing
+    live set;
+  - returning idle pages to the OS, which added 25% page faults.
+- *Result.* `scan_split` is now 0.95× of the pre-lane compiler. `text_ops` gives
+  back part of its memory win (34 → 38.5 MB); `binary_trees` keeps all of it.
 
 ## What each lane contributed
 
@@ -183,7 +188,7 @@ Lane numbers are from each lane's own report: paired before/after, loaded machin
 | — | `fix/checker-bugs` | nine checker/escape/formatter bugs | closed an effect-bound soundness hole |
 | — | `perf/text-dict-leftovers` | slice keys looked up by range without allocating | knucleotide 3.4× → 1.45×, RSS 63 → 29 MB |
 | — | `fix/loop-variable-rebinding` | loop variables rebind each iteration | `enumerate` position was silently wrong |
-| — | `perf/memory-footprint` | promotion on second survival, 1.5× trigger, per-depth arena chunks | binary_trees RSS 29 → 16 MB, text_ops 44 → 34 MB |
+| — | `perf/memory-footprint` (+ `-2`) | promotion on second survival, per-depth arena chunks, uncleared text storage | binary_trees RSS 29 → 16 MB and −13% time; text_ops 44 → 38.5 MB |
 
 **Coordinator fixes made during integration.**
 
@@ -265,14 +270,14 @@ register-allocator change that affects the QBE column.
 ## Still open
 
 - **Worst programs.**
-  - `text_ops` 3.60× and `matmul` 3.75×.
+  - `text_ops` 3.68× and `matmul` 3.75×.
   - `text_ops` is allocation of per-line/field `str` objects; `text_ops_tuned`
     (0.64×) shows the language can express the fast version.
   - `matmul`'s list-of-lists indexing is 2.69× even flat, and 2.84× unchecked;
     Rust is 2.11× there. The remaining cost is bounds checks and row loads LLVM
     does not hoist.
 - **Peak memory.** Allocation-heavy programs are still above 1.5× Zig:
-  - `text_ops` 4.4×, `binary_trees` 3.5×, `knucleotide` 2.7×, `sort_records` 2.6×;
+  - `text_ops` 4.9×, `binary_trees` 3.5×, `knucleotide` 3.0×, `sort_records` 2.6×;
   - an 8-byte header is the next lever (measured estimate in
     `memory-footprint-2026-09-23.md`).
 - **`bytes_scan`'s 25% layout regression,** and layout sensitivity generally: the
@@ -297,5 +302,5 @@ zig build bench-parity -Dbench-cpu=<cpu>        # the standing step, with thresh
 `final_measure.sh` expects the plan's `install-a3` compiler beside the
 repository, as the plan's harness does. Results:
 - `results/final/suite.json`, `micro.json`, `lib.json` (the `6a1a9c4d` batch);
-- `mem.json` (the `cfc940bf` re-time);
+- `mem.json` (the `cfc940bf` re-time), `mem2-suite.json` and `mem2-lib.json` (the `8a289c96` re-time);
 - `tables.md`.

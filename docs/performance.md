@@ -52,7 +52,7 @@ so `xs[i] = v` is a bounds test and one store instead of a runtime call behind
 the frame's GC roots. On the same thirteen programs it takes the geometric mean
 from 5.8× to 3.0× Zig: `nbody` 72× → 4.9×, `matmul` 41× → 7.1×,
 `fannkuch_redux` 16× → 1.3×, `sieve` 7.1× → 1.8×. The schematic render goes
-from 1.98× to 1.73×. Its [results](audits/performance-parity-results-2026-09-23.md): the suite went from 5.79× to 1.19× Zig on the default LLVM build and from 8.40× to 2.41× on QBE.
+from 1.98× to 1.73×. Its [results](audits/performance-parity-results-2026-09-23.md): the suite went from 5.81× to 1.20× Zig on the default LLVM build and from 8.40× to 2.41× on QBE.
 
 ## What is fast without trying
 

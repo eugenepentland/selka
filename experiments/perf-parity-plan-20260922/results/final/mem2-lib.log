@@ -1,0 +1,8 @@
+scan_count: 6 qualified arms: my my-unchecked zig-fast zig-safe loops before
+scan_replace: 6 qualified arms: my my-unchecked zig-fast zig-safe loops before
+scan_split: 6 qualified arms: my my-unchecked zig-fast zig-safe loops before
+slice_walk: 6 qualified arms: my my-unchecked zig-fast zig-safe loops before
+scan_count: ref 80.9 ms | my=0.99x  my-unchecked=1.00x  zig-fast=1.00x  zig-safe=2.97x  loops=1.00x  before=5.52x
+scan_replace: ref 143.1 ms | my=0.35x  my-unchecked=0.36x  zig-fast=1.00x  zig-safe=1.78x  loops=0.35x  before=1.77x
+scan_split: ref 32.2 ms | my=3.34x  my-unchecked=3.32x  zig-fast=1.00x  zig-safe=1.60x  loops=3.51x  before=6.61x
+slice_walk: ref 1.7 ms | my=2.63x  my-unchecked=2.41x  zig-fast=1.00x  zig-safe=0.99x  loops=2.69x  before=234.93x
