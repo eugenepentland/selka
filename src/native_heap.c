@@ -531,6 +531,8 @@ typedef struct { uint32_t offset, tag_offset, tag; } scan_entry;
  * inside a variant), which keeps the recursive walk. */
 struct myl_native_scan_plan {
     const myl_native_type *type;
+    /* `shape_signature` of `type` when the plan was built (GC-SCAN-PLAN-1). */
+    uint64_t signature;
     int usable;
     uint32_t count;
     scan_entry entries[SCAN_ENTRIES];
@@ -562,17 +564,40 @@ static int flatten(myl_native_scan_plan *plan, const myl_native_type *type, size
     }
     return 1;
 }
+/* What a runtime-built descriptor's own words say about its layout: its size
+ * and kind and, for each field, the offset, tag and child descriptor. Generated
+ * descriptors are image data whose address never names another layout, but a
+ * runtime-built one can live inside a managed object — a dictionary carries the
+ * descriptor of its own entries — and once that object is reclaimed another
+ * object at the same address carries a descriptor of a different layout. A
+ * plan cached under the address alone would then trace the new entries with
+ * the old entries' reference slots, skipping live references or marking
+ * scalars. The children a runtime-built descriptor names are image data, so
+ * this signature tells two such layouts apart (GC-SCAN-PLAN-1). */
+static uint64_t shape_signature(const myl_native_type *type) {
+    if (type->trace_mode != MYL_NATIVE_TRACE_LEGACY) return 0;
+    uint64_t hash = type->size * UINT64_C(0x9e3779b97f4a7c15) ^ type->kind ^ (uint64_t)type->field_count << 40;
+    for (size_t i = 0; i < type->field_count; ++i) {
+        hash ^= (uint64_t)(uintptr_t)type->fields[i].type + type->fields[i].offset * UINT64_C(0xbf58476d1ce4e5b9) + type->fields[i].tag;
+        hash *= UINT64_C(0x94d049bb133111eb);
+        hash ^= hash >> 29;
+    }
+    return hash;
+}
 /* The flat plan for `type`, from a small direct-mapped cache the heap owns,
  * built on first use; NULL when the type does not flatten or the cache could
- * not be reserved. */
+ * not be reserved. A plan answers only the descriptor address and shape it was
+ * built for (GC-SCAN-PLAN-1). */
 static const myl_native_scan_plan *scan_plan(myl_native_heap *heap, const myl_native_type *type) {
     if (!heap->scan_plans) {
         heap->scan_plans = calloc(SCAN_PLANS, sizeof *heap->scan_plans);
         if (!heap->scan_plans) return NULL;
     }
     myl_native_scan_plan *plan = &heap->scan_plans[((uintptr_t)type >> 4) & (SCAN_PLANS - 1)];
-    if (plan->type != type) {
+    uint64_t signature = shape_signature(type);
+    if (plan->type != type || plan->signature != signature) {
         plan->type = type;
+        plan->signature = signature;
         plan->count = 0;
         plan->usable = flatten(plan, type, 0, (scan_entry){0, SCAN_ALWAYS, 0});
     }
