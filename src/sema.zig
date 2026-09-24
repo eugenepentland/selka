@@ -1476,6 +1476,11 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         .lambda_captures = lambda_captures,
     };
     defer allocator.free(checker.managed_types);
+    // Checked trees run about one and a half times the syntax they come from.
+    // Reserving that up front keeps the append path from regrowing (and, in the
+    // project arena, recopying) the whole program's checked tables.
+    try checker.nodes.ensureTotalCapacity(allocator, program.nodes.items.len + program.nodes.items.len / 2 + 64);
+    try checker.statements.ensureTotalCapacity(allocator, program.statements.items.len + program.statements.items.len / 2 + 64);
     // C3 reuse: prepared declaration facts and fresh identity maps are
     // per-request; only populated when a semantic cache is attached.
     try initSpecializationReuse(&checker, allocator, catalog.records, &session, &spec_session);

@@ -794,12 +794,13 @@ fn checkMutDeclarations(allocator: std.mem.Allocator, program: typed.Program, re
     const sink = request.sink;
 
     const function = program.functions[index];
-    const declared_function = declaringFunction(request.syntax, function);
+    // The declaring syntax is found by a scan of every declaration, so it is
+    // looked up only for a function that actually reports a diagnostic.
     const positions: u16 = if (summary.mutates_unknown) unknownWritePositions(function) else summary.mutates;
     const declared = positionsBitset(function.signature.declared_mutates);
     var violated = false;
     if (summary.external and positions & ~declared != 0) {
-        const message = try unmarkedWriteMessage(allocator, src, declared_function, function, positions & ~declared);
+        const message = try unmarkedWriteMessage(allocator, src, declaringFunction(request.syntax, function), function, positions & ~declared);
         try sink.items.append(allocator, .{
             .code = mutation_marker_code,
             .span = summary.undeclared_witness orelse summary.witness orelse function.declaration,
@@ -814,7 +815,7 @@ fn checkMutDeclarations(allocator: std.mem.Allocator, program: typed.Program, re
     while (position < 16) : (position += 1) {
         if (declared & (@as(u16, 1) << @intCast(position)) == 0) continue;
         if (summary.mutates & (@as(u16, 1) << @intCast(position)) != 0) continue;
-        const message = try unusedMutMessage(allocator, src, declared_function, function, position);
+        const message = try unusedMutMessage(allocator, src, declaringFunction(request.syntax, function), function, position);
         try sink.items.append(allocator, .{
             .code = unused_mut_code,
             .span = function.scope.locals[position].declaration,

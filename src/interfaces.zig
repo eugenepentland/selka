@@ -186,6 +186,12 @@ pub const Index = struct {
         for (self.project.order.items) |module_id| {
             const module = self.project.modules.items[module_id];
             if (module.imports.len == 0) continue;
+            if (module.header.usage_scanned) {
+                for (module.imports, 0..) |imported, import_index| {
+                    if (imported.seen and import_index < self.units[module_id].import_used.len) self.units[module_id].import_used[import_index] = true;
+                }
+                continue;
+            }
             var sink: diagnostic.Sink = .{ .allocator = scratch };
             const tokens = lexer.lex(scratch, module.src.bytes, &sink) catch continue;
             var index: usize = 0;
@@ -337,10 +343,18 @@ pub const Index = struct {
         const allocator = self.project.arena.allocator();
         const src = self.project.modules.items[module].src;
 
-        // Re-lex this short name to normalize whitespace/comments around module separators.
-        var sink: diagnostic.Sink = .{ .allocator = allocator };
-        const tokens = try lexer.lex(allocator, src.text(span), &sink);
-        const qualified = lexer.qualifiedName(src.text(span), tokens) orelse return error.InternalError;
+        // Re-lex this short name to normalize whitespace/comments around module
+        // separators; a plain dotted spelling is decided without the lexer.
+        const text = src.text(span);
+        const qualified = switch (lexer.quickQualifiedName(text)) {
+            .name => |quick| quick,
+            .none => return error.InternalError,
+            .slow => slow: {
+                var sink: diagnostic.Sink = .{ .allocator = allocator };
+                const tokens = try lexer.lex(allocator, text, &sink);
+                break :slow lexer.qualifiedName(text, tokens) orelse return error.InternalError;
+            },
+        };
         return self.resolve(.{ .from = module, .alias = qualified.alias, .name = qualified.name, .kind = .type, .owner = null, .span = span });
     }
     /// `typeIdentity` for a caller that recovers from an unresolved name.

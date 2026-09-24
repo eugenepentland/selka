@@ -56,6 +56,11 @@ pub const Import = struct {
     alias: []const u8,
     span: source.Span,
     target: usize = undefined,
+    /// Whether some qualified reference after the header names this import
+    /// (the first import a qualifier matches). Header discovery already holds
+    /// the module's tokens, so the unused-import warning reads this instead of
+    /// lexing every module a second time.
+    seen: bool = false,
 
     /// Whether a source qualifier names this import, by its local alias or its
     /// full dotted module path. `import a.b` therefore answers both `a.b.fn`
@@ -68,7 +73,12 @@ pub const Import = struct {
 pub const Module = struct {
     name: []const u8,
     src: source.Source,
-    header: struct { declaration: source.Span = .{ .start = 0, .end = 0 }, body_start: usize = 0 } = .{},
+    header: struct {
+        declaration: source.Span = .{ .start = 0, .end = 0 },
+        body_start: usize = 0,
+        /// Whether header discovery recorded each import's `seen` flag.
+        usage_scanned: bool = false,
+    } = .{},
     imports: []Import = &.{},
     exports: []Export = &.{},
     digest: [32]u8 = undefined,
@@ -248,6 +258,8 @@ pub const Project = struct {
             try exports.append(allocator, .{ .name = exported_name.last, .span = exported_name.span, .alias = alias });
         }
         self.modules.items[id].exports = try exports.toOwnedSlice(allocator);
+        markQualifiedImports(src.bytes, tokens, self.modules.items[id].header.body_start, self.modules.items[id].imports);
+        self.modules.items[id].header.usage_scanned = true;
     }
     /// Consume the `module NAME;` header, or the headerless opening of an entry
     /// script whose every import names an embedded standard module. Answers the
@@ -322,6 +334,31 @@ pub const Project = struct {
         return primary;
     }
 };
+/// Mark every import some dotted reference after the header qualifies: for each
+/// `a.b.c` chain the qualifier `a.b` marks the first import it names. This is
+/// the scan the unused-import warning needs, taken from the header's tokens.
+fn markQualifiedImports(bytes: []const u8, tokens: []const lex.Token, body_start: usize, imports: []Import) void {
+    if (imports.len == 0) return;
+    var index: usize = 0;
+    while (index < tokens.len) : (index += 1) {
+        if (tokens[index].tag != .ident) continue;
+        if (tokens[index].span.start < body_start) continue;
+        var last = index;
+        var cursor = index + 1;
+        while (cursor + 1 < tokens.len and tokens[cursor].tag == .dot and tokens[cursor + 1].tag == .ident) {
+            last = cursor + 1;
+            cursor += 2;
+        }
+        if (last == index) continue;
+        const qualifier = bytes[tokens[index].span.start..tokens[last - 2].span.end];
+        for (imports) |*imported| {
+            if (!imported.matches(qualifier)) continue;
+            imported.seen = true;
+            break;
+        }
+        index = last;
+    }
+}
 const Scanner = struct {
     project: *Project,
     id: usize,
