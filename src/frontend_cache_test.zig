@@ -114,6 +114,32 @@ test "verdict entries require identical module bytes and reject damaged files" {
     try t.expect(try cache.lookupVerdict(t.allocator, &changed, .text) == null);
 }
 
+// spec: CACHE-CHECKSUM-1
+test "an entry whose payload changed under an intact header fails its checksum" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var cache = openCache(root);
+    var files: Files = .{};
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try load(&project, &files);
+    const index = try language.interfaces.buildWithCache(&project, null, null);
+    const module = project.modules.items[0];
+    try cache.rememberSyntax(module.src, module.header.body_start, index.units[0].syntax);
+    const key = cache.syntaxKey(module.src, module.header.body_start);
+    const path = try cache.entryPath(key);
+    defer t.allocator.free(path);
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(t.io, path, t.allocator, .unlimited);
+    defer t.allocator.free(bytes);
+    // The payload sits between the 44-byte header and the 8-byte checksum.
+    bytes[bytes.len - 9] ^= 0xff;
+    try std.Io.Dir.cwd().writeFile(t.io, .{ .sub_path = path, .data = bytes });
+    try t.expectError(error.Damaged, cache.read(key));
+    try t.expect(try cache.lookupSyntax(t.allocator, module.src, module.header.body_start) == null);
+}
+
 // spec-case: FRONTEND-CACHE-1
 test "damaged entries are rejected and fall back to fresh work without failing" {
     var temp = t.tmpDir(.{});

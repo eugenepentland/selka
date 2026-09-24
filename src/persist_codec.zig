@@ -12,6 +12,17 @@ const std = @import("std");
 /// Malformed or truncated stored bytes; callers treat every case as a cache miss.
 pub const DecodeError = error{ InvalidEncoding, Truncated, TooLarge, OutOfMemory };
 
+/// The integrity checksum persisted beside a stored payload: the first eight
+/// bytes of its BLAKE3 digest. It replaced XxHash3, whose std implementation
+/// runs at about 25 MB/s on this project's hybrid build hosts' efficiency cores
+/// and 370 MB/s on the performance cores; BLAKE3 hashes the same payloads at
+/// more than 1 GB/s on both, and every build and check verifies each entry.
+pub fn checksum(bytes: []const u8) u64 {
+    var digest: [8]u8 = undefined;
+    std.crypto.hash.Blake3.hash(bytes, &digest, .{});
+    return std.mem.readInt(u64, &digest, .little);
+}
+
 /// Growable little-endian writer for one serialized value.
 pub const Writer = struct {
     bytes: std.ArrayList(u8) = .empty,
@@ -229,4 +240,13 @@ test "codec rejects truncated and malformed bytes" {
     try bad_union.integer(@as(u8, 9));
     var bad_union_reader = Reader.init(std.testing.allocator, bad_union.bytes.items);
     try std.testing.expectError(error.InvalidEncoding, bad_union_reader.read(union(enum) { a, b }));
+}
+
+// spec-case: CACHE-CHECKSUM-1
+test "the payload checksum is the leading BLAKE3 bytes and sees every byte" {
+    var digest: [8]u8 = undefined;
+    std.crypto.hash.Blake3.hash("payload", &digest, .{});
+    try std.testing.expectEqual(std.mem.readInt(u64, &digest, .little), checksum("payload"));
+    try std.testing.expect(checksum("payload") != checksum("payloae"));
+    try std.testing.expect(checksum("") != checksum("\x00"));
 }

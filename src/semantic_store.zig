@@ -316,7 +316,7 @@ pub const Store = struct {
         const checksum = reader.integer(u64) catch return self.rejectPayload();
         if (!reader.done()) return self.rejectPayload();
         const checksum_offset = reader.at - @sizeOf(u64);
-        if (std.hash.XxHash3.hash(0, bytes[0..checksum_offset]) != checksum) return self.rejectPayload();
+        if (codec.checksum(bytes[0..checksum_offset]) != checksum) return self.rejectPayload();
         return self.allocator.dupe(u8, payload) catch error.OutOfMemory;
     }
 
@@ -479,7 +479,7 @@ pub const Store = struct {
         image.raw(payload_bytes) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
-        image.integer(std.hash.XxHash3.hash(0, image.bytes.items)) catch |err| switch (err) {
+        image.integer(codec.checksum(image.bytes.items)) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
 
