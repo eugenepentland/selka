@@ -216,9 +216,10 @@ test whose closure does not contain the edited function is answered from its
 receipt and is not linked into the library; the functions that are rebuilt reuse
 every emitted unit whose inputs did not change; and the compiled test harness is
 kept in the cache. When no case names a provider fixture, the body check starts
-alongside the declaration check instead of after it. On a generated
-200,000-line project where an edit reaches half of the 480 tests, the run after
-the edit takes about half a second longer than `mylang check` does
+alongside the declaration check instead of after it, and it reads the check
+summaries the way `build` does, so the effect passes revisit only changed bodies.
+On a generated 200,000-line project where an edit reaches half of the 480 tests,
+the run after the edit takes about 1.2 seconds, against 0.4 for `mylang check`
 (`docs/audits/devspeed-test-loop-scale-2026-09-24.md`).
 
 A successful deterministic case leaves a receipt under `.mylang-cache/tests`, or
