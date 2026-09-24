@@ -151,7 +151,7 @@ pub const Cache = struct {
     }
     /// Give a unit's assembly its frame-map table before it is assembled
     /// (QBE-FRAMEMAP-1). Assembly with no call-site positions is left untouched.
-    fn annotateAssembly(self: Cache, path: []const u8) Error!void {
+    pub fn annotateAssembly(self: Cache, path: []const u8) Error!void {
         const text = try self.context.read(path);
         const annotated = try annotateText(self.context, text);
         if (!std.mem.eql(u8, text, annotated)) try self.context.write(path, annotated);
@@ -312,6 +312,25 @@ pub const Cache = struct {
         if (self.codegen.lto) try argv.append(a, "-flto");
         try argv.append(a, try std.fmt.allocPrint(a, "-femit-bin={s}", .{output}));
         return argv.items;
+    }
+    /// The key a guest unit's own IL has under this build's environment and
+    /// cache contract: the identity a per-function object was published under.
+    pub fn unitKey(self: Cache, il: []const u8) Error![]const u8 {
+        return self.identity("function", il);
+    }
+    /// A key derived from other keys of this cache, under its own `kind`.
+    pub fn derived(self: Cache, kind: []const u8, input: []const u8) Error![]const u8 {
+        return self.identity(kind, input);
+    }
+    /// The object published under `key`, when it is on disk and its fingerprint matches.
+    pub fn cached(self: Cache, key: []const u8) Error!?Object {
+        const path = try self.entry(key, ".o");
+        if (!self.valid(path, try self.entry(key, ".digest"))) return null;
+        return .{ .key = key, .path = path, .reused = true };
+    }
+    /// Publish an object a caller built itself under `key`, with its fingerprint.
+    pub fn keep(self: Cache, key: []const u8, candidate: []const u8) Error!Object {
+        return self.store(key, try self.entry(key, ".o"), candidate);
     }
     fn identity(self: Cache, kind: []const u8, input: []const u8) Error![]const u8 {
         const contract = try self.contract.fingerprint(self.context.allocator);

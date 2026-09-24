@@ -1,5 +1,6 @@
 //! Filesystem and child-process operations for native builds.
 const std = @import("std");
+const spawn = @import("qbe_build_spawn.zig");
 const Sha = std.crypto.hash.sha2.Sha256;
 /// The one hidden folder every invocation stages beneath, so a destination
 /// directory keeps at most one shared staging folder instead of one
@@ -475,9 +476,11 @@ pub const Context = struct {
     pub fn captureQuiet(self: Context, argv: []const []const u8) Error!std.process.RunResult {
         return std.process.run(self.allocator, self.io, .{ .argv = argv });
     }
-    /// Invoke tools directly, preserving inherited environment and stderr.
+    /// Invoke tools directly, preserving inherited environment and stderr. The
+    /// tool starts without copying this process (`qbe_build_spawn.zig`), so a
+    /// build holding a large program pays the same per tool as a small one.
     pub fn command(self: Context, argv: []const []const u8, environment: ?*const std.process.Environ.Map) Error!void {
-        const result = try std.process.run(self.allocator, self.io, .{ .argv = argv, .environ_map = environment });
+        const result = try spawn.run(self.allocator, .{ .argv = argv, .environment = environment orelse self.environ });
         try std.Io.File.stderr().writeStreamingAll(self.io, result.stderr);
         if (exitCode(result.term) != 0) return error.NativeToolFailed;
     }

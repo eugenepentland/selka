@@ -211,6 +211,138 @@ test "a prebuilt runtime installed beside the compiler links directly, and damag
     try std.testing.expectEqualStrings("7\n", miss.output);
 }
 
+/// A three-module program whose modules each hold several functions, so a
+/// batched build puts more than one function in an object. It prints, then
+/// traps two modules deep, so the trace crosses batches.
+const batch_program = [_]struct { name: []const u8, text: []const u8 }{
+    .{ .name = "main.my", .text =
+    \\module main
+    \\import shapes
+    \\import walk
+    \\
+    \\
+    \\def main(out: Stream) -> int:
+    \\    total = 0
+    \\    for i in range(12):
+    \\        total += shapes.area(i) + walk.step(i) + shapes.scaled(i, 3)
+    \\    out.print(total)
+    \\    out.print(walk.pick([4, 5, 6], 1))
+    \\    out.print(walk.pick([4, 5, 6], 7))
+    \\    return 0
+    \\
+    },
+    .{ .name = "shapes.my", .text =
+    \\module shapes
+    \\
+    \\
+    \\public record Box:
+    \\    w: int
+    \\    h: int
+    \\
+    \\
+    \\public def area(n: int) -> int:
+    \\    b = Box(w=n, h=n + 1)
+    \\    return b.w * b.h
+    \\
+    \\
+    \\public def perimeter(n: int) -> int:
+    \\    return 2 * (n + n + 1)
+    \\
+    \\
+    \\public def scaled(n: int, k: int) -> int:
+    \\    return area(n) * k - perimeter(n)
+    \\
+    \\
+    \\public def diagonal(n: int) -> int:
+    \\    return n * n + (n + 1) * (n + 1)
+    \\
+    },
+    .{ .name = "walk.my", .text =
+    \\module walk
+    \\import shapes
+    \\
+    \\
+    \\public def step(n: int) -> int:
+    \\    return shapes.perimeter(n) - n + shapes.diagonal(n) % 7
+    \\
+    \\
+    \\public def pick(xs: list[int], i: int) -> int:
+    \\    return xs[i] + twice(i)
+    \\
+    \\
+    \\def twice(n: int) -> int:
+    \\    return n + n
+    \\
+    },
+};
+
+/// What one build of `batch_program` reported and what its executable did.
+const BatchRun = struct { functions: usize, objects: usize, stdout: []const u8, stderr: []const u8, term: std.process.Child.Term };
+
+/// Build `batch_program` in `directory` with `extra` build flags, grouping
+/// functions as `MYLANG_QBE_BATCH` (empty: the default) says, then run it.
+fn batchRun(context: fs.Context, resolved: Tools, directory: []const u8, grouping: []const u8, extra: []const []const u8) !BatchRun {
+    const a = context.allocator;
+    var environment = try std.process.Environ.createMap(std.testing.environ, a);
+    _ = environment.swapRemove("MYLANG_QBE_BATCH");
+    if (grouping.len != 0) try environment.put("MYLANG_QBE_BATCH", grouping);
+    const output = try join(a, &.{ directory, try std.fmt.allocPrint(a, "program-{s}", .{if (grouping.len == 0) "batched" else grouping}) });
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(a, &.{ resolved.compiler, "build", "main.my", "-o", output, "--qbe", resolved.qbe, "--zig", resolved.zig, "--report" });
+    try argv.appendSlice(a, &.{ "--cache-dir", try join(a, &.{ directory, try std.fmt.allocPrint(a, "cache-{s}", .{if (grouping.len == 0) "batched" else grouping}) }) });
+    try argv.appendSlice(a, extra);
+    const report = try spawnOk(context, argv.items, .{ .path = directory }, &environment);
+    const parsed = try std.json.parseFromSlice(std.json.Value, a, report, .{ .allocate = .alloc_always });
+    const ran = try std.process.run(a, context.io, .{ .argv = &.{output}, .cwd = .inherit });
+    return .{
+        .functions = v.array(v.get(parsed.value, "functions")).len,
+        .objects = v.number(v.get(parsed.value, "function_objects")),
+        .stdout = ran.stdout,
+        .stderr = ran.stderr,
+        .term = ran.term,
+    };
+}
+
+/// Build and run `batch_program` batched and one function per object with
+/// the same flags; both runs, batched first.
+fn batchPair(context: fs.Context, resolved: Tools, directory: []const u8, extra: []const []const u8) ![2]BatchRun {
+    return .{ try batchRun(context, resolved, directory, "", extra), try batchRun(context, resolved, directory, "1", extra) };
+}
+
+// spec: QBE-BATCH-2
+test "a batched build and an unbatched build of one program behave identically" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const a = context.allocator;
+    const resolved = try tools(a);
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for (batch_program) |file| try context.write(try join(a, &.{ root, file.name }), file.text);
+    // Debug: the frame record protocol and exact step accounting.
+    const debug = try batchPair(context, resolved, root, &.{ "--mode", "Debug" });
+    try std.testing.expect(debug[0].objects < debug[0].functions);
+    try std.testing.expectEqual(debug[1].functions, debug[1].objects);
+    try std.testing.expectEqual(debug[0].functions, debug[1].functions);
+    try std.testing.expectEqualStrings("2272\n7\n", debug[0].stdout);
+    try std.testing.expectEqualStrings(debug[1].stdout, debug[0].stdout);
+    try std.testing.expectEqual(std.process.Child.Term{ .exited = 1 }, debug[0].term);
+    try std.testing.expectEqual(debug[1].term, debug[0].term);
+    try std.testing.expect(std.mem.indexOf(u8, debug[0].stderr, "R_LIST_BOUNDS") != null);
+    try std.testing.expectEqualStrings(debug[1].stderr, debug[0].stderr);
+    // A QBE ReleaseFast executable carries no frame record: its trap trace
+    // comes from the frame map each batch's assembly was annotated with.
+    const fast = try batchPair(context, resolved, root, &.{ "--mode", "ReleaseFast" });
+    try std.testing.expect(fast[0].objects < fast[0].functions);
+    try std.testing.expectEqualStrings(debug[0].stdout, fast[0].stdout);
+    try std.testing.expectEqualStrings(fast[1].stdout, fast[0].stdout);
+    try std.testing.expectEqual(fast[1].term, fast[0].term);
+    try std.testing.expect(std.mem.indexOf(u8, fast[0].stderr, "in walk::pick") != null or std.mem.indexOf(u8, fast[0].stderr, "pick") != null);
+    try std.testing.expectEqualStrings(fast[1].stderr, fast[0].stderr);
+}
+
 // spec-case: EXIT-STATUS-1
 test "a native executable exits with its entry int result truncated to a byte" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
