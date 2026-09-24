@@ -81,7 +81,8 @@ pub const Shapes = struct {
     pub fn descriptorTable(self: Shapes, w: *std.Io.Writer) Error!void {
         if (self.descriptors.len != 0 and self.descriptors.len != self.types.len) return error.InvalidManifest;
         if (self.descriptors.len == 0) for (self.types) |item| {
-            if (try kindNumber(v.text(v.get(item, "kind"))) == list_kind) return error.InvalidManifest;
+            const kind = try kindNumber(v.text(v.get(item, "kind")));
+            if (kind == list_kind or kind == dict_kind) return error.InvalidManifest;
         };
         for (self.descriptors) |item| try w.print("extern const myl_native_type {s};\n", .{v.text(item)});
         try w.writeAll("static const myl_native_type *const co_native_types[]={\n");
@@ -99,11 +100,15 @@ pub const Shapes = struct {
         // type the wire carries one node per. Anything else is a malformed
         // manifest the generated adapter must refuse rather than walk off its
         // field table.
-        if ((kind == 5 or kind == list_kind) and fields.len != 1) return error.InvalidManifest;
+        if ((kind == 5 or kind == list_kind or kind == bytes_kind) and fields.len != 1) return error.InvalidManifest;
+        // A dictionary names its key and its value; a set's value is unit.
+        if (kind == dict_kind and fields.len != 2) return error.InvalidManifest;
         // An array's, a text's and a list's element count is carried by the
-        // manifest itself — zero for the two variable-length kinds. For every
+        // manifest itself — zero for the variable-length kinds — and so is a
+        // dictionary's subtrees per entry: two, or one for a set. For every
         // other aggregate the field table is the count.
-        const count = if (kind == 2 or kind == 5 or kind == list_kind) v.number(v.get(item, "count")) else fields.len;
+        const counted = kind == 2 or kind == 5 or kind == list_kind or kind == bytes_kind or kind == dict_kind;
+        const count = if (counted) v.number(v.get(item, "count")) else fields.len;
         try w.print(",{d},{d},{d},{d},", .{ v.number(v.get(item, "size")), count, v.number(v.get(item, "stride")), kind });
         try self.renderFields(w, fields, false);
         try w.writeByte(',');
@@ -174,9 +179,14 @@ pub fn find(types: []const Value, name: []const u8) ?usize {
 }
 /// Manifest kind names in their stable numeric order; the index is the number
 /// the generated adapter switches on.
-const kind_names = [_][]const u8{ "scalar", "record", "array", "variant", "domain", "text", "list", "niche" };
+const kind_names = [_][]const u8{ "scalar", "record", "array", "variant", "domain", "text", "list", "niche", "bytes", "dict" };
 /// The manifest kind number of a user list, carried as one wire node per element.
 const list_kind: u8 = 6;
+/// The manifest kind number of `bytes`, carried as one `u8` node per octet.
+const bytes_kind: u8 = 8;
+/// The manifest kind number of a dictionary or a set, carried as one key
+/// subtree (and, for a dictionary, one value subtree) per entry.
+const dict_kind: u8 = 9;
 fn kindNumber(name: []const u8) Error!u8 {
     for (kind_names, 0..) |kind, i| if (std.mem.eql(u8, name, kind)) return @intCast(i);
     return error.InvalidManifest;

@@ -1,5 +1,7 @@
 /* Copied native values and explicit domain conversions share one execution. */
 #include "native_text.h"
+#include "native_bytes.h"
+#include "native_dictionary.h"
 /* `myl_qbe_heap` returns a pointer. Without this declaration the call is an
    implicit `int` and the heap address is truncated to 32 bits, so every text
    argument or result faulted on a wild pointer; `qbe_bytes.h` includes the same
@@ -72,6 +74,32 @@ static uint64_t co_word(const void *input,size_t index){
     if(*type->name=='i' && type->size<8 && (bits&(UINT64_C(1)<<(type->size*8-1))))bits|=UINT64_MAX<<(type->size*8);
     return bits;
 }
+static int co_read(size_t,void *,size_t);
+/* A dictionary or a set: one key subtree per entry, followed for a dictionary
+   (`count` 2) by its value subtree; a set's unit value carries none. The keys
+   are hashed and compared by the program's own key descriptor, so any
+   hashable key the program can build is carried, and a repeated key is a
+   malformed request rather than a silent overwrite. */
+static int co_read_dictionary(const CoType *type,const MylangWireNode *node,void *output,size_t depth){
+    if(node->bits || node->children>co_count-co_cursor || (type->count!=1 && type->count!=2))return co_bad("InvalidArgument");
+    size_t key_index=type->children[0],value_index=type->children[1];
+    const CoType *key=&co_types[key_index],*value=&co_types[value_index];
+    myl_native_dictionary *dict=myl_native_dictionary_new(myl_qbe_heap(co_context),co_native_types[key_index],co_native_types[value_index],key->kind==5);
+    if(!dict)return co_bad("OutOfMemory");
+    if(!co_root(dict))return co_bad("OutOfMemory");
+    void *key_scratch=calloc(key->size?key->size:1,1),*value_scratch=calloc(value->size?value->size:1,1);
+    int ok=key_scratch && value_scratch ? 1 : co_bad("OutOfMemory");
+    for(size_t i=0;ok && i<node->children;++i){
+        size_t mark=co_root_count;
+        ok=co_read(key_index,key_scratch,depth+1) && (type->count==1 || co_read(value_index,value_scratch,depth+1));
+        if(ok && myl_native_dictionary_contains(dict,key_scratch))ok=co_bad("InvalidArgument");
+        if(ok && !myl_native_dictionary_write(myl_qbe_heap(co_context),dict,key_scratch,value_scratch))ok=co_bad("OutOfMemory");
+        co_unroot_to(mark);
+    }
+    free(key_scratch);free(value_scratch);
+    if(ok)memcpy(output,&dict,sizeof dict);
+    return ok;
+}
 static int co_read(size_t index,void *output,size_t depth){
     if(depth>=QBE_CODEC_DEPTH)return co_bad("WireLimit");
     if(co_cursor>=co_count)return co_bad("InvalidArgument");
@@ -126,6 +154,24 @@ static int co_read(size_t index,void *output,size_t depth){
         free(scratch);
         memcpy(output,&list,sizeof list);return 1;
     }
+    if(type->kind==8){
+        /* One `u8` node per octet, copied into a fresh guest `bytes`. */
+        if(node->bits || node->children>co_count-co_cursor)return co_bad("InvalidArgument");
+        const CoType *element=&co_types[type->children[0]];
+        unsigned char *raw=calloc(node->children?node->children:1,1);
+        if(!raw)return co_bad("OutOfMemory");
+        for(size_t i=0;i<node->children;++i){
+            const MylangWireNode *child=&co_input[co_cursor++];
+            if(!child->type || strcmp(child->type,element->name) || child->children || child->bits>255){free(raw);return co_bad("InvalidArgument");}
+            raw[i]=(unsigned char)child->bits;
+        }
+        myl_native_bytes *bytes=myl_native_bytes_new(myl_qbe_heap(co_context),raw,node->children);
+        free(raw);
+        if(!bytes)return co_bad("OutOfMemory");
+        if(!co_root(bytes))return co_bad("OutOfMemory");
+        memcpy(output,&bytes,sizeof bytes);return 1;
+    }
+    if(type->kind==9)return co_read_dictionary(type,node,output,depth);
     if(type->kind==4){
         if(!type->codec || node->bits || node->children!=1)return co_bad("InvalidArgument");
         const CoCodec *codec=type->codec;int ok=0;
@@ -162,6 +208,26 @@ static int co_read(size_t index,void *output,size_t depth){
         if(!co_read(child,(unsigned char *)output+offset,depth+1))return 0;
     }
     return 1;
+}
+/* The entries of a dictionary or a set in insertion order: each key
+   subtree, then for a dictionary its value subtree. */
+static int co_write_dictionary(const CoType *type,MylangWireNode *node,const void *input,size_t depth){
+    const myl_native_dictionary *dict=*(const myl_native_dictionary *const *)input;
+    if(!dict)return co_bad("InternalError");
+    size_t key_index=type->children[0],value_index=type->children[1];
+    size_t length=myl_native_dictionary_length(dict);
+    if(length>100000-co_needed)return co_bad("WireLimit");
+    node->children=length;
+    void *key_scratch=calloc(co_types[key_index].size?co_types[key_index].size:1,1);
+    void *value_scratch=calloc(co_types[value_index].size?co_types[value_index].size:1,1);
+    int ok=key_scratch && value_scratch ? 1 : co_bad("OutOfMemory");
+    for(size_t i=0;ok && i<length;++i){
+        if(!myl_native_dictionary_key_at(dict,i,key_scratch))ok=co_bad("InternalError");
+        ok=ok && co_write(key_index,key_scratch,depth+1);
+        if(ok && type->count==2)ok=myl_native_dictionary_value_at(dict,i,value_scratch) ? co_write(value_index,value_scratch,depth+1) : co_bad("InternalError");
+    }
+    free(key_scratch);free(value_scratch);
+    return ok;
 }
 static int co_write(size_t index,const void *input,size_t depth){
     if(depth>=QBE_CODEC_DEPTH || co_needed>=100000)return co_bad("WireLimit");
@@ -207,6 +273,18 @@ static int co_write(size_t index,const void *input,size_t depth){
         free(scratch);
         return 1;
     }
+    if(type->kind==8){
+        /* Bounded by the staging array alone, exactly as a list is. */
+        const myl_native_bytes *bytes=*(const myl_native_bytes *const *)input;
+        if(!bytes)return co_bad("InternalError");
+        if(bytes->length>100000-co_needed)return co_bad("WireLimit");
+        const CoType *element=&co_types[type->children[0]];
+        const unsigned char *raw=(const unsigned char *)bytes->storage;
+        node->children=bytes->length;
+        for(size_t i=0;i<bytes->length;++i)co_prepared[co_needed++]=(MylangWireNode){element->name,raw[i],0};
+        return 1;
+    }
+    if(type->kind==9)return co_write_dictionary(type,node,input,depth);
     if(type->kind==4){
         if(!type->codec)return co_bad("UnsupportedSignature");
         node->children=1;const CoCodec *codec=type->codec;

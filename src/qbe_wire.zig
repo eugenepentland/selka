@@ -118,11 +118,50 @@ pub fn listType(allocator: std.mem.Allocator, records: []const typed.Record, lay
 }
 
 /// The one managed value kind this record carries across the copied boundary, or
-/// null when the codec has no encoding for it yet. Text and lists share this
-/// entry point so the caller never spells the choice twice.
+/// null when the codec has no encoding for it yet. Text, lists, `bytes`,
+/// dictionaries and sets share this entry point so the caller never spells the
+/// choice twice.
 fn managedType(allocator: std.mem.Allocator, records: []const typed.Record, layout: native.Layout, record: typed.Record) Error!?Type {
     if (try textType(allocator, records, layout, record)) |item| return item;
-    return listType(allocator, records, layout, record);
+    if (try listType(allocator, records, layout, record)) |item| return item;
+    const kind = if (bytesRecord(record)) "bytes" else "dict";
+    const key = dictionaryKey(record);
+    if (key == null and !bytesRecord(record)) return null;
+    const elements: []const typed.Type = if (key) |dictionary_key| &.{ dictionary_key, record.shape.buffer.? } else &.{.u8};
+    const entry = try handle(allocator, records, layout, record, kind, elements);
+    return entry;
+}
+
+/// Whether a record is the builtin `bytes`: a managed octet buffer.
+pub fn bytesRecord(record: typed.Record) bool {
+    return record.isCollection() and record.collection.kind == .bytes;
+}
+/// The key type of a dictionary or a set, or null for any other record. A
+/// set is a dictionary whose values are unit (`runtime_values.CollectionShape`).
+pub fn dictionaryKey(record: typed.Record) ?typed.Type {
+    if (!record.isCollection() or record.collection.kind != .dictionary) return null;
+    return record.collection.key;
+}
+/// Whether a record is the builtin `float`: the domain over the IEEE bits.
+pub fn floatRecord(record: typed.Record) bool {
+    return std.mem.eql(u8, record.name, "float") and record.shape.domain == .u64;
+}
+/// A managed handle entry of kind `kind` whose fields name the element types
+/// the generated codec reads one wire node (or one subtree) per: the octet
+/// type for `bytes`, the key and the value for a dictionary. A set's value is
+/// unit, which carries no node, so its entry counts one subtree per element.
+fn handle(allocator: std.mem.Allocator, records: []const typed.Record, layout: native.Layout, record: typed.Record, kind: []const u8, elements: []const typed.Type) Error!Type {
+    const fields = try allocator.alloc(Field, elements.len);
+    for (fields, elements) |*field, element| field.* = .{ .type = typed.typeName(element, records), .offset = 0 };
+    const set = elements.len == 2 and elements[1] == .unit;
+    return .{
+        .name = record.name,
+        .kind = kind,
+        .size = layout.size,
+        .alignment = layout.alignment,
+        .aggregate = .{ .count = if (elements.len == 2) @as(u64, if (set) 1 else 2) else 0, .fields = fields },
+        .by_address = false,
+    };
 }
 
 /// QBE-AGGREF-1's one crossing rule: one argument of this type crosses a call
@@ -149,7 +188,7 @@ pub fn byAddress(layout: native.Layout, ty: typed.Type, records: []const typed.R
 fn includable(allocator: std.mem.Allocator, records: []const typed.Record, flags: []const bool, codecs: bool) Error![]bool {
     const included = try allocator.alloc(bool, records.len);
     errdefer allocator.free(included);
-    for (records, 0..) |record, i| included[i] = flags[i] or (codecs and textScalar(record) != null);
+    for (records, 0..) |record, i| included[i] = flags[i] or (codecs and (textScalar(record) != null or bytesRecord(record) or floatRecord(record)));
     var changed = codecs;
     while (changed) {
         changed = false;
@@ -157,6 +196,10 @@ fn includable(allocator: std.mem.Allocator, records: []const typed.Record, flags
             if (included[i] or record.contract.move_only) continue;
             if (listScalar(record)) |element| {
                 if (!carriable(element, included)) continue;
+            } else if (dictionaryKey(record)) |key| {
+                const value = record.shape.buffer.?;
+                const value_carried = value == .unit or carriable(value, included);
+                if (!carriable(key, included) or !value_carried) continue;
             } else if (record.shape.hasRuntimeIdentity() or record.shape.domain != null or record.shape.resource != null or record.contract.callback != null) continue else if (!childrenCarriable(record, included)) continue;
             included[i] = true;
             changed = true;
@@ -180,6 +223,15 @@ fn childrenCarriable(record: typed.Record, included: []const bool) bool {
     if (record.shape.array) |array| return carriable(array.element, included);
     for (record.fields) |field| if (!carriable(field.ty, included)) return false;
     return true;
+}
+
+/// Whether an admitted set needs the unit entry for its values.
+fn needsUnit(records: []const typed.Record, included: []const bool) bool {
+    for (records, included) |record, admitted| {
+        if (!admitted) continue;
+        if (dictionaryKey(record) != null and record.shape.buffer.? == .unit) return true;
+    }
+    return false;
 }
 
 /// Whether one value can cross once the records admitted so far are known.
@@ -215,7 +267,9 @@ pub fn describeWithDomains(allocator: std.mem.Allocator, catalog: *native.Catalo
     errdefer ids.deinit(allocator);
     for (0..typed.Type.record_base + catalog.records.len) |index| {
         const ty: typed.Type = @fromBackingInt(index);
-        const ordinary = ty.isInteger() or ty == .bool;
+        // Unit is offered only as a set's value: it carries no wire node, but a
+        // set is built with the descriptor the program uses for its values.
+        const ordinary = ty.isInteger() or ty == .bool or (ty == .unit and codecs and needsUnit(catalog.records, included));
         // A `Stream` is injected by the codec adapter, and so is every other
         // capability a test may declare except `Host`: `mylang test` hands it
         // a deterministic stand-in (TEST-CAPS-3).
@@ -245,7 +299,10 @@ pub fn describeWithDomains(allocator: std.mem.Allocator, catalog: *native.Catalo
             .alignment = layout.alignment,
             .by_address = byAddress(layout, ty, catalog.records),
         };
-        if (ty.isAggregate()) {
+        // A float crosses as its IEEE bits in one scalar word, like the
+        // integer backing it is stored as; it has no codec to decode through.
+        const float_bits = ty.isAggregate() and floatRecord(catalog.records[ty.recordIndex()]);
+        if (ty.isAggregate() and !float_bits) {
             const record = catalog.records[ty.recordIndex()];
             if (record.shape.variants) |variants| {
                 const fields = try allocator.alloc(Field, variants.cases.len);
@@ -358,9 +415,9 @@ test "a user list is carried as one node per element while other buffers stay ou
     const nested = findType(codec_types.types, "List<List<i64>>");
     try std.testing.expect(nested != null);
     try std.testing.expectEqualStrings("List<i64>", nested.?.aggregate.fields[0].type.?);
-    // `bytes` has no specified wire encoding yet, so it stays unsupported
-    // rather than being carried by the rule that happens to fit lists.
-    try std.testing.expect(findType(codec_types.types, "bytes") == null);
+    // `bytes` is carried under its own kind rather than by the rule that
+    // happens to fit lists (PROPERTY-TEST-5).
+    try std.testing.expectEqualStrings("bytes", findType(codec_types.types, "bytes").?.kind);
     // The ordinary manifest stays list-free in both directions.
     const ordinary = try describe(a, &catalog);
     try std.testing.expect(findType(ordinary.types, "List<i64>") == null);
@@ -376,8 +433,8 @@ test "a list of an uncarriable element stays out and a failed admission is fatal
     const span = @import("source.zig").Span{ .start = 0, .end = 0 };
     const base = typed.Type.record_base;
     var records = [_]typed.Record{
-        .{ .id = @fromBackingInt(base), .name = "List<bytes>", .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = @fromBackingInt(base + 1) } },
-        .{ .id = @fromBackingInt(base + 1), .name = "bytes", .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .u8 }, .collection = .{ .kind = .bytes } },
+        .{ .id = @fromBackingInt(base), .name = "List<Meters>", .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = @fromBackingInt(base + 1) } },
+        .{ .id = @fromBackingInt(base + 1), .name = "Meters", .declaration = span, .fields = &.{}, .shape = .{ .domain = .u32 } },
         .{ .id = @fromBackingInt(base + 2), .name = "List<i64>", .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .i64 } },
     };
     const flags = try a.alloc(bool, records.len);
@@ -394,7 +451,7 @@ test "a list of an uncarriable element stays out and a failed admission is fatal
 }
 
 // spec: QBE-LIST-2
-test "a record holding text or a list is admitted and one holding bytes is not" {
+test "a record holding text or a list is admitted and one holding a codec-less domain is not" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
@@ -410,7 +467,7 @@ test "a record holding text or a list is admitted and one holding bytes is not" 
     var records = [_]typed.Record{
         .{ .id = @fromBackingInt(base), .name = text_name, .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .u32 } },
         .{ .id = @fromBackingInt(base + 1), .name = "List<i64>", .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .i64 } },
-        .{ .id = @fromBackingInt(base + 2), .name = "bytes", .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .u8 }, .collection = .{ .kind = .bytes } },
+        .{ .id = @fromBackingInt(base + 2), .name = "Meters", .declaration = span, .fields = &.{}, .shape = .{ .domain = .u32 } },
         .{ .id = @fromBackingInt(base + 3), .name = "Bucket", .declaration = span, .fields = &bucket_fields },
         .{ .id = @fromBackingInt(base + 4), .name = "Raw", .declaration = span, .fields = &raw_fields },
     };
@@ -422,8 +479,8 @@ test "a record holding text or a list is admitted and one holding bytes is not" 
     // A record is admitted by its fields, so one that holds the two managed
     // values the codec carries crosses with them.
     try std.testing.expect(included[3]);
-    // One that holds a `bytes` is still refused: the rule that admits a list
-    // does not quietly admit every managed buffer beside it.
+    // One that holds a domain without a codec is still refused: the rule that
+    // admits a list does not quietly admit every value beside it.
     try std.testing.expect(!included[4]);
     const codec_types = try describeWithDomains(a, &catalog, true);
     const bucket = findType(codec_types.types, "Bucket");
@@ -437,4 +494,60 @@ test "a record holding text or a list is admitted and one holding bytes is not" 
     try std.testing.expect(findType(codec_types.types, "Raw") == null);
     const ordinary = try describe(a, &catalog);
     try std.testing.expect(findType(ordinary.types, "Bucket") == null);
+}
+
+// spec: PROPERTY-TEST-5
+test "float, bytes, a dictionary and a set cross the codec boundary under their own kinds" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const span = @import("source.zig").Span{ .start = 0, .end = 0 };
+    const base = typed.Type.record_base;
+    var records = [_]typed.Record{
+        .{ .id = @fromBackingInt(base), .name = text_name, .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .u32 } },
+        .{ .id = @fromBackingInt(base + 1), .name = "float", .declaration = span, .fields = &.{}, .shape = .{ .domain = .u64 } },
+        .{ .id = @fromBackingInt(base + 2), .name = "bytes", .declaration = span, .fields = &.{}, .managed = true, .shape = .{ .buffer = .u8 }, .collection = .{ .kind = .bytes } },
+        .{
+            .id = @fromBackingInt(base + 3),
+            .name = "dict<str,float>",
+            .declaration = span,
+            .fields = &.{},
+            .managed = true,
+            .shape = .{ .buffer = @fromBackingInt(base + 1) },
+            .collection = .{ .kind = .dictionary, .key = @fromBackingInt(base) },
+        },
+        .{
+            .id = @fromBackingInt(base + 4),
+            .name = "set<i64>",
+            .declaration = span,
+            .fields = &.{},
+            .managed = true,
+            .shape = .{ .buffer = .unit },
+            .collection = .{ .kind = .dictionary, .key = .i64, .set = true },
+        },
+    };
+    var catalog = try native.Catalog.initRecords(a, &records);
+    defer catalog.deinit();
+    const codec_types = try describeWithDomains(a, &catalog, true);
+    // A float is one scalar word of IEEE bits, not a domain waiting for a codec.
+    try std.testing.expectEqualStrings("scalar", findType(codec_types.types, "float").?.kind);
+    try std.testing.expectEqual(@as(u64, 8), findType(codec_types.types, "float").?.size);
+    const bytes = findType(codec_types.types, "bytes").?;
+    try std.testing.expectEqualStrings("bytes", bytes.kind);
+    try std.testing.expectEqualStrings("u8", bytes.aggregate.fields[0].type.?);
+    // A dictionary names its key and value and counts two subtrees per entry;
+    // a set's value is unit, which carries no node, so it counts one.
+    const dict = findType(codec_types.types, "dict<str,float>").?;
+    try std.testing.expectEqualStrings("dict", dict.kind);
+    try std.testing.expectEqual(@as(u64, 2), dict.aggregate.count);
+    try std.testing.expectEqualStrings(text_name, dict.aggregate.fields[0].type.?);
+    try std.testing.expectEqualStrings("float", dict.aggregate.fields[1].type.?);
+    const set = findType(codec_types.types, "set<i64>").?;
+    try std.testing.expectEqual(@as(u64, 1), set.aggregate.count);
+    try std.testing.expectEqualStrings("unit", set.aggregate.fields[1].type.?);
+    try std.testing.expect(findType(codec_types.types, "unit") != null);
+    // None of them reaches the ordinary manifest.
+    const ordinary = try describe(a, &catalog);
+    try std.testing.expect(findType(ordinary.types, "set<i64>") == null);
+    try std.testing.expect(findType(ordinary.types, "unit") == null);
 }

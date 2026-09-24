@@ -33,6 +33,9 @@ const Definition = struct {
     minimum: ?[]const u8 = null,
     maximum: ?[]const u8 = null,
     fields: ?[]const Field = null,
+    /// Set on a `class` (or `Cell`): a record by its fields, but one whose
+    /// values have identity, so no tool may build one from those fields.
+    class: ?bool = null,
     cases: ?[]const Case = null,
     element: ?[]const u8 = null,
     length: ?usize = null,
@@ -104,6 +107,9 @@ const Graph = struct {
                 out.codec = .{ .wire = try self.reference(codec.wire), .decode = decode.name, .encode = self.functions[@backingInt(codec.encode)].name, .error_type = try self.reference(shape.error_type) };
             }
             if (record.shape.buffer) |element| out.element = try self.reference(element);
+            // A dictionary's or a set's key type: the element names only the
+            // value (unit for a set), so without it the type is not described.
+            if (record.collection.key) |key| out.key = try self.reference(key);
             if (record.shape.resource) |kind| out.authority = @tagName(kind);
         } else if (record.shape.array) |array| {
             out.kind = if (array.key != null) .table else .array;
@@ -119,6 +125,7 @@ const Graph = struct {
             const fields = try self.allocator.alloc(Field, record.fields.len);
             for (fields, record.fields) |*field, original| field.* = .{ .name = original.name, .type = try self.reference(original.ty) };
             out.fields = fields;
+            if (record.isManagedRecord()) out.class = true;
         }
         return out;
     }

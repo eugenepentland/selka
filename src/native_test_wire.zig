@@ -127,6 +127,41 @@ pub const Codec = struct {
         for (0..node.children) |_| try array.append(try self.decode(element, depth + 1));
         return .{ .array = array };
     }
+    /// Flatten a dictionary or a set: one node whose `children` is the entry
+    /// count, then each entry's key tree and, for a dictionary, its value
+    /// tree. A dictionary is a JSON array of `[key, value]` pairs and a set a
+    /// JSON array of elements, both in iteration order, because a key may be
+    /// any hashable value rather than a string.
+    fn encodeKeyed(self: *Codec, keyed: Keyed, value: Value, index: usize, depth: usize) Error!void {
+        if (value != .array) return error.InvalidTestValue;
+        self.nodes.items[index].children = value.array.items.len;
+        for (value.array.items) |entry| {
+            if (keyed.set) {
+                try self.encode(keyed.key, entry, depth + 1);
+                continue;
+            }
+            if (entry != .array or entry.array.items.len != 2) return error.InvalidTestValue;
+            try self.encode(keyed.key, entry.array.items[0], depth + 1);
+            try self.encode(keyed.value, entry.array.items[1], depth + 1);
+        }
+    }
+    /// Convert one returned dictionary or set tree back to its JSON array.
+    fn decodeKeyed(self: *Codec, keyed: Keyed, node: Node, depth: usize) Error!Value {
+        if (node.bits != 0 or node.children > self.nodes.items.len - self.cursor) return error.InvalidNativeTestResponse;
+        var array: std.json.Array = .init(self.allocator);
+        for (0..node.children) |_| {
+            const element = try self.decode(keyed.key, depth + 1);
+            if (keyed.set) {
+                try array.append(element);
+                continue;
+            }
+            var pair: std.json.Array = .init(self.allocator);
+            try pair.append(element);
+            try pair.append(try self.decode(keyed.value, depth + 1));
+            try array.append(.{ .array = pair });
+        }
+        return .{ .array = array };
+    }
     /// Flatten one JSON string into the one-node-per-scalar text wire form: a
     /// text node whose `children` is the scalar count, followed by one node per
     /// Unicode scalar in the declared element type. The string is decoded as
@@ -170,6 +205,11 @@ pub const Codec = struct {
         try self.nodes.append(self.allocator, .{ .type = name });
         if (isText(name)) {
             try self.encodeText(try textElement(item), value, index);
+        } else if (std.mem.eql(u8, name, float_name)) {
+            if (value != .string) return error.InvalidTestValue;
+            self.nodes.items[index].bits = try floatBits(value.string);
+        } else if (keyOf(item)) |key| {
+            try self.encodeKeyed(.{ .set = isSet(name), .key = key, .value = v.text(v.get(item, "element")) }, value, index, depth);
         } else if (try listElement(name, item)) |element| {
             try self.encodeList(element, value, index, depth);
         } else if (std.mem.eql(u8, kind, "integer")) {
@@ -241,6 +281,11 @@ pub const Codec = struct {
         const item = try self.definition(name);
         const kind = v.text(v.get(item, "kind"));
         if (isText(name)) return self.decodeText(try textElement(item), node);
+        if (std.mem.eql(u8, name, float_name)) {
+            if (node.children != 0) return error.InvalidNativeTestResponse;
+            return .{ .string = try floatText(self.allocator, @bitCast(node.bits)) };
+        }
+        if (keyOf(item)) |key| return self.decodeKeyed(.{ .set = isSet(name), .key = key, .value = v.text(v.get(item, "element")) }, node, depth);
         if (try listElement(name, item)) |element| return self.decodeList(element, node, depth);
         if (std.mem.eql(u8, kind, "integer")) {
             if (node.children != 0) return error.InvalidNativeTestResponse;
@@ -306,6 +351,40 @@ fn decimal(name: []const u8, text: []const u8) Error!u64 {
 }
 
 const Field = struct { name: []const u8, type: []const u8 };
+/// A dictionary's or a set's element types: the key, and a dictionary's value.
+const Keyed = struct { set: bool, key: []const u8, value: []const u8 };
+/// The builtin binary64 type, carried as its IEEE bits in one node.
+const float_name = "float";
+/// The key type a dictionary or set definition names, or null for any other.
+fn keyOf(item: Value) ?[]const u8 {
+    if (!std.mem.eql(u8, v.text(v.get(item, "kind")), list_kind)) return null;
+    const key = v.get(item, "key");
+    return if (key == .string) key.string else null;
+}
+fn isSet(name: []const u8) bool {
+    return std.mem.startsWith(u8, name, "set<");
+}
+/// The IEEE bits of a float's typed JSON text: a decimal, `inf`, `-inf` or
+/// `nan` (every NaN is the canonical quiet NaN a program can observe).
+pub fn floatBits(text: []const u8) Error!u64 {
+    const number = std.fmt.parseFloat(f64, text) catch return error.InvalidTestValue;
+    if (std.math.isNan(number)) return 0x7ff8000000000000;
+    return @bitCast(number);
+}
+/// The canonical typed JSON text of a float: `nan`, `inf`, `-inf`, or the
+/// shortest decimal that reads back to the same value, always with a `.` so
+/// it is also a float literal (`-0.0`, `1.0`, `5.0e-324`). Magnitudes outside
+/// `[1e-6, 1e16)` use an exponent.
+pub fn floatText(allocator: std.mem.Allocator, number: f64) error{OutOfMemory}![]const u8 {
+    if (std.math.isNan(number)) return "nan";
+    if (std.math.isInf(number)) return if (number > 0) "inf" else "-inf";
+    const magnitude = @abs(number);
+    const plain = magnitude == 0 or (magnitude >= 1e-6 and magnitude < 1e16);
+    const text = if (plain) try std.fmt.allocPrint(allocator, "{d}", .{number}) else try std.fmt.allocPrint(allocator, "{e}", .{number});
+    const exponent = std.mem.indexOfScalar(u8, text, 'e') orelse text.len;
+    if (std.mem.indexOfScalar(u8, text[0..exponent], '.') != null) return text;
+    return std.fmt.allocPrint(allocator, "{s}.0{s}", .{ text[0..exponent], text[exponent..] });
+}
 fn variant(kind: []const u8) bool {
     return std.mem.eql(u8, kind, enumeration_kind) or std.mem.eql(u8, kind, "tagged_union") or std.mem.eql(u8, kind, "result");
 }

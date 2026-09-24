@@ -64,6 +64,12 @@ a value of that type decodes it against the checked type graph:
 | Enum-indexed table | object with every enum case name exactly once |
 | Closed enum | the case-name string; ordinals and unknown names reject |
 | Tagged union or result | object with `case`, plus `value` only for a payload-bearing case |
+| `float` | string: the shortest decimal that reads back to the same value, always with a `.` (`"-0.0"`, `"2.5"`, `"5.0e-324"`), or `"inf"`, `"-inf"`, `"nan"` |
+| `str` | JSON string |
+| `bytes`, `list[T]` | array of the elements (an octet is an integer string) |
+| `set[T]` | array of the elements in iteration order; a repeated element rejects |
+| `dict[K, V]` | array of `[key, value]` pairs in iteration order, so a key may be any hashable value; a repeated key rejects |
+| tuple | object with fields `$0`, `$1`, … |
 
 The encoder writes envelope fields in version, type, value order, record fields in
 declaration order and table keys in enum declaration order. Input ordering is

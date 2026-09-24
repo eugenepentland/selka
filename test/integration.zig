@@ -10751,3 +10751,77 @@ test "CLI a release build and a JSON diagnostic report the contract that failed"
     try testing.expect(std.mem.indexOf(u8, json.stderr, "\"code\":\"R_REQUIRES\"") != null);
     try testing.expect(std.mem.indexOf(u8, json.stderr, "\"contract\":{\"kind\":\"requires\",\"subject\":\"half\",\"clause\":\"amount > 0\",\"message\":\"amount must be positive\",\"caller\":{") != null);
 }
+
+/// One project directory holding `main.my`, with its own test cache, for the
+/// property-test CLI runs below.
+const PropertyProject = struct {
+    temporary: std.testing.TmpDir,
+    path: [:0]const u8,
+    cache: []const u8,
+
+    fn init(source: []const u8) !PropertyProject {
+        var temporary = testing.tmpDir(.{});
+        errdefer temporary.cleanup();
+        try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = source });
+        const path = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+        errdefer testing.allocator.free(path);
+        const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+        defer testing.allocator.free(root);
+        return .{ .temporary = temporary, .path = path, .cache = try std.fs.path.join(testing.allocator, &.{ root, ".mylang-test-cache" }) };
+    }
+    fn deinit(self: *PropertyProject) void {
+        testing.allocator.free(self.path);
+        testing.allocator.free(self.cache);
+        self.temporary.cleanup();
+    }
+    /// `mylang test main.my` with the project cache and `extra` arguments.
+    fn run(self: PropertyProject, extra: []const []const u8) !std.process.RunResult {
+        return capabilityTestRun(self.path, self.cache, extra);
+    }
+};
+fn freeRun(result: std.process.RunResult) void {
+    testing.allocator.free(result.stdout);
+    testing.allocator.free(result.stderr);
+}
+const boundary_values =
+    \\module main
+    \\
+    \\public def test_echo_set(s: set[str]) -> set[str]:
+    \\    t = s.copy()
+    \\    t.add("zz")
+    \\    return t
+    \\
+    \\public def test_echo_dict(d: dict[tuple[int, str], float]) -> dict[tuple[int, str], float]:
+    \\    e = d.copy()
+    \\    e[(9, "k")] = 0.5
+    \\    return e
+    \\
+    \\public def test_echo_bytes(b: bytes) -> bytes:
+    \\    return b + b"!"
+    \\
+    \\public def test_echo_float(f: float) -> float:
+    \\    return f * 2.0
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+const boundary_cases =
+    \\{"main::test_echo_set":{"arguments":{"s":["a","b"]},"expected":["a","b","zz"]},
+    \\ "main::test_echo_dict":{"arguments":{"d":[[{"$0":"1","$1":"x"},"1.5"],[{"$0":"-3","$1":""},"nan"]]},
+    \\   "expected":[[{"$0":"1","$1":"x"},"1.5"],[{"$0":"-3","$1":""},"nan"],[{"$0":"9","$1":"k"},"0.5"]]},
+    \\ "main::test_echo_bytes":{"arguments":{"b":["104","0"]},"expected":["104","0","33"]},
+    \\ "main::test_echo_float":{"arguments":{"f":"-inf"},"expected":"-inf"}}
+;
+
+// spec-case: PROPERTY-TEST-5
+test "CLI test carries sets, dictionaries with tuple keys, bytes and floats across the copied-value boundary" {
+    var project = try PropertyProject.init(boundary_values);
+    defer project.deinit();
+    try project.temporary.dir.writeFile(testing.io, .{ .sub_path = "cases.json", .data = boundary_cases });
+    const cases = try project.temporary.dir.realPathFileAlloc(testing.io, "cases.json", testing.allocator);
+    defer testing.allocator.free(cases);
+    const result = try project.run(&.{ "--cases", cases });
+    defer freeRun(result);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "4 passed, 0 cached, 0 failed, 0 skipped") != null);
+}

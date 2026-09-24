@@ -21,6 +21,7 @@ pub const embed_prelude =
     \\static int valid_scalar(MylangScalar value,const char *type) {
     \\    if (!value.type || strcmp(value.type,type)) return 0;
     \\    if (!strcmp(type,"bool")) return value.bits<=1;
+    \\    if (!strcmp(type,"float")) return 1;
     \\    unsigned width=0;
     \\    for (const char *p=type+1;*p;++p) width=width*10+(unsigned)(*p-'0');
     \\    if (width==64) return 1;
