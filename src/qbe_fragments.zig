@@ -21,7 +21,11 @@ const bytecode = @import("bytecode_model.zig");
 const typed = @import("typed.zig");
 const Span = @import("source.zig").Span;
 const test_dependencies = @import("native_test_dependencies.zig");
-const Sha = std.crypto.hash.sha2.Sha256;
+/// Every digest here is BLAKE3. On the pinned toolchain, std's SHA-256 takes its
+/// SHA-NI path, which mixes AVX2 message loads with legacy-SSE SHA instructions and
+/// runs at about 11 MB/s on this project's build hosts (one microcode assist per
+/// instruction); BLAKE3 hashes the same unit texts two orders of magnitude faster.
+const Sha = std.crypto.hash.Blake3;
 
 /// SHA-256 of a unit's canonical emission inputs, or of its emitted text.
 pub const Digest = [32]u8;
@@ -327,10 +331,16 @@ pub fn functionValueTargets(allocator: std.mem.Allocator, program: bytecode.Prog
     std.mem.sort([]const u8, names.items, {}, lessText);
     var hash = Sha.init(.{});
     for (names.items) |name| frame(&hash, name);
-    return hash.finalResult();
+    return digestOf(&hash);
 }
 fn lessText(_: void, left: []const u8, right: []const u8) bool {
     return std.mem.lessThan(u8, left, right);
+}
+/// The digest a finished hasher holds.
+fn digestOf(hash: *const Sha) Digest {
+    var out: Digest = undefined;
+    hash.final(&out);
+    return out;
 }
 fn frame(hash: *Sha, bytes: []const u8) void {
     var length: [8]u8 = undefined;
@@ -366,7 +376,7 @@ pub const Final = struct {
     }
     /// The finished key.
     pub fn finish(self: *Final) Digest {
-        return self.hash.finalResult();
+        return digestOf(&self.hash);
     }
 };
 
@@ -434,7 +444,7 @@ pub const Store = struct {
     pub fn open(allocator: std.mem.Allocator, io: std.Io, root: []const u8, identity: []const u8, label: []const u8) error{OutOfMemory}!Store {
         var name = Sha.init(.{});
         frame(&name, label);
-        const pack = std.fmt.bytesToHex(name.finalResult(), .lower);
+        const pack = std.fmt.bytesToHex(digestOf(&name), .lower);
         var store: Store = .{
             .allocator = allocator,
             .io = io,
@@ -602,7 +612,7 @@ fn namespace(allocator: std.mem.Allocator, root: []const u8, identity: []const u
     var hash = Sha.init(.{});
     frame(&hash, format_version);
     frame(&hash, identity);
-    const tag = std.fmt.bytesToHex(hash.finalResult(), .lower);
+    const tag = std.fmt.bytesToHex(digestOf(&hash), .lower);
     return std.fs.path.join(allocator, &.{ root, &tag });
 }
 
@@ -610,31 +620,38 @@ fn namespace(allocator: std.mem.Allocator, root: []const u8, identity: []const u
 /// partitions it.
 pub const Place = struct { root: []const u8, identity: []const u8 };
 
+/// Which remembered emission to look up: the `slot` one configuration of one
+/// entry point keeps (so the store holds one replay per configuration, not one
+/// per edit), and the `key` of the exact inputs it must have been made from.
+pub const Ticket = struct { slot: Digest, key: Digest };
+
 /// A whole lean emission remembered under the exact inputs that produced it
 /// (`EMIT-REPLAY-1`): the checked project's warnings and its manifest, plus the
 /// digest of every unit text the manifest names. An unchanged project replays
-/// them without checking, lowering or emitting anything.
+/// them without checking, lowering or emitting anything. Each slot holds only
+/// its latest emission, which a later emission in the same slot replaces.
 pub const Replay = struct {
     warnings: []const u8,
     manifest: []const u8,
 
-    const magic = "MYLREPL1";
+    const magic = "MYLREPL2";
 
-    /// The remembered emission for `key`, or null when absent, damaged, or
-    /// when any unit text it names has left the store.
-    pub fn load(allocator: std.mem.Allocator, io: std.Io, place: Place, key: Digest) error{OutOfMemory}!?Replay {
+    /// The remembered emission for `ticket`, or null when absent, made from
+    /// other inputs, damaged, or when any unit text it names has left the store.
+    pub fn load(allocator: std.mem.Allocator, io: std.Io, place: Place, ticket: Ticket) error{OutOfMemory}!?Replay {
         const directory = try namespace(allocator, place.root, place.identity);
-        const file = try replayPath(allocator, directory, key);
+        const file = try replayPath(allocator, directory, ticket.slot);
         const bytes = std.Io.Dir.cwd().readFileAlloc(io, file, allocator, .unlimited) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => return null,
         };
-        if (bytes.len < magic.len + 32 or !std.mem.eql(u8, bytes[0..magic.len], magic)) return null;
+        if (bytes.len < magic.len + 64 or !std.mem.eql(u8, bytes[0..magic.len], magic)) return null;
+        if (!std.mem.eql(u8, bytes[magic.len..][0..32], &ticket.key)) return null;
         const body_end = bytes.len - 32;
         var checksum: Digest = undefined;
         Sha.hash(bytes[0..body_end], &checksum, .{});
         if (!std.mem.eql(u8, &checksum, bytes[body_end..])) return null;
-        var reader: PackReader = .{ .bytes = bytes[0..body_end], .at = magic.len };
+        var reader: PackReader = .{ .bytes = bytes[0..body_end], .at = magic.len + 32 };
         const warnings = reader.take(std.math.cast(usize, reader.int(u64) catch return null) orelse return null) catch return null;
         const manifest = reader.take(std.math.cast(usize, reader.int(u64) catch return null) orelse return null) catch return null;
         const count = reader.int(u32) catch return null;
@@ -646,14 +663,15 @@ pub const Replay = struct {
         return .{ .warnings = warnings, .manifest = manifest };
     }
 
-    /// Remember one successful lean emission. Best effort.
-    pub fn remember(allocator: std.mem.Allocator, io: std.Io, place: Place, key: Digest, answer: Replay, units: []const Digest) void {
-        rememberAt(allocator, io, place, key, answer, units) catch return;
+    /// Remember one successful lean emission in its slot. Best effort.
+    pub fn remember(allocator: std.mem.Allocator, io: std.Io, place: Place, ticket: Ticket, answer: Replay, units: []const Digest) void {
+        rememberAt(allocator, io, place, ticket, answer, units) catch return;
     }
-    fn rememberAt(allocator: std.mem.Allocator, io: std.Io, place: Place, key: Digest, answer: Replay, units: []const Digest) !void {
+    fn rememberAt(allocator: std.mem.Allocator, io: std.Io, place: Place, ticket: Ticket, answer: Replay, units: []const Digest) !void {
         var out: std.ArrayList(u8) = .empty;
         defer out.deinit(allocator);
         try out.appendSlice(allocator, magic);
+        try out.appendSlice(allocator, &ticket.key);
         try appendInt(allocator, &out, u64, answer.warnings.len);
         try out.appendSlice(allocator, answer.warnings);
         try appendInt(allocator, &out, u64, answer.manifest.len);
@@ -664,10 +682,10 @@ pub const Replay = struct {
         Sha.hash(out.items, &checksum, .{});
         try out.appendSlice(allocator, &checksum);
         const directory = try namespace(allocator, place.root, place.identity);
-        try atomicWrite(io, try replayPath(allocator, directory, key), out.items);
+        try atomicWrite(io, try replayPath(allocator, directory, ticket.slot), out.items);
     }
-    fn replayPath(allocator: std.mem.Allocator, directory: []const u8, key: Digest) error{OutOfMemory}![]const u8 {
-        return std.fs.path.join(allocator, &.{ directory, "replay", &std.fmt.bytesToHex(key, .lower) });
+    fn replayPath(allocator: std.mem.Allocator, directory: []const u8, slot: Digest) error{OutOfMemory}![]const u8 {
+        return std.fs.path.join(allocator, &.{ directory, "replay", &std.fmt.bytesToHex(slot, .lower) });
     }
 };
 

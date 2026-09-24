@@ -33,12 +33,13 @@ pub fn facts(unit: std.json.Value) []const u8 {
     return v.text(v.get(unit, facts_key));
 }
 
-/// The lowercase hex SHA-256 of the unit text, which names its object.
+/// The lowercase hex BLAKE3 digest of the unit text, which names its object;
+/// the compiler's fragment store names a stored text by the same digest.
 pub fn digest(allocator: std.mem.Allocator, unit: std.json.Value) error{OutOfMemory}![]const u8 {
     const il = v.get(unit, inline_key);
     if (il != .string) return v.text(v.get(unit, digest_key));
     var hash: [32]u8 = undefined;
-    std.crypto.hash.sha2.Sha256.hash(il.string, &hash, .{});
+    std.crypto.hash.Blake3.hash(il.string, &hash, .{});
     return allocator.dupe(u8, &std.fmt.bytesToHex(hash, .lower));
 }
 
@@ -52,7 +53,7 @@ pub fn text(context: fs.Context, unit: std.json.Value) Error![]const u8 {
         else => return missing(context, unit),
     };
     var hash: [32]u8 = undefined;
-    std.crypto.hash.sha2.Sha256.hash(bytes, &hash, .{});
+    std.crypto.hash.Blake3.hash(bytes, &hash, .{});
     if (!std.mem.eql(u8, &std.fmt.bytesToHex(hash, .lower), v.text(v.get(unit, digest_key)))) return missing(context, unit);
     return bytes;
 }
@@ -76,7 +77,7 @@ test "an inline and a stored unit with the same text share one digest and one fa
     const il = "dbgfile \"myl_f_x\"\nexport function $myl_f_x() {\n@start\n ret\n}\n";
     const inline_unit = try std.json.parseFromSliceLeaky(std.json.Value, a, "{\"name\":\"m::x\",\"il\":\"dbgfile \\\"myl_f_x\\\"\\nexport function $myl_f_x() {\\n@start\\n ret\\n}\\n\"}", .{});
     var hash: [32]u8 = undefined;
-    std.crypto.hash.sha2.Sha256.hash(il, &hash, .{});
+    std.crypto.hash.Blake3.hash(il, &hash, .{});
     const hex = std.fmt.bytesToHex(hash, .lower);
     const stored_text = try std.fmt.allocPrint(a, "{{\"name\":\"m::x\",\"il_digest\":\"{s}\",\"il_file\":\"/nonexistent/unit\",\"il_facts\":\"dbgfile \\\"myl_f_x\\\"\\n\"}}", .{&hex});
     const stored = try std.json.parseFromSliceLeaky(std.json.Value, a, stored_text, .{});

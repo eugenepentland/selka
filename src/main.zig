@@ -2174,13 +2174,14 @@ fn nativeTestCompileSession(init: Context, compilation: *language.project_compil
             }
             init.timings.begin(lowering_phase, false);
             var stats: language.project_compile.Compilation.SelectedStats = .{};
+            const before = emissionCounts(compilation.reuse);
             const manifest = compilation.emitQbeSelected(init.gpa, names, &stats) catch |err| switch (err) {
                 error.SourceError => return nativeTestCompileReply(init, "lower", 1, "SourceError", 0, 0),
                 else => return err,
             };
             defer init.gpa.free(manifest);
             recordLoweredCount(init, stats.lowered_functions);
-            setWork(init, .emitted_fragments, stats.emitted_fragments, 0);
+            recordEmission(init, compilation.reuse, before, stats.emitted_fragments);
             init.timings.end();
             try std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = output, .data = manifest });
             _ = try nativeTestCompileReply(init, "lower", 0, null, stats.lowered_functions, stats.emitted_fragments);
@@ -2706,29 +2707,41 @@ fn fragmentsRoot(init: Context, parsed: Parsed) !?[]const u8 {
     return std.Io.Dir.cwd().realPathFileAlloc(init.io, relative, a) catch null;
 }
 
-/// EMIT-REPLAY-1: the key of one whole-project lean emission — every loaded
-/// module's name, path and bytes, the configured policy, the emission switches
-/// and the diagnostic format its warnings are rendered in. The compiler
-/// identity partitions the store the key is looked up in.
-fn manifestReplayKey(parsed: Parsed, diagnostics: diagnostic_output.Format, project: *const language.project.Project, policy: ?[64]u8) language.qbe_fragments.Digest {
-    var hash = std.crypto.hash.sha2.Sha256.init(.{});
-    hash.update("emit-project-qbe-replay-v1");
+/// EMIT-REPLAY-1: where one whole-project lean emission is remembered and the
+/// inputs it must match. The slot is the entry path, the emission switches and
+/// the diagnostic format its warnings are rendered in, so each configuration
+/// keeps only its latest emission; the key adds the configured policy and every
+/// loaded module's name, path and bytes. The compiler identity partitions the
+/// store both are looked up in.
+fn manifestReplayTicket(parsed: Parsed, diagnostics: diagnostic_output.Format, project: *const language.project.Project, policy: ?[64]u8) language.qbe_fragments.Ticket {
+    // BLAKE3, like every fragment-store digest: std's SHA-256 is two orders
+    // of magnitude slower on this toolchain (`qbe_fragments.zig`).
+    var slot = std.crypto.hash.Blake3.init(.{});
+    slot.update("emit-project-qbe-replay-v2");
+    replayFrame(&slot, parsed.path);
     const switches = [_]bool{ parsed.drop_debug, parsed.drop_step_checks, parsed.drop_frame_checks, parsed.unchecked, parsed.lean_manifest };
-    for (switches) |value| hash.update(&.{@intFromBool(value)});
-    hash.update(&.{@backingInt(diagnostics)});
+    for (switches) |value| slot.update(&.{@intFromBool(value)});
+    slot.update(&.{@backingInt(diagnostics)});
+    var key = slot;
     if (policy) |identity| {
-        hash.update("policy");
-        hash.update(&identity);
-    } else hash.update("no-policy");
+        key.update("policy");
+        key.update(&identity);
+    } else key.update("no-policy");
     for (project.modules.items) |module| {
-        for ([_][]const u8{ module.name, module.src.path, module.src.bytes }) |part| {
-            var length: [8]u8 = undefined;
-            std.mem.writeInt(u64, &length, part.len, .little);
-            hash.update(&length);
-            hash.update(part);
-        }
+        for ([_][]const u8{ module.name, module.src.path, module.src.bytes }) |part| replayFrame(&key, part);
     }
-    return hash.finalResult();
+    var ticket: language.qbe_fragments.Ticket = undefined;
+    slot.final(&ticket.slot);
+    key.final(&ticket.key);
+    return ticket;
+}
+
+/// Length-prefix one replay input so adjacent inputs cannot run together.
+fn replayFrame(hash: *std.crypto.hash.Blake3, part: []const u8) void {
+    var length: [8]u8 = undefined;
+    std.mem.writeInt(u64, &length, part.len, .little);
+    hash.update(&length);
+    hash.update(part);
 }
 
 /// Whether this command may replay or remember a whole lean emission.
@@ -2741,9 +2754,9 @@ fn replaysManifest(parsed: Parsed) bool {
 fn replayManifest(init: Context, parsed: Parsed, project: *const language.project.Project, policy: ?[64]u8) !bool {
     if (!replaysManifest(parsed)) return false;
     const root = (try fragmentsRoot(init, parsed)) orelse return false;
-    const key = manifestReplayKey(parsed, init.diagnostics, project, policy);
+    const ticket = manifestReplayTicket(parsed, init.diagnostics, project, policy);
     const place: language.qbe_fragments.Place = .{ .root = root, .identity = &build_identity };
-    const answer = (try language.qbe_fragments.Replay.load(init.arena.allocator(), init.io, place, key)) orelse return false;
+    const answer = (try language.qbe_fragments.Replay.load(init.arena.allocator(), init.io, place, ticket)) orelse return false;
     try std.Io.File.stderr().writeStreamingAll(init.io, answer.warnings);
     try std.Io.File.stdout().writeStreamingAll(init.io, answer.manifest);
     if (init.observation) |observation| {
@@ -2767,9 +2780,17 @@ fn rememberManifest(init: Context, parsed: Parsed, site: ReplaySite, compilation
         writer.writer.writeAll(rendered) catch return error.OutOfMemory;
     }
     const units = try reuse.store.texts(init.arena.allocator());
-    const key = manifestReplayKey(parsed, init.diagnostics, site.project, site.policy);
+    const ticket = manifestReplayTicket(parsed, init.diagnostics, site.project, site.policy);
     const place: language.qbe_fragments.Place = .{ .root = root, .identity = &build_identity };
-    language.qbe_fragments.Replay.remember(init.arena.allocator(), init.io, place, key, .{ .warnings = writer.written(), .manifest = manifest }, units);
+    language.qbe_fragments.Replay.remember(init.arena.allocator(), init.io, place, ticket, .{ .warnings = writer.written(), .manifest = manifest }, units);
+}
+
+/// Whether an emission hands the native build each unit's stored text by
+/// digest and path instead of the text itself: always for `run`, `run-project`
+/// and the native-test session, whose manifests only this compiler's build
+/// driver reads, and for `emit-project-qbe` when the driver asked for it.
+fn leanEmission(parsed: Parsed) bool {
+    return parsed.lean_manifest or parsed.command == .run or parsed.command == .@"run-project" or parsed.command == .@"native-test-compile";
 }
 
 /// Whether a command lowers the checked project to QBE units.
@@ -2793,7 +2814,7 @@ fn openFragments(init: Context, parsed: Parsed, storage: *language.qbe_fragments
     const selective = parsed.select_file != null or parsed.command == .@"native-test-compile";
     const label = try std.fmt.allocPrint(a, "{s}\x00{s}", .{ entry, if (selective) "selected" else "whole" });
     storage.* = try language.qbe_fragments.Store.open(a, init.io, root, &build_identity, label);
-    return .{ .store = storage, .lean = parsed.lean_manifest };
+    return .{ .store = storage, .lean = leanEmission(parsed) };
 }
 
 /// Resolve the baseline file for invalidation observations.  The path is
@@ -3224,12 +3245,32 @@ fn emitMeasuredNative(init: Context, compilation: anytype, policy: language.nati
     try compilation.emitWithOptions(policy.drop_debug);
     if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
     init.timings.begin("native_emission", false);
+    // A single-file compilation has no fragment store.
+    const reuse: ?language.qbe_fragments.Reuse = if (@hasField(@TypeOf(compilation.*), "reuse")) compilation.reuse else null;
+    const before = emissionCounts(reuse);
     const generated = try compilation.emitQbeWithOptions(init.gpa, policy);
     // `qbe-units-v1` emits one independently linkable fragment per lowered
-    // function, so the fragment count is observed at the emission site.
-    if (compilation.code) |code| setWork(init, .emitted_fragments, code.functions.len, 0);
+    // function, so the fragment count is observed at the emission site: a unit
+    // answered from the fragment store is reused, not emitted.
+    if (compilation.code) |code| recordEmission(init, reuse, before, code.functions.len);
     init.timings.end();
     return generated;
+}
+
+/// The fragment store's unit counters before one emission, or null without a store.
+fn emissionCounts(reuse: ?language.qbe_fragments.Reuse) ?language.qbe_fragments.Statistics {
+    const configured = reuse orelse return null;
+    return configured.store.statistics;
+}
+
+/// Record one emission's fragments (`QBE-FRAGMENT-REUSE-1`): with a fragment
+/// store, the units it emitted fresh and the units it answered from the store;
+/// without one, every one of the `total` units as emitted.
+fn recordEmission(init: Context, reuse: ?language.qbe_fragments.Reuse, before: ?language.qbe_fragments.Statistics, total: usize) void {
+    const configured = reuse orelse return setWork(init, .emitted_fragments, total, 0);
+    const prior = before orelse language.qbe_fragments.Statistics{};
+    const after = configured.store.statistics;
+    setWork(init, .emitted_fragments, after.misses - prior.misses, after.hits - prior.hits);
 }
 
 /// Lower and emit only functions named in `select_file`. The file contains one
@@ -3244,9 +3285,10 @@ fn emitMeasuredSelectedNative(init: Context, compilation: *language.project_comp
     }
     init.timings.begin(lowering_phase, false);
     var stats: language.project_compile.Compilation.SelectedStats = .{};
+    const before = emissionCounts(compilation.reuse);
     const generated = try compilation.emitQbeSelected(init.gpa, names, &stats);
     recordLoweredCount(init, stats.lowered_functions);
-    setWork(init, .emitted_fragments, stats.emitted_fragments, 0);
+    recordEmission(init, compilation.reuse, before, stats.emitted_fragments);
     init.timings.end();
     return generated;
 }

@@ -178,7 +178,7 @@ test "a lean manifest names each unit's stored text by digest instead of carryin
     const text = try std.Io.Dir.cwd().readFileAlloc(t.io, stored.object.get("il_file").?.string, a, .unlimited);
     try t.expectEqualStrings(inline_unit.object.get("il").?.string, text);
     var hash: [32]u8 = undefined;
-    std.crypto.hash.sha2.Sha256.hash(text, &hash, .{});
+    std.crypto.hash.Blake3.hash(text, &hash, .{});
     try t.expectEqualStrings(&std.fmt.bytesToHex(hash, .lower), stored.object.get("il_digest").?.string);
     // Everything but the unit texts is the fresh manifest's.
     try t.expectEqualStrings(inline_unit.object.get("symbol").?.string, stored.object.get("symbol").?.string);
@@ -219,7 +219,7 @@ test "a remembered emission replays its warnings and manifest until a unit text 
     try opened.init(root);
     defer opened.deinit();
     const unit = try opened.store.remember(@splat(1), "export function $g() {\n@start\n ret\n}\n", .{ .implementation_hash = "", .dependencies = &.{}, .cacheable = true, .pure = true, .reasons = &.{} });
-    const key: fragments.Digest = @splat(9);
+    const key: fragments.Ticket = .{ .slot = @splat(8), .key = @splat(9) };
     try t.expect((try fragments.Replay.load(a, t.io, .{ .root = root, .identity = "test-compiler" }, key)) == null);
     const texts = try opened.store.texts(a);
     try t.expectEqual(@as(usize, 1), texts.len);
@@ -227,6 +227,8 @@ test "a remembered emission replays its warnings and manifest until a unit text 
     const replayed = (try fragments.Replay.load(a, t.io, .{ .root = root, .identity = "test-compiler" }, key)).?;
     try t.expectEqualStrings("warning: w\n", replayed.warnings);
     try t.expectEqualStrings("{\"functions\":[]}", replayed.manifest);
+    // The slot keeps only its latest emission: other inputs miss.
+    try t.expect((try fragments.Replay.load(a, t.io, .{ .root = root, .identity = "test-compiler" }, .{ .slot = key.slot, .key = @splat(1) })) == null);
     // Another compiler identity never sees it.
     try t.expect((try fragments.Replay.load(a, t.io, .{ .root = root, .identity = "other-compiler" }, key)) == null);
     // A named unit text that left the store voids the replay.
