@@ -142,13 +142,15 @@ fn depfile(a: std.mem.Allocator, src: []const u8, paths: []const []const u8) ![]
     return text.written();
 }
 /// True when a source decides how already-emitted QBE IL becomes a native object
-/// or executable: the native build driver itself and the link-argument policy.
-/// Everything else about a build is already keyed separately — the IL text names
-/// each object, `content_hash` covers the bundled runtime sources, the tool
-/// stamps cover QBE and Zig — so only these files, the optimize mode and the Zig
-/// version can change an object whose IL did not change.
+/// or executable: the native build driver itself, the link-argument policy, and
+/// the frame-map annotator that rewrites every unit's assembly before it is
+/// assembled. Everything else about a build is already keyed separately — the IL
+/// text names each object, `content_hash` covers the bundled runtime sources,
+/// the tool stamps cover QBE and Zig — so only these files, the optimize mode
+/// and the Zig version can change an object whose IL did not change.
 fn drivesNativeBuilds(path: []const u8) bool {
     if (std.mem.indexOfScalar(u8, path, '/') != null) return false;
+    if (std.mem.eql(u8, path, "qbe_frame_map.zig")) return true;
     return std.mem.startsWith(u8, path, "qbe_build") or std.mem.startsWith(u8, path, "native_link");
 }
 /// The sorted subset of production inputs that drive native builds.

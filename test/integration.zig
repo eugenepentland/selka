@@ -9427,8 +9427,11 @@ fn expectIncrementalEqualsClean(allocator: std.mem.Allocator, directory: std.Io.
     const incremental = try buildObjects(allocator, entry, incremental_program, try std.fs.path.join(allocator, &.{ root, "cache" }));
     const clean = try buildObjects(allocator, entry, clean_program, try std.fmt.allocPrint(allocator, "{s}/clean-{d}", .{ root, round }));
     try testing.expectEqualStrings(clean.lines, incremental.lines);
-    // The edit compiled only what it changed; the clean build compiled everything.
-    try testing.expect(incremental.compiled < clean.compiled);
+    // A clean build compiles every function. An edit that stays inside one
+    // module rebuilds only that module's batch (round 0); the signature and
+    // interface edits change both modules, so they may rebuild everything.
+    try testing.expect(incremental.compiled <= clean.compiled);
+    try testing.expect(round != 0 or incremental.compiled < clean.compiled);
     try testing.expectEqualStrings(try programOutput(allocator, clean_program), try programOutput(allocator, incremental_program));
 }
 

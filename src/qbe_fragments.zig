@@ -381,18 +381,32 @@ pub const Final = struct {
 };
 
 /// The lines of a unit's text the native build reads without compiling it:
-/// the `dbgfile` line that marks a frame-map unit, and every `# ` marker line
-/// (frozen literal definitions). Everything else only matters to QBE.
+/// the `dbgfile` line that marks a frame-map unit, every `# ` marker line
+/// (frozen literal definitions), and every top-level `data` definition line,
+/// which keeps a unit out of a shared QBE batch. Everything else only matters
+/// to QBE.
 pub fn facts(allocator: std.mem.Allocator, il: []const u8) error{OutOfMemory}![]u8 {
     var out: std.ArrayList(u8) = .empty;
     var lines = std.mem.splitScalar(u8, il, '\n');
     while (lines.next()) |line| {
-        const keep = std.mem.startsWith(u8, line, "dbgfile ") or std.mem.startsWith(u8, line, "# ");
+        const keep = std.mem.startsWith(u8, line, "dbgfile ") or std.mem.startsWith(u8, line, "# ") or definesData(line);
         if (!keep) continue;
         try out.appendSlice(allocator, line);
         try out.append(allocator, '\n');
     }
     return out.toOwnedSlice(allocator);
+}
+
+/// Whether one line opens a top-level `data` definition: it starts with a
+/// letter, and `data` is one of its words before any `function` or `type`.
+fn definesData(line: []const u8) bool {
+    if (line.len == 0 or !std.ascii.isAlphabetic(line[0])) return false;
+    var tokens = std.mem.tokenizeScalar(u8, line, ' ');
+    while (tokens.next()) |token| {
+        if (std.mem.eql(u8, token, "data")) return true;
+        if (std.mem.eql(u8, token, "function") or std.mem.eql(u8, token, "type")) return false;
+    }
+    return false;
 }
 
 /// One reusable second-pass answer: the digest of the unit text, the facts the
@@ -780,6 +794,14 @@ fn atomicWrite(io: std.Io, file: []const u8, bytes: []const u8) !void {
         };
         return err;
     };
+}
+
+// spec-case: QBE-FRAGMENT-REUSE-1
+test "a stored unit's facts keep the frame-map, literal and data lines and nothing else" {
+    const il = "dbgfile \"myl_f_a\"\ntype :t = { l }\nexport data $d = { l 1 }\nexport function l $myl_f_a(l %ctx) {\n@start\n# myl-lit s e 1 2 0102\n ret 0\n}\n";
+    const kept = try facts(std.testing.allocator, il);
+    defer std.testing.allocator.free(kept);
+    try std.testing.expectEqualStrings("dbgfile \"myl_f_a\"\nexport data $d = { l 1 }\n# myl-lit s e 1 2 0102\n", kept);
 }
 
 // spec-case: QBE-FRAGMENT-REUSE-1

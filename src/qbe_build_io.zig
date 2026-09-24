@@ -1,5 +1,6 @@
 //! Filesystem and child-process operations for native builds.
 const std = @import("std");
+const spawn = @import("qbe_build_spawn.zig");
 const Sha = std.crypto.hash.sha2.Sha256;
 /// The one hidden folder every invocation stages beneath, so a destination
 /// directory keeps at most one shared staging folder instead of one
@@ -182,8 +183,23 @@ pub const Context = struct {
         std.Io.Dir.cwd().access(self.io, path, .{ .execute = true }) catch return false;
         return true;
     }
-    /// Read a build input; allocated bytes have command lifetime.
+    /// Read a build input; allocated bytes have command lifetime. The file is
+    /// read into one buffer of its stated length: a growing buffer re-copied
+    /// and re-faulted a 150 MB manifest several times over, which cost a warm
+    /// build most of a second. A file that cannot be read that way — its
+    /// length is unknown, or it changed while being read — is read again to
+    /// its end the ordinary way, which also reports every error.
     pub fn read(self: Context, path: []const u8) Error![]const u8 {
+        sized: {
+            const file = std.Io.Dir.cwd().openFile(self.io, path, .{}) catch break :sized;
+            defer file.close(self.io);
+            const stated = file.length(self.io) catch break :sized;
+            const bytes = try self.allocator.alloc(u8, std.math.cast(usize, stated) orelse break :sized);
+            const count = file.readPositionalAll(self.io, bytes, 0) catch break :sized;
+            var probe: [1]u8 = undefined;
+            const more = file.readPositionalAll(self.io, &probe, stated) catch break :sized;
+            if (count == stated and more == 0) return bytes;
+        }
         return std.Io.Dir.cwd().readFileAlloc(self.io, path, self.allocator, .unlimited);
     }
     /// Report the byte length of a published artifact without reading it.
@@ -475,9 +491,11 @@ pub const Context = struct {
     pub fn captureQuiet(self: Context, argv: []const []const u8) Error!std.process.RunResult {
         return std.process.run(self.allocator, self.io, .{ .argv = argv });
     }
-    /// Invoke tools directly, preserving inherited environment and stderr.
+    /// Invoke tools directly, preserving inherited environment and stderr. The
+    /// tool starts without copying this process (`qbe_build_spawn.zig`), so a
+    /// build holding a large program pays the same per tool as a small one.
     pub fn command(self: Context, argv: []const []const u8, environment: ?*const std.process.Environ.Map) Error!void {
-        const result = try std.process.run(self.allocator, self.io, .{ .argv = argv, .environ_map = environment });
+        const result = try spawn.run(self.allocator, .{ .argv = argv, .environment = environment });
         try std.Io.File.stderr().writeStreamingAll(self.io, result.stderr);
         if (exitCode(result.term) != 0) return error.NativeToolFailed;
     }
@@ -491,9 +509,13 @@ pub fn hash(allocator: std.mem.Allocator, bytes: []const u8) Error![]const u8 {
 /// Integrity fingerprint for stored native objects, covering length and contents.
 /// Keys stay on SHA-256 because they name small inputs; a warm build instead
 /// re-reads megabytes of cached objects, where a cryptographic hash costs more
-/// than the whole link it protects.
+/// than the whole link it protects. The hash is Wyhash: the pinned Zig's
+/// `XxHash3` hashes long inputs at about 20 MB/s on the build machines against
+/// Wyhash's 15 GB/s, which made verifying a 50,000-line project's objects cost
+/// seconds on every warm build. `v2` keeps a fingerprint written by the old
+/// hash from ever matching, so such an entry is simply rebuilt once.
 pub fn digest(allocator: std.mem.Allocator, bytes: []const u8) Error![]const u8 {
-    return std.fmt.allocPrint(allocator, "mylang-object-v1:{d}:{x:0>16}", .{ bytes.len, std.hash.XxHash3.hash(0, bytes) });
+    return std.fmt.allocPrint(allocator, "mylang-object-v2:{d}:{x:0>16}", .{ bytes.len, std.hash.Wyhash.hash(0, bytes) });
 }
 /// Translate abnormal child termination into the CLI's host failure status.
 pub fn exitCode(term: std.process.Child.Term) u8 {
@@ -708,6 +730,28 @@ test "native build IO owns allocations and rejects missing tools or failing comm
     try std.testing.expectEqual(@as(u8, 2), exitCode(.{ .signal = .KILL }));
     try std.testing.expectEqualStrings("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", try hash(context.allocator, "abc"));
 }
+// spec: QBE-BUILD-READ-1
+test "a build input is read whole into one buffer and a missing or directory path still fails" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const large = try context.allocator.alloc(u8, 3 * 1024 * 1024 + 17);
+    for (large, 0..) |*byte, index| byte.* = @truncate(index *% 7);
+    const path = try std.fs.path.join(context.allocator, &.{ root, "input.bin" });
+    try context.write(path, large);
+    try std.testing.expectEqualSlices(u8, large, try context.read(path));
+    const empty = try std.fs.path.join(context.allocator, &.{ root, "empty" });
+    try context.write(empty, "");
+    try std.testing.expectEqualStrings("", try context.read(empty));
+    try std.testing.expectError(error.FileNotFound, context.read(try std.fs.path.join(context.allocator, &.{ root, "missing" })));
+    try std.testing.expectError(error.IsDir, context.read(root));
+    // The fingerprint names its own version, so a v1 fingerprint never matches.
+    try std.testing.expect(std.mem.startsWith(u8, try digest(context.allocator, large), "mylang-object-v2:3145745:"));
+}
 // spec-case: QBE-2
 test "object integrity fingerprints separate truncated, padded and altered bytes" {
     const a = std.testing.allocator;
@@ -721,7 +765,7 @@ test "object integrity fingerprints separate truncated, padded and altered bytes
     defer a.free(repeated);
     try std.testing.expect(!std.mem.eql(u8, original, truncated));
     try std.testing.expect(!std.mem.eql(u8, original, altered));
-    try std.testing.expectEqualStrings("mylang-object-v1:18:", truncated[0..20]);
+    try std.testing.expectEqualStrings("mylang-object-v2:18:", truncated[0..20]);
     try std.testing.expectEqualStrings(original, repeated);
 }
 test "native publication repairs executable permissions and tool lookup skips directories" {

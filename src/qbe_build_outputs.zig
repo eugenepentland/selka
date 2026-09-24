@@ -16,6 +16,19 @@ const literal_word = "myl-lit ";
 pub const Error = host.Error || error{UnsupportedNativeEntry};
 /// Emit typed runtime descriptors, host bridges, and source-location tables.
 pub fn metadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]const u8 {
+    return metadataUnit(allocator, manifest, true);
+}
+/// QBE-BATCH-3: the part of `metadata` a batched build still compiles as one
+/// C unit — typed runtime descriptors, host bridges, literals, a declaration
+/// of every function's metadata and the frame-map roots. Each batch carries
+/// its own functions' location, message and inline tables instead
+/// (`metadataAssembly`), so an edit that moves one module's lines recompiles
+/// that module's tables, not the whole program's.
+pub fn sharedMetadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]const u8 {
+    return metadataUnit(allocator, manifest, false);
+}
+/// The metadata C unit, with every function's tables or with none of them.
+fn metadataUnit(allocator: std.mem.Allocator, manifest: std.json.Value, tables: bool) Error![]const u8 {
     var buffer: std.Io.Writer.Allocating = .init(allocator);
     errdefer buffer.deinit();
     const w = &buffer.writer;
@@ -29,6 +42,13 @@ pub fn metadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]
     for (functions) |unit| {
         try w.print("extern const MylQbeFunction {s}_meta;\n", .{v.text(v.get(unit, "symbol"))});
     }
+    if (tables) try functionTables(w, functions);
+    try frameMapRoots(w, functions);
+    return buffer.toOwnedSlice();
+}
+/// Every function's location, message and inline tables and its
+/// `MylQbeFunction` record, in C.
+fn functionTables(w: *std.Io.Writer, functions: []const std.json.Value) Error!void {
     for (functions) |unit| {
         const symbol = v.text(v.get(unit, "symbol"));
         const locations = v.array(v.get(unit, "locations"));
@@ -73,8 +93,67 @@ pub fn metadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]
         if (inlines.len != 0) try w.print("{s}_meta_inlines,{d}", .{ symbol, inlines.len }) else try w.writeAll("NULL,0");
         try w.writeAll("};\n");
     }
-    try frameMapRoots(w, functions);
+}
+/// QBE-BATCH-3: the metadata of the functions `units` names, as assembly: for
+/// each one the `MylQbeFunction` record `metadata` spells in C (name,
+/// locations, location count, messages, inline frames, inline count — six
+/// 8-byte words), then its location table (path, line, column per pc, one
+/// zero entry when there are none), its message table (one string per pc, a
+/// single `""` when there are none) and its inline frames (callee metadata,
+/// start, end, callee start, call position). Each function's tables share one
+/// `.data.rel.ro.<symbol>_meta` section, so the final link keeps or drops them
+/// with the function; every distinct string is stored once, in a mergeable
+/// string section. `qbe_runtime.h` asserts the three record sizes this relies on.
+pub fn metadataAssembly(allocator: std.mem.Allocator, units: []const std.json.Value) Error![]const u8 {
+    var buffer: std.Io.Writer.Allocating = .init(allocator);
+    errdefer buffer.deinit();
+    const w = &buffer.writer;
+    var strings: std.array_hash_map.String(void) = .empty;
+    defer strings.deinit(allocator);
+    for (units, 0..) |unit, index| {
+        const symbol = v.text(v.get(unit, "symbol"));
+        const locations = v.array(v.get(unit, "locations"));
+        const messages = v.array(v.get(unit, "messages"));
+        const inlines = v.array(v.get(unit, "inlines"));
+        try w.print("\t.section\t.data.rel.ro.{s}_meta,\"aw\",@progbits\n\t.p2align\t3\n\t.globl\t{s}_meta\n\t.type\t{s}_meta,@object\n\t.size\t{s}_meta,48\n{s}_meta:\n", .{ symbol, symbol, symbol, symbol, symbol });
+        try w.print("\t.quad\t.Lmyl_s_{d}\n\t.quad\t.Lmyl_l_{d}\n\t.quad\t{d}\n\t.quad\t.Lmyl_m_{d}\n", .{ try stringIndex(allocator, &strings, v.text(v.get(unit, "name"))), index, locations.len, index });
+        if (inlines.len != 0) try w.print("\t.quad\t.Lmyl_i_{d}\n\t.quad\t{d}\n", .{ index, inlines.len }) else try w.writeAll("\t.quad\t0\n\t.quad\t0\n");
+        try w.print(".Lmyl_l_{d}:\n", .{index});
+        for (locations) |location| {
+            const path = try stringIndex(allocator, &strings, v.text(v.get(location, "path")));
+            try w.print("\t.quad\t.Lmyl_s_{d}\n\t.quad\t{d}\n\t.quad\t{d}\n", .{ path, v.number(v.get(location, "line")), v.number(v.get(location, "column")) });
+        }
+        if (locations.len == 0) try w.writeAll("\t.quad\t0\n\t.quad\t0\n\t.quad\t0\n");
+        try w.print(".Lmyl_m_{d}:\n", .{index});
+        for (0..@max(1, locations.len)) |pc| {
+            const message = if (pc < messages.len) v.text(messages[pc]) else "";
+            try w.print("\t.quad\t.Lmyl_s_{d}\n", .{try stringIndex(allocator, &strings, message)});
+        }
+        if (inlines.len == 0) continue;
+        try w.print(".Lmyl_i_{d}:\n", .{index});
+        for (inlines) |frame| {
+            try w.print("\t.quad\t{s}_meta\n\t.quad\t{d}\n\t.quad\t{d}\n\t.quad\t{d}\n\t.quad\t{d}\n", .{
+                v.text(v.get(frame, "callee")),
+                v.number(v.get(frame, "start")),
+                v.number(v.get(frame, "end")),
+                v.number(v.get(frame, "callee_start")),
+                v.number(v.get(frame, "call_position")),
+            });
+        }
+    }
+    try w.writeAll("\t.section\t.rodata.str1.1,\"aMS\",@progbits,1\n");
+    for (strings.keys(), 0..) |text, index| {
+        try w.print(".Lmyl_s_{d}:\n\t.asciz\t", .{index});
+        try v.quote(w, text);
+        try w.writeByte('\n');
+    }
+    try w.writeAll("\t.section\t.note.GNU-stack,\"\",@progbits\n");
     return buffer.toOwnedSlice();
+}
+/// The label index of `text` in a batch's string table, adding it when new.
+fn stringIndex(allocator: std.mem.Allocator, strings: *std.array_hash_map.String(void), text: []const u8) Error!usize {
+    const slot = try strings.getOrPut(allocator, text);
+    return slot.index;
 }
 /// QBE-FRAMEMAP-1: a frame-map unit's code never names its metadata; only the
 /// return-address table does, and under full LTO that table is written after
@@ -109,15 +188,31 @@ const Literal = struct {
 /// Emit one C definition for every frozen `str`/`bytes` literal the emitted IL
 /// names. The marker carries the exact payload, so equal literals share one data
 /// object even across units.
+/// Every line of one unit's IL that starts with the literal marker. It
+/// searches for the marker instead of splitting every line: a program's IL is
+/// hundreds of megabytes and a warm build reads all of it to find a few
+/// literals.
+const MarkerLines = struct {
+    il: []const u8,
+    at: usize = 0,
+    fn next(self: *MarkerLines) ?[]const u8 {
+        while (std.mem.indexOfPos(u8, self.il, self.at, "# " ++ literal_word)) |found| {
+            const end = std.mem.indexOfScalarPos(u8, self.il, found, '\n') orelse self.il.len;
+            self.at = end;
+            if (found == 0 or self.il[found - 1] == '\n') return self.il[found..end];
+        }
+        self.at = self.il.len;
+        return null;
+    }
+};
 fn literalDefinitions(w: *std.Io.Writer, allocator: std.mem.Allocator, units: []const std.json.Value) Error!void {
     var seen: std.StringHashMapUnmanaged(void) = .empty;
     defer seen.deinit(allocator);
     var header = false;
     for (units) |unit| {
-        // A stored unit's facts hold exactly its marker lines.
-        var lines = std.mem.splitScalar(u8, lean.facts(unit), '\n');
+        // A stored unit's facts hold its marker lines (`QBE-FRAGMENT-REUSE-1`).
+        var lines: MarkerLines = .{ .il = lean.facts(unit) };
         while (lines.next()) |line| {
-            if (!std.mem.startsWith(u8, line, "# ") or !std.mem.startsWith(u8, line[2..], literal_word)) continue;
             var tokens = std.mem.tokenizeScalar(u8, line[2 + literal_word.len ..], ' ');
             const symbol = tokens.next() orelse continue;
             const element = tokens.next() orelse continue;
@@ -303,6 +398,52 @@ test "inline records name the callee metadata and link into the function metadat
     try std.testing.expect(std.mem.indexOf(u8, generated, "extern const MylQbeFunction main_native_meta;") != null);
     try std.testing.expect(std.mem.indexOf(u8, generated, "static const MylQbeInlineFrame main_native_meta_inlines[] = {\n{&myl_f_abc_meta,1,4,0,0},\n};\n") != null);
     try std.testing.expect(std.mem.indexOf(u8, generated, ",main_native_meta_messages,main_native_meta_inlines,1};") != null);
+}
+
+// spec: QBE-BATCH-3
+test "a batch's function metadata is assembly holding the C unit's records, and the shared unit keeps none" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const parsed = try std.json.parseFromSlice(std.json.Value, a,
+        \\{"entry":"main_native","entry_parameters":[],"functions":[
+        \\{"symbol":"main_native","name":"main","locations":[{"path":"a.my","line":3,"column":5},{"path":"a.my","line":4,"column":1}],
+        \\ "messages":["","x \"two\""],"inlines":[{"callee":"myl_f_abc","start":1,"end":4,"callee_start":0,"call_position":0}]},
+        \\{"symbol":"myl_f_abc","name":"m::f","locations":[]}]}
+    , .{});
+    const functions = v.array(v.get(parsed.value, "functions"));
+    const assembly = try metadataAssembly(a, functions);
+    // The record: name, locations, count, messages, inline frames, inline count.
+    try std.testing.expect(std.mem.indexOf(u8, assembly, "\t.section\t.data.rel.ro.main_native_meta,\"aw\",@progbits\n\t.p2align\t3\n\t.globl\tmain_native_meta\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, assembly, "main_native_meta:\n\t.quad\t.Lmyl_s_0\n\t.quad\t.Lmyl_l_0\n\t.quad\t2\n\t.quad\t.Lmyl_m_0\n\t.quad\t.Lmyl_i_0\n\t.quad\t1\n") != null);
+    // One location per pc, sharing one copy of the path; one message per pc.
+    try std.testing.expect(std.mem.indexOf(u8, assembly, ".Lmyl_l_0:\n\t.quad\t.Lmyl_s_1\n\t.quad\t3\n\t.quad\t5\n\t.quad\t.Lmyl_s_1\n\t.quad\t4\n\t.quad\t1\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, assembly, ".Lmyl_m_0:\n\t.quad\t.Lmyl_s_2\n\t.quad\t.Lmyl_s_3\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, assembly, ".Lmyl_i_0:\n\t.quad\tmyl_f_abc_meta\n\t.quad\t1\n\t.quad\t4\n\t.quad\t0\n\t.quad\t0\n") != null);
+    // A function with no locations keeps one zero location and one empty message.
+    const empty = "myl_f_abc_meta:\n\t.quad\t.Lmyl_s_4\n\t.quad\t.Lmyl_l_1\n\t.quad\t0\n\t.quad\t.Lmyl_m_1\n\t.quad\t0\n\t.quad\t0\n" ++
+        ".Lmyl_l_1:\n\t.quad\t0\n\t.quad\t0\n\t.quad\t0\n.Lmyl_m_1:\n\t.quad\t.Lmyl_s_2\n";
+    try std.testing.expect(std.mem.indexOf(u8, assembly, empty) != null);
+    try std.testing.expect(std.mem.indexOf(u8, assembly, "\t.section\t.rodata.str1.1,\"aMS\",@progbits,1\n.Lmyl_s_0:\n\t.asciz\t\"main\"\n") != null);
+    try std.testing.expect(std.mem.indexOf(u8, assembly, ".Lmyl_s_3:\n\t.asciz\t\"x \\\"two\\\"\"\n") != null);
+    // The shared C unit still declares every function's metadata but defines none.
+    const shared = try sharedMetadata(a, parsed.value);
+    try std.testing.expect(std.mem.indexOf(u8, shared, "extern const MylQbeFunction main_native_meta;") != null);
+    try std.testing.expect(std.mem.indexOf(u8, shared, "main_native_meta_locations") == null);
+    var failing = std.testing.FailingAllocator.init(std.testing.allocator, .{ .fail_index = 0 });
+    // The allocating writer reports a failed allocation as a failed write.
+    try std.testing.expectError(error.WriteFailed, metadataAssembly(failing.allocator(), functions));
+}
+
+// spec-case: QBE-BATCH-3
+test "literal markers are found only where a line starts with one" {
+    const il = "# myl-lit a t 1 1 00\nexport function l $f() {\n@s\n %x =l copy 1 # myl-lit b t 1 1 00\n ret 0\n}\n# myl-lit c t 1 1 01";
+    var lines: MarkerLines = .{ .il = il };
+    try std.testing.expectEqualStrings("# myl-lit a t 1 1 00", lines.next().?);
+    try std.testing.expectEqualStrings("# myl-lit c t 1 1 01", lines.next().?);
+    try std.testing.expectEqual(@as(?[]const u8, null), lines.next());
+    var none: MarkerLines = .{ .il = "export function l $f() {\n@s\n ret 0\n}" };
+    try std.testing.expectEqual(@as(?[]const u8, null), none.next());
 }
 
 // spec: QBE-TEARDOWN-1
