@@ -84,7 +84,11 @@ pub const Session = struct {
         const compiler = try resolveCompiler(context, opts.toolchain.compiler);
         const directory = try context.absolute(opts.cache);
         // Capture before creating cache files beneath a test source directory.
-        const source = try snapshot.captureExcluding(context, opts.source, directory);
+        // A `--no-cache` run keeps no import memo, so it reads none either.
+        const source = if (opts.flags.no_cache)
+            try snapshot.captureExcluding(context, opts.source, directory)
+        else
+            try snapshot.captureMemoized(context, opts.source, directory, try importsMemoPath(context, directory, try context.absolute(opts.source)));
         try context.mkdir(directory);
         // Owned scratch: a killed or crashed run cannot remove its snapshot, so
         // the next run's `owned` reclaims it once its owner marker is unlocked.
@@ -168,6 +172,12 @@ pub const Session = struct {
     /// exported signatures, visibility and explicit ceilings without checking any
     /// body. The returned manifest is `interface-contracts-v2` with canonical type descriptors.
     pub fn interfaceCheck(self: Session, source: []const u8) Error!std.json.Value {
+        const output = try self.interfaceOutput(source);
+        return (try std.json.parseFromSlice(std.json.Value, self.context.allocator, output.stdout, .{ .allocate = .alloc_always })).value;
+    }
+    /// Run the declaration check and return its successful output; a refusal
+    /// is mapped to the status error its exit code names.
+    fn interfaceOutput(self: Session, source: []const u8) Error!std.process.RunResult {
         var argv: std.ArrayList([]const u8) = .empty;
         defer argv.deinit(self.context.allocator);
         try argv.appendSlice(self.context.allocator, &.{ self.compiler, "list-interfaces", "--contracts", source });
@@ -177,7 +187,47 @@ pub const Session = struct {
         self.observe(output.stderr);
         const code = fs.exitCode(output.term);
         if (code != 0) return mapExit(code);
-        return (try std.json.parseFromSlice(std.json.Value, self.context.allocator, output.stdout, .{ .allocate = .alloc_always })).value;
+        return output;
+    }
+    /// `interfaceCheck` answered from the invocation cache when the same
+    /// resolved sources, configuration, compiler and environment produced it
+    /// before. The contracts are a pure function of those inputs, so an
+    /// unchanged project skips the declaration pass entirely. Only a clean
+    /// answer is kept — exit status 0 and nothing on stderr but work reports —
+    /// so a warning or a refusal is always reproduced by a real check.
+    pub fn interfaceCheckCached(self: Session, source: []const u8, identity: []const u8) Error!std.json.Value {
+        const flags = self.options.flags;
+        if (flags.no_cache or !self.environment.cacheable) return self.interfaceCheck(source);
+        const path = try self.interfacesPath();
+        if (!flags.force) if (readSealed(self.context, path)) |bytes| {
+            const line = std.mem.indexOfScalar(u8, bytes, '\n') orelse bytes.len;
+            if (line < bytes.len and std.mem.eql(u8, bytes[0..line], identity)) {
+                return (try std.json.parseFromSlice(std.json.Value, self.context.allocator, bytes[line + 1 ..], .{ .allocate = .alloc_always })).value;
+            }
+        };
+        const output = try self.interfaceOutput(source);
+        const parsed = (try std.json.parseFromSlice(std.json.Value, self.context.allocator, output.stdout, .{ .allocate = .alloc_always })).value;
+        if (onlyReports(output.stderr)) {
+            const payload = try std.mem.concat(self.context.allocator, u8, &.{ identity, "\n", output.stdout });
+            writeSealed(self.context, path, payload) catch |err| ignoreSessionFailure(err);
+        }
+        return parsed;
+    }
+    /// The one slot that keeps an entry's latest clean contracts, behind the
+    /// resolved source identity they answer for, so the store never grows by
+    /// an entry per edit.
+    fn interfacesPath(self: Session) Error![]const u8 {
+        var hash = std.crypto.hash.Blake3.init(.{});
+        for ([_][]const u8{ "native-test-interfaces-v1", self.hashes[0], self.environment.hash, self.source.entry_path }) |part| {
+            var length: [8]u8 = undefined;
+            std.mem.writeInt(u64, &length, part.len, .little);
+            hash.update(&length);
+            hash.update(part);
+        }
+        var digest: [32]u8 = undefined;
+        hash.final(&digest);
+        const name = try std.fmt.allocPrint(self.context.allocator, "{s}.json", .{std.fmt.bytesToHex(digest, .lower)});
+        return std.fs.path.join(self.context.allocator, &.{ self.directory, "interfaces", name });
     }
     /// Full checked graph via `emit-project-qbe`: lower, emit and return the
     /// complete manifest. This is the fallback when no reduced graph is stored.
@@ -280,6 +330,9 @@ pub const Session = struct {
                 project.compile = null;
                 return err;
             };
+            // The build below reads the written manifest, never the session, so
+            // the child can release its checked compilation while it runs.
+            compile.quit();
             manifest_path = path;
         }
         var arguments: std.ArrayList([]const u8) = .empty;
@@ -317,7 +370,16 @@ pub const Session = struct {
         // The native driver linked exactly one library for this graph. Record it
         // at the work site because its own report is a qbe-build-v1 receipt.
         if (self.work) |work| work.note(.links, 1, 0);
-        project.executor = try execute.Executor.init(self.context, project.manifest, library, project.directory, self.tools.zig);
+        const runner = try execute.runner(self.context, .{
+            .cache = if (self.options.flags.no_cache) null else self.directory,
+            .temporary = project.directory,
+            .zig = self.tools.zig,
+            .zig_stamp = self.hashes[1],
+        });
+        // A compiled harness is real work a warm run must not repeat; the trace
+        // names it so an acceptance test can count it.
+        if (runner.compiled) self.trace(&.{ "native-test-runner", runner.path });
+        project.executor = try execute.Executor.init(self.context, project.manifest, library, project.directory, runner.path);
         project.executor.?.stress = self.options.flags.gc_stress;
         project.select_file = try a.dupe(u8, select_file);
         return project.executor.?;
@@ -376,6 +438,16 @@ pub const Compile = struct {
     /// the compilation alive. Call `facts` to read the payload and `finish`
     /// (exactly once) to reap the child and forward its stderr.
     pub fn start(session: Session, entry_path: []const u8) Error!*Compile {
+        const compile = try begin(session, entry_path);
+        errdefer compile.finish(session);
+        try compile.awaitFacts();
+        return compile;
+    }
+
+    /// Spawn the session and send its facts request without waiting for the
+    /// answer, so the child checks the project while this process does other
+    /// work. `awaitFacts` collects the answer; `discard` abandons the session.
+    pub fn begin(session: Session, entry_path: []const u8) Error!*Compile {
         const a = session.context.allocator;
         const directory = try session.context.temporary(session.temporary);
         const facts_path = try std.fs.path.join(a, &.{ directory, "facts.json" });
@@ -409,8 +481,35 @@ pub const Compile = struct {
         errdefer compile.finish(session);
         const facts_line = try std.fmt.allocPrint(a, "facts {s}", .{facts_path});
         defer a.free(facts_line);
-        _ = try compile.exchange(facts_line);
+        try compile.writeLine(facts_line);
         return compile;
+    }
+
+    /// Wait for the answer to the facts request `begin` sent.
+    pub fn awaitFacts(self: *Compile) Error!void {
+        _ = try self.receive();
+    }
+
+    /// Ask the session to end without waiting for it: the child tears its
+    /// checked compilation down while this process builds and runs tests, and
+    /// `finish` later only reaps it. No request may follow.
+    pub fn quit(self: *Compile) void {
+        self.writeLine("quit") catch |err| ignoreSessionFailure(err);
+        if (self.child.stdin) |stdin| {
+            stdin.close(self.io);
+            self.child.stdin = null;
+        }
+    }
+
+    /// Kill a session nobody needs — the run's selection never used the graph
+    /// it was checking — and release it without forwarding what it wrote.
+    pub fn discard(self: *Compile) void {
+        if (self.child.stdin) |stdin| {
+            stdin.close(self.io);
+            self.child.stdin = null;
+        }
+        self.child.kill(self.io);
+        self.allocator.destroy(self);
     }
 
     /// Read the checked facts written by the successful `facts` request.
@@ -474,6 +573,11 @@ pub const Compile = struct {
 
     fn exchange(self: *Compile, line: []const u8) Error!Selected {
         try self.writeLine(line);
+        return self.receive();
+    }
+
+    /// Read and interpret the reply to the request last written.
+    fn receive(self: *Compile) Error!Selected {
         const raw = self.readLine() orelse {
             // The child can exit before its first reply when the project load
             // itself fails (a source error, the usual case) or a tool is missing.
@@ -518,6 +622,48 @@ pub const Compile = struct {
     };
 };
 
+/// The import memo (`snapshot.Imports`) of one entry and this compiler under
+/// a cache directory. Standard-module entries are this compiler's, and every
+/// test entry keeps its own file, so the programs of a directory run sharing
+/// one cache never overwrite each other's memo.
+fn importsMemoPath(context: fs.Context, directory: []const u8, entry: []const u8) Error![]const u8 {
+    var hash = std.crypto.hash.Blake3.init(.{});
+    hash.update(bundled.compiler_identity);
+    hash.update("\x00");
+    hash.update(entry);
+    var digest: [16]u8 = undefined;
+    hash.final(&digest);
+    const name = try std.fmt.allocPrint(context.allocator, "{s}.memo", .{std.fmt.bytesToHex(digest, .lower)});
+    return std.fs.path.join(context.allocator, &.{ directory, "imports", name });
+}
+/// Whether a child's stderr holds nothing but `--report` lines (the versioned
+/// `work-report-v1` and `frontend-cache-v1` records), so no diagnostic is lost
+/// when a cached answer replaces the child.
+fn onlyReports(stderr: []const u8) bool {
+    var lines = std.mem.splitScalar(u8, stderr, '\n');
+    while (lines.next()) |raw| {
+        const line = std.mem.trim(u8, raw, " \t\r");
+        if (line.len != 0 and !std.mem.startsWith(u8, line, "{\"version\":\"")) return false;
+    }
+    return true;
+}
+/// Publish `payload` behind its BLAKE3 digest line, atomically.
+fn writeSealed(context: fs.Context, path: []const u8, payload: []const u8) Error!void {
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.Blake3.hash(payload, &digest, .{});
+    try context.mkdir(std.fs.path.dirname(path).?);
+    try context.atomic(path, try std.mem.concat(context.allocator, u8, &.{ &std.fmt.bytesToHex(digest, .lower), "\n", payload }));
+}
+/// The payload `writeSealed` published, or null when the entry is missing,
+/// truncated or does not match its digest.
+fn readSealed(context: fs.Context, path: []const u8) ?[]const u8 {
+    const bytes = context.read(path) catch return null;
+    if (bytes.len < 65 or bytes[64] != '\n') return null;
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.Blake3.hash(bytes[65..], &digest, .{});
+    if (!std.mem.eql(u8, &std.fmt.bytesToHex(digest, .lower), bytes[0..64])) return null;
+    return bytes[65..];
+}
 /// Finish a graph's retained checked compilation, if any, and clear the pointer
 /// so no caller can use the reaped session again.
 fn finishCompile(session: Session, project: *Project) void {
@@ -643,4 +789,74 @@ test "a compiler child that is another copy of this program is refused before it
 // spec-case: NATIVE-TEST-9
 test "a child compiler source rejection is not a host failure" {
     try std.testing.expectEqual(@as(Error, error.SourceRejected), Session.mapExit(1));
+}
+
+/// A stand-in compiler whose `list-interfaces` logs its call, prints empty
+/// contracts, warns while `root/warn` exists and refuses while `root/refuse` does.
+fn fakeInterfaces(context: fs.Context, root: []const u8) ![]const u8 {
+    const script = try std.fs.path.join(context.allocator, &.{ root, "fake-compiler" });
+    const text = try std.fmt.allocPrint(context.allocator,
+        \\#!/bin/sh
+        \\printf '%s\n' "$1" >> "{0s}/calls.log"
+        \\if [ -f "{0s}/refuse" ]; then exit 3; fi
+        \\if [ -f "{0s}/warn" ]; then echo 'warning: something' >&2; fi
+        \\printf '%s\n' '{{"version":"interface-contracts-v2","modules":[]}}'
+        \\
+    , .{root});
+    var file = try std.Io.Dir.createFileAbsolute(context.io, script, .{ .permissions = .executable_file });
+    defer file.close(context.io);
+    try file.writeStreamingAll(context.io, text);
+    return script;
+}
+/// How many declaration checks the stand-in compiler ran.
+fn interfaceCalls(context: fs.Context, root: []const u8) !usize {
+    const log = context.read(try std.fs.path.join(context.allocator, &.{ root, "calls.log" })) catch return 0;
+    return std.mem.count(u8, log, "list-interfaces");
+}
+// spec: NATIVE-TEST-INTERFACES-1
+test "declaration contracts are reused for an unchanged resolved identity and never for a warning or a refusal" {
+    var variables: std.process.Environ.Map = .init(std.testing.allocator);
+    defer variables.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &variables);
+    defer context.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(context.io, ".", context.allocator);
+    const entry = try std.fs.path.join(context.allocator, &.{ root, "main.my" });
+    try context.write(entry, "module main\n");
+    var session: Session = .{
+        .context = context,
+        .options = .{ .source = entry },
+        .compiler = try fakeInterfaces(context, root),
+        .tools = .{ .zig = "/bin/true", .qbe = "/bin/true" },
+        .hashes = .{ "compiler", "", "" },
+        .environment = .{ .hash = "environment", .cacheable = true },
+        .directory = root,
+        .temporary = root,
+        .source = try snapshot.capture(context, entry),
+    };
+    _ = try session.interfaceCheckCached(entry, "identity-a");
+    _ = try session.interfaceCheckCached(entry, "identity-a");
+    try std.testing.expectEqual(@as(usize, 1), try interfaceCalls(context, root));
+    _ = try session.interfaceCheckCached(entry, "identity-b");
+    try std.testing.expectEqual(@as(usize, 2), try interfaceCalls(context, root));
+    _ = try session.interfaceCheckCached(entry, "identity-b");
+    // The entry keeps one slot: the newer identity replaced the older answer.
+    _ = try session.interfaceCheckCached(entry, "identity-a");
+    try std.testing.expectEqual(@as(usize, 3), try interfaceCalls(context, root));
+    // A warning must be shown again, so an answer with one is never kept.
+    try context.write(try std.fs.path.join(context.allocator, &.{ root, "warn" }), "");
+    _ = try session.interfaceCheckCached(entry, "identity-w");
+    _ = try session.interfaceCheckCached(entry, "identity-w");
+    try std.testing.expectEqual(@as(usize, 5), try interfaceCalls(context, root));
+    try context.write(try std.fs.path.join(context.allocator, &.{ root, "refuse" }), "");
+    try std.testing.expectError(error.ProjectPolicyRejected, session.interfaceCheckCached(entry, "identity-r"));
+    try std.testing.expectError(error.ProjectPolicyRejected, session.interfaceCheckCached(entry, "identity-r"));
+    try std.testing.expectEqual(@as(usize, 7), try interfaceCalls(context, root));
+    // A forced run checks again; a `--no-cache` run neither reads nor keeps.
+    session.options.flags.force = true;
+    try std.testing.expectError(error.ProjectPolicyRejected, session.interfaceCheckCached(entry, "identity-a"));
+    session.options.flags = .{ .no_cache = true };
+    try std.testing.expectError(error.ProjectPolicyRejected, session.interfaceCheckCached(entry, "identity-a"));
+    try std.testing.expectEqual(@as(usize, 9), try interfaceCalls(context, root));
 }

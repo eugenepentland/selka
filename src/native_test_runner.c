@@ -6,6 +6,7 @@
 #include "native_providers.h"
 #include "native_embed.h"
 #include <dlfcn.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -276,11 +277,28 @@ static int run_benchmark(FILE *request, const char *library_path) {
     return finish();
 }
 
+/* Point the protocol channel (fd 1) at a response file before any byte is
+   written, so a parent that runs many children at once reads each answer from
+   its own file instead of holding one pipe per child. */
+static void respond_to(const char *path) {
+    int descriptor = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    if (descriptor < 0) fail("NativeTestResponseUnavailable");
+    if (descriptor != STDOUT_FILENO) {
+        if (dup2(descriptor, STDOUT_FILENO) < 0) fail("NativeTestResponseUnavailable");
+        close(descriptor);
+    }
+}
+
 int main(int argc, char **argv) {
-    if (argc < 3 || argc > 4) fail("InvalidNativeTestArguments");
-    if (argc == 4) {
-        if (strcmp(argv[3], "--gc-stress") != 0) fail("InvalidNativeTestArguments");
-        stress_flag = 1;
+    if (argc < 3 || argc > 6) fail("InvalidNativeTestArguments");
+    for (int index = 3; index < argc; ++index) {
+        if (strcmp(argv[index], "--gc-stress") == 0) {
+            stress_flag = 1;
+        } else if (strcmp(argv[index], "--response") == 0 && index + 1 < argc) {
+            respond_to(argv[++index]);
+        } else {
+            fail("InvalidNativeTestArguments");
+        }
     }
     FILE *request = fopen(argv[2], "rb");
     if (!request) fail("NativeTestRequestUnavailable");

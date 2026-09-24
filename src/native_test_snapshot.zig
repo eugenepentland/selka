@@ -33,6 +33,29 @@ pub fn capture(context: fs.Context, entry: []const u8) Error!Snapshot {
 }
 /// Ignore a configured build-cache subtree in addition to conventional generated directories.
 pub fn captureExcluding(context: fs.Context, entry: []const u8, excluded: ?[]const u8) Error!Snapshot {
+    var captured = try inventory(context, entry, excluded, true);
+    captured.identity = try identity(context.allocator, captured.entry, captured.files, captured.support.files, null);
+    return captured;
+}
+/// `captureExcluding` with the resolved identity computed through the import
+/// memo at `memo_path` (`Imports`), which the capture then brings up to date.
+/// The identity is the one a full load computes; only its cost differs.
+pub fn captureMemoized(context: fs.Context, entry: []const u8, excluded: ?[]const u8, memo_path: []const u8) Error!Snapshot {
+    var captured = try inventory(context, entry, excluded, true);
+    var memo = Imports.open(context, memo_path);
+    defer memo.deinit();
+    defer memo.save(context);
+    if (try memoIdentity(context.allocator, &memo, captured.entry, captured.files, captured.support.files)) |memoized| {
+        captured.identity = memoized;
+        return captured;
+    }
+    captured.identity = try identity(context.allocator, captured.entry, captured.files, captured.support.files, &memo);
+    return captured;
+}
+/// The bounded `.my` inventory beneath the entry's project root and its
+/// configuration, without a resolved identity. `hashed` also fingerprints
+/// every file, which identity needs and a byte-for-byte comparison does not.
+fn inventory(context: fs.Context, entry: []const u8, excluded: ?[]const u8, hashed: bool) Error!Snapshot {
     const absolute = try context.absolute(entry);
     var root: []const u8 = std.fs.path.dirname(absolute) orelse return error.InvalidTestSnapshot;
     var name: []const u8 = std.fs.path.basename(absolute);
@@ -64,7 +87,7 @@ pub fn captureExcluding(context: fs.Context, entry: []const u8, excluded: ?[]con
         const path = try context.allocator.dupe(u8, item.path);
         const bytes = try read(context, item.dir, item.basename, byte_limit - total);
         total += bytes.len;
-        try files.append(context.allocator, .{ .path = path, .data = bytes, .hash = try fs.hash(context.allocator, bytes) });
+        try files.append(context.allocator, .{ .path = path, .data = bytes, .hash = if (hashed) try fileHash(context.allocator, bytes) else "" });
     }
     std.mem.sort(File, files.items, {}, less);
     if (find(files.items, name) == null) return error.InvalidTestSnapshot;
@@ -75,7 +98,7 @@ pub fn captureExcluding(context: fs.Context, entry: []const u8, excluded: ?[]con
         .entry_path = absolute,
         .files = files.items,
         .support = support,
-        .identity = try identity(context.allocator, name, files.items, support.files),
+        .identity = "",
         .excluded = excluded,
     };
 }
@@ -157,30 +180,188 @@ fn read(context: fs.Context, directory: std.Io.Dir, path: []const u8, limit: usi
 }
 /// Hash the compiler-resolved import closure while retaining the broad source
 /// inventory separately for immutable materialization and provider fixtures.
-fn identity(allocator: std.mem.Allocator, entry: []const u8, files: []const File, support: []const File) Error![]const u8 {
+/// A `memo` learns the standard modules the load passed through.
+fn identity(allocator: std.mem.Allocator, entry: []const u8, files: []const File, support: []const File, memo: ?*Imports) Error![]const u8 {
     var loaded = project.Project.init(allocator);
     defer loaded.deinit();
     var provider: MemoryProvider = .{ .files = files };
     const module_name = try entryModule(allocator, entry);
     loaded.load(.{ .context = &provider, .read = MemoryProvider.read }, module_name, .{}) catch return broadIdentity(allocator, entry, files, support);
-    const pairs = try allocator.alloc([2][]const u8, loaded.modules.items.len + support.len);
-    var count: usize = 0;
+    if (memo) |learning| try rememberStandard(learning, &loaded);
+    var pairs: std.ArrayList([2][]const u8) = .empty;
     for (loaded.modules.items) |module| {
         const path = project.modulePath(allocator, module.name) catch |err| switch (err) {
             error.InvalidModuleName => return error.InvalidTestSnapshot,
             error.OutOfMemory => return error.OutOfMemory,
         };
         const index = find(files, path) orelse continue;
-        pairs[count] = .{ files[index].path, files[index].hash };
-        count += 1;
+        try pairs.append(allocator, .{ files[index].path, files[index].hash });
     }
-    for (support) |file| {
-        pairs[count] = .{ file.path, file.hash };
-        count += 1;
-    }
-    std.mem.sort([2][]const u8, pairs[0..count], {}, pairLess);
-    const encoded = try std.json.Stringify.valueAlloc(allocator, .{ .version = "resolved-source-v2", .entry = entry, .files = pairs[0..count] }, .{});
+    return resolvedIdentity(allocator, entry, pairs.items, support);
+}
+/// The `resolved-source-v2` digest over the resolved files' (path, hash)
+/// pairs and the configuration files.
+fn resolvedIdentity(allocator: std.mem.Allocator, entry: []const u8, resolved: []const [2][]const u8, support: []const File) Error![]const u8 {
+    const pairs = try allocator.alloc([2][]const u8, resolved.len + support.len);
+    @memcpy(pairs[0..resolved.len], resolved);
+    for (support, pairs[resolved.len..]) |file, *pair| pair.* = .{ file.path, file.hash };
+    std.mem.sort([2][]const u8, pairs, {}, pairLess);
+    const encoded = try std.json.Stringify.valueAlloc(allocator, .{ .version = "resolved-source-v2", .entry = entry, .files = pairs }, .{});
     return fs.hash(allocator, encoded);
+}
+/// Import lists of module sources, memoized by content across runs, so the
+/// resolved identity of an unchanged project — or of one with a single edited
+/// module — never lexes every module again. The project loader lexes a whole
+/// file to read its header; at 200,000 lines that was a third of a second on
+/// every run and again at its end. An entry is keyed by the BLAKE3 of the
+/// module's bytes and whether it is the entry (a standard module by its name),
+/// and holds exactly the import names the loader recorded for those bytes, so
+/// the walk visits the modules a real load visits. The file is sealed by its
+/// digest; a damaged one is simply empty.
+pub const Imports = struct {
+    allocator: std.mem.Allocator,
+    /// The memo file; empty when the run keeps no memo.
+    path: []const u8 = "",
+    entries: std.StringHashMapUnmanaged([]const []const u8) = .empty,
+    /// Keys this run consulted, the entries a rewrite keeps.
+    used: std.StringHashMapUnmanaged(void) = .empty,
+    /// Whether this run added an entry, so the file needs rewriting.
+    added: bool = false,
+
+    /// Read the memo at `path`; a missing, damaged or foreign file yields an empty memo.
+    pub fn open(context: fs.Context, path: []const u8) Imports {
+        var memo: Imports = .{ .allocator = context.allocator, .path = path };
+        const bytes = context.read(path) catch return memo;
+        if (bytes.len < 65 or bytes[64] != '\n' or !std.mem.eql(u8, &sealOf(bytes[65..]), bytes[0..64])) return memo;
+        var lines = std.mem.splitScalar(u8, bytes[65..], '\n');
+        while (lines.next()) |line| {
+            const tab = std.mem.indexOfScalar(u8, line, '\t') orelse continue;
+            var names: std.ArrayList([]const u8) = .empty;
+            var words = std.mem.tokenizeScalar(u8, line[tab + 1 ..], ' ');
+            while (words.next()) |word| names.append(context.allocator, word) catch return memo;
+            memo.entries.put(context.allocator, line[0..tab], names.items) catch return memo;
+        }
+        return memo;
+    }
+    /// Release the memo's tables; names and keys belong to the caller's allocator.
+    pub fn deinit(self: *Imports) void {
+        self.entries.deinit(self.allocator);
+        self.used.deinit(self.allocator);
+    }
+    /// Rewrite the memo when this run learned something: the entries it used,
+    /// plus the older ones while the file stays within a few projects' worth.
+    pub fn save(self: *Imports, context: fs.Context) void {
+        if (!self.added or self.path.len == 0) return;
+        const keep_all = self.entries.count() <= 4 * self.used.count() + 256;
+        var body: std.ArrayList(u8) = .empty;
+        var iterator = self.entries.iterator();
+        while (iterator.next()) |entry| {
+            if (!keep_all and !self.used.contains(entry.key_ptr.*)) continue;
+            body.appendSlice(self.allocator, entry.key_ptr.*) catch return;
+            body.append(self.allocator, '\t') catch return;
+            for (entry.value_ptr.*, 0..) |name, index| {
+                if (index != 0) body.append(self.allocator, ' ') catch return;
+                body.appendSlice(self.allocator, name) catch return;
+            }
+            body.append(self.allocator, '\n') catch return;
+        }
+        const seal = sealOf(body.items);
+        const sealed = std.mem.concat(self.allocator, u8, &.{ &seal, "\n", body.items }) catch return;
+        context.mkdir(std.fs.path.dirname(self.path) orelse return) catch return;
+        // The memo is an acceleration: a refused write only costs the next run a lex.
+        context.atomic(self.path, sealed) catch return;
+    }
+    /// The imports of one module: memoized, or read from its header alone.
+    fn importsOf(self: *Imports, key: []const u8, name: []const u8, bytes: []const u8) Error!?[]const []const u8 {
+        try self.used.put(self.allocator, key, {});
+        if (self.entries.get(key)) |names| return names;
+        const names = (try headerImports(self.allocator, name, bytes)) orelse return null;
+        try self.entries.put(self.allocator, key, names);
+        self.added = true;
+        return names;
+    }
+};
+fn sealOf(bytes: []const u8) [64]u8 {
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.Blake3.hash(bytes, &digest, .{});
+    return std.fmt.bytesToHex(digest, .lower);
+}
+/// The import names the project loader records for one module's bytes, read by
+/// loading that module alone: its header is scanned exactly as in a full load,
+/// and the load then stops at the first project import it cannot read. Null
+/// when the header itself is refused; a full load then decides the identity.
+fn headerImports(allocator: std.mem.Allocator, name: []const u8, bytes: []const u8) Error!?[]const []const u8 {
+    var loaded = project.Project.init(allocator);
+    defer loaded.deinit();
+    const path = project.modulePath(allocator, name) catch |err| switch (err) {
+        error.InvalidModuleName => return null,
+        error.OutOfMemory => return error.OutOfMemory,
+    };
+    var provider: MemoryProvider = .{ .files = &.{.{ .path = path, .data = bytes, .hash = "" }} };
+    loaded.load(.{ .context = &provider, .read = MemoryProvider.read }, name, .{}) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => {},
+    };
+    if (loaded.modules.items.len == 0) return null;
+    if (loaded.problem) |problem| if (!std.mem.eql(u8, problem.code, "E_MODULE_READ")) return null;
+    const imports = loaded.modules.items[0].imports;
+    const names = try allocator.alloc([]const u8, imports.len);
+    for (imports, names) |imported, *copy| copy.* = try allocator.dupe(u8, imported.name);
+    return names;
+}
+/// The resolved identity computed from memoized import lists: the walk a
+/// real load makes, reading a header only for a module the memo has not seen.
+/// Null when a module cannot be resolved that way; the caller then loads.
+fn memoIdentity(allocator: std.mem.Allocator, memo: *Imports, entry: []const u8, files: []const File, support: []const File) Error!?[]const u8 {
+    const entry_module = try entryModule(allocator, entry);
+    var queue: std.ArrayList([]const u8) = .empty;
+    var seen: std.StringHashMapUnmanaged(void) = .empty;
+    var pairs: std.ArrayList([2][]const u8) = .empty;
+    try queue.append(allocator, entry_module);
+    try seen.put(allocator, entry_module, {});
+    var cursor: usize = 0;
+    while (cursor < queue.items.len) : (cursor += 1) {
+        const name = queue.items[cursor];
+        const path = project.modulePath(allocator, name) catch |err| switch (err) {
+            error.InvalidModuleName => return null,
+            error.OutOfMemory => return error.OutOfMemory,
+        };
+        const found = find(files, path);
+        if (found) |index| try pairs.append(allocator, .{ files[index].path, files[index].hash });
+        const standard = project.isStandardModule(allocator, name) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return null,
+        };
+        const imports = if (standard)
+            memo.entries.get(try std.fmt.allocPrint(allocator, "std:{s}", .{name})) orelse return null
+        else imports: {
+            const index = found orelse return null;
+            const role = if (cursor == 0) "entry" else "module";
+            const key = try std.fmt.allocPrint(allocator, "{s}:{s}", .{ files[index].hash, role });
+            break :imports (try memo.importsOf(key, name, files[index].data)) orelse return null;
+        };
+        if (standard) try memo.used.put(allocator, try std.fmt.allocPrint(allocator, "std:{s}", .{name}), {});
+        for (imports) |imported| {
+            const visited = try seen.getOrPut(allocator, imported);
+            if (!visited.found_existing) try queue.append(allocator, imported);
+        }
+    }
+    const resolved = try resolvedIdentity(allocator, entry, pairs.items, support);
+    return resolved;
+}
+/// Record the standard modules a real load visited, whose import lists the
+/// memo walk cannot read from project files.
+fn rememberStandard(memo: *Imports, loaded: *const project.Project) Error!void {
+    for (loaded.modules.items) |module| {
+        if (!std.mem.startsWith(u8, module.src.path, "@stdlib/")) continue;
+        const key = try std.fmt.allocPrint(memo.allocator, "std:{s}", .{module.name});
+        if (memo.entries.contains(key)) continue;
+        const names = try memo.allocator.alloc([]const u8, module.imports.len);
+        for (module.imports, names) |imported, *copy| copy.* = try memo.allocator.dupe(u8, imported.name);
+        try memo.entries.put(memo.allocator, key, names);
+        try memo.used.put(memo.allocator, key, {});
+        memo.added = true;
+    }
 }
 
 /// The absolute paths of the project sources one test entry's import closure
@@ -274,9 +455,33 @@ fn pairLess(_: void, left: [2][]const u8, right: [2][]const u8) bool {
     return std.mem.lessThan(u8, left[0], right[0]);
 }
 /// Reject edits, additions, deletions, or dependency changes since initial capture.
+/// A tree whose every captured file and configuration byte is unchanged has
+/// the captured identity by construction, so that case costs one re-read and
+/// no re-resolution; only a changed tree resolves its import closure again,
+/// which keeps an unrelated neighbouring edit from failing the run.
 pub fn verify(context: fs.Context, snapshot: Snapshot) Error!void {
+    if (sameBytes(snapshot, try inventory(context, snapshot.entry_path, snapshot.excluded, false))) return;
     const current = try captureExcluding(context, snapshot.entry_path, snapshot.excluded);
     if (!std.mem.eql(u8, current.identity, snapshot.identity)) return error.SourceChanged;
+}
+/// Whether two inventories hold the same entry, paths and bytes.
+fn sameBytes(before: Snapshot, after: Snapshot) bool {
+    if (!std.mem.eql(u8, before.entry, after.entry)) return false;
+    if (before.files.len != after.files.len or before.support.files.len != after.support.files.len) return false;
+    for (before.files, after.files) |old, new| {
+        if (!std.mem.eql(u8, old.path, new.path) or !std.mem.eql(u8, old.data, new.data)) return false;
+    }
+    for (before.support.files, after.support.files) |old, new| {
+        if (!std.mem.eql(u8, old.path, new.path) or !std.mem.eql(u8, old.data, new.data)) return false;
+    }
+    return true;
+}
+/// Fingerprint of one captured file's bytes, for the resolved identity.
+/// BLAKE3: a large project hashes megabytes of source on every run.
+fn fileHash(allocator: std.mem.Allocator, bytes: []const u8) Error![]const u8 {
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.Blake3.hash(bytes, &digest, .{});
+    return allocator.dupe(u8, &std.fmt.bytesToHex(digest, .lower));
 }
 
 /// Provider substitutions may introduce imports to any captured neighbor, so
@@ -286,6 +491,64 @@ fn verifyProviderInventory(context: fs.Context, snapshot: Snapshot) Error!void {
     const before = try broadIdentity(context.allocator, snapshot.entry, snapshot.files, snapshot.support.files);
     const after = try broadIdentity(context.allocator, current.entry, current.files, current.support.files);
     if (!std.mem.eql(u8, before, after)) return error.SourceChanged;
+}
+/// A snapshot root at the same path on every run of one project from one
+/// cache: `<scratch>/.pending/snapshot-<key>`, claimed through the scratch
+/// owner protocol (an exclusive lock on its `.owner` marker) for the run's
+/// lifetime. The compiler's caches are keyed by source path as well as bytes —
+/// the check verdict, the emitted-fragment packs — so a snapshot at a fresh
+/// random path missed all of them on every run; at a stable path an unchanged
+/// project replays its verdict and an edited one re-emits only what changed.
+pub const Stable = struct {
+    directory: []const u8,
+    marker: std.Io.File,
+    /// Remove the snapshot tree, then release the claim, so a concurrent sweep
+    /// never deletes a tree this run is still reading.
+    pub fn release(self: Stable, context: fs.Context) void {
+        context.remove(self.directory);
+        self.marker.close(context.io);
+    }
+};
+/// Claim the stable snapshot root for `seed` (the cache directory, project
+/// root and entry). Null when another live run holds it, a concurrent sweep is
+/// removing it, or the scratch root cannot hold it; the caller then stages at
+/// a fresh private path exactly as before. Whatever a killed run left inside
+/// is cleared first, keeping only the marker.
+pub fn claimStable(context: fs.Context, scratch: []const u8, seed: []const u8) ?Stable {
+    var digest: [16]u8 = undefined;
+    std.crypto.hash.Blake3.hash(seed, &digest, .{});
+    const name = std.fmt.allocPrint(context.allocator, "snapshot-{s}", .{std.fmt.bytesToHex(digest, .lower)}) catch return null;
+    const directory = std.fs.path.join(context.allocator, &.{ scratch, ".pending", name }) catch return null;
+    const marker_path = std.fs.path.join(context.allocator, &.{ directory, fs.owner_name }) catch return null;
+    std.Io.Dir.cwd().createDirPath(context.io, directory) catch return null;
+    const marker = std.Io.Dir.cwd().createFile(context.io, marker_path, .{ .truncate = false, .permissions = .fromMode(0o600) }) catch return null;
+    const locked = marker.tryLock(context.io, .exclusive) catch false;
+    const claimed = locked and stillLinked(context, marker, marker_path);
+    if (!claimed or !clearExcept(context, directory, fs.owner_name)) {
+        marker.close(context.io);
+        return null;
+    }
+    return .{ .directory = directory, .marker = marker };
+}
+/// Whether the locked marker is still the file at its path: a sweep that won
+/// the marker and deleted the tree before this lock leaves it unlinked.
+fn stillLinked(context: fs.Context, marker: std.Io.File, path: []const u8) bool {
+    const opened = marker.stat(context.io) catch return false;
+    const current = std.Io.Dir.cwd().statFile(context.io, path, .{}) catch return false;
+    return opened.inode == current.inode;
+}
+/// Delete every entry of `directory` except `keep`; false when one could not be.
+fn clearExcept(context: fs.Context, directory: []const u8, keep: []const u8) bool {
+    var opened = std.Io.Dir.cwd().openDir(context.io, directory, .{ .iterate = true, .follow_symlinks = false }) catch return false;
+    defer opened.close(context.io);
+    var names: std.ArrayList([]const u8) = .empty;
+    var iterator = opened.iterate();
+    while (iterator.next(context.io) catch return false) |entry| {
+        if (std.mem.eql(u8, entry.name, keep)) continue;
+        names.append(context.allocator, context.allocator.dupe(u8, entry.name) catch return false) catch return false;
+    }
+    for (names.items) |entry| opened.deleteTree(context.io, entry) catch return false;
+    return true;
 }
 /// Materialize captured bytes for checking and code generation without rereading
 /// live sources. Absolute paths are mirrored beneath the temp root so a
@@ -342,14 +605,14 @@ pub fn withTestEntry(context: fs.Context, snapshot: Snapshot) Error!Snapshot {
         try patched.appendSlice(context.allocator, main_stub);
     }
     const files = try context.allocator.dupe(File, snapshot.files);
-    files[index] = .{ .path = snapshot.files[index].path, .data = patched.items, .hash = try fs.hash(context.allocator, patched.items) };
+    files[index] = .{ .path = snapshot.files[index].path, .data = patched.items, .hash = try fileHash(context.allocator, patched.items) };
     return .{
         .root = snapshot.root,
         .entry = snapshot.entry,
         .entry_path = snapshot.entry_path,
         .files = files,
         .support = snapshot.support,
-        .identity = try identity(context.allocator, snapshot.entry, files, snapshot.support.files),
+        .identity = try identity(context.allocator, snapshot.entry, files, snapshot.support.files, null),
         .excluded = snapshot.excluded,
     };
 }
@@ -669,4 +932,88 @@ test "testEntryLocation propagates allocation failure" {
     defer std.testing.allocator.free(entry);
     var failing = std.testing.FailingAllocator.init(std.testing.allocator, .{ .fail_index = 0 });
     try std.testing.expectError(error.OutOfMemory, project_config.testEntryLocation(failing.allocator(), io, entry));
+}
+
+/// The full-load identity of `entry`, with the cache subtree excluded.
+fn loadedIdentity(context: fs.Context, entry: []const u8, cache: []const u8) ![]const u8 {
+    return (try captureExcluding(context, entry, cache)).identity;
+}
+/// The memoized identity of `entry`, reading and updating `memo`.
+fn memoizedIdentity(context: fs.Context, entry: []const u8, cache: []const u8, memo: []const u8) ![]const u8 {
+    return (try captureMemoized(context, entry, cache, memo)).identity;
+}
+// spec: NATIVE-TEST-IDENTITY-1
+test "a memoized capture resolves the identity a full load resolves, through edits, new imports and a damaged memo" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary_dir = std.testing.tmpDir(.{});
+    defer temporary_dir.cleanup();
+    const root = try temporary_dir.dir.realPathFileAlloc(context.io, ".", context.allocator);
+    const entry = try std.fs.path.join(context.allocator, &.{ root, "main.my" });
+    const leaf = try std.fs.path.join(context.allocator, &.{ root, "leaf.my" });
+    const extra = try std.fs.path.join(context.allocator, &.{ root, "extra.my" });
+    const cache = try std.fs.path.join(context.allocator, &.{ root, "cache" });
+    const memo = try std.fs.path.join(context.allocator, &.{ cache, "imports", "memo" });
+    try context.write(entry, "module main\nimport middle\nimport math\n");
+    try context.write(try std.fs.path.join(context.allocator, &.{ root, "middle.my" }), "module middle\nimport leaf\n");
+    try context.write(leaf, "module leaf\n");
+    try context.write(extra, "module extra\n");
+    const cold = try memoizedIdentity(context, entry, cache, memo);
+    try std.testing.expectEqualStrings(try loadedIdentity(context, entry, cache), cold);
+    // A warm capture reads every import list from the memo and learns nothing.
+    const warm = try captureMemoized(context, entry, cache, memo);
+    try std.testing.expectEqualStrings(cold, warm.identity);
+    var reopened = Imports.open(context, memo);
+    defer reopened.deinit();
+    try std.testing.expectEqualStrings(cold, (try memoIdentity(context.allocator, &reopened, warm.entry, warm.files, warm.support.files)) orelse "");
+    try std.testing.expect(!reopened.added);
+    // An unreachable module is outside the identity until an edit imports it.
+    try context.write(extra, "module extra\n# unreachable edit\n");
+    try std.testing.expectEqualStrings(cold, try memoizedIdentity(context, entry, cache, memo));
+    try context.write(leaf, "module leaf\nimport extra\n");
+    const imported = try memoizedIdentity(context, entry, cache, memo);
+    try std.testing.expectEqualStrings(try loadedIdentity(context, entry, cache), imported);
+    try context.write(extra, "module extra\n# now reachable\n");
+    try std.testing.expect(!std.mem.eql(u8, imported, try memoizedIdentity(context, entry, cache, memo)));
+    // A damaged memo is ignored rather than trusted.
+    try context.write(memo, "not a sealed memo\n");
+    try std.testing.expectEqualStrings(try loadedIdentity(context, entry, cache), try memoizedIdentity(context, entry, cache, memo));
+}
+
+// spec: NATIVE-TEST-STABLE-1
+test "the stable snapshot root is one path per seed, held by one run at a time and cleared of a killed run's files" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary_dir = std.testing.tmpDir(.{});
+    defer temporary_dir.cleanup();
+    const scratch = try temporary_dir.dir.realPathFileAlloc(context.io, ".", context.allocator);
+    const first = claimStable(context, scratch, "seed-a") orelse return error.TestUnexpectedResult;
+    // A live claim keeps a second run of the same project on a private path.
+    try std.testing.expect(claimStable(context, scratch, "seed-a") == null);
+    const other = claimStable(context, scratch, "seed-b") orelse return error.TestUnexpectedResult;
+    try std.testing.expect(!std.mem.eql(u8, first.directory, other.directory));
+    other.release(context);
+    const directory = first.directory;
+    first.release(context);
+    try std.testing.expect(!context.exists(directory));
+    // What a killed run leaves (an unlocked marker and its files) is cleared
+    // by the next claim, which gets the very same path.
+    const stale = try std.fs.path.join(context.allocator, &.{ directory, "stale.my" });
+    try context.write(try std.fs.path.join(context.allocator, &.{ try makeDirectory(context, directory), fs.owner_name }), "");
+    try context.write(stale, "module stale\n");
+    const again = claimStable(context, scratch, "seed-a") orelse return error.TestUnexpectedResult;
+    try std.testing.expectEqualStrings(directory, again.directory);
+    try std.testing.expect(!context.exists(stale));
+    again.release(context);
+    // The last release leaves the scratch root as it found it.
+    try std.testing.expect(!context.exists(try std.fs.path.join(context.allocator, &.{ scratch, ".pending" })));
+}
+/// Create `path` and return it.
+fn makeDirectory(context: fs.Context, path: []const u8) ![]const u8 {
+    try context.mkdir(path);
+    return path;
 }

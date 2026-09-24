@@ -35,10 +35,16 @@ pub const Graph = struct {
     functions: []const Unit,
 };
 
+/// Which functions a facts payload describes: every checked function, or only
+/// the transitive dependency closure of its roots — all `mylang test` ever
+/// plans, since it only plans the tests and benchmarks it discovered.
+pub const Scope = enum { all, closure };
 /// Render checked native-test facts for one checked project. All temporary
 /// fingerprints and dependency arrays live in a render-local arena; the returned
-/// payload alone is owned by `allocator`.
-pub fn render(allocator: std.mem.Allocator, src: source.Source, program: typed.Program, roots: []const typed.FunctionId, schema: []const u8) Error![]u8 {
+/// payload alone is owned by `allocator`. `.closure` describes only what the
+/// roots reach, in program order, so its units carry exactly the facts a plan
+/// of any root reads while a large project's untested code costs nothing.
+pub fn render(allocator: std.mem.Allocator, src: source.Source, program: typed.Program, roots: []const typed.FunctionId, schema: []const u8, scope: Scope) Error![]u8 {
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
     const scratch = arena.allocator();
@@ -50,27 +56,46 @@ pub fn render(allocator: std.mem.Allocator, src: source.Source, program: typed.P
         if (@backingInt(root) >= exported.len) return error.InvalidProgram;
         exported[@backingInt(root)] = true;
     }
-    const address_taken = try collectAddressTaken(scratch, program);
+    // The conservative indirect-call target set walks every body in the
+    // program, so it is collected only once a described body invokes a
+    // function value: a closure without indirect calls never pays for it.
+    var address_taken: ?[]const typed.FunctionId = null;
     const codecs = try collectCodecs(scratch, program);
     const facts: FunctionFacts = .{
         .allocator = scratch,
         .src = src,
         .program = program,
         .catalog = &catalog,
-        .address_taken = address_taken,
+        .address_taken = &address_taken,
         .codecs = codecs,
     };
-    const units = try scratch.alloc(Unit, program.functions.len);
+    const described = try scratch.alloc(?dependencies.Metadata, program.functions.len);
+    @memset(described, null);
+    var pending: std.ArrayList(typed.FunctionId) = .empty;
     for (program.functions, 0..) |function, index| {
-        units[index] = .{
+        if (scope == .all or exported[index]) try pending.append(scratch, function.id);
+    }
+    var callees: std.ArrayList(typed.FunctionId) = .empty;
+    while (pending.pop()) |id| {
+        const index = @backingInt(id);
+        if (index >= program.functions.len) return error.InvalidProgram;
+        if (described[index] != null) continue;
+        callees.clearRetainingCapacity();
+        described[index] = try facts.describe(program.functions[index], &callees);
+        if (scope == .closure) try pending.appendSlice(scratch, callees.items);
+    }
+    var units: std.ArrayList(Unit) = .empty;
+    for (program.functions, described, 0..) |function, metadata, index| {
+        const checked = metadata orelse continue;
+        try units.append(scratch, .{
             .name = function.name,
             .symbol = try symbol(scratch, function.name),
             .@"export" = if (exported[index]) .{ .name = function.name } else null,
-            .test_dependencies = try facts.describe(function),
-        };
+            .test_dependencies = checked,
+        });
     }
     const entry = if (@backingInt(program.main) < program.functions.len) try symbol(scratch, program.functions[@backingInt(program.main)].name) else "";
-    return std.json.Stringify.valueAlloc(allocator, Graph{ .schema = schema, .entry = entry, .functions = units }, .{});
+    return std.json.Stringify.valueAlloc(allocator, Graph{ .schema = schema, .entry = entry, .functions = units.items }, .{});
 }
 
 /// The stable native symbol for one qualified function name.
@@ -86,8 +111,6 @@ pub fn symbol(allocator: std.mem.Allocator, name: []const u8) Error![]const u8 {
 /// checked domain codec exists. Returns the explicit reasons to report.
 pub fn expandSelection(allocator: std.mem.Allocator, program: typed.Program, selected: []bool) Error!void {
     if (selected.len != program.functions.len) return error.InvalidProgram;
-    const address_taken = try collectAddressTaken(allocator, program);
-    defer allocator.free(address_taken);
     const codecs = try collectCodecs(allocator, program);
     defer allocator.free(codecs);
     var indirect = false;
@@ -106,7 +129,11 @@ pub fn expandSelection(allocator: std.mem.Allocator, program: typed.Program, sel
             }
         }
     }
+    // The address-taken set walks every body in the program, so only a
+    // selection that invokes a function value pays for it.
     if (indirect) {
+        const address_taken = try collectAddressTaken(allocator, program);
+        defer allocator.free(address_taken);
         for (address_taken) |id| selected[@backingInt(id)] = true;
     }
     if (codecs.len != 0) {
@@ -170,9 +197,12 @@ const ReasonSet = struct {
 const DependencySet = struct {
     allocator: std.mem.Allocator,
     items: std.ArrayList(dependencies.Dependency) = .empty,
+    /// Every dependency's function, for a closure walk over the facts.
+    ids: std.ArrayList(typed.FunctionId) = .empty,
     fn add(self: *DependencySet, program: typed.Program, id: typed.FunctionId, kind: dependencies.Kind) Error!void {
         const index = @backingInt(id);
         if (index >= program.functions.len) return error.InvalidProgram;
+        self.ids.append(self.allocator, id) catch return error.OutOfMemory;
         var digest: [32]u8 = undefined;
         Sha.hash(program.functions[index].name, &digest, .{});
         const symbol_text = std.fmt.allocPrint(self.allocator, "myl_f_{s}", .{std.fmt.bytesToHex(digest, .lower)}) catch return error.OutOfMemory;
@@ -183,6 +213,7 @@ const DependencySet = struct {
     }
     fn deinit(self: *DependencySet) void {
         self.items.deinit(self.allocator);
+        self.ids.deinit(self.allocator);
     }
 };
 
@@ -191,10 +222,12 @@ const FunctionFacts = struct {
     src: source.Source,
     program: typed.Program,
     catalog: *native_types.Catalog,
-    address_taken: []const typed.FunctionId,
+    /// Every address-taken function, collected on first use.
+    address_taken: *?[]const typed.FunctionId,
     codecs: []const typed.FunctionId,
 
-    fn describe(self: FunctionFacts, function: typed.Function) Error!dependencies.Metadata {
+    /// One function's facts; every function it depends on is appended to `callees`.
+    fn describe(self: FunctionFacts, function: typed.Function, callees: *std.ArrayList(typed.FunctionId)) Error!dependencies.Metadata {
         var hash = Sha.init(.{});
         part(&hash, "native-test-implementation-v2");
         part(&hash, native_types.Catalog.abi_version);
@@ -234,7 +267,12 @@ const FunctionFacts = struct {
                 .function_value => |value| try deps.add(self.program, value, .function_value),
                 .invoke => {
                     try reasons.add("conservative-indirect-target-set");
-                    for (self.address_taken) |id| try deps.add(self.program, id, .indirect);
+                    const targets = self.address_taken.* orelse targets: {
+                        const collected = try collectAddressTaken(self.allocator, self.program);
+                        self.address_taken.* = collected;
+                        break :targets collected;
+                    };
+                    for (targets) |id| try deps.add(self.program, id, .indirect);
                 },
                 .external_read, .environment_get, .environment_names, .acquire_resource, .complete_resource, .resource_io, .restrict_resource, .dir_resource => {
                     external = true;
@@ -250,6 +288,7 @@ const FunctionFacts = struct {
             try reasons.add("conservative-codec-runtime-set");
             for (self.codecs) |id| try deps.add(self.program, id, .codec);
         }
+        callees.appendSlice(self.allocator, deps.ids.items) catch return error.OutOfMemory;
         std.mem.sort(dependencies.Dependency, deps.items.items, {}, dependencyLess);
         std.mem.sort([]const u8, reasons.items.items, {}, stringLess);
         return .{
@@ -445,5 +484,5 @@ test "checked facts reject roots outside the checked function table" {
     const src = try source.Source.init(a, "main.my", "");
     const program: typed.Program = .{ .nodes = &.{}, .statements = &.{}, .functions = &.{}, .main = @fromBackingInt(0) };
     const roots = [_]typed.FunctionId{@fromBackingInt(0)};
-    try std.testing.expectError(error.InvalidProgram, render(a, src, program, &roots, "{}"));
+    try std.testing.expectError(error.InvalidProgram, render(a, src, program, &roots, "{}", .all));
 }

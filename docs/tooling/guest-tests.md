@@ -23,7 +23,11 @@ arguments, expectations and skip reasons keyed by qualified test name, and
 is a shell-style glob. Each selected case runs
 as a fresh native process bounded by `--max-steps`, `--max-frames`, `--max-calls`
 and `--timeout-ms`, with no implicit clock, entropy, filesystem, network or
-environment grants. `--json` prints a `native-tests-v1` report instead of the text
+environment grants. The cases run concurrently: `--jobs N` (then `MYLANG_JOBS`,
+then the cores the run may use, capped by how many per-test memory ceilings the
+machine's free memory holds) worker threads each start one test process at a
+time without copying the runner, and every result is reported in the same order
+whichever finished first. `--json` prints a `native-tests-v1` report instead of the text
 summary. Exit status is 0 when every selected runnable case passed, 1 on a
 failure or trap, 2 on a setup failure, and 3 when the selection was empty or
 entirely skipped — a filter that matches nothing is not a green run.
@@ -117,7 +121,12 @@ therefore fail a run, but it can never silently drop out of one.
 Each run materializes its private source snapshot under `$TMPDIR/.pending/` when
 `TMPDIR` is set and non-empty, and under `/tmp/.pending/` otherwise. On a host
 whose `/tmp` is a small or quota-bound tmpfs, point `TMPDIR` at disk; otherwise
-a full `/tmp` fails every test with `host failure: DiskQuota`.
+a full `/tmp` fails every test with `host failure: DiskQuota`. The snapshot sits
+at the same path on every run of one project from one cache
+(`.pending/snapshot-<key>`), because the compiler's caches of check verdicts,
+parsed modules and emitted functions are keyed by source path as well as bytes;
+a second run of the same project that starts while the first still holds that
+path stages at a fresh private one instead.
 
 A run removes that staging on every exit it controls — a pass, a failing test,
 a rejected project, a host error. A run killed outright (`SIGKILL`, a crash)
@@ -169,7 +178,10 @@ effects remain non-cacheable. Resolved native tool stamps remain part of identit
 
 A warm unchanged deterministic run still checks project validity through the shared
 query cache, but admits valid result receipts without lowering, emitting or linking
-any code, so it executes zero tests. Receipt reuse is bound to the selected
+any code, so it executes zero tests. That validity check replays the verdict the
+previous run's check recorded, and the declaration contracts come from the cache
+under the same resolved source identity, so an unchanged rerun starts exactly one
+compiler process and costs about what an unchanged `mylang check` does. Receipt reuse is bound to the selected
 dependency closure, contract and provider identities plus fixture, environment and
 budget identities; a helper edit executes only its dependent tests. A fully cached
 selection also needs durable checked facts (`native-test-graph-v3`), keyed by
@@ -197,6 +209,18 @@ project. A whole-project request with no selection keeps its own frontend check
 and is reported as a named `work-report-v1` bypass rather than hidden. Distinct
 provider graphs stay isolated; identical graphs share one closure and library per
 invocation.
+
+The work of a run after an edit follows the edit rather than the project. The
+checked facts describe only what the discovered tests and benchmarks reach; a
+test whose closure does not contain the edited function is answered from its
+receipt and is not linked into the library; the functions that are rebuilt reuse
+every emitted unit whose inputs did not change; and the compiled test harness is
+kept in the cache. When no case names a provider fixture, the body check starts
+alongside the declaration check instead of after it, and it reads the check
+summaries the way `build` does, so the effect passes revisit only changed bodies.
+On a generated 200,000-line project where an edit reaches half of the 480 tests,
+the run after the edit takes about 1.2 seconds, against 0.4 for `mylang check`
+(`docs/audits/devspeed-test-loop-scale-2026-09-24.md`).
 
 A successful deterministic case leaves a receipt under `.mylang-cache/tests`, or
 under `--cache-dir DIR`. The receipt's identity covers the case settings, the

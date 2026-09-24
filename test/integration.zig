@@ -8262,6 +8262,206 @@ fn pureProject(temp: *std.testing.TmpDir) !PureProject {
     };
 }
 
+/// One module of the scale chain: `f` adds one to the previous module's `f`
+/// (its statement is line 6), `unused` is reached by no test, and `test_mK`
+/// checks `f(1) == K + 2`.
+fn scaleModule(allocator: std.mem.Allocator, module: usize, body: []const u8) ![]u8 {
+    const opening = if (module == 0) try allocator.dupe(u8, "# the base of the chain") else try std.fmt.allocPrint(allocator, "import m{d}", .{module - 1});
+    defer allocator.free(opening);
+    const call = if (module == 0) try allocator.dupe(u8, "n") else try std.fmt.allocPrint(allocator, "m{d}.f(n)", .{module - 1});
+    defer allocator.free(call);
+    const default_body = try std.fmt.allocPrint(allocator, "return {s} + 1", .{call});
+    defer allocator.free(default_body);
+    return std.fmt.allocPrint(allocator,
+        \\module m{d}
+        \\{s}
+        \\
+        \\
+        \\public def f(n: int) -> int:
+        \\    {s}
+        \\
+        \\
+        \\public def unused(n: int) -> int:
+        \\    return n * 2
+        \\
+        \\
+        \\public def test_m{d}() -> bool:
+        \\    return f(1) == {d}
+        \\
+    , .{ module, opening, if (body.len != 0) body else default_body, module, module + 2 });
+}
+const scale_main =
+    \\module main
+    \\import m3
+    \\
+    \\
+    \\def main() -> int:
+    \\    return 0
+    \\
+;
+/// Where one scale fixture keeps its entry, cache and child trace.
+const ScalePaths = struct { entry: []const u8, cache: []const u8, trace: []const u8 };
+/// A four-module chain whose test in module K depends on modules 0..K.
+fn scaleProject(temp: *std.testing.TmpDir) !ScalePaths {
+    try writeProjectFile(temp, "main.my", scale_main);
+    for (0..4) |module| try scaleEdit(temp, module, "");
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    return .{
+        .entry = try std.fs.path.join(testing.allocator, &.{ root, "main.my" }),
+        .cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" }),
+        .trace = try std.fs.path.join(testing.allocator, &.{ root, "trace.log" }),
+    };
+}
+fn freeScalePaths(paths: ScalePaths) void {
+    testing.allocator.free(paths.entry);
+    testing.allocator.free(paths.cache);
+    testing.allocator.free(paths.trace);
+}
+/// Rewrite module `module` of the chain with `body` as `f`'s statement.
+fn scaleEdit(temp: *std.testing.TmpDir, module: usize, body: []const u8) !void {
+    const text = try scaleModule(testing.allocator, module, body);
+    defer testing.allocator.free(text);
+    const name = try std.fmt.allocPrint(testing.allocator, "m{d}.my", .{module});
+    defer testing.allocator.free(name);
+    try writeProjectFile(temp, name, text);
+}
+/// Run the chain's tests once with a fresh trace; the caller frees the result.
+fn scaleRun(paths: ScalePaths, extra: []const []const u8) !std.process.RunResult {
+    c4TraceReset(paths.trace);
+    return c4Invoke(paths.entry, null, paths.cache, paths.trace, extra);
+}
+/// Whether any stored checked-facts graph under `cache` mentions `needle`.
+fn storedGraphMentions(cache: []const u8, needle: []const u8) !bool {
+    const directory_path = try std.fs.path.join(testing.allocator, &.{ cache, "graphs" });
+    defer testing.allocator.free(directory_path);
+    var directory = try std.Io.Dir.cwd().openDir(testing.io, directory_path, .{ .iterate = true });
+    defer directory.close(testing.io);
+    var iterator = directory.iterate();
+    while (try iterator.next(testing.io)) |entry| {
+        if (entry.kind != .file) continue;
+        const bytes = try directory.readFileAlloc(testing.io, entry.name, testing.allocator, .limited(64 << 20));
+        defer testing.allocator.free(bytes);
+        if (std.mem.indexOf(u8, bytes, needle) != null) return true;
+    }
+    return false;
+}
+
+// spec: NATIVE-TEST-SCALE-1
+// spec: NATIVE-TEST-FACTS-2
+// spec-case: NATIVE-TEST-STABLE-1
+// spec-case: NATIVE-TEST-INTERFACES-1
+// spec-case: NATIVE-TEST-RUNNER-1
+// spec: NATIVE-TEST-SUMMARY-1
+test "after a body edit in module k exactly the tests that depend on k are rebuilt and re-run, and an unchanged rerun only replays a verdict" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const paths = try scaleProject(&temp);
+    defer freeScalePaths(paths);
+
+    const cold = try scaleRun(paths, &.{});
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cold.term);
+    try testing.expectEqual(@as(usize, 4), (try c4Counts(cold.stdout)).executed);
+    // The facts cover the tests' closure only: no untested function.
+    try testing.expect(try storedGraphMentions(paths.cache, "m0::f"));
+    try testing.expect(!try storedGraphMentions(paths.cache, "m2::unused"));
+
+    // Unchanged: one validity child, answered by the verdict the session recorded.
+    const unchanged = try scaleRun(paths, &.{});
+    defer testing.allocator.free(unchanged.stdout);
+    defer testing.allocator.free(unchanged.stderr);
+    const idle = try c4Counts(unchanged.stdout);
+    try testing.expectEqual(@as(usize, 0), idle.executed);
+    try testing.expectEqual(@as(usize, 4), idle.cached);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "check-project"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "list-interfaces"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "native-test-compile"));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, " build "));
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "native-test-runner"));
+    try testing.expectEqualStrings("skipped", try c4WorkStatus(try c4CommandWorkLine(unchanged.stderr, "check-project"), "checked_bodies"));
+
+    // A body edit in module 1 re-runs exactly the tests of modules 1, 2 and 3.
+    try scaleEdit(&temp, 1, "return m0.f(n) + 2 - 1");
+    const edited = try scaleRun(paths, &.{});
+    defer testing.allocator.free(edited.stdout);
+    defer testing.allocator.free(edited.stderr);
+    const rerun = try c4Counts(edited.stdout);
+    try testing.expectEqual(@as(usize, 3), rerun.executed);
+    try testing.expectEqual(@as(usize, 1), rerun.cached);
+    try testing.expectEqual(@as(usize, 0), rerun.failed);
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, "native-test-compile"));
+    try testing.expectEqual(@as(usize, 1), try c4TraceCount(paths.trace, " build "));
+    // The harness the cold run compiled is reused.
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "native-test-runner"));
+    // Lowered: the three tests and the four `f` they reach, nothing else.
+    const session = try c4CommandWorkLine(edited.stderr, "native-test-compile");
+    // The session's check is served by the summaries the cold run published:
+    // every body is checked for the tree, and no retained checked tree is read.
+    try testing.expectEqual(@as(usize, 0), try c4WorkCount(session, "checked_bodies", "reused"));
+    try testing.expect(try c4WorkCount(session, "checked_bodies", "performed") > 0);
+    try testing.expectEqual(@as(usize, 7), try c4WorkCount(session, "lowered_functions", "performed"));
+    // Emitted fragments the cold run stored answer again, which a snapshot at
+    // a fresh path on every run never allowed.
+    try testing.expect(try c4WorkCount(session, "emitted_fragments", "reused") > 0);
+    try testing.expect(try c4WorkCount(session, "emitted_fragments", "performed") < 7);
+
+    // An edit that no test reaches builds nothing and runs nothing.
+    const original = try scaleModule(testing.allocator, 2, "");
+    defer testing.allocator.free(original);
+    const untouched = try std.mem.replaceOwned(u8, testing.allocator, original, "return n * 2", "return n * 3");
+    defer testing.allocator.free(untouched);
+    try writeProjectFile(&temp, "m2.my", untouched);
+    const unreached = try scaleRun(paths, &.{});
+    defer testing.allocator.free(unreached.stdout);
+    defer testing.allocator.free(unreached.stderr);
+    const quiet = try c4Counts(unreached.stdout);
+    try testing.expectEqual(@as(usize, 0), quiet.executed);
+    try testing.expectEqual(@as(usize, 4), quiet.cached);
+    try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, " build "));
+}
+
+// spec-case: NATIVE-TEST-SCALE-1
+// spec-case: NATIVE-TEST-PARALLEL-1
+test "an edit that makes dependent tests trap reports the edited line, re-runs the failures, and a filter still selects one test" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const paths = try scaleProject(&temp);
+    defer freeScalePaths(paths);
+    const cold = try scaleRun(paths, &.{});
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cold.term);
+
+    // `f` in module 1 now divides by zero on line 6 of m1.my.
+    try scaleEdit(&temp, 1, "return m0.f(n) // 0");
+    const broken = try scaleRun(paths, &.{});
+    defer testing.allocator.free(broken.stdout);
+    defer testing.allocator.free(broken.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, broken.term);
+    const failing = try c4Counts(broken.stdout);
+    try testing.expectEqual(@as(usize, 3), failing.failed);
+    try testing.expectEqual(@as(usize, 1), failing.cached);
+    try testing.expect(std.mem.indexOf(u8, broken.stdout, "R_DIVISION_BY_ZERO") != null);
+    try testing.expect(std.mem.indexOf(u8, broken.stdout, "in m1::f at m1.my:6:") != null);
+    // A failure is never a receipt: the unchanged rerun executes it again.
+    const again = try scaleRun(paths, &.{});
+    defer testing.allocator.free(again.stdout);
+    defer testing.allocator.free(again.stderr);
+    const repeated = try c4Counts(again.stdout);
+    try testing.expectEqual(@as(usize, 3), repeated.executed);
+    try testing.expectEqual(@as(usize, 3), repeated.failed);
+    // A filter still narrows the selection to one case.
+    const filtered = try scaleRun(paths, &.{ "--filter", "test_m2" });
+    defer testing.allocator.free(filtered.stdout);
+    defer testing.allocator.free(filtered.stderr);
+    const one = try c4Counts(filtered.stdout);
+    try testing.expectEqual(@as(usize, 1), one.executed + one.cached);
+    try testing.expectEqual(@as(usize, 1), one.failed);
+    try testing.expect(std.mem.indexOf(u8, filtered.stdout, "m3::test_m3") == null);
+}
+
 // spec: PURE-SKIP-1
 test "PURE-SKIP-1 pure failure outcome replays without executing and is never masked" {
     var temp = testing.tmpDir(.{});

@@ -93,7 +93,8 @@ pub const usage = "usage: mylang test <entry.my|directory> [--filter SUBSTRING|G
     "  --mode Debug|ReleaseFast\n" ++
     "  --max-steps N --max-frames N --max-calls N --timeout-ms N\n" ++
     "  --max-memory BYTES  per-test byte ceiling (K/M/G suffixes; default 512M)\n" ++
-    "  --jobs N  directory fan-out width (default: cores, capped by free memory)\n" ++
+    "  --jobs N  test processes run at once, and a directory's fan-out width\n" ++
+    "    (default: cores, capped by free memory)\n" ++
     "  bench: --bench PATTERN [--bench-only] [--bench-output FILE]\n" ++
     "         [--bench-baseline FILE] [--bench-policy FILE] [--bench-profile ID]\n" ++
     "         [--bench-warmup N] [--bench-batches N] [--bench-batch-ms N]\n" ++
