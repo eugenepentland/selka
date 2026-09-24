@@ -42,8 +42,10 @@ interpreter that used to sit beside it was removed on 2026-09-14; bytecode
 survives only as the internal IR QBE consumes. The backend supports the current
 typed operations, managed collections, resources and embedding APIs on Linux
 x86-64. Native tests prepare checked facts without QBE lowering and emit only
-the selected tests' reachable closure; ordinary whole-project builds still use
-the whole-program lowering path, and incremental native linking remains open.
+the selected tests' reachable closure. Project builds reuse every function
+whose QBE unit's inputs did not change and skip an unchanged build outright
+([incremental frontend](docs/tooling/native-build.md#incremental-frontend));
+incremental native linking remains open.
 [The plan](docs/plan.md#1-project-direction) tracks the remaining work.
 
 Typed host-library calls execute through explicit registrations. The

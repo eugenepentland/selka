@@ -350,6 +350,53 @@ combination is supported and measured. A build with neither ceiling is the one
 that also drops the frame record, and giving such a binary `--max-steps=` in
 `MYLANG_OPTIONS` still reports `R_NO_STEP_ACCOUNTING` rather than ignoring it.
 
+## Incremental frontend
+
+A project build no longer lowers and renders the whole program when little
+changed. Four mechanisms stack; each is a cache the next build consults before
+doing the work.
+
+- **Unchanged build (`BUILD-NOOP-1`).** Beside the output the driver records a
+  receipt: a key over the frontend's manifest, the build environment and every
+  flag, plus the output file's inode, size and modification time. A build whose
+  key matches and whose output is untouched returns before parsing the manifest,
+  staging objects or linking. `--run`, `--report`, a provider and explicit link
+  inputs never take this shortcut.
+- **Unchanged project (`EMIT-REPLAY-1`).** The frontend child remembers its last
+  manifest and warnings per entry and configuration. An identical project replays
+  them after loading its sources, with nothing checked, lowered or emitted.
+- **Unchanged functions (`QBE-FRAGMENT-REUSE-1`).** Each function's QBE unit is
+  keyed by what its text depends on: its own lowered body, the signature and
+  policy of every function it names, the schema of every record it reaches, the
+  whole-program switches, and whether each callee can allocate. Records and
+  functions enter the key by name, and source positions not at all, so an edit
+  that shifts ids or lines elsewhere leaves the key alone. An unchanged key
+  answers from the fragment store under the frontend cache
+  (`<cache>/frontend/fragments`) without lowering the unit to QBE. The emitted
+  manifest is byte-identical to a fresh emission.
+- **Lean manifests.** `build --project`, `run`, `run-project` and `mylang test`
+  hand the driver each unit's digest and stored path instead of its text, and
+  its source positions as one compact string (`BUILD-POSITIONS-1`). Objects are
+  named by that digest, so the driver reads a unit's text only to build an
+  object that is missing, one member at a time (`BUILD-MEMORY-1`).
+
+The fragment store and the replay slots are partitioned by compiler identity
+and are removed with the rest of the cache; `--no-cache` bypasses all four.
+`work-report-v1` counts a unit answered from the store as a reused, not an
+emitted, fragment.
+
+```console
+$ mylang build main.my --project -o app --timings=json
+{"version":"phase-timings-v1",...,"name":"frontend","duration_ns":95000000,...}
+{"version":"phase-timings-v1",...,"name":"codegen","duration_ns":0,...}
+{"version":"phase-timings-v1",...,"name":"link","duration_ns":0,...}
+```
+
+On the generated 50,000-line ladder project (120 modules, 4,681 functions), an
+unchanged build takes 0.1 s and a one-line body edit 1.2 s, of which about
+0.55 s is the edited project's check. At 204,000 lines a cold build finishes in
+26 s under the default 8 GiB compiler ceiling (3.5 GB peak, in the frontend).
+
 ## Object cache and link
 
 For project entries, `mylang run` also caches the emitted manifest after validating
