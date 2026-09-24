@@ -176,6 +176,14 @@ pub fn metadataDigest(units: []const std.json.Value) [32]u8 {
     hash.update("qbe-batch-metadata-digest-v1");
     for (units) |unit| {
         digestText(&hash, v.text(v.get(unit, "symbol")));
+        // EMIT-META-1: a lean unit's name, positions, messages and inline
+        // frames are its stored metadata record, which its digest names.
+        const stored = v.get(unit, lean.meta_key);
+        if (stored == .string) {
+            digestText(&hash, "stored");
+            digestText(&hash, stored.string);
+            continue;
+        }
         digestText(&hash, v.text(v.get(unit, "name")));
         const compact = v.get(unit, "positions");
         if (compact == .string) {

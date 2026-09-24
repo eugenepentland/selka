@@ -66,16 +66,21 @@ const Unit = struct {
     inlines: []const InlineFrame,
     @"export": ?exports.Export = null,
     /// Set when a lean manifest names this unit's stored text instead of
-    /// carrying it: the text's digest, its path and the lines the native build
-    /// reads without compiling it (`QBE-FRAGMENT-REUSE-1`).
+    /// carrying it: the text's digest, the lines the native build reads
+    /// without compiling it and the digest of its stored metadata
+    /// (`QBE-FRAGMENT-REUSE-1`, `EMIT-META-1`).
     stored: ?Stored = null,
+    /// An executable build's manifest: no export or test-dependency facts.
+    executable: bool = false,
 
-    /// The manifest shape of one unit: its text inline, or, for a stored unit,
-    /// `il_digest`, `il_file` and `il_facts` in its place.
+    /// The manifest shape of one unit: its text and metadata inline, or, for a
+    /// stored unit, `il_digest`, `il_facts` and `meta_digest` in their place.
     pub fn jsonStringify(self: Unit, jw: anytype) !void {
         try jw.beginObject();
-        try jw.objectField("test_dependencies");
-        try jw.write(self.test_dependencies);
+        if (!self.executable) {
+            try jw.objectField("test_dependencies");
+            try jw.write(self.test_dependencies);
+        }
         try jw.objectField("name");
         try jw.write(self.name);
         try jw.objectField("symbol");
@@ -83,11 +88,10 @@ const Unit = struct {
         if (self.stored) |stored| {
             try jw.objectField("il_digest");
             try jw.write(stored.digest);
-            try jw.objectField("il_file");
-            try jw.write(stored.file);
             try jw.objectField("il_facts");
             try jw.write(stored.facts);
-            try writeCompactPositions(self, jw);
+            try jw.objectField("meta_digest");
+            try jw.write(stored.meta);
         } else {
             try jw.objectField("il");
             try jw.write(self.il);
@@ -95,16 +99,37 @@ const Unit = struct {
             try jw.write(self.locations);
             try jw.objectField("messages");
             try jw.write(self.messages);
+            try jw.objectField("inlines");
+            try jw.write(self.inlines);
         }
-        try jw.objectField("inlines");
-        try jw.write(self.inlines);
-        try jw.objectField("export");
-        try jw.write(self.@"export");
+        if (!self.executable) {
+            try jw.objectField("export");
+            try jw.write(self.@"export");
+        }
         try jw.endObject();
     }
 };
-/// A unit text kept in the fragment store: hex digest, path and build facts.
-const Stored = struct { digest: []const u8, file: []const u8, facts: []const u8 };
+/// A unit text kept in the fragment store: its hex digest and build facts,
+/// and the hex digest of its stored metadata once `metaPass` has named it.
+const Stored = struct { digest: []const u8, facts: []const u8, meta: []const u8 = "" };
+
+/// One unit's stored metadata (`EMIT-META-1`): its name, its positions and
+/// assertion messages in the compact spelling (`BUILD-POSITIONS-1`) and its
+/// inline frames — everything the build's function tables read besides the
+/// unit's symbol.
+const MetaRecord = struct {
+    unit: Unit,
+    /// The record as one JSON object.
+    pub fn jsonStringify(self: MetaRecord, jw: *std.json.Stringify) std.json.Stringify.Error!void {
+        try jw.beginObject();
+        try jw.objectField("name");
+        try jw.write(self.unit.name);
+        try writeCompactPositions(self.unit, jw);
+        try jw.objectField("inlines");
+        try jw.write(self.unit.inlines);
+        try jw.endObject();
+    }
+};
 
 /// A lean unit's per-instruction positions and assertion messages
 /// (`BUILD-POSITIONS-1`): `paths` lists each distinct source path once, in
@@ -184,26 +209,25 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
     const a = arena.allocator();
     var layouts = native_types.Catalog.initRecords(a, program.records) catch |err| return layoutError(err);
     defer layouts.deinit();
+    const shape: Shape = if (interface.reuse) |configured| .{ .lean = configured.lean, .executable = configured.executable } else .{};
     const units = try a.alloc(Unit, program.functions.len);
-    const exported = try exports.rootMask(a, program, interface.roots);
+    // An executable build reads no export facts, so it marks no roots.
+    const exported = try exports.rootMask(a, program, if (shape.executable) &.{} else interface.roots);
     for (program.functions, units, 0..) |function, *unit, index| {
         const emit = selected == null or selected.?[index];
-        const locations = try a.alloc(Location, if (emit) function.scope.instructions.len else 0);
-        const messages = try a.alloc([]const u8, if (emit) function.scope.instructions.len else 0);
-        if (emit) for (function.scope.instructions, locations, messages) |instruction, *location, *message| {
-            const value = src.locate(instruction.span.start);
-            location.* = .{ .path = value.path, .line = value.line, .column = value.column };
-            message.* = if (instruction.op == .assert_true) instruction.op.assert_true else "";
-        };
         unit.* = .{
             .name = function.name,
             .symbol = try symbol(a, function.name),
             .il = "",
-            .locations = locations,
-            .messages = messages,
-            .inlines = if (emit) try inlineFrames(a, program, function.scope.instructions) else &.{},
+            .locations = &.{},
+            .messages = &.{},
+            .inlines = &.{},
             .@"export" = if (emit) try exports.describeMarked(a, program, index, exported) else null,
+            .executable = shape.executable,
         };
+        // A lean unit's metadata is read from the store, or computed once
+        // its key misses, by `metaPass` (EMIT-META-1).
+        if (emit and !shape.lean) try fillPositions(a, program, src, index, unit);
     }
     const arenas = arena_lower.present(program);
     // A `str` conversion names only its target type, so the renderers a program
@@ -232,6 +256,7 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
     const allocates = try firstPass(pass, &reuse);
     pass.pure = try allocateAnalysis(a, program, allocates);
     try secondPass(pass, &reuse);
+    if (shape.lean) try metaPass(pass, &reuse, src);
     if (interface.reuse) |configured| configured.store.flush();
     const entry_function = program.functions[@backingInt(program.main)];
     const entry_parameters = try a.alloc([]const u8, entry_function.signature.parameter_count);
@@ -245,8 +270,9 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
     // A program that neither prints nor renders a value into text carries no
     // renderers, and copies nothing.
     const runtime_data = if (renderers.len == 0) descriptors else try std.mem.concat(a, u8, &.{ descriptors, renderers });
-    const wire_types = (qbe_wire.describe(a, &layouts) catch |err| return layoutError(err)).types;
-    const codecs = @import("qbe_codecs.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
+    // Wire types and codecs serve only a library's embedding API.
+    const wire_types = if (shape.executable) null else (qbe_wire.describe(a, &layouts) catch |err| return layoutError(err)).types;
+    const codecs = if (shape.executable) null else @import("qbe_codecs.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
     var text_format = false;
     for (program.functions) |function| for (function.scope.instructions) |instruction| {
         if (needsTextRuntime(program, instruction.op)) text_format = true;
@@ -265,6 +291,8 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
         .runtime_data = runtime_data,
         .version = "qbe-units-v1",
         .abi = test_dependencies.abi,
+        // Where a lean manifest's stored texts and metadata live, by digest.
+        .store = if (shape.lean) try interface.reuse.?.store.textRoot() else null,
         .functions = emitted,
         .entry = if (selected == null) units[@backingInt(program.main)].symbol else "",
     }, .{});
@@ -582,6 +610,8 @@ const Reuse = struct {
     symbols: std.StringHashMapUnmanaged(void),
     writes: []?[]const bool,
     targets: ?fragments.Digest = null,
+    /// Each emitted function's second-pass key, which its metadata key extends.
+    finals: []fragments.Digest,
 
     fn init(a: std.mem.Allocator, pass: EmitPass, configured: ?fragments.Reuse) GenerateError!Reuse {
         var symbols: std.StringHashMapUnmanaged(void) = .empty;
@@ -598,6 +628,7 @@ const Reuse = struct {
             .local = local,
             .symbols = symbols,
             .writes = writes,
+            .finals = try a.alloc(fragments.Digest, pass.program.functions.len),
         };
     }
     /// Which parameters of function `index` its own body writes: the one fact
@@ -668,10 +699,11 @@ fn secondPass(pass: EmitPass, reuse: *Reuse) GenerateError!void {
         if (pass.selected != null and !pass.selected.?[index]) continue;
         defer _ = scratch.reset(.retain_capacity);
         const key = if (reuse.configured != null) try reuse.final(a, program, index, pass.pure) else undefined;
+        reuse.finals[index] = key;
         if (reuse.configured) |configured| if (try configured.store.unit(key)) |answer| {
             unit.test_dependencies = answer.dependencies;
             if (configured.lean) {
-                unit.stored = try storedUnit(a, configured.store, answer);
+                unit.stored = try storedUnit(a, answer);
             } else {
                 unit.il = configured.store.read(answer.il) catch |err| switch (err) {
                     error.OutOfMemory => return error.OutOfMemory,
@@ -687,7 +719,7 @@ fn secondPass(pass: EmitPass, reuse: *Reuse) GenerateError!void {
         if (reuse.configured) |configured| {
             const answer = try configured.store.remember(key, emitted.text, unit.test_dependencies.?);
             if (configured.lean) {
-                unit.stored = try storedUnit(a, configured.store, answer);
+                unit.stored = try storedUnit(a, answer);
                 continue;
             }
         }
@@ -706,10 +738,115 @@ fn flagsOf(pass: EmitPass, index: usize) fragments.Flags {
     };
 }
 
-/// The lean manifest fields of one stored unit.
-fn storedUnit(a: std.mem.Allocator, store: *fragments.Store, answer: fragments.Unit) GenerateError!Stored {
-    return .{ .digest = try a.dupe(u8, &std.fmt.bytesToHex(answer.il, .lower)), .file = try store.path(answer.il), .facts = answer.facts };
+/// The lean manifest fields of one stored unit. Its text's path is the
+/// manifest's `store` joined with the digest, so no unit spells it.
+fn storedUnit(a: std.mem.Allocator, answer: fragments.Unit) GenerateError!Stored {
+    return .{ .digest = try a.dupe(u8, &std.fmt.bytesToHex(answer.il, .lower)), .facts = answer.facts };
 }
+
+/// Which manifest one emission writes: `lean` names stored texts and metadata
+/// by digest, and `executable` leaves out what only a library build reads.
+const Shape = struct { lean: bool = false, executable: bool = false };
+
+/// Compute one unit's per-instruction positions and assertion messages and
+/// its inline frames into `a`.
+fn fillPositions(a: std.mem.Allocator, program: bytecode.Program, src: Source, index: usize, unit: *Unit) GenerateError!void {
+    const code = program.functions[index].scope.instructions;
+    const locations = try a.alloc(Location, code.len);
+    const messages = try a.alloc([]const u8, code.len);
+    for (code, locations, messages) |instruction, *location, *message| {
+        const value = src.locate(instruction.span.start);
+        location.* = .{ .path = value.path, .line = value.line, .column = value.column };
+        message.* = if (instruction.op == .assert_true) instruction.op.assert_true else "";
+    }
+    unit.locations = locations;
+    unit.messages = messages;
+    unit.inlines = try inlineFrames(a, program, code);
+}
+
+/// EMIT-META-1: name every emitted lean unit's metadata by the digest of its
+/// stored text. The metadata key (`fragments.MetaKey`) is the unit's
+/// second-pass key plus the digest of each source its instructions' positions
+/// fall in, so a unit whose function and sources are unchanged reads its digest
+/// from the store without locating a single instruction; only a miss computes
+/// positions, messages and inline frames, renders them and stores the text.
+fn metaPass(pass: EmitPass, reuse: *Reuse, src: Source) GenerateError!void {
+    const store = reuse.configured.?.store;
+    var sources: SourceDigests = try .init(pass.allocator, src);
+    var scratch = std.heap.ArenaAllocator.init(pass.backing);
+    defer scratch.deinit();
+    for (pass.units, 0..) |*unit, index| {
+        if (pass.selected != null and !pass.selected.?[index]) continue;
+        defer _ = scratch.reset(.retain_capacity);
+        var key: fragments.MetaKey = .init(reuse.finals[index]);
+        sources.fold(&key, pass.program.functions[index].scope.instructions);
+        const identity = key.finish();
+        const digest = try store.meta(identity) orelse stored: {
+            var positioned = unit.*;
+            try fillPositions(scratch.allocator(), pass.program, src, index, &positioned);
+            const text = try std.json.Stringify.valueAlloc(scratch.allocator(), MetaRecord{ .unit = positioned }, .{});
+            break :stored try store.rememberMeta(identity, text);
+        };
+        unit.stored.?.meta = try pass.allocator.dupe(u8, &std.fmt.bytesToHex(digest, .lower));
+    }
+}
+
+/// The digest of each source of a merged program, computed the first time a
+/// unit's positions fall in it, and a stamp per source so one unit folds each
+/// source into its metadata key once, in first-use order.
+const SourceDigests = struct {
+    src: Source,
+    digests: []?fragments.Digest,
+    stamps: []usize,
+    stamp: usize = 0,
+
+    fn init(a: std.mem.Allocator, src: Source) GenerateError!SourceDigests {
+        const count = @max(1, src.origins.len);
+        const digests = try a.alloc(?fragments.Digest, count);
+        errdefer a.free(digests);
+        @memset(digests, null);
+        const stamps = try a.alloc(usize, count);
+        @memset(stamps, 0);
+        return .{ .src = src, .digests = digests, .stamps = stamps };
+    }
+    /// Add to `key` every source `code`'s positions fall in, in first-use order.
+    fn fold(self: *SourceDigests, key: *fragments.MetaKey, code: []const bytecode.Instruction) void {
+        self.stamp += 1;
+        var current: ?usize = null;
+        for (code) |instruction| {
+            const origin = self.originOf(instruction.span.start, current);
+            current = origin;
+            if (self.stamps[origin] == self.stamp) continue;
+            self.stamps[origin] = self.stamp;
+            key.source(self.digest(origin));
+        }
+    }
+    /// The index of the source `offset` falls in, as `Source.locate` finds
+    /// it: the last one starting at or before it. `hint` is tried first,
+    /// since consecutive instructions almost always share a source.
+    fn originOf(self: *const SourceDigests, offset: usize, hint: ?usize) usize {
+        const origins = self.src.origins;
+        if (origins.len == 0) return 0;
+        if (hint) |at| {
+            const next = if (at + 1 < origins.len) origins[at + 1].start else std.math.maxInt(usize);
+            if (origins[at].start <= offset and offset < next) return at;
+        }
+        var low: usize = 0;
+        var high = origins.len;
+        while (low + 1 < high) {
+            const mid = low + (high - low) / 2;
+            if (origins[mid].start <= offset) low = mid else high = mid;
+        }
+        return low;
+    }
+    fn digest(self: *SourceDigests, origin: usize) fragments.Digest {
+        if (self.digests[origin]) |known| return known;
+        const source = if (self.src.origins.len == 0) self.src else self.src.origins[origin].original;
+        const computed = fragments.sourceDigest(source.path, source.bytes);
+        self.digests[origin] = computed;
+        return computed;
+    }
+};
 
 /// Whether `native_render` reads this function's operand stacks: only a
 /// conversion to a managed text record names a type it cannot see otherwise

@@ -814,6 +814,9 @@ const Parsed = struct {
     /// Internal `--lean-manifest`: name each unit's stored text by digest and
     /// path instead of inlining it, and replay an unchanged project's manifest.
     lean_manifest: bool = false,
+    /// Internal `--lean-manifest=executable`: the lean manifest of an
+    /// executable, without the facts only a library build reads.
+    executable_manifest: bool = false,
     /// `--unchecked` (`run`) and internal `--drop-safety-checks` (the emitters):
     /// omit the overflow, narrowing-cast and index-bounds guards, and with no
     /// ceiling also the frame record and its position stores.
@@ -972,6 +975,7 @@ const ArgumentParser = struct {
     drop_step_checks: bool = false,
     drop_frame_checks: bool = false,
     lean_manifest: bool = false,
+    executable_manifest: bool = false,
     unchecked: bool = false,
     saw_min: bool = false,
     saw_population: bool = false,
@@ -1145,10 +1149,15 @@ const ArgumentParser = struct {
     /// Internal `--lean-manifest` on `emit-project-qbe`: the native build driver
     /// reads unit texts from the fragment store instead of the manifest
     /// (`QBE-FRAGMENT-REUSE-1`).
+    /// `--lean-manifest=executable` is the same for an executable build, whose
+    /// manifest leaves out the export, schema, wire, codec and test-dependency
+    /// facts only a library build reads (`EMIT-META-1`).
     fn leanManifestOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
-        if (!std.mem.eql(u8, arg, "--lean-manifest")) return false;
+        const executable = std.mem.eql(u8, arg, "--lean-manifest=executable");
+        if (!executable and !std.mem.eql(u8, arg, "--lean-manifest")) return false;
         if (self.command != .@"emit-project-qbe" or self.lean_manifest) return error.Usage;
         self.lean_manifest = true;
+        self.executable_manifest = executable;
         return true;
     }
 
@@ -1361,6 +1370,7 @@ const ArgumentParser = struct {
             .drop_step_checks = self.drop_step_checks,
             .drop_frame_checks = self.drop_frame_checks,
             .lean_manifest = self.lean_manifest,
+            .executable_manifest = self.executable_manifest,
             .unchecked = self.unchecked,
             .saw_steps = self.saw_steps,
             .saw_frames = self.saw_frames,
@@ -2722,7 +2732,7 @@ fn manifestReplayTicket(parsed: Parsed, diagnostics: diagnostic_output.Format, p
     var slot = std.crypto.hash.Blake3.init(.{});
     slot.update("emit-project-qbe-replay-v2");
     replayFrame(&slot, parsed.path);
-    const switches = [_]bool{ parsed.drop_debug, parsed.drop_step_checks, parsed.drop_frame_checks, parsed.unchecked, parsed.lean_manifest };
+    const switches = [_]bool{ parsed.drop_debug, parsed.drop_step_checks, parsed.drop_frame_checks, parsed.unchecked, parsed.lean_manifest, parsed.executable_manifest };
     for (switches) |value| slot.update(&.{@intFromBool(value)});
     slot.update(&.{@backingInt(diagnostics)});
     var key = slot;
@@ -2796,6 +2806,13 @@ fn leanEmission(parsed: Parsed) bool {
     return parsed.lean_manifest or parsed.command == .run or parsed.command == .@"run-project" or parsed.command == .@"native-test-compile";
 }
 
+/// Whether an emission is for an executable's native build, which reads no
+/// export, schema, wire, codec or test-dependency facts: `run`,
+/// `run-project`, and `emit-project-qbe --lean-manifest=executable`.
+fn executableEmission(parsed: Parsed) bool {
+    return parsed.executable_manifest or parsed.command == .run or parsed.command == .@"run-project";
+}
+
 /// Whether a command lowers the checked project to QBE units.
 fn emitsNative(command: Command) bool {
     return switch (command) {
@@ -2817,7 +2834,7 @@ fn openFragments(init: Context, parsed: Parsed, storage: *language.qbe_fragments
     const selective = parsed.select_file != null or parsed.command == .@"native-test-compile";
     const label = try std.fmt.allocPrint(a, "{s}\x00{s}", .{ entry, if (selective) "selected" else "whole" });
     storage.* = try language.qbe_fragments.Store.open(a, init.io, root, &build_identity, label);
-    return .{ .store = storage, .lean = leanEmission(parsed) };
+    return .{ .store = storage, .lean = leanEmission(parsed), .executable = executableEmission(parsed) };
 }
 
 /// Resolve the baseline file for invalidation observations.  The path is

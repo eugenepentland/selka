@@ -1,8 +1,11 @@
 //! One manifest unit's text, digest and build facts, whether the unit carries
 //! its QBE text inline (`il`) or, in a lean manifest, names the text the
-//! compiler stored in its fragment store (`il_digest`, `il_file`, `il_facts`;
-//! `QBE-FRAGMENT-REUSE-1`). The driver reads a stored text only when the object
-//! it names has to be built, so an unchanged unit costs a digest, not its text.
+//! compiler stored in its fragment store (`il_digest`, `il_facts`, and either
+//! the manifest's `store` directory or an older unit's own `il_file`;
+//! `QBE-FRAGMENT-REUSE-1`). A lean unit names its metadata — positions,
+//! assertion messages, inline frames — the same way (`meta_digest`,
+//! `EMIT-META-1`). The driver reads a stored text only when the object it
+//! names has to be built, so an unchanged unit costs a digest, not its text.
 const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
@@ -14,14 +17,24 @@ const inline_key = "il";
 const digest_key = "il_digest";
 const file_key = "il_file";
 const facts_key = "il_facts";
+/// The member naming a lean unit's stored metadata.
+pub const meta_key = "meta_digest";
 
 /// Whether a unit carries its text, or a complete stored reference to it.
 pub fn wellFormed(unit: std.json.Value) bool {
     if (v.get(unit, inline_key) == .string) return true;
-    const named = v.get(unit, digest_key);
+    if (!hexDigest(v.get(unit, digest_key))) return false;
+    const meta = v.get(unit, meta_key);
+    if (meta != .null and !hexDigest(meta)) return false;
+    const path = v.get(unit, file_key);
+    return (path == .null or path == .string) and v.get(unit, facts_key) == .string;
+}
+
+/// Whether a member is a lowercase hex BLAKE3 digest.
+fn hexDigest(named: std.json.Value) bool {
     if (named != .string or named.string.len != 64) return false;
     for (named.string) |byte| if (!std.ascii.isDigit(byte) and (byte < 'a' or byte > 'f')) return false;
-    return v.get(unit, file_key) == .string and v.get(unit, facts_key) == .string;
+    return true;
 }
 
 /// The lines of the unit text the driver reads without compiling it: the whole
@@ -43,21 +56,48 @@ pub fn digest(allocator: std.mem.Allocator, unit: std.json.Value) error{OutOfMem
     return allocator.dupe(u8, &std.fmt.bytesToHex(hash, .lower));
 }
 
+/// Where a stored unit's text lives: its own `il_file`, or the manifest's
+/// `store` directory joined with its digest.
+pub fn file(allocator: std.mem.Allocator, store: []const u8, unit: std.json.Value) error{OutOfMemory}![]const u8 {
+    const named = v.get(unit, file_key);
+    if (named == .string) return named.string;
+    return std.fs.path.join(allocator, &.{ store, v.text(v.get(unit, digest_key)) });
+}
+
 /// The unit text: inline, or read from the fragment store and checked against
 /// its digest, so a damaged or replaced file can never build a wrong object.
-pub fn text(context: fs.Context, unit: std.json.Value) Error![]const u8 {
+/// `store` is the manifest's `store` directory.
+pub fn text(context: fs.Context, store: []const u8, unit: std.json.Value) Error![]const u8 {
     const il = v.get(unit, inline_key);
     if (il == .string) return il.string;
-    const bytes = context.read(v.text(v.get(unit, file_key))) catch |err| switch (err) {
-        error.OutOfMemory => return error.OutOfMemory,
-        else => return missing(context, unit),
-    };
+    const path = try file(context.allocator, store, unit);
+    return verified(context, path, v.text(v.get(unit, digest_key))) orelse return missing(context, unit, path);
+}
+
+/// The bytes of `path` when they hash to `expected`, else null.
+fn verified(context: fs.Context, path: []const u8, expected: []const u8) ?[]const u8 {
+    const bytes = context.read(path) catch return null;
     var hash: [32]u8 = undefined;
     std.crypto.hash.Blake3.hash(bytes, &hash, .{});
-    if (!std.mem.eql(u8, &std.fmt.bytesToHex(hash, .lower), v.text(v.get(unit, digest_key)))) return missing(context, unit);
+    if (!std.mem.eql(u8, &std.fmt.bytesToHex(hash, .lower), expected)) return null;
     return bytes;
 }
 
+/// EMIT-META-1: the unit the build's function tables read — its symbol, name,
+/// positions, assertion messages and inline frames. A unit that carries them
+/// is itself; a lean unit's are its stored metadata record, read from `store`,
+/// checked against `meta_digest` and given the unit's symbol and marker lines
+/// (which the literal and frame-map scans of the same C unit read).
+pub fn tables(context: fs.Context, store: []const u8, unit: std.json.Value) Error!std.json.Value {
+    const named = v.get(unit, meta_key);
+    if (named != .string) return unit;
+    const path = try std.fs.path.join(context.allocator, &.{ store, named.string });
+    const bytes = verified(context, path, named.string) orelse return missing(context, unit, path);
+    var record = std.json.parseFromSliceLeaky(std.json.Value, context.allocator, bytes, .{}) catch return missing(context, unit, path);
+    if (record != .object) return missing(context, unit, path);
+    for ([_][]const u8{ "symbol", facts_key, digest_key }) |member| try record.object.put(context.allocator, member, v.get(unit, member));
+    return record;
+}
 /// One instruction's source position.
 pub const Position = struct { path: []const u8, line: u64, column: u64 };
 
@@ -129,11 +169,11 @@ fn number(field: ?[]const u8) u64 {
 }
 
 /// Name the unit whose stored text is gone, then refuse the manifest.
-fn missing(context: fs.Context, unit: std.json.Value) Error {
+fn missing(context: fs.Context, unit: std.json.Value, path: []const u8) Error {
     const message = std.fmt.allocPrint(
         context.allocator,
         "mylang: the stored QBE text of `{s}` is missing or damaged ({s}); rebuild with --no-cache\n",
-        .{ v.text(v.get(unit, "name")), v.text(v.get(unit, file_key)) },
+        .{ v.text(v.get(unit, "name")), path },
     ) catch return error.OutOfMemory;
     std.Io.File.stderr().writeStreamingAll(context.io, message) catch return error.InvalidNativeManifest;
     return error.InvalidNativeManifest;

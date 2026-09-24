@@ -33,7 +33,7 @@ pub const Digest = [32]u8;
 /// Bumped whenever the canonical encoding below or the pack layout changes, so
 /// an older store can never answer a newer compiler's question. The compiler
 /// identity already partitions the store; this guards the encoding itself.
-pub const format_version = "mylang-qbe-fragments-v1";
+pub const format_version = "mylang-qbe-fragments-v2";
 
 /// Whole-program switches that reach every unit's text.
 pub const Flags = struct {
@@ -380,6 +380,41 @@ pub const Final = struct {
     }
 };
 
+/// The key of a unit's metadata (`EMIT-META-1`) — its per-instruction source
+/// positions, assertion messages and inline frames. Its second-pass key covers
+/// everything about the lowered function except source positions, and every
+/// position is a place in a source some instruction's span falls in, found
+/// only from that source's bytes; so the key adds the path and bytes of each
+/// such source, in first-use order. An edit that moves lines in one module
+/// recomputes the metadata of the units whose instructions come from it, and
+/// no other.
+pub const MetaKey = struct {
+    hash: Sha,
+    /// Start from the unit's second-pass key.
+    pub fn init(final_key: Digest) MetaKey {
+        var hash = Sha.init(.{});
+        hash.update("unit-meta-v1");
+        hash.update(&final_key);
+        return .{ .hash = hash };
+    }
+    /// Add one source the unit's positions fall in, by `sourceDigest`.
+    pub fn source(self: *MetaKey, digest: Digest) void {
+        self.hash.update(&digest);
+    }
+    /// The finished key.
+    pub fn finish(self: *MetaKey) Digest {
+        return digestOf(&self.hash);
+    }
+};
+
+/// The digest one source contributes to a metadata key: its path and bytes.
+pub fn sourceDigest(path_text: []const u8, bytes: []const u8) Digest {
+    var hash = Sha.init(.{});
+    frame(&hash, path_text);
+    frame(&hash, bytes);
+    return digestOf(&hash);
+}
+
 /// The lines of a unit's text the native build reads without compiling it:
 /// the `dbgfile` line that marks a frame-map unit, every `# ` marker line
 /// (frozen literal definitions), and every top-level `data` definition line,
@@ -418,8 +453,11 @@ pub const Unit = struct {
 };
 
 /// How one emission uses a store: always consult and fill it, and with `lean`
-/// hand the build each unit's digest and stored path instead of its text.
-pub const Reuse = struct { store: *Store, lean: bool = false };
+/// hand the build each unit's stored text and stored metadata by digest
+/// instead of the text and positions themselves (`EMIT-META-1`). An
+/// `executable` emission is for the native build of a program, which reads no
+/// export, schema, wire, codec or test-dependency facts, so it writes none.
+pub const Reuse = struct { store: *Store, lean: bool = false, executable: bool = false };
 
 /// Reuse counters observed at the emission site.
 pub const Statistics = struct {
@@ -429,10 +467,14 @@ pub const Statistics = struct {
     /// Units answered from the store / emitted.
     hits: usize = 0,
     misses: usize = 0,
+    /// Unit metadata (positions, messages, inline frames) answered from the
+    /// store / computed from the source (`EMIT-META-1`).
+    meta_hits: usize = 0,
+    meta_misses: usize = 0,
 };
 
-const Entry = union(enum) { first: bool, unit: Unit };
-const pack_magic = "MYLFRAG1";
+const Entry = union(enum) { first: bool, unit: Unit, meta: Digest };
+const pack_magic = "MYLFRAG2";
 /// Old entries a pack keeps beyond the ones the latest build used, as a
 /// multiple of those: enough to switch between a few configurations of one
 /// project without re-emitting, bounded so the pack cannot grow forever.
@@ -481,11 +523,48 @@ pub const Store = struct {
         self.* = undefined;
     }
 
-    /// The digest of every unit text this process emitted or reused.
+    /// The digest of every text this process emitted or reused: each unit's
+    /// IL and each unit's stored metadata.
     pub fn texts(self: *const Store, allocator: std.mem.Allocator) error{OutOfMemory}![]const Digest {
         var out: std.ArrayList(Digest) = .empty;
-        for (self.used.values()) |entry| if (entry == .unit) try out.append(allocator, entry.unit.il);
+        for (self.used.values()) |entry| switch (entry) {
+            .unit => |answer| try out.append(allocator, answer.il),
+            .meta => |digest| try out.append(allocator, digest),
+            .first => {},
+        };
         return out.toOwnedSlice(allocator);
+    }
+    /// The directory every stored text lives in under its hex digest, which a
+    /// lean manifest names once as its `store`.
+    pub fn textRoot(self: *const Store) error{OutOfMemory}![]const u8 {
+        return std.fs.path.join(self.allocator, &.{ self.directory, "il" });
+    }
+    /// The digest of the stored metadata text for `key` (`EMIT-META-1`), if
+    /// any and if that text is still on disk.
+    pub fn meta(self: *Store, key: Digest) error{OutOfMemory}!?Digest {
+        const entry = self.lookup(key) orelse {
+            self.statistics.meta_misses += 1;
+            return null;
+        };
+        if (entry != .meta or !self.present(entry.meta)) {
+            self.statistics.meta_misses += 1;
+            return null;
+        }
+        self.statistics.meta_hits += 1;
+        try self.used.put(self.allocator, key, entry);
+        return entry.meta;
+    }
+    /// Store a freshly rendered metadata text (if not already stored) and
+    /// remember its digest under `key`. Returns the digest.
+    pub fn rememberMeta(self: *Store, key: Digest, text: []const u8) error{OutOfMemory}!Digest {
+        var digest: Digest = undefined;
+        Sha.hash(text, &digest, .{});
+        self.writeText(digest, text) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return digest,
+        };
+        try self.used.put(self.allocator, key, .{ .meta = digest });
+        return digest;
     }
 
     /// An answer this process already made or used, else one from the pack.
@@ -592,6 +671,7 @@ pub const Store = struct {
             const entry: Entry = switch (try reader.int(u8)) {
                 0 => .{ .first = (try reader.int(u8)) != 0 },
                 1 => .{ .unit = try reader.unitAnswer(self.allocator) },
+                2 => .{ .meta = try reader.digest() },
                 else => return error.Damaged,
             };
             self.entries.putAssumeCapacity(key, entry);
@@ -718,6 +798,10 @@ fn appendEntry(allocator: std.mem.Allocator, out: *std.ArrayList(u8), key: Diges
         .first => |allocates| {
             try out.append(allocator, 0);
             try out.append(allocator, @intFromBool(allocates));
+        },
+        .meta => |digest| {
+            try out.append(allocator, 2);
+            try out.appendSlice(allocator, &digest);
         },
         .unit => |answer| {
             try out.append(allocator, 1);

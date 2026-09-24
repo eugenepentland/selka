@@ -52,29 +52,46 @@ pub fn load(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
 
 /// The manifest member every accepted manifest carries.
 const version_member = "\"version\":\"qbe-units-v1\"";
-/// The member that opens one unit's inline text, and one stored unit's path.
-/// Inside a JSON string every quote is escaped, so neither spelling can occur
-/// within a unit's text or any other string member.
+/// The member that opens one unit's inline text, and one stored unit's text
+/// digest. Inside a JSON string every quote is escaped, so neither spelling
+/// can occur within a unit's text or any other string member.
 const inline_member = "\"il\":\"";
-const stored_member = "\"il_file\":\"";
+const stored_member = "\"il_digest\":\"";
+/// A lean unit's stored metadata digest (`EMIT-META-1`), and the directory
+/// the manifest's stored texts and metadata live in.
+const meta_member = "\"meta_digest\":\"";
+const store_member = "\"store\":\"";
 
 /// How many units a manifest carries, inline or stored.
 fn unitCount(manifest: []const u8) usize {
     return std.mem.count(u8, manifest, inline_member) + std.mem.count(u8, manifest, stored_member);
 }
 
-/// Whether every unit text a lean manifest names still exists. A path that
-/// needed JSON escaping is not checked by spelling, so it counts as missing.
+/// Whether every unit text and metadata record a lean manifest names still
+/// exists in its `store`. A store path that needed JSON escaping is not
+/// checked by spelling, so it counts as missing.
 fn storedTextsPresent(context: fs.Context, manifest: []const u8) bool {
-    var rest = manifest;
-    while (std.mem.indexOf(u8, rest, stored_member)) |at| {
-        rest = rest[at + stored_member.len ..];
-        const end = std.mem.indexOfScalar(u8, rest, '"') orelse return false;
-        const path = rest[0..end];
-        if (std.mem.indexOfScalar(u8, path, '\\') != null or !context.exists(path)) return false;
-        rest = rest[end..];
+    const digests = std.mem.count(u8, manifest, stored_member) + std.mem.count(u8, manifest, meta_member);
+    if (digests == 0) return true;
+    const root = memberText(manifest, store_member) orelse return false;
+    if (std.mem.indexOfScalar(u8, root, '\\') != null) return false;
+    for ([_][]const u8{ stored_member, meta_member }) |member| {
+        var rest = manifest;
+        while (std.mem.indexOf(u8, rest, member)) |at| {
+            rest = rest[at + member.len ..];
+            const digest = memberText(rest, "") orelse return false;
+            const path = std.fs.path.join(context.allocator, &.{ root, digest }) catch return false;
+            if (std.mem.indexOfScalar(u8, digest, '\\') != null or !context.exists(path)) return false;
+        }
     }
     return true;
+}
+
+/// The string value after the first `member` of `text`, up to its closing quote.
+fn memberText(text: []const u8, member: []const u8) ?[]const u8 {
+    const start = (std.mem.indexOf(u8, text, member) orelse return null) + member.len;
+    const end = std.mem.indexOfScalarPos(u8, text, start, '"') orelse return null;
+    return text[start..end];
 }
 
 /// Atomically publish an emitted manifest and its independent checksum.
@@ -103,9 +120,12 @@ fn entryPaths(context: fs.Context, settings: options.Options, identity: Identity
     return .{ .manifest = manifest, .digest = try std.fmt.allocPrint(context.allocator, "{s}.digest", .{manifest}) };
 }
 
+/// BLAKE3 over every source byte of the project (BUILD-KEYS-1): the
+/// toolchain's SHA-256 hashed a 200,000-line project's 7.6 MB at about 14 MB/s
+/// on some build hosts.
 fn keyFor(context: fs.Context, identity: Identity) ![]const u8 {
-    var hash = std.crypto.hash.sha2.Sha256.init(.{});
-    hash.update("native-run-validated-graph-v1");
+    var hash = std.crypto.hash.Blake3.init(.{});
+    hash.update("native-run-validated-graph-v2");
     frame(&hash, if (identity.step_checks) "steps-on" else "steps-off");
     frame(&hash, if (identity.frame_checks) "frames-on" else "frames-off");
     frame(&hash, if (identity.checks) "checks-on" else "checks-off");
@@ -119,7 +139,7 @@ fn keyFor(context: fs.Context, identity: Identity) ![]const u8 {
     return std.fmt.allocPrint(context.allocator, "{s}", .{std.fmt.bytesToHex(digest, .lower)});
 }
 
-fn frame(hash: *std.crypto.hash.sha2.Sha256, bytes: []const u8) void {
+fn frame(hash: *std.crypto.hash.Blake3, bytes: []const u8) void {
     var length: [8]u8 = undefined;
     std.mem.writeInt(u64, &length, bytes.len, .little);
     hash.update(&length);
@@ -181,16 +201,22 @@ test "a cached lean manifest is a hit only while every stored unit text it names
     var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
     defer context.deinit();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
-    const text = try std.fs.path.join(context.allocator, &.{ root, "unit" });
+    const text = try std.fs.path.join(context.allocator, &.{ root, "d" });
     try context.write(text, "export function $f() {\n@start\n ret\n}\n");
+    const meta = try std.fs.path.join(context.allocator, &.{ root, "m" });
+    try context.write(meta, "{\"name\":\"f\"}");
     const sources = [_]Source{.{ .path = "main.my", .bytes = "lean" }};
     const identity: Identity = .{ .sources = &sources };
     const settings: options.Options = .{ .source = "", .run = true, .cache = root };
-    const lean = try std.fmt.allocPrint(context.allocator, "{{\"version\":\"qbe-units-v1\",\"functions\":[{{\"il_digest\":\"d\",\"il_file\":\"{s}\",\"il_facts\":\"\"}},{{\"il\":\"x\"}}]}}", .{text});
+    const lean = try std.fmt.allocPrint(context.allocator, "{{\"version\":\"qbe-units-v1\",\"store\":\"{s}\",\"functions\":[{{\"il_digest\":\"d\",\"il_facts\":\"\",\"meta_digest\":\"m\"}},{{\"il\":\"x\"}}]}}", .{root});
     try store(std.testing.allocator, std.testing.io, &environment, settings, identity, lean);
     const hit = (try load(std.testing.allocator, std.testing.io, &environment, settings, identity)).?;
     defer std.testing.allocator.free(hit.manifest);
     try std.testing.expectEqual(@as(usize, 2), hit.fragments);
+    // EMIT-META-1: a stored metadata record that left the store voids the entry too.
+    try std.Io.Dir.cwd().deleteFile(std.testing.io, meta);
+    try std.testing.expect((try load(std.testing.allocator, std.testing.io, &environment, settings, identity)) == null);
+    try context.write(meta, "{\"name\":\"f\"}");
     try std.Io.Dir.cwd().deleteFile(std.testing.io, text);
     try std.testing.expect((try load(std.testing.allocator, std.testing.io, &environment, settings, identity)) == null);
 }

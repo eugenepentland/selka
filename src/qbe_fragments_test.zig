@@ -200,16 +200,72 @@ test "a lean manifest names each unit's stored text by digest instead of carryin
     const stored = (try unitNamed(a, lean, "helper::total")).?;
     const inline_unit = (try unitNamed(a, fresh, "helper::total")).?;
     try t.expect(stored.object.get("il") == null);
-    const text = try std.Io.Dir.cwd().readFileAlloc(t.io, stored.object.get("il_file").?.string, a, .unlimited);
+    const store = (try std.json.parseFromSliceLeaky(std.json.Value, a, lean, .{})).object.get("store").?.string;
+    const text = try storedText(a, store, stored.object.get("il_digest").?.string);
     try t.expectEqualStrings(inline_unit.object.get("il").?.string, text);
-    var hash: [32]u8 = undefined;
-    std.crypto.hash.Blake3.hash(text, &hash, .{});
-    try t.expectEqualStrings(&std.fmt.bytesToHex(hash, .lower), stored.object.get("il_digest").?.string);
     // Everything but the unit texts is the fresh manifest's.
     try t.expectEqualStrings(inline_unit.object.get("symbol").?.string, stored.object.get("symbol").?.string);
-    // BUILD-POSITIONS-1 (spec-case): the lean unit spells the same positions compactly.
-    try t.expect(stored.object.get("locations") == null);
-    try expectSamePositions(inline_unit, stored);
+    // EMIT-META-1 (spec-case): the lean unit names its metadata record, which
+    // spells the same positions compactly (BUILD-POSITIONS-1) and the same name
+    // and inline frames.
+    try t.expect(stored.object.get("locations") == null and stored.object.get("positions") == null);
+    const record = try std.json.parseFromSliceLeaky(std.json.Value, a, try storedText(a, store, stored.object.get("meta_digest").?.string), .{});
+    try t.expectEqualStrings("helper::total", record.object.get("name").?.string);
+    try t.expectEqual(inline_unit.object.get("inlines").?.array.items.len, record.object.get("inlines").?.array.items.len);
+    try expectSamePositions(inline_unit, record);
+}
+
+/// A stored text read back from `store` by its hex digest, checked against it.
+fn storedText(allocator: std.mem.Allocator, store: []const u8, digest: []const u8) ![]u8 {
+    const text = try std.Io.Dir.cwd().readFileAlloc(t.io, try std.fs.path.join(allocator, &.{ store, digest }), allocator, .unlimited);
+    var hash: [32]u8 = undefined;
+    std.crypto.hash.Blake3.hash(text, &hash, .{});
+    try t.expectEqualStrings(&std.fmt.bytesToHex(hash, .lower), digest);
+    return text;
+}
+
+/// One lean emission of `files` through a store reopened at `root`: its
+/// reuse counters and its manifest.
+const LeanRun = struct { statistics: fragments.Statistics, manifest: []u8 };
+fn emitLean(allocator: std.mem.Allocator, root: []const u8, files: *const Files) !LeanRun {
+    var opened: Opened = undefined;
+    try opened.init(root);
+    defer opened.deinit();
+    const manifest = try emit(allocator, files, .{ .store = &opened.store, .lean = true, .executable = true });
+    return .{ .statistics = opened.store.statistics, .manifest = manifest };
+}
+
+/// The `meta_digest` of the unit named `name`.
+fn metaDigest(allocator: std.mem.Allocator, manifest: []const u8, name: []const u8) ![]const u8 {
+    return (try unitNamed(allocator, manifest, name)).?.object.get("meta_digest").?.string;
+}
+
+// spec: EMIT-META-1
+test "an edit computes metadata only for units of the sources it changed" {
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    const cold = try emitLean(a, root, &original);
+    try t.expectEqual(@as(usize, 0), cold.statistics.meta_hits);
+    try t.expectEqual(cold.statistics.misses, cold.statistics.meta_misses);
+    // Nothing changed: every unit's metadata is read, none computed.
+    const warm = try emitLean(a, root, &original);
+    try t.expectEqual(@as(usize, 0), warm.statistics.meta_misses);
+    try t.expectEqualStrings(cold.manifest, warm.manifest);
+    // A body edit in `helper` recomputes the metadata of helper's units only,
+    // and a unit whose positions did not move keeps its digest.
+    const body = try emitLean(a, root, &body_edit);
+    try t.expect(body.statistics.meta_misses >= 1 and body.statistics.meta_misses <= 5);
+    try t.expectEqual(body.statistics.meta_hits + body.statistics.meta_misses, cold.statistics.meta_misses);
+    try t.expectEqualStrings(try metaDigest(a, cold.manifest, "main::main"), try metaDigest(a, body.manifest, "main::main"));
+    try t.expectEqualStrings(try metaDigest(a, cold.manifest, "helper::first"), try metaDigest(a, body.manifest, "helper::first"));
+    // An executable's lean manifest carries no library-only facts.
+    try t.expect(std.mem.indexOf(u8, body.manifest, "\"test_dependencies\"") == null);
+    try t.expect(std.mem.indexOf(u8, body.manifest, "\"export\"") == null);
+    try t.expect(std.mem.indexOf(u8, body.manifest, "\"schema\":null") != null);
 }
 
 // spec-case: QBE-FRAGMENT-REUSE-1

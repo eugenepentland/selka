@@ -224,8 +224,9 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         var arguments: std.ArrayList([]const u8) = .empty;
         try arguments.appendSlice(a, &.{ compiler, if (project) "emit-project-qbe" else "emit-qbe", try context.absolute(parsed.source) });
         // A project's units stay in the compiler's fragment store; the manifest
-        // names each by digest and path (`QBE-FRAGMENT-REUSE-1`).
-        if (project) try arguments.append(a, "--lean-manifest");
+        // names each text and its metadata by digest (`QBE-FRAGMENT-REUSE-1`,
+        // `EMIT-META-1`), and an executable's leaves out library-only facts.
+        if (project) try arguments.append(a, leanManifestFlag(parsed));
         if (std.mem.eql(u8, parsed.cache, options.no_cache)) {
             try arguments.append(a, "--no-cache");
         } else if (!std.mem.eql(u8, parsed.cache, options.default_cache)) {
@@ -787,6 +788,26 @@ const State = struct {
     compiled: bool = false,
     /// How the final link ran (BUILD-LINK-1), or null when it was skipped.
     link_route: ?direct_link.Route = null,
+    /// The directory a lean manifest's stored texts and metadata live in.
+    fn textStore(self: *const State) []const u8 {
+        return v.text(v.get(self.manifest, "store"));
+    }
+    /// EMIT-META-1: `units` as the function tables read them, a lean unit's
+    /// stored metadata read in place of the positions it does not carry.
+    fn metaTables(self: *State, units: []const std.json.Value) ![]const std.json.Value {
+        const out = try self.context.allocator.alloc(std.json.Value, units.len);
+        for (units, out) |unit, *table| table.* = try lean.tables(self.context, self.textStore(), unit);
+        return out;
+    }
+    /// The manifest with every unit's metadata in place, for the LLVM arm's
+    /// single metadata C unit, which spells every function's tables.
+    fn tableManifest(self: *State) !std.json.Value {
+        var copy = try self.manifest.object.clone(self.context.allocator);
+        var functions = std.json.Array.init(self.context.allocator);
+        try functions.appendSlice(try self.metaTables(v.array(v.get(self.manifest, manifest_functions))));
+        try copy.put(self.context.allocator, manifest_functions, .{ .array = functions });
+        return .{ .object = copy };
+    }
     fn add(self: *State, object: cache_api.Object) !void {
         if (!object.reused) self.compiled = true;
         try self.objects.append(self.context.allocator, object.path);
@@ -798,7 +819,7 @@ const State = struct {
         const wrapper = if (parsed.library) try @import("qbe_build_embed.zig").libraryWrapper(a, self.manifest) else try outputs.entry(a, self.manifest, parsed.provider != null, std.mem.eql(u8, parsed.mode, release_fast));
         const units: [2]cache_api.Object = if (self.cache.codegen.llvm) llvm: {
             try self.compileUnits(functions);
-            break :llvm .{ try self.cache.object("metadata", try outputs.metadata(a, self.manifest), .c_text), try self.cache.object("entry", wrapper, .c_text) };
+            break :llvm .{ try self.cache.object("metadata", try outputs.metadata(a, try self.tableManifest()), .c_text), try self.cache.object("entry", wrapper, .c_text) };
         } else try self.compileBatches(functions, wrapper);
         self.metadata_reused = units[0].reused;
         try self.add(units[0]);
@@ -825,7 +846,7 @@ const State = struct {
                 unit.object = object;
                 continue;
             }
-            unit.text = try lean.text(self.context, unit.value);
+            unit.text = try lean.text(self.context, self.textStore(), unit.value);
             unit.staged = .{ .miss = try self.cache.stageAt(key, unit.text, .qbe, environment) };
             try misses.append(a, index);
         }
@@ -834,7 +855,7 @@ const State = struct {
         // translates. A build that compiles nothing needs no sidecar at all.
         if (misses.items.len != 0 and self.cache.codegen.llvm) {
             const il = try a.alloc([]const u8, units.len);
-            for (units, il) |unit, *text| text.* = if (unit.text.len != 0) unit.text else try lean.text(self.context, unit.value);
+            for (units, il) |unit, *text| text.* = if (unit.text.len != 0) unit.text else try lean.text(self.context, self.textStore(), unit.value);
             try self.cache.declareSignatures(il, environment);
         }
         errdefer for (misses.items) |index| self.cache.discard(units[index].staged.miss);
@@ -893,7 +914,7 @@ const State = struct {
             // rendered from, and rendered only for a batch that must build them.
             const tables = try self.cache.derived(batch.metadata_version, &std.fmt.bytesToHex(outputs.metadataDigest(members), .lower));
             if (try self.cache.cached(tables)) |hit| objects[index * 2 + 1] = hit else {
-                try misses.append(a, .{ .key = tables, .object = &objects[index * 2 + 1], .input = .{ .assembly = try outputs.metadataAssembly(a, members) } });
+                try misses.append(a, .{ .key = tables, .object = &objects[index * 2 + 1], .input = .{ .assembly = try outputs.metadataAssembly(a, try self.metaTables(members)) } });
             }
         }
         // The C units start first: the shared metadata is the largest single compile.
@@ -925,7 +946,7 @@ const State = struct {
             reader.allocator = scratch;
             const member = self.members[self.at];
             self.at += 1;
-            const text = try lean.text(reader, member);
+            const text = try lean.text(reader, self.state.textStore(), member);
             try self.state.fitsQbe(member, text);
             return text;
         }
@@ -1204,6 +1225,11 @@ const State = struct {
         try self.objects.append(a, object);
     }
 };
+/// The frontend switch that asks for a project's lean manifest: an
+/// executable's leaves out the facts only a library build reads (`EMIT-META-1`).
+fn leanManifestFlag(parsed: options.Options) []const u8 {
+    return if (parsed.library) "--lean-manifest" else "--lean-manifest=executable";
+}
 /// The report's name for how the link ran, or null when it was skipped.
 fn routeName(route: ?direct_link.Route) ?[]const u8 {
     return if (route) |ran| @tagName(ran) else null;

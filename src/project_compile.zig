@@ -84,6 +84,11 @@ pub const Compilation = struct {
     /// Emit QBE units under an explicit debug, accounting and safety policy.
     pub fn emitQbeWithOptions(self: *Compilation, allocator: @import("std").mem.Allocator, policy: @import("native_interface.zig").Policy) EmitNativeError![]u8 {
         try self.emitWithOptions(policy.drop_debug);
+        // An executable's manifest carries no export or schema facts (only a
+        // library's embedding API reads them), so its build renders neither.
+        if (self.reuse) |configured| if (configured.executable) {
+            return @import("qbe.zig").generateWithInterface(allocator, self.code.?, self.src, &self.diagnostics, .{ .policy = policy, .reuse = self.reuse });
+        };
         const roots = try self.exportRoots(allocator);
         defer allocator.free(roots);
         const schema = try self.renderSchema(allocator, roots);
