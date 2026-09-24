@@ -36,10 +36,19 @@ const entries = [_]Entry{
     .{ .removed = "=>", .canonical = "", .message = "`=>` was removed and has no replacement" },
 };
 
+/// Removed spelling -> position in `entries`, built once at compile time so the
+/// lexer's per-identifier check is one map probe rather than a scan of every entry.
+const entry_index = std.StaticStringMap(usize).initComptime(indexPairs());
+fn indexPairs() [entries.len]struct { []const u8, usize } {
+    var pairs: [entries.len]struct { []const u8, usize } = undefined;
+    for (entries, 0..) |entry, index| pairs[index] = .{ entry.removed, index };
+    return pairs;
+}
+
 /// Return migration metadata for one exact removed spelling.
 fn lookup(spelling: []const u8) ?Entry {
-    for (entries) |entry| if (std.mem.eql(u8, spelling, entry.removed)) return entry;
-    return null;
+    const index = entry_index.get(spelling) orelse return null;
+    return entries[index];
 }
 
 /// Reject one exact removed spelling at its source location, or report that it is current.
@@ -48,10 +57,18 @@ pub fn reject(sink: *diagnostic.Sink, span: Span, spelling: []const u8) diagnost
     return sink.fail("E_REMOVED_SPELLING", span, entry.message);
 }
 
-/// Reject names removed at tokenization while leaving contextual type and member names to later layers.
-pub fn rejectLexical(sink: *diagnostic.Sink, span: Span, spelling: []const u8) diagnostic.Error!bool {
+/// Whether `rejectLexical` would reject this spelling.
+pub fn removedLexically(spelling: []const u8) bool {
+    if (entry_index.get(spelling) == null) return false;
     inline for (.{ "push", "len", "contains", "List" }) |contextual| {
         if (std.mem.eql(u8, spelling, contextual)) return false;
     }
+    return true;
+}
+
+/// Reject names removed at tokenization while leaving contextual type and member names to later layers.
+pub fn rejectLexical(sink: *diagnostic.Sink, span: Span, spelling: []const u8) diagnostic.Error!bool {
+    // Nearly every identifier is not a removed spelling; answer those with one probe.
+    if (!removedLexically(spelling)) return false;
     return reject(sink, span, spelling);
 }

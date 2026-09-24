@@ -114,10 +114,60 @@ $ mylang check-project app/main.my --explain-invalidation --report --cache-dir=.
 {"version":"frontend-cache-v1","syntax_hits":2,"syntax_misses":0,...,"stages":{"load_source":{"hits":1,"misses":0},"lex_parse":{"hits":1,"misses":0},"resolve_interface":{"hits":1,"misses":0}}}
 ```
 
+## Check summaries
+
+A project check keeps one more record in the frontend cache: one slot per
+entry module holding a *summary* of every ordinary function the last
+successful check or lowering command checked. A summary names the function by
+its stable declaration key and records its dependency context (the digest over
+every declaration its signature and body reference, including each one's
+defining module and `@deprecated` reason), the length and BLAKE3 digest of its
+declaration region together with the names that region's syntax references,
+its propagated effect mask and mutation summary, the diagnostics it
+contributed with spans relative to its region, and the functions it calls.
+
+The next `check` of the entry stands a summary in for every body whose context
+and region digest are unchanged. The body is neither checked nor copied: the
+function keeps its checked signature over an empty body, the effect and
+mutation passes seed it with its stored facts and report nothing of their own
+for it, and its stored diagnostics are replayed at the region's new offset.
+Dependency keys for such a function resolve its recorded names instead of
+walking its syntax. After the passes the check confirms that every body it did
+check still has exactly its stored facts and that no call cycle runs through
+both a checked and a stood-in body; if either fails, or a pass reports an error,
+the check repeats in full without summaries, so what `check` prints never
+depends on them. The entry point, constants, conversions, host and foreign
+declarations, and bodies whose checked tree names a specialization, a lambda or
+a type interned while checking are always checked.
+
+`build` (through its `emit-project-qbe` frontend), `run` and `run-project`
+read the same summaries but check every body, because lowering needs the
+checked tree; a summary stands in only for an unchanged body's facts and pass
+diagnostics, so the passes walk only changed bodies. Such a command writes the
+slot only when it had no summaries or repeated in full. A request served by
+summaries neither reads nor publishes the checked-body store below.
+
+`checked_bodies.reused` in the work report counts stood-in bodies; `performed`
+counts the bodies actually checked. After a one-line body edit only that body
+and the entry point are checked:
+
+```console
+$ mylang check main.my --report
+{"version":"work-report-v1","command":"check",...,"checked_bodies":{"status":"miss","performed":25,"reused":0},...}
+$ sed -i 's/k \* 1 + 1/k * 1 + 7/' m1.my
+$ mylang check main.my --report
+{"version":"work-report-v1","command":"check",...,"checked_bodies":{"status":"miss","performed":2,"reused":23},...}
+```
+
+`--no-cache` and `--explain-invalidation` use no summaries, and every other
+command that inspects the checked program (`context`, `lint`, `index-project`,
+the native-test session) ignores them. A damaged or foreign slot is a miss.
+
 ## Persistent checked-body store
 
-Ordinary one-shot `check`, project checking, `build`, `run` and native-test
-preparation use the same checked-body query path. The durable store lives under
+Ordinary one-shot single-file `check`, project commands that inspect the
+checked program without summaries (above), and native-test preparation use the
+same checked-body query path. The durable store lives under
 `<cache-dir>/semantic/` when `--cache-dir` is given and
 `.mylang-cache/semantic/` otherwise; it is one contract-namespaced directory of
 versioned `semantic-cache-v1` files. Each file contains one stable declaration

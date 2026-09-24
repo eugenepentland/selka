@@ -78,7 +78,7 @@ whose `version` is `work-report-v1`; do not assume a single stderr line.
 | stage | counted where |
 | --- | --- |
 | `parsed_modules` | module bodies lexed and parsed fresh vs returned by the in-process or persistent syntax lookup |
-| `checked_bodies` | `sema` body-check iterations vs checked-body and concrete-specialization copies |
+| `checked_bodies` | `sema` body-check iterations vs checked-body and concrete-specialization copies and bodies a [check summary](caches.md#check-summaries) stood in for |
 | `instantiated_specializations` | concrete specializations present in the checked program; a specialization body replay is an actual `checked_bodies.reused` hit |
 | `lowered_functions` | functions in the retained bytecode program after lowering |
 | `emitted_fragments` | independently linkable QBE units emitted |
