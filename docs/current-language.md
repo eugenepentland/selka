@@ -56,7 +56,7 @@ part of the current model, not guarantees supplied by a future thread system.
 
 Scalar constants may call bounded nongeneric source functions with scalar locals and control flow; see [source-evaluation.md](source-evaluation.md).
 
-Every process that runs guest code runs under a byte ceiling; see [runtime budgets](tooling/runtime-budgets.md). Typed holes and named executable laws are experimental agent-facing tools; comparative productivity evidence remains pending.
+Every process that runs guest code runs under a byte ceiling; see [runtime budgets](tooling/runtime-budgets.md). Typed holes are an experimental agent-facing tool; comparative productivity evidence remains pending. Sampled named laws are an experiment outside mylang (`experiments/guest-laws/`, see [named executable laws](experiments/guest-laws.md)).
 
 Run `python3 tests/feature_surface.py --compiler zig-out/bin/mylang --output receipt.json`
 to execute the documented feature-surface examples and verify explicit

@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Seeded laws retain actual counterexamples and bounded reductions."""
+"""Seeded laws retain actual counterexamples and bounded reductions.
+
+    python3 experiments/guest-laws/test_laws.py --compiler zig-out/bin/mylang
+
+An experiment's own check, not part of any gate.
+"""
 import argparse
 import json
 from pathlib import Path
@@ -7,7 +12,7 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = Path(__file__).resolve().parents[1]
+HERE = Path(__file__).resolve().parent
 
 
 def main():
@@ -19,9 +24,9 @@ def main():
         entry, config, output = (root / name for name in ('main.my', 'laws.json', 'report.json'))
         entry.write_text('module main\n\n\n\n'
                          'def main() -> i64:\n    return 0\n\n\n'
-                         'def test_law(n: i64) -> bool:\n    return n + n >= n\n')
+                         'public def test_law(n: i64) -> bool:\n    return n + n >= n\n')
         config.write_text(json.dumps({'main::test_law': {'n': [-30, -2]}}))
-        command = [sys.executable, str(ROOT / 'scripts/laws.py'), str(entry), '--compiler', compiler,
+        command = [sys.executable, str(HERE / 'laws.py'), str(entry), '--compiler', compiler,
                    '--laws', str(config), '--samples', '2', '--seed', '17', '--output', str(output)]
         result = subprocess.run(command, capture_output=True, text=True, timeout=60)
         assert result.returncode == 1, (result.stdout, result.stderr)

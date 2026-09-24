@@ -677,11 +677,6 @@
       "summary": "`todo[T]()` declares an unfinished implementation with a checked type and blocks publication.",
       "doc": "docs/typed-holes.md#typed-holes"
     },
-    "named-executable-laws": {
-      "kind": "tooling",
-      "summary": "A named law is an executable property statement checked with the rest of the suite.",
-      "doc": "docs/tooling/agent-tools.md#named-executable-laws"
-    },
     "deterministic-test-provider-fixtures": {
       "kind": "tooling",
       "summary": "A guest test runs with no ambient authority, and a case may replace a dependency's source to make a reading deterministic.",
@@ -973,6 +968,10 @@
     "legacy-syntax": {
       "date": "2026-09-13",
       "note": "the brace dialect: fn/let/let mut/struct/new, `T { \u2026 }` record literals, `::` qualification, `::<T>` turbofish, `cast<T>(x)`, `//` comments, `{ }` scope blocks, match expressions, `true`/`false`/`unit`, `else if` and `a..b` ranges. Indentation, `def`/`class`, `T(f=v)`, `alias.name`, `f[T](x)`, `T(x)`, `#` comments, `match`/`case`, `True`/`False`/`None`, `elif` and `range(a, b)` are the surface."
+    },
+    "named-executable-laws": {
+      "date": "2026-09-24",
+      "note": "the sampled-law runner was a Python script (scripts/laws.py), never part of the compiler; it moved to experiments/guest-laws/ as an experiment. `mylang test --cases` still runs one law case natively."
     },
     "value-producing-matches": {
       "date": "2026-09-13",

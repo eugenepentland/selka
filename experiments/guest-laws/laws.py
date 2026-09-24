@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Run named guest Boolean laws over seeded integer domains and retain counterexamples."""
+"""Run named guest Boolean laws over seeded integer domains and retain counterexamples.
+
+An experiment, not part of mylang: see docs/experiments/guest-laws.md.
+"""
 import argparse
 import json
 from pathlib import Path
@@ -56,7 +59,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('entry', type=Path)
     parser.add_argument('--laws', type=Path, required=True)
-    parser.add_argument('--compiler', type=Path, default=Path(__file__).resolve().parents[1] / 'zig-out/bin/mylang')
+    parser.add_argument('--compiler', type=Path, default=Path(__file__).resolve().parents[2] / 'zig-out/bin/mylang')
     parser.add_argument('--seed', type=int, default=20260907)
     parser.add_argument('--samples', type=int, default=20)
     parser.add_argument('--output', type=Path, required=True)

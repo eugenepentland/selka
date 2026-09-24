@@ -13,8 +13,9 @@ reachable schema. Each selected case executes QBE native code in a fresh process
 Parameter-free Boolean tests assert `true`; other result types require explicit
 expected typed JSON. Tests may call ordinary private helpers. Types appearing in
 exported test signatures must also be exported. Python is not a runtime dependency
-of this command; `scripts/test_project.py` now wraps the native command and reports
-its outcomes as a `guest-tests-v1` document.
+of this command. `experiments/guest-laws/test_project.py`, a Python helper of the
+[named-laws experiment](guest-laws.md), wraps it and reports its outcomes as a
+`guest-tests-v1` document.
 
 ## Inputs and assertions
 
