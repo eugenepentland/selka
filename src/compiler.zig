@@ -197,7 +197,7 @@ pub const Compilation = struct {
     pub fn emitWithOptions(self: *Compilation, drop_debug: bool) EmitError!void {
         try self.check();
         if (self.code == null) {
-            const lowered = try lower.lowerWith(self.arena.allocator(), self.program.?, drop_debug);
+            const lowered = try lower.lowerWith(.{ .output = self.arena.allocator(), .scratch = self.arena.child_allocator }, self.program.?, drop_debug);
             self.code = try @import("bytecode_inline.zig").inlineProgram(self.arena.allocator(), lowered);
         }
     }

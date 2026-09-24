@@ -326,6 +326,29 @@ test "a remembered emission replays its warnings and manifest until a unit text 
     try t.expect((try fragments.Replay.load(a, t.io, .{ .root = root, .identity = "test-compiler" }, key)) == null);
 }
 
+// spec: MANIFEST-STREAM-1
+test "remembering an emission writes its manifest to the record without copying it" {
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    const manifest = try a.alloc(u8, 4 * 1024 * 1024);
+    @memset(manifest, 'm');
+    const key: fragments.Ticket = .{ .slot = @splat(3), .key = @splat(4) };
+    const place: fragments.Place = .{ .root = root, .identity = "test-compiler" };
+    var counting = t.FailingAllocator.init(t.allocator, .{});
+    var scratch = std.heap.ArenaAllocator.init(counting.allocator());
+    defer scratch.deinit();
+    fragments.Replay.remember(scratch.allocator(), t.io, place, key, .{ .warnings = "warning: w\n", .manifest = manifest }, &.{});
+    // The record's own buffers are a few hundred bytes, not a 4 MiB copy.
+    try t.expect(counting.allocated_bytes < 64 * 1024);
+    const replayed = (try fragments.Replay.load(a, t.io, place, key)).?;
+    try t.expectEqualStrings("warning: w\n", replayed.warnings);
+    try t.expectEqualSlices(u8, manifest, replayed.manifest);
+}
+
 /// Whether a stored text is still on disk.
 fn onDisk(store: *fragments.Store, digest: fragments.Digest) !bool {
     std.Io.Dir.cwd().access(t.io, try store.path(digest), .{}) catch return false;

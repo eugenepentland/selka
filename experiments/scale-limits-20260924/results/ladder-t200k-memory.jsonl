@@ -1,0 +1,18 @@
+{"step": "cold_build", "env": [], "s": 24.817, "rss_mb": 1132, "ok": true, "code": 0, "load": 5.95, "tail": "", "tier": "t200k", "label": "v7"}
+{"step": "noop_build", "s": 0.272, "rss_mb": 58, "ok": true, "code": 0, "load": 6.84, "tail": "", "tier": "t200k", "label": "v7"}
+{"step": "cold_test_untimed", "env": [], "s": 4.457, "rss_mb": 1221, "ok": true, "code": 0, "load": 6.84, "tail": "", "tier": "t200k", "label": "v7"}
+{"step": "warm_check_untimed", "s": 1.551, "rss_mb": 857, "ok": true, "code": 0, "load": 6.69, "tail": "", "tier": "t200k", "label": "v7"}
+{"step": "edit_check", "sample": 0, "s": 0.548, "rss_mb": 444, "ok": true, "code": 0, "load": 6.4, "tail": "", "tier": "t200k", "label": "v7"}
+{"step": "edit_build", "sample": 0, "s": 1.923, "rss_mb": 847, "ok": true, "code": 0, "load": 6.4, "tail": "", "tier": "t200k", "label": "v7"}
+{"step": "edit_test", "sample": 0, "s": 2.336, "rss_mb": 1111, "ok": true, "code": 0, "load": 6.4, "tail": "", "tier": "t200k", "label": "v7"}
+{"step": "iface_build", "sample": 0, "s": 1.719, "rss_mb": 826, "ok": true, "code": 0, "load": 6.04, "tail": "", "tier": "t200k", "label": "v7"}
+{"step": "edit_check", "sample": 1, "s": 0.487, "rss_mb": 444, "ok": true, "code": 0, "load": 6.04, "tail": "", "tier": "t200k", "label": "v7"}
+{"step": "edit_build", "sample": 1, "s": 1.704, "rss_mb": 826, "ok": true, "code": 0, "load": 6.04, "tail": "", "tier": "t200k", "label": "v7"}
+{"step": "edit_test", "sample": 1, "s": 1.375, "rss_mb": 1111, "ok": true, "code": 0, "load": 6.04, "tail": "", "tier": "t200k", "label": "v7"}
+{"step": "iface_build", "sample": 1, "s": 1.944, "rss_mb": 826, "ok": true, "code": 0, "load": 5.8, "tail": "", "tier": "t200k", "label": "v7"}
+{"step": "edit_check", "sample": 2, "s": 0.505, "rss_mb": 444, "ok": true, "code": 0, "load": 5.8, "tail": "", "tier": "t200k", "label": "v7"}
+{"step": "edit_build", "sample": 2, "s": 1.676, "rss_mb": 826, "ok": true, "code": 0, "load": 5.8, "tail": "", "tier": "t200k", "label": "v7"}
+{"step": "edit_test", "sample": 2, "s": 1.492, "rss_mb": 1111, "ok": true, "code": 0, "load": 5.8, "tail": "", "tier": "t200k", "label": "v7"}
+{"step": "iface_build", "sample": 2, "s": 1.909, "rss_mb": 826, "ok": true, "code": 0, "load": 5.66, "tail": "", "tier": "t200k", "label": "v7"}
+{"step": "check_receipt", "first": {"s": 0.514, "rss_mb": 444, "ok": true}, "s": 0.072, "rss_mb": 18, "ok": true, "tail": "", "receipt": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":0,\"syntax_stored\":0,\"verdict_hits\":1,\"verdict_misses\":0,\"verdict_stored\":0,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":0,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"collect_declarations\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"resolve_interface\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"check_body\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"instantiate_specialization\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"mis", "tier": "t200k", "label": "v7"}
+{"step": "iface_build_receipt", "s": 1.992, "rss_mb": 826, "ok": true, "tail": "", "metadata_reused": "true", "compiled_functions": 17, "codegen_seconds": 0.328079139, "tier": "t200k", "label": "v7"}

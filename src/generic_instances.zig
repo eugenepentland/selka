@@ -39,10 +39,17 @@ const Index = std.HashMapUnmanaged(Key, InstanceId, Context, std.hash_map.defaul
 /// Callers resolve privacy, arity, requirements and valid type IDs before interning.
 /// Repeated or recursive requests reuse the original ID without extending the worklist.
 pub const Registry = struct {
+    /// GENERIC-INSTANCE-BUDGET-1: the most instances one generic declaration
+    /// may have. The bound is per declaration, so a program's total grows with
+    /// its generic declarations while polymorphic recursion, which multiplies
+    /// the instances of one declaration, still stops.
     pub const max_instances = 4096;
+    /// The most type arguments one instance may have.
     pub const max_arguments = 16;
     entries: std.ArrayList(Key) = .empty,
     index: Index = .empty,
+    /// How many instances each declaration has.
+    counts: std.AutoHashMapUnmanaged(DeclarationId, usize) = .empty,
     /// Release all owned argument copies and index storage using the insertion allocator.
     pub fn deinit(self: *Registry, allocator: std.mem.Allocator) void {
         for (self.entries.items) |key| {
@@ -51,6 +58,7 @@ pub const Registry = struct {
         }
         self.entries.deinit(allocator);
         self.index.deinit(allocator);
+        self.counts.deinit(allocator);
         self.* = .{};
     }
     /// Intern a resolved key transactionally. Allocation failure preserves IDs and contents.
@@ -59,15 +67,18 @@ pub const Registry = struct {
         if (key.lengths.len != 0 and key.lengths.len != key.arguments.len) return error.TooManyTypeArguments;
         if (key.arguments.len > max_arguments) return error.TooManyTypeArguments;
         if (self.index.get(key)) |id| return id;
-        if (self.entries.items.len == max_instances) return error.TooManyInstances;
+        if ((self.counts.get(key.declaration) orelse 0) == max_instances) return error.TooManyInstances;
         try self.entries.ensureUnusedCapacity(allocator, 1);
         try self.index.ensureUnusedCapacity(allocator, 1);
+        try self.counts.ensureUnusedCapacity(allocator, 1);
         const lengths = try allocator.dupe(?usize, key.lengths);
         errdefer allocator.free(lengths);
         const owned: Key = .{ .declaration = key.declaration, .arguments = try allocator.dupe(typed.Type, key.arguments), .lengths = lengths };
         const id: InstanceId = @fromBackingInt(self.entries.items.len);
         self.entries.appendAssumeCapacity(owned);
         self.index.putAssumeCapacityNoClobber(owned, id);
+        const count = self.counts.getOrPutAssumeCapacity(key.declaration);
+        count.value_ptr.* = if (count.found_existing) count.value_ptr.* + 1 else 1;
         return id;
     }
     /// Read a previously assigned identity. Argument storage survives later insertions.

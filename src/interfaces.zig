@@ -1479,6 +1479,7 @@ fn parseModule(project: *graph.Project, module_id: usize, sink: *diagnostic.Sink
     const scratch = project.arena.child_allocator;
     const tokens = try lexer.lex(scratch, module.src.bytes, sink);
     defer scratch.free(tokens);
-    var parse: parser.Parser = .{ .src = module.src, .storage = project.arena.allocator(), .tokens = tokens, .sink = sink };
+    var parse: parser.Parser = .{ .src = module.src, .storage = project.arena.allocator(), .tokens = tokens, .sink = sink, .syntax = .{ .growth = scratch } };
+    defer parse.release();
     return parse.parseModule();
 }

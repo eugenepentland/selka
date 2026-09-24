@@ -1,7 +1,10 @@
 # Development-speed lane: scale limits — 24 September 2026
 
 Branch `devspeed/scale-limits`, from `main` `fd36abc2`, with `devspeed/integration`
-`126a2b84` merged in at the end (as the coordinator asked). It implements items 4 and 5
+`126a2b84` merged in at the end (as the coordinator asked). After the first round was
+integrated (`ae5c9fd0`, fast-forwarded here), a follow-up made the cold 1M build fit the
+default memory ceiling and scaled the remaining program-wide caps; see *Follow-up* below.
+It implements items 4 and 5
 of the compilation-model audit (branch `devspeed/compilation-model-audit`,
 `docs/audits/compilation-model-2026-09-24.md` §9, §10.1, §11): lift the limits that
 stopped a generated project from compiling past 200k lines, and stop an added function
@@ -15,7 +18,7 @@ both at load time.
 
 | Acceptance (audit §11) | Status |
 | --- | --- |
-| 500k and 1M `check` and `build` with no `mylang.json` under the default ceilings | **500k: yes. 1M check: yes (8.2 s, 6.2 GB). 1M edit builds: yes (4.5 GB). 1M cold build: no.** Its frontend peaks at 8.95 GB resident, over the 8 GiB address-space ceiling; with `MYLANG_HOST_MEMORY_LIMIT=12G` it completes in 131 s. See *Memory at a million lines* for why and what remains. |
+| 500k and 1M `check` and `build` with no `mylang.json` under the default ceilings | **Yes, after the follow-up.** 1M cold build: 132 s, 5.52 GB peak, with no `MYLANG_HOST_MEMORY_LIMIT` (was 8.95 GB, needing 12G). 1M check: 8.2 s, 6.2 GB. 500k cold build: 66.7 s, 2.77 GB (was 4.50). |
 | Adversarial generic and nominal fixtures still report their limits, per declaration | Yes. The field-work family is refused at its declaration `Uses`, the growing families at their instance and shape limits, and a 17-level alias chain at its use `T0`. New tests show two declarations that together exceed a budget, 60,000 materializations, and 3,200 ordinary records are accepted. |
 | `evicted = 0` on an unchanged 500k rerun | Yes. An edit → check at 500k stores its entry, retains 147.8 MB (over the old 128 MiB) and evicts 0; at 1M it retains 294 MB and evicts 0. |
 | `mylang test` works at 500k | Yes (3.8 s edit → test). Its 177 failures are all `R_FRAME_LIMIT`: the test of module *k* recurses *k* modules deep under the 1,024-frame test ceiling, as the audit found. At 1M it works too (1,377 such failures). |
@@ -26,8 +29,8 @@ both at load time.
 
 ## What changed
 
-Seven commits of work, one merge and one docs commit. Every behaviour has a SPEC.md
-bullet and a test tagged with it.
+Seven commits of work, one merge and one docs commit in the first round, two more in the
+follow-up (below). Every behaviour has a SPEC.md bullet and a test tagged with it.
 
 ### 1. Both nominal `E_GENERIC_LIMIT` budgets are per declaration
 
@@ -75,7 +78,7 @@ bullet and a test tagged with it.
   byte, ~560 MB for a million lines per compiler identity. The 128 MiB floor still
   covers small projects, and entries larger than 128 MiB are still bypassed. The
   largest entry at 1M, the summary slot, is 39 MB, so that per-entry cap is reached
-  at ~3.3M lines (see *Remaining program-wide caps*).
+  at ~3.3M lines; the follow-up scales it (`FRONTEND-CACHE-ENTRY-1`).
 - Test: `the frontend cache keeps a working set larger than its floor and evicts
   least recently used history`.
 
@@ -212,6 +215,18 @@ Run once on the final tree (`48b26186` plus this report), through the build slot
 
 The whole unit root, run unsharded after the arena change, passed 1,678/1,678.
 
+The follow-up's gate, on `5e5925f5` plus this report:
+
+| Step | Result |
+| --- | --- |
+| `zig build test --summary all --maxrss 8000000000` | 93/93 steps (1,938 tests run, the rest cached verdicts) |
+| `zig build test-qbe --summary all` | 52/52 steps, 403/403 tests |
+| `zig build test-qbe-build --summary all -Dtest-rerun=true` | 34/34 steps, 118/118 tests |
+| `zig build fmt-check` | clean |
+| `zig-out/bin/mylang test tests/lang` | 569 passed, 0 failed, across 106 programs |
+
+The unsharded unit root passed 1,700/1,700.
+
 ## Measurements
 
 **Setup.**
@@ -283,68 +298,107 @@ link noise (0.32–0.88 s per link at this load).
 
 All the edit rows run under the default 8 GiB ceiling with no `mylang.json`.
 
-## Memory at a million lines (item 7)
+## Follow-up: memory and the remaining caps
 
-**Why address space ran far ahead of resident memory.**
-- Arena geometry, as above. A 500k check had 4.58 GB of address space for 2.72 GB
-  resident.
-- After the fix, address space tracks resident memory within ~5%: 6.53/6.23 GB for
-  the 1M check, and 9.62/8.95 GB for the 1M build frontend. The remainder is the
-  process arena of `std.process.Init` and the page allocator's rounding.
+Two commits after the integration merge `ae5c9fd0`: `9d424db1` (memory) and `5e5925f5`
+(caps).
 
-**What remains for a cold 1M build under 8 GiB.** The frontend child
-(`emit-project-qbe`) holds 8.1–8.4 GB for its whole 65 s emission. It peaks at
-8.95 GB resident and 9.62 GB of address space at the end, while it serializes the
-manifest and writes the replay record. Phases of the 77 s cold frontend (v3, load ~8):
+### A cold 1M build under the default 8 GiB ceiling (`9d424db1`)
 
-| Phase | seconds | resident at end |
-| --- | --- | --- |
-| load + parse (2,401 modules, 35.1 MB) | 3.2 | ~3.6 GB |
-| merge, dependency keys | 1.9 | ~4.3 GB |
-| body check, effect/origin passes | 4.5 | ~6.2 GB |
-| lowering (and inlining) | 1.7 | ~8.1 GB |
-| native emission (93,601 units) | 64.8 | 8.1 → 8.4 GB, 8.75 GB at the manifest |
+**How the memory was found.** `phase_rss.py` samples the frontend child
+(`emit-project-qbe`, as `mylang build` runs it) every 20 ms and aligns the samples with
+its `--timings=json` phases. At 500k, the phase that parses (+1.04 GB) and the phase that
+lowers (+1.14 GB) grew far more than the data they produce. Most of that was growth
+buffers left behind in arenas, plus tables nobody read again:
 
-Everything each phase produces stays live until exit. That includes:
-- the per-module ASTs, and the merged deep copy of them;
-- the 8.1M-node typed program;
-- the pre-inline bytecode, whose unchanged function bodies the inlined program
-  shares, so it cannot simply be dropped;
-- the emission's per-unit records;
-- the whole manifest as one JSON string, plus a copy for the replay record.
+- **The parser's node and statement lists (`PARSE-EXACT-1`).** They grew by appending
+  in the project arena. Each regrowth abandoned the old buffer: three times the final
+  list, per module. They now grow in the arena's freeing parent and are copied in at
+  their exact length when the parse ends.
+- **Lowering (`LOWER-EXACT-1`).** Each function's work stack, labels, fixups, loop
+  table and instruction list grew in the output arena, and so did bytecode
+  validation's tables. They now live in a per-function scratch arena over a freeing
+  allocator (`lower.Allocators`); only the finished instructions are copied out. The
+  scratch resets with `.free_all`: a `.retain_capacity` reset reallocates, and would
+  swallow its own allocation failure (the allocation-failure tests caught this).
+- **Merged syntax after check (`SYNTAX-RELEASE-1`).** In a whole-program
+  `emit-project-qbe`, lowering and emission read only the typed program and bytecode.
+  So once the program is checked, the merged node and statement tables are returned;
+  they have mappings of their own in the chunked arena, so the memory goes back to the
+  system. The emitted program is byte-identical (tested).
+- **The replay record (`MANIFEST-STREAM-1`).** It is written piece by piece around the
+  manifest, hashing as it goes, instead of being assembled in one buffer. The frontend
+  holds its manifest once, not twice.
 
-Getting under 8 GiB needs about 1 GB of these released. The cheapest candidates, in
-order:
-1. **Stream the manifest to stdout** and to the replay record instead of building it
-   whole: −0.5 to −1 GB of the end spike.
-2. **Keep per-module syntax in its own arena and drop it after the merge**:
-   ~0.6–0.9 GB at 1M, if nothing after the merge reads `index.units[i].syntax`.
-   Navigation and interfaces must be checked first.
-3. **Lower into a scratch arena and copy only what the inliner keeps.**
+**Cold build frontend, peak resident memory** (ReleaseFast; `fe.sh`, fresh cache, load
+~6):
 
-None is a one-line change, and the audit assigns phase freeing to the memory lane. The
-lasting fix is item 1 (per-module compilation), whose largest process is one module
-plus its imports' interfaces.
+| Tier | before (`de222eb6`) | after (`5e5925f5`) | peak address space after |
+| --- | --- | --- | --- |
+| 200k | 1,826 MB | **1,129 MB** (−38%) | 1,240 MB |
+| 500k | 4,490 MB | **2,751 MB** (−39%) | 2,895 MB |
+| 1M | 8,950 MB (fails at 8 GiB) | **5,517 MB** (−38%) | 5,872 MB |
 
-Until then, a cold 1M build needs `MYLANG_HOST_MEMORY_LIMIT=12G` **once**. Every edit
-build after it fits the default (4.6 GB).
+**Resident memory at the end of each 1M phase, after** (MB; 61.5 s cold frontend):
 
-## Remaining program-wide caps (not reached by the generated shape)
+| parse | merge | keys | body check | effects | lowering | emission | peak |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 880 | 1,561 | 2,208 | 3,901 | 4,217 | 4,266 | 5,407 | 5,517 |
 
-The tier has no generics and no callbacks, so these were not exercised. Each is a
-fixed count for the whole program, and a large real project could reach them:
+Merged syntax is released before lowering, so lowering adds 49 MB net. Before, it added
+1.9 GB.
 
-| Cap | Where | Trips when |
-| --- | --- | --- |
-| 4,096 generic function instantiations | `generic_instances.Registry.max_instances` | distinct `f[T]` instances program-wide |
-| 4,096 generic array specializations | `type_catalog.instantiateArray` | distinct `[N]T` from generic code |
-| 4,096 callback signatures | `callables.intern` | distinct `def(...) -> R` types |
-| 1 MiB of nominal type display names | `nominal_catalog` (`name_bytes`) | ~30k named types at ~35 bytes each |
-| 128 MiB per frontend-cache entry | `frontend_cache.write` / `readEntry` | the summary slot, 39 MB at 1M, passes it at ~3.3M lines (bypassed, then every check re-checks every body) |
-| 50,000 directory entries in a test snapshot walk | `native_test_snapshot.inventory` | a project tree of more than 50k files and directories |
+**Whole cold `build` peak, the largest process in the tree** (`/usr/bin/time %M`):
+- 200k: 1,828 → 1,132 MB;
+- 500k: 4,497 → 2,767 MB;
+- 1M: 8,985 MB with `MYLANG_HOST_MEMORY_LIMIT=12G` → **5,522 MB with no override**.
 
-The first three should get the treatment item 1 of this lane gave the nominal budgets:
-per declaration or per call site, not per program.
+The build driver peaks at 2.1 GB at 1M, after the frontend exits. Edit builds dropped
+too:
+- 200k: 935 → 826 MB;
+- 500k: 2,251 → 2,008 MB;
+- 1M: 4,513 → 3,982 MB.
+
+A cold `mylang test` dropped as well:
+- 500k: 3,591 → 2,970 MB;
+- 1M: fails → 5,876 MB.
+
+**What was not done, and why.**
+- **Dropping each module's syntax after the merge.** Name resolution during check
+  still reads the per-module declaration tables (`interfaces.Index` readers of
+  `units[m].syntax.types`). Those tables share an arena with the bodies, so dropping
+  the bodies alone needs a second arena for them. After `PARSE-EXACT-1`, per-module
+  syntax is 2.4× smaller: 0.44 GB for the whole 500k parse phase, 0.88 GB at 1M.
+- **Streaming the manifest to stdout.** The build driver reads the whole manifest
+  from the pipe anyway, and the replay record stores it with the warnings before it.
+  Full streaming needs a writer-based emitter API and a replay format with the warnings
+  after the manifest. The remaining end-of-run spike is ~110 MB at 1M.
+- **Releasing the typed program before emission.** An executable's stand-in emission
+  may lower more functions mid-emission (`lowerMore`), and that reads it.
+
+**What remains at 1M** (5.5 GB), from largest:
+- the check: typed program and semantic keys, +1.7 GB;
+- emission's per-unit records, +1.1 GB;
+- per-module syntax plus the index, 0.88 GB;
+- the merged syntax until check ends, +0.68 GB;
+- dependency keys, +0.65 GB.
+
+Per-module compilation (audit item 1) removes all of them from any one process.
+
+### The remaining program-wide caps (`5e5925f5`)
+
+| Cap | Before | After (effective limit) | Adversarial safeguard kept | Test |
+| --- | --- | --- | --- | --- |
+| Generic function instances (`GENERIC-INSTANCE-BUDGET-1`) | 4,096 per program | **4,096 per generic declaration**; the program total grows with its generic declarations | polymorphic recursion multiplies one declaration's instances: `grow[T]` calling `grow[list[T]]` still stops with `E_GENERIC_LIMIT`, and so does the expanding-array fixture | registry: one declaration refused at 4,097 while 4,097 others are accepted (8,193 in all); program: 4,097 generic declarations check |
+| Generic array shapes (`GENERIC-SITE-BUDGET-1`) | 4,096 per program, byte literals included | **4,096 per source spelling** | a spelling makes a new shape only when a generic body is instantiated at new types, so recursion through it stops (in practice the declaration's instance budget meets it first); a byte literal is one spelling with one shape | `chargeSite`: one spelling refused at 4,097; another spelling and the other family at the same spelling keep theirs |
+| Callback signatures (`GENERIC-SITE-BUDGET-1`) | 4,096 per program | **4,096 per source spelling** | as for arrays | same test |
+| Nominal display names (`NOMINAL-NAME-BUDGET-1`) | 1 MiB per program | **max(1 MiB, one byte per source byte)** total; each name still ≤ 1 MiB | nested generic names grow with the square of their depth, so the `Chain` fixture still stops a small program at 1 MiB | 2,000 records with 600-byte names (1.2 MB of names, 1.3 MB of source) check; `largeNames` still refused |
+| Frontend-cache entry (`FRONTEND-CACHE-ENTRY-1`) | 128 MiB | **max(128 MiB, 8 bytes per source byte)** once a project is loaded, so ≥ 280 MB at 1M against a 39 MB summary slot | a damaged length still cannot make a read allocate more than the project could have produced | a 1,500-byte entry is bypassed under a 1,000-byte ceiling and stored after fitting to a 200-byte project |
+
+`callables.intern` still scans every record to find an equal signature: O(records) per
+interned callback type. That is not a cap, but at 100k types with many function-typed
+values it is quadratic. Replacing it with an index needs every callback record
+registered, including the nominal ones `nominal_catalog` creates, so it was left alone.
 
 ## Notes for the integrator
 
@@ -363,13 +417,29 @@ per declaration or per call site, not per program.
     the adapter. At ~20k units that is past `ARG_MAX`, so the Zig adapter should read
     a response file or a directory.
 - **`src/main.zig`.** `run()` calls `frontend_cache.finish()` before the receipt, on
-  both the success and the error path.
+  both the success and the error path. `buildIndex` fits the frontend cache to the
+  loaded project (`fitProject`), and `listModulesWithCache` releases the merged
+  syntax of a checked whole-program `emit-project-qbe` (`releaseCheckedSyntax`).
+- **Follow-up API changes.**
+  - `lower.lowerWith` and `lower.lowerSelectedWith` take `lower.Allocators{ output,
+    scratch }` instead of one allocator; `scratch` must be a freeing allocator (the
+    project arena's `child_allocator`).
+  - `parser.Parser` takes an optional `.syntax = .{ .growth = gpa }`, and a caller
+    that sets it must `defer p.release()`.
+  - `project_compile.Compilation.releaseSyntax` empties `compilation.syntax.nodes`
+    and `.statements`. Any new reader of the merged syntax after check, in the build
+    frontend, must go before it.
+  - `type_catalog.Catalog.chargeSite` replaces the `arrays.specialized` counter.
 - **SPEC.md.**
   - New: `NOMINAL-LAYOUT-BUDGET-1`, `NOMINAL-TEMPLATE-BUDGET-1`, `PROJ-SCALE-1`,
     `FRONTEND-CACHE-RETAIN-1`, `BUILD-LINK-RSP-1`, `HOST-FAILURE-CAUSE-1`,
     `ARENA-BOUNDED-1`, `NATIVE-TEST-MEMO-MEMORY-1`, `QBE-FRAMEMAP-ROOTS-1`.
+  - New in the follow-up: `PARSE-EXACT-1`, `LOWER-EXACT-1`, `SYNTAX-RELEASE-1`,
+    `MANIFEST-STREAM-1`, `GENERIC-INSTANCE-BUDGET-1`, `GENERIC-SITE-BUDGET-1`,
+    `NOMINAL-NAME-BUDGET-1`, `FRONTEND-CACHE-ENTRY-1`.
   - Amended: `NOMINAL-LAYOUT-1`, `NOMINAL-TEMPLATE-CHECK-1`, `PROJ-6`,
-    `QBE-BATCH-3`, `QBE-BATCH-4`.
+    `QBE-BATCH-3`, `QBE-BATCH-4`, and in the follow-up `GENERIC-INSTANCE-1`,
+    `NOMINAL-INSTANCE-1`.
   - Removed: `NOMINAL-LAYOUT-WORK-1` (superseded; see §1).
 - **Timing.** A cold 200k `check` with the chunked arena was within noise of the
   `std` arena (1.61 against 1.70 s minimum of 3, at load 6.5–9.7) and used 105 MB

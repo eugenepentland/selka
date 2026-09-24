@@ -64,7 +64,7 @@ test "generic execution preserves nominal values through copy contracts" {
     try t.expectEqualStrings("id[B]", compilation.program.?.functions[2].name);
 }
 
-fn limited(count: usize) !void {
+fn declarations(count: usize) !void {
     var text_buffer: std.Io.Writer.Allocating = .init(t.allocator);
     defer text_buffer.deinit();
     for (0..count) |index| try text_buffer.writer.print("def g{d}[T]() -> i64:\n    return 0\n\n\n", .{index});
@@ -73,17 +73,28 @@ fn limited(count: usize) !void {
     try text_buffer.writer.writeAll("    return g0[i64]()\n");
     var compilation = try language.Compilation.init(t.allocator, "limit.my", text_buffer.written());
     defer compilation.deinit();
-    if (count == 4096) {
-        try compilation.check();
-        try t.expectEqual(@as(usize, 4097), compilation.program.?.functions.len);
-    } else {
-        try t.expectError(error.SourceError, compilation.check());
-        try t.expectEqualStrings("E_GENERIC_LIMIT", compilation.diagnostics.items[0].code);
-    }
+    try compilation.check();
+    try t.expectEqual(count + 1, compilation.program.?.functions.len);
 }
-test "generic execution bounds actual discovery and reuses instances at capacity" {
-    try limited(4096);
-    try limited(4097);
+// spec-case: GENERIC-INSTANCE-BUDGET-1
+test "polymorphic recursion in one declaration still stops at a generic limit" {
+    var compilation = try language.Compilation.init(t.allocator, "recursion.my",
+        \\def grow[T](x: T) -> i64:
+        \\    return grow[list[T]]([x])
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return grow[i64](1)
+    );
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqualStrings("E_GENERIC_LIMIT", compilation.diagnostics.items[0].code);
+}
+// spec-case: GENERIC-INSTANCE-BUDGET-1
+test "generic execution reuses instances and counts them per declaration, not per program" {
+    // 4,097 generic declarations each instantiated once: past what one
+    // program-wide budget of 4,096 allowed, within each declaration's own.
+    try declarations(4097);
 }
 
 // spec: GENERIC-DIAGNOSTIC-1

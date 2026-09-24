@@ -918,3 +918,81 @@ test "a class field write mutates the receiver in place without copying it" {
     const outcome = try native.run(&compilation);
     try testing.expectEqual(@as(i64, 5), outcome.value);
 }
+
+/// A program of `count` small functions, each a loop over a list, called from `main`.
+fn loopFunctions(allocator: std.mem.Allocator, count: usize) ![]u8 {
+    var text: std.Io.Writer.Allocating = .init(allocator);
+    defer text.deinit();
+    for (0..count) |index| try text.writer.print("def f{d}(n: int) -> int:\n    xs: list[int] = []\n    for k in range(n):\n        if k % 3 == 0:\n            xs.append(k * {d})\n    return len(xs)\n\n\n", .{ index, index });
+    try text.writer.writeAll("def main() -> int:\n    total = 0\n");
+    for (0..count) |index| try text.writer.print("    total += f{d}(4)\n", .{index});
+    try text.writer.writeAll("    return total\n");
+    return text.toOwnedSlice();
+}
+/// Bytes lowering reserved in its output arena when its scratch draws from
+/// `scratch` (null: from the output itself), and the lowered program's size.
+fn loweredBytes(program: @import("typed.zig").Program, scratch: ?std.mem.Allocator) !struct { bytes: usize, instructions: usize } {
+    const lower = @import("lower.zig");
+    var counting = testing.FailingAllocator.init(testing.allocator, .{});
+    var output = std.heap.ArenaAllocator.init(counting.allocator());
+    defer output.deinit();
+    const lowered = try lower.lowerWith(.{ .output = output.allocator(), .scratch = scratch orelse output.allocator() }, program, false);
+    var instructions: usize = 0;
+    for (lowered.functions) |function| instructions += function.scope.instructions.len;
+    return .{ .bytes = counting.allocated_bytes, .instructions = instructions };
+}
+// spec: LOWER-EXACT-1
+test "lowering keeps only each function's exact instructions in its output" {
+    const text = try loopFunctions(testing.allocator, 200);
+    defer testing.allocator.free(text);
+    var compilation = try language.Compilation.init(testing.allocator, "lowering.my", text);
+    defer compilation.deinit();
+    try compilation.check();
+    const inside = try loweredBytes(compilation.program.?, null);
+    const apart = try loweredBytes(compilation.program.?, testing.allocator);
+    try testing.expectEqual(inside.instructions, apart.instructions);
+    // The emitter's lists and the validation tables were most of the output.
+    try testing.expect(apart.bytes * 2 < inside.bytes);
+}
+
+const Modules = struct {
+    fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
+        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
+            \\module main
+            \\import helper
+            \\
+            \\
+            \\def main() -> int:
+            \\    return helper.twice(20) + 2
+        );
+        if (std.mem.eql(u8, path, "helper.my")) return allocator.dupe(u8,
+            \\module helper
+            \\
+            \\
+            \\public def twice(n: int) -> int:
+            \\    xs: list[int] = [n, n]
+            \\    return xs[0] + xs[1]
+        );
+        return error.NotFound;
+    }
+};
+/// The QBE a checked project emits, with its merged syntax released first or not.
+fn emittedAfterCheck(release: bool) ![]u8 {
+    var project = language.project.Project.init(testing.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
+    var index = try language.interfaces.build(&project);
+    var compilation = try language.project_compile.Compilation.init(&index);
+    try compilation.check();
+    if (release) compilation.releaseSyntax();
+    try testing.expectEqual(!release, compilation.syntax.nodes.items.len != 0);
+    return compilation.emitQbe(testing.allocator);
+}
+// spec: SYNTAX-RELEASE-1
+test "a checked project lowers and emits the same program after its merged syntax is released" {
+    const kept = try emittedAfterCheck(false);
+    defer testing.allocator.free(kept);
+    const released = try emittedAfterCheck(true);
+    defer testing.allocator.free(released);
+    try testing.expectEqualStrings(kept, released);
+}

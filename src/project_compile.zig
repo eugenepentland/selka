@@ -362,6 +362,24 @@ pub const Compilation = struct {
         const symbol = unit.symbols.items[unit.names.get(self.src.text(declaration)) orelse return error.InternalError];
         return symbol.exported and symbol.kind == .type;
     }
+    /// Lowering's output lives in the project arena; its per-function scratch
+    /// draws from the arena's freeing parent (LOWER-EXACT-1).
+    fn lowering(self: *Compilation) lower.Allocators {
+        return .{ .output = self.index.project.arena.allocator(), .scratch = self.index.project.arena.child_allocator };
+    }
+    /// SYNTAX-RELEASE-1: give the merged syntax's node and statement tables
+    /// back to the project arena once the program is checked and only lowering
+    /// and emission are left, which read the typed program and bytecode alone.
+    /// Tables this large have mappings of their own there, so their memory
+    /// returns to the system (680 MB at a million lines); the tables read as
+    /// empty afterwards.
+    pub fn releaseSyntax(self: *Compilation) void {
+        const allocator = self.index.project.arena.allocator();
+        self.syntax.nodes.deinit(allocator);
+        self.syntax.statements.deinit(allocator);
+        self.syntax.nodes = .empty;
+        self.syntax.statements = .empty;
+    }
     /// Lazily lower the checked project into its retained bytecode representation.
     pub fn emit(self: *Compilation) EmitError!void {
         return self.emitWithOptions(false);
@@ -372,7 +390,7 @@ pub const Compilation = struct {
         try self.check();
         if (self.code != null) return;
         if (try self.lowerStandIns(drop_debug)) return;
-        const lowered = try lower.lowerWith(self.index.project.arena.allocator(), self.program.?, drop_debug);
+        const lowered = try lower.lowerWith(self.lowering(), self.program.?, drop_debug);
         self.code = try bytecode_inline.inlineProgram(self.index.project.arena.allocator(), lowered);
     }
 
@@ -402,7 +420,7 @@ pub const Compilation = struct {
             const stored = record.* orelse continue;
             chosen.* = !std.mem.eql(u8, &stored.facts.inline_key, &@as(fragments.Digest, @splat(0)));
         }
-        const lowered = lower.lowerSelectedWith(a, self.program.?, standins.selected, drop_debug) catch |err| switch (err) {
+        const lowered = lower.lowerSelectedWith(self.lowering(), self.program.?, standins.selected, drop_debug) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => return error.InternalError,
         };
@@ -418,7 +436,7 @@ pub const Compilation = struct {
         const a = self.index.project.arena.allocator();
         const fresh = try a.alloc(bool, standins.selected.len);
         for (fresh, standins.selected, standins.pre) |*wanted, chosen, known| wanted.* = chosen and known.scope.instructions.len == 0;
-        const lowered = lower.lowerSelectedWith(a, self.program.?, fresh, standins.drop_debug) catch |err| switch (err) {
+        const lowered = lower.lowerSelectedWith(self.lowering(), self.program.?, fresh, standins.drop_debug) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => return error.InternalError,
         };

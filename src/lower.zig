@@ -22,6 +22,11 @@ const Work = union(enum) {
 const Fixup = struct { instruction: usize, label: Label, arm: ?usize = null, propagation: bool = false };
 const Emitter = struct {
     allocator: std.mem.Allocator,
+    /// LOWER-EXACT-1: where the emitter's work stack, labels, fixups, loop
+    /// table and instruction list grow. Only the finished instructions are
+    /// copied into `allocator`, at their exact length, so an arena output keeps
+    /// no abandoned growth buffers (two to three times the code, before).
+    scratch: std.mem.Allocator,
     program: typed.Program,
     /// A `--mode ReleaseFast` build drops `debug` nodes in lowering; Debug builds
     /// and `run`/`test` keep them.
@@ -33,11 +38,11 @@ const Emitter = struct {
     fixups: std.ArrayList(Fixup) = .empty,
 
     fn push(self: *Emitter, task: Work) !void {
-        try self.work.append(self.allocator, task);
+        try self.work.append(self.scratch, task);
     }
     fn label(self: *Emitter) !Label {
         const id: Label = @fromBackingInt(self.labels.items.len);
-        try self.labels.append(self.allocator, null);
+        try self.labels.append(self.scratch, null);
         return id;
     }
     fn instruction(self: *Emitter, span: Span, op: @FieldType(bc.Instruction, "op")) !void {
@@ -217,7 +222,7 @@ const Emitter = struct {
                 const start = try self.label();
                 const end = try self.label();
                 const next = if (loop.step != null) try self.label() else start;
-                try self.loops.put(self.allocator, loop.id, .{ .start = next, .end = end });
+                try self.loops.put(self.scratch, loop.id, .{ .start = next, .end = end });
                 try self.push(.{ .mark = end });
                 if (loop.step) |step| {
                     try self.push(.{ .jump = .{ .target = start, .span = stmt.span } });
@@ -444,30 +449,31 @@ const Emitter = struct {
         }
     }
     fn finish(self: *Emitter, body: typed.StatementId) ![]const bc.Instruction {
-        defer self.work.deinit(self.allocator);
-        defer self.labels.deinit(self.allocator);
-        defer self.fixups.deinit(self.allocator);
+        defer self.work.deinit(self.scratch);
+        defer self.labels.deinit(self.scratch);
+        defer self.fixups.deinit(self.scratch);
+        defer self.code.deinit(self.scratch);
         try self.push(.{ .statement = body });
         while (self.work.pop()) |task| switch (task) {
-            .instruction => |inst| try self.code.append(self.allocator, inst),
+            .instruction => |inst| try self.code.append(self.scratch, inst),
             .statement => |id| try self.emitStatement(id),
             .expression => |id| try self.emitExpression(id),
             .propagate => |propagate| {
-                try self.fixups.append(self.allocator, .{ .instruction = self.code.items.len, .label = propagate.target, .propagation = true });
-                try self.code.append(self.allocator, .{ .span = propagate.span, .op = .{ .try_result = .{ .input = propagate.input, .output = propagate.output, .error_target = 0 } } });
+                try self.fixups.append(self.scratch, .{ .instruction = self.code.items.len, .label = propagate.target, .propagation = true });
+                try self.code.append(self.scratch, .{ .span = propagate.span, .op = .{ .try_result = .{ .input = propagate.input, .output = propagate.output, .error_target = 0 } } });
             },
             .dispatch => |dispatch| {
                 const arms = try self.allocator.alloc(bc.SwitchArm, dispatch.targets.len);
                 for (dispatch.targets, dispatch.slots, arms, 0..) |target, slot, *arm, i| {
                     arm.* = .{ .target = 0, .slot = slot };
-                    try self.fixups.append(self.allocator, .{ .instruction = self.code.items.len, .label = target, .arm = i });
+                    try self.fixups.append(self.scratch, .{ .instruction = self.code.items.len, .label = target, .arm = i });
                 }
-                try self.code.append(self.allocator, .{ .span = dispatch.span, .op = .{ .switch_variant = .{ .ty = dispatch.ty, .arms = arms } } });
+                try self.code.append(self.scratch, .{ .span = dispatch.span, .op = .{ .switch_variant = .{ .ty = dispatch.ty, .arms = arms } } });
             },
             .mark => |id| self.labels.items[@backingInt(id)] = self.code.items.len,
             .jump => |jump| {
-                try self.fixups.append(self.allocator, .{ .instruction = self.code.items.len, .label = jump.target });
-                try self.code.append(self.allocator, .{ .span = jump.span, .op = if (jump.conditional) .{ .jump_if_false = 0 } else .{ .jump = 0 } });
+                try self.fixups.append(self.scratch, .{ .instruction = self.code.items.len, .label = jump.target });
+                try self.code.append(self.scratch, .{ .span = jump.span, .op = if (jump.conditional) .{ .jump_if_false = 0 } else .{ .jump = 0 } });
             },
         };
         for (self.fixups.items) |fixup| {
@@ -484,7 +490,7 @@ const Emitter = struct {
                 inst.op.jump_if_false = target;
             }
         }
-        return self.code.toOwnedSlice(self.allocator);
+        return self.allocator.dupe(bc.Instruction, self.code.items);
     }
 };
 fn binaryInstruction(binary: anytype, nodes: []const typed.Node, records: []const typed.Record) bc.Instruction {
@@ -534,15 +540,22 @@ fn binaryInstruction(binary: anytype, nodes: []const typed.Node, records: []cons
 }
 /// Allocate and validate bytecode lowered from the checked typed program.
 pub fn lower(allocator: std.mem.Allocator, program: typed.Program) LowerError!bc.Program {
-    return lowerWith(allocator, program, false);
+    return lowerWith(.{ .output = allocator, .scratch = allocator }, program, false);
 }
 
 /// Lower with an explicit `debug` policy: a ReleaseFast build drops the nodes.
-pub fn lowerWith(allocator: std.mem.Allocator, program: typed.Program, drop_debug: bool) LowerError!bc.Program {
+pub fn lowerWith(allocators: Allocators, program: typed.Program, drop_debug: bool) LowerError!bc.Program {
+    const allocator = allocators.output;
+    var scratch = std.heap.ArenaAllocator.init(allocators.scratch);
+    defer scratch.deinit();
     const functions = try allocator.alloc(bc.Function, program.functions.len);
-    for (program.functions, 0..) |function, index| functions[index] = try lowerFunction(allocator, program, function, true, drop_debug);
+    for (program.functions, 0..) |function, index| {
+        defer _ = scratch.reset(.free_all);
+        functions[index] = try lowerFunction(.{ .output = allocator, .scratch = scratch.allocator() }, program, function, true, drop_debug);
+    }
     const result: bc.Program = .{ .functions = functions, .main = program.main, .records = program.records };
-    try bc.validate(allocator, result);
+    // Validation's tables are temporary too.
+    try bc.validate(scratch.allocator(), result);
     return result;
 }
 
@@ -551,22 +564,33 @@ pub fn lowerWith(allocator: std.mem.Allocator, program: typed.Program, drop_debu
 /// locals so callers can resolve callee ABIs without lowering that body. The
 /// selection mask is caller-owned and must remain live through validation.
 pub fn lowerSelected(allocator: std.mem.Allocator, program: typed.Program, selected: []const bool) LowerError!bc.Program {
-    return lowerSelectedWith(allocator, program, selected, false);
+    return lowerSelectedWith(.{ .output = allocator, .scratch = allocator }, program, selected, false);
 }
 
 /// Selective lowering with an explicit `debug` policy.
-pub fn lowerSelectedWith(allocator: std.mem.Allocator, program: typed.Program, selected: []const bool, drop_debug: bool) LowerError!bc.Program {
+pub fn lowerSelectedWith(allocators: Allocators, program: typed.Program, selected: []const bool, drop_debug: bool) LowerError!bc.Program {
     if (selected.len != program.functions.len) return error.InternalError;
+    const allocator = allocators.output;
+    var scratch = std.heap.ArenaAllocator.init(allocators.scratch);
+    defer scratch.deinit();
     const functions = try allocator.alloc(bc.Function, program.functions.len);
-    for (program.functions, 0..) |function, index| functions[index] = try lowerFunction(allocator, program, function, selected[index], drop_debug);
+    for (program.functions, 0..) |function, index| {
+        defer _ = scratch.reset(.free_all);
+        functions[index] = try lowerFunction(.{ .output = allocator, .scratch = scratch.allocator() }, program, function, selected[index], drop_debug);
+    }
     const result: bc.Program = .{ .functions = functions, .main = program.main, .records = program.records };
-    bc.validateSelected(allocator, result, selected) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
+    bc.validateSelected(scratch.allocator(), result, selected) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
     return result;
 }
 
-fn lowerFunction(allocator: std.mem.Allocator, program: typed.Program, function: typed.Function, with_body: bool, drop_debug: bool) LowerError!bc.Function {
-    var emitter: Emitter = .{ .allocator = allocator, .program = program, .drop_debug = drop_debug };
-    defer emitter.loops.deinit(allocator);
+/// LOWER-EXACT-1: the allocator the lowered program lives in, and a freeing
+/// allocator the per-function scratch arena draws from, which holds every
+/// emitter list and validation table and is reset after each function.
+pub const Allocators = struct { output: std.mem.Allocator, scratch: std.mem.Allocator };
+
+fn lowerFunction(allocators: Allocators, program: typed.Program, function: typed.Function, with_body: bool, drop_debug: bool) LowerError!bc.Function {
+    var emitter: Emitter = .{ .allocator = allocators.output, .scratch = allocators.scratch, .program = program, .drop_debug = drop_debug };
+    defer emitter.loops.deinit(allocators.scratch);
     return .{
         .policy = .{
             .host = function.policy.host,

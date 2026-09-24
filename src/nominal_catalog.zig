@@ -15,6 +15,8 @@ const callables = @import("callables.zig");
 const record_layouts = @import("record_layouts.zig");
 const Context = @FieldType(Store, "context");
 const Identities = @FieldType(Store, "identities");
+/// The display-name budget of a small program, and each name's own ceiling.
+const min_name_bytes: usize = 1024 * 1024;
 const Builder = struct {
     context: Context,
     index: *const templates.Index,
@@ -65,7 +67,8 @@ const Builder = struct {
         }
         const bracketed = (node.key.base == .named or node.key.base == .tuple) and node.key.arguments.len != 0;
         const punctuation = if (bracketed) node.key.arguments.len + 1 else 0;
-        if (size > 1048576 - @min(punctuation + self.identities.name_bytes, 1048576)) return self.nameLimit(node.site);
+        const budget = self.nameBudget();
+        if (size > budget - @min(punctuation + self.identities.name_bytes, budget)) return self.nameLimit(node.site);
         var output: std.Io.Writer.Allocating = .init(allocator);
         defer output.deinit();
         output.writer.writeAll(base) catch return error.OutOfMemory;
@@ -102,8 +105,16 @@ const Builder = struct {
         self.identities.items.items[id].name = name;
         self.identities.name_bytes += name.len;
     }
+    /// NOMINAL-NAME-BUDGET-1: the display-name bytes one compilation may hold:
+    /// 1 MiB, or one byte per source byte in a larger program. A program's
+    /// ordinary names grow with its declarations, so it is never refused for
+    /// its size, while nested generic instances, whose names grow with the
+    /// square of their depth, still stop a small program at 1 MiB.
+    fn nameBudget(self: Builder) usize {
+        return @max(min_name_bytes, self.context.src.bytes.len);
+    }
     fn nameLimit(self: Builder, span: source.Span) Error {
-        return self.context.sink.fail(diagnostic.generic_limit, span, "nominal type display names exceed the 1 MiB compilation budget");
+        return self.context.sink.fail(diagnostic.generic_limit, span, "nominal type display names exceed the compilation budget (1 MiB, or one byte per source byte)");
     }
     fn publicBase(self: Builder, id: usize) Error!bool {
         const declaration = self.index.declarations.items[id];
