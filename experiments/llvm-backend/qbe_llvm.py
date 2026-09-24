@@ -27,7 +27,9 @@ Design rules, in the order they constrain the code:
   run, so no guard can become dead because of it.
 * QBE temporaries are mutable cells. Each gets a private entry-block slot;
   LLVM's promotion and SROA passes recover SSA where possible. Address arithmetic
-  uses GEP only when conservative provenance checks establish an object origin.
+  uses GEP only when conservative provenance checks establish an object origin,
+  and for a load or store whose address is an element address summed from a
+  marked storage word in the same block (LLVM-ELEMENT-GEP-1).
 * Source allocations stay where the source put them: the emitter deliberately
   hoists some aggregate scratch to the entry block and not others.
 * An unsupported opcode, type or calling shape raises `ParseError` naming the
@@ -259,6 +261,8 @@ class Function:
         # Temporaries the frontend marked `# myl-obj`: addresses it knows name
         # memory outside this function's stack frame.
         self.object_hints = set()
+        # LLVM-ELEMENT-CLASS-1: the marked element storage words, by element kind.
+        self.element_hints = {}
 
 
 class Unit:
@@ -360,7 +364,8 @@ def parse_unit(text, unit="unit"):
         raise ParseError("unit contains no function", unit)
     header = lines[index].strip()
     function, index = parse_header(header, lines, index, unit)
-    function.blocks = parse_blocks(lines, index, unit, function.object_hints)
+    function.blocks = parse_blocks(lines, index, unit, function.object_hints,
+                                   function.element_hints)
     if not function.blocks:
         raise ParseError("function contains no blocks", unit, function.line, header)
     return Unit(function, aggregates, alignments, debug_file)
@@ -404,12 +409,20 @@ def parse_header(header, lines, index, unit):
 #: `llvm_emit.classify_memory`).  Format: `# myl-obj %temp`.
 OBJECT_MARKER = "# myl-obj "
 
+#: LLVM-ELEMENT-CLASS-1: `# myl-elem %temp KIND` marks the storage word of a
+#: managed container — the start of an element storage block whose elements
+#: have one size and kind (`8r` holds GC references, `8v` plain 8-byte values,
+#: `1v` octets, ...).  It says everything `# myl-obj` says, plus that no object
+#: overlaps the block and that it only ever holds elements of that kind.
+ELEMENT_MARKER = "# myl-elem "
 
-def parse_blocks(lines, index, unit, object_hints=None):
+
+def parse_blocks(lines, index, unit, object_hints=None, element_hints=None):
     """Parse the block list of one function body.
 
     `object_hints`, when given, collects the temporaries the frontend marked as
-    holding an address outside this function's stack frame.
+    holding an address outside this function's stack frame; `element_hints`
+    maps the ones it marked as element storage to their element kind.
     """
     blocks, current = [], None
     while index < len(lines):
@@ -420,6 +433,13 @@ def parse_blocks(lines, index, unit, object_hints=None):
             marked = stripped[len(OBJECT_MARKER):].strip()
             if marked.startswith("%"):
                 object_hints.add(marked[1:])
+            continue
+        if object_hints is not None and stripped.startswith(ELEMENT_MARKER):
+            parts = stripped[len(ELEMENT_MARKER):].split()
+            if parts and parts[0].startswith("%"):
+                object_hints.add(parts[0][1:])
+                if element_hints is not None and len(parts) == 2 and re.fullmatch(r"\d+[rv]", parts[1]):
+                    element_hints[parts[0][1:]] = parts[1]
             continue
         line = strip_comment(raw)
         if not line:
@@ -889,6 +909,15 @@ def compile_ir(ir_text, output):
         command = [zig, "cc", "-c", "-flto", optimization, "-fPIC", "-g0", ir_path, "-o", output]
     else:
         command = [zig, "cc", "-S", optimization, "-fPIC", "-g0", ir_path, "-o", output]
+    remarks = os.environ.get("MYLANG_QBE_LLVM_REMARKS")
+    if remarks:
+        # Diagnostic only: this unit's own optimization remarks (a full-LTO
+        # pre-link compile already vectorizes a self-contained loop), written
+        # beside the others.  A warm object cache never reaches this point.
+        os.makedirs(remarks, exist_ok=True)
+        record = os.path.join(remarks, os.path.basename(output) + ".yaml")
+        command += ["-fsave-optimization-record=yaml", f"-foptimization-record-file={record}",
+                    "-foptimization-record-passes=loop-vectorize|licm|gvn"]
     completed = subprocess.run(command, capture_output=True, text=True)
     if completed.returncode != 0:
         raise ParseError(f"LLVM rejected the translated unit:\n{completed.stderr}\n"
@@ -948,6 +977,17 @@ def main(argv=None):
     except ParseError as error:
         sys.stderr.write(f"{error}\n")
         return 1
+    dump = os.environ.get("MYLANG_QBE_LLVM_DUMP")
+    if dump:
+        # A diagnostic copy of one unit's input IL and translated IR, named by
+        # its symbol.  It is not part of the build: a warm object cache never
+        # reaches this point, so a dump wants a fresh `--cache-dir`.
+        os.makedirs(dump, exist_ok=True)
+        stem = os.path.join(dump, unit.function.name)
+        with open(stem + ".ssa", "w") as handle:
+            handle.write(text)
+        with open(stem + ".ll", "w") as handle:
+            handle.write(ir_text)
     try:
         compile_ir(ir_text, options.output)
     except ParseError as error:

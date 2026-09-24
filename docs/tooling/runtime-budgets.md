@@ -174,13 +174,18 @@ $ mylang test suite/ --jobs 4 --max-memory=256M
 8 passed, 0 cached, 0 failed, 0 skipped across 4 programs
 ```
 
+That bounds one invocation. Several agents building and gating on one machine
+share it through `scripts/build-slot.sh`, which admits a job only when a slot and
+enough `MemAvailable` are free
+([many agents on one machine](many-agents.md)).
+
 ## Sharded Zig test roots
 
 The gate's two slow Zig test roots run as several processes rather than one:
 `zig build test` splits `src/root_test.zig` into `-Dtest-shards=N` shards
 (default 12) and `test/integration.zig` into `N/2`, each an independent run of
 the same test binary under `--guardian-shard=K/N`, declaring its own `max_rss`
-(1.5 GiB per unit shard, 1 GiB per CLI shard) so `zig build --maxrss` still
+(1 GiB per unit shard, 768 MiB per CLI shard) so `zig build --maxrss` still
 bounds the whole gate. Guardian's runner gives each shard the named tests whose
 position among them is `K` modulo `N`, and the unnamed `test { }` blocks to
 shard 0 alone, so the shards partition the root and their `N test(s) selected`
@@ -191,3 +196,46 @@ are never sharded, and `-Dtest-filter=…` puts `test` back on their single
 whole-root runs too: the compiler has already dropped every non-matching test,
 so splitting the remainder would mostly produce empty shards. An empty shard is
 not a failure — only a root that selected nothing as a whole still fails.
+`test-units-sharded` and `test-cli-sharded` split a filtered run anyway; they
+exist for `scripts/affected_tests.py`, whose selections can name a hundred slow
+tests and which sums the shards' counts itself.
+
+### Declared memory is a reservation, not a measurement
+
+The build runner starts a step only while the `max_rss` of every running step
+fits in `--maxrss` (by default the machine's total memory, 30 GiB here), so the
+declarations decide how much of the gate runs at once. A driver's declaration
+covers its whole process tree at its peak; a Zig test binary's must also stay
+above the largest single process, which the runner checks and fails on. On
+2026-09-23 a clean-cache `zig build test` never held more than 5.8 GiB at once,
+while its declarations summed to far more than 30 GiB: the last unit shards
+waited most of a minute for reservations that were never used. The ceilings in
+`build.zig` now follow measured peaks — 1 GiB per unit shard (largest process
+570 MiB), 768 MiB per CLI shard (141 MiB), 1.5 GiB for the host-application
+roots and `tests/guest`, 256 MiB for checks that run no compiler — and a rerun
+of every test took 98 s instead of 136 s on the same loaded machine (81 s with
+no memory limit at all). Measure a step's tree before raising its ceiling; a
+larger number is not a safer one.
+
+## Cached test verdicts
+
+A `zig build` Run step is re-executed only when its cache key changes, and the
+gate's test steps now use that: the root shards, the host-application roots,
+the Python drivers and `mylang doctest` are keyed on the test binary, the
+emitted compiler and `qbe` they run, their command and environment, and the
+repository files listed for them in `build_test_inputs.zig`. Those lists are
+expanded on every build by `tests/input_manifest.py`, which writes one content
+manifest per list (a SHA-256 per file); each step declares its manifest, so an
+edited, added, removed or renamed file re-runs exactly the steps whose lists
+cover it. The walk happens at make time because this Zig version records
+`dependOnDirectory` but never re-runs the configure phase for it: a list
+expanded in `build.zig` would not see a new fixture. An unchanged `zig build
+test` reruns only the manifest walk (0.15 s), Guardian, `doc-coverage`, the guest suites (whose own
+receipts make that near-free) and the SPEC merge replay, which reads git
+history. `test-inputs-coverage` fails the gate when a test source names an
+existing repository path that its step does not declare, and
+`-Dtest-rerun=true` re-runs every cached test step when a verdict is in doubt.
+
+A driver's standard output is sent to standard error, because the build runner
+discards a checked step's standard output and would otherwise hide the report
+of a failing driver.

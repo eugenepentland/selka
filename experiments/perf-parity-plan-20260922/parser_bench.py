@@ -4,8 +4,8 @@
 usage: parser_bench.py --arm NAME=MYLANG_PATH[:extra,flags] ... --json OUT [--rounds N] [--cpu C]
 
 Adapted from `.tmp/roadmap-verify/parser_ab.py`: builds `experiments/sexpr-port/main.my`
-with each named compiler (`--project`, default ReleaseFast = LLVM O3 + LTO, plus any
-extra flags), builds the in-repo Zig reference `experiments/sexpr-port/zig-bench`
+with each named compiler (`--project`, ReleaseFast = LLVM O3 + LTO named explicitly
+unless the arm's extra flags choose a backend or mode, plus any extra flags), builds the in-repo Zig reference `experiments/sexpr-port/zig-bench`
 ReleaseFast, asserts every arm prints byte-identical output for census and render on
 the 7.42 MB `input8.sexp`, then times fresh pinned processes with the arm order
 shuffled inside each round. Ratios are paired per round against zig.
@@ -45,8 +45,12 @@ def main() -> int:
         name, rest = spec.split("=", 1)
         compiler, _, flags = rest.partition(":")
         out = opts.work / f"parser-{name}"
+        extra = [f for f in flags.split(",") if f]
+        # The release path was the default build until 2026-09-23 (now QBE).
+        chosen = any(f.split("=")[0] in ("--backend", "--qbe", "--mode", "--release") for f in extra)
+        release = [] if chosen else ["--backend", "llvm", "--llvm-opt", "3", "--lto"]
         cmd = [compiler, "build", str(opts.source), "--project", "-o", str(out),
-               "--cache-dir", str(opts.work / f"cache-{name}"), *[f for f in flags.split(",") if f]]
+               "--cache-dir", str(opts.work / f"cache-{name}"), *release, *extra]
         p = subprocess.run(cmd, capture_output=True, text=True)
         if p.returncode != 0:
             raise SystemExit(f"{name}: build failed\n{p.stderr[-3000:]}")

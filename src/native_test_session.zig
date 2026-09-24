@@ -5,6 +5,7 @@ const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
 const snapshot = @import("native_test_snapshot.zig");
 const options = @import("native_test_options.zig");
+const build_options = @import("qbe_build_options.zig");
 const environment = @import("native_test_environment.zig");
 const execute = @import("native_test_execute.zig");
 const invalidation = @import("invalidation.zig");
@@ -285,13 +286,14 @@ pub const Session = struct {
         try arguments.appendSlice(self.context.allocator, &.{
             self.compiler, "build", project.source, "--project", "--library", "-o", library, "--zig", self.tools.zig,
         });
-        // Only name a backend when it is not the mode-derived default: a
-        // ReleaseFast test selects the LLVM release path, while an explicit
-        // `--qbe` (or any Debug run, whose default is QBE) names the tool.
-        if (self.options.toolchain.qbe.len != 0 or !std.mem.eql(u8, self.options.mode, "ReleaseFast")) {
-            try arguments.appendSlice(self.context.allocator, &.{ "--qbe", self.tools.qbe });
+        // A test build is QBE in either mode, named by the tool this session
+        // stamped; `--release` hands the child the LLVM release path instead,
+        // which already names its mode.
+        if (build_options.release(self.options.link_arguments)) {
+            try arguments.append(self.context.allocator, build_options.release_flag);
+        } else {
+            try arguments.appendSlice(self.context.allocator, &.{ "--qbe", self.tools.qbe, "--mode", self.options.mode });
         }
-        try arguments.appendSlice(self.context.allocator, &.{ "--mode", self.options.mode });
         // `--no-cache` and an explicit object directory are contradictory in the
         // build frontend; the sentinel disables durable query reuse instead.
         if (!self.options.flags.no_cache) {
@@ -333,6 +335,9 @@ pub const Session = struct {
             .result = v.get(function, "result"),
             .reference = v.get(function, "return_reference"),
             .mode = self.options.mode,
+            // The release path is another code generator in the same mode, so
+            // a QBE result never answers for it.
+            .release = build_options.release(self.options.link_arguments),
             .limits = self.options.limits,
             .gc_stress = self.options.flags.gc_stress,
             .policy = self.source.support.policy_identity,

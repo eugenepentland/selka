@@ -44,8 +44,29 @@ its floor is the CLI root. The per-edit check does care. Measured on
 | Whole `tests/lang` after one edit | `mylang test tests/lang --cache-dir .mylang-cache/lang-tests --gc-stress` | about 0.5 s; every unchanged test, output-effect tests included, replays its receipt |
 
 `--affected --against HEAD` narrows a mylang run further to the tests whose
-dependency closure reaches a changed declaration. Nothing equivalent exists for
-a Zig root: any change reruns the whole root, and sharding only divides it.
+dependency closure reaches a changed declaration. A Zig root has no such
+dependency graph, so `scripts/affected_tests.py` approximates one from the diff:
+the tests declared in and beside a changed file, the test files that import it,
+and every test carrying a `spec:` tag, diagnostic code or function name the diff
+touches, run through `test-units-sharded`/`test-cli-sharded`. It also maps C
+runtime, guest, documentation and driver changes to their steps, and it prints
+every selection with the reason for it:
+
+```console
+$ python3 scripts/affected_tests.py --dry-run --base HEAD
+affected tests: the inner loop, NOT the gate
+base: fe465f32ab10 (HEAD) plus uncommitted and untracked files; 1 changed file(s)
+selected:
+  zig unit filter  qbe_test.test.
+                     <- src/qbe_test.zig is the test file for src/qbe.zig
+  guest tests      tests/lang/python_core.my
+                     <- compiler source src/qbe.zig (guest smoke)
+```
+
+It is a selection, not a proof: the full gate is still the finishing check. In
+the gate itself an unchanged test step keeps its cached verdict (see
+[cached test verdicts](runtime-budgets.md#cached-test-verdicts)), so a `.my` or
+documentation edit re-runs only the steps that read it.
 
 Write new language-behaviour tests on the mylang side from now on. The list
 below is the backlog of existing Zig tests that belong there too.

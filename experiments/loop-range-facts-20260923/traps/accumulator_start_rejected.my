@@ -1,0 +1,11 @@
+def count(xs: list[int], start: int) -> int:
+    c = start
+    for x in xs:
+        if x > 0:
+            c += 1
+    return c
+
+
+def main(out: Stream) -> int:
+    out.print("start")
+    return count([1 for _ in range(20)], 9223372036854775805)

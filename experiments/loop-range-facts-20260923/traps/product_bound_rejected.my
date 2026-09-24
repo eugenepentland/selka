@@ -1,0 +1,15 @@
+def a(i: int, j: int) -> int:
+    return (i + j) * (i + j + 1) // 2 + i + 1
+
+
+def row(v: list[int], i: int) -> int:
+    s = 0
+    for j in range(len(v)):
+        s = s + a(i, j) % 7 * v[j]
+    return s
+
+
+def main(out: Stream) -> int:
+    v = [1 for _ in range(20)]
+    out.print(row(v, 1000))
+    return row(v, 3037000490)

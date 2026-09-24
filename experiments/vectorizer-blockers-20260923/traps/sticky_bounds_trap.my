@@ -1,0 +1,15 @@
+# a bounds error inside a versioned loop with no overflow at all
+
+
+def walk(values: list[int], n: int) -> int:
+    total = 0
+    for i in range(n):
+        total = total + values[i]
+    return total
+
+
+def main(out: Stream) -> int:
+    values = [i for i in range(10)]
+    out.print(walk(values, 10))
+    out.print(walk(values, 11))
+    return 0

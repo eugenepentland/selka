@@ -53,17 +53,28 @@ const Reporting = struct {
         return self.timings_json or self.report;
     }
 };
-/// The first screen of `mylang --help`: the commands an everyday edit loop uses.
+/// The first screen of `mylang --help`: the commands an everyday edit loop uses,
+/// where the guides are, and the navigation commands a large project needs.
 const everyday_help =
     \\mylang: a Python-shaped, statically checked language compiled to native code.
+    \\New here? `mylang docs primer` prints the language on one page.
     \\
     \\Everyday commands:
     \\  mylang check FILE.my              type-check without building
     \\  mylang run FILE.my [-- ARGS...]   build natively and run; arguments after --
-    \\  mylang build FILE.my -o OUT       native executable (add --project for a multi-module entry)
+    \\  mylang build FILE.my -o OUT       native executable, built by QBE in about a second
+    \\  mylang build FILE.my -o OUT --release   optimized (LLVM -O3 + LTO), for shipping or timing
     \\  mylang test FILE.my|DIR           run the public test_* functions
     \\  mylang fmt FILE.my [--check]      canonical formatting
+    \\  mylang docs [TOPIC]               the user guides built into this compiler
     \\  mylang reference --query TERM     look up a feature or an error code such as E_MODULE_NAME
+    \\
+    \\Working in a large project:
+    \\  mylang context ENTRY.my --symbol=module::name   one bounded answer about a declaration
+    \\  mylang context ENTRY.my --at=FILE:LINE:COLUMN   the same for the declaration at a position
+    \\  mylang tests-for ENTRY.my module::name          the tests that reach a declaration
+    \\  mylang list-interfaces ENTRY.my                 every module's public declarations
+    \\  mylang test ENTRY.my --affected --against REF   only the tests an edit since REF can reach
     \\
 ;
 const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--json] [--force]\n" ++
@@ -74,6 +85,7 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "       mylang doc-coverage [<repo-root>] (every implemented feature and standard export needs a documented example)\n       mylang " ++
     "doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose] (run every fenced documentation example)\n       mylang " ++
     "reference --query TERM [--format=text|json] (compiler-derived facts from this executable)\n       mylang " ++
+    "docs [TOPIC] (list the user guides built into this executable, or print one)\n       mylang " ++
     "invoke <entry.my> --function='module::name' (--describe | --input=FILE) (call one exported function natively)\n       mylang " ++
     "dump-tokens <file.my> (stage-0 `tokens-v1` JSON on stdout; lexical failures exit 1)\n       mylang " ++
     "<schema-project|input-module|check|run|dump-bytecode|di" ++
@@ -89,7 +101,8 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "run-project is the explicit project-entry alias\n  run/run-project: unbounded in instructions and frames by default; " ++
     "--max-steps=N and --max-frames=N impose a ceiling and --timeout=SECONDS caps elapsed time; " ++
     "--max-memory=BYTES --gc-stress --print-result --cache-dir=DIR --qbe=PATH --zig=PATH " ++
-    "(native objects default to .mylang-cache/qbe, shared with build)\n  " ++
+    "(native objects default to .mylang-cache/qbe, shared with build); the build is QBE unless " ++
+    "--release asks for LLVM -O3 with LTO\n  " ++
     "run/run-project: --max-memory takes K/M/G suffixes and caps the guest process's address space; " ++
     "MYLANG_MEMORY_LIMIT names the same ceiling and MYLANG_HOST_MEMORY_LIMIT replaces the " ++
     "compiler's own 8G ceiling (0 removes it)\n  " ++
@@ -266,6 +279,7 @@ fn dispatch(process: std.process.Init) !u8 {
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doc-coverage")) return @import("doc_coverage_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doctest")) return @import("doctest_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "reference")) return @import("reference_command.zig").run(@import("mylang"), process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "docs")) return @import("docs_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "invoke")) return @import("invoke_command.zig").run(process, args[2..]);
     // The `&` marker experiment is gone: `mut` is the spelling on both sides of a
     // call and the rule is always on, so the flag names no mode left to select.
@@ -1101,8 +1115,8 @@ const ArgumentParser = struct {
             if (!self.executes() or self.reporting.print_result) return error.Usage;
             self.reporting.print_result = true;
             try self.forward(arg);
-        } else if (std.mem.startsWith(u8, arg, "--qbe=")) {
-            self.native.codegen = .{ .qbe = try self.value(arg, "--qbe=") };
+        } else if (try self.codegenOption(arg)) {
+            return true;
         } else if (std.mem.startsWith(u8, arg, "--zig=")) {
             self.native.zig = try self.value(arg, "--zig=");
         } else if (std.mem.startsWith(u8, arg, select_file_prefix)) {
@@ -1120,6 +1134,21 @@ const ArgumentParser = struct {
         } else if (try self.uncheckedOption(arg)) {
             return true;
         } else return false;
+        return true;
+    }
+
+    /// The code generator a `run` builds with: QBE unless `--release` names the
+    /// LLVM O3 build with LTO (`run` is already ReleaseFast), or `--qbe=PATH`
+    /// names another QBE. The two contradict each other in either order.
+    fn codegenOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (std.mem.eql(u8, arg, native_options.release_flag)) {
+            if (!self.executes() or self.native.codegen != .auto) return error.Usage;
+            self.native.codegen = native_options.release_codegen;
+            return true;
+        }
+        if (!std.mem.startsWith(u8, arg, "--qbe=")) return false;
+        if (self.native.codegen == .llvm) return error.Usage;
+        self.native.codegen = .{ .qbe = try self.value(arg, "--qbe=") };
         return true;
     }
 

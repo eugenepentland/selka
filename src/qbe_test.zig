@@ -1383,12 +1383,37 @@ test "QBE-ALIAS-CLASS-1 a managed receiver and its element storage are marked as
     );
     defer parsed.deinit();
     const body = named(parsed.value, "total").?.il;
-    // Each `len` receiver, the element read's receiver and the storage word
-    // that read loads are marked, and nothing else is.
-    try std.testing.expectEqual(@as(usize, 6), std.mem.count(u8, body, "myl-obj"));
+    // Each `len` receiver and the element read's receiver are marked as
+    // objects, the storage word that read loads as element storage
+    // (LLVM-ELEMENT-CLASS-1), and nothing else is marked.
+    try std.testing.expectEqual(@as(usize, 5), std.mem.count(u8, body, "myl-obj"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "myl-elem"));
     // Every marker is its own comment line, which QBE's lexer drops whole, so
     // the QBE backend's assembly is byte-identical with and without them.
-    try std.testing.expectEqual(@as(usize, 6), std.mem.count(u8, body, "\n # myl-obj %v"));
+    try std.testing.expectEqual(@as(usize, 5), std.mem.count(u8, body, "\n # myl-obj %v"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, "\n # myl-elem %v"));
+}
+
+// spec: LLVM-ELEMENT-CLASS-1
+test "LLVM-ELEMENT-CLASS-1 a storage word is marked as element storage of its element size and kind" {
+    var parsed = try emitted(std.testing.allocator,
+        \\def pick(rows: list[list[float]], octets: bytes, i: i64) -> float:
+        \\    row = rows[i]
+        \\    b = octets[i]
+        \\    return row[i] + float(b)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return int(pick([[1.5]], b"a", 0))
+    );
+    defer parsed.deinit();
+    const body = named(parsed.value, "pick").?.il;
+    // A list of lists holds GC references, a list of floats plain 8-byte
+    // values and a byte string octets: three storage words, three kinds.
+    try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, body, "\n # myl-elem %v"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, " 8r\n"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, " 8v\n"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, body, " 1v\n"));
 }
 
 // spec-case: QBE-ALIAS-CLASS-1
