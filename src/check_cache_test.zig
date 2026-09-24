@@ -137,3 +137,32 @@ test "successful verdict warnings retain JSON format and cannot replay across fo
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), jsonScenario, .{});
 }
+
+fn policyIdentityScenario(allocator: std.mem.Allocator) !void {
+    var cache = Cache.init(allocator, 1024 * 1024);
+    defer cache.deinit();
+    var files: Files = .{};
+    // The identity lives in a buffer the caller then reuses, as a returning
+    // frame's locals are: the cache must key on its own copy.
+    var buffer: [64]u8 = @splat('a');
+    try cache.setPolicyIdentity(&buffer);
+    try remember(allocator, &cache, &files);
+    buffer = @splat('z');
+    var project = language.project.Project.init(allocator);
+    defer project.deinit();
+    try load(&project, &files);
+    try t.expect(cache.lookup(&project) != null);
+    try cache.setPolicyIdentity(&buffer);
+    try t.expect(cache.lookup(&project) == null);
+    try cache.setPolicyIdentity(null);
+    try t.expect(cache.lookup(&project) == null);
+    buffer = @splat('a');
+    try cache.setPolicyIdentity(&buffer);
+    try t.expect(cache.lookup(&project) != null);
+}
+
+// spec: POLICY-IDENTITY-OWNED-1
+test "check cache owns its policy identity so a reused caller buffer cannot change the key" {
+    try policyIdentityScenario(t.allocator);
+    try t.checkAllAllocationFailures(t.allocator, policyIdentityScenario, .{});
+}

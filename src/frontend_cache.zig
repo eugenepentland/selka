@@ -66,7 +66,8 @@ const Runtime = struct {
     /// Required import policy identity when the entry project configures one.
     /// Only the successful-verdict key consumes it: a changed or stricter
     /// policy must not replay an earlier pass, while syntax parsing stays
-    /// independent of policy acceptance.
+    /// independent of policy acceptance. Owned by `allocator`; assign it only
+    /// through `Cache.setPolicyIdentity`.
     policy_identity: ?[]const u8 = null,
     /// Whether this run stored an entry, so `finish` has a directory to trim.
     stored: bool = false,
@@ -135,9 +136,20 @@ pub const Cache = struct {
     pub fn retention(self: *const Cache) usize {
         return @max(self.max_bytes, 2 *| self.statistics.used_bytes);
     }
-    /// Release the caller-owned root path, if any; entries stay on disk.
+    /// Release the caller-owned root path, if any, and the owned policy
+    /// identity; entries stay on disk.
     pub fn deinit(self: *Cache) void {
         if (self.root_owned) self.runtime.allocator.free(self.root);
+        if (self.runtime.policy_identity) |owned| self.runtime.allocator.free(owned);
+        self.runtime.policy_identity = null;
+    }
+    /// Replace the policy identity the verdict key folds in with an owned copy
+    /// of `identity` (null clears it), so the caller's buffer may die
+    /// afterwards. On OutOfMemory the previous identity stays in place.
+    pub fn setPolicyIdentity(self: *Cache, identity: ?[]const u8) error{OutOfMemory}!void {
+        const owned = if (identity) |bytes| try self.runtime.allocator.dupe(u8, bytes) else null;
+        if (self.runtime.policy_identity) |previous| self.runtime.allocator.free(previous);
+        self.runtime.policy_identity = owned;
     }
 
     /// The directory holding entries for this compiler identity.

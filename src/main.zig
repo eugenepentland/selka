@@ -1712,6 +1712,9 @@ fn policyFailureStatus(err: anyerror) anyerror!u8 {
 /// policy path. Missing or malformed configuration returns host status 2; a
 /// resolved import that violates the policy returns status 3.
 fn loadConfiguredPolicy(init: Context, parsed: Parsed, project: *const language.project.Project, frontend: ?*language.frontend_cache.Cache, verdict: ?*language.check_cache.Cache) !ConfiguredPolicy {
+    // A session's caches outlive one request: forget the previous request's
+    // identity so an unconfigured project never keys on a configuration it lacks.
+    try setPolicyIdentity(frontend, verdict, null);
     if (parsed.command == .@"check-policy") return .{};
     const config_path = project_config.discover(init.gpa, init.io, parsed.path) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
@@ -1740,7 +1743,7 @@ fn loadConfiguredPolicy(init: Context, parsed: Parsed, project: *const language.
         // rule mode could replay under another.
         var identity: [64]u8 = undefined;
         const has_identity = config.cacheIdentity(&identity);
-        setPolicyIdentity(frontend, verdict, if (has_identity) identity[0..] else null);
+        try setPolicyIdentity(frontend, verdict, if (has_identity) identity[0..] else null);
         config_transferred = true;
         return .{ .config = config, .identity = if (has_identity) identity else null };
     }
@@ -1773,7 +1776,7 @@ fn loadConfiguredPolicy(init: Context, parsed: Parsed, project: *const language.
     }
     var identity: [64]u8 = undefined;
     const has_identity = config.cacheIdentity(&identity);
-    setPolicyIdentity(frontend, verdict, if (has_identity) identity[0..] else null);
+    try setPolicyIdentity(frontend, verdict, if (has_identity) identity[0..] else null);
     config_transferred = true;
     return .{ .config = config, .identity = if (has_identity) identity else null };
 }
@@ -1812,14 +1815,15 @@ fn foldInterfaceFiles(init: Context, configured: *ConfiguredPolicy, project: *co
     var digest: [32]u8 = undefined;
     hash.final(&digest);
     configured.identity = std.fmt.bytesToHex(digest, .lower);
-    setPolicyIdentity(stores.frontend, stores.verdict, configured.identity.?[0..]);
+    try setPolicyIdentity(stores.frontend, stores.verdict, configured.identity.?[0..]);
 }
 
 /// Publish the required-policy identity to the caches whose verdict must not
-/// outlive a policy change. Null restores today's behavior for unconfigured projects.
-fn setPolicyIdentity(frontend: ?*language.frontend_cache.Cache, verdict: ?*language.check_cache.Cache, identity: ?[]const u8) void {
-    if (frontend) |opened| opened.runtime.policy_identity = identity;
-    if (verdict) |opened| opened.policy_identity = identity;
+/// outlive a policy change. Each cache keeps its own copy, so `identity` may
+/// point at a local buffer. Null restores today's behavior for unconfigured projects.
+fn setPolicyIdentity(frontend: ?*language.frontend_cache.Cache, verdict: ?*language.check_cache.Cache, identity: ?[]const u8) error{OutOfMemory}!void {
+    if (frontend) |opened| try opened.setPolicyIdentity(identity);
+    if (verdict) |opened| try opened.setPolicyIdentity(identity);
 }
 
 /// Build the policy identity recorded in `project-dependencies-v1` receipts.

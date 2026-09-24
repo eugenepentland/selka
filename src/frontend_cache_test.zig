@@ -114,6 +114,33 @@ test "verdict entries require identical module bytes and reject damaged files" {
     try t.expect(try cache.lookupVerdict(t.allocator, &changed, .text) == null);
 }
 
+// spec-case: POLICY-IDENTITY-OWNED-1
+test "frontend verdict keys fold an owned policy identity, not the caller's buffer" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var cache = openCache(root);
+    defer cache.deinit();
+    var files: Files = .{};
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try load(&project, &files);
+    // Scribbling the caller's buffer after publishing it must not move the key.
+    var buffer: [64]u8 = @splat('a');
+    try cache.setPolicyIdentity(&buffer);
+    try cache.rememberVerdict(&project, .text, "warning: policy\n");
+    buffer = @splat('z');
+    const warnings = (try cache.lookupVerdict(t.allocator, &project, .text)).?;
+    defer t.allocator.free(warnings);
+    try t.expectEqualStrings("warning: policy\n", warnings);
+    // A different identity, or none, is a different key.
+    try cache.setPolicyIdentity(&buffer);
+    try t.expect(try cache.lookupVerdict(t.allocator, &project, .text) == null);
+    try cache.setPolicyIdentity(null);
+    try t.expect(try cache.lookupVerdict(t.allocator, &project, .text) == null);
+}
+
 // spec: CACHE-CHECKSUM-1
 test "an entry whose payload changed under an intact header fails its checksum" {
     var temp = t.tmpDir(.{});

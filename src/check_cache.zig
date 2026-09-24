@@ -15,6 +15,7 @@ pub const Cache = struct {
     max_bytes: usize,
     format: output.Format = .text,
     /// Required import policy identity for the current request, when configured.
+    /// Owned by `allocator`; assign it only through `setPolicyIdentity`.
     policy_identity: ?[]const u8 = null,
     entry: ?Entry = null,
     statistics: Statistics = .{},
@@ -22,9 +23,19 @@ pub const Cache = struct {
     pub fn init(allocator: std.mem.Allocator, max_bytes: usize) Cache {
         return .{ .allocator = allocator, .max_bytes = max_bytes };
     }
-    /// Release retained source and diagnostic text.
+    /// Release retained source and diagnostic text and the owned policy identity.
     pub fn deinit(self: *Cache) void {
         self.clear();
+        if (self.policy_identity) |owned| self.allocator.free(owned);
+        self.policy_identity = null;
+    }
+    /// Replace the current request's policy identity with an owned copy of
+    /// `identity` (null clears it), so the caller's buffer may die afterwards.
+    /// On OutOfMemory the previous identity stays in place.
+    pub fn setPolicyIdentity(self: *Cache, identity: ?[]const u8) error{OutOfMemory}!void {
+        const owned = if (identity) |bytes| try self.allocator.dupe(u8, bytes) else null;
+        if (self.policy_identity) |previous| self.allocator.free(previous);
+        self.policy_identity = owned;
     }
     /// Drop the last successful verdict without resetting cumulative observations.
     pub fn clear(self: *Cache) void {

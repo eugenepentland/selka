@@ -7328,6 +7328,46 @@ test "loadConfiguredPolicy enforces mylang.json across ordinary project commands
     try testing.expect(std.mem.indexOf(u8, stricter.stderr, "main -> helper: deny") != null);
 }
 
+// spec-case: POLICY-IDENTITY-OWNED-1
+test "loadConfiguredPolicy keeps a configured project's warm verdicts replayable on disk and in a session" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try writeProjectFile(&temp, "main.my", policy_project_main);
+    try writeProjectFile(&temp, "helper.my", policy_project_helper);
+    try writeProjectFile(&temp, "mylang.json", "{\"version\":1,\"import_policy\":\"policy.json\"}");
+    try writeProjectFile(&temp, "policy.json", policy_allow);
+    const entry = try temp.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    const root = try temp.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_argument);
+
+    // The identity used to be sliced from a returned frame, so the warm key
+    // hashed whatever later calls wrote there and never matched the stored one.
+    const cold = try projectCacheCheck(entry, cache_argument, 0);
+    try testing.expectEqual(@as(usize, 0), cold.verdict_hits);
+    const warm = try projectCacheCheck(entry, cache_argument, 0);
+    try testing.expectEqual(@as(usize, 1), warm.verdict_hits);
+    try testing.expectEqual(@as(usize, 0), warm.verdict_misses);
+
+    // The session's in-memory verdict compares the same identity on its next check.
+    try writeProjectFile(&temp, "commands", "check\ncheck\nquit\n");
+    const input = try temp.dir.openFile(testing.io, "commands", .{});
+    defer input.close(testing.io);
+    const output = try temp.dir.createFile(testing.io, "replies", .{});
+    defer output.close(testing.io);
+    var child = try std.process.spawn(testing.io, .{ .argv = &.{ compiler_path, "check-session", entry }, .stdin = .{ .file = input }, .stdout = .{ .file = output }, .stderr = .ignore });
+    defer child.kill(testing.io);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, try child.wait(testing.io));
+    const replies = try temp.dir.readFileAlloc(testing.io, "replies", testing.allocator, .limited(16384));
+    defer testing.allocator.free(replies);
+    try testing.expect(std.mem.indexOf(u8, replies, "\"semantic\":{\"hits\":1,\"misses\":1") != null);
+    try testing.expect(std.mem.indexOf(u8, replies, "\"status\":1") == null);
+}
+
 // spec-case: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "loadConfiguredPolicy policy discovery anchors to the entry file instead of the shell working directory" {
     var temp = testing.tmpDir(.{});
