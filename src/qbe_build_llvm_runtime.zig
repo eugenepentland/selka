@@ -88,10 +88,13 @@ const curated = [_]Entry{
     entry("myl_qbe_stream_write_bytes", &.{ P, i64_type, P }, i64_type),
 };
 
-/// The declaration attributes a helper's C definition proves: only
-/// `myl_qbe_heap`, which computes an address and touches no memory.
+/// The declaration attributes a helper's C definition proves: `myl_qbe_heap`
+/// computes an address and touches no memory, and the error return trace
+/// recorder is cold.
 pub fn attributes(name: []const u8) []const u8 {
     if (std.mem.eql(u8, name, "myl_qbe_heap")) return "memory(none) nounwind willreturn";
+    // ERROR-TRACE-1: the error return trace recorder runs only on an error path.
+    if (std.mem.eql(u8, name, "myl_qbe_error_trace_append")) return "cold nounwind";
     return "";
 }
 

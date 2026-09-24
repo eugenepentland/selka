@@ -4,11 +4,11 @@
 //!
 //! The trace is one process-wide `MylQbeErrorTrace` in the runtime
 //! (`src/qbe_runtime.h`): an origin site, an append count and a ring of the last
-//! `ring_entries` appended sites. A site is two words, the address of the
-//! recording function's `_meta` table and `pc | kind << 32`; the runtime reads
-//! the path, line, column, function name and — for a converting `?` — the case
-//! name out of that table, so no source location enters the unit's text and no
-//! string is built at run time. Every store sits on a path only an `Err` takes:
+//! 32 appended sites. A site is two words, the address of the recording
+//! function's `_meta` table and `pc | kind << 32`; the runtime reads the path,
+//! line, column, function name and — for a converting `?` — the case name out of
+//! that table, so no source location enters the unit's text and no string is
+//! built at run time. Every record sits on a path only an `Err` takes:
 //! the `Err(...)` construction itself, the error branch a runtime result or a
 //! `?` already has, and — for a `return` whose value is not a literal `Ok(...)`
 //! or `Err(...)` — a branch on the returned tag.
@@ -32,13 +32,14 @@ pub const Kind = enum(u64) {
     /// A `?` wrapped the error in a case of the caller's error union.
     converted = 4,
 };
-/// Appended sites the runtime ring keeps (`MYL_QBE_ERROR_TRACE_RING`).
-const ring_entries = 32;
-/// Byte offset of the append count in `MylQbeErrorTrace`.
-const count_offset = 16;
-/// Byte offset of the ring in `MylQbeErrorTrace`.
-const ring_offset = 24;
+/// The runtime's trace, whose origin a new `Err` overwrites in place.
 const trace_symbol = "myl_qbe_error_trace";
+/// Byte offsets of the origin's site word and of the append count in
+/// `MylQbeErrorTrace`; `src/qbe_runtime.c` asserts both.
+const origin_site_offset = 8;
+const count_offset = 16;
+/// The cold runtime recorder that appends one site to the trace's ring.
+pub const append_symbol = "myl_qbe_error_trace_append";
 
 /// The site word for `kind` at bytecode position `pc`.
 fn siteWord(kind: Kind, pc: usize) u64 {
@@ -63,37 +64,22 @@ pub fn conversionCase(allocator: std.mem.Allocator, records: []const typed.Recor
 pub fn Lower(comptime E: type) type {
     return struct {
         /// Record the site of the current instruction. `created` and `produced`
-        /// restart the trace at it; every other kind appends to the ring.
+        /// restart the trace at it with three stores; every other kind appends
+        /// to the ring through one call to a cold runtime recorder, which keeps
+        /// the error branch of a `?` as small as the backends can weigh it.
         pub fn record(self: *E, kind: Kind) Error!void {
             const meta = self.units[@backingInt(self.function.id)].symbol;
             const site = siteWord(kind, self.pc);
-            const trace = self.temp();
-            try self.print(" %v{d} =l copy extern ${s}\n", .{ trace, trace_symbol });
-            if (kind == .created or kind == .produced) {
-                const word = self.temp();
-                const count = self.temp();
-                try self.print(
-                    " storel extern ${s}_meta, %v{d}\n %v{d} =l add %v{d}, 8\n storel {d}, %v{d}\n %v{d} =l add %v{d}, {d}\n storel 0, %v{d}\n",
-                    .{ meta, trace, word, trace, site, word, count, trace, count_offset, count },
-                );
+            if (kind != .created and kind != .produced) {
+                try self.print(" call ${s}(l extern ${s}_meta, l {d})\n", .{ append_symbol, meta, site });
                 return;
             }
-            const count_slot = self.temp();
-            const count = self.temp();
-            const next = self.temp();
-            const index = self.temp();
-            const offset = self.temp();
-            const address = self.temp();
-            const entry = self.temp();
+            const trace = self.temp();
             const word = self.temp();
+            const count = self.temp();
             try self.print(
-                " %v{d} =l add %v{d}, {d}\n %v{d} =l loadl %v{d}\n %v{d} =l add %v{d}, 1\n storel %v{d}, %v{d}\n" ++
-                    " %v{d} =l and %v{d}, {d}\n %v{d} =l shl %v{d}, 4\n %v{d} =l add %v{d}, %v{d}\n",
-                .{ count_slot, trace, count_offset, count, count_slot, next, count, next, count_slot, index, count, ring_entries - 1, offset, index, address, trace, offset },
-            );
-            try self.print(
-                " %v{d} =l add %v{d}, {d}\n storel extern ${s}_meta, %v{d}\n %v{d} =l add %v{d}, 8\n storel {d}, %v{d}\n",
-                .{ entry, address, ring_offset, meta, entry, word, entry, site, word },
+                " %v{d} =l copy extern ${s}\n storel extern ${s}_meta, %v{d}\n %v{d} =l add %v{d}, {d}\n storel {d}, %v{d}\n %v{d} =l add %v{d}, {d}\n storel 0, %v{d}\n",
+                .{ trace, trace_symbol, meta, trace, word, trace, origin_site_offset, site, word, count, trace, count_offset, count },
             );
         }
         /// A new value of variant type `ty` with case `tag`: an `Err` restarts

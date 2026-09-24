@@ -270,8 +270,9 @@ void myl_qbe_exit_without_sweep(void);
  * whose code recorded it and a word holding the recording pc in its low 32 bits
  * and the kind above them. The origin is the `Err(...)` construction (or the
  * runtime operation) that made the value; `count` appends follow it, and the
- * ring keeps the last MYL_QBE_ERROR_TRACE_RING of them. Generated code writes
- * the struct itself, at the offsets `src/qbe_error_trace.zig` spells. */
+ * ring keeps the last MYL_QBE_ERROR_TRACE_RING of them. Generated code, on
+ * error paths only, stores a new origin itself (at the offsets
+ * `src/qbe_error_trace.zig` spells) and appends through the cold helper below. */
 #define MYL_QBE_ERROR_TRACE_RING 32
 #define MYL_QBE_ERROR_CREATED UINT64_C(0)
 #define MYL_QBE_ERROR_PRODUCED UINT64_C(1)
@@ -285,6 +286,8 @@ typedef struct {
     MylQbeErrorSite ring[MYL_QBE_ERROR_TRACE_RING];
 } MylQbeErrorTrace;
 extern MylQbeErrorTrace myl_qbe_error_trace;
+/* Append `site` of `function`: a `return` or `?` passed an `Err` on there. */
+void myl_qbe_error_trace_append(const MylQbeFunction *function, uint64_t site);
 /* Render the trace, one `  path:line:column  function  action` line per site,
  * innermost origin first, into `out` (NUL-terminated when `size` allows).
  * Returns the full length, so a call with no buffer measures it. */

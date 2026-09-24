@@ -168,7 +168,14 @@ test "the success paths execute no trace store: a returned Ok checks nothing and
     // of `Ok(...)` record nothing.
     try t.expectEqual(@as(usize, 1), occurrences(propagating, "myl_qbe_error_trace"));
     const branch = std.mem.indexOf(u8, propagating, "@tryerror").?;
-    try t.expect(std.mem.indexOf(u8, propagating, "myl_qbe_error_trace").? > branch);
+    try t.expect(std.mem.indexOf(u8, propagating, "call $myl_qbe_error_trace_append(").? > branch);
+}
+
+// spec-case: ERROR-TRACE-1
+test "an append is one call to a cold recorder that collects nothing" {
+    const error_trace = @import("qbe_error_trace.zig");
+    try t.expect(@import("qbe_roots.zig").pureCallee(error_trace.append_symbol));
+    try t.expectEqualStrings("cold nounwind", @import("qbe_build_llvm_runtime.zig").attributes(error_trace.append_symbol));
 }
 
 // spec: ERROR-TRACE-2
