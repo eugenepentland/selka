@@ -263,7 +263,13 @@ pub const Property = struct {
         const renderer: render.Renderer = .{ .schema = self.schema, .module = self.module() };
         const result = v.text(v.get(self.function, "result"));
         const spelled = try renderer.literal(self.context.allocator, result, actual);
-        return .{ .fail = try self.withOutput(try std.fmt.allocPrint(self.context.allocator, "returned {s}", .{spelled}), outcome.output) };
+        // ERROR-TRACE-3: an `Err` says where it was created and propagated.
+        const trace = std.mem.trimEnd(u8, outcome.trace, "\n");
+        const returned = if (trace.len == 0)
+            try std.fmt.allocPrint(self.context.allocator, "returned {s}", .{spelled})
+        else
+            try std.fmt.allocPrint(self.context.allocator, "returned {s}\nerror return trace:\n{s}", .{ spelled, trace });
+        return .{ .fail = try self.withOutput(returned, outcome.output) };
     }
     fn withOutput(self: *Property, reason: []const u8, output: []const u8) Error![]const u8 {
         if (output.len == 0) return reason;

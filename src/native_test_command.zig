@@ -910,9 +910,11 @@ fn executeProperties(
         const verdict = try finished;
         const result = &results[bound.slot];
         result.status = if (verdict.passed) "passed" else "failed";
-        result.actual = .{ .bool = verdict.passed };
+        // A pass is the case's own expectation (`True`, or `Ok(True)` for a
+        // `Result[bool, E]` test), so its receipt answers the next run.
+        result.actual = if (verdict.passed) selected[bound.slot].expected else .{ .bool = false };
         result.reason = try stripRoot(a, verdict.reason, bound.source, session.source.root);
-        const text = try std.json.Stringify.valueAlloc(a, verdict.evidence, .{});
+        const text = try stripRoot(a, try std.json.Stringify.valueAlloc(a, verdict.evidence, .{}), bound.source, session.source.root);
         result.context.property = try std.json.parseFromSliceLeaky(std.json.Value, a, text, .{});
     }
 }

@@ -325,7 +325,8 @@ all of them, then halves, quarters and single ones — then shrink the ones left
 tuples shrink field by field, and enums, unions and `Option` move toward earlier
 cases and `None`. The report prints the minimal input as mylang literals, one
 line per parameter, the input as generated and its run, the reason — the value
-returned, or a trap's code, message and frames — the original input's own reason
+returned (an `Err` with its [error return trace](../results-and-options.md#error-return-traces)), or a
+trap's code, message and frames — the original input's own reason
 when shrinking reached a different failure, and a command that reproduces the
 whole search. An input that ran past `--timeout-ms` is reported as generated,
 because every candidate could run as long.

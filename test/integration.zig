@@ -11166,3 +11166,50 @@ test "CLI test carries sets, dictionaries with tuple keys, bytes and floats acro
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
     try testing.expect(std.mem.indexOf(u8, result.stdout, "4 passed, 0 cached, 0 failed, 0 skipped") != null);
 }
+
+const erring_property =
+    \\module main
+    \\
+    \\def parse(text: str) -> Result[int, str]:
+    \\    if len(text) > 3:
+    \\        return Err("too long")
+    \\    return Ok(len(text))
+    \\
+    \\def checked(text: str) -> Result[int, str]:
+    \\    size = parse(text)?
+    \\    return Ok(size)
+    \\
+    \\public def test_short_text_parses(text: str) -> Result[bool, str]:
+    \\    size = checked(text)?
+    \\    return Ok(size <= 3)
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
+// spec-case: PROPERTY-TEST-3
+// spec-case: ERROR-TRACE-3
+test "CLI property test that fails with an Err reports the minimal input's error return trace" {
+    var project = try PropertyProject.init(erring_property);
+    defer project.deinit();
+    const text = try project.run(&.{});
+    defer freeRun(text);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, text.term);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "\n    text = \"aaaa\"\n  original input (run ") != null);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "  reason: returned Err(\"too long\")\n    error return trace:\n") != null);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "main.my:5:16") != null);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "main::parse") != null);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "Err(...) created") != null);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "main::test_short_text_parses") != null);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "? propagated") != null);
+    const json = try project.run(&.{"--json"});
+    defer freeRun(json);
+    const parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, json.stdout, .{});
+    defer parsed.deinit();
+    const failure = (try propertyOf(parsed.value, "main::test_short_text_parses")).object.get("failure").?;
+    const reason = failure.object.get("reason").?.string;
+    try testing.expect(std.mem.startsWith(u8, reason, "returned Err(\"too long\")\nerror return trace:\n"));
+    // The trace names the project's own file, not the runner's private snapshot.
+    try testing.expect(std.mem.indexOf(u8, reason, ".pending") == null);
+    try testing.expectEqualStrings("\"aaaa\"", failure.object.get("minimal").?.object.get("literals").?.object.get("text").?.string);
+}
