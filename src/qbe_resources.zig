@@ -57,6 +57,8 @@ pub fn Lower(comptime E: type) type {
                     const payload = try self.address(output, (try self.layout(ty)).payload_offset);
                     const label = self.temp();
                     try self.print(" jnz %v{d}, @completeerr{d}, @completeok{d}\n@completeerr{d}\n", .{ status, label, label, label });
+                    // ERROR-TRACE-1: a failed completion starts a fresh error return trace.
+                    try @import("qbe_error_trace.zig").Lower(E).record(self, .produced);
                     try self.writeTag(ty, shape.result.error_tag, output);
                     const owner_field = try self.field(shape.result.error_type, shape.resource_field);
                     const code_field = try self.field(shape.result.error_type, shape.code_field);

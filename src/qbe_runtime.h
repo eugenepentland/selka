@@ -1,6 +1,7 @@
 #ifndef MYLANG_QBE_RUNTIME_H
 #define MYLANG_QBE_RUNTIME_H
 #include <stdint.h>
+#include <stdio.h>
 #include "native_heap.h"
 
 struct MylangNativeProvidersTag;
@@ -265,4 +266,29 @@ int mylang_qbe_run_options(uint64_t (*entry)(void *), int argc, char **argv);
  * first. A host that runs the guest more than once in one process must never
  * call this: it would leave the heap of every run but the last unreclaimed. */
 void myl_qbe_exit_without_sweep(void);
+/* ERROR-TRACE-1: where an `Err` came from. One site is the function metadata
+ * whose code recorded it and a word holding the recording pc in its low 32 bits
+ * and the kind above them. The origin is the `Err(...)` construction (or the
+ * runtime operation) that made the value; `count` appends follow it, and the
+ * ring keeps the last MYL_QBE_ERROR_TRACE_RING of them. Generated code writes
+ * the struct itself, at the offsets `src/qbe_error_trace.zig` spells. */
+#define MYL_QBE_ERROR_TRACE_RING 32
+#define MYL_QBE_ERROR_CREATED UINT64_C(0)
+#define MYL_QBE_ERROR_PRODUCED UINT64_C(1)
+#define MYL_QBE_ERROR_RETURNED UINT64_C(2)
+#define MYL_QBE_ERROR_PROPAGATED UINT64_C(3)
+#define MYL_QBE_ERROR_CONVERTED UINT64_C(4)
+typedef struct { const MylQbeFunction *function; uint64_t site; } MylQbeErrorSite;
+typedef struct {
+    MylQbeErrorSite origin;
+    uint64_t count;
+    MylQbeErrorSite ring[MYL_QBE_ERROR_TRACE_RING];
+} MylQbeErrorTrace;
+extern MylQbeErrorTrace myl_qbe_error_trace;
+/* Render the trace, one `  path:line:column  function  action` line per site,
+ * innermost origin first, into `out` (NUL-terminated when `size` allows).
+ * Returns the full length, so a call with no buffer measures it. */
+size_t myl_qbe_error_trace_render(char *out, size_t size);
+/* Write the rendered trace to `stream`; nothing when no `Err` was recorded. */
+void myl_qbe_error_trace_write(FILE *stream);
 #endif
