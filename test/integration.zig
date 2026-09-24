@@ -1356,7 +1356,7 @@ test "CLI user commands need no interpreter: check, build, run, test, fmt, docs 
     try expectEmptyPathRun(&.{ compiler_path, "test", entry, cache_argument, tools[0], tools[1] }, &environment, "2 passed");
     try expectEmptyPathRun(&.{ compiler_path, "fmt-project", entry, "--check" }, &environment, "");
     try expectEmptyPathRun(&.{ compiler_path, "docs", "primer" }, &environment, "mylang");
-    try expectEmptyPathRun(&.{ compiler_path, "index-project", entry }, &environment, "\"version\":\"navigation-v1\"");
+    try expectEmptyPathRun(&.{ compiler_path, "index-project", entry }, &environment, "\"version\":\"navigation-summary-v1\"");
     try expectEmptyPathRun(&.{ compiler_path, "context", entry, "--symbol=text.words::count_words" }, &environment, "\"status\":\"ok\"");
 }
 
