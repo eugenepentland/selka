@@ -152,7 +152,6 @@ fn indexedElement(comptime E: type, self: E, access: bytecode.Access, ty: typed.
 /// rewriting the index first, leaves it the affine expression a loop's
 /// induction variable produces, which is what lets an optimizer strength-reduce
 /// it and share it between a read and a write of the same element.
-/// QBE-UNCHECKED-1 drops the test and keeps the address computation.
 fn fromEnd(comptime E: type, self: E, raw_index: usize, count: usize, element: Element) Error!void {
     const shifted = self.temp();
     try self.print(" %v{d} =l add %v{d}, {d}\n", .{ shifted, raw_index, count });
@@ -183,7 +182,8 @@ fn useElement(comptime E: type, self: E, element: Element, address_value: usize)
 }
 
 /// The unsigned range test of a fixed-array position against its count, and
-/// its cold trap reporting `reported`. QBE-UNCHECKED-1 drops both.
+/// its cold trap reporting `reported`. A loop copy's guard that proved the
+/// position in bounds drops both (QBE-LOOP-VERSION-1).
 fn boundsCheck(comptime E: type, self: E, check: RangeTest) Error!void {
     if (!self.checks) return;
     const invalid = self.temp();

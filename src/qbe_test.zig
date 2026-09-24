@@ -2429,10 +2429,9 @@ fn lowered(a: std.mem.Allocator, input: []const u8, policy: language.native_inte
     return text.toOwnedSlice(a);
 }
 
-/// A program reaching every guard class the unchecked policy removes: a checked
-/// add and multiply, a narrowing cast, a fixed-array index and a list index,
-/// plus an append whose allocation failure the policy keeps.
-const unchecked_program =
+/// A program reaching every value-guard class: a checked add and multiply, a
+/// narrowing cast, a fixed-array index and a list index.
+const guarded_program =
     \\def scale(xs: list[i64], at: i64, factor: i64) -> u8:
     \\    return u8(xs[at] * factor + 1)
     \\
@@ -2443,73 +2442,39 @@ const unchecked_program =
     \\    return i64(scale(xs, 0, 2))
 ;
 
-// spec: QBE-UNCHECKED-1
-test "the unchecked policy emits no overflow cast or bounds guard and no frame record" {
-    const a = std.testing.allocator;
-    const guarded = try lowered(a, unchecked_program, .{ .step_checks = false, .frame_checks = false });
-    defer a.free(guarded);
-    const bare = try lowered(a, unchecked_program, .{ .step_checks = false, .frame_checks = false, .checks = false });
-    defer a.free(bare);
-    // The default unbounded policy carries every guard class, and every call
-    // names its position for the frame map (QBE-FRAMEMAP-1) instead of storing
-    // it into a linked frame record.
-    try std.testing.expect(std.mem.indexOf(u8, guarded, "myl_qbe_fail_overflow_op") != null);
-    try std.testing.expect(std.mem.indexOf(u8, guarded, "myl_qbe_fail_cast") != null);
-    try std.testing.expect(std.mem.indexOf(u8, guarded, "myl_qbe_fail_normalized_index_bounds") != null);
-    try std.testing.expect(std.mem.indexOf(u8, guarded, "myl_qbe_fail_array_bounds") != null);
-    try std.testing.expect(std.mem.indexOf(u8, guarded, " dbgloc ") != null);
-    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, guarded, "%position"));
-    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "dbgloc"));
-    // The unchecked policy carries none of them.
-    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_overflow_op"));
-    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_cast"));
-    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_index_bounds"));
-    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_normalized_index_bounds"));
-    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_array_bounds"));
-    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "%position"));
-    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "_meta"));
-    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bare, "myl_qbe_fail_frame"));
-    try std.testing.expect(bare.len < guarded.len);
+/// Lower `guarded_program` under `policy` and require every value-guard class.
+fn expectValueGuards(a: std.mem.Allocator, policy: language.native_interface.Policy) ![]u8 {
+    const il = try lowered(a, guarded_program, policy);
+    errdefer a.free(il);
+    try std.testing.expect(std.mem.indexOf(u8, il, "myl_qbe_fail_overflow_op") != null);
+    try std.testing.expect(std.mem.indexOf(u8, il, "myl_qbe_fail_cast") != null);
+    try std.testing.expect(std.mem.indexOf(u8, il, "myl_qbe_fail_normalized_index_bounds") != null);
+    try std.testing.expect(std.mem.indexOf(u8, il, "myl_qbe_fail_array_bounds") != null);
+    return il;
 }
 
-// spec-case: QBE-UNCHECKED-1
-test "the unchecked policy keeps allocation failure division by zero and the collector" {
+// spec: RELEASE-CHECKED-1
+test "every build policy keeps the overflow cast and bounds guards and the frame protocol" {
     const a = std.testing.allocator;
-    const bare = try lowered(a, unchecked_program, .{ .step_checks = false, .frame_checks = false, .checks = false });
-    defer a.free(bare);
-    const divide = try lowered(a,
-        \\def half(left: i64, right: i64) -> i64:
-        \\    return left // right
-        \\
-        \\def main() -> i64:
-        \\    return half(8, 2)
-    , .{ .step_checks = false, .frame_checks = false, .checks = false });
-    defer a.free(divide);
-    // Out of memory must still fail cleanly, so every allocating call keeps its
-    // failure test and the collector keeps the heap handle it traces through.
-    try std.testing.expect(std.mem.indexOf(u8, bare, "myl_qbe_fail_allocation") != null);
-    try std.testing.expect(std.mem.indexOf(u8, bare, "%heap") != null);
-    // A zero divisor and a signed `MIN // -1` fault the hardware divider, so
-    // both tests stay even here; only their reported detail could be lost.
-    try std.testing.expect(std.mem.indexOf(u8, divide, "myl_qbe_fail_division") != null);
-    try std.testing.expect(std.mem.indexOf(u8, divide, "myl_qbe_fail_overflow_op") != null);
-}
-
-// spec-case: QBE-UNCHECKED-1
-test "an unchecked build that was given a ceiling keeps the accounting that enforces it" {
-    const a = std.testing.allocator;
-    const bounded = try lowered(a, unchecked_program, .{ .checks = false });
-    defer a.free(bounded);
-    // Step and depth accounting are orthogonal to the value guards: the frame
-    // record, the position stores and the step limit survive, while the
-    // overflow, cast and bounds guards are gone.
-    try std.testing.expect(std.mem.indexOf(u8, bounded, ", %position") != null);
-    try std.testing.expect(std.mem.indexOf(u8, bounded, "_meta") != null);
-    try std.testing.expect(std.mem.indexOf(u8, bounded, "@step_limit") != null);
-    try std.testing.expect(std.mem.indexOf(u8, bounded, "myl_qbe_fail_frame") != null);
-    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bounded, "myl_qbe_fail_cast"));
-    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bounded, "myl_qbe_fail_overflow_op"));
-    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, bounded, "myl_qbe_fail_array_bounds"));
+    // The fast unbounded policy a ReleaseFast executable builds under names
+    // every call's position for the frame map (QBE-FRAMEMAP-1).
+    const fast = try expectValueGuards(a, .{ .step_checks = false, .frame_checks = false });
+    defer a.free(fast);
+    try std.testing.expect(std.mem.indexOf(u8, fast, " dbgloc ") != null);
+    try std.testing.expect(std.mem.indexOf(u8, fast, "myl_qbe_fail_frame") != null);
+    // Every accounted policy links the frame record and stores positions.
+    const accounted = try expectValueGuards(a, .{});
+    defer a.free(accounted);
+    try std.testing.expect(std.mem.indexOf(u8, accounted, ", %position") != null);
+    try std.testing.expect(std.mem.indexOf(u8, accounted, "_meta") != null);
+    try std.testing.expect(std.mem.indexOf(u8, accounted, "@step_limit") != null);
+    const steps = try expectValueGuards(a, .{ .frame_checks = false });
+    defer a.free(steps);
+    try std.testing.expect(std.mem.indexOf(u8, steps, "_meta") != null);
+    const frames = try expectValueGuards(a, .{ .step_checks = false });
+    defer a.free(frames);
+    try std.testing.expect(std.mem.indexOf(u8, frames, "_meta") != null);
+    try std.testing.expect(std.mem.indexOf(u8, frames, ", %position") != null);
 }
 
 /// The number of root records each root push in `il` links, in program order.

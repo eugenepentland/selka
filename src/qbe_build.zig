@@ -63,6 +63,11 @@ pub fn runMeasured(process: std.process.Init, args: []const []const u8, phases: 
         try std.Io.File.stdout().writeStreamingAll(process.io, options.usage);
         return 0;
     }
+    // RELEASE-CHECKED-1: name the removed policy instead of dumping usage.
+    if (options.uncheckedRequested(args)) {
+        try std.Io.File.stderr().writeStreamingAll(process.io, "mylang build: " ++ options.unchecked_removed);
+        return 2;
+    }
     const parsed = options.parse(args) catch {
         try std.Io.File.stderr().writeStreamingAll(process.io, options.usage);
         return 2;
@@ -246,11 +251,6 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         // refuses one at run time. A library always keeps it.
         const frame_accounted = frameAccounting(parsed.link_arguments);
         if (fast_executable and !frame_accounted) try arguments.append(a, "--drop-frame-checks");
-        // QBE-UNCHECKED-1: `--unchecked` drops the overflow, cast and
-        // index-bounds guards. It composes with the two lines above rather
-        // than replacing them: a build that also asked for a ceiling keeps the
-        // frame protocol that enforces it and gives up only the value guards.
-        if (options.unchecked(parsed.link_arguments)) try arguments.append(a, "--drop-safety-checks");
         if (selectFile(parsed.link_arguments)) |path| {
             try arguments.append(a, try std.fmt.allocPrint(a, "--select-file={s}", .{path}));
             // Forward the work-report request for selective test builds so native-test

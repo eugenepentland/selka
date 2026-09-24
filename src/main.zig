@@ -295,6 +295,13 @@ fn dispatch(process: std.process.Init) !u8 {
     if (args.len >= 2 and std.mem.eql(u8, args[1], "invoke")) return @import("invoke_command.zig").run(process, args[2..]);
     // The `&` marker experiment is gone: `mut` is the spelling on both sides of a
     // call and the rule is always on, so the flag names no mode left to select.
+    // RELEASE-CHECKED-1: the unchecked build policy is gone; say why rather
+    // than dumping the usage an unknown flag gets.
+    if (args.len >= 2 and (std.mem.eql(u8, args[1], "run") or std.mem.eql(u8, args[1], "run-project")) and native_options.uncheckedRequested(args[2..])) {
+        const message = try std.mem.concat(process.arena.allocator(), u8, &.{ "mylang ", args[1], ": ", native_options.unchecked_removed });
+        try std.Io.File.stderr().writeStreamingAll(process.io, message);
+        return 2;
+    }
     if (mutationMarkersFlag(args[1..])) {
         try std.Io.File.stderr().writeStreamingAll(process.io, "mylang: --mutation-markers was removed; mark each written parameter `name: mut T` and each argument bound to one `mut value`\n");
         return 2;
@@ -861,10 +868,6 @@ const Parsed = struct {
     /// Internal `--lean-manifest=executable`: the lean manifest of an
     /// executable, without the facts only a library build reads.
     executable_manifest: bool = false,
-    /// `--unchecked` (`run`) and internal `--drop-safety-checks` (the emitters):
-    /// omit the overflow, narrowing-cast and index-bounds guards, and with no
-    /// ceiling also the frame record and its position stores.
-    unchecked: bool,
     /// True when the command was asked for a runtime instruction ceiling, so the
     /// program it compiles must carry the accounting that enforces it.
     saw_steps: bool,
@@ -893,21 +896,17 @@ const Parsed = struct {
             .drop_debug = self.drop_debug,
             .step_checks = !self.drop_step_checks,
             .frame_checks = !self.drop_frame_checks,
-            .checks = !self.unchecked,
         };
     }
 
     /// The policy `run`/`run-project` build under. Step accounting is emitted
     /// only where a ceiling was asked for. `frames` is the caller's own default
     /// for depth accounting — the single-file path emits it only under a
-    /// ceiling, a project keeps it — and `--unchecked` narrows it to exactly
-    /// the ceilings that were asked for, which is what removes the frame record
-    /// and its position stores when there are none (`QBE-UNCHECKED-1`).
+    /// ceiling, a project keeps it.
     fn runPolicy(self: *const Parsed, frames: bool) language.native_interface.Policy {
         return .{
             .step_checks = self.saw_steps,
-            .frame_checks = if (self.unchecked) self.saw_frames else frames,
-            .checks = !self.unchecked,
+            .frame_checks = frames,
         };
     }
 };
@@ -1022,7 +1021,6 @@ const ArgumentParser = struct {
     drop_frame_checks: bool = false,
     lean_manifest: bool = false,
     executable_manifest: bool = false,
-    unchecked: bool = false,
     saw_min: bool = false,
     saw_population: bool = false,
     saw_work: bool = false,
@@ -1186,8 +1184,6 @@ const ArgumentParser = struct {
         } else if (std.mem.eql(u8, arg, "--drop-frame-checks")) {
             if ((self.command != .@"emit-qbe" and self.command != .@"emit-project-qbe") or self.drop_frame_checks) return error.Usage;
             self.drop_frame_checks = true;
-        } else if (try self.uncheckedOption(arg)) {
-            return true;
         } else return false;
         return true;
     }
@@ -1219,23 +1215,6 @@ const ArgumentParser = struct {
         if (!std.mem.startsWith(u8, arg, "--qbe=")) return false;
         if (self.native.codegen == .llvm) return error.Usage;
         self.native.codegen = .{ .qbe = try self.value(arg, "--qbe=") };
-        return true;
-    }
-
-    /// `--unchecked` on `run`/`run-project` and the internal
-    /// `--drop-safety-checks` the native build driver hands the emitters: both
-    /// select `native_interface.Policy.checks = false`. They are one switch
-    /// under two spellings because the user-facing name states a guarantee the
-    /// program gives up, while the emitter name matches `--drop-step-checks`
-    /// and `--drop-frame-checks` beside it.
-    fn uncheckedOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
-        const emitter = self.command == .@"emit-qbe" or self.command == .@"emit-project-qbe";
-        if (std.mem.eql(u8, arg, "--drop-safety-checks")) {
-            if (!emitter or self.unchecked) return error.Usage;
-        } else if (std.mem.eql(u8, arg, "--unchecked")) {
-            if (!self.executes() or self.unchecked) return error.Usage;
-        } else return false;
-        self.unchecked = true;
         return true;
     }
 
@@ -1457,7 +1436,6 @@ const ArgumentParser = struct {
             .drop_frame_checks = self.drop_frame_checks,
             .lean_manifest = self.lean_manifest,
             .executable_manifest = self.executable_manifest,
-            .unchecked = self.unchecked,
             .saw_steps = self.saw_steps,
             .saw_frames = self.saw_frames,
             .friction_path = self.friction_path,
@@ -2308,8 +2286,7 @@ fn runProjectProgram(init: Context, compilation: *language.project_compile.Compi
         .sources = sources,
         .policy = if (configured.identity) |*value| value else null,
         .step_checks = parsed.saw_steps,
-        .frame_checks = parsed.runPolicy(true).frame_checks,
-        .checks = !parsed.unchecked,
+        .frame_checks = true,
     };
     if (!parsed.no_cache) {
         if (try native_run.manifest_cache.load(init.gpa, init.io, init.environ, parsed.native, identity)) |entry| {
@@ -2996,7 +2973,7 @@ fn manifestReplayTicket(parsed: Parsed, diagnostics: diagnostic_output.Format, p
     var slot = std.crypto.hash.Blake3.init(.{});
     slot.update("emit-project-qbe-replay-v2");
     replayFrame(&slot, parsed.path);
-    const switches = [_]bool{ parsed.drop_debug, parsed.drop_step_checks, parsed.drop_frame_checks, parsed.unchecked, parsed.lean_manifest, parsed.executable_manifest };
+    const switches = [_]bool{ parsed.drop_debug, parsed.drop_step_checks, parsed.drop_frame_checks, parsed.lean_manifest, parsed.executable_manifest };
     for (switches) |value| slot.update(&.{@intFromBool(value)});
     slot.update(&.{@backingInt(diagnostics)});
     var key = slot;

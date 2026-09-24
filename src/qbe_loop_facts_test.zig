@@ -13,10 +13,10 @@ const Manifest = struct { functions: []Unit };
 
 /// One function's IL under the protocol a published executable uses: no step
 /// or frame accounting, value guards on (or off, with `checked = false`).
-fn functionIl(source: []const u8, name: []const u8, step_checks: bool, checked: bool) ![]u8 {
+fn functionIl(source: []const u8, name: []const u8, step_checks: bool) ![]u8 {
     var c = try language.Compilation.init(t.allocator, fixture_path, source);
     defer c.deinit();
-    const manifest = try c.emitQbeWithOptions(t.allocator, .{ .step_checks = step_checks, .frame_checks = false, .checks = checked });
+    const manifest = try c.emitQbeWithOptions(t.allocator, .{ .step_checks = step_checks, .frame_checks = false });
     defer t.allocator.free(manifest);
     var parsed = try std.json.parseFromSlice(Manifest, t.allocator, manifest, .{ .allocate = .alloc_always, .ignore_unknown_fields = true });
     defer parsed.deinit();
@@ -24,7 +24,7 @@ fn functionIl(source: []const u8, name: []const u8, step_checks: bool, checked: 
     return error.TestUnexpectedResult;
 }
 fn fastIl(source: []const u8, name: []const u8) ![]u8 {
-    return functionIl(source, name, false, true);
+    return functionIl(source, name, false);
 }
 
 /// The versioned parts of one function's IL: everything before the first
@@ -277,13 +277,10 @@ test "a loop that can resize a list or allocate is not versioned" {
 }
 
 // spec-case: QBE-LOOP-FACTS-1
-test "a step-accounted or unchecked build keeps one copy of every loop" {
-    const counted = try functionIl(list_sum, "total", true, true);
+test "a step-accounted build keeps one copy of every loop" {
+    const counted = try functionIl(list_sum, "total", true);
     defer t.allocator.free(counted);
     try t.expectEqual(@as(usize, 0), std.mem.count(u8, counted, "@fi"));
-    const unchecked = try functionIl(list_sum, "total", false, false);
-    defer t.allocator.free(unchecked);
-    try t.expectEqual(@as(usize, 0), std.mem.count(u8, unchecked, "@fi"));
 }
 
 /// Run `source` under both lowerings — the versioned fast protocol and the

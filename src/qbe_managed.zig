@@ -338,18 +338,15 @@ fn checkedPointer(comptime E: type, self: *E, result: usize, slot: usize) Error!
 /// original index and receiver length. `failure` names the detail-carrying
 /// runtime helper; both values are captured, never recomputed.
 ///
-/// QBE-UNCHECKED-1: an unchecked build emits neither the test nor the cold
-/// block. The runtime call or inline address that produced `result` still runs,
-/// so the value the caller goes on to use is unchanged on a valid index.
+/// QBE-LOOP-VERSION-1: an element access a loop copy's guard proved in bounds
+/// emits neither the test nor the cold block.
 fn requireIndexBounds(comptime E: type, self: *E, result: usize, index: usize, length: usize, failure: []const u8) Error!void {
     if (!self.checks) return;
     const label = self.temp();
     try self.print(" jnz %v{d}, @success{d}, @failed{d}\n@failed{d}\n call ${s}(l %ctx, l %v{d}, l %v{d})\n jmp @failure\n@success{d}\n", .{ result, label, label, label, failure, index, length, label });
 }
 /// Require a pop that has no caller index; report the receiver length only.
-/// QBE-UNCHECKED-1 drops this test with the other container-range tests.
 fn requirePopBounds(comptime E: type, self: *E, result: usize, length: usize) Error!void {
-    if (!self.checks) return;
     const label = self.temp();
     try self.print(" jnz %v{d}, @success{d}, @failed{d}\n@failed{d}\n call $myl_qbe_fail_pop_bounds(l %ctx, l %v{d})\n jmp @failure\n@success{d}\n", .{ result, label, label, label, length, label });
 }
@@ -745,8 +742,8 @@ fn elementFeedsStore(comptime E: type, self: *E, element: typed.Type) Error!bool
 /// original index and the receiver length: `failure` names the helper that
 /// reports an index this lowering already normalized, or one it has not.
 fn inlineIndexRead(comptime E: type, self: *E, read: IndexRead, failure: []const u8) Error!void {
-    // QBE-UNCHECKED-1: the comparison exists only to feed the test, so an
-    // unchecked build emits neither and reads the element address directly.
+    // QBE-LOOP-VERSION-1: the comparison exists only to feed the test, so a
+    // read a loop copy's guard proved in bounds emits neither.
     if (self.checks) {
         const valid = self.temp();
         try self.print(unsigned_below, .{ valid, read.at, read.length });
@@ -789,8 +786,8 @@ fn inlineIndexRead(comptime E: type, self: *E, read: IndexRead, failure: []const
 /// region inside the element can only be the element itself. That is exactly
 /// the aliasing the runtime `memcpy` already had.
 fn inlineIndexWrite(comptime E: type, self: *E, write: IndexRead, failure: []const u8) Error!void {
-    // QBE-UNCHECKED-1: the comparison exists only to feed the test, so an
-    // unchecked build emits neither and writes the element address directly.
+    // QBE-LOOP-VERSION-1: the comparison exists only to feed the test, so a
+    // write a loop copy's guard proved in bounds emits neither.
     if (self.checks) {
         const valid = self.temp();
         try self.print(unsigned_below, .{ valid, write.at, write.length });
@@ -1074,13 +1071,9 @@ fn textAt(comptime E: type, self: *E, input: usize, at: usize, ty: typed.Type, r
     const size = self.temp();
     try self.print(load_pointer, .{ size, input });
     const normalized = try normalizedIndex(E, self, at, size, ty);
-    // QBE-UNCHECKED-1: keep the negative-index normalization, which produces the
-    // offset the read uses, and drop only its range test and cold block.
-    if (self.checks) {
-        const valid = self.temp();
-        try self.print(unsigned_below, .{ valid, normalized, size });
-        try requireIndexBounds(E, self, valid, at, size, "myl_qbe_fail_text_bounds_detail");
-    }
+    const valid = self.temp();
+    try self.print(unsigned_below, .{ valid, normalized, size });
+    try requireIndexBounds(E, self, valid, at, size, "myl_qbe_fail_text_bounds_detail");
     try self.print(" %v{d} =l call $myl_native_text_at(l %heap, l %v{d}, l %v{d})\n", .{ result, input, normalized });
     try checkedPointer(E, self, result, base);
 }
