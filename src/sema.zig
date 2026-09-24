@@ -1273,6 +1273,8 @@ fn normalizeDiagnostics(sink: *diagnostic.Sink) void {
     }
     sink.items.shrinkRetainingCapacity(count);
 }
+/// Syntax size above which checking reserves its checked tables up front.
+const presize_threshold = 1 << 14;
 /// Type-check a single source unit, returning arena-owned resolved instructions.
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
     return checkWithNames(allocator, src, program, sink, null);
@@ -1575,9 +1577,12 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     defer allocator.free(checker.managed_types);
     // Checked trees run about one and a half times the syntax they come from.
     // Reserving that up front keeps the append path from regrowing (and, in the
-    // project arena, recopying) the whole program's checked tables.
-    try checker.nodes.ensureTotalCapacity(allocator, program.nodes.items.len + program.nodes.items.len / 2 + 64);
-    try checker.statements.ensureTotalCapacity(allocator, program.statements.items.len + program.statements.items.len / 2 + 64);
+    // project arena, recopying) a large program's checked tables; a small one
+    // grows as it always did.
+    if (program.nodes.items.len >= presize_threshold) {
+        try checker.nodes.ensureTotalCapacity(allocator, program.nodes.items.len + program.nodes.items.len / 2);
+        try checker.statements.ensureTotalCapacity(allocator, program.statements.items.len + program.statements.items.len / 2);
+    }
     // C3 reuse: prepared declaration facts and fresh identity maps are
     // per-request; only populated when a semantic cache is attached.
     try initSpecializationReuse(&checker, allocator, catalog.records, &session, &spec_session);

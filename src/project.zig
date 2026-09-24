@@ -32,6 +32,8 @@ const diagnostic = @import("diagnostic.zig");
 const standard_library = @import("standard_library.zig");
 /// The one code every malformed or missing module header reports.
 const eModuleHeader = "E_MODULE_HEADER";
+/// Header discovery's scratch chunk: the tokens of a module of about 64 KiB.
+const header_scratch_bytes = 1 << 20;
 pub const ReadError = error{ OutOfMemory, NotFound, ReadFailed, TooLarge };
 /// Source reader callback; returned bytes use the supplied allocator and respect the byte limit.
 pub const Provider = struct { context: ?*anyopaque, read: *const fn (?*anyopaque, std.mem.Allocator, []const u8, usize) ReadError![]u8 };
@@ -150,6 +152,9 @@ pub const Project = struct {
         // never live (or faulted in) at once.
         var scratch = std.heap.ArenaAllocator.init(self.arena.child_allocator);
         defer scratch.deinit();
+        // One chunk that holds a typical module's tokens, reused by every
+        // module rather than grown (and faulted in) module by module.
+        _ = try scratch.allocator().alloc(u8, header_scratch_bytes);
         const root = try self.intern(provider, entry, null, options, &scratch);
         const Visit = struct { id: usize, next: usize = 0 };
         var work: std.ArrayList(Visit) = .empty;
@@ -194,9 +199,10 @@ pub const Project = struct {
         const allocator = self.arena.allocator();
         const src = self.modules.items[id].src;
         // Diagnostics outlive the header in the project arena; only the tokens
-        // are scratch.
+        // are scratch. Releasing the previous module's tokens can itself
+        // allocate (to keep one retained chunk), and that failure is reported.
         var sink: diagnostic.Sink = .{ .allocator = allocator };
-        defer _ = scratch.reset(.retain_capacity);
+        if (!scratch.reset(.retain_capacity)) return error.OutOfMemory;
         const tokens = lex.lex(scratch.allocator(), src.bytes, &sink) catch |err| {
             if (err == error.OutOfMemory) return err;
             const problem = sink.items.items[0];

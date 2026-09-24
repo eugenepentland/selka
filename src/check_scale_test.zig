@@ -337,6 +337,7 @@ test "a lowering command whose edit changes a callee's facts publishes the facts
     defer repeated.warm.deinit();
     defer repeated.cold.deinit();
     try t.expectEqual(@as(usize, 0), repeated.warm.stood_in);
+    try t.expectEqual(@as(usize, 7), repeated.warm.checked);
     try t.expect(repeated.warm.summaries != null);
     try t.expectEqualStrings(repeated.cold.facts, repeated.warm.facts);
     try t.expectEqualStrings(repeated.cold.diagnostics, repeated.warm.diagnostics);

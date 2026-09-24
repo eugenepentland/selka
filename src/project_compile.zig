@@ -85,7 +85,7 @@ pub const Compilation = struct {
             if (err != error.SourceError or !request.retry) return err;
             self.diagnostics.items.shrinkRetainingCapacity(before);
             counters.?.restore(semantic);
-            request.* = .{};
+            request.* = .{ .facts_only = request.facts_only };
             self.program = try @import("sema.zig").checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache);
             return;
         };
