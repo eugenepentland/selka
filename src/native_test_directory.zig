@@ -206,7 +206,9 @@ fn argv(context: fs.Context, shared: Fanout, source: []const u8) Error![]const [
         if (opts.against) |reference| try list.appendSlice(a, &.{ "--against", reference });
     }
     if (opts.flags.gc_stress) try list.append(a, "--gc-stress");
-    if (opts.seed) |seed| try list.appendSlice(a, &.{ "--seed", try decimal(a, seed) });
+    if (opts.determinism.seed) |seed| try list.appendSlice(a, &.{ "--seed", try decimal(a, seed) });
+    const runs = opts.determinism.property_runs;
+    if (runs != (options.Determinism{}).property_runs) try list.appendSlice(a, &.{ "--property-runs", try decimal(a, runs) });
     if (opts.bench.pattern) |pattern| {
         try list.appendSlice(a, &.{ "--bench", pattern, "--bench-profile", opts.bench.profile });
         if (opts.bench.only) try list.append(a, "--bench-only");

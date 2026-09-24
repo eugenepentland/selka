@@ -16,7 +16,9 @@ design record is
 The command discovers `test_` functions in the project's reachable public
 schema. A parameter-free test returning `bool` asserts `true`; any other result
 type needs an explicit expected typed JSON value, so an undeclared expectation is
-a configuration error rather than a silent pass. `--cases FILE` supplies
+a configuration error rather than a silent pass. A test with data parameters and
+no cases-file `arguments` is a [property test](#property-tests): the runner
+generates its inputs. `--cases FILE` supplies
 arguments, expectations and skip reasons keyed by qualified test name, and
 `--filter` selects qualified names case-sensitively: a pattern carrying no `*`,
 `?` or `[` matches any substring of the qualified name, and one that carries them
@@ -110,7 +112,8 @@ build.
 | `Network` | a network that refuses every connection with `network.denied_here()` |
 
 No test is ever handed real authority: a `Host` parameter is not supplied, and
-such a test fails as one that needs arguments. Every test gets its own
+without cases-file arguments such a test fails as a property test whose `Host`
+parameter cannot be generated. Every test gets its own
 stand-ins, so nothing one test writes is visible to another, and each test's
 entropy stream is its own and stays the same from run to run; renaming the test
 changes it, and `--seed N` pins every test's (a directory run forwards it). The
@@ -181,6 +184,191 @@ passed main::test_uptime_counts_whole_seconds
 helper, an example, a benchmark — gets them: the constructors need no
 capability, and using a stand-in is not an effect of a function whose own
 parameters supply none ([deterministic stand-ins](../effects.md#deterministic-stand-ins)).
+
+## Property tests
+
+A `test_` function with data parameters and no `arguments` in the cases file is
+a property test. The runner generates an input for every data parameter from its
+type, hands its capability parameters their
+[deterministic stand-ins](#capability-parameters) as it does for any test, and
+calls the test once per input: it passes when every input — 100 unless
+`--property-runs N` says otherwise — returns `True` (or `Ok(True)`) without
+trapping. `False`, `Ok(False)`, an `Err` and a trap (a failed `assert`, a broken
+contract, an index out of bounds, an overflow) are failures. A cases-file entry
+with `arguments` still wins: the test then runs once with exactly those.
+
+```mylang
+# doc: check
+module main
+
+@invariant(self.low <= self.high, "a span never runs backwards")
+public record Span:
+    low: int
+    high: int
+
+def total(xs: list[int]) -> int:
+    sum = 0
+    for x in xs:
+        sum = sum + x
+    return sum
+
+public def test_reversing_twice_is_the_identity(xs: list[int]) -> bool:
+    ys = xs.copy()
+    ys.reverse()
+    ys.reverse()
+    return ys == xs
+
+@requires(len(xs) > 0, "an average needs a value")
+public def test_average_is_within_range(xs: list[i32]) -> bool:
+    mean = total([int(x) for x in xs]) // len(xs)
+    return int(min(xs)) <= mean and mean <= int(max(xs))
+
+public def test_a_span_is_ordered(span: Span) -> bool:
+    return span.low <= span.high
+
+public def test_budget_stays_below_100(costs: list[int]) -> bool:
+    return total(costs) < 100
+
+def main() -> int:
+    return 0
+```
+
+```console
+$ mylang test app/main.my
+passed main::test_a_span_is_ordered
+passed main::test_average_is_within_range
+failed main::test_budget_stays_below_100: falsified after 8 passing runs (seed 8562780449005306539)
+  minimal input (62 shrinks, 512 attempts):
+    costs = [100]
+  original input (run 9):
+    costs = [1, 9223372036854775807]
+  reason: returned False
+  original reason: R_OVERFLOW (add: left 1, right 9223372036854775807, width 64)
+      in main::total at main.my:11:19
+      in main::test_budget_stays_below_100 at main.my:29:12
+  reproduce: mylang test app/main.my --filter 'main::test_budget_stays_below_100' --seed 8562780449005306539
+passed main::test_reversing_twice_is_the_identity
+3 passed, 0 cached, 1 failed, 0 skipped
+```
+
+### Generated inputs
+
+Inputs are deterministic. They are drawn from a SplitMix64 stream seeded by the
+test's seed — the same one its `Entropy` stand-in gets: the first eight bytes of
+the SHA-256 of its qualified name, or `N` under `--seed N` — and the run number,
+so run 37 of a property is the same value on every machine, and renaming the test
+draws new ones. Sizes grow from 0 on the first run to 100 on the last: a
+collection holds up to the size at the top level and half of it for every level
+it is nested, and an input stops growing collections once it holds 4096 nodes.
+
+| Type | What is generated |
+| --- | --- |
+| integers (`int`, `i8`…`u64`) | three draws in eight from the edges of the width — 0, 1, -1, the minimum and maximum, a power of two, one below it and its negation — one uniformly over the width, the rest near zero, growing with the size |
+| `bool` | `True` or `False` |
+| `float` | small binary fractions, bit patterns from the whole range, and on purpose both zeros, both infinities, NaN, the largest finite and the smallest subnormal magnitudes; the language observes each consistently (a NaN is `nan` and unequal to itself) |
+| `str` | seven scalars in ten printable ASCII, plus tab, newline, NUL and other controls, well-known non-ASCII scalars (`é`, `Ω`, `中`, `😀`, a combining accent, U+FEFF, U+10FFFF) and scalars from the whole range |
+| `bytes` | octets, a quarter of them 0, 1, 0x7F, 0x80 or 0xFF |
+| `list[T]`, `set[T]`, `dict[K, V]` | elements or entries of the element types; a set element or a dictionary key drawn twice is dropped, so keys of every hashable type work |
+| tuples, records | fieldwise |
+| fixed arrays, enum-indexed tables | every element or entry |
+| enums, unions, `Option[T]`, `Result[T, E]` | a case drawn uniformly, then its payload |
+
+A `class` (its values have identity), a `domain` (built only through its own
+constructors), a function value and `Host` are never generated: a property test
+with a parameter whose type reaches one fails, naming the parameter and the
+type, and so does one whose result is not `bool` or `Result[bool, E]`. With a
+`class Box` and a `test_boxes(boxes: list[Box]) -> bool` in the same module:
+
+```console
+$ mylang test app/main.my --filter test_boxes
+failed main::test_boxes: property test parameter `boxes: List<main::Box>` cannot be generated: it holds main::Box, and a class value has identity, so it is built by its own code rather than generated
+0 passed, 0 cached, 1 failed, 0 skipped
+```
+
+### Preconditions and invariants
+
+An input that breaks the test's own `@requires` is discarded, not failed:
+`test_average_is_within_range` above never sees an empty list. A value the
+runner generates was not built by a constructor, so every `test_` function also
+checks, on entry, the [`@invariant`](../contracts.md#invariants) of every record
+or domain its parameters hold — in fields, list, set and dictionary elements,
+arrays, tuples and every union case — and an input that breaks one is discarded
+the same way: `test_a_span_is_ordered` only ever sees ordered spans. A
+precondition that a function the test calls breaks is a failure like any other.
+Discarded inputs are replaced by more runs; when more than ten times the
+requested runs have been discarded the test fails, naming the clause that
+rejected the most. A collection of invariant-carrying records is accepted or
+discarded as a whole, so a long `list[Span]` is rarely valid; generate the
+fields and build the records in the test when that matters. A test that asks
+for one exact value, `@requires(n == 12345, "a single value")` on
+`test_picky(n: int)`, gives up:
+
+```console
+$ mylang test app/main.my --filter test_picky
+failed main::test_picky: too many discarded inputs: 1001 of 1001 generated inputs broke a precondition before 0 of 100 runs passed; most often test_picky requires `n == 12345`: a single value
+  reproduce: mylang test app/main.my --filter 'main::test_picky' --seed 4128163384585622329
+0 passed, 0 cached, 1 failed, 0 skipped
+```
+
+### Shrinking and the report
+
+The first failing input is shrunk before it is reported. Each parameter in turn
+is replaced by the first of its simpler candidates that still fails (for any
+reason), until no candidate of any parameter does or 2,000 candidates have run:
+integers move toward 0 by halving the distance (100 tries 0, 50, 75, 88, 94, 97,
+99), floats toward `0.0`, strings, bytes and collections first lose elements —
+all of them, then halves, quarters and single ones — then shrink the ones left
+(never into a set element or dictionary key another one holds), records and
+tuples shrink field by field, and enums, unions and `Option` move toward earlier
+cases and `None`. The report prints the minimal input as mylang literals, one
+line per parameter, the input as generated and its run, the reason — the value
+returned, or a trap's code, message and frames — the original input's own reason
+when shrinking reached a different failure, and a command that reproduces the
+whole search. An input that ran past `--timeout-ms` is reported as generated,
+because every candidate could run as long.
+
+`--json` adds a `property` object to every property test's result: its `seed`,
+its `counts` (`runs`, `passed`, `discarded`, `processes`, `shrinks`,
+`attempts`) and, for a failure, a `failure` object whose `minimal` and
+`original` inputs carry the typed JSON `arguments` a cases file takes and the
+`literals` the text report prints.
+
+```console
+$ mylang test app/main.my --filter test_budget --json | jq '.tests[0].property.failure.minimal'
+{
+  "arguments": {"costs": ["100"]},
+  "literals": {"costs": "[100]"}
+}
+```
+
+### Batches and receipts
+
+A property does not pay one process launch per input. The harness process makes
+one copied-value call per input and writes each answer as it finishes, so a
+passing 100-run property is one process, and every property's first batch runs
+beside the others. Replacements for discarded inputs and shrink candidates run
+in further batches. A child that dies or runs out of time mid-batch keeps the
+answers of the inputs before the one it was running; that input runs alone in a
+process of its own, and the rest of the batch in another. On the Debug compiler
+a warm 100-run property over `list[int]` takes about 0.2 seconds of
+`mylang test`, the whole command included.
+
+A passing property is reused like any other test. Its receipt identity adds the
+seed, the run count and the generator version, so changing `--seed`,
+`--property-runs` or the compiler's generator runs it again; a failure is never
+reused.
+
+```console
+$ mylang test app/main.my --filter test_reversing
+passed main::test_reversing_twice_is_the_identity
+1 passed, 0 cached, 0 failed, 0 skipped
+$ mylang test app/main.my --filter test_reversing
+cached main::test_reversing_twice_is_the_identity
+0 passed, 1 cached, 0 failed, 0 skipped
+$ mylang test app/main.my --filter test_reversing --property-runs 500
+passed main::test_reversing_twice_is_the_identity
+1 passed, 0 cached, 0 failed, 0 skipped
+```
 
 ## Directory runs
 

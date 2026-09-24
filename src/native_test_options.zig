@@ -67,9 +67,18 @@ pub const Options = struct {
     bench: BenchOptions = .{},
     /// `--against REF` reference revision for `--affected`; null without it.
     against: ?[]const u8 = null,
-    /// `--seed N` for the `Entropy` stand-in every test that declares one gets;
-    /// null derives each test's seed from its qualified name.
+    /// `--seed N` and `--property-runs N`: what every test's stand-ins and
+    /// generated inputs are drawn from.
+    determinism: Determinism = .{},
+};
+/// The inputs of a run that are drawn rather than written: the seed of every
+/// `Entropy` stand-in and every property test's generated inputs, and how
+/// many generated inputs a property test must pass.
+pub const Determinism = struct {
+    /// `--seed N`; null derives each test's seed from its qualified name.
     seed: ?u64 = null,
+    /// `--property-runs N`: generated inputs every property test must pass.
+    property_runs: u32 = 100,
 };
 /// The executables one native session drives, grouped so the option record
 /// stays a bag of independent choices rather than a list of tool paths.
@@ -96,7 +105,9 @@ pub const usage = "usage: mylang test <entry.my|directory> [--filter SUBSTRING|G
     "  --mode Debug|ReleaseFast\n" ++
     "  --max-steps N --max-frames N --max-calls N --timeout-ms N\n" ++
     "  --max-memory BYTES  per-test byte ceiling (K/M/G suffixes; default 512M)\n" ++
-    "  --seed N  seed every test's Entropy stand-in (default: from the test's name)\n" ++
+    "  --seed N  seed every test's Entropy stand-in and generated inputs\n" ++
+    "    (default: from the test's name)\n" ++
+    "  --property-runs N  generated inputs each property test must pass (default 100)\n" ++
     "  --jobs N  test processes run at once, and a directory's fan-out width\n" ++
     "    (default: cores, capped by free memory)\n" ++
     "  bench: --bench PATTERN [--bench-only] [--bench-output FILE]\n" ++
@@ -195,6 +206,7 @@ const Flag = enum {
     @"--max-memory",
     @"--jobs",
     @"--seed",
+    @"--property-runs",
     @"--bench",
     @"--bench-output",
     @"--bench-baseline",
@@ -221,7 +233,8 @@ fn assign(result: *Options, flag: Flag, value: []const u8) Error!void {
         .@"--timeout-ms" => result.limits.timeout_ms = @intCast(try number(value)),
         .@"--max-memory" => result.limits.max_memory = budget.parse(value) catch return error.InvalidTestArguments,
         .@"--jobs" => result.jobs = budget.jobs(value) catch return error.InvalidTestArguments,
-        .@"--seed" => result.seed = std.fmt.parseInt(u64, value, 10) catch return error.InvalidTestArguments,
+        .@"--seed" => result.determinism.seed = std.fmt.parseInt(u64, value, 10) catch return error.InvalidTestArguments,
+        .@"--property-runs" => result.determinism.property_runs = @intCast(try bounded(value, 1, 1_000_000)),
         .@"--bench" => result.bench.pattern = value,
         .@"--bench-output" => result.bench.output = value,
         .@"--bench-baseline" => result.bench.baseline = value,
@@ -332,9 +345,9 @@ test "a test run's --release is a ReleaseFast build that refuses --mode and --qb
 // spec: GUEST-TEST-GC-STRESS-1
 // spec-case: TEST-CAPS-3
 test "seed pins every test's entropy stand-in and takes a decimal word" {
-    try std.testing.expectEqual(@as(?u64, 7), (try parse(&.{ "main.my", "--seed", "7" })).seed);
-    try std.testing.expectEqual(@as(?u64, 18446744073709551615), (try parse(&.{ "main.my", "--seed=18446744073709551615" })).seed);
-    try std.testing.expectEqual(@as(?u64, null), (try parse(&.{"main.my"})).seed);
+    try std.testing.expectEqual(@as(?u64, 7), (try parse(&.{ "main.my", "--seed", "7" })).determinism.seed);
+    try std.testing.expectEqual(@as(?u64, 18446744073709551615), (try parse(&.{ "main.my", "--seed=18446744073709551615" })).determinism.seed);
+    try std.testing.expectEqual(@as(?u64, null), (try parse(&.{"main.my"})).determinism.seed);
     try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--seed", "-1" }));
     try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--seed" }));
 }
@@ -343,4 +356,14 @@ test "gc stress is an explicit opt-in switch" {
     try std.testing.expect(enabled.flags.gc_stress);
     try std.testing.expect(!(try parse(&.{"main.my"})).flags.gc_stress);
     try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--gc-stress=1" }));
+}
+
+// spec-case: PROPERTY-TEST-1
+test "property runs default to 100 and take a bounded positive count" {
+    try std.testing.expectEqual(@as(u32, 100), (try parse(&.{"main.my"})).determinism.property_runs);
+    try std.testing.expectEqual(@as(u32, 7), (try parse(&.{ "main.my", "--property-runs", "7" })).determinism.property_runs);
+    try std.testing.expectEqual(@as(u32, 1_000_000), (try parse(&.{ "main.my", "--property-runs=1000000" })).determinism.property_runs);
+    try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--property-runs", "0" }));
+    try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--property-runs", "1000001" }));
+    try std.testing.expectError(error.InvalidTestArguments, parse(&.{ "main.my", "--property-runs" }));
 }

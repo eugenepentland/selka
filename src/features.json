@@ -92,6 +92,11 @@
       "summary": "`mylang test --bench` measures exported `bench_` workloads against versioned baselines and reviewed policy limits.",
       "doc": "docs/tooling/guest-tests.md#performance-benchmarks"
     },
+    "property-tests": {
+      "kind": "tooling",
+      "summary": "A `test_` function with data parameters and no cases-file arguments is a property test: `mylang test` generates seeded, size-growing, edge-biased inputs from the parameter types, discards inputs that break the test's preconditions or a generated record's invariants, runs many inputs per native process, shrinks a failure to a minimal counterexample printed as mylang literals with a reproduction command, and reuses a pass until the seed, `--property-runs` or the generator changes.",
+      "doc": "docs/tooling/guest-tests.md#property-tests"
+    },
     "attributes": {
       "kind": "language",
       "summary": "@deprecated, @test and @allow attach a fixed attribute vocabulary to declarations; @test drives discovery and @deprecated warns across modules.",

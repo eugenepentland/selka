@@ -16,7 +16,9 @@ pub const Identity = struct {
 };
 /// Planner reasons and the replacement's identity evidence, grouped so the
 /// result keeps its flat wire form without growing one field per identity.
-pub const Context = struct { reasons: []const []const u8 = &.{}, identity: Identity = .{} };
+/// `property` is a falsified property test's counterexample report
+/// (PROPERTY-TEST-3), reported only when present.
+pub const Context = struct { reasons: []const []const u8 = &.{}, identity: Identity = .{}, property: std.json.Value = .null };
 /// Reported result and its semantic invalidation evidence.
 pub const Result = struct {
     name: []const u8,
@@ -33,7 +35,7 @@ pub const Result = struct {
     /// Serialize with `reasons` and the three identities flat, preserving the
     /// existing native-tests-v1 wire shape while keeping the struct compact.
     pub fn jsonStringify(self: Result, writer: anytype) !void {
-        try writer.write(.{
+        const flat = .{
             .name = self.name,
             .status = self.status,
             .actual = self.actual,
@@ -47,7 +49,16 @@ pub const Result = struct {
             .contract = self.context.identity.contract,
             .provider = self.context.identity.provider,
             .source = self.context.identity.source,
-        });
+        };
+        if (self.context.property == .null) return writer.write(flat);
+        try writer.beginObject();
+        inline for (@typeInfo(@TypeOf(flat)).@"struct".field_names) |name| {
+            try writer.objectField(name);
+            try writer.write(@field(flat, name));
+        }
+        try writer.objectField("property");
+        try writer.write(self.context.property);
+        try writer.endObject();
     }
 };
 /// A receipt is valid when its semantic dependency-closure key, selected

@@ -16,6 +16,9 @@ const invalidation = @import("invalidation.zig");
 const build_options = @import("qbe_build_options.zig");
 const budget = @import("memory_budget");
 const execute = @import("native_test_execute.zig");
+const property = @import("native_test_property.zig");
+const generator = @import("property_generate.zig");
+const wire = @import("native_test_wire.zig");
 const bench = @import("native_bench.zig");
 const builtin = @import("builtin");
 /// Setup failures never produce a cached green test run.
@@ -690,7 +693,8 @@ fn planSelectedCases(
         const tables = try graph.lookup(context.allocator);
         const checked = tables.checked.get(case.name) orelse case.function;
         const session = graphs.session;
-        const plan = try tables.plan.plan(context.allocator, try tables.symbol(case.name), try session.key(case.settings, checked));
+        const settings = if (case.declared.property) try propertyIdentity(context, session.options, case) else case.settings;
+        const plan = try tables.plan.plan(context.allocator, try tables.symbol(case.name), try session.key(settings, checked));
         result.key = try context.allocator.dupe(u8, &plan.key);
         result.dependencies = plan.dependencies;
         result.cacheable = plan.cacheable and session.environment.cacheable;
@@ -720,6 +724,20 @@ fn planSelectedCases(
         if (!session.options.flags.no_cache) try receipts.invalidate(context, path);
         try pending.append(context.allocator, .{ .graph = graph, .selected = checked, .dependencies = plan.dependencies, .kind = .tests, .slot = case_index });
     }
+}
+
+/// A property test's receipt identity: its case settings plus the seed its
+/// inputs are drawn from, how many must pass and the generator version, so a
+/// pass is reused only for the very inputs it passed (PROPERTY-TEST-4).
+fn propertyIdentity(context: fs.Context, opts: options.Options, case: cases.Case) Error!std.json.Value {
+    var drawn: std.json.ObjectMap = .empty;
+    try drawn.put(context.allocator, "generator", .{ .string = generator.version });
+    try drawn.put(context.allocator, "runs", .{ .integer = opts.determinism.property_runs });
+    try drawn.put(context.allocator, "seed", .{ .string = try std.fmt.allocPrint(context.allocator, "{d}", .{wire.entropySeed(opts.determinism.seed, case.name)}) });
+    var identity: std.json.ObjectMap = .empty;
+    try identity.put(context.allocator, "cases", case.settings);
+    try identity.put(context.allocator, "property", .{ .object = drawn });
+    return .{ .object = identity };
 }
 
 fn prepareSelectedGraphs(
@@ -792,7 +810,7 @@ fn executeSelectedCases(
 ) Error!void {
     var calls: std.ArrayList(execute.Call) = .empty;
     for (pending) |entry| {
-        if (entry.kind != .tests) continue;
+        if (entry.kind != .tests or selected[entry.slot].declared.property) continue;
         const executor = if (entry.graph.project.executor) |*prepared| prepared else return error.InvalidGraph;
         try calls.append(context.allocator, .{ .executor = executor, .function = entry.selected, .arguments = selected[entry.slot].arguments });
     }
@@ -800,7 +818,7 @@ fn executeSelectedCases(
     const outcomes = try execute.executeAll(context, calls.items, session.options.limits, width);
     var next: usize = 0;
     for (pending) |entry| {
-        if (entry.kind != .tests) continue;
+        if (entry.kind != .tests or selected[entry.slot].declared.property) continue;
         const case = selected[entry.slot];
         const result = &results[entry.slot];
         const outcome = outcomes[next];
@@ -819,6 +837,82 @@ fn executeSelectedCases(
             .root = session.source.root,
         });
         if (!passed and result.reason.len == 0) result.reason = "actual value does not match expected value";
+    }
+    try executeProperties(context, session, selected, results, pending);
+}
+
+/// One property test in flight: its result slot, its bound run and its search.
+const PropertyRun = struct { slot: usize, run: property.Property, source: []const u8, search: property.Search = .{} };
+
+/// Finishes properties on several threads: drawing replacements and
+/// shrinking are one process at a time for each property, so failing
+/// properties shrink side by side instead of one after another.
+const Finisher = struct {
+    runs: []PropertyRun,
+    answers: []const execute.BatchOutcome,
+    verdicts: []Error!property.Verdict,
+    next: std.atomic.Value(usize) = .init(0),
+
+    fn all(self: *Finisher, width: usize) void {
+        var threads: [16]?std.Thread = @splat(null);
+        const extra = @min(threads.len, @max(1, @min(width, self.runs.len)) - 1);
+        for (threads[0..extra]) |*thread| thread.* = std.Thread.spawn(.{}, work, .{self}) catch null;
+        self.work();
+        for (threads[0..extra]) |thread| if (thread) |started| started.join();
+    }
+    fn work(self: *Finisher) void {
+        while (true) {
+            const index = self.next.fetchAdd(1, .monotonic);
+            if (index >= self.runs.len) return;
+            const bound = &self.runs[index];
+            self.verdicts[index] = bound.run.finish(&bound.search, self.answers[index]);
+        }
+    }
+};
+
+/// Run every pending property test: bind each to its library (a signature
+/// that cannot be generated fails that test alone), execute every property's
+/// first batch concurrently, then finish each — drawing replacements for
+/// discarded inputs and shrinking a failure — one after another.
+fn executeProperties(
+    context: fs.Context,
+    session: sessions.Session,
+    selected: []const cases.Case,
+    results: []receipts.Result,
+    pending: []const Pending,
+) Error!void {
+    const a = context.allocator;
+    var runs: std.ArrayList(PropertyRun) = .empty;
+    for (pending) |entry| {
+        if (entry.kind != .tests or !selected[entry.slot].declared.property) continue;
+        const executor = if (entry.graph.project.executor) |*prepared| prepared else return error.InvalidGraph;
+        const settings: property.Settings = .{
+            .seed = wire.entropySeed(session.options.determinism.seed, selected[entry.slot].name),
+            .runs = session.options.determinism.property_runs,
+            .entry = session.options.source,
+        };
+        switch (try property.Property.bind(context, executor, entry.selected, session.options.limits, settings)) {
+            .invalid => |reason| {
+                results[entry.slot].status = "failed";
+                results[entry.slot].reason = reason;
+            },
+            .ready => |bound| try runs.append(a, .{ .slot = entry.slot, .run = bound, .source = entry.graph.project.source }),
+        }
+    }
+    const batches = try a.alloc(execute.BatchCall, runs.items.len);
+    for (runs.items, batches) |*bound, *batch| batch.* = try bound.run.first(&bound.search);
+    const width = executionWidth(context, session.options, batches.len);
+    const answers = try execute.executeBatches(context, batches, session.options.limits, width);
+    var finisher: Finisher = .{ .runs = runs.items, .answers = answers, .verdicts = try a.alloc(Error!property.Verdict, runs.items.len) };
+    finisher.all(width);
+    for (runs.items, finisher.verdicts) |*bound, finished| {
+        const verdict = try finished;
+        const result = &results[bound.slot];
+        result.status = if (verdict.passed) "passed" else "failed";
+        result.actual = .{ .bool = verdict.passed };
+        result.reason = try stripRoot(a, verdict.reason, bound.source, session.source.root);
+        const text = try std.json.Stringify.valueAlloc(a, verdict.evidence, .{});
+        result.context.property = try std.json.parseFromSliceLeaky(std.json.Value, a, text, .{});
     }
 }
 

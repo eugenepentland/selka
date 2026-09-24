@@ -9,6 +9,11 @@ test {
     _ = @import("native_test_dependencies.zig");
     _ = @import("native_test_execute.zig");
     _ = @import("native_test_wire.zig");
+    _ = @import("native_test_property.zig");
+    _ = @import("property_types.zig");
+    _ = @import("property_generate.zig");
+    _ = @import("property_shrink.zig");
+    _ = @import("property_render.zig");
 
     _ = @import("doc_coverage.zig");
     _ = @import("tokens_dump_test.zig");

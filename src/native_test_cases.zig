@@ -14,7 +14,9 @@ pub const Case = struct {
     settings: std.json.Value,
     /// A reasoned skip, or why a discovered test cannot run as declared. An
     /// invalid case is reported as one failure rather than aborting the run.
-    declared: struct { skip: ?[]const u8 = null, invalid: ?[]const u8 = null } = .{},
+    /// `property` marks a test with data parameters and no `arguments`, whose
+    /// inputs the runner generates (PROPERTY-TEST-1).
+    declared: struct { skip: ?[]const u8 = null, invalid: ?[]const u8 = null, property: bool = false } = .{},
 };
 /// Select exported test_ functions, validate all configuration keys, and retain skips.
 pub fn discover(allocator: std.mem.Allocator, schema: std.json.Value, cases: std.json.Value, pattern: []const u8) Error![]Case {
@@ -78,12 +80,14 @@ fn makeCase(function: std.json.Value, settings: std.json.Value) Error!Case {
     // A declared shape that cannot default is a failure of that one case, not a
     // host failure that takes the whole selection down before it is reported.
     var invalid: ?[]const u8 = null;
-    if (reason == null) {
-        if (parameters != 0 and !has_arguments) {
-            invalid = "test declares parameters; supply `arguments` in the cases file";
-        } else if (!explicit and !is_bool) {
-            invalid = "test result is not bool; supply `expected` in the cases file";
-        }
+    // Data parameters without `arguments` make a property test: the runner
+    // draws the inputs, and the verdict is the test's own `bool` result.
+    const property = reason == null and parameters != 0 and !has_arguments;
+    const undefaultable = reason == null and !(explicit or is_bool);
+    if (property and explicit) {
+        invalid = "a property test's verdict is its bool result; remove `expected` or supply `arguments`";
+    } else if (undefaultable and !property) {
+        invalid = "test result is not bool; supply `expected` in the cases file";
     }
     return .{
         .name = v.text(v.get(function, "name")),
@@ -92,7 +96,7 @@ fn makeCase(function: std.json.Value, settings: std.json.Value) Error!Case {
         .expected = if (explicit) v.get(settings, expected_key) else .{ .bool = true },
         .providers = providers,
         .settings = settings,
-        .declared = .{ .skip = reason, .invalid = invalid },
+        .declared = .{ .skip = reason, .invalid = invalid, .property = property and invalid == null },
     };
 }
 /// Case-sensitive shell-style wildcard matching, including bracket ranges. A

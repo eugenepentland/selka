@@ -10783,6 +10783,221 @@ fn freeRun(result: std.process.RunResult) void {
     testing.allocator.free(result.stdout);
     testing.allocator.free(result.stderr);
 }
+/// The `property` object of the named test in a `native-tests-v1` report.
+fn propertyOf(parsed: std.json.Value, name: []const u8) !std.json.Value {
+    for (parsed.object.get("tests").?.array.items) |item| {
+        if (std.mem.eql(u8, item.object.get("name").?.string, name)) return item.object.get("property") orelse error.TestUnexpectedResult;
+    }
+    return error.TestUnexpectedResult;
+}
+
+const failing_property =
+    \\module main
+    \\
+    \\public def test_sum_stays_below_100(xs: list[int]) -> bool:
+    \\    total = 0
+    \\    for x in xs:
+    \\        total = total + x
+    \\    return total < 100
+    \\
+    \\public def test_reversing_twice_is_the_identity(xs: list[int]) -> bool:
+    \\    ys = xs.copy()
+    \\    ys.reverse()
+    \\    ys.reverse()
+    \\    return ys == xs
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
+// spec-case: PROPERTY-TEST-3
+test "CLI property test shrinks a failing sum to the single-element list [100] and reports how to reproduce it" {
+    var project = try PropertyProject.init(failing_property);
+    defer project.deinit();
+    const text = try project.run(&.{});
+    defer freeRun(text);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, text.term);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "passed main::test_reversing_twice_is_the_identity\n") != null);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "failed main::test_sum_stays_below_100: falsified after ") != null);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "  minimal input (") != null);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "\n    xs = [100]\n  original input (run ") != null);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "  reason: returned False\n  reproduce: mylang test ") != null);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "main.my --filter 'main::test_sum_stays_below_100' --seed ") != null);
+    const json = try project.run(&.{"--json"});
+    defer freeRun(json);
+    const parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, json.stdout, .{});
+    defer parsed.deinit();
+    const property = try propertyOf(parsed.value, "main::test_sum_stays_below_100");
+    const failure = property.object.get("failure").?;
+    const minimal = failure.object.get("minimal").?;
+    try testing.expectEqual(@as(usize, 1), minimal.object.get("arguments").?.object.get("xs").?.array.items.len);
+    try testing.expectEqualStrings("100", minimal.object.get("arguments").?.object.get("xs").?.array.items[0].string);
+    try testing.expectEqualStrings("[100]", minimal.object.get("literals").?.object.get("xs").?.string);
+    try testing.expectEqualStrings("returned False", failure.object.get("reason").?.string);
+    try testing.expect(property.object.get("counts").?.object.get("shrinks").?.integer > 0);
+    // The same seed draws the same inputs, so the reproduction reports the
+    // same counterexample from the same run.
+    const seed = try std.json.Stringify.valueAlloc(testing.allocator, property.object.get("seed").?, .{});
+    defer testing.allocator.free(seed);
+    const again = try project.run(&.{ "--json", "--seed", seed, "--filter", "test_sum" });
+    defer freeRun(again);
+    const replay = try std.json.parseFromSlice(std.json.Value, testing.allocator, again.stdout, .{});
+    defer replay.deinit();
+    const replayed = (try propertyOf(replay.value, "main::test_sum_stays_below_100")).object.get("failure").?;
+    try testing.expectEqual(failure.object.get("run").?.integer, replayed.object.get("run").?.integer);
+    try testing.expectEqualStrings("[100]", replayed.object.get("minimal").?.object.get("literals").?.object.get("xs").?.string);
+}
+
+const refused_properties =
+    \\module main
+    \\
+    \\public class Box:
+    \\    value: int
+    \\
+    \\public domain Meters: u32:
+    \\    def from(value: u32) -> Meters:
+    \\        return wrap[Meters](value)
+    \\
+    \\public def test_class(boxes: list[Box]) -> bool:
+    \\    return len(boxes) >= 0
+    \\
+    \\public def test_domain(m: Meters) -> bool:
+    \\    _ = m
+    \\    return True
+    \\
+    \\public def test_function(f: def(int) -> int) -> bool:
+    \\    return f(1) >= 0
+    \\
+    \\public def test_host(host: Host, n: int) -> bool:
+    \\    _ = host
+    \\    return n >= 0
+    \\
+    \\public def test_count(n: int) -> int:
+    \\    return n
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
+// spec-case: PROPERTY-TEST-1
+test "CLI property test names the parameter and type it cannot generate" {
+    var project = try PropertyProject.init(refused_properties);
+    defer project.deinit();
+    const result = try project.run(&.{});
+    defer freeRun(result);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, result.term);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "failed main::test_class: property test parameter `boxes: List<main::Box>` cannot be generated: it holds main::Box, and a class value has identity") != null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "failed main::test_domain: property test parameter `m: main::Meters` cannot be generated: a domain is built only through its own constructors") != null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "failed main::test_function: property test parameter `f: def(i64) -> i64") != null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "a function value cannot be generated") != null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "failed main::test_host: property test parameter `host: Host` cannot be generated: a Host capability is never handed to a test") != null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "failed main::test_count: a property test returns bool or Result[bool, E], not i64") != null);
+    try testing.expect(std.mem.indexOf(u8, result.stderr, "host failure") == null);
+}
+
+const filtered_properties =
+    \\module main
+    \\
+    \\@invariant(self.low <= self.high, "a span never runs backwards")
+    \\public record Span:
+    \\    low: int
+    \\    high: int
+    \\
+    \\@requires(n >= 0, "only non-negative numbers")
+    \\public def test_halving(n: int) -> bool:
+    \\    return n // 2 <= n
+    \\
+    \\public def test_span(span: Span, other: Option[Span]) -> bool:
+    \\    match other:
+    \\        case Some(second):
+    \\            return span.low <= span.high and second.low <= second.high
+    \\        case None:
+    \\            return span.low <= span.high
+    \\
+    \\@requires(n == 12345, "a single value")
+    \\public def test_picky(n: int) -> bool:
+    \\    return n == 12345
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
+// spec-case: PROPERTY-TEST-2
+test "CLI property test discards inputs that break a precondition or a record invariant" {
+    var project = try PropertyProject.init(filtered_properties);
+    defer project.deinit();
+    const result = try project.run(&.{"--json"});
+    defer freeRun(result);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, result.term);
+    const parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, result.stdout, .{});
+    defer parsed.deinit();
+    const halving = (try propertyOf(parsed.value, "main::test_halving")).object.get("counts").?;
+    try testing.expectEqual(@as(i64, 100), halving.object.get("passed").?.integer);
+    try testing.expect(halving.object.get("discarded").?.integer > 0);
+    const span = (try propertyOf(parsed.value, "main::test_span")).object.get("counts").?;
+    try testing.expectEqual(@as(i64, 100), span.object.get("passed").?.integer);
+    try testing.expect(span.object.get("discarded").?.integer > 0);
+    const text = try project.run(&.{ "--filter", "test_picky" });
+    defer freeRun(text);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "failed main::test_picky: too many discarded inputs: 1001 of 1001 generated inputs broke a precondition before 0 of 100 runs passed; most often test_picky requires `n == 12345`: a single value") != null);
+    // A cases-file argument still wins over generation, and an invalid record
+    // it supplies is refused by the same invariant check.
+    try project.temporary.dir.writeFile(testing.io, .{ .sub_path = "cases.json", .data = "{\"main::test_span\":{\"arguments\":{\"span\":{\"low\":\"5\",\"high\":\"1\"},\"other\":{\"case\":\"none\"}}}}" });
+    const cases = try project.temporary.dir.realPathFileAlloc(testing.io, "cases.json", testing.allocator);
+    defer testing.allocator.free(cases);
+    const explicit = try project.run(&.{ "--cases", cases, "--filter", "test_span" });
+    defer freeRun(explicit);
+    try testing.expect(std.mem.indexOf(u8, explicit.stdout, "failed main::test_span: R_REQUIRES: test_span requires `self.low <= self.high`: parameter span holds a Span that breaks this invariant: a span never runs backwards") != null);
+}
+
+const hanging_property =
+    \\module main
+    \\
+    \\public def test_finishes(n: int) -> bool:
+    \\    spins = 0
+    \\    while n > 1000000:
+    \\        spins = spins + 1
+    \\    return spins == 0
+    \\
+    \\def main() -> int:
+    \\    return 0
+;
+
+// spec-case: PROPERTY-TEST-4
+test "CLI property test runs in one process, reuses a pass until its seed or runs change, and survives a child that dies mid-batch" {
+    var project = try PropertyProject.init(failing_property);
+    defer project.deinit();
+    const first = try project.run(&.{ "--json", "--filter", "test_reversing" });
+    defer freeRun(first);
+    const parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, first.stdout, .{});
+    defer parsed.deinit();
+    const counts = (try propertyOf(parsed.value, "main::test_reversing_twice_is_the_identity")).object.get("counts").?;
+    try testing.expectEqual(@as(i64, 100), counts.object.get("passed").?.integer);
+    try testing.expectEqual(@as(i64, 1), counts.object.get("processes").?.integer);
+    const cached = try project.run(&.{ "--filter", "test_reversing" });
+    defer freeRun(cached);
+    try testing.expect(std.mem.indexOf(u8, cached.stdout, "cached main::test_reversing_twice_is_the_identity") != null);
+    const fewer = try project.run(&.{ "--filter", "test_reversing", "--property-runs", "20" });
+    defer freeRun(fewer);
+    try testing.expect(std.mem.indexOf(u8, fewer.stdout, "passed main::test_reversing_twice_is_the_identity") != null);
+    const reseeded = try project.run(&.{ "--filter", "test_reversing", "--seed", "3" });
+    defer freeRun(reseeded);
+    try testing.expect(std.mem.indexOf(u8, reseeded.stdout, "passed main::test_reversing_twice_is_the_identity") != null);
+    const reused = try project.run(&.{ "--filter", "test_reversing", "--seed", "3" });
+    defer freeRun(reused);
+    try testing.expect(std.mem.indexOf(u8, reused.stdout, "cached main::test_reversing_twice_is_the_identity") != null);
+    // An input that never finishes kills its batch at the timeout; the inputs
+    // before it keep their answers, it is run alone, and it is the failure.
+    var hanging = try PropertyProject.init(hanging_property);
+    defer hanging.deinit();
+    const hung = try hanging.run(&.{ "--timeout-ms", "1000", "--max-steps", "4000000000" });
+    defer freeRun(hung);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, hung.term);
+    try testing.expect(std.mem.indexOf(u8, hung.stdout, "failed main::test_finishes: falsified after ") != null);
+    try testing.expect(std.mem.indexOf(u8, hung.stdout, "  input (not shrunk: it ran out of time, and so could every candidate):") != null);
+    try testing.expect(std.mem.indexOf(u8, hung.stdout, "  reason: the input ran past --timeout-ms 1000") != null);
+}
+
 const boundary_values =
     \\module main
     \\

@@ -382,7 +382,7 @@ pub const Session = struct {
         if (runner.compiled) self.trace(&.{ "native-test-runner", runner.path });
         project.executor = try execute.Executor.init(self.context, project.manifest, library, project.directory, runner.path);
         project.executor.?.stress = self.options.flags.gc_stress;
-        project.executor.?.seed = self.options.seed;
+        project.executor.?.seed = self.options.determinism.seed;
         project.select_file = try a.dupe(u8, select_file);
         return project.executor.?;
     }
@@ -407,7 +407,7 @@ pub const Session = struct {
             // The deterministic capabilities a test may declare (TEST-CAPS-3):
             // a different seed or start instant is a different execution.
             .stand_ins = .{
-                .seed = wire.entropySeed(self.options.seed, v.text(v.get(function, "name"))),
+                .seed = wire.entropySeed(self.options.determinism.seed, v.text(v.get(function, "name"))),
                 .clock_start = wire.clock_start,
             },
             .policy = self.source.support.policy_identity,
