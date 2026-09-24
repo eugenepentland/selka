@@ -109,10 +109,19 @@ pub fn build(index: *interfaces.Index) BuildError!Merged {
     }
     merged.lambdas = try lambdas.toOwnedSlice(allocator);
     // Declaration attributes are keyed by each module's own name span, so they
-    // must be relocated with the same map as the functions they describe.
+    // must be relocated with the same map as the functions they describe. A
+    // contract clause's condition is an expression of its module, so node
+    // identities move with that module's node range too.
     var attributes: std.ArrayList(ast.DeclarationAttributes) = .empty;
-    for (index.units, 0..) |unit, module| {
-        const map: Remap = .{ .src = src, .module = module };
+    for (index.units, ranges, 0..) |unit, range, module| {
+        const map: Remap = .{
+            .src = src,
+            .module = module,
+            .nodes = range.node_start,
+            .statements = range.statement_start,
+            .node_count = unit.syntax.nodes.items.len,
+            .statement_count = unit.syntax.statements.items.len,
+        };
         for (unit.syntax.attributes) |entry| try attributes.append(allocator, try map.value(allocator, ast.DeclarationAttributes, entry));
     }
     merged.attributes = try attributes.toOwnedSlice(allocator);
