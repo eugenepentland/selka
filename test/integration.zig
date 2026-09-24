@@ -8317,6 +8317,7 @@ fn storedGraphMentions(cache: []const u8, needle: []const u8) !bool {
 // spec-case: NATIVE-TEST-STABLE-1
 // spec-case: NATIVE-TEST-INTERFACES-1
 // spec-case: NATIVE-TEST-RUNNER-1
+// spec: NATIVE-TEST-SUMMARY-1
 test "after a body edit in module k exactly the tests that depend on k are rebuilt and re-run, and an unchanged rerun only replays a verdict" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
@@ -8361,6 +8362,10 @@ test "after a body edit in module k exactly the tests that depend on k are rebui
     try testing.expectEqual(@as(usize, 0), try c4TraceCount(paths.trace, "native-test-runner"));
     // Lowered: the three tests and the four `f` they reach, nothing else.
     const session = try c4CommandWorkLine(edited.stderr, "native-test-compile");
+    // The session's check is served by the summaries the cold run published:
+    // every body is checked for the tree, and no retained checked tree is read.
+    try testing.expectEqual(@as(usize, 0), try c4WorkCount(session, "checked_bodies", "reused"));
+    try testing.expect(try c4WorkCount(session, "checked_bodies", "performed") > 0);
     try testing.expectEqual(@as(usize, 7), try c4WorkCount(session, "lowered_functions", "performed"));
     // Emitted fragments the cold run stored answer again, which a snapshot at
     // a fresh path on every run never allowed.

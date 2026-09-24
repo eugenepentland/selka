@@ -2073,10 +2073,12 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
 fn openSummaries(init: Context, parsed: Parsed, project: *const language.project.Project, functions: ?*language.semantic_cache.Cache, request: *language.semantic_summary.Request) !void {
     if (parsed.reporting.explain_invalidation) return;
     // `check` stands summaries in for whole bodies; a command that lowers the
-    // program checks every body and stands them in only for pass facts.
+    // program checks every body and stands them in only for pass facts. The
+    // `native-test-compile` session is one: its facts and its selective
+    // lowering both read the checked tree (NATIVE-TEST-SUMMARY-1).
     switch (parsed.command) {
         .@"check-project" => {},
-        .@"emit-project-qbe", .run, .@"run-project" => request.facts_only = true,
+        .@"emit-project-qbe", .run, .@"run-project", .@"native-test-compile" => request.facts_only = true,
         else => return,
     }
     if (parsed.select_file != null) return;
