@@ -1320,6 +1320,52 @@ test "compile-time str literals contribute no managed allocation while computed 
     , "E_EFFECT_BOUND", "main");
 }
 
+// spec: EFFECT-INDEX-1
+test "an element read allocates only from a str receiver so whole-program lowering agrees with the checked effects" {
+    // `emit` lowers the whole program and re-derives every function's effects
+    // from its bytecode; a checked mask that charged these reads failed there.
+    try accept(
+        \\def first(names: [3]str) -> bool:
+        \\    return names[0] == "alpha"
+        \\
+        \\
+        \\def lookup(names: dict[int, str]) -> bool:
+        \\    return names[1] == "alpha"
+        \\
+        \\
+        \\def main() -> int:
+        \\    names: [3]str = ["alpha", "beta", "gamma"]
+        \\    names = replace(names, 1, "delta")
+        \\    return len(names[1])
+    );
+    try accept(
+        \\def first(names: [3]str) -> bool noalloc:
+        \\    return names[-1] == "gamma"
+        \\
+        \\
+        \\def lookup(names: dict[int, str]) -> bool noalloc:
+        \\    return names[1] == "alpha"
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    );
+    try result(
+        \\def main() -> int:
+        \\    names: [3]str = ["alpha", "beta", "gamma"]
+        \\    names = replace(names, 1, "delta")
+        \\    return len(names[1]) + len(names[-1])
+    , 10);
+    try reject(
+        \\def initial(name: str) -> bool noalloc:
+        \\    return name[0] == "a"
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    , "E_EFFECT_BOUND", "initial");
+}
+
 // spec: MUTATION-OVERLAP-1
 test "unannotated helpers accept shared collection arguments while declared mutates contracts still reject overlap" {
     try accept(

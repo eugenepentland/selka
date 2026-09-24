@@ -677,7 +677,10 @@ fn seedFunction(allocator: std.mem.Allocator, program: typed.Program, graph: *Gr
             .binary => |binary| if (binary.op == .add and allocatingSequence(program.records, node.ty)) {
                 graph.direct(index, .managed_allocation, node.span);
             },
-            .index => if (allocatingSequence(program.records, node.ty)) {
+            // Charged by the receiver, as `validate` charges `get_index`: only a
+            // `str` read builds a fresh string. A static-array or dictionary
+            // read of a `str` element hands back the stored reference.
+            .index => |access| if (allocatingElement(program.records, program.nodes[@backingInt(access.base)].ty)) {
                 graph.direct(index, .managed_allocation, node.span);
             },
             .acquire_buffer => graph.direct(index, .managed_allocation, node.span),
