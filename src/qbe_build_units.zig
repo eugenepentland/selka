@@ -58,6 +58,76 @@ pub fn text(context: fs.Context, unit: std.json.Value) Error![]const u8 {
     return bytes;
 }
 
+/// One instruction's source position.
+pub const Position = struct { path: []const u8, line: u64, column: u64 };
+
+/// A unit's per-instruction positions and assertion messages, in pc order,
+/// from either spelling (`BUILD-POSITIONS-1`): the `locations` and `messages`
+/// arrays of an inline unit, or a lean unit's `paths`, space-separated
+/// `path:line:column` `positions` and `[pc, message]` `assertions`.
+pub const Positions = struct {
+    unit: std.json.Value,
+    /// The compact `positions` text still to read, or null for `locations`.
+    compact: ?[]const u8,
+    /// How many positions the unit has.
+    count: usize,
+    pc: usize = 0,
+    /// The next entry of `assertions` not yet reached.
+    assertion: usize = 0,
+
+    /// Start reading `unit`'s positions.
+    pub fn init(unit: std.json.Value) Positions {
+        const packed_text = v.get(unit, "positions");
+        if (packed_text != .string) return .{ .unit = unit, .compact = null, .count = v.array(v.get(unit, "locations")).len };
+        const spelled = packed_text.string;
+        const count = if (spelled.len == 0) 0 else std.mem.count(u8, spelled, " ") + 1;
+        return .{ .unit = unit, .compact = spelled, .count = count };
+    }
+
+    /// The next instruction's position, or null after the last one. A
+    /// malformed compact entry reads as an unknown position rather than
+    /// shortening the table, so the table always has `count` entries.
+    pub fn next(self: *Positions) ?Position {
+        if (self.pc >= self.count) return null;
+        defer self.pc += 1;
+        const rest = self.compact orelse {
+            const location = v.array(v.get(self.unit, "locations"))[self.pc];
+            return .{ .path = v.text(v.get(location, "path")), .line = v.number(v.get(location, "line")), .column = v.number(v.get(location, "column")) };
+        };
+        const end = std.mem.indexOfScalar(u8, rest, ' ') orelse rest.len;
+        self.compact = if (end < rest.len) rest[end + 1 ..] else rest[end..];
+        var fields = std.mem.splitScalar(u8, rest[0..end], ':');
+        const path = number(fields.next());
+        const line = number(fields.next());
+        const column = number(fields.next());
+        const paths = v.array(v.get(self.unit, "paths"));
+        return .{ .path = if (path < paths.len) v.text(paths[@intCast(path)]) else "", .line = line, .column = column };
+    }
+
+    /// The assertion message of instruction `pc`, or "" when it has none.
+    /// Messages are asked for in increasing pc order.
+    pub fn message(self: *Positions, pc: usize) []const u8 {
+        if (v.get(self.unit, "positions") != .string) {
+            const messages = v.array(v.get(self.unit, "messages"));
+            return if (pc < messages.len) v.text(messages[pc]) else "";
+        }
+        const assertions = v.array(v.get(self.unit, "assertions"));
+        while (self.assertion < assertions.len) : (self.assertion += 1) {
+            const pair = v.array(assertions[self.assertion]);
+            if (pair.len != 2) continue;
+            const at = v.number(pair[0]);
+            if (at > pc) return "";
+            if (at == pc) return v.text(pair[1]);
+        }
+        return "";
+    }
+};
+
+/// A decimal field of a compact position, or zero when it is absent or malformed.
+fn number(field: ?[]const u8) u64 {
+    return std.fmt.parseUnsigned(u64, field orelse return 0, 10) catch 0;
+}
+
 /// Name the unit whose stored text is gone, then refuse the manifest.
 fn missing(context: fs.Context, unit: std.json.Value) Error {
     const message = std.fmt.allocPrint(
@@ -88,4 +158,35 @@ test "an inline and a stored unit with the same text share one digest and one fa
     // A truncated digest is not a stored reference.
     const short = try std.json.parseFromSliceLeaky(std.json.Value, a, "{\"il_digest\":\"ab\",\"il_file\":\"f\",\"il_facts\":\"\"}", .{});
     try std.testing.expect(!wellFormed(short));
+}
+
+// spec: BUILD-POSITIONS-1
+test "compact positions read back the table the spelled-out locations and messages hold" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const spelled = try std.json.parseFromSliceLeaky(std.json.Value, a,
+        \\{"locations":[{"path":"a.my","line":3,"column":5},{"path":"b.my","line":9,"column":1},{"path":"a.my","line":4,"column":2}],
+        \\ "messages":["","x must be two",""]}
+    , .{});
+    const compact = try std.json.parseFromSliceLeaky(std.json.Value, a,
+        \\{"paths":["a.my","b.my"],"positions":"0:3:5 1:9:1 0:4:2","assertions":[[1,"x must be two"]]}
+    , .{});
+    var left: Positions = .init(spelled);
+    var right: Positions = .init(compact);
+    try std.testing.expectEqual(@as(usize, 3), right.count);
+    try std.testing.expectEqualDeep(left.next(), right.next());
+    try std.testing.expectEqualStrings("", right.message(0));
+    try std.testing.expectEqualDeep(left.next(), right.next());
+    try std.testing.expectEqualStrings("x must be two", right.message(1));
+    try std.testing.expectEqualDeep(left.next(), right.next());
+    try std.testing.expectEqualStrings("", right.message(2));
+    try std.testing.expectEqual(@as(?Position, null), right.next());
+    // An empty table has no entries, and a malformed entry keeps its slot.
+    const empty = try std.json.parseFromSliceLeaky(std.json.Value, a, "{\"paths\":[],\"positions\":\"\",\"assertions\":[]}", .{});
+    try std.testing.expectEqual(@as(usize, 0), Positions.init(empty).count);
+    const damaged = try std.json.parseFromSliceLeaky(std.json.Value, a, "{\"paths\":[\"a.my\"],\"positions\":\"7:x 0:1:1\",\"assertions\":[]}", .{});
+    var read: Positions = .init(damaged);
+    try std.testing.expectEqualDeep(@as(?Position, .{ .path = "", .line = 0, .column = 0 }), read.next());
+    try std.testing.expectEqualDeep(@as(?Position, .{ .path = "a.my", .line = 1, .column = 1 }), read.next());
 }

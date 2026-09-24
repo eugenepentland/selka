@@ -5,6 +5,7 @@
 const std = @import("std");
 const language = @import("compiler.zig");
 const fragments = @import("qbe_fragments.zig");
+const units = @import("qbe_build_units.zig");
 const t = std.testing;
 
 /// The two modules of one version of the test project.
@@ -149,6 +150,23 @@ test "an edited project reuses every unchanged unit and emits exactly what a fre
     try t.expectEqual(@as(usize, 0), back.misses);
 }
 
+/// Both units spell the same positions and assertion messages, pc by pc.
+fn expectSamePositions(spelled: std.json.Value, compact: std.json.Value) !void {
+    var expected: units.Positions = .init(spelled);
+    var actual: units.Positions = .init(compact);
+    try t.expectEqual(expected.count, actual.count);
+    try t.expect(actual.count > 0);
+    for (0..actual.count) |pc| {
+        const want = expected.next().?;
+        const got = actual.next().?;
+        try t.expectEqualStrings(want.path, got.path);
+        try t.expectEqual(want.line, got.line);
+        try t.expectEqual(want.column, got.column);
+        try t.expectEqualStrings(expected.message(pc), actual.message(pc));
+    }
+    try t.expect(actual.next() == null);
+}
+
 /// The one unit of `manifest` named `name`, parsed, or null when absent.
 fn unitNamed(allocator: std.mem.Allocator, manifest: []const u8, name: []const u8) !?std.json.Value {
     const document = try std.json.parseFromSliceLeaky(std.json.Value, allocator, manifest, .{});
@@ -182,7 +200,9 @@ test "a lean manifest names each unit's stored text by digest instead of carryin
     try t.expectEqualStrings(&std.fmt.bytesToHex(hash, .lower), stored.object.get("il_digest").?.string);
     // Everything but the unit texts is the fresh manifest's.
     try t.expectEqualStrings(inline_unit.object.get("symbol").?.string, stored.object.get("symbol").?.string);
-    try t.expectEqual(inline_unit.object.get("locations").?.array.items.len, stored.object.get("locations").?.array.items.len);
+    // BUILD-POSITIONS-1 (spec-case): the lean unit spells the same positions compactly.
+    try t.expect(stored.object.get("locations") == null);
+    try expectSamePositions(inline_unit, stored);
 }
 
 // spec-case: QBE-FRAGMENT-REUSE-1

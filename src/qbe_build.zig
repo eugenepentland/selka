@@ -874,12 +874,11 @@ const State = struct {
             }
             const code = try batch.key(self.cache, keys[group.first .. group.first + group.count]);
             if (try self.cache.cached(code)) |hit| objects[index * 2] = hit else {
-                const il = try a.alloc([]const u8, group.count);
-                for (members, il) |member, *text| {
-                    text.* = try lean.text(self.context, member);
-                    try self.fitsQbe(member, text.*);
-                }
-                try misses.append(a, .{ .key = code, .object = &objects[index * 2], .input = .{ .il = il } });
+                // BUILD-MEMORY-1: each member's text is read, checked and written
+                // out one at a time, so no miss holds its text until QBE runs.
+                var texts: MemberTexts = .{ .state = self, .members = members };
+                const files = try batch.stage(self.cache, members.len, &texts);
+                try misses.append(a, .{ .key = code, .object = &objects[index * 2], .input = .{ .files = files } });
             }
             const assembly = try outputs.metadataAssembly(a, members);
             const tables = try self.cache.derived(batch.metadata_version, assembly);
@@ -903,6 +902,24 @@ const State = struct {
         }
         return .{ objects[batches.len * 2], objects[batches.len * 2 + 1] };
     }
+    /// One missed batch's member texts, read in plan order into the scratch
+    /// arena `batch.stage` hands each one, and each checked against the QBE
+    /// size limit before it is written.
+    const MemberTexts = struct {
+        state: *State,
+        members: []const std.json.Value,
+        at: usize = 0,
+        /// The next member's text, read into `scratch` and checked against the QBE size limit.
+        pub fn next(self: *MemberTexts, scratch: std.mem.Allocator) lean.Error![]const u8 {
+            var reader = self.state.context;
+            reader.allocator = scratch;
+            const member = self.members[self.at];
+            self.at += 1;
+            const text = try lean.text(reader, member);
+            try self.state.fitsQbe(member, text);
+            return text;
+        }
+    };
     /// Record one generated C unit's object, or stage its compile as a miss
     /// for the batch pool.
     fn stageC(self: *State, misses: *std.ArrayList(batch.Miss), kind: []const u8, text: []const u8, object: *cache_api.Object) !void {

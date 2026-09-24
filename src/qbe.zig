@@ -86,14 +86,15 @@ const Unit = struct {
             try jw.write(stored.file);
             try jw.objectField("il_facts");
             try jw.write(stored.facts);
+            try writeCompactPositions(self, jw);
         } else {
             try jw.objectField("il");
             try jw.write(self.il);
+            try jw.objectField("locations");
+            try jw.write(self.locations);
+            try jw.objectField("messages");
+            try jw.write(self.messages);
         }
-        try jw.objectField("locations");
-        try jw.write(self.locations);
-        try jw.objectField("messages");
-        try jw.write(self.messages);
         try jw.objectField("inlines");
         try jw.write(self.inlines);
         try jw.objectField("export");
@@ -103,6 +104,59 @@ const Unit = struct {
 };
 /// A unit text kept in the fragment store: hex digest, path and build facts.
 const Stored = struct { digest: []const u8, file: []const u8, facts: []const u8 };
+
+/// A lean unit's per-instruction positions and assertion messages
+/// (`BUILD-POSITIONS-1`): `paths` lists each distinct source path once, in
+/// first-use order; `positions` is one `path:line:column` entry per
+/// instruction, space separated, `path` indexing `paths`; and `assertions`
+/// pairs each instruction that has a message with that message. It carries
+/// exactly what `locations` and `messages` do in a fifth of the bytes, and
+/// the build reads it without allocating a JSON value per instruction.
+fn writeCompactPositions(unit: Unit, jw: *std.json.Stringify) std.json.Stringify.Error!void {
+    var paths: [compact_path_limit][]const u8 = undefined;
+    var known: usize = 0;
+    for (unit.locations) |location| {
+        if (pathIndex(paths[0..known], location.path) != null) continue;
+        if (known == paths.len) {
+            // More source paths than the table holds: spell the unit out.
+            try jw.objectField("locations");
+            try jw.write(unit.locations);
+            try jw.objectField("messages");
+            return jw.write(unit.messages);
+        }
+        paths[known] = location.path;
+        known += 1;
+    }
+    try jw.objectField("paths");
+    try jw.write(paths[0..known]);
+    try jw.objectField("positions");
+    try jw.beginWriteRaw();
+    try jw.writer.writeByte('"');
+    for (unit.locations, 0..) |location, pc| {
+        if (pc != 0) try jw.writer.writeByte(' ');
+        try jw.writer.print("{d}:{d}:{d}", .{ pathIndex(paths[0..known], location.path).?, location.line, location.column });
+    }
+    try jw.writer.writeByte('"');
+    jw.endWriteRaw();
+    try jw.objectField("assertions");
+    try jw.beginArray();
+    for (unit.messages, 0..) |message, pc| {
+        if (message.len == 0) continue;
+        try jw.beginArray();
+        try jw.write(pc);
+        try jw.write(message);
+        try jw.endArray();
+    }
+    try jw.endArray();
+}
+/// A unit's instructions come from its own module and from the modules of the
+/// callees inlined into it; a unit with more distinct paths than this keeps the
+/// spelled-out `locations` and `messages` instead.
+const compact_path_limit = 256;
+fn pathIndex(paths: []const []const u8, path: []const u8) ?usize {
+    for (paths, 0..) |known, index| if (known.ptr == path.ptr and known.len == path.len or std.mem.eql(u8, known, path)) return index;
+    return null;
+}
 
 /// Generate a JSON manifest whose independently linkable functions have stable names.
 pub fn generate(allocator: std.mem.Allocator, program: bytecode.Program, src: Source, sink: *diagnostic.Sink) GenerateError![]u8 {
