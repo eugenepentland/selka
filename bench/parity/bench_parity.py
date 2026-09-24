@@ -62,7 +62,7 @@ RUST_FLAGS = ["--edition", "2021", "-C", "opt-level=3", "-C", "codegen-units=1",
 RELEASE_FLAGS = ["--backend", "llvm", "--llvm-opt", "3", "--lto"]
 # The plan's parity targets (docs/audits/performance-parity-plan-2026-09-22.md §1),
 # reported beside the suite's geometric means; they are goals, not gates.
-TARGETS = {"my": 1.2, "my-unchecked": 1.1, "worst my": 1.5}
+TARGETS = {"my": 1.2, "worst my": 1.5}
 
 
 # ---------------------------------------------------------------- discovery
@@ -106,7 +106,6 @@ def arms_for(ports: list[tuple[str, Path, str]], qbe: bool) -> list[dict]:
                 arms.append(arm(f"my-{variant}", lang, path, RELEASE_FLAGS))
                 continue
             arms.append(arm("my", lang, path, RELEASE_FLAGS))
-            arms.append(arm("my-unchecked", lang, path, [*RELEASE_FLAGS, "--unchecked"]))
             if qbe:
                 arms.append(arm("my-qbe", lang, path, ["--backend", "qbe"]))
         elif lang == "zig":
@@ -502,14 +501,14 @@ def cell(bench: dict, arm_name: str) -> str:
 def table(result: dict, verdicts: list[dict]) -> str:
     """The ratio table: one row per benchmark, mylang variants folded into one column."""
     by_key = {(v["benchmark"], v["arm"]): v for v in verdicts}
-    lines = ["| group | benchmark | zig ms | zig-safe | rust | rust-checked | my | limit | my-unchecked | variants | check |",
-             "|---|---|---:|---:|---:|---:|---:|---:|---:|---|---|"]
+    lines = ["| group | benchmark | zig ms | zig-safe | rust | rust-checked | my | limit | variants | check |",
+             "|---|---|---:|---:|---:|---:|---:|---:|---|---|"]
     for name, bench in result["benchmarks"].items():
         ref = bench["arms"].get(REFERENCE, {})
         ms = f"{ref['wall_median'] * 1000:.1f}" if "wall_median" in ref else ""
         variants = []
         for arm_name, data in bench["arms"].items():
-            if data.get("lang") == "my" and arm_name not in ("my", "my-unchecked") and data.get("ratio_wall"):
+            if data.get("lang") == "my" and arm_name != "my" and data.get("ratio_wall"):
                 variants.append(f"{arm_name[3:]} {data['ratio_wall']['median']:.2f}")
         limit = by_key.get((name, "my"), {}).get("limit")
         marks = []
@@ -529,7 +528,7 @@ def table(result: dict, verdicts: list[dict]) -> str:
             status = bench["failure"]
         lines.append(f"| {bench['group']} | {name} | {ms} | {cell(bench, 'zig-safe')} | {cell(bench, 'rust')} | "
                      f"{cell(bench, 'rust-checked')} | {cell(bench, 'my')} | {f'{limit:.2f}' if limit else ''} | "
-                     f"{cell(bench, 'my-unchecked')} | {', '.join(variants)} | {status} |")
+                     f"{', '.join(variants)} | {status} |")
     return "\n".join(lines)
 
 
@@ -537,7 +536,7 @@ def geomeans(result: dict) -> list[str]:
     lines = []
     for group in GROUPS:
         benches = [b for b in result["benchmarks"].values() if b["group"] == group]
-        for arm_name in ("my", "my-unchecked", "zig-safe", "rust", "rust-checked"):
+        for arm_name in ("my", "zig-safe", "rust", "rust-checked"):
             ratios = [b["arms"][arm_name]["ratio_wall"]["median"] for b in benches
                       if b["arms"].get(arm_name, {}).get("ratio_wall")]
             if not ratios:
