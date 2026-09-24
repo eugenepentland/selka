@@ -476,10 +476,12 @@ becomes the single member of an archive published beside the objects. The link
 places the archive after every object that can reference it. Because the merge
 keeps every unit's function and data sections and the link collects unreferenced
 ones, a program that never prints still carries no printing runtime. A build that
-changes nothing relinks nothing observable: the candidate
-and the published executable are compared by length and then by bytes, and an
-identical result keeps its inode and modification time, which `--report` shows as
-`"output_changed": false`.
+changes nothing relinks nothing observable: when every object the link names was
+reused, the candidate and the published executable are compared by length and
+then by bytes, and an identical result keeps its inode and modification time,
+which `--report` shows as `"output_changed": false`. A link over any object the
+build compiled makes a new program, so it is published without reading either
+file (at 200,000 lines that comparison read two 130 MB executables).
 
 An unchanged build goes one step further and **skips the link itself**. The
 sidecar beside the executable records a link identity over the object set, the
@@ -495,10 +497,13 @@ change without changing a guest object. This is what keeps an unchanged
 A cached object or archive is accepted only when a fingerprint over its length
 and contents matches the one stored beside it in a `.digest` file. Damaged bytes
 and a damaged fingerprint are both misses, so a corrupt cache repairs the one
-entry it lost rather than failing the build or silently linking rubble. Cache
-keys stay on SHA-256 because they name small inputs; verification uses the
-cheaper fingerprint because a warm build re-reads megabytes of stored objects and
-a cryptographic pass over them costs more than the link it protects.
+entry it lost rather than failing the build or silently linking rubble. The
+`.digest` file also records the published file's inode, size and modification
+time, and an object that still has exactly that identity is accepted without
+reading it; anything that wrote, truncated or replaced it changes the identity,
+and then the bytes are fingerprinted again. Cache keys are BLAKE3 over the
+framed environment, contract, kind and input: a warm build keys every unit and
+batch, and the pinned toolchain's SHA-256 runs at about 14 MB/s on some hosts.
 
 ```console
 $ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/qbe-cache --report
@@ -573,7 +578,8 @@ expensive, and both are gone.
   the same whatever the driver holds (`src/qbe_build_spawn.zig`).
 - **Functions compile in batches.** Units are ordered by module, then symbol. A
   batch never spans two modules; a new one starts at every symbol whose hash
-  marks a boundary (one in 32 on average) and after 128 functions. A unit that
+  marks a boundary (one in 8 on average, so a body edit recompiles about eight
+  functions) and after 128 functions. A unit that
   defines data compiles alone. One QBE run takes each member's IL as its own
   input file (QBE forgets aggregate types between files, so members' types never
   collide) with every function in its own `.text.<symbol>` section, so

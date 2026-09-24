@@ -507,9 +507,9 @@ pub fn hash(allocator: std.mem.Allocator, bytes: []const u8) Error![]const u8 {
     return allocator.dupe(u8, &std.fmt.bytesToHex(result, .lower));
 }
 /// Integrity fingerprint for stored native objects, covering length and contents.
-/// Keys stay on SHA-256 because they name small inputs; a warm build instead
-/// re-reads megabytes of cached objects, where a cryptographic hash costs more
-/// than the whole link it protects. The hash is Wyhash: the pinned Zig's
+/// A cryptographic hash over megabytes of cached objects would cost more than
+/// the whole link it protects, and an untouched object is accepted by its
+/// recorded file identity without being read at all (BUILD-VERIFY-1). The hash is Wyhash: the pinned Zig's
 /// `XxHash3` hashes long inputs at about 20 MB/s on the build machines against
 /// Wyhash's 15 GB/s, which made verifying a 50,000-line project's objects cost
 /// seconds on every warm build. `v2` keeps a fingerprint written by the old

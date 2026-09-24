@@ -22,6 +22,7 @@ const native_interface = @import("native_interface.zig");
 const prelude = @import("prelude.zig");
 const qbe_wire = @import("qbe_wire.zig");
 const fragments = @import("qbe_fragments.zig");
+const exports = @import("qbe_exports.zig");
 /// Failures producing independent QBE native units.
 pub const GenerateError = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 const frame_module = @import("qbe_frame.zig");
@@ -63,7 +64,7 @@ const Unit = struct {
     locations: []const Location,
     messages: []const []const u8,
     inlines: []const InlineFrame,
-    @"export": ?@import("qbe_exports.zig").Export = null,
+    @"export": ?exports.Export = null,
     /// Set when a lean manifest names this unit's stored text instead of
     /// carrying it: the text's digest, its path and the lines the native build
     /// reads without compiling it (`QBE-FRAGMENT-REUSE-1`).
@@ -184,6 +185,7 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
     var layouts = native_types.Catalog.initRecords(a, program.records) catch |err| return layoutError(err);
     defer layouts.deinit();
     const units = try a.alloc(Unit, program.functions.len);
+    const exported = try exports.rootMask(a, program, interface.roots);
     for (program.functions, units, 0..) |function, *unit, index| {
         const emit = selected == null or selected.?[index];
         const locations = try a.alloc(Location, if (emit) function.scope.instructions.len else 0);
@@ -200,7 +202,7 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
             .locations = locations,
             .messages = messages,
             .inlines = if (emit) try inlineFrames(a, program, function.scope.instructions) else &.{},
-            .@"export" = if (emit) try @import("qbe_exports.zig").describe(a, program, index, interface.roots) else null,
+            .@"export" = if (emit) try exports.describeMarked(a, program, index, exported) else null,
         };
     }
     const arenas = arena_lower.present(program);

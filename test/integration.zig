@@ -9456,6 +9456,41 @@ test "an incremental build after body, signature and interface edits builds the 
     try testing.expectEqualStrings("51\n3:3\n", try programOutput(a, program));
 }
 
+/// One `--report` build of `entry` into `output` over `cache`: whether it says
+/// the output changed.
+fn reportedOutputChange(allocator: std.mem.Allocator, entry: []const u8, output: []const u8, cache: []const u8) !bool {
+    const result = try std.process.run(allocator, testing.io, .{ .argv = &.{ compiler_path, "build", entry, "--project", "-o", output, "--cache-dir", cache, "--mode", "Debug", "--report", tools[0], tools[1] } });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    const report = try std.json.parseFromSliceLeaky(std.json.Value, allocator, result.stdout, .{});
+    return report.object.get("output_changed").?.bool;
+}
+
+// spec: BUILD-PUBLISH-1
+test "a relink of reused objects keeps an identical executable, and a link over compiled ones replaces it unread" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try writeIncrementalVersion(temporary.dir, .{ .main = incremental_main, .helper = incremental_helper });
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const output = try std.fs.path.join(a, &.{ root, "program" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    try testing.expect(try reportedOutputChange(a, entry, output, cache));
+    const built = try std.Io.Dir.cwd().statFile(testing.io, output, .{});
+    // Without the sidecar the link cannot be skipped, but every object is
+    // reused, so the identical result keeps the published file.
+    try temporary.dir.deleteFile(testing.io, "program.qbe-manifest.json");
+    try testing.expect(!try reportedOutputChange(a, entry, output, cache));
+    try testing.expectEqual(built.inode, (try std.Io.Dir.cwd().statFile(testing.io, output, .{})).inode);
+    // A fresh cache compiles every object: the same program is published
+    // again rather than compared.
+    try testing.expect(try reportedOutputChange(a, entry, output, try std.fs.path.join(a, &.{ root, "fresh" })));
+    try testing.expect(built.inode != (try std.Io.Dir.cwd().statFile(testing.io, output, .{})).inode);
+    try testing.expectEqualStrings("7\n3:3\n", try programOutput(a, output));
+}
+
 // spec-case: BUILD-NOOP-1
 test "an unchanged build keeps its executable without rebuilding and a replaced one is rebuilt" {
     var temporary = testing.tmpDir(.{});

@@ -37,12 +37,18 @@ pub const units_variable = "MYLANG_QBE_BATCH";
 /// A batch holds at most this many functions unless `MYLANG_QBE_BATCH` says otherwise.
 pub const default_max_units: usize = 128;
 /// Inside one module a new batch starts, on average, every this many functions.
-pub const default_spacing: u64 = 32;
+/// QBE-BATCH-5: a body edit recompiles the batch its function lands in, so the
+/// spacing is the edit loop's codegen cost; at 8 a one-function edit of a 50,000-line
+/// project spends about 65 ms in QBE and the assembler instead of about 170 ms at
+/// 32, while a cold build of the same project starts four times as many
+/// (still concurrent, still small) tools for no measurable cost.
+pub const default_spacing: u64 = 8;
 /// The version every batch key carries, so a change to how members combine
 /// never reuses an object built the old way under an unchanged driver identity.
 const key_version = "qbe-batch-v1";
-/// The kind a batch's assembled function metadata is keyed under, beside its text.
-pub const metadata_version = "qbe-batch-metadata-v1";
+/// The kind a batch's assembled function metadata is keyed under, beside the
+/// digest of what it is rendered from (`outputs.metadataDigest`).
+pub const metadata_version = "qbe-batch-metadata-v2";
 
 /// One guest unit as the planner orders it: the module it belongs to, its
 /// stable symbol, and whether it must be compiled alone.
@@ -442,6 +448,25 @@ fn memberList(a: std.mem.Allocator, units: []const Unit, batch: Batch) ![]const 
 fn isolatedAlone(batches: []const Batch, index: usize) bool {
     for (batches) |batch| if (batch.first <= index and index < batch.first + batch.count) return batch.count == 1;
     return false;
+}
+
+// spec: QBE-BATCH-5
+test "a module's batches hold about eight functions, so an edit recompiles a handful" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const units = try syntheticUnits(a, 1000, 1000);
+    const batches = try plan(a, units, .{});
+    // 1,000 functions of one module form about 125 batches.
+    try std.testing.expect(batches.len >= 100 and batches.len <= 160);
+    try std.testing.expect(largestBatch(batches) <= 64);
+}
+
+/// The member count of the largest batch.
+fn largestBatch(batches: []const Batch) usize {
+    var largest: usize = 0;
+    for (batches) |batch| largest = @max(largest, batch.count);
+    return largest;
 }
 
 // spec-case: QBE-BATCH-1

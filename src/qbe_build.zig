@@ -779,7 +779,12 @@ const State = struct {
     runtime: cache_api.Object = undefined,
     metadata_reused: bool = false,
     runtime_installed: bool = false,
+    /// Whether this build compiled any object it links rather than reusing
+    /// it: the link then produces a new program, so the byte comparison that
+    /// keeps an identical one in place is not worth reading both files for.
+    compiled: bool = false,
     fn add(self: *State, object: cache_api.Object) !void {
+        if (!object.reused) self.compiled = true;
         try self.objects.append(self.context.allocator, object.path);
     }
     fn compile(self: *State, parsed: options.Options) !void {
@@ -880,10 +885,11 @@ const State = struct {
                 const files = try batch.stage(self.cache, members.len, &texts);
                 try misses.append(a, .{ .key = code, .object = &objects[index * 2], .input = .{ .files = files } });
             }
-            const assembly = try outputs.metadataAssembly(a, members);
-            const tables = try self.cache.derived(batch.metadata_version, assembly);
+            // BUILD-METADATA-KEY-1: the tables are keyed by what they are
+            // rendered from, and rendered only for a batch that must build them.
+            const tables = try self.cache.derived(batch.metadata_version, &std.fmt.bytesToHex(outputs.metadataDigest(members), .lower));
             if (try self.cache.cached(tables)) |hit| objects[index * 2 + 1] = hit else {
-                try misses.append(a, .{ .key = tables, .object = &objects[index * 2 + 1], .input = .{ .assembly = assembly } });
+                try misses.append(a, .{ .key = tables, .object = &objects[index * 2 + 1], .input = .{ .assembly = try outputs.metadataAssembly(a, members) } });
             }
         }
         // The C units start first: the shared metadata is the largest single compile.
@@ -1121,7 +1127,10 @@ const State = struct {
         if (parsed.provider) |provider_source| try self.provider(provider_source);
         try self.linkOnce(parsed, candidate);
         if (parsed.run) return self.context.publish(candidate, output);
+        // The link identity leads the sidecar so the next build's `reusable`
+        // finds it without parsing every function record after it.
         const report = try std.json.Stringify.valueAlloc(a, .{
+            .link_identity = try self.linkIdentity(parsed),
             .version = "qbe-manifest-v1",
             .abi = native_abi,
             .entry = v.text(v.get(self.manifest, "entry")),
@@ -1130,12 +1139,17 @@ const State = struct {
             .lto = self.cache.codegen.lto,
             .functions = self.records.items,
             .runtime_object = self.runtime.path,
-            .link_identity = try self.linkIdentity(parsed),
         }, .{});
         const sidecar = try std.fmt.allocPrint(a, "{s}.qbe-manifest.json", .{output});
         const staged = try std.fs.path.join(a, &.{ temporary, "manifest.json" });
         try self.context.write(staged, report);
-        const changed = try self.context.publish(candidate, output);
+        // BUILD-PUBLISH-1: a link over an object this build compiled is a new
+        // program; only a relink of objects that were all reused can reproduce
+        // the published bytes, so only that one is compared before replacing.
+        const changed = if (self.compiled or !self.runtime.reused) replaced: {
+            try self.context.republish(candidate, output);
+            break :replaced true;
+        } else try self.context.publish(candidate, output);
         // The sidecar is descriptive, not an atomic transaction with the executable.
         try self.context.rename(staged, sidecar);
         return changed;
@@ -1151,8 +1165,8 @@ const State = struct {
         if (native_link.hasInputs(parsed.link_arguments)) return false;
         const sidecar = try std.fmt.allocPrint(self.context.allocator, "{s}.qbe-manifest.json", .{output});
         const bytes = self.context.read(sidecar) catch return false;
-        const published = (try std.json.parseFromSlice(std.json.Value, self.context.allocator, bytes, .{ .allocate = .alloc_always })).value;
-        return std.mem.eql(u8, v.text(v.get(published, "link_identity")), try self.linkIdentity(parsed));
+        const published = sidecarIdentity(bytes) orelse return false;
+        return std.mem.eql(u8, published, try self.linkIdentity(parsed));
     }
     /// Hash everything a link's output depends on besides its link-input files:
     /// the object set, the runtime archive, the artifact kind, the mode, the
@@ -1167,7 +1181,11 @@ const State = struct {
             .target = parsed.target,
             .symbols = options.keepSymbols(parsed.link_arguments),
         }, .{});
-        return fs.hash(self.context.allocator, encoded);
+        // BLAKE3 (BUILD-KEYS-1): the object list of a large program is hundreds
+        // of kilobytes, which the toolchain's SHA-256 hashes at about 14 MB/s.
+        var digest: [32]u8 = undefined;
+        std.crypto.hash.Blake3.hash(encoded, &digest, .{});
+        return self.context.allocator.dupe(u8, &std.fmt.bytesToHex(digest, .lower));
     }
     fn provider(self: *State, source: []const u8) !void {
         const a = self.context.allocator;
@@ -1180,6 +1198,15 @@ const State = struct {
         try self.objects.append(a, object);
     }
 };
+/// The `link_identity` a published sidecar records, found by its key rather
+/// than by parsing the whole document: the sidecar lists every function, and
+/// a key and its quotes cannot occur unescaped inside any JSON string value.
+fn sidecarIdentity(bytes: []const u8) ?[]const u8 {
+    const key = "\"link_identity\":\"";
+    const start = (std.mem.indexOf(u8, bytes, key) orelse return null) + key.len;
+    const end = std.mem.indexOfScalarPos(u8, bytes, start, '"') orelse return null;
+    return bytes[start..end];
+}
 /// Shared-library link controls: bind the library's own descriptor references
 /// internally so a guest object's non-PIC relocations resolve without symbol
 /// interposition.
