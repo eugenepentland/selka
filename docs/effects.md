@@ -157,6 +157,10 @@ def main() -> int:
 - The bytecode validator recomputes every summary from the emitted instructions
   and rejects a forged annotation, so an effect cannot be hidden by editing
   metadata.
+- A contract condition (`@requires`, `@ensures`, `@invariant` and each `old(...)`)
+  is held to the empty ceiling apart from `managed_allocation`, judged by the
+  same inference: any other effect it or a function it calls has is
+  `E_CONTRACT_EFFECT` ([contracts](contracts.md#conditions-are-pure)).
 
 ## Mutation contracts
 
@@ -487,6 +491,7 @@ def main(net: Network) -> int:
 
 ## Related pages
 
+- [Contracts](contracts.md) — why a `@requires`, `@ensures` or `@invariant` condition must be effect-free
 - [Printing, files and command-line authority](io.md) — the capability values and the grants that provision them
 - [Managed arenas](arenas.md) — why allocation inside an arena still contributes `managed_allocation`
 - [Transitive effect bounds](experiments/effects.md) — the dated checkpoint this contract grew from

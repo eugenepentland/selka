@@ -63,7 +63,10 @@ resolution.
 A `private def` is visible only to other members of its domain. Calling it from
 outside reports `E_PRIVATE_FUNCTION`, naming both the call site and the
 declaring domain. A private member may still be reached through a public member,
-which is how the clamping factory above keeps its invariant.
+which is how the clamping factory above keeps its invariant. To have the
+compiler check that invariant instead of trusting every member, write it as
+`@invariant(unwrap(self) <= 1000u32)` above the domain: it is checked at every
+`wrap[Millimeters](...)` ([contracts](contracts.md#invariants)).
 
 Domain values are nominal: `Millimeters` and `Seconds` have the same `u32`
 backing type but are not interchangeable, a `Measurement` field keeps its

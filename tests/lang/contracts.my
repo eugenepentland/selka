@@ -1,0 +1,166 @@
+module contracts
+
+"""Contract clauses that hold: every test runs its clauses and returns True
+only when the program carried on past them. Violations and diagnostics are
+Zig tests in `src/contracts_test.zig`."""
+
+
+@invariant(self.low <= self.high, "a range never runs backwards")
+record Range:
+    low: int
+    high: int = 100
+
+
+record Window:
+    span: Range
+    label: int
+
+
+@invariant(unwrap(self) <= 1000u32)
+domain Millimeters: u32:
+    @requires(value <= 1000u32, "a distance fits the representable range")
+    def from(value: u32) -> Millimeters:
+        return wrap[Millimeters](value)
+    def number(value: Millimeters) -> u32:
+        return unwrap(value)
+
+
+@requires(amount > 0, "amount must be positive")
+@requires(len(accounts) > 0)
+@ensures(result <= amount)
+@ensures(len(log) == old(len(log)) + 1)
+def withdraw(accounts: list[int], log: mut list[str], amount: int) -> int:
+    log.append("withdraw")
+    if accounts[0] < amount:
+        return accounts[0]
+    return amount
+
+
+@ensures(result >= 0, "a length is never negative")
+def parse(text: str) -> Result[int, str]:
+    if text == "":
+        return Err("empty")
+    return Ok(len(text))
+
+
+def doubled(text: str) -> Result[int, str]:
+    n = parse(text)?
+    return Ok(n * 2)
+
+
+@ensures(result > 0)
+def skip_on_error(text: str) -> Result[int, str]:
+    if text == "bad":
+        return Err("rejected")
+    return Ok(1)
+
+
+@ensures(len(items) == old(len(items)) + 2)
+def push_twice(items: mut list[int], value: int):
+    items.append(value)
+    items.append(value)
+
+
+@ensures(result == old(first) + old(second))
+def sum_then_forget(first: int, second: int) -> int:
+    total = first + second
+    first = 0
+    second = 0
+    return total + first + second
+
+
+@requires(len(values) > 0)
+@ensures(result >= values[0])
+def biggest[T](values: list[int], tag: T) -> int:
+    best = values[0]
+    for value in values:
+        if value > best:
+            best = value
+    return best
+
+
+def positive(value: int) -> bool:
+    debug(value)
+    return value > 0
+
+
+@requires(positive(value))
+@ensures(result == old([value, value].copy())[0] * 2)
+def twice(value: int) -> int:
+    return value * 2
+
+
+public def test_withdraw_holds_every_clause_on_both_returns() -> bool:
+    log: list[str] = []
+    small = withdraw([3], mut log, 5)
+    large = withdraw([30], mut log, 5)
+    return small == 3 and large == 5 and len(log) == 2
+
+
+def value_or(outcome: Result[int, str], fallback: int) -> int:
+    match outcome:
+        case Ok(value):
+            return value
+        case Err(_):
+            return fallback
+
+
+public def test_ensures_checks_only_ok_results() -> bool:
+    good = value_or(parse("abc"), -1)
+    empty = value_or(parse(""), -1)
+    rejected = value_or(skip_on_error("bad"), -1)
+    return good == 3 and empty == -1 and rejected == -1
+
+
+public def test_propagated_error_skips_the_postcondition() -> bool:
+    return value_or(doubled("ab"), -1) == 4 and value_or(doubled(""), -1) == -1
+
+
+public def test_procedure_postcondition_runs_at_its_implicit_end() -> bool:
+    items = [1]
+    push_twice(mut items, 7)
+    return len(items) == 3 and items[2] == 7
+
+
+public def test_old_captures_parameters_at_entry() -> bool:
+    return sum_then_forget(2, 3) == 5
+
+
+public def test_generic_function_checks_its_clauses() -> bool:
+    return biggest([3, 9, 2], "tag") == 9 and biggest([4], 1) == 4
+
+
+public def test_contracts_may_call_helpers_and_allocate() -> bool:
+    return twice(21) == 42
+
+
+public def test_invariant_holds_through_construction_and_defaults() -> bool:
+    positional = Range(1, 5)
+    named = Range(low=2, high=3)
+    defaulted = Range(low=50)
+    return positional.high == 5 and named.low == 2 and defaulted.high == 100
+
+
+public def test_invariant_holds_through_replace_and_field_writes() -> bool:
+    span = Range(1, 5)
+    span.high = 9
+    span.low += 3
+    moved = replace(span, low=8)
+    window = Window(span=moved, label=1)
+    window.span.high = 20
+    return span.low == 4 and moved.low == 8 and window.span.high == 20
+
+
+public def test_invariant_holds_through_destructuring_targets() -> bool:
+    span = Range(1, 5)
+    span.low, span.high = 2, 6
+    return span.low == 2 and span.high == 6
+
+
+public def test_domain_invariant_holds_through_wrap() -> bool:
+    distance = Millimeters.from(700u32)
+    return Millimeters.number(distance) == 700u32
+
+
+def main() -> int:
+    return 0

@@ -187,6 +187,16 @@
       "summary": "`divtrunc` and `remtrunc` round toward zero where `//` and `%` round down.",
       "doc": "docs/integer-operations.md#truncating-division"
     },
+    "contracts": {
+      "kind": "language",
+      "summary": "`@requires(cond[, \"message\"])` and `@ensures(cond[, \"message\"])` on a `def` are checked at entry and at every normal return in every build mode and backend, with `result`, entry-time `old(expr)` and `Ok`-only postconditions for `Result`; a violation traps `R_REQUIRES` (naming the caller) or `R_ENSURES`, and conditions must be effect-free apart from allocation.",
+      "doc": "docs/contracts.md#preconditions-and-postconditions"
+    },
+    "type-invariants": {
+      "kind": "language",
+      "summary": "`@invariant(cond[, \"message\"])` on a `record` or `domain` is checked against `self` at every construction, `replace`, field write and `wrap`, trapping `R_INVARIANT` where the bad value was produced.",
+      "doc": "docs/contracts.md#invariants"
+    },
     "assert-statements": {
       "kind": "language",
       "summary": "`assert condition` and `assert condition, \"message\"` trap `R_ASSERT` under every effect bound.",
