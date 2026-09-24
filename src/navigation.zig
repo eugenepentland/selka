@@ -1,5 +1,6 @@
 //! Source-pinned compiler navigation facts, independent of VM execution.
 const std = @import("std");
+const ast = @import("ast.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
 const pc = @import("project_compile.zig");
@@ -204,6 +205,19 @@ const Builder = struct {
         if (self.options.limits.references) |cap| if (self.references.items.len >= cap) return error.NavigationLimit;
         try self.references.append(self.allocator, row);
     }
+    /// CONTRACT-INTERFACE-1: a function's contract clauses lead its published
+    /// signature, one per line, as they stand above its `def`.
+    fn contractSignature(self: *Builder, function: ast.Function, signature: []const u8) Error![]const u8 {
+        var out: std.ArrayList(u8) = .empty;
+        for (ast.attributesOf(self.compilation.syntax, function.name)) |attribute| {
+            if (!attribute.kind.contract()) continue;
+            try out.appendSlice(self.allocator, self.compilation.src.text(attribute.span));
+            try out.append(self.allocator, '\n');
+        }
+        if (out.items.len == 0) return signature;
+        try out.appendSlice(self.allocator, signature);
+        return out.toOwnedSlice(self.allocator);
+    }
     fn declarationsFromSyntax(self: *Builder) Error!void {
         const compilation = self.compilation;
         const checked = compilation.program != null;
@@ -232,7 +246,7 @@ const Builder = struct {
             const start = name_at.span.start;
             const stop = excerptEnd(original.bytes, start, body_at.span.end);
             self.symbols.items[slot].details.type_name = compilation.src.text(function.signature.return_type);
-            self.symbols.items[slot].details.signature = original.bytes[start..body_at.span.start];
+            self.symbols.items[slot].details.signature = try self.contractSignature(function, original.bytes[start..body_at.span.start]);
             self.symbols.items[slot].details.analysis = functionAnalysis(checked, function.signature.type_parameters.len != 0);
             self.symbols.items[slot].context.snippet = original.bytes[start..stop];
             self.symbols.items[slot].context.snippet_truncated = stop != body_at.span.end;
