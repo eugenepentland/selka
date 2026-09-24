@@ -14,6 +14,13 @@ any other toolchain.
 - `zig build test` — runs the gate. It **does not install**, so `zig-out/bin/mylang` stays
   stale unless you also ran `zig build`.
 - `zig build test-compile` — type-checks every Zig test root without running anything.
+- **Building and using mylang needs no Python.** `zig build` (the install graph) and
+  every command of the installed compiler run none; `USE-WITHOUT-PYTHON-1` in
+  `test/integration.zig` runs the user commands under an empty `PATH`. Python is
+  fine in `zig build test` drivers, developer scripts, `bench/`, `velocity/` and
+  `experiments/`; the LLVM adapter behind `--release` is the one exception until
+  it is ported. Never wire a Python step into the install graph or spawn one from
+  `src/`.
 - Use `zig build -Doptimize=ReleaseFast --prefix /path/to/install` for a compiler
   installation used by application agents, or to time the compiler itself. Default
   `zig build` produces a Debug compiler; cached guest tests still pay its parsing,

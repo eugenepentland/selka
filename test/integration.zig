@@ -1270,6 +1270,96 @@ fn spawnWithEnv(argv: []const []const u8, env_map: *const std.process.Environ.Ma
     return std.process.run(testing.allocator, testing.io, .{ .argv = argv, .environ_map = env_map });
 }
 
+/// The entry of the empty-`PATH` project: it imports a module, prints through
+/// its stream and carries a test, so `build`, `run` and `test` all have work.
+const empty_path_main =
+    \\module main
+    \\import text.words
+    \\
+    \\def main(out: Stream) -> int:
+    \\    n = words.count_words("the quick brown fox")
+    \\    out.print(f"words: {n}")
+    \\    return 0
+    \\
+    \\
+    \\public def test_main_words() -> bool:
+    \\    return words.count_words("one two") == 2
+    \\
+;
+/// The imported module of the empty-`PATH` project, with a test of its own.
+const empty_path_words =
+    \\module text.words
+    \\
+    \\public def count_words(line: str) -> int:
+    \\    total = 0
+    \\    for part in line.split(" "):
+    \\        if len(part) > 0:
+    \\            total = total + 1
+    \\    return total
+    \\
+    \\
+    \\public def test_count_words() -> bool:
+    \\    return count_words("a bb  ccc") == 3 and count_words("") == 0
+    \\
+;
+
+/// A child environment whose `PATH` names only an empty directory under `root`,
+/// with `HOME` and `TMPDIR` inside the fixture and Zig's global cache forwarded.
+/// A command that reached for `python3`, or for any program it was not handed
+/// by `--zig`/`--qbe`, cannot start it here.
+fn emptyPathEnvironment(root: []const u8) !std.process.Environ.Map {
+    var environment: std.process.Environ.Map = .init(testing.allocator);
+    errdefer environment.deinit();
+    const bin = try std.fs.path.join(testing.allocator, &.{ root, "empty-bin" });
+    defer testing.allocator.free(bin);
+    try std.Io.Dir.cwd().createDirPath(testing.io, bin);
+    try environment.put("PATH", bin);
+    try environment.put("HOME", root);
+    try environment.put("TMPDIR", root);
+    try forwardZigCache(&environment);
+    return environment;
+}
+
+/// Run one command under `environment`, requiring exit status 0 and
+/// `stdout_part` somewhere in its standard output; a failure prints its stderr.
+fn expectEmptyPathRun(argv: []const []const u8, environment: *const std.process.Environ.Map, stdout_part: []const u8) !void {
+    const result = try spawnWithEnv(argv, environment);
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    errdefer std.debug.print("`{s}` under an empty PATH:\nstdout: {s}\nstderr: {s}\n", .{ argv[@min(1, argv.len - 1)], result.stdout, result.stderr });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, stdout_part) != null);
+}
+
+// spec: USE-WITHOUT-PYTHON-1
+test "CLI user commands need no interpreter: check, build, run, test, fmt, docs and navigation under an empty PATH" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try writeProjectFile(&temporary, "main.my", empty_path_main);
+    try writeProjectFile(&temporary, "text/words.my", empty_path_words);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const entry = try std.fs.path.join(testing.allocator, &.{ root, "main.my" });
+    defer testing.allocator.free(entry);
+    const program = try std.fs.path.join(testing.allocator, &.{ root, "program" });
+    defer testing.allocator.free(program);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_argument);
+    var environment = try emptyPathEnvironment(root);
+    defer environment.deinit();
+    try expectEmptyPathRun(&.{ compiler_path, "check", entry }, &environment, "");
+    try expectEmptyPathRun(&.{ compiler_path, "build", entry, "-o", program, "--cache-dir", cache, tools[0], tools[1] }, &environment, "");
+    try expectEmptyPathRun(&.{program}, &environment, "words: 4\n");
+    try expectEmptyPathRun(&.{ compiler_path, "run", entry, cache_argument, tools[0], tools[1] }, &environment, "words: 4\n");
+    try expectEmptyPathRun(&.{ compiler_path, "test", entry, cache_argument, tools[0], tools[1] }, &environment, "2 passed");
+    try expectEmptyPathRun(&.{ compiler_path, "fmt-project", entry, "--check" }, &environment, "");
+    try expectEmptyPathRun(&.{ compiler_path, "docs", "primer" }, &environment, "mylang");
+    try expectEmptyPathRun(&.{ compiler_path, "index-project", entry }, &environment, "\"version\":\"navigation-v1\"");
+    try expectEmptyPathRun(&.{ compiler_path, "context", entry, "--symbol=text.words::count_words" }, &environment, "\"status\":\"ok\"");
+}
+
 // spec: BOUNDARY-CLI-1
 test "boundary acceptance CLI runs through run build --run and installed paths" {
     var temp = testing.tmpDir(.{});
