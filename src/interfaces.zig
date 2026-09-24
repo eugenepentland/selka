@@ -1312,7 +1312,9 @@ fn tokenLess(_: void, a: []const u8, b: []const u8) bool {
 }
 /// The effect one canonical capability parameter descriptor permits, or null for
 /// a value type. The descriptors come from `contractTypeText`, which resolves
-/// aliases and prints capabilities under their reserved spellings.
+/// aliases and prints most capabilities under their Python spellings
+/// (`Filesystem`, `Clock`, ...) and `Stream`/`Host` under their internal ones,
+/// so both spellings are recognized (DERIVED-EFFECTS-4).
 fn capabilityEffect(text: []const u8) ?effect_set.Effect {
     const table = [_]struct { []const u8, effect_set.Effect }{
         .{ "filesystem_cap", .filesystem },
@@ -1322,6 +1324,11 @@ fn capabilityEffect(text: []const u8) ?effect_set.Effect {
         .{ "environment_cap", .environment },
         .{ "stream_cap", .output },
         .{ "host_cap", .host },
+        .{ "Filesystem", .filesystem },
+        .{ "Network", .network },
+        .{ "Clock", .clock },
+        .{ "Entropy", .random },
+        .{ "Environment", .environment },
     };
     inline for (table) |entry| if (std.mem.eql(u8, text, entry[0])) return entry[1];
     return null;
