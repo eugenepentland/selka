@@ -229,6 +229,12 @@ fn resolvedIdentity(allocator: std.mem.Allocator, entry: []const u8, resolved: [
 /// digest; a damaged one is simply empty.
 pub const Imports = struct {
     allocator: std.mem.Allocator,
+    /// An allocator that really frees, for the throwaway one-module load that
+    /// reads a header the memo has not seen (NATIVE-TEST-MEMO-MEMORY-1): each
+    /// such load holds a 1 MiB header scratch and a project arena, which in the
+    /// build context's arena would stay allocated once per module (3.8 GB for
+    /// a cold million-line run, which then failed with OutOfMemory).
+    scratch: std.mem.Allocator,
     /// The memo file; empty when the run keeps no memo.
     path: []const u8 = "",
     entries: std.StringHashMapUnmanaged([]const []const u8) = .empty,
@@ -239,7 +245,7 @@ pub const Imports = struct {
 
     /// Read the memo at `path`; a missing, damaged or foreign file yields an empty memo.
     pub fn open(context: fs.Context, path: []const u8) Imports {
-        var memo: Imports = .{ .allocator = context.allocator, .path = path };
+        var memo: Imports = .{ .allocator = context.allocator, .scratch = context.parent, .path = path };
         const bytes = context.read(path) catch return memo;
         if (bytes.len < 65 or bytes[64] != '\n' or !std.mem.eql(u8, &sealOf(bytes[65..]), bytes[0..64])) return memo;
         var lines = std.mem.splitScalar(u8, bytes[65..], '\n');
@@ -284,7 +290,7 @@ pub const Imports = struct {
     fn importsOf(self: *Imports, key: []const u8, name: []const u8, bytes: []const u8) Error!?[]const []const u8 {
         try self.used.put(self.allocator, key, {});
         if (self.entries.get(key)) |names| return names;
-        const names = (try headerImports(self.allocator, name, bytes)) orelse return null;
+        const names = (try headerImports(self.allocator, self.scratch, name, bytes)) orelse return null;
         try self.entries.put(self.allocator, key, names);
         self.added = true;
         return names;
@@ -299,8 +305,8 @@ fn sealOf(bytes: []const u8) [64]u8 {
 /// loading that module alone: its header is scanned exactly as in a full load,
 /// and the load then stops at the first project import it cannot read. Null
 /// when the header itself is refused; a full load then decides the identity.
-fn headerImports(allocator: std.mem.Allocator, name: []const u8, bytes: []const u8) Error!?[]const []const u8 {
-    var loaded = project.Project.init(allocator);
+fn headerImports(allocator: std.mem.Allocator, scratch: std.mem.Allocator, name: []const u8, bytes: []const u8) Error!?[]const []const u8 {
+    var loaded = project.Project.init(scratch);
     defer loaded.deinit();
     const path = project.modulePath(allocator, name) catch |err| switch (err) {
         error.InvalidModuleName => return null,
@@ -1014,6 +1020,33 @@ test "a memoized capture resolves the identity a full load resolves, through edi
     // A damaged memo is ignored rather than trusted.
     try context.write(memo, "not a sealed memo\n");
     try std.testing.expectEqualStrings(try loadedIdentity(context, entry, cache), try memoizedIdentity(context, entry, cache, memo));
+}
+
+// spec: NATIVE-TEST-MEMO-MEMORY-1
+test "a cold memoized capture gives back each module's header load instead of keeping it per module" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary_dir = std.testing.tmpDir(.{});
+    defer temporary_dir.cleanup();
+    const root = try temporary_dir.dir.realPathFileAlloc(context.io, ".", context.allocator);
+    const entry = try std.fs.path.join(context.allocator, &.{ root, "main.my" });
+    const memo = try std.fs.path.join(context.allocator, &.{ root, "cache", "imports", "memo" });
+    // A chain of 64 modules, every header unknown to the memo.
+    try context.write(entry, "module main\nimport m0\n");
+    for (0..64) |index| {
+        const path = try std.fmt.allocPrint(context.allocator, "{s}/m{d}.my", .{ root, index });
+        const text = if (index == 63) "module m63\n" else try std.fmt.allocPrint(context.allocator, "module m{d}\nimport m{d}\n", .{ index, index + 1 });
+        try context.write(path, text);
+    }
+    const before = context.arena.queryCapacity();
+    const captured = try captureMemoized(context, entry, null, memo);
+    try std.testing.expectEqual(@as(usize, 65), captured.files.len);
+    // Each header load held a 1 MiB scratch and its own project arena; they go
+    // back to the parent allocator, so the build context grows by kilobytes
+    // per module rather than by a mebibyte.
+    try std.testing.expect(context.arena.queryCapacity() - before < 16 * 1024 * 1024);
 }
 
 // spec: NATIVE-TEST-STABLE-1
