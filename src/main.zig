@@ -2109,6 +2109,8 @@ fn runProjectProgram(init: Context, compilation: *language.project_compile.Compi
         else => return err,
     };
     defer init.gpa.free(manifest);
+    // FRAGMENT-SWEEP-1: the texts this manifest names are in a flushed pack.
+    if (compilation.reuse) |reuse| reuse.store.sweep();
     if (!parsed.no_cache) native_run.manifest_cache.store(init.gpa, init.io, init.environ, parsed.native, identity, manifest) catch return runNative(init, parsed, manifest);
     return runNative(init, parsed, manifest);
 }
@@ -2228,6 +2230,9 @@ fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Com
         .@"emit-project-qbe" => blk: {
             const manifest = (try emitProjectNative(init, compilation, parsed.select_file, parsed.emissionPolicy())) orelse return error.SourceError;
             try rememberManifest(init, parsed, site, compilation, manifest);
+            // FRAGMENT-SWEEP-1: every text this manifest names is in a flushed
+            // pack and the replay, so an occasional sweep can go now.
+            if (compilation.reuse) |reuse| reuse.store.sweep();
             break :blk manifest;
         },
         .@"schema-project" => blk: {

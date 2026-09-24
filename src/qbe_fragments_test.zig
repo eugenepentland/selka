@@ -111,6 +111,7 @@ const Opened = struct {
         self.store = try fragments.Store.open(self.arena.allocator(), t.io, root, "test-compiler", "main.my");
     }
     fn deinit(self: *Opened) void {
+        self.store.deinit();
         self.arena.deinit();
     }
 };
@@ -249,17 +250,17 @@ test "an edit computes metadata only for units of the sources it changed" {
     const a = arena.allocator();
     const root = try directory.dir.realPathFileAlloc(t.io, ".", a);
     const cold = try emitLean(a, root, &original);
-    try t.expectEqual(@as(usize, 0), cold.statistics.meta_hits);
-    try t.expectEqual(cold.statistics.misses, cold.statistics.meta_misses);
+    try t.expectEqual(@as(usize, 0), cold.statistics.meta.hits);
+    try t.expectEqual(cold.statistics.misses, cold.statistics.meta.misses);
     // Nothing changed: every unit's metadata is read, none computed.
     const warm = try emitLean(a, root, &original);
-    try t.expectEqual(@as(usize, 0), warm.statistics.meta_misses);
+    try t.expectEqual(@as(usize, 0), warm.statistics.meta.misses);
     try t.expectEqualStrings(cold.manifest, warm.manifest);
     // A body edit in `helper` recomputes the metadata of helper's units only,
     // and a unit whose positions did not move keeps its digest.
     const body = try emitLean(a, root, &body_edit);
-    try t.expect(body.statistics.meta_misses >= 1 and body.statistics.meta_misses <= 5);
-    try t.expectEqual(body.statistics.meta_hits + body.statistics.meta_misses, cold.statistics.meta_misses);
+    try t.expect(body.statistics.meta.misses >= 1 and body.statistics.meta.misses <= 5);
+    try t.expectEqual(body.statistics.meta.hits + body.statistics.meta.misses, cold.statistics.meta.misses);
     try t.expectEqualStrings(try metaDigest(a, cold.manifest, "main::main"), try metaDigest(a, body.manifest, "main::main"));
     try t.expectEqualStrings(try metaDigest(a, cold.manifest, "helper::first"), try metaDigest(a, body.manifest, "helper::first"));
     // An executable's lean manifest carries no library-only facts.
@@ -317,4 +318,56 @@ test "a remembered emission replays its warnings and manifest until a unit text 
     // A named unit text that left the store voids the replay.
     try std.Io.Dir.cwd().deleteFile(t.io, try opened.store.path(unit.il));
     try t.expect((try fragments.Replay.load(a, t.io, .{ .root = root, .identity = "test-compiler" }, key)) == null);
+}
+
+/// Whether a stored text is still on disk.
+fn onDisk(store: *fragments.Store, digest: fragments.Digest) !bool {
+    std.Io.Dir.cwd().access(t.io, try store.path(digest), .{}) catch return false;
+    return true;
+}
+
+/// A text written straight into `store`, which no pack or replay names.
+fn orphan(store: *fragments.Store, text: []const u8) !fragments.Digest {
+    var digest: fragments.Digest = undefined;
+    std.crypto.hash.Blake3.hash(text, &digest, .{});
+    try std.Io.Dir.cwd().writeFile(t.io, .{ .sub_path = try store.path(digest), .data = text });
+    return digest;
+}
+
+// spec: FRAGMENT-SWEEP-1
+test "a sweep removes only the texts no pack or replay names, and never while another process holds the store" {
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    var opened: Opened = undefined;
+    try opened.init(root);
+    defer opened.deinit();
+    const packed_unit = try opened.store.remember(@splat(3), "export function $p() {\n@start\n ret\n}\n", .{ .implementation_hash = "", .dependencies = &.{}, .cacheable = true, .pure = true, .reasons = &.{} });
+    const meta = try opened.store.rememberMeta(@splat(4), "{\"name\":\"p\"}");
+    opened.store.flush();
+    // A text only a remembered emission names, and one nothing names.
+    const replayed = try orphan(&opened.store, "export function $r() {\n@start\n ret\n}\n");
+    fragments.Replay.remember(a, t.io, .{ .root = root, .identity = "test-compiler" }, .{ .slot = @splat(5), .key = @splat(6) }, .{ .warnings = "", .manifest = "{}" }, &.{replayed});
+    const garbage = try orphan(&opened.store, "export function $g() {\n@start\n ret\n}\n");
+    // Few texts written since the last sweep: no sweep, whoever holds the store.
+    opened.store.sweep();
+    try t.expect(try onDisk(&opened.store, garbage));
+    // Past the threshold, but another process still holds the store: no sweep.
+    opened.store.statistics.texts.written = 10_000;
+    var other: Opened = undefined;
+    try other.init(root);
+    opened.store.sweep();
+    try t.expect(try onDisk(&opened.store, garbage));
+    try t.expectEqual(@as(usize, 0), opened.store.statistics.texts.swept);
+    other.deinit();
+    // Alone past the threshold: only the unnamed text goes.
+    opened.store.sweep();
+    try t.expectEqual(@as(usize, 1), opened.store.statistics.texts.swept);
+    try t.expect(!try onDisk(&opened.store, garbage));
+    try t.expect(try onDisk(&opened.store, packed_unit.il));
+    try t.expect(try onDisk(&opened.store, meta));
+    try t.expect(try onDisk(&opened.store, replayed));
 }
