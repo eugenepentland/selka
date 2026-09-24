@@ -400,7 +400,18 @@ test "nominal guarantee propagation handles long reverse ordered declaration cha
     try reject(text.written(), "E_GENERIC_REQUIREMENT", "Link0");
 }
 
-test "nominal expression checking enforces the work budget without issuing executable type IDs" {
+/// A chain of `levels` aliases, each a pair of the next, whose first name
+/// expands to about 2^levels visits, used by one field.
+fn aliasChain(allocator: std.mem.Allocator, levels: usize) ![]u8 {
+    var text: std.Io.Writer.Allocating = .init(allocator);
+    defer text.deinit();
+    try text.writer.writeAll("class Pair[A, B]:\n    first: A\n    second: B\n\n\n");
+    for (0..levels) |level| try text.writer.print("type T{d} = Pair[T{d}, T{d}]\n\n\n", .{ level, level + 1, level + 1 });
+    try text.writer.print("type T{d} = i64\n\n\nclass Holder:\n    value: T0\n", .{levels});
+    return text.toOwnedSlice();
+}
+// spec: NOMINAL-TEMPLATE-BUDGET-1
+test "nominal expression checking bounds each top-level expression without issuing executable type IDs" {
     var compilation = try language.Compilation.init(t.allocator, "budget.my",
         \\class Box[T]:
         \\    value: T
@@ -410,10 +421,21 @@ test "nominal expression checking enforces the work budget without issuing execu
     var index = try collect(&compilation, &sink);
     const declaration = try named(index, "Box");
     const span = compilation.syntax.?.types.records[0].fields[0].ty;
-    // Collection already visited the one field. The remaining visits reach the exact limit.
-    for (0..99999) |_| try t.expectEqual(@as(usize, 0), (try index.expression(span, declaration.parameters)).parameter);
-    try t.expectError(error.SourceError, index.expression(span, declaration.parameters));
-    try t.expectEqualStrings("E_GENERIC_LIMIT", sink.items.items[0].code);
+    // Every top-level expression starts a fresh budget: resolving the same
+    // field more times than one expression may visit is never refused.
+    for (0..100001) |_| try t.expectEqual(@as(usize, 0), (try index.expression(span, declaration.parameters)).parameter);
+    try t.expectEqual(@as(usize, 0), sink.items.items.len);
+    // One expression that expands past the budget is refused at its own spelling.
+    const text = try aliasChain(t.allocator, 17);
+    defer t.allocator.free(text);
+    var chain = try language.Compilation.init(t.allocator, "chain.my", text);
+    defer chain.deinit();
+    var chain_sink: language.diagnostic.Sink = .{ .allocator = chain.arena.allocator() };
+    try t.expectError(error.SourceError, collect(&chain, &chain_sink));
+    const problem = chain_sink.items.items[0];
+    try t.expectEqualStrings("E_GENERIC_LIMIT", problem.code);
+    try t.expectEqualStrings("T0", chain.src.text(problem.span));
+    try t.expect(std.mem.indexOf(u8, problem.message, "100000 visits") != null);
 }
 const Modules = struct {
     strict: bool = false,

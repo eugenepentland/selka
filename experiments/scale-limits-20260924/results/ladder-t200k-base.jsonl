@@ -1,0 +1,18 @@
+{"step": "cold_build", "s": 24.762, "rss_mb": 1939, "ok": true, "code": 0, "load": 3.6, "tail": "", "tier": "t200k", "label": "base"}
+{"step": "noop_build", "s": 0.258, "rss_mb": 58, "ok": true, "code": 0, "load": 4.88, "tail": "", "tier": "t200k", "label": "base"}
+{"step": "cold_test_untimed", "s": 4.849, "rss_mb": 1590, "ok": true, "code": 0, "load": 4.88, "tail": "", "tier": "t200k", "label": "base"}
+{"step": "warm_check_untimed", "s": 1.525, "rss_mb": 870, "ok": true, "code": 0, "load": 4.89, "tail": "", "tier": "t200k", "label": "base"}
+{"step": "edit_check", "sample": 0, "s": 0.557, "rss_mb": 458, "ok": true, "code": 0, "load": 4.82, "tail": "", "tier": "t200k", "label": "base"}
+{"step": "edit_build", "sample": 0, "s": 1.954, "rss_mb": 979, "ok": true, "code": 0, "load": 4.82, "tail": "", "tier": "t200k", "label": "base"}
+{"step": "edit_test", "sample": 0, "s": 2.429, "rss_mb": 1123, "ok": true, "code": 0, "load": 4.82, "tail": "", "tier": "t200k", "label": "base"}
+{"step": "iface_build", "sample": 0, "s": 2.118, "rss_mb": 949, "ok": true, "code": 0, "load": 5.63, "tail": "", "tier": "t200k", "label": "base"}
+{"step": "edit_check", "sample": 1, "s": 0.59, "rss_mb": 458, "ok": true, "code": 0, "load": 5.63, "tail": "", "tier": "t200k", "label": "base"}
+{"step": "edit_build", "sample": 1, "s": 1.934, "rss_mb": 948, "ok": true, "code": 0, "load": 5.63, "tail": "", "tier": "t200k", "label": "base"}
+{"step": "edit_test", "sample": 1, "s": 1.611, "rss_mb": 1123, "ok": true, "code": 0, "load": 5.42, "tail": "", "tier": "t200k", "label": "base"}
+{"step": "iface_build", "sample": 1, "s": 2.034, "rss_mb": 949, "ok": true, "code": 0, "load": 5.42, "tail": "", "tier": "t200k", "label": "base"}
+{"step": "edit_check", "sample": 2, "s": 0.599, "rss_mb": 458, "ok": true, "code": 0, "load": 5.42, "tail": "", "tier": "t200k", "label": "base"}
+{"step": "edit_build", "sample": 2, "s": 1.922, "rss_mb": 949, "ok": true, "code": 0, "load": 5.42, "tail": "", "tier": "t200k", "label": "base"}
+{"step": "edit_test", "sample": 2, "s": 2.174, "rss_mb": 1123, "ok": true, "code": 0, "load": 5.39, "tail": "", "tier": "t200k", "label": "base"}
+{"step": "iface_build", "sample": 2, "s": 2.592, "rss_mb": 949, "ok": true, "code": 0, "load": 5.39, "tail": "", "tier": "t200k", "label": "base"}
+{"step": "check_receipt", "first": {"s": 0.543, "rss_mb": 458, "ok": true}, "s": 0.082, "rss_mb": 19, "ok": true, "tail": "", "receipt": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":0,\"syntax_stored\":0,\"verdict_hits\":1,\"verdict_misses\":0,\"verdict_stored\":0,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":0,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"collect_declarations\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"resolve_interface\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"check_body\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"instantiate_specialization\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"mis", "tier": "t200k", "label": "base"}
+{"step": "iface_build_receipt", "s": 2.046, "rss_mb": 941, "ok": true, "tail": "", "metadata_reused": "false", "compiled_functions": 17, "codegen_seconds": 0.360356394, "tier": "t200k", "label": "base"}

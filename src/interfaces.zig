@@ -1473,7 +1473,12 @@ fn moduleSyntax(project: *graph.Project, module_id: usize, cache: ?*SyntaxCache,
 }
 fn parseModule(project: *graph.Project, module_id: usize, sink: *diagnostic.Sink) diagnostic.Error!ast.Program {
     const module = project.modules.items[module_id];
-    const tokens = try lexer.lex(project.arena.allocator(), module.src.bytes, sink);
-    var parse: parser.Parser = .{ .src = module.src, .arena = &project.arena, .tokens = tokens, .sink = sink };
+    // ARENA-BOUNDED-1: the syntax outlives the tokens, which nothing reads after
+    // the parse, so they come from the child allocator and go back at once
+    // instead of staying in the project arena (about 420 MB at a million lines).
+    const scratch = project.arena.child_allocator;
+    const tokens = try lexer.lex(scratch, module.src.bytes, sink);
+    defer scratch.free(tokens);
+    var parse: parser.Parser = .{ .src = module.src, .storage = project.arena.allocator(), .tokens = tokens, .sink = sink };
     return parse.parseModule();
 }

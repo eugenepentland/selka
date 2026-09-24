@@ -312,7 +312,8 @@ unselected production bodies are not checked, so an unfinished body may be
 `todo[T]()` or contain a body type error while its declarations stay valid,
 but a production interface error or a syntax error still rejects. The original files are never modified. A
 fixture cannot replace the test entry or introduce a path the project does not
-already have; source snapshots reject symbolic links and are bounded to 16 MiB,
+already have; source snapshots reject symbolic links and are bounded by the
+project's `max_total_bytes` budget (64 MiB unless `mylang.json` sets it),
 with at most 128 files for a provider snapshot. Invalid fixture source or a
 changed public contract is a setup failure, and the fixture settings are part of
 the receipt identity, so changing an injected value re-executes the case.

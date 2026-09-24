@@ -21,9 +21,11 @@
 const std = @import("std");
 const linux = std.os.linux;
 
-/// Why a tool could not be started or waited for: the same failures
-/// `std.process.spawn` reports, so callers handle both alike.
-pub const Error = std.process.SpawnError;
+/// Why a tool could not be started or waited for: the failures
+/// `std.process.spawn` reports, so callers handle both alike, plus
+/// `ArgumentListTooLong` for an `execve` refused with `E2BIG`, which the
+/// standard set can only call `Unexpected` (HOST-FAILURE-CAUSE-1).
+pub const Error = std.process.SpawnError || error{ArgumentListTooLong};
 
 /// A running tool: its process id and the read end of the pipe its standard
 /// error goes to, or -1 when it writes to this process's standard error.
@@ -110,7 +112,10 @@ pub fn start(allocator: std.mem.Allocator, request: Request) Error!Started {
         // The child exited without executing anything; reap it and report why.
         var status: u32 = 0;
         waitFor(pid, &status);
-        return execError(@fromBackingInt(@intCast(failure)));
+        const code: linux.E = @fromBackingInt(@intCast(failure));
+        const err = execError(code);
+        if (err == error.Unexpected) unexpected("execve", request.argv[0], code);
+        return err;
     }
     return .{ .pid = pid, .stderr = if (request.capture) pipe[0] else -1 };
 }
@@ -141,7 +146,10 @@ pub fn ready(allocator: std.mem.Allocator, running: []const Started) Error!usize
                 if (fd.revents != 0) return index;
             },
             .INTR, .AGAIN => {},
-            else => return error.Unexpected,
+            else => |code| {
+                unexpected("poll", "", code);
+                return error.Unexpected;
+            },
         }
     }
 }
@@ -214,7 +222,10 @@ fn inherited(allocator: std.mem.Allocator) Error![*:null]const ?[*:0]const u8 {
                 try bytes.appendSlice(allocator, buffer[0..rc]);
             },
             .INTR => continue,
-            else => return error.Unexpected,
+            else => |code| {
+                unexpected("reading", "/proc/self/environ", code);
+                return error.Unexpected;
+            },
         }
     }
     // Every entry ends in a NUL; one more keeps a truncated last entry whole.
@@ -295,15 +306,30 @@ fn openNull() Error!linux.fd_t {
     return @intCast(rc);
 }
 
-/// Map a failed system call's errno onto the spawn errors `std.process` uses.
+/// Map a failed system call's errno onto the spawn errors `std.process` uses;
+/// an errno with no name there is written to standard error before the
+/// generic `Unexpected`, so the host failure still names its cause.
 fn check(rc: usize) Error!void {
     return switch (linux.errno(rc)) {
         .SUCCESS => {},
         .AGAIN, .NOMEM => error.SystemResources,
         .MFILE => error.ProcessFdQuotaExceeded,
         .NFILE => error.SystemFdQuotaExceeded,
-        else => error.Unexpected,
+        else => |code| {
+            unexpected("system call", "", code);
+            return error.Unexpected;
+        },
     };
+}
+
+/// HOST-FAILURE-CAUSE-1: name an errno the error set cannot, on standard
+/// error, as `mylang: <what> <tool> failed: errno <NAME>`. It writes with one
+/// system call from a stack buffer, so it cannot fail or allocate.
+fn unexpected(what: []const u8, tool: []const u8, code: linux.E) void {
+    var buffer: [512]u8 = undefined;
+    const separator: []const u8 = if (tool.len == 0) "" else " ";
+    const text = std.fmt.bufPrint(&buffer, "mylang: {s}{s}{s} failed: errno {s}\n", .{ what, separator, tool, @tagName(code) }) catch return;
+    _ = linux.write(2, text.ptr, text.len);
 }
 
 /// The error an `execve` refusal stands for.
@@ -317,6 +343,7 @@ fn execError(code: linux.E) Error {
         .LOOP => error.SymLinkLoop,
         .NAMETOOLONG => error.NameTooLong,
         .NOMEM, .AGAIN => error.SystemResources,
+        .@"2BIG" => error.ArgumentListTooLong,
         else => error.Unexpected,
     };
 }
@@ -340,6 +367,23 @@ test "a tool starts without copying this process and reports status and standard
     // A tool that is not there is refused at start, with nothing left to reap.
     try std.testing.expectError(error.FileNotFound, start(a, .{ .argv = &.{"/no/such/mylang-tool"}, .environment = &environment }));
     try std.testing.expectError(error.FileNotFound, start(a, .{ .argv = &.{"no-such-mylang-tool"}, .environment = &environment }));
+}
+
+// spec: HOST-FAILURE-CAUSE-1
+test "an argument list past the kernel's limit is refused as ArgumentListTooLong, not Unexpected" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var environment: std.process.Environ.Map = .init(a);
+    // 80 arguments of 100 KiB: 8 MB, over the 6 MiB `execve` admits under any stack limit.
+    const argument = try a.alloc(u8, 100 * 1024);
+    @memset(argument, 'x');
+    const argv = try a.alloc([]const u8, 81);
+    argv[0] = "/bin/sh";
+    for (argv[1..]) |*slot| slot.* = argument;
+    try std.testing.expectError(error.ArgumentListTooLong, start(a, .{ .argv = argv, .environment = &environment }));
+    try std.testing.expectEqual(error.ArgumentListTooLong, execError(.@"2BIG"));
+    try std.testing.expectEqual(error.Unexpected, execError(.IO));
 }
 
 /// Start one `/bin/sh` per script at once, then reap them in order, returning

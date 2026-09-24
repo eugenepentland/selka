@@ -114,7 +114,7 @@ fn listAttributes(work: std.mem.Allocator, src: source.Source, syntax: ast.Progr
 pub fn render(allocator: std.mem.Allocator, arena: *std.heap.ArenaAllocator, src: source.Source, tokens: []const lex.Token, sink: *diagnostic.Sink) Error![]u8 {
     var scan: Scan = .{ .src = src, .tokens = tokens };
     const module_file = scan.word(0, "module");
-    var syntax_parser: parser.Parser = .{ .src = src, .arena = arena, .tokens = tokens, .sink = sink };
+    var syntax_parser: parser.Parser = .{ .src = src, .storage = arena.allocator(), .tokens = tokens, .sink = sink };
     const syntax = if (module_file) try syntax_parser.parseModule() else try syntax_parser.parse();
     var scratch = std.heap.ArenaAllocator.init(allocator);
     defer scratch.deinit();

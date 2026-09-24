@@ -141,11 +141,12 @@ test "nominal layout expansion bounds distinct array identities" {
     const excessive = try identitySource(t.allocator, 4097, false);
     defer t.allocator.free(excessive);
     try reject(excessive, "E_GENERIC_LIMIT", "4096 array shapes");
-    // Tag and Values contribute two symbolic roots before the field applications.
-    const nominal = try identitySource(t.allocator, 4094, true);
+    // Values' own symbolic root is an instance charged to it before its field
+    // applications; Tag's root is charged to Tag (NOMINAL-LAYOUT-BUDGET-1).
+    const nominal = try identitySource(t.allocator, 4095, true);
     defer t.allocator.free(nominal);
     try finite(nominal);
-    const nominal_excess = try identitySource(t.allocator, 4095, true);
+    const nominal_excess = try identitySource(t.allocator, 4096, true);
     defer t.allocator.free(nominal_excess);
     try reject(nominal_excess, "E_GENERIC_LIMIT", "4096 type instances");
 }
@@ -163,8 +164,69 @@ test "nominal layout expansion bounds repeated field work independently of ident
     defer t.allocator.free(text);
     try reject(text, "E_GENERIC_LIMIT", "100000 checking operations");
 }
+/// Two declarations that each expand `Big` at `count` distinct array lengths,
+/// about 512 operations apiece: together they cost more than one request's
+/// budget, and each alone costs less.
+fn sharedWorkSource(allocator: std.mem.Allocator, count: usize) ![]u8 {
+    var text: std.Io.Writer.Allocating = .init(allocator);
+    defer text.deinit();
+    try text.writer.writeAll("class Big[T]:\n");
+    for (0..512) |i| try text.writer.print("    f{d}: T\n", .{i});
+    for (0..2) |owner| {
+        try text.writer.print("\n\nclass Uses{d}[U]:\n", .{owner});
+        for (0..count) |i| try text.writer.print("    f{d}: Big[[{d}]U]\n", .{ i, owner * count + i + 1 });
+    }
+    return text.toOwnedSlice();
+}
+/// The primary and related spellings of the one diagnostic `text` is rejected with.
+fn limitSite(text: []const u8) ![2][]const u8 {
+    var compilation = try language.Compilation.init(t.allocator, "limit.my", text);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.emit());
+    const problem = compilation.diagnostics.items[0];
+    try t.expectEqualStrings("E_GENERIC_LIMIT", problem.code);
+    try t.expect(problem.related != null);
+    const primary = try t.allocator.dupe(u8, compilation.src.text(problem.span));
+    errdefer t.allocator.free(primary);
+    return .{ primary, try t.allocator.dupe(u8, compilation.src.text(problem.related.?.span)) };
+}
+// spec: NOMINAL-LAYOUT-BUDGET-1
+test "nominal layout budgets apply per declaration so a program may exceed them in total" {
+    // 2 x 120 x 512 field expansions: over 100000 together, under it per declaration.
+    const shared = try sharedWorkSource(t.allocator, 120);
+    defer t.allocator.free(shared);
+    try finite(shared);
+    // The adversarial declaration is still rejected, at its own name, with the
+    // field its expansion had reached as the related location.
+    const text = try workSource(t.allocator);
+    defer t.allocator.free(text);
+    const site = try limitSite(text);
+    defer for (site) |part| t.allocator.free(part);
+    try t.expectEqualStrings("Uses", site[0]);
+    try t.expectEqual(@as(u8, 'f'), site[1][0]);
+}
+fn materializeMany(allocator: std.mem.Allocator) !void {
+    var compilation = try language.Compilation.init(allocator, "many.my", "class Box[T]:\n    value: T\n");
+    defer compilation.deinit();
+    try compilation.parse();
+    var sink: language.diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
+    const index = try templates.collect(compilation.arena.allocator(), compilation.src, compilation.syntax.?, &sink, null);
+    var graph = try layouts.collect(allocator, &index, &sink);
+    defer graph.deinit();
+    const span = compilation.syntax.?.types.records[0].name;
+    // Each materialized type is its own request: 60000 of them charge far more
+    // than 100000 operations in total, none is refused, and the finished
+    // requests are not retained.
+    for (0..60000) |_| _ = try graph.materialize(.{ .builtin = .i64 }, span);
+    try t.expectEqual(@as(usize, 0), sink.items.items.len);
+    try t.expectEqual(@as(usize, 1), graph.budget.requests.items.len);
+}
+// spec-case: NOMINAL-LAYOUT-BUDGET-1
+test "every materialized concrete type gets its own layout budget" {
+    try materializeMany(t.allocator);
+}
 /// Many ordinary records whose fields name one leaf record: linear work, no
-/// expansion, and more checking operations than the fixed minimum budget.
+/// expansion, and more checking operations in total than one request's budget.
 fn wideSource(allocator: std.mem.Allocator, records: usize) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
@@ -176,6 +238,7 @@ fn wideSource(allocator: std.mem.Allocator, records: usize) ![]u8 {
     }
     return text.toOwnedSlice();
 }
+/// The operations every declaration's request charged while `text` was collected.
 fn layoutWork(text: []const u8) !usize {
     var compilation = try language.Compilation.init(t.allocator, "wide.my", text);
     defer compilation.deinit();
@@ -185,20 +248,17 @@ fn layoutWork(text: []const u8) !usize {
     var graph = try layouts.collect(t.allocator, &index, &sink);
     defer graph.deinit();
     try t.expectEqual(@as(usize, 0), sink.items.items.len);
-    return graph.budget.work;
+    var work: usize = 0;
+    for (graph.budget.requests.items) |request| work += request.work;
+    return work;
 }
-// spec: NOMINAL-LAYOUT-WORK-1
-test "nominal layout work budget grows with the program so a large ordinary project is not refused for its size" {
-    try t.expectEqual(layouts.minimum_work, layouts.workLimit(0));
-    try t.expectEqual(layouts.minimum_work, layouts.workLimit(layouts.minimum_work - 1));
-    try t.expectEqual(@as(usize, 19_000_000), layouts.workLimit(19_000_000));
-    // 3200 ordinary 16-field records charge more operations than the fixed
-    // minimum; the source-derived budget accepts them.
+// spec-case: NOMINAL-LAYOUT-BUDGET-1
+test "a large ordinary project is not refused for its total layout work" {
+    // 3200 ordinary 16-field records charge more than 100000 operations in all,
+    // a few dozen per declaration.
     const text = try wideSource(t.allocator, 3200);
     defer t.allocator.free(text);
-    const work = try layoutWork(text);
-    try t.expect(work > layouts.minimum_work);
-    try t.expect(work < layouts.workLimit(text.len));
+    try t.expect(try layoutWork(text) > 100000);
 }
 fn longSource(allocator: std.mem.Allocator) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);

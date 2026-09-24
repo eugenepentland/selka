@@ -379,3 +379,66 @@ test "frontend cache contract dimensions invalidate syntax and verdict keys for 
     defer t.allocator.free(same_warnings);
     try t.expectEqualStrings("warning\n", same_warnings);
 }
+
+/// The key of the `index`th retention-test entry.
+fn retentionKey(index: usize) [32]u8 {
+    var key: [32]u8 = @splat(0);
+    key[0] = @intCast(index);
+    return key;
+}
+/// Read the entries `first..last` back through `cache`, returning how many hit.
+fn readBack(cache: *Cache, first: usize, last: usize) !usize {
+    var hits: usize = 0;
+    for (first..last) |index| {
+        const payload = cache.read(retentionKey(index)) catch continue;
+        t.allocator.free(payload);
+        hits += 1;
+    }
+    return hits;
+}
+/// Age every stored retention entry to one fixed moment, so the next run's
+/// uses are strictly newer whatever the file system's timestamp resolution.
+fn age(cache: *Cache, count: usize) !void {
+    for (0..count) |index| {
+        const path = try cache.entryPath(retentionKey(index));
+        defer t.allocator.free(path);
+        try std.Io.Dir.cwd().setTimestamps(t.io, path, .{ .modify_timestamp = .{ .new = .{ .nanoseconds = 1_000_000_000 * std.time.ns_per_s } } });
+    }
+}
+// spec: FRONTEND-CACHE-RETAIN-1
+test "the frontend cache keeps a working set larger than its floor and evicts least recently used history" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const payload: [400]u8 = @splat('p');
+    // A cold run stores eight entries, about 3.6 KB, against a 1,000-byte
+    // floor: all of them are its working set, and none is evicted.
+    var cold = openCache(root);
+    cold.max_bytes = 1000;
+    for (0..8) |index| try t.expect(try cold.write(retentionKey(index), &payload));
+    cold.finish();
+    try t.expectEqual(@as(usize, 0), cold.statistics.evicted);
+    try t.expect(cold.retention() > cold.statistics.retained_bytes);
+    // An unchanged rerun reads every entry and stores one more: nothing goes.
+    var rerun = openCache(root);
+    rerun.max_bytes = 1000;
+    try t.expectEqual(@as(usize, 8), try readBack(&rerun, 0, 8));
+    try t.expect(try rerun.write(retentionKey(8), &payload));
+    rerun.finish();
+    try t.expectEqual(@as(usize, 0), rerun.statistics.evicted);
+    try age(&rerun, 9);
+    // A run that uses two entries and stores one keeps twice what it used, and
+    // the entries it used are the last to go: the others are evicted first.
+    var narrow = openCache(root);
+    narrow.max_bytes = 1000;
+    try t.expectEqual(@as(usize, 2), try readBack(&narrow, 0, 2));
+    try t.expect(try narrow.write(retentionKey(9), &payload));
+    narrow.finish();
+    try t.expect(narrow.statistics.evicted > 0);
+    try t.expect(narrow.statistics.retained_bytes <= narrow.retention());
+    var after = openCache(root);
+    try t.expectEqual(@as(usize, 2), try readBack(&after, 0, 2));
+    try t.expectEqual(@as(usize, 1), try readBack(&after, 9, 10));
+    try t.expectEqual(@as(usize, 10) - narrow.statistics.evicted, try readBack(&after, 0, 10));
+}

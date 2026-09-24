@@ -103,18 +103,19 @@ const State = enum { unneeded, queued, ready, visiting, complete };
 pub const Edge = struct { target: Id, span: Span };
 /// Graph-owned layout identity with a separately discovered storage dependency list.
 pub const Node = struct { key: Key, site: Span, edges: []const Edge = &.{}, state: State = .unneeded };
-const Budget = struct { instances: usize = 0, arrays: usize = 0, work: usize = 0, depth: usize = 0, expanded: usize = 0, work_limit: usize = minimum_work };
-/// The checking-operation budget every program gets, however small.
-pub const minimum_work: usize = 100000;
-/// The checking-operation budget of a program with this many source bytes: the
-/// fixed minimum, or one operation per source byte once the program is larger.
-/// Linear growth of an ordinary program costs a small fraction of an operation
-/// per byte, so only an expansion that multiplies work (a generic declaration
-/// instantiating ever-larger arguments) can reach it, while a large project is
-/// never refused for its size alone.
-pub fn workLimit(source_bytes: usize) usize {
-    return @max(minimum_work, source_bytes);
-}
+/// NOMINAL-LAYOUT-BUDGET-1: one demand on the graph — a declaration's symbolic
+/// root, or one concrete type the checker materializes — and what expanding it
+/// has cost so far. Every limit is charged to the demand whose expansion first
+/// discovered the node, so a program of any size gets the same bound per
+/// declaration and the total work stays proportional to the source.
+const Request = struct { site: Span, work: usize = 0, instances: usize = 0, arrays: usize = 0 };
+/// A queued node and the request that discovered it, which pays for its expansion.
+const Pending = struct { id: Id, request: usize };
+const Budget = struct { depth: usize = 0, expanded: usize = 0, requests: std.ArrayList(Request) = .empty, current: usize = 0 };
+/// The per-request ceilings (NOMINAL-LAYOUT-1).
+const max_work = 100000;
+const max_instances = 4096;
+const max_arrays = 4096;
 /// Layout evidence for all declarations, including templates with distinct symbolic parameters.
 pub const Graph = struct {
     allocator: std.mem.Allocator,
@@ -122,7 +123,7 @@ pub const Graph = struct {
     templates: *const templates.Index,
     nodes: std.ArrayList(Node) = .empty,
     index: Map = .empty,
-    pending: std.ArrayList(Id) = .empty,
+    pending: std.ArrayList(Pending) = .empty,
     budget: Budget = .{},
 
     /// Release graph-owned keys, edges and discovery storage; the template index and sink are borrowed.
@@ -134,37 +135,49 @@ pub const Graph = struct {
         self.nodes.deinit(self.allocator);
         self.index.deinit(self.allocator);
         self.pending.deinit(self.allocator);
+        self.budget.requests.deinit(self.allocator);
         self.* = .{ .allocator = self.allocator, .sink = self.sink, .templates = self.templates };
     }
-    fn charge(self: *Graph, span: Span) Error!void {
-        if (self.budget.work == self.budget.work_limit) return self.workExhausted(span);
-        self.budget.work += 1;
+    /// Open a new request at `site` and make it the one charged. A request made
+    /// after collection starts with nothing pending, so the finished ones are
+    /// dropped and the list stays one entry long.
+    fn begin(self: *Graph, site: Span) Error!void {
+        if (self.budget.expanded == self.pending.items.len) self.budget.requests.clearRetainingCapacity();
+        try self.budget.requests.append(self.allocator, .{ .site = site });
+        self.budget.current = self.budget.requests.items.len - 1;
     }
-    /// Name the budget the expansion ran out of: the fixed minimum a small
-    /// program gets, or the per-source-byte allowance of a larger one.
-    fn workExhausted(self: *Graph, span: Span) Error {
-        if (self.budget.work_limit == minimum_work) return self.sink.fail(eGenericLimit, span, "nominal layout expansion exceeds 100000 checking operations");
-        return self.sink.fail(eGenericLimit, span, "nominal layout expansion exceeds one checking operation per source byte");
+    /// Report a limit at the request that exceeded it, naming where its expansion stood.
+    fn limit(self: *Graph, span: Span, comptime what: []const u8) Error {
+        const site = self.budget.requests.items[self.budget.current].site;
+        const message = "nominal layout expansion of this type exceeds " ++ what;
+        if (site.start == span.start and site.end == span.end) return self.sink.fail(eGenericLimit, site, message);
+        return self.sink.failRelated(eGenericLimit, site, message, .{ .span = span, .message = "the expansion reached this type" });
+    }
+    fn charge(self: *Graph, span: Span) Error!void {
+        const request = &self.budget.requests.items[self.budget.current];
+        if (request.work == max_work) return self.limit(span, "100000 checking operations");
+        request.work += 1;
     }
     fn intern(self: *Graph, key: Key, span: Span) Error!Id {
         try self.charge(span);
         if (self.index.get(key)) |id| return id;
         const instance = key.base == .named and key.arguments.len != 0;
-        if (instance and self.budget.instances == 4096) return self.sink.fail(eGenericLimit, span, "nominal layout expansion exceeds 4096 type instances");
-        if (key.base == .array and self.budget.arrays == 4096) return self.sink.fail(eGenericLimit, span, "nominal layout expansion exceeds 4096 array shapes");
+        const request = &self.budget.requests.items[self.budget.current];
+        if (instance and request.instances == max_instances) return self.limit(span, "4096 type instances");
+        if (key.base == .array and request.arrays == max_arrays) return self.limit(span, "4096 array shapes");
         try self.nodes.ensureUnusedCapacity(self.allocator, 1);
         try self.index.ensureUnusedCapacity(self.allocator, 1);
         const owned: Key = .{ .base = key.base, .arguments = try self.allocator.dupe(Id, key.arguments) };
         const id: Id = @fromBackingInt(self.nodes.items.len);
         self.nodes.appendAssumeCapacity(.{ .key = owned, .site = span });
         self.index.putAssumeCapacityNoClobber(owned, id);
-        if (instance) self.budget.instances += 1;
-        if (key.base == .array) self.budget.arrays += 1;
+        if (instance) request.instances += 1;
+        if (key.base == .array) request.arrays += 1;
         return id;
     }
     fn need(self: *Graph, id: Id) Error!void {
         if (self.nodes.items[@backingInt(id)].state != .unneeded) return;
-        try self.pending.append(self.allocator, id);
+        try self.pending.append(self.allocator, .{ .id = id, .request = self.budget.current });
         self.nodes.items[@backingInt(id)].state = .queued;
     }
     fn resolve(self: *Graph, value: templates.Expression, arguments: []const Id, span: Span) Error!Id {
@@ -218,6 +231,7 @@ pub const Graph = struct {
     /// Intern a concrete source type and validate only newly demanded storage dependencies.
     pub fn materialize(self: *Graph, value: templates.Expression, span: Span) Error!Id {
         if (templates.depends(value)) return self.sink.fail("E_GENERIC_BODY_UNSUPPORTED", span, "nominal specialization requires resolved concrete type arguments");
+        try self.begin(span);
         const first = self.pending.items.len;
         const id = try self.resolve(value, &.{}, span);
         try self.need(id);
@@ -227,6 +241,7 @@ pub const Graph = struct {
     }
     /// Demand an already-resolved key when function specialization supplies concrete arguments.
     pub fn materializeKey(self: *Graph, key: Key, span: Span) Error!Id {
+        try self.begin(span);
         const first = self.pending.items.len;
         const id = try self.intern(key, span);
         try self.need(id);
@@ -237,6 +252,7 @@ pub const Graph = struct {
     fn roots(self: *Graph) Error!void {
         for (self.templates.declarations.items, 0..) |declaration, id| {
             if (declaration.builtin_name != null) continue;
+            try self.begin(declaration.name);
             var arguments: [16]Id = undefined;
             for (declaration.parameters, 0..) |parameter, i| arguments[i] = try self.intern(.{ .base = .{ .parameter = .{ .declaration = id, .index = i } }, .arguments = &.{} }, parameter.name);
             try self.need(try self.intern(.{ .base = .{ .named = id }, .arguments = arguments[0..declaration.parameters.len] }, declaration.name));
@@ -244,7 +260,8 @@ pub const Graph = struct {
     }
     fn expand(self: *Graph) Error!void {
         while (self.budget.expanded < self.pending.items.len) {
-            const id = self.pending.items[self.budget.expanded];
+            const id = self.pending.items[self.budget.expanded].id;
+            self.budget.current = self.pending.items[self.budget.expanded].request;
             const node = self.nodes.items[@backingInt(id)];
             var edges: std.ArrayList(Edge) = .empty;
             defer edges.deinit(self.allocator);
@@ -282,7 +299,8 @@ pub const Graph = struct {
         const Visit = struct { id: Id, next: usize = 0 };
         var stack: std.ArrayList(Visit) = .empty;
         defer stack.deinit(self.allocator);
-        for (self.pending.items[first..]) |root| {
+        for (self.pending.items[first..]) |queued| {
+            const root = queued.id;
             if (self.nodes.items[@backingInt(root)].state == .complete) continue;
             self.nodes.items[@backingInt(root)].state = .visiting;
             try stack.append(self.allocator, .{ .id = root });
@@ -315,7 +333,6 @@ pub const Graph = struct {
 /// This proves bounded finite storage dependencies, not executable concrete layouts or operations.
 pub fn collect(allocator: std.mem.Allocator, index: *const templates.Index, sink: *diagnostic.Sink) Error!Graph {
     var graph: Graph = .{ .allocator = allocator, .templates = index, .sink = sink };
-    graph.budget.work_limit = workLimit(index.context.src.bytes.len);
     errdefer graph.deinit();
     try graph.roots();
     try graph.expand();

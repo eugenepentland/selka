@@ -2784,6 +2784,54 @@ test "CLI build uses QBE when no backend is named and --release builds LLVM O3 w
     try testing.expectEqualStrings("42\n", released.stdout);
     try invokeOptions("run", "def main() -> i64:\n    return 0\n", &.{"--release"}, 2, "", "usage:");
 }
+// spec-case: QBE-FRAMEMAP-ROOTS-1
+test "CLI default build keeps the shared metadata object when a function is added and its trap still names every frame" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
+        \\def divide(a: i64, b: i64) -> i64:
+        \\    return a // b
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return divide(7, 0)
+    });
+    const path = try temporary.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const directory = std.fs.path.dirname(path).?;
+    const cache = try std.fs.path.join(testing.allocator, &.{ directory, "cache" });
+    defer testing.allocator.free(cache);
+    const output = try std.fs.path.join(testing.allocator, &.{ directory, "program" });
+    defer testing.allocator.free(output);
+    const cold = try buildReceipt(path, output, cache, &.{});
+    defer testing.allocator.free(cold);
+    try testing.expect(std.mem.indexOf(u8, cold, "\"metadata_reused\":false") != null);
+    // A new function reached from `main`: the default (ReleaseFast, QBE,
+    // frame-map) build compiles it and `main` again, and reuses the shared unit.
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
+        \\def divide(a: i64, b: i64) -> i64:
+        \\    return a // b
+        \\
+        \\
+        \\def extra(n: i64) -> i64:
+        \\    return n + 3
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return divide(extra(4), 0)
+    });
+    const added = try buildReceipt(path, output, cache, &.{});
+    defer testing.allocator.free(added);
+    try testing.expect(std.mem.indexOf(u8, added, "\"mode\":\"ReleaseFast\"") != null);
+    try testing.expect(std.mem.indexOf(u8, added, "\"metadata_reused\":true") != null);
+    const ran = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{output} });
+    defer testing.allocator.free(ran.stdout);
+    defer testing.allocator.free(ran.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, ran.term);
+    try testing.expect(std.mem.indexOf(u8, ran.stderr, "error[R_DIVISION_BY_ZERO]") != null);
+    try testing.expect(std.mem.indexOf(u8, ran.stderr, "in divide at ") != null);
+    try testing.expect(std.mem.indexOf(u8, ran.stderr, "in main at ") != null);
+}
 // spec: CLI-3
 test "CLI executes the exact plan acceptance programs and recursive functions" {
     try invoke("run", @embedFile("fixtures/sum.my"), 0, "4950\n", "");
