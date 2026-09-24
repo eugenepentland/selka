@@ -21,6 +21,7 @@ pub const Error = error{
     DuplicateField,
     InvalidBudget,
     InvalidImportPolicy,
+    InvalidInterfaceFiles,
     InvalidJson,
     InvalidLint,
     InvalidVersion,
@@ -67,6 +68,9 @@ pub const Document = struct {
     /// Whether a `lint` object was present; its contents are parsed by the
     /// `mylang` module's lint driver, which owns those types.
     lint: bool = false,
+    /// `interface_files: true`: every project module's generated `.api` file
+    /// must be current, or checking the project fails (API-FILE-3).
+    interface_files: bool = false,
 };
 
 /// One resolved policy file: absolute path, exact bytes and content digest.
@@ -389,6 +393,7 @@ fn parseDocument(allocator: std.mem.Allocator, bytes: []const u8, failure: *Fail
     var budgets: Budgets = .{};
     var budgets_seen = false;
     var lint_seen = false;
+    var interface_files: ?bool = null;
 
     while (true) {
         const key_token = try readToken(allocator, &scanner, failure);
@@ -420,6 +425,13 @@ fn parseDocument(allocator: std.mem.Allocator, bytes: []const u8, failure: *Fail
             if (!isObjectBegin(value)) return fail(failure, &diagnostics, "lint must be a JSON object", error.InvalidLint);
             lint_seen = true;
             try skipValue(allocator, &scanner, failure, &diagnostics);
+        } else if (std.mem.eql(u8, key, "interface_files")) {
+            if (interface_files != null) return fail(failure, &diagnostics, "duplicate interface_files field", error.DuplicateField);
+            interface_files = switch (value) {
+                .true => true,
+                .false => false,
+                else => return fail(failure, &diagnostics, "interface_files must be true or false", error.InvalidInterfaceFiles),
+            };
         } else {
             return fail(failure, &diagnostics, "unknown field in mylang.json", error.UnknownField);
         }
@@ -429,7 +441,7 @@ fn parseDocument(allocator: std.mem.Allocator, bytes: []const u8, failure: *Fail
     if (!isEndOfDocument(trailing)) return fail(failure, &diagnostics, "trailing content after the configuration object", error.InvalidJson);
     if (version == null) return fail(failure, &diagnostics, "mylang.json must carry version: 1", error.MissingVersion);
     if (lint_seen and version.? != 2) return fail(failure, &diagnostics, "lint requires mylang.json version 2", error.InvalidLint);
-    return .{ .version = version.?, .import_policy = import_policy, .budgets = budgets, .lint = lint_seen };
+    return .{ .version = version.?, .import_policy = import_policy, .budgets = budgets, .lint = lint_seen, .interface_files = interface_files orelse false };
 }
 
 /// Read the body of a `budgets` object after its opening brace. Every key is

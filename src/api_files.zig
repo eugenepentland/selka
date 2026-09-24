@@ -71,6 +71,25 @@ pub fn run(allocator: std.mem.Allocator, request: Request, index: *interfaces.In
     };
 }
 
+/// The `E_INTERFACE_FILE_STALE` diagnostics for a project that opted in, one
+/// line per missing or stale file, or null when every file is current.
+pub fn staleDiagnostics(allocator: std.mem.Allocator, io: std.Io, root: []const u8, entry: []const u8, index: *interfaces.Index) Error!?[]u8 {
+    var arena_state = std.heap.ArenaAllocator.init(allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    const entries = try collect(arena, io, root, index);
+    if (outOfDate(entries) == 0) return null;
+    var out: std.ArrayList(u8) = .empty;
+    for (entries) |item| {
+        if (item.state == .current) continue;
+        try out.print(arena, "{s}:1:1: error[E_INTERFACE_FILE_STALE]: the interface file of module `{s}` is {s}; run `mylang api {s} --write` and review its diff\n", .{
+            item.path, item.module, @tagName(item.state), entry,
+        });
+    }
+    const owned = try allocator.dupe(u8, out.items);
+    return owned;
+}
+
 fn outOfDate(entries: []const Entry) usize {
     var count: usize = 0;
     for (entries) |item| count += @intFromBool(item.state != .current);

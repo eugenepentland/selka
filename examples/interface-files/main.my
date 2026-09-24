@@ -1,0 +1,7 @@
+module main
+import shop.billing
+import shop.money
+
+def main() -> int:
+    lines = [billing.Line(quantity=2, unit_cents=50)]
+    return money.Cents.value(billing.charge(lines)) - 108

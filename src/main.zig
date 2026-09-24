@@ -1778,6 +1778,43 @@ fn loadConfiguredPolicy(init: Context, parsed: Parsed, project: *const language.
     return .{ .config = config, .identity = if (has_identity) identity else null };
 }
 
+/// API-FILE-3: fold every project module's checked-in interface file into the
+/// configured identity the verdict caches key on, so a replayed success never
+/// outlives an edit to, or the deletion of, one of those files. A project
+/// without `interface_files` keeps its identity unchanged.
+fn foldInterfaceFiles(init: Context, configured: *ConfiguredPolicy, project: *const language.project.Project, root: []const u8, stores: Replayed) !void {
+    const config = if (configured.config) |*value| value else return;
+    if (!config.document.interface_files) return;
+    var hash = std.crypto.hash.sha2.Sha256.init(.{});
+    hash.update("interface-files-identity-v1");
+    hash.update(&config.digest);
+    if (configured.identity) |*identity| hash.update(identity);
+    for (project.order.items) |module| {
+        const src = project.modules.items[module].src;
+        if (!language.interface_files.projectModule(src)) continue;
+        const path = try language.interface_files.apiPath(init.gpa, src.path);
+        defer init.gpa.free(path);
+        const absolute = try std.fs.path.join(init.gpa, &.{ root, path });
+        defer init.gpa.free(absolute);
+        const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, absolute, init.gpa, .limited(16 * 1024 * 1024)) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => null,
+        };
+        defer if (bytes) |owned| init.gpa.free(owned);
+        var length: [8]u8 = undefined;
+        std.mem.writeInt(u64, &length, path.len, .little);
+        hash.update(&length);
+        hash.update(path);
+        std.mem.writeInt(u64, &length, if (bytes) |owned| owned.len + 1 else 0, .little);
+        hash.update(&length);
+        if (bytes) |owned| hash.update(owned);
+    }
+    var digest: [32]u8 = undefined;
+    hash.final(&digest);
+    configured.identity = std.fmt.bytesToHex(digest, .lower);
+    setPolicyIdentity(stores.frontend, stores.verdict, configured.identity.?[0..]);
+}
+
 /// Publish the required-policy identity to the caches whose verdict must not
 /// outlive a policy change. Null restores today's behavior for unconfigured projects.
 fn setPolicyIdentity(frontend: ?*language.frontend_cache.Cache, verdict: ?*language.check_cache.Cache, identity: ?[]const u8) void {
@@ -2110,6 +2147,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     // replayed. A project without `mylang.json` keeps its previous behavior.
     var configured = loadConfiguredPolicy(init, parsed, &project, frontend, verdict) catch |err| return policyFailureStatus(err);
     defer configured.deinit();
+    try foldInterfaceFiles(init, &configured, &project, files.root, .{ .verdict = verdict, .frontend = frontend, .policy = null });
     const policy_receipt = try configuredPolicyReceipt(init.arena.allocator(), &configured);
     if (try surfaceProject(init, &project, parsed)) |status| return status;
     if (try replayStoredVerdict(init, parsed, &project, .{ .verdict = verdict, .frontend = frontend, .policy = configured.identity })) return 0;
@@ -2145,7 +2183,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         };
         recordCheckWork(init, functions, semantic_before, compilation.program);
         try rememberSummaries(init, frontend, &project, &summaries);
-        if (parsed.command == .context) return contextCommand(init, parsed, &compilation, unchecked_reason, &files);
+        if (try checkedCommand(init, parsed, &compilation, unchecked_reason, &files, &configured)) |status| return status;
         init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
         recordTypedNodes(init, &compilation);
         releaseCheckedSyntax(parsed, &compilation, unchecked_reason == null);
@@ -2625,6 +2663,17 @@ fn declarationCommand(init: Context, project: *language.project.Project, parsed:
     return status;
 }
 
+/// The first step after bodies check: `context` answers here (even from a
+/// project that did not check), and a project that opted into interface files
+/// rejects a stale one. Null lets the command continue.
+fn checkedCommand(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, unchecked_reason: ?[]const u8, files: *ModuleFiles, configured: *const ConfiguredPolicy) !?u8 {
+    if (parsed.command == .context) {
+        const status = try contextCommand(init, parsed, compilation, unchecked_reason, files);
+        return status;
+    }
+    return enforceInterfaceFiles(init, parsed, configured, compilation.index, files.root);
+}
+
 /// Where `mylang api` reads a project: the parse caches it indexes through and
 /// the directory its module paths are relative to.
 const ApiSources = struct {
@@ -2668,6 +2717,31 @@ fn apiFailure(init: Context, project: *language.project.Project, err: language.a
             return 1;
         },
     }
+}
+
+/// API-FILE-3: a project whose `mylang.json` sets `interface_files` rejects a
+/// missing or stale interface file with `E_INTERFACE_FILE_STALE` once its
+/// bodies check. Only the commands that build or check the live project
+/// enforce it; navigation, reports and native-test snapshots do not.
+fn enforceInterfaceFiles(init: Context, parsed: Parsed, configured: *const ConfiguredPolicy, index: *language.interfaces.Index, root: []const u8) !?u8 {
+    const config = if (configured.config) |*value| value else return null;
+    if (!config.document.interface_files or !enforcesInterfaceFiles(parsed)) return null;
+    // The bodies already checked, so rendering cannot fail on a declaration;
+    // an unreadable interface file is a host failure.
+    const text = (try language.api_files.staleDiagnostics(init.gpa, init.io, root, parsed.path, index)) orelse return null;
+    defer init.gpa.free(text);
+    try std.Io.File.stderr().writeStreamingAll(init.io, text);
+    return 1;
+}
+
+/// Whether a command checks or builds the live project, so a configured
+/// `interface_files` gate applies to it.
+fn enforcesInterfaceFiles(parsed: Parsed) bool {
+    return switch (parsed.command) {
+        .@"check-project", .@"run-project", .run => true,
+        .@"emit-project-qbe" => parsed.select_file == null,
+        else => false,
+    };
 }
 
 fn buildIndex(init: Context, project: *language.project.Project, cache: ?*language.syntax_cache.Cache, frontend: ?*language.frontend_cache.Cache) !?language.interfaces.Index {
