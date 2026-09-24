@@ -133,6 +133,13 @@ typedef struct {
        frame-pointer walk a frame-map trap performs (QBE-FRAMEMAP-1). Appended
        after the frozen ABI prefix. */
     uintptr_t native_stack_top;
+    /* Deterministic stand-in capabilities (`time.simulated_clock`,
+       `random.seeded_entropy`, `filesystem.memory`, `environment.fixed`,
+       `network.denied`, and the ones `mylang test` hands a test): the registry
+       they live in and the hook that frees it after resources are dropped.
+       Appended after the frozen ABI prefix. */
+    void *stand_ins;
+    void (*stand_in_cleanup)(void *);
 } MylQbeContext;
 typedef struct {
     uint64_t value, steps;
@@ -228,6 +235,37 @@ uint64_t myl_qbe_environment_only(void *, uint64_t authority, const unsigned cha
 /* `env.names()`: build a sorted managed `list[str]` of the visible names, or
    NULL after setting an allocation trap. */
 void *myl_qbe_environment_names(void *, uint64_t authority);
+/* Deterministic stand-in capabilities. A clock, entropy or environment stand-in
+   is a word in [MYL_QBE_STAND_IN_BASE, +MYL_QBE_STAND_IN_LIMIT), disjoint from
+   every host-granted word; a filesystem or network stand-in carries its 1-based
+   registry index in the resource authority (see qbe_resources.c). Nothing that
+   reads a stand-in consults the host providers. */
+#define MYL_QBE_STAND_IN_BASE UINT64_C(0x5354414e44000000)
+#define MYL_QBE_STAND_IN_LIMIT 4096u
+#define MYL_QBE_IS_STAND_IN(word) ((word) >= MYL_QBE_STAND_IN_BASE && (word) - MYL_QBE_STAND_IN_BASE < MYL_QBE_STAND_IN_LIMIT)
+/* The acquisition status a stand-in `Network` answers every request with. */
+#define MYL_QBE_STAND_IN_DENIED 6
+/* Build one stand-in. `kind` is the capability index (0 clock, 1 entropy,
+   2 filesystem, 3 network, 4 environment); `operand` is the clock's start in
+   Unix nanoseconds, the entropy seed, or a managed `NAME\0VALUE\0...` text for
+   an environment (0 for an empty one). Traps and returns 0 on bad input. */
+uint64_t myl_qbe_stand_in(void *, uint64_t kind, uint64_t operand);
+/* Move a simulated clock by `nanoseconds`: 0 on success, 1 when the clock is
+   host-granted (only a simulated clock can be moved), 2 when the reading would
+   leave the signed 64-bit range. Traps on a word that is not a clock. */
+uint64_t myl_qbe_clock_advance(void *, uint64_t authority, uint64_t nanoseconds);
+/* Stand-in half of `myl_qbe_external_read`: the same statuses, no provider. */
+int myl_qbe_stand_in_read(void *, uint64_t authority, unsigned kind, uint64_t *output);
+/* Stand-in environment lookup: 1 present (value borrowed from the registry),
+   0 absent, -1 after a capability trap. */
+int myl_qbe_stand_in_environment(void *, uint64_t authority, const unsigned char *key, size_t length, const unsigned char **value, size_t *value_length);
+/* Stand-in halves of `env.only(...)` and `env.names()`. */
+uint64_t myl_qbe_stand_in_environment_only(void *, uint64_t authority, const unsigned char *names, size_t length);
+void *myl_qbe_stand_in_environment_names(void *, uint64_t authority);
+/* The in-memory provider (a `const MylangResourceProvider *`) behind a
+   filesystem stand-in, or NULL when the 0-based registry `index` is not a
+   stand-in of that resource `kind`. A network stand-in has no provider. */
+const void *myl_qbe_stand_in_provider(void *, uint64_t index, unsigned kind);
 int mylang_qbe_execute_gc(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, int stress, MylQbeResult *result);
 int mylang_qbe_execute(uint64_t (*entry)(void *), uint64_t steps, uint64_t frames, MylQbeResult *result);
 

@@ -941,6 +941,8 @@ static int execute_config_args(uint64_t (*entry)(void *), uint64_t steps, uint64
     result->trap_detail = context->trap_detail;
     memcpy(result->trace, context->trace, sizeof result->trace);
     if (context->cleanup) context->cleanup(context);
+    /* Stand-ins go after the resources, whose handles they may still own. */
+    if (context->stand_in_cleanup) context->stand_in_cleanup(context);
     while (context->frame_allocations) myl_qbe_frame_release(context,(NativeFrameAllocation *)context->frame_allocations+1);
     free(context->host_state);
     free(context->frame_data);

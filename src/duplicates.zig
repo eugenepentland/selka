@@ -269,6 +269,11 @@ const CanonicalWriter = struct {
                 writer.print("external {s}\n", .{@tagName(read.kind)}) catch return error.OutOfMemory;
                 try work.append(allocator, .{ .expression = read.capability });
             },
+            .stand_in => |stand| {
+                writer.print("stand-in {s}\n", .{@tagName(stand.kind)}) catch return error.OutOfMemory;
+                if (stand.second) |second| try work.append(allocator, .{ .expression = second });
+                try work.append(allocator, .{ .expression = stand.first });
+            },
             .acquire_buffer => |acquire| try work.append(allocator, .{ .expression = acquire.capacity }),
             .file_access => |call| {
                 writer.print("file access {s} mode={c} text={}\n", .{ @tagName(call.kind), call.mode, call.text }) catch return error.OutOfMemory;

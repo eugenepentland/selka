@@ -188,6 +188,7 @@ test {
     _ = @import("builtin_context_test.zig");
     _ = @import("json_document_test.zig");
     _ = @import("standard_library_test.zig");
+    _ = @import("stand_ins_test.zig");
     _ = @import("byte_builder_test.zig");
     _ = @import("loop_exit_test.zig");
     _ = @import("constants_test.zig");

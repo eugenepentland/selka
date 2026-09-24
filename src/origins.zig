@@ -300,6 +300,7 @@ const Context = struct {
             .environment_only,
             .environment_names,
             .external_read,
+            .stand_in,
             .resource_io,
             .print,
             .stream_write,
