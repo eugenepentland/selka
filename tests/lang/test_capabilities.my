@@ -224,3 +224,25 @@ public def test_denied_network_refuses_every_connection() -> bool:
             return False
         case network.Connected.err(code):
             return code == network.denied_here() and network.describe(code) == "network access is denied in this context: this Network is a deterministic stand-in"
+
+
+# spec-case: TEST-CAPS-3
+public def test_runner_clock_starts_at_the_documented_instant(clock: Clock) -> bool:
+    start = time.from_unix_nanoseconds(946684800000000000)
+    match time.seconds(60):
+        case Ok(step):
+            _ = time.advance(clock, step)
+        case Err(_):
+            return False
+    return seconds_since(clock, start) == 60
+
+
+# spec-case: TEST-CAPS-3
+public def test_runner_capabilities_are_empty_and_deterministic(fs: Filesystem, env: Environment, net: Network, entropy: Entropy) -> bool:
+    empty = len(names(fs.listdir(""))) == 0 and len(env.names()) == 0
+    logged = log(fs, "first")
+    match network.connect(net.host("127.0.0.1:80")):
+        case network.Connected.ok(_):
+            return False
+        case network.Connected.err(code):
+            return empty and logged and code == network.denied_here() and first_word(entropy) != first_word(entropy)
