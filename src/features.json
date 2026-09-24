@@ -607,6 +607,11 @@
       "summary": "Ordinary checked bodies, symbolic templates and concrete specializations share one reuse.max_bytes in-memory budget accounting for exact owned entry rows, arena backing including chunk bookkeeping, stable keys and the exact stdlib hash-index backing; eviction converges to the bound, oversized entries bypass, a zero budget disables reuse, and retained bytes plus a per-kind breakdown are reported.",
       "doc": "docs/tooling/caches.md#persistent-checked-body-store"
     },
+    "check-summaries": {
+      "kind": "tooling",
+      "summary": "A project check stands stored per-function summaries (dependency context, region digest and referenced names, propagated effect and mutation facts, region-relative diagnostics, callees) in for every unchanged body, so a one-body edit checks only that body; a changed cross-function fact, a cycle through a stood-in body or a pass error repeats the check in full, and build/run use the summaries for pass facts only.",
+      "doc": "docs/tooling/caches.md#check-summaries"
+    },
     "persistent-checked-bodies": {
       "kind": "tooling",
       "summary": "Ordinary checked bodies persist across compiler processes as versioned, validated semantic-cache-v1 entries with atomic publication, remap-or-miss decoding, contract isolation and --no-cache correctness.",

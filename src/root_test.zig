@@ -107,6 +107,7 @@ test {
     _ = @import("frontend_cache_test.zig");
     _ = @import("check_cache_test.zig");
     _ = @import("semantic_cache_test.zig");
+    _ = @import("check_scale_test.zig");
     _ = @import("semantic_key.zig");
     _ = @import("sema_builtins.zig");
     _ = @import("sema_places.zig");

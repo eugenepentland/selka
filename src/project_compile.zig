@@ -49,6 +49,7 @@ const Names = @import("module_names.zig").Names;
 /// Which functions a native-test facts payload describes.
 pub const FactsScope = native_test_facts.Scope;
 const native_test_facts = @import("native_test_facts.zig");
+const semantic_cache = @import("semantic_cache.zig");
 /// Project-level checked and lowered state borrowing the interface index and its arena.
 pub const Compilation = struct {
     index: *interfaces.Index,
@@ -70,15 +71,44 @@ pub const Compilation = struct {
         return self.checkWithCache(null);
     }
     /// Reuse supported function queries while checking fresh module/type/effect dependencies.
-    pub fn checkWithCache(self: *Compilation, cache: ?*@import("semantic_cache.zig").Cache) CheckError!void {
+    pub fn checkWithCache(self: *Compilation, cache: ?*semantic_cache.Cache) CheckError!void {
         if (self.program != null) return;
         for (self.diagnostics.items.items) |item| if (item.severity == .err) return error.SourceError;
         var names: Names = .{ .index = self.index, .src = self.src };
         // Bind this project's lexical module/import identities so semantic
         // dependency resolution is per-module instead of global-by-spelling.
         if (cache) |semantic| semantic.resolution = self.index;
-        self.program = try @import("sema.zig").checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache);
+        const before = self.diagnostics.items.items.len;
+        const counters = if (cache) |semantic| Counters.save(semantic) else null;
+        self.program = @import("sema.zig").checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache) catch |err| {
+            // A check whose stood-in bodies met a changed cross-function fact
+            // repeats in full, from the same diagnostics and work counters.
+            const semantic = cache orelse return err;
+            const request = semantic.context.summaries orelse return err;
+            if (err != error.SourceError or !request.retry) return err;
+            self.diagnostics.items.shrinkRetainingCapacity(before);
+            counters.?.restore(semantic);
+            request.* = .{ .facts_only = request.facts_only };
+            self.program = try @import("sema.zig").checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache);
+            return;
+        };
     }
+
+    /// Work counters a repeated check restores, so it reports one check's work.
+    const Counters = struct {
+        functions: semantic_cache.Statistics,
+        symbolic: @import("generic_cache.zig").Statistics,
+        specializations: @import("generic_specializations.zig").Statistics,
+
+        fn save(cache: *const semantic_cache.Cache) Counters {
+            return .{ .functions = cache.statistics, .symbolic = cache.reuse.symbolic.statistics, .specializations = cache.reuse.specializations.statistics };
+        }
+        fn restore(self: Counters, cache: *semantic_cache.Cache) void {
+            cache.statistics = self.functions;
+            cache.reuse.symbolic.statistics = self.symbolic;
+            cache.reuse.specializations.statistics = self.specializations;
+        }
+    };
     /// Allocate independently compilable scalar QBE units after full project checking.
     pub fn emitQbe(self: *Compilation, allocator: @import("std").mem.Allocator) EmitNativeError![]u8 {
         return self.emitQbeWithOptions(allocator, .{});

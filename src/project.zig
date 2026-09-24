@@ -32,6 +32,8 @@ const diagnostic = @import("diagnostic.zig");
 const standard_library = @import("standard_library.zig");
 /// The one code every malformed or missing module header reports.
 const eModuleHeader = "E_MODULE_HEADER";
+/// Header discovery's scratch chunk: the tokens of a module of about 64 KiB.
+const header_scratch_bytes = 1 << 20;
 pub const ReadError = error{ OutOfMemory, NotFound, ReadFailed, TooLarge };
 /// Source reader callback; returned bytes use the supplied allocator and respect the byte limit.
 pub const Provider = struct { context: ?*anyopaque, read: *const fn (?*anyopaque, std.mem.Allocator, []const u8, usize) ReadError![]u8 };
@@ -56,6 +58,11 @@ pub const Import = struct {
     alias: []const u8,
     span: source.Span,
     target: usize = undefined,
+    /// Whether some qualified reference after the header names this import
+    /// (the first import a qualifier matches). Header discovery already holds
+    /// the module's tokens, so the unused-import warning reads this instead of
+    /// lexing every module a second time.
+    seen: bool = false,
 
     /// Whether a source qualifier names this import, by its local alias or its
     /// full dotted module path. `import a.b` therefore answers both `a.b.fn`
@@ -68,7 +75,12 @@ pub const Import = struct {
 pub const Module = struct {
     name: []const u8,
     src: source.Source,
-    header: struct { declaration: source.Span = .{ .start = 0, .end = 0 }, body_start: usize = 0 } = .{},
+    header: struct {
+        declaration: source.Span = .{ .start = 0, .end = 0 },
+        body_start: usize = 0,
+        /// Whether header discovery recorded each import's `seen` flag.
+        usage_scanned: bool = false,
+    } = .{},
     imports: []Import = &.{},
     exports: []Export = &.{},
     digest: [32]u8 = undefined,
@@ -99,7 +111,7 @@ pub const Project = struct {
         self.problem = .{ .code = code, .message = message, .site = site, .related = related };
         return error.SourceError;
     }
-    fn intern(self: *Project, provider: Provider, name: []const u8, origin: ?Site, options: Options) diagnostic.Error!usize {
+    fn intern(self: *Project, provider: Provider, name: []const u8, origin: ?Site, options: Options, scratch: *std.heap.ArenaAllocator) diagnostic.Error!usize {
         if (self.names.get(name)) |id| return id;
         const allocator = self.arena.allocator();
         if (self.modules.items.len >= options.max_modules) return self.fail("E_MODULE_LIMIT", "module count exceeds the project budget", origin orelse .{ .module = 0, .span = .{ .start = 0, .end = 0 } }, null);
@@ -123,7 +135,7 @@ pub const Project = struct {
         const source_path = if (standard_library.source(path) != null) try std.fmt.allocPrint(allocator, "@stdlib/{s}", .{path}) else path;
         self.modules.items[id].src = try source.Source.init(allocator, source_path, bytes);
         std.crypto.hash.sha2.Sha256.hash(bytes, &self.modules.items[id].digest, .{});
-        try self.header(id, options, origin == null);
+        try self.header(id, options, origin == null, scratch);
         return id;
     }
     /// Load the reachable import graph iteratively while enforcing source and graph limits.
@@ -135,7 +147,15 @@ pub const Project = struct {
         // location needs to be manufactured for the diagnostic renderer.
         if (options.max_modules == 0) return error.InvalidModuleBudget;
         const allocator = self.arena.allocator();
-        const root = try self.intern(provider, entry, null, options);
+        // Header discovery lexes each module into this scratch arena, which is
+        // reset after every module, so the token arrays of a whole project are
+        // never live (or faulted in) at once.
+        var scratch = std.heap.ArenaAllocator.init(self.arena.child_allocator);
+        defer scratch.deinit();
+        // One chunk that holds a typical module's tokens, reused by every
+        // module rather than grown (and faulted in) module by module.
+        _ = try scratch.allocator().alloc(u8, header_scratch_bytes);
+        const root = try self.intern(provider, entry, null, options, &scratch);
         const Visit = struct { id: usize, next: usize = 0 };
         var work: std.ArrayList(Visit) = .empty;
         defer work.deinit(allocator);
@@ -153,7 +173,7 @@ pub const Project = struct {
             work.items[index].next += 1;
             const imported = self.modules.items[visit.id].imports[visit.next];
             const site: Site = .{ .module = visit.id, .span = imported.span };
-            const target = try self.intern(provider, imported.name, site, options);
+            const target = try self.intern(provider, imported.name, site, options, &scratch);
             self.modules.items[visit.id].imports[visit.next].target = target;
             switch (self.modules.items[target].state) {
                 .complete => {},
@@ -175,11 +195,15 @@ pub const Project = struct {
         }
         self.progress.complete = true;
     }
-    fn header(self: *Project, id: usize, options: Options, is_entry: bool) diagnostic.Error!void {
+    fn header(self: *Project, id: usize, options: Options, is_entry: bool, scratch: *std.heap.ArenaAllocator) diagnostic.Error!void {
         const allocator = self.arena.allocator();
         const src = self.modules.items[id].src;
+        // Diagnostics outlive the header in the project arena; only the tokens
+        // are scratch. Releasing the previous module's tokens can itself
+        // allocate (to keep one retained chunk), and that failure is reported.
         var sink: diagnostic.Sink = .{ .allocator = allocator };
-        const tokens = lex.lex(allocator, src.bytes, &sink) catch |err| {
+        if (!scratch.reset(.retain_capacity)) return error.OutOfMemory;
+        const tokens = lex.lex(scratch.allocator(), src.bytes, &sink) catch |err| {
             if (err == error.OutOfMemory) return err;
             const problem = sink.items.items[0];
             return self.fail(problem.code, problem.message, .{ .module = id, .span = problem.span }, null);
@@ -248,6 +272,8 @@ pub const Project = struct {
             try exports.append(allocator, .{ .name = exported_name.last, .span = exported_name.span, .alias = alias });
         }
         self.modules.items[id].exports = try exports.toOwnedSlice(allocator);
+        markQualifiedImports(src.bytes, tokens, self.modules.items[id].header.body_start, self.modules.items[id].imports);
+        self.modules.items[id].header.usage_scanned = true;
     }
     /// Consume the `module NAME;` header, or the headerless opening of an entry
     /// script whose every import names an embedded standard module. Answers the
@@ -322,6 +348,31 @@ pub const Project = struct {
         return primary;
     }
 };
+/// Mark every import some dotted reference after the header qualifies: for each
+/// `a.b.c` chain the qualifier `a.b` marks the first import it names. This is
+/// the scan the unused-import warning needs, taken from the header's tokens.
+fn markQualifiedImports(bytes: []const u8, tokens: []const lex.Token, body_start: usize, imports: []Import) void {
+    if (imports.len == 0) return;
+    var index: usize = 0;
+    while (index < tokens.len) : (index += 1) {
+        if (tokens[index].tag != .ident) continue;
+        if (tokens[index].span.start < body_start) continue;
+        var last = index;
+        var cursor = index + 1;
+        while (cursor + 1 < tokens.len and tokens[cursor].tag == .dot and tokens[cursor + 1].tag == .ident) {
+            last = cursor + 1;
+            cursor += 2;
+        }
+        if (last == index) continue;
+        const qualifier = bytes[tokens[index].span.start..tokens[last - 2].span.end];
+        for (imports) |*imported| {
+            if (!imported.matches(qualifier)) continue;
+            imported.seen = true;
+            break;
+        }
+        index = last;
+    }
+}
 const Scanner = struct {
     project: *Project,
     id: usize,
