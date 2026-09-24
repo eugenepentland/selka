@@ -1,0 +1,270 @@
+module sets
+
+# `set[T]` is an insertion-ordered set over any hashable element type: a
+# dictionary from its elements to unit, so membership, `add`, `remove` and
+# `discard` are the dictionary's expected-constant-time probes. These programs
+# cover the literal and comprehension forms, every method and operator, the
+# Python rendering, sharing and `mut`, arenas, and the structural keys that
+# dictionaries and sets now accept.
+
+
+record SetPoint:
+    x: int
+    y: int
+
+
+record Labelled:
+    name: str
+    at: SetPoint
+
+
+union SetShape:
+    empty,
+    radius: int,
+    label: str
+
+
+enum SetColor:
+    red,
+    green,
+    blue
+
+
+def grow(target: mut set[int], value: int) -> None:
+    target.add(value)
+
+
+def members(values: set[str]) -> int:
+    count = 0
+    for value in values:
+        if value in values:
+            count += 1
+    return count
+
+
+def squares(count: int) -> set[SetPoint]:
+    points: set[SetPoint] = set()
+    for i in range(count):
+        points.add(SetPoint(x=i, y=i * i))
+    return points
+
+
+# spec: SET-1
+public def test_a_set_literal_keeps_first_insertion_order_and_renders_like_python() -> bool:
+    values = {3, 1, 2, 3, 1}
+    empty: set[str] = set()
+    if len(values) != 3 or f"{values}" != "{3, 1, 2}":
+        return False
+    if f"{empty}" != "set()" or len(empty) != 0:
+        return False
+    nested: list[set[int]] = [{1}, set()]
+    return f"{nested}" == "[{1}, set()]"
+
+
+# spec-case: SET-1
+public def test_a_set_comprehension_and_set_of_an_iterable_build_fresh_sets() -> bool:
+    evens = {x * 2 for x in range(6) if x % 2 == 0}
+    letters = set("banana")
+    keys = set({"b": 1, "a": 2})
+    copied = set(evens)
+    counted = set(range(4))
+    octets = set(b"abca")
+    if f"{evens}" != "{0, 4, 8}" or f"{letters}" != "{'b', 'a', 'n'}":
+        return False
+    if f"{keys}" != "{'b', 'a'}" or copied != evens or len(counted) != 4:
+        return False
+    copied.add(99)
+    return 99 not in evens and len(octets) == 3 and 97 in octets
+
+
+# spec-case: SET-1
+public def test_add_remove_discard_pop_clear_copy_and_update() -> bool:
+    values: set[int] = set()
+    values.add(5)
+    values.add(7)
+    values.add(5)
+    values.discard(42)
+    values.update({9, 5, 11})
+    if f"{values}" != "{5, 7, 9, 11}":
+        return False
+    values.remove(7)
+    values.discard(9)
+    last = values.pop()
+    if last != 11 or f"{values}" != "{5}":
+        return False
+    snapshot = values.copy()
+    values.clear()
+    return len(values) == 0 and 5 in snapshot and 5 not in values
+
+
+# spec-case: SET-1
+public def test_a_set_is_shared_on_assignment_and_written_through_mut() -> bool:
+    values: set[int] = {1}
+    alias = values
+    alias.add(2)
+    grow(mut values, 3)
+    words = {"x", "y", "x"}
+    return len(values) == 3 and 2 in values and 3 in alias and members(words) == 2
+
+
+# spec-case: SET-1
+public def test_a_set_iterates_sorts_and_folds_in_insertion_order() -> bool:
+    values = {30, 10, 20}
+    order: list[int] = []
+    for value in values:
+        order.append(value)
+    if order != [30, 10, 20] or list(values) != [30, 10, 20]:
+        return False
+    if sorted(values) != [10, 20, 30] or sorted(values, reverse=True) != [30, 20, 10]:
+        return False
+    return sum(values) == 60 and min(values) == 10 and max(values) == 30 and any({False, True})
+
+
+# spec-case: SET-1
+public def test_a_set_built_inside_an_arena_escapes_with_its_elements() -> bool:
+    kept: set[Labelled] = set()
+    with arena() as scratch:
+        local: set[Labelled] = set()
+        for i in range(40):
+            local.add(Labelled(name="p" + str(i), at=SetPoint(x=i, y=0)))
+        local.remove(Labelled(name="p3", at=SetPoint(x=3, y=0)))
+        kept = scratch.escape(local)
+    found = 0
+    for i in range(40):
+        if Labelled(name="p" + str(i), at=SetPoint(x=i, y=0)) in kept:
+            found += 1
+    return found == 39 and len(kept) == 39
+
+
+# spec: SET-OPERATORS-1
+public def test_the_combining_operators_keep_left_order_then_new_right_elements() -> bool:
+    left = {1, 2, 3, 4}
+    right = {6, 4, 2, 5}
+    if f"{left | right}" != "{1, 2, 3, 4, 6, 5}" or f"{left & right}" != "{2, 4}":
+        return False
+    if f"{left - right}" != "{1, 3}" or f"{left ^ right}" != "{1, 3, 6, 5}":
+        return False
+    if left.union(right) != left | right or left.intersection(right) != left & right:
+        return False
+    if left.difference(right) != left - right or left.symmetric_difference(right) != left ^ right:
+        return False
+    return len(left) == 4 and len(right) == 4
+
+
+# spec-case: SET-OPERATORS-1
+public def test_subset_superset_and_disjoint_answer_like_python() -> bool:
+    small = {2, 3}
+    large = {1, 2, 3}
+    if not (small <= large) or not (small < large) or large <= small:
+        return False
+    if not (large >= small) or not (large > small) or large > large or not (large >= large):
+        return False
+    if not small.issubset(large) or not large.issuperset(small) or small.issuperset(large):
+        return False
+    return small.isdisjoint({7, 8}) and not small.isdisjoint(large) and not (large < large)
+
+
+# spec-case: SET-OPERATORS-1
+public def test_set_equality_ignores_insertion_order() -> bool:
+    first = {1, 2, 3}
+    second = {3, 1, 2}
+    second.discard(3)
+    second.add(3)
+    return first == second and first != {1, 2} and {"a"} == set("a")
+
+
+# spec: HASH-KEYS-2
+public def test_records_tuples_unions_options_enums_bools_and_bytes_key_by_value() -> bool:
+    grid: dict[SetPoint, str] = {SetPoint(x=1, y=2): "a"}
+    grid[SetPoint(x=3, y=4)] = "b"
+    stem = "no"
+    names: dict[Labelled, int] = {Labelled(name=stem + "de", at=SetPoint(x=0, y=0)): 7}
+    pairs: dict[tuple[int, str], int] = {(1, "x"): 5}
+    flags: dict[bool, int] = {True: 1, False: 0}
+    shapes = {SetShape.radius(3), SetShape.label("hi"), SetShape.empty}
+    colors = {SetColor.blue, SetColor.red}
+    nothing: Option[int] = None
+    three: Option[int] = Some(3)
+    maybe: set[Option[int]] = {nothing, Some(3)}
+    blobs = {b"ab", b"cd"}
+    if grid[SetPoint(x=3, y=4)] != "b" or names[Labelled(name="node", at=SetPoint(x=0, y=0))] != 7:
+        return False
+    if pairs[(1, "x")] != 5 or (2, "x") in pairs or flags[False] != 0:
+        return False
+    if SetShape.label("h" + "i") not in shapes or SetShape.radius(4) in shapes or SetColor.green in colors:
+        return False
+    return nothing in maybe and three in maybe and b"a" + b"b" in blobs and f"{colors}" == "{SetColor.blue, SetColor.red}"
+
+
+# spec-case: HASH-KEYS-2
+public def test_a_stored_key_is_a_copy_the_source_binding_cannot_change() -> bool:
+    point = SetPoint(x=1, y=1)
+    seen: set[SetPoint] = {point}
+    point.x = 9
+    return SetPoint(x=1, y=1) in seen and point not in seen and len(seen) == 1
+
+
+# spec-case: HASH-KEYS-2
+public def test_thousands_of_record_keys_are_found_through_the_index() -> bool:
+    points = squares(3000)
+    hits = 0
+    for i in range(3000):
+        if SetPoint(x=i, y=i * i) in points:
+            hits += 1
+    return hits == 3000 and SetPoint(x=5, y=26) not in points
+
+
+# spec: DICT-REMOVE-1
+public def test_removals_in_the_middle_keep_order_membership_and_growth() -> bool:
+    values: set[int] = set()
+    for i in range(2000):
+        values.add(i)
+    for i in range(2000):
+        if i % 3 != 0:
+            values.remove(i)
+    if len(values) != 667 or 1 in values or 999 not in values:
+        return False
+    for i in range(2000, 2600):
+        values.add(i)
+    order: list[int] = []
+    for value in values:
+        order.append(value)
+    if order[0] != 0 or order[1] != 3 or order[666] != 1998 or order[667] != 2000:
+        return False
+    counts: dict[str, int] = {"a": 1, "b": 2, "c": 3}
+    _ = counts.pop("b")
+    counts["b"] = 4
+    return len(values) == 1267 and f"{counts}" == "{'a': 1, 'c': 3, 'b': 4}"
+
+
+# spec-case: DICT-REMOVE-1
+public def test_a_set_pop_after_removals_answers_the_newest_live_element() -> bool:
+    values = {1, 2, 3, 4, 5}
+    values.remove(5)
+    values.remove(2)
+    first = values.pop()
+    second = values.pop()
+    return first == 4 and second == 3 and f"{values}" == "{1}"
+
+
+# Benchmarks: one operation builds a set of `size` records, probes every one of
+# them and removes half. With expected-constant-time probes the time per
+# element stays flat from the small size to the large one.
+def churn(size: int) -> bool:
+    points = squares(size)
+    hits = 0
+    for i in range(size):
+        if SetPoint(x=i, y=i * i) in points:
+            hits += 1
+    for i in range(size):
+        if i % 2 == 0:
+            points.discard(SetPoint(x=i, y=i * i))
+    return hits == size and len(points) == size // 2
+
+
+public def bench_set_churn_1k() -> bool:
+    return churn(1000)
+
+
+public def bench_set_churn_16k() -> bool:
+    return churn(16000)

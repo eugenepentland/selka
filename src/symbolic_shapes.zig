@@ -193,6 +193,7 @@ pub const Context = struct {
         const declaration = self.catalog.templates.store.?.index.declarations.items[value.nominal.declaration];
         if (declaration.builtin_name) |name| {
             if (std.mem.eql(u8, name, "dict")) return .dictionary;
+            if (std.mem.eql(u8, name, "set")) return .dictionary;
             if (std.mem.eql(u8, name, "str")) return .string;
             if (std.mem.eql(u8, name, "bytes")) return .bytes;
             // The mutable octet buffer is the byte family too: generic bodies see
@@ -200,6 +201,14 @@ pub const Context = struct {
             if (std.mem.eql(u8, name, "byte_buffer")) return .bytes;
         }
         return .list;
+    }
+    /// Whether a concrete or symbolic type is a `set[T]` (SET-1).
+    pub fn isSet(self: Context, value: Value) bool {
+        if (value == .concrete) return typed.setRecord(self.catalog.records, value.concrete) != null;
+        if (value != .nominal) return false;
+        const declaration = self.catalog.templates.store.?.index.declarations.items[value.nominal.declaration];
+        const name = declaration.builtin_name orelse return false;
+        return std.mem.eql(u8, name, "set");
     }
     /// Resolve symbolic dictionary keys without inventing concrete parameter types.
     pub fn collectionKey(self: Context, value: Value, span: source.Span) Error!Value {
@@ -211,6 +220,8 @@ pub const Context = struct {
     pub fn container(self: Context, value: Value, span: source.Span) Error!?struct { element: Value } {
         if (self.kind(value) != templates.Kind.buffer) return null;
         if (value == .nominal) {
+            // A set's table values are unit, exactly as its concrete schema says.
+            if (self.isSet(value)) return .{ .element = .{ .concrete = .unit } };
             const shape = try self.schema(value, span);
             const element_index: usize = if (self.collectionKind(value) == .dictionary) 1 else 0;
             return .{ .element = shape.fields[element_index].ty.? };

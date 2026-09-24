@@ -218,6 +218,26 @@ test "mylang json budgets override the project loading limits" {
     try t.expectError(error.DuplicateField, loadTmp(&temp, "duplicate.json", &failure));
 }
 
+// spec-case: API-FILE-3
+test "mylang json interface_files is an optional boolean" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    var failure: project_config.Failure = .{};
+    try writeTmp(&temp, "plain.json", "{\"version\":1}");
+    var plain = try loadTmp(&temp, "plain.json", &failure);
+    defer plain.deinit();
+    try t.expect(!plain.document.interface_files);
+    try writeTmp(&temp, "enabled.json", "{\"version\":1,\"interface_files\":true}");
+    var enabled = try loadTmp(&temp, "enabled.json", &failure);
+    defer enabled.deinit();
+    try t.expect(enabled.document.interface_files);
+    try writeTmp(&temp, "text.json", "{\"version\":1,\"interface_files\":\"yes\"}");
+    try t.expectError(error.InvalidInterfaceFiles, loadTmp(&temp, "text.json", &failure));
+    try t.expectEqualStrings("interface_files must be true or false", failure.detail);
+    try writeTmp(&temp, "twice.json", "{\"version\":1,\"interface_files\":true,\"interface_files\":false}");
+    try t.expectError(error.DuplicateField, loadTmp(&temp, "twice.json", &failure));
+}
+
 // spec-case: REQUIRED-PROJECT-IMPORT-POLICY-1
 test "project config rejects unknown duplicate malformed and unsupported shapes" {
     var temp = t.tmpDir(.{});

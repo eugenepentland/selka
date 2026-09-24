@@ -34,6 +34,7 @@ $ mylang reference --query E_MODULE_NAME   # one feature or error code, from the
 | `contracts` | [contracts: requires, ensures and invariants](contracts.md) |
 | `modules` | [modules, imports and exports](modules.md) |
 | `memory` | [managed collections](managed-memory.md) |
+| `sets` | [sets and hashable keys](sets.md) |
 | `arenas` | [managed arenas](arenas.md) |
 | `stdlib` | [the standard library](standard-library.md) |
 | `tests` | [guest tests](tooling/guest-tests.md) |
@@ -45,7 +46,7 @@ $ mylang reference --query E_MODULE_NAME   # one feature or error code, from the
 
 - The language: [primer](primer.md), [language guide](python-syntax.md),
   [statements](statements.md), [functions](functions.md),
-  [records, unions and enums](records-and-unions.md), [tuples](tuples.md),
+  [records, unions and enums](records-and-unions.md), [tuples](tuples.md), [sets](sets.md),
   [lambdas](lambdas.md), [matching a variant](match-expressions.md),
   [structured loop exits](structured-loop-exits.md),
   [integer ranges](range-iteration.md), [generics](generics.md) and
@@ -80,6 +81,7 @@ $ mylang reference --query E_MODULE_NAME   # one feature or error code, from the
   (`index-project`, `tests-for`), [focused declaration context](tooling/agent-context.md)
   (`context --symbol` / `--at`), [agent-facing inspection](tooling/agent-tools.md)
   (`list-interfaces` and friends), [interface diffs](tooling/api-diff.md),
+  [interface files](tooling/interface-files.md) (`mylang api`),
   [linting](tooling/lint.md), [import policy](tooling/import-policy.md).
 - Compiler behaviour: [caches](tooling/caches.md), [phase timings](tooling/timings.md),
   [work and reuse reports](tooling/work-report.md).

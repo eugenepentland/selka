@@ -192,6 +192,7 @@ void myl_print_dictionary(MylPrint *out, const void *value, unsigned depth, MylP
     if (myl_print_deep(out, depth)) return;
     myl_native_dictionary *dict;
     memcpy(&dict, value, sizeof dict);
+    myl_native_dictionary_settle(dict);
     byte(out, '{');
     for (size_t i = 0; i < dict->entries->length; ++i) {
         const unsigned char *entry = (const unsigned char *)dict->entries->storage + i * dict->entry_type.size;
@@ -199,6 +200,24 @@ void myl_print_dictionary(MylPrint *out, const void *value, unsigned depth, MylP
         key(out, entry, depth + 1);
         literal(out, ": ");
         item(out, entry + dict->value_offset, depth + 1);
+    }
+    byte(out, '}');
+}
+/* A set renders as Python spells one: its elements between braces in
+ * insertion order, and `set()` when it is empty, because `{}` is a dict. */
+void myl_print_set(MylPrint *out, const void *value, unsigned depth, MylPrintFn element) {
+    if (myl_print_deep(out, depth)) return;
+    myl_native_dictionary *dict;
+    memcpy(&dict, value, sizeof dict);
+    myl_native_dictionary_settle(dict);
+    if (!dict->entries->length) {
+        literal(out, "set()");
+        return;
+    }
+    byte(out, '{');
+    for (size_t i = 0; i < dict->entries->length; ++i) {
+        if (i) literal(out, ", ");
+        element(out, (const unsigned char *)dict->entries->storage + i * dict->entry_type.size, depth + 1);
     }
     byte(out, '}');
 }

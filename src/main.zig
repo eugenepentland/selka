@@ -78,6 +78,7 @@ const everyday_help =
     \\  mylang context ENTRY.my --at=FILE:LINE:COLUMN   the same for the declaration at a position
     \\  mylang tests-for ENTRY.my module::name          the tests that reach a declaration (also module.name)
     \\  mylang list-interfaces ENTRY.my                 every module's public declarations
+    \\  mylang api ENTRY.my --write|--check             the checked-in .api interface file beside each module
     \\  mylang index-project ENTRY.my                   declaration counts per module; --module=NAME, --symbol=NAME for records
     \\  mylang test ENTRY.my --affected --against REF   only the tests an edit since REF can reach
     \\
@@ -129,6 +130,7 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "lint: --gate --accept --json --profile=agent|strict|safety --against=REF (blocking findings exit 3)\n  " ++
     "tests-for: <entry.my> <qualified-name> lists the tests that reach a declaration\n  " ++
     "api-diff: <entry.my> --write=FILE | --against=FILE [--json] (classified interface changes)\n  " ++
+    "api: <entry.my> --write | --check [--json] (the generated .api interface file beside every module; stale files exit 1)\n  " ++
     "context: <entry.my> --symbol=NAME | --at=PATH:LINE:COLUMN [--context-bytes=N] [--format=json] " ++
     "[--against=FILE] (one bounded agent-context-v1 answer about one declaration)\n  " ++
     "fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: " ++
@@ -448,6 +450,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .lint,
         .@"tests-for",
         .@"api-diff",
+        .api,
         .context,
         .@"discover-project-duplicates",
         .@"report-project-quality",
@@ -588,6 +591,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         .lint,
         .@"tests-for",
         .@"api-diff",
+        .api,
         .context,
         .@"discover-project-duplicates",
         .@"report-project-quality",
@@ -765,6 +769,7 @@ const Command = enum {
     lint,
     @"tests-for",
     @"api-diff",
+    api,
     context,
     @"check-project",
     @"run-project",
@@ -1102,7 +1107,7 @@ const ArgumentParser = struct {
 
     fn checks(self: *const ArgumentParser) bool {
         return switch (self.command) {
-            .fmt, .@"fmt-module", .@"fmt-project" => true,
+            .fmt, .@"fmt-module", .@"fmt-project", .api => true,
             else => false,
         };
     }
@@ -1221,6 +1226,7 @@ const ArgumentParser = struct {
     fn discoveryOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
         if (try self.lintOption(arg)) return true;
         if (try self.apiDiffOption(arg)) return true;
+        if (try self.apiOption(arg)) return true;
         if (try self.contextOption(arg)) return true;
         if (try self.indexOption(arg)) return true;
         if (std.mem.startsWith(u8, arg, "--min-nodes=")) {
@@ -1281,6 +1287,19 @@ const ArgumentParser = struct {
         } else if (std.mem.startsWith(u8, arg, lint_against_prefix)) {
             if (self.api_against != null or arg.len == lint_against_prefix.len) return error.Usage;
             self.api_against = arg[lint_against_prefix.len..];
+        } else if (std.mem.eql(u8, arg, "--json")) {
+            if (self.api_json) return error.Usage;
+            self.api_json = true;
+        } else return false;
+        return true;
+    }
+
+    /// `api` switches besides `--check`: `--write` and `--json`.
+    fn apiOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (self.command != .api) return false;
+        if (std.mem.eql(u8, arg, "--write")) {
+            if (self.write) return error.Usage;
+            self.write = true;
         } else if (std.mem.eql(u8, arg, "--json")) {
             if (self.api_json) return error.Usage;
             self.api_json = true;
@@ -1396,6 +1415,7 @@ const ArgumentParser = struct {
         if (self.command == .@"check-policy" and self.policy == null) return error.Usage;
         if (self.command == .@"tests-for" and self.subject == null) return error.Usage;
         if (self.command == .@"api-diff" and (self.api_against == null) == (self.api_write == null)) return error.Usage;
+        if (self.command == .api and self.write == self.format_check) return error.Usage;
         if (self.command == .context and (self.context_symbol == null) == (self.context_at == null)) return error.Usage;
         if (self.context_pending != null) return error.Usage;
         try self.index.validate();
@@ -1758,6 +1778,43 @@ fn loadConfiguredPolicy(init: Context, parsed: Parsed, project: *const language.
     return .{ .config = config, .identity = if (has_identity) identity else null };
 }
 
+/// API-FILE-3: fold every project module's checked-in interface file into the
+/// configured identity the verdict caches key on, so a replayed success never
+/// outlives an edit to, or the deletion of, one of those files. A project
+/// without `interface_files` keeps its identity unchanged.
+fn foldInterfaceFiles(init: Context, configured: *ConfiguredPolicy, project: *const language.project.Project, root: []const u8, stores: Replayed) !void {
+    const config = if (configured.config) |*value| value else return;
+    if (!config.document.interface_files) return;
+    var hash = std.crypto.hash.sha2.Sha256.init(.{});
+    hash.update("interface-files-identity-v1");
+    hash.update(&config.digest);
+    if (configured.identity) |*identity| hash.update(identity);
+    for (project.order.items) |module| {
+        const src = project.modules.items[module].src;
+        if (!language.interface_files.projectModule(src)) continue;
+        const path = try language.interface_files.apiPath(init.gpa, src.path);
+        defer init.gpa.free(path);
+        const absolute = try std.fs.path.join(init.gpa, &.{ root, path });
+        defer init.gpa.free(absolute);
+        const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, absolute, init.gpa, .limited(16 * 1024 * 1024)) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => null,
+        };
+        defer if (bytes) |owned| init.gpa.free(owned);
+        var length: [8]u8 = undefined;
+        std.mem.writeInt(u64, &length, path.len, .little);
+        hash.update(&length);
+        hash.update(path);
+        std.mem.writeInt(u64, &length, if (bytes) |owned| owned.len + 1 else 0, .little);
+        hash.update(&length);
+        if (bytes) |owned| hash.update(owned);
+    }
+    var digest: [32]u8 = undefined;
+    hash.final(&digest);
+    configured.identity = std.fmt.bytesToHex(digest, .lower);
+    setPolicyIdentity(stores.frontend, stores.verdict, configured.identity.?[0..]);
+}
+
 /// Publish the required-policy identity to the caches whose verdict must not
 /// outlive a policy change. Null restores today's behavior for unconfigured projects.
 fn setPolicyIdentity(frontend: ?*language.frontend_cache.Cache, verdict: ?*language.check_cache.Cache, identity: ?[]const u8) void {
@@ -2090,13 +2147,14 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     // replayed. A project without `mylang.json` keeps its previous behavior.
     var configured = loadConfiguredPolicy(init, parsed, &project, frontend, verdict) catch |err| return policyFailureStatus(err);
     defer configured.deinit();
+    try foldInterfaceFiles(init, &configured, &project, files.root, .{ .verdict = verdict, .frontend = frontend, .policy = null });
     const policy_receipt = try configuredPolicyReceipt(init.arena.allocator(), &configured);
     if (try surfaceProject(init, &project, parsed)) |status| return status;
     if (try replayStoredVerdict(init, parsed, &project, .{ .verdict = verdict, .frontend = frontend, .policy = configured.identity })) return 0;
     // `list-interfaces` is the declaration/interface gate: it parses every module
     // and checks exported signatures without checking bodies. `--contracts`
     // publishes those declared contracts for provider validation.
-    if (parsed.command == .@"list-interfaces") return listInterfaces(init, &project, parsed, cache, frontend);
+    if (try declarationCommand(init, &project, parsed, .{ .syntax = cache, .frontend = frontend, .root = files.root })) |status| return status;
     const output = if (parsed.command != .@"list-modules") result: {
         var index = (try buildIndex(init, &project, cache, frontend)) orelse return partialNavigation(init, &project, parsed, &files);
         init.timings.begin("source_merge", false);
@@ -2125,7 +2183,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         };
         recordCheckWork(init, functions, semantic_before, compilation.program);
         try rememberSummaries(init, frontend, &project, &summaries);
-        if (parsed.command == .context) return contextCommand(init, parsed, &compilation, unchecked_reason, &files);
+        if (try checkedCommand(init, parsed, &compilation, unchecked_reason, &files, &configured)) |status| return status;
         init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
         recordTypedNodes(init, &compilation);
         releaseCheckedSyntax(parsed, &compilation, unchecked_reason == null);
@@ -2592,6 +2650,98 @@ fn listInterfaces(init: Context, project: *language.project.Project, parsed: Par
     defer init.gpa.free(text);
     try std.Io.File.stdout().writeStreamingAll(init.io, text);
     return 0;
+}
+
+/// The commands answered from the declaration index alone, without checking
+/// bodies: `list-interfaces` and `api`. Null for every other command.
+fn declarationCommand(init: Context, project: *language.project.Project, parsed: Parsed, sources: ApiSources) !?u8 {
+    const status = switch (parsed.command) {
+        .@"list-interfaces" => try listInterfaces(init, project, parsed, sources.syntax, sources.frontend),
+        .api => try apiFiles(init, project, parsed, sources),
+        else => return null,
+    };
+    return status;
+}
+
+/// The first step after bodies check: `context` answers here (even from a
+/// project that did not check), and a project that opted into interface files
+/// rejects a stale one. Null lets the command continue.
+fn checkedCommand(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, unchecked_reason: ?[]const u8, files: *ModuleFiles, configured: *const ConfiguredPolicy) !?u8 {
+    if (parsed.command == .context) {
+        const status = try contextCommand(init, parsed, compilation, unchecked_reason, files);
+        return status;
+    }
+    return enforceInterfaceFiles(init, parsed, configured, compilation.index, files.root);
+}
+
+/// Where `mylang api` reads a project: the parse caches it indexes through and
+/// the directory its module paths are relative to.
+const ApiSources = struct {
+    syntax: ?*language.syntax_cache.Cache,
+    frontend: ?*language.frontend_cache.Cache,
+    root: []const u8,
+};
+
+/// `mylang api --write | --check [--json]`: regenerate or compare the interface
+/// file beside every project module. Declarations must resolve; bodies are
+/// never checked. A file-system failure is a host failure (2).
+fn apiFiles(init: Context, project: *language.project.Project, parsed: Parsed, sources: ApiSources) !u8 {
+    var index = (try buildIndex(init, project, sources.syntax, sources.frontend)) orelse return 1;
+    const request: language.api_files.Request = .{
+        .io = init.io,
+        .root = sources.root,
+        .entry = parsed.path,
+        .mode = if (parsed.write) .write else .check,
+        .json = parsed.api_json,
+    };
+    const outcome = language.api_files.run(init.gpa, request, &index) catch |err| return apiFailure(init, project, err);
+    defer init.gpa.free(outcome.report);
+    try std.Io.File.stdout().writeStreamingAll(init.io, outcome.report);
+    return outcome.status;
+}
+
+/// Report an `api` or interface-file enforcement failure: allocation
+/// propagates, a declaration error prints the project diagnostics (1), and a
+/// file-system failure is a host failure (2).
+fn apiFailure(init: Context, project: *language.project.Project, err: language.api_files.Error) !u8 {
+    switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.HostIo => {
+            try init.text("api: cannot read, write or delete an interface file\n");
+            return 2;
+        },
+        else => {
+            const message = try diagnostic_output.renderProject(init.gpa, project, init.diagnostics);
+            defer init.gpa.free(message);
+            try std.Io.File.stderr().writeStreamingAll(init.io, message);
+            return 1;
+        },
+    }
+}
+
+/// API-FILE-3: a project whose `mylang.json` sets `interface_files` rejects a
+/// missing or stale interface file with `E_INTERFACE_FILE_STALE` once its
+/// bodies check. Only the commands that build or check the live project
+/// enforce it; navigation, reports and native-test snapshots do not.
+fn enforceInterfaceFiles(init: Context, parsed: Parsed, configured: *const ConfiguredPolicy, index: *language.interfaces.Index, root: []const u8) !?u8 {
+    const config = if (configured.config) |*value| value else return null;
+    if (!config.document.interface_files or !enforcesInterfaceFiles(parsed)) return null;
+    // The bodies already checked, so rendering cannot fail on a declaration;
+    // an unreadable interface file is a host failure.
+    const text = (try language.api_files.staleDiagnostics(init.gpa, init.io, root, parsed.path, index)) orelse return null;
+    defer init.gpa.free(text);
+    try std.Io.File.stderr().writeStreamingAll(init.io, text);
+    return 1;
+}
+
+/// Whether a command checks or builds the live project, so a configured
+/// `interface_files` gate applies to it.
+fn enforcesInterfaceFiles(parsed: Parsed) bool {
+    return switch (parsed.command) {
+        .@"check-project", .@"run-project", .run => true,
+        .@"emit-project-qbe" => parsed.select_file == null,
+        else => false,
+    };
 }
 
 fn buildIndex(init: Context, project: *language.project.Project, cache: ?*language.syntax_cache.Cache, frontend: ?*language.frontend_cache.Cache) !?language.interfaces.Index {

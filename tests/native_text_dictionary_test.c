@@ -31,7 +31,8 @@ static void index_sound(const myl_native_dictionary *dict) {
         for (size_t walk=(size_t)(dict->index.slots[at]>>32)&mask;walk!=at;walk=(walk+1)&mask)
             assert(dict->index.slots[walk]);
     }
-    assert(named==dict->entries->length);
+    /* A removed middle entry waits for `settle` unnamed (DICT-REMOVE-1). */
+    assert(named==dict->entries->length-dict->dead);
 }
 /* The slot a lone key lands in, read back from the table the writer filled. */
 static size_t home(myl_native_heap *heap,myl_native_dictionary *dict,int64_t key) {

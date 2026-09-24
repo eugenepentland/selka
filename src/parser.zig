@@ -13,6 +13,7 @@ const eRequirement = diagnostic.generic_requirement;
 const eGenericLimit = diagnostic.generic_limit;
 const removed_spelling_code = "E_REMOVED_SPELLING";
 const std = @import("std");
+const removed_names = @import("removed_names.zig");
 const eIteration = "E_ITERATION";
 const effects = @import("effect_set.zig");
 const ast = @import("ast.zig");
@@ -67,7 +68,6 @@ pub const HintForm = enum {
     method,
     from_import,
     chained_assignment,
-    set_literal,
     exceptions,
     match_literal,
     del_statement,
@@ -92,7 +92,6 @@ pub const declaration_hints = [_]DeclarationHint{
     .{ .form = .method, .idiom = "method", .message = "a record or class body declares fields, not methods", .accepted = "declare a top-level function taking the record: def norm1(p: Point) -> int" },
     .{ .form = .from_import, .idiom = "from-import", .message = "a from-import is not a declaration", .accepted = "import the module and declare a record: import dataclasses" },
     .{ .form = .chained_assignment, .idiom = "chained-assign", .message = "a chained assignment declares no binding", .accepted = "assign one name per statement: `x = 21` first, then `y = 21`" },
-    .{ .form = .set_literal, .idiom = "set-literal", .message = "a set literal is not a collection this language has", .accepted = "use a dict literal keyed by the value: `{1: True, 2: True}`" },
     .{ .form = .exceptions, .idiom = "exceptions", .message = "a try statement is not part of the language", .accepted = "return `Result` and match it: `case Ok(value)` and `case Err(reason)`" },
     .{ .form = .match_literal, .idiom = "match-literal", .message = "a case names a union, enum or result case, not a literal", .accepted = "compare literals with `if`/`elif`: `if x == 1:` then `elif x == 3:`" },
     .{ .form = .del_statement, .idiom = "del", .message = "a del statement is not part of the language", .accepted = "remove with `_ = xs.pop(index)` for a list or `_ = d.pop(key)` for a dictionary" },
@@ -120,6 +119,8 @@ const match_expression_accepted = "assign the value in each branch of an if/elif
 const power_accepted = "multiply in a loop: `total = 1` then `for i in range(exponent): total = total * base`";
 const shift_accepted = "use `shift_left(value, count)` or `shift_right(value, count)`";
 const for_else_message = "a loop has no `else` clause";
+const set_augment_message = "a set has no augmented assignment operator";
+const set_augment_accepted = "rebind with the operator, `s = s | t`, or call `s.update(t)`";
 const nested_def_message = "a function body declares statements, not another function";
 const match_expression_message = "`match` is a statement, not an expression";
 const power_message = "`**` is not an operator";
@@ -214,6 +215,10 @@ pub const Parser = struct {
             .kw_match => .{ .message = match_expression_message, .accepted = match_expression_accepted },
             .star => if (self.previousTag() == .star) .{ .message = power_message, .accepted = power_accepted } else null,
             .lt => if (self.previousTag() == .lt) .{ .message = shift_message, .accepted = shift_accepted } else null,
+            .equal => switch (self.previousTag()) {
+                .pipe, .ampersand, .caret => .{ .message = set_augment_message, .accepted = set_augment_accepted },
+                else => null,
+            },
             else => null,
         };
         if (form) |shape| return self.alternative(expression_code, shape.message, shape.accepted);
@@ -1677,7 +1682,7 @@ pub const Parser = struct {
                 var values: std.ArrayList(ast.NodeId) = .empty;
                 if (self.current().tag != .rbracket) while (true) {
                     try values.append(self.storage, try self.expression(0));
-                    if (values.items.len == 1 and self.current().tag == .kw_for) break :list try self.parseComprehension(token, values.items[0]);
+                    if (values.items.len == 1 and self.current().tag == .kw_for) break :list try self.parseComprehension(token, values.items[0], false);
                     if (!self.take(.comma) or self.current().tag == .rbracket) break;
                 };
                 const close = try self.expect(.rbracket);
@@ -1696,7 +1701,7 @@ pub const Parser = struct {
             .integer, .bytes, .ident, .kw_true, .kw_false => try self.parseLeaf(token),
             .minus, .bang => unary: {
                 self.cursor.pos += 1;
-                const operand = try self.expression(if (std.mem.eql(u8, self.src.text(token.span), "not")) 3 else 7);
+                const operand = try self.expression(if (std.mem.eql(u8, self.src.text(token.span), "not")) 3 else 10);
                 break :unary try self.append(.{
                     .span = .join(token.span, self.syntax.nodes.items[@backingInt(operand)].span),
                     .data = .{ .unary = .{
@@ -1707,6 +1712,12 @@ pub const Parser = struct {
                 });
             },
             .lparen => try self.parenthesizedExpression(token),
+            // `&` before an operand was the borrow marker `mut` replaced
+            // (MUT-PARAM-5); only the binary set intersection spells it now.
+            .ampersand => {
+                _ = try removed_names.reject(self.sink, token.span, "&");
+                return self.pythonExpressionFailure(token);
+            },
             // A `def` or `match` in expression position, and the second `*` or
             // `<` of a `**` or `<<`, name their accepted spelling; every other
             // token keeps the plain rejection.
@@ -1847,7 +1858,11 @@ pub const Parser = struct {
         // `unwrap` is the keyword that opens a domain, so it is never a member
         // name; the value it would extract comes from `match` or `?`.
         if (self.current().tag == .kw_unwrap) return self.hintHere(.option_unwrap);
-        const name: lex.Token = .{ .tag = .ident, .span = try self.declaredName() };
+        // `union` is a declaration keyword, but after a dot it is the set
+        // method `s.union(t)` (SET-1).
+        const keyword_member = self.current().tag == .kw_union;
+        if (keyword_member) self.cursor.pos += 1;
+        const name: lex.Token = .{ .tag = .ident, .span = if (keyword_member) self.tokens[self.cursor.pos - 1].span else try self.declaredName() };
         if (self.take(.lparen)) {
             const arguments = try self.callArguments();
             const close = try self.callClose();
@@ -1873,6 +1888,9 @@ pub const Parser = struct {
             .le => .le,
             .gt => .gt,
             .ge => .ge,
+            .pipe => .bit_or,
+            .caret => .bit_xor,
+            .ampersand => .bit_and,
             else => unreachable,
         };
     }
@@ -1901,18 +1919,19 @@ pub const Parser = struct {
         if (!negate) return test_value;
         return self.append(.{ .span = span, .data = .{ .unary = .{ .op = .not, .operand = test_value, .op_span = operator.span } } });
     }
-    /// Parse the tail of `[value for name in iterable if condition]` after its value.
-    /// The source and the filter are parsed above the conditional expression, as
-    /// Python's grammar parses them: the `if` after the iterable starts the
-    /// filter, so `[x for x in xs if p]` never reads as a conditional.
-    fn parseComprehension(self: *Parser, token: lex.Token, output: ast.NodeId) diagnostic.Error!ast.NodeId {
+    /// Parse the tail of `[value for name in iterable if condition]` after its
+    /// value, or with `set` the tail of `{value for name in iterable if
+    /// condition}`. The source and the filter are parsed above the conditional
+    /// expression, as Python's grammar parses them: the `if` after the iterable
+    /// starts the filter, so `[x for x in xs if p]` never reads as a conditional.
+    fn parseComprehension(self: *Parser, token: lex.Token, output: ast.NodeId, set: bool) diagnostic.Error!ast.NodeId {
         _ = try self.expect(.kw_for);
         const name = try self.expect(.ident);
         _ = try self.expect(.kw_in);
         const input = try self.expression(1);
         if (self.current().tag == .kw_for) return self.hintHere(.nested_comprehension);
         const filter = if (self.take(.kw_if)) try self.expression(1) else null;
-        const close = try self.expect(.rbracket);
+        const close = if (set) try self.expect(.rbrace) else try self.expect(.rbracket);
         const src: ast.Comprehension.Source = if (try self.rangeBounds(input)) |bounds|
             .{ .range = .{ .start = bounds.start, .end = bounds.end } }
         else
@@ -1922,6 +1941,7 @@ pub const Parser = struct {
             .name = name.span,
             .source = src,
             .filter = filter,
+            .set = set,
         } } });
     }
 
@@ -1978,9 +1998,11 @@ pub const Parser = struct {
         var entries: std.ArrayList(ast.NodeId) = .empty;
         while (self.current().tag != .rbrace) {
             try entries.append(self.storage, try self.expression(0));
-            // A comma where the `:` belongs is a set literal, and a `for` after
-            // the value is a dict comprehension; neither shape parses today.
-            if (self.current().tag == .comma) return self.hintHere(.set_literal);
+            // A first element followed by a comma, the closing brace or `for`
+            // is a set literal or a set comprehension (SET-1); `{}` stays the
+            // empty dict, as in Python.
+            if (entries.items.len == 1 and self.current().tag == .kw_for) return self.parseComprehension(token, entries.items[0], true);
+            if (entries.items.len == 1 and (self.current().tag == .comma or self.current().tag == .rbrace)) return self.parseSetLiteral(token, entries.items[0]);
             _ = try self.expect(.colon);
             try entries.append(self.storage, try self.expression(0));
             if (self.current().tag == .kw_for) return self.hintHere(.dict_comprehension);
@@ -1988,6 +2010,15 @@ pub const Parser = struct {
         }
         const close = try self.expect(.rbrace);
         return self.append(.{ .span = .join(token.span, close.span), .data = .{ .dictionary_literal = try entries.toOwnedSlice(self.storage) } });
+    }
+    /// Parse the rest of `{a, b, ...}` after its first element: a set literal.
+    /// The elements stay in source order and a trailing comma is accepted.
+    fn parseSetLiteral(self: *Parser, token: lex.Token, first: ast.NodeId) diagnostic.Error!ast.NodeId {
+        var values: std.ArrayList(ast.NodeId) = .empty;
+        try values.append(self.storage, first);
+        while (self.take(.comma) and self.current().tag != .rbrace) try values.append(self.storage, try self.expression(0));
+        const close = try self.expect(.rbrace);
+        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .set_literal = try values.toOwnedSlice(self.storage) } });
     }
     fn parseRestrict(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         return self.sink.fail("E_REMOVED_SPELLING", token.span, "`restrict_resource[...]` was removed; use `fs.read_only()`");
@@ -2388,8 +2419,14 @@ fn binaryPrecedence(tag: lex.Tag) ?u8 {
         .and_and => 2,
         .eq_eq, .bang_eq => 3,
         .lt, .le, .gt, .ge => 4,
-        .plus, .minus => 5,
-        .star, .slash, .slash_slash, .percent => 6,
+        // Python's bitwise precedence, used by the set operators
+        // (SET-OPERATORS-1): `|` below `^` below `&`, all above comparison
+        // and below arithmetic.
+        .pipe => 5,
+        .caret => 6,
+        .ampersand => 7,
+        .plus, .minus => 8,
+        .star, .slash, .slash_slash, .percent => 9,
         else => null,
     };
 }

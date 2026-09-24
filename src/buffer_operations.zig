@@ -126,6 +126,20 @@ pub const Kind = enum {
     /// builtin is text construction rather than a method, so its owner is the
     /// empty text value that names the family and its one argument is the code.
     text_chr,
+    /// The set vocabulary (SET-1) with no dictionary or list meaning:
+    /// `add`, `discard`, `union`, `intersection`, `difference`,
+    /// `symmetric_difference`, `issubset`, `issuperset` and `isdisjoint`. The
+    /// checker desugars each into operations on the set's unit-valued table
+    /// and loops over its keys, so none of these kinds reaches checked code.
+    set_add,
+    set_discard,
+    set_union,
+    set_intersection,
+    set_difference,
+    set_symmetric_difference,
+    set_subset,
+    set_superset,
+    set_disjoint,
     /// Return the required source argument count for this buffer builtin.
     pub fn arity(self: Kind) usize {
         return switch (self) {
@@ -142,6 +156,8 @@ pub const Kind = enum {
             .replace, .insert, .setdefault, .pop_default => 2,
             .iteration_check, .key_at, .value_at, .read, .append, .take, .truncate, .contains, .split, .join, .starts_with, .ends_with, .find => 1,
             .text_chr => 1,
+            .set_add, .set_discard, .set_union, .set_intersection, .set_difference, .set_symmetric_difference => 1,
+            .set_subset, .set_superset, .set_disjoint => 1,
             .write, .resize, .reserve, .get, .slice, .find_any, .view => 2,
             .sort_keyed => 3,
             .parse_int_range, .parse_float_range, .scalar_count_range => 2,
@@ -173,6 +189,8 @@ pub const Kind = enum {
             .parse_int_range, .parse_float_range => false,
             .view, .scalar_count, .scalar_count_range => false,
             .copy, .items, .index_of => false,
+            .set_union, .set_intersection, .set_difference, .set_symmetric_difference => false,
+            .set_subset, .set_superset, .set_disjoint => false,
             else => true,
         };
     }
@@ -190,21 +208,27 @@ const Method = struct {
     /// An in-place octet-buffer method: a byte-kind buffer operation only the
     /// mutable `byte_buffer` receiver accepts, never an immutable `bytes`.
     buffer: bool = false,
+    /// A `set[T]` method (SET-1). A set is a dictionary-kind collection, so
+    /// this flag, not the family, is what admits it.
+    set: bool = false,
 };
 
 /// Accepted method names in spelling order. Each spelling appears once so the
 /// resolver and the per-family suggestion lists share one source of truth.
 const methods = [_]Method{
+    .{ .spelling = "add", .kind = .set_add, .set = true },
     .{ .spelling = "append", .kind = .append, .list = true },
     .{ .spelling = "append_byte", .kind = .buffer_append_byte, .buffer = true },
     .{ .spelling = "append_float", .kind = .buffer_append_float, .buffer = true },
     .{ .spelling = "append_int", .kind = .buffer_append_int, .buffer = true },
     .{ .spelling = "append_range", .kind = .buffer_append_range, .buffer = true },
     .{ .spelling = "append_utf8", .kind = .buffer_append_utf8, .buffer = true },
-    .{ .spelling = "clear", .kind = .clear, .list = true, .dictionary = true },
-    .{ .spelling = "copy", .kind = .copy, .list = true, .dictionary = true, .bytes = true },
+    .{ .spelling = "clear", .kind = .clear, .list = true, .dictionary = true, .set = true },
+    .{ .spelling = "copy", .kind = .copy, .list = true, .dictionary = true, .bytes = true, .set = true },
     .{ .spelling = "count", .kind = .count, .string = true },
     .{ .spelling = "decode", .kind = .decode, .bytes = true },
+    .{ .spelling = "difference", .kind = .set_difference, .set = true },
+    .{ .spelling = "discard", .kind = .set_discard, .set = true },
     .{ .spelling = "encode", .kind = .encode, .string = true },
     .{ .spelling = "endswith", .kind = .ends_with, .string = true, .bytes = true },
     .{ .spelling = "extend", .kind = .extend, .list = true },
@@ -214,9 +238,13 @@ const methods = [_]Method{
     .{ .spelling = "hex", .kind = .hex, .bytes = true },
     .{ .spelling = "index", .kind = .index_of, .list = true },
     .{ .spelling = "insert", .kind = .insert, .list = true },
+    .{ .spelling = "intersection", .kind = .set_intersection, .set = true },
     .{ .spelling = "isalpha", .kind = .is_alpha, .string = true },
     .{ .spelling = "isdigit", .kind = .is_digit, .string = true },
+    .{ .spelling = "isdisjoint", .kind = .set_disjoint, .set = true },
     .{ .spelling = "isspace", .kind = .is_space, .string = true },
+    .{ .spelling = "issubset", .kind = .set_subset, .set = true },
+    .{ .spelling = "issuperset", .kind = .set_superset, .set = true },
     .{ .spelling = "items", .kind = .items, .dictionary = true },
     .{ .spelling = "join", .kind = .join, .string = true, .bytes = true },
     .{ .spelling = "keys", .kind = .keys, .dictionary = true },
@@ -226,8 +254,8 @@ const methods = [_]Method{
     .{ .spelling = "parse_float_range", .kind = .parse_float_range, .bytes = true },
     .{ .spelling = "parse_int", .kind = .parse_int, .string = true, .bytes = true },
     .{ .spelling = "parse_int_range", .kind = .parse_int_range, .bytes = true },
-    .{ .spelling = "pop", .kind = .pop, .list = true, .dictionary = true },
-    .{ .spelling = "remove", .kind = .remove, .list = true },
+    .{ .spelling = "pop", .kind = .pop, .list = true, .dictionary = true, .set = true },
+    .{ .spelling = "remove", .kind = .remove, .list = true, .set = true },
     .{ .spelling = "replace", .kind = .replace, .string = true },
     .{ .spelling = "reserve", .kind = .buffer_reserve, .buffer = true },
     .{ .spelling = "reverse", .kind = .reverse, .list = true },
@@ -240,8 +268,10 @@ const methods = [_]Method{
     .{ .spelling = "splitlines", .kind = .splitlines, .string = true },
     .{ .spelling = "startswith", .kind = .starts_with, .string = true, .bytes = true },
     .{ .spelling = "strip", .kind = .strip, .string = true },
+    .{ .spelling = "symmetric_difference", .kind = .set_symmetric_difference, .set = true },
     .{ .spelling = "to_list", .kind = .to_list, .bytes = true },
-    .{ .spelling = "update", .kind = .update, .dictionary = true },
+    .{ .spelling = "union", .kind = .set_union, .set = true },
+    .{ .spelling = "update", .kind = .update, .dictionary = true, .set = true },
     .{ .spelling = "view", .kind = .view, .bytes = true },
     .{ .spelling = "upper", .kind = .upper, .string = true },
     .{ .spelling = "values", .kind = .values, .dictionary = true },
@@ -314,6 +344,8 @@ pub const SignatureNames = struct {
     family: ManagedKind,
     element: []const u8 = "int",
     key: []const u8 = "int",
+    /// The receiver is a `set[T]`, whose element is spelled by `key`.
+    set: bool = false,
 };
 
 /// Render one collection method's checked signature exactly as the call-site
@@ -341,9 +373,11 @@ const span_signature = "(start: int, end: int) -> {s}";
 const index_signature = "(index: int) -> {s}";
 const element_signature = "(value: {s}) -> None";
 const keyed_signature = "(key: {s}) -> {s}";
+const other_signature = "(other: {s}) -> None";
 
 /// The `(...) -> ...` half of one rendered signature, appended to `writer`.
 fn signatureBody(allocator: std.mem.Allocator, kind: Kind, names: SignatureNames) std.mem.Allocator.Error![]const u8 {
+    if (names.set) return setSignatureBody(allocator, kind, names);
     const receiver = names.receiver;
     const element = names.element;
     const key = names.key;
@@ -379,7 +413,7 @@ fn signatureBody(allocator: std.mem.Allocator, kind: Kind, names: SignatureNames
         else
             try std.fmt.allocPrint(allocator, "(index: int, value: {s}) -> None", .{element}),
         .append, .remove => try std.fmt.allocPrint(allocator, element_signature, .{element}),
-        .extend => try std.fmt.allocPrint(allocator, "(other: {s}) -> None", .{receiver}),
+        .extend => try std.fmt.allocPrint(allocator, other_signature, .{receiver}),
         .insert => try std.fmt.allocPrint(allocator, "(index: int, value: {s}) -> None", .{element}),
         .pop => try std.fmt.allocPrint(allocator, fresh_signature, .{element}),
         .pop_at => try std.fmt.allocPrint(allocator, index_signature, .{element}),
@@ -393,7 +427,7 @@ fn signatureBody(allocator: std.mem.Allocator, kind: Kind, names: SignatureNames
             try std.fmt.allocPrint(allocator, "(key: {s}, default: {s}) -> {s}", .{ key, element, element })
         else
             try std.fmt.allocPrint(allocator, keyed_signature, .{ key, element }),
-        .update => try std.fmt.allocPrint(allocator, "(other: {s}) -> None", .{receiver}),
+        .update => try std.fmt.allocPrint(allocator, other_signature, .{receiver}),
         .setdefault, .pop_default => try std.fmt.allocPrint(allocator, "(key: {s}, default: {s}) -> {s}", .{ key, element, element }),
         .key_at => try std.fmt.allocPrint(allocator, index_signature, .{key}),
         .value_at => try std.fmt.allocPrint(allocator, index_signature, .{element}),
@@ -403,6 +437,20 @@ fn signatureBody(allocator: std.mem.Allocator, kind: Kind, names: SignatureNames
         .buffer_append_range => try allocator.dupe(u8, "(data: bytes, start: int, end: int) -> bool"),
         .buffer_append_utf8 => try allocator.dupe(u8, "(value: str) -> bool"),
         else => try allocator.dupe(u8, "()"),
+    };
+}
+
+/// The `(...) -> ...` half of one `set[T]` method signature (SET-1).
+fn setSignatureBody(allocator: std.mem.Allocator, kind: Kind, names: SignatureNames) std.mem.Allocator.Error![]const u8 {
+    const receiver = names.receiver;
+    return switch (kind) {
+        .set_add, .set_discard, .remove => std.fmt.allocPrint(allocator, element_signature, .{names.key}),
+        .pop => std.fmt.allocPrint(allocator, fresh_signature, .{names.key}),
+        .copy => std.fmt.allocPrint(allocator, fresh_signature, .{receiver}),
+        .clear => allocator.dupe(u8, "() -> None"),
+        .update => std.fmt.allocPrint(allocator, other_signature, .{receiver}),
+        .set_subset, .set_superset, .set_disjoint => std.fmt.allocPrint(allocator, "(other: {s}) -> bool", .{receiver}),
+        else => std.fmt.allocPrint(allocator, "(other: {s}) -> {s}", .{ receiver, receiver }),
     };
 }
 
@@ -420,6 +468,30 @@ pub fn methodSpellings(allocator: std.mem.Allocator, family: ManagedKind) std.me
         index += 1;
     }
     return selected;
+}
+
+/// Accepted `set[T]` method spellings, sorted (SET-1).
+pub fn setMethodSpellings(allocator: std.mem.Allocator) std.mem.Allocator.Error![]const []const u8 {
+    var count: usize = 0;
+    for (methods) |entry| {
+        if (entry.set) count += 1;
+    }
+    const selected = try allocator.alloc([]const u8, count);
+    var index: usize = 0;
+    for (methods) |entry| {
+        if (!entry.set) continue;
+        selected[index] = entry.spelling;
+        index += 1;
+    }
+    return selected;
+}
+
+/// Whether `kind` is a method a `set[T]` receiver answers (SET-1).
+pub fn setMethod(kind: Kind) bool {
+    inline for (methods) |entry| {
+        if (entry.set and entry.kind == kind) return true;
+    }
+    return false;
 }
 
 /// Every managed collection method spelling, sorted, for a receiver whose exact
@@ -466,6 +538,8 @@ pub fn managedAllocation(kind: Kind, dictionary: bool) bool {
         .buffer_reserve, .buffer_append_byte, .buffer_append_range => true,
         .buffer_append_utf8, .buffer_append_int, .buffer_append_float => true,
         .write => dictionary,
+        // The set vocabulary that inserts or builds a fresh set (SET-1).
+        .set_add, .set_union, .set_intersection, .set_difference, .set_symmetric_difference => true,
         else => false,
     };
 }

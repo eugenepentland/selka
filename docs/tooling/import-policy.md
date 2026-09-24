@@ -28,6 +28,10 @@ Strict JSON; unknown fields, duplicate keys and unsupported versions reject:
 {"version": 1, "import_policy": "policy.json"}
 ```
 
+`"interface_files": true` is also accepted: it makes every module's generated
+interface file part of checking the project
+([interface files](interface-files.md#enforcing-current-files-with-mylangjson)).
+
 `import_policy` is optional. When present it must be a nonempty relative or
 absolute path; the file must exist and parse under the
 [import policy rules](../experiments/import-policy.md). `check-policy` can be

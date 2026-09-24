@@ -690,7 +690,7 @@ pub const Index = struct {
     /// Ceiling the interface publishes for one declaration: the derived set, and
     /// the source's own clause when it narrows that set. A `host def`/`extern
     /// def` has no body to derive from, so its clause is its ceiling as written.
-    fn effectiveCeiling(self: *Index, module: usize, function: ast.Function) ContractError!effect_set.Mask {
+    pub fn effectiveCeiling(self: *Index, module: usize, function: ast.Function) ContractError!effect_set.Mask {
         const declared = if (function.policy.effect_bound) |bound| bound.allowed else null;
         if (function.policy.host != null or function.policy.c_abi) return declared orelse effect_set.all;
         const derived = try self.derivedCeiling(module, function.signature);
@@ -804,13 +804,7 @@ pub const Index = struct {
         for (ast.attributesOf(self.units[module].syntax, declaration)) |attribute| {
             if (!attribute.kind.contract()) continue;
             if (out.items.len != 0) try out.append(allocator, ' ');
-            var blank = false;
-            for (src.text(attribute.span)) |byte| {
-                const space = byte == ' ' or byte == '\t' or byte == '\r' or byte == '\n';
-                if (space and blank) continue;
-                blank = space;
-                try out.append(allocator, if (space) ' ' else byte);
-            }
+            try appendFolded(&out, allocator, src.text(attribute.span));
         }
         if (out.items.len == 0) return null;
         const clauses = try out.toOwnedSlice(allocator);
@@ -907,7 +901,8 @@ pub const Index = struct {
         declaration.name = origin.display;
         return declaration;
     }
-    fn findFunction(self: *Index, unit: Unit, span: source.Span) ?ast.Function {
+    /// The function declaration in `unit` whose name has this span, if any.
+    pub fn findFunction(self: *Index, unit: Unit, span: source.Span) ?ast.Function {
         _ = self;
         for (unit.syntax.functions) |function| {
             if (function.name.start == span.start and function.name.end == span.end) return function;
@@ -982,42 +977,50 @@ pub const Index = struct {
         for (parameters, 0..) |parameter, index| {
             if (index != 0) try out.appendSlice(allocator, ",");
             try out.appendSlice(allocator, try std.fmt.allocPrint(allocator, "${d}:", .{index}));
-            var tokens: std.ArrayList([]const u8) = .empty;
-            defer tokens.deinit(allocator);
-            if (parameter.default_copy or hasBuiltinRequirement(self.project.modules.items[module].src, parameter, "copy")) {
-                try appendUniqueToken(allocator, &tokens, "copy");
-            }
-            if (parameter.constant_length) try appendUniqueToken(allocator, &tokens, "length");
-            for (parameter.requirements) |span| {
-                const name = self.project.modules.items[module].src.text(span);
-                if (std.mem.eql(u8, name, "copy")) continue;
-                try appendUniqueToken(allocator, &tokens, name);
-            }
-            for (parameter.named_requirements) |reference| {
-                var sink: diagnostic.Sink = .{ .allocator = allocator };
-                const resolution = try self.constraintDeclaration(module, reference, &sink);
-                try appendUniqueToken(allocator, &tokens, try std.fmt.allocPrint(allocator, qualified_name_format, .{
-                    self.project.modules.items[resolution.identity.module].name,
-                    self.units[resolution.identity.module].symbols.items[resolution.identity.symbol].name,
-                }));
-            }
-            for (parameter.field_requirements) |field| {
-                try appendUniqueToken(allocator, &tokens, try std.fmt.allocPrint(allocator, "field({s}:{s})", .{
-                    self.project.modules.items[module].src.text(field.name),
-                    try self.contractTypeText(module, field.ty, parameters),
-                }));
-            }
-            for (parameter.operation_requirements) |operation| {
-                try appendUniqueToken(allocator, &tokens, try self.contractOperationText(module, operation, parameters));
-            }
-            std.mem.sort([]const u8, tokens.items, {}, tokenLess);
-            for (tokens.items, 0..) |token, token_index| {
+            const tokens = try self.requirementTokens(module, parameter, parameters);
+            for (tokens, 0..) |token, token_index| {
                 if (token_index != 0) try out.appendSlice(allocator, "+");
                 try out.appendSlice(allocator, token);
             }
         }
         try out.appendSlice(allocator, "]");
         return out.toOwnedSlice(allocator);
+    }
+    /// The sorted, duplicate-free requirement tokens one type parameter
+    /// declares: `copy`, `length`, builtin bounds, qualified named constraints,
+    /// `field(name:type)` and `op(...)` requirements. The slice and its text
+    /// live in the project arena.
+    pub fn requirementTokens(self: *Index, module: usize, parameter: ast.TypeParameter, parameters: []const ast.TypeParameter) ContractError![]const []const u8 {
+        const allocator = self.project.arena.allocator();
+        var tokens: std.ArrayList([]const u8) = .empty;
+        if (parameter.default_copy or hasBuiltinRequirement(self.project.modules.items[module].src, parameter, "copy")) {
+            try appendUniqueToken(allocator, &tokens, "copy");
+        }
+        if (parameter.constant_length) try appendUniqueToken(allocator, &tokens, "length");
+        for (parameter.requirements) |span| {
+            const name = self.project.modules.items[module].src.text(span);
+            if (std.mem.eql(u8, name, "copy")) continue;
+            try appendUniqueToken(allocator, &tokens, name);
+        }
+        for (parameter.named_requirements) |reference| {
+            var sink: diagnostic.Sink = .{ .allocator = allocator };
+            const resolution = try self.constraintDeclaration(module, reference, &sink);
+            try appendUniqueToken(allocator, &tokens, try std.fmt.allocPrint(allocator, qualified_name_format, .{
+                self.project.modules.items[resolution.identity.module].name,
+                self.units[resolution.identity.module].symbols.items[resolution.identity.symbol].name,
+            }));
+        }
+        for (parameter.field_requirements) |field| {
+            try appendUniqueToken(allocator, &tokens, try std.fmt.allocPrint(allocator, "field({s}:{s})", .{
+                self.project.modules.items[module].src.text(field.name),
+                try self.contractTypeText(module, field.ty, parameters),
+            }));
+        }
+        for (parameter.operation_requirements) |operation| {
+            try appendUniqueToken(allocator, &tokens, try self.contractOperationText(module, operation, parameters));
+        }
+        std.mem.sort([]const u8, tokens.items, {}, tokenLess);
+        return tokens.toOwnedSlice(allocator);
     }
     fn contractOperationText(self: *Index, module: usize, operation: ast.Operation, parameters: []const ast.TypeParameter) ContractError![]const u8 {
         const allocator = self.project.arena.allocator();
@@ -1169,7 +1172,10 @@ pub const Index = struct {
         try out.appendSlice(allocator, "]");
         return out.toOwnedSlice(allocator);
     }
-    fn contractTypeText(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter) ContractError![]const u8 {
+    /// Render one declaration-level type spelled in `module` as its canonical
+    /// descriptor (`i64`, `list[pkg::Name]`, `$0` for a type parameter); the
+    /// text lives in the project arena.
+    pub fn contractTypeText(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter) ContractError![]const u8 {
         var path: std.ArrayList(Identity) = .empty;
         defer path.deinit(self.project.arena.allocator());
         return self.contractTypeTextPath(module, span, parameters, &path);
@@ -1315,7 +1321,9 @@ fn tokenLess(_: void, a: []const u8, b: []const u8) bool {
 }
 /// The effect one canonical capability parameter descriptor permits, or null for
 /// a value type. The descriptors come from `contractTypeText`, which resolves
-/// aliases and prints capabilities under their reserved spellings.
+/// aliases and prints most capabilities under their Python spellings
+/// (`Filesystem`, `Clock`, ...) and `Stream`/`Host` under their internal ones,
+/// so both spellings are recognized (DERIVED-EFFECTS-4).
 fn capabilityEffect(text: []const u8) ?effect_set.Effect {
     const table = [_]struct { []const u8, effect_set.Effect }{
         .{ "filesystem_cap", .filesystem },
@@ -1325,6 +1333,11 @@ fn capabilityEffect(text: []const u8) ?effect_set.Effect {
         .{ "environment_cap", .environment },
         .{ "stream_cap", .output },
         .{ "host_cap", .host },
+        .{ "Filesystem", .filesystem },
+        .{ "Network", .network },
+        .{ "Clock", .clock },
+        .{ "Entropy", .random },
+        .{ "Environment", .environment },
     };
     inline for (table) |entry| if (std.mem.eql(u8, text, entry[0])) return entry[1];
     return null;
@@ -1359,7 +1372,8 @@ fn permissionsText(allocator: std.mem.Allocator, mask: effect_set.Mask, mutates:
     try out.appendSlice(allocator, origin);
     return out.toOwnedSlice(allocator);
 }
-fn appendEffectNames(out: *std.ArrayList(u8), allocator: std.mem.Allocator, mask: effect_set.Mask) !void {
+/// Append each effect `mask` holds, by name in declaration order, joined by commas.
+pub fn appendEffectNames(out: *std.ArrayList(u8), allocator: std.mem.Allocator, mask: effect_set.Mask) std.mem.Allocator.Error!void {
     var separator = false;
     inline for (std.meta.tags(effect_set.Effect)) |effect| {
         if (mask & effect_set.bit(effect) != 0) {
@@ -1381,6 +1395,17 @@ fn unavailableAnalysis(program: ?typed.Program, function: ast.Function) fact_sta
 }
 fn boundSpan(reference: ast.BoundReference) source.Span {
     return if (reference.alias) |alias| source.Span.join(alias, reference.name) else reference.name;
+}
+/// Append `text` with every run of spaces, tabs and line breaks folded to one
+/// space: the normalized spelling of a clause written across several lines.
+pub fn appendFolded(out: *std.ArrayList(u8), allocator: std.mem.Allocator, text: []const u8) std.mem.Allocator.Error!void {
+    var blank = false;
+    for (text) |byte| {
+        const space = byte == ' ' or byte == '\t' or byte == '\r' or byte == '\n';
+        if (space and blank) continue;
+        blank = space;
+        try out.append(allocator, if (space) ' ' else byte);
+    }
 }
 /// The first non-empty line of a docstring with surrounding whitespace trimmed.
 fn firstDocLine(text: []const u8) []const u8 {

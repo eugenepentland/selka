@@ -43,19 +43,6 @@ static int visit(Work *work, Pair pair) {
     work->seen[at]=pair; work->seen_count++;
     return 1;
 }
-static const void *dictionary_value(const myl_native_dictionary *dict,const void *key) {
-    for (size_t i=0;i<dict->entries->length;i++) {
-        const unsigned char *entry=(const unsigned char *)dict->entries->storage+i*dict->entry_type.size;
-        int same;
-        if (dict->string_keys) {
-            myl_native_text *a,*b;
-            memcpy(&a,key,sizeof(a)); memcpy(&b,entry,sizeof(b));
-            same=myl_native_text_equal(a,b);
-        } else same=!memcmp(key,entry,dict->key->size);
-        if (same) return entry+dict->value_offset;
-    }
-    return NULL;
-}
 static int managed(Work *work,Pair pair) {
     const void *left,*right;
     memcpy(&left,pair.left,sizeof(left)); memcpy(&right,pair.right,sizeof(right));
@@ -65,10 +52,14 @@ static int managed(Work *work,Pair pair) {
     if (visited<=0) return visited<0?visited:1;
     if (pair.type->collection_kind==3) {
         const myl_native_dictionary *a=left,*b=right;
-        if (a->entries->length!=b->entries->length) return 0;
+        if (myl_native_dictionary_length(a)!=myl_native_dictionary_length(b)) return 0;
+        /* Every key of one side is looked up in the other's table, hashing and
+         * comparing it structurally (HASH-KEYS-1), so equality ignores
+         * insertion order and costs one expected-constant probe per entry. */
+        myl_native_dictionary_settle(a);
         for (size_t i=0;i<a->entries->length;i++) {
             const unsigned char *entry=(const unsigned char *)a->entries->storage+i*a->entry_type.size;
-            const void *other=dictionary_value(b,entry);
+            const void *other=myl_native_dictionary_find(b,entry);
             if (!other) return 0;
             int status=push(work,pair.type->element,entry+a->value_offset,other);
             if (status<0) return status;

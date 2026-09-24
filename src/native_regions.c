@@ -157,6 +157,8 @@ static void translate(Copier *copier, const myl_native_type *type, const void *s
 }
 static void fill_dictionary(Copier *copier, Clone item) {
     myl_native_dictionary *from = item.source, *clone = item.clone;
+    /* Removed entries still sit in the source's entry list until it settles. */
+    myl_native_dictionary_settle(from);
     size_t width = from->entry_type.size ? from->entry_type.size : 1;
     unsigned char *entry = malloc(width);
     if (!entry) { copier->failed = 1; return; }

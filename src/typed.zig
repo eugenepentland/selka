@@ -324,7 +324,8 @@ fn equalitySupport(ty: Type, records: []const Record, visited: *[64]usize, depth
     const next = depth + 1;
     if (record.isCollection()) {
         if (record.collection.kind == .string or record.collection.kind == .bytes) return true;
-        if (record.shape.buffer) |element| if (!equalitySupport(element, records, visited, next)) return false;
+        // A set's values are unit, which compare trivially: only its elements matter.
+        if (!record.collection.set) if (record.shape.buffer) |element| if (!equalitySupport(element, records, visited, next)) return false;
         if (record.collection.key) |key| if (!equalitySupport(key, records, visited, next)) return false;
         return true;
     }
@@ -370,6 +371,18 @@ pub fn carriesWritableStorage(records: []const Record, ty: Type) bool {
 /// the caller.
 pub fn referenceArray(records: []const Record, ty: Type) bool {
     return ty.isAggregate() and ty.recordIndex() < records.len and records[ty.recordIndex()].shape.array != null;
+}
+
+/// Whether a schema is a `set[T]`: a dictionary-kind collection from its
+/// elements to unit that answers the set vocabulary instead of the mapping one.
+pub fn isSet(record: Record) bool {
+    return record.managed and record.collection.kind == .dictionary and record.collection.set;
+}
+
+/// The schema of a set type, or null for any other type.
+pub fn setRecord(records: []const Record, ty: Type) ?Record {
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return null;
+    return if (isSet(records[ty.recordIndex()])) records[ty.recordIndex()] else null;
 }
 
 /// Whether a managed byte-kind schema is the immutable byte string rather than

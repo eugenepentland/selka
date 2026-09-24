@@ -30,10 +30,12 @@ pub const topics = [_]Topic{
     .{ .name = "contracts", .path = "docs/contracts.md", .summary = "@requires, @ensures and @invariant: checked preconditions, postconditions and invariants" },
     .{ .name = "modules", .path = "docs/modules.md", .summary = "module headers, imports, public declarations and projects" },
     .{ .name = "memory", .path = "docs/managed-memory.md", .summary = "managed lists, dicts and strings; the tracing collector" },
+    .{ .name = "sets", .path = "docs/sets.md", .summary = "set[T]: literals, comprehensions, methods, operators and hashable keys" },
     .{ .name = "arenas", .path = "docs/arenas.md", .summary = "`with arena()` regions for bulk allocation" },
     .{ .name = "stdlib", .path = "docs/standard-library.md", .summary = "the standard modules: strings, math, json, sort, time, ..." },
     .{ .name = "tests", .path = "docs/tooling/guest-tests.md", .summary = "mylang test: test_ functions, cases files, benchmarks, caching" },
     .{ .name = "build", .path = "docs/tooling/native-build.md", .summary = "mylang build and run: QBE by default, --release, caches, reports" },
     .{ .name = "navigation", .path = "docs/tooling/navigation.md", .summary = "index-project and tests-for: definitions, uses and reaching tests" },
     .{ .name = "context", .path = "docs/tooling/agent-context.md", .summary = "mylang context: a bounded answer about one declaration" },
+    .{ .name = "api", .path = "docs/tooling/interface-files.md", .summary = "mylang api: the generated .api interface file beside every module" },
 };

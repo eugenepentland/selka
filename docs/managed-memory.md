@@ -191,9 +191,12 @@ def main() -> int:
 ## Insertion-ordered dictionaries
 
 `dict[K, V]` keeps its entries in the order their keys were first inserted, and
-rewriting an existing key leaves that key in its original position. Keys are
-`int` or `str`; anything else is rejected with `E_DICT_KEY`, because those are the
-types the runtime compares and hashes by value. Values are any copyable storable
+rewriting an existing key leaves that key in its original position. A key is any
+[hashable](sets.md#hashable-keys) value — an integer, `bool`, `str`, `bytes`, or a
+tuple, record, union, enum, domain, `Option` or fixed array built only from those —
+hashed and compared structurally and copied into the table; a `float`, list, dict,
+set, `byte_buffer`, `class` or function key is rejected with `E_DICT_KEY` naming the
+offending part. Values are any copyable storable
 type, including lists and other dictionaries. `counts[key]` traps with
 `R_MISSING_KEY` when the key is absent, so `counts.get(key, fallback)` is the
 lookup that always answers. `counts.keys()`, `counts.values()` and `counts.items()`
@@ -405,8 +408,11 @@ checked pass over a list, string, byte string or dictionary. It takes exactly on
 generator and at most one filter, the filter runs before the expression, and the
 binding exists only inside the comprehension and may not shadow an active name.
 The source collection is unchanged, and the produced value has to be a copyable
-storable list element. Nested generators, generator expressions, and dictionary
-or set comprehensions are not provided; write an ordinary `for` loop for those.
+storable list element. Nested generators, generator expressions and dictionary
+comprehensions are not provided; write an ordinary `for` loop for those.
+
+The set comprehension `{expression for name in source if condition}` follows the
+same rules and builds a [set](sets.md#set-literals-and-construction) instead.
 
 The source may also be an integer `range(...)`, exactly as in a `for` loop:
 `range(end)` and `range(start, end)` walk a half-open ascending range and bind the

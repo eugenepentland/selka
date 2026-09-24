@@ -734,7 +734,10 @@ const Checker = struct {
     /// receiver's type when its family is known and the method spellings that
     /// receiver accepts, or their union when its family is not known.
     pub fn unknownMethodMessage(self: *Checker, family: ?ManagedKind, receiver: ?typed.Type) Error![]const u8 {
-        const spellings = if (family) |kind|
+        const set = if (receiver) |receiver_type| typed.setRecord(self.catalog.records, receiver_type) != null else false;
+        const spellings = if (set)
+            try buffer_operations.setMethodSpellings(self.allocator)
+        else if (family) |kind|
             try buffer_operations.methodSpellings(self.allocator, kind)
         else
             try buffer_operations.unionMethodSpellings(self.allocator);
@@ -759,6 +762,7 @@ const Checker = struct {
             .family = schema.collection.kind,
             .element = try typed.surfaceTypeName(self.allocator, schema.shape.buffer orelse .i64, self.catalog.records),
             .key = if (schema.collection.key) |key| try typed.surfaceTypeName(self.allocator, key, self.catalog.records) else "int",
+            .set = typed.isSet(schema),
         };
     }
     /// One rejected method call: the syntax it occupies, the callee, and the
@@ -957,8 +961,11 @@ const Checker = struct {
         if (!expected.isInteger() and !numeric_surface.isFloat(expected, self.catalog.records)) {
             // `==`/`!=` operands share one aggregate type, so a typed side gives a
             // contextual constructor on the other side its type (`v == None`,
-            // `r == Ok(3)`); any other aggregate operator is unaffected.
-            if (binary.op != .eq and binary.op != .ne) return;
+            // `r == Ok(3)`); so do the set operators (`s | {3}`), whose two
+            // operands are sets of one type. Any other aggregate operator is
+            // unaffected.
+            const set_operands = typed.setRecord(self.catalog.records, expected) != null;
+            if (binary.op != .eq and binary.op != .ne and !set_operands) return;
             if (self.obviousType(binary.left)) |left| try self.hint(binary.right, left);
             if (self.obviousType(binary.right)) |right| try self.hint(binary.left, right);
             return;
@@ -1021,6 +1028,7 @@ const Checker = struct {
     pub const checkCollectionMethod = collection_checks.checkCollectionMethod;
     pub const checkCollectionSlice = collection_checks.checkCollectionSlice;
     pub const checkComprehension = collection_checks.checkComprehension;
+    pub const checkSetFromIterable = collection_checks.checkSetFromIterable;
     pub const checkFormat = collection_checks.checkFormat;
     pub const checkListAccess = collection_checks.checkListAccess;
     pub const checkListLiteral = collection_checks.checkListLiteral;
@@ -1033,6 +1041,13 @@ const Checker = struct {
     pub const optionReceiverMethod = collection_checks.optionReceiverMethod;
     pub const requireSortable = collection_checks.requireSortable;
     pub const requiresCellEquality = collection_checks.requiresCellEquality;
+    const set_checks = @import("sema_sets.zig").Checks(Checker);
+    pub const checkEmptySet = set_checks.checkEmptySet;
+    pub const checkSetBinary = set_checks.checkSetBinary;
+    pub const checkSetLiteral = set_checks.checkSetLiteral;
+    pub const checkSetMethod = set_checks.checkSetMethod;
+    pub const checkSetMethodSyntax = set_checks.checkSetMethodSyntax;
+    pub const requireSetElement = set_checks.requireSetElement;
     const place_checks = @import("sema_places.zig").Checks(Checker);
     pub const arrayKey = place_checks.arrayKey;
     pub const arrayPlace = place_checks.arrayPlace;
@@ -1131,7 +1146,9 @@ const Checker = struct {
     pub fn requireArenaOperation(self: *Checker, owner: ?typed.LocalId, kind: BufferKind, arguments: []const typed.NodeId) Error!void {
         const slot = owner orelse return;
         if (self.arenas.items.len == 0) return;
-        if ((kind == .append or kind == .extend) and arguments.len == 1) return self.requireArenaStore(slot, arguments[0]);
+        // `update` copies every entry of its operand in, exactly as `extend`
+        // copies every element, so an arena-held operand is refused the same way.
+        if ((kind == .append or kind == .extend or kind == .update) and arguments.len == 1) return self.requireArenaStore(slot, arguments[0]);
         if (kind != .write or arguments.len != 2) return;
         try self.requireArenaStore(slot, arguments[0]);
         try self.requireArenaStore(slot, arguments[1]);
@@ -1618,7 +1635,12 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     try initSpecializationReuse(&checker, allocator, catalog.records, &session, &spec_session);
     for (program.functions, 0..) |function, i| {
         const name = if (module_names) |names| try names.functionDeclaration(function.policy.owner, function.name) else try functionName(allocator, src, function.policy.owner, function.name);
-        if (checker.catalog.names.contains(name) or checker.catalog.templates.names.contains(name)) return sink.fail("E_DUPLICATE_NAME", function.name, "function name conflicts with a declared type");
+        // The builtin `set` type is new beside programs that already declare a
+        // function of that name, so such a function keeps its name and its
+        // calls (SET-1); a declared type named `set` still conflicts.
+        const template = checker.catalog.templates.names.get(name);
+        const builtin_set = template != null and template.?.end == 0 and std.mem.eql(u8, name, "set");
+        if (checker.catalog.names.contains(name) or (template != null and !builtin_set)) return sink.fail("E_DUPLICATE_NAME", function.name, "function name conflicts with a declared type");
         if (checker.functions.get(name)) |previous| return sink.failRelated(
             "E_DUPLICATE_FUNCTION",
             function.name,

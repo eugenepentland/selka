@@ -155,6 +155,7 @@ pub const Index = struct {
         try self.addByteString();
         try self.addByteBuffer();
         try self.addBuiltin("dict", 2, .buffer);
+        try self.addBuiltin("set", 1, .buffer);
         try self.addDictionaryViews();
         try self.addTuples();
     }

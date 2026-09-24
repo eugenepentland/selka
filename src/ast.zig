@@ -70,6 +70,8 @@ pub const Node = struct {
         format: []const NodeId,
         comprehension: Comprehension,
         dictionary_literal: []const NodeId,
+        /// `{a, b, ...}`: a set literal's elements in source order (SET-1).
+        set_literal: []const NodeId,
         membership: struct { needle: NodeId, container: NodeId, negate: bool = false },
         boolean: bool,
         unit,
@@ -163,6 +165,8 @@ pub const Comprehension = struct {
     name: Span,
     source: Source,
     filter: ?NodeId = null,
+    /// `{value for ...}` builds a `set` instead of a list (SET-1).
+    set: bool = false,
     /// A comprehension draws its elements from a collection expression or, like a `for`
     /// loop, from a half-open integer `range(...)`; a unit start means the implicit zero.
     pub const Source = union(enum) { iterable: NodeId, range: struct { start: NodeId, end: NodeId } };

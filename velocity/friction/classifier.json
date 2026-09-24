@@ -1,7 +1,7 @@
 {
   "version": "friction-classifier-v1",
   "note": "diagnostic code plus a source regex maps to an idiom name; the first matching row wins; no match is 'unclassified'. `hints` names the idioms the parser itself answers with a targeted message: the `declaration_hints` table in `src/parser.zig` and this array are one table, and `src/declaration_hints_test.zig` plus `tests/parser_hints.py` fail when either side gains a form the other lacks.",
-  "hints": ["union-cases", "module-constant", "method", "from-import", "chained-assign", "set-literal", "exceptions", "match-literal", "del", "string-prefix", "main-guard", "option-unwrap", "nested-comprehension", "dict-comprehension", "generator-argument", "walrus"],
+  "hints": ["union-cases", "module-constant", "method", "from-import", "chained-assign", "exceptions", "match-literal", "del", "string-prefix", "main-guard", "option-unwrap", "nested-comprehension", "dict-comprehension", "generator-argument", "walrus"],
   "rules": [
     {"code": "E_SYNTAX", "regex": "^\\s*from\\s+[A-Za-z_][A-Za-z_0-9]*(\\.[A-Za-z_][A-Za-z_0-9]*)*\\s+import\\b", "idiom": "from-import"},
     {"code": "E_SYNTAX", "regex": "^\\s*\"\"\"|^\\s*'''", "idiom": "docstring"},
@@ -14,7 +14,6 @@
     {"code": "E_REMOVED_SPELLING", "regex": "[&|^~]|<<|>>", "idiom": "bit-operator"},
     {"code": "E_TOKEN", "regex": "[|^~]|<<|>>", "idiom": "bit-operator"},
     {"code": "E_UNKNOWN_TYPE", "regex": "\\bset\\[", "idiom": "set"},
-    {"code": "E_SYNTAX", "regex": "\\{[^:}]+(,[^:}]+)*\\}", "idiom": "set-literal"},
     {"code": "E_SYNTAX", "regex": "\\bfor\\b.*\\bfor\\b", "idiom": "nested-comprehension"},
     {"code": "E_SYNTAX", "regex": "\\b(any|all|sum|min|max|sorted)\\(.*\\bfor\\b", "idiom": "generator-argument"},
     {"code": "E_COLLECTION_METHOD", "regex": "\\w+\\.\\w+\\.\\w+\\(", "idiom": "dotted-module-call"},

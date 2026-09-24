@@ -29,6 +29,7 @@ void myl_print_text(MylPrint *out, const void *value, unsigned depth);
 void myl_print_bytes(MylPrint *out, const void *value, unsigned depth);
 void myl_print_list(MylPrint *out, const void *value, unsigned depth, MylPrintFn element);
 void myl_print_dictionary(MylPrint *out, const void *value, unsigned depth, MylPrintFn key, MylPrintFn item);
+void myl_print_set(MylPrint *out, const void *value, unsigned depth, MylPrintFn element);
 void myl_print_array(MylPrint *out, const void *value, unsigned depth, size_t count, size_t stride, MylPrintFn element);
 void myl_print_record(MylPrint *out, const void *value, unsigned depth, const char *name, const MylPrintField *fields, size_t count);
 /* A class renders like a record whose fields live behind the pointer in `slot`. */

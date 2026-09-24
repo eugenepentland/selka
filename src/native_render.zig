@@ -154,6 +154,8 @@ fn collection(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Cat
         },
         .dictionary => {
             const key = try symbol(a, catalog, record.collection.key orelse return error.InvalidType);
+            // A set renders its elements between braces, or `set()` (SET-1).
+            if (record.collection.set) return body(writer, item.name, try std.fmt.allocPrint(a, "myl_print_set(o, v, d, {s});", .{key}));
             const value_ty = record.shape.buffer orelse return error.InvalidType;
             const value = try symbol(a, catalog, value_ty);
             return body(writer, item.name, try std.fmt.allocPrint(a, "myl_print_dictionary(o, v, d, {s}, {s});", .{ key, value }));

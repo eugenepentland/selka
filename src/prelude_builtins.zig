@@ -28,7 +28,7 @@ const chr_builtin = "chr";
 
 /// Prelude names answered without an import when no binding or declaration shadows them.
 pub fn reserved(name: []const u8) bool {
-    inline for (.{ "sum", "min", "max", "sorted", "abs", "round", "any", "all", reversed_builtin, "list", "zip", ord_builtin, chr_builtin }) |builtin| {
+    inline for (.{ "sum", "min", "max", "sorted", "abs", "round", "any", "all", reversed_builtin, "list", "set", "zip", ord_builtin, chr_builtin }) |builtin| {
         if (std.mem.eql(u8, name, builtin)) return true;
     }
     return false;
@@ -36,7 +36,7 @@ pub fn reserved(name: []const u8) bool {
 
 /// Names whose single argument is a sequence the prelude materialises as a new list.
 pub fn materializes(name: []const u8) bool {
-    return std.mem.eql(u8, name, "list");
+    return std.mem.eql(u8, name, "list") or std.mem.eql(u8, name, "set");
 }
 
 /// Checked local slots and loop identity of one walk over a list.

@@ -35,6 +35,7 @@ const numeric_surface = @import("numeric_surface.zig");
 const prelude = @import("prelude.zig");
 const arrays = @import("array_literals.zig");
 const variant_calls = @import("variant_calls.zig");
+const set_lower = @import("set_lower.zig");
 const truncating = @import("truncating_math.zig");
 const isMutableBytes = sema_shared.isMutableBytes;
 const eCellEquality = sema_shared.eCellEquality;
@@ -107,6 +108,12 @@ pub fn Checks(comptime Checker: type) type {
         /// drawing elements from a collection or, like a `for` loop, from an integer `range(...)`.
         pub fn checkComprehension(self: *Checker, node: ast.Node, each: ast.Comprehension, temporaries: []const typed.Type) Error!typed.Node {
             return impl.checkComprehension(Checker, self, node, each, temporaries);
+        }
+        /// `set(iterable)`: a fresh set of every element one walk over a list,
+        /// str, bytes, fixed array, dictionary (its keys), dictionary view or
+        /// set visits, in that order (SET-1).
+        pub fn checkSetFromIterable(self: *Checker, span: source.Span, source_value: typed.NodeId) Error!typed.Node {
+            return impl.checkSetFromIterable(Checker, self, span, source_value);
         }
         /// Render an f-string's pieces once in source order, then join them into one
         /// exactly-sized text allocation instead of repeatedly copying prefixes.
@@ -221,6 +228,10 @@ fn collectionSyntax(comptime Checker: type, self: *Checker, id: ast.NodeId) Erro
                     _ = try @import("removed_names.zig").reject(self.sink, call.name, name);
                     return self.sink.fail("E_LIST_METHOD", call.name, try self.unknownMethodMessage(family, value_type));
                 };
+                // A set answers only the set vocabulary, never the mapping one
+                // its dictionary representation would otherwise admit (SET-1).
+                if (typed.isSet(self.catalog.records[value_type.recordIndex()]) and !buffer_operations.setMethod(kind))
+                    return self.sink.fail("E_LIST_METHOD", call.name, try self.unknownMethodMessage(family, value_type));
                 // The everyday vocabulary stays a buffer operation; the
                 // checker picks its arity from the receiver and `pop` name.
                 if (!buffer_operations.vocabulary(kind) and (call.type_arguments.len != 0 or call.arguments.len != kind.arity()))
@@ -314,11 +325,46 @@ fn checkComprehension(comptime Checker: type, self: *Checker, node: ast.Node, ea
         .iterable = iterable,
         .output = parts.output,
         .kind = schema.collection.kind,
-        .reserve = each.filter == null,
+        .reserve = each.filter == null and !each.set,
         .projection = if (projected) view else null,
         .fixed = fixed,
+        .set = each.set,
     };
     return comprehensionLoop(Checker, self, b, slots, parts.body, source_values);
+}
+fn checkSetFromIterable(comptime Checker: type, self: *Checker, span: source.Span, source_value: typed.NodeId) Error!typed.Node {
+    const b: collections.Builder(Checker) = .{ .checker = self, .span = span };
+    const view = dictionary_views.identify(self.catalog, self.nodes.items[@backingInt(source_value)].ty);
+    const projected = view != null and view.? != .item;
+    const iterable = if (projected) try dictionary_views.owner(Checker, self, span, source_value) else source_value;
+    const iterable_type = self.nodes.items[@backingInt(iterable)].ty;
+    const fixed = arrays.fixed(self.catalog, iterable_type);
+    if (fixed == null and !self.collectionType(iterable_type)) return self.sink.fail(eCollectionMethod, span, "set() takes a list, str, bytes, fixed array, dictionary, dictionary view or set");
+    const schema = self.catalog.records[iterable_type.recordIndex()];
+    const element = if (fixed) |shape| shape.element else if (projected) try dictionary_views.element(&self.catalog, iterable_type, view.?, span) else switch (schema.collection.kind) {
+        .list => schema.shape.buffer.?,
+        .string => iterable_type,
+        .bytes => typed.Type.i64,
+        .dictionary => schema.collection.key.?,
+    };
+    try self.requireSetElement(element, span);
+    const owner = try b.local(iterable_type);
+    const index = try b.local(.i64);
+    const limit = try b.local(.i64);
+    const value_slot = try b.local(element);
+    const output = try b.local(try set_lower.setType(&self.catalog, element, span));
+    const sets: set_lower.Builder(Checker) = .{ .b = b };
+    const body = try sets.add(output, try b.read(value_slot));
+    const slots: ComprehensionSlots = .{ .owner = owner, .index = index, .limit = limit, .slot = value_slot };
+    return comprehensionLoop(Checker, self, b, slots, body, .{
+        .iterable = iterable,
+        .output = output,
+        .kind = schema.collection.kind,
+        .reserve = false,
+        .projection = if (projected) view else null,
+        .fixed = fixed,
+        .set = true,
+    });
 }
 /// Check the produced value and optional filter with `slot` bound to the element name,
 /// returning the fresh output list and the retained-append body the loop repeats. Shared
@@ -328,10 +374,13 @@ fn comprehensionBody(comptime Checker: type, self: *Checker, b: collections.Buil
     defer _ = self.active.remove(self.src.text(each.name));
     const produced = try self.expression(each.output);
     const produced_type = self.nodes.items[@backingInt(produced)].ty;
+    // `{value for ...}` adds each value to a fresh set instead (SET-1).
+    if (each.set) try self.requireSetElement(produced_type, node.span);
     if (!typed.storable(produced_type, self.catalog.records) or typed.moveOnly(produced_type, self.catalog.records) or self.requiresHandling(produced_type))
         return self.sink.fail(eListType, node.span, "list elements require copyable storable values without pending results");
-    const output = try b.local(try collections.listType(&self.catalog, produced_type, node.span));
-    const kept = try b.stmt(.{ .discard = try b.operation(output, .append, &.{produced}) });
+    const output = try b.local(if (each.set) try set_lower.setType(&self.catalog, produced_type, node.span) else try collections.listType(&self.catalog, produced_type, node.span));
+    const sets: set_lower.Builder(Checker) = .{ .b = b };
+    const kept = if (each.set) try sets.add(output, produced) else try b.stmt(.{ .discard = try b.operation(output, .append, &.{produced}) });
     const body = if (each.filter) |condition| guarded: {
         const test_value = try self.expression(condition);
         try self.require(self.nodes.items[@backingInt(test_value)].ty, .bool, self.syntax.nodes.items[@backingInt(condition)].span);
@@ -363,11 +412,13 @@ fn checkRangeComprehension(comptime Checker: type, self: *Checker, b: collection
     const step = try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.node(element, .{ .integer = 1 }), element) } });
     const loop_id = self.loops.next;
     self.loops.next += 1;
-    const capacity = if (each.filter == null) try b.rangeCapacity(try b.read(index), try b.read(limit), element) else try b.integer(0);
+    const capacity = if (each.filter == null and !each.set) try b.rangeCapacity(try b.read(index), try b.read(limit), element) else try b.integer(0);
+    const output_type = self.locals.items[@backingInt(parts.output)].ty;
+    const fresh = if (each.set) try b.node(output_type, .{ .array = &.{} }) else try b.node(output_type, .{ .acquire_buffer = .{ .capacity = capacity } });
     return b.block(&.{
         try b.stmt(.{ .initialize = .{ .slot = index, .value = start } }),
         try b.stmt(.{ .initialize = .{ .slot = limit, .value = end } }),
-        try b.stmt(.{ .initialize = .{ .slot = parts.output, .value = try b.node(self.locals.items[@backingInt(parts.output)].ty, .{ .acquire_buffer = .{ .capacity = capacity } }) } }),
+        try b.stmt(.{ .initialize = .{ .slot = parts.output, .value = fresh } }),
         try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, i, try b.read(limit), .bool), .body = parts.body, .step = step } }),
     }, try b.read(parts.output));
 }
@@ -381,6 +432,8 @@ const ComprehensionSource = struct {
     projection: ?dictionary_views.Kind = null,
     /// Set when the source is a fixed array, which is read by index.
     fixed: ?typed.Array = null,
+    /// The output is a fresh set rather than a list (SET-1).
+    set: bool = false,
 };
 fn comprehensionLoop(
     comptime Checker: type,
@@ -411,7 +464,7 @@ fn comprehensionLoop(
     self.loops.next += 1;
     const output_capacity = if (source_values.reserve) try b.read(slots.limit) else try b.integer(0);
     const output_type = self.locals.items[@backingInt(source_values.output)].ty;
-    const acquire_output = try b.node(output_type, .{ .acquire_buffer = .{ .capacity = output_capacity } });
+    const acquire_output = if (source_values.set) try b.node(output_type, .{ .array = &.{} }) else try b.node(output_type, .{ .acquire_buffer = .{ .capacity = output_capacity } });
     return b.block(&.{
         try b.stmt(.{ .initialize = .{ .slot = slots.owner, .value = source_values.iterable } }),
         try b.stmt(.{ .initialize = .{ .slot = slots.index, .value = try b.integer(0) } }),
@@ -612,6 +665,8 @@ fn checkCollectionAccess(comptime Checker: type, self: *Checker, node: ast.Node,
     const owner_type = self.nodes.items[@backingInt(base)].ty;
     const managed_owner = owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].isCollection();
     const dictionary = managed_owner and self.catalog.records[owner_type.recordIndex()].collection.kind == .dictionary;
+    if (typed.setRecord(self.catalog.records, owner_type) != null)
+        return self.checkSetMethodSyntax(node, .{ .span = node.span, .base = base, .receiver = call.receiver, .kind = kind, .arguments = &.{} }, inputs, temporaries);
     // `pop` is one Python name with an optional argument; its arity selects the
     // list-tail, list-index, dictionary-key or dictionary-default form.
     if (kind == .pop) kind = if (dictionary) (if (inputs.len == 2) .pop_default else .pop_key) else (if (inputs.len == 1) .pop_at else .pop);
@@ -981,6 +1036,14 @@ fn checkBufferOperation(comptime Checker: type, self: *Checker, _: ast.Node, ope
     const local = &self.locals.items[@backingInt(owner)];
     if (!local.ty.isAggregate() or !self.catalog.records[local.ty.recordIndex()].isCollection()) return self.sink.fail(eListType, operation.owner, needs_list);
     local.usage.reads += 1;
+    if (typed.isSet(self.catalog.records[local.ty.recordIndex()])) {
+        if (operation.kind.mutates()) local.usage.writes += 1;
+        const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
+        for (operation.arguments, arguments) |input, *argument| argument.* = self.resolved[@backingInt(input)].?;
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = out.span };
+        out.* = try self.checkSetMethod(.{ .span = out.span, .base = try b.read(owner), .receiver = owner, .kind = operation.kind, .arguments = arguments });
+        return;
+    }
     if (self.catalog.records[local.ty.recordIndex()].collection.kind == .dictionary) if (dictionary_views.operation(operation.kind)) |kind| {
         if (operation.arguments.len != 0) return self.sink.fail("E_ARITY", operation.owner, "dictionary views take no arguments");
         const b: collections.Builder(Checker) = .{ .checker = self, .span = out.span };
