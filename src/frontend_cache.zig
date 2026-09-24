@@ -21,7 +21,7 @@ const project = @import("project.zig");
 const cache_key = @import("cache_key.zig");
 
 /// Bump when the on-disk layout or a stored serializer changes; older files miss.
-pub const format_version = "mylang-frontend-cache-v3";
+pub const format_version = "mylang-frontend-cache-v4";
 /// Default retention: entries above this are bypassed, and the directory is
 /// trimmed back to it after a successful store.
 pub const default_max_bytes: usize = 128 * 1024 * 1024;
@@ -304,7 +304,7 @@ pub const Cache = struct {
         const payload = reader.slice(std.math.cast(usize, payload_len) orelse return error.Damaged) catch return error.Damaged;
         const checksum = reader.integer(u64) catch return error.Damaged;
         if (!reader.done()) return error.Damaged;
-        if (std.hash.XxHash3.hash(0, payload) != checksum) return error.Damaged;
+        if (codec.checksum(payload) != checksum) return error.Damaged;
         return self.runtime.allocator.dupe(u8, payload) catch return error.OutOfMemory;
     }
 
@@ -393,7 +393,7 @@ fn encodeHeader(writer: *codec.Writer, key: [32]u8, payload: []const u8) std.mem
     try writer.raw(&key);
     try writer.integer(@as(u64, payload.len));
     try writer.raw(payload);
-    try writer.integer(std.hash.XxHash3.hash(0, payload));
+    try writer.integer(codec.checksum(payload));
 }
 
 /// Frame one borrowed byte string so adjacent fields cannot alias.

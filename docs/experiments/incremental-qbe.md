@@ -2,13 +2,13 @@
 
 QBE compiles independently linkable guest functions. The driver caches each
 assembled object across compiler processes and links the current function set.
-The ordinary frontend now reuses checked ordinary bodies, symbolic generic
-templates and concrete specializations by default, but `mylang build` still lowers
-the complete checked program and renders its QBE units on every build; the
-object cache reuses assembled per-function objects. Native object reuse is the
-part this page documents; per-function lazy lowering/emission, incremental native
-linking and hot reload remain open ([implementation
-status](../audits/velocity-implementation/final-status.md)).
+The ordinary frontend reuses checked ordinary bodies, symbolic generic templates
+and concrete specializations by default, and a project build reuses each
+function's emitted QBE unit while its inputs are unchanged and skips an
+unchanged build outright ([incremental
+frontend](../tooling/native-build.md#incremental-frontend)). Native object reuse is
+the part this page documents; incremental native linking and hot reload remain
+open ([implementation status](../audits/velocity-implementation/final-status.md)).
 
 ## Build and run
 

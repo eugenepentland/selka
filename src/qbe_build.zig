@@ -10,6 +10,8 @@ const outputs = @import("qbe_build_outputs.zig");
 const v = @import("qbe_build_value.zig");
 const frame_map = @import("qbe_frame_map.zig");
 const native_link = @import("native_link.zig");
+const lean = @import("qbe_build_units.zig");
+const receipts = @import("qbe_build_receipt.zig");
 const batch = @import("qbe_build_batch.zig");
 const tool_spawn = @import("qbe_build_spawn.zig");
 /// The linker flag that drops every section a program never references.
@@ -220,6 +222,9 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         const compiler = try frontendCompiler(context);
         var arguments: std.ArrayList([]const u8) = .empty;
         try arguments.appendSlice(a, &.{ compiler, if (project) "emit-project-qbe" else "emit-qbe", try context.absolute(parsed.source) });
+        // A project's units stay in the compiler's fragment store; the manifest
+        // names each by digest and path (`QBE-FRAGMENT-REUSE-1`).
+        if (project) try arguments.append(a, "--lean-manifest");
         if (std.mem.eql(u8, parsed.cache, options.no_cache)) {
             try arguments.append(a, "--no-cache");
         } else if (!std.mem.eql(u8, parsed.cache, options.default_cache)) {
@@ -257,18 +262,23 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         }
         break :frontend generated.stdout;
     };
-    const manifest = (try std.json.parseFromSlice(std.json.Value, a, manifest_bytes, .{ .allocate = .alloc_always })).value;
-    try validate(a, manifest);
     // A consumed manifest reports no frontend time because no frontend ran.
     const frontend = if (checked_manifest != null) 0 else seconds(context, start);
     const native_start = std.Io.Timestamp.now(context.io, .awake);
+    const output = if (parsed.run) try std.fs.path.join(a, &.{ temporary, "program" }) else try context.absolute(parsed.output);
+    // BUILD-NOOP-1: the same manifest under the same environment, flags and
+    // untouched output is already built; nothing below would change a byte.
+    const receipt = receipts.Receipt.init(context, parsed, try receiptIdentity(a, cache), manifest_bytes, output);
+    if (unchanged(receipt, phases, frontend)) return 0;
+    const manifest = (try std.json.parseFromSlice(std.json.Value, a, manifest_bytes, .{ .allocate = .alloc_always })).value;
+    try validate(a, manifest);
     var state = State{ .context = context, .cache = cache, .manifest = manifest };
     const codegen_start = std.Io.Timestamp.now(context.io, .awake);
     try state.compile(parsed);
     const codegen = seconds(context, codegen_start);
     const link_start = std.Io.Timestamp.now(context.io, .awake);
-    const output = if (parsed.run) try std.fs.path.join(a, &.{ temporary, "program" }) else try context.absolute(parsed.output);
     const changed = try state.link(parsed, output);
+    if (receipt) |built| built.record();
     const link = seconds(context, link_start);
     if (parsed.report) {
         const objects = try functionObjects(a, state.records.items);
@@ -310,6 +320,29 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
     }
     if (parsed.run) return spawnParts(context, output, controls, parsed);
     return 0;
+}
+/// Whether this build's receipt says its output is already exactly what it
+/// would produce (`BUILD-NOOP-1`). A skipped build still reports its frontend
+/// phase, and codegen, link and native phases that did no work.
+fn unchanged(receipt: ?receipts.Receipt, phases: ?*PhaseTimings, frontend: f64) bool {
+    const recorded = receipt orelse return false;
+    switch (recorded.state()) {
+        .fresh => {
+            if (phases) |measured| measured.* = .{ .frontend = frontend, .codegen = 0, .link = 0, .native = 0, .complete = true };
+            return true;
+        },
+        // Something replaced the output this manifest built: the link's own
+        // reuse check trusts the sidecar, so the stranger must go first.
+        .replaced => recorded.discard(),
+        .unknown => {},
+    }
+    return false;
+}
+/// Everything besides the manifest and the build flags that decides a build's
+/// output: this driver's generation (driver, runtime and native ABI) and the
+/// resolved tool, mode, target and backend environment of every object.
+fn receiptIdentity(a: std.mem.Allocator, cache: cache_api.Cache) Error![]const u8 {
+    return std.mem.concat(a, u8, &.{ generation_identity, "\x00", cache.environment });
 }
 /// How many distinct objects hold the guest functions, and how many of them
 /// this build compiled: one per function on the LLVM arm, one per batch on QBE.
@@ -658,7 +691,7 @@ fn validate(allocator: std.mem.Allocator, manifest: std.json.Value) !void {
     defer seen.deinit(allocator);
     for (units) |unit| {
         const symbol = v.text(v.get(unit, "symbol"));
-        if (symbol.len == 0 or v.get(unit, "il") != .string) return error.InvalidNativeManifest;
+        if (symbol.len == 0 or !lean.wellFormed(unit)) return error.InvalidNativeManifest;
         if (!std.ascii.isAlphabetic(symbol[0]) and symbol[0] != '_') return error.InvalidNativeManifest;
         for (symbol) |character| if (!std.ascii.isAlphanumeric(character) and character != '_') return error.InvalidNativeManifest;
         if ((try seen.getOrPut(allocator, symbol)).found_existing) return error.InvalidNativeManifest;
@@ -667,8 +700,9 @@ fn validate(allocator: std.mem.Allocator, manifest: std.json.Value) !void {
     if (!entry_found) return error.InvalidNativeManifest;
 }
 /// One sorted manifest unit and the object-cache state it reached, kept together
-/// so a failed wave can reclaim the scratch of every job it started.
-const Unit = struct { value: std.json.Value, staged: cache_api.Staged = undefined, object: cache_api.Object = undefined };
+/// so a failed wave can reclaim the scratch of every job it started. `text` is
+/// the unit's QBE text once a miss needed it (a lean unit's is read then).
+const Unit = struct { value: std.json.Value, staged: cache_api.Staged = undefined, object: cache_api.Object = undefined, text: []const u8 = "" };
 /// One function's QBE footprint: its blocks, its temporaries, and the bytes
 /// QBE is estimated to need for them.
 const QbeFootprint = struct { blocks: u64, temporaries: u64, bytes: u64 };
@@ -770,24 +804,30 @@ const State = struct {
         const a = self.context.allocator;
         const environment = try self.cache.adapterEnvironment();
         const units = try a.alloc(Unit, functions.len);
-        const il = try a.alloc([]const u8, functions.len);
-        for (functions, 0..) |function, index| {
-            units[index] = .{ .value = function };
-            il[index] = v.text(v.get(function, "il"));
-        }
+        for (functions, 0..) |function, index| units[index] = .{ .value = function };
         var misses: std.ArrayList(usize) = .empty;
-        for (functions, 0..) |function, index| {
-            const staged = try self.cache.stage("function", v.text(v.get(function, "il")), .qbe, environment);
-            units[index].staged = staged;
-            switch (staged) {
-                .hit => |object| units[index].object = object,
-                .miss => try misses.append(a, index),
+        // An object is named by its unit text's digest, so a hit never reads the
+        // text; a lean unit's text is read from the fragment store only here, for
+        // the objects that must be built (`QBE-FRAGMENT-REUSE-1`).
+        for (units, 0..) |*unit, index| {
+            const key = try self.cache.digestKey(try lean.digest(a, unit.value));
+            if (try self.cache.cached(key)) |object| {
+                unit.staged = .{ .hit = object };
+                unit.object = object;
+                continue;
             }
+            unit.text = try lean.text(self.context, unit.value);
+            unit.staged = .{ .miss = try self.cache.stageAt(key, unit.text, .qbe, environment) };
+            try misses.append(a, index);
         }
         // A concurrent LLVM build cannot rely on unit order to fill the adapter's
         // call-site signature sidecar, so it is made complete before any unit
         // translates. A build that compiles nothing needs no sidecar at all.
-        if (misses.items.len != 0) try self.cache.declareSignatures(il, environment);
+        if (misses.items.len != 0 and self.cache.codegen.llvm) {
+            const il = try a.alloc([]const u8, units.len);
+            for (units, il) |unit, *text| text.* = if (unit.text.len != 0) unit.text else try lean.text(self.context, unit.value);
+            try self.cache.declareSignatures(il, environment);
+        }
         errdefer for (misses.items) |index| self.cache.discard(units[index].staged.miss);
         try self.buildMisses(units, misses.items);
         for (units) |unit| {
@@ -812,10 +852,13 @@ const State = struct {
         std.mem.sort(usize, order, functions, planLess);
         const units = try a.alloc(batch.Unit, functions.len);
         const keys = try a.alloc([]const u8, functions.len);
+        // A unit is keyed by its IL's digest and planned from the lines the
+        // driver reads without compiling it, so a lean unit's text is never read
+        // here (`QBE-FRAGMENT-REUSE-1`).
         for (order, units, keys) |index, *unit, *key| {
-            const il = v.text(v.get(functions[index], "il"));
-            unit.* = .{ .module = batch.moduleOf(v.text(v.get(functions[index], "name"))), .symbol = v.text(v.get(functions[index], "symbol")), .alone = batch.definesData(il) };
-            key.* = try self.cache.unitKey(il);
+            const function = functions[index];
+            unit.* = .{ .module = batch.moduleOf(v.text(v.get(function, "name"))), .symbol = v.text(v.get(function, "symbol")), .alone = batch.definesData(lean.facts(function)) };
+            key.* = try self.cache.digestKey(try lean.digest(a, function));
         }
         const batches = try batch.plan(a, units, batch.policy(self.context.environ));
         // Objects: each batch's code then its metadata, then the shared metadata and the entry.
@@ -831,12 +874,11 @@ const State = struct {
             }
             const code = try batch.key(self.cache, keys[group.first .. group.first + group.count]);
             if (try self.cache.cached(code)) |hit| objects[index * 2] = hit else {
-                const il = try a.alloc([]const u8, group.count);
-                for (members, il) |member, *text| {
-                    try self.fitsQbe(member);
-                    text.* = v.text(v.get(member, "il"));
-                }
-                try misses.append(a, .{ .key = code, .object = &objects[index * 2], .input = .{ .il = il } });
+                // BUILD-MEMORY-1: each member's text is read, checked and written
+                // out one at a time, so no miss holds its text until QBE runs.
+                var texts: MemberTexts = .{ .state = self, .members = members };
+                const files = try batch.stage(self.cache, members.len, &texts);
+                try misses.append(a, .{ .key = code, .object = &objects[index * 2], .input = .{ .files = files } });
             }
             const assembly = try outputs.metadataAssembly(a, members);
             const tables = try self.cache.derived(batch.metadata_version, assembly);
@@ -860,6 +902,24 @@ const State = struct {
         }
         return .{ objects[batches.len * 2], objects[batches.len * 2 + 1] };
     }
+    /// One missed batch's member texts, read in plan order into the scratch
+    /// arena `batch.stage` hands each one, and each checked against the QBE
+    /// size limit before it is written.
+    const MemberTexts = struct {
+        state: *State,
+        members: []const std.json.Value,
+        at: usize = 0,
+        /// The next member's text, read into `scratch` and checked against the QBE size limit.
+        pub fn next(self: *MemberTexts, scratch: std.mem.Allocator) lean.Error![]const u8 {
+            var reader = self.state.context;
+            reader.allocator = scratch;
+            const member = self.members[self.at];
+            self.at += 1;
+            const text = try lean.text(reader, member);
+            try self.state.fitsQbe(member, text);
+            return text;
+        }
+    };
     /// Record one generated C unit's object, or stage its compile as a miss
     /// for the batch pool.
     fn stageC(self: *State, misses: *std.ArrayList(batch.Miss), kind: []const u8, text: []const u8, object: *cache_api.Object) !void {
@@ -882,10 +942,10 @@ const State = struct {
     /// estimate (`qbeRefusal`) exceeds the address-space ceiling QBE inherits
     /// from this process, naming the function and the two ways out, instead of
     /// letting QBE die in `emalloc` minutes later. No ceiling, no refusal.
-    fn fitsQbe(self: *State, unit: std.json.Value) fs.Error!void {
+    fn fitsQbe(self: *State, unit: std.json.Value, text: []const u8) fs.Error!void {
         const address_space = std.posix.getrlimit(.AS) catch return;
         if (address_space.cur == std.math.maxInt(u64)) return;
-        const refusal = qbeRefusal(v.text(v.get(unit, "il")), address_space.cur) orelse return;
+        const refusal = qbeRefusal(text, address_space.cur) orelse return;
         const gib: f64 = 1024.0 * 1024.0 * 1024.0;
         const message = try std.fmt.allocPrint(
             self.context.allocator,
@@ -1004,7 +1064,7 @@ const State = struct {
     /// Whether any unit was lowered for the frame map (QBE-FRAMEMAP-1).
     fn usesFrameMap(self: *State) bool {
         for (v.array(v.get(self.manifest, manifest_functions))) |unit| {
-            if (frame_map.usesFrameMap(v.text(v.get(unit, "il")))) return true;
+            if (frame_map.usesFrameMap(lean.facts(unit))) return true;
         }
         return false;
     }

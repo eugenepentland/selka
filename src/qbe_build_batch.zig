@@ -176,7 +176,33 @@ pub fn width(io: std.Io, batches: usize) usize {
 /// What a missed object is built from: each member's IL in plan order (QBE,
 /// frame-map annotation, then the assembler), ready assembly (the assembler
 /// alone), or a C unit the object cache already staged (its compiler alone).
-pub const Input = union(enum) { il: []const []const u8, assembly: []const u8, staged: cache_api.Job };
+pub const Input = union(enum) { il: []const []const u8, files: Files, assembly: []const u8, staged: cache_api.Job };
+/// A code batch whose members' sectioned IL the caller already wrote, one
+/// `.ssa` file each, into the private directory `work` (`BUILD-MEMORY-1`): the
+/// caller reads one unit text at a time, so a cold build of a large program
+/// never holds every miss's text at once.
+pub const Files = struct { work: []const u8, paths: []const []const u8 };
+
+/// Write one code batch's members for `Input.files`: each text `sectioned`
+/// into its own `.ssa` file in a fresh private directory. `texts` yields each
+/// member's IL in plan order through `next(scratch)`; everything a member
+/// needs is allocated from `scratch`, which is reset after it is written.
+pub fn stage(cache: cache_api.Cache, count: usize, texts: anytype) !Files {
+    const context = cache.context;
+    const a = context.allocator;
+    const work = try context.temporary(cache.temporary);
+    errdefer context.remove(work);
+    var scratch = std.heap.ArenaAllocator.init(context.parent);
+    defer scratch.deinit();
+    const paths = try a.alloc([]const u8, count);
+    for (paths, 0..) |*path, member| {
+        defer _ = scratch.reset(.retain_capacity);
+        const text = try texts.next(scratch.allocator());
+        path.* = try std.fs.path.join(a, &.{ work, try std.fmt.allocPrint(a, "{d}.ssa", .{member}) });
+        try context.write(path.*, try sectioned(scratch.allocator(), text));
+    }
+    return .{ .work = work, .paths = paths };
+}
 /// One object that missed the cache: the key it is published under, where the
 /// built object is recorded, and what it is built from.
 pub const Miss = struct { key: []const u8, object: *cache_api.Object, input: Input };
@@ -216,8 +242,13 @@ pub fn build(cache: cache_api.Cache, misses: []const Miss, limit: usize) cache_a
         };
         if (advanced) |started| try running.append(a, started) else context.remove(current.work);
     }
-    // A staged C unit whose compiler never started still owns its scratch.
-    for (misses[next..]) |miss| if (miss.input == .staged) cache.discard(miss.input.staged);
+    // A staged C unit whose compiler never started still owns its scratch, and
+    // so does a batch whose files were written but whose QBE never ran.
+    for (misses[next..]) |miss| switch (miss.input) {
+        .staged => |job| cache.discard(job),
+        .files => |files| context.remove(files.work),
+        else => {},
+    };
     if (failure) |err| return err;
 }
 
@@ -243,6 +274,15 @@ fn startJob(cache: cache_api.Cache, miss: Miss, index: usize) cache_api.Error!Ru
         const started = try spawn.start(a, .{ .argv = job.argv, .environment = job.environment });
         return .{ .miss = index, .work = job.work, .stage = .compile, .started = started };
     }
+    if (miss.input == .files) {
+        const files = miss.input.files;
+        errdefer context.remove(files.work);
+        var argv: std.ArrayList([]const u8) = .empty;
+        try argv.appendSlice(a, &.{ cache.codegen.tool, "-t", "amd64_sysv", "-o", try std.fs.path.join(a, &.{ files.work, "batch.s" }) });
+        try argv.appendSlice(a, files.paths);
+        const started = try spawn.start(a, .{ .argv = argv.items });
+        return .{ .miss = index, .work = files.work, .stage = .qbe, .started = started };
+    }
     const work = try context.temporary(cache.temporary);
     errdefer context.remove(work);
     const assembly = try std.fs.path.join(a, &.{ work, "batch.s" });
@@ -263,7 +303,7 @@ fn startJob(cache: cache_api.Cache, miss: Miss, index: usize) cache_api.Error!Ru
             const started = try spawn.start(a, .{ .argv = argv.items });
             return .{ .miss = index, .work = work, .stage = .qbe, .started = started };
         },
-        .staged => unreachable,
+        .staged, .files => unreachable,
     }
 }
 
@@ -291,21 +331,34 @@ fn advance(cache: cache_api.Cache, miss: Miss, current: Running, stopping: bool)
     try std.Io.File.stderr().writeStreamingAll(context.io, current.stderr.items);
     if (fs.exitCode(term) != 0) return error.NativeToolFailed;
     if (stopping) return null;
+    // BUILD-MEMORY-1: the assembly a step annotates and the object it
+    // fingerprints are read through a scratch arena freed when the step ends,
+    // so a cold build holds one batch's worth of them, not the program's.
+    var scratch = std.heap.ArenaAllocator.init(context.parent);
+    defer scratch.deinit();
+    var light = cache;
+    light.context.allocator = scratch.allocator();
     switch (current.stage) {
         .qbe => {
-            try cache.annotateAssembly(try std.fs.path.join(a, &.{ current.work, "batch.s" }));
+            try light.annotateAssembly(try std.fs.path.join(a, &.{ current.work, "batch.s" }));
             const started = try spawn.start(a, .{ .argv = try assembler(cache, current.work) });
             return .{ .miss = current.miss, .work = current.work, .stage = .assemble, .started = started };
         },
         .assemble => {
-            miss.object.* = try cache.keep(miss.key, try std.fs.path.join(a, &.{ current.work, "object.o" }));
+            miss.object.* = try copiedObject(a, try light.keep(miss.key, try std.fs.path.join(a, &.{ current.work, "object.o" })));
             return null;
         },
         .compile => {
-            miss.object.* = try cache.publish(miss.input.staged);
+            miss.object.* = try copiedObject(a, try light.publish(miss.input.staged));
             return null;
         },
     }
+}
+
+/// An object published through a scratch cache, with its names copied out of
+/// the scratch arena into `allocator`.
+fn copiedObject(allocator: std.mem.Allocator, object: cache_api.Object) error{OutOfMemory}!cache_api.Object {
+    return .{ .key = try allocator.dupe(u8, object.key), .path = try allocator.dupe(u8, object.path), .reused = object.reused };
 }
 
 /// The cache key of a batch: its members' own keys, in plan order.
@@ -412,6 +465,44 @@ test "each function of a unit gets its own text section and data-defining units 
     // The word inside a name, a parameter or a body line is not a definition.
     try std.testing.expect(!definesData("export function l $metadata(l %data) {\n@s\n %data2 =l copy 1\n ret 0\n}\n"));
     try std.testing.expect(definesData("type :t = { l }\nexport function l $f() {\n@s\n ret 0\n}\nexport data $late = { l 1 }"));
+}
+
+/// Member texts for the staging test, handed out one at a time.
+const TestTexts = struct {
+    texts: []const []const u8,
+    at: usize = 0,
+    /// The next member's IL, copied into the caller's scratch arena.
+    pub fn next(self: *TestTexts, scratch: std.mem.Allocator) error{OutOfMemory}![]const u8 {
+        defer self.at += 1;
+        return scratch.dupe(u8, self.texts[self.at]);
+    }
+};
+
+// spec: BUILD-MEMORY-1
+test "a staged batch writes each member's sectioned text and leaves no scratch when it never runs" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const cache: cache_api.Cache = .{ .context = context, .directory = root, .temporary = root, .assets = "/assets", .environment = "env", .zig = "/bin/false", .mode = "Debug", .codegen = .{ .tool = "/bin/false" } };
+    const members = [_][]const u8{ "export function l $a() {\n@s\n ret 0\n}", "function w $b() {\n@s\n ret 1\n}" };
+    var texts: TestTexts = .{ .texts = &members };
+    const files = try stage(cache, members.len, &texts);
+    try std.testing.expectEqual(@as(usize, 2), files.paths.len);
+    try std.testing.expectEqualStrings(try sectioned(context.allocator, members[0]), try context.read(files.paths[0]));
+    try std.testing.expectEqualStrings(try sectioned(context.allocator, members[1]), try context.read(files.paths[1]));
+    // A failing first batch stops the pool; the staged batch that never started
+    // still has its directory removed.
+    var objects: [2]cache_api.Object = undefined;
+    const misses = [_]Miss{
+        .{ .key = "first", .input = .{ .il = &.{"export function l $c() {\n@s\n ret 0\n}"} }, .object = &objects[0] },
+        .{ .key = "second", .input = .{ .files = files }, .object = &objects[1] },
+    };
+    try std.testing.expectError(error.NativeToolFailed, build(cache, &misses, 1));
+    try std.testing.expect(!context.exists(files.work));
 }
 
 // spec-case: QBE-BATCH-1

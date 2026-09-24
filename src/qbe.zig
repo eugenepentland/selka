@@ -21,6 +21,7 @@ const test_dependencies = @import("native_test_dependencies.zig");
 const native_interface = @import("native_interface.zig");
 const prelude = @import("prelude.zig");
 const qbe_wire = @import("qbe_wire.zig");
+const fragments = @import("qbe_fragments.zig");
 /// Failures producing independent QBE native units.
 pub const GenerateError = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 const frame_module = @import("qbe_frame.zig");
@@ -63,7 +64,99 @@ const Unit = struct {
     messages: []const []const u8,
     inlines: []const InlineFrame,
     @"export": ?@import("qbe_exports.zig").Export = null,
+    /// Set when a lean manifest names this unit's stored text instead of
+    /// carrying it: the text's digest, its path and the lines the native build
+    /// reads without compiling it (`QBE-FRAGMENT-REUSE-1`).
+    stored: ?Stored = null,
+
+    /// The manifest shape of one unit: its text inline, or, for a stored unit,
+    /// `il_digest`, `il_file` and `il_facts` in its place.
+    pub fn jsonStringify(self: Unit, jw: anytype) !void {
+        try jw.beginObject();
+        try jw.objectField("test_dependencies");
+        try jw.write(self.test_dependencies);
+        try jw.objectField("name");
+        try jw.write(self.name);
+        try jw.objectField("symbol");
+        try jw.write(self.symbol);
+        if (self.stored) |stored| {
+            try jw.objectField("il_digest");
+            try jw.write(stored.digest);
+            try jw.objectField("il_file");
+            try jw.write(stored.file);
+            try jw.objectField("il_facts");
+            try jw.write(stored.facts);
+            try writeCompactPositions(self, jw);
+        } else {
+            try jw.objectField("il");
+            try jw.write(self.il);
+            try jw.objectField("locations");
+            try jw.write(self.locations);
+            try jw.objectField("messages");
+            try jw.write(self.messages);
+        }
+        try jw.objectField("inlines");
+        try jw.write(self.inlines);
+        try jw.objectField("export");
+        try jw.write(self.@"export");
+        try jw.endObject();
+    }
 };
+/// A unit text kept in the fragment store: hex digest, path and build facts.
+const Stored = struct { digest: []const u8, file: []const u8, facts: []const u8 };
+
+/// A lean unit's per-instruction positions and assertion messages
+/// (`BUILD-POSITIONS-1`): `paths` lists each distinct source path once, in
+/// first-use order; `positions` is one `path:line:column` entry per
+/// instruction, space separated, `path` indexing `paths`; and `assertions`
+/// pairs each instruction that has a message with that message. It carries
+/// exactly what `locations` and `messages` do in a fifth of the bytes, and
+/// the build reads it without allocating a JSON value per instruction.
+fn writeCompactPositions(unit: Unit, jw: *std.json.Stringify) std.json.Stringify.Error!void {
+    var paths: [compact_path_limit][]const u8 = undefined;
+    var known: usize = 0;
+    for (unit.locations) |location| {
+        if (pathIndex(paths[0..known], location.path) != null) continue;
+        if (known == paths.len) {
+            // More source paths than the table holds: spell the unit out.
+            try jw.objectField("locations");
+            try jw.write(unit.locations);
+            try jw.objectField("messages");
+            return jw.write(unit.messages);
+        }
+        paths[known] = location.path;
+        known += 1;
+    }
+    try jw.objectField("paths");
+    try jw.write(paths[0..known]);
+    try jw.objectField("positions");
+    try jw.beginWriteRaw();
+    try jw.writer.writeByte('"');
+    for (unit.locations, 0..) |location, pc| {
+        if (pc != 0) try jw.writer.writeByte(' ');
+        try jw.writer.print("{d}:{d}:{d}", .{ pathIndex(paths[0..known], location.path).?, location.line, location.column });
+    }
+    try jw.writer.writeByte('"');
+    jw.endWriteRaw();
+    try jw.objectField("assertions");
+    try jw.beginArray();
+    for (unit.messages, 0..) |message, pc| {
+        if (message.len == 0) continue;
+        try jw.beginArray();
+        try jw.write(pc);
+        try jw.write(message);
+        try jw.endArray();
+    }
+    try jw.endArray();
+}
+/// A unit's instructions come from its own module and from the modules of the
+/// callees inlined into it; a unit with more distinct paths than this keeps the
+/// spelled-out `locations` and `messages` instead.
+const compact_path_limit = 256;
+fn pathIndex(paths: []const []const u8, path: []const u8) ?usize {
+    for (paths, 0..) |known, index| if (known.ptr == path.ptr and known.len == path.len or std.mem.eql(u8, known, path)) return index;
+    return null;
+}
 
 /// Generate a JSON manifest whose independently linkable functions have stable names.
 pub fn generate(allocator: std.mem.Allocator, program: bytecode.Program, src: Source, sink: *diagnostic.Sink) GenerateError![]u8 {
@@ -120,6 +213,7 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
     // collect needs no root push at its call site.
     var pass: EmitPass = .{
         .allocator = a,
+        .backing = allocator,
         .program = program,
         .units = units,
         .states = states,
@@ -132,9 +226,11 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
         .checks = interface.policy.checks,
         .pure = &.{},
     };
-    try emitPass(pass);
-    pass.pure = try allocateAnalysis(a, program, units);
-    try emitPass(pass);
+    var reuse: Reuse = try .init(a, pass, interface.reuse);
+    const allocates = try firstPass(pass, &reuse);
+    pass.pure = try allocateAnalysis(a, program, allocates);
+    try secondPass(pass, &reuse);
+    if (interface.reuse) |configured| configured.store.flush();
     const entry_function = program.functions[@backingInt(program.main)];
     const entry_parameters = try a.alloc([]const u8, entry_function.signature.parameter_count);
     const entry_parameter_names = try a.alloc([]const u8, entry_function.signature.parameter_count);
@@ -431,6 +527,9 @@ const pureCalleeName = roots_module.pureCalleeName;
 /// pass that uses its result.
 const EmitPass = struct {
     allocator: std.mem.Allocator,
+    /// Backs the per-function scratch arena, which is reset after every unit so
+    /// one emission never holds more than one function's lowering garbage.
+    backing: std.mem.Allocator,
     program: bytecode.Program,
     units: []Unit,
     states: [][]const ?[]const typed.Type,
@@ -447,39 +546,211 @@ const EmitPass = struct {
     pure: []const bool,
 };
 
-/// Lower every selected function into its unit, overwriting any previous text.
-fn emitPass(pass: EmitPass) GenerateError!void {
-    for (pass.program.functions, pass.units, pass.states, 0..) |function, *unit, *stacks, index| {
-        if (pass.selected != null and !pass.selected.?[index]) continue;
-        var emitter = Emitter{
-            .allocator = pass.allocator,
-            .program = pass.program,
-            .function = function,
-            .units = pass.units,
-            .layouts = pass.layouts,
-            .sink = pass.sink,
-            .output = .init(pass.allocator),
-            .scratch = .init(pass.allocator),
-            .arenas = pass.arenas,
-            .step_checks = pass.step_checks,
-            .frame_checks = pass.frame_checks,
-            .checks = pass.checks,
-            .entry = index == @backingInt(pass.program.main),
-            .pure = pass.pure,
+/// Lower one function into text allocated from `scratch`, with the pass's
+/// current allocation analysis. Its operand stacks are returned beside it.
+fn emitOne(pass: EmitPass, index: usize, scratch: std.mem.Allocator) GenerateError!struct { text: []const u8, states: []?[]const typed.Type } {
+    var emitter = Emitter{
+        .allocator = scratch,
+        .program = pass.program,
+        .function = pass.program.functions[index],
+        .units = pass.units,
+        .layouts = pass.layouts,
+        .sink = pass.sink,
+        .output = .init(scratch),
+        .scratch = .init(scratch),
+        .arenas = pass.arenas,
+        .step_checks = pass.step_checks,
+        .frame_checks = pass.frame_checks,
+        .checks = pass.checks,
+        .entry = index == @backingInt(pass.program.main),
+        .pure = pass.pure,
+    };
+    const text = try emitter.emit(pass.units[index].symbol);
+    return .{ .text = text, .states = emitter.states };
+}
+
+/// The fragment reuse one emission runs with: the configured store, the
+/// per-build key memo, each function's first-pass key, the symbols of every
+/// unit (for `unitAllocates`), and the facts a second-pass key reads about
+/// each named function (`QBE-FRAGMENT-REUSE-1`).
+const Reuse = struct {
+    configured: ?fragments.Reuse,
+    keys: ?fragments.Keys,
+    local: []fragments.Digest,
+    symbols: std.StringHashMapUnmanaged(void),
+    writes: []?[]const bool,
+    targets: ?fragments.Digest = null,
+
+    fn init(a: std.mem.Allocator, pass: EmitPass, configured: ?fragments.Reuse) GenerateError!Reuse {
+        var symbols: std.StringHashMapUnmanaged(void) = .empty;
+        errdefer symbols.deinit(a);
+        for (pass.units) |unit| try symbols.put(a, unit.symbol, {});
+        const writes = try a.alloc(?[]const bool, pass.program.functions.len);
+        errdefer a.free(writes);
+        @memset(writes, null);
+        const local = try a.alloc(fragments.Digest, pass.program.functions.len);
+        errdefer a.free(local);
+        return .{
+            .configured = configured,
+            .keys = if (configured != null) try fragments.Keys.init(a, pass.program) else null,
+            .local = local,
+            .symbols = symbols,
+            .writes = writes,
         };
-        unit.il = try emitter.emit(unit.symbol);
-        stacks.* = emitter.states;
-        unit.test_dependencies = test_dependencies.describe(pass.allocator, pass.program, index, unit.il, pass.layouts, emitter.states) catch |err| return layoutError(err);
     }
+    /// Which parameters of function `index` its own body writes: the one fact
+    /// about a callee's body (`blindCall`) that a caller's unit reads.
+    fn parameterWrites(self: *Reuse, a: std.mem.Allocator, program: bytecode.Program, index: usize) GenerateError![]const bool {
+        if (self.writes[index]) |known| return known;
+        const function = program.functions[index];
+        const count = @min(function.signature.parameter_count, function.scope.locals.len);
+        const flags = try a.alloc(bool, count);
+        for (flags, 0..) |*flag, parameter| {
+            flag.* = false;
+            for (0..function.scope.instructions.len) |at| if (writesLocalAt(function, at, parameter)) {
+                flag.* = true;
+                break;
+            };
+        }
+        self.writes[index] = flags;
+        return flags;
+    }
+    /// The second-pass key of function `index` under allocation analysis `pure`.
+    fn final(self: *Reuse, a: std.mem.Allocator, program: bytecode.Program, index: usize, pure: []const bool) GenerateError!fragments.Digest {
+        var key: fragments.Final = .init(self.local[index]);
+        for (try self.keys.?.callees(index)) |callee| key.callee(callee < pure.len and pure[callee], try self.parameterWrites(a, program, callee));
+        for (program.functions[index].scope.instructions) |instruction| if (instruction.op == .invoke) {
+            if (self.targets == null) self.targets = try fragments.functionValueTargets(a, program);
+            key.targets(self.targets.?);
+            break;
+        };
+        return key.finish();
+    }
+};
+
+/// First pass: learn, per emitted function, whether its own text allocates.
+/// Units are lowered with roots everywhere and then discarded; a stored answer
+/// for an unchanged first-pass key skips the lowering.
+fn firstPass(pass: EmitPass, reuse: *Reuse) GenerateError![]bool {
+    const program = pass.program;
+    const allocates = try pass.allocator.alloc(bool, program.functions.len);
+    @memset(allocates, false);
+    var scratch = std.heap.ArenaAllocator.init(pass.backing);
+    defer scratch.deinit();
+    for (0..program.functions.len) |index| {
+        if (pass.selected != null and !pass.selected.?[index]) continue;
+        if (reuse.configured) |configured| {
+            reuse.local[index] = try reuse.keys.?.local(index, flagsOf(pass, index));
+            if (try configured.store.first(reuse.local[index])) |answer| {
+                allocates[index] = answer;
+                continue;
+            }
+        }
+        defer _ = scratch.reset(.retain_capacity);
+        const emitted = try emitOne(pass, index, scratch.allocator());
+        allocates[index] = unitAllocates(emitted.text, &reuse.symbols);
+        if (reuse.configured) |configured| try configured.store.rememberFirst(reuse.local[index], allocates[index]);
+    }
+    return allocates;
+}
+
+/// Second pass: emit (or reuse) every selected unit with the allocation
+/// analysis in hand, and record its checked dependency facts. Only the unit
+/// text and the operand stacks a `str` renderer needs outlive one function.
+fn secondPass(pass: EmitPass, reuse: *Reuse) GenerateError!void {
+    const a = pass.allocator;
+    const program = pass.program;
+    var scratch = std.heap.ArenaAllocator.init(pass.backing);
+    defer scratch.deinit();
+    for (program.functions, pass.units, pass.states, 0..) |function, *unit, *stacks, index| {
+        if (pass.selected != null and !pass.selected.?[index]) continue;
+        defer _ = scratch.reset(.retain_capacity);
+        const key = if (reuse.configured != null) try reuse.final(a, program, index, pass.pure) else undefined;
+        if (reuse.configured) |configured| if (try configured.store.unit(key)) |answer| {
+            unit.test_dependencies = answer.dependencies;
+            if (configured.lean) {
+                unit.stored = try storedUnit(a, configured.store, answer);
+            } else {
+                unit.il = configured.store.read(answer.il) catch |err| switch (err) {
+                    error.OutOfMemory => return error.OutOfMemory,
+                    error.FragmentMissing => return error.InternalError,
+                };
+            }
+            if (rendersText(function, program.records)) stacks.* = try analyzedStates(pass, index, scratch.allocator());
+            continue;
+        };
+        const emitted = try emitOne(pass, index, scratch.allocator());
+        unit.test_dependencies = test_dependencies.describe(a, program, index, emitted.text, pass.layouts, emitted.states) catch |err| return layoutError(err);
+        if (rendersText(function, program.records)) stacks.* = try copyStates(a, emitted.states);
+        if (reuse.configured) |configured| {
+            const answer = try configured.store.remember(key, emitted.text, unit.test_dependencies.?);
+            if (configured.lean) {
+                unit.stored = try storedUnit(a, configured.store, answer);
+                continue;
+            }
+        }
+        unit.il = try a.dupe(u8, emitted.text);
+    }
+}
+
+/// The whole-program switches a unit's first-pass key covers.
+fn flagsOf(pass: EmitPass, index: usize) fragments.Flags {
+    return .{
+        .step_checks = pass.step_checks,
+        .frame_checks = pass.frame_checks,
+        .checks = pass.checks,
+        .arenas = pass.arenas,
+        .entry = index == @backingInt(pass.program.main),
+    };
+}
+
+/// The lean manifest fields of one stored unit.
+fn storedUnit(a: std.mem.Allocator, store: *fragments.Store, answer: fragments.Unit) GenerateError!Stored {
+    return .{ .digest = try a.dupe(u8, &std.fmt.bytesToHex(answer.il, .lower)), .file = try store.path(answer.il), .facts = answer.facts };
+}
+
+/// Whether `native_render` reads this function's operand stacks: only a
+/// conversion to a managed text record names a type it cannot see otherwise
+/// (`rendersConversion` needs the operand's type only for those), so an integer
+/// narrowing never costs a reused unit its operand analysis.
+fn rendersText(function: bytecode.Function, records: []const typed.Record) bool {
+    for (function.scope.instructions) |instruction| switch (instruction.op) {
+        .cast_integer => |target| {
+            if (!target.isAggregate() or target.recordIndex() >= records.len) continue;
+            const record = records[target.recordIndex()];
+            if (record.managed and record.collection.kind == .string) return true;
+        },
+        else => {},
+    };
+    return false;
+}
+
+/// Operand stacks of a reused unit, from the same analysis emission runs. A
+/// host or C-ABI function is lowered without one, exactly as when emitted.
+fn analyzedStates(pass: EmitPass, index: usize, scratch: std.mem.Allocator) GenerateError![]const ?[]const typed.Type {
+    const function = pass.program.functions[index];
+    if (function.policy.c_abi or function.policy.host != null) return &.{};
+    const ir = @import("native_ir.zig").analyze(scratch, pass.program, function) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return error.InternalError,
+    };
+    return copyStates(pass.allocator, ir.states);
+}
+
+/// Copy per-pc operand stacks out of one function's scratch arena.
+fn copyStates(a: std.mem.Allocator, states: []const ?[]const typed.Type) GenerateError![]const ?[]const typed.Type {
+    const copied = try a.alloc(?[]const typed.Type, states.len);
+    for (states, copied) |state, *out| out.* = if (state) |stack| try a.dupe(typed.Type, stack) else null;
+    return copied;
 }
 
 /// Per function, whether it can allocate or reach a call that can, transitively.
 /// A direct `.call` to a function this leaves false cannot start a collection,
-/// so the caller omits the root protocol around it. The answer is read from the
-/// already-emitted text, so it cannot drift from the lowering it describes.
-fn allocateAnalysis(a: std.mem.Allocator, program: bytecode.Program, units: []const Unit) GenerateError![]bool {
-    const may = try a.alloc(bool, program.functions.len);
-    for (units, 0..) |unit, index| may[index] = unitAllocates(unit.il, units);
+/// so the caller omits the root protocol around it. `own` is each function's
+/// answer from its own first-pass text (`unitAllocates`), so the analysis
+/// cannot drift from the lowering it describes.
+fn allocateAnalysis(a: std.mem.Allocator, program: bytecode.Program, own: []const bool) GenerateError![]bool {
+    const may = try a.dupe(bool, own);
     var changed = true;
     while (changed) {
         changed = false;
@@ -505,7 +776,9 @@ fn allocateAnalysis(a: std.mem.Allocator, program: bytecode.Program, units: []co
 
 /// Whether a unit's text allocates on its own: any call other than a pure
 /// runtime callee or another unit in this program (which the graph handles).
-fn unitAllocates(text: []const u8, units: []const Unit) bool {
+/// `symbols` holds every unit's symbol, so each call costs one lookup rather
+/// than a scan of the whole program.
+fn unitAllocates(text: []const u8, symbols: *const std.StringHashMapUnmanaged(void)) bool {
     if (callsIndirectly(text)) return true;
     var rest = text;
     while (std.mem.indexOf(u8, rest, "call $")) |at| {
@@ -513,7 +786,7 @@ fn unitAllocates(text: []const u8, units: []const Unit) bool {
         const stop = std.mem.indexOfAny(u8, rest, "( \n") orelse rest.len;
         const name = rest[0..stop];
         const runtime = pureCalleeName(name) or frameCallee(name);
-        if (!runtime and !guestSymbol(name, units)) return true;
+        if (!runtime and !symbols.contains(name)) return true;
         rest = rest[stop..];
     }
     return false;
@@ -523,11 +796,6 @@ const callsIndirectly = roots_module.callsIndirectly;
 
 fn frameCallee(name: []const u8) bool {
     for (frame_callees) |candidate| if (std.mem.eql(u8, name, candidate)) return true;
-    return false;
-}
-
-fn guestSymbol(name: []const u8, units: []const Unit) bool {
-    for (units) |unit| if (std.mem.eql(u8, unit.symbol, name)) return true;
     return false;
 }
 

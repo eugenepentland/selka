@@ -121,12 +121,17 @@ pub const Cache = struct {
     /// can then start their tools together and finish each one.
     pub fn stage(self: Cache, kind: []const u8, input: []const u8, flavor: Flavor, environment: ?*const std.process.Environ.Map) Error!Staged {
         const key = try self.identity(kind, input);
+        if (try self.cached(key)) |hit| return .{ .hit = hit };
+        return .{ .miss = try self.stageAt(key, input, flavor, environment) };
+    }
+    /// Prepare the tool invocation that builds `input` into the object `key`
+    /// names, without running it.
+    pub fn stageAt(self: Cache, key: []const u8, input: []const u8, flavor: Flavor, environment: ?*const std.process.Environ.Map) Error!Job {
         const path = try self.entry(key, ".o");
-        if (self.valid(path, try self.entry(key, ".digest"))) return .{ .hit = .{ .key = key, .path = path, .reused = true } };
         const work = try self.context.temporary(self.temporary);
         const candidate = try std.fs.path.join(self.context.allocator, &.{ work, "object.o" });
         const scratch: Scratch = .{ .key = key, .path = path, .candidate = candidate, .work = work };
-        return .{ .miss = try self.prepare(scratch, input, flavor, environment) };
+        return self.prepare(scratch, input, flavor, environment);
     }
     /// Run a staged job's primary tool and its optional assembler, then publish
     /// its object. This is the sequential path a single `object` takes.
@@ -317,6 +322,13 @@ pub const Cache = struct {
     /// cache contract: the identity a per-function object was published under.
     pub fn unitKey(self: Cache, il: []const u8) Error![]const u8 {
         return self.identity("function", il);
+    }
+    /// The key of a guest unit named by the hex digest of its IL rather than the
+    /// IL itself (`QBE-FRAGMENT-REUSE-1`): a lean manifest carries only that
+    /// digest, so its objects are found without reading any unit text, and an
+    /// inline unit with the same text reaches the same key.
+    pub fn digestKey(self: Cache, digest: []const u8) Error![]const u8 {
+        return self.identity("function-digest", digest);
     }
     /// A key derived from other keys of this cache, under its own `kind`.
     pub fn derived(self: Cache, kind: []const u8, input: []const u8) Error![]const u8 {

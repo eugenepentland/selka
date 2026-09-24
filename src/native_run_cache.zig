@@ -31,23 +31,50 @@ pub const Identity = struct {
 pub const Entry = struct { manifest: []u8, fragments: usize };
 
 /// Load a checksum-valid emitted manifest, or return null for absence/corruption.
+/// The manifest is never parsed here: its fragment count is stored beside its
+/// checksum, and a lean manifest (`QBE-FRAGMENT-REUSE-1`) is a hit only while
+/// every unit text it names is still in the fragment store.
 pub fn load(allocator: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, settings: options.Options, identity: Identity) Error!?Entry {
     var context = try fs.Context.init(allocator, io, environ);
     defer context.deinit();
     const paths = try entryPaths(context, settings, identity);
     const manifest = context.read(paths.manifest) catch return null;
-    const expected = context.read(paths.digest) catch return null;
+    const recorded = context.read(paths.digest) catch return null;
     if (manifest.len == 0) return null;
+    const newline = std.mem.indexOfScalar(u8, recorded, '\n') orelse return null;
     const actual = fs.digest(context.allocator, manifest) catch return null;
-    if (!std.mem.eql(u8, expected, actual)) return null;
-    var parsed = std.json.parseFromSlice(std.json.Value, context.allocator, manifest, .{}) catch return null;
-    defer parsed.deinit();
-    if (parsed.value != .object) return null;
-    const version = parsed.value.object.get("version") orelse return null;
-    if (version != .string or !std.mem.eql(u8, version.string, "qbe-units-v1")) return null;
-    const functions = parsed.value.object.get("functions") orelse return null;
-    if (functions != .array or functions.array.items.len == 0) return null;
-    return .{ .manifest = try allocator.dupe(u8, manifest), .fragments = functions.array.items.len };
+    if (!std.mem.eql(u8, recorded[0..newline], actual)) return null;
+    const fragments = std.fmt.parseInt(usize, recorded[newline + 1 ..], 10) catch return null;
+    if (fragments == 0 or std.mem.indexOf(u8, manifest, version_member) == null) return null;
+    if (!storedTextsPresent(context, manifest)) return null;
+    return .{ .manifest = try allocator.dupe(u8, manifest), .fragments = fragments };
+}
+
+/// The manifest member every accepted manifest carries.
+const version_member = "\"version\":\"qbe-units-v1\"";
+/// The member that opens one unit's inline text, and one stored unit's path.
+/// Inside a JSON string every quote is escaped, so neither spelling can occur
+/// within a unit's text or any other string member.
+const inline_member = "\"il\":\"";
+const stored_member = "\"il_file\":\"";
+
+/// How many units a manifest carries, inline or stored.
+fn unitCount(manifest: []const u8) usize {
+    return std.mem.count(u8, manifest, inline_member) + std.mem.count(u8, manifest, stored_member);
+}
+
+/// Whether every unit text a lean manifest names still exists. A path that
+/// needed JSON escaping is not checked by spelling, so it counts as missing.
+fn storedTextsPresent(context: fs.Context, manifest: []const u8) bool {
+    var rest = manifest;
+    while (std.mem.indexOf(u8, rest, stored_member)) |at| {
+        rest = rest[at + stored_member.len ..];
+        const end = std.mem.indexOfScalar(u8, rest, '"') orelse return false;
+        const path = rest[0..end];
+        if (std.mem.indexOfScalar(u8, path, '\\') != null or !context.exists(path)) return false;
+        rest = rest[end..];
+    }
+    return true;
 }
 
 /// Atomically publish an emitted manifest and its independent checksum.
@@ -61,7 +88,8 @@ pub fn store(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proce
     const manifest_path = try std.fs.path.join(context.allocator, &.{ directory, key });
     const digest_path = try std.fmt.allocPrint(context.allocator, "{s}.digest", .{manifest_path});
     try context.atomic(manifest_path, manifest);
-    try context.atomic(digest_path, try fs.digest(context.allocator, manifest));
+    const recorded = try std.fmt.allocPrint(context.allocator, "{s}\n{d}", .{ try fs.digest(context.allocator, manifest), unitCount(manifest) });
+    try context.atomic(digest_path, recorded);
 }
 
 const Paths = struct { manifest: []const u8, digest: []const u8 };
@@ -131,7 +159,7 @@ test "manifest cache reuses valid data and treats corruption as a miss" {
     const identity: Identity = .{ .sources = &sources };
     const settings: options.Options = .{ .source = "", .run = true, .cache = root };
     try std.testing.expect((try load(std.testing.allocator, std.testing.io, &environment, settings, identity)) == null);
-    const valid_manifest = "{\"version\":\"qbe-units-v1\",\"functions\":[{}]}";
+    const valid_manifest = "{\"version\":\"qbe-units-v1\",\"functions\":[{\"il\":\"\"}]}";
     try store(std.testing.allocator, std.testing.io, &environment, settings, identity, valid_manifest);
     const hit = (try load(std.testing.allocator, std.testing.io, &environment, settings, identity)).?;
     defer std.testing.allocator.free(hit.manifest);
@@ -141,5 +169,28 @@ test "manifest cache reuses valid data and treats corruption as a miss" {
     defer context.deinit();
     const paths = try entryPaths(context, settings, identity);
     try context.atomic(paths.manifest, "corrupt");
+    try std.testing.expect((try load(std.testing.allocator, std.testing.io, &environment, settings, identity)) == null);
+}
+
+// spec-case: QBE-FRAGMENT-REUSE-1
+test "a cached lean manifest is a hit only while every stored unit text it names exists" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const text = try std.fs.path.join(context.allocator, &.{ root, "unit" });
+    try context.write(text, "export function $f() {\n@start\n ret\n}\n");
+    const sources = [_]Source{.{ .path = "main.my", .bytes = "lean" }};
+    const identity: Identity = .{ .sources = &sources };
+    const settings: options.Options = .{ .source = "", .run = true, .cache = root };
+    const lean = try std.fmt.allocPrint(context.allocator, "{{\"version\":\"qbe-units-v1\",\"functions\":[{{\"il_digest\":\"d\",\"il_file\":\"{s}\",\"il_facts\":\"\"}},{{\"il\":\"x\"}}]}}", .{text});
+    try store(std.testing.allocator, std.testing.io, &environment, settings, identity, lean);
+    const hit = (try load(std.testing.allocator, std.testing.io, &environment, settings, identity)).?;
+    defer std.testing.allocator.free(hit.manifest);
+    try std.testing.expectEqual(@as(usize, 2), hit.fragments);
+    try std.Io.Dir.cwd().deleteFile(std.testing.io, text);
     try std.testing.expect((try load(std.testing.allocator, std.testing.io, &environment, settings, identity)) == null);
 }

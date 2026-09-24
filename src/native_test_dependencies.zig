@@ -5,6 +5,10 @@ const typed = @import("typed.zig");
 const layouts = @import("native_types.zig");
 const effects = @import("effect_set.zig");
 const Sha = std.crypto.hash.sha2.Sha256;
+/// Implementation and type-fact digests are BLAKE3: they hash every emitted
+/// unit's whole text, and std's SHA-256 runs at about 11 MB/s on this toolchain
+/// (see `qbe_fragments.zig`). Linker symbols stay SHA-256 names.
+const Fact = std.crypto.hash.Blake3;
 /// Native ABI identity carried by every checked-facts manifest. This is the one
 /// definition: the QBE units manifest, the durable checked-facts graph and the
 /// native build driver's generation identity all reference it, so the meaning
@@ -55,8 +59,8 @@ pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, index: 
     for (states) |state| if (state) |stack| for (stack) |ty| try builder.typeInput(ty);
     std.mem.sort(Dependency, builder.dependencies.items, {}, dependencyLess);
     std.mem.sort(TypeFact, builder.type_facts.items, {}, typeLess);
-    var hash = Sha.init(.{});
-    part(&hash, "native-test-implementation-v1");
+    var hash = Fact.init(.{});
+    part(&hash, "native-test-implementation-v2");
     part(&hash, layouts.Catalog.abi_version);
     part(&hash, il);
     for (builder.type_facts.items) |fact| {
@@ -64,7 +68,7 @@ pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, index: 
         part(&hash, &fact.digest);
     }
     return .{
-        .implementation_hash = try allocator.dupe(u8, &std.fmt.bytesToHex(hash.finalResult(), .lower)),
+        .implementation_hash = try allocator.dupe(u8, &std.fmt.bytesToHex(factDigest(&hash), .lower)),
         .dependencies = try builder.dependencies.toOwnedSlice(allocator),
         .cacheable = cacheable,
         .pure = signaturePure(function.signature, function.scope.locals),
@@ -134,16 +138,16 @@ const Facts = struct {
     fn typeInput(self: *Facts, ty: typed.Type) layouts.Error!void {
         if ((try self.types.getOrPut(self.allocator, ty)).found_existing) return;
         const identity = try self.catalog.identity(ty);
-        var hash = Sha.init(.{});
+        var hash = Fact.init(.{});
         part(&hash, &(try self.catalog.layout(ty)).hash);
         if (ty.isAggregate()) try self.recordInput(self.program.records[ty.recordIndex()], &hash);
-        try self.type_facts.append(self.allocator, .{ .identity = identity, .digest = hash.finalResult() });
+        try self.type_facts.append(self.allocator, .{ .identity = identity, .digest = factDigest(&hash) });
     }
-    fn child(self: *Facts, hash: *Sha, ty: typed.Type) layouts.Error!void {
+    fn child(self: *Facts, hash: *Fact, ty: typed.Type) layouts.Error!void {
         part(hash, try self.catalog.identity(ty));
         try self.typeInput(ty);
     }
-    fn recordInput(self: *Facts, record: typed.Record, hash: *Sha) layouts.Error!void {
+    fn recordInput(self: *Facts, record: typed.Record, hash: *Fact) layouts.Error!void {
         part(hash, @tagName(record.collection.kind));
         if (record.managed) {
             const body = try self.catalog.heapLayout(record.id);
@@ -180,7 +184,14 @@ const Facts = struct {
     }
 };
 
-fn part(hash: *Sha, bytes: []const u8) void {
+/// The digest a finished fact hasher holds.
+fn factDigest(hash: *const Fact) [32]u8 {
+    var out: [32]u8 = undefined;
+    hash.final(&out);
+    return out;
+}
+
+fn part(hash: *Fact, bytes: []const u8) void {
     var length: [8]u8 = undefined;
     std.mem.writeInt(u64, &length, bytes.len, .little);
     hash.update(&length);

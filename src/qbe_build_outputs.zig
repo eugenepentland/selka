@@ -3,6 +3,7 @@ const std = @import("std");
 const v = @import("qbe_build_value.zig");
 const host = @import("qbe_build_host.zig");
 const frame_map = @import("qbe_frame_map.zig");
+const lean = @import("qbe_build_units.zig");
 /// One packed-argument cleanup shared by every early grant exit.
 const free_arguments = "free(arguments);";
 /// Marker the managed lowering writes into a unit's IL for each frozen
@@ -50,24 +51,24 @@ fn metadataUnit(allocator: std.mem.Allocator, manifest: std.json.Value, tables: 
 fn functionTables(w: *std.Io.Writer, functions: []const std.json.Value) Error!void {
     for (functions) |unit| {
         const symbol = v.text(v.get(unit, "symbol"));
-        const locations = v.array(v.get(unit, "locations"));
+        var positions: lean.Positions = .init(unit);
+        const count = positions.count;
         try w.print("static const MylQbeLocation {s}_meta_locations[] = {{\n", .{symbol});
-        for (locations) |location| {
+        while (positions.next()) |position| {
             try w.writeByte('{');
-            try v.quote(w, v.text(v.get(location, "path")));
-            try w.print(",{d},{d}}},\n", .{ v.number(v.get(location, "line")), v.number(v.get(location, "column")) });
+            try v.quote(w, position.path);
+            try w.print(",{d},{d}}},\n", .{ position.line, position.column });
         }
-        if (locations.len == 0) try w.writeAll("{0,0,0},\n");
+        if (count == 0) try w.writeAll("{0,0,0},\n");
         // One message per pc, `""` when the instruction is not an assertion. Pad
         // to the location count so the runtime's `position < count` check always
         // names a real entry, even for a hand-written manifest.
-        const messages = v.array(v.get(unit, "messages"));
         try w.print("}};\nstatic const char *{s}_meta_messages[] = {{\n", .{symbol});
-        for (0..locations.len) |pc| {
-            try v.quote(w, if (pc < messages.len) v.text(messages[pc]) else "");
+        for (0..count) |pc| {
+            try v.quote(w, positions.message(pc));
             try w.writeAll(",\n");
         }
-        if (locations.len == 0) try w.writeAll("\"\",\n");
+        if (count == 0) try w.writeAll("\"\",\n");
         try w.writeAll("};\n");
         // One record per inlined splice: the callee's metadata, the caller pc
         // range its body occupies, the callee-local pc it starts at, and the
@@ -88,7 +89,7 @@ fn functionTables(w: *std.Io.Writer, functions: []const std.json.Value) Error!vo
         }
         try w.print("const MylQbeFunction {s}_meta = {{", .{symbol});
         try v.quote(w, v.text(v.get(unit, "name")));
-        try w.print(",{s}_meta_locations,{d},{s}_meta_messages,", .{ symbol, locations.len, symbol });
+        try w.print(",{s}_meta_locations,{d},{s}_meta_messages,", .{ symbol, count, symbol });
         if (inlines.len != 0) try w.print("{s}_meta_inlines,{d}", .{ symbol, inlines.len }) else try w.writeAll("NULL,0");
         try w.writeAll("};\n");
     }
@@ -111,22 +112,21 @@ pub fn metadataAssembly(allocator: std.mem.Allocator, units: []const std.json.Va
     defer strings.deinit(allocator);
     for (units, 0..) |unit, index| {
         const symbol = v.text(v.get(unit, "symbol"));
-        const locations = v.array(v.get(unit, "locations"));
-        const messages = v.array(v.get(unit, "messages"));
+        var positions: lean.Positions = .init(unit);
+        const count = positions.count;
         const inlines = v.array(v.get(unit, "inlines"));
         try w.print("\t.section\t.data.rel.ro.{s}_meta,\"aw\",@progbits\n\t.p2align\t3\n\t.globl\t{s}_meta\n\t.type\t{s}_meta,@object\n\t.size\t{s}_meta,48\n{s}_meta:\n", .{ symbol, symbol, symbol, symbol, symbol });
-        try w.print("\t.quad\t.Lmyl_s_{d}\n\t.quad\t.Lmyl_l_{d}\n\t.quad\t{d}\n\t.quad\t.Lmyl_m_{d}\n", .{ try stringIndex(allocator, &strings, v.text(v.get(unit, "name"))), index, locations.len, index });
+        try w.print("\t.quad\t.Lmyl_s_{d}\n\t.quad\t.Lmyl_l_{d}\n\t.quad\t{d}\n\t.quad\t.Lmyl_m_{d}\n", .{ try stringIndex(allocator, &strings, v.text(v.get(unit, "name"))), index, count, index });
         if (inlines.len != 0) try w.print("\t.quad\t.Lmyl_i_{d}\n\t.quad\t{d}\n", .{ index, inlines.len }) else try w.writeAll("\t.quad\t0\n\t.quad\t0\n");
         try w.print(".Lmyl_l_{d}:\n", .{index});
-        for (locations) |location| {
-            const path = try stringIndex(allocator, &strings, v.text(v.get(location, "path")));
-            try w.print("\t.quad\t.Lmyl_s_{d}\n\t.quad\t{d}\n\t.quad\t{d}\n", .{ path, v.number(v.get(location, "line")), v.number(v.get(location, "column")) });
+        while (positions.next()) |position| {
+            const path = try stringIndex(allocator, &strings, position.path);
+            try w.print("\t.quad\t.Lmyl_s_{d}\n\t.quad\t{d}\n\t.quad\t{d}\n", .{ path, position.line, position.column });
         }
-        if (locations.len == 0) try w.writeAll("\t.quad\t0\n\t.quad\t0\n\t.quad\t0\n");
+        if (count == 0) try w.writeAll("\t.quad\t0\n\t.quad\t0\n\t.quad\t0\n");
         try w.print(".Lmyl_m_{d}:\n", .{index});
-        for (0..@max(1, locations.len)) |pc| {
-            const message = if (pc < messages.len) v.text(messages[pc]) else "";
-            try w.print("\t.quad\t.Lmyl_s_{d}\n", .{try stringIndex(allocator, &strings, message)});
+        for (0..@max(1, count)) |pc| {
+            try w.print("\t.quad\t.Lmyl_s_{d}\n", .{try stringIndex(allocator, &strings, positions.message(pc))});
         }
         if (inlines.len == 0) continue;
         try w.print(".Lmyl_i_{d}:\n", .{index});
@@ -163,8 +163,7 @@ fn stringIndex(allocator: std.mem.Allocator, strings: *std.array_hash_map.String
 fn frameMapRoots(w: *std.Io.Writer, functions: []const std.json.Value) Error!void {
     var any = false;
     for (functions) |unit| {
-        const il = v.get(unit, "il");
-        if (il == .string and frame_map.usesFrameMap(v.text(il))) any = true;
+        if (frame_map.usesFrameMap(lean.facts(unit))) any = true;
     }
     if (!any) return;
     try w.writeAll("__attribute__((used)) static const MylQbeFunction *const mylang_frame_map_functions[] = {\n");
@@ -210,9 +209,8 @@ fn literalDefinitions(w: *std.Io.Writer, allocator: std.mem.Allocator, units: []
     defer seen.deinit(allocator);
     var header = false;
     for (units) |unit| {
-        const il = v.get(unit, "il");
-        if (il != .string) continue;
-        var lines: MarkerLines = .{ .il = v.text(il) };
+        // A stored unit's facts hold its marker lines (`QBE-FRAGMENT-REUSE-1`).
+        var lines: MarkerLines = .{ .il = lean.facts(unit) };
         while (lines.next()) |line| {
             var tokens = std.mem.tokenizeScalar(u8, line[2 + literal_word.len ..], ' ');
             const symbol = tokens.next() orelse continue;
