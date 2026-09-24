@@ -36,4 +36,5 @@ pub const topics = [_]Topic{
     .{ .name = "build", .path = "docs/tooling/native-build.md", .summary = "mylang build and run: QBE by default, --release, caches, reports" },
     .{ .name = "navigation", .path = "docs/tooling/navigation.md", .summary = "index-project and tests-for: definitions, uses and reaching tests" },
     .{ .name = "context", .path = "docs/tooling/agent-context.md", .summary = "mylang context: a bounded answer about one declaration" },
+    .{ .name = "api", .path = "docs/tooling/interface-files.md", .summary = "mylang api: the generated .api interface file beside every module" },
 };

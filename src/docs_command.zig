@@ -105,3 +105,12 @@ test "docs lists every topic with the primer first and prints each embedded page
     try std.testing.expectEqual(@as(u8, 2), (try answer(std.testing.allocator, &.{ "primer", "syntax" })).status);
     try std.testing.expectEqualStrings(usage, (try answer(std.testing.allocator, &.{"--help"})).stdout);
 }
+
+// spec-case: CLI-DOCS-1
+test "docs api prints the interface-files guide" {
+    const listed = try answer(std.testing.allocator, &.{});
+    try std.testing.expect(std.mem.indexOf(u8, listed.stdout, "  api ") != null);
+    const guide = try answer(std.testing.allocator, &.{"api"});
+    try std.testing.expectEqual(@as(u8, 0), guide.status);
+    try std.testing.expect(std.mem.startsWith(u8, guide.stdout, "# Interface files\n"));
+}

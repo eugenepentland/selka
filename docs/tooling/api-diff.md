@@ -35,6 +35,11 @@ The four classes are:
 | `breaking` | The identity disappeared, or its interface fingerprint changed. A caller must be updated. |
 | `unchanged` | Identical identity and both fingerprints. Counted, not listed. |
 
+The command is a report and never blocks a build. To keep the published
+interface in version control as readable text instead, see
+[interface files](interface-files.md): `mylang api` writes one `.api` file per
+module and can make a stale one a checking error.
+
 The command is a report and never blocks a build. A malformed or unreadable
 baseline is a usage failure (exit 2); a source error in the current project
 stays exit 1. Removing a declaration that was `@deprecated` in the baseline is
