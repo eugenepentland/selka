@@ -1,0 +1,21 @@
+{"side": "a", "step": "cold", "wall_s": 27.772, "rc": 0, "frontend": 15.187, "codegen": 12.044, "link": 0.357, "metadata_reused": false, "compiled_objects": 2799, "load": 8.93, "err": ""}
+{"side": "a", "step": "noop", "wall_s": 0.589, "rc": 0, "frontend": 0.255, "codegen": 0.165, "link": 0.01, "metadata_reused": true, "compiled_objects": 0, "load": 8.93, "err": ""}
+{"side": "b", "step": "cold", "wall_s": 26.963, "rc": 0, "frontend": 13.927, "codegen": 12.465, "link": 0.381, "metadata_reused": false, "compiled_objects": 2799, "load": 8.8, "err": ""}
+{"side": "b", "step": "noop", "wall_s": 0.598, "rc": 0, "frontend": 0.236, "codegen": 0.176, "link": 0.012, "metadata_reused": true, "compiled_objects": 0, "load": 8.8, "err": ""}
+{"side": "a", "step": "edit", "round": 0, "wall_s": 3.087, "rc": 0, "frontend": 1.696, "codegen": 0.207, "link": 1.06, "metadata_reused": true, "compiled_objects": 1, "load": 9.14, "err": ""}
+{"side": "b", "step": "edit", "round": 0, "wall_s": 3.44, "rc": 0, "frontend": 1.565, "codegen": 0.279, "link": 1.485, "metadata_reused": true, "compiled_objects": 1, "load": 8.89, "err": ""}
+{"side": "a", "step": "iface", "round": 0, "wall_s": 2.942, "rc": 0, "frontend": 1.291, "codegen": 0.503, "link": 1.03, "metadata_reused": false, "compiled_objects": 1, "load": 8.89, "err": ""}
+{"side": "b", "step": "iface", "round": 0, "wall_s": 2.865, "rc": 0, "frontend": 1.762, "codegen": 0.177, "link": 0.813, "metadata_reused": true, "compiled_objects": 1, "load": 8.58, "err": ""}
+{"side": "b", "step": "edit", "round": 1, "wall_s": 2.629, "rc": 0, "frontend": 1.379, "codegen": 0.227, "link": 0.901, "metadata_reused": true, "compiled_objects": 1, "load": 8.58, "err": ""}
+{"side": "a", "step": "edit", "round": 1, "wall_s": 2.638, "rc": 0, "frontend": 1.244, "codegen": 0.217, "link": 1.059, "metadata_reused": true, "compiled_objects": 1, "load": 8.37, "err": ""}
+{"side": "b", "step": "iface", "round": 1, "wall_s": 2.546, "rc": 0, "frontend": 1.381, "codegen": 0.22, "link": 0.817, "metadata_reused": true, "compiled_objects": 1, "load": 8.37, "err": ""}
+{"side": "a", "step": "iface", "round": 1, "wall_s": 2.592, "rc": 0, "frontend": 1.303, "codegen": 0.364, "link": 0.812, "metadata_reused": false, "compiled_objects": 1, "load": 8.1, "err": ""}
+{"side": "a", "step": "edit", "round": 2, "wall_s": 2.375, "rc": 0, "frontend": 1.285, "codegen": 0.182, "link": 0.798, "metadata_reused": true, "compiled_objects": 1, "load": 8.1, "err": ""}
+{"side": "b", "step": "edit", "round": 2, "wall_s": 2.399, "rc": 0, "frontend": 1.309, "codegen": 0.177, "link": 0.8, "metadata_reused": true, "compiled_objects": 1, "load": 7.93, "err": ""}
+{"side": "a", "step": "iface", "round": 2, "wall_s": 2.554, "rc": 0, "frontend": 1.222, "codegen": 0.385, "link": 0.837, "metadata_reused": false, "compiled_objects": 1, "load": 7.93, "err": ""}
+{"side": "b", "step": "iface", "round": 2, "wall_s": 2.653, "rc": 0, "frontend": 1.269, "codegen": 0.187, "link": 1.09, "metadata_reused": true, "compiled_objects": 1, "load": 7.62, "err": ""}
+{"side": "b", "step": "edit", "round": 3, "wall_s": 2.406, "rc": 0, "frontend": 1.299, "codegen": 0.174, "link": 0.825, "metadata_reused": true, "compiled_objects": 1, "load": 7.62, "err": ""}
+{"side": "a", "step": "edit", "round": 3, "wall_s": 2.607, "rc": 0, "frontend": 1.233, "codegen": 0.175, "link": 1.094, "metadata_reused": true, "compiled_objects": 1, "load": 7.25, "err": ""}
+{"side": "b", "step": "iface", "round": 3, "wall_s": 2.516, "rc": 0, "frontend": 1.235, "codegen": 0.223, "link": 0.954, "metadata_reused": true, "compiled_objects": 1, "load": 7.25, "err": ""}
+{"side": "a", "step": "iface", "round": 3, "wall_s": 1.921, "rc": 0, "frontend": 1.142, "codegen": 0.314, "link": 0.361, "metadata_reused": false, "compiled_objects": 1, "load": 6.83, "err": ""}
+{"program_outputs": {"a": "69899", "b": "69899"}, "equal": true}

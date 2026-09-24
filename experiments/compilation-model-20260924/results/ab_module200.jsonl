@@ -1,0 +1,13 @@
+{"side": "whole", "round": 0, "wall_s": 4.301, "rc": 0, "rss_mb": 948, "cpu_s": 3.48, "load": 9.04}
+{"side": "module", "round": 0, "wall_s": 0.136, "rc": 0, "rss_mb": 48, "cpu_s": 0.1, "load": 9.04}
+{"side": "module", "round": 1, "wall_s": 0.121, "rc": 0, "rss_mb": 48, "cpu_s": 0.11, "load": 9.04}
+{"side": "whole", "round": 1, "wall_s": 2.815, "rc": 0, "rss_mb": 949, "cpu_s": 3.16, "load": 9.03}
+{"side": "whole", "round": 2, "wall_s": 2.893, "rc": 0, "rss_mb": 948, "cpu_s": 3.15, "load": 9.03}
+{"side": "module", "round": 2, "wall_s": 0.131, "rc": 0, "rss_mb": 48, "cpu_s": 0.12, "load": 9.03}
+{"side": "module", "round": 3, "wall_s": 0.087, "rc": 0, "rss_mb": 48, "cpu_s": 0.08, "load": 9.03}
+{"side": "whole", "round": 3, "wall_s": 2.709, "rc": 0, "rss_mb": 948, "cpu_s": 3.0, "load": 8.95}
+{"side": "whole", "round": 4, "wall_s": 3.009, "rc": 0, "rss_mb": 948, "cpu_s": 3.38, "load": 8.95}
+{"side": "module", "round": 4, "wall_s": 0.116, "rc": 0, "rss_mb": 48, "cpu_s": 0.1, "load": 8.95}
+{"side": "module", "round": 5, "wall_s": 0.08, "rc": 0, "rss_mb": 48, "cpu_s": 0.07, "load": 8.95}
+{"side": "whole", "round": 5, "wall_s": 2.681, "rc": 0, "rss_mb": 948, "cpu_s": 3.01, "load": 9.03}
+{"whole": {"min_wall_s": 2.681, "median_wall_s": 2.893, "max_rss_mb": 949}, "module": {"min_wall_s": 0.08, "median_wall_s": 0.121, "max_rss_mb": 48}}

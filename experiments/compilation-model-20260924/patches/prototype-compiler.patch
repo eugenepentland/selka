@@ -1,0 +1,63 @@
+diff --git a/src/nominal_layouts.zig b/src/nominal_layouts.zig
+index b1daec14..5c097898 100644
+--- a/src/nominal_layouts.zig
++++ b/src/nominal_layouts.zig
+@@ -126,7 +126,7 @@ pub const Graph = struct {
+         self.* = .{ .allocator = self.allocator, .sink = self.sink, .templates = self.templates };
+     }
+     fn charge(self: *Graph, span: Span) Error!void {
+-        if (self.budget.work == 100000) return self.sink.fail(eGenericLimit, span, "nominal layout expansion exceeds 100000 checking operations");
++        if (self.budget.work == 100000000) return self.sink.fail(eGenericLimit, span, "nominal layout expansion exceeds 100000 checking operations");
+         self.budget.work += 1;
+     }
+     fn intern(self: *Graph, key: Key, span: Span) Error!Id {
+diff --git a/src/qbe_build.zig b/src/qbe_build.zig
+index c0563ebc..4600b81d 100644
+--- a/src/qbe_build.zig
++++ b/src/qbe_build.zig
+@@ -922,7 +922,7 @@ const State = struct {
+         const shared = batches.len + groups.len;
+         // The C units start first: the shared metadata is the largest single compile.
+         var work: std.ArrayList(batch.Miss) = .empty;
+-        try self.stageC(&work, "metadata", try outputs.sharedMetadata(a, self.manifest), &objects[shared]);
++        try self.stageC(&work, "metadata", try outputs.sharedMetadata(a, self.manifest, self.cache.codegen.lto), &objects[shared]);
+         try self.stageC(&work, "entry", wrapper, &objects[shared + 1]);
+         try work.appendSlice(a, misses.items);
+         try batch.build(self.cache, work.items, batch.width(self.context.io, work.items.len));
+diff --git a/src/qbe_build_outputs.zig b/src/qbe_build_outputs.zig
+index b1ff55a6..c055d036 100644
+--- a/src/qbe_build_outputs.zig
++++ b/src/qbe_build_outputs.zig
+@@ -20,7 +20,7 @@ const call_position_key = "call_position";
+ pub const Error = host.Error || error{UnsupportedNativeEntry};
+ /// Emit typed runtime descriptors, host bridges, and source-location tables.
+ pub fn metadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]const u8 {
+-    return metadataUnit(allocator, manifest, true);
++    return metadataUnit(allocator, manifest, true, true);
+ }
+ /// QBE-BATCH-3: the part of `metadata` a batched build still compiles as one
+ /// C unit — typed runtime descriptors, host bridges, literals and, for a
+@@ -28,11 +28,11 @@ pub fn metadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]
+ /// its own functions' location, message and inline tables instead
+ /// (`metadataAssembly`), so an edit that moves one module's lines recompiles
+ /// that module's tables, not the whole program's.
+-pub fn sharedMetadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]const u8 {
+-    return metadataUnit(allocator, manifest, false);
++pub fn sharedMetadata(allocator: std.mem.Allocator, manifest: std.json.Value, frame_roots: bool) Error![]const u8 {
++    return metadataUnit(allocator, manifest, false, frame_roots);
+ }
+ /// The metadata C unit, with every function's tables or with none of them.
+-fn metadataUnit(allocator: std.mem.Allocator, manifest: std.json.Value, tables: bool) Error![]const u8 {
++fn metadataUnit(allocator: std.mem.Allocator, manifest: std.json.Value, tables: bool, frame_roots: bool) Error![]const u8 {
+     var buffer: std.Io.Writer.Allocating = .init(allocator);
+     errdefer buffer.deinit();
+     const w = &buffer.writer;
+@@ -46,7 +46,7 @@ fn metadataUnit(allocator: std.mem.Allocator, manifest: std.json.Value, tables:
+     // QBE-BATCH-4: without the tables only the frame-map roots name any, so a
+     // batched program that keeps no frame map declares none, and adding or
+     // removing a function leaves this, the largest single compile, unchanged.
+-    const roots = usesFrameMap(functions);
++    const roots = frame_roots and usesFrameMap(functions);
+     if (tables or roots) for (functions) |unit| {
+         try w.print("extern const MylQbeFunction {s}_meta;\n", .{v.text(v.get(unit, "symbol"))});
+     };
