@@ -114,6 +114,19 @@ test "module budgets and missing files fail without a partial report" {
     try rejection(&.{}, .{}, "E_MODULE_READ");
     try rejection(&.{diamond[0]}, .{}, "E_MODULE_READ");
 }
+fn budgetRejection(options: p.Options, expected: []const u8) !void {
+    var files: Files = .{ .entries = &diamond };
+    var project = p.Project.init(t.allocator);
+    defer project.deinit();
+    try t.expectError(error.SourceError, project.load(files.provider(), "main", options));
+    try t.expectEqualStrings("E_PROJECT_BYTES", project.problem.?.code);
+    try t.expect(std.mem.indexOf(u8, project.problem.?.message, expected) != null);
+}
+// spec: PROJ-BUDGET-MESSAGE-1
+test "a refused source names the byte budget that ran out and the mylang.json field that raises it" {
+    try budgetRejection(.{ .max_total_bytes = diamond[0].bytes.len }, "max_total_bytes budget; raise budgets.max_total_bytes in mylang.json");
+    try budgetRejection(.{ .max_file_bytes = 4 }, "the file exceeds the 4-byte max_file_bytes budget; raise budgets.max_file_bytes in mylang.json");
+}
 // spec: PROJ-6
 test "the default project budgets admit a large module graph" {
     const options: p.Options = .{};

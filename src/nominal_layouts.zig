@@ -103,7 +103,18 @@ const State = enum { unneeded, queued, ready, visiting, complete };
 pub const Edge = struct { target: Id, span: Span };
 /// Graph-owned layout identity with a separately discovered storage dependency list.
 pub const Node = struct { key: Key, site: Span, edges: []const Edge = &.{}, state: State = .unneeded };
-const Budget = struct { instances: usize = 0, arrays: usize = 0, work: usize = 0, depth: usize = 0, expanded: usize = 0 };
+const Budget = struct { instances: usize = 0, arrays: usize = 0, work: usize = 0, depth: usize = 0, expanded: usize = 0, work_limit: usize = minimum_work };
+/// The checking-operation budget every program gets, however small.
+pub const minimum_work: usize = 100000;
+/// The checking-operation budget of a program with this many source bytes: the
+/// fixed minimum, or one operation per source byte once the program is larger.
+/// Linear growth of an ordinary program costs a small fraction of an operation
+/// per byte, so only an expansion that multiplies work (a generic declaration
+/// instantiating ever-larger arguments) can reach it, while a large project is
+/// never refused for its size alone.
+pub fn workLimit(source_bytes: usize) usize {
+    return @max(minimum_work, source_bytes);
+}
 /// Layout evidence for all declarations, including templates with distinct symbolic parameters.
 pub const Graph = struct {
     allocator: std.mem.Allocator,
@@ -126,8 +137,14 @@ pub const Graph = struct {
         self.* = .{ .allocator = self.allocator, .sink = self.sink, .templates = self.templates };
     }
     fn charge(self: *Graph, span: Span) Error!void {
-        if (self.budget.work == 100000) return self.sink.fail(eGenericLimit, span, "nominal layout expansion exceeds 100000 checking operations");
+        if (self.budget.work == self.budget.work_limit) return self.workExhausted(span);
         self.budget.work += 1;
+    }
+    /// Name the budget the expansion ran out of: the fixed minimum a small
+    /// program gets, or the per-source-byte allowance of a larger one.
+    fn workExhausted(self: *Graph, span: Span) Error {
+        if (self.budget.work_limit == minimum_work) return self.sink.fail(eGenericLimit, span, "nominal layout expansion exceeds 100000 checking operations");
+        return self.sink.fail(eGenericLimit, span, "nominal layout expansion exceeds one checking operation per source byte");
     }
     fn intern(self: *Graph, key: Key, span: Span) Error!Id {
         try self.charge(span);
@@ -298,6 +315,7 @@ pub const Graph = struct {
 /// This proves bounded finite storage dependencies, not executable concrete layouts or operations.
 pub fn collect(allocator: std.mem.Allocator, index: *const templates.Index, sink: *diagnostic.Sink) Error!Graph {
     var graph: Graph = .{ .allocator = allocator, .templates = index, .sink = sink };
+    graph.budget.work_limit = workLimit(index.context.src.bytes.len);
     errdefer graph.deinit();
     try graph.roots();
     try graph.expand();

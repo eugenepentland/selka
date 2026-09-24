@@ -137,6 +137,7 @@ test {
     _ = @import("quality_test.zig");
     _ = @import("affected_tests_test.zig");
     _ = @import("navigation_test.zig");
+    _ = @import("navigation_scale_test.zig");
     _ = @import("context_test.zig");
     _ = @import("invoke_command.zig");
     _ = @import("native_wire.zig");

@@ -116,7 +116,7 @@ def load(compiler, entry, cache_dir=None):
         except (OSError, ValueError, TypeError, KeyError):
             pass  # Corrupt receipts are misses, never successful navigation facts.
     if index is None:
-        result = subprocess.run([str(compiler), 'index-project', str(entry)], capture_output=True, timeout=120)
+        result = subprocess.run([str(compiler), 'index-project', str(entry), '--full'], capture_output=True, timeout=120)
         if result.returncode or len(result.stdout) > MAX_INDEX_BYTES:
             raise ValueError('index generation failed: ' + result.stderr.decode(errors='replace')[:4096])
         index = json.loads(result.stdout)

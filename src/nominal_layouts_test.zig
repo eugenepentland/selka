@@ -163,6 +163,43 @@ test "nominal layout expansion bounds repeated field work independently of ident
     defer t.allocator.free(text);
     try reject(text, "E_GENERIC_LIMIT", "100000 checking operations");
 }
+/// Many ordinary records whose fields name one leaf record: linear work, no
+/// expansion, and more checking operations than the fixed minimum budget.
+fn wideSource(allocator: std.mem.Allocator, records: usize) ![]u8 {
+    var text: std.Io.Writer.Allocating = .init(allocator);
+    defer text.deinit();
+    try text.writer.writeAll("class Leaf:\n    v: i64\n\n\n");
+    for (0..records) |i| {
+        try text.writer.print("class W{d}:\n", .{i});
+        for (0..16) |j| try text.writer.print("    f{d}: Leaf\n", .{j});
+        try text.writer.writeAll("\n\n");
+    }
+    return text.toOwnedSlice();
+}
+fn layoutWork(text: []const u8) !usize {
+    var compilation = try language.Compilation.init(t.allocator, "wide.my", text);
+    defer compilation.deinit();
+    try compilation.parse();
+    var sink: language.diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
+    const index = try templates.collect(compilation.arena.allocator(), compilation.src, compilation.syntax.?, &sink, null);
+    var graph = try layouts.collect(t.allocator, &index, &sink);
+    defer graph.deinit();
+    try t.expectEqual(@as(usize, 0), sink.items.items.len);
+    return graph.budget.work;
+}
+// spec: NOMINAL-LAYOUT-WORK-1
+test "nominal layout work budget grows with the program so a large ordinary project is not refused for its size" {
+    try t.expectEqual(layouts.minimum_work, layouts.workLimit(0));
+    try t.expectEqual(layouts.minimum_work, layouts.workLimit(layouts.minimum_work - 1));
+    try t.expectEqual(@as(usize, 19_000_000), layouts.workLimit(19_000_000));
+    // 3200 ordinary 16-field records charge more operations than the fixed
+    // minimum; the source-derived budget accepts them.
+    const text = try wideSource(t.allocator, 3200);
+    defer t.allocator.free(text);
+    const work = try layoutWork(text);
+    try t.expect(work > layouts.minimum_work);
+    try t.expect(work < layouts.workLimit(text.len));
+}
 fn longSource(allocator: std.mem.Allocator) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
