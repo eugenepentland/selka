@@ -161,9 +161,9 @@ module, as in the development-speed audit):
 | 200k | after, `--lto=thin` | **207 s** | 16.3 / 71.7 / 119.2 | 132 s | 3.5 GB (1.9) | 11.2, 12.1 |
 
 The audit's earlier 50k figures (cold 369 s, edit → build 95 s) are the same
-order as this run's "before" row; the edit → build here is slower because the
-old path re-ran the adapter's `--signatures-only` pass over the whole closure
-on every build (58 s of the 115 s).
+order as this run's "before" row. Of this run's 115 s before-edit → build, 58 s
+is codegen for one changed function: the adapter's `--signatures-only` pass
+over the whole closure, which the old driver ran on every build.
 
 Against the targets:
 
@@ -179,8 +179,9 @@ Where the remaining time goes, and why it stops there:
   and codegen partitions (`--lto-partitions=12`) only take it to 13.4 s: most
   of it is optimizing the one merged module on one thread, and it grows with
   the program (62 s at 50k, 265 s at 200k) and is paid again after any edit.
-  The 200k merged module peaks at 6.5 GB in LLD, within the compiler's 8 GiB
-  ceiling that its tools inherit, but not by much.
+  At 200k the build's largest process reaches 6.5 GB (1.9 GB under ThinLTO),
+  within the compiler's 8 GiB address-space ceiling that its tools inherit, but
+  not by much.
 - **Per-unit compiles** are 25 s of the 50k build and 111 s of the 200k build
   (loaded): about 39 ms of `-O3` pre-link pipeline and bitcode per unit, of
   which 8 ms is the process start. The in-process translation itself is a small
@@ -335,9 +336,9 @@ GATE_RESULTS
   index) would make an edit → build recompile only the modules whose imports
   changed. The runtime archive's members would need extracting, since a
   backend compile cannot open `archive.a(member.o)`.
-- **Full LTO memory.** The 200k merged module peaks at 6.5 GB in LLD against
-  the 8 GiB ceiling the compiler hands its tools; a program a little larger
-  than 200k lines will need ThinLTO.
+- **Full LTO memory.** At 200k the largest process of a full-LTO build
+  reaches 6.5 GB against the 8 GiB ceiling the compiler hands its tools; a
+  program a little larger may need ThinLTO.
 - **The 50k cold target** needs full LTO's optimizer off the critical path;
   neither partitioned codegen (12% of the link at 10k) nor batching clang starts
   (≈ 3 s at 50k) gets there.

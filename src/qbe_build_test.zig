@@ -196,7 +196,9 @@ test "a prebuilt runtime installed beside the compiler links directly, and damag
     const beside: Tools = .{ .compiler = compiler, .qbe = resolved.qbe, .zig = resolved.zig };
 
     const shaped = try emitInstalled(context, beside, lib, try join(a, &.{ root, "emit-work" }));
-    try std.testing.expectEqual(@as(usize, 2), shaped.archives);
+    // QBE in Debug and ReleaseFast, and the LLVM flavors, which need only Zig
+    // now that the translator is built in: `llvm`, `llvm-lto`, `llvm-thinlto`.
+    try std.testing.expectEqual(@as(usize, 5), shaped.archives);
     try std.testing.expectEqual(@as(usize, 2), shaped.objects);
     try std.testing.expect(shaped.stems_ok);
 
