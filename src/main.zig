@@ -1564,6 +1564,24 @@ fn finishCheckProject(
     return rememberCheck(verdict, project, compilation);
 }
 
+/// Record the `check-project` verdict for a project the internal
+/// `native-test-compile` session has just checked. The session's check is the
+/// one `check-project` makes, so the next unchanged `mylang test` validates by
+/// replaying this verdict instead of re-checking every body. A project whose
+/// warnings its configuration denies records nothing, so that validity check
+/// still runs and still rejects it.
+fn rememberSessionVerdict(
+    init: Context,
+    project: *language.project.Project,
+    compilation: *language.project_compile.Compilation,
+    stores: Replayed,
+    configured: *const ConfiguredPolicy,
+) !void {
+    if (try projectWarningsDenied(init, compilation, configured)) return;
+    try rememberFrontendVerdict(init, .@"check-project", project, compilation, stores.frontend);
+    _ = try rememberCheck(stores.verdict, project, compilation);
+}
+
 /// Whether an opted-in `warnings: "deny"` project makes this checked program
 /// rejecting. The caller has already reported the diagnostics.
 fn projectWarningsDenied(init: Context, compilation: *language.project_compile.Compilation, configured: *const ConfiguredPolicy) !bool {
@@ -1988,7 +2006,10 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
             .lint => return lintProject(init, parsed, &compilation, &configured),
             .@"tests-for" => return testsFor(init, parsed, &compilation),
             .@"api-diff" => return apiDiff(init, parsed, &compilation),
-            .@"native-test-compile" => return nativeTestCompileSession(init, &compilation),
+            .@"native-test-compile" => {
+                try rememberSessionVerdict(init, &project, &compilation, .{ .verdict = verdict, .frontend = frontend, .policy = configured.identity }, &configured);
+                return nativeTestCompileSession(init, &compilation);
+            },
             else => {},
         }
         const executed = executedStages(parsed.command);
@@ -2119,9 +2140,9 @@ fn emitProjectNative(init: Context, compilation: *language.project_compile.Compi
 /// `native-test-graph` is an internal checked-facts producer. It emits no
 /// lowering/emission receipt because no QBE work occurred, and stdout stays a
 /// pure graph payload for the native-test parent.
-fn emitNativeTestFacts(init: Context, compilation: *language.project_compile.Compilation) ![]u8 {
+fn emitNativeTestFacts(init: Context, compilation: *language.project_compile.Compilation, scope: language.project_compile.FactsScope) ![]u8 {
     init.timings.begin(frontend_label, false);
-    const facts = compilation.emitNativeTestFacts(init.gpa) catch |err| switch (err) {
+    const facts = compilation.emitNativeTestFactsScoped(init.gpa, scope) catch |err| switch (err) {
         error.SourceError => {
             try reportProject(init, compilation);
             return error.SourceError;
@@ -2149,7 +2170,9 @@ fn nativeTestCompileSession(init: Context, compilation: *language.project_compil
         if (std.mem.startsWith(u8, line, "facts ")) {
             const path = std.mem.trim(u8, line["facts ".len..], " \t");
             if (path.len == 0) return nativeTestCompileReply(init, "facts", 2, "MissingOutput", 0, 0);
-            const facts = emitNativeTestFacts(init, compilation) catch |err| switch (err) {
+            // The session serves `mylang test`, which plans only the tests and
+            // benchmarks it discovered, so its facts cover just their closure.
+            const facts = emitNativeTestFacts(init, compilation, .closure) catch |err| switch (err) {
                 error.SourceError => return nativeTestCompileReply(init, "facts", 1, "SourceError", 0, 0),
                 else => return err,
             };
@@ -2214,7 +2237,7 @@ const ReplaySite = struct { project: *const language.project.Project, policy: ?[
 
 fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Compilation, parsed: Parsed, site: ReplaySite) !?[]u8 {
     return switch (parsed.command) {
-        .@"native-test-graph" => try emitNativeTestFacts(init, compilation),
+        .@"native-test-graph" => try emitNativeTestFacts(init, compilation, .all),
         .@"emit-project-qbe" => blk: {
             const manifest = (try emitProjectNative(init, compilation, parsed.select_file, parsed.emissionPolicy())) orelse return error.SourceError;
             try rememberManifest(init, parsed, site, compilation, manifest);

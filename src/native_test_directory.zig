@@ -145,16 +145,23 @@ pub fn run(context: fs.Context, opts: options.Options) Error!u8 {
     defer context.remove(workspace);
     const outcomes = try a.alloc(Outcome, paths.len);
     const workers = width(context, opts, paths.len);
+    const shared: Fanout = .{ .compiler = compiler, .options = opts, .workspace = workspace, .jobs = childJobs(workers, paths.len) };
     var start: usize = 0;
     while (start < paths.len) : (start += workers) {
-        try wave(context, .{ .compiler = compiler, .options = opts, .workspace = workspace }, paths[start..@min(start + workers, paths.len)], outcomes[start..]);
+        try wave(context, shared, paths[start..@min(start + workers, paths.len)], outcomes[start..]);
     }
     return summarize(context, opts, selection, outcomes);
 }
 /// One child program's exit status and the report bytes it produced.
 const Outcome = struct { code: u8, report: []const u8 };
-/// Values shared by every child of a directory run.
-const Fanout = struct { compiler: []const u8, options: options.Options, workspace: []const u8 };
+/// Values shared by every child of a directory run. `jobs` is the test-process
+/// width each child may use, so the run as a whole stays within `workers`.
+const Fanout = struct { compiler: []const u8, options: options.Options, workspace: []const u8, jobs: usize = 1 };
+/// Split the run's worker width between the programs running at once: many
+/// programs get one test process each, and a lone program gets every worker.
+fn childJobs(workers: usize, found: usize) usize {
+    return @max(1, workers / @max(1, @min(found, workers)));
+}
 fn wave(context: fs.Context, shared: Fanout, paths: []const []const u8, outcomes: []Outcome) Error!void {
     const a = context.allocator;
     const children = try a.alloc(std.process.Child, paths.len);
@@ -189,6 +196,7 @@ fn argv(context: fs.Context, shared: Fanout, source: []const u8) Error![]const [
     // Resolved before the fan-out, so every child enforces the same ceiling and
     // keys its receipts on it rather than rediscovering the environment itself.
     try list.appendSlice(a, &.{ "--max-memory", try decimal(a, opts.limits.max_memory orelse budget.test_default) });
+    try list.appendSlice(a, &.{ "--jobs", try decimal(a, shared.jobs) });
     if (opts.flags.force) try list.append(a, "--force");
     if (opts.flags.no_cache) try list.append(a, "--no-cache");
     // Each child derives its own program's affected selection against the same
@@ -391,6 +399,20 @@ test "each child command inherits the selection, budgets and tool choices of the
     const released = try std.mem.join(context.allocator, " ", try argv(context, release, "/programs/one.my"));
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, released, "--release"));
     try std.testing.expect(std.mem.indexOf(u8, released, "--mode") == null);
+}
+// spec-case: NATIVE-TEST-PARALLEL-1
+test "a directory run shares its worker width between the programs it runs at once" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    try std.testing.expectEqual(@as(usize, 12), childJobs(12, 1));
+    try std.testing.expectEqual(@as(usize, 4), childJobs(12, 3));
+    try std.testing.expectEqual(@as(usize, 1), childJobs(12, 106));
+    try std.testing.expectEqual(@as(usize, 1), childJobs(1, 5));
+    const shared: Fanout = .{ .compiler = "/usr/bin/mylang", .options = try options.parse(&.{"suite"}), .workspace = "/tmp/work", .jobs = childJobs(12, 3) };
+    const line = try std.mem.join(context.allocator, " ", try argv(context, shared, "/programs/one.my"));
+    try std.testing.expect(std.mem.indexOf(u8, line, "--jobs 4") != null);
 }
 // spec: NATIVE-BENCH-6
 test "a directory benchmark run is sequential and rejects aggregate artifacts" {
