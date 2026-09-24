@@ -180,4 +180,20 @@ test "the clang command of an LLVM unit is the cc1 line of zig cc's own listing"
     try std.testing.expectEqualStrings("A=\"b\\c\"", argv[11]);
     try std.testing.expectEqualStrings("/w/object.o.ll", argv[argv.len - 1]);
     try std.testing.expectEqual(@as(?[]const []const u8, null), try compile.commandLine(arena.allocator(), .{ .zig = "/tools/zig", .front = "-cc1" }, "no command here\n"));
+    try std.testing.expectEqual(@as(?usize, argv.len - 4), compile.outputPosition(argv, "/w/object.o"));
+}
+
+// spec-case: LLVM-ZIG-1
+test "a unit built without LTO writes its assembly where the -S command's -o says, not to /dev/null" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const listing =
+        \\ "/opt/zig/zig" "-cc1" "-triple" "x86_64-unknown-linux-gnu" "-S" "-O2" "-o" "/dev/null" "-x" "ir" "/w/unit.s.ll"
+        \\
+    ;
+    const argv = (try compile.commandLine(arena.allocator(), .{ .zig = "/tools/zig", .front = "-cc1" }, listing)).?;
+    const at = compile.outputPosition(argv, "/w/unit.s").?;
+    try std.testing.expectEqualStrings("/dev/null", argv[at]);
+    try std.testing.expectEqualStrings("-o", argv[at - 1]);
+    try std.testing.expectEqual(@as(?usize, null), compile.outputPosition(&.{ "zig", "clang", "-o" }, "/w/unit.s"));
 }

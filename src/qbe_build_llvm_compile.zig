@@ -189,7 +189,7 @@ pub const Tool = struct {
         if (fs.exitCode(result.term) != 0) return probeFailed(context);
         const argv = (try commandLine(a, .{ .zig = cache.zig, .front = asked.front }, result.stderr)) orelse return probeFailed(context);
         const input_at = position(argv, input) orelse return probeFailed(context);
-        const output_at = position(argv, output) orelse return probeFailed(context);
+        const output_at = outputPosition(argv, output) orelse return probeFailed(context);
         return .{ .argv = argv, .input = input_at, .output = output_at };
     }
 
@@ -236,6 +236,16 @@ fn probeFailed(context: fs.Context) Error {
 fn position(argv: []const []const u8, wanted: []const u8) ?usize {
     for (argv, 0..) |argument, index| if (std.mem.eql(u8, argument, wanted)) return index;
     return null;
+}
+
+/// Where a front-end command names its output: the probe's own output path,
+/// or else the argument after `-o`. For `-S` Zig's listing names `/dev/null`
+/// there, because Zig collects the assembly itself; the `-cc1` command writes
+/// it wherever that argument says.
+pub fn outputPosition(argv: []const []const u8, output: []const u8) ?usize {
+    if (position(argv, output)) |found| return found;
+    const flag = position(argv, "-o") orelse return null;
+    return if (flag + 1 < argv.len) flag + 1 else null;
 }
 
 /// Which line of a `-###` listing to take, and the Zig that runs it.
