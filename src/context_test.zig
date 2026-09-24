@@ -523,6 +523,24 @@ test "context answers one declaration with a single agent-context-v1 envelope" {
     try t.expect(field(root, "continuation") == .null);
 }
 
+// spec-case: NAVIGATION-SPELLING-1
+test "context accepts the call-site spelling module.name for a module-qualified declaration" {
+    var files: Files = .{ .entries = &healthy_entries };
+    const scene = try Scene.open(t.allocator, &files, "main");
+    defer scene.close();
+    const dotted = try scene.render(symbolOptions("model.validate"));
+    defer t.allocator.free(dotted.bytes);
+    const parsed = try envelope(dotted);
+    defer parsed.deinit();
+    try t.expectEqual(context.Status.ok, dotted.status);
+    try t.expectEqualStrings("model.validate", nestedString(parsed.value, &.{ "selector", "symbol" }));
+    try t.expectEqualStrings("model::validate", nestedString(parsed.value, &.{ "selector", "resolved" }));
+    try t.expectEqualStrings("model::validate", stringAt(record(parsed.value, "declaration"), "id"));
+    const missing = try scene.render(symbolOptions("model.no_such_declaration"));
+    defer t.allocator.free(missing.bytes);
+    try t.expectEqual(context.Status.missing, missing.status);
+}
+
 // spec: CONTEXT-SELECT-1
 test "context selects the qualified name and reports ambiguity and absence" {
     var files: Files = .{ .entries = &healthy_entries };

@@ -8,7 +8,9 @@ sources and compiler that produced it. The design record is
 
 ## Source navigation
 
-The command prints one `navigation-v1` JSON document: `symbols` for module-
+By default the command prints a bounded `navigation-summary-v1` overview (see
+[the summary and the filters](#summary-and-filters-for-large-projects)); with
+`--full` it prints one `navigation-v1` JSON document: `symbols` for module-
 qualified declarations and locals, each with its original source range,
 signature, checked type name, the published effect ceiling, the declared `mut`
 parameter positions, a `return_origin` bound (`fresh`, `params` or `unknown`), whether the
@@ -18,12 +20,13 @@ module's path, byte length and SHA-256 alongside the compiler's own identity.
 Those relationships are static, so they are not runtime coverage and not proof
 that a change is safe. A project that fails body checking still produces a
 partial index with `checked: false` and no checked edges, which is useful for
-repairing source and is never a successful type-check verdict. Defaults cap
-symbols and relationship rows at 20 each and combined snippets at 8 KiB, and
-omitted counts are reported explicitly. `scripts/navigate.py` asks one focused
-question over the same index — `definition`, `references`, `callers`, `callees`,
-`impact` or `context` — and `tests/navigation_client.py --compiler BINARY`
-exercises the whole surface.
+repairing source and is never a successful type-check verdict. The index has
+no size cap: it grows with the project and is bounded only by the compiler's
+memory ceiling, like `check`. To ask one focused question instead of
+reading the whole index, `mylang context` returns one declaration's contract,
+the types it names, its callers and callees and the tests that reach it
+([focused context](agent-context.md)), and `mylang tests-for` lists the reaching
+tests alone ([below](#which-tests-reach-a-declaration)).
 
 Every symbol also carries the analysis behind its facts, so an unavailable
 inference is never an empty fact: see [Fact status](#fact-status-in-interface-and-navigation-output).
@@ -35,12 +38,74 @@ not checked publishes `analysis` and `null` for those four fields instead, and a
 consumer must read `null` as "not known here" rather than as "none".
 
 ```console
-$ mylang index-project examples/modules/main.my > /tmp/index.json
-$ python3 -c "import json; d=json.load(open('/tmp/index.json')); print(d['version'], d['checked'], len(d['symbols']), len(d['references']))"
-navigation-v1 True 11 25
-$ python3 scripts/navigate.py --compiler zig-out/bin/mylang --entry examples/modules/main.my \
-    --symbol 'shared.units::Distance.make' --relation callers --limit 5
-{"version": "navigation-query-v1", "checked": true, ... "references": [{"from": "main::main", "to": "shared.units::Distance.make", "kind": "call", "location": {"path": "main.my", "start": 263, "end": 287, "line": 10, "column": 19}}], ...}
+$ mylang index-project examples/modules/main.my --full
+{"version":"navigation-v1","checked":true,"reference_scope":"resolved concrete bodies and specializations; ...","snapshot_sha256":"65f6f8db...","snapshot":{...},"symbols":[...],"references":[...], ...}
+$ mylang context examples/modules/main.my --symbol=shared.units::Distance.make
+{"version":"agent-context-v1","status":"ok", ... {"name":"dependencies","records":[{"direction":"outgoing","edge":"call","id":"shared.units::Distance.raw", ...},{"direction":"incoming","edge":"call","id":"main::main","kind":"function","signature":"main() -> int", ...}]}, ...}
+```
+
+## Summary and filters for large projects
+
+The complete document grows with every local and every relationship: 36 MB for
+a generated 50,000-line project, 145 MB at 200,000 lines and 364 MB at 500,000.
+So `index-project`
+without a flag prints `navigation-summary-v1` instead — the snapshot digest and
+compiler identity, totals, and one row per loaded module with its path, its
+exported count and its declaration counts by kind — plus the queries that
+drill down, with your entry path filled in. It skips the relationship walk,
+and its size follows the module count: 15 KB at 50,000 lines, 58 KB at
+200,000 and 144 KB at 500,000.
+
+```console
+$ mylang index-project examples/modules/main.my
+{"version":"navigation-summary-v1","checked":true,"snapshot_sha256":"4b030dc6...","compiler":{...},"totals":{"modules":2,"symbols":11,"exported":4,"kinds":{"function":4,"type":2,"field":1,"parameter":3,"local":1}},"modules":[{"module":"shared.units","path":"shared/units.my","exported":3,"kinds":{"function":3,"type":1,"parameter":3}},{"module":"main","path":"main.my","exported":1,"kinds":{"function":1,"type":1,"field":1,"local":1}}],"queries":{...}}
+```
+
+A filter prints `navigation-selection-v1`: the same `navigation-v1` symbol and
+reference records, restricted to what the filters select, with the snapshot rows
+of the modules those records sit in (`snapshot_sha256` still pins the whole
+project). Every filter given must match, and each is also accepted with a
+space instead of `=`:
+
+| Filter | Selects |
+| --- | --- |
+| `--module=NAME` | the declarations of one module |
+| `--symbol=NAME` | one declaration and the members it owns: a type's fields and cases, a domain's functions, a function's parameters and locals |
+| `--kind=KIND` | one kind: `function`, `type`, `constraint`, `field`, `case`, `parameter` or `local` |
+
+References into or out of a selected symbol come with it, so `--symbol` answers
+"who calls this and what does it call" in one document. `--symbol` accepts the
+spelling code writes at a call site, `module.name`, as well as `module::name` and
+a bare name only one declaration carries (see
+[call-site spelling](#call-site-spelling)). A filter that names nothing prints
+the document with `"status": "missing"` (or `"ambiguous"` with `candidates`) and
+exits 2; an unknown `--kind`, or `--full` together with a filter, is a usage
+error.
+
+```console
+$ mylang index-project examples/modules/main.my --symbol=shared.units.Distance.make
+{"version":"navigation-selection-v1","status":"ok","checked":true, ... "selection":{"module":null,"symbol":"shared.units.Distance.make","kind":null,"resolved":"shared.units::Distance.make"}, ... "symbols":[{"id":"shared.units::Distance.make", ...},{"id":"shared.units::Distance.make/local:value@147", ...}], ...}
+```
+
+`--full` is the complete `navigation-v1` document, byte for byte what the
+command printed by default before; it is streamed rather than built in memory.
+The repository's own `navigation-v1` consumers under `scripts/` and `tests/` pass it.
+
+## Call-site spelling
+
+Code names a declaration in another module as `module.name`; the index spells
+its identity `module::name`. `mylang context --symbol`, `mylang tests-for` and
+`mylang index-project --symbol` accept both. A dotted spelling is tried at every
+split into a module path and a member path, because both may contain dots:
+`shared.units.Distance.make` is `shared.units::Distance.make`. One match is the
+answer; a spelling that matches several declarations is reported with the
+candidates and is never silently resolved.
+
+```console
+$ mylang tests-for examples/modules/main.my shared.units.Distance.make
+tests-for shared.units::Distance.make
+  direct (0):
+  reached-by (0):
 ```
 
 ## Reading an interface
@@ -103,13 +168,10 @@ its per-declaration `permissions` value stays the directional bound its frozen
 set-subset consumer compares.
 
 ```console
-$ mylang index-project hole.my > /tmp/index.json
-$ python3 -c "import json; d=json.load(open('/tmp/index.json')); print(d['checked']); print([(s['name'], s.get('analysis'), s['effects']) for s in d['symbols'] if s['kind'] == 'function'])"
-False
-[('double', 'declaration-only', None), ('unfinished', 'declaration-only', None), ('main', 'declaration-only', None)]
-$ mylang index-project main.my > /tmp/index.json
-$ python3 -c "import json; d=json.load(open('/tmp/index.json')); print([(s['name'], s.get('analysis'), s['effects']) for s in d['symbols'] if s['name'] == 'parse'])"
-[('parse', None, [])]
+$ mylang index-project hole.my
+{"version":"navigation-v1","checked":false, ... "symbols":[{"id":"hole::double","name":"double","kind":"function", ... "analysis":"declaration-only","effects":null,"mutates":null,"return_origin":null,"mutation_writes":null, ...}, ...
+$ mylang index-project main.my
+{"version":"navigation-v1","checked":true, ... {"id":"main::parse","name":"parse","kind":"function", ... "signature":"parse(value: int) -> int","type_name":"i64","effects":["managed_allocation"],"mutates":[],"return_origin":"fresh","mutation_writes":false, ...}, ...
 ```
 
 ## Which tests reach a declaration
@@ -130,7 +192,29 @@ adds every test that reaches it only through another call. The distinction is
 what makes the answer actionable: a test that reaches `parse` only through
 `main` proves little about `parse`, so extend a `direct` test when one exists.
 An unknown qualified name prints a message and exits 2; a declaration no test
-reaches prints empty lists and exits 0.
+reaches prints empty lists and exits 0. The name may be written as a call site
+writes it, `app.parse` (see [call-site spelling](#call-site-spelling)).
+
+The answer does not wait for the project to check. When a body does not
+type-check — the usual state in the middle of a change — `tests-for` prints the
+diagnostics on stderr and still answers on stdout, from a call graph read from
+the parsed calls: each call resolves by name through the calling module's own
+declarations and its import aliases, the same namespaces the checker uses. A
+closing `basis: syntax` line labels that answer, because a name resolved
+without checked types is not a checked fact:
+
+```console
+$ mylang tests-for src/app/main.my app.parse
+src/app/main.my:12:20: error[E_TYPE]: expected int, found str
+...
+tests-for app::parse
+  direct (1): app::test_parse
+  reached-by (2): app::test_parse app::test_end_to_end
+  basis: syntax (the project does not type-check; calls were resolved by name, not by checked types)
+```
+
+Only a project whose syntax does not parse gets no answer: `tests-for` says so
+and exits 1.
 
 The same index backs two other surfaces: `mylang lint` attaches the reachable
 tests to any finding that names a declaration, and `mylang list-interfaces`

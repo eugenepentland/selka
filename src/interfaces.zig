@@ -63,6 +63,15 @@ pub const ContractError = diagnostic.Error || error{IncompleteProject};
 pub const Kind = enum { type, function, constraint };
 /// Identify a declaration by its module and local symbol index.
 pub const Identity = struct { module: usize, symbol: usize };
+/// One exported declaration a listing line renders, and the module it is listed under.
+const Exported = struct { module: usize, symbol: Symbol };
+/// A checked program's functions by name: `exact` by the whole qualified name,
+/// `family` by the name before any `[...]` specialization suffix, each keeping
+/// the first function in program order, which is the one a scan would find.
+const FunctionTable = struct {
+    exact: std.StringHashMapUnmanaged(typed.FunctionId) = .empty,
+    family: std.StringHashMapUnmanaged(typed.FunctionId) = .empty,
+};
 /// Store declaration visibility and optional domain-owner restrictions. A
 /// re-export facade carries `re_export` pointing at the defining declaration in
 /// its own module; every consumer resolves through that identity.
@@ -592,13 +601,14 @@ pub const Index = struct {
         defer {
             if (tests) |*index| index.deinit();
         }
+        const functions = try self.functionTable();
         output.writer.writeAll("module interfaces v1; declarations/signature visibility checked; bodies not type checked\n") catch return error.OutOfMemory;
         for (self.project.order.items) |module| {
             output.writer.print("module {s}\n", .{self.project.modules.items[module].name}) catch return error.OutOfMemory;
             for (self.units[module].symbols.items) |symbol| {
                 if (!symbol.exported) continue;
                 if (symbol.kind == .function) {
-                    try self.renderFunctionLine(&output.writer, module, symbol, if (tests) |*index| index else null);
+                    try self.renderFunctionLine(&output.writer, .{ .module = module, .symbol = symbol }, if (tests) |*index| index else null, &functions);
                     continue;
                 }
                 output.writer.print("  export {s} {s}", .{ @tagName(symbol.kind), symbol.name }) catch return error.OutOfMemory;
@@ -695,12 +705,12 @@ pub const Index = struct {
     /// `ceiling()`. `tests` carries the shared reachability index, or null when
     /// no checked program is attached, in which case the column says
     /// `tests(unavailable)` rather than silently disappearing.
-    fn renderFunctionLine(self: *Index, writer: *std.Io.Writer, module: usize, symbol: Symbol, tests: ?*const tests_index.Index) ContractError!void {
+    fn renderFunctionLine(self: *Index, writer: *std.Io.Writer, exported: Exported, tests: ?*const tests_index.Index, functions: *const FunctionTable) ContractError!void {
         const allocator = self.project.arena.allocator();
-        const origin = self.declarationSource(module, symbol);
+        const origin = self.declarationSource(exported.module, exported.symbol);
         const function = self.findFunction(self.units[origin.module], origin.symbol.span) orelse return error.InternalError;
         const signature = try self.contractSignatureText(origin.module, function.signature);
-        const inferred = self.publishedEffects(origin.module, origin.symbol);
+        const inferred = try self.publishedEffects(origin.module, origin.symbol, functions);
         writer.print("  export function {s} {s} effects(", .{ origin.display, signature }) catch return error.OutOfMemory;
         if (inferred) |mask| {
             var names: std.ArrayList(u8) = .empty;
@@ -721,7 +731,7 @@ pub const Index = struct {
         writer.writeAll(ceiling.items) catch return error.OutOfMemory;
         writer.writeAll(")") catch return error.OutOfMemory;
         if (tests) |index| {
-            if (try self.programFunction(origin.module, origin.symbol.name)) |id| {
+            if (try self.programFunction(origin.module, origin.symbol.name, functions)) |id| {
                 const answer = index.answer(id);
                 writer.print(" tests({d})", .{answer.reached.len}) catch return error.OutOfMemory;
             }
@@ -733,13 +743,27 @@ pub const Index = struct {
     }
     /// The checked function identity of one module-qualified declaration, or
     /// null when the attached program carries no such name.
-    fn programFunction(self: *Index, module: usize, name: []const u8) ContractError!?typed.FunctionId {
-        const program = self.program orelse return null;
-        const qualified = try std.fmt.allocPrint(self.project.arena.allocator(), "{s}::{s}", .{ self.project.modules.items[module].name, name });
+    fn programFunction(self: *Index, module: usize, name: []const u8, functions: *const FunctionTable) ContractError!?typed.FunctionId {
+        const qualified = try std.fmt.allocPrint(self.project.arena.allocator(), qualified_name_format, .{ self.project.modules.items[module].name, name });
+        return functions.exact.get(qualified);
+    }
+    /// Index the attached program's functions by name once per listing, so
+    /// each exported callable finds its checked entry with one lookup rather
+    /// than a scan of every function (quadratic on a large project). Empty when
+    /// no checked program is attached.
+    fn functionTable(self: *Index) ContractError!FunctionTable {
+        var table: FunctionTable = .{};
+        const program = self.program orelse return table;
+        const allocator = self.project.arena.allocator();
         for (program.functions, 0..) |function, index| {
-            if (std.mem.eql(u8, function.name, qualified)) return @fromBackingInt(@intCast(index));
+            const id: typed.FunctionId = @fromBackingInt(@intCast(index));
+            const exact = try table.exact.getOrPut(allocator, function.name);
+            if (!exact.found_existing) exact.value_ptr.* = id;
+            const base = function.name[0 .. std.mem.indexOfScalar(u8, function.name, '[') orelse function.name.len];
+            const family = try table.family.getOrPut(allocator, base);
+            if (!family.found_existing) family.value_ptr.* = id;
         }
-        return null;
+        return table;
     }
     /// Build the shared tests index for the attached checked program, or null
     /// when no bodies were checked.
@@ -884,19 +908,15 @@ pub const Index = struct {
     /// as one. `renderFunctionLine` reports the null as `effects(unavailable)`
     /// plus the analysis status; `contractFunction` keeps the declared-bound
     /// meaning of the contract manifest.
-    fn publishedEffects(self: *Index, module: usize, symbol: Symbol) ?effect_set.Mask {
+    fn publishedEffects(self: *Index, module: usize, symbol: Symbol, functions: *const FunctionTable) ContractError!?effect_set.Mask {
         const program = self.program orelse return null;
-        const prefix = std.fmt.allocPrint(
+        const prefix = try std.fmt.allocPrint(
             self.project.arena.allocator(),
             qualified_name_format,
             .{ self.project.modules.items[module].name, symbol.name },
-        ) catch return null;
-        for (program.functions) |function| {
-            if (!std.mem.startsWith(u8, function.name, prefix)) continue;
-            if (function.name.len != prefix.len and function.name[prefix.len] != '[') continue;
-            return function.policy.effects;
-        }
-        return null;
+        );
+        const id = functions.family.get(prefix) orelse return null;
+        return program.functions[@backingInt(id)].policy.effects;
     }
     fn contractSignatureText(self: *Index, module: usize, signature: ast.FunctionSignature) ContractError![]const u8 {
         const allocator = self.project.arena.allocator();

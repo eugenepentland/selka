@@ -211,6 +211,14 @@ zig build fmt-check
 `zig build test` runs the checker, actual CLI, and runtime/tooling integration
 acceptance. CI uses this default suite in Debug and ReleaseFast.
 
+Building and using mylang needs only the pinned Zig: `zig build` (with or
+without `-Dcompiler-only`) runs no Python, and the installed compiler's
+`check`, `build`, `run`, `test`, `fmt`, `docs`, `index-project`, `context` and
+`packages` run none either, `--release` included: its LLVM backend is built into
+the compiler (`USE-WITHOUT-PYTHON-1` and the `PACKAGES-*` tests check them under
+an empty `PATH`). Python 3 is used only by some `zig build test` drivers,
+developer scripts and experiments.
+
 While iterating, `-Dtest-filter=SUBSTRING` narrows the Zig suites to the tests
 whose name contains that text. `zig build test-units -Dtest-filter=arena` runs
 that area of `src/root_test.zig` in a second or two instead of the whole
@@ -398,11 +406,12 @@ canonical layout. Formatting preserves token spellings, literal values and
 comments, and accepts syntactically valid code without requiring completed type
 checking.
 
-[Project verification](docs/experiments/verification-driver.md) uses
-`python3 scripts/verify.py verify.json`. Filters select explicit steps and their
-dependencies; reports distinguish selected success from full-manifest success.
-The Python driver tests also run under `zig build test`, alongside the
-core/CLI suites and the runtime/tooling integration drivers.
+[Project verification](docs/experiments/verification-driver.md) is a Python
+workflow runner for this repository's own `verify.json` manifest
+(`python3 scripts/verify.py verify.json`), not part of the compiler: nothing a
+mylang user builds, runs or tests goes through it. Filters select explicit steps
+and their dependencies; reports distinguish selected success from full-manifest
+success.
 
 Source programs use [declared codec operations](docs/experiments/source-codecs.md)
 to convert between domain values and their typed wire representations.
@@ -451,13 +460,12 @@ symbols, callers, references, types, effects and bounded source context:
 
 ```sh
 zig-out/bin/mylang index-project src/schematic/guest/main.my
-python3 scripts/navigate.py --compiler zig-out/bin/mylang \
-  --entry src/schematic/guest/main.my --symbol layout::build --relation context \
-  --cache-dir /tmp/mylang-navigation
+zig-out/bin/mylang context src/schematic/guest/main.my --symbol=layout::build
+zig-out/bin/mylang tests-for src/schematic/guest/main.my layout::build
 ```
 
 Indexes carry source/compiler receipts, and failed bodies expose unchecked
-partial declarations. The optional bounded cache supports equivalent worktrees.
+partial declarations.
 [Larger-project measurements](docs/experiments/large-project-checking.md) justified
 retaining 256 parsed modules within the existing memory budget. Per-function
 checked-body reuse, symbolic-template reuse, concrete-specialization reuse and

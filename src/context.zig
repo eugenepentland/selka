@@ -213,6 +213,45 @@ const Session = struct {
     diagnosis: Diagnosis = .{},
     /// Present only when body syntax failed before any declaration merged.
     lexical: ?Lexical = null,
+    /// The finished declaration table while the relationship walk has not run
+    /// yet: what the selector resolves against before any row exists.
+    declared: ?[]const navigation.Symbol = null,
+};
+
+/// Resolves the selector the moment every declaration is known, then keeps
+/// only the relationship rows into or out of the selected declaration, so an
+/// answer about one declaration never holds every row of a large project.
+const Selecting = struct {
+    session: *Session,
+    /// The selected declaration's identity. The table the selector resolved
+    /// against may still move, so the answer re-finds the symbol by this.
+    resolved: ?[]const u8 = null,
+
+    fn visitor(self: *Selecting) navigation.Visitor {
+        return .{ .context = self, .declarations = declarations, .wants = wants, .row = row };
+    }
+
+    fn declarations(context: *anyopaque, table: navigation.Table) navigation.VisitError!void {
+        const self: *Selecting = @ptrCast(@alignCast(context));
+        self.session.declared = table.symbols;
+        defer self.session.declared = null;
+        resolve(self.session) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return error.InternalError,
+        };
+        if (self.session.source.symbol) |symbol| self.resolved = symbol.id;
+        self.session.source.symbol = null;
+    }
+
+    fn wants(context: *anyopaque, from: []const u8, to: []const u8) bool {
+        const self: *Selecting = @ptrCast(@alignCast(context));
+        const id = self.resolved orelse return false;
+        return std.mem.eql(u8, from, id) or std.mem.eql(u8, to, id);
+    }
+
+    fn row(_: *anyopaque, _: navigation.Reference) navigation.VisitError!bool {
+        return true;
+    }
 };
 
 /// Render one answer from a loaded compilation, checked or not. A compilation
@@ -235,14 +274,18 @@ fn run(allocator: std.mem.Allocator, compilation: *pc.Compilation, identity: rec
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
     var session: Session = .{ .gpa = allocator, .arena = arena.allocator(), .options = options };
-    var facts = try navigation.collect(session.arena, compilation, identity, .{});
-    session.source = .{
-        .compilation = compilation,
-        .facts = &facts,
-        .snapshot = facts.snapshot,
-        .snapshot_sha256 = facts.snapshot_sha256,
+    session.source.compilation = compilation;
+    var selecting: Selecting = .{ .session = &session };
+    var facts = navigation.collect(allocator, compilation, identity, .{ .edges = .{ .visit = selecting.visitor() } }) catch |err| switch (err) {
+        // Only a writing visitor fails this way, and this one writes nothing.
+        error.WriteFailed => return error.InternalError,
+        else => |other| return other,
     };
-    try resolve(&session);
+    defer facts.deinit();
+    session.source.facts = &facts;
+    session.source.snapshot = facts.snapshot;
+    session.source.snapshot_sha256 = facts.snapshot_sha256;
+    session.source.symbol = if (selecting.resolved) |id| facts.symbol(id) else null;
     if (session.diagnosis.status == .ok and !facts.checked) {
         session.diagnosis.status = .partial;
         session.diagnosis.reason = options.unavailable_reason orelse "bodies were not checked; declarations and diagnostics only";
@@ -297,6 +340,7 @@ fn resolve(session: *Session) Error!void {
 /// Every declaration this run can name: the checked tables when the bodies
 /// merged, and the recovered lexical candidates when they did not.
 fn allSymbols(session: *const Session) []const navigation.Symbol {
+    if (session.declared) |table| return table;
     if (session.source.facts) |facts| return facts.symbols;
     if (session.lexical) |*recovered| return recovered.candidates.symbols;
     return &.{};
@@ -320,6 +364,24 @@ fn resolveSymbol(session: *Session, name: []const u8) Error!void {
     if (symbolWithId(session, name)) |found| {
         session.source.symbol = found;
         return;
+    }
+    // The spelling code writes at a call site, `module.name`, names the same
+    // declaration as `module::name`; a dotted spelling that could name several
+    // is reported like an ambiguous bare name.
+    const ids = session.arena.alloc([]const u8, symbols.len) catch return error.OutOfMemory;
+    for (ids, symbols) |*id, item| id.* = item.id;
+    switch (try navigation.resolveSpelling(session.arena, name, ids)) {
+        .found => |id| {
+            session.source.symbol = symbolWithId(session, id);
+            return;
+        },
+        .ambiguous => |candidates| {
+            session.source.candidates = candidates;
+            session.diagnosis.status = .ambiguous;
+            session.diagnosis.reason = "several declarations match that dotted spelling; use a module-qualified name";
+            return;
+        },
+        .missing => {},
     }
     // A bare name is accepted only when exactly one declaration carries it: a
     // near match is reported, never silently chosen.

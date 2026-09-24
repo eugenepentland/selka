@@ -58,7 +58,7 @@ def check(path, document):
 
 
 def compare_index(compiler, entry):
-    index = subprocess.run([compiler, 'index-project', str(entry)], capture_output=True, text=True, timeout=300)
+    index = subprocess.run([compiler, 'index-project', str(entry), '--full'], capture_output=True, text=True, timeout=300)
     assert index.returncode == 0, (str(entry), index.stderr)
     document = json.loads(index.stdout)
     assert document['checked'], str(entry)

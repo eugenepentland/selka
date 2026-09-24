@@ -1,34 +1,28 @@
 # Agent-facing inspection
 
-Named laws state a property of an application and are checked like ordinary
-tests, so a program can be probed over a range of inputs rather than at one
-point. The design record is [named executable laws](../experiments/guest-laws.md).
-
 The bounded instruction trace and the recorded host transcript that used to sit
-alongside it were interpreter facilities and were removed with it on 2026-09-14.
-A natively built guest reports a source-mapped call stack at its trap instead;
-see [runtime budgets](runtime-budgets.md#guest-memory-ceilings) for what a trap
-prints.
+alongside a guest run were interpreter facilities and were removed with it on
+2026-09-14. A natively built guest reports a source-mapped call stack at its trap
+instead; see [runtime budgets](runtime-budgets.md#guest-memory-ceilings) for what
+a trap prints.
 
 ## Named executable laws
 
-A law is an exported `test_` function returning `bool` that states a property of
-the application, and a JSON configuration gives each qualified law an integer
-domain per parameter. `scripts/laws.py` samples those domains with an explicit
-seed, runs every sample through the schema-pinned guest test runner as a fresh
-native process, and writes a `guest-laws-v1` report retaining the seed, the
-source snapshot identity, the inputs, the outcomes and the source locations. A failing sample is
-reduced within its supplied domains while preserving the failure category, and a
-repeated campaign on the same snapshot draws the same inputs. Passing samples are
-evidence, not a proof; reductions are counterexample candidates, not guaranteed
-minimal ones. This generator covers bounded integer inputs only, and a source or
-compiler change invalidates a campaign rather than mixing evidence across
-versions.
+Sampled laws are an experiment, not part of mylang. The law runner, which draws
+seeded inputs from integer domains for an exported `test_` function returning
+`bool`, reduces a failing sample within its domains and writes a `guest-laws-v1`
+report, is a Python script under `experiments/guest-laws/`; the compiler has no
+laws command, and nothing in building or using mylang runs it. Its design record,
+[named executable laws](../experiments/guest-laws.md), says how to run it.
+
+What mylang itself offers is one law case at a time: `mylang test ENTRY --cases
+FILE` runs an exported `test_` function natively with the arguments and the
+expected value the cases file gives it ([guest tests](guest-tests.md#mylang-test)).
 
 ```console
-$ cat laws.json
-{"main::test_sum_is_commutative": {"left": [0, 1000], "right": [0, 1000]}}
-$ python3 scripts/laws.py app/main.my --compiler zig-out/bin/mylang \
-    --laws laws.json --seed 17 --samples 20 --output report.json
-{"passed": true, "cases": 20, "output": "report.json"}
+$ cat cases.json
+{"main::test_sum_is_commutative": {"arguments": {"left": "3", "right": "4"}, "expected": true}}
+$ mylang test app/main.my --cases cases.json
+passed main::test_sum_is_commutative
+1 passed, 0 cached, 0 failed, 0 skipped
 ```

@@ -49,15 +49,34 @@ pub const Index = struct {
 pub fn discoveredTests(memory: std.mem.Allocator, program: typed.Program, modules: []const ModuleSyntax) Error![]typed.FunctionId {
     var tests: std.ArrayList(typed.FunctionId) = .empty;
     defer tests.deinit(memory);
+    var names_arena = std.heap.ArenaAllocator.init(memory);
+    defer names_arena.deinit();
+    const attributed = try testAttributed(names_arena.allocator(), modules);
     for (program.functions) |function| {
         if (function.type_arguments.len != 0) continue;
         if (std.mem.eql(u8, function.name, entry_adapter.wrapper_name)) continue;
         if (std.mem.startsWith(u8, function.name, "lambda@")) continue;
         const local = localName(function.name);
-        if (!std.mem.startsWith(u8, local, "test_") and !hasTestAttribute(modules, function.name)) continue;
+        if (!std.mem.startsWith(u8, local, "test_") and !attributed.contains(function.name)) continue;
         try tests.append(memory, function.id);
     }
     return tests.toOwnedSlice(memory);
+}
+
+/// The `module::name` identity of every top-level function carrying `@test`,
+/// read from each module's syntax once, so discovery answers each checked
+/// function with one lookup instead of scanning every module per function.
+fn testAttributed(arena: std.mem.Allocator, modules: []const ModuleSyntax) Error!std.StringHashMapUnmanaged(void) {
+    var names: std.StringHashMapUnmanaged(void) = .empty;
+    for (modules) |module| {
+        if (module.syntax.attributes.len == 0) continue;
+        for (module.syntax.functions) |function| {
+            if (function.policy.owner != null) continue;
+            if (!ast.hasAttribute(module.syntax, function.name, .@"test")) continue;
+            try names.put(arena, try std.fmt.allocPrint(arena, "{s}::{s}", .{ module.name, module.src.text(function.name) }), {});
+        }
+    }
+    return names;
 }
 
 /// Resolve each function's direct `.call` targets by walking its checked body.
@@ -85,19 +104,31 @@ pub fn callGraph(memory: std.mem.Allocator, program: typed.Program) Error![][]co
 /// Invert a call graph and a test set into per-function direct and transitive
 /// test answers, in test discovery order.
 pub fn build(memory: std.mem.Allocator, program: typed.Program, call_graph: []const []const typed.FunctionId, tests: []const typed.FunctionId) Error!Index {
+    const names = try memory.alloc([]const u8, program.functions.len);
+    defer memory.free(names);
+    for (names, program.functions) |*name, function| name.* = function.name;
+    return buildNamed(memory, names, call_graph, tests);
+}
+
+/// `build` over any function table: `names[i]` is the qualified name of the
+/// function the graph and the test list identify as `i`. A syntax-derived graph
+/// (`navigation_syntax.zig`) indexes its own declaration table this way, so the
+/// checked and the unchecked answers share one reachability walk.
+pub fn buildNamed(memory: std.mem.Allocator, names: []const []const u8, call_graph: []const []const typed.FunctionId, tests: []const typed.FunctionId) Error!Index {
     var arena = std.heap.ArenaAllocator.init(memory);
     errdefer arena.deinit();
     const scratch = arena.allocator();
-    const direct_lists = try scratch.alloc(std.ArrayList([]const u8), program.functions.len);
-    const reached_lists = try scratch.alloc(std.ArrayList([]const u8), program.functions.len);
+    const count = names.len;
+    const direct_lists = try scratch.alloc(std.ArrayList([]const u8), count);
+    const reached_lists = try scratch.alloc(std.ArrayList([]const u8), count);
     for (direct_lists) |*list| list.* = .empty;
     for (reached_lists) |*list| list.* = .empty;
-    const visited = try scratch.alloc(bool, program.functions.len);
+    const visited = try scratch.alloc(bool, count);
     var pending: std.ArrayList(typed.FunctionId) = .empty;
     for (tests) |test_id| {
         const test_index = @backingInt(test_id);
-        if (test_index >= program.functions.len) continue;
-        const name = program.functions[test_index].name;
+        if (test_index >= count) continue;
+        const name = names[test_index];
         @memset(visited, false);
         pending.clearRetainingCapacity();
         visited[test_index] = true;
@@ -113,8 +144,8 @@ pub fn build(memory: std.mem.Allocator, program: typed.Program, call_graph: []co
         }
         for (call_graph[test_index]) |callee| try direct_lists[@backingInt(callee)].append(scratch, name);
     }
-    const direct = try scratch.alloc([]const []const u8, program.functions.len);
-    const reached = try scratch.alloc([]const []const u8, program.functions.len);
+    const direct = try scratch.alloc([]const []const u8, count);
+    const reached = try scratch.alloc([]const []const u8, count);
     for (direct, reached, direct_lists, reached_lists) |*kept, *everything, direct_list, reached_list| {
         kept.* = direct_list.items;
         everything.* = reached_list.items;
@@ -126,20 +157,4 @@ pub fn build(memory: std.mem.Allocator, program: typed.Program, call_graph: []co
 fn localName(qualified: []const u8) []const u8 {
     const at = std.mem.indexOf(u8, qualified, "::") orelse return qualified;
     return qualified[at + 2 ..];
-}
-
-/// Whether the function whose checked identity is `qualified` carries `@test`
-/// in the module syntax that declares it.
-fn hasTestAttribute(modules: []const ModuleSyntax, qualified: []const u8) bool {
-    const at = std.mem.indexOf(u8, qualified, "::") orelse return false;
-    const module_name = qualified[0..at];
-    const local = qualified[at + 2 ..];
-    for (modules) |module| {
-        if (!std.mem.eql(u8, module.name, module_name)) continue;
-        for (module.syntax.functions) |function| {
-            if (!std.mem.eql(u8, module.src.text(function.name), local)) continue;
-            return ast.hasAttribute(module.syntax, function.name, .@"test");
-        }
-    }
-    return false;
 }

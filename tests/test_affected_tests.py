@@ -108,6 +108,10 @@ class Mapping(SyntheticRepo):
         self.assertIn("test-llvm-adapter", sel.steps)
         self.assertTrue(sel.llvm)
 
+    def test_the_llvm_translator_adds_an_llvm_guest_smoke(self) -> None:
+        sel = self.select({"src/qbe_build_llvm_emit.zig": ["x"]})
+        self.assertTrue(sel.llvm)
+
     def test_the_build_graph_is_left_to_the_gate(self) -> None:
         sel = self.select({"build.zig": ["x"]})
         self.assertTrue(sel.empty())
