@@ -665,6 +665,8 @@ fn planSelectedCases(
     outcomes: Outcomes,
     pending: *std.ArrayList(Pending),
 ) Error!void {
+    // Tests of one module share its contract identity; compute it once.
+    var module_contracts: std.StringHashMapUnmanaged([]const u8) = .empty;
     for (selected, 0..) |case, case_index| {
         const result = &outcomes.results[case_index];
         result.* = .{ .name = case.name, .status = "skipped", .expected = case.expected };
@@ -684,10 +686,7 @@ fn planSelectedCases(
         const contract_identity = if (has_providers) blk: {
             const modules = try contracts.moduleNames(context.allocator, case.providers);
             break :blk try contracts.contractIdentity(context.allocator, graphs.production, modules);
-        } else blk: {
-            const modules = [_][]const u8{try testModuleName(context.allocator, case.name)};
-            break :blk try contracts.contractIdentity(context.allocator, graphs.production, &modules);
-        };
+        } else try moduleContract(context, graphs.production, &module_contracts, try testModuleName(context.allocator, case.name));
         const identity: receipts.Identity = .{ .contract = contract_identity, .provider = graph.provider_identity, .source = graph.source_identity };
         const tables = try graph.lookup(context.allocator);
         const checked = tables.checked.get(case.name) orelse case.function;
@@ -945,6 +944,13 @@ const Group = struct {
     names: std.ArrayList([]const u8) = .empty,
 };
 
+/// The contract identity of one test module, memoized for the tests that share it.
+fn moduleContract(context: fs.Context, production: std.json.Value, memo: *std.StringHashMapUnmanaged([]const u8), module: []const u8) Error![]const u8 {
+    if (memo.get(module)) |known| return known;
+    const identity = try contracts.contractIdentity(context.allocator, production, &.{module});
+    try memo.put(context.allocator, module, identity);
+    return identity;
+}
 /// The module part of a `module::name` qualified test identity.
 fn testModuleName(allocator: std.mem.Allocator, qualified: []const u8) Error![]const u8 {
     const at = std.mem.indexOf(u8, qualified, "::") orelse return error.UnknownFunction;
@@ -1048,6 +1054,22 @@ test "one prepared project graph is shared per selected provider identity" {
     try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, calls, "list-interfaces"));
 }
 
+// spec-case: NATIVE-TEST-PLAN-2
+test "a module's contract identity is computed once for all of its tests" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const production = (try std.json.parseFromSlice(std.json.Value, context.allocator, fake_contracts, .{ .allocate = .alloc_always })).value;
+    var memo: std.StringHashMapUnmanaged([]const u8) = .empty;
+    const first = try moduleContract(context, production, &memo, "production");
+    const second = try moduleContract(context, production, &memo, "production");
+    try std.testing.expectEqual(first.ptr, second.ptr);
+    try std.testing.expectEqualStrings(try contracts.contractIdentity(context.allocator, production, &.{"production"}), first);
+    try std.testing.expectEqual(@as(u32, 1), memo.count());
+    try std.testing.expectError(error.InvalidContracts, moduleContract(context, production, &memo, "absent"));
+    try std.testing.expectEqual(@as(u32, 1), memo.count());
+}
 // spec: NATIVE-TEST-OVERLAP-1
 test "the production check starts beside the declaration check unless a fixture can select another graph" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
