@@ -10403,3 +10403,172 @@ test "an unchanged build keeps its executable without rebuilding and a replaced 
     try testing.expect(std.mem.indexOf(u8, repaired.stderr, "\"name\":\"link\",\"duration_ns\":0,") == null);
     try testing.expectEqualStrings("7\n3:3\n", try programOutput(a, output));
 }
+
+/// One contract fixture: a module whose `half` carries `@requires(PRE)` and
+/// whose `Range` carries `@invariant(INV)`, with a passing test for each.
+fn contractFixture(precondition: []const u8, invariant: []const u8) ![]u8 {
+    return std.fmt.allocPrint(testing.allocator,
+        \\module main
+        \\
+        \\@invariant({s})
+        \\public record Range:
+        \\    low: int
+        \\    high: int
+        \\
+        \\@requires({s})
+        \\public def half(amount: int) -> int:
+        \\    return amount // 2
+        \\
+        \\def make(low: int) -> Range:
+        \\    return Range(low, 5)
+        \\
+        \\public def test_half() -> bool:
+        \\    return half(4) == 2
+        \\
+        \\public def test_make() -> bool:
+        \\    return make(3).low == 3
+        \\
+        \\def main() -> int:
+        \\    return half(4) + make(3).low
+        \\
+    , .{ invariant, precondition });
+}
+
+/// Run one compiler command and hand back its result; the caller frees it.
+fn contractCommand(argv: []const []const u8) !std.process.RunResult {
+    return std.process.run(testing.allocator, testing.io, .{ .argv = argv });
+}
+
+fn freeResult(result: std.process.RunResult) void {
+    testing.allocator.free(result.stdout);
+    testing.allocator.free(result.stderr);
+}
+
+/// Write `main.my` from the fixture template in `directory`.
+fn writeContractFixture(directory: std.Io.Dir, precondition: []const u8, invariant: []const u8) !void {
+    const text = try contractFixture(precondition, invariant);
+    defer testing.allocator.free(text);
+    try directory.writeFile(testing.io, .{ .sub_path = "main.my", .data = text });
+}
+
+// spec: CONTRACT-CACHE-1
+test "CLI an edit to one contract clause is never served from a warm cache" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try writeContractFixture(temporary.dir, "amount > 0", "self.low <= self.high");
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const entry = try std.fs.path.join(testing.allocator, &.{ root, "main.my" });
+    defer testing.allocator.free(entry);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_argument);
+    const warm_test = try contractCommand(&.{ compiler_path, "test", entry, cache_argument, tools[0], tools[1] });
+    defer freeResult(warm_test);
+    try testing.expect(std.mem.indexOf(u8, warm_test.stdout, "2 passed") != null);
+    const warm_run = try contractCommand(&.{ compiler_path, "run", entry, cache_argument, tools[0], tools[1] });
+    defer freeResult(warm_run);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 5 }, warm_run.term);
+    // Only the precondition changes: the same caches must now trap under it.
+    try writeContractFixture(temporary.dir, "amount > 10", "self.low <= self.high");
+    const run = try contractCommand(&.{ compiler_path, "run", entry, cache_argument, tools[0], tools[1] });
+    defer freeResult(run);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, run.term);
+    try testing.expect(std.mem.indexOf(u8, run.stderr, "error[R_REQUIRES]: precondition violated: half requires `amount > 10`") != null);
+    const tested = try contractCommand(&.{ compiler_path, "test", entry, cache_argument, tools[0], tools[1] });
+    defer freeResult(tested);
+    try testing.expect(std.mem.indexOf(u8, tested.stdout, "failed main::test_half: R_REQUIRES: half requires `amount > 10`") != null);
+    try testing.expect(std.mem.indexOf(u8, tested.stdout, "1 failed") != null);
+    // An invariant lives on another declaration than the body that checks it.
+    try writeContractFixture(temporary.dir, "amount > 10", "self.low > self.high");
+    const rechecked = try contractCommand(&.{ compiler_path, "test", entry, cache_argument, tools[0], tools[1] });
+    defer freeResult(rechecked);
+    try testing.expect(std.mem.indexOf(u8, rechecked.stdout, "failed main::test_make: R_INVARIANT: Range invariant `self.low > self.high`") != null);
+    try testing.expect(std.mem.indexOf(u8, rechecked.stdout, "2 failed") != null);
+}
+
+// spec: CONTRACT-INTERFACE-1
+test "CLI interfaces, the contracts manifest, context and api-diff carry contract clauses" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try writeContractFixture(temporary.dir, "amount > 0", "self.low <= self.high");
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const entry = try std.fs.path.join(testing.allocator, &.{ root, "main.my" });
+    defer testing.allocator.free(entry);
+    const baseline = try std.fs.path.join(testing.allocator, &.{ root, "baseline.txt" });
+    defer testing.allocator.free(baseline);
+    const write_argument = try std.fmt.allocPrint(testing.allocator, "--write={s}", .{baseline});
+    defer testing.allocator.free(write_argument);
+    const against_argument = try std.fmt.allocPrint(testing.allocator, "--against={s}", .{baseline});
+    defer testing.allocator.free(against_argument);
+    const listed = try contractCommand(&.{ compiler_path, "list-interfaces", entry });
+    defer freeResult(listed);
+    try testing.expect(std.mem.indexOf(u8, listed.stdout, "export type Range @invariant(self.low <= self.high)") != null);
+    try testing.expect(std.mem.indexOf(u8, listed.stdout, "tests(1) @requires(amount > 0)") != null);
+    const manifest = try contractCommand(&.{ compiler_path, "list-interfaces", "--contracts", entry });
+    defer freeResult(manifest);
+    try testing.expect(std.mem.indexOf(u8, manifest.stdout, "\"contracts\":\"@invariant(self.low <= self.high)\"") != null);
+    const context = try contractCommand(&.{ compiler_path, "context", entry, "--symbol=main::half" });
+    defer freeResult(context);
+    try testing.expect(std.mem.indexOf(u8, context.stdout, "\"signature\":\"@requires(amount > 0)\\nhalf(amount: int) -> int") != null);
+    const written = try contractCommand(&.{ compiler_path, "api-diff", entry, write_argument });
+    defer freeResult(written);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, written.term);
+    try writeContractFixture(temporary.dir, "amount > 1", "self.low < self.high");
+    const diffed = try contractCommand(&.{ compiler_path, "api-diff", entry, against_argument });
+    defer freeResult(diffed);
+    try testing.expect(std.mem.indexOf(u8, diffed.stdout, "breaking: main::Range (interface changed)") != null);
+    try testing.expect(std.mem.indexOf(u8, diffed.stdout, "breaking: main::half (interface changed)") != null);
+}
+
+// spec-case: CONTRACT-TRAP-1
+test "CLI a release build and a JSON diagnostic report the contract that failed" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\@requires(amount > 0, "amount must be positive")
+        \\def half(amount: int) -> int:
+        \\    return amount // 2
+        \\
+        \\@ensures(result > 100)
+        \\def grow(x: int) -> int:
+        \\    return x + 1
+        \\
+        \\def main() -> int:
+        \\    return grow(half(8))
+        \\
+    });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "caller.my", .data =
+        \\@requires(amount > 0, "amount must be positive")
+        \\def half(amount: int) -> int:
+        \\    return amount // 2
+        \\
+        \\def main() -> int:
+        \\    return half(0)
+        \\
+    });
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const entry = try std.fs.path.join(testing.allocator, &.{ root, "main.my" });
+    defer testing.allocator.free(entry);
+    const caller = try std.fs.path.join(testing.allocator, &.{ root, "caller.my" });
+    defer testing.allocator.free(caller);
+    const program = try std.fs.path.join(testing.allocator, &.{ root, "program" });
+    defer testing.allocator.free(program);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}/cache", .{root});
+    defer testing.allocator.free(cache_argument);
+    const built = try contractCommand(&.{ compiler_path, "build", entry, "-o", program, "--release", cache_argument, tools[1] });
+    defer freeResult(built);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, built.term);
+    const released = try contractCommand(&.{program});
+    defer freeResult(released);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, released.term);
+    try testing.expect(std.mem.indexOf(u8, released.stderr, "error[R_ENSURES]: postcondition violated: grow ensures `result > 100`") != null);
+    const json = try contractCommand(&.{ compiler_path, "run", caller, "--diagnostics=json", cache_argument, tools[0], tools[1] });
+    defer freeResult(json);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, json.term);
+    try testing.expect(std.mem.indexOf(u8, json.stderr, "\"code\":\"R_REQUIRES\"") != null);
+    try testing.expect(std.mem.indexOf(u8, json.stderr, "\"contract\":{\"kind\":\"requires\",\"subject\":\"half\",\"clause\":\"amount > 0\",\"message\":\"amount must be positive\",\"caller\":{") != null);
+}

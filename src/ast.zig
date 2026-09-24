@@ -288,16 +288,35 @@ pub const module_docstring_span = Span{ .start = 0, .end = 0 };
 pub const DeclarationDoc = struct { declaration: Span, text: []const u8, span: Span };
 
 /// One fixed-vocabulary attribute kind the parser accepts above a declaration.
-pub const AttributeKind = enum { deprecated, @"test", allow };
+/// `requires`, `ensures` and `invariant` are the contract clauses: they carry a
+/// condition expression and may repeat on one declaration.
+pub const AttributeKind = enum {
+    deprecated,
+    @"test",
+    allow,
+    requires,
+    ensures,
+    invariant,
+
+    /// Whether this kind is a contract clause with a checked condition.
+    pub fn contract(self: AttributeKind) bool {
+        return self == .requires or self == .ensures or self == .invariant;
+    }
+};
 /// One `@name(...)` clause attached to a declaration.
 pub const Attribute = struct {
     kind: AttributeKind,
     /// The whole `@name(...)` clause.
     span: Span,
-    /// The `@deprecated` reason or the `@allow` rule name.
+    /// The `@deprecated` reason, the `@allow` rule name, or a contract clause's
+    /// optional message literal.
     argument: ?Span = null,
     /// The `@allow` `reason="..."` payload.
     reason: ?Span = null,
+    /// A contract clause's condition expression.
+    condition: ?NodeId = null,
+    /// The `old(...)` calls an `@ensures` condition makes, in source order.
+    olds: []const NodeId = &.{},
 };
 /// One declaration's attribute list, keyed by the declaration name span.
 pub const DeclarationAttributes = struct { declaration: Span, attributes: []const Attribute };
@@ -308,6 +327,15 @@ pub fn attributesOf(program: Program, declaration: Span) []const Attribute {
         if (entry.declaration.start == declaration.start and entry.declaration.end == declaration.end) return entry.attributes;
     }
     return &.{};
+}
+
+/// The source offset a declaration begins at: its first attribute's `@`, or
+/// its name when it carries none. Cache regions and interface spellings start
+/// here, so an edit to a contract clause above a declaration changes them.
+pub fn declarationStart(program: Program, declaration: Span) usize {
+    var start = declaration.start;
+    for (attributesOf(program, declaration)) |attribute| start = @min(start, attribute.span.start);
+    return start;
 }
 
 /// Whether the declaration whose name has this span carries the given attribute.

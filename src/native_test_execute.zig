@@ -266,7 +266,7 @@ pub const Executor = struct {
             try detail.writeText(&diagnostics.writer);
             // `writeText` renders only numeric detail, so a message-only assert
             // detail is quoted here, matching the runtime's `R_ASSERT: text` line.
-            if (std.mem.eql(u8, code, "R_ASSERT") and detail_version != 0 and detail_operation_text.len != 0)
+            if (trap_detail.messageTrap(code) and detail_version != 0 and detail_operation_text.len != 0)
                 try diagnostics.writer.print(": {s}", .{detail_operation_text});
             try diagnostics.writer.writeAll("\n");
         }

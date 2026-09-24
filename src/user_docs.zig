@@ -27,6 +27,7 @@ pub const topics = [_]Topic{
     .{ .name = "bytes", .path = "docs/bytes.md", .summary = "bytes: indexing, slices, conversions and in-place writes" },
     .{ .name = "io", .path = "docs/io.md", .summary = "print through Stream, debug, arguments, files and run authority" },
     .{ .name = "effects", .path = "docs/effects.md", .summary = "capabilities, effect ceilings and mutation contracts" },
+    .{ .name = "contracts", .path = "docs/contracts.md", .summary = "@requires, @ensures and @invariant: checked preconditions, postconditions and invariants" },
     .{ .name = "modules", .path = "docs/modules.md", .summary = "module headers, imports, public declarations and projects" },
     .{ .name = "memory", .path = "docs/managed-memory.md", .summary = "managed lists, dicts and strings; the tracing collector" },
     .{ .name = "arenas", .path = "docs/arenas.md", .summary = "`with arena()` regions for bulk allocation" },

@@ -398,8 +398,10 @@ fn unitFallthrough(comptime Checker: type, self: *Checker, body: CheckedStatemen
     try self.requireHandled(0, span);
     const value: typed.NodeId = @fromBackingInt(self.nodes.items.len);
     try self.nodes.append(self.allocator, .{ .span = span, .ty = .unit, .data = .unit });
+    // The implicit end of a procedure is a normal return: its postconditions hold there too.
+    const data: @FieldType(typed.Statement, "data") = if (self.contract.ensures.len != 0) try self.contractReturn(value, span) else .{ .ret = value };
     const ret: typed.StatementId = @fromBackingInt(self.statements.items.len);
-    try self.statements.append(self.allocator, .{ .span = span, .terminates = true, .data = .{ .ret = value } });
+    try self.statements.append(self.allocator, .{ .span = span, .terminates = true, .data = data });
     const children = try self.allocator.dupe(typed.StatementId, &.{ body.id, ret });
     const block: typed.StatementId = @fromBackingInt(self.statements.items.len);
     try self.statements.append(self.allocator, .{ .span = span, .terminates = true, .data = .{ .block = children } });
@@ -411,6 +413,7 @@ fn statementRet(comptime Checker: type, self: *Checker, stmt: ast.Statement, exp
     try self.requireArenaReturn(value, stmt.span);
     try self.requireHandled(0, stmt.span);
     flow.terminates = true;
+    if (self.contract.ensures.len != 0) return self.contractReturn(value, stmt.span);
     return .{ .ret = value };
 }
 /// `assert` traps instead of returning, so it needs no result type and no effect.

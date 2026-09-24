@@ -46,6 +46,11 @@ collected reference, which is what lets them leave an arena block freely; see
 [managed arenas](arenas.md) for that rule and [managed memory](managed-memory.md) for
 what sharing a managed field means.
 
+A rule every value of a record must satisfy is written as an invariant above it,
+such as `@invariant(self.low <= self.high)`. It is checked at every
+construction, `replace(...)` and field write, and a violation traps
+`R_INVARIANT`; see [contracts](contracts.md#invariants).
+
 ## Managed class records
 
 `class` declares the same named fields as `record` but with reference semantics.
@@ -505,6 +510,7 @@ writes reads the elements where they are.
 
 ## Related pages
 
+- [Contracts](contracts.md#invariants) — an `@invariant` a record checks at every construction, `replace` and field write
 - [Results and options](results-and-options.md) — `Result`, `Option` and their contextual constructors
 - [Python-style application code](python-syntax.md) — the surrounding syntax
 - [Managed memory](managed-memory.md) — what a managed field shares

@@ -3,6 +3,10 @@ const syntax_code = "E_SYNTAX";
 const expression_code = "E_EXPRESSION";
 const expected_expression = "expected an expression";
 const eExportRemoved = "E_EXPORT_REMOVED";
+/// Diagnostic code for a contract clause on a declaration that cannot carry it.
+const contract_target_code = "E_CONTRACT_TARGET";
+/// Diagnostic code for an `old(...)` outside `@ensures` or with a bad argument list.
+const contract_old_code = "E_CONTRACT_OLD";
 const eInternalName = "E_INTERNAL_NAME";
 const eDefaultArgument = "E_DEFAULT_ARGUMENT";
 const eRequirement = diagnostic.generic_requirement;
@@ -635,23 +639,84 @@ pub const Parser = struct {
         _ = try self.expect(.ident);
         while (self.take(.dot)) _ = try self.expect(.ident);
     }
-    /// The fixed attribute vocabulary: only these three names are accepted.
+    /// The fixed attribute vocabulary: the three declaration markers and the
+    /// three contract clauses.
     fn attributeKind(text: []const u8) ?ast.AttributeKind {
-        if (std.mem.eql(u8, text, "deprecated")) return .deprecated;
-        if (std.mem.eql(u8, text, "test")) return .@"test";
-        if (std.mem.eql(u8, text, "allow")) return .allow;
+        inline for (@typeInfo(ast.AttributeKind).@"enum".field_names) |name| {
+            if (std.mem.eql(u8, text, name)) return @field(ast.AttributeKind, name);
+        }
         return null;
     }
-    /// Whether the next declaration token starts a function head, the only
-    /// declaration kind attributes attach to in this round.
-    fn atFunctionHead(self: *Parser) bool {
+    /// Parse one contract clause's `(condition[, "message"])` after its name.
+    /// An `@ensures` condition records the `old(...)` calls it makes; any other
+    /// clause that calls `old` is `E_CONTRACT_OLD`. The condition's nodes are
+    /// exactly those appended while parsing it, so the scan needs no walker.
+    fn contractClause(self: *Parser, attribute: *ast.Attribute, at: Span) diagnostic.Error!void {
+        _ = try self.expect(.lparen);
+        const first = self.syntax.nodes.items.len;
+        const condition = try self.expression(0);
+        attribute.condition = condition;
+        if (self.take(.comma)) attribute.argument = (try self.expect(.bytes)).span;
+        attribute.span = .join(at, (try self.expect(.rparen)).span);
+        var olds: std.ArrayList(ast.NodeId) = .empty;
+        for (self.syntax.nodes.items[first..], first..) |node, index| {
+            if (node.data != .call or node.data.call.owner != null) continue;
+            if (!std.mem.eql(u8, self.src.text(node.data.call.name), "old")) continue;
+            if (attribute.kind != .ensures) return self.sink.fail(contract_old_code, node.span, "`old(...)` is only legal inside `@ensures`; a precondition and an invariant already see the current value");
+            if (node.data.call.arguments.len != 1) return self.sink.fail(contract_old_code, node.span, "`old` takes exactly one expression");
+            try olds.append(self.storage, @fromBackingInt(index));
+        }
+        attribute.olds = try olds.toOwnedSlice(self.storage);
+    }
+    /// The declaration kinds an attribute list can precede.
+    const AttributeHead = enum { function, host_function, record, domain, other };
+    /// Classify the declaration head after an attribute list, past `public`.
+    fn attributeHead(self: *Parser) AttributeHead {
         var at = self.cursor.pos;
         if (self.tokens[at].tag == .ident and std.mem.eql(u8, self.src.text(self.tokens[at].span), "public")) at += 1;
+        const text = self.src.text(self.tokens[at].span);
         return switch (self.tokens[at].tag) {
-            .kw_def, .kw_private, .kw_conversion => true,
-            .ident => std.mem.eql(u8, self.src.text(self.tokens[at].span), "extern") or std.mem.eql(u8, self.src.text(self.tokens[at].span), "host"),
-            else => false,
+            .kw_def, .kw_private, .kw_conversion => .function,
+            .kw_domain => .domain,
+            .ident => if (std.mem.eql(u8, text, "extern") or std.mem.eql(u8, text, "host")) .host_function else if (std.mem.eql(u8, text, "record")) .record else .other,
+            else => .other,
         };
+    }
+    /// Reject an attribute placed above a declaration that cannot carry it:
+    /// `@requires`/`@ensures` need a `def` with a body, `@invariant` a
+    /// `record` or `domain`, and the other attributes a function. A domain
+    /// member (`member` set) takes only contract clauses.
+    fn checkAttributeTarget(self: *Parser, pending: []const ast.Attribute, member: bool) diagnostic.Error!void {
+        if (pending.len == 0) return;
+        const head = self.attributeHead();
+        for (pending) |attribute| switch (attribute.kind) {
+            .invariant => if (head != .record and head != .domain)
+                return self.sink.fail(contract_target_code, attribute.span, "`@invariant` attaches to a `record` or `domain` declaration; a class, union, enum, alias, constraint or function carries none"),
+            .requires, .ensures => if (head != .function)
+                return self.sink.fail(contract_target_code, attribute.span, if (head == .host_function) "an `extern` or `host` declaration has no body to check a contract in" else "`@requires` and `@ensures` attach to a `def` declaration"),
+            .deprecated, .@"test", .allow => if (member or (head != .function and head != .host_function))
+                return self.sink.fail("E_ATTRIBUTE_TARGET", attribute.span, if (member) "only contract clauses attach to a domain member" else "attributes attach to a function declaration"),
+        };
+    }
+    /// Record one declaration's attribute list under its name span.
+    fn attach(self: *Parser, table: *std.ArrayList(ast.DeclarationAttributes), declaration: Span, pending: []const ast.Attribute) std.mem.Allocator.Error!void {
+        if (pending.len != 0) try table.append(self.storage, .{ .declaration = declaration, .attributes = pending });
+    }
+    /// Parse one function declared inside a domain body, with the contract
+    /// clauses written above it.
+    fn domainMember(self: *Parser, owner: Span, table: *std.ArrayList(ast.DeclarationAttributes)) diagnostic.Error!ast.Function {
+        const pending = try self.attributes();
+        try self.checkAttributeTarget(pending, true);
+        const member = try self.function(owner);
+        try self.attach(table, member.name, pending);
+        return member;
+    }
+    /// Reject `@invariant` on a generic record: its condition would have to be
+    /// checked once per instantiation, which this version does not do.
+    fn rejectGenericInvariant(self: *Parser, pending: []const ast.Attribute, type_parameters: []const ast.TypeParameter) diagnostic.Error!void {
+        if (type_parameters.len == 0) return;
+        for (pending) |attribute| if (attribute.kind == .invariant)
+            return self.sink.fail(contract_target_code, attribute.span, "`@invariant` attaches to a non-generic `record`; a generic record carries none");
     }
     /// Parse the `@name(...)` clauses that precede one declaration, rejecting an
     /// unknown name and a repeated kind.
@@ -664,12 +729,14 @@ pub const Parser = struct {
             const name = try self.expect(.ident);
             const clause: Span = .join(at_token.span, name.span);
             const kind = attributeKind(self.src.text(name.span)) orelse
-                return self.sink.fail("E_UNKNOWN_ATTRIBUTE", clause, "unknown attribute; expected @deprecated, @test or @allow");
-            for (list.items) |existing| if (existing.kind == kind)
+                return self.sink.fail("E_UNKNOWN_ATTRIBUTE", clause, "unknown attribute; expected @deprecated, @test, @allow, @requires, @ensures or @invariant");
+            // Contract clauses repeat: each one is checked in source order.
+            if (!kind.contract()) for (list.items) |existing| if (existing.kind == kind)
                 return self.sink.fail("E_DUPLICATE_ATTRIBUTE", clause, "attribute is repeated on one declaration");
             var attribute: ast.Attribute = .{ .kind = kind, .span = clause };
             switch (kind) {
                 .@"test" => {},
+                .requires, .ensures, .invariant => try self.contractClause(&attribute, at_token.span),
                 .deprecated => {
                     _ = try self.expect(.lparen);
                     attribute.argument = (try self.expect(.bytes)).span;
@@ -741,7 +808,7 @@ pub const Parser = struct {
         var public_names: std.ArrayList(Span) = .empty;
         while (self.current().tag != .eof) {
             const pending = try self.attributes();
-            if (pending.len != 0 and !self.atFunctionHead()) return self.sink.fail("E_ATTRIBUTE_TARGET", pending[0].span, "attributes attach to a function declaration");
+            try self.checkAttributeTarget(pending, false);
             // A leading `public` publishes the declaration that follows, so a
             // module marks visibility on the declaration itself. It is not a way
             // to spell the separate `export NAME` directive.
@@ -838,9 +905,10 @@ pub const Parser = struct {
                         if (codec != null) return self.sink.fail("E_DUPLICATE_CODEC", self.current().span, "a domain declares at most one codec");
                         self.cursor.pos += 1;
                         codec = try self.parseCodec();
-                    } else try functions.append(self.storage, try self.function(name.span));
+                    } else try functions.append(self.storage, try self.domainMember(name.span, &attribute_table));
                 }
                 _ = try self.expect(.dedent);
+                try self.attach(&attribute_table, name.span, pending);
                 try self.markPublic(&public_names, declare_public, name.span);
                 try domains.append(self.storage, .{ .name = name.span, .backing = backing, .codec = codec });
                 continue;
@@ -849,10 +917,12 @@ pub const Parser = struct {
             if (managed_record or self.takeRecordHead()) {
                 const name = try self.expect(.ident);
                 const type_parameters = try self.typeParameters();
+                try self.rejectGenericInvariant(pending, type_parameters);
                 _ = try self.expect(.indent);
                 try self.recordDocstring(name.span);
                 const fields = try self.recordFields();
                 _ = try self.expect(.dedent);
+                try self.attach(&attribute_table, name.span, pending);
                 try self.markPublic(&public_names, declare_public, name.span);
                 try records.append(self.storage, .{ .managed = managed_record, .type_parameters = type_parameters, .name = name.span, .fields = fields });
                 continue;
@@ -861,7 +931,7 @@ pub const Parser = struct {
             const declared_function = try self.function(null);
             try self.markPublic(&public_names, declare_public, declared_function.name);
             try functions.append(self.storage, declared_function);
-            if (pending.len != 0) try attribute_table.append(self.storage, .{ .declaration = declared_function.name, .attributes = pending });
+            try self.attach(&attribute_table, declared_function.name, pending);
         }
         return .{
             .types = .{

@@ -258,7 +258,15 @@ const FunctionFacts = struct {
             const current = item orelse break;
             const node = switch (current) {
                 .expression => |id| self.program.nodes[@backingInt(id)],
-                .statement => continue,
+                .statement => |id| {
+                    // CONTRACT-INTERFACE-1: a contract clause checked in this
+                    // body may be written outside its source region (an
+                    // `@invariant` on a record it builds), so its text is
+                    // part of the implementation identity.
+                    const statement = self.program.statements[@backingInt(id)];
+                    if (statement.data == .assertion and statement.data.assertion.kind != .statement) part(&hash, statement.data.assertion.message);
+                    continue;
+                },
             };
             try facts.add(node.ty);
             switch (node.data) {
