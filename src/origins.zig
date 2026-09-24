@@ -82,6 +82,17 @@ pub const Summary = struct {
     undeclared_witness: ?source.Span = null,
 };
 
+/// One function's cross-function facts as the effect and mutation passes infer
+/// them: the propagated effect mask (before the mutation bit is added) and the
+/// mutation summary. A check that did not materialize a body stands these in
+/// for it; a pass that computes them can hand them back for the next check.
+pub const Fact = struct { graph_mask: effect_set.Mask = 0, summary: Summary = .{} };
+
+/// The stand-in facts for function `index`, or null when its body was checked.
+pub fn standIn(stubs: []const ?Fact, index: usize) ?Fact {
+    return if (index < stubs.len) stubs[index] else null;
+}
+
 fn mergeSummaries(a: Summary, b: Summary) Summary {
     return .{
         .return_origin = Origin.merge(a.return_origin, b.return_origin),
@@ -94,7 +105,9 @@ fn mergeSummaries(a: Summary, b: Summary) Summary {
     };
 }
 
-fn sameSummary(a: Summary, b: Summary) bool {
+/// Whether two summaries carry the same transitive facts. Witness spans only
+/// locate a function's own diagnostics, so they do not take part.
+pub fn sameSummary(a: Summary, b: Summary) bool {
     return a.mutates == b.mutates and a.mutates_unknown == b.mutates_unknown and
         a.writes == b.writes and a.external == b.external and
         a.return_origin.positions == b.return_origin.positions and a.return_origin.unknown == b.return_origin.unknown;
@@ -599,9 +612,14 @@ const FixedPoint = struct { summaries: []Summary, widened: bool };
 
 /// Compute transitive mutation and return-origin summaries to a fixed point.
 /// Budget exhaustion widens conservatively; it never reports a write as absent.
-fn buildSummaries(allocator: std.mem.Allocator, program: typed.Program) std.mem.Allocator.Error!FixedPoint {
+fn buildSummaries(allocator: std.mem.Allocator, program: typed.Program, stubs: []const ?Fact) std.mem.Allocator.Error!FixedPoint {
     const summaries = try allocator.alloc(Summary, program.functions.len);
     @memset(summaries, .{});
+    // A stood-in body keeps the summary it had when it was last checked; only
+    // checked bodies iterate, reading those fixed summaries at their calls.
+    for (summaries, 0..) |*summary, index| {
+        if (standIn(stubs, index)) |fact| summary.* = fact.summary;
+    }
     var keep = true;
     defer if (keep) allocator.free(summaries);
     var scratch = std.heap.ArenaAllocator.init(allocator);
@@ -612,6 +630,7 @@ fn buildSummaries(allocator: std.mem.Allocator, program: typed.Program) std.mem.
     while (true) {
         var changed = false;
         for (program.functions, 0..) |_, index| {
+            if (standIn(stubs, index) != null) continue;
             _ = scratch.reset(.retain_capacity);
             const computed = try analyzeFunction(&context, index);
             const merged = mergeSummaries(summaries[index], computed);
@@ -773,6 +792,11 @@ pub const Request = struct {
     syntax: ast.Program,
     /// Diagnostic destination.
     sink: *diagnostic.Sink,
+    /// Stand-in facts for bodies this check did not materialize, by function
+    /// index; such a function is neither analyzed nor diagnosed.
+    stubs: []const ?Fact = &.{},
+    /// When set, receives every function's final mutation summary.
+    summaries: ?[]Summary = null,
 };
 
 /// The syntax function one checked function was built from. A specialized
@@ -1139,8 +1163,11 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, request: Requ
     const sink = request.sink;
     _ = request.exported;
     var violated = false;
-    const built = try buildSummaries(allocator, program);
+    const built = try buildSummaries(allocator, program, request.stubs);
     try publish(allocator, program, built.summaries);
+    if (request.summaries) |out| {
+        for (out, 0..) |*summary, index| summary.* = if (index < built.summaries.len) built.summaries[index] else .{};
+    }
     if (built.widened and program.functions.len != 0) {
         try sink.items.append(allocator, .{
             .code = limit_code,
@@ -1149,16 +1176,21 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, request: Requ
         });
         violated = true;
     }
+    // A stood-in body passed all three checks when it was last checked, and its
+    // own facts and every callee fact it reads are unchanged, so it is skipped.
     for (program.functions, 0..) |_, index| {
+        if (standIn(request.stubs, index) != null) continue;
         if (try checkDeclaredBound(allocator, program, index, built.summaries[index], sink)) violated = true;
     }
     // Item 1's declaration side: every write is declared `mut`, every `mut` is
     // written, and every `mut` names a type with storage to write.
     for (program.functions, 0..) |_, index| {
+        if (standIn(request.stubs, index) != null) continue;
         if (try checkMutDeclarations(allocator, program, request, index, built.summaries[index])) violated = true;
     }
 
     for (program.functions, 0..) |_, index| {
+        if (standIn(request.stubs, index) != null) continue;
         if (try collectOverlaps(allocator, program, built.summaries, index, sink)) violated = true;
     }
     return violated;

@@ -230,6 +230,52 @@ pub const Cache = struct {
         if (stored) self.statistics.verdict.stored += 1;
     }
 
+    /// The check summaries last remembered for this project's entry, or null.
+    /// The payload belongs to the cache allocator; the caller frees it. A
+    /// damaged or foreign file is a miss, and the check then checks every body.
+    pub fn lookupSummaries(self: *Cache, loaded: *const project.Project) error{OutOfMemory}!?[]u8 {
+        const key = self.summariesKey(loaded) orelse return null;
+        return self.read(key) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.Damaged => {
+                self.statistics.damaged += 1;
+                return null;
+            },
+            else => return null,
+        };
+    }
+
+    /// Remember one successful check's summaries for this project's entry,
+    /// replacing the previous ones: there is one slot per entry, not one per edit.
+    pub fn rememberSummaries(self: *Cache, loaded: *const project.Project, payload: []const u8) error{OutOfMemory}!void {
+        const key = self.summariesKey(loaded) orelse return;
+        _ = self.write(key, payload) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => {
+                self.statistics.bypassed += 1;
+                return;
+            },
+        };
+    }
+
+    /// Slot key of an entry's check summaries: the entry module's name and path
+    /// under this compiler identity and contract.
+    pub fn summariesKey(self: *Cache, loaded: *const project.Project) ?[32]u8 {
+        if (loaded.modules.items.len == 0) return null;
+        const entry = loaded.modules.items[0];
+        var hash = std.crypto.hash.sha2.Sha256.init(.{});
+        hash.update(format_version);
+        hash.update("check-summaries");
+        frame(&hash, self.identity);
+        const contract = self.contractHex();
+        hash.update(&contract);
+        frame(&hash, entry.name);
+        frame(&hash, entry.src.path);
+        var out: [32]u8 = undefined;
+        hash.final(&out);
+        return out;
+    }
+
     /// Content key of one parsed-module entry; exposed so tests can damage it.
     pub fn syntaxKey(self: *Cache, src: source.Source, body_start: usize) [32]u8 {
         var hash = std.crypto.hash.sha2.Sha256.init(.{});

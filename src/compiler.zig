@@ -37,6 +37,8 @@ pub const interfaces = @import("interfaces.zig");
 pub const check_cache = @import("check_cache.zig");
 /// Changed-source semantic function queries with fresh global validation.
 pub const semantic_cache = @import("semantic_cache.zig");
+/// Per-function check summaries that stand in for unchanged bodies in `check`.
+pub const semantic_summary = @import("semantic_summary.zig");
 pub const syntax_cache = @import("syntax_cache.zig");
 /// Persistent content-addressed frontend reuse for ordinary one-shot commands.
 pub const frontend_cache = @import("frontend_cache.zig");

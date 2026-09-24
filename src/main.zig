@@ -1965,6 +1965,13 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         compilation.reuse = try openFragments(init, parsed, &fragment_store);
         if (parsed.command == .@"index-project") break :result try renderNavigation(init, &compilation, functions);
         const semantic_before = if (functions) |f| f.statistics else null;
+        // `check` needs no checked trees: unchanged bodies are stood in by the
+        // summaries the entry's last successful check left.
+        var summaries: language.semantic_summary.Request = .{};
+        const summarized = try openSummaries(init, parsed, &project, functions, &summaries);
+        defer if (summarized) {
+            functions.?.context.summaries = null;
+        };
         // `context` answers about a project that does not check: it publishes the
         // declarations and diagnostics it did recover and names the reason the
         // resolved relationships are missing, rather than failing like a gate.
@@ -2020,7 +2027,10 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         if (requested_output) |output| break :result output;
         try reportProject(init, &compilation);
         if (parsed.command == .@"project-dependencies") break :result try init.gpa.dupe(u8, dependency_receipt.?);
-        if (parsed.command == .@"check-project") return finishCheckProject(init, &project, &compilation, verdict, frontend, &configured);
+        if (parsed.command == .@"check-project") {
+            try rememberSummaries(init, frontend, &project, &summaries);
+            return finishCheckProject(init, &project, &compilation, verdict, frontend, &configured);
+        }
         if (parsed.command == .@"discover-project-duplicates") return discoverProject(init, parsed, &project, &compilation, frontend_start);
         if (parsed.command == .@"check-policy") return checkProjectPolicy(init, parsed, &project);
         return runProjectProgram(init, &compilation, parsed, &configured);
@@ -2028,6 +2038,39 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     defer init.gpa.free(output);
     try std.Io.File.stdout().writeStreamingAll(init.io, output);
     return 0;
+}
+
+/// Attach the entry's stored check summaries to a `check-project` request.
+/// Only a plain one-shot check qualifies: an invalidation explanation compares
+/// complete checked trees, and every other command lowers or inspects them.
+fn openSummaries(init: Context, parsed: Parsed, project: *const language.project.Project, functions: ?*language.semantic_cache.Cache, request: *language.semantic_summary.Request) !bool {
+    if (parsed.command != .@"check-project" or parsed.reporting.explain_invalidation) return false;
+    const cache = parsed.frontend orelse return false;
+    const semantic = functions orelse return false;
+    init.timings.begin("summary_load", false);
+    defer init.timings.end();
+    if (try cache.lookupSummaries(project)) |payload| {
+        defer init.gpa.free(payload);
+        const arena = init.arena.allocator();
+        if (language.semantic_summary.decode(arena, payload)) |decoded| {
+            const index = try arena.create(language.semantic_summary.Index);
+            index.* = decoded;
+            request.previous = index;
+        }
+    }
+    semantic.context.summaries = request;
+    return true;
+}
+
+/// Persist the summaries a successful `check-project` produced for its entry.
+fn rememberSummaries(init: Context, frontend: ?*language.frontend_cache.Cache, project: *const language.project.Project, request: *const language.semantic_summary.Request) !void {
+    const cache = frontend orelse return;
+    const produced = request.produced orelse return;
+    init.timings.begin("summary_store", false);
+    defer init.timings.end();
+    const payload = try language.semantic_summary.encode(init.gpa, produced);
+    defer init.gpa.free(payload);
+    try cache.rememberSummaries(project, payload);
 }
 
 /// Record the `checkFunction` execution-site counters for one check, plus the

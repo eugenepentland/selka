@@ -21,7 +21,7 @@ const Hash = std.crypto.hash.sha2.Sha256;
 
 /// Domain for per-function dependency digests. Bump when the tracked dependency
 /// model changes so stale entries are never admitted.
-pub const functions_domain = "semantic-functions-v5";
+pub const functions_domain = "semantic-functions-v6";
 /// Domain for the module export-directive digest. Kept in one place so the
 /// indexed and per-declaration scan oracle hash the same prefix.
 const export_domain = "export-v1";
@@ -506,8 +506,12 @@ const Builder = struct {
         const kind: DeclKind = @fromBackingInt(@intCast(@as(u4, @truncate(key >> 32))));
         const index: usize = @intCast(@as(u32, @truncate(key)));
         var hash = Hash.init(.{});
-        frame(&hash, "decl-v3");
+        frame(&hash, "decl-v4");
         frame(&hash, @tagName(kind));
+        // The defining module is part of a declaration's identity: an import
+        // alias retargeted to another module's byte-identical declaration binds
+        // a different declaration, with its own inferred facts and types.
+        frame(&hash, self.moduleName(self.declarationModule(kind, index)));
         var collector = Collector.init(self, self.declarationModule(kind, index));
         defer collector.deinit();
         switch (kind) {
@@ -519,6 +523,13 @@ const Builder = struct {
                 if (start > end or end > self.src.bytes.len) return error.OutOfMemory;
                 frame(&hash, self.src.bytes[start..end]);
                 self.mixExport(&hash, function.name);
+                // `@deprecated` sits on the line above the declaration, outside
+                // the header bytes, yet every cross-module caller warns about it.
+                for (ast.attributesOf(self.program, function.name)) |attribute| {
+                    if (attribute.kind != .deprecated) continue;
+                    frame(&hash, "deprecated");
+                    frame(&hash, if (attribute.argument) |reason| self.src.text(reason) else "");
+                }
                 if (function.policy.constant) {
                     try collector.collectValue(ast.Function, function);
                 } else {

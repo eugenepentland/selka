@@ -114,6 +114,8 @@ const record_layouts = @import("record_layouts.zig");
 const Error = diagnostic.Error;
 const instances = @import("generic_instances.zig");
 const semantic_cache = @import("semantic_cache.zig");
+const sema_summaries = @import("sema_summaries.zig");
+const origins = @import("origins.zig");
 const timings = @import("timings.zig");
 const generic_cache = @import("generic_cache.zig");
 const Names = @import("module_names.zig").Names;
@@ -198,6 +200,65 @@ const Checker = struct {
     /// The `with open(...)` head whose failure traps instead of yielding a result.
     trapping_open: ?source.Span = null,
 
+    /// Reset the per-function state and bind one ordinary instance's signature:
+    /// its owner, return type and parameter locals.
+    fn beginFunction(self: *Checker, i: usize, function: ast.Function) Error!void {
+        self.checked_index = i;
+        self.current_function = @fromBackingInt(i);
+        self.current_lambda = null;
+        for (self.resolved_nodes.items) |node| self.resolved[node] = null;
+        self.resolved_nodes.clearRetainingCapacity();
+        self.expected_types.clearRetainingCapacity();
+        self.option_facts.clear();
+        self.locals = .empty;
+        self.counters.clearRetainingCapacity();
+        self.active.clearRetainingCapacity();
+        self.owner = if (function.policy.owner) |owner| try self.ty(owner) else null;
+        self.return_type = try self.ty(function.signature.return_type);
+        try self.bindParameters(function);
+    }
+    /// The checked function record of ordinary instance `i` with body `body`.
+    fn finishFunction(self: *Checker, i: usize, function: ast.Function, body: typed.StatementId) Error!typed.Function {
+        return .{
+            .policy = .{
+                .host = function.policy.host,
+                .c_abi = function.policy.c_abi,
+                .effect_bound = function.policy.effect_bound,
+                .owner = self.owner,
+                .restricted = function.policy.restricted,
+                .conversion = function.policy.conversion,
+            },
+            .signature = .{
+                .constant_arguments = self.instance_keys.items[i].lengths,
+                .return_type = self.return_type,
+                .parameter_count = function.signature.parameters.len,
+                .mutates = &.{},
+                .return_origin = .unknown,
+                // The declared footprint is the `mut` parameter set itself: a
+                // written position and a `name: mut T` declaration are the same
+                // fact, so there is no separate clause to reconcile.
+                .declared_mutates = function.signature.mut_positions,
+            },
+            .scope = .{
+                .body = body,
+                .locals = try self.locals.toOwnedSlice(self.allocator),
+            },
+            .id = @fromBackingInt(i),
+            .name = try self.instanceName(@fromBackingInt(i)),
+            .type_arguments = self.instance_keys.items[i].arguments,
+            .declaration = function.name,
+        };
+    }
+    /// A stand-in for an unchanged ordinary body: the checked signature and
+    /// parameter locals over an empty body, which no later pass walks. Its
+    /// summary supplies the facts and diagnostics its body would.
+    fn standInFunction(self: *Checker, i: usize) Error!typed.Function {
+        const function = self.syntaxFunction(@fromBackingInt(i));
+        try self.beginFunction(i, function);
+        const body: typed.StatementId = @fromBackingInt(self.statements.items.len);
+        try self.statements.append(self.allocator, .{ .span = self.syntax.statements.items[@backingInt(function.body)].span, .terminates = true, .data = .{ .block = &.{} } });
+        return self.finishFunction(i, function, body);
+    }
     fn checkFunction(self: *Checker, i: usize) Error!typed.Function {
         self.checked_index = i;
         if (i >= self.lambda_start and i < self.lambda_start + self.syntax.lambdas.len)
@@ -211,16 +272,7 @@ const Checker = struct {
         const constant_context: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink, .catalog = self.catalog };
         const declaration = @backingInt(self.instance_keys.items[i].declaration);
         const constant = if (function.policy.constant and try constant_context.literalType(declaration) == null) try constant_context.evaluate(declaration) else null;
-        for (self.resolved_nodes.items) |node| self.resolved[node] = null;
-        self.resolved_nodes.clearRetainingCapacity();
-        self.expected_types.clearRetainingCapacity();
-        self.option_facts.clear();
-        self.locals = .empty;
-        self.counters.clearRetainingCapacity();
-        self.active.clearRetainingCapacity();
-        self.owner = if (function.policy.owner) |owner| try self.ty(owner) else null;
-        self.return_type = try self.ty(function.signature.return_type);
-        try self.bindParameters(function);
+        try self.beginFunction(i, function);
         if (function.policy.c_abi) {
             const foreign = @import("c_abi.zig");
             if (self.locals.items.len == 0 or self.locals.items[0].ty != .host_cap) return sink.fail("E_HOST_CAPABILITY", function.name, "an extern or host declaration must take `host: Host` as its first parameter");
@@ -272,35 +324,7 @@ const Checker = struct {
             function.name,
             "function may fall through without returning its declared type; loops are conservatively treated as falling through, even while true",
         );
-        return .{
-            .policy = .{
-                .host = function.policy.host,
-                .c_abi = function.policy.c_abi,
-                .effect_bound = function.policy.effect_bound,
-                .owner = self.owner,
-                .restricted = function.policy.restricted,
-                .conversion = function.policy.conversion,
-            },
-            .signature = .{
-                .constant_arguments = self.instance_keys.items[i].lengths,
-                .return_type = self.return_type,
-                .parameter_count = function.signature.parameters.len,
-                .mutates = &.{},
-                .return_origin = .unknown,
-                // The declared footprint is the `mut` parameter set itself: a
-                // written position and a `name: mut T` declaration are the same
-                // fact, so there is no separate clause to reconcile.
-                .declared_mutates = function.signature.mut_positions,
-            },
-            .scope = .{
-                .body = body.id,
-                .locals = try self.locals.toOwnedSlice(allocator),
-            },
-            .id = @fromBackingInt(i),
-            .name = try self.instanceName(@fromBackingInt(i)),
-            .type_arguments = self.instance_keys.items[i].arguments,
-            .declaration = function.name,
-        };
+        return self.finishFunction(i, function, body.id);
     }
     /// Whether `span` lies inside the body of a generic function declaration,
     /// where a lambda never receives a callback type (GENERIC-LAMBDA-1).
@@ -1354,6 +1378,79 @@ fn reuseBody(
     }
     return function;
 }
+/// Open the stand-in plan for a request whose cache carries a summary request.
+fn openPlan(cache: ?*semantic_cache.Cache, session: *?semantic_cache.Session, allocator: std.mem.Allocator, src: source.Source, main: usize) Error!?sema_summaries.Plan {
+    const c = cache orelse return null;
+    const request = c.context.summaries orelse return null;
+    const queries = if (session.*) |*opened| opened else return null;
+    const timing = activeTiming(cache);
+    const start = timingStart(timing);
+    defer timingAdd(timing, "stand_in_planning", start);
+    const plan = try sema_summaries.Plan.init(allocator, request, &queries.prepared, src, main);
+    return plan;
+}
+/// Mark a failed stand-in attempt for a full retry and pass the error on. A
+/// check with no stood-in body reports its diagnostics as they are.
+fn retryOr(plan: *?sema_summaries.Plan, err: Error) Error {
+    if (err == error.SourceError) if (plan.*) |*active| if (active.active()) {
+        active.request.retry = true;
+    };
+    return err;
+}
+/// Everything one body step reads: the checker, the reuse sessions, the
+/// stand-in plan and the instance to check.
+const InstanceStep = struct {
+    checker: *Checker,
+    session: *?semantic_cache.Session,
+    spec_session: *?generic_specializations.Session,
+    cache: ?*semantic_cache.Cache,
+    plan: *?sema_summaries.Plan,
+    allocator: std.mem.Allocator,
+    index: usize,
+};
+/// Check, reuse or stand in for one instance's body. Null means the body
+/// failed and its diagnostics are in the sink.
+fn checkInstance(step: InstanceStep) Error!?typed.Function {
+    const checker = step.checker;
+    const i = step.index;
+    const start_nodes = checker.nodes.items.len;
+    const start_statements = checker.statements.items.len;
+    const start_diagnostics = checker.sink.items.items.len;
+    if (step.plan.*) |*plan| if (plan.standIn(i) != null) {
+        const function = try checker.standInFunction(i);
+        // Binding the parameters may repeat a diagnostic the stored body
+        // notes already carry; the notes are the complete record.
+        checker.sink.items.shrinkRetainingCapacity(start_diagnostics);
+        try plan.replayBody(i, checker.sink);
+        if (step.session.*) |*queries| queries.standIn(i);
+        return function;
+    };
+    const reused = try reuseBody(checker, step.session, step.spec_session, step.cache, step.allocator, i);
+    const timing = activeTiming(step.cache);
+    const fresh = reused == null;
+    const fresh_start = if (fresh) timingStart(timing) else null;
+    defer if (fresh) timingAdd(timing, "fresh_body_check", fresh_start);
+    const function = reused orelse checker.checkFunction(i) catch |err| switch (err) {
+        error.SourceError => return null,
+        else => return err,
+    };
+    try recordBodyRange(.{
+        .checker = checker,
+        .session = step.session,
+        .allocator = step.allocator,
+        .index = i,
+        .start_nodes = start_nodes,
+        .start_statements = start_statements,
+        .reused = reused != null,
+    });
+    if (step.plan.*) |*plan| try plan.recordChecked(step.allocator, .{
+        .instance = i,
+        .nodes = .{ .start = start_nodes, .end = checker.nodes.items.len },
+        .statements = .{ .start = start_statements, .end = checker.statements.items.len },
+        .diagnostics = checker.sink.items.items[start_diagnostics..],
+    });
+    return function;
+}
 /// One body's fresh interval recording inputs.
 const RangeRecord = struct {
     checker: *Checker,
@@ -1524,36 +1621,30 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     // `err: Stream` may both appear; any other Stream name is rejected.
     try validateEntryParameters(src, &checker, sink, entry);
     if (!entry_adapter.supported(try checker.ty(entry.signature.return_type), checker.catalog.records)) return sink.fail("E_TYPE", entry.signature.return_type, "main must return int, None, Result<None/int,int>, or Result[int,str]");
+    var plan = try openPlan(cache, &session, allocator, src, @backingInt(main));
     var checked_functions: std.ArrayList(typed.Function) = .empty;
     var i: usize = 0;
     while (i < checker.instance_keys.items.len and (!contracts_failed or i < checker.ordinary_count)) : (i += 1) {
-        const start_nodes = checker.nodes.items.len;
-        const start_statements = checker.statements.items.len;
-        const reused = try reuseBody(&checker, &session, &spec_session, cache, allocator, i);
-        const fresh = reused == null;
-        const fresh_start = if (fresh) timingStart(timing) else null;
-        defer if (fresh) timingAdd(timing, "fresh_body_check", fresh_start);
-        const function = reused orelse checker.checkFunction(i) catch |err| switch (err) {
-            error.SourceError => {
-                failed = true;
-                continue;
-            },
-            else => return err,
-        };
-        try recordBodyRange(.{
+        const function = (try checkInstance(.{
             .checker = &checker,
             .session = &session,
+            .spec_session = &spec_session,
+            .cache = cache,
+            .plan = &plan,
             .allocator = allocator,
             .index = i,
-            .start_nodes = start_nodes,
-            .start_statements = start_statements,
-            .reused = reused != null,
-        });
+        })) orelse {
+            failed = true;
+            continue;
+        };
         try checked_functions.append(allocator, function);
     }
     // Failed functions leave no executable placeholders. Cross-function passes
     // require a complete graph and must never see the partial function list.
+    // A body that failed is checked in full whether or not others stood in:
+    // a stood-in body had no errors and its inputs are unchanged.
     if (failed) return error.SourceError;
+    const pass_start = sink.items.items.len;
     const functions = try checked_functions.toOwnedSlice(allocator);
     try @import("c_abi.zig").validateImports(allocator, functions, sink);
     var executable_names: std.StringHashMapUnmanaged(typed.FunctionId) = .empty;
@@ -1571,19 +1662,29 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     const exported = try exportedFunctions(allocator, module_names, checked.functions);
     timingAdd(timing, "entry_adaptation", entry_start);
     const effects_start = timingStart(timing);
-    try @import("effects.zig").check(allocator, checked, .{ .exported = exported, .src = src, .syntax = program, .sink = sink });
+    const stubs: []const ?origins.Fact = if (plan) |*active| try active.passStubs(allocator, checked.functions.len) else &.{};
+    const facts: ?[]origins.Fact = if (plan != null) try allocator.alloc(origins.Fact, checked.functions.len) else null;
+    @import("effects.zig").check(allocator, checked, .{ .exported = exported, .src = src, .syntax = program, .sink = sink, .stubs = stubs, .facts = facts }) catch |err| return retryOr(&plan, err);
     timingAdd(timing, "effect_origin_passes", effects_start);
     const codecs_start = timingStart(timing);
-    try @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink);
+    @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink) catch |err| return retryOr(&plan, err);
     timingAdd(timing, "domain_codec_validation", codecs_start);
     const warnings_start = timingStart(timing);
-    try warnBindings(allocator, functions, sink);
+    try warnBindings(allocator, functions, stubs, sink);
     try warnImports(module_names, sink);
+    const pass_items: []const diagnostic.Diagnostic = if (plan != null) try allocator.dupe(diagnostic.Diagnostic, sink.items.items[pass_start..]) else &.{};
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
     timingAdd(timing, "warning_derivation", warnings_start);
     // A rejected dead copy write is an implementation error, not advice: it must
     // stop checking before retention publishes an invalid program.
-    for (sink.items.items) |item| if (item.severity == .err) return error.SourceError;
+    for (sink.items.items) |item| if (item.severity == .err) return retryOr(&plan, error.SourceError);
+    if (plan) |*active| {
+        const summary_start = timingStart(timing);
+        defer timingAdd(timing, "check_summaries", summary_start);
+        if (!try active.consistent(allocator, checked, facts.?)) return retryOr(&plan, error.SourceError);
+        active.request.produced = try active.produce(allocator, checked, facts.?, .{ .src = src, .pass = pass_items, .initial_record_count = checker.initial_record_count, .syntax = program });
+        try active.replayPasses(sink);
+    }
     const retain_start = timingStart(timing);
     try publishSpecializationSession(&spec_session, &checker, allocator, checked);
     if (session) |*queries| try queries.remember(checked);
@@ -1635,9 +1736,12 @@ fn checkHostType(allocator: std.mem.Allocator, catalog: []const typed.Record, ty
     };
 }
 
-fn warnBindings(allocator: std.mem.Allocator, functions: []const typed.Function, sink: *diagnostic.Sink) Error!void {
-    for (functions) |function| {
+fn warnBindings(allocator: std.mem.Allocator, functions: []const typed.Function, stubs: []const ?origins.Fact, sink: *diagnostic.Sink) Error!void {
+    for (functions, 0..) |function, index| {
         if (function.policy.host != null) continue;
+        // A stood-in body has only its parameters here; its summary replays
+        // the binding warnings its checked body reported.
+        if (origins.standIn(stubs, index) != null) continue;
         for (function.scope.locals) |local| {
             if (local.usage.dead_write_span) |span| {
                 // Each field write reads its destination once; a read beyond that
