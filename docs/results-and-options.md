@@ -307,10 +307,11 @@ A trap is reported as before, with its call stack instead.
 The trace keeps the origin and the last 32 sites after it. A deeper chain, such as
 a recursive descent, reports how many sites in between were dropped:
 `... 9 more entries dropped ...`. Each site is a function's position table and an
-instruction index the compiler already emits, so recording one is a few stores on
-the error path: an `Ok` passing through `?`, and a `return Ok(...)`, execute
-nothing extra. A `return` whose value could be either case tests the returned
-case once.
+instruction index the compiler already emits, so no text is built while the
+program runs. A new `Err` costs three stores and every later site one call to a
+small runtime recorder, all on the error path: an `Ok` passing through `?`, and a
+`return Ok(...)`, execute nothing extra. A `return` whose value could be either
+case tests the returned case once.
 
 ## Option constructors
 
