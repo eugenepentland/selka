@@ -18,6 +18,7 @@ test {
     _ = @import("qbe_build_receipt.zig");
     _ = @import("qbe_build_batch.zig");
     _ = @import("qbe_build_spawn.zig");
+    _ = @import("qbe_build_link.zig");
 }
 
 // The two scenarios below spawn the installed compiler end to end, the way the

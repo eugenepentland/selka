@@ -14,6 +14,7 @@ const lean = @import("qbe_build_units.zig");
 const receipts = @import("qbe_build_receipt.zig");
 const batch = @import("qbe_build_batch.zig");
 const tool_spawn = @import("qbe_build_spawn.zig");
+const direct_link = @import("qbe_build_link.zig");
 /// The linker flag that drops every section a program never references.
 const gc_sections = "-Wl,--gc-sections";
 /// The manifest array that lists every emitted unit.
@@ -293,6 +294,7 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
             .runtime_reused = state.runtime.reused,
             .runtime_installed = state.runtime_installed,
             .metadata_reused = state.metadata_reused,
+            .link_route = routeName(state.link_route),
             .functions = state.records.items,
             .frontend_seconds = frontend,
             .codegen_seconds = codegen,
@@ -783,6 +785,8 @@ const State = struct {
     /// it: the link then produces a new program, so the byte comparison that
     /// keeps an identical one in place is not worth reading both files for.
     compiled: bool = false,
+    /// How the final link ran (BUILD-LINK-1), or null when it was skipped.
+    link_route: ?direct_link.Route = null,
     fn add(self: *State, object: cache_api.Object) !void {
         if (!object.reused) self.compiled = true;
         try self.objects.append(self.context.allocator, object.path);
@@ -1059,7 +1063,9 @@ const State = struct {
     /// whose units carry frame-map positions, LTO to assembly first.
     fn linkAttempt(self: *State, parsed: options.Options, candidate: []const u8) !void {
         if (self.cache.codegen.lto and !parsed.library and self.usesFrameMap()) return self.linkAssembled(parsed, candidate);
-        try self.context.command(try self.linkCommand(parsed, candidate), null);
+        // BUILD-LINK-1: the command `zig cc` would run, without its host probe.
+        const place: direct_link.Place = .{ .directory = self.cache.directory, .environment = self.cache.environment };
+        self.link_route = try direct_link.run(self.context, place, .{ .argv = try self.linkCommand(parsed, candidate), .objects = self.objects.items, .output = candidate, .scratch = self.cache.temporary });
     }
     /// Whether this link is an LLVM frame-map executable, whose guest code keeps
     /// no frame pointer: its traps unwind by call-frame information, so it
@@ -1198,6 +1204,10 @@ const State = struct {
         try self.objects.append(a, object);
     }
 };
+/// The report's name for how the link ran, or null when it was skipped.
+fn routeName(route: ?direct_link.Route) ?[]const u8 {
+    return if (route) |ran| @tagName(ran) else null;
+}
 /// The `link_identity` a published sidecar records, found by its key rather
 /// than by parsing the whole document: the sidecar lists every function, and
 /// a key and its quotes cannot occur unescaped inside any JSON string value.

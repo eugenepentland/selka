@@ -9491,6 +9491,39 @@ test "a relink of reused objects keeps an identical executable, and a link over 
     try testing.expectEqualStrings("7\n3:3\n", try programOutput(a, output));
 }
 
+/// How one `--report` build of `entry` into `output` over `cache` ran its
+/// link, followed by whether the output changed.
+fn reportedLinkRoute(allocator: std.mem.Allocator, entry: []const u8, output: []const u8, cache: []const u8) ![]const u8 {
+    const result = try std.process.run(allocator, testing.io, .{ .argv = &.{ compiler_path, "build", entry, "--project", "-o", output, "--cache-dir", cache, "--mode", "Debug", "--report", tools[0], tools[1] } });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    const report = try std.json.parseFromSliceLeaky(std.json.Value, allocator, result.stdout, .{});
+    const changed = if (report.object.get("output_changed").?.bool) "changed" else "kept";
+    return std.fmt.allocPrint(allocator, "{s} {s}", .{ report.object.get("link_route").?.string, changed });
+}
+
+// spec-case: BUILD-LINK-1
+test "the first link records how zig cc links and every later link runs the linker directly" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try writeIncrementalVersion(temporary.dir, .{ .main = incremental_main, .helper = incremental_helper });
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const output = try std.fs.path.join(a, &.{ root, "program" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    try testing.expectEqualStrings("recorded changed", try reportedLinkRoute(a, entry, output, cache));
+    // A direct relink of the same objects writes exactly the bytes `zig cc`
+    // wrote: the comparison keeps the published executable.
+    try temporary.dir.deleteFile(testing.io, "program.qbe-manifest.json");
+    try testing.expectEqualStrings("direct kept", try reportedLinkRoute(a, entry, output, cache));
+    try writeIncrementalVersion(temporary.dir, incremental_versions[0]);
+    // An edit relinks with no `zig cc`, and the program is the edited one.
+    try testing.expectEqualStrings("direct changed", try reportedLinkRoute(a, entry, output, cache));
+    try testing.expectEqualStrings("17\n3:3\n", try programOutput(a, output));
+}
+
 // spec-case: BUILD-NOOP-1
 test "an unchanged build keeps its executable without rebuilding and a replaced one is rebuilt" {
     var temporary = testing.tmpDir(.{});
