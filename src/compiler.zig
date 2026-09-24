@@ -80,6 +80,10 @@ pub const declaration_diff = @import("declaration_diff.zig");
 pub const affected_tests = @import("affected_tests.zig");
 /// `mylang api-diff` baseline comparison and classification.
 pub const api_diff = @import("api_diff.zig");
+/// Generated per-module interface files (`mylang api`) and their comparison.
+pub const interface_files = @import("interface_files.zig");
+/// `mylang api` host side: read, compare, write and delete the interface files.
+pub const api_files = @import("api_files.zig");
 /// `mylang context` bounded per-declaration answer for a coding agent.
 pub const context = @import("context.zig");
 const disassemble = @import("disassemble.zig");
