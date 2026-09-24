@@ -102,7 +102,7 @@ const Claim = struct { file: ?std.Io.File, held: bool };
 /// Native filesystem, process, and allocation failures preserve their diagnostics.
 pub const Error = std.Io.Dir.RealPathFileAllocError || std.Io.Dir.ReadFileAllocError ||
     std.Io.Dir.WriteFileError || std.Io.Dir.CreateDirPathError || std.Io.Dir.RenameError ||
-    std.process.RunError || std.Io.File.Writer.Error || error{ ToolNotFound, NativeToolFailed };
+    std.process.RunError || std.Io.File.Writer.Error || error{ ToolNotFound, NativeToolFailed, ArgumentListTooLong };
 /// A build owns temporary allocations until the command exits.
 pub const Context = struct {
     allocator: std.mem.Allocator,

@@ -1128,7 +1128,8 @@ const State = struct {
         try lto.appendSlice(a, &.{ "--lto-emit-asm", "--lto-partitions=1", "-m", "elf_x86_64", "--entry", "main", "-o", base });
         try lto.appendSlice(a, self.objects.items);
         try lto.append(a, self.runtime.path);
-        try self.context.command(lto.items, null);
+        // BUILD-LINK-RSP-1: both commands name every object.
+        try self.context.command(try direct_link.responseArgv(self.context, try std.fs.path.join(a, &.{ directory, "lto.rsp" }), lto.items, 2), null);
         const assembly = try std.fs.path.join(a, &.{ directory, "program.s" });
         try self.context.write(assembly, try cache_api.annotateText(self.context, try self.context.read(try std.fmt.allocPrint(a, "{s}.lto.s", .{base}))));
         const object = try std.fs.path.join(a, &.{ directory, "program.o" });
@@ -1142,7 +1143,7 @@ const State = struct {
         try args.appendSlice(a, &.{ "-lm", gc_sections });
         if (!options.keepSymbols(parsed.link_arguments)) try args.append(a, "-s");
         try args.appendSlice(a, &.{ "-o", candidate });
-        try self.context.command(args.items, null);
+        try self.context.command(try direct_link.responseArgv(self.context, try std.fs.path.join(a, &.{ directory, "link.rsp" }), args.items, 2), null);
     }
     /// Whether an input is already machine code rather than LTO bitcode.
     fn nativeObject(self: *State, path: []const u8) !bool {

@@ -55,7 +55,7 @@ pub const Route = enum { direct, recorded, driver };
 pub fn run(context: fs.Context, place: Place, link: Link) fs.Error!Route {
     const a = context.allocator;
     const run_start = objectRun(link) orelse {
-        try context.command(link.argv, null);
+        try context.command(try responseArgv(context, try responsePath(context, link), link.argv, 2), null);
         return .driver;
     };
     const file = try templatePath(context, place, link, run_start);
@@ -66,15 +66,36 @@ pub fn run(context: fs.Context, place: Place, link: Link) fs.Error!Route {
     try shown.appendSlice(a, link.argv[0..2]);
     try shown.append(a, "-###");
     try shown.appendSlice(a, link.argv[2..]);
-    const result = try spawn.run(a, .{ .argv = shown.items });
+    const result = try spawn.run(a, .{ .argv = try responseArgv(context, try responsePath(context, link), shown.items, 3) });
     const line = linkerLine(result.stderr);
+    if (fs.exitCode(result.term) != 0) {
+        // BUILD-LINK-RSP-1: `zig cc` starts the `ld.lld` it printed with every
+        // object on its command line, which the kernel refuses past about 6 MB.
+        // The printed command, run directly through a response file, still
+        // links; a program's own link error fails that link too, and then
+        // `zig cc`'s report of it is what the user sees.
+        if (try linkPrinted(context, file, link, line)) return .recorded;
+        try writeExcept(context, result.stderr, line);
+        return error.NativeToolFailed;
+    }
     // Everything else `zig cc` wrote (a warning) is the link's own output.
     try writeExcept(context, result.stderr, line);
-    if (fs.exitCode(result.term) != 0) return error.NativeToolFailed;
     const template = (try record(a, link, line orelse return .driver)) orelse return .driver;
     if (!try applies(context, template)) return .driver;
     context.atomic(file, try std.mem.join(a, "\x00", template)) catch return .driver;
     return .recorded;
+}
+
+/// Link directly from the linker command `zig cc` printed but could not run,
+/// keeping it as this shape's template; false when there is no usable command
+/// or the direct link fails.
+fn linkPrinted(context: fs.Context, file: []const u8, link: Link, line: ?[]const u8) fs.Error!bool {
+    const template = (try record(context.allocator, link, line orelse return false)) orelse return false;
+    if (!try direct(context, link, template)) return false;
+    // The program is linked either way; a template that cannot be kept only
+    // costs the next link of this shape another recording run.
+    context.atomic(file, try std.mem.join(context.allocator, "\x00", template)) catch return true;
+    return true;
 }
 
 /// The index in `argv` where the object run starts, or null when the objects
@@ -170,10 +191,46 @@ fn direct(context: fs.Context, link: Link, template: []const []const u8) fs.Erro
             try argv.append(a, link.output);
         } else try argv.append(a, token);
     }
-    const result = try spawn.run(a, .{ .argv = argv.items });
+    const result = try spawn.run(a, .{ .argv = try responseArgv(context, try responsePath(context, link), argv.items, 2) });
     if (fs.exitCode(result.term) != 0) return false;
     try std.Io.File.stderr().writeStreamingAll(context.io, result.stderr);
     return true;
+}
+
+/// Where one link's response file goes: beside its output, which every link
+/// writes into a directory private to that build.
+fn responsePath(context: fs.Context, link: Link) fs.Error![]const u8 {
+    return std.fs.path.join(context.allocator, &.{ std.fs.path.dirname(link.output) orelse ".", "link.rsp" });
+}
+
+/// BUILD-LINK-RSP-1: `argv` with every argument after the first `keep` moved
+/// into the response file `path` and named by one `@path` argument, which
+/// `zig cc`, `zig ld.lld` and the linker `zig cc` starts all expand. A link
+/// names every object, and a million-line program's 19,007 objects are 4.66 MB
+/// of arguments, past the kernel's limit for one `execve`; this way the command
+/// line stays a few hundred bytes however large the program. An argument with
+/// a quote or a backslash, which Zig's and LLVM's response-file readers do not
+/// spell alike, keeps the command as it was.
+pub fn responseArgv(context: fs.Context, path: []const u8, argv: []const []const u8, keep: usize) fs.Error![]const []const u8 {
+    if (argv.len <= keep) return argv;
+    const a = context.allocator;
+    var text: std.ArrayList(u8) = .empty;
+    for (argv[keep..]) |argument| {
+        if (argument.len == 0 or std.mem.indexOfAny(u8, argument, "\\\"'") != null) return argv;
+        // Both readers split on whitespace outside double quotes, and Zig's
+        // skips a `#` comment where an argument would start.
+        const quoted = argument[0] == '#' or std.mem.indexOfAny(u8, argument, " \t\r\n") != null;
+        if (quoted) try text.append(a, '"');
+        try text.appendSlice(a, argument);
+        if (quoted) try text.append(a, '"');
+        try text.append(a, '\n');
+    }
+    // An unwritable directory leaves the command whole, for the tool to report.
+    context.write(path, text.items) catch return argv;
+    const shortened = try a.alloc([]const u8, keep + 1);
+    @memcpy(shortened[0..keep], argv[0..keep]);
+    shortened[keep] = try std.fmt.allocPrint(a, "@{s}", .{path});
+    return shortened;
 }
 
 /// Whether every argument of `template` that names a path still names one.
@@ -270,4 +327,89 @@ test "a command that cannot be read back unambiguously records no template" {
     try std.testing.expectEqual(@as(?usize, null), objectRun(.{ .argv = &.{ "/zig", "cc", "/my dir/a.o", "-o", "/out" }, .objects = &.{"/my dir/a.o"}, .output = "/out" }));
     try std.testing.expect(!wellFormed(&.{ "ld.lld", objects_marker }));
     try std.testing.expect(!wellFormed(&.{ "cc", objects_marker, output_marker }));
+}
+
+// spec: BUILD-LINK-RSP-1
+test "a response file carries every argument after the kept ones, quoting whitespace, and refuses what the readers spell apart" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var environment: std.process.Environ.Map = .init(a);
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const path = try std.fs.path.join(a, &.{ root, "link.rsp" });
+    const shortened = try responseArgv(context, path, &.{ "/zig", "cc", "-O2", "/c/a.o", "/my dir/b.o", "#odd", "-o", "/out" }, 2);
+    try std.testing.expectEqual(@as(usize, 3), shortened.len);
+    try std.testing.expectEqualStrings("cc", shortened[1]);
+    try std.testing.expectEqualStrings(try std.fmt.allocPrint(a, "@{s}", .{path}), shortened[2]);
+    try std.testing.expectEqualStrings("-O2\n/c/a.o\n\"/my dir/b.o\"\n\"#odd\"\n-o\n/out\n", try context.read(path));
+    // A quote or backslash, which Zig reads differently from LLVM, keeps the
+    // command whole; so does a command with nothing after the kept arguments.
+    const quoted: []const []const u8 = &.{ "/zig", "ld.lld", "/c/it's.o" };
+    try std.testing.expectEqual(quoted.ptr, (try responseArgv(context, path, quoted, 2)).ptr);
+    const escaped: []const []const u8 = &.{ "/zig", "ld.lld", "C:\\a.o" };
+    try std.testing.expectEqual(escaped.ptr, (try responseArgv(context, path, escaped, 2)).ptr);
+    const bare: []const []const u8 = &.{ "/zig", "cc" };
+    try std.testing.expectEqual(bare.ptr, (try responseArgv(context, path, bare, 2)).ptr);
+}
+
+/// `count` empty objects, each under a path of about 900 bytes, after one that
+/// defines `main` to return 7.
+fn manyObjects(context: fs.Context, zig: []const u8, root: []const u8, count: usize) ![]const []const u8 {
+    const a = context.allocator;
+    const main_c = try std.fs.path.join(a, &.{ root, "main.c" });
+    const empty_c = try std.fs.path.join(a, &.{ root, "empty.c" });
+    try context.write(main_c, "int main(void) { return 7; }\n");
+    try context.write(empty_c, "\n");
+    const main_o = try std.fs.path.join(a, &.{ root, "main.o" });
+    const empty_o = try std.fs.path.join(a, &.{ root, "empty.o" });
+    try context.command(&.{ zig, "cc", "-c", main_c, "-o", main_o }, null);
+    try context.command(&.{ zig, "cc", "-c", empty_c, "-o", empty_o }, null);
+    const empty = try context.read(empty_o);
+    const segment: [200]u8 = @splat('d');
+    const deep = try std.fs.path.join(a, &.{ root, &segment, &segment, &segment, &segment });
+    try context.mkdir(deep);
+    const objects = try a.alloc([]const u8, count + 1);
+    objects[0] = main_o;
+    for (objects[1..], 0..) |*object, index| {
+        object.* = try std.fmt.allocPrint(a, "{s}/object-{d}.o", .{ deep, index });
+        try context.write(object.*, empty);
+    }
+    return objects;
+}
+
+// spec-case: BUILD-LINK-RSP-1
+// spec-case: HOST-FAILURE-CAUSE-1
+test "a link naming more object bytes than one execve can carry links through a response file, recorded and direct" {
+    const zig = std.testing.environ.getPosix("MYLANG_ZIG") orelse return error.ToolNotFound;
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var environment: std.process.Environ.Map = .init(a);
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    // 7,000 paths of about 900 bytes: over the 6 MiB the kernel admits for one
+    // `execve` under any stack limit, like a million-line program's 4.66 MB.
+    const objects = try manyObjects(context, zig, root, 7000);
+    const output = try std.fs.path.join(a, &.{ root, "out", "program" });
+    try context.mkdir(std.fs.path.dirname(output).?);
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(a, &.{ zig, "cc" });
+    try argv.appendSlice(a, objects);
+    try argv.appendSlice(a, &.{ "-o", output });
+    // The whole command is refused by the kernel, and the refusal names its cause.
+    try std.testing.expectError(error.ArgumentListTooLong, spawn.run(a, .{ .argv = argv.items }));
+    const place: Place = .{ .directory = root, .environment = "test" };
+    const link: Link = .{ .argv = argv.items, .objects = objects, .output = output };
+    try std.testing.expectEqual(Route.recorded, try run(context, place, link));
+    try std.testing.expectEqual(std.process.Child.Term{ .exited = 7 }, (try spawn.run(a, .{ .argv = &.{output} })).term);
+    try std.Io.Dir.cwd().deleteFile(std.testing.io, output);
+    try std.testing.expectEqual(Route.direct, try run(context, place, link));
+    try std.testing.expectEqual(std.process.Child.Term{ .exited = 7 }, (try spawn.run(a, .{ .argv = &.{output} })).term);
 }
