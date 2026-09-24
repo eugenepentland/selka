@@ -38,6 +38,19 @@ pub fn build(index: *interfaces.Index) BuildError!Merged {
     const ranges = try allocator.alloc(Range, inputs.len);
     var merged: ast.Program = .{ .nodes = .empty, .statements = .empty, .functions = &.{} };
     var function_modules: std.ArrayList(usize) = .empty;
+    // Size the merged tables once: appending module by module into an arena
+    // would otherwise regrow and recopy the whole program's nodes repeatedly.
+    var node_total: usize = 0;
+    var statement_total: usize = 0;
+    var function_total: usize = 0;
+    for (index.units) |unit| {
+        node_total += unit.syntax.nodes.items.len;
+        statement_total += unit.syntax.statements.items.len;
+        function_total += unit.syntax.functions.len;
+    }
+    try merged.nodes.ensureTotalCapacityPrecise(allocator, node_total);
+    try merged.statements.ensureTotalCapacityPrecise(allocator, statement_total);
+    try function_modules.ensureTotalCapacityPrecise(allocator, function_total);
     for (index.units, 0..) |unit, module| {
         const map: Remap = .{
             .src = src,

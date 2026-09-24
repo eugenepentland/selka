@@ -164,110 +164,115 @@ pub fn declarationEnd(bytes: []const u8, tokens: []const Token, start: usize, br
     }
     return at;
 }
+/// Every reserved spelling and the tag it lexes as. `keyword` answers from one
+/// comptime map instead of comparing a word against each spelling in turn.
+const keyword_words = .{
+    "f64_add",
+    "f64_sub",
+    "f64_mul",
+    "f64_div",
+    "f64_eq",
+    "f64_lt",
+    "f64_le",
+    "f64_sqrt",
+    "f64_floor",
+    "f64_ceil",
+    "f64_trunc",
+    "f64_abs",
+    "f64_neg",
+    "f64_from_u64",
+    "f64_to_u64",
+
+    "bit_and",
+    "bit_or",
+    "bit_xor",
+    "shift_left",
+    "shift_right",
+    "wrapping_add",
+    "wrapping_sub",
+    "wrapping_mul",
+    "saturating_add",
+    "saturating_sub",
+    "saturating_mul",
+
+    "return",
+    "i64",
+    "bool",
+    "if",
+    "else",
+    "while",
+    "break",
+    "continue",
+    "const",
+    "for",
+    "in",
+    "is",
+    "type",
+    "conversion",
+    "i8",
+    "i16",
+    "i32",
+    "u8",
+    "u16",
+    "u32",
+    "u64",
+    "filesystem_cap",
+    "network_cap",
+    "acquire_resource",
+    "complete_resource",
+    "environment_cap",
+    "environment_get",
+    "restrict_resource",
+    "read_resource",
+    "write_resource",
+    "clock_cap",
+    "random_cap",
+    "clock_now",
+    "random_u64",
+
+    "replace",
+    "len",
+    "domain",
+    "private",
+    "wrap",
+    "todo",
+    "codec_encode",
+    "codec_decode",
+    "unwrap",
+    "enum",
+    "union",
+    "match",
+    "arena",
+    "as",
+    "pass",
+    "elif",
+    "case",
+    "with",
+    "assert",
+};
+const keyword_aliases = .{
+    .{ "def", Tag.kw_def },
+    .{ "class", Tag.kw_class },
+    .{ "True", Tag.kw_true },
+    .{ "False", Tag.kw_false },
+    .{ "None", Tag.kw_none },
+    .{ "and", Tag.and_and },
+    .{ "or", Tag.or_or },
+    .{ "not", Tag.bang },
+    // Internal binary64 square root for `src/stdlib/math.my`: the module
+    // declares `sqrt`, which shadows the prelude helper, so it reaches the
+    // intrinsic under a spelling ordinary programs are not taught.
+    .{ "__float_sqrt", Tag.kw_f64_sqrt },
+};
+const keyword_map = std.StaticStringMap(Tag).initComptime(keywordPairs());
+fn keywordPairs() [keyword_words.len + keyword_aliases.len]struct { []const u8, Tag } {
+    var pairs: [keyword_words.len + keyword_aliases.len]struct { []const u8, Tag } = undefined;
+    inline for (keyword_words, 0..) |w, index| pairs[index] = .{ w, @field(Tag, "kw_" ++ w) };
+    inline for (keyword_aliases, 0..) |alias, index| pairs[keyword_words.len + index] = .{ alias[0], alias[1] };
+    return pairs;
+}
 fn keyword(word: []const u8) Tag {
-    const words = .{
-        "f64_add",
-        "f64_sub",
-        "f64_mul",
-        "f64_div",
-        "f64_eq",
-        "f64_lt",
-        "f64_le",
-        "f64_sqrt",
-        "f64_floor",
-        "f64_ceil",
-        "f64_trunc",
-        "f64_abs",
-        "f64_neg",
-        "f64_from_u64",
-        "f64_to_u64",
-
-        "bit_and",
-        "bit_or",
-        "bit_xor",
-        "shift_left",
-        "shift_right",
-        "wrapping_add",
-        "wrapping_sub",
-        "wrapping_mul",
-        "saturating_add",
-        "saturating_sub",
-        "saturating_mul",
-
-        "return",
-        "i64",
-        "bool",
-        "if",
-        "else",
-        "while",
-        "break",
-        "continue",
-        "const",
-        "for",
-        "in",
-        "is",
-        "type",
-        "conversion",
-        "i8",
-        "i16",
-        "i32",
-        "u8",
-        "u16",
-        "u32",
-        "u64",
-        "filesystem_cap",
-        "network_cap",
-        "acquire_resource",
-        "complete_resource",
-        "environment_cap",
-        "environment_get",
-        "restrict_resource",
-        "read_resource",
-        "write_resource",
-        "clock_cap",
-        "random_cap",
-        "clock_now",
-        "random_u64",
-
-        "replace",
-        "len",
-        "domain",
-        "private",
-        "wrap",
-        "todo",
-        "codec_encode",
-        "codec_decode",
-        "unwrap",
-        "enum",
-        "union",
-        "match",
-        "arena",
-        "as",
-        "pass",
-        "elif",
-        "case",
-        "with",
-        "assert",
-    };
-    inline for (words) |w| {
-        if (std.mem.eql(u8, word, w)) return @field(Tag, "kw_" ++ w);
-    }
-    const aliases = .{
-        .{ "def", Tag.kw_def },
-        .{ "class", Tag.kw_class },
-        .{ "True", Tag.kw_true },
-        .{ "False", Tag.kw_false },
-        .{ "None", Tag.kw_none },
-        .{ "and", Tag.and_and },
-        .{ "or", Tag.or_or },
-        .{ "not", Tag.bang },
-        // Internal binary64 square root for `src/stdlib/math.my`: the module
-        // declares `sqrt`, which shadows the prelude helper, so it reaches the
-        // intrinsic under a spelling ordinary programs are not taught.
-        .{ "__float_sqrt", Tag.kw_f64_sqrt },
-    };
-    inline for (aliases) |alias| if (std.mem.eql(u8, word, alias[0])) return alias[1];
-    return .ident;
+    return keyword_map.get(word) orelse .ident;
 }
 fn rejectRemovedWord(sink: *diagnostic.Sink, bytes: []const u8, start: usize, end: usize) diagnostic.Error!void {
     _ = try removed_names.rejectLexical(sink, .{ .start = start, .end = end }, bytes[start..end]);
@@ -364,6 +369,9 @@ fn quotedEnd(bytes: []const u8, start: usize, limit: usize, byte_prefix: bool, s
 fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *diagnostic.Sink) diagnostic.Error![]Token {
     var tokens: std.ArrayList(Token) = .empty;
     errdefer tokens.deinit(allocator);
+    // Source averages well over three bytes per token; reserving that many
+    // avoids regrowing (and, in an arena, recopying) the list while lexing.
+    try tokens.ensureTotalCapacity(allocator, (span.end -| span.start) / 3 + 8);
     const limit = span.end;
     var i: usize = span.start;
     while (i < limit) {
@@ -475,10 +483,50 @@ fn declarationHead(bytes: []const u8, token: Token) bool {
     };
 }
 
+/// A normalized reference spelling: the optional module qualifier and the member name.
+pub const Qualified = struct { alias: ?[]const u8, name: []const u8 };
+/// What `quickQualifiedName` could decide without the full lexer.
+pub const QuickName = union(enum) {
+    /// The spelling needs `lex` + `qualifiedName` (whitespace, `::`, a digit or a
+    /// removed spelling, whose lexical diagnostic only the lexer reports).
+    slow,
+    /// The lexer would accept the spelling, and `qualifiedName` answers null.
+    none,
+    /// The lexer would accept the spelling, and `qualifiedName` answers this.
+    name: Qualified,
+};
+/// `qualifiedName(text, lex(text))` for the common spelling made only of
+/// identifier bytes and dots, decided without allocating a token list. Name
+/// resolution calls this once per reference, so the lexer's allocation and
+/// layout pass would otherwise run for every name in every checked body.
+pub fn quickQualifiedName(text: []const u8) QuickName {
+    if (text.len == 0) return .slow;
+    var segment_start: usize = 0;
+    var last_dot: ?usize = null;
+    var keyword_segment = false;
+    var index: usize = 0;
+    while (index <= text.len) : (index += 1) {
+        if (index < text.len and text[index] != '.') {
+            const byte = text[index];
+            if (!(std.ascii.isAlphanumeric(byte) or byte == '_')) return .slow;
+            continue;
+        }
+        const segment = text[segment_start..index];
+        if (segment.len == 0 or std.ascii.isDigit(segment[0])) return .slow;
+        if (removed_names.removedLexically(segment)) return .slow;
+        if (keyword(segment) != .ident) keyword_segment = true;
+        if (index < text.len) last_dot = index;
+        segment_start = index + 1;
+    }
+    if (keyword_segment) return .none;
+    const dot = last_dot orelse return .{ .name = .{ .alias = null, .name = text } };
+    return .{ .name = .{ .alias = text[0..dot], .name = text[dot + 1 ..] } };
+}
+
 /// Normalize a simple name or one direct-import qualification, preserving source
 /// spelling. A dotted module path splits at the last dot, so `shared.units.area`
 /// normalizes to alias `shared.units` and name `area`.
-pub fn qualifiedName(text: []const u8, tokens: []const Token) ?struct { alias: ?[]const u8, name: []const u8 } {
+pub fn qualifiedName(text: []const u8, tokens: []const Token) ?Qualified {
     if (tokens.len < 2 or tokens[0].tag != .ident) return null;
     const first = text[tokens[0].span.start..tokens[0].span.end];
     if (tokens.len == 2 and tokens[1].tag == .eof) return .{ .alias = null, .name = first };

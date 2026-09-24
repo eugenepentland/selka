@@ -13,6 +13,7 @@ const semantic_store = @import("semantic_store.zig");
 const generic_cache = @import("generic_cache.zig");
 const generic_specializations = @import("generic_specializations.zig");
 const timings = @import("timings.zig");
+const summary = @import("semantic_summary.zig");
 
 /// Re-exported so host wiring can bind the full contract without depending on
 /// the compiler module's internal file layout.
@@ -137,6 +138,11 @@ pub const Context = struct {
     /// Opt-in phase recorder. Kept in the context so the public cache shape does
     /// not grow another field solely for instrumentation.
     timing: ?*timings.Profile = null,
+    /// Per-function check summaries for a `check` that needs no checked trees:
+    /// unchanged bodies are stood in by their stored summaries instead of being
+    /// checked or copied, and the check's own summaries come back here. Such a
+    /// request never hydrates retained checked trees.
+    summaries: ?*summary.Request = null,
 };
 
 /// Retention budget and the symbolic-template table that shares it. Grouped
@@ -321,10 +327,11 @@ pub const Cache = struct {
     pub fn begin(self: *Cache, allocator: std.mem.Allocator, src: source.Source, syntax: ast.Program, records: []const typed.Record) error{ OutOfMemory, InternalError }!Session {
         const profile = if (self.context.timing) |p| if (p.enabled) p else null else null;
         const prepare_start = if (profile) |p| p.now() else std.Io.Timestamp.zero;
-        const prepared = try key.prepare(allocator, src, syntax, self.context.contract, self.context.mutation_contract, self.resolution);
+        const recall = if (self.context.summaries) |request| if (request.previous) |previous| summary.recall(previous) else null else null;
+        const prepared = try key.prepare(allocator, src, syntax, .{ .build = self.context.contract, .mutation = self.context.mutation_contract }, self.resolution, recall);
         if (profile) |p| p.addSince("dependency_key_preparation", prepare_start, false);
         if (self.context.persistent) |persistent| {
-            if (self.entries.len == 0) {
+            if (self.entries.len == 0 and self.context.summaries == null) {
                 const io_start = if (profile) |p| p.now() else std.Io.Timestamp.zero;
                 try self.loadPersistent(persistent, prepared);
                 if (profile) |p| p.addSince("retention_store_io", io_start, false);
@@ -340,6 +347,8 @@ pub const Cache = struct {
         @memset(ranges, .{ .nodes = .{ .start = 0, .end = 0 }, .statements = .{ .start = 0, .end = 0 } });
         const reused = try allocator.alloc(bool, count);
         @memset(reused, false);
+        const stood_in = try allocator.alloc(bool, count);
+        @memset(stood_in, false);
         var function_map: std.StringHashMapUnmanaged(usize) = .empty;
         for (prepared.ordinary_ast, 0..) |ast_index, instance| {
             const entry = try function_map.getOrPut(allocator, prepared.keys[ast_index]);
@@ -355,7 +364,7 @@ pub const Cache = struct {
             .src = src,
             .prepared = prepared,
             .ranges = ranges,
-            .reuse = .{ .enabled = enabled, .functions = reused },
+            .reuse = .{ .enabled = enabled, .functions = reused, .stood_in = stood_in },
             .remap = .{
                 .functions = function_map,
                 .records = record_map,
@@ -455,6 +464,12 @@ pub const Session = struct {
         self.reuse.functions[index] = true;
         self.cache.statistics.reused += 1;
         return function;
+    }
+    /// Record that a check summary stood in for ordinary instance `index`: the
+    /// body was neither checked nor copied, and nothing is retained for it.
+    pub fn standIn(self: *Session, index: usize) void {
+        if (index < self.reuse.stood_in.len) self.reuse.stood_in[index] = true;
+        self.cache.statistics.reused += 1;
     }
     fn reason(self: *Session, why: MissReason) ?typed.Function {
         self.cache.statistics.misses[@backingInt(why)] += 1;
@@ -561,6 +576,10 @@ pub const Session = struct {
     pub fn remember(self: *Session, program: typed.Program) error{ OutOfMemory, InternalError }!void {
         const cache = self.cache;
         if (cache.reuse.max_bytes == 0) return;
+        // A request served by check summaries neither reads nor publishes
+        // retained checked trees: checking a body fresh costs no more than
+        // decoding and relocating its tree.
+        if (cache.context.summaries != null) return;
         const generic_bytes = cache.reuse.symbolic.retainedBytes() + cache.reuse.specializations.retainedBytes();
         const ordinary_budget = cache.reuse.max_bytes -| generic_bytes;
         const ordinary_count = self.prepared.ordinary_ast.len;
@@ -582,6 +601,7 @@ pub const Session = struct {
         var budget_exhausted = false;
         var stopped_at: usize = ordinary_count;
         for (0..ordinary_count) |i| {
+            if (self.reuse.stood_in[i]) continue;
             const ast_index = self.prepared.ordinary_ast[i];
             const stable_key = self.prepared.keys[ast_index];
             if (self.reuse.functions[i]) if (cache.index.get(stable_key)) |old_index| if (!used[old_index]) {
@@ -731,6 +751,8 @@ fn fitsOrdinaryBudget(running: usize, cost: usize, count: usize, budget: usize) 
 const Reuse = struct {
     enabled: bool,
     functions: []bool,
+    /// Bodies a check summary stood in for: there is no checked tree to retain.
+    stood_in: []bool,
 };
 
 /// Whether one referenced aggregate is a declared callable-typed slot. Declared

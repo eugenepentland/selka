@@ -1504,9 +1504,13 @@ test "shared budget honors the ordinary one-entry hash minimum boundary" {
     try t.expectEqual(@as(usize, 8), cache.index.capacity());
     const exact = owned_entry.entryCost(cache.entries[0]) + owned_entry.indexBytesFor(1);
 
-    // A fresh cache one byte below the exact row+arena+minimum-index cost admits
-    // nothing, yet the check still succeeds and reports zero retained storage.
-    var below = Cache.init(t.allocator, exact - 1);
+    // A fresh cache below the exact row+arena+minimum-index cost admits nothing,
+    // yet the check still succeeds and reports zero retained storage. A fresh
+    // entry's arena grows by whether the child allocator can extend a chunk in
+    // place, so its cost can differ by a few bytes from the retained entry's
+    // with the process's allocation history; the one-byte boundary itself is
+    // asserted on the transferred entry below.
+    var below = Cache.init(t.allocator, exact - 64);
     defer below.deinit();
     try checkCachedOnly(t.allocator, &below, one_body_source);
     try t.expectEqual(@as(usize, 0), below.entries.len);

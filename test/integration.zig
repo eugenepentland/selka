@@ -618,6 +618,105 @@ test "C2 concurrent publishers never expose a partial entry" {
     try testing.expectEqual(@as(usize, 2), counts.reused);
 }
 
+/// Write a ladder-shaped project into `directory`: `modules` modules in an
+/// import chain, each declaring a record and `functions` functions whose bodies
+/// build a `list[int]` (a collection type that first appears inside bodies),
+/// fold it through the record and call the same function of the previous
+/// module. `constant` is the edited literal in `m1.f1_0`; `m0.f0_0` carries an
+/// unused binding so a warning has to survive every check.
+fn writeLadder(directory: std.Io.Dir, modules: usize, functions: usize, constant: usize) !void {
+    var module: usize = 0;
+    while (module < modules) : (module += 1) {
+        var text: std.Io.Writer.Allocating = .init(testing.allocator);
+        defer text.deinit();
+        const out = &text.writer;
+        try out.print("module m{d}\n", .{module});
+        if (module > 0) try out.print("import m{d}\n", .{module - 1});
+        try out.print("\n\npublic record Acc{d}:\n    total: int\n    count: int\n", .{module});
+        var function: usize = 0;
+        while (function < functions) : (function += 1) {
+            const offset = if (module == 1 and function == 0) constant else module;
+            try out.print("\n\npublic def f{d}_{d}(n: int) -> int:\n    xs: list[int] = []\n    for k in range(n):\n        xs.append(k * {d} + {d})\n", .{ module, function, function + 1, offset });
+            if (module == 0 and function == 0) try out.writeAll("    spare = 1\n");
+            try out.print("    acc = Acc{d}(total=0, count=0)\n    for x in xs:\n        acc = Acc{d}(total=acc.total + x, count=acc.count + 1)\n", .{ module, module });
+            if (module > 0) try out.print("    return acc.total + m{d}.f{d}_{d}(n - 1)\n", .{ module - 1, module - 1, function }) else try out.writeAll("    return acc.total\n");
+        }
+        const name = try std.fmt.allocPrint(testing.allocator, "m{d}.my", .{module});
+        defer testing.allocator.free(name);
+        try directory.writeFile(testing.io, .{ .sub_path = name, .data = text.written() });
+    }
+    var main_text: std.Io.Writer.Allocating = .init(testing.allocator);
+    defer main_text.deinit();
+    try main_text.writer.print("module main\nimport m{d}\n\n\ndef main() -> int:\n    total = 0\n", .{modules - 1});
+    var function: usize = 0;
+    while (function < functions) : (function += 1) try main_text.writer.print("    total += m{d}.f{d}_{d}(5)\n", .{ modules - 1, modules - 1, function });
+    try main_text.writer.writeAll("    return total - total\n");
+    try directory.writeFile(testing.io, .{ .sub_path = "main.my", .data = main_text.written() });
+}
+
+/// `stderr` without the JSON report lines `--report` adds.
+fn diagnosticLines(allocator: std.mem.Allocator, stderr: []const u8) ![]u8 {
+    var kept: std.Io.Writer.Allocating = .init(allocator);
+    defer kept.deinit();
+    var lines = std.mem.splitScalar(u8, stderr, '\n');
+    while (lines.next()) |line| {
+        if (std.mem.startsWith(u8, line, "{")) continue;
+        try kept.writer.print("{s}\n", .{line});
+    }
+    return kept.toOwnedSlice();
+}
+
+/// `check <entry> --report` with the given cache argument under `environment`.
+fn checkReportWith(environment: *const std.process.Environ.Map, entry: []const u8, cache_argument: []const u8) !std.process.RunResult {
+    return std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", entry, "--report", cache_argument }, .environ_map = environment });
+}
+
+// The deterministic ratchet for the check-at-scale lane: a project whose
+// checked trees do not fit the semantic retention budget (pinned small here,
+// as a 50k-line project's are at the default) re-checked every body the
+// budget dropped. Summaries do not depend on that budget.
+// spec-case: CHECK-SUMMARY-1
+test "check after a one-body edit re-checks only that body when retention cannot hold the project" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(directory);
+    const entry = try std.fs.path.join(testing.allocator, &.{ directory, "main.my" });
+    defer testing.allocator.free(entry);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}/cache", .{directory});
+    defer testing.allocator.free(cache_argument);
+    var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
+    defer environment.deinit();
+    try environment.put("MYLANG_SEMANTIC_BUDGET", "65536");
+    try writeLadder(temporary.dir, 4, 6, 1);
+    const seed = try checkReportWith(&environment, entry, cache_argument);
+    defer testing.allocator.free(seed.stdout);
+    defer testing.allocator.free(seed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, seed.term);
+    try testing.expectEqual(@as(usize, 25), (try c2Counts(seed.stderr)).performed);
+
+    try writeLadder(temporary.dir, 4, 6, 7);
+    const edited = try checkReportWith(&environment, entry, cache_argument);
+    defer testing.allocator.free(edited.stdout);
+    defer testing.allocator.free(edited.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, edited.term);
+    // The edited body and the entry point; the other 23 bodies stand in.
+    const counts = try c2Counts(edited.stderr);
+    try testing.expectEqual(@as(usize, 2), counts.performed);
+    try testing.expectEqual(@as(usize, 23), counts.reused);
+
+    const cold = try c2RunCheckReport(entry, cache_argument, true);
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cold.term);
+    const warm_diagnostics = try diagnosticLines(testing.allocator, edited.stderr);
+    defer testing.allocator.free(warm_diagnostics);
+    const cold_diagnostics = try diagnosticLines(testing.allocator, cold.stderr);
+    defer testing.allocator.free(cold_diagnostics);
+    try testing.expect(std.mem.indexOf(u8, warm_diagnostics, "W_UNUSED_BINDING") != null);
+    try testing.expectEqualStrings(cold_diagnostics, warm_diagnostics);
+}
+
 const SymbolicCounts = struct { performed: usize, reused: usize };
 
 fn symbolicCounts(stderr: []const u8) !SymbolicCounts {

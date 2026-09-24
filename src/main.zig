@@ -1433,7 +1433,7 @@ fn listModules(init: Context, parsed: Parsed) !u8 {
     var functions = try openSemanticCache(init, parsed);
     functions.context.timing = init.timings;
     defer functions.deinit();
-    const status = try listModulesWithCache(init, parsed, null, null, &functions);
+    const status = try listModulesWithCache(init, parsed, null, null, &functions, .process);
     recordSemanticBypass(init, &functions, null);
     return status;
 }
@@ -1934,7 +1934,16 @@ fn receiptStages(parsed: Parsed, executed: [std.meta.tags(invalidation.Stage).le
     return stages;
 }
 
-fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_cache.Cache, verdict: ?*language.check_cache.Cache, functions: ?*language.semantic_cache.Cache) !u8 {
+/// How long a project request's loaded graph must outlive the request itself.
+const Lifetime = enum {
+    /// A one-shot command: the process exits right after, so an optimized
+    /// build skips tearing the project arena down page by page.
+    process,
+    /// A request inside a long-lived session, which must release everything.
+    session,
+};
+
+fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_cache.Cache, verdict: ?*language.check_cache.Cache, functions: ?*language.semantic_cache.Cache, lifetime: Lifetime) !u8 {
     const frontend = parsed.frontend;
     const frontend_start = if (parsed.reporting.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
     const path = parsed.path;
@@ -1949,7 +1958,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     var files: ModuleFiles = .{ .io = init.io, .root = location.root };
     files.inputs = (try prepareInputs(init, parsed, location.name)) orelse return 2;
     var project = language.project.Project.init(init.gpa);
-    defer project.deinit();
+    defer if (lifetime == .session or std.debug.runtime_safety) project.deinit();
     if (try loadModules(init, &project, &files, location.name, try projectLimits(init, parsed))) |status| return status;
     init.timings.counts.modules = project.modules.items.len;
     init.timings.counts.source_bytes = project.counts.bytes;
@@ -1975,6 +1984,11 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         compilation.reuse = try openFragments(init, parsed, &fragment_store);
         if (parsed.command == .@"index-project") break :result try renderNavigation(init, &compilation, functions);
         const semantic_before = if (functions) |f| f.statistics else null;
+        // `check` needs no checked trees: unchanged bodies are stood in by the
+        // summaries the entry's last successful check left.
+        var summaries: language.semantic_summary.Request = .{};
+        try openSummaries(init, parsed, &project, functions, &summaries);
+        defer closeSummaries(functions);
         // `context` answers about a project that does not check: it publishes the
         // declarations and diagnostics it did recover and names the reason the
         // resolved relationships are missing, rather than failing like a gate.
@@ -1988,6 +2002,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
             else => return err,
         };
         recordCheckWork(init, functions, semantic_before, compilation.program);
+        try rememberSummaries(init, frontend, &project, &summaries);
         if (parsed.command == .context) return contextCommand(init, parsed, &compilation, unchecked_reason, &files);
         init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
         init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
@@ -2038,6 +2053,52 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     defer init.gpa.free(output);
     try std.Io.File.stdout().writeStreamingAll(init.io, output);
     return 0;
+}
+
+/// Attach the entry's stored check summaries to a `check-project` request, or
+/// to a command that lowers the whole checked program. An invalidation
+/// explanation compares complete receipts and uses none, and so does every
+/// command that inspects the checked program some other way.
+fn openSummaries(init: Context, parsed: Parsed, project: *const language.project.Project, functions: ?*language.semantic_cache.Cache, request: *language.semantic_summary.Request) !void {
+    if (parsed.reporting.explain_invalidation) return;
+    // `check` stands summaries in for whole bodies; a command that lowers the
+    // program checks every body and stands them in only for pass facts.
+    switch (parsed.command) {
+        .@"check-project" => {},
+        .@"emit-project-qbe", .run, .@"run-project" => request.facts_only = true,
+        else => return,
+    }
+    if (parsed.select_file != null) return;
+    const cache = parsed.frontend orelse return;
+    const semantic = functions orelse return;
+    init.timings.begin("summary_load", false);
+    defer init.timings.end();
+    if (try cache.lookupSummaries(project)) |payload| {
+        defer init.gpa.free(payload);
+        const arena = init.arena.allocator();
+        if (language.semantic_summary.decode(arena, payload)) |decoded| {
+            const index = try arena.create(language.semantic_summary.Index);
+            index.* = decoded;
+            request.previous = index;
+        }
+    }
+    semantic.context.summaries = request;
+}
+
+/// Detach a request's summaries from the semantic cache that outlives it.
+fn closeSummaries(functions: ?*language.semantic_cache.Cache) void {
+    if (functions) |semantic| semantic.context.summaries = null;
+}
+
+/// Persist the summaries a successful `check-project` produced for its entry.
+fn rememberSummaries(init: Context, frontend: ?*language.frontend_cache.Cache, project: *const language.project.Project, request: *const language.semantic_summary.Request) !void {
+    const cache = frontend orelse return;
+    const produced = request.produced orelse return;
+    init.timings.begin("summary_store", false);
+    defer init.timings.end();
+    const payload = try language.semantic_summary.encode(init.gpa, produced);
+    defer init.gpa.free(payload);
+    try cache.rememberSummaries(project, payload);
 }
 
 /// Record the `checkFunction` execution-site counters for one check, plus the
@@ -3123,7 +3184,7 @@ fn sessionCheck(init: Context, parsed: Parsed, cache: *SessionCache) !void {
     observation.work.command = @tagName(request.command);
     request_init.observation = &observation;
     const before = cache.syntax.statistics;
-    const status = listModulesWithCache(request_init, request, &cache.syntax, &cache.semantic, &cache.functions) catch |err| {
+    const status = listModulesWithCache(request_init, request, &cache.syntax, &cache.semantic, &cache.functions, .session) catch |err| {
         cache.verdict_reuses += observation.work.results.request;
         cache.specializations += observation.work.stages[@backingInt(invalidation.WorkStage.instantiated_specializations)].performed;
         const reported: u8 = switch (err) {

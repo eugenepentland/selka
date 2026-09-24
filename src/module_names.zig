@@ -29,9 +29,7 @@ pub const Names = struct {
         const original = self.src.originalSpan(span) catch return error.InternalError;
         if (original.input >= self.index.units.len or original.input >= self.index.project.modules.items.len) return error.InternalError;
         const text = self.src.text(span);
-        var tokens_sink: diagnostic.Sink = .{ .allocator = self.allocator() };
-        const tokens = try lexer.lex(self.allocator(), text, &tokens_sink);
-        const qualified = lexer.qualifiedName(text, tokens) orelse return error.InternalError;
+        const qualified = (try self.qualify(text)) orelse return error.InternalError;
         const bare = qualified.name;
         const name = if (member) |method| try std.fmt.allocPrint(self.allocator(), "{s}.{s}", .{ bare, self.src.text(method) }) else bare;
         const id = self.index.resolve(.{ .from = original.input, .alias = qualified.alias, .name = name, .kind = kind, .owner = current_owner, .span = original.span }) catch |err| {
@@ -69,9 +67,7 @@ pub const Names = struct {
     pub fn symbolKind(self: Names, span: source.Span) diagnostic.Error!?interfaces.Kind {
         const original = self.src.originalSpan(span) catch return error.InternalError;
         const text = self.src.text(span);
-        var sink: diagnostic.Sink = .{ .allocator = self.allocator() };
-        const tokens = try lexer.lex(self.allocator(), text, &sink);
-        const qualified = lexer.qualifiedName(text, tokens) orelse return null;
+        const qualified = (try self.qualify(text)) orelse return null;
         var module = original.input;
         if (qualified.alias) |alias| {
             var found = false;
@@ -85,6 +81,18 @@ pub const Names = struct {
         const unit = self.index.units[module];
         const id = unit.names.get(qualified.name) orelse return null;
         return unit.symbols.items[id].kind;
+    }
+    /// Normalize one reference spelling exactly as `lexer.qualifiedName` over its
+    /// tokens does, lexing only a spelling the lexer-free path cannot decide.
+    fn qualify(self: Names, text: []const u8) diagnostic.Error!?lexer.Qualified {
+        switch (lexer.quickQualifiedName(text)) {
+            .name => |qualified| return qualified,
+            .none => return null,
+            .slow => {},
+        }
+        var sink: diagnostic.Sink = .{ .allocator = self.allocator() };
+        const tokens = try lexer.lex(self.allocator(), text, &sink);
+        return lexer.qualifiedName(text, tokens);
     }
     /// Check whether a name belongs to the originating module's declarations or import aliases.
     pub fn topLevel(self: Names, span: source.Span) error{InternalError}!bool {
