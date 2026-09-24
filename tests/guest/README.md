@@ -83,8 +83,9 @@ directory run.
   native runner compares values rather than trap codes. The deep packed/boxed
   variant chains are generated and are covered here by the representative
   union/match cases; the trap parity itself remains in the Python driver.
-- **Named laws** (`tests/laws.py`): sampled laws and bounded reduction are
-  driven by `scripts/laws.py` and provider configuration, not by `mylang test`.
+- **Named laws** (`experiments/guest-laws/`): sampled laws and bounded
+  reduction are an experimental Python runner, not part of mylang and not driven
+  by `mylang test`.
 
 ## Link note
 

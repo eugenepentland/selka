@@ -1,5 +1,11 @@
 # Generated Python calls
 
+Status: removed. `scripts/bindings.py` is gone, and its example consumer
+`examples/domain-codecs/use_calls.py` was deleted on 2026-09-24 because nothing
+could generate the module it imports. `mylang invoke` is the native way to call
+one exported function ([invoking an export](../tooling/invocation.md)). This page
+is the design record.
+
 `scripts/bindings.py` now generates typed Python functions for exported effect-free
 language functions whose complete parameter/result graphs have wire representations.
 The generated module remains standalone for data operations. Calling language code

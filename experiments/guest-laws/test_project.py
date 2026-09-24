@@ -72,7 +72,7 @@ def run(compiler, entry, pattern="*", cases=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("entry", type=Path)
-    parser.add_argument("--compiler", type=Path, default=Path(__file__).resolve().parents[1] / "zig-out/bin/mylang")
+    parser.add_argument("--compiler", type=Path, default=Path(__file__).resolve().parents[2] / "zig-out/bin/mylang")
     parser.add_argument("--filter", default="*")
     parser.add_argument("--cases", type=Path, help="JSON object mapping qualified tests to arguments/expected/skip")
     args = parser.parse_args()
