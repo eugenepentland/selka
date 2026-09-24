@@ -1,0 +1,81 @@
+module error_traces
+
+# Recording an error return trace (ERROR-TRACE-1) writes only to the trace: every
+# `Err` construction, `?`, conversion and returned result still carries exactly
+# the value it carried before, including past the ring's 32 entries. A test
+# returning `Result[bool, E]` expects `Ok(True)` without a cases file.
+union AppError:
+    Config: str,
+    Usage: int
+
+
+def parse_port(text: str) -> Result[int, str]:
+    if len(text) == 0:
+        return Err("empty port")
+    return Ok(len(text))
+
+
+def read_config(text: str) -> Result[int, str]:
+    port = parse_port(text)?
+    return Ok(port + 1)
+
+
+def load(text: str) -> Result[int, AppError]:
+    return Ok(read_config(text)?)
+
+
+def descend(depth: int) -> Result[int, int]:
+    if depth == 0:
+        return Err(9)
+    return Ok(descend(depth - 1)? + 1)
+
+
+def climb(depth: int) -> Result[int, int]:
+    if depth == 0:
+        return Ok(0)
+    return Ok(climb(depth - 1)? + 1)
+
+
+def pass_on(result: Result[int, int]) -> Result[int, int]:
+    return result
+
+
+def choose(value: int) -> Result[int, int]:
+    return Ok(value) if value > 10 else pass_on(Err(value))
+
+
+def code_of(result: Result[int, int]) -> int:
+    match result:
+        case Ok(value):
+            return value
+        case Err(code):
+            return -code
+
+
+# spec-case: ERROR-TRACE-1
+public def test_converted_error_keeps_its_payload() -> bool:
+    match load(""):
+        case Ok(port):
+            return False
+        case Err(error):
+            match error:
+                case AppError.Config(text):
+                    return text == "empty port"
+                case AppError.Usage(code):
+                    return False
+
+
+# spec-case: ERROR-TRACE-1
+public def test_returned_results_keep_their_case_and_value() -> bool:
+    return code_of(choose(4)) == -4 and code_of(choose(12)) == 12 and code_of(pass_on(Ok(3))) == 3
+
+
+# spec-case: ERROR-TRACE-4
+public def test_propagation_deeper_than_the_ring_keeps_the_error() -> bool:
+    return code_of(descend(40)) == -9 and code_of(climb(40)) == 40
+
+
+# spec-case: ERROR-TRACE-3
+public def test_a_result_test_passes_on_ok_true() -> Result[bool, str]:
+    port = read_config("ab")?
+    return Ok(port == 3)

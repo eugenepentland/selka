@@ -46,8 +46,9 @@ pub const BenchConfig = struct {
 /// One raw timed batch: how many copied-value calls it covered and its duration.
 pub const Batch = struct { iterations: u64, duration_ns: u64 };
 /// One execution result; expected-value comparison never executes guest code.
-/// `output` carries the guest stdout captured during the call, if any.
-pub const Outcome = struct { status: []const u8, actual: Value = .null, diagnostics: []const u8 = "", output: []const u8 = "", steps: u64 = 0 };
+/// `output` carries the guest stdout captured during the call, if any, and
+/// `trace` the error return trace the call left behind (`ERROR-TRACE-3`).
+pub const Outcome = struct { status: []const u8, actual: Value = .null, diagnostics: []const u8 = "", output: []const u8 = "", trace: []const u8 = "", steps: u64 = 0 };
 /// One bounded child call and whether the wall-clock bound ended it. A caller
 /// that must tell a timeout from a trap needs the distinction `Outcome` alone
 /// cannot carry, because both leave no guest value.
@@ -160,7 +161,7 @@ pub const Executor = struct {
             },
         };
         const parsed = try self.parse(v.text(v.get(function, "result")), result.stdout, false);
-        return .{ .outcome = .{ .status = parsed.status, .actual = parsed.actual, .diagnostics = parsed.diagnostics, .output = parsed.output, .steps = parsed.steps } };
+        return .{ .outcome = .{ .status = parsed.status, .actual = parsed.actual, .diagnostics = parsed.diagnostics, .output = parsed.output, .trace = parsed.trace, .steps = parsed.steps } };
     }
     /// Validate one call's typed arguments and write its request and the path
     /// its child answers into; the child itself is started by `executeAll`.
@@ -298,6 +299,13 @@ pub const Executor = struct {
             parsed.output = bytes[reader.offset..][0..@intCast(size)];
             reader.offset += @intCast(size);
         }
+        // ERROR-TRACE-3: then, optionally, the error return trace it rendered.
+        if (reader.offset < bytes.len) {
+            const size = try reader.number();
+            if (size > output_limit or size > bytes.len - reader.offset) return error.InvalidNativeTestResponse;
+            parsed.trace = bytes[reader.offset..][0..@intCast(size)];
+            reader.offset += @intCast(size);
+        }
         if (reader.offset != bytes.len) return error.InvalidNativeTestResponse;
         if (status != 0) {
             parsed.diagnostics = try diagnostics.toOwnedSlice();
@@ -433,7 +441,7 @@ fn conclude(context: fs.Context, call: Call, prepared: Prepared, raw: Raw) Error
     const bytes = std.Io.Dir.cwd().readFileAlloc(context.io, prepared.response, a, .limited(response_limit)) catch |err|
         return .{ .status = infrastructure_failure, .diagnostics = @errorName(err) };
     const parsed = try call.executor.parse(v.text(v.get(call.function, "result")), bytes, false);
-    return .{ .status = parsed.status, .actual = parsed.actual, .diagnostics = parsed.diagnostics, .output = parsed.output, .steps = parsed.steps };
+    return .{ .status = parsed.status, .actual = parsed.actual, .diagnostics = parsed.diagnostics, .output = parsed.output, .trace = parsed.trace, .steps = parsed.steps };
 }
 fn monotonic(io: std.Io) i96 {
     return std.Io.Timestamp.now(io, .awake).nanoseconds;
@@ -443,6 +451,7 @@ const Parsed = struct {
     actual: Value = .null,
     diagnostics: []const u8 = "",
     output: []const u8 = "",
+    trace: []const u8 = "",
     steps: u64 = 0,
     warmup_iterations: u64 = 0,
     calibrated_iterations: u64 = 0,

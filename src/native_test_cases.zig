@@ -37,7 +37,7 @@ pub fn discover(allocator: std.mem.Allocator, schema: std.json.Value, cases: std
     for (functions) |function| {
         const name = v.text(v.get(function, "name"));
         if (!discovered(function) or !matches(pattern, name)) continue;
-        try selected.append(allocator, try makeCase(function, v.get(cases, name)));
+        try selected.append(allocator, try makeCase(allocator, function, v.get(cases, name)));
     }
     return selected.toOwnedSlice(allocator);
 }
@@ -52,7 +52,19 @@ fn testName(name: []const u8) bool {
     const start = if (std.mem.lastIndexOf(u8, name, "::")) |i| i + 2 else 0;
     return std.mem.startsWith(u8, name[start..], "test_");
 }
-fn makeCase(function: std.json.Value, settings: std.json.Value) Error!Case {
+/// ERROR-TRACE-3: a test returning `Result[bool, E]` asserts `Ok(True)`, so a
+/// failure it propagates with `?` fails the test and reports its trace.
+fn resultOfBool(function: std.json.Value) bool {
+    return std.mem.startsWith(u8, v.text(v.get(function, "result")), "Result[bool,");
+}
+/// The typed JSON spelling of `Ok(True)`, the default a `Result[bool, E]` test expects.
+fn okTrue(allocator: std.mem.Allocator) Error!std.json.Value {
+    var object: std.json.ObjectMap = .empty;
+    try object.put(allocator, "case", .{ .string = "ok" });
+    try object.put(allocator, "value", .{ .bool = true });
+    return .{ .object = object };
+}
+fn makeCase(allocator: std.mem.Allocator, function: std.json.Value, settings: std.json.Value) Error!Case {
     if (settings != .null and settings != .object) return error.InvalidTestCases;
     if (settings == .object) {
         var entries = settings.object.iterator();
@@ -71,7 +83,7 @@ fn makeCase(function: std.json.Value, settings: std.json.Value) Error!Case {
     if (providers != .null and providers != .object) return error.InvalidTestCases;
     const reason = if (skip == .string and skip.string.len != 0) skip.string else null;
     const explicit = settings == .object and settings.object.contains(expected_key);
-    const is_bool = std.mem.eql(u8, v.text(v.get(function, "result")), "bool");
+    const is_bool = std.mem.eql(u8, v.text(v.get(function, "result")), "bool") or resultOfBool(function);
     const declared = v.get(function, "parameters_count");
     const parameters: usize = if (declared == .integer and declared.integer > 0) @intCast(declared.integer) else 0;
     const has_arguments = arguments == .object and arguments.object.count() != 0;
@@ -89,7 +101,7 @@ fn makeCase(function: std.json.Value, settings: std.json.Value) Error!Case {
         .name = v.text(v.get(function, "name")),
         .function = function,
         .arguments = if (arguments == .null) .{ .object = .empty } else arguments,
-        .expected = if (explicit) v.get(settings, expected_key) else .{ .bool = true },
+        .expected = if (explicit) v.get(settings, expected_key) else if (resultOfBool(function)) try okTrue(allocator) else .{ .bool = true },
         .providers = providers,
         .settings = settings,
         .declared = .{ .skip = reason, .invalid = invalid },
@@ -174,6 +186,19 @@ test "test discovery rejects unknown configuration and marks undefaultable shape
     const empty = try discover(std.testing.allocator, schema, .null, "other::*");
     defer std.testing.allocator.free(empty);
     try std.testing.expectEqual(@as(usize, 0), empty.len);
+}
+// spec-case: ERROR-TRACE-3
+test "a parameter-free test returning Result[bool, E] expects Ok(True) without a cases file" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const parsed = try std.json.parseFromSlice(std.json.Value, arena.allocator(),
+        \\{"functions":[{"name":"checks::test_parse","result":"Result[bool,str]","parameters_count":0},{"name":"checks::test_unit","result":"Result[unit,str]","parameters_count":0}]}
+    , .{});
+    const found = try discover(arena.allocator(), parsed.value, .null, "*");
+    try std.testing.expectEqual(@as(?[]const u8, null), found[0].declared.invalid);
+    try std.testing.expectEqualStrings("ok", found[0].expected.object.get("case").?.string);
+    try std.testing.expect(found[0].expected.object.get("value").?.bool);
+    try std.testing.expectEqualStrings("test result is not bool; supply `expected` in the cases file", found[1].declared.invalid.?);
 }
 // spec-case: NATIVE-TEST-4
 test "a wildcard-free filter selects by substring of the qualified name" {

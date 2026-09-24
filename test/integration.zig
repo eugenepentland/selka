@@ -1106,6 +1106,54 @@ fn expectErrorReport(binary: []const u8, wanted: []const u8) !void {
     try testing.expectEqualStrings("", reported.stdout);
     try testing.expectEqualStrings(wanted, reported.stderr);
 }
+/// The `reason` a `native-tests-v1` report gives for the test called `name`.
+fn testReason(report: std.json.Value, name: []const u8) []const u8 {
+    for (report.object.get("tests").?.array.items) |case| {
+        if (std.mem.eql(u8, case.object.get("name").?.string, name)) return case.object.get("reason").?.string;
+    }
+    return "";
+}
+
+// spec-case: ERROR-TRACE-3
+test "CLI test reports a Result test's Err with its error return trace in text and JSON" {
+    const a = testing.allocator;
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "config_test.my", .data =
+        \\def parse_port(text: str) -> Result[int, str]:
+        \\    if len(text) == 0:
+        \\        return Err("empty")
+        \\    return Ok(len(text))
+        \\
+        \\public def test_port() -> Result[bool, str]:
+        \\    port = parse_port("")?
+        \\    return Ok(port == 2)
+        \\
+        \\public def test_fine() -> Result[bool, str]:
+        \\    return Ok(parse_port("ab")? == 2)
+    });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "config_test.my", a);
+    defer a.free(entry);
+    const cache = try std.fmt.allocPrint(a, "{s}/cache", .{std.fs.path.dirname(entry).?});
+    defer a.free(cache);
+    const text = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "test", entry, "--cache-dir", cache, tools[0], tools[1] } });
+    defer a.free(text.stdout);
+    defer a.free(text.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, text.term);
+    try testing.expect(std.mem.indexOf(u8, text.stdout, "passed config_test::test_fine\n") != null);
+    try testing.expect(std.mem.indexOf(u8, text.stdout,
+        \\failed config_test::test_port: expected {"case":"ok","value":true}, got {"case":"err","value":"empty"}
+        \\  config_test.my:3:16  config_test::parse_port  Err(...) created
+        \\  config_test.my:7:12  config_test::test_port   ? propagated
+        \\
+    ) != null);
+    const json = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "test", entry, "--json", "--cache-dir", cache, tools[0], tools[1] } });
+    defer a.free(json.stdout);
+    defer a.free(json.stderr);
+    const parsed = try std.json.parseFromSlice(std.json.Value, a, json.stdout, .{});
+    defer parsed.deinit();
+    try testing.expect(std.mem.endsWith(u8, testReason(parsed.value, "config_test::test_port"), "\n  config_test.my:7:12  config_test::test_port   ? propagated"));
+}
 
 // spec: EPRINT-1
 test "CLI separates eprint stderr from print stdout byte-exactly" {

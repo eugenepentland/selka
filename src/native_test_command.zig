@@ -815,6 +815,7 @@ fn executeSelectedCases(
             .actual = outcome.actual,
             .diagnostics = outcome.diagnostics,
             .output = outcome.output,
+            .trace = outcome.trace,
             .project_source = entry.graph.project.source,
             .root = session.source.root,
         });
@@ -829,6 +830,8 @@ const Failure = struct {
     actual: std.json.Value,
     diagnostics: []const u8,
     output: []const u8,
+    /// The error return trace the child rendered, shown when the value is an `Err`.
+    trace: []const u8 = "",
     project_source: []const u8,
     root: []const u8,
 };
@@ -844,6 +847,11 @@ fn failureReason(context: fs.Context, failure: Failure) Error![]const u8 {
             try describeValue(context.allocator, failure.expected),
             try describeValue(context.allocator, failure.actual),
         });
+        // ERROR-TRACE-3: a test that returned an `Err` says where it came from.
+        if (errorValue(failure.actual) and failure.trace.len != 0) {
+            const trace = try stripRoot(context.allocator, std.mem.trimEnd(u8, failure.trace, "\n"), failure.project_source, failure.root);
+            reason = try std.fmt.allocPrint(context.allocator, "{s}\n{s}", .{ reason, trace });
+        }
     } else {
         reason = try stripRoot(context.allocator, failure.diagnostics, failure.project_source, failure.root);
     }
@@ -851,6 +859,13 @@ fn failureReason(context: fs.Context, failure: Failure) Error![]const u8 {
     const captured = try stripRoot(context.allocator, failure.output, failure.project_source, failure.root);
     if (reason.len == 0) return captured;
     return std.fmt.allocPrint(context.allocator, "{s}\n{s}", .{ reason, captured });
+}
+
+/// Whether a decoded test value is the error case of a `Result`.
+fn errorValue(value: std.json.Value) bool {
+    if (value != .object) return false;
+    const case = value.object.get("case") orelse return false;
+    return case == .string and std.ascii.eqlIgnoreCase(case.string, "err");
 }
 
 /// Render one typed JSON expectation value for a failure line: a string keeps
@@ -919,6 +934,45 @@ test "a failed expectation reports both values and any captured guest output" {
         .root = "/work/project",
     });
     try std.testing.expectEqualStrings("", passed);
+}
+
+// spec: ERROR-TRACE-3
+test "a test that returned an Err reports its error return trace after the values" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var failed: std.json.ObjectMap = .empty;
+    try failed.put(context.allocator, "case", .{ .string = "err" });
+    try failed.put(context.allocator, "value", .{ .string = "empty" });
+    const trace = "  /snapshot/project/main.my:3:16  main::parse  Err(...) created\n  /snapshot/project/main.my:7:9   main::test_parse  ? propagated\n";
+    const reported = try failureReason(context, .{
+        .status = "value",
+        .expected = .{ .bool = true },
+        .actual = .{ .object = failed },
+        .diagnostics = "",
+        .output = "",
+        .trace = trace,
+        .project_source = "/snapshot/project/main.my",
+        .root = "/work/project",
+    });
+    try std.testing.expectEqualStrings(
+        \\expected true, got {"case":"err","value":"empty"}
+        \\  /work/project/main.my:3:16  main::parse  Err(...) created
+        \\  /work/project/main.my:7:9   main::test_parse  ? propagated
+    , reported);
+    // A value that is not an `Err` leaves a stale trace out of the report.
+    const mismatch = try failureReason(context, .{
+        .status = "value",
+        .expected = .{ .bool = true },
+        .actual = .{ .bool = false },
+        .diagnostics = "",
+        .output = "",
+        .trace = trace,
+        .project_source = "/snapshot/project/main.my",
+        .root = "/work/project",
+    });
+    try std.testing.expectEqualStrings("expected true, got false", mismatch);
 }
 
 /// Per-case outcome slots bundled for planning. `pure` marks a case that is both
