@@ -495,7 +495,7 @@ pub const Context = struct {
     /// tool starts without copying this process (`qbe_build_spawn.zig`), so a
     /// build holding a large program pays the same per tool as a small one.
     pub fn command(self: Context, argv: []const []const u8, environment: ?*const std.process.Environ.Map) Error!void {
-        const result = try spawn.run(self.allocator, .{ .argv = argv, .environment = environment orelse self.environ });
+        const result = try spawn.run(self.allocator, .{ .argv = argv, .environment = environment });
         try std.Io.File.stderr().writeStreamingAll(self.io, result.stderr);
         if (exitCode(result.term) != 0) return error.NativeToolFailed;
     }

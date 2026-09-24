@@ -908,7 +908,7 @@ const State = struct {
             const job = units[index].staged.miss;
             // QBE-SPAWN-1: started without copying this process; diagnostics
             // stream straight to this process's standard error.
-            children[started] = tool_spawn.start(a, .{ .argv = job.argv, .environment = job.environment orelse self.context.environ, .capture = false }) catch |err| {
+            children[started] = tool_spawn.start(a, .{ .argv = job.argv, .environment = job.environment, .capture = false }) catch |err| {
                 failure = err;
                 break;
             };

@@ -33,11 +33,12 @@ pub const Started = struct { pid: linux.pid_t, stderr: linux.fd_t };
 pub const Finished = struct { term: std.process.Child.Term, stderr: []const u8 };
 
 /// How one tool is started: its argument vector (`argv[0]` is a path, or a
-/// name looked up on `PATH`), its complete environment, and whether its
-/// standard error is captured for the caller or shared with this process.
+/// name looked up on `PATH`), its complete environment — null inherits this
+/// process's own, as `std.process` does — and whether its standard error is
+/// captured for the caller or shared with this process.
 pub const Request = struct {
     argv: []const []const u8,
-    environment: *const std.process.Environ.Map,
+    environment: ?*const std.process.Environ.Map = null,
     capture: bool = true,
 };
 
@@ -66,8 +67,11 @@ pub fn start(allocator: std.mem.Allocator, request: Request) Error!Started {
     for (request.argv, 0..) |argument, index| argv[index] = (try allocator.dupeSentinel(u8, argument, 0)).ptr;
     // `ZIG_PROGRESS` names a descriptor of this process's own parent; a tool
     // must never write progress frames into it, exactly as `std.process` drops it.
-    const block = try request.environment.createPosixBlock(allocator, .{ .zig_progress_fd = -1 });
-    const candidates = try candidatePaths(allocator, request.argv[0], request.environment);
+    const envp: [*:null]const ?[*:0]const u8 = if (request.environment) |map|
+        (try map.createPosixBlock(allocator, .{ .zig_progress_fd = -1 })).slice.ptr
+    else
+        try inherited(allocator);
+    const candidates = try candidatePaths(allocator, request.argv[0], variable(envp, "PATH"));
     const stack = try allocator.alignedAlloc(u8, .fromByteUnits(16), child_stack_bytes);
     defer allocator.free(stack);
 
@@ -85,7 +89,7 @@ pub fn start(allocator: std.mem.Allocator, request: Request) Error!Started {
     var shared: Shared = .{
         .candidates = candidates,
         .argv = argv.ptr,
-        .envp = block.slice.ptr,
+        .envp = envp,
         .null_fd = null_fd,
         .stderr_fd = pipe[1],
         .mask = undefined,
@@ -176,7 +180,7 @@ pub fn run(allocator: std.mem.Allocator, request: Request) Error!Finished {
 
 /// The paths the child tries in order: `argv[0]` itself when it names a path,
 /// otherwise each `PATH` directory joined with it, as `execvp` searches.
-fn candidatePaths(allocator: std.mem.Allocator, name: []const u8, environment: *const std.process.Environ.Map) Error![]const [*:0]const u8 {
+fn candidatePaths(allocator: std.mem.Allocator, name: []const u8, search: ?[]const u8) Error![]const [*:0]const u8 {
     var list: std.ArrayList([*:0]const u8) = .empty;
     if (std.mem.indexOfScalar(u8, name, '/') != null) {
         try list.append(allocator, try allocator.dupeSentinel(u8, name, 0));
@@ -184,12 +188,57 @@ fn candidatePaths(allocator: std.mem.Allocator, name: []const u8, environment: *
     }
     // Without a `PATH` there is nowhere to look, and the start reports the
     // tool missing rather than guessing a system directory.
-    var directories = std.mem.splitScalar(u8, environment.get("PATH") orelse return list.toOwnedSlice(allocator), ':');
+    var directories = std.mem.splitScalar(u8, search orelse return list.toOwnedSlice(allocator), ':');
     while (directories.next()) |directory| {
         const base = if (directory.len == 0) "." else directory;
         try list.append(allocator, try std.fmt.allocPrintSentinel(allocator, "{s}/{s}", .{ base, name }, 0));
     }
     return list.toOwnedSlice(allocator);
+}
+
+/// This process's own environment as an `execve` block, read back from
+/// `/proc/self/environ` — the block the kernel handed this process, which
+/// nothing here rewrites — without its `ZIG_PROGRESS` entry.
+fn inherited(allocator: std.mem.Allocator) Error![*:null]const ?[*:0]const u8 {
+    const opened = linux.open("/proc/self/environ", .{ .ACCMODE = .RDONLY, .CLOEXEC = true }, 0);
+    try check(opened);
+    const fd: linux.fd_t = @intCast(opened);
+    defer _ = linux.close(fd);
+    var bytes: std.ArrayList(u8) = .empty;
+    var buffer: [16 * 1024]u8 = undefined;
+    while (true) {
+        const rc = linux.read(fd, &buffer, buffer.len);
+        switch (linux.errno(rc)) {
+            .SUCCESS => {
+                if (rc == 0) break;
+                try bytes.appendSlice(allocator, buffer[0..rc]);
+            },
+            .INTR => continue,
+            else => return error.Unexpected,
+        }
+    }
+    // Every entry ends in a NUL; one more keeps a truncated last entry whole.
+    try bytes.append(allocator, 0);
+    var entries: std.ArrayList(?[*:0]const u8) = .empty;
+    var first: usize = 0;
+    for (bytes.items, 0..) |byte, index| {
+        if (byte != 0) continue;
+        const entry = bytes.items[first..index :0];
+        first = index + 1;
+        if (entry.len == 0 or std.mem.startsWith(u8, entry, "ZIG_PROGRESS=")) continue;
+        try entries.append(allocator, entry.ptr);
+    }
+    return (try entries.toOwnedSliceSentinel(allocator, null)).ptr;
+}
+
+/// The value an environment block gives `name`, or null.
+fn variable(envp: [*:null]const ?[*:0]const u8, name: []const u8) ?[]const u8 {
+    var index: usize = 0;
+    while (envp[index]) |entry| : (index += 1) {
+        const text = std.mem.span(entry);
+        if (text.len > name.len and text[name.len] == '=' and std.mem.startsWith(u8, text, name)) return text[name.len + 1 ..];
+    }
+    return null;
 }
 
 /// The child: reset handlers, wire the standard streams, restore the mask and
@@ -319,6 +368,20 @@ test "many started tools run at once and each is reaped with its own output" {
     const results = try startMany(arena.allocator(), &environment, 8);
     try std.testing.expectEqualSlices(u8, &.{ 0, 1, 2, 3, 4, 5, 6, 7 }, results[0]);
     try std.testing.expectEqualStrings("01234567", results[1]);
+}
+
+// spec-case: QBE-SPAWN-1
+test "a request that names no environment inherits this process's own" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    // A bare name is found on the inherited PATH, and the tool sees it unchanged.
+    const finished = try run(a, .{ .argv = &.{ "sh", "-c", "printf '%s' \"$PATH\" >&2" } });
+    try std.testing.expectEqual(std.process.Child.Term{ .exited = 0 }, finished.term);
+    try std.testing.expectEqualStrings(std.testing.environ.getPosix("PATH") orelse "", finished.stderr);
+    const block = try inherited(a);
+    try std.testing.expectEqualStrings(std.testing.environ.getPosix("PATH") orelse "", variable(block, "PATH") orelse "");
+    try std.testing.expectEqual(@as(?[]const u8, null), variable(block, "ZIG_PROGRESS"));
 }
 
 /// Wait for the first of `started` to close its standard error, collecting

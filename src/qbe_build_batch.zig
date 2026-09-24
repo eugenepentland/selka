@@ -240,7 +240,7 @@ fn startJob(cache: cache_api.Cache, miss: Miss, index: usize) cache_api.Error!Ru
     if (miss.input == .staged) {
         const job = miss.input.staged;
         errdefer cache.discard(job);
-        const started = try spawn.start(a, .{ .argv = job.argv, .environment = job.environment orelse context.environ });
+        const started = try spawn.start(a, .{ .argv = job.argv, .environment = job.environment });
         return .{ .miss = index, .work = job.work, .stage = .compile, .started = started };
     }
     const work = try context.temporary(cache.temporary);
@@ -249,7 +249,7 @@ fn startJob(cache: cache_api.Cache, miss: Miss, index: usize) cache_api.Error!Ru
     switch (miss.input) {
         .assembly => |text| {
             try context.write(assembly, text);
-            const started = try spawn.start(a, .{ .argv = try assembler(cache, work), .environment = context.environ });
+            const started = try spawn.start(a, .{ .argv = try assembler(cache, work) });
             return .{ .miss = index, .work = work, .stage = .assemble, .started = started };
         },
         .il => |members| {
@@ -260,7 +260,7 @@ fn startJob(cache: cache_api.Cache, miss: Miss, index: usize) cache_api.Error!Ru
                 try context.write(path, try sectioned(a, il));
                 try argv.append(a, path);
             }
-            const started = try spawn.start(a, .{ .argv = argv.items, .environment = context.environ });
+            const started = try spawn.start(a, .{ .argv = argv.items });
             return .{ .miss = index, .work = work, .stage = .qbe, .started = started };
         },
         .staged => unreachable,
@@ -294,7 +294,7 @@ fn advance(cache: cache_api.Cache, miss: Miss, current: Running, stopping: bool)
     switch (current.stage) {
         .qbe => {
             try cache.annotateAssembly(try std.fs.path.join(a, &.{ current.work, "batch.s" }));
-            const started = try spawn.start(a, .{ .argv = try assembler(cache, current.work), .environment = context.environ });
+            const started = try spawn.start(a, .{ .argv = try assembler(cache, current.work) });
             return .{ .miss = current.miss, .work = current.work, .stage = .assemble, .started = started };
         },
         .assemble => {
