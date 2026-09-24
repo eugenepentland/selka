@@ -1875,6 +1875,364 @@ test "checked arithmetic at every width reports the same result and trap from th
     defer a.free(wanted);
     try testing.expectEqualStrings(wanted, trapped);
 }
+const sticky_reduction_program =
+    \\# checked reductions in loops, operands from the command line
+    \\
+    \\
+    \\def number(text: str) -> int:
+    \\    match int(text):
+    \\        case Some(value):
+    \\            return value
+    \\        case None:
+    \\            return 0
+    \\
+    \\
+    \\def build(n: int, value: int, last: int) -> list[int]:
+    \\    values: list[int] = []
+    \\    for i in range(n):
+    \\        values.append(value)
+    \\    values.append(last)
+    \\    return values
+    \\
+    \\
+    \\def total_of(values: list[int], start: int) -> int:
+    \\    total = start
+    \\    for v in values:
+    \\        total += v
+    \\    return total
+    \\
+    \\
+    \\def indexed(values: list[int], start: int) -> int:
+    \\    total = start
+    \\    for i in range(len(values)):
+    \\        total = total + values[i]
+    \\    return total
+    \\
+    \\
+    \\def scaled(values: list[int], start: int) -> int:
+    \\    total = start
+    \\    for v in values:
+    \\        total += v * 3
+    \\    return total
+    \\
+    \\
+    \\def difference(values: list[int], start: int) -> int:
+    \\    total = start
+    \\    for v in values:
+    \\        total -= v
+    \\    return total
+    \\
+    \\
+    \\def count_of(values: list[int], start: int) -> int:
+    \\    count = start
+    \\    for v in values:
+    \\        if v == 109:
+    \\            count += 1
+    \\    return count
+    \\
+    \\
+    \\def octets(n: int, start: int) -> int:
+    \\    empty: list[int] = []
+    \\    buffer = byte_buffer(empty)
+    \\    for i in range(n):
+    \\        _ = buffer.append_byte(109)
+    \\        _ = buffer.append_byte(7)
+    \\    data = bytes(buffer)
+    \\    count = start
+    \\    for i in range(len(data)):
+    \\        if data[i] == 109:
+    \\            count += 1
+    \\    return count
+    \\
+    \\
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    kind = args[0]
+    \\    n = number(args[1])
+    \\    value = number(args[2])
+    \\    last = number(args[3])
+    \\    start = number(args[4])
+    \\    values = build(n, value, last)
+    \\    if kind == "sum":
+    \\        out.print(total_of(values, start))
+    \\    if kind == "indexed":
+    \\        out.print(indexed(values, start))
+    \\    if kind == "scaled":
+    \\        out.print(scaled(values, start))
+    \\    if kind == "difference":
+    \\        out.print(difference(values, start))
+    \\    if kind == "count":
+    \\        out.print(count_of(values, start))
+    \\    if kind == "octets":
+    \\        out.print(octets(n, start))
+    \\    return 0
+;
+/// One run of `sticky_reduction_program` — kind, count, value, last value,
+/// start — and the exit status it must have: 1 when a checked update overflows.
+const ReductionCase = struct { args: [5][]const u8, status: u8 };
+const reduction_cases = [_]ReductionCase{
+    .{ .args = .{ "sum", "1000", "5", "7", "0" }, .status = 0 },
+    .{ .args = .{ "sum", "3", "9223372036854775807", "1", "0" }, .status = 1 },
+    .{ .args = .{ "sum", "50", "1099511627776", "3", "9223318161234591743" }, .status = 1 },
+    .{ .args = .{ "sum", "50", "1099511627776", "3", "9223316402983323647" }, .status = 0 },
+    .{ .args = .{ "sum", "2000", "-1125899906842624", "4611686018427387904", "0" }, .status = 0 },
+    .{ .args = .{ "indexed", "1000", "5", "7", "0" }, .status = 0 },
+    .{ .args = .{ "indexed", "3", "-9223372036854775807", "-2", "0" }, .status = 1 },
+    .{ .args = .{ "scaled", "7", "3074457345618258602", "1", "0" }, .status = 1 },
+    .{ .args = .{ "scaled", "1000", "-4", "9", "0" }, .status = 0 },
+    .{ .args = .{ "difference", "100", "109", "1", "-9223372036854764908" }, .status = 1 },
+    .{ .args = .{ "difference", "100", "109", "1", "-9223372036854764907" }, .status = 0 },
+    .{ .args = .{ "count", "100", "109", "109", "9223372036854775707" }, .status = 1 },
+    .{ .args = .{ "count", "100", "109", "1", "9223372036854775707" }, .status = 0 },
+    .{ .args = .{ "octets", "1000", "0", "0", "9223372036854774807" }, .status = 0 },
+    .{ .args = .{ "octets", "1000", "0", "0", "9223372036854774808" }, .status = 1 },
+};
+/// Run one argument list through the LLVM and the QBE binary and require the
+/// same status, stdout and stderr from both; returns the LLVM run's stderr.
+fn expectSameRun(binaries: [2][]const u8, args: []const []const u8, status: u8) ![]u8 {
+    const a = testing.allocator;
+    var runs: [2]std.process.RunResult = undefined;
+    for (binaries, 0..) |binary, index| {
+        var argv: std.ArrayList([]const u8) = .empty;
+        defer argv.deinit(a);
+        try argv.append(a, binary);
+        try argv.appendSlice(a, args);
+        runs[index] = try std.process.run(a, testing.io, .{ .argv = argv.items });
+    }
+    defer a.free(runs[0].stdout);
+    errdefer a.free(runs[0].stderr);
+    defer a.free(runs[1].stdout);
+    defer a.free(runs[1].stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = status }, runs[0].term);
+    try testing.expectEqual(runs[0].term, runs[1].term);
+    try testing.expectEqualStrings(runs[0].stdout, runs[1].stdout);
+    try testing.expectEqualStrings(runs[0].stderr, runs[1].stderr);
+    return runs[0].stderr;
+}
+/// One program built with the release default (LLVM, full LTO) and with QBE:
+/// the LLVM executable, the QBE executable and the source path.
+const BuiltPair = struct {
+    llvm: []u8,
+    qbe: []u8,
+    entry: [:0]u8,
+    fn binaries(self: BuiltPair) [2][]const u8 {
+        return .{ self.llvm, self.qbe };
+    }
+    fn deinit(self: BuiltPair) void {
+        testing.allocator.free(self.llvm);
+        testing.allocator.free(self.qbe);
+        testing.allocator.free(self.entry);
+    }
+};
+/// Build `program`, written to `name` in `temporary`, with both backends.
+fn buildBothBackends(temporary: *testing.TmpDir, name: []const u8, program: []const u8) !BuiltPair {
+    const a = testing.allocator;
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = name, .data = program });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, name, a);
+    errdefer a.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const cache_argument = try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{directory});
+    defer a.free(cache_argument);
+    const llvm = try std.fmt.allocPrint(a, "{s}/{s}-llvm", .{ directory, name });
+    errdefer a.free(llvm);
+    const qbe = try std.fmt.allocPrint(a, "{s}/{s}-qbe", .{ directory, name });
+    errdefer a.free(qbe);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", llvm, cache_argument, tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", qbe, cache_argument, tools[0], tools[1] }, "");
+    return .{ .llvm = llvm, .qbe = qbe, .entry = entry };
+}
+/// Every row of `reduction_cases` runs the same on both backends, and traps
+/// with `R_OVERFLOW` exactly when its status says so.
+fn expectReductionCases(binaries: [2][]const u8) !void {
+    for (reduction_cases) |case| {
+        const stderr = try expectSameRun(binaries, &case.args, case.status);
+        defer testing.allocator.free(stderr);
+        try testing.expectEqual(case.status == 1, std.mem.indexOf(u8, stderr, "error[R_OVERFLOW]") != null);
+    }
+}
+// spec: LLVM-STICKY-REDUCTION-1
+test "checked reduction loops sum and trap the same from the LLVM fast copy as from QBE" {
+    const a = testing.allocator;
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const built = try buildBothBackends(&temporary, "reductions.my", sticky_reduction_program);
+    defer built.deinit();
+    try expectReductionCases(built.binaries());
+    // One trap in full: the update that overflows is the third, with the
+    // running total and the element it adds, in the loop's own function.
+    const trapped = try expectSameRun(built.binaries(), &.{ "sum", "3", "9223372036854775807", "1", "0" }, 1);
+    defer a.free(trapped);
+    const expected =
+        \\{path}:23:15: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 9223372036854775807, width 64)
+        \\  in total_of at {path}:23:15
+        \\  in main at {path}:78:19
+        \\
+    ++ "\x1eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":9223372036854775807,\"width\":64}\n";
+    const wanted = try std.mem.replaceOwned(u8, a, expected, "{path}", built.entry);
+    defer a.free(wanted);
+    try testing.expectEqualStrings(wanted, trapped);
+}
+const element_loops_program =
+    \\# element loops over lists, nested lists, records in lists and bytes; sizes from the command line
+    \\
+    \\
+    \\record Body:
+    \\    x: float
+    \\    v: float
+    \\
+    \\
+    \\def number(text: str) -> int:
+    \\    match int(text):
+    \\        case Some(value):
+    \\            return value
+    \\        case None:
+    \\            return 0
+    \\
+    \\
+    \\def dot(a: list[float], b: list[float]) -> float:
+    \\    s = 0.0
+    \\    for i in range(len(a)):
+    \\        s = s + a[i] * b[i]
+    \\    return s
+    \\
+    \\
+    \\def product(n: int) -> float:
+    \\    a = [[float(i + j) for j in range(n)] for i in range(n)]
+    \\    b = [[float(i * j % 7) for j in range(n)] for i in range(n)]
+    \\    c = [[0.0 for j in range(n)] for i in range(n)]
+    \\    for i in range(n):
+    \\        for k in range(n):
+    \\            aik = a[i][k]
+    \\            for j in range(n):
+    \\                c[i][j] = c[i][j] + aik * b[k][j]
+    \\    total = 0.0
+    \\    for i in range(n):
+    \\        for j in range(n):
+    \\            total = total + c[i][j]
+    \\    return total
+    \\
+    \\
+    \\def advance(bodies: mut list[Body], steps: int) -> None:
+    \\    for s in range(steps):
+    \\        for i in range(len(bodies)):
+    \\            bodies[i].x = bodies[i].x + bodies[i].v
+    \\            bodies[i].v = bodies[i].v * 0.5
+    \\
+    \\
+    \\def scan(n: int) -> int:
+    \\    empty: list[int] = []
+    \\    buffer = byte_buffer(empty)
+    \\    for i in range(n):
+    \\        _ = buffer.append_byte(i % 256)
+    \\    data = bytes(buffer)
+    \\    count = 0
+    \\    for i in range(len(data)):
+    \\        if data[i] == 109:
+    \\            count += 1
+    \\    return count
+    \\
+    \\
+    \\def prefix(values: list[int], at: int) -> int:
+    \\    total = 0
+    \\    for i in range(at):
+    \\        total += values[i]
+    \\    return total
+    \\
+    \\
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    n = number(args[0])
+    \\    at = number(args[1])
+    \\    out.print(int(product(n)))
+    \\    bodies = [Body(x=float(i), v=1.0) for i in range(n)]
+    \\    advance(mut bodies, 10)
+    \\    out.print(int(bodies[n - 1].x * 1000.0))
+    \\    out.print(scan(n * 100))
+    \\    values = [i * 3 for i in range(n)]
+    \\    out.print(int(dot([float(v) for v in values], [1.5 for v in values])))
+    \\    out.print(prefix(values, at))
+    \\    return 0
+;
+// spec: LLVM-ELEMENT-GEP-1
+test "element loops over lists, nested lists, records and bytes compute and trap the same from LLVM as from QBE" {
+    const a = testing.allocator;
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const built = try buildBothBackends(&temporary, "elements.my", element_loops_program);
+    defer built.deinit();
+    const quiet = try expectSameRun(built.binaries(), &.{ "20", "20" }, 0);
+    defer a.free(quiet);
+    try testing.expectEqualStrings("", quiet);
+    // One past the end of the list traps in the loop that reads it.
+    const trapped = try expectSameRun(built.binaries(), &.{ "20", "21" }, 1);
+    defer a.free(trapped);
+    try testing.expect(std.mem.indexOf(u8, trapped, "error[R_LIST_BOUNDS]: native execution failed (index 20, length 20)") != null);
+    try testing.expect(std.mem.indexOf(u8, trapped, "  in prefix at ") != null);
+}
+/// Loops LLVM vectorizes once their checks are proven (`QBE-LOOP-VERSION-1`):
+/// a byte count and a row update, sized and shifted from the command line.
+const vector_loops_program =
+    \\def number(text: str) -> int:
+    \\    match int(text):
+    \\        case Some(value):
+    \\            return value
+    \\        case None:
+    \\            return 0
+    \\
+    \\
+    \\def scan(data: bytes) -> int:
+    \\    count = 0
+    \\    for i in range(len(data)):
+    \\        if data[i] == 109:
+    \\            count += 1
+    \\    return count
+    \\
+    \\
+    \\def axpy(c: mut list[float], b: list[float], a: float, shift: int) -> None:
+    \\    for j in range(len(c)):
+    \\        c[j] = c[j] + a * b[j + shift]
+    \\
+    \\
+    \\def main(args: list[str], out: Stream) -> int:
+    \\    n = number(args[0])
+    \\    text = ""
+    \\    for i in range(n):
+    \\        text = text + "mylang "
+    \\    b = [float(i) for i in range(n)]
+    \\    c = [1.0 for i in range(n)]
+    \\    axpy(mut c, b, 0.5, number(args[1]))
+    \\    total = 0.0
+    \\    for x in c:
+    \\        total = total + x
+    \\    out.print(scan(text.encode()))
+    \\    out.print(int(total))
+    \\    return 0
+;
+// spec-case: QBE-LOOP-VERSION-1
+test "versioned loops LLVM vectorizes compute and trap exactly as QBE does" {
+    const a = testing.allocator;
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "vector.my", .data = vector_loops_program });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "vector.my", a);
+    defer a.free(entry);
+    const directory = std.fs.path.dirname(entry).?;
+    const cache_argument = try std.fmt.allocPrint(a, "--cache-dir={s}/cache", .{directory});
+    defer a.free(cache_argument);
+    const llvm = try std.fmt.allocPrint(a, "{s}/vector-llvm", .{directory});
+    defer a.free(llvm);
+    const qbe = try std.fmt.allocPrint(a, "{s}/vector-qbe", .{directory});
+    defer a.free(qbe);
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", llvm, cache_argument, tools[1] }, "");
+    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", qbe, cache_argument, tools[0], tools[1] }, "");
+    // Every index proven: 1000 words of "mylang ", and 1000 + 0.5 * (0 + ... + 999).
+    const quiet = try expectSameBoundary(.{ llvm, qbe }, .{ "1000", "0", "", "" }, 0, "1000\n250750\n");
+    defer a.free(quiet);
+    try testing.expectEqualStrings("", quiet);
+    // `b[j + 1]` fails the guard, so the original loop traps at its last row.
+    const trapped = try expectSameBoundary(.{ llvm, qbe }, .{ "1000", "1", "", "" }, 1, "");
+    defer a.free(trapped);
+    try testing.expect(std.mem.indexOf(u8, trapped, "index 1000, length 1000") != null);
+    try testing.expect(std.mem.indexOf(u8, trapped, "  in axpy at ") != null);
+}
 // spec-case: QBE-STEP-ACCOUNTING-1
 test "an executable built without a requested ceiling refuses a runtime step budget" {
     var temporary = testing.tmpDir(.{});
@@ -7821,11 +8179,20 @@ const bench_cases =
     \\{"main::bench_loop":{"sizes":{"small":{"arguments":{"limit":"10"},"expected":"45"}}}}
 ;
 const bench_sampling = [_][]const u8{ "--bench-warmup", "0", "--bench-batches", "2", "--bench-batch-ms", "1" };
+// Both policies decide by construction, never by how fast the machine is right
+// now. Two 1 ms batches taken during a loaded gate can differ by far more than
+// the default 25% spread budget, and the enforcement run can be many times
+// slower than the run that made the baseline, so a policy that leaves noise or
+// growth reachable fails at random under load (it did in the 2026-09-22 parity
+// gates). The passing policy sets a spread budget and a meaningful-delta floor
+// no measurement of this loop reaches; the ceiling is below any measurement.
+// The growth, noise and confirmation arithmetic has its own deterministic unit
+// tests in `src/native_bench.zig`; this test covers the CLI path end to end.
 const bench_policy_pass =
-    \\{"version":"bench-policy-v1","runner_profile":"default","default":{"allowed_growth_percent":1000,"minimum_meaningful_delta_ns":0,"max_ns_per_op":1000000000},"required":["main::bench_loop[small]"]}
+    \\{"version":"bench-policy-v1","runner_profile":"default","default":{"allowed_growth_percent":1000,"minimum_meaningful_delta_ns":1000000000,"max_ns_per_op":1000000000},"required":["main::bench_loop[small]"],"noise":{"max_relative_spread_percent":1000000000,"near_limit_margin_percent":0}}
 ;
 const bench_policy_ceiling =
-    \\{"version":"bench-policy-v1","runner_profile":"default","default":{"allowed_growth_percent":1000,"minimum_meaningful_delta_ns":0,"max_ns_per_op":0.0000001},"required":["main::bench_loop[small]"]}
+    \\{"version":"bench-policy-v1","runner_profile":"default","default":{"allowed_growth_percent":1000,"minimum_meaningful_delta_ns":0,"max_ns_per_op":0.0000001},"required":["main::bench_loop[small]"],"noise":{"max_relative_spread_percent":1000000000,"near_limit_margin_percent":0}}
 ;
 
 fn benchArgs(allocator: std.mem.Allocator, base: []const []const u8) ![]const []const u8 {
@@ -7858,6 +8225,24 @@ fn benchSpawn(allocator: std.mem.Allocator, args: *std.ArrayList([]const u8), ca
     try args.append(allocator, cache_argument);
     try args.appendSlice(allocator, &tools);
     return std.process.run(allocator, testing.io, .{ .argv = args.items });
+}
+
+/// Expect a benchmark run's exit status and print its stderr when it differs:
+/// an unexpected 2 is a host failure (spawn, disk quota, memory on a loaded
+/// machine), and only that text says which.
+fn expectBenchExit(expected: u8, result: std.process.RunResult) !void {
+    const wanted = std.process.Child.Term{ .exited = expected };
+    if (std.meta.eql(wanted, result.term)) return;
+    std.debug.print("benchmark run ended {any}, wanted exit {d}; stderr:\n{s}\n", .{ result.term, expected, result.stderr });
+    return error.TestUnexpectedResult;
+}
+
+/// The verdict of the one comparison a baseline-checked benchmark report carries.
+fn benchVerdict(allocator: std.mem.Allocator, path: []const u8) ![]const u8 {
+    const report = (try std.json.parseFromSlice(std.json.Value, allocator, try readFile(allocator, path), .{})).value;
+    const comparisons = report.object.get("comparisons").?.array.items;
+    try testing.expectEqual(@as(usize, 1), comparisons.len);
+    return comparisons[0].object.get("verdict").?.string;
 }
 
 fn readFile(allocator: std.mem.Allocator, path: []const u8) ![]const u8 {
@@ -7893,7 +8278,7 @@ test "guest benchmarks write a candidate and enforce an approved baseline immuta
     const ceiling_policy = try std.fs.path.join(a, &.{ root, "ceiling.json" });
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
     const candidate_run = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "Debug", "--bench-output", candidate }));
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, candidate_run.term);
+    try expectBenchExit(0, candidate_run);
     const report = (try std.json.parseFromSlice(std.json.Value, a, try readFile(a, candidate), .{})).value;
     try testing.expectEqualStrings("bench-report-v1", report.object.get("version").?.string);
     try testing.expect(report.object.get("complete").?.bool);
@@ -7906,10 +8291,15 @@ test "guest benchmarks write a candidate and enforce an approved baseline immuta
     const approved_json = (try std.json.parseFromSlice(std.json.Value, a, approved, .{})).value;
     try testing.expectEqualStrings("bench-baseline-v1", approved_json.object.get("version").?.string);
     try testing.expectEqualStrings("testrev", approved_json.object.get("provenance").?.object.get("revision").?.string);
-    const passing = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "Debug", "--bench-baseline", baseline, "--bench-policy", pass_policy }));
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, passing.term);
-    const failing = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "Debug", "--bench-baseline", baseline, "--bench-policy", ceiling_policy }));
-    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, failing.term);
+    const passing_report = try std.fs.path.join(a, &.{ root, "passing.json" });
+    const failing_report = try std.fs.path.join(a, &.{ root, "failing.json" });
+    const passing = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "Debug", "--bench-baseline", baseline, "--bench-policy", pass_policy, "--bench-output", passing_report }));
+    try expectBenchExit(0, passing);
+    try testing.expectEqualStrings("pass", try benchVerdict(a, passing_report));
+    const failing = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "Debug", "--bench-baseline", baseline, "--bench-policy", ceiling_policy, "--bench-output", failing_report }));
+    try expectBenchExit(1, failing);
+    // It fails on the ceiling itself, not on noise or an incompatible baseline.
+    try testing.expectEqualStrings("ceiling", try benchVerdict(a, failing_report));
     // A failed check leaves the approved baseline byte-for-byte unchanged.
     try testing.expectEqualStrings(approved, try readFile(a, baseline));
 }
@@ -7948,7 +8338,7 @@ test "a wrong benchmark result or trap fails the run and reports no measurement"
     const candidate = try std.fs.path.join(a, &.{ root, "candidate.json" });
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
     const run = try benchRun(a, entry, cases, cache, try benchArgs(a, &.{ "--bench", "*", "--mode", "Debug", "--bench-output", candidate }));
-    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, run.term);
+    try expectBenchExit(1, run);
     const report = (try std.json.parseFromSlice(std.json.Value, a, try readFile(a, candidate), .{})).value;
     try testing.expect(!report.object.get("complete").?.bool);
     try testing.expect(!report.object.get("passed").?.bool);
@@ -7990,7 +8380,7 @@ test "a directory benchmark run measures sequentially and stays green without te
     try writeProjectFile(&temporary, "suite/two/main.my", bench_dir_program);
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
     const run = try benchRunDirectory(a, suite, cache, &.{ "--bench", "*", "--mode", "Debug" });
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, run.term);
+    try expectBenchExit(0, run);
 }
 
 // Guest test transport, failure text and entry discovery

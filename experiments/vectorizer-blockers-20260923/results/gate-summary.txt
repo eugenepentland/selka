@@ -1,0 +1,6 @@
+test rc=0 247s
+test-qbe rc=0 49s
+test-qbe-build rc=0 1s
+test-schematic rc=0 1s
+test-byte-io rc=0 1s
+fmt-check rc=0 0s

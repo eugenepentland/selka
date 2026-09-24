@@ -56,7 +56,9 @@ exposed QBE miscompilations in resource cleanup and generic arrays.
 | aggregate register assignment depends on the whole signature | the adapter accounts for hidden result pointers and rolls an entire aggregate onto the stack when its registers are unavailable |
 | a block that runs off its end continues at the next one | the implicit fall-through is emitted as an explicit branch |
 | the frontend emits every overflow/bounds/cast/allocation check itself | no `nsw`/`nuw`/`exact`/fast-math, no `inbounds`, no `noalias` pointer attribute, no TBAA |
-| every `alloc*` is this activation's own stack storage, and the frontend marks the managed addresses it knows are not (`# myl-obj %temp`) | a load or store either side places carries scoped `!alias.scope`/`!noalias`; one neither side places carries none |
+| every `alloc*` is this activation's own stack storage, and the frontend marks the managed addresses it knows are not (`# myl-obj %temp`, and `# myl-elem %temp KIND` for a container's element storage) | a load or store either side places carries scoped `!alias.scope`/`!noalias`; objects and element storage of each kind get scopes that exclude each other; one neither side places carries none |
+| an element access is an integer sum on the marked storage word | a load or store whose address is such a sum from the same block gets it as a plain `getelementptr i8` from the base, so scalar evolution sees the index |
+| a checked reduction or other overflow check in a loop is a branch to a trap | a loop whose checks decide nothing else is versioned (`sticky_loops.py`): a fast copy without those branches, verified at its exits, falling back to the untouched loop |
 
 ## Layout
 
@@ -64,6 +66,7 @@ exposed QBE miscompilations in resource cleanup and generic arrays.
 |---|---|
 | `qbe_llvm.py` | the QBE-compatible tool: IL parsing, type inference, the CLI, and the `zig cc` invocation |
 | `llvm_emit.py` | LLVM IR emission for one unit |
+| `sticky_loops.py` | loop versioning before emission: the fast copy without overflow-check branches, its exit verification and the fallback (LLVM-STICKY-REDUCTION-1) |
 | `amd64_sysv.py`, `runtime_signatures.py` | aggregate ABI classification and exact C helper declarations |
 | `test_adapter.py` | executable ABI, alignment, pointer and stack-guard regressions |
 | `inventory.py` | opcode/type/signature/symbol inventory of a manifest — the supported-subset contract |

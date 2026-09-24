@@ -105,6 +105,15 @@ test {
     _ = @import("check_cache_test.zig");
     _ = @import("semantic_cache_test.zig");
     _ = @import("semantic_key.zig");
+    _ = @import("sema_builtins.zig");
+    _ = @import("sema_places.zig");
+    _ = @import("sema_collections.zig");
+    _ = @import("sema_calls.zig");
+    _ = @import("sema_operators.zig");
+    _ = @import("sema_expressions.zig");
+    _ = @import("sema_loops.zig");
+    _ = @import("sema_statements.zig");
+    _ = @import("sema_specialize.zig");
     _ = @import("invalidation_matrix_test.zig");
     _ = @import("semantic_project_test.zig");
     _ = @import("import_policy_test.zig");
@@ -139,6 +148,7 @@ test {
     _ = @import("integers_test.zig");
     _ = @import("arrays_test.zig");
     _ = @import("array_places_test.zig");
+    _ = @import("qbe_loop_facts_test.zig");
     _ = @import("domains_test.zig");
     _ = @import("variants_test.zig");
     _ = @import("tables_test.zig");
@@ -187,6 +197,9 @@ test {
 
 test {
     _ = @import("qbe.zig");
+    _ = @import("qbe_il_passes.zig");
+    _ = @import("qbe_frame.zig");
+    _ = @import("qbe_roots.zig");
     _ = @import("qbe_test.zig");
     _ = @import("qbe_text_test.zig");
     _ = @import("qbe_range_keys_test.zig");

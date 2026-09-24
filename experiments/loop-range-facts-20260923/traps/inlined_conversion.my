@@ -1,0 +1,15 @@
+def scaled(x: int, factor: float) -> int:
+    return int(float(x) * factor)
+
+
+def total(xs: list[int], factor: float) -> int:
+    t = 0
+    for i in range(len(xs)):
+        t += scaled(xs[i], factor)
+    return t
+
+
+def main(out: Stream) -> int:
+    xs = [i for i in range(20)]
+    out.print(total(xs, 2.5))
+    return total(xs, 1e300)

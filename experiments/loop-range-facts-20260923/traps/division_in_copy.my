@@ -1,0 +1,10 @@
+def ratio(xs: list[int]) -> int:
+    t = 0
+    for i in range(len(xs)):
+        t += xs[i] // (i - 12)
+    return t
+
+
+def main(out: Stream) -> int:
+    out.print("start")
+    return ratio([i for i in range(20)])

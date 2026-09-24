@@ -1,0 +1,30 @@
+== test
+base failures: 0   lane failures: 0
+NEW in lane (0):
+cleared by lane (0):
+Build Summary: 81/81 steps succeeded; 1781/19869 tests passed (18088 skipped)
+== test-qbe
+base failures: 0   lane failures: 0
+NEW in lane (0):
+cleared by lane (0):
+Build Summary: 50/50 steps succeeded; 311/311 tests passed
+== test-qbe-build
+base failures: 0   lane failures: 0
+NEW in lane (0):
+cleared by lane (0):
+Build Summary: 32/32 steps succeeded
+== test-schematic
+base failures: 0   lane failures: 0
+NEW in lane (0):
+cleared by lane (0):
+Build Summary: 29/29 steps succeeded
+== test-byte-io
+base failures: 0   lane failures: 0
+NEW in lane (0):
+cleared by lane (0):
+Build Summary: 28/28 steps succeeded
+== fmt-check
+base failures: 0   lane failures: 0
+NEW in lane (0):
+cleared by lane (0):
+Build Summary: 2/2 steps succeeded

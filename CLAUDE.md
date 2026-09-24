@@ -15,21 +15,55 @@ any other toolchain.
   stale unless you also ran `zig build`.
 - `zig build test-compile` — type-checks every Zig test root without running anything.
 - Use `zig build -Doptimize=ReleaseFast --prefix /path/to/install` for a compiler
-  installation used by application agents or performance measurements. Default
+  installation used by application agents, or to time the compiler itself. Default
   `zig build` produces a Debug compiler; cached guest tests still pay its parsing,
   JSON and dependency-planning costs. This setting optimizes the compiler itself,
-  independently of the guest program's backend and optimization flags. Add
-  `-Dcompiler-only=true` when you only need `mylang` (performance measurements,
-  `zig build bench-parity`): it skips installing `board-trial`, `schematic-svg` and
-  `mylang-io`, each of which re-optimizes the whole compiler.
+  independently of the guest program's backend and optimization flags, so guest
+  benchmarks do not need it (see "Measuring guest programs"). Add
+  `-Dcompiler-only=true` when you only need `mylang`: it skips installing
+  `board-trial`, `schematic-svg` and `mylang-io`, each of which re-optimizes the
+  whole compiler.
+- Sharing the machine with other agents: run `zig build`, focused tests and gates
+  through `scripts/build-slot.sh build|gate …`. It admits a job only when a slot
+  and enough memory are free, and keeps the timing CPUs (`MYLANG_TIMING_CPUS`,
+  default `2,3,10,11`) free of builds. Give every worktree its own
+  `ZIG_LOCAL_CACHE_DIR` and set `TMPDIR` on disk. See
+  `docs/tooling/many-agents.md`.
 - Never point two source trees (a base checkout and a worktree) at one
   `ZIG_LOCAL_CACHE_DIR`. Zig reuses the cached configure phase across them, and its
   absolute paths name the first tree. The build now fails with "this build
   configuration belongs to …" instead of quietly bundling the wrong runtime. See
   `docs/tooling/native-build.md#where-the-content-hash-comes-from`.
 
+## Measuring guest programs
+
+Time guest programs with the Debug `zig-out/bin/mylang` from a plain `zig build`
+(about 15 s after a change). A Debug and a ReleaseFast compiler emit
+byte-identical guest binaries. The compiler's optimization mode changes only how
+fast the compiler runs, never the program it emits. `zig build bench-parity`,
+`bench/parity/bench_parity.py` and `experiments/perf-parity-plan-20260922/bench.py`
+all default to `zig-out/bin/mylang`. Build a ReleaseFast compiler
+(`-Doptimize=ReleaseFast -Dcompiler-only=true --prefix …`, about 3 to 5 minutes)
+only to time the compiler itself or to hand a compiler to other agents.
+`bench_parity.py same-binaries --other PATH` re-checks the identity when in doubt.
+
 ## Fast loops (use these while iterating)
 
+- `python3 scripts/affected_tests.py` — **the inner loop for a change.** It diffs
+  against the merge-base with `main` (plus staged, unstaged and untracked files; `--base
+  REF` to choose), maps each changed file to the tests that most directly cover it and
+  runs only those: `src/foo.zig` → the Zig tests in and beside it (`foo_test.zig`, test
+  files importing it), tests carrying a `spec:` tag, diagnostic code or function the
+  diff touches, plus a guest smoke; `src/*.c` → `test-native-memory`, `test-native-heap`
+  and the guest areas using that runtime part; `tests/lang/x.my` → `mylang test` on it;
+  a doc page → its doctest and `doc-coverage`; the LLVM adapter → `test-llvm-adapter`
+  plus an LLVM guest smoke; a driver under `tests/` → its build step. It prints what it
+  selected and why (`--dry-run` stops there), runs Zig selections as sharded
+  processes, and says on every run that it is **not the gate**. Measured 2026-09-23
+  on a loaded machine: 1–2 s for a `.my` or doc edit, 14 s for `src/sema.zig`, 25 s
+  for a `src/native_*.c`, 57 s for `src/qbe.zig` (its 108 Zig tests). Run it through
+  the build slot like any build. The full gate below is still required before you
+  finish.
 - `zig build test-units -Dtest-filter=SUBSTRING` — runs only `src/root_test.zig` tests
   whose name contains SUBSTRING. `-Dtest-filter=arena` is 34 tests in about 1.5 s; the whole
   root is 1113 tests in about 73 s (measured warm 2026-09-18; `zig build test` shards it). `zig build test-cli -Dtest-filter=…` does the same for
@@ -76,6 +110,17 @@ zig build fmt-check
 
 `zig build test` also runs `mylang doc-coverage .` and `mylang doctest .`.
 
+Test verdicts are cached like build outputs. A test shard, a Python driver or the
+doctest re-runs only when its test binary, the compiler or `qbe` it runs, its command,
+or one of the repository files it reads changes; those files are declared per step in
+`build_test_inputs.zig`, and `zig build test` fails (`test-inputs-coverage`) when a
+test names a repository path its step does not declare. An unchanged `zig build test`
+takes seconds, and a `.my` or doc edit re-runs only what reads it. A cached step
+prints no test count, so the `Build Summary` total counts only what ran:
+`-Dtest-rerun=true` re-runs every test step (full counts, or to rule out a stale
+verdict you suspect). When a test starts reading a new fixture, declare it in
+`build_test_inputs.zig`.
+
 `zig build test` splits its two slow Zig roots across processes: `src/root_test.zig`
 into `-Dtest-shards=N` shards (default 12) and `test/integration.zig` into `N/2`, each
 one run of the same test binary under Guardian's `--guardian-shard=K/N` with its own
@@ -113,6 +158,21 @@ Guardian runs **inside** `zig build test` and blocks; there are no baselines.
   `.guardian/baselines/type-size.txt`.
 - **Tests need at least one `expect*` assertion** and **no `if`/`while`/`switch` or extra
   `for` at the top level of a test body**. Write straight-line assertions.
+
+## Merging `SPEC.md` (run once per clone)
+
+```
+sh scripts/setup-git.sh
+```
+
+It registers the `spec-bullets` merge driver that `.gitattributes` names for `SPEC.md`
+(`scripts/merge_spec.py`) in the clone's shared `.git/config`, so every worktree gets it.
+The driver merges bullets by tag: both sides' appends to one section are kept (ours,
+then theirs), a bullet amended on one side keeps only the new text, and only a tag both
+sides changed differently, or prose both sides edited, is left as a conflict. Without the
+setup git ignores the attribute and falls back to its plain line merge, where parallel
+appends conflict and a hand union can repeat an amended tag (Guardian rejects that).
+Tests: `zig build test-spec-merge`.
 
 ## Documentation gate
 

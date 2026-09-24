@@ -1,0 +1,10 @@
+def kernel(c: mut list[list[float]], n: int) -> None:
+    for j in range(n):
+        c[1][j] = c[1][j] + 1.0
+
+
+def main(out: Stream) -> int:
+    c = [[0.0 for _ in range(20)], [0.0 for _ in range(19)]]
+    out.print("start")
+    kernel(mut c, 20)
+    return 0

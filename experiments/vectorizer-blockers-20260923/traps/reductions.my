@@ -1,0 +1,89 @@
+# checked reductions in loops, operands from the command line
+
+
+def number(text: str) -> int:
+    match int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+def build(n: int, value: int, last: int) -> list[int]:
+    values: list[int] = []
+    for i in range(n):
+        values.append(value)
+    values.append(last)
+    return values
+
+
+def total_of(values: list[int], start: int) -> int:
+    total = start
+    for v in values:
+        total += v
+    return total
+
+
+def indexed(values: list[int], start: int) -> int:
+    total = start
+    for i in range(len(values)):
+        total = total + values[i]
+    return total
+
+
+def scaled(values: list[int], start: int) -> int:
+    total = start
+    for v in values:
+        total += v * 3
+    return total
+
+
+def difference(values: list[int], start: int) -> int:
+    total = start
+    for v in values:
+        total -= v
+    return total
+
+
+def count_of(values: list[int], start: int) -> int:
+    count = start
+    for v in values:
+        if v == 109:
+            count += 1
+    return count
+
+
+def octets(n: int, start: int) -> int:
+    empty: list[int] = []
+    buffer = byte_buffer(empty)
+    for i in range(n):
+        _ = buffer.append_byte(109)
+        _ = buffer.append_byte(7)
+    data = bytes(buffer)
+    count = start
+    for i in range(len(data)):
+        if data[i] == 109:
+            count += 1
+    return count
+
+
+def main(args: list[str], out: Stream) -> int:
+    kind = args[0]
+    n = number(args[1])
+    value = number(args[2])
+    last = number(args[3])
+    start = number(args[4])
+    values = build(n, value, last)
+    if kind == "sum":
+        out.print(total_of(values, start))
+    if kind == "indexed":
+        out.print(indexed(values, start))
+    if kind == "scaled":
+        out.print(scaled(values, start))
+    if kind == "difference":
+        out.print(difference(values, start))
+    if kind == "count":
+        out.print(count_of(values, start))
+    if kind == "octets":
+        out.print(octets(n, start))
+    return 0

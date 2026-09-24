@@ -17,6 +17,7 @@ the lane C scorer, so the two instruments cannot disagree about what CPython
 does (backlog item V0).
 """
 import argparse
+import concurrent.futures
 import glob
 import json
 import os
@@ -266,6 +267,14 @@ def load_manifest():
     return manifest['probes']
 
 
+def default_jobs():
+    """Concurrent probes: `MYLANG_JOBS` when set, else the cores up to 8."""
+    try:
+        return max(1, int(os.environ['MYLANG_JOBS']))
+    except (KeyError, ValueError):
+        return max(1, min(8, os.cpu_count() or 1))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', type=Path)
@@ -276,6 +285,8 @@ def main():
     parser.add_argument('--require-targets', action='store_true',
                         help='fail unless every selected probe meets its target')
     parser.add_argument('--verbose', action='store_true')
+    parser.add_argument('--jobs', type=int, default=default_jobs(),
+                        help='probes compiled and run at once (default: MYLANG_JOBS, else up to 8)')
     args = parser.parse_args()
 
     if args.self_test:
@@ -287,8 +298,11 @@ def main():
     probes = [probe for probe in load_manifest()
               if glob.fnmatch.fnmatch(probe['name'], args.filter)]
     rows, groups = [], {}
-    for probe in probes:
-        observed = run_probe(compiler, FIXTURES / (probe['name'] + '.my'))
+    # Every probe is an independent `mylang run`; running them concurrently keeps
+    # the report in manifest order while the build waits on the slowest few.
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
+        outcomes = list(pool.map(lambda probe: run_probe(compiler, FIXTURES / (probe['name'] + '.my')), probes))
+    for probe, observed in zip(probes, outcomes):
         state = classify(probe, observed)
         groups.setdefault(probe['group'], []).append(state)
         rows.append({'name': probe['name'], 'group': probe['group'], 'audit': probe['audit'],

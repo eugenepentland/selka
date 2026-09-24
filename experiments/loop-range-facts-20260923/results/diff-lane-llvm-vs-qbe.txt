@@ -1,0 +1,6 @@
+SKIP array_negative_index: build A failed: ['mylang: host failure: InternalError']
+SKIP array_writes: build A failed: ['mylang: host failure: InternalError']
+SAME-but-false conditional_expression
+SAME-but-false option_narrowing
+SKIP attenuation: build A failed: ['/home/epentland/ai/canopy/mylang/.claude/worktrees/agent-ad59f229cfd824c2d/examples/attenuation.my:20:12: error[E_REMOVED_SPELLING]: `restrict_resource[...]` was removed; use `fs.read_only()`']
+same 135, differ 0, skipped 3

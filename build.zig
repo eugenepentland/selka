@@ -1,6 +1,8 @@
 const std = @import("std");
 const builtin = @import("builtin");
 const guardian = @import("guardian");
+/// The repository files each cached test step reads while it runs.
+const test_inputs = @import("build_test_inputs.zig");
 /// QBE release vendored under `vendor/qbe`; `.qbeversion` must agree with it.
 const vendored_qbe = "1.3";
 /// Translation units of the vendored QBE release, matching its own `Makefile`.
@@ -42,20 +44,38 @@ const rss = struct {
     /// peaks near 2.2G where it used to peak near 1.1G.
     const suite: u64 = 2560 * mib;
     /// One shard of the unit root. A shard builds and runs only its slice of
-    /// the guest programs, so its peak sits well under the whole root's 1.1G:
-    /// observed 77M-336M across eight warm shards. The ceiling keeps the cold
-    /// margin the whole root needs while letting eight shards share a
-    /// `--maxrss` budget the whole root's 2G ceiling would not stretch to.
-    const shard_unit: u64 = 1536 * mib;
-    /// One shard of the CLI root, which builds far fewer guests. Observed
-    /// 91M-139M across four warm shards; the ceiling is a concurrency budget.
-    const shard_cli: u64 = 1024 * mib;
-    /// Python drivers that drive the compiler but build no native programs.
+    /// the guest programs, so its peak sits well under the whole root's 2.2G.
+    /// Observed on a clean cache (2026-09-23): the test process itself peaked
+    /// at 216M-570M across the twelve shards, and a shard's whole process tree
+    /// (its guest compiles included) at 275M-1.24G for a moment. The whole
+    /// `zig build test` never held more than 5.8G at once, but at 1.5G per
+    /// shard the declarations alone passed a 30G machine's budget, so the build
+    /// runner held the last shards back for most of a minute. 1G keeps a 1.8x
+    /// margin over the largest single process, which is what the runner checks.
+    const shard_unit: u64 = 1024 * mib;
+    /// One shard of the CLI root, which builds far fewer guests. Observed on a
+    /// clean cache: 103M-141M for the test process, up to 1.22G for a moment
+    /// across its tree; the ceiling is a concurrency budget.
+    const shard_cli: u64 = 768 * mib;
+    /// The host applications' test roots (board, byte I/O, schematic) and the
+    /// directory run of `tests/guest`. Observed on a clean cache (2026-09-23):
+    /// the schematic root's process tree 1.24G, `tests/guest` 1.33G, the board
+    /// and byte I/O roots under 50M.
+    const host_suite: u64 = 1536 * mib;
+    /// Drivers that run the compiler a few programs at a time. Observed on a
+    /// clean cache: the idiom probes 0.69G, parser hints 0.47G, the C runtime
+    /// suites (every suite compiling at once) 0.55G.
     const driver: u64 = 1024 * mib;
-    /// Drivers that compile and link native programs, the QBE parity and
+    /// Drivers that compile and link many native programs at once, the QBE
+    /// parity and boundary drivers. Observed: the boundary matrix 1.29G-1.45G.
     const parity: u64 = 2048 * mib;
-    /// Guardian's whole-tree gate. Observed: the whole-tree run stays well under 100M.
-    const gate: u64 = 1024 * mib;
+    /// Checks that run Python or a small C harness but no compiler: the
+    /// self-tests, the friction harvest, the SPEC merge driver, the inner-loop
+    /// checks. Observed: under 60M each. Declaring a driver's 1G for each of
+    /// them only kept the build runner from starting test shards it had room for.
+    const script: u64 = 256 * mib;
+    /// Guardian's whole-tree gate. Observed: the whole-tree run's tree 273M.
+    const gate: u64 = 512 * mib;
     /// Zig compilations. Only these and the test binaries report a peak to the
     /// build runner, so only they can trip a ceiling; the margin over the debug
     /// peak leaves room for a ReleaseFast build of the same tree.
@@ -91,6 +111,57 @@ var install_exe_focus: ?*std.Build.Step = null;
 /// that has no `lib/mylang-llvm` beside it, and a ReleaseFast build defaults to
 /// the LLVM arm, so the adapter must be found the way `qbe` is.
 var tool_llvm_adapter: []const u8 = "";
+/// The emitted `qbe` and compiler binaries. The environment names the tools by
+/// an installed path whose bytes the cache key cannot see, so every cached
+/// step that runs them declares their contents as inputs.
+var tool_inputs: [2]?std.Build.LazyPath = .{ null, null };
+/// `-Dtest-rerun`: run every cached test step even when none of its inputs
+/// changed, to see full selected-test counts or to rule out a stale verdict.
+var test_rerun = false;
+/// The directory of per-list content manifests `tests/input_manifest.py` writes
+/// on every build, one `NAME.txt` per list in `build_test_inputs.zig`.
+var input_manifests: ?std.Build.LazyPath = null;
+/// Add the step that hashes every declared test input, once per build. It runs on
+/// every invocation because only a make-phase walk sees a file added to a
+/// declared directory: this Zig version records `dependOnDirectory` but never
+/// re-runs the configure phase for it. An unchanged tree yields byte-identical
+/// manifests, so the cached steps that read them stay cached.
+fn addInputManifests(b: *std.Build) void {
+    const run = b.addSystemCommand(&.{ "python3", "tests/input_manifest.py" });
+    run.setName("hash declared test inputs");
+    run.setCwd(b.path("."));
+    run.has_side_effects = true;
+    run.step.max_rss = rss.script;
+    input_manifests = run.addOutputDirectoryArg("test-inputs");
+    inline for (comptime std.meta.declarations(test_inputs)) |name| {
+        run.addArgs(&.{ "--list", name });
+        run.addArgs(&@field(test_inputs, name));
+    }
+}
+/// Let a test step's verdict be cached: it re-runs only when its command, its
+/// environment, an artifact it names, the tools the environment names, or one of
+/// the repository files the `list` in `build_test_inputs.zig` declares changes
+/// (or under `-Dtest-rerun`). An empty `list` declares no repository files.
+fn cached(run: *std.Build.Step.Run, list: []const u8) void {
+    run.has_side_effects = test_rerun;
+    const b = run.step.owner;
+    if (list.len != 0) run.addFileInput(input_manifests.?.path(b, b.fmt("{s}.txt", .{list})));
+    for (tool_inputs) |tool| if (tool) |path| run.addFileInput(path);
+}
+/// A test driver outside Zig (Python, or the compiler on a whole tree) whose
+/// verdict is a pure function of `entries`, its command and the tools: cached,
+/// bounded, and checked for exit status 0. The build runner discards a checked
+/// step's standard output, so the command's standard output is sent to standard
+/// error, which it keeps and prints when the step fails. `name` labels the step
+/// in the build summary, where every such step would otherwise read `run sh`.
+fn driver(b: *std.Build, name: []const u8, bytes: u64, list: []const u8) *std.Build.Step.Run {
+    const run = bounded(b.addSystemCommand(&.{ "sh", "-c", "exec \"$@\" 1>&2", "driver" }), bytes);
+    run.setName(name);
+    run.setCwd(b.path("."));
+    run.expectExitCode(0);
+    cached(run, list);
+    return run;
+}
 /// Declare a step's resident-memory ceiling, and give it the native tools a guest
 /// build needs; harmless on steps that build no guest.
 fn bounded(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
@@ -139,24 +210,37 @@ fn focused(step: *std.Build.Step.Run, bytes: u64) *std.Build.Step.Run {
 fn forwardFilters(b: *std.Build, step: *std.Build.Step.Run, filters: []const []const u8) void {
     for (filters) |filter| step.addArg(b.fmt("--guardian-filter={s}", .{filter}));
 }
+/// How to split one test root: its shard count, each shard's resident-memory
+/// ceiling, the list naming the repository files its tests read
+/// (`build_test_inputs.zig`), the
+/// whole-root run a count of 1 uses instead, and — for the focused sharded
+/// steps — the `-Dtest-filter` values to forward and whether to cache verdicts.
+const Shards = struct {
+    count: usize,
+    bytes: u64,
+    inputs: []const u8,
+    whole: *std.Build.Step.Run,
+    filters: []const []const u8 = &.{},
+    cache: bool = true,
+};
 /// The runs that cover one test root: `count` shards of the same test binary,
 /// each executing the slice of the root's named tests that `--guardian-shard=`
 /// assigns it, or the caller's single whole-root run when `count` is 1. The
 /// shards partition the root — Guardian's runner gives the unnamed `test { }`
 /// blocks to shard 0 alone — so together they run every test exactly once, and
 /// the build runner schedules them concurrently against its `--maxrss` budget.
-fn shardRuns(
-    b: *std.Build,
-    compile: *std.Build.Step.Compile,
-    bytes: u64,
-    count: usize,
-    whole: *std.Build.Step.Run,
-) []const *std.Build.Step {
-    if (count <= 1) return b.allocator.dupe(*std.Build.Step, &.{&whole.step}) catch @panic("out of memory");
-    const steps = b.allocator.alloc(*std.Build.Step, count) catch @panic("out of memory");
+/// A shard's verdict is cached on the test binary, the tools and the declared
+/// inputs, so an unchanged rerun of the gate does not execute it again; the
+/// whole-root run stays uncached because `test-units`/`test-cli` report its
+/// selected count every time.
+fn shardRuns(b: *std.Build, compile: *std.Build.Step.Compile, shards: Shards) []const *std.Build.Step {
+    if (shards.count <= 1) return b.allocator.dupe(*std.Build.Step, &.{&shards.whole.step}) catch @panic("out of memory");
+    const steps = b.allocator.alloc(*std.Build.Step, shards.count) catch @panic("out of memory");
     for (steps, 0..) |*step, index| {
-        const run = focused(b.addRunArtifact(compile), bytes);
-        guardian.announceShard(run, index, count);
+        const run = focused(b.addRunArtifact(compile), shards.bytes);
+        guardian.announceShard(run, index, shards.count);
+        forwardFilters(b, run, shards.filters);
+        if (shards.cache) cached(run, shards.inputs);
         step.* = &run.step;
     }
     return steps;
@@ -181,13 +265,15 @@ fn boundedChecks(step: *std.Build.Step) void {
 /// `zig build test` never builds or times it. Arguments after `--` reach the
 /// harness (`--json PATH`, `--arms ...`, `--write-thresholds`).
 fn addParityBench(b: *std.Build) void {
-    const cpu = b.option(u32, "bench-cpu", "bench-parity: the one CPU every timed process is pinned to (default 2)") orelse 2;
+    const cpu = b.option(u32, "bench-cpu", "bench-parity: the one CPU every timed process is pinned to (default: first of MYLANG_TIMING_CPUS, else 2)");
     const rounds = b.option(u32, "bench-rounds", "bench-parity: timed rounds per program (default 7)") orelse 7;
     const filter = b.option([]const u8, "bench-filter", "bench-parity: comma-separated substrings of GROUP/NAME, e.g. sieve or micro/");
     const compiler = b.option([]const u8, "bench-mylang", "bench-parity: time this compiler instead of the one this build installs");
     const bench = b.addSystemCommand(&.{ "python3", "bench/parity/bench_parity.py", "run", "--zig", b.graph.zig_exe });
     bench.setCwd(b.path("."));
-    bench.addArgs(&.{ "--cpu", b.fmt("{d}", .{cpu}), "--rounds", b.fmt("{d}", .{rounds}) });
+    // Without -Dbench-cpu the harness picks the first reserved timing CPU itself.
+    if (cpu) |index| bench.addArgs(&.{ "--cpu", b.fmt("{d}", .{index}) });
+    bench.addArgs(&.{ "--rounds", b.fmt("{d}", .{rounds}) });
     if (filter) |needle| {
         if (std.mem.trim(u8, needle, " \t\r\n,").len == 0) {
             std.debug.print("error: -Dbench-filter= needs a non-empty substring; omit it to run every program\n", .{});
@@ -214,14 +300,16 @@ pub fn build(b: *std.Build) void {
     const target = b.resolveTargetQuery(.{});
     const optimize = b.standardOptimizeOption(.{});
     // `-Dtest-filter=SUBSTRING` narrows the unit and CLI suites to one area in seconds.
+    // It may be repeated; a test runs when its name contains any of the substrings,
+    // which is how `scripts/affected_tests.py` selects several areas in one build.
     // An absent flag runs every test; an explicitly empty one is a footgun that
     // silently selects the whole suite, so reject it before it reaches a test root.
-    const test_filters: []const []const u8 = if (b.option([]const u8, "test-filter", "Run only Zig tests whose name contains this substring")) |needle| blk: {
-        if (std.mem.trim(u8, needle, " \t\r\n").len == 0) {
+    const test_filters: []const []const u8 = if (b.option([]const []const u8, "test-filter", "Run only Zig tests whose name contains this substring (repeatable)")) |needles| blk: {
+        for (needles) |needle| if (std.mem.trim(u8, needle, " \t\r\n").len == 0) {
             std.debug.print("error: -Dtest-filter= needs a non-empty substring; run `zig build test` for the full suite\n", .{});
             std.process.exit(2);
-        }
-        break :blk b.dupeStrings(&.{needle});
+        };
+        break :blk b.dupeStrings(needles);
     } else &.{};
     // `-Dtest-shards=N` splits the two slow test roots across N processes the
     // build runner schedules in parallel; `-Dtest-shards=1` is one process per
@@ -239,6 +327,7 @@ pub fn build(b: *std.Build) void {
         std.debug.print("error: -Dtest-shards= needs a positive count; -Dtest-shards=1 runs each root in one process\n", .{});
         std.process.exit(2);
     }
+    test_rerun = b.option(bool, "test-rerun", "Run every cached test step even when none of its declared inputs changed") orelse false;
     const unit_shards = if (test_filters.len == 0) requested_shards else 1;
     // The CLI root is both smaller and coarser than the unit root, so it takes
     // half the shards; a wider fan-out oversubscribes the core budget and made
@@ -276,11 +365,13 @@ pub fn build(b: *std.Build) void {
     b.getInstallStep().dependOn(&install_exe.step);
     // Installed beside `mylang`, where the native build driver looks for it before `PATH`.
     const qbe_exe = vendoredQbe(b, target);
+    tool_inputs = .{ qbe_exe.getEmittedBin(), exe.getEmittedBin() };
+    addInputManifests(b);
     const install_qbe_step = b.addInstallArtifact(qbe_exe, .{});
     b.getInstallStep().dependOn(&install_qbe_step.step);
     // LLVM's adapter is optional at run time; keep its imported modules beside
     // its entry point so an installed compiler needs no source checkout.
-    for ([_][]const u8{ "qbe_llvm.py", "llvm_emit.py", "runtime_signatures.py", "amd64_sysv.py" }) |file| {
+    for ([_][]const u8{ "qbe_llvm.py", "llvm_emit.py", "runtime_signatures.py", "amd64_sysv.py", "sticky_loops.py" }) |file| {
         const source = b.path(b.pathJoin(&.{ "experiments", "llvm-backend", file }));
         const install = b.addInstallFileWithDir(source, .lib, b.pathJoin(&.{ "mylang-llvm", file }));
         b.getInstallStep().dependOn(&install.step);
@@ -297,18 +388,31 @@ pub fn build(b: *std.Build) void {
     // LLVM arm, so name the adapter source the same way `qbe` is named.
     tool_llvm_adapter = b.pathJoin(&.{ root, "experiments", "llvm-backend", "qbe_llvm.py" });
     // Focused tests need `qbe` on disk but must stay off the gated install graph.
-    // A separate, unattached install of the same compile step gives them a stable
-    // path without pulling in Guardian or the other installed artifacts.
-    const focus_qbe_step = b.addInstallArtifact(qbe_exe, .{ .dest_dir = .{ .override = .{ .custom = "focus" } } });
-    const focus_exe_step = b.addInstallArtifact(exe, .{ .dest_dir = .{ .override = .{ .custom = "focus" } } });
+    // A separate, unattached copy of the same binaries gives them a stable path
+    // without pulling in Guardian or the other installed artifacts. It is a file
+    // copy, not a second artifact install: a run step names an artifact by the
+    // path its install left, so two installs of one artifact would make that
+    // path (and every cache key holding it) depend on which install ran last.
+    const focus_qbe_step = b.addInstallFileWithDir(qbe_exe.getEmittedBin(), .{ .custom = "focus" }, "qbe");
+    const focus_exe_step = b.addInstallFileWithDir(exe.getEmittedBin(), .{ .custom = "focus" }, "mylang");
     tool_qbe_focus = b.pathJoin(&.{ root, "zig-out", "focus", "qbe" });
     install_qbe_focus = &focus_qbe_step.step;
     install_exe_focus = &focus_exe_step.step;
+    // The compiler `scripts/affected_tests.py` runs guest tests and doctests with:
+    // the same unattached copies, so the inner loop never waits on Guardian or
+    // on the host applications `zig build` installs.
+    const affected_compiler = b.step("affected-compiler", "Install only mylang and qbe to zig-out/focus, for scripts/affected_tests.py");
+    affected_compiler.dependOn(&focus_exe_step.step);
+    affected_compiler.dependOn(&focus_qbe_step.step);
     // Prebuild the runtime archive (and text-formatter object) for each optimize
     // mode with the freshly built compiler and install them beside it under
     // `lib/mylang-runtime`, so a cold `mylang build` links a matching prebuilt
     // archive instead of compiling the runtime from source on its first run.
     const prebuild = b.addRunArtifact(exe);
+    // Name the compiler by its installed path every time, rather than by
+    // whichever path exists when this step happens to start, so an unchanged
+    // rerun reuses the prebuilt runtime instead of re-emitting it.
+    prebuild.step.dependOn(&install_exe.step);
     prebuild.step.max_rss = rss.parity;
     prebuild.addArgs(&.{ "emit-runtime", "--zig", b.graph.zig_exe, "--qbe" });
     prebuild.addFileArg(qbe_exe.getEmittedBin());
@@ -468,24 +572,35 @@ pub fn build(b: *std.Build) void {
     // The gate runs each slow root as several concurrent shards; `test-units`
     // and `test-cli` keep the single whole-root run, so `-Dtest-filter` behaves
     // exactly as documented and its selected-test count means what it says.
-    const unit_runs = shardRuns(b, unit, rss.shard_unit, unit_shards, run_unit);
-    const cli_runs = shardRuns(b, integration, rss.shard_cli, cli_shards, run_integration);
+    const unit_runs = shardRuns(b, unit, .{ .count = unit_shards, .bytes = rss.shard_unit, .inputs = "unit", .whole = run_unit });
+    const cli_runs = shardRuns(b, integration, .{ .count = cli_shards, .bytes = rss.shard_cli, .inputs = "cli", .whole = run_integration });
     dependOnAll(test_step, unit_runs);
     // The fast inner loops: no Python drivers, no Guardian and no full install graph,
     // so `-Dtest-filter` returns in seconds.
     b.step("test-units", "Run only src/root_test.zig, honouring -Dtest-filter").dependOn(&run_unit.step);
     b.step("test-cli", "Run only test/integration.zig, honouring -Dtest-filter").dependOn(&run_integration.step);
+    // The same focused runs split into `-Dtest-shards` concurrent processes even
+    // under a filter, for `scripts/affected_tests.py`: its selections can name a
+    // hundred slow tests, and it sums the shards' counts itself. They are never
+    // cached, so every run reports what it selected.
+    const units_sharded = b.step("test-units-sharded", "Run src/root_test.zig split into -Dtest-shards processes, honouring -Dtest-filter");
+    const cli_sharded = b.step("test-cli-sharded", "Run test/integration.zig split into -Dtest-shards/2 processes, honouring -Dtest-filter");
+    dependOnAll(units_sharded, shardRuns(b, unit, .{ .count = requested_shards, .bytes = rss.shard_unit, .inputs = "", .whole = run_unit, .filters = test_filters, .cache = false }));
+    dependOnAll(cli_sharded, shardRuns(b, integration, .{ .count = @max(1, requested_shards / 2), .bytes = rss.shard_cli, .inputs = "", .whole = run_integration, .filters = test_filters, .cache = false }));
     const byte_io_step = b.step("test-byte-io", "Verify raw guest stdin/stdout and host bounds");
-    const run_byte_io_unit = bounded(b.addRunArtifact(byte_io_unit), rss.suite);
+    const run_byte_io_unit = bounded(b.addRunArtifact(byte_io_unit), rss.host_suite);
+    cached(run_byte_io_unit, "byte_io");
     byte_io_step.dependOn(&run_byte_io_unit.step);
     test_step.dependOn(&run_byte_io_unit.step);
     guardian.addAllChecks(b, guardian_exe, byte_io_step, .{});
     boundedChecks(byte_io_step);
     dependOnAll(test_step, cli_runs);
-    const run_board_unit = bounded(b.addRunArtifact(board_unit), rss.suite);
+    const run_board_unit = bounded(b.addRunArtifact(board_unit), rss.host_suite);
+    cached(run_board_unit, "board");
     test_step.dependOn(&run_board_unit.step);
     const schematic_step = b.step("test-schematic", "Verify guest SVG generation against Netlisp connectivity and source mutations");
-    const run_schematic_unit = bounded(b.addRunArtifact(schematic_unit), rss.suite);
+    const run_schematic_unit = bounded(b.addRunArtifact(schematic_unit), rss.host_suite);
+    cached(run_schematic_unit, "schematic");
     const audit_runtime = b.step("test-runtime-audit", "Run every Zig test root for isolated runtime probes");
     guardian.addAllChecks(b, guardian_exe, audit_runtime, .{});
     boundedChecks(audit_runtime);
@@ -545,8 +660,9 @@ pub fn build(b: *std.Build) void {
         .root_module = native_heap_module,
     });
     const run_native_heap_test = b.addRunArtifact(native_heap_test);
-    run_native_heap_test.step.max_rss = rss.driver;
-    run_native_heap_test.has_side_effects = true;
+    run_native_heap_test.step.max_rss = rss.script;
+    // The harness binary is its only input, so a checked run is cached on it.
+    run_native_heap_test.expectExitCode(0);
     const native_heap_step = b.step("test-native-heap", "Verify native collector trace, cycle, budget, and equality paths");
     const native_arena_module = b.createModule(.{
         .target = target,
@@ -575,8 +691,8 @@ pub fn build(b: *std.Build) void {
         .root_module = native_arena_module,
     });
     const run_native_arena_test = b.addRunArtifact(native_arena_test);
-    run_native_arena_test.step.max_rss = rss.driver;
-    run_native_arena_test.has_side_effects = true;
+    run_native_arena_test.step.max_rss = rss.script;
+    run_native_arena_test.expectExitCode(0);
     native_heap_step.dependOn(&run_native_arena_test.step);
     native_heap_step.dependOn(&run_native_heap_test.step);
     guardian.addAllChecks(b, guardian_exe, native_heap_step, .{});
@@ -597,7 +713,9 @@ pub fn build(b: *std.Build) void {
     native_test_unit.root_module.addImport("qbe_build_assets", build_assets);
     native_test_unit.root_module.addImport("memory_budget", budget);
     guardian.enableTestDiagnostics(native_test_unit.root_module);
-    native_test_step.dependOn(&bounded(b.addRunArtifact(native_test_unit), rss.suite).step);
+    const run_native_test_unit = bounded(b.addRunArtifact(native_test_unit), rss.suite);
+    cached(run_native_test_unit, "native_roots");
+    native_test_step.dependOn(&run_native_test_unit.step);
     compile_tests.dependOn(&native_test_unit.step);
     guardian.addAllChecks(b, guardian_exe, native_test_step, .{});
     boundedChecks(native_test_step);
@@ -609,7 +727,9 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     }) });
     guardian.enableTestDiagnostics(ffi_unit.root_module);
-    ffi_step.dependOn(&bounded(b.addRunArtifact(ffi_unit), rss.suite).step);
+    const run_ffi_unit = bounded(b.addRunArtifact(ffi_unit), rss.suite);
+    cached(run_ffi_unit, "native_roots");
+    ffi_step.dependOn(&run_ffi_unit.step);
     compile_tests.dependOn(&ffi_unit.step);
     guardian.addAllChecks(b, guardian_exe, ffi_step, .{});
     boundedChecks(ffi_step);
@@ -622,7 +742,9 @@ pub fn build(b: *std.Build) void {
         .root_module = host_native,
     });
     guardian.enableTestDiagnostics(host_native_unit.root_module);
-    qbe_build_step.dependOn(&bounded(b.addRunArtifact(host_native_unit), rss.suite).step);
+    const run_host_native_unit = bounded(b.addRunArtifact(host_native_unit), rss.suite);
+    cached(run_host_native_unit, "native_roots");
+    qbe_build_step.dependOn(&run_host_native_unit.step);
     compile_tests.dependOn(&host_native_unit.step);
     const qbe_build_unit = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
         .root_source_file = b.path("src/qbe_build_test.zig"),
@@ -632,7 +754,9 @@ pub fn build(b: *std.Build) void {
     qbe_build_unit.root_module.addImport("qbe_build_assets", build_assets);
     qbe_build_unit.root_module.addImport("memory_budget", budget);
     guardian.enableTestDiagnostics(qbe_build_unit.root_module);
-    qbe_build_step.dependOn(&bounded(b.addRunArtifact(qbe_build_unit), rss.suite).step);
+    const run_qbe_build_unit = bounded(b.addRunArtifact(qbe_build_unit), rss.suite);
+    cached(run_qbe_build_unit, "native_roots");
+    qbe_build_step.dependOn(&run_qbe_build_unit.step);
     compile_tests.dependOn(&qbe_build_unit.step);
     const host_bridge_module = b.createModule(.{ .target = target, .optimize = optimize, .link_libc = true });
     host_bridge_module.addIncludePath(b.path("src"));
@@ -641,7 +765,10 @@ pub fn build(b: *std.Build) void {
         .flags = &.{ "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG" },
     });
     const host_bridge_test = b.addExecutable(.{ .name = "host-bridge-test", .root_module = host_bridge_module, .max_rss = rss.compile });
-    qbe_build_step.dependOn(&bounded(b.addRunArtifact(host_bridge_test), rss.suite).step);
+    const run_host_bridge_test = bounded(b.addRunArtifact(host_bridge_test), rss.suite);
+    // The bridge harness binary is its only input, so a checked run is cached on it.
+    run_host_bridge_test.expectExitCode(0);
+    qbe_build_step.dependOn(&run_host_bridge_test.step);
     compile_tests.dependOn(&host_bridge_test.step);
     guardian.addAllChecks(b, guardian_exe, qbe_build_step, .{});
     boundedChecks(qbe_build_step);
@@ -655,6 +782,7 @@ pub fn build(b: *std.Build) void {
     guardian.enableTestDiagnostics(golden_unit.root_module);
     compile_tests.dependOn(&golden_unit.step);
     const run_golden = bounded(b.addRunArtifact(golden_unit), rss.suite);
+    cached(run_golden, "golden");
     forwardFilters(b, run_golden, test_filters);
     run_golden.setCwd(b.path("."));
     golden_step.dependOn(&run_golden.step);
@@ -665,13 +793,12 @@ pub fn build(b: *std.Build) void {
     guardian.addAllChecks(b, guardian_exe, agent_tools, .{});
     boundedChecks(agent_tools);
     const idiom_step = b.step("test-idioms", "Measure Python-shaped idioms and reject regressions");
-    const idiom_self_test = bounded(b.addSystemCommand(&.{ "python3", "tests/idiom_probes.py", "--self-test" }), rss.driver);
-    idiom_self_test.setCwd(b.path("."));
+    const idiom_self_test = driver(b, "python3 tests/idiom_probes.py --self-test", rss.script, "idioms_self");
+    idiom_self_test.addArgs(&.{ "python3", "tests/idiom_probes.py", "--self-test" });
     idiom_step.dependOn(&idiom_self_test.step);
-    const idiom_run = bounded(b.addSystemCommand(&.{ "python3", "tests/idiom_probes.py", "--compiler" }), rss.parity);
+    const idiom_run = driver(b, "python3 tests/idiom_probes.py --compiler", rss.driver, "idioms");
+    idiom_run.addArgs(&.{ "python3", "tests/idiom_probes.py", "--compiler" });
     idiom_run.addArtifactArg(exe);
-    idiom_run.setCwd(b.path("."));
-    idiom_run.has_side_effects = true;
     idiom_step.dependOn(&idiom_run.step);
     test_step.dependOn(idiom_step);
     // The repair-round packages ship two Python drivers beside their Zig tests:
@@ -679,18 +806,24 @@ pub fn build(b: *std.Build) void {
     // compiler) and the friction harvest over its replay fixture. Registering
     // them here keeps them from rotting outside the gate.
     const usefulness_step = b.step("test-agent-usefulness", "Verify parser hints, headerless imports, and the friction harvest");
-    const hints_static = bounded(b.addSystemCommand(&.{ "python3", "tests/parser_hints.py" }), rss.driver);
-    hints_static.setCwd(b.path("."));
+    const hints_static = driver(b, "python3 tests/parser_hints.py", rss.script, "parser_hints");
+    hints_static.addArgs(&.{ "python3", "tests/parser_hints.py" });
     usefulness_step.dependOn(&hints_static.step);
-    const hints_run = bounded(b.addSystemCommand(&.{ "python3", "tests/parser_hints.py", "--compiler" }), rss.parity);
+    const hints_run = driver(b, "python3 tests/parser_hints.py --compiler", rss.driver, "parser_hints");
+    hints_run.addArgs(&.{ "python3", "tests/parser_hints.py", "--compiler" });
     hints_run.addArtifactArg(exe);
-    hints_run.setCwd(b.path("."));
-    hints_run.has_side_effects = true;
     usefulness_step.dependOn(&hints_run.step);
-    const harvest_run = bounded(b.addSystemCommand(&.{ "python3", "tests/test_friction_harvest.py" }), rss.driver);
-    harvest_run.setCwd(b.path("."));
+    const harvest_run = driver(b, "python3 tests/test_friction_harvest.py", rss.script, "friction");
+    harvest_run.addArgs(&.{ "python3", "tests/test_friction_harvest.py" });
     usefulness_step.dependOn(&harvest_run.step);
     test_step.dependOn(usefulness_step);
+    // The SPEC.md merge driver (`scripts/merge_spec.py`): synthetic three-way
+    // cases, a throwaway repository end to end, and a replay of real merges.
+    const spec_merge_step = b.step("test-spec-merge", "Verify the SPEC.md merge driver, including replayed history");
+    const spec_merge_run = bounded(b.addSystemCommand(&.{ "python3", "tests/test_spec_merge.py" }), rss.script);
+    spec_merge_run.setCwd(b.path("."));
+    spec_merge_step.dependOn(&spec_merge_run.step);
+    test_step.dependOn(spec_merge_step);
     // The bundled runtime's `content_hash` comes from a make-phase run of
     // `build_qbe_assets.zig`. This driver runs that file on throwaway trees that
     // share one Zig cache, the way a stale hash once reached an installed compiler.
@@ -706,33 +839,50 @@ pub fn build(b: *std.Build) void {
     // and requires one answer, so a shape that satisfies its contract on QBE and
     // not on LLVM fails here instead of on whichever backend nobody ran.
     const boundary_step = b.step("test-native-boundary", "Verify every carried boundary shape agrees across the QBE and LLVM backends");
-    const boundary_self = bounded(b.addSystemCommand(&.{ "python3", "tests/native_boundary_matrix.py", "--self-test" }), rss.driver);
-    boundary_self.setCwd(b.path("."));
+    const boundary_self = driver(b, "python3 tests/native_boundary_matrix.py --self-test", rss.script, "boundary_self");
+    boundary_self.addArgs(&.{ "python3", "tests/native_boundary_matrix.py", "--self-test" });
     boundary_step.dependOn(&boundary_self.step);
-    const boundary_run = bounded(b.addSystemCommand(&.{ "python3", "tests/native_boundary_matrix.py", "--compiler" }), rss.parity);
+    const boundary_run = driver(b, "python3 tests/native_boundary_matrix.py --compiler", rss.parity, "boundary");
+    boundary_run.addArgs(&.{ "python3", "tests/native_boundary_matrix.py", "--compiler" });
     boundary_run.addArtifactArg(exe);
-    boundary_run.setCwd(b.path("."));
-    boundary_run.has_side_effects = true;
     boundary_step.dependOn(&boundary_run.step);
     test_step.dependOn(boundary_step);
     // The LLVM adapter's unit tests pin its IL parsing, overflow-intrinsic
     // rewrites, frame map and declaration attributes. Nothing else fails if the
     // adapter silently stops matching a shape, so they run in the gate.
     const adapter_step = b.step("test-llvm-adapter", "Run the LLVM adapter's unit tests");
-    const adapter_run = bounded(b.addSystemCommand(&.{ "python3", "-m", "unittest", "test_adapter" }), rss.driver);
+    const adapter_run = driver(b, "python3 -m unittest test_adapter", rss.driver, "adapter");
+    adapter_run.addArgs(&.{ "python3", "-m", "unittest", "test_adapter" });
     adapter_run.setCwd(b.path("experiments/llvm-backend"));
-    adapter_run.has_side_effects = true;
     adapter_step.dependOn(&adapter_run.step);
     test_step.dependOn(adapter_step);
     // The C runtime's own suites (heap, collections, text, dictionary, regions,
     // print, text views) under UBSan. Two of them broke silently in merges when
     // only lanes ran them by hand, so they run in the gate.
     const native_memory_step = b.step("test-native-memory", "Run the C runtime suites under UBSan");
-    const native_memory_run = bounded(b.addSystemCommand(&.{ "python3", "scripts/test_native_memory.py" }), rss.driver);
-    native_memory_run.setCwd(b.path("."));
-    native_memory_run.has_side_effects = true;
+    const native_memory_run = driver(b, "python3 scripts/test_native_memory.py", rss.driver, "native_memory");
+    native_memory_run.addArgs(&.{ "python3", "scripts/test_native_memory.py" });
     native_memory_step.dependOn(&native_memory_run.step);
     test_step.dependOn(native_memory_step);
+    // The inner loop's own machinery: the change-to-test mapping behind
+    // `scripts/affected_tests.py`, and the check that every repository file a
+    // cached test root names is one of its declared inputs.
+    const affected_step = b.step("test-affected-selection", "Pin scripts/affected_tests.py's change-to-test mapping");
+    const affected_run = driver(b, "python3 tests/test_affected_tests.py", rss.script, "affected");
+    affected_run.addArgs(&.{ "python3", "tests/test_affected_tests.py" });
+    affected_step.dependOn(&affected_run.step);
+    test_step.dependOn(affected_step);
+    const coverage_step = b.step("test-inputs-coverage", "Require every repository file a cached test names to be a declared input");
+    const coverage_self = driver(b, "python3 tests/test_inputs_coverage.py --self-test", rss.script, "coverage_self");
+    coverage_self.addArgs(&.{ "python3", "tests/test_inputs_coverage.py", "--self-test" });
+    coverage_step.dependOn(&coverage_self.step);
+    const coverage_run = driver(b, "python3 tests/test_inputs_coverage.py", rss.script, "coverage");
+    const manifest_self = driver(b, "python3 tests/input_manifest.py --self-test", rss.script, "manifest_self");
+    manifest_self.addArgs(&.{ "python3", "tests/input_manifest.py", "--self-test" });
+    coverage_step.dependOn(&manifest_self.step);
+    coverage_run.addArgs(&.{ "python3", "tests/test_inputs_coverage.py" });
+    coverage_step.dependOn(&coverage_run.step);
+    test_step.dependOn(coverage_step);
     const doc_coverage = bounded(b.addRunArtifact(exe), rss.driver);
     doc_coverage.addArgs(&.{ "doc-coverage", "." });
     doc_coverage.setCwd(b.path("."));
@@ -740,7 +890,7 @@ pub fn build(b: *std.Build) void {
     b.step("test-doc-coverage", "Require a documented example for every feature and standard export").dependOn(&doc_coverage.step);
     test_step.dependOn(&doc_coverage.step);
     const guest_step = b.step("test-guest", "Run the guest-behavior tests written in the language");
-    const guest_tests = bounded(b.addRunArtifact(exe), rss.suite);
+    const guest_tests = bounded(b.addRunArtifact(exe), rss.host_suite);
     guest_tests.addArgs(&.{ "test", "tests/guest", "--cache-dir", ".mylang-cache/guest-tests" });
     guest_tests.setCwd(b.path("."));
     guest_tests.has_side_effects = true;
@@ -761,10 +911,9 @@ pub fn build(b: *std.Build) void {
     boundedChecks(lang_step);
     const doctest_step = b.step("test-docs", "Execute every fenced documentation example");
     // The doctest fans its units out across a worker pool, so it is bounded like a suite.
-    const doctest_run = bounded(b.addRunArtifact(exe), rss.suite);
+    const doctest_run = driver(b, "mylang doctest .", rss.suite, "doctest");
+    doctest_run.addArtifactArg(exe);
     doctest_run.addArgs(&.{ "doctest", "." });
-    doctest_run.setCwd(b.path("."));
-    doctest_run.has_side_effects = true;
     doctest_step.dependOn(&doctest_run.step);
     test_step.dependOn(&doctest_run.step);
     guardian.addAllChecks(b, guardian_exe, doctest_step, .{});
