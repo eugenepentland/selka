@@ -98,12 +98,10 @@ pub fn writeMutates(writer: *std.Io.Writer, mutates: []const u16) std.Io.Writer.
 /// Intern a callable schema with immediate scalar storage and no captured state.
 pub fn intern(allocator: std.mem.Allocator, catalog: *@import("type_catalog.zig").Catalog, contract: typed.Callable, span: source.Span, sink: *diagnostic.Sink) diagnostic.Error!typed.Type {
     if (contract.parameters.len > 16) return sink.fail("E_CALLBACK_TYPE", span, "callback signatures support at most 16 value parameters");
-    var count: usize = 0;
     for (catalog.records) |record| if (record.contract.callback) |existing| {
         if (equal(existing, contract)) return record.id;
-        count += 1;
     };
-    if (count == 4096) return sink.fail(diagnostic.generic_limit, span, "callback specialization exceeds 4096 distinct signatures");
+    try catalog.chargeSite(allocator, .callback, span, sink);
     const parameters = try allocator.dupe(typed.Type, contract.parameters);
     var name: std.Io.Writer.Allocating = .init(allocator);
     defer name.deinit();

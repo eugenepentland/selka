@@ -3,6 +3,7 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
+const type_catalog = @import("type_catalog.zig");
 const factories =
     \\domain Component: u64:
     \\    def make(n: u64) -> Component:
@@ -266,5 +267,34 @@ test "expanding generic array recursion stops at the specialization budget" {
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings("E_GENERIC_LIMIT", compilation.diagnostics.items[0].code);
-    try t.expectEqualStrings("generic array specialization exceeds 4096 distinct shapes", compilation.diagnostics.items[0].message);
+    // One instance makes one shape per spelling, so the recursion meets its
+    // declaration's instance budget (GENERIC-INSTANCE-BUDGET-1) first.
+    try t.expectEqualStrings("generic specialization exceeds instance or type argument budget", compilation.diagnostics.items[0].message);
+}
+/// One family of specialization at one spelling.
+const Charge = struct { kind: type_catalog.SiteKind, span: language.source.Span };
+/// Charge `site` its whole budget of distinct specializations.
+fn fillSite(catalog: *type_catalog.Catalog, allocator: std.mem.Allocator, site: Charge, sink: *language.diagnostic.Sink) !void {
+    for (0..type_catalog.max_site_specializations) |_| try catalog.chargeSite(allocator, site.kind, site.span, sink);
+}
+// spec: GENERIC-SITE-BUDGET-1
+test "array shapes and callback signatures are budgeted per spelling, not per program" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var none: [0]@import("typed.zig").Record = .{};
+    var catalog: type_catalog.Catalog = .{ .records = &none, .names = .empty };
+    var sink: language.diagnostic.Sink = .{ .allocator = a };
+    const first: language.source.Span = .{ .start = 10, .end = 14 };
+    const second: language.source.Span = .{ .start = 20, .end = 24 };
+    // One spelling takes its whole budget; another spelling, and the other
+    // family at the same spelling, still have their own.
+    const sites = [_]Charge{ .{ .kind = .array, .span = first }, .{ .kind = .array, .span = second }, .{ .kind = .callback, .span = first } };
+    for (sites) |site| try fillSite(&catalog, a, site, &sink);
+    try t.expectEqual(@as(usize, 0), sink.items.items.len);
+    try t.expectError(error.SourceError, catalog.chargeSite(a, .array, first, &sink));
+    try t.expectEqualStrings("E_GENERIC_LIMIT", sink.items.items[0].code);
+    try t.expectEqual(first.start, sink.items.items[0].span.start);
+    try t.expectError(error.SourceError, catalog.chargeSite(a, .callback, first, &sink));
+    try t.expectEqualStrings("callback specialization at this spelling exceeds 4096 distinct signatures", sink.items.items[1].message);
 }

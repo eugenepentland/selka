@@ -2620,6 +2620,7 @@ fn listInterfaces(init: Context, project: *language.project.Project, parsed: Par
 fn buildIndex(init: Context, project: *language.project.Project, cache: ?*language.syntax_cache.Cache, frontend: ?*language.frontend_cache.Cache) !?language.interfaces.Index {
     const syntax_before: usize = if (cache) |opened| opened.statistics.hits else 0;
     const disk_before: usize = if (frontend) |opened| opened.statistics.syntax.hits else 0;
+    if (frontend) |opened| opened.fitProject(project.counts.bytes);
     const index = language.interfaces.buildWithCacheTimed(project, cache, frontend, init.timings) catch |err| switch (err) {
         error.SourceError => {
             recordParsedModules(init, project, cache, frontend, syntax_before, disk_before);

@@ -63,22 +63,35 @@ test "generic instances distinguish nominal types with identical representation"
     try t.expect(a != b and a != builtin and b != builtin);
     try t.expectEqual(a, try insert(&registry, t.allocator, 0, &.{a_record.id}));
 }
-test "generic instances limits preserve existing identities and ordered traversal" {
+/// Intern the `index`th distinct instance of one declaration: a constant
+/// length argument of `index`.
+fn lengthArguments(allocator: std.mem.Allocator, registry: *Registry, declaration: usize, index: usize) !instances.InstanceId {
+    return registry.intern(allocator, .{ .declaration = @fromBackingInt(declaration), .arguments = &.{.u64}, .lengths = &.{index} });
+}
+/// Intern one instance of each of declarations 1 through `count`.
+fn oneEach(registry: *Registry, count: usize) !void {
+    for (1..count + 1) |declaration| _ = try insert(registry, t.allocator, declaration, &.{});
+}
+// spec: GENERIC-INSTANCE-BUDGET-1
+test "generic instances limits apply per declaration and preserve existing identities" {
     var registry: Registry = .{};
     defer registry.deinit(t.allocator);
     const sixteen: [Registry.max_arguments]typed.Type = @splat(.i64);
     const first = try insert(&registry, t.allocator, 0, &sixteen);
     const saved = try registry.get(first);
+    // One declaration takes its full budget of distinct instances...
     for (1..Registry.max_instances) |index| {
-        const id = try insert(&registry, t.allocator, index, &.{});
+        const id = try lengthArguments(t.allocator, &registry, 0, index);
         try t.expectEqual(index, @backingInt(id));
-        try t.expectEqual(index, @backingInt((try registry.get(id)).declaration));
     }
     try t.expectEqual(first, try insert(&registry, t.allocator, 0, &sixteen));
-    try t.expectError(error.TooManyInstances, insert(&registry, t.allocator, Registry.max_instances, &.{}));
+    try t.expectError(error.TooManyInstances, lengthArguments(t.allocator, &registry, 0, Registry.max_instances));
+    // ...and every other declaration still has its own: the program total is
+    // not bounded by one declaration's budget.
+    try oneEach(&registry, Registry.max_instances + 1);
+    try t.expectEqual(@as(usize, 2 * Registry.max_instances + 1), registry.entries.items.len);
     const seventeen: [Registry.max_arguments + 1]typed.Type = @splat(.i64);
     try t.expectError(error.TooManyTypeArguments, insert(&registry, t.allocator, 0, &seventeen));
-    try t.expectEqual(@as(usize, Registry.max_instances), registry.entries.items.len);
     try t.expectEqualSlices(typed.Type, &sixteen, saved.arguments);
 }
 

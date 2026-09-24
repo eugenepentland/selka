@@ -380,6 +380,29 @@ test "frontend cache contract dimensions invalidate syntax and verdict keys for 
     try t.expectEqualStrings("warning\n", same_warnings);
 }
 
+// spec: FRONTEND-CACHE-ENTRY-1
+test "the frontend cache admits an entry as large as the loaded project needs" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const payload: [1500]u8 = @splat('s');
+    var cache = openCache(root);
+    cache.max_bytes = 1000;
+    // Over the configured ceiling, the entry is bypassed rather than stored...
+    try t.expect(!try cache.write(retentionKey(0), &payload));
+    // ...until the cache is fitted to a project whose source makes it plausible.
+    cache.fitProject(200);
+    try t.expectEqual(@as(usize, 200 * language.frontend_cache.entry_bytes_per_source_byte), cache.max_bytes);
+    try t.expect(try cache.write(retentionKey(0), &payload));
+    const back = try cache.read(retentionKey(0));
+    defer t.allocator.free(back);
+    try t.expectEqualSlices(u8, &payload, back);
+    // Fitting never lowers a ceiling already larger than the project needs.
+    cache.fitProject(1);
+    try t.expectEqual(@as(usize, 1600), cache.max_bytes);
+}
+
 /// The key of the `index`th retention-test entry.
 fn retentionKey(index: usize) [32]u8 {
     var key: [32]u8 = @splat(0);

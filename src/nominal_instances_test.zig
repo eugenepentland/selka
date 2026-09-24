@@ -192,6 +192,28 @@ test "nominal instances share declaration identity through imported signatures a
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), moduleScenario, .{});
 }
+/// `count` records whose names are `length` bytes each, plus a trivial entry.
+fn longNamedRecords(allocator: std.mem.Allocator, count: usize, length: usize) ![]u8 {
+    var text: std.Io.Writer.Allocating = .init(allocator);
+    defer text.deinit();
+    const stem = try allocator.alloc(u8, length - 6);
+    defer allocator.free(stem);
+    @memset(stem, 'n');
+    for (0..count) |index| try text.writer.print("class R{s}{d:0>5}:\n    v: i64\n\n\n", .{ stem, index });
+    try text.writer.writeAll("def main() -> i64:\n    return 0\n");
+    return text.toOwnedSlice();
+}
+// spec: NOMINAL-NAME-BUDGET-1
+test "nominal display names are budgeted by the program's size, not a fixed 1 MiB" {
+    // 2,000 records with 600-byte names: 1.2 MB of display names, over the
+    // old fixed 1 MiB and under the program's own 1.3 MB of source.
+    const text = try longNamedRecords(t.allocator, 2000, 600);
+    defer t.allocator.free(text);
+    var compilation = try language.Compilation.init(t.allocator, "names.my", text);
+    defer compilation.deinit();
+    try compilation.check();
+    try t.expect(compilation.program.?.records.len >= 2000);
+}
 fn largeNames(allocator: std.mem.Allocator) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
@@ -219,6 +241,7 @@ fn largeNames(allocator: std.mem.Allocator) ![]u8 {
     );
     return text.toOwnedSlice();
 }
+// spec-case: NOMINAL-NAME-BUDGET-1
 test "nominal concrete type names stop expansion before excessive diagnostic allocation" {
     const text = try largeNames(t.allocator);
     defer t.allocator.free(text);

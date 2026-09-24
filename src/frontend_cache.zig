@@ -26,6 +26,8 @@ pub const format_version = "mylang-frontend-cache-v4";
 /// stored anything trims the directory back to the larger of this and twice
 /// the bytes the run itself used (FRONTEND-CACHE-RETAIN-1).
 pub const default_max_bytes: usize = 128 * 1024 * 1024;
+/// Entry bytes a project may need per byte of its source (FRONTEND-CACHE-ENTRY-1).
+pub const entry_bytes_per_source_byte: usize = 8;
 /// Default per-project cache directory for one-shot commands.
 pub const default_directory = ".mylang-cache/frontend";
 
@@ -114,6 +116,17 @@ pub const Cache = struct {
         if (!self.runtime.stored) return;
         self.runtime.stored = false;
         self.trim() catch return;
+    }
+    /// FRONTEND-CACHE-ENTRY-1: fit the per-entry ceiling to a loaded project of
+    /// `source_bytes`: the larger of the configured ceiling and eight bytes per
+    /// source byte. A project's largest entry, its check summaries, is about
+    /// one byte per source byte (39 MB at a million lines), and a module's
+    /// syntax about eight per byte of that module, so neither is refused at
+    /// any project size, while a damaged length still cannot make a read
+    /// allocate more than the project could have produced. The retention
+    /// floor rises with it; the working set is already that large.
+    pub fn fitProject(self: *Cache, source_bytes: usize) void {
+        self.max_bytes = @max(self.max_bytes, entry_bytes_per_source_byte *| source_bytes);
     }
     /// The directory's retention budget: the configured floor, or twice the
     /// bytes this run used when that is larger, so a project whose working set

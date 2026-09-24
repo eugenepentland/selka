@@ -13,8 +13,21 @@ const ArrayCatalog = struct {
     resolved: std.AutoHashMapUnmanaged(usize, typed.Type) = .empty,
     templates: std.AutoHashMapUnmanaged(usize, generic_arrays.Template) = .empty,
     shapes: std.AutoHashMapUnmanaged(typed.Array, typed.Type) = .empty,
-    specialized: usize = 0,
+    /// GENERIC-SITE-BUDGET-1: distinct array shapes and callback signatures
+    /// each source spelling has specialized.
+    sites: std.AutoHashMapUnmanaged(Site, usize) = .empty,
 };
+/// What a spelling specializes, and where it starts in the merged source.
+const Site = struct { kind: SiteKind, start: usize };
+/// The two specialization families counted per spelling.
+pub const SiteKind = enum { array, callback };
+/// GENERIC-SITE-BUDGET-1: the most distinct array shapes, or callback
+/// signatures, one source spelling may specialize. A spelling makes a new one
+/// only when a generic body is instantiated at new types, so this stops
+/// polymorphic recursion through that spelling, while a program's total grows
+/// with its spellings: a thousand byte literals of a thousand lengths are a
+/// thousand spellings with one shape each.
+pub const max_site_specializations = 4096;
 
 /// Arena-owned type identities, field indexes, and resolved aggregate layouts.
 pub const Catalog = struct {
@@ -69,11 +82,22 @@ pub const Catalog = struct {
         }
         return result;
     }
+    /// Count one new specialization at `span`, refusing the 4097th a single
+    /// spelling would make (GENERIC-SITE-BUDGET-1).
+    pub fn chargeSite(self: *Catalog, allocator: std.mem.Allocator, kind: SiteKind, span: Span, sink: *diagnostic.Sink) Error!void {
+        const count = try self.arrays.sites.getOrPut(allocator, .{ .kind = kind, .start = span.start });
+        if (!count.found_existing) count.value_ptr.* = 0;
+        if (count.value_ptr.* == max_site_specializations) return sink.fail("E_GENERIC_LIMIT", span, switch (kind) {
+            .array => "generic array specialization at this spelling exceeds 4096 distinct shapes",
+            .callback => "callback specialization at this spelling exceeds 4096 distinct signatures",
+        });
+        count.value_ptr.* += 1;
+    }
     /// Intern a specialized numeric array while retaining declaration-based element identity.
     pub fn instantiateArray(self: *Catalog, allocator: std.mem.Allocator, element: typed.Type, length: usize, span: Span, sink: *diagnostic.Sink) Error!typed.Type {
         const shape: typed.Array = .{ .element = element, .length = length };
         if (self.arrays.shapes.get(shape)) |found| return found;
-        if (self.arrays.specialized == 4096) return sink.fail("E_GENERIC_LIMIT", span, "generic array specialization exceeds 4096 distinct shapes");
+        try self.chargeSite(allocator, .array, span, sink);
         const id: typed.Type = @fromBackingInt(self.records.len + typed.Type.record_base);
         const name = try std.fmt.allocPrint(allocator, "[{d}]{s}", .{ length, typed.typeName(element, self.records) });
         const schema: typed.Record = .{
@@ -96,7 +120,6 @@ pub const Catalog = struct {
         try storage.ensureUnusedCapacity(allocator, 1);
         try self.arrays.shapes.put(allocator, shape, id);
         storage.appendAssumeCapacity(schema);
-        self.arrays.specialized += 1;
         return id;
     }
     /// Require a record type and return its declared field layout.
