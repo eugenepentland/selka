@@ -25,6 +25,14 @@ const Error = cache_api.Error;
 
 /// The output LLD is given; each module's assembly is `program-lto.lto.<input>.s`.
 const output_name = "program-lto";
+/// Keep LLVM from merging identical code that came from different call sites.
+/// A runtime helper inlined into guest code carries the position of the call
+/// it replaced, and after a guest function is imported and inlined at several
+/// sites, sinking common instructions or merging common block tails folds
+/// those copies into one whose inline site is lost (`@ CALLER:0`), which the
+/// frame map cannot attribute. The Lox port's ThinLTO build hit it; either
+/// switch alone avoided it there, and both are off for margin.
+const keep_call_sites = [_][]const u8{ "-mllvm", "-sink-common-insts=false", "-mllvm", "-enable-tail-merge=false" };
 
 /// What one ThinLTO link reads: the build's cache (its context and tools),
 /// LLD's optimization switches for the build's level, every input in link
@@ -46,14 +54,28 @@ pub fn link(request: Request) Error![]const []const u8 {
     const a = context.allocator;
     const staging = try std.fs.path.join(a, &.{ request.directory, "thin" });
     try context.mkdir(staging);
-    var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(a, &.{ request.cache.zig, "ld.lld", "--error-limit=0", "-mllvm", "-float-abi=hard" });
-    try argv.appendSlice(a, request.level);
-    const jobs = try std.fmt.allocPrint(a, "--thinlto-jobs={d}", .{workers(context, request.inputs.len)});
-    try argv.appendSlice(a, &.{ "--lto-emit-asm", jobs, "-m", "elf_x86_64", "--entry", "main", "-o", try std.fs.path.join(a, &.{ staging, output_name }) });
-    for (request.inputs, 0..) |input, index| try argv.append(a, try alias(context, staging, .{ .input = input, .index = index }));
-    try context.command(argv.items, null);
+    const aliases = try a.alloc([]const u8, request.inputs.len);
+    for (request.inputs, aliases, 0..) |input, *name, index| name.* = try alias(context, staging, .{ .input = input, .index = index });
+    const shape: Shape = .{ .zig = request.cache.zig, .level = request.level, .jobs = workers(context, request.inputs.len), .output = try std.fs.path.join(a, &.{ staging, output_name }) };
+    try context.command(try command(a, shape, aliases), null);
     return assembleAll(request, try assemblyFiles(context, staging));
+}
+
+/// What the LLD command reads besides its inputs: the Zig that runs it, the
+/// optimization switches, how many modules it compiles at once and its output.
+const Shape = struct { zig: []const u8, level: []const []const u8, jobs: usize, output: []const u8 };
+
+/// The LLD command that optimizes and compiles every bitcode module among
+/// `inputs` to its own assembly file, keeping each call site's position.
+fn command(allocator: Allocator, shape: Shape, inputs: []const []const u8) Error![]const []const u8 {
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(allocator, &.{ shape.zig, "ld.lld", "--error-limit=0", "-mllvm", "-float-abi=hard" });
+    try argv.appendSlice(allocator, shape.level);
+    try argv.appendSlice(allocator, &keep_call_sites);
+    const jobs = try std.fmt.allocPrint(allocator, "--thinlto-jobs={d}", .{shape.jobs});
+    try argv.appendSlice(allocator, &.{ "--lto-emit-asm", jobs, "-m", "elf_x86_64", "--entry", "main", "-o", shape.output });
+    try argv.appendSlice(allocator, inputs);
+    return argv.items;
 }
 
 /// One input to alias: its path and its place in the link order.
@@ -170,3 +192,19 @@ const Queue = struct {
         }
     }
 };
+
+// spec-case: LLVM-THINLTO-1
+test "the ThinLTO link emits per-module assembly on several threads and keeps call sites apart" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const shape: Shape = .{ .zig = "/zig", .level = &.{ "--lto-O3", "-O3" }, .jobs = 6, .output = "/w/thin/program-lto" };
+    const argv = try command(arena.allocator(), shape, &.{ "/w/thin/0000000.o", "/w/thin/0000001.a" });
+    const joined = try std.mem.join(arena.allocator(), " ", argv);
+    try std.testing.expectEqualStrings("/zig", argv[0]);
+    try std.testing.expect(std.mem.indexOf(u8, joined, "--lto-O3 -O3") != null);
+    try std.testing.expect(std.mem.indexOf(u8, joined, "--thinlto-jobs=6") != null);
+    try std.testing.expect(std.mem.indexOf(u8, joined, "--lto-emit-asm") != null);
+    try std.testing.expect(std.mem.indexOf(u8, joined, "-mllvm -sink-common-insts=false -mllvm -enable-tail-merge=false") != null);
+    try std.testing.expect(std.mem.indexOf(u8, joined, "--lto-partitions") == null);
+    try std.testing.expectEqualStrings("/w/thin/0000001.a", argv[argv.len - 1]);
+}

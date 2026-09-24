@@ -1,5 +1,21 @@
 # llvm-backend — an LLVM arm for the existing QBE lowering
 
+> **Status (2026-09-24): retired from the toolchain, kept as an oracle.** The
+> compiler now translates QBE IL to LLVM IR itself (`src/qbe_build_llvm*.zig`,
+> `LLVM-ZIG-1` in `SPEC.md`), so `--release` runs no Python. Nothing in the
+> build, the install or the compiler reaches the Python files here: `zig build`
+> no longer installs them under `lib/mylang-llvm`, `--llvm-adapter` and
+> `MYLANG_LLVM_ADAPTER` are gone, and a `--qbe` path ending in `qbe_llvm.py` only
+> selects the built-in backend without reading the file. They stay because they
+> are the reference the Zig port was proven against byte for byte:
+> `experiments/llvm-zig-20260924/equivalence.py` replays a build's
+> `MYLANG_LLVM_DUMP` through `qbe_llvm.translate_text`, the golden corpus
+> `test/fixtures/llvm-translate/adapter-corpus.json` was generated from it, and
+> `zig build test-llvm-adapter` still runs `test_adapter.py`. The rest of this
+> page describes the experiment as it was run; where it says "the adapter", the
+> Zig translator now does the same thing. See
+> [`docs/audits/devspeed-llvm-zig-2026-09-24.md`](../../docs/audits/devspeed-llvm-zig-2026-09-24.md).
+
 An isolated experiment that answers one question: **how much of mylang's remaining
 runtime gap comes from QBE optimizing and generating code for the current
 lowering?** Guest source, frontend optimizations, object layouts, runtime, safety

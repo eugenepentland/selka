@@ -30,6 +30,7 @@ test {
     _ = @import("qbe_build_llvm_test.zig");
     _ = @import("qbe_build_llvm_sticky.zig");
     _ = @import("qbe_build_llvm_compile.zig");
+    _ = @import("qbe_build_llvm_thin.zig");
     _ = @import("qbe_build.zig");
     _ = @import("runtime_options.zig");
     _ = @import("qbe_build_cache.zig");
