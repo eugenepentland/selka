@@ -5,7 +5,7 @@
 //! direct per-function fact: an effect mask, a mutation footprint, body-local
 //! diagnostics and the abstract call edges that feed the later whole-graph
 //! effect propagation. This module persists those direct facts in the shared
-//! `semantic-cache-v1` durable store under an explicit `symbolic-template-v1`
+//! `semantic-cache-v2` durable store under an explicit `symbolic-template-v1`
 //! payload kind and replays them when the declaration region, dependency
 //! context and build context are all byte-identical.
 //!

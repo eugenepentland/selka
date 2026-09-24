@@ -1,0 +1,15 @@
+module main
+import model
+import make
+import measure
+
+
+def main() -> int:
+    s = make.scene()
+    nodes: list[model.Node] = []
+    make.grow(mut nodes, 3)
+    total = measure.indexed_x(s) + measure.first_child(s) + measure.radius_sum(s) + measure.pair_y(s) + measure.chained()
+    total += measure.through_api(make.point(1, 1)) + measure.deepest(make.leaf(2)) + len(nodes)
+    if measure.tinted(s):
+        return total
+    return 0

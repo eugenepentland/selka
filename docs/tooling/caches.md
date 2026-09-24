@@ -127,7 +127,7 @@ its propagated effect mask and mutation summary, the diagnostics it
 contributed with spans relative to its region, and the functions it calls.
 
 The next `check` of the entry stands a summary in for every body whose context
-and region digest are unchanged. The body is neither checked nor copied: the
+and region digest are unchanged and whose touched records keep their shapes. The body is neither checked nor copied: the
 function keeps its checked signature over an empty body, the effect and
 mutation passes seed it with its stored facts and report nothing of their own
 for it, and its stored diagnostics are replayed at the region's new offset.
@@ -139,6 +139,19 @@ the check repeats in full without summaries, so what `check` prints never
 depends on them. The entry point, constants, conversions, host and foreign
 declarations, and bodies whose checked tree names a specialization, a lambda or
 a type interned while checking are always checked.
+
+Two independent guards keep a stand-in from outliving a type it depends on.
+The dependency context is transitive: a declaration's fingerprint covers every
+declaration it reaches, in an order-independent way (so recursive and mutually
+recursive types are covered), a composite type spelling such as `list[Inner]`,
+`dict[str, Inner]`, `Option[Inner]`, a tuple, an array or a callback type
+references each component type, a type declaration's fingerprint covers its
+source text, and a facade's re-exported name binds the declaration it names.
+Independently, a summary records the transitive shape digest of every catalog
+record its checked tree touched (`CHECK-SHAPES-1`), however the body reached it,
+and is not stood in unless every one of them still has that shape. Renaming a
+field of a record a body reaches only through `o.items[0]` therefore re-checks
+that body.
 
 `build` (through its `emit-project-qbe` frontend), `run` and `run-project`
 read the same summaries but check every body, because lowering needs the
@@ -170,7 +183,7 @@ checked program without summaries (above), and native-test preparation use the
 same checked-body query path. The durable store lives under
 `<cache-dir>/semantic/` when `--cache-dir` is given and
 `.mylang-cache/semantic/` otherwise; it is one contract-namespaced directory of
-versioned `semantic-cache-v1` files. Each file contains one stable declaration
+versioned `semantic-cache-v2` files. Each file contains one stable declaration
 key, the dependency context, the checked contract digest, the owned relocatable
 `typed.Function`/node/statement tree, referenced stable identities, source
 region/body bytes, the body-local binding-warning notes (code, severity, span and
@@ -186,7 +199,9 @@ reference ordinals and source ranges. Decoding does not integrate the body:
 `semantic_cache.Session.lookup` still remaps old `FunctionId` and record ordinals
 through the fresh catalog, verifies that the declaration region is byte-identical
 at its new location, and treats any missing or ambiguous remap or failed
-relocation as a fresh check. The fresh project's effect, mutation, codec and
+relocation as a fresh check. Each record reference also carries the record's transitive shape digest, and a
+body whose touched record changed shape misses as `record-shape-changed`. The
+fresh project's effect, mutation, codec and
 binding-warning passes always run over the copied body, so a replayed body cannot
 carry an obsolete global verdict and warning locations relocate with the source.
 

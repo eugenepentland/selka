@@ -77,6 +77,9 @@ pub const native_roots = [_][]const u8{ "src/", "tests/", llvm_adapter };
 /// `tests/idiom_probes.py --compiler`: the probe corpus and its manifest.
 pub const idioms = [_][]const u8{ "tests/idiom_probes.py", "tests/fixtures/idioms/", llvm_adapter };
 
+/// `tests/incremental_diff.py`: the mutation walk and its fixture project.
+pub const incremental = [_][]const u8{ "tests/incremental_diff.py", "tests/fixtures/incremental/" };
+
 /// `tests/idiom_probes.py --self-test`: the CPython oracle only.
 pub const idioms_self = [_][]const u8{"tests/idiom_probes.py"};
 

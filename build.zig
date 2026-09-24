@@ -816,6 +816,14 @@ pub fn build(b: *std.Build) void {
     idiom_run.addArtifactArg(exe);
     idiom_step.dependOn(&idiom_run.step);
     test_step.dependOn(idiom_step);
+    // Incremental `check` must answer exactly what a cold check answers: a
+    // seeded mutation walk over a small project compares the two byte for byte.
+    const incremental_step = b.step("test-incremental", "Compare cached and cold check over seeded source mutations");
+    const incremental_run = driver(b, "python3 tests/incremental_diff.py", rss.driver, "incremental");
+    incremental_run.addArgs(&.{ "python3", "tests/incremental_diff.py", "--steps", "120" });
+    incremental_run.addArtifactArg(exe);
+    incremental_step.dependOn(&incremental_run.step);
+    test_step.dependOn(incremental_step);
     // The repair-round packages ship two Python drivers beside their Zig tests:
     // the parser-hint/classifier agreement (static, then end to end against this
     // compiler) and the friction harvest over its replay fixture. Registering

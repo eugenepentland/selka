@@ -9,7 +9,9 @@ const effect_set = @import("effect_set.zig");
 /// One stable function identity exchanged for a fresh catalog ordinal at lookup time.
 pub const FunctionRef = struct { id: typed.FunctionId, key: []const u8 };
 /// One stable nominal-type identity exchanged for a fresh catalog ordinal.
-pub const RecordRef = struct { index: usize, key: []const u8 };
+/// `shape` is the record's transitive shape digest when the tree was checked
+/// (`semantic_key.Shapes`); a changed shape makes the tree stale.
+pub const RecordRef = struct { index: usize, key: []const u8, shape: [32]u8 = @splat(0) };
 /// Relocatable declaration facts retained for one checked function.
 pub const Identity = struct { key: []const u8, context: [32]u8, body: source.Span, region: source.Span, checked_contract: [32]u8 = @splat(0) };
 /// One persisted body-local diagnostic/warning. Warnings are derived from the
@@ -70,7 +72,7 @@ pub const Entry = struct {
         const function_refs = try arena_allocator.alloc(FunctionRef, spec.function_refs.len);
         for (spec.function_refs, function_refs) |ref, *out| out.* = .{ .id = ref.id, .key = try arena_allocator.dupe(u8, ref.key) };
         const record_refs = try arena_allocator.alloc(RecordRef, spec.record_refs.len);
-        for (spec.record_refs, record_refs) |ref, *out| out.* = .{ .index = ref.index, .key = try arena_allocator.dupe(u8, ref.key) };
+        for (spec.record_refs, record_refs) |ref, *out| out.* = .{ .index = ref.index, .key = try arena_allocator.dupe(u8, ref.key), .shape = ref.shape };
         const identity = Identity{
             .key = try arena_allocator.dupe(u8, spec.identity.key),
             .context = spec.identity.context,
@@ -527,7 +529,7 @@ pub fn createSpecialization(
     const function_refs = try a.alloc(SpecializationFunctionRef, spec.function_refs.len);
     for (spec.function_refs, function_refs) |reference, *out| out.* = .{ .kind = reference.kind, .id = reference.id, .key = try a.dupe(u8, reference.key) };
     const record_refs = try a.alloc(RecordRef, spec.record_refs.len);
-    for (spec.record_refs, record_refs) |reference, *out| out.* = .{ .index = reference.index, .key = try a.dupe(u8, reference.key) };
+    for (spec.record_refs, record_refs) |reference, *out| out.* = .{ .index = reference.index, .key = try a.dupe(u8, reference.key), .shape = reference.shape };
     const arguments = try a.alloc([]const u8, spec.identity.arguments.len);
     for (spec.identity.arguments, arguments) |argument, *out| out.* = try a.dupe(u8, argument);
     const lengths = try a.dupe(?usize, spec.identity.lengths);

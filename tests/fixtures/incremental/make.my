@@ -1,0 +1,24 @@
+module make
+import model
+
+
+public def point(x: int, y: int) -> model.Point:
+    return model.Point(x=x, y=y)
+
+
+public def leaf(value: int) -> model.Node:
+    return model.Node(value=value, children=[], tag=None)
+
+
+public def scene() -> model.Scene:
+    shapes: list[model.Shape] = [model.Shape.dot(point(1, 2)), model.Shape.circle(center=point(3, 4), radius=5)]
+    index: dict[str, model.Point] = {}
+    index["a"] = point(6, 7)
+    root = leaf(8)
+    root.children.append(leaf(9))
+    pairs: list[tuple[int, model.Point]] = [(1, point(10, 11))]
+    return model.Scene(shapes=shapes, index=index, root=Some(root), tint=model.Color.green, pairs=pairs, count=2)
+
+
+public def grow(nodes: mut list[model.Node], value: int) -> None:
+    nodes.append(leaf(value))
