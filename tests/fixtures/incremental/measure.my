@@ -1,0 +1,53 @@
+module measure
+import model
+import make
+import api
+
+
+public def indexed_x(s: model.Scene) -> int:
+    return s.index["a"].x
+
+
+public def first_child(s: model.Scene) -> int:
+    match s.root:
+        case Some(node):
+            return node.children[0].value
+        case None:
+            return 0
+
+
+public def radius_sum(s: model.Scene) -> int:
+    total = 0
+    for shape in s.shapes:
+        match shape:
+            case model.Shape.circle(center, radius):
+                total += radius + center.y
+            case model.Shape.dot(p):
+                total += p.x
+            case model.Shape.empty:
+                total += 0
+    return total
+
+
+public def pair_y(s: model.Scene) -> int:
+    key, point = s.pairs[0]
+    return key + point.y
+
+
+public def chained() -> int:
+    return make.scene().index["a"].y
+
+
+public def through_api(p: api.Point) -> int:
+    return p.x + p.y
+
+
+public def tinted(s: model.Scene) -> bool:
+    return s.tint == model.Color.green
+
+
+public def deepest(n: model.Node) -> int:
+    best = n.value
+    for child in n.children:
+        best = best + deepest(child)
+    return best

@@ -6,8 +6,11 @@ const v = @import("qbe_build_value.zig");
 const wire = @import("native_test_wire.zig");
 const trap_detail = @import("native_trap_detail.zig");
 const budget = @import("memory_budget");
+const spawn = @import("qbe_build_spawn.zig");
 const Value = std.json.Value;
 const infrastructure_failure = "infrastructure-failure";
+/// Failure text for a child that exited abnormally: its termination and stderr.
+const process_failed = "NativeTestProcessFailed: {any}\n{s}";
 const magic: u64 = 0x3154534554594c4d;
 const bench_magic: u64 = 0x3248434e42594c4d;
 const bench_response_magic: u64 = 0x3250535242594c4d;
@@ -60,6 +63,57 @@ pub const BenchOutcome = struct {
     calibrated_iterations: u64 = 0,
     raw: []const Batch = &.{},
 };
+/// The embedded POSIX harness sources, in the order the runner key hashes them.
+const runner_sources = .{ "native_test_runner.c", "native_host.h", "native_providers.h", "native_embed.h" };
+/// Where the compiled harness is published and what builds it. `cache` is
+/// null for a `--no-cache` run, which compiles a private copy under `temporary`.
+pub const RunnerStore = struct { cache: ?[]const u8, temporary: []const u8, zig: []const u8, zig_stamp: []const u8 };
+/// A usable harness path and whether this call had to compile it.
+pub const Runner = struct { path: []const u8, compiled: bool };
+/// The compiled harness for this compiler's embedded runner sources. A run
+/// with a cache reuses the executable a previous run published under
+/// `<cache>/runner/<key>`, where the key covers every embedded source byte,
+/// the compile flags and the `zig` tool stamp, so an unchanged toolchain never
+/// pays the C compile again; a miss compiles once and publishes by rename.
+pub fn runner(context: fs.Context, store: RunnerStore) Error!Runner {
+    const a = context.allocator;
+    const flags = [_][]const u8{ "cc", "-std=c11", "-O2" };
+    var hash = std.crypto.hash.Blake3.init(.{});
+    inline for (.{"native-test-runner-v2"} ++ flags) |part| framed(&hash, part);
+    framed(&hash, store.zig_stamp);
+    inline for (runner_sources) |name| framed(&hash, @embedFile(name));
+    var digest: [32]u8 = undefined;
+    hash.final(&digest);
+    const key = std.fmt.bytesToHex(digest, .lower);
+    const cache = store.cache orelse return .{ .path = try compileRunner(context, store, store.temporary), .compiled = true };
+    const directory = try std.fs.path.join(a, &.{ cache, "runner" });
+    const published = try std.fs.path.join(a, &.{ directory, &key });
+    if (context.runnable(published)) return .{ .path = published, .compiled = false };
+    try context.mkdir(directory);
+    const staging = try context.temporary(directory);
+    defer context.remove(staging);
+    const built = try compileRunner(context, store, staging);
+    // A concurrent run may publish the same key first; both executables are
+    // built from identical inputs, so whichever rename lands last is correct.
+    // A cache that refuses the rename still has this run's private copy.
+    context.rename(built, published) catch return .{ .path = try compileRunner(context, store, store.temporary), .compiled = true };
+    return .{ .path = published, .compiled = true };
+}
+/// Write the embedded harness sources beneath `directory` and compile them there.
+fn compileRunner(context: fs.Context, store: RunnerStore, directory: []const u8) Error![]const u8 {
+    const a = context.allocator;
+    inline for (runner_sources) |name| try context.write(try std.fs.path.join(a, &.{ directory, name }), @embedFile(name));
+    const source = try std.fs.path.join(a, &.{ directory, "native_test_runner.c" });
+    const executable = try std.fs.path.join(a, &.{ directory, "native-test-runner" });
+    try context.command(&.{ store.zig, "cc", "-std=c11", "-O2", source, "-ldl", "-o", executable }, null);
+    return executable;
+}
+fn framed(hash: *std.crypto.hash.Blake3, bytes: []const u8) void {
+    var length: [8]u8 = undefined;
+    std.mem.writeInt(u64, &length, bytes.len, .little);
+    hash.update(&length);
+    hash.update(bytes);
+}
 /// Reusable compiled harness and immutable schema for a native test library.
 pub const Executor = struct {
     context: fs.Context,
@@ -69,20 +123,13 @@ pub const Executor = struct {
     types: []const Value,
     /// `--gc-stress` for every child call; set from the invocation's flags.
     stress: bool = false,
-    /// Compile the embedded POSIX harness once; test calls load the library in new processes.
-    pub fn init(context: fs.Context, manifest: Value, library: []const u8, temporary: []const u8, zig: []const u8) Error!Executor {
+    /// Bind a compiled harness (`runner`) to one library and its schema; test
+    /// calls load the library in new processes.
+    pub fn init(context: fs.Context, manifest: Value, library: []const u8, temporary: []const u8, executable: []const u8) Error!Executor {
         const a = context.allocator;
         const schema = v.get(manifest, "schema");
         if (schema != .string) return error.InvalidNativeTestManifest;
         const parsed = std.json.parseFromSlice(Value, a, schema.string, .{ .allocate = .alloc_always }) catch return error.InvalidNativeTestManifest;
-        errdefer parsed.deinit();
-        const source = try std.fs.path.join(a, &.{ temporary, "native-test-runner.c" });
-        const executable = try std.fs.path.join(a, &.{ temporary, "native-test-runner" });
-        try context.write(source, @embedFile("native_test_runner.c"));
-        inline for (.{ "native_host.h", "native_providers.h", "native_embed.h" }) |name| {
-            try context.write(try std.fs.path.join(a, &.{ temporary, name }), @embedFile(name));
-        }
-        try context.command(&.{ zig, "cc", "-std=c11", "-O2", source, "-ldl", "-o", executable }, null);
         return .{ .context = context, .library = library, .temporary = temporary, .executable = executable, .types = v.array(v.get(parsed.value, "types")) };
     }
     /// Validate named typed arguments and run one bounded child invocation.
@@ -109,11 +156,26 @@ pub const Executor = struct {
         if (fs.exitCode(result.term) != 0) return .{
             .outcome = .{
                 .status = infrastructure_failure,
-                .diagnostics = try std.fmt.allocPrint(self.context.allocator, "NativeTestProcessFailed: {any}\n{s}", .{ result.term, result.stderr }),
+                .diagnostics = try std.fmt.allocPrint(self.context.allocator, process_failed, .{ result.term, result.stderr }),
             },
         };
         const parsed = try self.parse(v.text(v.get(function, "result")), result.stdout, false);
         return .{ .outcome = .{ .status = parsed.status, .actual = parsed.actual, .diagnostics = parsed.diagnostics, .output = parsed.output, .steps = parsed.steps } };
+    }
+    /// Validate one call's typed arguments and write its request and the path
+    /// its child answers into; the child itself is started by `executeAll`.
+    fn prepare(self: *const Executor, call: Call, limits: Limits) Error!Prepared {
+        const a = self.context.allocator;
+        var codec: wire.Codec = .{ .allocator = a, .types = self.types };
+        defer codec.deinit();
+        try codec.arguments(call.function, call.arguments);
+        const path = try self.request(try testRequest(a, v.text(v.get(call.function, "name")), codec.nodes.items, limits));
+        const response = try std.fs.path.join(a, &.{ std.fs.path.dirname(path).?, "response" });
+        var arguments: std.ArrayList([]const u8) = .empty;
+        try arguments.appendSlice(a, &.{ self.executable, self.library, path });
+        if (self.stress) try arguments.append(a, "--gc-stress");
+        try arguments.appendSlice(a, &.{ "--response", response });
+        return .{ .argv = arguments.items, .response = response };
     }
     /// Sample one validated copied-value call. Compilation is never timed; the
     /// child warms up, calibrates a batch size, then reports raw timed batches.
@@ -134,7 +196,7 @@ pub const Executor = struct {
         }) catch |err| return .{ .status = infrastructure_failure, .diagnostics = @errorName(err) };
         if (fs.exitCode(result.term) != 0) return .{
             .status = infrastructure_failure,
-            .diagnostics = try std.fmt.allocPrint(self.context.allocator, "NativeTestProcessFailed: {any}\n{s}", .{ result.term, result.stderr }),
+            .diagnostics = try std.fmt.allocPrint(self.context.allocator, process_failed, .{ result.term, result.stderr }),
         };
         const parsed = try self.parse(v.text(v.get(function, "result")), result.stdout, true);
         return .{
@@ -247,6 +309,135 @@ pub const Executor = struct {
         return parsed;
     }
 };
+/// One queued test call: the executor that owns its library and schema, the
+/// checked function and its typed arguments.
+pub const Call = struct { executor: *const Executor, function: Value, arguments: Value };
+/// A call whose request is written: the child's argument vector and the file
+/// it answers into.
+const Prepared = struct { argv: []const []const u8, response: []const u8 };
+/// Bytes of one child's diagnostic stream kept for its failure text.
+const stderr_limit = 1024 * 1024;
+/// Bytes one response may hold, the bound the captured stdout had.
+const response_limit = 32 * 1024 * 1024;
+/// What one child left behind: how it ended and what it wrote to stderr, or
+/// why it has no ending of its own (it could not start, or ran out of time).
+/// A worker gathers it with a private allocator; the calling thread turns it
+/// into an `Outcome`.
+const Raw = struct {
+    term: ?std.process.Child.Term = null,
+    stderr: []const u8 = "",
+    failure: ?[]const u8 = null,
+};
+/// The shared queue the execution workers take calls from.
+const Pool = struct {
+    prepared: []const Prepared,
+    raw: []Raw,
+    environment: *const std.process.Environ.Map,
+    timeout_ns: i96,
+    io: std.Io,
+    /// Thread-safe allocator the kept stderr of a child lives in.
+    keep: std.mem.Allocator,
+    next: std.atomic.Value(usize) = .init(0),
+
+    /// Take calls until none is left, running each child to its end. A child's
+    /// start-up scratch (its stack, argument and environment blocks) lives in
+    /// the worker's arena, which is reset after every child, so a run of many
+    /// tests holds one child's scratch per worker.
+    fn work(self: *Pool, arena: *std.heap.ArenaAllocator) void {
+        while (true) {
+            const index = self.next.fetchAdd(1, .monotonic);
+            if (index >= self.prepared.len) return;
+            var raw = self.runOne(arena.allocator(), self.prepared[index]);
+            raw.stderr = self.keep.dupe(u8, raw.stderr) catch "";
+            self.raw[index] = raw;
+            _ = arena.reset(.retain_capacity);
+        }
+    }
+    /// Start one child, collect its stderr until it ends, and reap it; kill a
+    /// child still running at its deadline.
+    fn runOne(self: *Pool, allocator: std.mem.Allocator, prepared: Prepared) Raw {
+        const started = spawn.start(allocator, .{ .argv = prepared.argv, .environment = self.environment }) catch |err| return .{ .failure = @errorName(err) };
+        const deadline = monotonic(self.io) + self.timeout_ns;
+        var stderr: std.ArrayList(u8) = .empty;
+        while (true) {
+            const now = monotonic(self.io);
+            if (now >= deadline) {
+                _ = std.os.linux.kill(started.pid, .KILL);
+                while (!(drain(allocator, started, &stderr) catch true)) {}
+                _ = spawn.reap(started);
+                return .{ .failure = "Timeout" };
+            }
+            var fds = [1]std.os.linux.pollfd{.{ .fd = started.stderr, .events = std.os.linux.POLL.IN, .revents = 0 }};
+            const wait = @divFloor(deadline - now + std.time.ns_per_ms - 1, std.time.ns_per_ms);
+            _ = std.os.linux.poll(&fds, 1, @intCast(@min(wait, std.math.maxInt(i32))));
+            if (fds[0].revents == 0) continue;
+            if (drain(allocator, started, &stderr) catch true) return .{ .term = spawn.reap(started), .stderr = stderr.items };
+        }
+    }
+};
+/// Read once what a child wrote to its stderr, keeping at most
+/// `stderr_limit` bytes. True once the stream has ended.
+fn drain(allocator: std.mem.Allocator, started: spawn.Started, stderr: *std.ArrayList(u8)) spawn.Error!bool {
+    const ended = try spawn.pump(allocator, started, stderr);
+    if (stderr.items.len > stderr_limit) stderr.shrinkRetainingCapacity(stderr_limit);
+    return ended;
+}
+/// Run every call as its own fresh bounded native process, `width` at a time,
+/// and return one outcome per call in call order. Every request is written
+/// first; then `width` workers (this thread and `width - 1` more) each start a
+/// child without copying this process (`qbe_build_spawn`), wait for it and
+/// take the next, so starting children — an `execve` each — proceeds on every
+/// worker at once instead of one after another. Each child answers into its
+/// own response file. A child still running at `timeout_ms` is killed and
+/// reported as `Timeout`, and one that cannot start is an infrastructure
+/// failure of that case alone, exactly as the one-call `attempt` reports them.
+pub fn executeAll(context: fs.Context, calls: []const Call, limits: Limits, width: usize) Error![]Outcome {
+    if (!limitsValid(limits)) return error.InvalidTestLimits;
+    const a = context.allocator;
+    const prepared = try a.alloc(Prepared, calls.len);
+    for (calls, prepared) |call, *slot| slot.* = try call.executor.prepare(call, limits);
+    const raw = try a.alloc(Raw, calls.len);
+    @memset(raw, .{});
+    var pool: Pool = .{
+        .prepared = prepared,
+        .raw = raw,
+        .environment = try context.bounded(limits.max_memory orelse budget.test_default),
+        .timeout_ns = @as(i96, limits.timeout_ms) * std.time.ns_per_ms,
+        .io = context.io,
+        .keep = a,
+    };
+    const workers = @max(1, @min(width, calls.len));
+    const arenas = try a.alloc(std.heap.ArenaAllocator, workers);
+    for (arenas) |*arena| arena.* = .init(a);
+    defer for (arenas) |*arena| arena.deinit();
+    const threads = try a.alloc(?std.Thread, workers);
+    @memset(threads, null);
+    // A worker that cannot be started leaves its share to the others.
+    for (threads[1..], arenas[1..]) |*thread, *arena| thread.* = std.Thread.spawn(.{}, Pool.work, .{ &pool, arena }) catch null;
+    pool.work(&arenas[0]);
+    for (threads) |thread| if (thread) |started| started.join();
+    const outcomes = try a.alloc(Outcome, calls.len);
+    for (calls, prepared, raw, outcomes) |call, request, ended, *outcome| outcome.* = try conclude(context, call, request, ended);
+    return outcomes;
+}
+/// Turn one child's ending into its outcome: its failure, its abnormal exit,
+/// or the answer it wrote.
+fn conclude(context: fs.Context, call: Call, prepared: Prepared, raw: Raw) Error!Outcome {
+    const a = context.allocator;
+    if (raw.failure) |reason| return .{ .status = infrastructure_failure, .diagnostics = reason };
+    const term = raw.term orelse return .{ .status = infrastructure_failure, .diagnostics = "NativeTestProcessFailed" };
+    if (fs.exitCode(term) != 0) return .{
+        .status = infrastructure_failure,
+        .diagnostics = try std.fmt.allocPrint(a, process_failed, .{ term, raw.stderr }),
+    };
+    const bytes = std.Io.Dir.cwd().readFileAlloc(context.io, prepared.response, a, .limited(response_limit)) catch |err|
+        return .{ .status = infrastructure_failure, .diagnostics = @errorName(err) };
+    const parsed = try call.executor.parse(v.text(v.get(call.function, "result")), bytes, false);
+    return .{ .status = parsed.status, .actual = parsed.actual, .diagnostics = parsed.diagnostics, .output = parsed.output, .steps = parsed.steps };
+}
+fn monotonic(io: std.Io) i96 {
+    return std.Io.Timestamp.now(io, .awake).nanoseconds;
+}
 const Parsed = struct {
     status: []const u8,
     actual: Value = .null,
@@ -517,4 +708,92 @@ test "native test child timeout is bounded and classified without a guest value"
     try std.testing.expectEqualStrings(infrastructure_failure, outcome.status);
     try std.testing.expectEqualStrings("Timeout", outcome.diagnostics);
     try std.testing.expect(outcome.actual == .null);
+}
+
+/// Six fake children for the pool: four answer with a trap whose captured
+/// output names their slot, one outlives any short timeout, one fails.
+fn poolFixture(context: fs.Context, directory: []const u8) ![6]Executor {
+    const a = context.allocator;
+    var executors: [6]Executor = undefined;
+    const bodies = [_][]const u8{ "", "", "", "", "exec /bin/sleep 5\n", "echo boom >&2\nexit 3\n" };
+    for (&executors, bodies, 0..) |*executor, body, slot| {
+        const response = try std.fmt.allocPrint(a, "{s}/response-{d}", .{ directory, slot });
+        try context.write(response, try trapResponse(a, try std.fmt.allocPrint(a, "call-{d}", .{slot})));
+        const script = try std.fmt.allocPrint(a, "{s}/child-{d}", .{ directory, slot });
+        // The runner is handed `library request --response FILE`; a script sees FILE as `$3`.
+        try context.write(script, if (body.len != 0) body else try std.fmt.allocPrint(a, "exec /bin/cp {s} \"$3\"\n", .{response}));
+        executor.* = .{ .context = context, .library = script, .temporary = directory, .executable = "/bin/sh", .types = &.{} };
+    }
+    return executors;
+}
+// spec: NATIVE-TEST-PARALLEL-1
+test "a parallel run returns every outcome in its call's slot, bounding and isolating each child" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary_dir = std.testing.tmpDir(.{});
+    defer temporary_dir.cleanup();
+    const directory = try temporary_dir.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const executors = try poolFixture(context, directory);
+    var calls: [6]Call = undefined;
+    for (&calls, &executors) |*call, *executor| call.* = .{ .executor = executor, .function = .null, .arguments = .{ .object = .empty } };
+    const outcomes = try executeAll(context, &calls, .{ .timeout_ms = 400 }, 3);
+    try std.testing.expectEqual(@as(usize, 6), outcomes.len);
+    try std.testing.expectEqualStrings("trap", outcomes[0].status);
+    try std.testing.expectEqualStrings("call-0", outcomes[0].output);
+    try std.testing.expectEqualStrings("call-2", outcomes[2].output);
+    try std.testing.expectEqualStrings("call-3", outcomes[3].output);
+    try std.testing.expectEqualStrings(infrastructure_failure, outcomes[4].status);
+    try std.testing.expectEqualStrings("Timeout", outcomes[4].diagnostics);
+    try std.testing.expectEqualStrings(infrastructure_failure, outcomes[5].status);
+    try std.testing.expect(std.mem.indexOf(u8, outcomes[5].diagnostics, "NativeTestProcessFailed") != null);
+    try std.testing.expect(std.mem.indexOf(u8, outcomes[5].diagnostics, "boom") != null);
+    try std.testing.expectError(error.InvalidTestLimits, executeAll(context, &calls, .{ .timeout_ms = 0 }, 3));
+}
+
+/// A stand-in `zig` whose `cc … -o FILE` writes an executable script to FILE.
+fn fakeZig(context: fs.Context, directory: []const u8) ![]const u8 {
+    const path = try std.fs.path.join(context.allocator, &.{ directory, "fake-zig" });
+    var file = try std.Io.Dir.createFileAbsolute(context.io, path, .{ .permissions = .executable_file });
+    defer file.close(context.io);
+    try file.writeStreamingAll(context.io,
+        \\#!/bin/sh
+        \\while [ "$#" -gt 0 ]; do
+        \\  if [ "$1" = "-o" ]; then out="$2"; fi
+        \\  shift
+        \\done
+        \\printf '#!/bin/sh\n' > "$out"
+        \\/bin/chmod +x "$out"
+        \\
+    );
+    return path;
+}
+// spec: NATIVE-TEST-RUNNER-1
+test "the compiled harness is published once per source and tool stamp and reused after that" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary_dir = std.testing.tmpDir(.{});
+    defer temporary_dir.cleanup();
+    const directory = try temporary_dir.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const zig = try fakeZig(context, directory);
+    const cache = try std.fs.path.join(context.allocator, &.{ directory, "cache" });
+    const scratch = try std.fs.path.join(context.allocator, &.{ directory, "scratch" });
+    try context.mkdir(scratch);
+    const first = try runner(context, .{ .cache = cache, .temporary = scratch, .zig = zig, .zig_stamp = "zig-a" });
+    try std.testing.expect(first.compiled);
+    try std.testing.expect(context.runnable(first.path));
+    const second = try runner(context, .{ .cache = cache, .temporary = scratch, .zig = zig, .zig_stamp = "zig-a" });
+    try std.testing.expect(!second.compiled);
+    try std.testing.expectEqualStrings(first.path, second.path);
+    // Another toolchain is another harness.
+    const other = try runner(context, .{ .cache = cache, .temporary = scratch, .zig = zig, .zig_stamp = "zig-b" });
+    try std.testing.expect(other.compiled);
+    try std.testing.expect(!std.mem.eql(u8, first.path, other.path));
+    // Without a cache the harness is compiled privately every time.
+    const private = try runner(context, .{ .cache = null, .temporary = scratch, .zig = zig, .zig_stamp = "zig-a" });
+    try std.testing.expect(private.compiled);
+    try std.testing.expect(std.mem.startsWith(u8, private.path, scratch));
 }

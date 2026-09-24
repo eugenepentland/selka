@@ -1388,7 +1388,7 @@ fn openPlan(cache: ?*semantic_cache.Cache, session: *?semantic_cache.Session, al
     const timing = activeTiming(cache);
     const start = timingStart(timing);
     defer timingAdd(timing, "stand_in_planning", start);
-    const plan = try sema_summaries.Plan.init(allocator, request, &queries.prepared, main);
+    const plan = try sema_summaries.Plan.init(allocator, request, queries, main);
     return plan;
 }
 /// Mark a failed stand-in attempt for a full retry and pass the error on. A
@@ -1687,7 +1687,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         const summary_start = timingStart(timing);
         defer timingAdd(timing, "check_summaries", summary_start);
         if (!try active.consistent(allocator, checked, facts.?)) return retryOr(&plan, error.SourceError);
-        if (active.publishes()) active.request.produced = try active.produce(allocator, checked, facts.?, .{ .pass = pass_items, .initial_record_count = checker.initial_record_count, .syntax = program });
+        if (active.publishes()) active.request.produced = try active.produce(allocator, checked, facts.?, .{ .pass = pass_items, .syntax = program });
         try active.replayPasses(sink);
     }
     const retain_start = timingStart(timing);

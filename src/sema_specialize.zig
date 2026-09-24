@@ -206,6 +206,8 @@ fn lookupSpecialization(
     }
     const record_remaps = try allocator.alloc(?typed.Type, entry.payload.counts.old_record_count);
     @memset(record_remaps, null);
+    var shapes: semantic_key.Shapes = .{ .allocator = allocator, .records = self.catalog.records };
+    defer shapes.deinit();
     for (entry.payload.refs.record_refs) |reference| {
         if (reference.index >= self.initial_record_count) {
             reuse.noteMiss(.interned_record);
@@ -217,6 +219,14 @@ fn lookupSpecialization(
         };
         if (fresh == std.math.maxInt(usize)) {
             reuse.noteMiss(.ambiguous_record);
+            return null;
+        }
+        const shape = (try shapes.digest(fresh)) orelse {
+            reuse.noteMiss(.missing_record);
+            return null;
+        };
+        if (!std.mem.eql(u8, &shape, &reference.shape)) {
+            reuse.noteMiss(.record_shape_changed);
             return null;
         }
         record_remaps[reference.index] = @fromBackingInt(fresh + typed.Type.record_base);
@@ -304,12 +314,18 @@ fn publishSpecializations(comptime Checker: type, self: *Checker, reuse: *generi
         var record_iterator = refs.records.keyIterator();
         var record_count: usize = 0;
         var stable_records = true;
+        var shapes: semantic_key.Shapes = .{ .allocator = allocator, .records = program.records };
+        defer shapes.deinit();
         while (record_iterator.next()) |record_index| {
             if (record_index.* >= self.initial_record_count or record_index.* >= program.records.len) {
                 stable_records = false;
                 break;
             }
-            record_refs[record_count] = .{ .index = record_index.*, .key = program.records[record_index.*].name };
+            const shape = (try shapes.digest(record_index.*)) orelse {
+                stable_records = false;
+                break;
+            };
+            record_refs[record_count] = .{ .index = record_index.*, .key = program.records[record_index.*].name, .shape = shape };
             record_count += 1;
         }
         if (!stable_records) {

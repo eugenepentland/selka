@@ -120,8 +120,13 @@ pub fn writeOutcome(context: fs.Context, directory: []const u8, result: Result) 
     try publish(context, directory, result);
 }
 /// Write one checksummed outcome envelope at the content-addressed result path.
+/// The closure's symbol list is left out: the key already binds the closure,
+/// no reader consults the list, and in a large project it made every receipt
+/// tens of kilobytes to write, read, parse and checksum.
 fn publish(context: fs.Context, directory: []const u8, result: Result) Error!void {
-    const payload = try std.json.Stringify.valueAlloc(context.allocator, result, .{});
+    var stored = result;
+    stored.dependencies = &.{};
+    const payload = try std.json.Stringify.valueAlloc(context.allocator, stored, .{});
     const bytes = try std.json.Stringify.valueAlloc(context.allocator, .{ .payload = payload, .sha256 = try fs.hash(context.allocator, payload) }, .{});
     try context.atomic(try path(context, directory, result.key), bytes);
 }
@@ -231,4 +236,22 @@ test "a recorded pure failure replays with its message and rejects changed ident
     const passed = outcome(context, try path(context, directory, pass.key), pass.key, pass.name, pass.expected, identity).?;
     try std.testing.expectEqualStrings("passed", passed.status);
     try std.testing.expect(passed.actual.bool);
+}
+
+// spec-case: NATIVE-TEST-PLAN-2
+test "a published receipt leaves out the closure's symbol list and is still accepted by its key" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(context.io, ".", context.allocator);
+    const closure = [_][]const u8{ "myl_f_one", "myl_f_two" };
+    const result: Result = .{ .name = "main::test_ok", .status = "passed", .actual = .{ .bool = true }, .expected = .{ .bool = true }, .key = "closure-key", .dependencies = &closure, .cacheable = true };
+    try write(context, directory, result);
+    const filename = try path(context, directory, result.key);
+    const stored = try context.read(filename);
+    try std.testing.expect(std.mem.indexOf(u8, stored, "myl_f_one") == null);
+    try std.testing.expect(hit(context, filename, result.key, result.name, result.expected, .{}));
 }

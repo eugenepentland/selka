@@ -17,6 +17,7 @@ const origins = @import("origins.zig");
 const summary = @import("semantic_summary.zig");
 const semantic_key = @import("semantic_key.zig");
 const sem_copy = @import("semantic_copy.zig");
+const semantic_cache = @import("semantic_cache.zig");
 
 /// One checked instance's node and statement intervals and the diagnostics
 /// appended while its body was checked.
@@ -31,8 +32,6 @@ pub const Checked = struct {
 pub const Outputs = struct {
     /// Diagnostics the whole-program passes appended, before any replay.
     pass: []const diagnostic.Diagnostic,
-    /// Catalog records that existed before any body was checked.
-    initial_record_count: usize,
     /// The checked syntax, for each declaration's kind.
     syntax: ast.Program,
 };
@@ -41,6 +40,8 @@ pub const Outputs = struct {
 pub const Plan = struct {
     request: *summary.Request,
     prepared: *const semantic_key.Prepared,
+    /// The request's reuse session: fresh catalog names and record shapes.
+    session: *semantic_cache.Session,
     /// Previous summary position standing in for each ordinary instance, or null.
     stand_ins: []?u32,
     /// Every checked instance, in check order.
@@ -49,13 +50,19 @@ pub const Plan = struct {
     main: usize,
 
     /// Plan stand-ins for one request. `main` is the entry point's instance.
-    pub fn init(allocator: std.mem.Allocator, request: *summary.Request, prepared: *const semantic_key.Prepared, main: usize) error{OutOfMemory}!Plan {
+    pub fn init(allocator: std.mem.Allocator, request: *summary.Request, session: *semantic_cache.Session, main: usize) error{OutOfMemory}!Plan {
+        const prepared = &session.prepared;
         const count = prepared.ordinary_ast.len;
         const stand_ins = try allocator.alloc(?u32, count);
+        errdefer allocator.free(stand_ins);
         @memset(stand_ins, null);
         request.stood_in = 0;
         request.prepared = prepared.*;
         if (request.previous) |previous| {
+            // Previous table record position -> its shape in the fresh catalog.
+            const shapes = try allocator.alloc(ShapeState, previous.records.len);
+            defer allocator.free(shapes);
+            @memset(shapes, .unknown);
             for (prepared.ordinary_ast, 0..) |ast_index, instance| {
                 if (instance == main) continue;
                 const position = previous.find(prepared.keys[ast_index]) orelse continue;
@@ -65,11 +72,12 @@ pub const Plan = struct {
                 const region = prepared.regions[ast_index];
                 if (region.end - region.start != stored.region.len) continue;
                 if (!std.mem.eql(u8, &prepared.recalled.digests[ast_index], &stored.region.digest)) continue;
+                if (!try touchedShapesMatch(allocator, session, previous, stored.uses, shapes)) continue;
                 stand_ins[instance] = position;
                 request.stood_in += 1;
             }
         }
-        return .{ .request = request, .prepared = prepared, .stand_ins = stand_ins, .main = main };
+        return .{ .request = request, .prepared = prepared, .session = session, .stand_ins = stand_ins, .main = main };
     }
 
     /// The previous summary standing in for ordinary instance `i`'s
@@ -168,7 +176,7 @@ pub const Plan = struct {
                 if (node >= visited.len or visited[node]) continue;
                 visited[node] = true;
                 if (self.standIn(node)) |stored| {
-                    for (stored.callees) |position| if (current[position]) |next| try stack.append(allocator, next);
+                    for (stored.uses.callees) |position| if (current[position]) |next| try stack.append(allocator, next);
                 } else if (checked_edges[node]) |edges| {
                     try stack.appendSlice(allocator, edges);
                 }
@@ -196,9 +204,10 @@ pub const Plan = struct {
     }
 
     /// This request's summary table, one entry per ordinary instance in order.
-    pub fn produce(self: *const Plan, allocator: std.mem.Allocator, program: typed.Program, facts: []const origins.Fact, outputs: Outputs) error{ OutOfMemory, InternalError }![]const summary.Summary {
+    pub fn produce(self: *const Plan, allocator: std.mem.Allocator, program: typed.Program, facts: []const origins.Fact, outputs: Outputs) error{ OutOfMemory, InternalError }!summary.Table {
         const count = self.prepared.ordinary_ast.len;
         const table = try allocator.alloc(summary.Summary, count);
+        var names: RecordNames = .{};
         const current = try self.currentPositions(allocator);
         const records = try allocator.alloc(?usize, count);
         @memset(records, null);
@@ -210,14 +219,39 @@ pub const Plan = struct {
         for (0..count) |instance| {
             if (self.standIn(instance)) |stored| {
                 table[instance] = stored.*;
-                table[instance].callees = try remapCallees(allocator, stored.callees, current);
-                if (table[instance].callees.len != stored.callees.len) table[instance].stubbable = false;
+                table[instance].uses.callees = try remapCallees(allocator, stored.uses.callees, current);
+                if (table[instance].uses.callees.len != stored.uses.callees.len) table[instance].stubbable = false;
+                table[instance].uses.records = try names.carry(allocator, self.request.previous.?.records, stored.uses.records);
                 continue;
             }
             const record = if (records[instance]) |position| self.checked.items[position] else null;
             table[instance] = try self.checkedSummary(allocator, program, .{ .instance = instance, .record = record, .fact = if (instance < facts.len) facts[instance] else .{} }, pass, outputs);
+            if (record) |checked_record| try self.touched(allocator, program, checked_record, &names, &table[instance]);
         }
-        return table;
+        return .{ .records = names.list.items, .summaries = table };
+    }
+
+    /// Record the catalog records one checked body's tree touched and their
+    /// combined shape; a tree that touched a record without a stable name or
+    /// shape is not stubbable.
+    fn touched(self: *const Plan, allocator: std.mem.Allocator, program: typed.Program, record: Checked, names: *RecordNames, entry: *summary.Summary) error{ OutOfMemory, InternalError }!void {
+        const indices = (try treeRecords(allocator, program, record, self.prepared.ordinary_ast.len, self.session.remap.initial_record_count)) orelse {
+            entry.stubbable = false;
+            return;
+        };
+        const positions = try allocator.alloc(u32, indices.len);
+        const shapes = try allocator.alloc(summary.Shape, indices.len);
+        for (indices, positions, shapes) |index, *position, *shape| {
+            const name = program.records[index].name;
+            position.* = try names.intern(allocator, name);
+            const digest = (try self.session.shapeOf(name)) orelse {
+                entry.stubbable = false;
+                return;
+            };
+            shape.* = .{ .name = name, .digest = digest };
+        }
+        entry.uses.records = positions;
+        entry.uses.shape = summary.combineShapes(shapes);
     }
 
     /// One checked ordinary instance's summary.
@@ -225,10 +259,7 @@ pub const Plan = struct {
         const ast_index = self.prepared.ordinary_ast[checked.instance];
         const region = self.prepared.regions[ast_index];
         var stubbable = checked.instance != self.main and checked.record != null;
-        if (checked.record) |record| {
-            if (!try stableTree(allocator, program, record, self.prepared.ordinary_ast.len, outputs.initial_record_count)) stubbable = false;
-            if (!admitsStandIn(program.functions[checked.instance], outputs.syntax.functions[ast_index])) stubbable = false;
-        }
+        if (checked.record != null and !admitsStandIn(program.functions[checked.instance], outputs.syntax.functions[ast_index])) stubbable = false;
         const body_notes = try notesIn(allocator, if (checked.record) |record| record.diagnostics else &.{}, region, &stubbable);
         const pass_notes = try notesIn(allocator, passItemsIn(pass, region), region, &stubbable);
         return .{
@@ -241,7 +272,7 @@ pub const Plan = struct {
             },
             .fact = summary.fromFact(checked.fact),
             .notes = .{ .body = body_notes, .pass = pass_notes },
-            .callees = if (checked.record) |record| try callTargets(allocator, program, record) else &.{},
+            .uses = .{ .callees = if (checked.record) |record| try callTargets(allocator, program, record) else &.{} },
             .stubbable = stubbable,
         };
     }
@@ -318,18 +349,68 @@ fn notesIn(allocator: std.mem.Allocator, items: []const diagnostic.Diagnostic, r
     return notes.toOwnedSlice(allocator);
 }
 
-/// Whether one checked ordinary body's tree names only ordinary functions and
-/// types that existed before any body was checked, the condition under which a
-/// later check may stand a summary in for it.
-fn stableTree(allocator: std.mem.Allocator, program: typed.Program, record: Checked, ordinary_count: usize, initial_record_count: usize) error{ OutOfMemory, InternalError }!bool {
+/// The catalog records one checked ordinary body's tree touches, or null
+/// when it names a function or record that did not exist before any body was
+/// checked (a specialization, a lambda, a type interned while checking): a
+/// later check cannot stand a summary in for such a body.
+fn treeRecords(allocator: std.mem.Allocator, program: typed.Program, record: Checked, ordinary_count: usize, initial_record_count: usize) error{ OutOfMemory, InternalError }!?[]const usize {
     var refs = sem_copy.RefSet.init(allocator);
     defer refs.deinit();
     const node_end = @min(record.nodes.end, program.nodes.len);
     const statement_end = @min(record.statements.end, program.statements.len);
     try sem_copy.collectRefs(allocator, program.functions[record.instance], program.nodes[@min(record.nodes.start, node_end)..node_end], program.statements[@min(record.statements.start, statement_end)..statement_end], &refs);
     var functions = refs.functions.keyIterator();
-    while (functions.next()) |id| if (id.* >= ordinary_count) return false;
+    while (functions.next()) |id| if (id.* >= ordinary_count) return null;
+    const indices = try allocator.alloc(usize, refs.records.count());
     var records = refs.records.keyIterator();
-    while (records.next()) |index| if (index.* >= initial_record_count) return false;
-    return true;
+    var count: usize = 0;
+    while (records.next()) |index| : (count += 1) {
+        if (index.* >= initial_record_count or index.* >= program.records.len) return null;
+        indices[count] = index.*;
+    }
+    return indices;
 }
+
+/// Whether a record's shape in the fresh catalog is known yet, and what it is.
+const ShapeState = union(enum) { unknown, missing, known: [32]u8 };
+
+/// Whether every record a stored body touched still exists with the shape it
+/// had, compared through the order-independent combined digest.
+fn touchedShapesMatch(allocator: std.mem.Allocator, session: *semantic_cache.Session, previous: *const summary.Index, uses: summary.Uses, shapes: []ShapeState) error{OutOfMemory}!bool {
+    const touched = try allocator.alloc(summary.Shape, uses.records.len);
+    defer allocator.free(touched);
+    for (uses.records, touched) |position, *shape| {
+        if (shapes[position] == .unknown) {
+            shapes[position] = if (try session.shapeOf(previous.records[position])) |digest| .{ .known = digest } else .missing;
+        }
+        const digest = switch (shapes[position]) {
+            .known => |known| known,
+            else => return false,
+        };
+        shape.* = .{ .name = previous.records[position], .digest = digest };
+    }
+    const combined = summary.combineShapes(touched);
+    return std.mem.eql(u8, &combined, &uses.shape);
+}
+
+/// The record-name list of the table being produced.
+const RecordNames = struct {
+    list: std.ArrayList([]const u8) = .empty,
+    positions: std.StringHashMapUnmanaged(u32) = .empty,
+
+    fn intern(self: *RecordNames, allocator: std.mem.Allocator, name: []const u8) error{OutOfMemory}!u32 {
+        const entry = try self.positions.getOrPut(allocator, name);
+        if (!entry.found_existing) {
+            entry.value_ptr.* = @intCast(self.list.items.len);
+            try self.list.append(allocator, name);
+        }
+        return entry.value_ptr.*;
+    }
+
+    /// Positions in this table of records another table named by position.
+    fn carry(self: *RecordNames, allocator: std.mem.Allocator, previous: []const []const u8, positions: []const u32) error{OutOfMemory}![]const u32 {
+        const out = try allocator.alloc(u32, positions.len);
+        for (positions, out) |position, *carried| carried.* = try self.intern(allocator, previous[position]);
+        return out;
+    }
+};

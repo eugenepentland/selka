@@ -46,6 +46,9 @@ const source = @import("source.zig");
 const typed = @import("typed.zig");
 const diagnostic = @import("diagnostic.zig");
 const Names = @import("module_names.zig").Names;
+/// Which functions a native-test facts payload describes.
+pub const FactsScope = native_test_facts.Scope;
+const native_test_facts = @import("native_test_facts.zig");
 const semantic_cache = @import("semantic_cache.zig");
 const semantic_key = @import("semantic_key.zig");
 const fragments = @import("qbe_fragments.zig");
@@ -165,15 +168,39 @@ pub const Compilation = struct {
     /// checked function's semantic fingerprint and dependency edges. It is the
     /// graph a warm `mylang test` loads before selecting result receipts.
     pub fn emitNativeTestFacts(self: *Compilation, allocator: @import("std").mem.Allocator) EmitNativeError![]u8 {
+        return self.emitNativeTestFactsScoped(allocator, .all);
+    }
+
+    /// The facts payload of `emitNativeTestFacts` over `scope`: `.all` keeps
+    /// every checked function under the public-interface roots, `.closure`
+    /// describes only what the selectable tests and benchmarks reach, with a
+    /// schema of just their signatures — everything a `mylang test` plan reads.
+    pub fn emitNativeTestFactsScoped(self: *Compilation, allocator: @import("std").mem.Allocator, scope: FactsScope) EmitNativeError![]u8 {
         try self.check();
-        const roots = try self.testRoots(allocator);
+        const roots = if (scope == .all) try self.testRoots(allocator) else try self.testEntryRoots(allocator);
         defer allocator.free(roots);
         const schema = try self.renderSchema(allocator, roots);
         defer allocator.free(schema);
-        return @import("native_test_facts.zig").render(allocator, self.src, self.program.?, roots, schema) catch |err| switch (err) {
+        return native_test_facts.render(allocator, self.src, self.program.?, roots, schema, scope) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => return error.InternalError,
         };
+    }
+
+    /// The functions `mylang test` can select: every discovered test and every
+    /// exported `bench_` function.
+    fn testEntryRoots(self: *Compilation, allocator: @import("std").mem.Allocator) CheckError![]typed.FunctionId {
+        try self.check();
+        var roots: @import("std").ArrayList(typed.FunctionId) = .empty;
+        // UNTESTED-ERROR: allocation-failure cleanup; generic allocator-failure coverage exercises it and no deterministic OOM hook reaches it here.
+        errdefer roots.deinit(allocator);
+        for (self.program.?.functions) |function| {
+            const at = @import("std").mem.lastIndexOf(u8, function.name, "::");
+            const short = if (at) |position| function.name[position + 2 ..] else function.name;
+            const benchmark = @import("std").mem.startsWith(u8, short, "bench_") and try self.exported(function);
+            if (benchmark or try self.discoveredTest(function)) try roots.append(allocator, function.id);
+        }
+        return roots.toOwnedSlice(allocator);
     }
 
     /// Lower and emit only the selected functions (plus conservative runtime
@@ -181,16 +208,19 @@ pub const Compilation = struct {
     /// caller. `stats` receives the closure width actually lowered and emitted.
     pub fn emitQbeSelected(self: *Compilation, allocator: @import("std").mem.Allocator, names: []const []const u8, stats: *SelectedStats) EmitNativeError![]u8 {
         try self.check();
-        const roots = try self.testRoots(allocator);
-        defer allocator.free(roots);
-        const schema = try self.renderSchema(allocator, roots);
-        defer allocator.free(schema);
         const selected = try self.selectFunctions(allocator, names);
         defer allocator.free(selected);
-        @import("native_test_facts.zig").expandSelection(allocator, self.program.?, selected) catch |err| switch (err) {
+        native_test_facts.expandSelection(allocator, self.program.?, selected) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => return error.InternalError,
         };
+        // Only a selected root is emitted, so only it needs an export and a
+        // schema entry; the unselected rest of a large public interface would
+        // cost a whole-program schema on every selective build.
+        const roots = try self.selectedRoots(allocator, selected);
+        defer allocator.free(roots);
+        const schema = try self.renderSchema(allocator, roots);
+        defer allocator.free(schema);
         var count: usize = 0;
         for (selected) |flag| count += @intFromBool(flag);
         const code = lower.lowerSelected(self.index.project.arena.allocator(), self.program.?, selected) catch |err| switch (err) {
@@ -213,22 +243,38 @@ pub const Compilation = struct {
     /// Lowering/emission counts for one selective native build.
     pub const SelectedStats = struct { lowered_functions: usize = 0, emitted_fragments: usize = 0 };
 
+    /// Mark each named function, by one table lookup per name rather than a
+    /// scan of every function per name. The first function of a repeated name
+    /// is the one marked, as a front-to-back scan would find it.
     fn selectFunctions(self: *Compilation, allocator: @import("std").mem.Allocator, names: []const []const u8) CheckError![]bool {
-        const selected = try allocator.alloc(bool, self.program.?.functions.len);
+        const functions = self.program.?.functions;
+        var positions: std.StringHashMapUnmanaged(usize) = .empty;
+        defer positions.deinit(allocator);
+        try positions.ensureTotalCapacity(allocator, @intCast(functions.len));
+        for (functions, 0..) |function, index| {
+            const entry = positions.getOrPutAssumeCapacity(function.name);
+            if (!entry.found_existing) entry.value_ptr.* = index;
+        }
+        const selected = try allocator.alloc(bool, functions.len);
+        // UNTESTED-ERROR: a name the checked program lacks is an internal error the native-test planner never produces; the slice is released on it.
+        errdefer allocator.free(selected);
         @memset(selected, false);
         for (names) |name| {
             if (name.len == 0) continue;
-            var found = false;
-            for (self.program.?.functions, 0..) |function, index| {
-                if (std.mem.eql(u8, function.name, name)) {
-                    selected[index] = true;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) return error.InternalError;
+            selected[positions.get(name) orelse return error.InternalError] = true;
         }
         return selected;
+    }
+
+    /// The test-graph roots (`testRoots`) a selection actually emits.
+    fn selectedRoots(self: *Compilation, allocator: @import("std").mem.Allocator, selected: []const bool) CheckError![]typed.FunctionId {
+        const all = try self.testRoots(allocator);
+        defer allocator.free(all);
+        var roots: std.ArrayList(typed.FunctionId) = .empty;
+        // UNTESTED-ERROR: allocation-failure cleanup; generic allocator-failure coverage exercises it and no deterministic OOM hook reaches it here.
+        errdefer roots.deinit(allocator);
+        for (all) |root| if (selected[@backingInt(root)]) try roots.append(allocator, root);
+        return roots.toOwnedSlice(allocator);
     }
 
     fn renderSchema(self: *Compilation, allocator: @import("std").mem.Allocator, roots: []const typed.FunctionId) EmitNativeError![]u8 {

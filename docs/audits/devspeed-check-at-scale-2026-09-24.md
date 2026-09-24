@@ -266,3 +266,143 @@ body-check time is page faults on the 1.6M-node checked program.
 | `zig build test-qbe-build --summary all` | 33/33 steps |
 | `zig build fmt-check` | clean |
 | `zig-out/bin/mylang test tests/lang` | 569 passed across 106 programs |
+
+## Addendum: false-clean incremental check (commit `c9fde868`)
+
+The coordinator found, with a differential harness, that an incremental `check` could
+stay green over a program a cold check rejects. It reproduced with the baseline
+compiler `fc742bd4` too, where a cached `build` also linked the stale program, so the
+hole predates this lane.
+
+### Cause
+
+A body's dependency context is a digest over the declarations its syntax names,
+folded transitively through those declarations' own references. Four gaps let a
+dependency drop out:
+
+1. **Composite type spellings resolved to nothing.** A field typed `list[Inner]`,
+   `dict[str, Inner]`, `Option[Inner]`, a tuple, an array or a callback type is one span
+   that is not an identifier, so `Outer`'s fingerprint never referenced `Inner`.
+   `user.first(o: shapes.Outer)` reads `o.items[0].x`. It names only `Outer`, and
+   renaming `Inner.x` left its context unchanged. The same applies to a return type used
+   in a chained call (`shapes.make().items[0].x`).
+2. **A type declaration's own text was not in its fingerprint.** Only the names it
+   resolved were. A field changed to a different composite type, a default value, or
+   `record` ↔ `class` did not change it.
+3. **Cycles were order-dependent.** A declaration met again while its own fingerprint
+   was being computed contributed zeros, and the memo kept the result. With `A ↔ B`,
+   `B`'s fingerprint could lack `A`'s content, depending on which body was keyed first.
+4. **A facade re-export (`export shapes.A`) was a negative lookup** in the facade
+   module, so `api.A`'s users never depended on `A`.
+
+### Fix
+
+There are two independent guards, and each one alone fixes every regression case below.
+I checked this by running the tests with the new transitive keys but constant shape
+digests, and with the old keys but real shape digests. Both pass. With neither, three
+tests fail.
+
+- **Transitive keys** (`semantic_key.zig`, SEMANTIC-KEY-TRANSITIVE-1):
+  - A declaration's fingerprint is its own digest plus the sorted own digests of every
+    declaration reachable from it, so it no longer depends on key order and a cycle
+    folds every member into every member.
+  - Composite type spellings are indexed from the parser's `TypeExpressions` tables by
+    exact span and expand to their component types.
+  - Type declarations frame their source text.
+  - Re-exported names are registered in the facade module.
+- **Touched shapes** (`semantic_key.Shapes`, CHECK-SHAPES-1):
+  - A record's transitive shape digest covers its schema and the schema of every record
+    its fields, cases, elements and callback slots reach, in name order.
+  - A summary stores the records its checked tree touched and the combined digest of
+    their shapes. The digest is order-independent, keyed by record name.
+  - Retained checked trees and retained specializations store a shape per record
+    reference.
+  - A mismatch against the fresh catalog prevents the stand-in, or misses as
+    `record-shape-changed`. This guard catches a dependency however the body reached it,
+    because it reads the checked tree rather than the syntax.
+  - The store format is now `semantic-cache-v2` and the summary format
+    `check-summaries-v3`, so old entries miss.
+
+### Tests
+
+- The coordinator's exact repro is a CLI test (`test/integration.zig`, *a cached check
+  sees a field renamed in a record reached only through a list element*): cached and
+  `--no-cache` stderr must be byte-identical, and include `user.my:5:14
+  E_UNKNOWN_FIELD`.
+- In `src/check_scale_test.zig`, each case compares against a cold check in both check
+  and lowering mode:
+  - a field reached only through a list element, a dictionary value, an Option payload
+    and a return type is renamed, then retyped from `int` to `float`: all four users are
+    re-checked;
+  - a managed field is added to the reached record: the lowering facts equal the cold
+    ones;
+  - a type cycle `A ↔ B`, where `B` is keyed from inside the cycle first, plus a facade
+    re-export of `A`: all three users re-check.
+- Direct tests of the shape guard:
+  - a summary with a tampered shape digest is not stood in;
+  - retained trees with tampered record shapes miss with `record-shape-changed`.
+- **The in-repo differential harness** (`tests/incremental_diff.py`,
+  `tests/fixtures/incremental/`, `zig build test-incremental`):
+  - The fixture is five modules with records nested in lists, dicts, Options,
+    `tuple[...]`, a union with a named-field case, class fields, an enum, a recursive
+    class, a facade re-export and a `mut` parameter.
+  - Its mutations: rename or retype a field (`int` → `float`/`bool`, `list` →
+    `Option`), rename a case, retype a case payload, rename a def, add a parameter, drop
+    `mut`, remove `public`, insert a type error or a no-op line, and change an integer
+    literal.
+  - Each step warms the cache on the unmutated project, applies one or two mutations,
+    and requires cached and cold `check` to agree on status, stdout and stderr byte for
+    byte.
+  - **It is part of `zig build test`:** 120 steps, seed 1, about 9 s with the Debug
+    compiler, cached like the other drivers.
+
+### Before and after
+
+The in-repo harness on its fixture:
+
+| Compiler | Seeds × steps | Mismatches |
+| --- | --- | --- |
+| baseline `fc742bd4` | 1–3 × 150 | 12, 13, 16 |
+| this lane before the fix (`8e17ed05`) | 1–3 × 150 | 14, 14, 19 |
+| this lane after the fix (Debug) | 1–6 × 400 | **0 of 2,400** |
+
+The coordinator's harness on the Lox port (`check_diff.py`, entry `main.my`, fixed
+ReleaseFast compiler):
+
+| Run | Steps | Mismatches | cold clean / rejected |
+| --- | --- | --- | --- |
+| seed 7, `8e17ed05` (coordinator's run) | 300 | 9, all field renames | 43 / 257 |
+| seed 7, fixed | 300 | **0** | 43 / 257 (same mutation sequence) |
+| seed 11, fixed | 300 | **0** | 47 / 253 |
+
+Replaying the coordinator's nine snapshots (`cd2/mismatch-*`) with the fixed compiler
+gives byte-identical cached and cold output for all nine. The `8e17ed05` compiler still
+differs on them: in snapshot 1 it reports 4 errors against the cold check's 6.
+
+### Cost
+
+Edit → check with ReleaseFast compilers, min of 5 at load 2.2–3.1:
+
+| Tier | before fix | after fix |
+| --- | --- | --- |
+| 50k | 0.102 s | 0.111 s |
+| 200k | 0.448 s | 0.489 s |
+
+Both stay well inside the targets. At 200k the added time is:
+
+- dependency keys, +20 ms: composite types now resolve their components, and closures
+  are walked;
+- stand-in planning, +5 ms: shape comparison;
+- the summary slot load and store, +6 ms: record lists.
+
+No-op check is unchanged (0.017 / 0.073 s).
+
+### Gate at `c9fde868`
+
+| Step | Result |
+| --- | --- |
+| `zig build test --summary all --maxrss 8000000000` | 92/92 steps, 1,870 tests run, 0 failed; includes `test-incremental` (120 steps, 0 mismatches) |
+| `zig build test-qbe --summary all` | 51/51 steps, 361/361 tests |
+| `zig build test-qbe-build --summary all` | 33/33 steps |
+| `zig build fmt-check` | clean |
+| `zig-out/bin/mylang test tests/lang` | 569 passed across 106 programs |

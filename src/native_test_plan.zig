@@ -1,7 +1,13 @@
 //! Result-cache closure planning over fresh compiler-owned dependency manifests.
 const std = @import("std");
 const json = @import("qbe_build_value.zig");
-const Sha = std.crypto.hash.sha2.Sha256;
+/// The plan key hash. BLAKE3, because a key frames the symbol and implementation
+/// hash of every function in a test's closure, and the closures of a large
+/// project's tests sum to megabytes per run, where `std`'s SHA-256 runs at
+/// about 14 MB/s on some of the build machines' cores.
+const Hash = std.crypto.hash.Blake3;
+/// Plan key domain; `v2` moved the key to BLAKE3, so every older receipt misses once.
+const key_version = "native-test-plan-v2";
 /// Allocation failures or an incomplete/unrecognized semantic dependency manifest.
 pub const Error = error{ OutOfMemory, InvalidManifest, UnknownFunction };
 /// One entry's transitive semantic fingerprint; strings borrow the parsed manifest.
@@ -25,68 +31,127 @@ const Dependency = struct { symbol: []const u8, kind: Kind };
 const Metadata = struct { implementation_hash: []const u8, dependencies: []const Dependency, cacheable: bool, pure: bool = true, reasons: []const []const u8 };
 /// Manifest key for a unit's checked dependency facts.
 const facts_key = "test_dependencies";
-/// Compute a sorted transitive implementation closure, including cycles exactly once.
-/// The caller supplies runtime/tool/input/settings fingerprints through context_key.
-pub fn plan(allocator: std.mem.Allocator, manifest: std.json.Value, entry_symbol: []const u8, context_key: []const u8) Error!Plan {
-    const units = json.array(json.get(manifest, "functions"));
-    const abi = json.text(json.get(manifest, "abi"));
-    if (units.len == 0 or abi.len == 0) return error.InvalidManifest;
-    var index: std.StringHashMapUnmanaged(usize) = .empty;
-    defer index.deinit(allocator);
-    for (units, 0..) |unit, i| {
-        const symbol = json.text(json.get(unit, "symbol"));
-        if (symbol.len == 0) return error.InvalidManifest;
-        const entry = try index.getOrPut(allocator, symbol);
-        if (entry.found_existing) return error.InvalidManifest;
-        entry.value_ptr.* = i;
-    }
-    const entry = index.get(entry_symbol) orelse return error.UnknownFunction;
-    var queue: std.ArrayList(usize) = .empty;
-    defer queue.deinit(allocator);
-    const seen = try allocator.alloc(bool, units.len);
-    defer allocator.free(seen);
-    @memset(seen, false);
-    try queue.append(allocator, entry);
-    seen[entry] = true;
-    var closure: std.ArrayList([]const u8) = .empty;
-    errdefer closure.deinit(allocator);
-    var reasons: std.ArrayList([]const u8) = .empty;
-    errdefer reasons.deinit(allocator);
-    var cacheable = true;
-    var cursor: usize = 0;
-    while (cursor < queue.items.len) : (cursor += 1) {
-        const unit = units[queue.items[cursor]];
-        try closure.append(allocator, json.text(json.get(unit, "symbol")));
-        const facts = json.get(unit, facts_key);
-        try validateFacts(facts);
-        if (!json.boolean(json.get(facts, "cacheable"))) cacheable = false;
-        for (json.array(json.get(facts, "reasons"))) |reason| try unique(allocator, &reasons, json.text(reason));
-        for (json.array(json.get(facts, "dependencies"))) |dependency| {
-            if (std.meta.stringToEnum(Kind, json.text(json.get(dependency, "kind"))) == null) return error.InvalidManifest;
-            const next = index.get(json.text(json.get(dependency, "symbol"))) orelse return error.InvalidManifest;
-            if (seen[next]) continue;
-            seen[next] = true;
-            try queue.append(allocator, next);
+/// One unit's facts, read once when its graph is indexed: its symbol and
+/// implementation hash, its dependencies as unit positions, its reasons, and
+/// whether all of that was well formed.
+const Node = struct {
+    symbol: []const u8,
+    implementation: []const u8,
+    edges: []const usize,
+    reasons: []const std.json.Value,
+    flags: packed struct { valid: bool, cacheable: bool, pure: bool },
+};
+/// Symbol positions and resolved facts of one parsed graph, built once so
+/// planning each selected test costs that test's closure alone rather than a
+/// pass over the whole graph or a JSON lookup per visited function.
+pub const Index = struct {
+    abi: []const u8,
+    positions: std.StringHashMapUnmanaged(usize) = .empty,
+    nodes: []const Node = &.{},
+
+    /// Index every unit by its symbol and resolve its facts; an empty graph, a
+    /// unit without a symbol or a repeated symbol is an invalid manifest. A
+    /// unit whose facts are malformed is an invalid manifest only for a plan
+    /// that reaches it.
+    pub fn init(allocator: std.mem.Allocator, manifest: std.json.Value) Error!Index {
+        const units = json.array(json.get(manifest, "functions"));
+        const abi = json.text(json.get(manifest, "abi"));
+        if (units.len == 0 or abi.len == 0) return error.InvalidManifest;
+        var index: Index = .{ .abi = abi };
+        errdefer index.deinit(allocator);
+        try index.positions.ensureTotalCapacity(allocator, @intCast(units.len));
+        for (units, 0..) |unit, position| {
+            const symbol = json.text(json.get(unit, "symbol"));
+            if (symbol.len == 0) return error.InvalidManifest;
+            const entry = index.positions.getOrPutAssumeCapacity(symbol);
+            if (entry.found_existing) return error.InvalidManifest;
+            entry.value_ptr.* = position;
         }
+        const nodes = try allocator.alloc(Node, units.len);
+        @memset(nodes, .{ .symbol = "", .implementation = "", .edges = &.{}, .reasons = &.{}, .flags = .{ .valid = false, .cacheable = false, .pure = false } });
+        index.nodes = nodes;
+        for (units, nodes) |unit, *node| try index.resolve(allocator, unit, node);
+        return index;
     }
-    std.mem.sort([]const u8, closure.items, {}, stringLess);
-    std.mem.sort([]const u8, reasons.items, {}, stringLess);
-    var hash = Sha.init(.{});
-    part(&hash, "native-test-plan-v1");
-    part(&hash, abi);
-    part(&hash, context_key);
-    part(&hash, entry_symbol);
-    for (closure.items) |symbol| {
-        part(&hash, symbol);
-        part(&hash, json.text(json.get(json.get(units[index.get(symbol).?], facts_key), "implementation_hash")));
+    /// Read one unit's facts into its node, leaving it invalid when they are malformed.
+    fn resolve(self: *const Index, allocator: std.mem.Allocator, unit: std.json.Value, node: *Node) Error!void {
+        const facts = json.get(unit, facts_key);
+        node.symbol = json.text(json.get(unit, "symbol"));
+        validateFacts(facts) catch return;
+        const dependencies = json.array(json.get(facts, "dependencies"));
+        const edges = try allocator.alloc(usize, dependencies.len);
+        node.edges = edges;
+        for (dependencies, edges) |dependency, *edge| {
+            if (std.meta.stringToEnum(Kind, json.text(json.get(dependency, "kind"))) == null) return;
+            edge.* = self.positions.get(json.text(json.get(dependency, "symbol"))) orelse return;
+        }
+        node.implementation = json.text(json.get(facts, "implementation_hash"));
+        node.reasons = json.array(json.get(facts, "reasons"));
+        node.flags = .{ .valid = true, .cacheable = json.boolean(json.get(facts, "cacheable")), .pure = json.boolean(json.get(facts, "pure")) };
     }
-    const dependencies = try closure.toOwnedSlice(allocator);
-    errdefer allocator.free(dependencies);
-    // Purity is a property of the test's own signature: a capability parameter
-    // or a declared `mutates` footprint keeps it off the opt-in replay path even
-    // though the whole closure may still be cacheable.
-    const entry_pure = json.boolean(json.get(json.get(units[entry], facts_key), "pure"));
-    return .{ .key = std.fmt.bytesToHex(hash.finalResult(), .lower), .cacheable = cacheable, .pure = entry_pure, .dependencies = dependencies, .reasons = try reasons.toOwnedSlice(allocator) };
+    /// Release the symbol table and resolved facts; the strings still belong to the manifest.
+    pub fn deinit(self: *Index, allocator: std.mem.Allocator) void {
+        for (self.nodes) |node| allocator.free(node.edges);
+        allocator.free(self.nodes);
+        self.positions.deinit(allocator);
+    }
+    /// Compute one entry's sorted transitive implementation closure, including
+    /// cycles exactly once, and its key. The caller supplies runtime, tool,
+    /// input and settings fingerprints through `context_key`.
+    pub fn plan(self: *const Index, allocator: std.mem.Allocator, entry_symbol: []const u8, context_key: []const u8) Error!Plan {
+        const entry = self.positions.get(entry_symbol) orelse return error.UnknownFunction;
+        var queue: std.ArrayList(usize) = .empty;
+        defer queue.deinit(allocator);
+        var seen = try std.DynamicBitSetUnmanaged.initEmpty(allocator, self.nodes.len);
+        defer seen.deinit(allocator);
+        try queue.append(allocator, entry);
+        seen.set(entry);
+        var reasons: std.ArrayList([]const u8) = .empty;
+        errdefer reasons.deinit(allocator);
+        var cacheable = true;
+        var cursor: usize = 0;
+        while (cursor < queue.items.len) : (cursor += 1) {
+            const node = self.nodes[queue.items[cursor]];
+            if (!node.flags.valid) return error.InvalidManifest;
+            if (!node.flags.cacheable) cacheable = false;
+            for (node.reasons) |reason| try unique(allocator, &reasons, json.text(reason));
+            for (node.edges) |next| {
+                if (seen.isSet(next)) continue;
+                seen.set(next);
+                try queue.append(allocator, next);
+            }
+        }
+        std.mem.sort(usize, queue.items, self, symbolLess);
+        std.mem.sort([]const u8, reasons.items, {}, stringLess);
+        var hash = Hash.init(.{});
+        part(&hash, key_version);
+        part(&hash, self.abi);
+        part(&hash, context_key);
+        part(&hash, entry_symbol);
+        const dependencies = try allocator.alloc([]const u8, queue.items.len);
+        errdefer allocator.free(dependencies);
+        for (queue.items, dependencies) |position, *symbol| {
+            symbol.* = self.nodes[position].symbol;
+            part(&hash, self.nodes[position].symbol);
+            part(&hash, self.nodes[position].implementation);
+        }
+        var digest: [32]u8 = undefined;
+        hash.final(&digest);
+        // Purity is a property of the test's own signature: a capability parameter
+        // or a declared `mutates` footprint keeps it off the opt-in replay path even
+        // though the whole closure may still be cacheable.
+        return .{ .key = std.fmt.bytesToHex(digest, .lower), .cacheable = cacheable, .pure = self.nodes[entry].flags.pure, .dependencies = dependencies, .reasons = try reasons.toOwnedSlice(allocator) };
+    }
+    fn symbolLess(self: *const Index, left: usize, right: usize) bool {
+        return std.mem.lessThan(u8, self.nodes[left].symbol, self.nodes[right].symbol);
+    }
+};
+/// Plan one entry against a manifest indexed for this call alone. A caller
+/// that plans many entries of one graph builds one `Index` instead.
+pub fn plan(allocator: std.mem.Allocator, manifest: std.json.Value, entry_symbol: []const u8, context_key: []const u8) Error!Plan {
+    var index = try Index.init(allocator, manifest);
+    defer index.deinit(allocator);
+    return index.plan(allocator, entry_symbol, context_key);
 }
 fn validateFacts(facts: std.json.Value) Error!void {
     const digest = json.text(json.get(facts, "implementation_hash"));
@@ -103,7 +168,7 @@ fn unique(allocator: std.mem.Allocator, values: *std.ArrayList([]const u8), valu
 fn stringLess(_: void, a: []const u8, b: []const u8) bool {
     return std.mem.lessThan(u8, a, b);
 }
-fn part(hash: *Sha, bytes: []const u8) void {
+fn part(hash: *Hash, bytes: []const u8) void {
     var length: [8]u8 = undefined;
     std.mem.writeInt(u64, &length, bytes.len, .little);
     hash.update(&length);
@@ -210,4 +275,52 @@ test "plan exposes entry signature purity and treats an absent field as impure" 
     const legacy_plan = try plan(a, legacy.value, "A", "runtime");
     defer legacy_plan.deinit(a);
     try std.testing.expect(!legacy_plan.pure);
+}
+
+/// Plan `entry` against a graph of `units` through one shared index.
+fn indexedKey(allocator: std.mem.Allocator, index: *const Index, entry: []const u8) ![64]u8 {
+    const result = try index.plan(allocator, entry, "runtime");
+    defer result.deinit(allocator);
+    return result.key;
+}
+// spec: NATIVE-TEST-PLAN-2
+test "one index plans every entry of a graph as a fresh plan does and fails only the plans that reach a malformed unit" {
+    const a = std.testing.allocator;
+    const units = [_]FixtureUnit{
+        fixture("A", 0, &.{.{ .symbol = "shared", .kind = .call }}),
+        fixture("B", 1, &.{ .{ .symbol = "shared", .kind = .call }, .{ .symbol = "A", .kind = .function_value } }),
+        fixture("shared", 0, &.{.{ .symbol = "B", .kind = .call }}),
+        fixture("broken", 0, &.{.{ .symbol = "missing", .kind = .call }}),
+        fixture("C", 1, &.{.{ .symbol = "broken", .kind = .call }}),
+    };
+    const bytes = try std.json.Stringify.valueAlloc(a, .{ .abi = "native-abi", .functions = units }, .{});
+    defer a.free(bytes);
+    const parsed = try std.json.parseFromSlice(std.json.Value, a, bytes, .{});
+    defer parsed.deinit();
+    var index = try Index.init(a, parsed.value);
+    defer index.deinit(a);
+    const planned = try index.plan(a, "B", "runtime");
+    defer planned.deinit(a);
+    // The same key and the same sorted closure a one-off plan computes.
+    try std.testing.expectEqualStrings(&(try fixturePlan(a, &units, "B", "runtime")), &planned.key);
+    try std.testing.expectEqual(@as(usize, 3), planned.dependencies.len);
+    try std.testing.expectEqualStrings("A", planned.dependencies[0]);
+    try std.testing.expectEqualStrings("shared", planned.dependencies[2]);
+    try std.testing.expectEqualStrings(&(try fixturePlan(a, &units, "A", "runtime")), &(try indexedKey(a, &index, "A")));
+    // A dangling edge is an invalid manifest only for the entry that reaches it.
+    try std.testing.expectError(error.InvalidManifest, index.plan(a, "C", "runtime"));
+    try std.testing.expectError(error.UnknownFunction, index.plan(a, "nobody", "runtime"));
+}
+test "index construction releases every table on each allocation failure" {
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, allocationIndex, .{});
+}
+fn allocationIndex(allocator: std.mem.Allocator) !void {
+    const units = [_]FixtureUnit{ fixture("A", 0, &.{.{ .symbol = "B", .kind = .call }}), fixture("B", 1, &.{}) };
+    const bytes = try std.json.Stringify.valueAlloc(allocator, .{ .abi = "native-abi", .functions = units }, .{});
+    defer allocator.free(bytes);
+    const parsed = try std.json.parseFromSlice(std.json.Value, allocator, bytes, .{});
+    defer parsed.deinit();
+    var index = try Index.init(allocator, parsed.value);
+    defer index.deinit(allocator);
+    _ = try indexedKey(allocator, &index, "A");
 }

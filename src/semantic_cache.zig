@@ -64,6 +64,8 @@ pub const MissReason = enum {
     interned_record,
     /// A stored function value would require an interned callable contract.
     function_value,
+    /// A record the retained tree touched has a different transitive shape.
+    record_shape_changed,
     /// The retained tree was too large to keep.
     over_budget,
 };
@@ -87,6 +89,7 @@ pub fn missReasonName(reason: MissReason) []const u8 {
         .generic_specialization => "generic-specialization",
         .interned_record => "interned-record",
         .function_value => "function-value",
+        .record_shape_changed => "record-shape-changed",
         .over_budget => "over-budget",
     };
 }
@@ -369,6 +372,7 @@ pub const Cache = struct {
                 .functions = function_map,
                 .records = record_map,
                 .initial_record_count = records.len,
+                .shapes = .{ .allocator = allocator, .records = try allocator.dupe(typed.Record, records) },
             },
         };
     }
@@ -383,6 +387,8 @@ const Remap = struct {
     /// Catalog records that existed before body checking. Records appended while
     /// checking (callable contracts, structural arrays) have no stable remap yet.
     initial_record_count: usize,
+    /// Transitive shape digests of the fresh catalog's records.
+    shapes: key.Shapes,
 };
 
 /// Per-function reuse state for one check request.
@@ -442,6 +448,8 @@ pub const Session = struct {
         for (entry.meta.record_refs, records) |reference, *out| {
             const fresh = self.remap.records.get(reference.key) orelse return self.reason(.missing_record);
             if (fresh == std.math.maxInt(usize)) return self.reason(.ambiguous_record);
+            const shape = (try self.remap.shapes.digest(fresh)) orelse return self.reason(.missing_record);
+            if (!std.mem.eql(u8, &shape, &reference.shape)) return self.reason(.record_shape_changed);
             out.* = .{ .old = reference.index, .fresh = @fromBackingInt(fresh + typed.Type.record_base) };
         }
         copy.sortRecordRemaps(records);
@@ -464,6 +472,13 @@ pub const Session = struct {
         self.reuse.functions[index] = true;
         self.cache.statistics.reused += 1;
         return function;
+    }
+    /// The transitive shape digest of the fresh catalog record named `name`, or
+    /// null when no record, or more than one, has that name.
+    pub fn shapeOf(self: *Session, name: []const u8) error{OutOfMemory}!?[32]u8 {
+        const index = self.remap.records.get(name) orelse return null;
+        if (index == std.math.maxInt(usize)) return null;
+        return self.remap.shapes.digest(index);
     }
     /// Record that a check summary stood in for ordinary instance `index`: the
     /// body was neither checked nor copied, and nothing is retained for it.
@@ -541,7 +556,11 @@ pub const Session = struct {
                 unstable = .ambiguous_record;
                 break;
             }
-            record_refs[record_count] = .{ .index = index.*, .key = name };
+            const shape = (try self.remap.shapes.digest(fresh_index)) orelse {
+                unstable = .missing_record;
+                break;
+            };
+            record_refs[record_count] = .{ .index = index.*, .key = name, .shape = shape };
             record_count += 1;
         }
         if (unstable) |why| return self.freshMiss(why);

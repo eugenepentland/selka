@@ -1,0 +1,33 @@
+module model
+
+
+public enum Color:
+    red,
+    green,
+    blue
+
+
+public record Point:
+    x: int
+    y: int
+
+
+public class Node:
+    value: int
+    children: list[Node]
+    tag: Option[str]
+
+
+public union Shape:
+    dot: Point,
+    circle(center: Point, radius: int),
+    empty
+
+
+public class Scene:
+    shapes: list[Shape]
+    index: dict[str, Point]
+    root: Option[Node]
+    tint: Color
+    pairs: list[tuple[int, Point]]
+    count: int
