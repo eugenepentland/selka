@@ -269,7 +269,7 @@ grows with every reference (about 200 bytes per row).
   - `src/features.json`: 2 new slugs.
   - `src/interfaces.zig`: `renderFunctionLine` and its helpers.
   - `src/nominal_layouts.zig` and `src/project.zig`: one budget each.
-- **Gate at `804b706b`:**
+- **Gate**, run at `804b706b` and re-run, all green, at `a17624f5` (the commit that adds this report):
   - `zig build test --summary all --maxrss 8000000000`: 92/92 steps; the 12 root
     shards give 1678 unit tests, the 6 CLI shards 194.
   - `zig build test-qbe --summary all`: 51/51 steps, 390/390 tests.
