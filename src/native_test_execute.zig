@@ -9,11 +9,20 @@ const budget = @import("memory_budget");
 const spawn = @import("qbe_build_spawn.zig");
 const Value = std.json.Value;
 const infrastructure_failure = "infrastructure-failure";
+/// The harness switch that runs every call under the stress collector.
+const gc_stress_flag = "--gc-stress";
 /// Failure text for a child that exited abnormally: its termination and stderr.
 const process_failed = "NativeTestProcessFailed: {any}\n{s}";
 const magic: u64 = 0x3154534554594c4d;
 const bench_magic: u64 = 0x3248434e42594c4d;
 const bench_response_magic: u64 = 0x3250535242594c4d;
+/// "MLYPROP1"/"MLYPRSP1"/"MLYPEND1": the property batch request, response
+/// and trailer magics `native_test_runner.c` shares.
+const property_magic: u64 = 0x31504f5250594c4d;
+const property_response_magic: u64 = 0x3150535250594c4d;
+const property_end_magic: u64 = 0x31444e4550594c4d;
+/// Inputs one property batch request may carry; the harness enforces the same bound.
+pub const batch_limit = 4096;
 /// Bytes of guest stdout one test response may carry back to the parent.
 const output_limit = 256 * 1024;
 /// Native test setup, validation, filesystem and child-process failures.
@@ -46,8 +55,22 @@ pub const BenchConfig = struct {
 /// One raw timed batch: how many copied-value calls it covered and its duration.
 pub const Batch = struct { iterations: u64, duration_ns: u64 };
 /// One execution result; expected-value comparison never executes guest code.
-/// `output` carries the guest stdout captured during the call, if any.
-pub const Outcome = struct { status: []const u8, actual: Value = .null, diagnostics: []const u8 = "", output: []const u8 = "", steps: u64 = 0 };
+/// `output` carries the guest stdout captured during the call, if any, and
+/// `trap` the structured first-trap fields a caller classifies by.
+pub const Outcome = struct { status: []const u8, actual: Value = .null, diagnostics: []const u8 = "", output: []const u8 = "", steps: u64 = 0, trap: Trap = .{} };
+/// The first trap of one call, read apart from its rendered diagnostics: the
+/// trap code, the message an `assert` or a contract clause carries, and the
+/// qualified function of the innermost frame, which tells a test's own
+/// precondition from one a function it calls broke.
+pub const Trap = struct { code: []const u8 = "", message: []const u8 = "", frame: []const u8 = "" };
+/// One property batch call: the executor owning the library, the checked
+/// function, and each input's copied argument nodes in run order.
+pub const BatchCall = struct { executor: *const Executor, function: Value, inputs: []const []const wire.Node };
+/// What one property batch child answered: an outcome per input it finished,
+/// in input order, and whether it finished them all. A child that dies or
+/// runs out of time mid-batch leaves the outcomes before the input it was
+/// running; `ending` says why it stopped early.
+pub const BatchOutcome = struct { outcomes: []const Outcome, complete: bool, ending: []const u8 = "", timed_out: bool = false };
 /// One bounded child call and whether the wall-clock bound ended it. A caller
 /// that must tell a timeout from a trap needs the distinction `Outcome` alone
 /// cannot carry, because both leave no guest value.
@@ -162,7 +185,7 @@ pub const Executor = struct {
             },
         };
         const parsed = try self.parse(v.text(v.get(function, "result")), result.stdout, false);
-        return .{ .outcome = .{ .status = parsed.status, .actual = parsed.actual, .diagnostics = parsed.diagnostics, .output = parsed.output, .steps = parsed.steps } };
+        return .{ .outcome = parsed.outcome() };
     }
     /// Validate one call's typed arguments and write its request and the path
     /// its child answers into; the child itself is started by `executeAll`.
@@ -175,9 +198,27 @@ pub const Executor = struct {
         const response = try std.fs.path.join(a, &.{ std.fs.path.dirname(path).?, "response" });
         var arguments: std.ArrayList([]const u8) = .empty;
         try arguments.appendSlice(a, &.{ self.executable, self.library, path });
-        if (self.stress) try arguments.append(a, "--gc-stress");
+        if (self.stress) try arguments.append(a, gc_stress_flag);
         try arguments.appendSlice(a, &.{ "--response", response });
         return .{ .argv = arguments.items, .response = response };
+    }
+    /// Write one property batch request and the path its child answers into.
+    fn prepareBatch(self: *const Executor, call: BatchCall, limits: Limits) Error!Prepared {
+        const a = self.context.allocator;
+        const path = try self.request(try batchRequest(a, v.text(v.get(call.function, "name")), call.inputs, limits));
+        const response = try std.fs.path.join(a, &.{ std.fs.path.dirname(path).?, "response" });
+        var arguments: std.ArrayList([]const u8) = .empty;
+        try arguments.appendSlice(a, &.{ self.executable, self.library, path });
+        if (self.stress) try arguments.append(a, gc_stress_flag);
+        try arguments.appendSlice(a, &.{ "--response", response });
+        return .{ .argv = arguments.items, .response = response };
+    }
+    /// Copy one input's named typed arguments into the nodes a batch carries,
+    /// with the deterministic stand-ins for every capability parameter.
+    pub fn encode(self: Executor, function: Value, arguments: Value) Error![]const wire.Node {
+        var codec: wire.Codec = .{ .allocator = self.context.allocator, .types = self.types, .seed = self.seed };
+        try codec.arguments(function, arguments);
+        return codec.nodes.items;
     }
     /// Sample one validated copied-value call. Compilation is never timed; the
     /// child warms up, calibrates a batch size, then reports raw timed batches.
@@ -206,9 +247,9 @@ pub const Executor = struct {
             .actual = parsed.actual,
             .diagnostics = parsed.diagnostics,
             .steps = parsed.steps,
-            .warmup_iterations = parsed.warmup_iterations,
-            .calibrated_iterations = parsed.calibrated_iterations,
-            .raw = parsed.raw,
+            .warmup_iterations = parsed.sampled.warmup_iterations,
+            .calibrated_iterations = parsed.sampled.calibrated_iterations,
+            .raw = parsed.sampled.raw,
         };
     }
     /// Child argv: the runner, the library, the request, and the collector
@@ -216,7 +257,7 @@ pub const Executor = struct {
     fn argv(self: Executor, path: []const u8) Error![]const []const u8 {
         const a = self.context.allocator;
         if (!self.stress) return a.dupe([]const u8, &.{ self.executable, self.library, path });
-        return a.dupe([]const u8, &.{ self.executable, self.library, path, "--gc-stress" });
+        return a.dupe([]const u8, &.{ self.executable, self.library, path, gc_stress_flag });
     }
     /// Write one request under a fresh child directory and return its path.
     fn request(self: Executor, bytes: []const u8) Error![]const u8 {
@@ -231,6 +272,26 @@ pub const Executor = struct {
         var reader: Reader = .{ .bytes = bytes };
         const expected = if (bench) bench_response_magic else magic;
         if (try reader.number() != expected) return error.InvalidNativeTestResponse;
+        var parsed = try self.record(&reader, result_type);
+        if (bench) {
+            parsed.sampled.warmup_iterations = try reader.number();
+            parsed.sampled.calibrated_iterations = try reader.number();
+            const batch_count = try reader.number();
+            if (batch_count > 64) return error.InvalidNativeTestResponse;
+            const raw = try self.context.allocator.alloc(Batch, @intCast(batch_count));
+            for (raw) |*batch| batch.* = .{ .iterations = try reader.number(), .duration_ns = try reader.number() };
+            parsed.sampled.raw = raw;
+        }
+        // A response may end with the guest stdout the child captured. Older
+        // responses without the trailer keep parsing because it is optional.
+        if (reader.offset < bytes.len) parsed.output = try reader.output();
+        if (reader.offset != bytes.len) return error.InvalidNativeTestResponse;
+        return parsed;
+    }
+    /// Read one call's shared header, trap frames and returned value tree: the
+    /// part a test, a benchmark and every input of a property batch answer
+    /// alike. A trapped call keeps its rendered diagnostics and no value.
+    fn record(self: Executor, reader: *Reader, result_type: []const u8) Error!Parsed {
         const status = try reader.number();
         const steps = try reader.number();
         const count = try reader.number();
@@ -261,46 +322,30 @@ pub const Executor = struct {
         if (status > 2 or frame_count > 16 or count > 100000) return error.InvalidNativeTestResponse;
         var diagnostics: std.Io.Writer.Allocating = .init(self.context.allocator);
         defer diagnostics.deinit();
+        const carries_message = trap_detail.messageTrap(code) and detail_version != 0 and detail_operation_text.len != 0;
         if (code.len != 0) {
             try diagnostics.writer.writeAll(code);
             try detail.writeText(&diagnostics.writer);
             // `writeText` renders only numeric detail, so a message-only assert
             // detail is quoted here, matching the runtime's `R_ASSERT: text` line.
-            if (trap_detail.messageTrap(code) and detail_version != 0 and detail_operation_text.len != 0)
-                try diagnostics.writer.print(": {s}", .{detail_operation_text});
+            if (carries_message) try diagnostics.writer.print(": {s}", .{detail_operation_text});
             try diagnostics.writer.writeAll("\n");
         }
         if (domain.len != 0) try diagnostics.writer.print("domain: {s}; rejected: {d}\n", .{ domain, rejected });
-        for (0..@intCast(frame_count)) |_| {
+        var trap: Trap = .{ .code = code, .message = if (carries_message) detail_operation_text else "" };
+        for (0..@intCast(frame_count)) |index| {
             const function = try reader.text();
             const path = try reader.text();
             const line = try reader.number();
             const column = try reader.number();
+            if (index == 0) trap.frame = function;
             try diagnostics.writer.print("  in {s} at {s}:{d}:{d}\n", .{ function, path, line, column });
         }
         if (omitted != 0) try diagnostics.writer.print("  {d} frames omitted\n", .{omitted});
         var codec: wire.Codec = .{ .allocator = self.context.allocator, .types = self.types, .seed = self.seed };
         defer codec.deinit();
         for (0..@intCast(count)) |_| try codec.nodes.append(self.context.allocator, .{ .type = try reader.text(), .bits = try reader.number(), .children = @intCast(try reader.number()) });
-        var parsed: Parsed = .{ .status = if (status == 0) "value" else if (status == 1) "trap" else infrastructure_failure, .steps = steps };
-        if (bench) {
-            parsed.warmup_iterations = try reader.number();
-            parsed.calibrated_iterations = try reader.number();
-            const batch_count = try reader.number();
-            if (batch_count > 64) return error.InvalidNativeTestResponse;
-            const raw = try self.context.allocator.alloc(Batch, @intCast(batch_count));
-            for (raw) |*batch| batch.* = .{ .iterations = try reader.number(), .duration_ns = try reader.number() };
-            parsed.raw = raw;
-        }
-        // A response may end with the guest stdout the child captured. Older
-        // responses without the trailer keep parsing because it is optional.
-        if (reader.offset < bytes.len) {
-            const size = try reader.number();
-            if (size > output_limit or size > bytes.len - reader.offset) return error.InvalidNativeTestResponse;
-            parsed.output = bytes[reader.offset..][0..@intCast(size)];
-            reader.offset += @intCast(size);
-        }
-        if (reader.offset != bytes.len) return error.InvalidNativeTestResponse;
+        var parsed: Parsed = .{ .status = if (status == 0) "value" else if (status == 1) "trap" else infrastructure_failure, .steps = steps, .trap = trap };
         if (status != 0) {
             parsed.diagnostics = try diagnostics.toOwnedSlice();
             return parsed;
@@ -309,6 +354,29 @@ pub const Executor = struct {
         if (codec.cursor != codec.nodes.items.len) return error.InvalidNativeTestResponse;
         parsed.actual = actual;
         return parsed;
+    }
+    /// Parse a property batch response: one record per finished input, in
+    /// input order, then the trailer naming how many there were. A response
+    /// cut short by a dying child keeps every record it holds in full and
+    /// reports itself incomplete; a malformed record is still an error.
+    pub fn parseBatch(self: Executor, result_type: []const u8, bytes: []const u8, inputs: usize) Error!BatchOutcome {
+        var reader: Reader = .{ .bytes = bytes };
+        var outcomes: std.ArrayList(Outcome) = .empty;
+        if (bytes.len < 8) return .{ .outcomes = &.{}, .complete = false };
+        if (try reader.number() != property_response_magic) return error.InvalidNativeTestResponse;
+        while (reader.offset < bytes.len) {
+            const index = reader.number() catch break;
+            if (index == property_end_magic) {
+                if (try reader.number() != inputs or outcomes.items.len != inputs or reader.offset != bytes.len) return error.InvalidNativeTestResponse;
+                return .{ .outcomes = outcomes.items, .complete = true };
+            }
+            if (index != outcomes.items.len or index >= inputs) return error.InvalidNativeTestResponse;
+            // A record the child did not finish writing is where it died.
+            const parsed = self.record(&reader, result_type) catch |err| if (reader.exhausted) break else return err;
+            const output = reader.output() catch |err| if (reader.exhausted) break else return err;
+            try outcomes.append(self.context.allocator, .{ .status = parsed.status, .actual = parsed.actual, .diagnostics = parsed.diagnostics, .output = output, .steps = parsed.steps, .trap = parsed.trap });
+        }
+        return .{ .outcomes = outcomes.items, .complete = false };
     }
 };
 /// One queued test call: the executor that owns its library and schema, the
@@ -398,7 +466,30 @@ pub fn executeAll(context: fs.Context, calls: []const Call, limits: Limits, widt
     const a = context.allocator;
     const prepared = try a.alloc(Prepared, calls.len);
     for (calls, prepared) |call, *slot| slot.* = try call.executor.prepare(call, limits);
-    const raw = try a.alloc(Raw, calls.len);
+    const raw = try runPool(context, prepared, limits, width);
+    const outcomes = try a.alloc(Outcome, calls.len);
+    for (calls, prepared, raw, outcomes) |call, request, ended, *outcome| outcome.* = try conclude(context, call, request, ended);
+    return outcomes;
+}
+/// Run every property batch as its own bounded native process, `width` at a
+/// time, exactly as `executeAll` runs tests: one child per batch, each
+/// answering into its own response file, a child still running at
+/// `timeout_ms` killed. A batch child makes one copied-value call per input,
+/// so a property's inputs cost one process launch rather than one each.
+pub fn executeBatches(context: fs.Context, calls: []const BatchCall, limits: Limits, width: usize) Error![]BatchOutcome {
+    if (!limitsValid(limits)) return error.InvalidTestLimits;
+    const a = context.allocator;
+    const prepared = try a.alloc(Prepared, calls.len);
+    for (calls, prepared) |call, *slot| slot.* = try call.executor.prepareBatch(call, limits);
+    const raw = try runPool(context, prepared, limits, width);
+    const outcomes = try a.alloc(BatchOutcome, calls.len);
+    for (calls, prepared, raw, outcomes) |call, request, ended, *outcome| outcome.* = try concludeBatch(context, call, request, ended);
+    return outcomes;
+}
+/// Start every prepared child on `width` workers and gather how each ended.
+fn runPool(context: fs.Context, prepared: []const Prepared, limits: Limits, width: usize) Error![]Raw {
+    const a = context.allocator;
+    const raw = try a.alloc(Raw, prepared.len);
     @memset(raw, .{});
     var pool: Pool = .{
         .prepared = prepared,
@@ -408,7 +499,7 @@ pub fn executeAll(context: fs.Context, calls: []const Call, limits: Limits, widt
         .io = context.io,
         .keep = a,
     };
-    const workers = @max(1, @min(width, calls.len));
+    const workers = @max(1, @min(width, prepared.len));
     const arenas = try a.alloc(std.heap.ArenaAllocator, workers);
     for (arenas) |*arena| arena.* = .init(a);
     defer for (arenas) |*arena| arena.deinit();
@@ -418,9 +509,27 @@ pub fn executeAll(context: fs.Context, calls: []const Call, limits: Limits, widt
     for (threads[1..], arenas[1..]) |*thread, *arena| thread.* = std.Thread.spawn(.{}, Pool.work, .{ &pool, arena }) catch null;
     pool.work(&arenas[0]);
     for (threads) |thread| if (thread) |started| started.join();
-    const outcomes = try a.alloc(Outcome, calls.len);
-    for (calls, prepared, raw, outcomes) |call, request, ended, *outcome| outcome.* = try conclude(context, call, request, ended);
-    return outcomes;
+    return raw;
+}
+/// Turn one batch child's ending into its per-input outcomes. The response
+/// file is read whatever the ending, because a child that died or timed out
+/// mid-batch still finished the inputs before the one it was running.
+fn concludeBatch(context: fs.Context, call: BatchCall, prepared: Prepared, raw: Raw) Error!BatchOutcome {
+    const a = context.allocator;
+    const bytes = std.Io.Dir.cwd().readFileAlloc(context.io, prepared.response, a, .limited(response_limit)) catch "";
+    var outcome = try call.executor.parseBatch(v.text(v.get(call.function, "result")), bytes, call.inputs.len);
+    if (outcome.complete) {
+        const term = raw.term orelse return outcome;
+        if (fs.exitCode(term) == 0) return outcome;
+        outcome.complete = false;
+    }
+    if (raw.failure) |reason| {
+        outcome.ending = reason;
+        outcome.timed_out = std.mem.eql(u8, reason, "Timeout");
+    } else if (raw.term) |term| {
+        outcome.ending = try std.fmt.allocPrint(a, process_failed, .{ term, raw.stderr });
+    } else outcome.ending = "NativeTestProcessFailed";
+    return outcome;
 }
 /// Turn one child's ending into its outcome: its failure, its abnormal exit,
 /// or the answer it wrote.
@@ -435,7 +544,7 @@ fn conclude(context: fs.Context, call: Call, prepared: Prepared, raw: Raw) Error
     const bytes = std.Io.Dir.cwd().readFileAlloc(context.io, prepared.response, a, .limited(response_limit)) catch |err|
         return .{ .status = infrastructure_failure, .diagnostics = @errorName(err) };
     const parsed = try call.executor.parse(v.text(v.get(call.function, "result")), bytes, false);
-    return .{ .status = parsed.status, .actual = parsed.actual, .diagnostics = parsed.diagnostics, .output = parsed.output, .steps = parsed.steps };
+    return parsed.outcome();
 }
 fn monotonic(io: std.Io) i96 {
     return std.Io.Timestamp.now(io, .awake).nanoseconds;
@@ -446,10 +555,16 @@ const Parsed = struct {
     diagnostics: []const u8 = "",
     output: []const u8 = "",
     steps: u64 = 0,
-    warmup_iterations: u64 = 0,
-    calibrated_iterations: u64 = 0,
-    raw: []const Batch = &.{},
+    trap: Trap = .{},
+    /// A benchmark's sampling answer; zero for a test or a batch input.
+    sampled: Sampled = .{},
+
+    fn outcome(self: Parsed) Outcome {
+        return .{ .status = self.status, .actual = self.actual, .diagnostics = self.diagnostics, .output = self.output, .steps = self.steps, .trap = self.trap };
+    }
 };
+/// The sampling half of a benchmark response.
+const Sampled = struct { warmup_iterations: u64 = 0, calibrated_iterations: u64 = 0, raw: []const Batch = &.{} };
 fn limitsValid(limits: Limits) bool {
     return limits.max_steps != 0 and limits.max_frames != 0 and limits.max_calls != 0 and limits.timeout_ms != 0;
 }
@@ -483,6 +598,19 @@ fn benchRequest(a: std.mem.Allocator, name: []const u8, items: []const wire.Node
     try writeNodes(w, items);
     return buffer.toOwnedSlice();
 }
+/// A property batch request: the test request's limits and name, then the
+/// input count and each input's node block.
+fn batchRequest(a: std.mem.Allocator, name: []const u8, inputs: []const []const wire.Node, limits: Limits) Error![]const u8 {
+    if (inputs.len > batch_limit) return error.TestValueLimit;
+    var buffer: std.Io.Writer.Allocating = .init(a);
+    defer buffer.deinit();
+    const w = &buffer.writer;
+    try writeNumbers(w, &.{ property_magic, limits.max_steps, limits.max_frames, limits.max_calls });
+    try string(w, name);
+    try w.writeInt(u64, inputs.len, .little);
+    for (inputs) |nodes| try writeNodes(w, nodes);
+    return buffer.toOwnedSlice();
+}
 /// Test and benchmark requests share their argument/name trailer exactly.
 /// Write a fixed field sequence; kept out of tests so a test body keeps one loop.
 fn writeNumbers(w: *std.Io.Writer, numbers: []const u64) Error!void {
@@ -504,18 +632,35 @@ fn string(w: *std.Io.Writer, bytes: []const u8) Error!void {
 const Reader = struct {
     bytes: []const u8,
     offset: usize = 0,
+    /// Set when a read ran past the end, which in a batch response means the
+    /// child died while writing that record rather than that it wrote a bad one.
+    exhausted: bool = false,
     fn number(self: *Reader) Error!u64 {
-        if (self.bytes.len - self.offset < 8) return error.InvalidNativeTestResponse;
+        if (self.bytes.len - self.offset < 8) return self.short();
         const result = std.mem.readInt(u64, self.bytes[self.offset..][0..8], .little);
         self.offset += 8;
         return result;
     }
     fn text(self: *Reader) Error![]const u8 {
         const size = try self.number();
-        if (size > 4096 or size > self.bytes.len - self.offset) return error.InvalidNativeTestResponse;
+        if (size > 4096) return error.InvalidNativeTestResponse;
+        if (size > self.bytes.len - self.offset) return self.short();
         const value = self.bytes[self.offset..][0..@intCast(size)];
         self.offset += @intCast(size);
         return value;
+    }
+    /// The captured guest stdout trailer: a length and at most `output_limit` bytes.
+    fn output(self: *Reader) Error![]const u8 {
+        const size = try self.number();
+        if (size > output_limit) return error.InvalidNativeTestResponse;
+        if (size > self.bytes.len - self.offset) return self.short();
+        const value = self.bytes[self.offset..][0..@intCast(size)];
+        self.offset += @intCast(size);
+        return value;
+    }
+    fn short(self: *Reader) Error {
+        self.exhausted = true;
+        return error.InvalidNativeTestResponse;
     }
 };
 
@@ -638,10 +783,10 @@ test "native benchmark response carries raw batches and rejects a wrong magic" {
     }
     const parsed = try executor.parse("i64", buffer.written(), true);
     try std.testing.expectEqualStrings("value", parsed.status);
-    try std.testing.expectEqual(@as(u64, 3), parsed.warmup_iterations);
-    try std.testing.expectEqual(@as(u64, 7), parsed.calibrated_iterations);
-    try std.testing.expectEqual(@as(usize, 2), parsed.raw.len);
-    try std.testing.expectEqual(@as(u64, 777), parsed.raw[1].duration_ns);
+    try std.testing.expectEqual(@as(u64, 3), parsed.sampled.warmup_iterations);
+    try std.testing.expectEqual(@as(u64, 7), parsed.sampled.calibrated_iterations);
+    try std.testing.expectEqual(@as(usize, 2), parsed.sampled.raw.len);
+    try std.testing.expectEqual(@as(u64, 777), parsed.sampled.raw[1].duration_ns);
     try std.testing.expectEqualStrings("5", parsed.actual.string);
     try std.testing.expectError(error.InvalidNativeTestResponse, executor.parse("i64", buffer.written(), false));
 }
@@ -798,4 +943,96 @@ test "the compiled harness is published once per source and tool stamp and reuse
     const private = try runner(context, .{ .cache = null, .temporary = scratch, .zig = zig, .zig_stamp = "zig-a" });
     try std.testing.expect(private.compiled);
     try std.testing.expect(std.mem.startsWith(u8, private.path, scratch));
+}
+
+/// A property batch response answering the first `answered` of `total`
+/// inputs, each returning `True` with a captured output naming its slot, and
+/// the trailer only when every input was answered.
+fn batchResponse(a: std.mem.Allocator, answered: usize, total: usize) Error![]const u8 {
+    var buffer: std.Io.Writer.Allocating = .init(a);
+    errdefer buffer.deinit();
+    const w = &buffer.writer;
+    try w.writeInt(u64, property_response_magic, .little);
+    for (0..answered) |slot| try batchRecord(a, w, slot);
+    if (answered == total) try writeNumbers(w, &.{ property_end_magic, total });
+    return buffer.toOwnedSlice();
+}
+fn batchRecord(a: std.mem.Allocator, w: *std.Io.Writer, slot: usize) Error!void {
+    try writeNumbers(w, &.{ slot, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+    try string(w, "");
+    try string(w, "");
+    try string(w, "");
+    try w.writeInt(u64, 0, .little);
+    try string(w, "bool");
+    try writeNumbers(w, &.{ 1, 0 });
+    try string(w, try std.fmt.allocPrint(a, "input-{d}", .{slot}));
+}
+fn boolExecutor(context: fs.Context, types: []const Value, library: []const u8, directory: []const u8) Executor {
+    return .{ .context = context, .library = library, .temporary = directory, .executable = "/bin/sh", .types = types };
+}
+
+// spec: PROPERTY-TEST-4
+test "property a batch response answers every input in one process and a cut-off one keeps its finished inputs" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const parsed = try std.json.parseFromSliceLeaky(Value, a, "{\"types\":[{\"name\":\"bool\",\"kind\":\"boolean\"}]}", .{});
+    const executor = boolExecutor(context, v.array(v.get(parsed, "types")), "", "");
+    const whole = try executor.parseBatch("bool", try batchResponse(a, 3, 3), 3);
+    try std.testing.expect(whole.complete);
+    try std.testing.expectEqual(@as(usize, 3), whole.outcomes.len);
+    try std.testing.expect(whole.outcomes[2].actual.bool);
+    try std.testing.expectEqualStrings("input-2", whole.outcomes[2].output);
+    // A child that died while writing its third record leaves two answers.
+    const cut = try batchResponse(a, 3, 4);
+    const partial = try executor.parseBatch("bool", cut[0 .. cut.len - 5], 4);
+    try std.testing.expect(!partial.complete);
+    try std.testing.expectEqual(@as(usize, 2), partial.outcomes.len);
+    // A trailer that miscounts the inputs is a malformed answer, not a short one.
+    try std.testing.expectError(error.InvalidNativeTestResponse, executor.parseBatch("bool", try batchResponse(a, 3, 3), 4));
+    const nothing = try executor.parseBatch("bool", "", 2);
+    try std.testing.expectEqual(@as(usize, 0), nothing.outcomes.len);
+    // The request carries the limits and name once, then every input's nodes.
+    const node = [_]wire.Node{.{ .type = "bool", .bits = 1 }};
+    const request = try batchRequest(a, "main::test_p", &.{ &node, &node }, .{ .max_steps = 5, .max_frames = 6, .max_calls = 7 });
+    var reader: Reader = .{ .bytes = request };
+    try std.testing.expectEqual(property_magic, try reader.number());
+    try std.testing.expectEqual(@as(u64, 5), try reader.number());
+    try std.testing.expectEqual(@as(u64, 6), try reader.number());
+    try std.testing.expectEqual(@as(u64, 7), try reader.number());
+    try std.testing.expectEqualStrings("main::test_p", try reader.text());
+    try std.testing.expectEqual(@as(u64, 2), try reader.number());
+}
+
+// spec-case: PROPERTY-TEST-4
+test "property a batch child that dies mid-batch reports the inputs it finished and why it stopped" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary_dir = std.testing.tmpDir(.{});
+    defer temporary_dir.cleanup();
+    const directory = try temporary_dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const canned = try std.fs.path.join(a, &.{ directory, "canned" });
+    try context.write(canned, try batchResponse(a, 2, 5));
+    // The runner is handed `library request --response FILE`; the script sees FILE as `$3`.
+    const script = try std.fs.path.join(a, &.{ directory, "dying-child" });
+    try context.write(script, try std.fmt.allocPrint(a, "/bin/cp {s} \"$3\"\necho crashed >&2\nexit 7\n", .{canned}));
+    const parsed = try std.json.parseFromSliceLeaky(Value, a, "{\"types\":[{\"name\":\"bool\",\"kind\":\"boolean\"}]}", .{});
+    const executor = boolExecutor(context, v.array(v.get(parsed, "types")), script, directory);
+    const node = [_]wire.Node{.{ .type = "bool", .bits = 1 }};
+    const inputs = [_][]const wire.Node{ &node, &node, &node, &node, &node };
+    const function = try std.json.parseFromSliceLeaky(Value, a, "{\"name\":\"main::test_p\",\"result\":\"bool\"}", .{});
+    const answers = try executeBatches(context, &.{.{ .executor = &executor, .function = function, .inputs = &inputs }}, .{ .timeout_ms = 5000 }, 1);
+    try std.testing.expectEqual(@as(usize, 2), answers[0].outcomes.len);
+    try std.testing.expect(!answers[0].complete);
+    try std.testing.expect(!answers[0].timed_out);
+    try std.testing.expect(std.mem.indexOf(u8, answers[0].ending, "crashed") != null);
 }

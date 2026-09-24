@@ -1,7 +1,8 @@
 #define _POSIX_C_SOURCE 200809L
 /* Fresh-process copied-value harness. The parent owns typed JSON conversion.
-   A request either performs one copied-value call (tests) or samples the same
-   call repeatedly with an in-process monotonic clock (benchmarks). */
+   A request either performs one copied-value call (tests), samples the same
+   call repeatedly with an in-process monotonic clock (benchmarks), or makes
+   one copied-value call per input of a batch (property tests). */
 #include "native_host.h"
 #include "native_providers.h"
 #include "native_embed.h"
@@ -21,6 +22,12 @@
 /* "MLYBNCH2"/"MLYBRSP2", one byte per character in little-endian order. */
 #define BENCH_REQUEST_MAGIC UINT64_C(0x3248434e42594c4d)
 #define BENCH_RESPONSE_MAGIC UINT64_C(0x3250535242594c4d)
+/* "MLYPROP1"/"MLYPRSP1"/"MLYPEND1": a property batch request, its response,
+   and the trailer that says every input's record was written. */
+#define PROPERTY_REQUEST_MAGIC UINT64_C(0x31504f5250594c4d)
+#define PROPERTY_RESPONSE_MAGIC UINT64_C(0x3150535250594c4d)
+#define PROPERTY_END_MAGIC UINT64_C(0x31444e4550594c4d)
+#define PROPERTY_INPUT_LIMIT 4096
 
 typedef int (*Invoke)(const char *, const MylangWireNode *, size_t, MylangWireNode *, size_t, const MylangCodecOptions *, MylangCodecResult *);
 
@@ -277,6 +284,57 @@ static int run_benchmark(FILE *request, const char *library_path) {
     return finish();
 }
 
+/* One copied-value call per input, in one process. Every input's record is
+   flushed as soon as it is written, so a child that dies mid-batch (a crash,
+   the memory ceiling, the parent's timeout) leaves the records of the inputs
+   before the one that killed it, and the parent reruns only from there. Each
+   call resets guest state before returning (native_embed.h), so a trap in one
+   input does not leak into the next. */
+static int run_property(FILE *request, const char *library_path) {
+    MylangCodecOptions options = {0};
+    options.run.max_steps = number(request); options.run.max_frames = number(request); options.max_calls = number(request);
+    options.run.stress = (uint64_t)stress_flag;
+    char *name = string(request);
+    uint64_t inputs_count = number(request);
+    if (inputs_count > PROPERTY_INPUT_LIMIT) fail("InvalidNativeTestRequest");
+    MylangWireNode **inputs = calloc(inputs_count ? (size_t)inputs_count : 1, sizeof *inputs);
+    uint64_t *counts = calloc(inputs_count ? (size_t)inputs_count : 1, sizeof *counts);
+    if (!inputs || !counts) fail("OutOfMemory");
+    for (uint64_t i = 0; i < inputs_count; ++i) {
+        counts[i] = number(request);
+        inputs[i] = read_nodes(request, counts[i]);
+    }
+    MylangWireNode *outputs = calloc(TEST_NODE_LIMIT, sizeof *outputs);
+    if (!outputs) fail("OutOfMemory");
+    if (fgetc(request) != EOF) fail("InvalidNativeTestRequest");
+    fclose(request);
+    void *library = NULL;
+    Invoke invoke = load_invoke(&library, library_path);
+    put_number(PROPERTY_RESPONSE_MAGIC);
+    if (fflush(stdout) != 0) fail("NativeTestOutputFailed");
+    for (uint64_t i = 0; i < inputs_count; ++i) {
+        MylangCodecResult out;
+        memset(&out, 0, sizeof out);
+        OutputCapture capture = capture_stdout();
+        invoke(name, inputs[i], (size_t)counts[i], outputs, TEST_NODE_LIMIT, &options, &out);
+        size_t output_length = 0;
+        char *output = release_stdout(capture, &output_length);
+        put_number(i);
+        put_prefix(&out);
+        put_tail(&out, outputs);
+        put_output(output, output_length);
+        free(output);
+        if (fflush(stdout) != 0) fail("NativeTestOutputFailed");
+    }
+    put_number(PROPERTY_END_MAGIC); put_number(inputs_count);
+    for (uint64_t i = 0; i < inputs_count; ++i) {
+        for (uint64_t j = 0; j < counts[i]; ++j) free((void *)inputs[i][j].type);
+        free(inputs[i]);
+    }
+    free(inputs); free(counts); free(outputs); free(name); dlclose(library);
+    return finish();
+}
+
 /* Point the protocol channel (fd 1) at a response file before any byte is
    written, so a parent that runs many children at once reads each answer from
    its own file instead of holding one pipe per child. */
@@ -304,6 +362,7 @@ int main(int argc, char **argv) {
     if (!request) fail("NativeTestRequestUnavailable");
     uint64_t magic = number(request);
     if (magic == BENCH_REQUEST_MAGIC) return run_benchmark(request, argv[1]);
+    if (magic == PROPERTY_REQUEST_MAGIC) return run_property(request, argv[1]);
     if (magic != TEST_REQUEST_MAGIC) fail("InvalidNativeTestRequest");
     return run_test(request, argv[1]);
 }
