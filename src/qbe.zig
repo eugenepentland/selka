@@ -265,7 +265,6 @@ fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src:
         .selected = selected,
         .step_checks = interface.policy.step_checks,
         .frame_checks = interface.policy.frame_checks,
-        .checks = interface.policy.checks,
         .pure = &.{},
     };
     var reuse: Reuse = try .init(a, pass, interface.reuse);
@@ -600,9 +599,6 @@ const EmitPass = struct {
     step_checks: bool,
     /// Whether generated code enforces the `--max-frames` ceiling itself.
     frame_checks: bool,
-    /// Whether generated code carries the overflow, cast and bounds guards
-    /// (`--unchecked` turns them off; see `native_interface.Policy.checks`).
-    checks: bool,
     pure: []const bool,
 };
 
@@ -621,7 +617,6 @@ fn emitOne(pass: EmitPass, index: usize, scratch: std.mem.Allocator) GenerateErr
         .arenas = pass.arenas,
         .step_checks = pass.step_checks,
         .frame_checks = pass.frame_checks,
-        .checks = pass.checks,
         .entry = index == @backingInt(pass.program.main),
         .pure = pass.pure,
     };
@@ -878,7 +873,7 @@ fn snapshotOf(pass: EmitPass, reuse: *Reuse, reads: fragments.Reads, invoking: b
     const standin = &reuse.standin.?;
     var hash = std.crypto.hash.Blake3.init(.{});
     hash.update("standin-snapshot-v1");
-    for ([_]bool{ pass.step_checks, pass.frame_checks, pass.checks, pass.arenas }) |flag| hash.update(&.{@intFromBool(flag)});
+    for ([_]bool{ pass.step_checks, pass.frame_checks, pass.arenas }) |flag| hash.update(&.{@intFromBool(flag)});
     for (reads.names) |name| {
         snapshotText(&hash, name);
         const index = standin.functions.get(name) orelse {
@@ -1087,7 +1082,6 @@ fn flagsOf(pass: EmitPass, index: usize) fragments.Flags {
     return .{
         .step_checks = pass.step_checks,
         .frame_checks = pass.frame_checks,
-        .checks = pass.checks,
         .arenas = pass.arenas,
         .entry = index == @backingInt(pass.program.main),
     };
@@ -1371,9 +1365,10 @@ const Emitter = struct {
     /// a frame ceiling omits both and refuses one at run time instead, exactly as
     /// instruction-budget accounting does.
     frame_checks: bool = true,
-    /// Emit the value guards: integer overflow, narrowing casts and index
-    /// bounds. `--unchecked` clears it, which also removes the frame record
-    /// and its position stores when nothing is accounted (`QBE-UNCHECKED-1`).
+    /// Emit the value guards of integer `+ - *` and of list, fixed-array and
+    /// `bytes` element access. Always true, except while a check-free loop
+    /// copy lowers an instruction its guard proved cannot fail
+    /// (`QBE-LOOP-VERSION-1`); every other guard ignores it.
     checks: bool = true,
     /// True for the function the runtime calls first, the only place the
     /// missing-accounting guard has to run.
@@ -1694,7 +1689,6 @@ const Emitter = struct {
     pub const frameBytes = frame_lower.frameBytes;
     pub const frameLeaf = frame_lower.frameLeaf;
     pub const frameMap = frame_lower.frameMap;
-    pub const framesLinked = frame_lower.framesLinked;
     pub const initializeStorage = frame_lower.initializeStorage;
     pub const leaveFrame = frame_lower.leaveFrame;
     pub const packArgument = frame_lower.packArgument;
@@ -1971,7 +1965,7 @@ const Emitter = struct {
         // The position marker is not budget metadata: trap traces and
         // `assert` messages read the frame's current pc, so it is emitted
         // even where the step check is not.
-        if (self.framesLinked()) try self.print("@{s}{d}\n storel {d}, %position\n", .{ prefix, pc, pc }) else try self.print("@{s}{d}\n", .{ prefix, pc });
+        try self.print("@{s}{d}\n storel {d}, %position\n", .{ prefix, pc, pc });
     }
     /// What the check-free copy may assume at the current instruction, or
     /// null outside one (`QBE-LOOP-VERSION-1`).
@@ -2019,7 +2013,7 @@ const Emitter = struct {
             self.pc = pc;
             self.expireFusedDecode(pc);
             // QBE-LOOP-VERSION-1: an instruction whose guards the loop's own
-            // guard proved is lowered as an unchecked build lowers it.
+            // guard proved is lowered without them.
             const checks = self.checks;
             defer self.checks = checks;
             if (self.loopAction()) |action| if (action.unchecked) {

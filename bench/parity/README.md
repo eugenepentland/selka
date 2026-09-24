@@ -48,7 +48,6 @@ and counterfactual tooling; this directory is the maintained copy.
 | arm | build |
 |---|---|
 | `my` | `mylang build --backend llvm --llvm-opt 3 --lto` (what `--release` means) |
-| `my-unchecked` | `+ --unchecked` |
 | `my-<variant>` | a variant file with the `my` flags (`_tuned`, `_arena`, `_class`, `_flat`, ...) |
 | `my-qbe` | `--backend qbe` (the plain `mylang build` since 2026-09-23), only with `-- --qbe` |
 | `zig-fast` | `zig build-exe -O ReleaseFast`: **the reference of every ratio** |

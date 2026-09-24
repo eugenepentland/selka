@@ -61,9 +61,9 @@ pub fn append(context: fs.Context, raw: []const []const u8, output: *std.ArrayLi
 /// argument after one as its value, or a `--link FILE` written next is lost.
 fn boolean(flag: []const u8) bool {
     for ([_][]const u8{
-        "--project",  "--library",     "--report",       "--run",             "--force",        "--json",      "--release",      "--lto",
-        "--no-cache", "--unchecked",   "--keep-symbols", "--step-accounting", "--gc-stress",    "--pure-skip", "--affected",     "--bench-only",
-        "--restrict", "--allow-clock", "--allow-host",   "--allow-all",       "--allow-random", "--allow-env", "--print-result",
+        "--project",     "--library",      "--report",          "--run",          "--force",     "--json",         "--release",    "--lto",
+        "--no-cache",    "--keep-symbols", "--step-accounting", "--gc-stress",    "--pure-skip", "--affected",     "--bench-only", "--restrict",
+        "--allow-clock", "--allow-host",   "--allow-all",       "--allow-random", "--allow-env", "--print-result",
     }) |name| if (std.mem.eql(u8, flag, name)) return true;
     return false;
 }

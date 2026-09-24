@@ -74,17 +74,6 @@ test "an accounted build keeps the linked frame record and no call positions" {
     try std.testing.expect(!frame_map.usesFrameMap(rec));
 }
 
-// spec-case: QBE-FRAMEMAP-1
-test "an unchecked fast build carries no call positions, as it links no record" {
-    const a = std.testing.allocator;
-    var c = try language.Compilation.init(a, "qbe.my", recursive);
-    defer c.deinit();
-    const manifest = try c.emitQbeWithOptions(a, .{ .step_checks = false, .frame_checks = false, .checks = false });
-    defer a.free(manifest);
-    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, manifest, "dbgloc"));
-    try std.testing.expectEqual(@as(usize, 0), std.mem.count(u8, manifest, "dbgfile"));
-}
-
 // spec-case: QBE-FRAMEMAP-ASM-1
 test "the compiler and the native build agree on the entry guard's column" {
     try std.testing.expectEqual(frame_map.guard_column, qbe.frame_map_guard_column);

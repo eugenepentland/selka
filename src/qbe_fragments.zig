@@ -40,7 +40,6 @@ pub const format_version = "mylang-qbe-fragments-v2";
 pub const Flags = struct {
     step_checks: bool,
     frame_checks: bool,
-    checks: bool,
     /// Any function opens an arena scope (`qbe_arena.present`).
     arenas: bool,
     /// This function is the program's entry.

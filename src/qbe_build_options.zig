@@ -24,20 +24,18 @@ pub fn keepSymbols(args: []const []const u8) bool {
     for (args) |argument| if (std.mem.eql(u8, argument, "--keep-symbols")) return true;
     return false;
 }
-/// Whether a build gave up the language's value guards: integer overflow on
-/// `+ - * // %` and unary `-`, narrowing integer casts, and index bounds on
-/// lists, fixed arrays, `bytes`, `str` and dictionary position reads. With no
-/// step and no frame ceiling it also removes the per-call frame record, the
-/// stack-floor test and the position stores. Allocation failure, the memory
-/// budget, GC roots and host-call validation are kept. A would-be trap becomes
-/// undefined behaviour, so this is a release policy for a program already known
-/// to be correct, not a way to make a failing one pass (`QBE-UNCHECKED-1`). It
-/// rides in `link_arguments` like `--keep-symbols`, so the frozen Options field
-/// set does not grow; guest arguments after `--` are never read.
-pub fn unchecked(args: []const []const u8) bool {
+/// The refusal every building or executing command answers `--unchecked` with
+/// (`RELEASE-CHECKED-1`). The policy made a would-be trap undefined behaviour,
+/// so an optimized build could compute a different result than a checked one;
+/// it is gone, and naming it is a usage error rather than an unknown flag.
+pub const unchecked_removed = "--unchecked was removed: every build keeps overflow, cast and bounds checks so optimization never changes a program's result\n";
+/// Whether the command's own arguments name the removed `--unchecked` switch,
+/// bare or with a value. Guest arguments after `--` are never read, so a guest
+/// may still receive the spelling.
+pub fn uncheckedRequested(args: []const []const u8) bool {
     for (args) |argument| {
         if (std.mem.eql(u8, argument, "--")) return false;
-        if (std.mem.eql(u8, argument, "--unchecked")) return true;
+        if (std.mem.eql(u8, argument, "--unchecked") or std.mem.startsWith(u8, argument, "--unchecked=")) return true;
     }
     return false;
 }
@@ -162,9 +160,6 @@ pub const usage = "usage: mylang build <file.my> (-o <output> | --run) [--projec
     "  " ++ cache_dir_flag ++ "DIR  --no-cache  --report\n" ++
     "  --timings=json  phase-timings-v1 JSON Lines on stderr (frontend/codegen/link/native)\n" ++
     "  --keep-symbols  keep the guest symbol table so `perf report` names functions\n" ++
-    "  --unchecked  drop overflow, cast and index-bounds guards and, with no ceiling,\n" ++
-    "    the frame record and position stores; a would-be trap becomes undefined\n" ++
-    "    behaviour. ReleaseFast executables only: not --mode Debug, not --library\n" ++
     "  --max-memory BYTES  byte ceiling for --run (K/M/G suffixes; default 4G)\n" ++
     "  --timeout=SECONDS  wall-clock ceiling for --run (no default; a run past it exits 1 with R_TIMEOUT)\n" ++
     "  --run instead of -o: execute temporarily; pass guest arguments after --\n";
@@ -210,11 +205,6 @@ pub fn parse(args: []const []const u8) Error!Options {
         // scans, so the frozen Options field set does not grow for a switch that
         // changes no artifact.
         if (std.mem.eql(u8, argument, "--timings=json")) continue;
-        // `--unchecked` is a code-generation policy the emitters read out of
-        // `link_arguments`, which the driver already scans and forwards, so the
-        // frozen Options field set does not grow. `validate` refuses the two
-        // combinations that cannot honor it.
-        if (std.mem.eql(u8, argument, "--unchecked")) continue;
         // `--release` is a bare switch that stands for four controls; `validate`
         // refuses it beside any control it already names.
         if (std.mem.eql(u8, argument, release_flag)) {
@@ -251,11 +241,6 @@ pub fn parse(args: []const []const u8) Error!Options {
 fn validate(result: Options) Error!void {
     if (result.source.len == 0) return error.InvalidBuildArguments;
     if (release(result.link_arguments) and restatesRelease(result.link_arguments)) return error.InvalidBuildArguments;
-    // A Debug build exists to report failures, and a library is linked into
-    // hosts — the embed API and the guest-test runner — that always run their
-    // guest under a finite budget and need its traps. Neither can honor
-    // `--unchecked`, so neither accepts it and silently ignores it.
-    if (unchecked(result.link_arguments) and (!std.mem.eql(u8, result.mode, default_mode) or result.library)) return error.InvalidBuildArguments;
     if (result.run) {
         if (result.output.len != 0 or result.library) return error.InvalidBuildArguments;
     } else {
@@ -391,8 +376,6 @@ test "--release names ReleaseFast LLVM O3 with LTO and refuses a control it alre
     try std.testing.expectEqual(Lto.full, asked.codegen.llvm.lto);
     try std.testing.expect(release(asked.link_arguments));
     try std.testing.expect(!release((try parse(&.{ "main.my", "-o", "out" })).link_arguments));
-    // `--unchecked` is a ReleaseFast policy the shorthand keeps.
-    try std.testing.expect(unchecked((try parse(&.{ "main.my", "--run", "--release", "--unchecked" })).link_arguments));
     // A guest argument that spells the switch after `--` belongs to the guest.
     try std.testing.expectEqual(std.meta.activeTag((try parse(&.{ "main.my", "--run", "--", "--release" })).codegen), .auto);
     try std.testing.expect(std.mem.indexOf(u8, usage, "--release  the optimized build: --mode ReleaseFast --backend llvm --llvm-opt 3 --lto") != null);
@@ -492,21 +475,20 @@ test "native link controls are repeatable and reject injected compiler switches"
     try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "--run", "--library-path" }));
 }
 
-// spec-case: QBE-UNCHECKED-1
-test "a release build accepts --unchecked and Debug and library builds refuse it" {
-    const asked = try parse(&.{ "main.my", "-o", "out", "--unchecked" });
-    try std.testing.expect(unchecked(asked.link_arguments));
-    try std.testing.expectEqualStrings("main.my", asked.source);
-    try std.testing.expectEqualStrings(default_mode, asked.mode);
-    try std.testing.expect(!unchecked((try parse(&.{ "main.my", "-o", "out" })).link_arguments));
-    try std.testing.expect(std.mem.indexOf(u8, usage, "--unchecked") != null);
-    // A Debug build reports failures and a library is embedded by hosts that
-    // need traps; neither accepts a policy it cannot honor.
-    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--unchecked", "--mode=Debug" }));
-    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "--project", "--library", "-o", "lib.so", "--unchecked" }));
-    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--unchecked=yes" }));
+// spec-case: RELEASE-CHECKED-1
+test "every build refuses --unchecked as removed and a guest may still receive it" {
+    try std.testing.expect(uncheckedRequested(&.{ "main.my", "-o", "out", "--unchecked" }));
+    try std.testing.expect(uncheckedRequested(&.{ "main.my", "--run", "--release", "--unchecked" }));
+    try std.testing.expect(uncheckedRequested(&.{ "main.my", "-o", "out", "--unchecked=yes" }));
+    try std.testing.expect(!uncheckedRequested(&.{ "main.my", "-o", "out", "--release" }));
+    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "-o", "out", "--unchecked" }));
+    try std.testing.expectError(error.InvalidBuildArguments, parse(&.{ "main.my", "--run", "--release", "--unchecked" }));
+    try std.testing.expect(std.mem.indexOf(u8, usage, "--unchecked") == null);
+    try std.testing.expect(std.mem.startsWith(u8, unchecked_removed, "--unchecked was removed: every build keeps overflow, cast and bounds checks"));
     // A guest argument that spells the switch after `--` belongs to the guest.
-    try std.testing.expect(!unchecked((try parse(&.{ "main.my", "--run", "--", "--unchecked" })).link_arguments));
+    try std.testing.expect(!uncheckedRequested(&.{ "main.my", "--run", "--", "--unchecked" }));
+    const guest = try parse(&.{ "main.my", "--run", "--", "--unchecked" });
+    try std.testing.expectEqualStrings("--unchecked", guest.arguments[1]);
 }
 // spec-case: BUILD-RELEASE-1
 test "a link input written after a bare switch is still linked" {

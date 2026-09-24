@@ -62,8 +62,8 @@ pub fn Lower(comptime Emitter: type) type {
         /// depth ceiling and the execution-stack floor without a runtime call. The
         /// record is `{prev, function, position, native_bytes}`; generated code owns
         /// the first three words and reads `ctx->frames`/`ctx->frame_limit`/
-        /// `ctx->frame_floor` at their frozen offsets. A build that links no record
-        /// at all emits nothing here (see `framesLinked`).
+        /// `ctx->frame_floor` at their frozen offsets. The frame-map protocol
+        /// links none and emits only the stack-floor test (see `frameMap`).
         pub fn enterFrame(self: *Emitter, name: []const u8) GenerateError!void {
             return impl.enterFrame(Emitter, self, name);
         }
@@ -81,23 +81,14 @@ pub fn Lower(comptime Emitter: type) type {
         pub fn frameLeaf(self: *Emitter) bool {
             return impl.frameLeaf(Emitter, self);
         }
-        /// QBE-FRAMEMAP-1: the fast protocol (no step and no frame accounting) with
-        /// its value guards on links no frame record at all. Every call instead
+        /// QBE-FRAMEMAP-1: the fast protocol (no step and no frame accounting)
+        /// links no frame record at all. Every call instead
         /// names its bytecode position with `dbgloc PC+1`, the build turns those
         /// into a return-address table (`qbe_frame_map.zig`), and the runtime walks
         /// the frame-pointer chain only when a trap fires. Nothing else reads a
         /// record there: no step check, no depth counter.
         pub fn frameMap(self: *const Emitter) bool {
             return impl.frameMap(Emitter, self);
-        }
-        /// Whether this function links a frame record at all. QBE-UNCHECKED-1: a
-        /// build that carries neither ceiling and was asked to drop its value
-        /// guards has nothing left that reads the record — no step check, no depth
-        /// counter, and no guard whose trap would want a trace — so the record, the
-        /// stack-floor test, the `_meta` store, the link/unlink pair and every
-        /// `storel N, %position` go away together. Every other policy keeps them.
-        pub fn framesLinked(self: *const Emitter) bool {
-            return impl.framesLinked(Emitter, self);
         }
         /// Zero-fill the locals a root push or drop could read before their first store, and
         /// store each parameter into its slot.
@@ -260,32 +251,22 @@ fn initializeStorage(comptime Emitter: type, self: *Emitter) GenerateError!void 
         } else try self.print(" %v{d} =l add %l{d}, {d}\n storel %v{d}, %l{d}\n", .{ projected, entry.source, entry.offset, projected, entry.slot });
     }
 }
-/// Whether this function links a frame record at all. QBE-UNCHECKED-1: a
-/// build that carries neither ceiling and was asked to drop its value
-/// guards has nothing left that reads the record — no step check, no depth
-/// counter, and no guard whose trap would want a trace — so the record, the
-/// stack-floor test, the `_meta` store, the link/unlink pair and every
-/// `storel N, %position` go away together. Every other policy keeps them.
-fn framesLinked(comptime Emitter: type, self: *const Emitter) bool {
-    return self.checks or self.step_checks or self.frame_checks;
-}
-/// QBE-FRAMEMAP-1: the fast protocol (no step and no frame accounting) with
-/// its value guards on links no frame record at all. Every call instead
+/// QBE-FRAMEMAP-1: the fast protocol (no step and no frame accounting) links
+/// no frame record at all. Every call instead
 /// names its bytecode position with `dbgloc PC+1`, the build turns those
 /// into a return-address table (`qbe_frame_map.zig`), and the runtime walks
 /// the frame-pointer chain only when a trap fires. Nothing else reads a
 /// record there: no step check, no depth counter.
 fn frameMap(comptime Emitter: type, self: *const Emitter) bool {
-    return self.checks and !self.step_checks and !self.frame_checks;
+    return !self.step_checks and !self.frame_checks;
 }
 /// Link this function's native-stack frame record and enforce the logical
 /// depth ceiling and the execution-stack floor without a runtime call. The
 /// record is `{prev, function, position, native_bytes}`; generated code owns
 /// the first three words and reads `ctx->frames`/`ctx->frame_limit`/
-/// `ctx->frame_floor` at their frozen offsets. A build that links no record
-/// at all emits nothing here (see `framesLinked`).
+/// `ctx->frame_floor` at their frozen offsets. The frame-map protocol links
+/// none and emits only the stack-floor test (see `frameMap`).
 fn enterFrame(comptime Emitter: type, self: *Emitter, name: []const u8) GenerateError!void {
-    if (!framesLinked(Emitter, self)) return;
     if (frameMap(Emitter, self)) return guardFrame(Emitter, self);
     const admit = self.temp();
     const stack = self.temp();

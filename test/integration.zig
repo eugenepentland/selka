@@ -10014,57 +10014,21 @@ fn expectNoCapturedOutput(outcome: std.json.Value) !void {
     try testing.expectEqual(@as(usize, 0), captured.len);
 }
 
-// spec-case: QBE-UNCHECKED-1
-test "an unchecked executable computes the same results and refuses a runtime ceiling" {
-    var temporary = testing.tmpDir(.{});
-    defer temporary.cleanup();
-    try temporary.dir.writeFile(testing.io, .{ .sub_path = "unchecked.my", .data =
-        \\def scale(xs: list[i64], at: i64, factor: i64) -> u8:
-        \\    return u8(xs[at] * factor + 1)
-        \\
-        \\def main() -> i64:
-        \\    fixed: [3]i64 = [10, 20, 30]
-        \\    xs: list[i64] = []
-        \\    xs.append(fixed[1])
-        \\    return i64(scale(xs, 0, 2)) + len(xs)
-    });
-    const entry = try temporary.dir.realPathFileAlloc(testing.io, "unchecked.my", testing.allocator);
-    defer testing.allocator.free(entry);
-    const directory = std.fs.path.dirname(entry).?;
-    const checked = try std.fs.path.join(testing.allocator, &.{ directory, "checked-bin" });
-    defer testing.allocator.free(checked);
-    const bare = try std.fs.path.join(testing.allocator, &.{ directory, "unchecked-bin" });
-    defer testing.allocator.free(bare);
-    const cache = try std.fs.path.join(testing.allocator, &.{ directory, "cache" });
-    defer testing.allocator.free(cache);
-    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
-    defer testing.allocator.free(cache_argument);
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", checked, cache_argument, tools[0], tools[1] }, "");
-    try expectConstantProcess(&.{ compiler_path, "build", entry, "-o", bare, cache_argument, tools[0], tools[1], "--unchecked" }, "");
-    // Valid input reaches the same answer under both policies: 20 * 2 + 1 = 41,
-    // plus the one appended element, returned as the process status too.
-    const guarded = try runExecutable(&.{checked}, "--print-result");
-    defer testing.allocator.free(guarded.stdout);
-    defer testing.allocator.free(guarded.stderr);
-    const unguarded = try runExecutable(&.{bare}, "--print-result");
-    defer testing.allocator.free(unguarded.stdout);
-    defer testing.allocator.free(unguarded.stderr);
-    try testing.expectEqualStrings("42\n", guarded.stdout);
-    try testing.expectEqualStrings(guarded.stdout, unguarded.stdout);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 42 }, guarded.term);
-    try testing.expectEqual(guarded.term, unguarded.term);
-    try testing.expectEqualStrings("", unguarded.stderr);
-    // The unchecked build is unbounded, so a ceiling it cannot enforce is
-    // refused loudly rather than silently ignored.
-    const refused = try runExecutable(&.{bare}, "--max-steps=1");
-    defer testing.allocator.free(refused.stdout);
-    defer testing.allocator.free(refused.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, refused.term);
-    try testing.expect(std.mem.indexOf(u8, refused.stderr, "R_NO_STEP_ACCOUNTING") != null);
+/// Run `argv` and require the removal refusal `mylang COMMAND` gives for
+/// `--unchecked`: usage exit status 2, the reason on stderr, nothing built.
+fn expectUncheckedRemoved(argv: []const []const u8, command: []const u8) !void {
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = argv });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, result.term);
+    const expected = try std.fmt.allocPrint(testing.allocator, "mylang {s}: --unchecked was removed: every build keeps overflow, cast and bounds checks so optimization never changes a program's result\n", .{command});
+    defer testing.allocator.free(expected);
+    try testing.expectEqualStrings(expected, result.stderr);
+    try testing.expectEqualStrings("", result.stdout);
 }
 
-// spec-case: QBE-UNCHECKED-1
-test "the unchecked policy is refused where its traps are still needed" {
+// spec-case: RELEASE-CHECKED-1
+test "every building and running command refuses --unchecked as removed" {
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "refused.my", .data =
@@ -10076,18 +10040,14 @@ test "the unchecked policy is refused where its traps are still needed" {
     const directory = std.fs.path.dirname(entry).?;
     const output = try std.fs.path.join(testing.allocator, &.{ directory, "refused-bin" });
     defer testing.allocator.free(output);
-    // `mylang test` names the refusal instead of reporting an unknown flag.
-    const tested = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "test", entry, "--unchecked" } });
-    defer testing.allocator.free(tested.stdout);
-    defer testing.allocator.free(tested.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, tested.term);
-    try testing.expect(std.mem.indexOf(u8, tested.stderr, "--unchecked is refused") != null);
-    // A Debug build exists to report failures, so it does not accept the policy.
-    const debug = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "build", entry, "-o", output, "--unchecked", "--mode=Debug" } });
-    defer testing.allocator.free(debug.stdout);
-    defer testing.allocator.free(debug.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, debug.term);
-    try testing.expect(std.mem.indexOf(u8, debug.stderr, "--unchecked") != null);
+    try expectUncheckedRemoved(&.{ compiler_path, "build", entry, "-o", output, "--unchecked" }, "build");
+    try expectUncheckedRemoved(&.{ compiler_path, "build", entry, "--run", "--release", "--unchecked" }, "build");
+    try expectUncheckedRemoved(&.{ compiler_path, "build", entry, "-o", output, "--unchecked", "--mode=Debug" }, "build");
+    try expectUncheckedRemoved(&.{ compiler_path, "run", entry, "--unchecked" }, "run");
+    try expectUncheckedRemoved(&.{ compiler_path, "run-project", entry, "--unchecked" }, "run-project");
+    try expectUncheckedRemoved(&.{ compiler_path, "test", entry, "--unchecked" }, "test");
+    // Nothing was built.
+    try testing.expectError(error.FileNotFound, temporary.dir.access(testing.io, "refused-bin", .{}));
 }
 
 /// One version of the two-module project the incremental-build fixture edits.

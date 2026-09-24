@@ -240,7 +240,7 @@ cap how much a guest may hold; the collector enforces the cap. Measured on twent
 set fits. At `MYLANG_MEMORY_LIMIT=4M`, below the live set, the same program traps
 `R_MEMORY_BUDGET` rather than merely slowing down.
 
-## What safety costs, and how to stop paying it
+## What safety costs
 
 The language's traps are code the emitter generates: a comparison and a cold
 branch per checked arithmetic operation, per narrowing cast and per container
@@ -267,13 +267,14 @@ slow program gets fast. The per-call frame protocol is three times as expensive
 as all of them together, because it is unconditional work on every call and it
 inflates every function body past the inliner's threshold.
 
-`mylang build --unchecked` takes both omissions at emission time; see
-[unchecked release builds](tooling/native-build.md#unchecked-release-builds) for
-exactly what stops being detected. It is a policy for a program whose tests
-already pass, not a debugging tool: under it an overflow, an out-of-range cast
-or an out-of-bounds index is undefined behaviour instead of a named trap.
-Allocation failure, the memory ceiling, the collector and capability validation
-are unaffected, so a program that runs out of memory still exits cleanly.
+No build omits them. Every build keeps the value guards and the frame protocol,
+so an overflow, an out-of-range cast or an out-of-bounds index is always a named
+trap and optimization never changes a program's result (see
+[checks in every build](tooling/native-build.md#checks-in-every-build)). The
+frame protocol's cost is paid down instead: a ReleaseFast executable with no
+ceiling links no frame record and names each call's position in a
+return-address table read only when a trap fires, and a counted loop proves its
+own checks once (below).
 
 ## Loops that prove their own checks
 
@@ -332,8 +333,8 @@ def main() -> int:
 
 A loop keeps one copy, and every check, when its body calls a function that is
 not inlined, prints, builds a string or grows a list: put that work before or
-after the hot loop. A step-accounted build (`--max-steps`) and an `--unchecked`
-build never version a loop. The
+after the hot loop. A step-accounted build (`--max-steps`) never versions a
+loop. The
 [loop range facts audit](audits/loop-range-facts-2026-09-23.md) has the
 measurements.
 
@@ -566,7 +567,7 @@ python3 bench/parity/bench_parity.py rebaseline .mylang-cache/bench-parity/resul
 ```
 
 It prints one table row per program (Zig milliseconds, then `zig-safe`, `rust`,
-`rust-checked`, `my`, its limit, `my-unchecked` and the variants as ratios), the
+`rust-checked`, `my`, its limit and the variants as ratios), the
 suite's geometric means beside the plan's targets, and one line per regression
 naming the program, arm, ratio and threshold. A program over its limit is timed
 a second time, and the step fails only when both passes exceed it. Rust arms are skipped with a notice
