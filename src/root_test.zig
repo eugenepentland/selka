@@ -14,6 +14,7 @@ test {
     _ = @import("tokens_dump_test.zig");
     _ = @import("doc_coverage_command.zig");
     _ = @import("doctest_command.zig");
+    _ = @import("docs_command.zig");
     _ = @import("reference_test.zig");
     _ = @import("context_test.zig");
     _ = @import("invoke_test.zig");

@@ -198,18 +198,17 @@ fn buildEnvironment(context: fs.Context, settings: options.Options) Error![]cons
 }
 
 /// The run cache's view of the selected code generator. An explicit tool names
-/// its own stamp, so a rebuilt one invalidates the program; the mode-derived
-/// default hashes the installed adapter instead, which is the identity the
-/// object cache keys on and costs only a read of the small Python package.
+/// its own stamp, so a rebuilt one invalidates the program; an unnamed backend
+/// is the QBE found beside the compiler or on `PATH` in either mode, and an
+/// LLVM build with no named adapter hashes the installed one, which is the
+/// identity the object cache keys on and costs only a read of the small
+/// Python package.
 fn codegenIdentity(context: fs.Context, settings: options.Options) Error![]const u8 {
     const zig = try context.executable(settings.zig);
     return switch (settings.codegen) {
         .qbe => |path| qbeIdentity(context, try context.executable(path), zig),
         .llvm => |llvm| llvmIdentity(context, llvm, settings.mode, zig),
-        .auto => if (std.mem.eql(u8, settings.mode, "Debug"))
-            qbeIdentity(context, try context.executable("qbe"), zig)
-        else
-            llvmIdentity(context, .{ .optimization = "3", .lto = true }, settings.mode, zig),
+        .auto => qbeIdentity(context, try context.executable("qbe"), zig),
     };
 }
 
@@ -299,6 +298,7 @@ test "a run identity separates programs, toolchains and build modes" {
     try std.testing.expectEqualStrings(first, try identity(context, settings, "{\"functions\":[]}"));
 }
 
+// spec-case: BUILD-BACKEND-2
 test "run identity follows resolved QBE tools and effective LLVM settings" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
     defer environment.deinit();
@@ -319,6 +319,9 @@ test "run identity follows resolved QBE tools and effective LLVM settings" {
     try environment.put("PATH", root);
     context.self_directory = "";
     const debug: options.Options = .{ .source = "", .run = true, .zig = zig, .mode = "Debug" };
+    // An unnamed backend is the same QBE in either mode; the mode keys the
+    // program through its own field of the build environment.
+    try std.testing.expectEqualStrings(try codegenIdentity(context, debug), try codegenIdentity(context, .{ .source = "", .run = true, .zig = zig, .mode = "ReleaseFast" }));
     const before = try context.allocator.dupe(u8, try codegenIdentity(context, debug));
     try context.write(qbe, "#!/bin/sh\nexit 22\n");
     const after = try codegenIdentity(context, debug);

@@ -5,11 +5,12 @@ usage: compare.py BEFORE_MYLANG AFTER_MYLANG CASE.my... [--modes build,qbe,run,d
 
 For each case and mode, build (or run) with both compilers and compare the
 executable's stdout, stderr and exit status. Modes:
-  build   mylang build (ReleaseFast, LLVM O3 + LTO default)       then run
+  build   mylang build --backend llvm --llvm-opt 3 --lto (ReleaseFast; the
+          default when this ran, `--release` since 2026-09-23)    then run
   qbe     mylang build --backend qbe (ReleaseFast, QBE)            then run
   nolto   mylang build --backend llvm --llvm-opt 3 (no LTO)        then run
   run     mylang run (QBE fast protocol)
-  gc      mylang build, run with --gc-stress
+  gc      the `build` arm, run with --gc-stress
 Prints one line per (case, mode) and the differing outputs.
 """
 import os
@@ -19,12 +20,13 @@ import sys
 import tempfile
 from pathlib import Path
 
+RELEASE = ["--backend", "llvm", "--llvm-opt", "3", "--lto"]
 MODES = {
-    "build": (["build"], []),
+    "build": (["build", *RELEASE], []),
     "qbe": (["build", "--backend", "qbe"], []),
     "nolto": (["build", "--backend", "llvm", "--llvm-opt", "3"], []),
-    "gc": (["build"], ["--gc-stress"]),
-    "steps": (["build"], ["--max-steps=5"]),
+    "gc": (["build", *RELEASE], ["--gc-stress"]),
+    "steps": (["build", *RELEASE], ["--max-steps=5"]),
     "qbegc": (["build", "--backend", "qbe"], ["--gc-stress"]),
 }
 

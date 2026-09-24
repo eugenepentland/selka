@@ -55,6 +55,11 @@ DEFAULT_TOLERANCE = 0.15
 MAX_TOLERANCE = 0.50
 RUST_FLAGS = ["--edition", "2021", "-C", "opt-level=3", "-C", "codegen-units=1",
               "-C", "target-cpu=native", "-C", "panic=abort"]
+# The build every mylang arm but `my-qbe` times: ReleaseFast, LLVM O3 with full
+# LTO. `mylang build` defaulted to it until 2026-09-23 and now defaults to QBE;
+# it is spelled out rather than written `--release` so a compiler named by
+# `-Dbench-mylang` from before the shorthand builds exactly the same arm.
+RELEASE_FLAGS = ["--backend", "llvm", "--llvm-opt", "3", "--lto"]
 # The plan's parity targets (docs/audits/performance-parity-plan-2026-09-22.md §1),
 # reported beside the suite's geometric means; they are goals, not gates.
 TARGETS = {"my": 1.2, "my-unchecked": 1.1, "worst my": 1.5}
@@ -98,10 +103,10 @@ def arms_for(ports: list[tuple[str, Path, str]], qbe: bool) -> list[dict]:
     for lang, path, variant in ports:
         if lang == "my":
             if variant:
-                arms.append(arm(f"my-{variant}", lang, path, []))
+                arms.append(arm(f"my-{variant}", lang, path, RELEASE_FLAGS))
                 continue
-            arms.append(arm("my", lang, path, []))
-            arms.append(arm("my-unchecked", lang, path, ["--unchecked"]))
+            arms.append(arm("my", lang, path, RELEASE_FLAGS))
+            arms.append(arm("my-unchecked", lang, path, [*RELEASE_FLAGS, "--unchecked"]))
             if qbe:
                 arms.append(arm("my-qbe", lang, path, ["--backend", "qbe"]))
         elif lang == "zig":

@@ -3,6 +3,7 @@ const std = @import("std");
 const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
 const options = @import("native_test_options.zig");
+const build_options = @import("qbe_build_options.zig");
 const invalidation = @import("invalidation.zig");
 const budget = @import("memory_budget");
 const snapshot = @import("native_test_snapshot.zig");
@@ -176,10 +177,11 @@ fn argv(context: fs.Context, shared: Fanout, source: []const u8) Error![]const [
     var list: std.ArrayList([]const u8) = .empty;
     try list.appendSlice(a, &.{ shared.compiler, "test", source, "--json" });
     try list.appendSlice(a, &.{ "--filter", opts.filter, "--cache-dir", opts.cache });
-    // A nameless backend is the child's mode-derived default, so it is forwarded
-    // only when the caller named one.
+    // A nameless backend is the child's own QBE, so it is forwarded only when the
+    // caller named one; `--release` already names its mode.
     if (opts.toolchain.qbe.len != 0) try list.appendSlice(a, &.{ "--qbe", opts.toolchain.qbe });
-    try list.appendSlice(a, &.{ "--zig", opts.toolchain.zig, "--mode", opts.mode });
+    try list.appendSlice(a, &.{ "--zig", opts.toolchain.zig });
+    try list.appendSlice(a, if (build_options.release(opts.link_arguments)) &.{build_options.release_flag} else &.{ "--mode", opts.mode });
     try list.appendSlice(a, &.{ "--max-steps", try decimal(a, opts.limits.max_steps) });
     try list.appendSlice(a, &.{ "--max-frames", try decimal(a, opts.limits.max_frames) });
     try list.appendSlice(a, &.{ "--max-calls", try decimal(a, opts.limits.max_calls) });
@@ -384,6 +386,11 @@ test "each child command inherits the selection, budgets and tool choices of the
     try std.testing.expect(std.mem.indexOf(u8, line, "--force") != null);
     try std.testing.expect(std.mem.indexOf(u8, line, "--no-cache") != null);
     try std.testing.expectError(error.DirectoryCasesUnsupported, run(context, try options.parse(&.{ "suite", "--cases", "cases.json" })));
+    // `--release` reaches each child once, in place of the mode it already names.
+    const release: Fanout = .{ .compiler = "/usr/bin/mylang", .options = try options.parse(&.{ "suite", "--release" }), .workspace = "/tmp/work" };
+    const released = try std.mem.join(context.allocator, " ", try argv(context, release, "/programs/one.my"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, released, "--release"));
+    try std.testing.expect(std.mem.indexOf(u8, released, "--mode") == null);
 }
 // spec: NATIVE-BENCH-6
 test "a directory benchmark run is sequential and rejects aggregate artifacts" {

@@ -225,7 +225,12 @@ Details: `docs/python-syntax.md`, `docs/io.md`, `docs/effects.md`, `docs/stateme
 ## Native builds
 
 `mylang build prog.my -o prog` drives QBE, the assembler and the linker directly — no
-Python. Objects are content-addressed under `.mylang-cache/qbe` (override with
+Python. QBE is the backend of every `build`, `run` and `test` unless `--release`
+asks for the optimized one (`--mode ReleaseFast --backend llvm --llvm-opt 3 --lto`,
+like `cargo build --release`): use it for a binary you ship or time, not in the edit
+loop, since each rebuild pays the LTO link. A harness that measures the optimized
+build must say so (`--backend llvm --llvm-opt 3 --lto` works on older compilers
+too). Objects are content-addressed under `.mylang-cache/qbe` (override with
 `--cache-dir`); the bundled runtime is published once per content hash and linked as one
 static archive with `--gc-sections`, so a program that never prints does not carry the
 printing runtime. `--report` prints a JSON timing/reuse breakdown. See

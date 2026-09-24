@@ -8,6 +8,28 @@ opt-in escape hatches for performance when a measurement calls for them. That go
 is still a hypothesis; [the plan](docs/plan.md) tracks the application evidence that
 would confirm it. The working language name and `.my` extension are provisional.
 
+## Start here
+
+- **Writing mylang?** Read [the one-page primer](docs/primer.md): the language
+  for a Python programmer, every example checked by `mylang doctest`. The user
+  guides also ship inside the compiler, so they are there outside this
+  repository: `mylang docs` lists them, and `mylang docs primer` (or `syntax`,
+  `io`, `errors`, `tests`, `build`, ...) prints one.
+- **Commands:** `mylang --help` starts with the everyday ones. `run`, `build`
+  and `test` build with QBE, which takes about a second; add `--release` for the
+  optimized LLVM `-O3` + LTO build you ship or time.
+- **Working in a large project:** `mylang context ENTRY.my --symbol=module::name`
+  answers one bounded question about a declaration (`--at=FILE:LINE:COLUMN`
+  about a position), `mylang tests-for ENTRY.my module::name` lists the tests
+  that reach it, `mylang list-interfaces ENTRY.my` prints every module's public
+  surface, and `mylang test ENTRY.my --affected --against REF` runs only the
+  tests an edit since `REF` can change.
+- **All documentation:** [docs/README.md](docs/README.md) indexes the user guides
+  first and keeps the compiler's internal records (audits, experiments,
+  proposals, handoffs) apart.
+
+## Status
+
 The [incremental QBE native backend](docs/experiments/incremental-qbe.md) is the
 default runtime; an opt-in LLVM adapter supports optimized Linux x86-64 builds.
 `mylang build` produces an executable, reusing individual native
@@ -31,7 +53,8 @@ cases. Three exploratory agent maintenance blocks have since completed; see
 [the audit](docs/audits/feature-completeness-2026-09-07.md). These do not establish
 a comparative productivity advantage.
 Expensive geometry can remain in Zig/C/Rust behind explicit typed wrappers.
-Select LLVM with `mylang build … --backend llvm --llvm-opt 3`; `--lto` is optional.
+Build the optimized executable with `mylang build … --release` (LLVM `-O3` with
+full LTO); `--backend llvm --llvm-opt N [--lto]` picks another level.
 The installed adapter requires Python 3 and uses the selected Zig toolchain's
 LLVM. Guest functions retain that C driver's resolved CPU features through LTO;
 the CPU policy is part of the native object cache identity. QBE remains the
@@ -91,7 +114,9 @@ zig-out/bin/mylang build examples/factorial.my --run
 Add `--project` for a module entry or `--library` for a shared library. The compiler
 runs the native build directly; Python is not needed for application builds.
 `--qbe` and `--zig` select tool paths; otherwise QBE is taken from beside the
-`mylang` executable, then `PATH`, so builds work from any working directory. See
+`mylang` executable, then `PATH`, so builds work from any working directory.
+Every build uses QBE unless `--release` asks for LLVM `-O3` with LTO (see
+[native builds](docs/tooling/native-build.md#backends)). See
 the [QBE build guide](docs/experiments/incremental-qbe.md) for the vendored
 toolchain, cache behavior, providers, and embedding.
 
@@ -589,7 +614,7 @@ builds preserve its timestamp.
 
 When a program is not fast enough, the [performance page](docs/performance.md) is
 the front door: what ordinary managed code costs, that `mylang build` and
-`mylang run` build `ReleaseFast` by default, how to raise the `--max-steps` and
+`mylang run` build `ReleaseFast` with QBE by default and `--release` with LLVM, how to raise the `--max-steps` and
 `--max-frames` budgets each trap now names, why a fixed `[N]T` belongs on the wire
 rather than in a hot loop, and how to measure with `--timings`, `--report` and the
 system timer.

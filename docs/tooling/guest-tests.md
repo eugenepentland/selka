@@ -4,9 +4,10 @@
 checks the project, finds the exported functions whose names begin with `test_`,
 builds them natively and runs each one in its own process. Cases are configured
 with one JSON file rather than with a framework inside the language, and the
-runner itself needs no Python. The default `Debug` build uses QBE and stays
-Python-free; `mylang test --mode ReleaseFast` builds the LLVM release path and
-therefore needs the installed adapter, exactly as `mylang build` does. The
+runner itself needs no Python. Its builds use QBE in either mode (`Debug` by
+default) and stay Python-free; `mylang test --release` builds the LLVM release
+path (ReleaseFast, `-O3` with LTO) and therefore needs the installed adapter,
+exactly as `mylang build --release` does. The
 design record is
 [the guest test workflow](../experiments/guest-tests.md).
 
@@ -355,7 +356,7 @@ types need an explicit expectation. `--bench-only` skips the correctness pass fo
 local iteration.
 
 ```console
-$ mylang test app/main.my --bench '*' --mode ReleaseFast
+$ mylang test app/main.my --bench '*' --release
 passed main::test_square
 1 passed, 0 cached, 0 failed, 0 skipped
 bench main::bench_sum[small] measured median=12.40 ns/op spread=1.20% samples=9
@@ -390,11 +391,11 @@ measurements in retained history. The approved file is never modified by a
 comparison.
 
 ```console
-$ mylang test app/main.my --bench '*' --mode ReleaseFast \
+$ mylang test app/main.my --bench '*' --release \
     --bench-output perf/candidate.json
 $ mylang bench-promote --candidate perf/candidate.json --baseline perf/baseline.json \
     --approver maintainer --reason "accept 4% growth" --revision testrev
-$ mylang test app/main.my --bench '*' --mode ReleaseFast \
+$ mylang test app/main.my --bench '*' --release \
     --bench-baseline perf/baseline.json --bench-policy perf/policy.json
 ```
 

@@ -1,0 +1,235 @@
+# mylang in one page — for Python programmers
+
+mylang is statically typed, Python-shaped, and compiles to a native executable.
+Write it like typed Python; the differences that matter are on this page, and
+every example on it runs under `mylang doctest`. The compiler carries the longer
+guides with it: `mylang docs` lists them and `mylang docs syntax` (or `io`,
+`errors`, `tests`, `stdlib`, ...) prints one, from any directory.
+
+## Commands
+
+```bash
+mylang check prog.my                  # type-check only (fast)
+mylang run prog.my -- ARG1 ARG2       # build and run; the program's arguments go after --
+mylang build prog.my -o prog          # native executable (QBE: about a second)
+mylang build prog.my -o prog --release  # optimized: LLVM -O3 + LTO, for shipping or timing
+mylang test prog.my                   # run the public test_* functions; `mylang test DIR` runs every file
+mylang fmt prog.my --check            # formatter (drop --check to print the formatted file)
+mylang docs primer                    # this page; `mylang --help` lists every command
+```
+
+`run`, `build` and `test` all build with QBE unless you pass `--release`, so the
+edit-build-test loop stays fast; `--release` pays an LTO link on every rebuild.
+
+## File layout
+
+- A single-file program needs no header. A file that imports another file of
+  the project starts with `module NAME`, and **NAME must equal the file name**
+  without `.my` (`calc.my` → `module calc`). `def main` is unrelated to it.
+- `import util` loads `util.my` beside the entry; call `util.f(x)`. Only the
+  declarations `util` marks `public` are visible. `check`, `run`, `build` and
+  `test` follow the imports from a module entry by themselves.
+- Tests are `public def test_name() -> bool` (return `True` to pass), in the same
+  file as the code or in `name_test.my` that does `import name` (then only
+  `name`'s `public` declarations are visible). A test may take `out: Stream`,
+  but not `Filesystem`, `Clock` and the other capabilities: test the pure
+  functions and keep I/O in `main`.
+
+## Program shape and I/O
+
+```mylang
+# doc: check
+def main(args: list[str], fs: Filesystem, out: Stream, err: Stream) -> int:
+    if len(args) != 1: # args are the arguments only (no program name)
+        err.print("usage: prog FILE")
+        return 2 # main's return value is the exit status
+    match fs.read_text(args[0]): # Result[str, ...]; fs.read_file gives bytes
+        case Ok(text):
+            out.print(len(text.splitlines()), "lines") # print(a, b) joins with spaces
+        case Err(_):
+            err.print(f"error: cannot read {args[0]}")
+            return 1
+    return 0
+```
+
+- There is no bare `print`: take `out: Stream` / `err: Stream` parameters (only
+  `main` receives them from the runtime; pass them down). `debug(x)` prints to
+  stderr from anywhere, for debugging only.
+- Capabilities (`fs: Filesystem`, `clock: Clock`, `env: Environment`, ...) are
+  parameters of `main`; pass them to the helpers that need them. There is no
+  `import sys`, `os`, `re`, `heapq` or `collections`.
+
+## Types and declarations
+
+```mylang
+record Item:              # value type: copied on assignment; fields by keyword
+    name: str
+    count: int
+
+class Node:               # reference type: shared, mutable or recursive data
+    value: int
+    next: Option[Node]
+
+enum Color:
+    red,
+    green
+
+union Shape:              # tagged union; variants carry a payload or named fields
+    circle: float,
+    rect(w: float, h: float)
+
+def area(s: Shape) -> float:
+    match s:
+        case Shape.circle(r):
+            return 3.0 * r * r
+        case Shape.rect(w, h):
+            return w * h
+```
+
+Construct with keywords: `Item(name="a", count=1)`, `Shape.rect(w=2.0, h=3.0)`,
+`Node(value=1, next=None)`. Recursive data (trees, ASTs) goes through a `class`
+(a `union` may name a class declared above it). Writing a field of a `record`
+copy (`for it in items: it.count = 0`) is a compile error: use a `class`, or
+rebuild the record. Builtin types: `int`, `float`, `bool`, `str`, `bytes`,
+`list[T]`, `dict[K, V]` (keys `int` or `str` only), `tuple[A, B]`, `Option[T]`
+(`Some(x)` / `None`) and `Result[T, E]` (`Ok(x)` / `Err(e)`).
+
+## Errors: Result, Option and `?`
+
+```mylang
+# doc: expect 3
+def parse_pair(s: str) -> Result[tuple[int, int], str]:
+    parts = s.split(",")
+    if len(parts) != 2:
+        return Err(f"bad pair: {s}")
+    a = int(parts[0].strip())          # int(str) -> Option[int]; float(str) likewise
+    b = int(parts[1].strip())
+    if a is None or b is None:         # `is None` narrows: a and b are int below
+        return Err("not a number")
+    return Ok((a, b))
+
+def total(s: str) -> Result[int, str]:
+    a, b = parse_pair(s)?              # `?` returns the Err early; tuples unpack
+    return Ok(a + b)
+
+def main(out: Stream) -> int:
+    match total("1, 2"):
+        case Ok(n):
+            out.print(n)
+        case Err(message):
+            out.print(message)
+    return 0
+```
+
+There are no exceptions and no `try`. To compare with a literal `Ok(...)`, bind
+it to a typed name first: `expected: Result[int, str] = Ok(3)`, then
+`total("1,2") == expected`.
+
+## Collections
+
+```mylang
+# doc: expect 2 1 [[], [7]] 1
+def main(out: Stream) -> int:
+    counts: dict[str, int] = {}          # an empty literal needs a declared type
+    for word in "a b a".split():
+        counts[word] = counts.get(word, 0) + 1
+    rows: list[list[int]] = []
+    rows.append([])                      # `[]` passed to a method takes its type from it
+    rows.append([n * 7 for n in range(1, 2)])
+    out.print(counts["a"], counts["b"], rows, len(rows[1]))
+    return 0
+```
+
+- list: `append`, `pop`, `insert`, `sort(key=...)`, `len`, slices `xs[a:b]`,
+  negative indexes, `x in xs`, comprehensions `[f(x) for x in xs if p(x)]`.
+- dict: `d[k]`, `d.get(k, default)`, `k in d`, `for k, v in d.items()`
+  (insertion order).
+- Sorting: `sorted(xs)`, `xs.sort(key=lambda it: (-it.count, it.name))` (tuple
+  keys work; a lambda cannot capture locals, so use a top-level function then).
+- `min(a, b)`, `max(xs)`, `abs(n)`, `sum(xs)`, `range(n)` and `range(a, b)`;
+  `for i, x in enumerate(xs)` and `for a, b in zip(xs, ys)` unpack in `for`
+  loops (a comprehension takes a single name).
+
+## Mutating a parameter: `mut` on both sides
+
+```mylang
+# doc: expect 1
+def bump(counts: mut dict[str, int], key: str):
+    counts[key] = counts.get(key, 0) + 1
+
+def main(out: Stream) -> int:
+    counts: dict[str, int] = {}
+    bump(mut counts, "x")                # the call site repeats `mut`
+    out.print(counts["x"])
+    return 0
+```
+
+A function that writes a list, dict or class parameter declares it `mut`, its
+callers write `mut arg`, and a `mut` that is never written is an error. Mutating
+locals needs nothing. The compiler's message quotes the exact fix.
+
+## Numbers, strings and bytes
+
+```mylang
+# doc: expect 3.5 -4 2 -3 2.67 b
+import strings
+
+def main(out: Stream) -> int:
+    fixed = "?"
+    match strings.format_float(2.675, 2):  # the stand-in for f"{x:.2f}"
+        case Ok(text):
+            fixed = text
+        case Err(_):
+            fixed = "error"
+    word = "abc"
+    out.print(7 / 2, -7 // 2, -7 % 3, divtrunc(-7, 2), fixed, word[1])
+    return 0
+```
+
+- `int` is 64-bit and overflow traps; `float` is binary64. Conditions must be
+  `bool`: write `if len(xs) > 0:`, not `if xs:`.
+- `/` is float division even on ints; `//` and `%` are Python's floor forms;
+  `divtrunc` and `remtrunc` truncate like C. There is no `**`: use
+  `math.pow(2.0, 10)` (`import math`, integer exponent).
+- `str(n)`; `int(s)` and `float(s)` return an `Option`; `ord("a")`, `chr(98)`.
+- Strings: `split`, `splitlines`, `strip`, `join`, `replace`, `find`, `count`,
+  `startswith`, `lower`, `upper`, `isdigit`, `zfill`, `encode`, ... `s[i]` is a
+  one-character `str`. `==` compares strings but `<` does not (`sorted` does
+  sort a list of strings). f-strings interpolate expressions but take no
+  format spec (`{x:.2f}` is rejected).
+- `strings.format_float(x, digits)` rounds the exact binary value, like C and
+  Python (`2.675` → `"2.67"`), except that an exact tie rounds away from zero
+  (`0.125` → `"0.13"`, Python `"0.12"`) and a negative result that rounds to
+  zero prints `"0.00"`.
+- Build a large string by collecting pieces in a `list[str]` and
+  `"".join(pieces)`. For byte-level scanning read with `fs.read_file`: `data[i]`
+  is an `int`, `data[a:b]` a `bytes` slice, `.decode()` a `Result[str, ...]`.
+
+## Not available — do this instead
+
+| Python | mylang |
+| --- | --- |
+| `set()` | `dict[str, bool]` |
+| dict or set comprehension, generator expression | a loop, or a list comprehension |
+| `range(a, b, step)`, `1 < x < 3` | a `while` loop; `1 < x and x < 3` |
+| `x ** n`, `round(x, n)` | `math.pow(x, n)`; `strings.format_float` for display |
+| `"ab" * 3`, `"a" < "b"` | a loop; compare with `sorted`, `ord`, or char by char |
+| `try` / `except` | `Result` and `?` |
+| methods on classes, closures | top-level functions that take the object or state |
+| `heapq`, `re`, `collections` | write the small helper (a binary heap over `list[int]`) |
+| `if x:` on a list, str or int | an explicit `bool` expression |
+
+## Scoping
+
+Locals are function-scoped like Python, but reading a name on a path where it
+might not be assigned yet is a compile error (`E_UNBOUND`): assign a default
+before the loop or `if` that sets it (`best = 0` before the loop).
+
+## Where to read more
+
+`mylang docs TOPIC` prints each of these from the compiler itself: `syntax` (the
+language guide), `io` (files, streams, capabilities), `text`, `bytes`,
+`modules`, `errors` (Result and Option), `effects`, `stdlib`, `tests` and
+`build`. In a large project, `mylang context ENTRY.my --symbol=module::name`
+answers one bounded question about a declaration, and `mylang tests-for` and
+`mylang test --affected` find the tests an edit reaches.

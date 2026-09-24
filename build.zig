@@ -108,8 +108,8 @@ var install_qbe_focus: ?*std.Build.Step = null;
 var install_exe_focus: ?*std.Build.Step = null;
 /// The qualified LLVM adapter source a test driver names through
 /// `MYLANG_LLVM_ADAPTER`: a test binary runs the compiler from a cache directory
-/// that has no `lib/mylang-llvm` beside it, and a ReleaseFast build defaults to
-/// the LLVM arm, so the adapter must be found the way `qbe` is.
+/// that has no `lib/mylang-llvm` beside it, and a `--release` build uses the
+/// LLVM arm, so the adapter must be found the way `qbe` is.
 var tool_llvm_adapter: []const u8 = "";
 /// The emitted `qbe` and compiler binaries. The environment names the tools by
 /// an installed path whose bytes the cache key cannot see, so every cached
@@ -257,6 +257,16 @@ fn boundedChecks(step: *std.Build.Step) void {
     }
 }
 
+/// Give `module` the user guides `mylang docs` prints: one anonymous import per
+/// topic in `src/user_docs.zig`, named as `src/docs_command.zig` embeds it, so
+/// the guides ship inside the compiler and an edited page rebuilds it.
+fn addUserDocs(b: *std.Build, module: *std.Build.Module) void {
+    const user_docs = @import("src/user_docs.zig");
+    for (user_docs.topics) |topic| {
+        module.addAnonymousImport(b.fmt("{s}{s}", .{ user_docs.import_prefix, topic.name }), .{ .root_source_file = b.path(topic.path) });
+    }
+}
+
 /// `zig build bench-parity`: the standing mylang/Zig/Rust parity benchmark under
 /// `bench/parity`. It builds every arm with the compiler this build installs (or
 /// `-Dbench-mylang=PATH`), requires byte-identical output, times pinned
@@ -359,6 +369,7 @@ pub fn build(b: *std.Build) void {
     // Snapshot identity needs the actual application/test root rather than the
     // generated Zig or Guardian test-runner root exposed by `@import("root")`.
     exe.root_module.addImport("native_test_root", exe.root_module);
+    addUserDocs(b, exe.root_module);
     const build_assets = @import("build_qbe_assets.zig").module(b, target, optimize, .{ .compile = rss.compile, .run = rss.driver });
     exe.root_module.addImport("qbe_build_assets", build_assets);
     const install_exe = b.addInstallArtifact(exe, .{});
@@ -384,8 +395,8 @@ pub fn build(b: *std.Build) void {
     tool_qbe = b.pathJoin(&.{ root, "zig-out", "bin", "qbe" });
     tool_zig = b.graph.zig_exe;
     // A test binary runs the compiler from a cache directory with no
-    // `lib/mylang-llvm` beside it, and a ReleaseFast build now defaults to the
-    // LLVM arm, so name the adapter source the same way `qbe` is named.
+    // `lib/mylang-llvm` beside it, and a `--release` build uses the LLVM arm,
+    // so name the adapter source the same way `qbe` is named.
     tool_llvm_adapter = b.pathJoin(&.{ root, "experiments", "llvm-backend", "qbe_llvm.py" });
     // Focused tests need `qbe` on disk but must stay off the gated install graph.
     // A separate, unattached copy of the same binaries gives them a stable path
@@ -475,6 +486,7 @@ pub fn build(b: *std.Build) void {
     unit.root_module.addImport("native_test_root", unit.root_module);
     unit.root_module.addImport("qbe_build_assets", build_assets);
     unit.root_module.addImport("memory_budget", budget);
+    addUserDocs(b, unit.root_module);
     // Unit tests execute guest programs natively, so they need the same tools and
     // one shared object cache that `mylang build` uses.
     const native_test_options = b.addOptions();
