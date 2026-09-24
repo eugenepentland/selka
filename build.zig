@@ -84,7 +84,10 @@ const rss = struct {
     /// Observed (ReleaseFast, C3/C4 tree): a test-root compile peaked at 2.55G,
     /// so the old 2.15G bound blocked the documented gate; 3G keeps a bounded
     /// ceiling with headroom for the same tree.
-    const compile: u64 = 3072 * mib;
+    /// Observed (ReleaseFast `-Dcompiler-only`, 2026-09-24, after the incremental
+    /// build frontend landed): the mylang executable compile peaked at 3.26-3.32G,
+    /// over the 3G bound, so the install graph failed after writing the binary.
+    const compile: u64 = 3584 * mib;
     /// `zig build run`, which executes whatever program the caller names.
     /// Matches the 4 GiB ceiling `mylang run` gives a guest.
     const guest: u64 = 4096 * mib;
