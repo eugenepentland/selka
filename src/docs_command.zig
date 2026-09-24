@@ -105,3 +105,10 @@ test "docs lists every topic with the primer first and prints each embedded page
     try std.testing.expectEqual(@as(u8, 2), (try answer(std.testing.allocator, &.{ "primer", "syntax" })).status);
     try std.testing.expectEqualStrings(usage, (try answer(std.testing.allocator, &.{"--help"})).stdout);
 }
+
+// spec-case: CLI-DOCS-1
+test "docs prints the sets guide under its own topic" {
+    try std.testing.expect(std.mem.startsWith(u8, page("sets").?, "# Sets"));
+    const listed = try answer(std.testing.allocator, &.{});
+    try std.testing.expect(std.mem.indexOf(u8, listed.stdout, "  sets ") != null);
+}

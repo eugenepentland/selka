@@ -29,6 +29,7 @@ pub const topics = [_]Topic{
     .{ .name = "effects", .path = "docs/effects.md", .summary = "capabilities, effect ceilings and mutation contracts" },
     .{ .name = "modules", .path = "docs/modules.md", .summary = "module headers, imports, public declarations and projects" },
     .{ .name = "memory", .path = "docs/managed-memory.md", .summary = "managed lists, dicts and strings; the tracing collector" },
+    .{ .name = "sets", .path = "docs/sets.md", .summary = "set[T]: literals, comprehensions, methods, operators and hashable keys" },
     .{ .name = "arenas", .path = "docs/arenas.md", .summary = "`with arena()` regions for bulk allocation" },
     .{ .name = "stdlib", .path = "docs/standard-library.md", .summary = "the standard modules: strings, math, json, sort, time, ..." },
     .{ .name = "tests", .path = "docs/tooling/guest-tests.md", .summary = "mylang test: test_ functions, cases files, benchmarks, caching" },

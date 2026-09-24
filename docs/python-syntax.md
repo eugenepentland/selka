@@ -132,7 +132,9 @@ def main() -> int:
     return 0
 ```
 
-Dictionaries preserve insertion order and use `int` or `str` keys. Their values
+Dictionaries preserve insertion order and take any
+[hashable](sets.md#hashable-keys) key: an integer, `bool`, `str`, `bytes`, or a
+tuple, record, union, enum or `Option` built from those. Their values
 have a single inferred or annotated type. Updates through an alias are shared.
 Use `counts[key]`, `counts[key] = value`, `counts.get(key, fallback)`,
 `counts.keys()`, `counts.values()` and `counts.items()`. These return live typed
@@ -149,7 +151,9 @@ dictionary or an integer `range(...)` — `[i for i in range(10)]` works the sam
 does in a `for` loop. Without a filter, the result reserves the source length (or
 the exact nonnegative range length) before filling; filtered results grow with the
 values they retain. It takes one generator; nested generators and generator
-expressions are not provided, and neither are dict or set comprehensions.
+expressions are not provided, and neither are dict comprehensions. The set
+comprehension `{value for name in items if condition}` builds a
+[set](sets.md#set-literals-and-construction) the same way.
 
 ```mylang
 # doc: expect 42

@@ -209,8 +209,7 @@ def main(out: Stream) -> int:
 
 | Python | mylang |
 | --- | --- |
-| `set()` | `dict[str, bool]` |
-| dict or set comprehension, generator expression | a loop, or a list comprehension |
+| dict comprehension, generator expression | a loop, or a list or set comprehension |
 | `range(a, b, step)`, `1 < x < 3` | a `while` loop; `1 < x and x < 3` |
 | `x ** n`, `round(x, n)` | `math.pow(x, n)`; `strings.format_float` for display |
 | `"ab" * 3`, `"a" < "b"` | a loop; compare with `sorted`, `ord`, or char by char |

@@ -294,8 +294,23 @@
     },
     "managed-insertion-ordered-dictionaries": {
       "kind": "language",
-      "summary": "`dict` keeps insertion order over `int` or `str` keys and copyable values and answers `items`, `pop`, `update`, `setdefault`, `get`, `keys`, `values`, `copy` and `clear`.",
+      "summary": "`dict` keeps insertion order over hashable keys and copyable values and answers `items`, `pop`, `update`, `setdefault`, `get`, `keys`, `values`, `copy` and `clear`.",
       "doc": "docs/managed-memory.md#insertion-ordered-dictionaries"
+    },
+    "managed-sets": {
+      "kind": "language",
+      "summary": "`set[T]` keeps insertion order over hashable elements: `{a, b}` literals, `set()` with a type from context, `set(iterable)`, `{x for x in xs if p}` comprehensions, `add`, `remove`, `discard`, `pop`, `clear`, `copy`, `update`, `in`, `len`, `for`, `sorted` and `list`, Python rendering (`{1, 2}`, `set()`), shared on assignment with `mut` parameters.",
+      "doc": "docs/sets.md#set-literals-and-construction"
+    },
+    "set-operators": {
+      "kind": "language",
+      "summary": "`|`, `&`, `-` and `^` build a new set holding the left operand's order then the right's new elements, `<=`, `<`, `>=` and `>` test subsets and supersets, `==` ignores insertion order, and `union`, `intersection`, `difference`, `symmetric_difference`, `issubset`, `issuperset` and `isdisjoint` spell the same operations.",
+      "doc": "docs/sets.md#set-operators"
+    },
+    "hashable-keys": {
+      "kind": "language",
+      "summary": "Dictionary keys and set elements may be any integer, `bool`, `str`, `bytes`, or a tuple, record, union, enum, domain, `Option` or fixed array built only from those, hashed and compared structurally with no seed; `float`, collections, `byte_buffer`, `class`, function and capability keys are rejected with `E_DICT_KEY` or `E_SET_ELEMENT` naming the offending part.",
+      "doc": "docs/sets.md#hashable-keys"
     },
     "dictionary-methods": {
       "kind": "language",
@@ -949,7 +964,8 @@
     "managed_lists": "copyable shared aliases; automatic growth; no owned/resource elements, borrowed interiors, untraced storage embedding, or host escape",
     "gc": "single-threaded nonmoving tracing; retained guest values root intermediates; collect-on-allocation stress option",
     "python": "static fixed-width types, function-scoped locals with E_UNBOUND definite assignment, value records; indentation is the only block syntax",
-    "dictionaries": "managed insertion order; homogeneous int or str keys and copyable values",
+    "dictionaries": "managed insertion order; homogeneous hashable keys (integers, bool, str, bytes, and tuples, records, unions, enums, domains, Option and fixed arrays of those) and copyable values; no dict comprehension",
+    "sets": "managed insertion order over hashable elements; `set()` needs an expected type; no frozenset, no augmented operators (`|=`); generic bodies key only by integer-bounded parameters, `str` or concrete hashable types",
     "native_tests": "fresh QBE processes; exported typed-call-compatible signatures; positive deterministic receipts only; project validity is always checked through the shared query cache; only a fully cached selection skips lowering/emission/linking, while a changed snapshot still pays one whole-project preparation emission and an uncached selection builds the whole selected-provider library; provider snapshots at most 128 sources/16 MiB",
     "standard_library": "ten embedded Python-syntax modules over managed types: math, strings, sort, path, hex, base64, json, pool, random, time"
   },
