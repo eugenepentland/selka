@@ -122,8 +122,9 @@ In the JSON report, `state` is `missing`, `stale` or `orphaned`. The `added`,
 `Domain.member`, and the module docstring is `__doc__`. An orchestrator can read
 them to see which callers a change may affect.
 
-An orphan is a `.api` file under the entry's directory whose `.my` source no
-longer exists and that still starts with the generated header. `--write` deletes
+An orphan is a `.api` file under the entry's directory (hidden directories
+and `zig-out` are not searched) whose `.my` source no longer exists and that
+still starts with the generated header. `--write` deletes
 it. Two kinds of file are never touched: one without the header (written by
 hand), and one whose source still exists but is not loaded from this entry,
 because it may belong to another entry's graph.

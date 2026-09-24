@@ -13,8 +13,9 @@ const interface_files = @import("interface_files.zig");
 const max_file_bytes = 16 * 1024 * 1024;
 /// Hunk lines shown per module in the `--check` text report.
 const diff_line_limit = 40;
-/// Directories never searched for orphaned interface files.
-const skipped_directories = [_][]const u8{ ".git", ".mylang-cache", ".zig-cache", "zig-out", "node_modules" };
+/// Directories never searched for orphaned interface files, besides every
+/// hidden (dot) directory such as `.git` or `.mylang-cache`.
+const skipped_directories = [_][]const u8{ "zig-out", "node_modules" };
 
 /// What `mylang api` does with the files it compares.
 pub const Mode = enum { write, check };
@@ -141,6 +142,7 @@ fn appendOrphans(arena: std.mem.Allocator, io: std.Io, root: []const u8, entries
 }
 
 fn skipped(name: []const u8) bool {
+    if (std.mem.startsWith(u8, name, ".")) return true;
     for (skipped_directories) |directory| if (std.mem.eql(u8, name, directory)) return true;
     return false;
 }

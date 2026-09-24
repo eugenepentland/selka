@@ -113,6 +113,7 @@ const Renderer = struct {
     fn docstring(self: *Renderer) Error!void {
         const doc = ast.docstringOf(self.syntax(), ast.module_docstring_span) orelse return;
         const trimmed = std.mem.trim(u8, doc.text, " \t\r\n");
+        if (trimmed.len == 0) return;
         const end = std.mem.indexOf(u8, trimmed, "\n\n") orelse trimmed.len;
         var lines = std.mem.splitScalar(u8, trimmed[0..end], '\n');
         var first = true;
