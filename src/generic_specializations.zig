@@ -3,7 +3,7 @@
 //! A concrete specialization is a generic template instantiated with resolved
 //! type and length arguments. Its checked body is keyed by the canonical
 //! specialization fingerprint (`semantic_key.specializationFingerprint`) and
-//! persisted in the shared `semantic-cache-v1` durable store under the explicit
+//! persisted in the shared `semantic-cache-v2` durable store under the explicit
 //! `specialization-v1` payload kind. Replay requires:
 //!
 //! * the canonical fingerprint to be re-derived from fresh inputs;
@@ -52,6 +52,8 @@ pub const MissReason = enum {
     ambiguous_record,
     /// The tree referenced a catalog record interned while checking.
     interned_record,
+    /// A record the retained tree touched has a different transitive shape.
+    record_shape_changed,
     /// The tree referenced a synthesized lambda body with no stable identity.
     lambda_reference,
     /// The result could not be represented safely (never a partial entry).
@@ -77,6 +79,7 @@ pub fn missReasonName(reason: MissReason) []const u8 {
         .missing_record => "specialization-missing-record-identity",
         .ambiguous_record => "specialization-ambiguous-record-identity",
         .interned_record => "specialization-interned-record",
+        .record_shape_changed => "specialization-record-shape-changed",
         .lambda_reference => "specialization-lambda-reference",
         .unrepresentable => "specialization-result-unrepresentable",
     };

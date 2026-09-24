@@ -56,7 +56,7 @@ requests while reloading source and input manifests.
 
 This is the first frontend query-reuse component. Since these measurements,
 persistent syntax storage and semantic query/dependency caching have landed through
-the frontend and `semantic-cache-v1` stores: one-shot commands reuse checked
+the frontend and `semantic-cache-v2` stores: one-shot commands reuse checked
 ordinary bodies, symbolic templates and validated concrete specializations, and
 native-test selection adds receipt and reduced-graph reuse. Automatic watch
 integration was dropped with the Python watch driver; finer invalidation reports,

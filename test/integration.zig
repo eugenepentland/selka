@@ -403,7 +403,7 @@ fn c2PathExists(path: []const u8) bool {
 }
 
 fn c2FirstSemanticFile(allocator: std.mem.Allocator, cache_base: []const u8) ![]u8 {
-    const version_dir = try std.fs.path.join(allocator, &.{ cache_base, "semantic", "semantic-cache-v1" });
+    const version_dir = try std.fs.path.join(allocator, &.{ cache_base, "semantic", "semantic-cache-v2" });
     defer allocator.free(version_dir);
     var directory = std.Io.Dir.cwd().openDir(testing.io, version_dir, .{ .iterate = true }) catch return error.MissingSemanticEntry;
     defer directory.close(testing.io);
@@ -715,6 +715,41 @@ test "check after a one-body edit re-checks only that body when retention cannot
     defer testing.allocator.free(cold_diagnostics);
     try testing.expect(std.mem.indexOf(u8, warm_diagnostics, "W_UNUSED_BINDING") != null);
     try testing.expectEqualStrings(cold_diagnostics, warm_diagnostics);
+}
+
+// The coordinator's false-clean: `user.first` reaches `shapes.Inner` only
+// through `Outer.items`'s element type. Renaming `Inner.x` used to leave the
+// cached check green while a cold check rejected the program.
+// spec-case: SEMANTIC-KEY-TRANSITIVE-1
+test "a cached check sees a field renamed in a record reached only through a list element" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(directory);
+    const entry = try std.fs.path.join(testing.allocator, &.{ directory, "main.my" });
+    defer testing.allocator.free(entry);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}/cache", .{directory});
+    defer testing.allocator.free(cache_argument);
+    const shapes = "module shapes\npublic class Inner:\n    x: int\npublic class Outer:\n    items: list[Inner]\npublic def make() -> Outer:\n    items: list[Inner] = []\n    items.append(Inner(x=1))\n    return Outer(items=items)\n";
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = shapes });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "user.my", .data = "module user\nimport shapes\npublic def first(o: shapes.Outer) -> int:\n    v = o.items[0]\n    return v.x\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport shapes\nimport user\ndef main() -> int:\n    return user.first(shapes.make())\n" });
+    const seed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", entry, cache_argument } });
+    defer testing.allocator.free(seed.stdout);
+    defer testing.allocator.free(seed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, seed.term);
+    const renamed = "module shapes\npublic class Inner:\n    y: int\npublic class Outer:\n    items: list[Inner]\npublic def make() -> Outer:\n    items: list[Inner] = []\n    items.append(Inner(y=1))\n    return Outer(items=items)\n";
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "shapes.my", .data = renamed });
+    const cached = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", entry, cache_argument } });
+    defer testing.allocator.free(cached.stdout);
+    defer testing.allocator.free(cached.stderr);
+    const cold = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check", entry, "--no-cache" } });
+    defer testing.allocator.free(cold.stdout);
+    defer testing.allocator.free(cold.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, cold.term);
+    try testing.expect(std.mem.indexOf(u8, cold.stderr, "user.my:5:14: error[E_UNKNOWN_FIELD]") != null);
+    try testing.expectEqual(cold.term, cached.term);
+    try testing.expectEqualStrings(cold.stderr, cached.stderr);
 }
 
 const SymbolicCounts = struct { performed: usize, reused: usize };
@@ -7308,7 +7343,7 @@ fn c3sCheckReport(path: []const u8, cache_argument: []const u8, no_cache: bool) 
 /// First semantic file whose payload carries the `specialization-v1` stable-key
 /// prefix. The durable file name is a hash, so the kind marker is the discriminator.
 fn c3sFirstSpecializationFile(allocator: std.mem.Allocator, cache_base: []const u8) ![]u8 {
-    const version_dir = try std.fs.path.join(allocator, &.{ cache_base, "semantic", "semantic-cache-v1" });
+    const version_dir = try std.fs.path.join(allocator, &.{ cache_base, "semantic", "semantic-cache-v2" });
     defer allocator.free(version_dir);
     var directory = std.Io.Dir.cwd().openDir(testing.io, version_dir, .{ .iterate = true }) catch return error.MissingSpecializationEntry;
     defer directory.close(testing.io);

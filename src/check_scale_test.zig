@@ -453,6 +453,193 @@ test "cached syntax decodes in place and a damaged entry is still a counted miss
     try t.expectEqual(@as(usize, 1), cache.statistics.damaged);
 }
 
+// `user` reaches `shapes.Inner` only through a list element, a dictionary
+// value, an Option payload and a call's return type, never by naming it.
+const reach_shapes =
+    \\module shapes
+    \\public class Inner:
+    \\    x: int
+    \\public class Outer:
+    \\    items: list[Inner]
+    \\    table: dict[str, Inner]
+    \\    maybe: Option[Inner]
+    \\public def make() -> Outer:
+    \\    items: list[Inner] = []
+    \\    items.append(Inner(x=1))
+    \\    table: dict[str, Inner] = {}
+    \\    return Outer(items=items, table=table, maybe=None)
+    \\
+;
+const reach_user =
+    \\module user
+    \\import shapes
+    \\public def first(o: shapes.Outer) -> int:
+    \\    v = o.items[0]
+    \\    return v.x
+    \\public def looked(o: shapes.Outer) -> int:
+    \\    return o.table["k"].x
+    \\public def maybe(o: shapes.Outer) -> int:
+    \\    match o.maybe:
+    \\        case Some(v):
+    \\            return v.x
+    \\        case None:
+    \\            return 0
+    \\public def chained() -> int:
+    \\    return shapes.make().items[0].x
+    \\
+;
+
+fn reachFiles(shapes: []const u8) [3]File {
+    return .{
+        .{ .path = "main.my", .bytes = "module main\nimport shapes\nimport user\ndef main() -> int:\n    o = shapes.make()\n    return user.first(o) + user.looked(o) + user.maybe(o) + user.chained()\n" },
+        .{ .path = "user.my", .bytes = reach_user },
+        .{ .path = "shapes.my", .bytes = shapes },
+    };
+}
+
+/// `reach_shapes` with each `from` replaced by the matching `to`.
+fn shapesEdited(comptime edits: []const [2][]const u8) []const u8 {
+    comptime var text: []const u8 = reach_shapes;
+    inline for (edits) |edit| {
+        const at = comptime std.mem.indexOf(u8, text, edit[0]).?;
+        text = text[0..at] ++ edit[1] ++ text[at + edit[0].len ..];
+    }
+    return text;
+}
+
+// spec: SEMANTIC-KEY-TRANSITIVE-1
+test "renaming a field reached only through list, dict, Option and return types re-checks every user" {
+    const original = reachFiles(reach_shapes);
+    const renamed = reachFiles(shapesEdited(&.{ .{ "    x: int", "    y: int" }, .{ "Inner(x=1)", "Inner(y=1)" } }));
+    const outcome = try checkAfterEdit(&original, &renamed);
+    defer outcome.warm.deinit();
+    defer outcome.cold.deinit();
+    // All four `user` bodies read the renamed field: none may stand in.
+    try t.expectEqual(@as(usize, 4), std.mem.count(u8, outcome.cold.diagnostics, "E_UNKNOWN_FIELD"));
+    try t.expectEqualStrings(outcome.cold.diagnostics, outcome.warm.diagnostics);
+    const lowering = try checkAfterEditAs(&original, &renamed, .lowering);
+    defer lowering.warm.deinit();
+    defer lowering.cold.deinit();
+    try t.expectEqualStrings(lowering.cold.diagnostics, lowering.warm.diagnostics);
+}
+
+// spec-case: SEMANTIC-KEY-TRANSITIVE-1
+test "retyping a field reached only through element and return types re-checks every user" {
+    const original = reachFiles(reach_shapes);
+    const retyped = reachFiles(shapesEdited(&.{ .{ "    x: int", "    x: float" }, .{ "Inner(x=1)", "Inner(x=1.0)" } }));
+    const outcome = try checkAfterEdit(&original, &retyped);
+    defer outcome.warm.deinit();
+    defer outcome.cold.deinit();
+    try t.expectEqual(@as(usize, 4), std.mem.count(u8, outcome.cold.diagnostics, "error["));
+    try t.expectEqualStrings(outcome.cold.diagnostics, outcome.warm.diagnostics);
+    // A field type edit that keeps every body valid still re-checks them, and
+    // the facts a lowering command publishes are the cold ones.
+    const widened = reachFiles(shapesEdited(&.{ .{ "    x: int", "    x: int\n    tags: list[int]" }, .{ "Inner(x=1)", "Inner(x=1, tags=[])" } }));
+    const lowering = try checkAfterEditAs(&original, &widened, .lowering);
+    defer lowering.warm.deinit();
+    defer lowering.cold.deinit();
+    try t.expectEqualStrings(lowering.cold.facts, lowering.warm.facts);
+    try t.expectEqualStrings(lowering.cold.diagnostics, lowering.warm.diagnostics);
+}
+
+// Mutually recursive classes, and a facade that re-exports one of them.
+const cycle_user =
+    \\module user
+    \\import shapes
+    \\import api
+    \\public def f1(a: shapes.A) -> int:
+    \\    return a.w
+    \\public def f2(b: shapes.B) -> int:
+    \\    return b.a.w
+    \\public def f3(a: api.A) -> int:
+    \\    return a.w
+    \\public def unused() -> int:
+    \\    return 0
+    \\
+;
+const cycle_shapes = "module shapes\npublic class A:\n    b: B\n    w: int\npublic class B:\n    a: A\n";
+fn cycleFiles(shapes: []const u8) [4]File {
+    return .{
+        .{ .path = "main.my", .bytes = "module main\nimport user\ndef main() -> int:\n    return user.unused()\n" },
+        // `f1` is keyed first, so `B` is reached from inside the `A`-`B` cycle
+        // before `f2` asks for it; `f3` names `A` only through the facade.
+        .{ .path = "user.my", .bytes = cycle_user },
+        .{ .path = "api.my", .bytes = "module api\nimport shapes\nexport shapes.A\n" },
+        .{ .path = "shapes.my", .bytes = shapes },
+    };
+}
+
+// spec-case: SEMANTIC-KEY-TRANSITIVE-1
+test "a type reached through a declaration cycle or a facade re-export invalidates its users" {
+    const original = cycleFiles(cycle_shapes);
+    const renamed = cycleFiles("module shapes\npublic class A:\n    b: B\n    z: int\npublic class B:\n    a: A\n");
+    const outcome = try checkAfterEdit(&original, &renamed);
+    defer outcome.warm.deinit();
+    defer outcome.cold.deinit();
+    try t.expectEqual(@as(usize, 3), std.mem.count(u8, outcome.cold.diagnostics, "E_UNKNOWN_FIELD"));
+    try t.expectEqualStrings(outcome.cold.diagnostics, outcome.warm.diagnostics);
+}
+
+// spec: CHECK-SHAPES-1
+test "a summary whose touched record shape no longer matches is not stood in" {
+    var arena_state = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    const files = reachFiles(reach_shapes);
+    const seed = try checkProject(&files, null, .check);
+    defer seed.deinit();
+    const decoded = summary.decode(arena, seed.summaries.?).?;
+    try t.expect(decoded.records.len != 0);
+    // Pretend `first` was checked against a different `Inner`.
+    const changed = try arena.dupe(summary.Summary, decoded.summaries);
+    const first = decoded.find("fn\x1fuser\x1f\x1ffirst").?;
+    try t.expect(changed[first].stubbable and changed[first].uses.records.len != 0);
+    changed[first].uses.shape[0] ^= 1;
+    const tampered = try summary.encode(arena, .{ .records = decoded.records, .summaries = changed });
+    const warm = try checkProject(&files, tampered, .check);
+    defer warm.deinit();
+    const untouched = try checkProject(&files, seed.summaries.?, .check);
+    defer untouched.deinit();
+    try t.expectEqual(untouched.stood_in - 1, warm.stood_in);
+    try t.expectEqual(untouched.checked + 1, warm.checked);
+    try t.expectEqualStrings(untouched.diagnostics, warm.diagnostics);
+}
+
+// spec-case: CHECK-SHAPES-1
+test "a retained checked tree whose touched record shape no longer matches misses" {
+    const files = reachFiles(reach_shapes);
+    var cache = language.semantic_cache.Cache.init(t.allocator, 16 * 1024 * 1024);
+    defer cache.deinit();
+    try checkRetained(&files, &cache);
+    try t.expect(cache.entries.len != 0);
+    try checkRetained(&files, &cache);
+    const reason = @backingInt(language.semantic_cache.MissReason.record_shape_changed);
+    try t.expectEqual(@as(usize, 0), cache.statistics.misses[reason]);
+    corruptRecordShapes(&cache);
+    const reused_before = cache.statistics.reused;
+    try checkRetained(&files, &cache);
+    try t.expect(cache.statistics.misses[reason] != 0);
+    try t.expectEqual(reused_before, cache.statistics.reused);
+}
+
+/// Pretend every retained tree was checked against different records.
+fn corruptRecordShapes(cache: *language.semantic_cache.Cache) void {
+    for (cache.entries) |entry| for (@constCast(entry.meta.record_refs)) |*reference| {
+        reference.shape[0] ^= 1;
+    };
+}
+
+/// Check the project `files` through the retained checked-tree path.
+fn checkRetained(files: []const File, cache: *language.semantic_cache.Cache) !void {
+    var provider: Files = .{ .entries = files };
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = &provider, .read = Files.read }, "main", .{});
+    var index = try language.interfaces.build(&project);
+    var compilation = try language.project_compile.Compilation.init(&index);
+    try compilation.checkWithCache(cache);
+}
+
 // spec-case: CHECK-SUMMARY-1
 test "stored summaries round-trip and a foreign payload is refused" {
     const original = projectFiles(lib_source);

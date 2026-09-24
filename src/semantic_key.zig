@@ -21,7 +21,7 @@ const Hash = std.crypto.hash.sha2.Sha256;
 
 /// Domain for per-function dependency digests. Bump when the tracked dependency
 /// model changes so stale entries are never admitted.
-pub const functions_domain = "semantic-functions-v6";
+pub const functions_domain = "semantic-functions-v7";
 /// Domain for the module export-directive digest. Kept in one place so the
 /// indexed and per-declaration scan oracle hash the same prefix.
 const export_domain = "export-v1";
@@ -288,6 +288,56 @@ pub fn providerIdentity(allocator: std.mem.Allocator, arguments: []const typed.T
     return hexFingerprint(allocator, hash.finalResult());
 }
 
+/// Transitive shape digests of one catalog's records, memoized per request.
+/// A record's digest covers its own schema (fields and their types, cases and
+/// payloads, element, backing and callback slots, managed and contract flags)
+/// and the schema of every record those reach, in a canonical order. A body
+/// that touched a record while it was checked depends on exactly this, however
+/// the record was reached (a field's element type, a return type, a facade).
+pub const Shapes = struct {
+    /// Owns the memo; a request passes its arena.
+    allocator: std.mem.Allocator,
+    records: []const typed.Record,
+    memo: std.AutoHashMapUnmanaged(usize, [32]u8) = .empty,
+
+    /// Release the memo; digests already returned are values.
+    pub fn deinit(self: *Shapes) void {
+        self.memo.deinit(self.allocator);
+    }
+
+    /// The transitive shape digest of record `index`, or null when the
+    /// catalog has no such record.
+    pub fn digest(self: *Shapes, index: usize) error{OutOfMemory}!?[32]u8 {
+        const allocator = self.allocator;
+        if (index >= self.records.len) return null;
+        if (self.memo.get(index)) |known| return known;
+        var seen: std.AutoHashMapUnmanaged(usize, void) = .empty;
+        defer seen.deinit(allocator);
+        var reached: std.ArrayList(usize) = .empty;
+        defer reached.deinit(allocator);
+        try collectProviderRecords(allocator, self.records[index].id, self.records, &seen, &reached);
+        std.mem.sort(usize, reached.items, self.records, lessRecordNameThenIndex);
+        var hash = Hash.init(.{});
+        frame(&hash, "shape-v1");
+        frame(&hash, self.records[index].name);
+        var count: [8]u8 = undefined;
+        std.mem.writeInt(u64, &count, reached.items.len, .little);
+        hash.update(&count);
+        for (reached.items) |reached_index| mixRecord(&hash, self.records[reached_index], self.records);
+        const result = hash.finalResult();
+        try self.memo.put(allocator, index, result);
+        return result;
+    }
+};
+
+fn lessRecordNameThenIndex(records: []const typed.Record, a: usize, b: usize) bool {
+    return switch (std.mem.order(u8, records[a].name, records[b].name)) {
+        .lt => true,
+        .gt => false,
+        .eq => a < b,
+    };
+}
+
 fn hexFingerprint(allocator: std.mem.Allocator, digest: [32]u8) error{OutOfMemory}![]const u8 {
     return std.fmt.allocPrint(allocator, "{s}", .{std.fmt.bytesToHex(digest, .lower)}) catch error.OutOfMemory;
 }
@@ -419,8 +469,13 @@ const Builder = struct {
     program: ast.Program,
     resolution: ?*interfaces.Index,
     modules: []ModuleDecls,
+    /// Declaration key -> transitive fingerprint.
     memo: std.AutoHashMapUnmanaged(u64, [32]u8) = .empty,
-    active: std.AutoHashMapUnmanaged(u64, void) = .empty,
+    /// Declaration key -> its own digest and the declarations it references.
+    own: std.AutoHashMapUnmanaged(u64, Own) = .empty,
+    /// Composite type spelling (`list[T]`, `dict[K, V]`, `tuple[...]`, an array
+    /// or a callback type) -> the component type spans it is written with.
+    type_parts: std.AutoHashMapUnmanaged(SpanKey, []const source.Span) = .empty,
 
     fn init(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, resolution: ?*interfaces.Index) error{OutOfMemory}!Builder {
         const module_count: usize = if (src.origins.len == 0) 1 else src.origins.len;
@@ -445,14 +500,62 @@ const Builder = struct {
             const bytes = if (self.src.origins.len == 0) self.src.bytes else self.src.origins[index].original.bytes;
             try buildExportIndex(self.allocator, bytes, &module.exports);
         }
+        try self.registerReExports();
+        try self.indexTypeParts();
         return self;
+    }
+
+    /// A name a facade module re-exports binds the declaration it names, not a
+    /// negative lookup in the facade, so a body reaching a type through a facade
+    /// depends on the type itself.
+    fn registerReExports(self: *Builder) error{OutOfMemory}!void {
+        const index = self.resolution orelse return;
+        for (index.units, 0..) |unit, module| {
+            if (module >= self.modules.len) break;
+            for (unit.symbols.items) |symbol| {
+                const target = symbol.re_export orelse continue;
+                if (target.module >= self.modules.len or target.module >= index.units.len) continue;
+                const target_name = index.units[target.module].symbols.items[target.symbol].name;
+                const declarations = self.modules[target.module].names.get(target_name) orelse continue;
+                for (declarations.items) |declaration| try self.register(module, symbol.name, declaration);
+            }
+        }
+    }
+
+    /// Index every composite type spelling by its exact span, so collecting a
+    /// type written `list[shapes.Inner]` references `shapes.Inner` as well.
+    fn indexTypeParts(self: *Builder) error{OutOfMemory}!void {
+        const expressions = self.program.types.expressions;
+        for (expressions.applications) |application| {
+            const parts = try self.allocator.alloc(source.Span, application.arguments.len + 1);
+            parts[0] = application.name;
+            @memcpy(parts[1..], application.arguments);
+            try self.type_parts.put(self.allocator, SpanKey.of(application.span), parts);
+        }
+        for (expressions.arrays) |array| {
+            const parts = try self.allocator.alloc(source.Span, 2);
+            parts[0] = array.element;
+            parts[1] = switch (array.index) {
+                .length => |span| span,
+                .enum_type => |span| span,
+            };
+            try self.type_parts.put(self.allocator, SpanKey.of(array.span), parts);
+        }
+        for (expressions.tuples) |tuple| try self.type_parts.put(self.allocator, SpanKey.of(tuple.span), tuple.elements);
+        for (expressions.callbacks) |callback| {
+            const parts = try self.allocator.alloc(source.Span, callback.parameters.len + 1);
+            @memcpy(parts[0..callback.parameters.len], callback.parameters);
+            parts[callback.parameters.len] = callback.return_type;
+            try self.type_parts.put(self.allocator, SpanKey.of(callback.span), parts);
+        }
     }
 
     fn deinit(self: *Builder) void {
         for (self.modules) |*module| module.deinit(self.allocator);
         self.allocator.free(self.modules);
         self.memo.deinit(self.allocator);
-        self.active.deinit(self.allocator);
+        self.own.deinit(self.allocator);
+        self.type_parts.deinit(self.allocator);
     }
 
     fn register(self: *Builder, module: usize, name: []const u8, key: u64) error{OutOfMemory}!void {
@@ -540,19 +643,55 @@ const Builder = struct {
             try collector.collectValue(ast.Function, function);
             names.names.* = try self.allocator.dupe(Name, collector.names.items);
         }
-        try self.mixRefs(&hash, &collector, null);
+        try self.mixRefs(&hash, &collector);
         return hash.finalResult();
     }
 
+    /// Transitive fingerprint of one declaration: its own digest and the own
+    /// digests of every declaration it reaches through its references, in a
+    /// canonical order. It is independent of the order declarations are asked
+    /// for, so a cycle (recursive or mutually recursive types) folds every
+    /// member's content into every member's fingerprint.
     fn declFingerprint(self: *Builder, key: u64) error{OutOfMemory}!([32]u8) {
         if (self.memo.get(key)) |fingerprint| return fingerprint;
-        if (self.active.contains(key)) return @splat(0);
-        try self.active.put(self.allocator, key, {});
-        defer _ = self.active.remove(key);
+        var reached: std.AutoHashMapUnmanaged(u64, void) = .empty;
+        defer reached.deinit(self.allocator);
+        var pending: std.ArrayList(u64) = .empty;
+        defer pending.deinit(self.allocator);
+        var digests: std.ArrayList([32]u8) = .empty;
+        defer digests.deinit(self.allocator);
+        try reached.put(self.allocator, key, {});
+        try pending.append(self.allocator, key);
+        while (pending.pop()) |current| {
+            const own = try self.ownDigest(current);
+            if (current != key) try digests.append(self.allocator, own.digest);
+            for (own.edges) |next| {
+                const entry = try reached.getOrPut(self.allocator, next);
+                if (entry.found_existing) continue;
+                try pending.append(self.allocator, next);
+            }
+        }
+        std.mem.sort([32]u8, digests.items, {}, lessFingerprint);
+        var hash = Hash.init(.{});
+        frame(&hash, "decl-v5");
+        hash.update(&(try self.ownDigest(key)).digest);
+        for (digests.items) |digest| {
+            frame(&hash, "reaches");
+            hash.update(&digest);
+        }
+        const fingerprint = hash.finalResult();
+        try self.memo.put(self.allocator, key, fingerprint);
+        return fingerprint;
+    }
+
+    /// One declaration's own content: kind, defining module, source bytes,
+    /// visibility and negative lookups, plus the declarations it references.
+    fn ownDigest(self: *Builder, key: u64) error{OutOfMemory}!Own {
+        if (self.own.get(key)) |cached| return cached;
         const kind: DeclKind = @fromBackingInt(@intCast(@as(u4, @truncate(key >> 32))));
         const index: usize = @intCast(@as(u32, @truncate(key)));
         var hash = Hash.init(.{});
-        frame(&hash, "decl-v4");
+        frame(&hash, "own-v1");
         frame(&hash, @tagName(kind));
         // The defining module is part of a declaration's identity: an import
         // alias retargeted to another module's byte-identical declaration binds
@@ -587,32 +726,53 @@ const Builder = struct {
             .record => {
                 self.mixExport(&hash, self.program.types.records[index].name);
                 try collector.collectValue(ast.Record, self.program.types.records[index]);
+                self.mixDeclarationBytes(&hash, self.program.types.records[index].name, collector.extent);
             },
             .domain => {
                 self.mixExport(&hash, self.program.types.domains[index].name);
                 try collector.collectValue(ast.Domain, self.program.types.domains[index]);
+                self.mixDeclarationBytes(&hash, self.program.types.domains[index].name, collector.extent);
             },
             .resource => {
                 self.mixExport(&hash, self.program.types.resources[index].name);
                 try collector.collectValue(ast.Domain, self.program.types.resources[index]);
+                self.mixDeclarationBytes(&hash, self.program.types.resources[index].name, collector.extent);
             },
             .variant => {
                 self.mixExport(&hash, self.program.types.variants[index].name);
                 try collector.collectValue(ast.Variants, self.program.types.variants[index]);
+                self.mixDeclarationBytes(&hash, self.program.types.variants[index].name, collector.extent);
             },
             .alias => {
                 self.mixExport(&hash, self.program.types.expressions.aliases[index].name);
                 try collector.collectValue(ast.TypeAlias, self.program.types.expressions.aliases[index]);
+                self.mixDeclarationBytes(&hash, self.program.types.expressions.aliases[index].name, collector.extent);
             },
             .constraint => {
                 self.mixExport(&hash, self.program.types.constraints[index].name);
                 try collector.collectValue(ast.Constraint, self.program.types.constraints[index]);
+                self.mixDeclarationBytes(&hash, self.program.types.constraints[index].name, collector.extent);
             },
         }
-        try self.mixRefs(&hash, &collector, key);
-        const fingerprint = hash.finalResult();
-        try self.memo.put(self.allocator, key, fingerprint);
-        return fingerprint;
+        try self.mixNegatives(&hash, &collector);
+        var edges: std.ArrayList(u64) = .empty;
+        var references = collector.refs.keyIterator();
+        while (references.next()) |reference| {
+            if (reference.* != key) try edges.append(self.allocator, reference.*);
+        }
+        const own: Own = .{ .digest = hash.finalResult(), .edges = try edges.toOwnedSlice(self.allocator) };
+        try self.own.put(self.allocator, key, own);
+        return own;
+    }
+
+    /// Frame a type declaration's source text, from the start of the line that
+    /// names it to the end of the last span it is written with: a default
+    /// value, a `record`/`class` spelling or a field order change is part of
+    /// what every user of the type depends on.
+    fn mixDeclarationBytes(self: *Builder, hash: *Hash, name: source.Span, extent: usize) void {
+        const start = lineStart(self.src.bytes, name.start);
+        const end = @min(@max(extent, name.end), self.src.bytes.len);
+        frame(hash, self.src.bytes[start..end]);
     }
 
     fn declarationModule(self: *Builder, kind: DeclKind, index: usize) usize {
@@ -652,8 +812,8 @@ const Builder = struct {
     }
 
     /// Hash the resolved declaration fingerprints and module-scoped negative
-    /// lookups recorded for one declaration, in deterministic order.
-    fn mixRefs(self: *Builder, hash: *Hash, collector: *const Collector, skip: ?u64) error{OutOfMemory}!void {
+    /// lookups recorded for one function's context, in deterministic order.
+    fn mixRefs(self: *Builder, hash: *Hash, collector: *const Collector) error{OutOfMemory}!void {
         // Dependencies are ordered by their content fingerprints, never by a
         // fresh catalog ordinal, so reordering modules or declarations cannot
         // perturb an otherwise identical dependency digest.
@@ -661,26 +821,39 @@ const Builder = struct {
         defer self.allocator.free(fingerprints);
         var iterator = collector.refs.keyIterator();
         var count: usize = 0;
-        while (iterator.next()) |key| {
-            if (skip) |self_key| if (self_key == key.*) continue;
-            fingerprints[count] = try self.declFingerprint(key.*);
-            count += 1;
-        }
+        while (iterator.next()) |key| : (count += 1) fingerprints[count] = try self.declFingerprint(key.*);
         std.mem.sort([32]u8, fingerprints[0..count], {}, lessFingerprint);
         for (fingerprints[0..count]) |fingerprint| {
             frame(hash, "reference");
             hash.update(&fingerprint);
         }
+        try self.mixNegatives(hash, collector);
+    }
+
+    /// Hash one collection's module-scoped negative lookups in sorted order.
+    fn mixNegatives(self: *Builder, hash: *Hash, collector: *const Collector) error{OutOfMemory}!void {
         const names = try self.allocator.alloc([]const u8, collector.negatives.count());
         defer self.allocator.free(names);
         var negative_iterator = collector.negatives.keyIterator();
-        count = 0;
+        var count: usize = 0;
         while (negative_iterator.next()) |name| : (count += 1) names[count] = name.*;
         std.mem.sort([]const u8, names, {}, lessString);
         for (names) |name| {
             frame(hash, "negative");
             frame(hash, name);
         }
+    }
+};
+
+/// One declaration's own digest and the declarations it references directly.
+const Own = struct { digest: [32]u8, edges: []const u64 };
+
+/// Hashable exact source span.
+const SpanKey = struct {
+    start: usize,
+    end: usize,
+    fn of(span: source.Span) SpanKey {
+        return .{ .start = span.start, .end = span.end };
     }
 };
 
@@ -694,6 +867,8 @@ const Collector = struct {
     negatives: Negatives = .empty,
     visited_nodes: std.AutoHashMapUnmanaged(usize, void) = .empty,
     visited_statements: std.AutoHashMapUnmanaged(usize, void) = .empty,
+    /// End of the furthest span collected, for a declaration's source extent.
+    extent: usize = 0,
     /// When set, every distinct name resolved is also kept in `names`.
     recording: bool = false,
     names: std.ArrayList(Name) = .empty,
@@ -727,14 +902,22 @@ const Collector = struct {
 
     fn addSpan(self: *Collector, span: source.Span) error{OutOfMemory}!void {
         if (span.end <= span.start or span.end > self.builder.src.bytes.len) return;
+        self.extent = @max(self.extent, span.end);
         const text = self.builder.src.bytes[span.start..span.end];
-        if (!identifierLike(text)) return;
-        try self.add(text, null);
+        if (identifierLike(text)) return self.add(text, null);
+        // A composite type spelling names its component types.
+        const parts = self.builder.type_parts.get(SpanKey.of(span)) orelse return;
+        for (parts) |part| {
+            // Components lie strictly inside their spelling, so expansion ends.
+            const inside = part.start >= span.start and part.end <= span.end;
+            if (inside and part.end - part.start < span.end - span.start) try self.addSpan(part);
+        }
     }
 
     fn addMember(self: *Collector, owner: source.Span, name: source.Span) error{OutOfMemory}!void {
         if (owner.end <= owner.start or owner.end > self.builder.src.bytes.len) return;
         if (name.end <= name.start or name.end > self.builder.src.bytes.len) return;
+        self.extent = @max(self.extent, @max(owner.end, name.end));
         const owner_text = self.builder.src.bytes[owner.start..owner.end];
         const name_text = self.builder.src.bytes[name.start..name.end];
         if (owner_text.len == 0 or name_text.len == 0) return;

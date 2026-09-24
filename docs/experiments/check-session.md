@@ -76,7 +76,7 @@ runs these tests in Debug and ReleaseFast.
 
 This process keeps whole-project verdict reuse and per-function checked-body reuse
 in one compiler process. Persistent checked bodies, symbolic-template and
-concrete-specialization replay live in the one-shot `semantic-cache-v1` store
+concrete-specialization replay live in the one-shot `semantic-cache-v2` store
 documented in [compiler caches](../tooling/caches.md#persistent-checked-body-store);
 structured diagnostic framing, per-function lazy lowering and incremental native
 linking remain open work. This is not completion of the incremental-compilation

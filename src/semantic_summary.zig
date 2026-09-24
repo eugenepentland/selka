@@ -21,7 +21,7 @@ const codec = @import("persist_codec.zig");
 const semantic_key = @import("semantic_key.zig");
 
 /// Payload version; bump for any layout or meaning change so old payloads miss.
-pub const format_version = "check-summaries-v2";
+pub const format_version = "check-summaries-v3";
 
 /// One stored diagnostic without related notes, its span relative to the start
 /// of its function's declaration region.
@@ -53,6 +53,19 @@ pub const Fact = struct {
     external: bool = false,
 };
 
+/// What one checked body reached besides its own declaration: the functions
+/// it calls and the catalog records its checked tree touched.
+pub const Uses = struct {
+    /// Positions in the same summary table of the functions the body names.
+    callees: []const u32 = &.{},
+    /// Positions in the table's record list of the records the tree touched.
+    records: []const u32 = &.{},
+    /// `combineShapes` over those records' transitive shape digests. A record
+    /// reached only through a field, element or return type is still touched,
+    /// so a body is never stood in over a record whose shape changed.
+    shape: [32]u8 = @splat(0),
+};
+
 /// One ordinary function's summary. `stubbable` is false for a function that
 /// every check re-checks (the entry point, constants, conversions, host
 /// declarations, and bodies whose checked tree names a specialization, a lambda
@@ -64,14 +77,44 @@ pub const Summary = struct {
     region: Region,
     fact: Fact,
     notes: Notes = .{},
-    /// Positions in the same summary table of the functions the body names.
-    callees: []const u32 = &.{},
+    uses: Uses = .{},
     stubbable: bool,
 };
+
+/// One entry's summaries and the names of the records they touched.
+pub const Table = struct {
+    records: []const []const u8 = &.{},
+    summaries: []const Summary = &.{},
+};
+
+/// One touched record: its catalog name and transitive shape digest.
+pub const Shape = struct { name: []const u8, digest: [32]u8 };
+
+/// The digest over a body's touched records, independent of their order.
+pub fn combineShapes(shapes: []Shape) [32]u8 {
+    std.mem.sort(Shape, shapes, {}, shapeBefore);
+    var hash = std.crypto.hash.Blake3.init(.{});
+    hash.update("touched-shapes-v1");
+    for (shapes) |shape| {
+        var length: [8]u8 = undefined;
+        std.mem.writeInt(u64, &length, shape.name.len, .little);
+        hash.update(&length);
+        hash.update(shape.name);
+        hash.update(&shape.digest);
+    }
+    var out: [32]u8 = undefined;
+    hash.final(&out);
+    return out;
+}
+
+fn shapeBefore(_: void, a: Shape, b: Shape) bool {
+    return std.mem.lessThan(u8, a.name, b.name);
+}
 
 /// A decoded summary table with its key index.
 pub const Index = struct {
     summaries: []const Summary = &.{},
+    records: []const []const u8 = &.{},
     by_key: std.StringHashMapUnmanaged(u32) = .empty,
 
     /// Position of the summary with this stable key, or null.
@@ -85,7 +128,7 @@ pub const Request = struct {
     /// Summaries of this entry's last successful check; null checks every body.
     previous: ?*const Index = null,
     /// This check's summaries, set when it succeeds; the host persists them.
-    produced: ?[]const Summary = null,
+    produced: ?Table = null,
     /// Set when a stand-in attempt met a changed cross-function fact (or a
     /// diagnostic it cannot reproduce exactly) and must be repeated in full.
     retry: bool = false,
@@ -171,11 +214,11 @@ pub fn diagnosticOf(note: Note, region_start: usize) diagnostic.Diagnostic {
 }
 
 /// Serialize a summary table with its format version.
-pub fn encode(allocator: std.mem.Allocator, summaries: []const Summary) std.mem.Allocator.Error![]u8 {
+pub fn encode(allocator: std.mem.Allocator, table: Table) std.mem.Allocator.Error![]u8 {
     var writer = codec.Writer.init(allocator);
     errdefer writer.deinit();
     try writer.write([]const u8, format_version);
-    try writer.write([]const Summary, summaries);
+    try writer.write(Table, table);
     return writer.bytes.toOwnedSlice(allocator);
 }
 
@@ -186,12 +229,14 @@ pub fn decode(allocator: std.mem.Allocator, payload: []const u8) ?Index {
     var reader = codec.Reader.init(allocator, payload);
     const version = reader.read([]const u8) catch return null;
     if (!std.mem.eql(u8, version, format_version)) return null;
-    const summaries = reader.read([]const Summary) catch return null;
+    const table = reader.read(Table) catch return null;
     if (!reader.done()) return null;
-    var index: Index = .{ .summaries = summaries };
+    const summaries = table.summaries;
+    var index: Index = .{ .summaries = summaries, .records = table.records };
     index.by_key.ensureTotalCapacity(allocator, @intCast(summaries.len)) catch return null;
     for (summaries, 0..) |summary, position| {
-        for (summary.callees) |callee| if (callee >= summaries.len) return null;
+        for (summary.uses.callees) |callee| if (callee >= summaries.len) return null;
+        for (summary.uses.records) |record| if (record >= table.records.len) return null;
         const entry = index.by_key.getOrPutAssumeCapacity(summary.key);
         // Keys are unique in a table this compiler wrote; a duplicate is foreign.
         if (entry.found_existing) return null;
