@@ -995,7 +995,7 @@
     "gc": "single-threaded nonmoving tracing; retained guest values root intermediates; collect-on-allocation stress option",
     "python": "static fixed-width types, function-scoped locals with E_UNBOUND definite assignment, value records; indentation is the only block syntax",
     "dictionaries": "managed insertion order; homogeneous hashable keys (integers, bool, str, bytes, and tuples, records, unions, enums, domains, Option and fixed arrays of those) and copyable values; no dict comprehension",
-    "sets": "managed insertion order over hashable elements; `set()` needs an expected type; no frozenset, no augmented operators (`|=`); generic bodies key only by integer-bounded parameters, `str` or concrete hashable types",
+    "sets": "managed insertion order over hashable elements; `set()` needs an expected type; no frozenset, no augmented operators (`|=`); generic bodies key only by integer-bounded parameters, `str` or concrete hashable types; a module that declares its own function named `set` keeps it, and there the type spelling `set[T]` is unavailable while literals still work",
     "native_tests": "fresh QBE processes; exported typed-call-compatible signatures; positive deterministic receipts only; project validity is always checked through the shared query cache; only a fully cached selection skips lowering/emission/linking, while a changed snapshot still pays one whole-project preparation emission and an uncached selection builds the whole selected-provider library; provider snapshots at most 128 sources/16 MiB",
     "standard_library": "ten embedded Python-syntax modules over managed types: math, strings, sort, path, hex, base64, json, pool, random, time"
   },

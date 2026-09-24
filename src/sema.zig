@@ -1635,7 +1635,12 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     try initSpecializationReuse(&checker, allocator, catalog.records, &session, &spec_session);
     for (program.functions, 0..) |function, i| {
         const name = if (module_names) |names| try names.functionDeclaration(function.policy.owner, function.name) else try functionName(allocator, src, function.policy.owner, function.name);
-        if (checker.catalog.names.contains(name) or checker.catalog.templates.names.contains(name)) return sink.fail("E_DUPLICATE_NAME", function.name, "function name conflicts with a declared type");
+        // The builtin `set` type is new beside programs that already declare a
+        // function of that name, so such a function keeps its name and its
+        // calls (SET-1); a declared type named `set` still conflicts.
+        const template = checker.catalog.templates.names.get(name);
+        const builtin_set = template != null and template.?.end == 0 and std.mem.eql(u8, name, "set");
+        if (checker.catalog.names.contains(name) or (template != null and !builtin_set)) return sink.fail("E_DUPLICATE_NAME", function.name, "function name conflicts with a declared type");
         if (checker.functions.get(name)) |previous| return sink.failRelated(
             "E_DUPLICATE_FUNCTION",
             function.name,

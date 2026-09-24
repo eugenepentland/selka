@@ -155,3 +155,18 @@ test "a set that outgrows the memory budget traps instead of corrupting the heap
     const result = try native.runWithOptions(&c, .{ .max_memory = 1 << 20 });
     try t.expectEqualStrings("R_MEMORY_BUDGET", result.trap.code);
 }
+
+// spec-case: SET-1
+test "a program's own function named set keeps its name beside set literals" {
+    try t.expectEqual(@as(i64, 43), try value(
+        \\def set(values: mut list[int], index: int, replacement: int) -> None:
+        \\    values[index] = replacement
+        \\
+        \\def main() -> int:
+        \\    values = [1, 2]
+        \\    set(mut values, 0, 40)
+        \\    seen = {values[0], values[1], 1}
+        \\    return values[0] + len(seen)
+        \\
+    ));
+}
