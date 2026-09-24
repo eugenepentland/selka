@@ -38,9 +38,11 @@ pub const ReadError = error{ OutOfMemory, NotFound, ReadFailed, TooLarge };
 /// Source reader callback; returned bytes use the supplied allocator and respect the byte limit.
 pub const Provider = struct { context: ?*anyopaque, read: *const fn (?*anyopaque, std.mem.Allocator, []const u8, usize) ReadError![]u8 };
 /// Bounds on module count, import edges, individual files, and total source
-/// bytes. A `mylang.json` `budgets` object may override each field; the defaults
-/// admit a project of several thousand modules.
-pub const Options = struct { max_modules: usize = 4096, max_imports: usize = 65536, max_file_bytes: usize = 4 * 1024 * 1024, max_total_bytes: usize = 16 * 1024 * 1024 };
+/// bytes. A `mylang.json` `budgets` object may override each field. The
+/// defaults (PROJ-SCALE-1) admit a project of well over a million lines with no
+/// configuration: 64 MiB of source is about 1.9 million lines of 35-byte lines,
+/// and 16,384 modules averages 64 lines a module over a million lines.
+pub const Options = struct { max_modules: usize = 16384, max_imports: usize = 262144, max_file_bytes: usize = 4 * 1024 * 1024, max_total_bytes: usize = 64 * 1024 * 1024 };
 /// A source span paired with the module whose bytes it indexes.
 pub const Site = struct { module: usize, span: source.Span };
 /// A dotted module path: its joined text, its trailing segment, and its span.

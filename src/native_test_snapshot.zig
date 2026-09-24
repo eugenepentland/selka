@@ -8,13 +8,14 @@ const project = @import("native_test_root").snapshot_project;
 pub const Error = fs.Error || std.Io.Dir.OpenError || std.Io.Dir.SelectiveWalker.Error ||
     std.Io.File.StatError || std.Io.File.ReadPositionalError ||
     error{ InvalidTestSnapshot, SourceChanged, InvalidTestProviders, ProviderSignatureChanged };
-const byte_limit = 16 * 1024 * 1024;
 /// Entry-point body appended to a library entry so it can be checked as a project.
 const main_stub = "def main() -> int:\n    return 0\n";
 /// Captured bytes are independent of subsequent source edits.
 pub const File = struct { path: []const u8, data: []const u8, hash: []const u8 };
-/// Captured required-configuration files and their combined policy identity.
-pub const Support = struct { files: []const File = &.{}, policy_identity: ?[]const u8 = null };
+/// Captured required-configuration files, their combined policy identity, and
+/// the project budgets the same configuration sets (PROJ-SCALE-1): the snapshot
+/// is bounded by its `max_total_bytes`, and the resolved identity loads under it.
+pub const Support = struct { files: []const File = &.{}, policy_identity: ?[]const u8 = null, budgets: project.Options = .{} };
 /// Paths and bytes belong to the enclosing native build context.
 pub const Snapshot = struct {
     root: []const u8,
@@ -34,7 +35,7 @@ pub fn capture(context: fs.Context, entry: []const u8) Error!Snapshot {
 /// Ignore a configured build-cache subtree in addition to conventional generated directories.
 pub fn captureExcluding(context: fs.Context, entry: []const u8, excluded: ?[]const u8) Error!Snapshot {
     var captured = try inventory(context, entry, excluded, true);
-    captured.identity = try identity(context.allocator, captured.entry, captured.files, captured.support.files, null);
+    captured.identity = try identity(context.allocator, captured.entry, captured.files, captured.support, null);
     return captured;
 }
 /// `captureExcluding` with the resolved identity computed through the import
@@ -49,7 +50,7 @@ pub fn captureMemoized(context: fs.Context, entry: []const u8, excluded: ?[]cons
         captured.identity = memoized;
         return captured;
     }
-    captured.identity = try identity(context.allocator, captured.entry, captured.files, captured.support.files, &memo);
+    captured.identity = try identity(context.allocator, captured.entry, captured.files, captured.support, &memo);
     return captured;
 }
 /// The bounded `.my` inventory beneath the entry's project root and its
@@ -66,6 +67,8 @@ fn inventory(context: fs.Context, entry: []const u8, excluded: ?[]const u8, hash
         root = location.root;
         name = location.relative;
     }
+    const support = try captureSupport(context, absolute);
+    const byte_limit = support.budgets.max_total_bytes;
     var directory = try std.Io.Dir.cwd().openDir(context.io, root, .{ .iterate = true, .follow_symlinks = false });
     defer directory.close(context.io);
     var walker = try directory.walk(context.allocator);
@@ -91,7 +94,6 @@ fn inventory(context: fs.Context, entry: []const u8, excluded: ?[]const u8, hash
     }
     std.mem.sort(File, files.items, {}, less);
     if (find(files.items, name) == null) return error.InvalidTestSnapshot;
-    const support = try captureSupport(context, absolute);
     return .{
         .root = root,
         .entry = name,
@@ -121,6 +123,12 @@ fn captureSupport(context: fs.Context, entry_absolute: []const u8) Error!Support
     var config = project_config.load(context.allocator, context.io, absolute_config, &failure) catch
         return .{ .files = try support.toOwnedSlice(context.allocator) };
     defer config.deinit();
+    var budgets: project.Options = .{};
+    const configured = config.document.budgets;
+    if (configured.max_modules) |value| budgets.max_modules = value;
+    if (configured.max_imports) |value| budgets.max_imports = value;
+    if (configured.max_file_bytes) |value| budgets.max_file_bytes = value;
+    if (configured.max_total_bytes) |value| budgets.max_total_bytes = value;
     var policy_identity: ?[]const u8 = null;
     if (config.policy) |policy| {
         if (!policy.absolute) {
@@ -136,7 +144,7 @@ fn captureSupport(context: fs.Context, entry_absolute: []const u8) Error!Support
         var identity_buffer: [64]u8 = undefined;
         if (config.cacheIdentity(&identity_buffer)) policy_identity = try context.allocator.dupe(u8, &identity_buffer);
     }
-    return .{ .files = try support.toOwnedSlice(context.allocator), .policy_identity = policy_identity };
+    return .{ .files = try support.toOwnedSlice(context.allocator), .policy_identity = policy_identity, .budgets = budgets };
 }
 
 fn readAbsolute(context: fs.Context, path: []const u8, limit: usize) Error![]const u8 {
@@ -181,12 +189,13 @@ fn read(context: fs.Context, directory: std.Io.Dir, path: []const u8, limit: usi
 /// Hash the compiler-resolved import closure while retaining the broad source
 /// inventory separately for immutable materialization and provider fixtures.
 /// A `memo` learns the standard modules the load passed through.
-fn identity(allocator: std.mem.Allocator, entry: []const u8, files: []const File, support: []const File, memo: ?*Imports) Error![]const u8 {
+fn identity(allocator: std.mem.Allocator, entry: []const u8, files: []const File, configuration: Support, memo: ?*Imports) Error![]const u8 {
+    const support = configuration.files;
     var loaded = project.Project.init(allocator);
     defer loaded.deinit();
     var provider: MemoryProvider = .{ .files = files };
     const module_name = try entryModule(allocator, entry);
-    loaded.load(.{ .context = &provider, .read = MemoryProvider.read }, module_name, .{}) catch return broadIdentity(allocator, entry, files, support);
+    loaded.load(.{ .context = &provider, .read = MemoryProvider.read }, module_name, configuration.budgets) catch return broadIdentity(allocator, entry, files, support);
     if (memo) |learning| try rememberStandard(learning, &loaded);
     var pairs: std.ArrayList([2][]const u8) = .empty;
     for (loaded.modules.items) |module| {
@@ -612,7 +621,7 @@ pub fn withTestEntry(context: fs.Context, snapshot: Snapshot) Error!Snapshot {
         .entry_path = snapshot.entry_path,
         .files = files,
         .support = snapshot.support,
-        .identity = try identity(context.allocator, snapshot.entry, files, snapshot.support.files, null),
+        .identity = try identity(context.allocator, snapshot.entry, files, snapshot.support, null),
         .excluded = snapshot.excluded,
     };
 }
@@ -661,7 +670,7 @@ pub fn replace(context: fs.Context, snapshot: Snapshot, replacements: std.json.V
         const data = if (replacement) |value| value.string else file.data;
         total = std.math.add(usize, total, file.path.len) catch return error.InvalidTestProviders;
         total = std.math.add(usize, total, data.len) catch return error.InvalidTestProviders;
-        if (total > byte_limit) return error.InvalidTestProviders;
+        if (total > snapshot.support.budgets.max_total_bytes) return error.InvalidTestProviders;
         const target = try std.fs.path.join(context.allocator, &.{ root, file.path });
         try context.mkdir(std.fs.path.dirname(target).?);
         try context.write(target, data);
@@ -780,6 +789,31 @@ test "resolved snapshot identity ignores unreachable edits and retains transitiv
     try verify(context, initial);
     try context.write(config, "{\"version\":1,\"budgets\":{\"max_modules\":21}}");
     try std.testing.expectError(error.SourceChanged, verify(context, initial));
+}
+// spec-case: PROJ-SCALE-1
+test "a test snapshot is bounded by the project's configured source budget rather than a fixed size" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary_dir = std.testing.tmpDir(.{});
+    defer temporary_dir.cleanup();
+    const root = try temporary_dir.dir.realPathFileAlloc(context.io, ".", context.allocator);
+    const entry = try std.fs.path.join(context.allocator, &.{ root, "main.my" });
+    const config = try std.fs.path.join(context.allocator, &.{ root, "mylang.json" });
+    try context.write(entry, "module main\nimport big\n");
+    try context.write(try std.fs.path.join(context.allocator, &.{ root, "big.my" }), "module big\n# " ++ ("0123456789abcdef" ++ "0123456789abcdef") ++ ("0123456789abcdef" ++ "0123456789abcdef") ++ "\n");
+    // With no configuration the snapshot has the default project budget.
+    const unconfigured = try capture(context, entry);
+    try std.testing.expectEqual((project.Options{}).max_total_bytes, unconfigured.support.budgets.max_total_bytes);
+    // A configured budget smaller than the sources refuses the snapshot, and
+    // one that holds them admits it and is what the resolved identity loads under.
+    try context.write(config, "{\"version\":1,\"budgets\":{\"max_total_bytes\":64}}");
+    try std.testing.expectError(error.InvalidTestSnapshot, capture(context, entry));
+    try context.write(config, "{\"version\":1,\"budgets\":{\"max_total_bytes\":4096}}");
+    const configured = try capture(context, entry);
+    try std.testing.expectEqual(@as(usize, 4096), configured.support.budgets.max_total_bytes);
+    try std.testing.expectEqual(@as(usize, 2), configured.files.len);
 }
 test "provider signatures and typed values compare structurally" {
     const parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,

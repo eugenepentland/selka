@@ -115,12 +115,15 @@ test "module budgets and missing files fail without a partial report" {
     try rejection(&.{diamond[0]}, .{}, "E_MODULE_READ");
 }
 // spec: PROJ-6
+// spec: PROJ-SCALE-1
 test "the default project budgets admit a large module graph" {
     const options: p.Options = .{};
-    try t.expectEqual(@as(usize, 4096), options.max_modules);
-    try t.expectEqual(@as(usize, 65536), options.max_imports);
+    try t.expectEqual(@as(usize, 16384), options.max_modules);
+    try t.expectEqual(@as(usize, 262144), options.max_imports);
     try t.expectEqual(@as(usize, 4 * 1024 * 1024), options.max_file_bytes);
-    try t.expectEqual(@as(usize, 16 * 1024 * 1024), options.max_total_bytes);
+    // A million-line project of the generated scale shape is 35.1 MB of source.
+    try t.expectEqual(@as(usize, 64 * 1024 * 1024), options.max_total_bytes);
+    try t.expect(options.max_total_bytes > 35_122_778);
 }
 test "module paths exclude traversal and incomplete state cannot render" {
     for ([_][]const u8{ "", ".", "..", "a..b", "a/b", "a\\b", "/tmp/a", "a.", "a-b", "1a" }) |name| {

@@ -269,8 +269,12 @@ def main() -> int:
 
 ## Limits
 
-- A project loads at most 256 modules and 4,096 import edges, with each file
-  capped at 4 MiB and the whole project at 16 MiB of source.
+- By default a project loads at most 16,384 modules and 262,144 import edges,
+  with each file capped at 4 MiB and the whole project at 64 MiB of source —
+  room for well over a million lines with no configuration. A `mylang.json`
+  `budgets` object (`max_modules`, `max_imports`, `max_file_bytes`,
+  `max_total_bytes`) raises or lowers each, and `mylang test` bounds its source
+  snapshot by the same `max_total_bytes`.
 - Import cycles reject, reporting both the importing location and the related
   source location. Importing the same module twice in one file rejects with
   `E_DUPLICATE_IMPORT`.
