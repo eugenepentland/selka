@@ -745,7 +745,7 @@ def collect_structure(compiler, entry):
 
 
 def collect_call_depth(compiler, entry):
-    result = run_measured([compiler, "index-project", entry, "--no-cache"], timeout=600)
+    result = run_measured([compiler, "index-project", entry, "--full", "--no-cache"], timeout=600)
     if result["exit"] != 0 or not result["stdout"].strip():
         return {"status": "unsupported", "exit": result["exit"],
                 "stderr": result["stderr"][:300], "wall_ms": result["wall_ms"]}

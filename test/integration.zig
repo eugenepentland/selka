@@ -3646,6 +3646,83 @@ test "CLI tests-for lists direct and transitive tests and rejects an unknown nam
     , "");
     try invokeOptions("tests-for", source, &.{"input::missing"}, 2, "", "no checked declaration");
 }
+// spec-case: TESTS-FOR-SYNTAX-1
+test "CLI tests-for answers a project that does not type-check from its syntax and accepts module.name" {
+    const source =
+        \\module input
+        \\
+        \\
+        \\def parse(value: int) -> int:
+        \\    return helper(value)
+        \\
+        \\
+        \\def helper(value: int) -> int:
+        \\    return value
+        \\
+        \\
+        \\def test_parse() -> bool effects():
+        \\    return parse(1) == 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const red = try std.mem.replaceOwned(u8, testing.allocator, source, "    return value\n", "    return value + \"red\"\n");
+    defer testing.allocator.free(red);
+    try invokeOptions("tests-for", red, &.{"input.helper"}, 0,
+        \\tests-for input::helper
+        \\  direct (0):
+        \\  reached-by (1): input::test_parse
+        \\  basis: syntax (the project does not type-check; calls were resolved by name, not by checked types)
+        \\
+    , "error[E_TYPE]");
+    try invokeOptions("tests-for", red, &.{"input.missing"}, 2, "", "no declaration has that qualified name");
+    try invokeOptions("tests-for", source, &.{"input.parse"}, 0,
+        \\tests-for input::parse
+        \\  direct (1): input::test_parse
+        \\  reached-by (1): input::test_parse
+        \\
+    , "");
+    try invokeOptions("tests-for", "module input\n\n\ndef parse(value: int) -> int:\n    return +\n", &.{"input::parse"}, 1, "", "the project does not parse");
+}
+// spec-case: NAVIGATION-SELECT-1
+test "CLI index-project prints the summary by default, the full document on --full and a selection per filter" {
+    const source =
+        \\module input
+        \\
+        \\
+        \\def helper(value: int) -> int:
+        \\    return value
+        \\
+        \\
+        \\def main() -> int:
+        \\    return helper(0)
+    ;
+    const summary = try runFixture("index-project", source, &.{});
+    defer testing.allocator.free(summary.stdout);
+    defer testing.allocator.free(summary.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, summary.term);
+    try testing.expect(std.mem.startsWith(u8, summary.stdout, "{\"version\":\"navigation-summary-v1\",\"checked\":true,"));
+    try testing.expect(std.mem.indexOf(u8, summary.stdout, "\"kinds\":{\"function\":2,\"parameter\":1}") != null);
+    const full = try runFixture("index-project", source, &.{"--full"});
+    defer testing.allocator.free(full.stdout);
+    defer testing.allocator.free(full.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, full.term);
+    try testing.expect(std.mem.startsWith(u8, full.stdout, "{\"version\":\"navigation-v1\",\"checked\":true,"));
+    const selected = try runFixture("index-project", source, &.{ "--symbol", "input.helper" });
+    defer testing.allocator.free(selected.stdout);
+    defer testing.allocator.free(selected.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, selected.term);
+    try testing.expect(std.mem.startsWith(u8, selected.stdout, "{\"version\":\"navigation-selection-v1\",\"status\":\"ok\","));
+    try testing.expect(std.mem.indexOf(u8, selected.stdout, "\"resolved\":\"input::helper\"") != null);
+    const missing = try runFixture("index-project", source, &.{"--module=absent"});
+    defer testing.allocator.free(missing.stdout);
+    defer testing.allocator.free(missing.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, missing.term);
+    try testing.expect(std.mem.indexOf(u8, missing.stdout, "\"status\":\"missing\"") != null);
+    try invokeOptions("index-project", source, &.{ "--full", "--module=input" }, 2, "", "usage:");
+    try invokeOptions("index-project", source, &.{"--kind=method"}, 2, "", "usage:");
+}
 // spec-case: LINT-1
 test "CLI lint undocumented-export reports under agent and blocks under strict" {
     const source =

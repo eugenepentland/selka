@@ -19,7 +19,7 @@
     },
     "tests-for-index": {
       "kind": "tooling",
-      "summary": "One tests-reachability index backs `mylang tests-for`, the related notes on `mylang lint` findings, and the `tests(N)` column of `mylang list-interfaces`.",
+      "summary": "One tests-reachability index backs `mylang tests-for`, the related notes on `mylang lint` findings, and the `tests(N)` column of `mylang list-interfaces`; on a project that does not type-check, `tests-for` answers from a syntax call graph labeled `basis: syntax`.",
       "doc": "docs/tooling/navigation.md#which-tests-reach-a-declaration"
     },
     "interface-fact-status": {
@@ -494,8 +494,18 @@
     },
     "source-navigation": {
       "kind": "tooling",
-      "summary": "`index-project` reports definitions, references and a pinned source snapshot as JSON.",
+      "summary": "`index-project --full` reports definitions, references and a pinned source snapshot as one `navigation-v1` JSON document with no size cap, streamed to stdout.",
       "doc": "docs/tooling/navigation.md#source-navigation"
+    },
+    "navigation-summary-and-filters": {
+      "kind": "tooling",
+      "summary": "`index-project` prints a bounded `navigation-summary-v1` overview by default (per-module declaration counts by kind plus drill-down queries), and `--module`, `--symbol` and `--kind` print the selected `navigation-v1` records with their references as `navigation-selection-v1`.",
+      "doc": "docs/tooling/navigation.md#summary-and-filters-for-large-projects"
+    },
+    "navigation-call-site-spelling": {
+      "kind": "tooling",
+      "summary": "`context --symbol`, `tests-for` and `index-project --symbol` accept the call-site spelling `module.name` as well as `module::name`, trying every module/member split and reporting several matches as ambiguous.",
+      "doc": "docs/tooling/navigation.md#call-site-spelling"
     },
     "syntax-cache": {
       "kind": "tooling",

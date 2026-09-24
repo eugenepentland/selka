@@ -49,7 +49,6 @@ pub fn candidates(allocator: std.mem.Allocator, loaded: *const project.Project) 
                 .ident => if (std.mem.eql(u8, module.src.text(token.span), "result") or std.mem.eql(u8, module.src.text(token.span), "buffer") or std.mem.eql(u8, module.src.text(token.span), "pool")) "type" else continue,
                 else => continue,
             };
-            if (symbols.items.len >= 50000) return error.NavigationLimit;
             const span = tokens[i + 1].span;
             const at = module.src.locate(span.start);
             const name = module.src.text(span);
@@ -64,25 +63,48 @@ pub fn candidates(allocator: std.mem.Allocator, loaded: *const project.Project) 
     return .{ .arena = arena, .symbols = symbols.items, .omitted_modules = omitted.items };
 }
 
-/// Complete loaded-source receipts are retained, but no semantic edges are invented.
-pub fn render(allocator: std.mem.Allocator, loaded: *const project.Project, identity: receipt.Identity) navigation.Error![]u8 {
-    var recovered = try candidates(allocator, loaded);
-    defer recovered.deinit();
+/// What a lexical pass publishes as `reference_scope`: nothing was resolved.
+pub const reference_scope = "lexical top-level candidates only; body syntax failed; no resolved references or visibility claims";
+
+/// The loaded-source snapshot a lexical answer is pinned to, and its digest.
+pub const Pinned = struct { snapshot: navigation.Snapshot, sha256: []const u8 };
+
+/// Pin a lexical answer to the complete loaded-source receipts, which are
+/// retained even though no semantic edge is invented.
+pub fn pin(arena: std.mem.Allocator, loaded: *const project.Project, identity: receipt.Identity) navigation.Error!Pinned {
     var source_snapshot = loaded.*;
     source_snapshot.problem = null;
-    const scratch = recovered.arena.allocator();
     const snapshot: navigation.Snapshot = .{
-        .implementation = try receipt.implementation(scratch, identity),
-        .inputs = try receipt.inputs(scratch, &source_snapshot),
+        .implementation = try receipt.implementation(arena, identity),
+        .inputs = try receipt.inputs(arena, &source_snapshot),
     };
-    return std.json.Stringify.valueAlloc(allocator, .{
+    return .{ .snapshot = snapshot, .sha256 = try receipt.digest(arena, snapshot) };
+}
+
+/// Complete loaded-source receipts are retained, but no semantic edges are invented.
+pub fn render(allocator: std.mem.Allocator, loaded: *const project.Project, identity: receipt.Identity) navigation.Error![]u8 {
+    var out: std.Io.Writer.Allocating = .init(allocator);
+    errdefer out.deinit();
+    write(&out.writer, allocator, loaded, identity) catch |err| switch (err) {
+        error.WriteFailed => return error.OutOfMemory,
+        else => |other| return other,
+    };
+    return out.toOwnedSlice();
+}
+
+/// Stream the complete lexical `navigation-v1` document `render` returns.
+pub fn write(writer: *std.Io.Writer, allocator: std.mem.Allocator, loaded: *const project.Project, identity: receipt.Identity) (navigation.Error || error{WriteFailed})!void {
+    var recovered = try candidates(allocator, loaded);
+    defer recovered.deinit();
+    const pinned = try pin(recovered.arena.allocator(), loaded, identity);
+    try std.json.Stringify.value(.{
         .version = "navigation-v1",
         .checked = false,
-        .reference_scope = "lexical top-level candidates only; body syntax failed; no resolved references or visibility claims",
-        .snapshot_sha256 = try receipt.digest(scratch, snapshot),
-        .snapshot = snapshot,
+        .reference_scope = reference_scope,
+        .snapshot_sha256 = pinned.sha256,
+        .snapshot = pinned.snapshot,
         .symbols = recovered.symbols,
         .references = @as([]const navigation.Reference, &.{}),
         .omitted_modules = recovered.omitted_modules,
-    }, .{});
+    }, .{}, writer);
 }

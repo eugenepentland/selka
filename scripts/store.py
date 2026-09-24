@@ -711,7 +711,7 @@ def classify(files, compiler):
 
 def index_edges(store, compiler, branch, directory, entry):
     """Reference edges from index-project, keyed by store hash; skipped unless the project checks."""
-    result = compiler.run(['index-project', str(Path(directory) / entry)])
+    result = compiler.run(['index-project', str(Path(directory) / entry), '--full'])
     if result.returncode != 0:
         return 0
     document = json.loads(result.stdout)

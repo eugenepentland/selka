@@ -29,7 +29,7 @@ mylang context app/main.my --symbol 'model::validate' --against=api-baseline.jso
 
 | Selector | Selects |
 | --- | --- |
-| `--symbol 'module::name'` | One exact module-qualified declaration, in the `module::name` spelling `mylang index-project` and `mylang tests-for` already use. A name that matches several declarations is reported as ambiguous and a name that matches none as missing; neither is silently resolved to a near match. |
+| `--symbol 'module::name'` | One exact module-qualified declaration, in the `module::name` spelling `mylang index-project` and `mylang tests-for` already use, or the call-site spelling `module.name` (see [call-site spelling](navigation.md#call-site-spelling)). A name that matches several declarations is reported as ambiguous and a name that matches none as missing; neither is silently resolved to a near match. |
 | `--at 'path:line:column'` | The innermost declaration, or the diagnostic, whose source span contains that one-based position. |
 
 | Option | Meaning |
