@@ -147,8 +147,16 @@ const Canon = struct {
     }
 };
 
-/// The distinct ordinals in first-mention order.
+/// The distinct ordinals in first-mention order. A function names a handful,
+/// so a short list is deduplicated in place of building a hash set.
 fn unique(allocator: std.mem.Allocator, items: []const u32) error{OutOfMemory}![]const u32 {
+    if (items.len <= 32) {
+        var out: std.ArrayList(u32) = try .initCapacity(allocator, items.len);
+        for (items) |item| {
+            if (std.mem.indexOfScalar(u32, out.items, item) == null) out.appendAssumeCapacity(item);
+        }
+        return out.toOwnedSlice(allocator);
+    }
     var seen: std.AutoHashMapUnmanaged(u32, void) = .empty;
     defer seen.deinit(allocator);
     var out: std.ArrayList(u32) = .empty;
@@ -169,6 +177,30 @@ pub const Keys = struct {
     records: []?RecordFact,
     /// Per-record visit stamps for one closure walk, and the current stamp.
     closure: struct { stamps: []u32, current: u32 = 0 },
+    /// Canonical-encoding buffers kept from one key to the next, so keying
+    /// every function of a large program does not grow fresh buffers for
+    /// each one (every function is keyed on every build).
+    spare: Spare = .{},
+
+    const Spare = struct { bytes: std.ArrayList(u8) = .empty, functions: std.ArrayList(u32) = .empty, records: std.ArrayList(u32) = .empty };
+
+    /// A canonical encoder over the kept buffers, or fresh ones while a caller
+    /// further up is still using them.
+    fn encoder(self: *Keys) Canon {
+        const taken = self.spare;
+        self.spare = .{};
+        return .{ .allocator = self.allocator, .program = self.program, .bytes = taken.bytes, .functions = taken.functions, .records = taken.records };
+    }
+    /// Keep the larger of an encoder's buffers and the kept ones, emptied.
+    fn recycle(self: *Keys, used: *Canon) void {
+        used.bytes.clearRetainingCapacity();
+        used.functions.clearRetainingCapacity();
+        used.records.clearRetainingCapacity();
+        if (used.bytes.capacity < self.spare.bytes.capacity) return used.deinit();
+        var old: Canon = .{ .allocator = self.allocator, .program = self.program, .bytes = self.spare.bytes, .functions = self.spare.functions, .records = self.spare.records };
+        old.deinit();
+        self.spare = .{ .bytes = used.bytes, .functions = used.functions, .records = used.records };
+    }
 
     /// Prepare empty memo tables for one lowered program.
     pub fn init(allocator: std.mem.Allocator, program: bytecode.Program) error{OutOfMemory}!Keys {
@@ -194,6 +226,8 @@ pub const Keys = struct {
         self.allocator.free(self.interfaces);
         self.allocator.free(self.records);
         self.allocator.free(self.closure.stamps);
+        var kept = self.encoder();
+        kept.deinit();
         self.* = undefined;
     }
     fn release(self: *Keys, summary: Summary) void {
@@ -205,8 +239,8 @@ pub const Keys = struct {
     /// except the callee allocation facts, which the second pass adds.
     pub fn local(self: *Keys, index: usize, flags: Flags) error{OutOfMemory}!Digest {
         const own = try self.body(index);
-        var canon: Canon = .{ .allocator = self.allocator, .program = self.program };
-        defer canon.deinit();
+        var canon = self.encoder();
+        defer self.recycle(&canon);
         try canon.text(format_version);
         try canon.put(flags);
         try canon.raw(&own.digest);
@@ -234,8 +268,8 @@ pub const Keys = struct {
     fn body(self: *Keys, index: usize) error{OutOfMemory}!Summary {
         if (self.bodies[index]) |known| return known;
         const function = self.program.functions[index];
-        var canon: Canon = .{ .allocator = self.allocator, .program = self.program };
-        defer canon.deinit();
+        var canon = self.encoder();
+        defer self.recycle(&canon);
         try canon.text("body");
         try canon.text(function.name);
         try canon.put(function.policy);
@@ -252,8 +286,8 @@ pub const Keys = struct {
     fn interface(self: *Keys, index: usize) error{OutOfMemory}!Summary {
         if (self.interfaces[index]) |known| return known;
         const function = self.program.functions[index];
-        var canon: Canon = .{ .allocator = self.allocator, .program = self.program };
-        defer canon.deinit();
+        var canon = self.encoder();
+        defer self.recycle(&canon);
         try canon.text("interface");
         try canon.text(function.name);
         try canon.put(function.policy);
@@ -271,8 +305,8 @@ pub const Keys = struct {
     /// One record's own schema, naming (not expanding) the records it reaches.
     fn record(self: *Keys, index: u32) error{OutOfMemory}!RecordFact {
         if (self.records[index]) |known| return known;
-        var canon: Canon = .{ .allocator = self.allocator, .program = self.program };
-        defer canon.deinit();
+        var canon = self.encoder();
+        defer self.recycle(&canon);
         try canon.text("record");
         try canon.put(self.program.records[index]);
         const summary = try canon.finish();
@@ -496,6 +530,15 @@ fn lease(allocator: std.mem.Allocator, io: std.Io, directory: []const u8) error{
     return null;
 }
 
+/// The store's text directory, created and opened once, so each presence
+/// check names one entry of it rather than walking a whole path; null when it
+/// cannot be opened (checks then use the full path).
+fn textDirectory(allocator: std.mem.Allocator, io: std.Io, directory: []const u8) error{OutOfMemory}!?std.Io.Dir {
+    const path = try std.fs.path.join(allocator, &.{ directory, "il" });
+    std.Io.Dir.cwd().createDirPath(io, path) catch return null;
+    return std.Io.Dir.cwd().openDir(io, path, .{}) catch null;
+}
+
 /// Add to `live` every text a pack's entries name.
 fn packTexts(allocator: std.mem.Allocator, bytes: []const u8, live: *std.AutoHashMapUnmanaged(Digest, void)) error{ OutOfMemory, Damaged }!void {
     var entries: std.AutoHashMapUnmanaged(Digest, Entry) = .empty;
@@ -566,7 +609,8 @@ pub const Store = struct {
 
     /// The pack a store answers from, and the open `.lease` file whose shared
     /// lock this process holds while it may write texts (`FRAGMENT-SWEEP-1`).
-    const Pack = struct { name: []const u8, lease: ?std.Io.File = null };
+    /// And the open text directory, whose entries are checked by name.
+    const Pack = struct { name: []const u8, lease: ?std.Io.File = null, texts: ?std.Io.Dir = null };
 
     /// Open the store under `root` for one compiler `identity` and load the
     /// pack named by `label` (for example the entry path and build policy).
@@ -581,7 +625,7 @@ pub const Store = struct {
             .allocator = allocator,
             .io = io,
             .directory = directory,
-            .pack = .{ .name = try allocator.dupe(u8, &pack), .lease = try lease(allocator, io, directory) },
+            .pack = .{ .name = try allocator.dupe(u8, &pack), .lease = try lease(allocator, io, directory), .texts = try textDirectory(allocator, io, directory) },
         };
         store.load() catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
@@ -593,6 +637,7 @@ pub const Store = struct {
     /// pack bytes, which belong to the arena the store was opened with.
     pub fn deinit(self: *Store) void {
         if (self.pack.lease) |file| file.close(self.io);
+        if (self.pack.texts) |listing| listing.close(self.io);
         self.entries.deinit(self.allocator);
         self.used.deinit(self.allocator);
         self.allocator.free(self.directory);
@@ -789,6 +834,10 @@ pub const Store = struct {
     }
 
     fn present(self: *Store, digest: Digest) bool {
+        if (self.pack.texts) |listing| {
+            listing.access(self.io, &std.fmt.bytesToHex(digest, .lower), .{}) catch return false;
+            return true;
+        }
         const file = self.path(digest) catch return false;
         std.Io.Dir.cwd().access(self.io, file, .{}) catch return false;
         return true;
@@ -1039,4 +1088,34 @@ test "atomicWrite reports a refused rename and leaves no staging file behind" {
     var iterator = names.iterate();
     try std.testing.expectEqualStrings("unit", (try iterator.next(std.testing.io)).?.name);
     try std.testing.expectEqual(@as(?std.Io.Dir.Entry, null), try iterator.next(std.testing.io));
+}
+
+// spec-case: QBE-FRAGMENT-REUSE-1
+test "the ordinals a key names keep first-mention order without repeats, short or long" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try std.testing.expectEqualSlices(u32, &.{ 4, 1, 9 }, try unique(a, &.{ 4, 1, 4, 9, 1 }));
+    var long: [100]u32 = undefined;
+    for (&long, 0..) |*item, index| item.* = @intCast(index % 40);
+    const deduplicated = try unique(a, &long);
+    try std.testing.expectEqual(@as(usize, 40), deduplicated.len);
+    try std.testing.expectEqual(@as(u32, 39), deduplicated[39]);
+}
+
+// spec-case: QBE-FRAGMENT-REUSE-1
+test "a store sees a text in its open text directory until the file is gone" {
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var store = try Store.open(a, std.testing.io, root, "test-compiler", "main.my");
+    defer store.deinit();
+    try std.testing.expect(store.pack.texts != null);
+    const digest = try store.rememberMeta(@splat(1), "{\"name\":\"f\"}");
+    try std.testing.expect(store.present(digest));
+    try std.Io.Dir.cwd().deleteFile(std.testing.io, try store.path(digest));
+    try std.testing.expect(!store.present(digest));
 }
