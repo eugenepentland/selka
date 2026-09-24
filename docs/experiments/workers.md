@@ -1,5 +1,9 @@
 # Bounded isolated workers
 
+Status: removed. `scripts/workers.py` is gone, and `examples/workers/run.py`,
+which imported it, was deleted on 2026-09-24; `examples/workers/main.my` remains
+an ordinary program. This page is the design record.
+
 `scripts/workers.py` provides a host API for concurrent guest function calls. Each
 worker is a separate compiler/VM process with its own arena, references, refcounts
 and allocator bookkeeping. Source files and typed-call-v1 messages are copied

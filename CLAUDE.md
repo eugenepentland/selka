@@ -14,6 +14,13 @@ any other toolchain.
 - `zig build test` — runs the gate. It **does not install**, so `zig-out/bin/mylang` stays
   stale unless you also ran `zig build`.
 - `zig build test-compile` — type-checks every Zig test root without running anything.
+- **Building and using mylang needs no Python.** `zig build` (the install graph) and
+  every command of the installed compiler run none; `USE-WITHOUT-PYTHON-1` in
+  `test/integration.zig` runs the user commands under an empty `PATH`. Python is
+  fine in `zig build test` drivers, developer scripts, `bench/`, `velocity/` and
+  `experiments/`; the LLVM adapter behind `--release` is the one exception until
+  it is ported. Never wire a Python step into the install graph or spawn one from
+  `src/`.
 - Use `zig build -Doptimize=ReleaseFast --prefix /path/to/install` for a compiler
   installation used by application agents, or to time the compiler itself. Default
   `zig build` produces a Debug compiler; cached guest tests still pay its parsing,
@@ -112,14 +119,18 @@ zig build fmt-check
 
 Test verdicts are cached like build outputs. A test shard, a Python driver or the
 doctest re-runs only when its test binary, the compiler or `qbe` it runs, its command,
-or one of the repository files it reads changes; those files are declared per step in
+one of the environment variables it depends on (`PATH`, `HOME`, `TMPDIR`, `MYLANG_*`,
+…), or one of the repository files it reads changes; those files are declared per step in
 `build_test_inputs.zig`, and `zig build test` fails (`test-inputs-coverage`) when a
 test names a repository path its step does not declare. An unchanged `zig build test`
 takes seconds, and a `.my` or doc edit re-runs only what reads it. A cached step
 prints no test count, so the `Build Summary` total counts only what ran:
 `-Dtest-rerun=true` re-runs every test step (full counts, or to rule out a stale
 verdict you suspect). When a test starts reading a new fixture, declare it in
-`build_test_inputs.zig`.
+`build_test_inputs.zig`. Test steps always run in the live environment of the
+`zig build` that runs them: never call `Step.Run.setEnvironmentVariable` in
+`build.zig` (a cached configuration freezes the whole environment it copies, and
+the build refuses to configure); pass variables through `withTools`.
 
 `zig build test` splits its two slow Zig roots across processes: `src/root_test.zig`
 into `-Dtest-shards=N` shards (default 12) and `test/integration.zig` into `N/2`, each

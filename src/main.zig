@@ -24,6 +24,10 @@ const context_at_flag = "--at";
 const context_bytes_flag = "--context-bytes";
 /// `context --against FILE` spelling, which takes the next argument.
 const context_against_flag = "--against";
+/// `index-project --module NAME` / `--module=NAME`.
+const index_module_flag = "--module";
+/// `index-project --kind KIND` / `--kind=KIND`.
+const index_kind_flag = "--kind";
 /// Wall-clock ceiling forwarded to the guest runtime, which parses the same flag.
 const timeout_prefix = "--timeout=";
 /// Shared internal session failure name for an over-long request line.
@@ -72,8 +76,9 @@ const everyday_help =
     \\Working in a large project:
     \\  mylang context ENTRY.my --symbol=module::name   one bounded answer about a declaration
     \\  mylang context ENTRY.my --at=FILE:LINE:COLUMN   the same for the declaration at a position
-    \\  mylang tests-for ENTRY.my module::name          the tests that reach a declaration
+    \\  mylang tests-for ENTRY.my module::name          the tests that reach a declaration (also module.name)
     \\  mylang list-interfaces ENTRY.my                 every module's public declarations
+    \\  mylang index-project ENTRY.my                   declaration counts per module; --module=NAME, --symbol=NAME for records
     \\  mylang test ENTRY.my --affected --against REF   only the tests an edit since REF can reach
     \\
 ;
@@ -86,6 +91,7 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose] (run every fenced documentation example)\n       mylang " ++
     "reference --query TERM [--format=text|json] (compiler-derived facts from this executable)\n       mylang " ++
     "docs [TOPIC] (list the user guides built into this executable, or print one)\n       mylang " ++
+    "packages lock CONFIG.json --output LOCK.json | build ENTRY.my --lock LOCK.json [--command C] [--receipt FILE] (offline locked local packages)\n       mylang " ++
     "invoke <entry.my> --function='module::name' (--describe | --input=FILE) (call one exported function natively)\n       mylang " ++
     "dump-tokens <file.my> (stage-0 `tokens-v1` JSON on stdout; lexical failures exit 1)\n       mylang " ++
     "<schema-project|input-module|check|run|dump-bytecode|di" ++
@@ -129,7 +135,9 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "--check (otherwise writes formatted source to " ++
     "stdout)\n" ++
     "  list-declarations: parse-only declarations-v1 JSON with byte ranges\n" ++
-    "  index-project: JSON symbols, references and pinned source snapshot\n  project-dependencies: checked module graph and hashes; --inputs supported\n" ++
+    "  index-project: navigation-summary-v1 per-module declaration counts by default; --module=NAME --symbol=NAME " ++
+    "--kind=function|type|constraint|field|case|parameter|local select navigation-v1 records (navigation-selection-v1); " ++
+    "--full prints the complete navigation-v1 document\n  project-dependencies: checked module graph and hashes; --inputs supported\n" ++
     "  one-shot commands: --timings=json (phase-timings-v1 JSON Lines on stderr)\n" ++
     "  build: --timings=json records the frontend, codegen, link and native phases it already measures for --report\n" ++
     "    --report prints work-report-v1 actual work/reuse plus a frontend-cache-v1 comparison receipt on stderr; --timings=json also adds them; --cache-dir=DIR selects their root; --no-cache disables reuse\n" ++
@@ -280,6 +288,10 @@ fn dispatch(process: std.process.Init) !u8 {
     if (args.len >= 2 and std.mem.eql(u8, args[1], "doctest")) return @import("doctest_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "reference")) return @import("reference_command.zig").run(@import("mylang"), process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "docs")) return @import("docs_command.zig").run(process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "packages")) {
+        const identity = std.fmt.bytesToHex(build_identity, .lower);
+        return @import("packages_command.zig").run(process, args[2..], &identity);
+    }
     if (args.len >= 2 and std.mem.eql(u8, args[1], "invoke")) return @import("invoke_command.zig").run(process, args[2..]);
     // The `&` marker experiment is gone: `mut` is the spelling on both sides of a
     // call and the rule is always on, so the flag names no mode left to select.
@@ -779,6 +791,32 @@ const ContextOptions = struct {
     against: ?[]const u8 = null,
 };
 
+/// `index-project` view switches: `--full` for the complete `navigation-v1`
+/// document, or the `--module`, `--symbol` and `--kind` filters of a
+/// selection. None of them asks for the default bounded summary.
+const IndexOptions = struct {
+    full: bool = false,
+    selection: language.navigation_views.Selection = .{},
+
+    /// The document these switches ask for.
+    fn view(self: IndexOptions) language.navigation_views.View {
+        if (self.full) return .full;
+        const selected = self.selection;
+        if (selected.module != null or selected.symbol != null or selected.kind != null) return .{ .selection = selected };
+        return .summary;
+    }
+
+    /// `--full` publishes everything, so it takes no filter, and `--kind` names
+    /// one of the kinds a navigation symbol carries.
+    fn validate(self: IndexOptions) error{Usage}!void {
+        const selected = self.selection;
+        if (self.full and (selected.module != null or selected.symbol != null or selected.kind != null)) return error.Usage;
+        const kind = selected.kind orelse return;
+        for (language.navigation.kinds) |known| if (std.mem.eql(u8, known, kind)) return;
+        return error.Usage;
+    }
+};
+
 const Parsed = struct {
     schema_report: bool,
     inputs: [16][]const u8,
@@ -802,6 +840,8 @@ const Parsed = struct {
     subject: ?[]const u8,
     /// `context` selector, budget and optional baseline.
     context: ContextOptions,
+    /// `index-project` view: summary, selection or `--full`.
+    index: IndexOptions,
     /// `api-diff` baseline to compare against, or the path to write.
     api_against: ?[]const u8,
     api_write: ?[]const u8,
@@ -922,9 +962,10 @@ fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Pa
         if (try parser.grantOption(arg)) continue;
         if (try parser.executionOption(arg)) continue;
         if (try parser.leanManifestOption(arg)) continue;
-        // `context` also accepts its `--flag value` spelling, which consumes the
-        // next argument; every other flag keeps the `--flag=value` form.
-        if (try parser.contextSeparateValue(args, &index)) continue;
+        // `context` and `index-project` also accept their `--flag value`
+        // spelling, which consumes the next argument; every other flag keeps
+        // the `--flag=value` form.
+        if (try parser.separateValue(args, &index)) continue;
         if (try parser.discoveryOption(arg)) continue;
         if (std.mem.startsWith(u8, arg, policy_prefix)) {
             if (command != .@"check-policy" or parser.policy != null or arg.len == policy_prefix.len) return error.Usage;
@@ -968,6 +1009,7 @@ const ArgumentParser = struct {
     context_pending: ?ContextSelectorField = null,
     context_bytes: usize = language.context.default_context_bytes,
     context_against: ?[]const u8 = null,
+    index: IndexOptions = .{},
     api_against: ?[]const u8 = null,
     api_write: ?[]const u8 = null,
     api_json: bool = false,
@@ -1201,6 +1243,7 @@ const ArgumentParser = struct {
         if (try self.lintOption(arg)) return true;
         if (try self.apiDiffOption(arg)) return true;
         if (try self.contextOption(arg)) return true;
+        if (try self.indexOption(arg)) return true;
         if (std.mem.startsWith(u8, arg, "--min-nodes=")) {
             if ((self.command != .@"discover-duplicates" and self.command != .@"discover-project-duplicates") or self.saw_min) return error.Usage;
             self.saw_min = true;
@@ -1331,6 +1374,43 @@ const ArgumentParser = struct {
         };
     }
 
+    /// `index-project` switches in the `--flag=value` spelling: `--full`,
+    /// `--module=NAME`, `--symbol=NAME` and `--kind=KIND`. A repeat or an empty
+    /// value is a usage error.
+    fn indexOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (self.command != .@"index-project") return false;
+        if (std.mem.eql(u8, arg, "--full")) {
+            if (self.index.full) return error.Usage;
+            self.index.full = true;
+            return true;
+        }
+        inline for (.{ .{ index_module_flag, "module" }, .{ context_symbol_flag, "symbol" }, .{ index_kind_flag, "kind" } }) |spelled| {
+            if (std.mem.startsWith(u8, arg, spelled[0] ++ "=")) return contextValue(&@field(self.index.selection, spelled[1]), arg[spelled[0].len + 1 ..]);
+        }
+        return false;
+    }
+
+    /// A `context` or `index-project` switch written with a space instead of
+    /// `=`, which takes the next argument.
+    fn separateValue(self: *ArgumentParser, args: []const []const u8, index: *usize) error{Usage}!bool {
+        if (try self.indexSeparateValue(args, index)) return true;
+        return self.contextSeparateValue(args, index);
+    }
+
+    /// The `index-project` filters written with a space instead of `=`, which
+    /// take the next argument, as `context --symbol NAME` does.
+    fn indexSeparateValue(self: *ArgumentParser, args: []const []const u8, index: *usize) error{Usage}!bool {
+        if (self.command != .@"index-project") return false;
+        inline for (.{ .{ index_module_flag, "module" }, .{ context_symbol_flag, "symbol" }, .{ index_kind_flag, "kind" } }) |spelled| {
+            if (std.mem.eql(u8, args[index.*], spelled[0])) {
+                if (index.* + 1 >= args.len) return error.Usage;
+                index.* += 1;
+                return contextValue(&@field(self.index.selection, spelled[1]), args[index.*]);
+            }
+        }
+        return false;
+    }
+
     fn finish(self: *ArgumentParser) ArgError!Parsed {
         if (self.saw_work and !self.discovery.approximate) return error.Usage;
         if (self.command == .@"fmt-project" and !self.format_check) return error.Usage;
@@ -1339,6 +1419,7 @@ const ArgumentParser = struct {
         if (self.command == .@"api-diff" and (self.api_against == null) == (self.api_write == null)) return error.Usage;
         if (self.command == .context and (self.context_symbol == null) == (self.context_at == null)) return error.Usage;
         if (self.context_pending != null) return error.Usage;
+        try self.index.validate();
         return .{
             .schema_report = self.schema_report,
             .inputs = self.inputs,
@@ -1363,6 +1444,7 @@ const ArgumentParser = struct {
                 .bytes = self.context_bytes,
                 .against = self.context_against,
             },
+            .index = self.index,
             .api_against = self.api_against,
             .api_write = self.api_write,
             .api_json = self.api_json,
@@ -1749,19 +1831,59 @@ fn lintProject(init: Context, parsed: Parsed, compilation: *language.project_com
     });
 }
 
-/// Print the discovered tests that reach one qualified declaration.
+/// Print the discovered tests that reach one declaration, spelled
+/// `module::name` or, as code spells a call, `module.name`. A project whose
+/// bodies did not check still answers, from the syntax call graph, with a
+/// closing `basis: syntax` line.
 fn testsFor(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation) !u8 {
     const subject = parsed.subject orelse return 2;
-    const rendered = (language.navigation.renderTestsFor(init.gpa, compilation, subject) catch |err| switch (err) {
-        error.OutOfMemory => return error.OutOfMemory,
-        else => return error.InternalError,
-    }) orelse {
+    var arena = std.heap.ArenaAllocator.init(init.gpa);
+    defer arena.deinit();
+    const scratch = arena.allocator();
+    const navigation = language.navigation;
+    const rendered = if (compilation.program) |program| checked: {
+        const resolved = (try testsSubject(init, try navigation.resolveSpelling(scratch, subject, try navigation.functionNames(scratch, program)), "checked ")) orelse return 2;
+        break :checked navigation.renderTestsFor(init.gpa, compilation, resolved) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return error.InternalError,
+        };
+    } else syntax: {
+        const graph = language.navigation_syntax.build(scratch, compilation) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.InternalError => return error.InternalError,
+        };
+        const resolved = (try testsSubject(init, try navigation.resolveSpelling(scratch, subject, graph.names), "")) orelse return 2;
+        break :syntax try language.navigation_syntax.renderTestsFor(init.gpa, graph, resolved);
+    };
+    const answer = rendered orelse {
         try init.text("tests-for: no checked declaration has that qualified name\n");
         return 2;
     };
-    defer init.gpa.free(rendered);
-    try std.Io.File.stdout().writeStreamingAll(init.io, rendered);
+    defer init.gpa.free(answer);
+    try std.Io.File.stdout().writeStreamingAll(init.io, answer);
     return 0;
+}
+
+/// The declaration a `tests-for` spelling names, or null after reporting that
+/// it names none or, for a dotted spelling, several.
+fn testsSubject(init: Context, resolved: language.navigation.Resolved, checked: []const u8) !?[]const u8 {
+    switch (resolved) {
+        .found => |id| return id,
+        .missing => {
+            const message = try std.fmt.allocPrint(init.gpa, "tests-for: no {s}declaration has that qualified name\n", .{checked});
+            defer init.gpa.free(message);
+            try init.text(message);
+            return null;
+        },
+        .ambiguous => |candidates| {
+            const joined = try std.mem.join(init.gpa, " ", candidates);
+            defer init.gpa.free(joined);
+            const message = try std.fmt.allocPrint(init.gpa, "tests-for: several declarations match that dotted name; use one of: {s}\n", .{joined});
+            defer init.gpa.free(message);
+            try init.text(message);
+            return null;
+        },
+    }
 }
 
 /// `api-diff`: write a baseline snapshot, or classify the current project
@@ -1804,7 +1926,7 @@ fn apiDiffError(init: Context, err: language.api_diff.Error) !u8 {
 /// cannot see are missing instead of seeing nothing at all.
 fn checkFailure(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, inputs: []const GeneratedInput) !?u8 {
     try reportProject(init, compilation);
-    if (parsed.command == .context) return null;
+    if (parsed.command == .context or parsed.command == .@"tests-for") return null;
     if (parsed.reporting.explain_invalidation) try reportFailedInvalidation(init, parsed, compilation, inputs);
     return 1;
 }
@@ -2004,7 +2126,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         init.timings.end();
         var fragment_store: language.qbe_fragments.Store = undefined;
         compilation.reuse = try openFragments(init, parsed, &fragment_store);
-        if (parsed.command == .@"index-project") break :result try renderNavigation(init, &compilation, functions);
+        if (parsed.command == .@"index-project") return indexProject(init, &compilation, functions, parsed);
         const semantic_before = if (functions) |f| f.statistics else null;
         // `check` needs no checked trees: unchanged bodies are stood in by the
         // summaries the entry's last successful check left.
@@ -2027,12 +2149,13 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         try rememberSummaries(init, frontend, &project, &summaries);
         if (parsed.command == .context) return contextCommand(init, parsed, &compilation, unchecked_reason, &files);
         init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
-        init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
+        recordTypedNodes(init, &compilation);
         // The internal native-test compile session keeps this one checked
         // compilation alive and serves facts plus selective lowering from it, so
         // a provider graph is never checked again just to emit its closure.
         switch (parsed.command) {
             .lint => return lintProject(init, parsed, &compilation, &configured),
+            // `tests-for` also answers a project that did not check, from its syntax.
             .@"tests-for" => return testsFor(init, parsed, &compilation),
             .@"api-diff" => return apiDiff(init, parsed, &compilation),
             .@"native-test-compile" => {
@@ -2346,14 +2469,24 @@ fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Com
 
 fn partialNavigation(init: Context, project: *language.project.Project, parsed: Parsed, files: ?*ModuleFiles) !u8 {
     if (parsed.command == .context) return contextPartial(init, parsed, project, files);
+    if (parsed.command == .@"tests-for") {
+        try init.text("tests-for: the project does not parse, so no call graph can be read; fix the syntax errors above\n");
+        return 1;
+    }
     if (parsed.command != .@"index-project") return 1;
-    const output = try language.navigation_partial.render(init.gpa, project, try compilerIdentity(init.io));
-    defer init.gpa.free(output);
-    try std.Io.File.stdout().writeStreamingAll(init.io, output);
-    return 0;
+    var buffer: [64 * 1024]u8 = undefined;
+    var stdout = std.Io.File.stdout().writerStreaming(init.io, &buffer);
+    const status = try language.navigation_views.writeLexical(&stdout.interface, init.gpa, project, try compilerIdentity(init.io), indexRequest(parsed));
+    try stdout.interface.flush();
+    return indexStatus(status);
 }
 
-fn renderNavigation(init: Context, compilation: *language.project_compile.Compilation, functions: ?*language.semantic_cache.Cache) ![]u8 {
+/// `index-project`: check what checks, then publish the requested document —
+/// the bounded `navigation-summary-v1` by default, a `navigation-selection-v1`
+/// for a filter, or the complete `navigation-v1` on `--full` — streamed to
+/// stdout rather than held whole. A body that fails to check still yields
+/// its declarations; the diagnostics go to stderr.
+fn indexProject(init: Context, compilation: *language.project_compile.Compilation, functions: ?*language.semantic_cache.Cache, parsed: Parsed) !u8 {
     const semantic_before = if (functions) |f| f.statistics else null;
     compilation.checkWithCache(functions) catch |err| switch (err) {
         error.SourceError => {},
@@ -2361,10 +2494,35 @@ fn renderNavigation(init: Context, compilation: *language.project_compile.Compil
     };
     recordCheckWork(init, functions, semantic_before, compilation.program);
     init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
-    if (compilation.program) |program| init.timings.counts.typed_nodes = program.nodes.len + program.statements.len;
+    recordTypedNodes(init, compilation);
     init.timings.end();
     try reportProject(init, compilation);
-    return language.navigation.render(init.gpa, compilation, try compilerIdentity(init.io), .{});
+    var buffer: [64 * 1024]u8 = undefined;
+    var stdout = std.Io.File.stdout().writerStreaming(init.io, &buffer);
+    const status = try language.navigation_views.writeChecked(&stdout.interface, init.gpa, compilation, try compilerIdentity(init.io), indexRequest(parsed));
+    try stdout.interface.flush();
+    return indexStatus(status);
+}
+
+/// Count the typed nodes a check produced; `tests-for` reaches here with
+/// none when the bodies did not check.
+fn recordTypedNodes(init: Context, compilation: *const language.project_compile.Compilation) void {
+    const program = compilation.program orelse return;
+    init.timings.counts.typed_nodes = program.nodes.len + program.statements.len;
+}
+
+/// The view and entry path one `index-project` run asks for.
+fn indexRequest(parsed: Parsed) language.navigation_views.Request {
+    return .{ .view = parsed.index.view(), .entry = parsed.path };
+}
+
+/// A selection that named nothing still printed a document saying why; it
+/// exits 2 like any unresolved name.
+fn indexStatus(status: language.navigation_views.Status) u8 {
+    return switch (status) {
+        .ok => 0,
+        .missing, .ambiguous => 2,
+    };
 }
 
 /// Source-loading limits from the entry project's `mylang.json`, or the

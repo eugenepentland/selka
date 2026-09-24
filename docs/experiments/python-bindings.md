@@ -1,5 +1,9 @@
 # Generated standalone Python data bindings
 
+Status: removed. `scripts/bindings.py` is gone, and its example consumer
+`examples/schema/use_bindings.py` was deleted on 2026-09-24 because nothing
+could generate the module it imports. This page is the design record.
+
 The generator derives Python data types and a typed JSON codec from a freshly
 checked public language schema:
 

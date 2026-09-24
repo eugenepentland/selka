@@ -64,6 +64,10 @@ pub const bytecode = @import("bytecode.zig");
 pub const effect_set = @import("effect_set.zig");
 pub const navigation = @import("navigation.zig");
 pub const navigation_partial = @import("navigation_partial.zig");
+/// `index-project`'s summary, selection and full documents.
+pub const navigation_views = @import("navigation_views.zig");
+/// Syntax-derived test reachability for a project whose bodies do not check.
+pub const navigation_syntax = @import("navigation_syntax.zig");
 pub const quality = @import("quality.zig");
 pub const duplicates = @import("duplicates.zig");
 /// `mylang lint` driver, rule registry and profiles.

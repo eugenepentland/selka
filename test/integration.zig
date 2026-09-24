@@ -1270,6 +1270,302 @@ fn spawnWithEnv(argv: []const []const u8, env_map: *const std.process.Environ.Ma
     return std.process.run(testing.allocator, testing.io, .{ .argv = argv, .environ_map = env_map });
 }
 
+/// The entry of the empty-`PATH` project: it imports a module, prints through
+/// its stream and carries a test, so `build`, `run` and `test` all have work.
+const empty_path_main =
+    \\module main
+    \\import text.words
+    \\
+    \\def main(out: Stream) -> int:
+    \\    n = words.count_words("the quick brown fox")
+    \\    out.print(f"words: {n}")
+    \\    return 0
+    \\
+    \\
+    \\public def test_main_words() -> bool:
+    \\    return words.count_words("one two") == 2
+    \\
+;
+/// The imported module of the empty-`PATH` project, with a test of its own.
+const empty_path_words =
+    \\module text.words
+    \\
+    \\public def count_words(line: str) -> int:
+    \\    total = 0
+    \\    for part in line.split(" "):
+    \\        if len(part) > 0:
+    \\            total = total + 1
+    \\    return total
+    \\
+    \\
+    \\public def test_count_words() -> bool:
+    \\    return count_words("a bb  ccc") == 3 and count_words("") == 0
+    \\
+;
+
+/// A child environment whose `PATH` names only an empty directory under `root`,
+/// with `HOME` and `TMPDIR` inside the fixture and Zig's global cache forwarded.
+/// A command that reached for `python3`, or for any program it was not handed
+/// by `--zig`/`--qbe`, cannot start it here.
+fn emptyPathEnvironment(root: []const u8) !std.process.Environ.Map {
+    var environment: std.process.Environ.Map = .init(testing.allocator);
+    errdefer environment.deinit();
+    const bin = try std.fs.path.join(testing.allocator, &.{ root, "empty-bin" });
+    defer testing.allocator.free(bin);
+    try std.Io.Dir.cwd().createDirPath(testing.io, bin);
+    try environment.put("PATH", bin);
+    try environment.put("HOME", root);
+    try environment.put("TMPDIR", root);
+    try forwardZigCache(&environment);
+    return environment;
+}
+
+/// Run one command under `environment`, requiring exit status 0 and
+/// `stdout_part` somewhere in its standard output; a failure prints its stderr.
+fn expectEmptyPathRun(argv: []const []const u8, environment: *const std.process.Environ.Map, stdout_part: []const u8) !void {
+    const result = try spawnWithEnv(argv, environment);
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    errdefer std.debug.print("`{s}` under an empty PATH:\nstdout: {s}\nstderr: {s}\n", .{ argv[@min(1, argv.len - 1)], result.stdout, result.stderr });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, stdout_part) != null);
+}
+
+// spec: USE-WITHOUT-PYTHON-1
+test "CLI user commands need no interpreter: check, build, run, test, fmt, docs and navigation under an empty PATH" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try writeProjectFile(&temporary, "main.my", empty_path_main);
+    try writeProjectFile(&temporary, "text/words.my", empty_path_words);
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(root);
+    const entry = try std.fs.path.join(testing.allocator, &.{ root, "main.my" });
+    defer testing.allocator.free(entry);
+    const program = try std.fs.path.join(testing.allocator, &.{ root, "program" });
+    defer testing.allocator.free(program);
+    const cache = try std.fs.path.join(testing.allocator, &.{ root, "cache" });
+    defer testing.allocator.free(cache);
+    const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
+    defer testing.allocator.free(cache_argument);
+    var environment = try emptyPathEnvironment(root);
+    defer environment.deinit();
+    try expectEmptyPathRun(&.{ compiler_path, "check", entry }, &environment, "");
+    try expectEmptyPathRun(&.{ compiler_path, "build", entry, "-o", program, "--cache-dir", cache, tools[0], tools[1] }, &environment, "");
+    try expectEmptyPathRun(&.{program}, &environment, "words: 4\n");
+    try expectEmptyPathRun(&.{ compiler_path, "run", entry, cache_argument, tools[0], tools[1] }, &environment, "words: 4\n");
+    try expectEmptyPathRun(&.{ compiler_path, "test", entry, cache_argument, tools[0], tools[1] }, &environment, "2 passed");
+    try expectEmptyPathRun(&.{ compiler_path, "fmt-project", entry, "--check" }, &environment, "");
+    try expectEmptyPathRun(&.{ compiler_path, "docs", "primer" }, &environment, "mylang");
+    try expectEmptyPathRun(&.{ compiler_path, "index-project", entry }, &environment, "\"version\":\"navigation-summary-v1\"");
+    try expectEmptyPathRun(&.{ compiler_path, "context", entry, "--symbol=text.words::count_words" }, &environment, "\"status\":\"ok\"");
+}
+
+/// The shared library every packages fixture locks.
+const package_library = "module numbers\n\n\npublic def answer() -> int:\n    return 42\n";
+/// An application entry that imports the locked library and returns its answer.
+const package_application = "module main\nimport numbers\n\ndef main() -> int:\n    return numbers.answer()\n";
+
+/// A temporary tree holding `library/numbers.my`, `packages.json` naming it, and
+/// the absolute compiler, plus the environment every `mylang packages` call runs
+/// under: an empty `PATH`, `HOME` and `TMPDIR` inside the tree, and the native
+/// tools named the way `zig build` names them, since a staged build spawns this
+/// compiler with no `--qbe`/`--zig` of its own.
+const PackagesFixture = struct {
+    temporary: testing.TmpDir,
+    root: [:0]const u8,
+    compiler: [:0]const u8,
+    environment: std.process.Environ.Map,
+
+    fn init() !PackagesFixture {
+        var temporary = testing.tmpDir(.{});
+        errdefer temporary.cleanup();
+        try writeProjectFile(&temporary, "library/numbers.my", package_library);
+        try writeProjectFile(&temporary, "packages.json", "{\"packages\":[{\"name\":\"numbers\",\"root\":\"library\"}]}");
+        const root = try temporary.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
+        errdefer testing.allocator.free(root);
+        var environment = try emptyPathEnvironment(root);
+        errdefer environment.deinit();
+        const qbe = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, @import("test_options").qbe_path, testing.allocator);
+        defer testing.allocator.free(qbe);
+        try environment.put("MYLANG_QBE", qbe);
+        try environment.put("MYLANG_ZIG", @import("test_options").zig_path);
+        const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
+        return .{ .temporary = temporary, .root = root, .compiler = compiler, .environment = environment };
+    }
+
+    fn deinit(self: *PackagesFixture) void {
+        self.environment.deinit();
+        testing.allocator.free(self.compiler);
+        testing.allocator.free(self.root);
+        self.temporary.cleanup();
+    }
+
+    /// Run `mylang packages ARGS` from the fixture root.
+    fn run(self: *PackagesFixture, args: []const []const u8) !std.process.RunResult {
+        var argv: std.ArrayList([]const u8) = .empty;
+        defer argv.deinit(testing.allocator);
+        try argv.appendSlice(testing.allocator, &.{ self.compiler, "packages" });
+        try argv.appendSlice(testing.allocator, args);
+        return std.process.run(testing.allocator, testing.io, .{ .argv = argv.items, .cwd = .{ .path = self.root }, .environ_map = &self.environment });
+    }
+
+    /// Run `mylang packages ARGS` and require `status`, `stdout` exactly and
+    /// `stderr_part` somewhere in standard error.
+    fn expect(self: *PackagesFixture, args: []const []const u8, status: u8, stdout: []const u8, stderr_part: []const u8) !void {
+        const result = try self.run(args);
+        defer testing.allocator.free(result.stdout);
+        defer testing.allocator.free(result.stderr);
+        errdefer std.debug.print("mylang packages {s}: stdout {s}\nstderr {s}\n", .{ args[0], result.stdout, result.stderr });
+        try testing.expectEqual(std.process.Child.Term{ .exited = status }, result.term);
+        try testing.expectEqualStrings(stdout, result.stdout);
+        try testing.expect(std.mem.indexOf(u8, result.stderr, stderr_part) != null);
+    }
+
+    fn read(self: *PackagesFixture, path: []const u8) ![]u8 {
+        return self.temporary.dir.readFileAlloc(testing.io, path, testing.allocator, .limited(1 << 20));
+    }
+
+    fn write(self: *PackagesFixture, path: []const u8, data: []const u8) !void {
+        try writeProjectFile(&self.temporary, path, data);
+    }
+};
+
+/// Build one application through the lock with `run-project`: the program's
+/// answer is printed and is its exit status, the receipt names the lock, this
+/// compiler and the dependency report, and the application directory still
+/// holds only its entry.
+fn expectPackagedApplication(fixture: *PackagesFixture, application: []const u8, identity: []const u8) !void {
+    const entry = try std.fmt.allocPrint(testing.allocator, "{s}/main.my", .{application});
+    defer testing.allocator.free(entry);
+    try fixture.write(entry, package_application);
+    try fixture.expect(&.{ "build", entry, "--lock", "lock.json", "--command", "run-project", "--receipt", "receipt.json" }, 42, "42\n", "");
+    const receipt = try fixture.read("receipt.json");
+    defer testing.allocator.free(receipt);
+    try testing.expect(std.mem.indexOf(u8, receipt, "\"version\": \"package-build-v1\"") != null);
+    try testing.expect(std.mem.indexOf(u8, receipt, "\"lock_sha256\": \"") != null);
+    try testing.expect(std.mem.indexOf(u8, receipt, identity) != null);
+    try testing.expect(std.mem.indexOf(u8, receipt, "\"version\": \"project-dependencies-v1\"") != null);
+    const directory = try std.fs.path.join(testing.allocator, &.{ fixture.root, application });
+    defer testing.allocator.free(directory);
+    const entries = try scratchEntries(directory);
+    defer testing.allocator.free(entries);
+    try testing.expectEqualStrings("main.my", entries);
+}
+
+/// This compiler's `compiler_sha256`, as `--features` reports it.
+fn featureIdentity(compiler: []const u8) ![]u8 {
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler, "--features" } });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    const marker = "\"compiler_sha256\":\"";
+    const start = (std.mem.indexOf(u8, result.stdout, marker) orelse return error.TestUnexpectedResult) + marker.len;
+    return testing.allocator.dupe(u8, result.stdout[start .. start + 64]);
+}
+
+// spec: PACKAGES-BUILD-1
+test "mylang packages builds two applications from one locked library without writing either tree" {
+    var fixture = try PackagesFixture.init();
+    defer fixture.deinit();
+    const identity = try featureIdentity(fixture.compiler);
+    defer testing.allocator.free(identity);
+    try fixture.expect(&.{ "lock", "packages.json", "--output", "lock.json" }, 0, "", "");
+    const frozen = try fixture.read("lock.json");
+    defer testing.allocator.free(frozen);
+    try expectPackagedApplication(&fixture, "app1", identity);
+    try expectPackagedApplication(&fixture, "app2", identity);
+    // The default command only checks, and prints nothing on success.
+    try fixture.expect(&.{ "build", "app1/main.my", "--lock=lock.json" }, 0, "", "");
+    const after = try fixture.read("lock.json");
+    defer testing.allocator.free(after);
+    try testing.expectEqualStrings(frozen, after);
+    // Every staging directory under TMPDIR (the fixture root) was removed.
+    const entries = try scratchEntries(fixture.root);
+    defer testing.allocator.free(entries);
+    try testing.expect(std.mem.indexOf(u8, entries, "mylang-packages-") == null);
+}
+
+/// The lock with its one package listed twice, as two versions of one namespace would be.
+fn doubledLock(fixture: *PackagesFixture, frozen: []const u8) !void {
+    var parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, frozen, .{});
+    defer parsed.deinit();
+    const packages = &parsed.value.object.getPtr("packages").?.array;
+    try packages.append(packages.items[0]);
+    const doubled = try std.json.Stringify.valueAlloc(testing.allocator, parsed.value, .{});
+    defer testing.allocator.free(doubled);
+    try fixture.write("lock.json", doubled);
+}
+
+// spec-case: PACKAGES-BUILD-1
+test "mylang packages refuses drift, shared paths, doubled namespaces, standard names and symbolic links before compiling" {
+    var fixture = try PackagesFixture.init();
+    defer fixture.deinit();
+    try fixture.write("app1/main.my", package_application);
+    try fixture.expect(&.{ "lock", "packages.json", "--output", "lock.json" }, 0, "", "");
+    const frozen = try fixture.read("lock.json");
+    defer testing.allocator.free(frozen);
+    try fixture.expect(&.{ "build", "app1/main.my", "--lock", "lock.json", "--receipt", "receipt.json" }, 0, "", "");
+    const receipt = try fixture.read("receipt.json");
+    defer testing.allocator.free(receipt);
+    const build_args = [_][]const u8{ "build", "app1/main.my", "--lock", "lock.json", "--receipt", "receipt.json" };
+    try fixture.write("library/numbers.my", "module numbers\n\n\npublic def answer() -> int:\n    return 43\n");
+    try fixture.expect(&build_args, 2, "", "packages: locked dependency changed: numbers");
+    try fixture.write("library/numbers.my", package_library);
+    try fixture.write("app1/numbers.my", package_library);
+    try fixture.expect(&build_args, 2, "", "duplicate or invalid module path: numbers.my");
+    try fixture.temporary.dir.deleteFile(testing.io, "app1/numbers.my");
+    try fixture.write("app1/std_extra.my", "module std_extra\n");
+    try fixture.expect(&build_args, 2, "", "cannot replace a standard module: std_extra.my");
+    try fixture.temporary.dir.deleteFile(testing.io, "app1/std_extra.my");
+    try doubledLock(&fixture, frozen);
+    try fixture.expect(&build_args, 2, "", "duplicate or incompatible package namespace: numbers");
+    try fixture.write("lock.json", "{\"version\":\"package-lock-v0\",\"packages\":[]}");
+    try fixture.expect(&build_args, 2, "", "unsupported package lock");
+    try fixture.write("lock.json", frozen);
+    try fixture.temporary.dir.deleteFile(testing.io, "library/numbers.my");
+    try fixture.temporary.dir.symLink(testing.io, "../app1/main.my", "library/numbers.my", .{});
+    try fixture.expect(&build_args, 2, "", "symbolic-link sources are rejected: numbers.my");
+    // No refusal touched the receipt the passing build wrote.
+    const kept = try fixture.read("receipt.json");
+    defer testing.allocator.free(kept);
+    try testing.expectEqualStrings(receipt, kept);
+}
+
+// spec: PACKAGES-LOCK-1
+test "mylang packages lock pins each resolved root and module hash and refuses bad namespaces, empty packages and stray sources" {
+    var fixture = try PackagesFixture.init();
+    defer fixture.deinit();
+    try fixture.expect(&.{ "lock", "packages.json", "--output", "lock.json" }, 0, "", "");
+    const lock = try fixture.read("lock.json");
+    defer testing.allocator.free(lock);
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(package_library, &digest, .{});
+    const pinned = try std.fmt.allocPrint(testing.allocator, "\"numbers.my\": \"{s}\"", .{std.fmt.bytesToHex(digest, .lower)});
+    defer testing.allocator.free(pinned);
+    const root = try std.fmt.allocPrint(testing.allocator, "\"root\": \"{s}/library\"", .{fixture.root});
+    defer testing.allocator.free(root);
+    try testing.expect(std.mem.startsWith(u8, lock, "{\n  \"version\": \"package-lock-v1\",\n  \"packages\": [\n"));
+    try testing.expect(std.mem.indexOf(u8, lock, pinned) != null);
+    try testing.expect(std.mem.indexOf(u8, lock, root) != null);
+    const lock_args = [_][]const u8{ "lock", "packages.json", "--output", "other.json" };
+    try fixture.write("packages.json", "{\"packages\":[{\"name\":\"std_numbers\",\"root\":\"library\"}]}");
+    try fixture.expect(&lock_args, 2, "", "invalid or reserved package namespace: std_numbers");
+    try fixture.write("packages.json", "{\"packages\":[{\"name\":\"9numbers\",\"root\":\"library\"}]}");
+    try fixture.expect(&lock_args, 2, "", "invalid or reserved package namespace: 9numbers");
+    try fixture.write("packages.json", "{\"packages\":[{\"name\":\"numbers\",\"root\":\"library\"},{\"name\":\"numbers\",\"root\":\"library\"}]}");
+    try fixture.expect(&lock_args, 2, "", "duplicate package namespace: numbers");
+    try fixture.write("packages.json", "{\"packages\":[{\"name\":\"numbers\",\"root\":\"missing\"}]}");
+    try fixture.expect(&lock_args, 2, "", "cannot resolve root");
+    try fixture.write("empty/notes.txt", "no sources here");
+    try fixture.write("packages.json", "{\"packages\":[{\"name\":\"numbers\",\"root\":\"empty\"}]}");
+    try fixture.expect(&lock_args, 2, "", "empty dependency: numbers");
+    try fixture.write("library/stray.my", "module stray\n");
+    try fixture.write("packages.json", "{\"packages\":[{\"name\":\"numbers\",\"root\":\"library\"}]}");
+    try fixture.expect(&lock_args, 2, "", "dependency source must declare its package namespace: stray.my");
+    try fixture.expect(&.{ "lock", "packages.json" }, 2, "", "usage: mylang packages");
+    // No refused lock wrote its output.
+    try testing.expectError(error.FileNotFound, fixture.temporary.dir.access(testing.io, "other.json", .{}));
+}
+
 // spec: BOUNDARY-CLI-1
 test "boundary acceptance CLI runs through run build --run and installed paths" {
     var temp = testing.tmpDir(.{});
@@ -3693,6 +3989,83 @@ test "CLI tests-for lists direct and transitive tests and rejects an unknown nam
         \\
     , "");
     try invokeOptions("tests-for", source, &.{"input::missing"}, 2, "", "no checked declaration");
+}
+// spec-case: TESTS-FOR-SYNTAX-1
+test "CLI tests-for answers a project that does not type-check from its syntax and accepts module.name" {
+    const source =
+        \\module input
+        \\
+        \\
+        \\def parse(value: int) -> int:
+        \\    return helper(value)
+        \\
+        \\
+        \\def helper(value: int) -> int:
+        \\    return value
+        \\
+        \\
+        \\def test_parse() -> bool effects():
+        \\    return parse(1) == 1
+        \\
+        \\
+        \\def main() -> int:
+        \\    return 0
+    ;
+    const red = try std.mem.replaceOwned(u8, testing.allocator, source, "    return value\n", "    return value + \"red\"\n");
+    defer testing.allocator.free(red);
+    try invokeOptions("tests-for", red, &.{"input.helper"}, 0,
+        \\tests-for input::helper
+        \\  direct (0):
+        \\  reached-by (1): input::test_parse
+        \\  basis: syntax (the project does not type-check; calls were resolved by name, not by checked types)
+        \\
+    , "error[E_TYPE]");
+    try invokeOptions("tests-for", red, &.{"input.missing"}, 2, "", "no declaration has that qualified name");
+    try invokeOptions("tests-for", source, &.{"input.parse"}, 0,
+        \\tests-for input::parse
+        \\  direct (1): input::test_parse
+        \\  reached-by (1): input::test_parse
+        \\
+    , "");
+    try invokeOptions("tests-for", "module input\n\n\ndef parse(value: int) -> int:\n    return +\n", &.{"input::parse"}, 1, "", "the project does not parse");
+}
+// spec-case: NAVIGATION-SELECT-1
+test "CLI index-project prints the summary by default, the full document on --full and a selection per filter" {
+    const source =
+        \\module input
+        \\
+        \\
+        \\def helper(value: int) -> int:
+        \\    return value
+        \\
+        \\
+        \\def main() -> int:
+        \\    return helper(0)
+    ;
+    const summary = try runFixture("index-project", source, &.{});
+    defer testing.allocator.free(summary.stdout);
+    defer testing.allocator.free(summary.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, summary.term);
+    try testing.expect(std.mem.startsWith(u8, summary.stdout, "{\"version\":\"navigation-summary-v1\",\"checked\":true,"));
+    try testing.expect(std.mem.indexOf(u8, summary.stdout, "\"kinds\":{\"function\":2,\"parameter\":1}") != null);
+    const full = try runFixture("index-project", source, &.{"--full"});
+    defer testing.allocator.free(full.stdout);
+    defer testing.allocator.free(full.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, full.term);
+    try testing.expect(std.mem.startsWith(u8, full.stdout, "{\"version\":\"navigation-v1\",\"checked\":true,"));
+    const selected = try runFixture("index-project", source, &.{ "--symbol", "input.helper" });
+    defer testing.allocator.free(selected.stdout);
+    defer testing.allocator.free(selected.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, selected.term);
+    try testing.expect(std.mem.startsWith(u8, selected.stdout, "{\"version\":\"navigation-selection-v1\",\"status\":\"ok\","));
+    try testing.expect(std.mem.indexOf(u8, selected.stdout, "\"resolved\":\"input::helper\"") != null);
+    const missing = try runFixture("index-project", source, &.{"--module=absent"});
+    defer testing.allocator.free(missing.stdout);
+    defer testing.allocator.free(missing.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, missing.term);
+    try testing.expect(std.mem.indexOf(u8, missing.stdout, "\"status\":\"missing\"") != null);
+    try invokeOptions("index-project", source, &.{ "--full", "--module=input" }, 2, "", "usage:");
+    try invokeOptions("index-project", source, &.{"--kind=method"}, 2, "", "usage:");
 }
 // spec-case: LINT-1
 test "CLI lint undocumented-export reports under agent and blocks under strict" {

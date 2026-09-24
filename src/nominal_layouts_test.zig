@@ -225,6 +225,41 @@ fn materializeMany(allocator: std.mem.Allocator) !void {
 test "every materialized concrete type gets its own layout budget" {
     try materializeMany(t.allocator);
 }
+/// Many ordinary records whose fields name one leaf record: linear work, no
+/// expansion, and more checking operations in total than one request's budget.
+fn wideSource(allocator: std.mem.Allocator, records: usize) ![]u8 {
+    var text: std.Io.Writer.Allocating = .init(allocator);
+    defer text.deinit();
+    try text.writer.writeAll("class Leaf:\n    v: i64\n\n\n");
+    for (0..records) |i| {
+        try text.writer.print("class W{d}:\n", .{i});
+        for (0..16) |j| try text.writer.print("    f{d}: Leaf\n", .{j});
+        try text.writer.writeAll("\n\n");
+    }
+    return text.toOwnedSlice();
+}
+/// The operations every declaration's request charged while `text` was collected.
+fn layoutWork(text: []const u8) !usize {
+    var compilation = try language.Compilation.init(t.allocator, "wide.my", text);
+    defer compilation.deinit();
+    try compilation.parse();
+    var sink: language.diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
+    const index = try templates.collect(compilation.arena.allocator(), compilation.src, compilation.syntax.?, &sink, null);
+    var graph = try layouts.collect(t.allocator, &index, &sink);
+    defer graph.deinit();
+    try t.expectEqual(@as(usize, 0), sink.items.items.len);
+    var work: usize = 0;
+    for (graph.budget.requests.items) |request| work += request.work;
+    return work;
+}
+// spec-case: NOMINAL-LAYOUT-BUDGET-1
+test "a large ordinary project is not refused for its total layout work" {
+    // 3200 ordinary 16-field records charge more than 100000 operations in all,
+    // a few dozen per declaration.
+    const text = try wideSource(t.allocator, 3200);
+    defer t.allocator.free(text);
+    try t.expect(try layoutWork(text) > 100000);
+}
 fn longSource(allocator: std.mem.Allocator) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
