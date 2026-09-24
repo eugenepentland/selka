@@ -341,6 +341,7 @@ fn run(init: Context, parsed: Parsed) !u8 {
     with_frontend.frontend = if (frontend_cache) |*cache| cache else null;
     with_frontend.semantic = if (semantic_store) |*store| store else null;
     const status = runCommand(command_init, with_frontend) catch |err| {
+        if (frontend_cache) |*cache| cache.finish();
         best_effort: {
             reportMeasured(init, parsed, if (frontend_cache) |*cache| cache else null, &observation) catch break :best_effort;
         }
@@ -349,6 +350,9 @@ fn run(init: Context, parsed: Parsed) !u8 {
         if (friction) |recorder| recorder.finish(2, frictionElapsedNs(friction_start, init.io));
         return err;
     };
+    // FRONTEND-CACHE-RETAIN-1: trim once the whole working set is known, and
+    // before the receipt, so it reports what this run evicted.
+    if (frontend_cache) |*cache| cache.finish();
     try reportMeasured(init, parsed, if (frontend_cache) |*cache| cache else null, &observation);
     if (frontend_cache) |*cache| cache.deinit();
     if (semantic_store) |*store| store.deinit();

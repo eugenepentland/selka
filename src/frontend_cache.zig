@@ -22,8 +22,9 @@ const cache_key = @import("cache_key.zig");
 
 /// Bump when the on-disk layout or a stored serializer changes; older files miss.
 pub const format_version = "mylang-frontend-cache-v4";
-/// Default retention: entries above this are bypassed, and the directory is
-/// trimmed back to it after a successful store.
+/// Default retention floor: entries above this are bypassed, and a run that
+/// stored anything trims the directory back to the larger of this and twice
+/// the bytes the run itself used (FRONTEND-CACHE-RETAIN-1).
 pub const default_max_bytes: usize = 128 * 1024 * 1024;
 /// Default per-project cache directory for one-shot commands.
 pub const default_directory = ".mylang-cache/frontend";
@@ -51,6 +52,9 @@ pub const Statistics = struct {
     bypassed: usize = 0,
     evicted: usize = 0,
     retained_bytes: usize = 0,
+    /// Entry bytes this run read back or stored: its working set, which the
+    /// retention budget keeps twice over (FRONTEND-CACHE-RETAIN-1).
+    used_bytes: usize = 0,
 };
 
 /// Allocator and I/O handle shared by every cache operation.
@@ -62,6 +66,8 @@ const Runtime = struct {
     /// policy must not replay an earlier pass, while syntax parsing stays
     /// independent of policy acceptance.
     policy_identity: ?[]const u8 = null,
+    /// Whether this run stored an entry, so `finish` has a directory to trim.
+    stored: bool = false,
 };
 
 /// One bounded, caller-serialized directory of immutable entries.
@@ -98,6 +104,23 @@ pub const Cache = struct {
         var hex: [64]u8 = undefined;
         self.contract.fingerprintHex(&hex);
         return hex;
+    }
+    /// FRONTEND-CACHE-RETAIN-1: once a run is done, bound the directory by the
+    /// budget `retention` gives, evicting the least recently used entries.
+    /// Trimming only here, and not after every store, means the budget sees
+    /// the whole working set and the directory is listed once per run rather
+    /// than once per stored entry. A run that stored nothing leaves it alone.
+    pub fn finish(self: *Cache) void {
+        if (!self.runtime.stored) return;
+        self.runtime.stored = false;
+        self.trim() catch return;
+    }
+    /// The directory's retention budget: the configured floor, or twice the
+    /// bytes this run used when that is larger, so a project whose working set
+    /// outgrows the floor keeps all of it plus as much again of history
+    /// instead of evicting every entry on every run.
+    pub fn retention(self: *const Cache) usize {
+        return @max(self.max_bytes, 2 *| self.statistics.used_bytes);
     }
     /// Release the caller-owned root path, if any; entries stay on disk.
     pub fn deinit(self: *Cache) void {
@@ -365,6 +388,14 @@ pub const Cache = struct {
         if (!reader.done()) return error.Damaged;
         if (codec.checksum(payload) != checksum) return error.Damaged;
         kept = true;
+        self.statistics.used_bytes +|= bytes.len;
+        // Eviction goes oldest first, so a use renews the entry: the order is
+        // by last use, and the entries this run needs are the last to go.
+        // A read-only cache still serves hits; it only ages in store order.
+        std.Io.Dir.cwd().setTimestampsNow(self.runtime.io, path, .{}) catch |err| switch (err) {
+            error.ReadOnlyFileSystem => {},
+            else => {},
+        };
         return .{ .bytes = bytes, .payload = payload };
     }
 
@@ -395,13 +426,15 @@ pub const Cache = struct {
             };
             return error.WriteFailed;
         };
-        self.trim() catch return error.WriteFailed;
+        self.statistics.used_bytes +|= writer.bytes.items.len;
+        self.runtime.stored = true;
         return true;
     }
 
-    /// Bound the directory: drop oldest-by-mtime entries once it exceeds the
-    /// budget. Concurrent trims may both remove entries; a lost race only costs a
-    /// future miss, never a false hit.
+    /// Bound the directory: drop the least recently used entries (oldest
+    /// mtime; a read renews it) once it exceeds `retention`. Concurrent trims
+    /// may both remove entries; a lost race only costs a future miss, never a
+    /// false hit.
     fn trim(self: *Cache) error{ OutOfMemory, WriteFailed }!void {
         const directory = self.namespace() catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
@@ -427,10 +460,11 @@ pub const Cache = struct {
             total += @intCast(stat.size);
         }
         self.statistics.retained_bytes = total;
-        if (total <= self.max_bytes) return;
+        const budget = self.retention();
+        if (total <= budget) return;
         std.mem.sort(Entry, entries.items, {}, oldestFirst);
         for (entries.items) |entry| {
-            if (total <= self.max_bytes) break;
+            if (total <= budget) break;
             dir.deleteFile(self.runtime.io, entry.name) catch continue;
             total -= entry.size;
             self.statistics.evicted += 1;
