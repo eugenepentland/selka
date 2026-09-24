@@ -19,6 +19,7 @@ const spawn = @import("qbe_build_spawn.zig");
 const budget = @import("memory_budget");
 const compile = @import("qbe_build_llvm_compile.zig");
 const frame_map = @import("qbe_frame_map.zig");
+const direct_link = @import("qbe_build_link.zig");
 
 const Allocator = std.mem.Allocator;
 const Error = cache_api.Error;
@@ -57,7 +58,9 @@ pub fn link(request: Request) Error![]const []const u8 {
     const aliases = try a.alloc([]const u8, request.inputs.len);
     for (request.inputs, aliases, 0..) |input, *name, index| name.* = try alias(context, staging, .{ .input = input, .index = index });
     const shape: Shape = .{ .zig = request.cache.zig, .level = request.level, .jobs = workers(context, request.inputs.len), .output = try std.fs.path.join(a, &.{ staging, output_name }) };
-    try context.command(try command(a, shape, aliases), null);
+    // BUILD-LINK-RSP-1: the command names every module.
+    const rsp = try std.fs.path.join(a, &.{ request.directory, "thin.rsp" });
+    try context.command(try direct_link.responseArgv(context, rsp, try command(a, shape, aliases), 2), null);
     return assembleAll(request, try assemblyFiles(context, staging));
 }
 

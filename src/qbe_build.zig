@@ -1082,7 +1082,7 @@ const State = struct {
         try args.appendSlice(a, &.{ "-lm", gc_sections });
         if (!options.keepSymbols(parsed.link_arguments)) try args.append(a, "-s");
         try args.appendSlice(a, &.{ "-o", candidate });
-        try self.context.command(args.items, null);
+        try self.context.command(try direct_link.responseArgv(self.context, try std.fs.path.join(a, &.{ directory, "link.rsp" }), args.items, 2), null);
     }
     /// Every guest unit's symbol by the GUID its pseudo probes carry, for the
     /// ThinLTO modules a callee was inlined into from another module.
@@ -1106,7 +1106,8 @@ const State = struct {
         try lto.appendSlice(a, ltoLevel(self.cache.codegen.optimization));
         try lto.appendSlice(a, &.{ "--lto-emit-asm", "--lto-partitions=1", "-m", "elf_x86_64", "--entry", "main", "-o", base });
         try lto.appendSlice(a, inputs);
-        try self.context.command(lto.items, null);
+        // BUILD-LINK-RSP-1: the command names every object.
+        try self.context.command(try direct_link.responseArgv(self.context, try std.fs.path.join(a, &.{ directory, "lto.rsp" }), lto.items, 2), null);
         const assembly = try std.fs.path.join(a, &.{ directory, "program.s" });
         try self.context.write(assembly, try cache_api.annotateText(self.context, try self.context.read(try std.fmt.allocPrint(a, "{s}.lto.s", .{base})), null));
         const object = try std.fs.path.join(a, &.{ directory, "program.o" });

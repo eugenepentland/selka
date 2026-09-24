@@ -54,7 +54,11 @@ const Syntax = struct {
     tuples: std.AutoHashMapUnmanaged(usize, ast.TupleType) = .empty,
 };
 const Context = struct { allocator: std.mem.Allocator, src: source.Source, sink: *diagnostic.Sink, names: ?*Names };
-const Budget = struct { depth: usize = 0, work: usize = 0 };
+/// NOMINAL-TEMPLATE-BUDGET-1: the depth and visits of the one top-level type
+/// expression being resolved, and where it is spelled. Each top-level
+/// expression starts a fresh budget, so the bound is per declaration site and
+/// the total work stays proportional to the source, however large the program.
+const Budget = struct { depth: usize = 0, work: usize = 0, site: Span = .{ .start = 0, .end = 0 } };
 /// Reusable declaration identities and symbolic field/payload expressions for specialization.
 pub const Index = struct {
     context: Context,
@@ -318,10 +322,19 @@ pub const Index = struct {
         for (parameters, 0..) |item, i| if (std.mem.eql(u8, self.context.src.text(span), self.context.src.text(item.name))) return i;
         return null;
     }
+    /// Report the budget at the top-level expression that exceeded it, naming
+    /// where its resolution stood when that differs.
+    fn limit(self: *Index, span: Span) Error {
+        const site = self.budget.site;
+        const message = "nominal type expression exceeds the checking budget of 256 levels and 100000 visits";
+        if (site.start == span.start and site.end == span.end) return self.context.sink.fail("E_GENERIC_LIMIT", site, message);
+        return self.context.sink.failRelated("E_GENERIC_LIMIT", site, message, .{ .span = span, .message = "resolution reached this type" });
+    }
     /// Resolve syntax to declaration identities without substituting representative concrete types.
     pub fn expression(self: *Index, span: Span, parameters: []const requirements.Parameter) Error!Expression {
         const ctx = self.context;
-        if (self.budget.depth == 256 or self.budget.work == 100000) return ctx.sink.fail("E_GENERIC_LIMIT", span, "nominal type expressions exceed checking depth/work budget");
+        if (self.budget.depth == 0) self.budget = .{ .site = span };
+        if (self.budget.depth == 256 or self.budget.work == 100000) return self.limit(span);
         self.budget.depth += 1;
         self.budget.work += 1;
         defer self.budget.depth -= 1;

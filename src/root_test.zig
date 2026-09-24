@@ -89,6 +89,7 @@ test {
     _ = @import("nominal_instances_test.zig");
     _ = @import("nominal_bodies_test.zig");
     _ = @import("nominal_layouts_test.zig");
+    _ = @import("chunked_arena.zig");
     _ = @import("nominal_templates_test.zig");
     _ = @import("nominal_type_syntax_test.zig");
     _ = @import("generic_arrays_test.zig");

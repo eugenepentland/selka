@@ -270,7 +270,7 @@ test "Python match cases retain contextual pattern names square types and discar
     const src = try source.Source.init(arena.allocator(), "patterns.my", text);
     var sink: diagnostic.Sink = .{ .allocator = arena.allocator() };
     const tokens = try lexer.lex(arena.allocator(), text, &sink);
-    var p: parser.Parser = .{ .src = src, .arena = &arena, .tokens = tokens, .sink = &sink };
+    var p: parser.Parser = .{ .src = src, .storage = arena.allocator(), .tokens = tokens, .sink = &sink };
     const syntax = try p.parse();
     try t.expectEqual(@as(usize, 1), syntax.types.expressions.applications.len);
     const body = syntax.statements.items[@backingInt(syntax.functions[0].body)].data.block;

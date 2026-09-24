@@ -51,7 +51,7 @@ fn parseModuleSource(arena: *std.heap.ArenaAllocator, bytes: []const u8) !Parsed
     var sink: diagnostic.Sink = .{ .allocator = allocator };
     const src = try source.Source.init(allocator, "script.my", bytes);
     const tokens = try lexer.lex(allocator, bytes, &sink);
-    var p: parser.Parser = .{ .src = src, .arena = arena, .tokens = tokens, .sink = &sink };
+    var p: parser.Parser = .{ .src = src, .storage = arena.allocator(), .tokens = tokens, .sink = &sink };
     return .{ .syntax = try p.parseModule(), .src = src };
 }
 
@@ -65,7 +65,7 @@ fn moduleFailure(arena: *std.heap.ArenaAllocator, bytes: []const u8) !Failure {
     var sink: diagnostic.Sink = .{ .allocator = allocator };
     const src = try source.Source.init(allocator, "script.my", bytes);
     const tokens = try lexer.lex(allocator, bytes, &sink);
-    var p: parser.Parser = .{ .src = src, .arena = arena, .tokens = tokens, .sink = &sink };
+    var p: parser.Parser = .{ .src = src, .storage = arena.allocator(), .tokens = tokens, .sink = &sink };
     try t.expectError(error.SourceError, p.parseModule());
     const first = sink.items.items[0];
     const at = src.locate(first.span.start);

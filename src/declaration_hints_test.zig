@@ -37,7 +37,7 @@ const Fixture = struct {
         self.src = try source.Source.init(allocator, "hint.my", bytes);
         var sink: diagnostic.Sink = .{ .allocator = allocator };
         const tokens = try lexer.lex(allocator, bytes, &sink);
-        var p: parser.Parser = .{ .src = self.src, .arena = &self.arena, .tokens = tokens, .sink = &sink };
+        var p: parser.Parser = .{ .src = self.src, .storage = self.arena.allocator(), .tokens = tokens, .sink = &sink };
         try t.expectError(error.SourceError, p.parse());
         self.sink = sink;
         return &self.sink.items.items[0];

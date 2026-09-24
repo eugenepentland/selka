@@ -550,6 +550,16 @@ when a path it names has disappeared, and a direct link that fails goes through
 `zig cc` again. `--report` names the route as `link_route` (`recorded`,
 `direct` or `driver`).
 
+Every link command passes its arguments through a response file (`@link.rsp`
+beside the output, `BUILD-LINK-RSP-1`), because a link names every object: a
+million-line program's 19,007 objects are 4.66 MB of arguments, past what the
+kernel accepts for one `execve`. `zig cc` still starts `ld.lld` with every
+object named, which the kernel refuses past about 6 MB; when that recording run
+fails having printed its command, the build links directly from the printed
+command, through a response file, and keeps it as the template. A tool the
+kernel refuses to start reports why: `host failure: ArgumentListTooLong` rather
+than `Unexpected`.
+
 A cached object or archive is accepted only when a fingerprint over its length
 and contents matches the one stored beside it in a `.digest` file. Damaged bytes
 and a damaged fingerprint are both misses, so a corrupt cache repairs the one

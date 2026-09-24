@@ -23,8 +23,8 @@ pub fn metadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]
     return metadataUnit(allocator, manifest, true);
 }
 /// QBE-BATCH-3: the part of `metadata` a batched build still compiles as one
-/// C unit — typed runtime descriptors, host bridges, literals and, for a
-/// frame-map program, the roots that name every function's metadata. Each batch carries
+/// C unit — typed runtime descriptors, host bridges and literals, naming no
+/// function (QBE-FRAMEMAP-ROOTS-1). Each batch carries
 /// its own functions' location, message and inline tables instead
 /// (`metadataAssembly`), so an edit that moves one module's lines recompiles
 /// that module's tables, not the whole program's.
@@ -43,10 +43,12 @@ fn metadataUnit(allocator: std.mem.Allocator, manifest: std.json.Value, tables: 
     try literalDefinitions(w, allocator, functions);
     // Every inline table names another unit's metadata, which may be defined
     // later in this file, so declare them all before the first definition.
-    // QBE-BATCH-4: without the tables only the frame-map roots name any, so a
-    // batched program that keeps no frame map declares none, and adding or
-    // removing a function leaves this, the largest single compile, unchanged.
-    const roots = usesFrameMap(functions);
+    // QBE-FRAMEMAP-ROOTS-1: the roots exist for full LTO, which only the
+    // full-table unit of the LLVM arm can be built under. A batched QBE unit
+    // is never LTO, and its frame-map section already names every `_meta` the
+    // table can reach, so it declares none and adding or removing a function
+    // leaves this, the largest single compile, unchanged (QBE-BATCH-4).
+    const roots = tables and usesFrameMap(functions);
     if (tables or roots) for (functions) |unit| {
         try w.print("extern const MylQbeFunction {s}_meta;\n", .{v.text(v.get(unit, "symbol"))});
     };
@@ -511,7 +513,8 @@ test "a batch's function metadata is assembly holding the C unit's records, and 
 }
 
 // spec: QBE-BATCH-4
-test "the shared metadata unit names the functions only for the frame map, so a new function leaves it unchanged" {
+// spec: QBE-FRAMEMAP-ROOTS-1
+test "the shared metadata unit names no function, so a new function leaves it unchanged, and only the full-table unit roots them" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
@@ -523,12 +526,21 @@ test "the shared metadata unit names the functions only for the frame map, so a 
         \\{"symbol":"myl_f_abc","name":"m::f","il":"export function $myl_f_abc() {\n@s\n ret\n}\n"}]}
     , .{});
     try std.testing.expectEqualStrings(try sharedMetadata(a, one), try sharedMetadata(a, two));
-    // A frame-map unit roots every function's metadata, so it must name them all.
+    // A frame-map program's batched shared unit names no function either: its
+    // frame-map sections keep each `_meta` the table reaches, and it is never LTO.
+    const mapped_one = try std.json.parseFromSliceLeaky(std.json.Value, a,
+        \\{"entry":"main_native","functions":[{"symbol":"main_native","name":"main","il":"dbgfile \"main_native\"\nexport function $main_native() {\n@s\n ret\n}\n"}]}
+    , .{});
     const mapped = try std.json.parseFromSliceLeaky(std.json.Value, a,
         \\{"entry":"main_native","functions":[{"symbol":"main_native","name":"main","il":"dbgfile \"main_native\"\nexport function $main_native() {\n@s\n ret\n}\n"},
         \\{"symbol":"myl_f_abc","name":"m::f","il":"export function $myl_f_abc() {\n@s\n ret\n}\n"}]}
     , .{});
-    const rooted = try sharedMetadata(a, mapped);
+    const shared = try sharedMetadata(a, mapped);
+    try std.testing.expectEqualStrings(try sharedMetadata(a, mapped_one), shared);
+    try std.testing.expect(std.mem.indexOf(u8, shared, "myl_f_abc_meta") == null);
+    try std.testing.expect(std.mem.indexOf(u8, shared, "mylang_frame_map_functions") == null);
+    // The full-table unit, which an LTO build links, still roots every function's metadata.
+    const rooted = try metadata(a, mapped);
     try std.testing.expect(std.mem.indexOf(u8, rooted, "extern const MylQbeFunction myl_f_abc_meta;") != null);
     try std.testing.expect(std.mem.indexOf(u8, rooted, "&myl_f_abc_meta,") != null);
 }

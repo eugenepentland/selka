@@ -211,7 +211,10 @@ pub fn generateSelectedWithInterface(allocator: std.mem.Allocator, program: byte
 }
 
 fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src: Source, sink: *diagnostic.Sink, interface: native_interface.Interface, requested: ?[]const bool) GenerateError![]u8 {
-    var arena = std.heap.ArenaAllocator.init(allocator);
+    // ARENA-BOUNDED-1: a whole program's units and facts outgrow the standard
+    // arena's half-again nodes (a 752 MB reservation, 21 MB touched, at a
+    // million lines); this arena reserves at most one chunk ahead.
+    var arena = @import("chunked_arena.zig").ChunkedArena.init(allocator);
     defer arena.deinit();
     const a = arena.allocator();
     // EMIT-STANDIN-1: a stand-in emission lowers more functions as it goes,
