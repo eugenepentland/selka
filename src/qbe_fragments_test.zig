@@ -7,14 +7,17 @@ const language = @import("compiler.zig");
 const fragments = @import("qbe_fragments.zig");
 const units = @import("qbe_build_units.zig");
 const t = std.testing;
-
-/// The two modules of one version of the test project.
-const Files = struct { main: []const u8, helper: []const u8 };
+/// The manifest member listing every unit.
+const functions_member = "functions";
+/// The modules of one version of the test project; `other` is imported only
+/// by the three-module stand-in project.
+const Files = struct { main: []const u8, helper: []const u8, other: []const u8 = "" };
 
 fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     const files: *const Files = @ptrCast(@alignCast(context.?));
     if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, files.main);
     if (std.mem.eql(u8, path, "helper.my")) return allocator.dupe(u8, files.helper);
+    if (std.mem.eql(u8, path, "other.my") and files.other.len != 0) return allocator.dupe(u8, files.other);
     return error.NotFound;
 }
 
@@ -178,7 +181,7 @@ fn expectSamePositions(spelled: std.json.Value, compact: std.json.Value) !void {
 /// The one unit of `manifest` named `name`, parsed, or null when absent.
 fn unitNamed(allocator: std.mem.Allocator, manifest: []const u8, name: []const u8) !?std.json.Value {
     const document = try std.json.parseFromSliceLeaky(std.json.Value, allocator, manifest, .{});
-    for (document.object.get("functions").?.array.items) |unit| {
+    for (document.object.get(functions_member).?.array.items) |unit| {
         if (std.mem.eql(u8, unit.object.get("name").?.string, name)) return unit;
     }
     return null;
@@ -373,4 +376,153 @@ test "a sweep removes only the texts no pack or replay names, and never while an
     try t.expect(try onDisk(&opened.store, packed_unit.il));
     try t.expect(try onDisk(&opened.store, meta));
     try t.expect(try onDisk(&opened.store, replayed));
+}
+
+/// One lean executable emission of `files` through a store reopened at
+/// `root`, checked the way `build` checks it (EMIT-STANDIN-1): a function
+/// whose record is current is stood in rather than lowered.
+fn emitStandIn(allocator: std.mem.Allocator, root: []const u8, files: *const Files) !LeanRun {
+    var opened: Opened = undefined;
+    try opened.init(root);
+    defer opened.deinit();
+    var project = language.project.Project.init(allocator);
+    defer project.deinit();
+    try project.load(.{ .context = @constCast(files), .read = read }, "main", .{});
+    var index = try language.interfaces.build(&project);
+    var compilation = try language.project_compile.Compilation.init(&index);
+    compilation.reuse = .{ .store = &opened.store, .lean = true, .executable = true };
+    var cache = language.semantic_cache.Cache.init(t.allocator, 0);
+    defer cache.deinit();
+    var request: language.semantic_summary.Request = .{ .facts_only = true };
+    cache.context.summaries = &request;
+    try compilation.checkWithCache(&cache);
+    const manifest = try compilation.emitQbe(allocator);
+    return .{ .statistics = opened.store.statistics, .manifest = manifest };
+}
+
+/// Both manifests hand the build the same program: every unit names the
+/// same text, facts and metadata, and every program-wide member but the
+/// store's own path is the same.
+fn expectSameBuild(allocator: std.mem.Allocator, expected: []const u8, actual: []const u8) !void {
+    const left = (try std.json.parseFromSliceLeaky(std.json.Value, allocator, expected, .{})).object;
+    const right = (try std.json.parseFromSliceLeaky(std.json.Value, allocator, actual, .{})).object;
+    for ([_][]const u8{ "text_format", "runtime_data", "host", "entry", "entry_parameters" }) |member| {
+        try t.expectEqualStrings(try std.json.Stringify.valueAlloc(allocator, left.get(member).?, .{}), try std.json.Stringify.valueAlloc(allocator, right.get(member).?, .{}));
+    }
+    const want = left.get(functions_member).?.array.items;
+    const got = right.get(functions_member).?.array.items;
+    try t.expectEqual(want.len, got.len);
+    for (want, got) |one, other| try t.expectEqualStrings(try unitShape(allocator, one), try unitShape(allocator, other));
+}
+
+/// A lean unit's name, symbol, text digest, facts and metadata digest.
+fn unitShape(allocator: std.mem.Allocator, unit: std.json.Value) ![]const u8 {
+    const fields = unit.object;
+    return std.fmt.allocPrint(allocator, "{s} {s} {s} {s} {s}", .{
+        fields.get("name").?.string,
+        fields.get("symbol").?.string,
+        fields.get("il_digest").?.string,
+        fields.get("il_facts").?.string,
+        fields.get("meta_digest").?.string,
+    });
+}
+
+/// Emit `files` with stand-ins through `root` and in full through
+/// `reference`, require the same build, and return the stand-in counters.
+fn expectStandInMatches(allocator: std.mem.Allocator, root: []const u8, reference: []const u8, files: *const Files) !fragments.Standin {
+    const stood = try emitStandIn(allocator, root, files);
+    const full = try emitLean(allocator, reference, files);
+    try expectSameBuild(allocator, full.manifest, stood.manifest);
+    return stood.statistics.standin;
+}
+
+// spec: EMIT-STANDIN-1
+test "an executable's emission lowers only what an edit changed and emits what a full emission emits" {
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const base = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    const root = try std.fs.path.join(a, &.{ base, "standin" });
+    const reference = try std.fs.path.join(a, &.{ base, "full" });
+    // A cold store lowers every function and leaves records.
+    const cold = try expectStandInMatches(a, root, reference, &original);
+    try t.expectEqual(@as(usize, 0), cold.reused);
+    // Unchanged: only what is always lowered (the printing entry, the text
+    // renderer) and what a caller may inline (`total`) is lowered again;
+    // `scale` and `first` are stood in.
+    const warm = try expectStandInMatches(a, root, reference, &original);
+    try t.expectEqual(@as(usize, 2), warm.reused);
+    try t.expectEqual(cold.lowered, warm.lowered + warm.reused);
+    // Every kind of edit still emits exactly the full emission. A body edit
+    // moves the positions of every function in its source, so none of
+    // `helper` is stood in; the three-module test below counts what is.
+    const body = try expectStandInMatches(a, root, reference, &body_edit);
+    try t.expectEqual(cold.lowered, body.lowered + body.reused);
+    _ = try expectStandInMatches(a, root, reference, &interface_edit);
+    _ = try expectStandInMatches(a, root, reference, &signature_edit);
+    _ = try expectStandInMatches(a, root, reference, &schema_edit);
+    // Coming back lowers what the edits' records replaced; the build after
+    // that stands the same two functions in again.
+    _ = try expectStandInMatches(a, root, reference, &original);
+    const again = try expectStandInMatches(a, root, reference, &original);
+    try t.expectEqual(warm.reused, again.reused);
+}
+
+/// A module no edit below touches; neither function is an inline candidate.
+const other_source =
+    \\module other
+    \\
+    \\
+    \\public def grow(xs: list[int], k: int) -> list[int]:
+    \\    out: list[int] = []
+    \\    for x in xs:
+    \\        out.append(x + k)
+    \\    return out
+    \\
+    \\
+    \\public def last(xs: list[int]) -> int:
+    \\    return xs[len(xs) - 1]
+    \\
+;
+
+/// The entry of the three-module project: it uses `helper` and `other`.
+const three_main_source = replaced(
+    replaced(main_source, "import helper\n", "import helper\nimport other\n"),
+    "    out.print(str(p.left))\n",
+    "    ys = other.grow(xs, 4)\n    out.print(other.last(ys))\n    out.print(str(p.left))\n",
+);
+
+/// The three-module project before and after a body edit in `helper`.
+const three: Files = .{ .main = three_main_source, .helper = helper_source, .other = other_source };
+const three_body_edit: Files = .{ .main = three_main_source, .helper = body_edit.helper, .other = other_source };
+
+// spec-case: EMIT-STANDIN-1
+test "a body edit in one module stands in every function of the modules it did not touch" {
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const base = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    const root = try std.fs.path.join(a, &.{ base, "standin" });
+    const reference = try std.fs.path.join(a, &.{ base, "full" });
+    const cold = try expectStandInMatches(a, root, reference, &three);
+    try t.expectEqual(@as(usize, 0), cold.reused);
+    // Unchanged: `scale`, `first`, `grow` and `last` are stood in.
+    const warm = try expectStandInMatches(a, root, reference, &three);
+    try t.expectEqual(@as(usize, 4), warm.reused);
+    try t.expectEqual(cold.lowered, warm.lowered + warm.reused);
+    // The edit moves positions in `helper` only, so its functions are lowered
+    // again while `grow` and `last` in `other` stay stood in.
+    const body = try expectStandInMatches(a, root, reference, &three_body_edit);
+    try t.expectEqual(@as(usize, 2), body.reused);
+    try t.expectEqual(cold.lowered, body.lowered + body.reused);
+    // A function keeps one record, which the edit replaced, so going back
+    // lowers `helper` once more and the next unchanged build stands it in.
+    const back = try expectStandInMatches(a, root, reference, &three);
+    try t.expectEqual(@as(usize, 2), back.reused);
+    const again = try expectStandInMatches(a, root, reference, &three);
+    try t.expectEqual(@as(usize, 4), again.reused);
 }

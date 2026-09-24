@@ -54,6 +54,7 @@ pub const Plan = struct {
         const stand_ins = try allocator.alloc(?u32, count);
         @memset(stand_ins, null);
         request.stood_in = 0;
+        request.prepared = prepared.*;
         if (request.previous) |previous| {
             for (prepared.ordinary_ast, 0..) |ast_index, instance| {
                 if (instance == main) continue;

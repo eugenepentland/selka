@@ -47,6 +47,10 @@ const typed = @import("typed.zig");
 const diagnostic = @import("diagnostic.zig");
 const Names = @import("module_names.zig").Names;
 const semantic_cache = @import("semantic_cache.zig");
+const semantic_key = @import("semantic_key.zig");
+const fragments = @import("qbe_fragments.zig");
+const lower = @import("lower.zig");
+const bytecode_inline = @import("bytecode_inline.zig");
 /// Project-level checked and lowered state borrowing the interface index and its arena.
 pub const Compilation = struct {
     index: *interfaces.Index,
@@ -87,8 +91,37 @@ pub const Compilation = struct {
             counters.?.restore(semantic);
             request.* = .{ .facts_only = request.facts_only };
             self.program = try @import("sema.zig").checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache);
-            return;
+            return self.prepareStandIns(request.prepared);
         };
+        if (cache) |semantic| if (semantic.context.summaries) |request| try self.prepareStandIns(request.prepared);
+    }
+
+    /// EMIT-STANDIN-1: give an executable's lean emission the source identity
+    /// of every declared function — its stable declaration key, dependency
+    /// context, region digest and length, which the check proves fix the
+    /// checked body — so its lowering can leave out every function whose
+    /// last record is still current. The entry, host, foreign and conversion
+    /// declarations, specializations and expression lambdas get none and are
+    /// always lowered.
+    fn prepareStandIns(self: *Compilation, identities: ?semantic_key.Prepared) CheckError!void {
+        const reuse = if (self.reuse) |*configured| configured else return;
+        if (!reuse.lean or !reuse.executable) return;
+        const prepared = identities orelse return;
+        const program = self.program.?;
+        const a = self.index.project.arena.allocator();
+        const keys = try a.alloc(?fragments.Digest, program.functions.len);
+        @memset(keys, null);
+        for (prepared.ordinary_ast, 0..) |ast_index, instance| {
+            if (instance >= program.functions.len or instance == @backingInt(program.main)) continue;
+            keys[instance] = sourceIdentity(prepared, ast_index, program.functions[instance]);
+        }
+        const records = try a.alloc(?*const fragments.Record, program.functions.len);
+        @memset(records, null);
+        const selected = try a.alloc(bool, program.functions.len);
+        @memset(selected, true);
+        const standins = try a.create(fragments.Standins);
+        standins.* = .{ .records = records, .keys = keys, .selected = selected, .pre = &.{}, .lower = .{ .context = self, .run = lowerMore } };
+        reuse.standins = standins;
     }
 
     /// Work counters a repeated check restores, so it reports one check's work.
@@ -160,11 +193,11 @@ pub const Compilation = struct {
         };
         var count: usize = 0;
         for (selected) |flag| count += @intFromBool(flag);
-        const code = @import("lower.zig").lowerSelected(self.index.project.arena.allocator(), self.program.?, selected) catch |err| switch (err) {
+        const code = lower.lowerSelected(self.index.project.arena.allocator(), self.program.?, selected) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => return error.InternalError,
         };
-        const inlined = @import("bytecode_inline.zig").inlineProgram(self.index.project.arena.allocator(), code) catch |err| switch (err) {
+        const inlined = bytecode_inline.inlineProgram(self.index.project.arena.allocator(), code) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => return error.InternalError,
         };
@@ -291,9 +324,90 @@ pub const Compilation = struct {
     /// Lower with an explicit `debug` policy: a ReleaseFast build drops the nodes.
     pub fn emitWithOptions(self: *Compilation, drop_debug: bool) EmitError!void {
         try self.check();
-        if (self.code == null) {
-            const lowered = try @import("lower.zig").lowerWith(self.index.project.arena.allocator(), self.program.?, drop_debug);
-            self.code = try @import("bytecode_inline.zig").inlineProgram(self.index.project.arena.allocator(), lowered);
+        if (self.code != null) return;
+        if (try self.lowerStandIns(drop_debug)) return;
+        const lowered = try lower.lowerWith(self.index.project.arena.allocator(), self.program.?, drop_debug);
+        self.code = try bytecode_inline.inlineProgram(self.index.project.arena.allocator(), lowered);
+    }
+
+    /// How many functions the retained bytecode program has bodies for: all
+    /// of them, unless an executable's emission left some unlowered.
+    pub fn loweredCount(self: *const Compilation) usize {
+        const code = self.code orelse return 0;
+        const reuse = self.reuse orelse return code.functions.len;
+        const standins = reuse.standins orelse return code.functions.len;
+        var count: usize = 0;
+        for (standins.selected) |chosen| count += @intFromBool(chosen);
+        return count;
+    }
+
+    /// EMIT-STANDIN-1: lower only the functions without a record under their
+    /// source identity, and those whose record says the inliner may splice
+    /// them (a lowered caller needs their bodies). The emission lowers more
+    /// through `lowerMore` if a record turns out stale.
+    fn lowerStandIns(self: *Compilation, drop_debug: bool) EmitError!bool {
+        const reuse = self.reuse orelse return false;
+        const standins = reuse.standins orelse return false;
+        const a = self.index.project.arena.allocator();
+        for (standins.keys, standins.records, standins.selected) |*key, *record, *chosen| {
+            const identity = key.* orelse continue;
+            key.* = fragments.recordKey(identity, drop_debug);
+            record.* = try reuse.store.record(key.*.?);
+            const stored = record.* orelse continue;
+            chosen.* = !std.mem.eql(u8, &stored.facts.inline_key, &@as(fragments.Digest, @splat(0)));
+        }
+        const lowered = lower.lowerSelectedWith(a, self.program.?, standins.selected, drop_debug) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return error.InternalError,
+        };
+        standins.pre = try a.dupe(@import("bytecode.zig").Function, lowered.functions);
+        standins.drop_debug = drop_debug;
+        self.code = try bytecode_inline.inlineProgram(a, lowered);
+        return true;
+    }
+
+    /// Lower every selected function a stand-in emission has not lowered yet.
+    fn lowerMore(context: *anyopaque, standins: *fragments.Standins) error{ OutOfMemory, InternalError }!void {
+        const self: *Compilation = @ptrCast(@alignCast(context));
+        const a = self.index.project.arena.allocator();
+        const fresh = try a.alloc(bool, standins.selected.len);
+        for (fresh, standins.selected, standins.pre) |*wanted, chosen, known| wanted.* = chosen and known.scope.instructions.len == 0;
+        const lowered = lower.lowerSelectedWith(a, self.program.?, fresh, standins.drop_debug) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return error.InternalError,
+        };
+        for (fresh, standins.pre, lowered.functions) |wanted, *known, function| {
+            if (wanted) known.* = function;
         }
     }
 };
+
+/// A function's source identity (EMIT-STANDIN-1): its stable declaration key,
+/// dependency context, region digest and region length, and its name; null
+/// for a function whose unit is never reused without lowering it.
+fn sourceIdentity(prepared: semantic_key.Prepared, ast_index: usize, function: typed.Function) ?fragments.Digest {
+    if (function.type_arguments.len != 0 or std.mem.startsWith(u8, function.name, "lambda@")) return null;
+    if (function.policy.host != null or function.policy.c_abi or function.policy.conversion) return null;
+    if (ast_index >= prepared.keys.len or ast_index >= prepared.recalled.digests.len) return null;
+    // The key ends in the declared name, which the checked name must end in.
+    const key = prepared.keys[ast_index];
+    const declared = key[(std.mem.lastIndexOfScalar(u8, key, 0x1f) orelse return null) + 1 ..];
+    if (!std.mem.endsWith(u8, function.name, declared)) return null;
+    const region = prepared.regions[ast_index];
+    var hash = std.crypto.hash.Blake3.init(.{});
+    hash.update("standin-source-v1");
+    for ([_][]const u8{ key, function.name }) |part| {
+        var length: [8]u8 = undefined;
+        std.mem.writeInt(u64, &length, part.len, .little);
+        hash.update(&length);
+        hash.update(part);
+    }
+    hash.update(&prepared.contexts[ast_index]);
+    hash.update(&prepared.recalled.digests[ast_index]);
+    var extent: [8]u8 = undefined;
+    std.mem.writeInt(u64, &extent, region.end - region.start, .little);
+    hash.update(&extent);
+    var digest: fragments.Digest = undefined;
+    hash.final(&digest);
+    return digest;
+}

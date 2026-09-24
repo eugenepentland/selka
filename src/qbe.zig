@@ -210,10 +210,16 @@ pub fn generateSelectedWithInterface(allocator: std.mem.Allocator, program: byte
     return generateImpl(allocator, program, src, sink, interface, selected);
 }
 
-fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: Source, sink: *diagnostic.Sink, interface: native_interface.Interface, selected: ?[]const bool) GenerateError![]u8 {
+fn generateImpl(allocator: std.mem.Allocator, program_in: bytecode.Program, src: Source, sink: *diagnostic.Sink, interface: native_interface.Interface, requested: ?[]const bool) GenerateError![]u8 {
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
     const a = arena.allocator();
+    // EMIT-STANDIN-1: a stand-in emission lowers more functions as it goes,
+    // so it works on its own copy of the function table and its own selection.
+    const standins: ?*fragments.Standins = if (interface.reuse) |configured| configured.standins else null;
+    const selected: ?[]const bool = if (standins) |state| state.selected else requested;
+    var program = program_in;
+    if (standins != null) program.functions = try a.dupe(bytecode.Function, program_in.functions);
     var layouts = native_types.Catalog.initRecords(a, program.records) catch |err| return layoutError(err);
     defer layouts.deinit();
     const shape: Shape = if (interface.reuse) |configured| .{ .lean = configured.lean, .executable = configured.executable } else .{};
@@ -260,11 +266,7 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
         .pure = &.{},
     };
     var reuse: Reuse = try .init(a, pass, interface.reuse);
-    const allocates = try firstPass(pass, &reuse);
-    pass.pure = try allocateAnalysis(a, program, allocates);
-    try secondPass(pass, &reuse);
-    if (shape.lean) try metaPass(pass, &reuse, src);
-    if (interface.reuse) |configured| configured.store.flush();
+    try runPasses(&pass, &reuse, src, standins, shape.lean);
     const entry_function = program.functions[@backingInt(program.main)];
     const entry_parameters = try a.alloc([]const u8, entry_function.signature.parameter_count);
     const entry_parameter_names = try a.alloc([]const u8, entry_function.signature.parameter_count);
@@ -280,12 +282,9 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
     // Wire types and codecs serve only a library's embedding API.
     const wire_types = if (shape.executable) null else (qbe_wire.describe(a, &layouts) catch |err| return layoutError(err)).types;
     const codecs = if (shape.executable) null else @import("qbe_codecs.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
-    var text_format = false;
-    for (program.functions) |function| for (function.scope.instructions) |instruction| {
-        if (needsTextRuntime(program, instruction.op)) text_format = true;
-    };
+    const text_format = textFormat(program, &reuse);
     const host = @import("qbe_host.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
-    const emitted = if (selected) |mask| try selectedUnits(a, units, mask) else units;
+    const emitted = if (requested) |mask| try selectedUnits(a, units, mask) else units;
     return std.json.Stringify.valueAlloc(allocator, .{
         .host = host,
         .text_format = text_format,
@@ -301,8 +300,29 @@ fn generateImpl(allocator: std.mem.Allocator, program: bytecode.Program, src: So
         // Where a lean manifest's stored texts and metadata live, by digest.
         .store = if (shape.lean) try interface.reuse.?.store.textRoot() else null,
         .functions = emitted,
-        .entry = if (selected == null) units[@backingInt(program.main)].symbol else "",
+        .entry = if (requested == null) units[@backingInt(program.main)].symbol else "",
     }, .{});
+}
+
+/// Emit once with roots everywhere to learn which functions can allocate,
+/// then again with the analysis in hand (a call to a function that cannot
+/// collect needs no root push at its call site), then name each lean unit's
+/// metadata. A stand-in emission (EMIT-STANDIN-1) first settles which
+/// functions it must lower, and afterwards leaves their records.
+fn runPasses(pass: *EmitPass, reuse: *Reuse, src: Source, standins: ?*fragments.Standins, lean: bool) GenerateError!void {
+    const allocates = if (standins) |state| stood: {
+        reuse.standin = try StandIn.init(pass.allocator, pass.program, state, src);
+        pass.arenas = arenasPresent(pass.program, reuse);
+        break :stood try standInPasses(pass, reuse);
+    } else plain: {
+        const own = try firstPass(pass.*, reuse);
+        pass.pure = try allocateAnalysis(pass.allocator, pass.program, own, reuse);
+        break :plain own;
+    };
+    try secondPass(pass.*, reuse);
+    if (lean) try metaPass(pass.*, reuse, src);
+    if (reuse.standin != null) try recordStandIns(pass.*, reuse, allocates);
+    if (reuse.configured) |configured| configured.store.flush();
 }
 
 fn selectedUnits(allocator: std.mem.Allocator, units: []const Unit, selected: []const bool) GenerateError![]const Unit {
@@ -619,6 +639,9 @@ const Reuse = struct {
     targets: ?fragments.Digest = null,
     /// Each emitted function's second-pass key, which its metadata key extends.
     finals: []fragments.Digest,
+    /// EMIT-STANDIN-1: what an emission that lowers only some functions keeps
+    /// about each one, or null for an emission that lowers them all.
+    standin: ?StandIn = null,
 
     fn init(a: std.mem.Allocator, pass: EmitPass, configured: ?fragments.Reuse) GenerateError!Reuse {
         var symbols: std.StringHashMapUnmanaged(void) = .empty;
@@ -638,10 +661,23 @@ const Reuse = struct {
             .finals = try a.alloc(fragments.Digest, pass.program.functions.len),
         };
     }
+    /// The record function `index`'s unit is taken from, when it stays unlowered.
+    fn stood(self: *const Reuse, index: usize) ?*const fragments.Record {
+        const standin = self.standin orelse return null;
+        if (standin.standins.selected[index]) return null;
+        return standin.standins.records[index];
+    }
+    /// Forget every memo that reads function bodies, after some changed.
+    fn forget(self: *Reuse, a: std.mem.Allocator, program: bytecode.Program) GenerateError!void {
+        self.keys = try fragments.Keys.init(a, program);
+        @memset(self.writes, null);
+        self.targets = null;
+    }
     /// Which parameters of function `index` its own body writes: the one fact
     /// about a callee's body (`blindCall`) that a caller's unit reads.
     fn parameterWrites(self: *Reuse, a: std.mem.Allocator, program: bytecode.Program, index: usize) GenerateError![]const bool {
         if (self.writes[index]) |known| return known;
+        if (self.stood(index)) |record| return record.facts.writes;
         const function = program.functions[index];
         const count = @min(function.signature.parameter_count, function.scope.locals.len);
         const flags = try a.alloc(bool, count);
@@ -655,18 +691,321 @@ const Reuse = struct {
         self.writes[index] = flags;
         return flags;
     }
+    /// The digest of the program's function-value target set, over every
+    /// lowered function's instructions and every stood-in function's record.
+    fn valueTargets(self: *Reuse, a: std.mem.Allocator, program: bytecode.Program) GenerateError!fragments.Digest {
+        if (self.targets) |known| return known;
+        var names: std.ArrayList([]const u8) = .empty;
+        for (program.functions, 0..) |function, index| {
+            if (self.stood(index)) |record| {
+                try names.appendSlice(a, record.facts.values);
+                continue;
+            }
+            for (function.scope.instructions) |instruction| switch (instruction.op) {
+                .function_value => |value| if (@backingInt(value.function) < program.functions.len) try names.append(a, program.functions[@backingInt(value.function)].name),
+                else => {},
+            };
+        }
+        self.targets = fragments.targetsDigest(names.items);
+        return self.targets.?;
+    }
     /// The second-pass key of function `index` under allocation analysis `pure`.
     fn final(self: *Reuse, a: std.mem.Allocator, program: bytecode.Program, index: usize, pure: []const bool) GenerateError!fragments.Digest {
         var key: fragments.Final = .init(self.local[index]);
         for (try self.keys.?.callees(index)) |callee| key.callee(callee < pure.len and pure[callee], try self.parameterWrites(a, program, callee));
-        for (program.functions[index].scope.instructions) |instruction| if (instruction.op == .invoke) {
-            if (self.targets == null) self.targets = try fragments.functionValueTargets(a, program);
-            key.targets(self.targets.?);
-            break;
-        };
+        if (invokes(program.functions[index])) key.targets(try self.valueTargets(a, program));
         return key.finish();
     }
 };
+
+/// Whether a function invokes a function value.
+fn invokes(function: bytecode.Function) bool {
+    for (function.scope.instructions) |instruction| if (instruction.op == .invoke) return true;
+    return false;
+}
+
+/// EMIT-STANDIN-1 per-emission state: the stand-ins the frontend chose, the
+/// function and record names, each function's inline key, and — for each
+/// lowered function — its stored unit answer, its metadata digest and the
+/// sources its positions fall in, from which its record is made.
+const StandIn = struct {
+    standins: *fragments.Standins,
+    functions: std.StringHashMapUnmanaged(u32),
+    records: std.StringHashMapUnmanaged(u32),
+    inline_keys: []fragments.Digest,
+    answers: []?fragments.Unit,
+    metas: []?fragments.Digest,
+    sources: [][]const u32,
+    digests: SourceDigests,
+    /// The function table the emission works on, into which newly lowered
+    /// bodies are inlined.
+    working: []bytecode.Function,
+
+    fn init(a: std.mem.Allocator, program: bytecode.Program, standins: *fragments.Standins, src: Source) GenerateError!StandIn {
+        var functions: std.StringHashMapUnmanaged(u32) = .empty;
+        errdefer functions.deinit(a);
+        for (program.functions, 0..) |function, index| try functions.put(a, function.name, @intCast(index));
+        var records: std.StringHashMapUnmanaged(u32) = .empty;
+        errdefer records.deinit(a);
+        for (program.records, 0..) |record, index| try records.put(a, record.name, @intCast(index));
+        const count = program.functions.len;
+        const answers = try a.alloc(?fragments.Unit, count);
+        errdefer a.free(answers);
+        @memset(answers, null);
+        const metas = try a.alloc(?fragments.Digest, count);
+        errdefer a.free(metas);
+        @memset(metas, null);
+        const sources = try a.alloc([]const u32, count);
+        errdefer a.free(sources);
+        @memset(sources, &.{});
+        const inline_keys = try a.alloc(fragments.Digest, count);
+        errdefer a.free(inline_keys);
+        return .{
+            .standins = standins,
+            .functions = functions,
+            .records = records,
+            .inline_keys = inline_keys,
+            .answers = answers,
+            .metas = metas,
+            .sources = sources,
+            .digests = try .init(a, src),
+            .working = @constCast(program.functions),
+        };
+    }
+    /// The indices of the functions `names` names, skipping any that no
+    /// longer exist.
+    fn indices(self: *const StandIn, a: std.mem.Allocator, names: []const []const u8) GenerateError![]const u32 {
+        var out: std.ArrayList(u32) = .empty;
+        for (names) |name| if (self.functions.get(name)) |index| try out.append(a, index);
+        return out.items;
+    }
+};
+
+/// EMIT-STANDIN-1: run the first pass and the allocation analysis over the
+/// lowered functions and the stood-in records, then select every stood-in
+/// function whose record no longer matches what its unit would read, lower
+/// those too, and repeat until no record is stale. Returns each function's
+/// own allocation fact.
+fn standInPasses(pass: *EmitPass, reuse: *Reuse) GenerateError![]bool {
+    const standin = &reuse.standin.?;
+    const standins = standin.standins;
+    while (true) {
+        const own = try firstPass(pass.*, reuse);
+        pass.pure = try allocateAnalysis(pass.allocator, pass.program, own, reuse);
+        try inlineKeys(pass.*, reuse);
+        var grew = false;
+        for (standins.records, standins.selected) |record, *chosen| {
+            const stored = record orelse continue;
+            if (chosen.*) continue;
+            const now = try snapshotOf(pass.*, reuse, stored.reads, stored.facts.marks.invokes);
+            if (std.mem.eql(u8, &now, &stored.snapshot)) continue;
+            chosen.* = true;
+            grew = true;
+        }
+        if (!grew) return own;
+        try standins.lower.run(standins.lower.context, standins);
+        try reinline(pass.*, standin);
+        pass.arenas = arenasPresent(pass.program, reuse);
+        try reuse.forget(pass.allocator, pass.program);
+    }
+}
+
+/// Inline the selected functions' bodies again after more were lowered, and
+/// put the results in the emission's function table.
+fn reinline(pass: EmitPass, standin: *StandIn) GenerateError!void {
+    const standins = standin.standins;
+    const lowered: bytecode.Program = .{ .functions = standins.pre, .main = pass.program.main, .records = pass.program.records };
+    const inlined = @import("bytecode_inline.zig").inlineProgram(pass.allocator, lowered) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return error.InternalError,
+    };
+    for (standins.selected, standin.working, inlined.functions) |chosen, *function, result| {
+        if (chosen) function.scope = result.scope;
+    }
+}
+
+/// Each function's inline key: zero unless the inliner may splice it into a
+/// caller, and then the digest of the body a caller splices.
+fn inlineKeys(pass: EmitPass, reuse: *Reuse) GenerateError!void {
+    const standin = &reuse.standin.?;
+    for (standin.inline_keys, 0..) |*key, index| {
+        if (reuse.stood(index)) |record| {
+            key.* = record.facts.inline_key;
+        } else if (standin.standins.selected[index] and @import("bytecode_inline.zig").eligibleFunction(pass.program, index)) {
+            key.* = try reuse.keys.?.bodyDigest(index);
+        } else key.* = @splat(0);
+    }
+}
+
+/// Whether any function opens an arena scope, reading a stood-in function's
+/// record in place of its body.
+fn arenasPresent(program: bytecode.Program, reuse: *const Reuse) bool {
+    for (program.functions, 0..) |function, index| {
+        if (reuse.stood(index)) |record| {
+            if (record.facts.marks.arena) return true;
+        } else if (arena_lower.opens(function)) return true;
+    }
+    return false;
+}
+
+/// Whether any function needs the text runtime, reading a stood-in
+/// function's record in place of its body.
+fn textFormat(program: bytecode.Program, reuse: *const Reuse) bool {
+    for (program.functions, 0..) |function, index| {
+        if (reuse.stood(index)) |record| {
+            if (record.facts.marks.text) return true;
+        } else if (needsText(program, function)) return true;
+    }
+    return false;
+}
+
+/// Whether one function's body needs the text runtime.
+fn needsText(program: bytecode.Program, function: bytecode.Function) bool {
+    for (function.scope.instructions) |instruction| if (needsTextRuntime(program, instruction.op)) return true;
+    return false;
+}
+
+/// The digest of everything a unit reads outside its function's own source:
+/// the whole-program switches, and for each function it names that
+/// function's interface, inline key, allocation fact and parameter writes;
+/// the schema of every record it reaches; the function-value target set
+/// when it invokes a function value; and every source its positions fall in.
+/// A stood-in unit is current exactly while this equals its record's.
+fn snapshotOf(pass: EmitPass, reuse: *Reuse, reads: fragments.Reads, invoking: bool) GenerateError!fragments.Digest {
+    const standin = &reuse.standin.?;
+    var hash = std.crypto.hash.Blake3.init(.{});
+    hash.update("standin-snapshot-v1");
+    for ([_]bool{ pass.step_checks, pass.frame_checks, pass.checks, pass.arenas }) |flag| hash.update(&.{@intFromBool(flag)});
+    for (reads.names) |name| {
+        snapshotText(&hash, name);
+        const index = standin.functions.get(name) orelse {
+            hash.update("missing");
+            continue;
+        };
+        hash.update(&try reuse.keys.?.interfaceDigest(index));
+        hash.update(&standin.inline_keys[index]);
+        hash.update(&.{@intFromBool(pass.pure[index])});
+        const writes = try reuse.parameterWrites(pass.allocator, pass.program, index);
+        snapshotCount(&hash, writes.len);
+        for (writes) |flag| hash.update(&.{@intFromBool(flag)});
+    }
+    for (reads.records) |name| {
+        snapshotText(&hash, name);
+        const index = standin.records.get(name) orelse {
+            hash.update("missing");
+            continue;
+        };
+        hash.update(&try reuse.keys.?.recordDigest(index));
+    }
+    if (invoking) hash.update(&try reuse.valueTargets(pass.allocator, pass.program));
+    for (reads.sources) |path| {
+        snapshotText(&hash, path);
+        const digest = (try standin.digests.digestAt(path)) orelse {
+            hash.update("missing");
+            continue;
+        };
+        hash.update(&digest);
+    }
+    var out: fragments.Digest = undefined;
+    hash.final(&out);
+    return out;
+}
+fn snapshotText(hash: *std.crypto.hash.Blake3, text: []const u8) void {
+    snapshotCount(hash, text.len);
+    hash.update(text);
+}
+fn snapshotCount(hash: *std.crypto.hash.Blake3, count: usize) void {
+    var bytes: [8]u8 = undefined;
+    std.mem.writeInt(u64, &bytes, count, .little);
+    hash.update(&bytes);
+}
+
+/// What function `index`'s unit read about the rest of the program.
+fn readsOf(pass: EmitPass, reuse: *Reuse, index: usize) GenerateError!fragments.Reads {
+    const standin = &reuse.standin.?;
+    const a = pass.allocator;
+    const callees = try reuse.keys.?.callees(index);
+    const names = try a.alloc([]const u8, callees.len);
+    for (callees, names) |callee, *name| name.* = pass.program.functions[callee].name;
+    const reached = try reuse.keys.?.reach(index);
+    const records = try a.alloc([]const u8, reached.len);
+    for (reached, records) |record, *name| name.* = pass.program.records[record].name;
+    const origins = standin.sources[index];
+    const paths = try a.alloc([]const u8, origins.len);
+    for (origins, paths) |origin, *path| path.* = standin.digests.path(origin);
+    return .{ .names = names, .records = records, .sources = paths };
+}
+
+/// Whether a lowered function may leave a record: one that prints or renders
+/// a value into text is always lowered, since the program's renderers are
+/// read from its body, and so is one that names an expression lambda, whose
+/// name moves with the source around it.
+fn recordable(pass: EmitPass, reuse: *Reuse, index: usize) GenerateError!bool {
+    const function = pass.program.functions[index];
+    if (rendersText(function, pass.program.records)) return false;
+    for (function.scope.instructions) |instruction| if (instruction.op == .print) return false;
+    for (try reuse.keys.?.callees(index)) |callee| {
+        if (std.mem.startsWith(u8, pass.program.functions[callee].name, "lambda@")) return false;
+    }
+    return true;
+}
+
+/// The names of the functions one lowered function calls after inlining, and
+/// of those it takes as values (one per instruction, as the target set counts them).
+fn calledNames(a: std.mem.Allocator, program: bytecode.Program, function: bytecode.Function) GenerateError![2][]const []const u8 {
+    var calls: std.ArrayList([]const u8) = .empty;
+    var values: std.ArrayList([]const u8) = .empty;
+    for (function.scope.instructions) |instruction| switch (instruction.op) {
+        .call => |id| if (@backingInt(id) < program.functions.len) {
+            const name = program.functions[@backingInt(id)].name;
+            for (calls.items) |known| {
+                if (std.mem.eql(u8, known, name)) break;
+            } else try calls.append(a, name);
+        },
+        .function_value => |value| if (@backingInt(value.function) < program.functions.len) try values.append(a, program.functions[@backingInt(value.function)].name),
+        else => {},
+    };
+    return .{ calls.items, values.items };
+}
+
+/// EMIT-STANDIN-1: give every stood-in unit its record's answer, and leave a
+/// fresh record for every lowered function that may have one.
+fn recordStandIns(pass: EmitPass, reuse: *Reuse, allocates: []const bool) GenerateError!void {
+    const standin = &reuse.standin.?;
+    const store = reuse.configured.?.store;
+    const a = pass.allocator;
+    for (pass.program.functions, pass.units, 0..) |function, *unit, index| {
+        if (reuse.stood(index)) |record| {
+            unit.stored = .{ .digest = try a.dupe(u8, &std.fmt.bytesToHex(record.unit.il, .lower)), .facts = record.unit.facts, .meta = try a.dupe(u8, &std.fmt.bytesToHex(record.meta, .lower)) };
+            unit.test_dependencies = record.unit.dependencies;
+            store.statistics.standin.reused += 1;
+            continue;
+        }
+        store.statistics.standin.lowered += 1;
+        const key = standin.standins.keys[index] orelse continue;
+        const answer = standin.answers[index] orelse continue;
+        const meta = standin.metas[index] orelse continue;
+        if (!try recordable(pass, reuse, index)) continue;
+        const reads = try readsOf(pass, reuse, index);
+        const named = try calledNames(a, pass.program, function);
+        const marks: fragments.Marks = .{ .invokes = invokes(function), .arena = arena_lower.opens(function), .text = needsText(pass.program, function) };
+        try store.rememberRecord(key, .{
+            .name = function.name,
+            .unit = answer,
+            .meta = meta,
+            .snapshot = try snapshotOf(pass, reuse, reads, marks.invokes),
+            .facts = .{
+                .inline_key = standin.inline_keys[index],
+                .allocates = allocates[index],
+                .calls = named[0],
+                .writes = try reuse.parameterWrites(a, pass.program, index),
+                .values = named[1],
+                .marks = marks,
+            },
+            .reads = reads,
+        });
+    }
+}
 
 /// First pass: learn, per emitted function, whether its own text allocates.
 /// Units are lowered with roots everywhere and then discarded; a stored answer
@@ -678,7 +1017,11 @@ fn firstPass(pass: EmitPass, reuse: *Reuse) GenerateError![]bool {
     var scratch = std.heap.ArenaAllocator.init(pass.backing);
     defer scratch.deinit();
     for (0..program.functions.len) |index| {
-        if (pass.selected != null and !pass.selected.?[index]) continue;
+        if (pass.selected != null and !pass.selected.?[index]) {
+            // A stood-in unit's own allocation fact is its record's.
+            if (reuse.stood(index)) |record| allocates[index] = record.facts.allocates;
+            continue;
+        }
         if (reuse.configured) |configured| {
             reuse.local[index] = try reuse.keys.?.local(index, flagsOf(pass, index));
             if (try configured.store.first(reuse.local[index])) |answer| {
@@ -709,6 +1052,7 @@ fn secondPass(pass: EmitPass, reuse: *Reuse) GenerateError!void {
         reuse.finals[index] = key;
         if (reuse.configured) |configured| if (try configured.store.unit(key)) |answer| {
             unit.test_dependencies = answer.dependencies;
+            if (reuse.standin) |standin| standin.answers[index] = answer;
             if (configured.lean) {
                 unit.stored = try storedUnit(a, answer);
             } else {
@@ -725,6 +1069,7 @@ fn secondPass(pass: EmitPass, reuse: *Reuse) GenerateError!void {
         if (rendersText(function, program.records)) stacks.* = try copyStates(a, emitted.states);
         if (reuse.configured) |configured| {
             const answer = try configured.store.remember(key, emitted.text, unit.test_dependencies.?);
+            if (reuse.standin) |standin| standin.answers[index] = answer;
             if (configured.lean) {
                 unit.stored = try storedUnit(a, answer);
                 continue;
@@ -779,17 +1124,23 @@ fn fillPositions(a: std.mem.Allocator, program: bytecode.Program, src: Source, i
 /// positions, messages and inline frames, renders them and stores the text.
 fn metaPass(pass: EmitPass, reuse: *Reuse, src: Source) GenerateError!void {
     const store = reuse.configured.?.store;
-    var sources: SourceDigests = try .init(pass.allocator, src);
+    var own: SourceDigests = undefined;
+    const sources = if (reuse.standin) |*standin| &standin.digests else own: {
+        own = try .init(pass.allocator, src);
+        break :own &own;
+    };
     var scratch = std.heap.ArenaAllocator.init(pass.backing);
     defer scratch.deinit();
     for (pass.units, 0..) |*unit, index| {
         if (pass.selected != null and !pass.selected.?[index]) continue;
         defer _ = scratch.reset(.retain_capacity);
         var key: fragments.MetaKey = .init(reuse.finals[index]);
-        sources.fold(&key, pass.program.functions[index].scope.instructions);
+        try sources.fold(&key, pass.program.functions[index].scope.instructions);
+        if (reuse.standin) |standin| standin.sources[index] = try pass.allocator.dupe(u32, sources.last.items);
         const identity = key.finish();
         if (try store.meta(identity)) |digest| {
             unit.stored.?.meta = try pass.allocator.dupe(u8, &std.fmt.bytesToHex(digest, .lower));
+            if (reuse.standin) |standin| standin.metas[index] = digest;
             continue;
         }
         var positioned = unit.*;
@@ -797,6 +1148,7 @@ fn metaPass(pass: EmitPass, reuse: *Reuse, src: Source) GenerateError!void {
         const text = try std.json.Stringify.valueAlloc(scratch.allocator(), MetaRecord{ .unit = positioned }, .{});
         const digest = try store.rememberMeta(identity, text);
         unit.stored.?.meta = try pass.allocator.dupe(u8, &std.fmt.bytesToHex(digest, .lower));
+        if (reuse.standin) |standin| standin.metas[index] = digest;
         // The build needs a fresh record in any case, since the metadata
         // it belongs to changed; handing it over inline saves reading it back.
         unit.stored.?.record = try pass.allocator.dupe(u8, text);
@@ -807,10 +1159,15 @@ fn metaPass(pass: EmitPass, reuse: *Reuse, src: Source) GenerateError!void {
 /// unit's positions fall in it, and a stamp per source so one unit folds each
 /// source into its metadata key once, in first-use order.
 const SourceDigests = struct {
+    allocator: std.mem.Allocator,
     src: Source,
     digests: []?fragments.Digest,
     stamps: []usize,
     stamp: usize = 0,
+    /// The sources the last `fold` added, in first-use order.
+    last: std.ArrayList(u32) = .empty,
+    /// Each source's path, for looking a stored source up by it.
+    paths: std.StringHashMapUnmanaged(u32) = .empty,
 
     fn init(a: std.mem.Allocator, src: Source) GenerateError!SourceDigests {
         const count = @max(1, src.origins.len);
@@ -819,11 +1176,12 @@ const SourceDigests = struct {
         @memset(digests, null);
         const stamps = try a.alloc(usize, count);
         @memset(stamps, 0);
-        return .{ .src = src, .digests = digests, .stamps = stamps };
+        return .{ .allocator = a, .src = src, .digests = digests, .stamps = stamps };
     }
     /// Add to `key` every source `code`'s positions fall in, in first-use order.
-    fn fold(self: *SourceDigests, key: *fragments.MetaKey, code: []const bytecode.Instruction) void {
+    fn fold(self: *SourceDigests, key: *fragments.MetaKey, code: []const bytecode.Instruction) GenerateError!void {
         self.stamp += 1;
+        self.last.clearRetainingCapacity();
         var current: ?usize = null;
         for (code) |instruction| {
             const origin = self.originOf(instruction.span.start, current);
@@ -831,7 +1189,18 @@ const SourceDigests = struct {
             if (self.stamps[origin] == self.stamp) continue;
             self.stamps[origin] = self.stamp;
             key.source(self.digest(origin));
+            try self.last.append(self.allocator, @intCast(origin));
         }
+    }
+    /// The path of source `origin`.
+    fn path(self: *const SourceDigests, origin: usize) []const u8 {
+        return if (self.src.origins.len == 0) self.src.path else self.src.origins[origin].original.path;
+    }
+    /// The digest of the source at `wanted`, or null when no source has that path.
+    fn digestAt(self: *SourceDigests, wanted: []const u8) GenerateError!?fragments.Digest {
+        if (self.paths.count() == 0) for (0..self.digests.len) |origin| try self.paths.put(self.allocator, self.path(origin), @intCast(origin));
+        const origin = self.paths.get(wanted) orelse return null;
+        return self.digest(origin);
     }
     /// The index of the source `offset` falls in, as `Source.locate` finds
     /// it: the last one starting at or before it. `hint` is tried first,
@@ -900,13 +1269,28 @@ fn copyStates(a: std.mem.Allocator, states: []const ?[]const typed.Type) Generat
 /// so the caller omits the root protocol around it. `own` is each function's
 /// answer from its own first-pass text (`unitAllocates`), so the analysis
 /// cannot drift from the lowering it describes.
-fn allocateAnalysis(a: std.mem.Allocator, program: bytecode.Program, own: []const bool) GenerateError![]bool {
+fn allocateAnalysis(a: std.mem.Allocator, program: bytecode.Program, own: []const bool, reuse: *const Reuse) GenerateError![]bool {
     const may = try a.dupe(bool, own);
+    // A stood-in function's calls after inlining are its record's (EMIT-STANDIN-1).
+    const stood = try a.alloc(?[]const u32, program.functions.len);
+    @memset(stood, null);
+    if (reuse.standin) |standin| for (stood, 0..) |*calls, index| {
+        const record = reuse.stood(index) orelse continue;
+        calls.* = try standin.indices(a, record.facts.calls);
+    };
     var changed = true;
     while (changed) {
         changed = false;
-        for (program.functions, 0..) |function, index| {
+        for (program.functions, stood, 0..) |function, recorded, index| {
             if (may[index]) continue;
+            if (recorded) |calls| {
+                for (calls) |callee| if (may[callee]) {
+                    may[index] = true;
+                    changed = true;
+                    break;
+                };
+                continue;
+            }
             for (function.scope.instructions) |instruction| {
                 const callee = switch (instruction.op) {
                     .call => |id| @backingInt(id),

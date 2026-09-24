@@ -2722,7 +2722,7 @@ fn lowerForReceipt(init: Context, compilation: *language.project_compile.Compila
         error.SourceError => return false,
         else => return err,
     };
-    if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
+    if (compilation.code != null) recordLoweredCount(init, compilation.loweredCount());
     return true;
 }
 
@@ -3329,7 +3329,7 @@ fn featureReport(init: std.process.Init) !void {
 fn emitMeasuredNative(init: Context, compilation: anytype, policy: language.native_interface.Policy) ![]u8 {
     init.timings.begin(lowering_phase, false);
     try compilation.emitWithOptions(policy.drop_debug);
-    if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
+    if (compilation.code != null) recordLoweredCount(init, if (@hasDecl(@TypeOf(compilation.*), "loweredCount")) compilation.loweredCount() else compilation.code.?.functions.len);
     init.timings.begin("native_emission", false);
     // A single-file compilation has no fragment store.
     const reuse: ?language.qbe_fragments.Reuse = if (@hasField(@TypeOf(compilation.*), "reuse")) compilation.reuse else null;
@@ -3339,6 +3339,11 @@ fn emitMeasuredNative(init: Context, compilation: anytype, policy: language.nati
     // function, so the fragment count is observed at the emission site: a unit
     // answered from the fragment store is reused, not emitted.
     if (compilation.code) |code| recordEmission(init, reuse, before, code.functions.len);
+    // EMIT-STANDIN-1: an executable's emission may lower more functions than
+    // it started with; the count is what it lowered in the end.
+    if (reuse) |configured| if (configured.standins != null) {
+        recordLoweredCount(init, configured.store.statistics.standin.lowered - before.?.standin.lowered);
+    };
     init.timings.end();
     return generated;
 }
@@ -3356,7 +3361,9 @@ fn recordEmission(init: Context, reuse: ?language.qbe_fragments.Reuse, before: ?
     const configured = reuse orelse return setWork(init, .emitted_fragments, total, 0);
     const prior = before orelse language.qbe_fragments.Statistics{};
     const after = configured.store.statistics;
-    setWork(init, .emitted_fragments, after.misses - prior.misses, after.hits - prior.hits);
+    // A unit an executable's emission took from its function's record without
+    // lowering the function (EMIT-STANDIN-1) is reused as well.
+    setWork(init, .emitted_fragments, after.misses - prior.misses, (after.hits - prior.hits) + (after.standin.reused - prior.standin.reused));
 }
 
 /// Lower and emit only functions named in `select_file`. The file contains one
