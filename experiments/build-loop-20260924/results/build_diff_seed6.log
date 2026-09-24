@@ -1,0 +1,151 @@
+ok step 1 (compiler.my: int literal; value.my: swap fields) built, 66 runs agree
+ok step 2 (table.my: int literal) built, 66 runs agree
+ok step 3 (natives.my: body no-op) built, 66 runs agree
+ok step 4 (vm.my: int literal) built, 66 runs agree
+ok step 5 (heap.my: body no-op) built, 66 runs agree
+ok step 6 (object.my: op + 1->+ 2) built, 66 runs agree
+ok step 7 (chunk.my: int literal) built, 66 runs agree
+ok step 8 (output.my: body no-op) built, 66 runs agree
+ok step 9 (parser.my: bytes literal) built, 66 runs agree
+ok step 10 (main.my: body no-op; table.my: body no-op) built, 66 runs agree
+ok step 11 (chunk.my: int literal) built, 66 runs agree
+ok step 12 (object.my: int literal) built, 66 runs agree
+ok step 13 (table.my: int literal; heap.my: body no-op) built, 66 runs agree
+ok step 14 (heap.my: int literal) built, 66 runs agree
+ok step 15 (heap.my: int literal; natives.my: bytes literal) built, 66 runs agree
+ok step 16 (interpreter.my: int literal) built, 66 runs agree
+ok step 17 (chunk.my: int literal) built, 66 runs agree
+ok step 18 (heap.my: int literal) built, 66 runs agree
+ok step 19 (resolver.my: bytes literal) built, 66 runs agree
+ok step 20 (interpreter.my: body no-op; parser.my: bytes literal) built, 66 runs agree
+ok step 21 (heap.my: swap fields) built, 66 runs agree
+ok step 22 (heap.my: int literal) built, 66 runs agree
+ok step 23 (output.my: body no-op) built, 66 runs agree
+ok step 24 (ast.my: swap fields) built, 66 runs agree
+ok step 25 (lox_strings.my: int literal) built, 66 runs agree
+ok step 26 (heap.my: int literal) built, 66 runs agree
+ok step 27 (parser.my: bytes literal) built, 66 runs agree
+ok step 28 (main.my: int literal) built, 66 runs agree
+ok step 29 (interpreter.my: body no-op) built, 66 runs agree
+ok step 30 (driver.my: swap fields) built, 66 runs agree
+ok step 31 (scanner.my: int literal) built, 66 runs agree
+ok step 32 (resolver.my: int literal) built, 66 runs agree
+ok step 33 (scanner.my: int literal; vm.my: body no-op) built, 66 runs agree
+ok step 34 (interpreter.my: body no-op) built, 66 runs agree
+ok step 35 (heap.my: swap fields) built, 66 runs agree
+ok step 36 (output.my: swap fields) built, 66 runs agree
+ok step 37 (main.my: int literal) built, 66 runs agree
+ok step 38 (table.my: int literal) built, 66 runs agree
+ok step 39 (value.my: int literal) built, 66 runs agree
+ok step 40 (vm.my: body no-op; compiler.my: int literal) built, 66 runs agree
+ok step 41 (driver.my: body no-op; interpreter.my: int literal) built, 66 runs agree
+ok step 42 (lox_strings.my: int literal) built, 66 runs agree
+ok step 43 (heap.my: swap fields) built, 66 runs agree
+ok step 44 (resolver.my: int literal; scanner.my: int literal) built, 66 runs agree
+ok step 45 (vm.my: body no-op) built, 66 runs agree
+ok step 46 (vm.my: body no-op; parser.my: bytes literal) built, 66 runs agree
+ok step 47 (parser.my: bytes literal) built, 66 runs agree
+ok step 48 (interpreter.my: int literal) built, 66 runs agree
+ok step 49 (driver.my: int literal) built, 66 runs agree
+ok step 50 (compiler.my: bytes literal) built, 66 runs agree
+ok step 51 (compiler.my: swap fields; ast.my: add function) built, 66 runs agree
+ok step 52 (lox_strings.my: op ==->!=) built, 66 runs agree
+ok step 53 (compiler.my: body no-op) built, 66 runs agree
+ok step 54 (driver.my: int literal) built, 66 runs agree
+ok step 55 (parser.my: int literal) built, 66 runs agree
+ok step 56 (driver.my: int literal) built, 66 runs agree
+ok step 57 (heap.my: body no-op) built, 66 runs agree
+ok step 58 (scanner.my: body no-op) built, 66 runs agree
+ok step 59 (ast.my: body no-op; lox_strings.my: body no-op) built, 66 runs agree
+ok step 60 (table.my: int literal; ast.my: bytes literal) built, 66 runs agree
+ok step 61 (chunk.my: swap fields) built, 66 runs agree
+ok step 62 (parser.my: body no-op; compiler.my: int literal) built, 66 runs agree
+ok step 63 (driver.my: swap fields) built, 66 runs agree
+ok step 64 (chunk.my: int literal) built, 66 runs agree
+ok step 65 (resolver.my: op - 1->- 2) built, 66 runs agree
+ok step 66 (parser.my: swap fields) built, 66 runs agree
+ok step 67 (natives.my: add function) built, 66 runs agree
+ok step 68 (value.my: swap fields) built, 66 runs agree
+ok step 69 (main.my: add function) built, 66 runs agree
+ok step 70 (natives.my: body no-op) built, 66 runs agree
+ok step 71 (parser.my: body no-op) built, 66 runs agree
+ok step 72 (output.my: int literal; main.my: int literal) built, 66 runs agree
+ok step 73 (resolver.my: bytes literal) built, 66 runs agree
+ok step 74 (natives.my: body no-op) built, 66 runs agree
+ok step 75 (table.my: int literal) built, 66 runs agree
+ok step 76 (interpreter.my: bytes literal) built, 66 runs agree
+ok step 77 (interpreter.my: bytes literal) built, 66 runs agree
+ok step 78 (scanner.my: int literal) built, 66 runs agree
+ok step 79 (table.my: int literal; output.my: bytes literal) built, 66 runs agree
+ok step 80 (parser.my: bytes literal; parser.my: bytes literal) built, 66 runs agree
+ok step 81 (natives.my: body no-op; interpreter.my: bytes literal) built, 66 runs agree
+ok step 82 (scanner.my: bytes literal) built, 66 runs agree
+ok step 83 (heap.my: swap fields) built, 66 runs agree
+ok step 84 (resolver.my: int literal) built, 66 runs agree
+ok step 85 (value.my: int literal; table.my: int literal) built, 66 runs agree
+ok step 86 (table.my: op - 1->- 2) built, 66 runs agree
+ok step 87 (lox_strings.my: int literal) built, 66 runs agree
+ok step 88 (output.my: int literal) built, 66 runs agree
+ok step 89 (table.my: int literal; natives.my: body no-op) built, 66 runs agree
+ok step 90 (table.my: swap fields) built, 66 runs agree
+ok step 91 (resolver.my: int literal) built, 66 runs agree
+ok step 92 (scanner.my: int literal) built, 66 runs agree
+ok step 93 (lox_strings.my: int literal) built, 66 runs agree
+ok step 94 (resolver.my: bytes literal) built, 66 runs agree
+ok step 95 (output.my: bytes literal) built, 66 runs agree
+ok step 96 (ast.my: body no-op; scanner.my: body no-op) built, 66 runs agree
+ok step 97 (scanner.my: int literal) built, 66 runs agree
+ok step 98 (scanner.my: body no-op) built, 66 runs agree
+ok step 99 (compiler.my: body no-op; scanner.my: int literal) built, 66 runs agree
+ok step 100 (ast.my: body no-op) built, 66 runs agree
+ok step 101 (object.my: int literal) built, 66 runs agree
+ok step 102 (lox_strings.my: body no-op) built, 66 runs agree
+ok step 103 (vm.my: int literal) built, 66 runs agree
+ok step 104 (main.my: int literal) built, 66 runs agree
+ok step 105 (output.my: body no-op) built, 66 runs agree
+ok step 106 (chunk.my: int literal) built, 66 runs agree
+ok step 107 (resolver.my: int literal; resolver.my: swap fields) built, 66 runs agree
+ok step 108 (chunk.my: int literal) built, 66 runs agree
+ok step 109 (vm.my: body no-op; chunk.my: int literal) built, 66 runs agree
+ok step 110 (object.my: int literal) built, 66 runs agree
+ok step 111 (scanner.my: int literal; lox_strings.my: body no-op) built, 66 runs agree
+ok step 112 (scanner.my: body no-op) built, 66 runs agree
+ok step 113 (driver.my: body no-op) built, 66 runs agree
+ok step 114 (parser.my: body no-op) built, 66 runs agree
+ok step 115 (object.my: int literal; compiler.my: bytes literal) built, 66 runs agree
+ok step 116 (output.my: swap fields) built, 66 runs agree
+ok step 117 (heap.my: swap fields) built, 66 runs agree
+ok step 118 (parser.my: bytes literal) built, 66 runs agree
+ok step 119 (driver.my: body no-op) built, 66 runs agree
+ok step 120 (value.my: body no-op) built, 66 runs agree
+ok step 121 (value.my: body no-op) built, 66 runs agree
+ok step 122 (parser.my: bytes literal) built, 66 runs agree
+ok step 123 (interpreter.my: int literal; heap.my: body no-op) built, 66 runs agree
+ok step 124 (ast.my: swap fields; table.my: int literal) built, 66 runs agree
+ok step 125 (vm.my: int literal; heap.my: int literal) built, 66 runs agree
+ok step 126 (value.my: int literal; scanner.my: body no-op) built, 66 runs agree
+ok step 127 (resolver.my: int literal) built, 66 runs agree
+ok step 128 (natives.my: body no-op) built, 66 runs agree
+ok step 129 (compiler.my: int literal; ast.my: swap fields) built, 66 runs agree
+ok step 130 (chunk.my: int literal; ast.my: body no-op) built, 66 runs agree
+ok step 131 (vm.my: bytes literal) built, 66 runs agree
+ok step 132 (natives.my: add function) built, 66 runs agree
+ok step 133 (output.my: add function) built, 66 runs agree
+ok step 134 (table.my: add function) built, 66 runs agree
+ok step 135 (heap.my: swap fields) built, 66 runs agree
+ok step 136 (value.my: int literal) built, 66 runs agree
+ok step 137 (compiler.my: int literal) built, 66 runs agree
+ok step 138 (heap.my: op - 1->- 2) built, 66 runs agree
+ok step 139 (resolver.my: bytes literal; parser.my: op + 1->+ 2) built, 66 runs agree
+ok step 140 (heap.my: swap fields) built, 66 runs agree
+ok step 141 (driver.my: body no-op) built, 66 runs agree
+ok step 142 (lox_strings.my: body no-op; heap.my: int literal) built, 66 runs agree
+ok step 143 (interpreter.my: body no-op) built, 66 runs agree
+ok step 144 (compiler.my: body no-op) built, 66 runs agree
+ok step 145 (interpreter.my: int literal; interpreter.my: bytes literal) built, 66 runs agree
+ok step 146 (output.my: op + 1->+ 2) built, 66 runs agree
+ok step 147 (heap.my: body no-op) built, 66 runs agree
+ok step 148 (main.my: op ==->!=) built, 66 runs agree
+ok step 149 (output.my: op >->>=) built, 66 runs agree
+ok step 150 (main.my: op ==->!=) built, 66 runs agree
+DONE steps=150 mismatches=0 built=150 rejected=0 runs_compared=9900

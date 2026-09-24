@@ -1,0 +1,425 @@
+pristine cold check rc=0
+MISMATCH step 1 (heap.my: rename field): cached rc=1 cold rc=1
+  cached stderr: heap.my:72:112: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: base, closure, code, function, ip_x, upvalues
+              frames.append(CallFrame(closure=value.NO_OBJ, function=function, code=function.code.code, upvalues=[], ip=0, base=0))
+                                                                                                                     ^
+    vm.my:249:29: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: base, closure, code, function, ip_x, upvalues
+          byte = frame.code[frame.ip]
+                                  ^
+    vm.
+  cold   stderr: heap.my:72:112: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: base, closure, code, function, ip_x, upvalues
+              frames.append(CallFrame(closure=value.NO_OBJ, function=function, code=function.code.code, upvalues=[], ip=0, base=0))
+                                                                                                                     ^
+    vm.my:38:61: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: base, closure, code, function, ip_x, upvalues
+              _ = line.append_int(frame.function.code.lines[frame.ip - 1])
+ok step 2 (main.my: body no-op) rc=0
+ok step 3 (compiler.my: rename def) rc=1
+ok step 4 (object.my: rename field) rc=1
+ok step 5 (vm.my: drop mut) rc=1
+ok step 6 (ast.my: body no-op) rc=0
+ok step 7 (lox_strings.my: unpublic) rc=0
+ok step 8 (output.my: body type error; vm.my: drop mut) rc=1
+ok step 9 (interpreter.my: body type error; vm.my: add param) rc=1
+ok step 10 (interpreter.my: rename def) rc=1
+ok step 11 (main.my: add param) rc=1
+ok step 12 (value.my: ret bool->int; main.my: body no-op) rc=1
+ok step 13 (lox_strings.my: body no-op) rc=0
+ok step 14 (heap.my: rename field) rc=1
+ok step 15 (resolver.my: drop mut) rc=1
+ok step 16 (scanner.my: rename def; scanner.my: ret bool->int) rc=1
+ok step 17 (vm.my: body type error) rc=1
+ok step 18 (interpreter.my: add param; output.my: body type error) rc=1
+ok step 19 (scanner.my: add param) rc=1
+ok step 20 (resolver.my: body no-op) rc=0
+ok step 21 (parser.my: body no-op) rc=0
+ok step 22 (object.my: param int->float) rc=1
+ok step 23 (heap.my: add param) rc=1
+ok step 24 (chunk.my: body type error) rc=1
+ok step 25 (driver.my: body no-op; compiler.my: body no-op) rc=0
+ok step 26 (main.my: body type error) rc=1
+ok step 27 (vm.my: drop mut) rc=1
+ok step 28 (compiler.my: body no-op) rc=0
+ok step 29 (natives.my: body no-op) rc=0
+ok step 30 (table.my: rename def) rc=1
+ok step 31 (lox_strings.my: rename def) rc=1
+ok step 32 (main.my: add param) rc=1
+ok step 33 (driver.my: add param) rc=1
+ok step 34 (resolver.my: add param) rc=1
+ok step 35 (driver.my: drop mut) rc=1
+ok step 36 (scanner.my: body no-op) rc=0
+ok step 37 (compiler.my: body no-op) rc=0
+ok step 38 (output.my: add param) rc=1
+ok step 39 (lox_strings.my: body no-op; object.my: rename def) rc=1
+ok step 40 (lox_strings.my: add param) rc=1
+ok step 41 (resolver.my: drop mut; value.my: rename field) rc=1
+ok step 42 (resolver.my: drop mut) rc=1
+ok step 43 (heap.my: body no-op) rc=0
+ok step 44 (ast.my: rename field; resolver.my: drop mut) rc=1
+ok step 45 (main.my: add param) rc=1
+ok step 46 (compiler.my: body no-op) rc=0
+ok step 47 (heap.my: rename field) rc=1
+ok step 48 (vm.my: body type error) rc=1
+ok step 49 (value.my: body no-op) rc=0
+ok step 50 (parser.my: body no-op) rc=0
+ok step 51 (driver.my: int literal) rc=0
+ok step 52 (main.my: body type error) rc=1
+ok step 53 (driver.my: body no-op; interpreter.my: body type error) rc=1
+ok step 54 (chunk.my: body no-op) rc=0
+ok step 55 (natives.my: add param) rc=1
+ok step 56 (compiler.my: rename def) rc=1
+ok step 57 (vm.my: body type error) rc=1
+ok step 58 (parser.my: body type error; value.my: rename field) rc=1
+ok step 59 (object.my: rename field) rc=1
+ok step 60 (main.my: body type error) rc=1
+ok step 61 (heap.my: body type error; compiler.my: drop mut) rc=1
+ok step 62 (chunk.my: rename field) rc=1
+ok step 63 (interpreter.my: body no-op) rc=0
+ok step 64 (value.my: rename def; heap.my: body type error) rc=1
+ok step 65 (output.my: unpublic; compiler.my: body type error) rc=1
+ok step 66 (natives.my: param int->float; value.my: body no-op) rc=1
+ok step 67 (resolver.my: body type error) rc=1
+ok step 68 (heap.my: add param) rc=1
+ok step 69 (table.my: drop mut) rc=1
+ok step 70 (scanner.my: add param) rc=1
+ok step 71 (output.my: body type error) rc=1
+ok step 72 (heap.my: rename def; parser.my: body type error) rc=1
+ok step 73 (scanner.my: body type error) rc=1
+ok step 74 (chunk.my: unpublic; ast.my: field int->float) rc=1
+ok step 75 (natives.my: param int->float) rc=1
+ok step 76 (resolver.my: drop mut) rc=1
+ok step 77 (resolver.my: add param) rc=1
+ok step 78 (parser.my: body type error) rc=1
+ok step 79 (value.my: body type error) rc=1
+ok step 80 (vm.my: add param) rc=1
+ok step 81 (ast.my: rename field) rc=1
+ok step 82 (resolver.my: body no-op) rc=0
+ok step 83 (compiler.my: add param) rc=1
+ok step 84 (interpreter.my: body type error) rc=1
+ok step 85 (heap.my: body no-op) rc=0
+ok step 86 (heap.my: param int->float; ast.my: body type error) rc=1
+ok step 87 (compiler.my: body type error; resolver.my: unpublic) rc=1
+ok step 88 (value.my: unpublic) rc=1
+ok step 89 (table.my: body no-op) rc=0
+ok step 90 (object.my: unpublic; vm.my: ret bool->int) rc=1
+ok step 91 (driver.my: rename def; interpreter.my: body type error) rc=1
+ok step 92 (heap.my: ret bool->int) rc=1
+ok step 93 (value.my: rename field) rc=1
+ok step 94 (output.my: body type error) rc=1
+ok step 95 (ast.my: rename field; scanner.my: rename field) rc=1
+ok step 96 (compiler.my: ret int->bool; lox_strings.my: add param) rc=1
+ok step 97 (driver.my: body type error) rc=1
+ok step 98 (output.my: unpublic) rc=1
+ok step 99 (chunk.my: rename field; output.my: unpublic) rc=1
+ok step 100 (lox_strings.my: add param) rc=1
+ok step 101 (interpreter.my: add param) rc=1
+ok step 102 (interpreter.my: body type error; main.my: ret int->bool) rc=1
+ok step 103 (main.my: add param) rc=1
+ok step 104 (main.my: rename def) rc=1
+ok step 105 (table.my: drop mut) rc=1
+ok step 106 (parser.my: rename field) rc=1
+ok step 107 (compiler.my: drop mut) rc=1
+ok step 108 (main.my: ret int->bool; parser.my: ret bool->int) rc=1
+ok step 109 (object.my: ret int->bool; interpreter.my: body type error) rc=1
+ok step 110 (lox_strings.my: unpublic) rc=1
+ok step 111 (scanner.my: rename def) rc=1
+ok step 112 (value.my: body type error) rc=1
+ok step 113 (driver.my: body type error) rc=1
+ok step 114 (chunk.my: add param) rc=1
+ok step 115 (value.my: rename def; vm.my: rename def) rc=1
+ok step 116 (table.my: body no-op; resolver.my: drop mut) rc=1
+ok step 117 (chunk.my: unpublic; lox_strings.my: add param) rc=1
+ok step 118 (vm.my: body no-op; interpreter.my: rename def) rc=1
+ok step 119 (value.my: rename field) rc=1
+ok step 120 (output.my: body type error) rc=1
+ok step 121 (object.my: rename def; chunk.my: rename field) rc=1
+ok step 122 (table.my: unpublic) rc=1
+ok step 123 (lox_strings.my: unpublic) rc=1
+ok step 124 (interpreter.my: add param; natives.my: body no-op) rc=1
+MISMATCH step 125 (chunk.my: rename field; object.my: param int->float): cached rc=1 cold rc=1
+  cached stderr: chunk.my:55:27: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: code, constants, lines_x
+          return Chunk(code=[], lines=[], constants=[])
+                                ^
+    chunk.my:60:12: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: code, constants, lines_x
+          target.lines.append(line)
+                 ^
+    vm.my:375:48: error[E_TYPE]: expected float, found int
+          closure = object.new_closure(function_ref, function.upvalue_count)
+                                                     ^
+    
+  cold   stderr: chunk.my:55:27: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: code, constants, lines_x
+          return Chunk(code=[], lines=[], constants=[])
+                                ^
+    chunk.my:60:12: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: code, constants, lines_x
+          target.lines.append(line)
+                 ^
+    vm.my:38:49: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: code, constants, lines_x
+              _ = line.append_int(frame.function.code.lines[frame.ip - 1])
+                                   
+ok step 126 (value.my: body type error; output.my: drop mut) rc=1
+ok step 127 (object.my: rename field) rc=1
+ok step 128 (driver.my: ret int->bool) rc=1
+ok step 129 (scanner.my: body type error) rc=1
+ok step 130 (value.my: rename def) rc=1
+ok step 131 (ast.my: rename field) rc=1
+ok step 132 (scanner.my: param int->float) rc=1
+ok step 133 (scanner.my: add param) rc=1
+ok step 134 (scanner.my: rename def) rc=1
+ok step 135 (natives.my: body type error) rc=1
+MISMATCH step 136 (object.my: rename field; output.my: body no-op): cached rc=1 cold rc=1
+  cached stderr: heap.my:250:47: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: fields_x, klass
+                  mark_table(mut rt.marker, payload.fields)
+                                                    ^
+    interpreter.my:414:97: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: fields_x, klass
+          instance = heap.allocate(mut it.rt, object.Obj.instance(object.InstanceObj(klass=class_ref, fields=table.new_table())))
+                                                                                                      ^
+    vm.my:152:104: error[E_UNKNOWN_
+  cold   stderr: heap.my:250:47: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: fields_x, klass
+                  mark_table(mut rt.marker, payload.fields)
+                                                    ^
+    interpreter.my:260:38: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: fields_x, klass
+                  match table.get(instance.fields, node.name_ref, hash):
+                                           ^
+    interpreter.my:283:31: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: fields_x, klass
+                  fields = in
+ok step 137 (output.my: body type error) rc=1
+ok step 138 (driver.my: rename def) rc=1
+ok step 139 (ast.my: body no-op) rc=0
+ok step 140 (lox_strings.my: body type error) rc=1
+ok step 141 (main.my: body no-op) rc=0
+ok step 142 (table.my: add param) rc=1
+ok step 143 (table.my: ret bool->int; ast.my: rename field) rc=1
+ok step 144 (object.my: rename field) rc=1
+ok step 145 (output.my: body type error) rc=1
+ok step 146 (table.my: rename def) rc=1
+ok step 147 (interpreter.my: rename def) rc=1
+ok step 148 (interpreter.my: drop mut) rc=1
+ok step 149 (value.my: add param; parser.my: rename def) rc=1
+ok step 150 (scanner.my: body no-op) rc=0
+ok step 151 (table.my: add param) rc=1
+ok step 152 (compiler.my: body no-op) rc=0
+ok step 153 (compiler.my: body type error; heap.my: body type error) rc=1
+ok step 154 (resolver.my: param int->float) rc=1
+ok step 155 (resolver.my: body no-op) rc=0
+ok step 156 (driver.my: add param) rc=1
+ok step 157 (table.my: body no-op; value.my: add param) rc=1
+ok step 158 (scanner.my: body type error) rc=1
+ok step 159 (ast.my: add param; value.my: ret bool->int) rc=1
+ok step 160 (chunk.my: unpublic) rc=1
+ok step 161 (driver.my: body no-op) rc=0
+ok step 162 (main.my: body type error; output.my: body type error) rc=1
+ok step 163 (main.my: body no-op; table.my: unpublic) rc=1
+ok step 164 (main.my: add param) rc=1
+ok step 165 (object.my: rename def) rc=1
+ok step 166 (value.my: unpublic; compiler.my: add param) rc=1
+ok step 167 (parser.my: body type error; parser.my: body type error) rc=1
+ok step 168 (heap.my: add param) rc=1
+ok step 169 (object.my: field int->float) rc=1
+ok step 170 (heap.my: drop mut) rc=1
+ok step 171 (value.my: unpublic; main.my: add param) rc=1
+ok step 172 (chunk.my: unpublic) rc=1
+ok step 173 (ast.my: field int->float) rc=1
+ok step 174 (chunk.my: body no-op; lox_strings.my: body type error) rc=1
+ok step 175 (output.my: rename def) rc=1
+ok step 176 (compiler.my: body type error) rc=1
+ok step 177 (interpreter.my: rename field; scanner.my: drop mut) rc=1
+ok step 178 (heap.my: rename def) rc=1
+ok step 179 (scanner.my: rename def) rc=1
+ok step 180 (heap.my: rename field; compiler.my: body no-op) rc=1
+ok step 181 (natives.my: add param; vm.my: body type error) rc=1
+ok step 182 (driver.my: add param) rc=1
+ok step 183 (table.my: body type error) rc=1
+ok step 184 (object.my: unpublic; driver.my: add param) rc=1
+ok step 185 (lox_strings.my: add param) rc=1
+ok step 186 (lox_strings.my: unpublic) rc=1
+ok step 187 (main.my: add param; ast.my: rename field) rc=1
+ok step 188 (ast.my: drop mut) rc=1
+ok step 189 (table.my: rename def) rc=1
+ok step 190 (natives.my: body no-op; vm.my: rename def) rc=1
+ok step 191 (interpreter.my: add param) rc=1
+ok step 192 (lox_strings.my: add param) rc=1
+MISMATCH step 193 (object.my: rename field): cached rc=1 cold rc=1
+  cached stderr: heap.my:256:48: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: arity, code, name_x, upvalue_count
+                  mark_object(mut rt.marker, payload.name)
+                                                     ^
+    object.my:120:74: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: arity, code, name_x, upvalue_count
+          return FunctionObj(arity=0, upvalue_count=0, code=chunk.new_chunk(), name=value.NO_OBJ)
+                                                                               ^
+    output.my:80:17: error[E_UNKNOWN_FIELD]: field does n
+  cold   stderr: heap.my:256:48: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: arity, code, name_x, upvalue_count
+                  mark_object(mut rt.marker, payload.name)
+                                                     ^
+    object.my:120:74: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: arity, code, name_x, upvalue_count
+          return FunctionObj(arity=0, upvalue_count=0, code=chunk.new_chunk(), name=value.NO_OBJ)
+                                                                               ^
+    output.my:80:17: error[E_UNKNOWN_FIELD]: field does n
+ok step 194 (heap.my: body type error) rc=1
+ok step 195 (resolver.my: body type error) rc=1
+ok step 196 (parser.my: body no-op) rc=0
+ok step 197 (main.my: ret int->bool) rc=1
+ok step 198 (value.my: add param) rc=1
+ok step 199 (natives.my: rename def) rc=1
+ok step 200 (compiler.my: add param) rc=1
+ok step 201 (natives.my: drop mut) rc=1
+ok step 202 (driver.my: body type error; ast.my: body type error) rc=1
+ok step 203 (interpreter.my: add param) rc=1
+ok step 204 (main.my: body no-op; ast.my: rename field) rc=1
+MISMATCH step 205 (interpreter.my: rename field): cached rc=1 cold rc=1
+  cached stderr: interpreter.my:45:42: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: line_x, message
+          return RuntimeError(message=message, line=line)
+                                               ^
+    
+  cold   stderr: interpreter.my:45:42: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: line_x, message
+          return RuntimeError(message=message, line=line)
+                                               ^
+    interpreter.my:606:70: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: line_x, message
+                              output.error_line(mut it.out, f"[line {error.line}]".encode())
+                                                                           ^
+    
+ok step 206 (heap.my: field int->float) rc=1
+ok step 207 (interpreter.my: rename def) rc=1
+ok step 208 (compiler.my: body type error) rc=1
+ok step 209 (resolver.my: add param) rc=1
+ok step 210 (lox_strings.my: body type error; output.my: rename def) rc=1
+ok step 211 (main.my: add param) rc=1
+ok step 212 (scanner.my: rename def) rc=1
+ok step 213 (vm.my: drop mut) rc=1
+ok step 214 (scanner.my: add param) rc=1
+ok step 215 (compiler.my: drop mut) rc=1
+ok step 216 (vm.my: rename def) rc=1
+ok step 217 (interpreter.my: body no-op) rc=0
+ok step 218 (compiler.my: body type error) rc=1
+ok step 219 (value.my: rename def) rc=1
+ok step 220 (driver.my: body no-op) rc=0
+ok step 221 (object.my: unpublic; lox_strings.my: add param) rc=1
+ok step 222 (table.my: body no-op; resolver.my: body no-op) rc=0
+ok step 223 (lox_strings.my: add param) rc=1
+ok step 224 (ast.my: rename field) rc=1
+ok step 225 (heap.my: body type error; table.my: drop mut) rc=1
+ok step 226 (value.my: add param; ast.my: rename field) rc=1
+ok step 227 (vm.my: body no-op) rc=0
+ok step 228 (compiler.my: param int->float; lox_strings.my: body type error) rc=1
+ok step 229 (heap.my: add param; interpreter.my: add param) rc=1
+MISMATCH step 230 (heap.my: rename field): cached rc=1 cold rc=1
+  cached stderr: heap.my:72:99: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: base, closure, code, function, ip, upvalues_x
+              frames.append(CallFrame(closure=value.NO_OBJ, function=function, code=function.code.code, upvalues=[], ip=0, base=0))
+                                                                                                        ^
+    vm.my:288:42: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: base, closure, code, function, ip, upvalues_x
+          upvalue = heap.upvalue_obj(rt, frame.upvalues[read_byte(mut frame)])
+            
+  cold   stderr: heap.my:72:99: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: base, closure, code, function, ip, upvalues_x
+              frames.append(CallFrame(closure=value.NO_OBJ, function=function, code=function.code.code, upvalues=[], ip=0, base=0))
+                                                                                                        ^
+    vm.my:138:11: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: base, closure, code, function, ip, upvalues_x
+          frame.upvalues = heap.closure_obj(rt, closure).upvalues
+                ^
+    vm.my:2
+ok step 231 (ast.my: rename field) rc=1
+MISMATCH step 232 (scanner.my: rename field): cached rc=1 cold rc=1
+  cached stderr: ast.my:200:43: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: kind, length, line, message, start_x
+          _ = buffer.append_range(source, token.start, token.start + token.length)
+                                                ^
+    ast.my:223:51: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: kind, length, line, message, start_x
+                  _ = buffer.append_range(source, token.start + 1, token.start + token.length - 1)
+                                                        ^
+    scanner.my:71:30: error[E_UNKNOWN_FIELD]: field does not
+  cold   stderr: ast.my:200:43: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: kind, length, line, message, start_x
+          _ = buffer.append_range(source, token.start, token.start + token.length)
+                                                ^
+    ast.my:223:51: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: kind, length, line, message, start_x
+                  _ = buffer.append_range(source, token.start + 1, token.start + token.length - 1)
+                                                        ^
+    scanner.my:71:30: error[E_UNKNOWN_FIELD]: field does not
+ok step 233 (scanner.my: drop mut; output.my: rename def) rc=1
+ok step 234 (interpreter.my: drop mut) rc=1
+ok step 235 (object.my: rename field) rc=1
+ok step 236 (parser.my: body no-op) rc=0
+ok step 237 (scanner.my: body no-op) rc=0
+ok step 238 (lox_strings.my: body type error) rc=1
+ok step 239 (ast.my: field int->float) rc=1
+ok step 240 (resolver.my: ret int->bool) rc=1
+ok step 241 (parser.my: body no-op; interpreter.my: add param) rc=1
+ok step 242 (resolver.my: rename def) rc=1
+ok step 243 (resolver.my: rename field) rc=1
+ok step 244 (scanner.my: ret bool->int; heap.my: add param) rc=1
+ok step 245 (driver.my: rename def) rc=1
+ok step 246 (driver.my: field int->float) rc=1
+ok step 247 (scanner.my: body type error) rc=1
+ok step 248 (chunk.my: body no-op; resolver.my: body no-op) rc=0
+ok step 249 (value.my: rename def) rc=1
+ok step 250 (vm.my: rename def) rc=1
+ok step 251 (compiler.my: rename def) rc=1
+ok step 252 (object.my: rename field) rc=1
+ok step 253 (resolver.my: rename def) rc=1
+ok step 254 (driver.my: add param) rc=1
+ok step 255 (heap.my: add param; vm.my: drop mut) rc=1
+ok step 256 (vm.my: add param) rc=1
+ok step 257 (vm.my: body type error; table.my: rename def) rc=1
+ok step 258 (output.my: add param) rc=1
+ok step 259 (scanner.my: rename def; interpreter.my: body no-op) rc=1
+ok step 260 (table.my: body no-op) rc=0
+ok step 261 (ast.my: field int->float) rc=1
+ok step 262 (heap.my: body no-op) rc=0
+ok step 263 (main.my: add param) rc=1
+ok step 264 (heap.my: body no-op) rc=0
+ok step 265 (resolver.my: param int->float) rc=1
+ok step 266 (output.my: rename field) rc=1
+ok step 267 (vm.my: rename def) rc=1
+ok step 268 (main.my: ret int->bool) rc=1
+ok step 269 (resolver.my: rename def) rc=1
+ok step 270 (value.my: body no-op) rc=0
+ok step 271 (parser.my: body no-op) rc=0
+ok step 272 (resolver.my: param int->float) rc=1
+ok step 273 (ast.my: rename field) rc=1
+ok step 274 (compiler.my: rename def) rc=1
+ok step 275 (vm.my: body no-op; lox_strings.my: body type error) rc=1
+ok step 276 (compiler.my: add param; compiler.my: param int->float) rc=1
+ok step 277 (table.my: ret bool->int) rc=1
+ok step 278 (compiler.my: body type error) rc=1
+ok step 279 (output.my: add param) rc=1
+ok step 280 (scanner.my: body type error) rc=1
+ok step 281 (main.my: body type error) rc=1
+MISMATCH step 282 (interpreter.my: rename field; output.my: body no-op): cached rc=1 cold rc=1
+  cached stderr: interpreter.my:45:42: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: line_x, message
+          return RuntimeError(message=message, line=line)
+                                               ^
+    
+  cold   stderr: interpreter.my:45:42: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: line_x, message
+          return RuntimeError(message=message, line=line)
+                                               ^
+    interpreter.my:606:70: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: line_x, message
+                              output.error_line(mut it.out, f"[line {error.line}]".encode())
+                                                                           ^
+    
+ok step 283 (vm.my: rename def) rc=1
+ok step 284 (lox_strings.my: rename def) rc=1
+ok step 285 (output.my: add param) rc=1
+ok step 286 (vm.my: ret bool->int; chunk.my: param int->float) rc=1
+ok step 287 (scanner.my: add param) rc=1
+ok step 288 (lox_strings.my: unpublic) rc=1
+ok step 289 (compiler.my: add param; heap.my: add param) rc=1
+ok step 290 (resolver.my: body type error) rc=1
+ok step 291 (natives.my: body type error) rc=1
+ok step 292 (output.my: body type error; output.my: rename def) rc=1
+ok step 293 (parser.my: rename def) rc=1
+ok step 294 (parser.my: body type error) rc=1
+MISMATCH step 295 (object.my: rename field): cached rc=1 cold rc=1
+  cached stderr: heap.my:72:88: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: arity, code_x, name, upvalue_count
+              frames.append(CallFrame(closure=value.NO_OBJ, function=function, code=function.code.code, upvalues=[], ip=0, base=0))
+                                                                                             ^
+    heap.my:257:37: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: arity, code_x, name, upvalue_count
+                  for constant in payload.code.constants:
+                                          ^
+    object.my:120:50: er
+  cold   stderr: heap.my:72:88: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: arity, code_x, name, upvalue_count
+              frames.append(CallFrame(closure=value.NO_OBJ, function=function, code=function.code.code, upvalues=[], ip=0, base=0))
+                                                                                             ^
+    heap.my:257:37: error[E_UNKNOWN_FIELD]: field does not exist on this record type; declared fields: arity, code_x, name, upvalue_count
+                  for constant in payload.code.constants:
+                                          ^
+    object.my:120:50: er
+ok step 296 (natives.my: body no-op) rc=0
+ok step 297 (lox_strings.my: body no-op) rc=0
+ok step 298 (main.my: add param) rc=1
+ok step 299 (natives.my: add param; heap.my: field int->float) rc=1
+ok step 300 (lox_strings.my: body no-op) rc=0
+DONE steps=300 mismatches=9 cold-clean=43 cold-errors=257
