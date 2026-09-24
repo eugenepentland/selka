@@ -64,6 +64,27 @@ fn frame(hash: *std.crypto.hash.sha2.Sha256, bytes: []const u8) void {
     hash.update(&length);
     hash.update(bytes);
 }
+fn blakeFrame(hash: *std.crypto.hash.Blake3, bytes: []const u8) void {
+    var length: [8]u8 = undefined;
+    std.mem.writeInt(u64, &length, bytes.len, .little);
+    hash.update(&length);
+    hash.update(bytes);
+}
+/// The identity of one published file — inode, size and modification time,
+/// each as 16 hex digits — or null when it cannot be read or is empty. A file
+/// written, truncated or replaced since the stamp was taken has another one.
+fn fileStamp(context: fs.Context, path: []const u8) ?[48]u8 {
+    const stat = std.Io.Dir.cwd().statFile(context.io, path, .{}) catch return null;
+    if (stat.kind != .file or stat.size == 0) return null;
+    const modified: u64 = @bitCast(@as(i64, @truncate(stat.mtime.nanoseconds)));
+    var out: [48]u8 = undefined;
+    _ = std.fmt.bufPrint(&out, "{x:0>16}{x:0>16}{x:0>16}", .{ @as(u64, @truncate(stat.inode)), stat.size, modified }) catch return null;
+    return out;
+}
+/// The version every object key starts with. `v3` moved the key from SHA-256
+/// to BLAKE3 and frames the contract fields instead of their fingerprint, so
+/// no key an older driver published can ever be looked up by this one.
+const object_key_version = "mylang-object-key-v3";
 
 /// QBE-FRAMEMAP-1: a runtime or generated C function that can sit between a
 /// guest frame and the runtime's `fail` keeps a frame pointer wherever it
@@ -344,19 +365,21 @@ pub const Cache = struct {
     pub fn keep(self: Cache, key: []const u8, candidate: []const u8) Error!Object {
         return self.store(key, try self.entry(key, ".o"), candidate);
     }
-    /// SHA-256 over the build environment, the cache contract, the kind and the
-    /// input, each length-framed so no two different tuples share a byte
-    /// stream. The input is hashed where it lies: JSON-encoding every unit's IL
-    /// first cost a warm 50,000-line build a quarter of its driver time.
+    /// BLAKE3 over the build environment, every cache contract field, the kind
+    /// and the input, each length-framed so no two different tuples share a
+    /// byte stream. The input is hashed where it lies: JSON-encoding every
+    /// unit's IL first cost a warm 50,000-line build a quarter of its driver
+    /// time. A warm build keys every guest unit and batch, so the key is BLAKE3
+    /// (BUILD-KEYS-1): the pinned toolchain's SHA-256 runs at about 14 MB/s on
+    /// this project's build hosts, and it used to run twice per key (once more
+    /// for the contract fingerprint, whose fields are now framed directly).
     fn identity(self: Cache, kind: []const u8, input: []const u8) Error![]const u8 {
-        var contract: [64]u8 = undefined;
-        self.contract.fingerprintHex(&contract);
-        var hash = std.crypto.hash.sha2.Sha256.init(.{});
-        hash.update("mylang-object-key-v2");
-        frame(&hash, self.environment);
-        frame(&hash, &contract);
-        frame(&hash, kind);
-        frame(&hash, input);
+        var hash = std.crypto.hash.Blake3.init(.{});
+        hash.update(object_key_version);
+        blakeFrame(&hash, self.environment);
+        inline for (@typeInfo(Contract).@"struct".field_names) |name| blakeFrame(&hash, @field(self.contract, name));
+        blakeFrame(&hash, kind);
+        blakeFrame(&hash, input);
         var digest: [32]u8 = undefined;
         hash.final(&digest);
         return self.context.allocator.dupe(u8, &std.fmt.bytesToHex(digest, .lower));
@@ -371,11 +394,25 @@ pub const Cache = struct {
         const bytes = try self.context.read(candidate);
         const digest = try objectDigest(self.context.allocator, bytes);
         try self.context.republish(candidate, path);
-        try self.context.atomic(try self.entry(key, ".digest"), digest);
+        // BUILD-VERIFY-1: the fingerprint also records the published file's
+        // identity, so a later build accepts the untouched file by `stat`.
+        const sealed = if (fileStamp(self.context, path)) |stamp| try std.fmt.allocPrint(self.context.allocator, "{s}\n{s}", .{ digest, &stamp }) else digest;
+        try self.context.atomic(try self.entry(key, ".digest"), sealed);
         return .{ .key = key, .path = path, .reused = false };
     }
+    /// BUILD-VERIFY-1: a stored object is accepted when its fingerprint file
+    /// records exactly the inode, size and modification time the file has now —
+    /// nothing wrote, truncated or replaced it since its bytes were fingerprinted
+    /// — and otherwise only when its bytes match the recorded length and hash. A
+    /// warm build consults every batch object of the program, and reading and
+    /// hashing all of them cost a 200,000-line build about a tenth of a second.
     fn valid(self: Cache, path: []const u8, checksum: []const u8) bool {
-        const expected = self.context.read(checksum) catch return false;
+        const recorded = self.context.read(checksum) catch return false;
+        const split = std.mem.indexOfScalar(u8, recorded, '\n');
+        const expected = recorded[0 .. split orelse recorded.len];
+        if (split) |at| if (fileStamp(self.context, path)) |stamp| {
+            if (std.mem.eql(u8, recorded[at + 1 ..], &stamp)) return true;
+        };
         const bytes = self.context.read(path) catch return false;
         if (bytes.len == 0) return false;
         const actual = fs.digest(self.context.allocator, bytes) catch return false;
@@ -546,6 +583,64 @@ test "object keys frame their parts, so moving bytes between kind, input and env
     // A unit's key is exactly the key a staged per-function object carries.
     try std.testing.expectEqualStrings(whole, try cache.unitKey("il"));
     try std.testing.expectEqualStrings(try cache.identity("qbe-batch-v1", "a\nb"), try cache.derived("qbe-batch-v1", "a\nb"));
+}
+
+// spec: BUILD-KEYS-1
+test "an object key is the BLAKE3 of its framed environment, contract fields, kind and input" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var environment: std.process.Environ.Map = .init(arena.allocator());
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    const cache: Cache = .{ .context = context, .directory = "objects", .temporary = "work", .assets = "/assets", .environment = "env", .zig = "/zig", .mode = "Debug", .codegen = .{ .tool = "/qbe" } };
+    var hash = std.crypto.hash.Blake3.init(.{});
+    hash.update("mylang-object-key-v3");
+    const contract = Contract.default;
+    const parts = [_][]const u8{ "env", contract.bootstrap_language, contract.target, contract.runtime_abi, contract.effects, contract.flags, contract.compiler_identity, "function-digest", "abc" };
+    for (parts) |part| blakeFrame(&hash, part);
+    var digest: [32]u8 = undefined;
+    hash.final(&digest);
+    try std.testing.expectEqualStrings(&std.fmt.bytesToHex(digest, .lower), try cache.digestKey("abc"));
+    // Every contract field reaches the key, not only its fingerprint.
+    var flagged = cache;
+    flagged.contract.flags = "-x";
+    try std.testing.expect(!std.mem.eql(u8, try cache.digestKey("abc"), try flagged.digestKey("abc")));
+}
+
+// spec: BUILD-VERIFY-1
+test "a stored object is accepted by its recorded file identity and otherwise only by its bytes" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var environment: std.process.Environ.Map = .init(a);
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const cache: Cache = .{ .context = context, .directory = root, .temporary = root, .assets = "/assets", .environment = "env", .zig = "/zig", .mode = "Debug", .codegen = .{ .tool = "/qbe" } };
+    const candidate = try std.fs.path.join(a, &.{ root, "candidate.o" });
+    try context.write(candidate, "object bytes");
+    const stored = try cache.keep("k", candidate);
+    try std.testing.expect(try cache.cached("k") != null);
+    // An untouched file is accepted by `stat` alone: a fingerprint whose hash
+    // half no longer matches does not matter while the identity does.
+    const sidecar = try std.fs.path.join(a, &.{ root, "k.digest" });
+    const recorded = try context.read(sidecar);
+    const split = std.mem.indexOfScalar(u8, recorded, '\n').?;
+    try context.write(sidecar, try std.mem.concat(a, u8, &.{ "mylang-object-v2:0:0", recorded[split..] }));
+    try std.testing.expect(try cache.cached("k") != null);
+    // A replaced file has another identity, so its bytes decide: equal bytes
+    // under the original fingerprint are accepted, other bytes are not.
+    try context.write(sidecar, recorded);
+    const same = try std.fs.path.join(a, &.{ root, "same.o" });
+    try context.write(same, "object bytes");
+    try context.rename(same, stored.path);
+    try std.testing.expect(try cache.cached("k") != null);
+    const other = try std.fs.path.join(a, &.{ root, "other.o" });
+    try context.write(other, "object BYTES");
+    try context.rename(other, stored.path);
+    try std.testing.expectEqual(@as(?Object, null), try cache.cached("k"));
 }
 
 test "LLVM full LTO carries O3 and flto through generated C and final link flags" {

@@ -29,7 +29,7 @@ pub fn releasesOnReturn(arenas: bool, function: bytecode.Function) bool {
 
 /// Whether this frame can change the arena depth. Callees restore their own
 /// depth, so only a function that opens a scope needs frame bookkeeping.
-fn opens(function: bytecode.Function) bool {
+pub fn opens(function: bytecode.Function) bool {
     for (function.scope.instructions) |instruction| if (instruction.op == .begin_arena) return true;
     return false;
 }

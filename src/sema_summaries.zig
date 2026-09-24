@@ -57,6 +57,7 @@ pub const Plan = struct {
         errdefer allocator.free(stand_ins);
         @memset(stand_ins, null);
         request.stood_in = 0;
+        request.prepared = prepared.*;
         if (request.previous) |previous| {
             // Previous table record position -> its shape in the fresh catalog.
             const shapes = try allocator.alloc(ShapeState, previous.records.len);

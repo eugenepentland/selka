@@ -814,6 +814,9 @@ const Parsed = struct {
     /// Internal `--lean-manifest`: name each unit's stored text by digest and
     /// path instead of inlining it, and replay an unchanged project's manifest.
     lean_manifest: bool = false,
+    /// Internal `--lean-manifest=executable`: the lean manifest of an
+    /// executable, without the facts only a library build reads.
+    executable_manifest: bool = false,
     /// `--unchecked` (`run`) and internal `--drop-safety-checks` (the emitters):
     /// omit the overflow, narrowing-cast and index-bounds guards, and with no
     /// ceiling also the frame record and its position stores.
@@ -972,6 +975,7 @@ const ArgumentParser = struct {
     drop_step_checks: bool = false,
     drop_frame_checks: bool = false,
     lean_manifest: bool = false,
+    executable_manifest: bool = false,
     unchecked: bool = false,
     saw_min: bool = false,
     saw_population: bool = false,
@@ -1145,10 +1149,15 @@ const ArgumentParser = struct {
     /// Internal `--lean-manifest` on `emit-project-qbe`: the native build driver
     /// reads unit texts from the fragment store instead of the manifest
     /// (`QBE-FRAGMENT-REUSE-1`).
+    /// `--lean-manifest=executable` is the same for an executable build, whose
+    /// manifest leaves out the export, schema, wire, codec and test-dependency
+    /// facts only a library build reads (`EMIT-META-1`).
     fn leanManifestOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
-        if (!std.mem.eql(u8, arg, "--lean-manifest")) return false;
+        const executable = std.mem.eql(u8, arg, "--lean-manifest=executable");
+        if (!executable and !std.mem.eql(u8, arg, "--lean-manifest")) return false;
         if (self.command != .@"emit-project-qbe" or self.lean_manifest) return error.Usage;
         self.lean_manifest = true;
+        self.executable_manifest = executable;
         return true;
     }
 
@@ -1361,6 +1370,7 @@ const ArgumentParser = struct {
             .drop_step_checks = self.drop_step_checks,
             .drop_frame_checks = self.drop_frame_checks,
             .lean_manifest = self.lean_manifest,
+            .executable_manifest = self.executable_manifest,
             .unchecked = self.unchecked,
             .saw_steps = self.saw_steps,
             .saw_frames = self.saw_frames,
@@ -2034,7 +2044,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         // A command that lowers must do so before the receipt is built: emitted
         // fragments are real inputs to the lower/emit/link explanation, not an
         // empty table that can only compare equal.
-        if (!try lowerForReceipt(init, &compilation, receipt_stages)) {
+        if (!try lowerForReceipt(init, &compilation, receipt_stages, parsed.drop_debug)) {
             try reportProject(init, &compilation);
             if (parsed.reporting.explain_invalidation) {
                 try reportFailedInvalidation(init, parsed, &compilation, files.inputs);
@@ -2183,6 +2193,8 @@ fn runProjectProgram(init: Context, compilation: *language.project_compile.Compi
         else => return err,
     };
     defer init.gpa.free(manifest);
+    // FRAGMENT-SWEEP-1: the texts this manifest names are in a flushed pack.
+    if (compilation.reuse) |reuse| reuse.store.sweep();
     if (!parsed.no_cache) native_run.manifest_cache.store(init.gpa, init.io, init.environ, parsed.native, identity, manifest) catch return runNative(init, parsed, manifest);
     return runNative(init, parsed, manifest);
 }
@@ -2304,6 +2316,9 @@ fn emitRequestedOutput(init: Context, compilation: *language.project_compile.Com
         .@"emit-project-qbe" => blk: {
             const manifest = (try emitProjectNative(init, compilation, parsed.select_file, parsed.emissionPolicy())) orelse return error.SourceError;
             try rememberManifest(init, parsed, site, compilation, manifest);
+            // FRAGMENT-SWEEP-1: every text this manifest names is in a flushed
+            // pack and the replay, so an occasional sweep can go now.
+            if (compilation.reuse) |reuse| reuse.store.sweep();
             break :blk manifest;
         },
         .@"schema-project" => blk: {
@@ -2721,15 +2736,18 @@ fn dependencyReport(init: Context, compilation: *language.project_compile.Compil
 /// Lower a project before its receipt is built when the command will emit, so
 /// the receipt's fragment table is populated with real inputs. Returns false
 /// when lowering reported a source error; the caller reports diagnostics.
-fn lowerForReceipt(init: Context, compilation: *language.project_compile.Compilation, executed: [std.meta.tags(invalidation.Stage).len]bool) !bool {
+/// The lowering is the one the emission then uses, so it honours the
+/// emitter's `--drop-debug` (a ReleaseFast project build drops its `debug`
+/// lines, DEBUG-LINE-1); `run` and `run-project` never set it.
+fn lowerForReceipt(init: Context, compilation: *language.project_compile.Compilation, executed: [std.meta.tags(invalidation.Stage).len]bool, drop_debug: bool) !bool {
     if (!executed[@backingInt(invalidation.Stage.lower_function)]) return true;
     init.timings.begin(lowering_phase, false);
     defer init.timings.end();
-    compilation.emit() catch |err| switch (err) {
+    compilation.emitWithOptions(drop_debug) catch |err| switch (err) {
         error.SourceError => return false,
         else => return err,
     };
-    if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
+    if (compilation.code != null) recordLoweredCount(init, compilation.loweredCount());
     return true;
 }
 
@@ -2805,7 +2823,7 @@ fn manifestReplayTicket(parsed: Parsed, diagnostics: diagnostic_output.Format, p
     var slot = std.crypto.hash.Blake3.init(.{});
     slot.update("emit-project-qbe-replay-v2");
     replayFrame(&slot, parsed.path);
-    const switches = [_]bool{ parsed.drop_debug, parsed.drop_step_checks, parsed.drop_frame_checks, parsed.unchecked, parsed.lean_manifest };
+    const switches = [_]bool{ parsed.drop_debug, parsed.drop_step_checks, parsed.drop_frame_checks, parsed.unchecked, parsed.lean_manifest, parsed.executable_manifest };
     for (switches) |value| slot.update(&.{@intFromBool(value)});
     slot.update(&.{@backingInt(diagnostics)});
     var key = slot;
@@ -2879,6 +2897,13 @@ fn leanEmission(parsed: Parsed) bool {
     return parsed.lean_manifest or parsed.command == .run or parsed.command == .@"run-project" or parsed.command == .@"native-test-compile";
 }
 
+/// Whether an emission is for an executable's native build, which reads no
+/// export, schema, wire, codec or test-dependency facts: `run`,
+/// `run-project`, and `emit-project-qbe --lean-manifest=executable`.
+fn executableEmission(parsed: Parsed) bool {
+    return parsed.executable_manifest or parsed.command == .run or parsed.command == .@"run-project";
+}
+
 /// Whether a command lowers the checked project to QBE units.
 fn emitsNative(command: Command) bool {
     return switch (command) {
@@ -2900,7 +2925,7 @@ fn openFragments(init: Context, parsed: Parsed, storage: *language.qbe_fragments
     const selective = parsed.select_file != null or parsed.command == .@"native-test-compile";
     const label = try std.fmt.allocPrint(a, "{s}\x00{s}", .{ entry, if (selective) "selected" else "whole" });
     storage.* = try language.qbe_fragments.Store.open(a, init.io, root, &build_identity, label);
-    return .{ .store = storage, .lean = leanEmission(parsed) };
+    return .{ .store = storage, .lean = leanEmission(parsed), .executable = executableEmission(parsed) };
 }
 
 /// Resolve the baseline file for invalidation observations.  The path is
@@ -3329,7 +3354,7 @@ fn featureReport(init: std.process.Init) !void {
 fn emitMeasuredNative(init: Context, compilation: anytype, policy: language.native_interface.Policy) ![]u8 {
     init.timings.begin(lowering_phase, false);
     try compilation.emitWithOptions(policy.drop_debug);
-    if (compilation.code) |code| recordLoweredCount(init, code.functions.len);
+    if (compilation.code != null) recordLoweredCount(init, if (@hasDecl(@TypeOf(compilation.*), "loweredCount")) compilation.loweredCount() else compilation.code.?.functions.len);
     init.timings.begin("native_emission", false);
     // A single-file compilation has no fragment store.
     const reuse: ?language.qbe_fragments.Reuse = if (@hasField(@TypeOf(compilation.*), "reuse")) compilation.reuse else null;
@@ -3339,6 +3364,11 @@ fn emitMeasuredNative(init: Context, compilation: anytype, policy: language.nati
     // function, so the fragment count is observed at the emission site: a unit
     // answered from the fragment store is reused, not emitted.
     if (compilation.code) |code| recordEmission(init, reuse, before, code.functions.len);
+    // EMIT-STANDIN-1: an executable's emission may lower more functions than
+    // it started with; the count is what it lowered in the end.
+    if (reuse) |configured| if (configured.standins != null) {
+        recordLoweredCount(init, configured.store.statistics.standin.lowered - before.?.standin.lowered);
+    };
     init.timings.end();
     return generated;
 }
@@ -3356,7 +3386,9 @@ fn recordEmission(init: Context, reuse: ?language.qbe_fragments.Reuse, before: ?
     const configured = reuse orelse return setWork(init, .emitted_fragments, total, 0);
     const prior = before orelse language.qbe_fragments.Statistics{};
     const after = configured.store.statistics;
-    setWork(init, .emitted_fragments, after.misses - prior.misses, after.hits - prior.hits);
+    // A unit an executable's emission took from its function's record without
+    // lowering the function (EMIT-STANDIN-1) is reused as well.
+    setWork(init, .emitted_fragments, after.misses - prior.misses, (after.hits - prior.hits) + (after.standin.reused - prior.standin.reused));
 }
 
 /// Lower and emit only functions named in `select_file`. The file contains one

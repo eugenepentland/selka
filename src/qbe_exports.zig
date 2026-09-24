@@ -13,12 +13,32 @@ pub const Export = struct { name: []const u8, parameters: []const []const u8, pa
 
 /// Return null for implementation-private functions and concrete generic instances.
 pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, index: usize, roots: []const typed.FunctionId) Error!?Export {
-    var exported = false;
+    const mask = try rootMask(allocator, program, roots);
+    defer allocator.free(mask);
+    return describeMarked(allocator, program, index, mask);
+}
+
+/// One flag per function of `program`, set for every export root; a root
+/// outside the program is refused. An emission marks the roots once and
+/// reads one flag per unit, where looking each unit up in the
+/// root list cost a program whose every function is public time quadratic in
+/// its size (about a fifth of a second at 18,000 functions).
+pub fn rootMask(allocator: std.mem.Allocator, program: bytecode.Program, roots: []const typed.FunctionId) Error![]bool {
+    const mask = try allocator.alloc(bool, program.functions.len);
+    @memset(mask, false);
     for (roots) |root| {
-        if (@backingInt(root) >= program.functions.len) return error.InternalError;
-        if (@backingInt(root) == index) exported = true;
+        if (@backingInt(root) >= program.functions.len) {
+            allocator.free(mask);
+            return error.InternalError;
+        }
+        mask[@backingInt(root)] = true;
     }
-    if (!exported) return null;
+    return mask;
+}
+
+/// The export description of function `index` when `mask` (from `rootMask`) marks it.
+pub fn describeMarked(allocator: std.mem.Allocator, program: bytecode.Program, index: usize, mask: []const bool) Error!?Export {
+    if (index >= mask.len or !mask[index]) return null;
     const function = program.functions[index];
     const parameters = try allocator.alloc([]const u8, function.signature.parameter_count);
     const parameter_names = try allocator.alloc([]const u8, function.signature.parameter_count);

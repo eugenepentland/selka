@@ -21,6 +21,7 @@ const bytecode = @import("bytecode_model.zig");
 const typed = @import("typed.zig");
 const Span = @import("source.zig").Span;
 const test_dependencies = @import("native_test_dependencies.zig");
+const codec = @import("persist_codec.zig");
 /// Every digest here is BLAKE3. On the pinned toolchain, std's SHA-256 takes its
 /// SHA-NI path, which mixes AVX2 message loads with legacy-SSE SHA instructions and
 /// runs at about 11 MB/s on this project's build hosts (one microcode assist per
@@ -33,7 +34,7 @@ pub const Digest = [32]u8;
 /// Bumped whenever the canonical encoding below or the pack layout changes, so
 /// an older store can never answer a newer compiler's question. The compiler
 /// identity already partitions the store; this guards the encoding itself.
-pub const format_version = "mylang-qbe-fragments-v1";
+pub const format_version = "mylang-qbe-fragments-v2";
 
 /// Whole-program switches that reach every unit's text.
 pub const Flags = struct {
@@ -147,8 +148,16 @@ const Canon = struct {
     }
 };
 
-/// The distinct ordinals in first-mention order.
+/// The distinct ordinals in first-mention order. A function names a handful,
+/// so a short list is deduplicated in place of building a hash set.
 fn unique(allocator: std.mem.Allocator, items: []const u32) error{OutOfMemory}![]const u32 {
+    if (items.len <= 32) {
+        var out: std.ArrayList(u32) = try .initCapacity(allocator, items.len);
+        for (items) |item| {
+            if (std.mem.indexOfScalar(u32, out.items, item) == null) out.appendAssumeCapacity(item);
+        }
+        return out.toOwnedSlice(allocator);
+    }
     var seen: std.AutoHashMapUnmanaged(u32, void) = .empty;
     defer seen.deinit(allocator);
     var out: std.ArrayList(u32) = .empty;
@@ -169,6 +178,30 @@ pub const Keys = struct {
     records: []?RecordFact,
     /// Per-record visit stamps for one closure walk, and the current stamp.
     closure: struct { stamps: []u32, current: u32 = 0 },
+    /// Canonical-encoding buffers kept from one key to the next, so keying
+    /// every function of a large program does not grow fresh buffers for
+    /// each one (every function is keyed on every build).
+    spare: Spare = .{},
+
+    const Spare = struct { bytes: std.ArrayList(u8) = .empty, functions: std.ArrayList(u32) = .empty, records: std.ArrayList(u32) = .empty };
+
+    /// A canonical encoder over the kept buffers, or fresh ones while a caller
+    /// further up is still using them.
+    fn encoder(self: *Keys) Canon {
+        const taken = self.spare;
+        self.spare = .{};
+        return .{ .allocator = self.allocator, .program = self.program, .bytes = taken.bytes, .functions = taken.functions, .records = taken.records };
+    }
+    /// Keep the larger of an encoder's buffers and the kept ones, emptied.
+    fn recycle(self: *Keys, used: *Canon) void {
+        used.bytes.clearRetainingCapacity();
+        used.functions.clearRetainingCapacity();
+        used.records.clearRetainingCapacity();
+        if (used.bytes.capacity < self.spare.bytes.capacity) return used.deinit();
+        var old: Canon = .{ .allocator = self.allocator, .program = self.program, .bytes = self.spare.bytes, .functions = self.spare.functions, .records = self.spare.records };
+        old.deinit();
+        self.spare = .{ .bytes = used.bytes, .functions = used.functions, .records = used.records };
+    }
 
     /// Prepare empty memo tables for one lowered program.
     pub fn init(allocator: std.mem.Allocator, program: bytecode.Program) error{OutOfMemory}!Keys {
@@ -194,6 +227,8 @@ pub const Keys = struct {
         self.allocator.free(self.interfaces);
         self.allocator.free(self.records);
         self.allocator.free(self.closure.stamps);
+        var kept = self.encoder();
+        kept.deinit();
         self.* = undefined;
     }
     fn release(self: *Keys, summary: Summary) void {
@@ -205,8 +240,8 @@ pub const Keys = struct {
     /// except the callee allocation facts, which the second pass adds.
     pub fn local(self: *Keys, index: usize, flags: Flags) error{OutOfMemory}!Digest {
         const own = try self.body(index);
-        var canon: Canon = .{ .allocator = self.allocator, .program = self.program };
-        defer canon.deinit();
+        var canon = self.encoder();
+        defer self.recycle(&canon);
         try canon.text(format_version);
         try canon.put(flags);
         try canon.raw(&own.digest);
@@ -234,8 +269,8 @@ pub const Keys = struct {
     fn body(self: *Keys, index: usize) error{OutOfMemory}!Summary {
         if (self.bodies[index]) |known| return known;
         const function = self.program.functions[index];
-        var canon: Canon = .{ .allocator = self.allocator, .program = self.program };
-        defer canon.deinit();
+        var canon = self.encoder();
+        defer self.recycle(&canon);
         try canon.text("body");
         try canon.text(function.name);
         try canon.put(function.policy);
@@ -252,8 +287,8 @@ pub const Keys = struct {
     fn interface(self: *Keys, index: usize) error{OutOfMemory}!Summary {
         if (self.interfaces[index]) |known| return known;
         const function = self.program.functions[index];
-        var canon: Canon = .{ .allocator = self.allocator, .program = self.program };
-        defer canon.deinit();
+        var canon = self.encoder();
+        defer self.recycle(&canon);
         try canon.text("interface");
         try canon.text(function.name);
         try canon.put(function.policy);
@@ -271,8 +306,8 @@ pub const Keys = struct {
     /// One record's own schema, naming (not expanding) the records it reaches.
     fn record(self: *Keys, index: u32) error{OutOfMemory}!RecordFact {
         if (self.records[index]) |known| return known;
-        var canon: Canon = .{ .allocator = self.allocator, .program = self.program };
-        defer canon.deinit();
+        var canon = self.encoder();
+        defer self.recycle(&canon);
         try canon.text("record");
         try canon.put(self.program.records[index]);
         const summary = try canon.finish();
@@ -285,6 +320,16 @@ pub const Keys = struct {
     /// Append every record reachable from `roots`, ordered by name, with its
     /// schema digest: the complete type information any unit text can read.
     fn schemas(self: *Keys, canon: *Canon, roots: []const u32) error{OutOfMemory}!void {
+        const closure = try self.closureOf(roots);
+        defer self.allocator.free(closure);
+        try canon.put(@as(u64, closure.len));
+        for (closure) |index| {
+            try canon.text(self.program.records[index].name);
+            try canon.raw(&(try self.record(index)).digest);
+        }
+    }
+    /// Every record reachable from `roots`, ordered by name.
+    fn closureOf(self: *Keys, roots: []const u32) error{OutOfMemory}![]u32 {
         self.closure.current +%= 1;
         if (self.closure.current == 0) {
             @memset(self.closure.stamps, 0);
@@ -305,32 +350,46 @@ pub const Keys = struct {
             }
         };
         std.mem.sort(u32, queue.items, Order{ .records = self.program.records }, Order.less);
-        try canon.put(@as(u64, queue.items.len));
-        for (queue.items) |index| {
-            try canon.text(self.program.records[index].name);
-            try canon.raw(&(try self.record(index)).digest);
-        }
+        return self.allocator.dupe(u32, queue.items);
     }
     fn visit(self: *Keys, queue: *std.ArrayList(u32), index: u32) error{OutOfMemory}!void {
         if (index >= self.closure.stamps.len or self.closure.stamps[index] == self.closure.current) return;
         self.closure.stamps[index] = self.closure.current;
         try queue.append(self.allocator, index);
     }
+
+    /// EMIT-STANDIN-1: every record whose schema the first-pass key of
+    /// function `index` covers, ordered by name.
+    pub fn reach(self: *Keys, index: usize) error{OutOfMemory}![]u32 {
+        const own = try self.body(index);
+        var roots: std.ArrayList(u32) = .empty;
+        defer roots.deinit(self.allocator);
+        try roots.appendSlice(self.allocator, own.records);
+        for (own.functions) |callee| try roots.appendSlice(self.allocator, (try self.interface(callee)).records);
+        return self.closureOf(roots.items);
+    }
+    /// The digest of function `index`'s own lowered content.
+    pub fn bodyDigest(self: *Keys, index: usize) error{OutOfMemory}!Digest {
+        return (try self.body(index)).digest;
+    }
+    /// The digest of what a caller's unit reads about function `index`.
+    pub fn interfaceDigest(self: *Keys, index: usize) error{OutOfMemory}!Digest {
+        return (try self.interface(index)).digest;
+    }
+    /// The digest of record `index`'s own schema.
+    pub fn recordDigest(self: *Keys, index: u32) error{OutOfMemory}!Digest {
+        return (try self.record(index)).digest;
+    }
 };
 
 /// Hash of the sorted names of every function some instruction takes as a
-/// value. An indirect call's checked dependency facts list all of them, so a
+/// value, one name per such instruction, in any order (they are sorted in
+/// place). An indirect call's checked dependency facts list all of them, so a
 /// unit that invokes a function value depends on this set.
-pub fn functionValueTargets(allocator: std.mem.Allocator, program: bytecode.Program) error{OutOfMemory}!Digest {
-    var names: std.ArrayList([]const u8) = .empty;
-    defer names.deinit(allocator);
-    for (program.functions) |function| for (function.scope.instructions) |instruction| switch (instruction.op) {
-        .function_value => |value| if (@backingInt(value.function) < program.functions.len) try names.append(allocator, program.functions[@backingInt(value.function)].name),
-        else => {},
-    };
-    std.mem.sort([]const u8, names.items, {}, lessText);
+pub fn targetsDigest(names: [][]const u8) Digest {
+    std.mem.sort([]const u8, names, {}, lessText);
     var hash = Sha.init(.{});
-    for (names.items) |name| frame(&hash, name);
+    for (names) |name| frame(&hash, name);
     return digestOf(&hash);
 }
 fn lessText(_: void, left: []const u8, right: []const u8) bool {
@@ -380,6 +439,41 @@ pub const Final = struct {
     }
 };
 
+/// The key of a unit's metadata (`EMIT-META-1`) — its per-instruction source
+/// positions, assertion messages and inline frames. Its second-pass key covers
+/// everything about the lowered function except source positions, and every
+/// position is a place in a source some instruction's span falls in, found
+/// only from that source's bytes; so the key adds the path and bytes of each
+/// such source, in first-use order. An edit that moves lines in one module
+/// recomputes the metadata of the units whose instructions come from it, and
+/// no other.
+pub const MetaKey = struct {
+    hash: Sha,
+    /// Start from the unit's second-pass key.
+    pub fn init(final_key: Digest) MetaKey {
+        var hash = Sha.init(.{});
+        hash.update("unit-meta-v1");
+        hash.update(&final_key);
+        return .{ .hash = hash };
+    }
+    /// Add one source the unit's positions fall in, by `sourceDigest`.
+    pub fn source(self: *MetaKey, digest: Digest) void {
+        self.hash.update(&digest);
+    }
+    /// The finished key.
+    pub fn finish(self: *MetaKey) Digest {
+        return digestOf(&self.hash);
+    }
+};
+
+/// The digest one source contributes to a metadata key: its path and bytes.
+pub fn sourceDigest(path_text: []const u8, bytes: []const u8) Digest {
+    var hash = Sha.init(.{});
+    frame(&hash, path_text);
+    frame(&hash, bytes);
+    return digestOf(&hash);
+}
+
 /// The lines of a unit's text the native build reads without compiling it:
 /// the `dbgfile` line that marks a frame-map unit, every `# ` marker line
 /// (frozen literal definitions), and every top-level `data` definition line,
@@ -418,8 +512,39 @@ pub const Unit = struct {
 };
 
 /// How one emission uses a store: always consult and fill it, and with `lean`
-/// hand the build each unit's digest and stored path instead of its text.
-pub const Reuse = struct { store: *Store, lean: bool = false };
+/// hand the build each unit's stored text and stored metadata by digest
+/// instead of the text and positions themselves (`EMIT-META-1`). An
+/// `executable` emission is for the native build of a program, which reads no
+/// export, schema, wire, codec or test-dependency facts, so it writes none.
+pub const Reuse = struct { store: *Store, lean: bool = false, executable: bool = false, standins: ?*Standins = null };
+
+/// EMIT-STANDIN-1: an executable's lean emission that lowers only the
+/// functions it has to. A function whose source identity has a record and
+/// whose unit read nothing that changed is left unlowered and its unit is
+/// taken from the record; every other function is lowered and emitted, and
+/// leaves a fresh record.
+pub const Standins = struct {
+    /// Per function: the record its unit is reused from while it stays
+    /// unselected, or null.
+    records: []?*const Record,
+    /// Per function: the key its record is stored under, or null for a
+    /// function whose unit is never reused this way.
+    keys: []?Digest,
+    /// Per function: lowered and emitted by this emission.
+    selected: []bool,
+    /// Per function: its lowered body before inlining (empty until selected).
+    pre: []bytecode.Function,
+    /// Lowers every selected function whose `pre` body is still empty.
+    lower: Lowering,
+    /// Whether `debug` lines are dropped while lowering.
+    drop_debug: bool = false,
+};
+
+/// A way to lower more functions into `Standins.pre` during one emission.
+pub const Lowering = struct {
+    context: *anyopaque,
+    run: *const fn (context: *anyopaque, standins: *Standins) error{ OutOfMemory, InternalError }!void,
+};
 
 /// Reuse counters observed at the emission site.
 pub const Statistics = struct {
@@ -429,10 +554,153 @@ pub const Statistics = struct {
     /// Units answered from the store / emitted.
     hits: usize = 0,
     misses: usize = 0,
+    /// Unit metadata (positions, messages, inline frames) answered from the
+    /// store / computed from the source (`EMIT-META-1`).
+    meta: Count = .{},
+    /// Texts this process wrote to the store, and texts a sweep removed
+    /// (`FRAGMENT-SWEEP-1`).
+    texts: Traffic = .{},
+    /// Functions an executable's emission lowered, and units it took from
+    /// records without lowering their functions (`EMIT-STANDIN-1`).
+    standin: Standin = .{},
+};
+/// How many functions one emission lowered and how many it stood in for.
+pub const Standin = struct { lowered: usize = 0, reused: usize = 0 };
+/// How many answers a store gave, and how many it did not have.
+pub const Count = struct { hits: usize = 0, misses: usize = 0 };
+/// Texts written to a store and texts swept out of it.
+pub const Traffic = struct { written: usize = 0, swept: usize = 0 };
+/// The file under a store's directory counting the texts written since its
+/// last sweep, and the fewest such texts that make a sweep worth its listing.
+const written_name = ".written";
+const sweep_floor: usize = 4096;
+/// The file whose lock leases a store (`FRAGMENT-SWEEP-1`).
+const lease_name = ".lease";
+
+/// Take this process's shared lease on the store at `directory`, or null when
+/// the filesystem cannot lock (the store then never sweeps).
+fn lease(allocator: std.mem.Allocator, io: std.Io, directory: []const u8) error{OutOfMemory}!?std.Io.File {
+    std.Io.Dir.cwd().createDirPath(io, directory) catch return null;
+    const path = try std.fs.path.join(allocator, &.{ directory, lease_name });
+    const file = std.Io.Dir.cwd().createFile(io, path, .{ .truncate = false, .read = true }) catch return null;
+    if (file.tryLock(io, .shared) catch false) return file;
+    file.close(io);
+    return null;
+}
+
+/// The store's text directory, created and opened once, so each presence
+/// check names one entry of it rather than walking a whole path; null when it
+/// cannot be opened (checks then use the full path).
+fn textDirectory(allocator: std.mem.Allocator, io: std.Io, directory: []const u8) error{OutOfMemory}!?std.Io.Dir {
+    const path = try std.fs.path.join(allocator, &.{ directory, "il" });
+    std.Io.Dir.cwd().createDirPath(io, path) catch return null;
+    return std.Io.Dir.cwd().openDir(io, path, .{}) catch null;
+}
+
+/// Add to `live` every text a pack's entries name.
+fn packTexts(allocator: std.mem.Allocator, bytes: []const u8, live: *std.AutoHashMapUnmanaged(Digest, void)) error{ OutOfMemory, Damaged }!void {
+    var entries: std.AutoHashMapUnmanaged(Digest, Entry) = .empty;
+    try readPack(allocator, bytes, &entries);
+    var values = entries.valueIterator();
+    while (values.next()) |entry| switch (entry.*) {
+        .unit => |answer| try live.put(allocator, answer.il, {}),
+        .meta => |digest| try live.put(allocator, digest, {}),
+        .record => |stored| {
+            try live.put(allocator, stored.unit.il, {});
+            try live.put(allocator, stored.meta, {});
+        },
+        .first => {},
+    };
+}
+
+/// Add to `live` every text a remembered emission names.
+fn replayTexts(allocator: std.mem.Allocator, bytes: []const u8, live: *std.AutoHashMapUnmanaged(Digest, void)) error{ OutOfMemory, Damaged }!void {
+    if (bytes.len < Replay.magic.len + 64 or !std.mem.eql(u8, bytes[0..Replay.magic.len], Replay.magic)) return error.Damaged;
+    var reader: PackReader = .{ .bytes = bytes[0 .. bytes.len - 32], .at = Replay.magic.len + 32 };
+    _ = try reader.take(std.math.cast(usize, try reader.int(u64)) orelse return error.Damaged);
+    _ = try reader.take(std.math.cast(usize, try reader.int(u64)) orelse return error.Damaged);
+    for (0..try reader.int(u32)) |_| try live.put(allocator, try reader.digest(), {});
+}
+
+/// Read a pack's entries into `entries`, refusing a damaged one.
+fn readPack(allocator: std.mem.Allocator, bytes: []const u8, entries: *std.AutoHashMapUnmanaged(Digest, Entry)) error{ OutOfMemory, Damaged }!void {
+    if (bytes.len < pack_magic.len + 32 or !std.mem.eql(u8, bytes[0..pack_magic.len], pack_magic)) return error.Damaged;
+    const body_end = bytes.len - 32;
+    var checksum: Digest = undefined;
+    Sha.hash(bytes[0..body_end], &checksum, .{});
+    if (!std.mem.eql(u8, &checksum, bytes[body_end..])) return error.Damaged;
+    var reader: PackReader = .{ .bytes = bytes[0..body_end], .at = pack_magic.len };
+    const count = try reader.int(u32);
+    // Every entry is at least a key, a kind byte and one payload byte.
+    if (count > body_end / 34) return error.Damaged;
+    try entries.ensureTotalCapacity(allocator, count);
+    for (0..count) |_| {
+        const key = try reader.digest();
+        const entry: Entry = switch (try reader.int(u8)) {
+            0 => .{ .first = (try reader.int(u8)) != 0 },
+            1 => .{ .unit = try reader.unitAnswer(allocator) },
+            2 => .{ .meta = try reader.digest() },
+            3 => .{ .record = try reader.record(allocator) },
+            else => return error.Damaged,
+        };
+        entries.putAssumeCapacity(key, entry);
+    }
+}
+
+const Entry = union(enum) { first: bool, unit: Unit, meta: Digest, record: *const Record };
+const pack_magic = "MYLFRAG3";
+
+/// EMIT-STANDIN-1: what one function's last emission leaves for a build that
+/// reuses its unit without lowering the function. It is stored under a key of
+/// the function's source identity (its declaration key, dependency context
+/// and region digest, which fix its checked body) and the lowering policy;
+/// `snapshot` covers everything else the unit and its metadata read, and a
+/// build reuses the record only while that is unchanged.
+pub const Record = struct {
+    name: []const u8,
+    /// The unit's stored answer and the digest of its stored metadata record.
+    unit: Unit,
+    meta: Digest,
+    /// Digest of what the unit read outside the function's own source.
+    snapshot: Digest,
+    /// What other functions' units and the program read about this one.
+    facts: Facts,
+    /// What this function's unit read about the rest of the program.
+    reads: Reads,
 };
 
-const Entry = union(enum) { first: bool, unit: Unit };
-const pack_magic = "MYLFRAG1";
+/// The facts a caller's unit or a whole-program pass reads about a function
+/// without its body: its inline key (zero unless the inliner may splice it,
+/// otherwise the digest of the body a caller splices), whether its own text
+/// allocates, the functions it calls after inlining, which parameters it
+/// writes, the functions it takes as values, and three program-wide marks.
+pub const Facts = struct {
+    inline_key: Digest = @splat(0),
+    allocates: bool = false,
+    calls: []const []const u8 = &.{},
+    writes: []const bool = &.{},
+    values: []const []const u8 = &.{},
+    marks: Marks = .{},
+};
+
+/// Whether a function invokes a function value, opens an arena, or needs the
+/// text runtime.
+pub const Marks = struct { invokes: bool = false, arena: bool = false, text: bool = false };
+
+/// What a unit read about the rest of the program: the functions it names, the
+/// records whose schema it reaches, and the sources its positions fall in.
+pub const Reads = struct { names: []const []const u8 = &.{}, records: []const []const u8 = &.{}, sources: []const []const u8 = &.{} };
+
+/// The key a function's record is stored under: its source identity and
+/// whether its `debug` lines were lowered. The emission switches are part of
+/// every record's snapshot instead.
+pub fn recordKey(source_identity: Digest, drop_debug: bool) Digest {
+    var hash = Sha.init(.{});
+    hash.update("standin-record-v1");
+    hash.update(&source_identity);
+    hash.update(&.{@intFromBool(drop_debug)});
+    return digestOf(&hash);
+}
 /// Old entries a pack keeps beyond the ones the latest build used, as a
 /// multiple of those: enough to switch between a few configurations of one
 /// project without re-emitting, bounded so the pack cannot grow forever.
@@ -444,26 +712,35 @@ const carry_factor = 3;
 pub const Store = struct {
     allocator: std.mem.Allocator,
     io: std.Io,
-    /// `<root>/<identity tag>`: texts under `il/`, packs under `packs/`.
+    /// `<root>/<identity tag>`: texts under `il/`, packs under `packs/`,
+    /// replays under `replay/`.
     directory: []const u8,
-    pack: []const u8,
+    /// This build's pack name, and its shared lease on the store.
+    pack: Pack,
     /// Entries loaded from the pack, and the entries this build used or made.
     entries: std.AutoHashMapUnmanaged(Digest, Entry) = .empty,
     used: std.array_hash_map.Auto(Digest, Entry) = .empty,
     statistics: Statistics = .{},
 
+    /// The pack a store answers from, and the open `.lease` file whose shared
+    /// lock this process holds while it may write texts (`FRAGMENT-SWEEP-1`).
+    /// And the open text directory, whose entries are checked by name.
+    const Pack = struct { name: []const u8, lease: ?std.Io.File = null, texts: ?std.Io.Dir = null };
+
     /// Open the store under `root` for one compiler `identity` and load the
     /// pack named by `label` (for example the entry path and build policy).
-    /// The allocator should be an arena that outlives the emission.
+    /// The allocator should be an arena that outlives the emission. The store
+    /// is leased for as long as it is open.
     pub fn open(allocator: std.mem.Allocator, io: std.Io, root: []const u8, identity: []const u8, label: []const u8) error{OutOfMemory}!Store {
         var name = Sha.init(.{});
         frame(&name, label);
         const pack = std.fmt.bytesToHex(digestOf(&name), .lower);
+        const directory = try namespace(allocator, root, identity);
         var store: Store = .{
             .allocator = allocator,
             .io = io,
-            .directory = try namespace(allocator, root, identity),
-            .pack = try allocator.dupe(u8, &pack),
+            .directory = directory,
+            .pack = .{ .name = try allocator.dupe(u8, &pack), .lease = try lease(allocator, io, directory), .texts = try textDirectory(allocator, io, directory) },
         };
         store.load() catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
@@ -471,21 +748,149 @@ pub const Store = struct {
         };
         return store;
     }
-    /// Release the in-memory tables and names. Loaded answers borrow the pack
-    /// bytes, which belong to the arena the store was opened with.
+    /// Release the in-memory tables, names and lease. Loaded answers borrow the
+    /// pack bytes, which belong to the arena the store was opened with.
     pub fn deinit(self: *Store) void {
+        if (self.pack.lease) |file| file.close(self.io);
+        if (self.pack.texts) |listing| listing.close(self.io);
         self.entries.deinit(self.allocator);
         self.used.deinit(self.allocator);
         self.allocator.free(self.directory);
-        self.allocator.free(self.pack);
+        self.allocator.free(self.pack.name);
         self.* = undefined;
     }
 
-    /// The digest of every unit text this process emitted or reused.
+    /// FRAGMENT-SWEEP-1: once the texts written since the last sweep outnumber
+    /// the texts this build names (and at least `sweep_floor`), delete every
+    /// text in the store that no pack and no replay names. A sweep runs only
+    /// under the store's exclusive lease: every process that may write a text
+    /// holds the shared lease from `open` until it exits, so a text another
+    /// process wrote but has not named in a pack yet is never taken, and a text
+    /// named by a flushed pack or a replay — every text a manifest hands the
+    /// native build — is never unnamed. Best effort: nothing here fails a build.
+    pub fn sweep(self: *Store) void {
+        self.sweepAt() catch return;
+    }
+    fn sweepAt(self: *Store) !void {
+        const counter = try std.fs.path.join(self.allocator, &.{ self.directory, written_name });
+        const pending = self.readCount(counter) +| self.statistics.texts.written;
+        const named = self.texts(self.allocator) catch return;
+        if (pending <= @max(sweep_floor, named.len)) return self.writeCount(counter, pending);
+        const file = self.pack.lease orelse return self.writeCount(counter, pending);
+        if (!(file.tryLock(self.io, .exclusive) catch false)) {
+            // A failed conversion may have dropped the shared lock; take it back.
+            _ = file.tryLock(self.io, .shared) catch false;
+            return self.writeCount(counter, pending);
+        }
+        defer _ = file.tryLock(self.io, .shared) catch false;
+        var live: std.AutoHashMapUnmanaged(Digest, void) = .empty;
+        try self.namedBy("packs", &live, packTexts);
+        try self.namedBy("replay", &live, replayTexts);
+        try self.deleteUnnamed(&live);
+        self.writeCount(counter, 0);
+    }
+    /// Add to `live` every text each file of `subdirectory` names, as `names` reads it.
+    fn namedBy(self: *Store, subdirectory: []const u8, live: *std.AutoHashMapUnmanaged(Digest, void), comptime names: fn (std.mem.Allocator, []const u8, *std.AutoHashMapUnmanaged(Digest, void)) error{ OutOfMemory, Damaged }!void) !void {
+        const where = try std.fs.path.join(self.allocator, &.{ self.directory, subdirectory });
+        var directory = std.Io.Dir.cwd().openDir(self.io, where, .{ .iterate = true }) catch return;
+        defer directory.close(self.io);
+        var iterator = directory.iterate();
+        while (try iterator.next(self.io)) |entry| {
+            if (entry.kind != .file) continue;
+            const bytes = directory.readFileAlloc(self.io, entry.name, self.allocator, .unlimited) catch continue;
+            names(self.allocator, bytes, live) catch |err| switch (err) {
+                error.OutOfMemory => return error.OutOfMemory,
+                // A damaged pack or replay answers nothing, so it names nothing.
+                error.Damaged => continue,
+            };
+        }
+    }
+    /// Delete every file under `il/` that is not a text `live` names, including
+    /// staging files a crashed writer left behind.
+    fn deleteUnnamed(self: *Store, live: *const std.AutoHashMapUnmanaged(Digest, void)) !void {
+        const where = try std.fs.path.join(self.allocator, &.{ self.directory, "il" });
+        var directory = std.Io.Dir.cwd().openDir(self.io, where, .{ .iterate = true }) catch return;
+        defer directory.close(self.io);
+        var doomed: std.ArrayList([]const u8) = .empty;
+        var iterator = directory.iterate();
+        while (try iterator.next(self.io)) |entry| {
+            if (entry.kind != .file) continue;
+            var digest: Digest = undefined;
+            const text = entry.name.len == 64 and (std.fmt.hexToBytes(&digest, entry.name) catch null) != null;
+            if (text and live.contains(digest)) continue;
+            try doomed.append(self.allocator, try self.allocator.dupe(u8, entry.name));
+        }
+        for (doomed.items) |name| directory.deleteFile(self.io, name) catch continue;
+        self.statistics.texts.swept += doomed.items.len;
+    }
+    fn readCount(self: *Store, counter: []const u8) usize {
+        var buffer: [32]u8 = undefined;
+        const bytes = std.Io.Dir.cwd().readFile(self.io, counter, &buffer) catch return 0;
+        return std.fmt.parseUnsigned(usize, std.mem.trim(u8, bytes, " \n"), 10) catch 0;
+    }
+    fn writeCount(self: *Store, counter: []const u8, count: usize) void {
+        if (count == self.readCount(counter)) return;
+        var buffer: [32]u8 = undefined;
+        atomicWrite(self.io, counter, std.fmt.bufPrint(&buffer, "{d}\n", .{count}) catch return) catch return;
+    }
+
+    /// The digest of every text this process emitted or reused: each unit's
+    /// IL and each unit's stored metadata.
     pub fn texts(self: *const Store, allocator: std.mem.Allocator) error{OutOfMemory}![]const Digest {
         var out: std.ArrayList(Digest) = .empty;
-        for (self.used.values()) |entry| if (entry == .unit) try out.append(allocator, entry.unit.il);
+        for (self.used.values()) |entry| switch (entry) {
+            .unit => |answer| try out.append(allocator, answer.il),
+            .meta => |digest| try out.append(allocator, digest),
+            .record => |stored| try out.appendSlice(allocator, &.{ stored.unit.il, stored.meta }),
+            .first => {},
+        };
         return out.toOwnedSlice(allocator);
+    }
+    /// The record a function's last emission left under `key` (`EMIT-STANDIN-1`),
+    /// kept in this build's pack once looked up.
+    pub fn record(self: *Store, key: Digest) error{OutOfMemory}!?*const Record {
+        const entry = self.lookup(key) orelse return null;
+        if (entry != .record) return null;
+        try self.used.put(self.allocator, key, entry);
+        return entry.record;
+    }
+    /// Remember a freshly made record under `key`.
+    pub fn rememberRecord(self: *Store, key: Digest, made: Record) error{OutOfMemory}!void {
+        const stored = try self.allocator.create(Record);
+        stored.* = made;
+        try self.used.put(self.allocator, key, .{ .record = stored });
+    }
+    /// The directory every stored text lives in under its hex digest, which a
+    /// lean manifest names once as its `store`.
+    pub fn textRoot(self: *const Store) error{OutOfMemory}![]const u8 {
+        return std.fs.path.join(self.allocator, &.{ self.directory, "il" });
+    }
+    /// The digest of the stored metadata text for `key` (`EMIT-META-1`), if
+    /// any and if that text is still on disk.
+    pub fn meta(self: *Store, key: Digest) error{OutOfMemory}!?Digest {
+        const entry = self.lookup(key) orelse {
+            self.statistics.meta.misses += 1;
+            return null;
+        };
+        if (entry != .meta or !self.present(entry.meta)) {
+            self.statistics.meta.misses += 1;
+            return null;
+        }
+        self.statistics.meta.hits += 1;
+        try self.used.put(self.allocator, key, entry);
+        return entry.meta;
+    }
+    /// Store a freshly rendered metadata text (if not already stored) and
+    /// remember its digest under `key`. Returns the digest.
+    pub fn rememberMeta(self: *Store, key: Digest, text: []const u8) error{OutOfMemory}!Digest {
+        var digest: Digest = undefined;
+        Sha.hash(text, &digest, .{});
+        self.writeText(digest, text) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return digest,
+        };
+        try self.used.put(self.allocator, key, .{ .meta = digest });
+        return digest;
     }
 
     /// An answer this process already made or used, else one from the pack.
@@ -559,6 +964,10 @@ pub const Store = struct {
     }
 
     fn present(self: *Store, digest: Digest) bool {
+        if (self.pack.texts) |listing| {
+            listing.access(self.io, &std.fmt.bytesToHex(digest, .lower), .{}) catch return false;
+            return true;
+        }
         const file = self.path(digest) catch return false;
         std.Io.Dir.cwd().access(self.io, file, .{}) catch return false;
         return true;
@@ -567,9 +976,10 @@ pub const Store = struct {
         if (self.present(digest)) return;
         const file = try self.path(digest);
         try atomicWrite(self.io, file, il);
+        self.statistics.texts.written += 1;
     }
     fn packPath(self: *const Store) error{OutOfMemory}![]const u8 {
-        return std.fs.path.join(self.allocator, &.{ self.directory, "packs", self.pack });
+        return std.fs.path.join(self.allocator, &.{ self.directory, "packs", self.pack.name });
     }
     fn load(self: *Store) !void {
         const file = try self.packPath();
@@ -577,25 +987,7 @@ pub const Store = struct {
             error.OutOfMemory => return error.OutOfMemory,
             else => return,
         };
-        if (bytes.len < pack_magic.len + 32 or !std.mem.eql(u8, bytes[0..pack_magic.len], pack_magic)) return error.Damaged;
-        const body_end = bytes.len - 32;
-        var checksum: Digest = undefined;
-        Sha.hash(bytes[0..body_end], &checksum, .{});
-        if (!std.mem.eql(u8, &checksum, bytes[body_end..])) return error.Damaged;
-        var reader: PackReader = .{ .bytes = bytes[0..body_end], .at = pack_magic.len };
-        const count = try reader.int(u32);
-        // Every entry is at least a key, a kind byte and one payload byte.
-        if (count > body_end / 34) return error.Damaged;
-        try self.entries.ensureTotalCapacity(self.allocator, count);
-        for (0..count) |_| {
-            const key = try reader.digest();
-            const entry: Entry = switch (try reader.int(u8)) {
-                0 => .{ .first = (try reader.int(u8)) != 0 },
-                1 => .{ .unit = try reader.unitAnswer(self.allocator) },
-                else => return error.Damaged,
-            };
-            self.entries.putAssumeCapacity(key, entry);
-        }
+        try readPack(self.allocator, bytes, &self.entries);
     }
     fn writePack(self: *Store) !void {
         var out: std.ArrayList(u8) = .empty;
@@ -719,6 +1111,18 @@ fn appendEntry(allocator: std.mem.Allocator, out: *std.ArrayList(u8), key: Diges
             try out.append(allocator, 0);
             try out.append(allocator, @intFromBool(allocates));
         },
+        .meta => |digest| {
+            try out.append(allocator, 2);
+            try out.appendSlice(allocator, &digest);
+        },
+        .record => |record| {
+            try out.append(allocator, 3);
+            var writer = codec.Writer.init(allocator);
+            defer writer.deinit();
+            try writer.write(Record, record.*);
+            try appendInt(allocator, out, u32, @intCast(writer.bytes.items.len));
+            try out.appendSlice(allocator, writer.bytes.items);
+        },
         .unit => |answer| {
             try out.append(allocator, 1);
             try out.appendSlice(allocator, &answer.il);
@@ -755,6 +1159,18 @@ const PackReader = struct {
     }
     fn text(self: *PackReader) error{Damaged}![]const u8 {
         return self.take(try self.int(u32));
+    }
+    fn record(self: *PackReader, allocator: std.mem.Allocator) error{ Damaged, OutOfMemory }!*const Record {
+        const bytes = try self.take(try self.int(u32));
+        var reader = codec.Reader.init(allocator, bytes);
+        const value = reader.read(Record) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return error.Damaged,
+        };
+        if (!reader.done()) return error.Damaged;
+        const stored = try allocator.create(Record);
+        stored.* = value;
+        return stored;
     }
     fn unitAnswer(self: *PackReader, allocator: std.mem.Allocator) error{ Damaged, OutOfMemory }!Unit {
         const il = try self.digest();
@@ -822,4 +1238,34 @@ test "atomicWrite reports a refused rename and leaves no staging file behind" {
     var iterator = names.iterate();
     try std.testing.expectEqualStrings("unit", (try iterator.next(std.testing.io)).?.name);
     try std.testing.expectEqual(@as(?std.Io.Dir.Entry, null), try iterator.next(std.testing.io));
+}
+
+// spec-case: QBE-FRAGMENT-REUSE-1
+test "the ordinals a key names keep first-mention order without repeats, short or long" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try std.testing.expectEqualSlices(u32, &.{ 4, 1, 9 }, try unique(a, &.{ 4, 1, 4, 9, 1 }));
+    var long: [100]u32 = undefined;
+    for (&long, 0..) |*item, index| item.* = @intCast(index % 40);
+    const deduplicated = try unique(a, &long);
+    try std.testing.expectEqual(@as(usize, 40), deduplicated.len);
+    try std.testing.expectEqual(@as(u32, 39), deduplicated[39]);
+}
+
+// spec-case: QBE-FRAGMENT-REUSE-1
+test "a store sees a text in its open text directory until the file is gone" {
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var store = try Store.open(a, std.testing.io, root, "test-compiler", "main.my");
+    defer store.deinit();
+    try std.testing.expect(store.pack.texts != null);
+    const digest = try store.rememberMeta(@splat(1), "{\"name\":\"f\"}");
+    try std.testing.expect(store.present(digest));
+    try std.Io.Dir.cwd().deleteFile(std.testing.io, try store.path(digest));
+    try std.testing.expect(!store.present(digest));
 }

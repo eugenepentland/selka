@@ -138,6 +138,10 @@ pub const Request = struct {
     /// tree: its bodies are all checked, and summaries stand in only for the
     /// cross-function facts (and the pass diagnostics) of unchanged ones.
     facts_only: bool = false,
+    /// The request's prepared declaration identities (stable keys,
+    /// dependency contexts, region digests), kept for the build's
+    /// lowering-free unit reuse (`EMIT-STANDIN-1`); allocated in the check's arena.
+    prepared: ?semantic_key.Prepared = null,
 };
 
 /// Convert the passes' in-memory facts to the persisted shape.

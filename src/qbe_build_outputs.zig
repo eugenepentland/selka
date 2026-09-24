@@ -12,6 +12,10 @@ const free_arguments = "free(arguments);";
 /// `<symbol> <element> <width> <count> [hex]`, with element bytes in lowercase
 /// hex.
 const literal_word = "myl-lit ";
+/// The inline-frame fields that name the callee-local start pc and the caller
+/// pc of the call site.
+const callee_start_key = "callee_start";
+const call_position_key = "call_position";
 /// Metadata, allocation, and unsupported executable-entry failures.
 pub const Error = host.Error || error{UnsupportedNativeEntry};
 /// Emit typed runtime descriptors, host bridges, and source-location tables.
@@ -19,8 +23,8 @@ pub fn metadata(allocator: std.mem.Allocator, manifest: std.json.Value) Error![]
     return metadataUnit(allocator, manifest, true);
 }
 /// QBE-BATCH-3: the part of `metadata` a batched build still compiles as one
-/// C unit — typed runtime descriptors, host bridges, literals, a declaration
-/// of every function's metadata and the frame-map roots. Each batch carries
+/// C unit — typed runtime descriptors, host bridges, literals and, for a
+/// frame-map program, the roots that name every function's metadata. Each batch carries
 /// its own functions' location, message and inline tables instead
 /// (`metadataAssembly`), so an edit that moves one module's lines recompiles
 /// that module's tables, not the whole program's.
@@ -39,12 +43,23 @@ fn metadataUnit(allocator: std.mem.Allocator, manifest: std.json.Value, tables: 
     try literalDefinitions(w, allocator, functions);
     // Every inline table names another unit's metadata, which may be defined
     // later in this file, so declare them all before the first definition.
-    for (functions) |unit| {
+    // QBE-BATCH-4: without the tables only the frame-map roots name any, so a
+    // batched program that keeps no frame map declares none, and adding or
+    // removing a function leaves this, the largest single compile, unchanged.
+    const roots = usesFrameMap(functions);
+    if (tables or roots) for (functions) |unit| {
         try w.print("extern const MylQbeFunction {s}_meta;\n", .{v.text(v.get(unit, "symbol"))});
-    }
+    };
     if (tables) try functionTables(w, functions);
-    try frameMapRoots(w, functions);
+    if (roots) try frameMapRoots(w, functions);
     return buffer.toOwnedSlice();
+}
+/// Whether any unit was lowered for the frame map (QBE-FRAMEMAP-1).
+fn usesFrameMap(functions: []const std.json.Value) bool {
+    for (functions) |unit| {
+        if (frame_map.usesFrameMap(lean.facts(unit))) return true;
+    }
+    return false;
 }
 /// Every function's location, message and inline tables and its
 /// `MylQbeFunction` record, in C.
@@ -81,8 +96,8 @@ fn functionTables(w: *std.Io.Writer, functions: []const std.json.Value) Error!vo
                     v.text(v.get(frame, "callee")),
                     v.number(v.get(frame, "start")),
                     v.number(v.get(frame, "end")),
-                    v.number(v.get(frame, "callee_start")),
-                    v.number(v.get(frame, "call_position")),
+                    v.number(v.get(frame, callee_start_key)),
+                    v.number(v.get(frame, call_position_key)),
                 });
             }
             try w.writeAll("};\n");
@@ -135,8 +150,8 @@ pub fn metadataAssembly(allocator: std.mem.Allocator, units: []const std.json.Va
                 v.text(v.get(frame, "callee")),
                 v.number(v.get(frame, "start")),
                 v.number(v.get(frame, "end")),
-                v.number(v.get(frame, "callee_start")),
-                v.number(v.get(frame, "call_position")),
+                v.number(v.get(frame, callee_start_key)),
+                v.number(v.get(frame, call_position_key)),
             });
         }
     }
@@ -148,6 +163,72 @@ pub fn metadataAssembly(allocator: std.mem.Allocator, units: []const std.json.Va
     }
     try w.writeAll("\t.section\t.note.GNU-stack,\"\",@progbits\n");
     return buffer.toOwnedSlice();
+}
+/// BUILD-METADATA-KEY-1: the BLAKE3 digest of everything `metadataAssembly`
+/// reads from `units`, in order — each unit's symbol and name, its positions in
+/// whichever spelling it carries (the compact `paths`, `positions` and
+/// `assertions`, or the spelled-out `locations` and `messages`) and its inline
+/// frames — so a batch's assembled tables are found in the object cache
+/// without rendering them. Rendering every batch's tables only to key them cost
+/// a warm build more than the rest of its planning.
+pub fn metadataDigest(units: []const std.json.Value) [32]u8 {
+    var hash = std.crypto.hash.Blake3.init(.{});
+    hash.update("qbe-batch-metadata-digest-v1");
+    for (units) |unit| {
+        digestText(&hash, v.text(v.get(unit, "symbol")));
+        // EMIT-META-1: a lean unit's name, positions, messages and inline
+        // frames are its stored metadata record, which its digest names.
+        const stored = v.get(unit, lean.meta_key);
+        if (stored == .string) {
+            digestText(&hash, "stored");
+            digestText(&hash, stored.string);
+            continue;
+        }
+        digestText(&hash, v.text(v.get(unit, "name")));
+        const compact = v.get(unit, "positions");
+        if (compact == .string) {
+            digestText(&hash, "compact");
+            digestNumber(&hash, v.array(v.get(unit, "paths")).len);
+            for (v.array(v.get(unit, "paths"))) |path| digestText(&hash, v.text(path));
+            digestText(&hash, compact.string);
+            digestNumber(&hash, v.array(v.get(unit, "assertions")).len);
+            for (v.array(v.get(unit, "assertions"))) |assertion| {
+                const pair = v.array(assertion);
+                digestNumber(&hash, pair.len);
+                if (pair.len != 2) continue;
+                digestNumber(&hash, v.number(pair[0]));
+                digestText(&hash, v.text(pair[1]));
+            }
+        } else {
+            digestText(&hash, "spelled");
+            digestNumber(&hash, v.array(v.get(unit, "locations")).len);
+            for (v.array(v.get(unit, "locations"))) |location| {
+                digestText(&hash, v.text(v.get(location, "path")));
+                digestNumber(&hash, v.number(v.get(location, "line")));
+                digestNumber(&hash, v.number(v.get(location, "column")));
+            }
+            digestNumber(&hash, v.array(v.get(unit, "messages")).len);
+            for (v.array(v.get(unit, "messages"))) |message| digestText(&hash, v.text(message));
+        }
+        const inlines = v.array(v.get(unit, "inlines"));
+        digestNumber(&hash, inlines.len);
+        for (inlines) |frame| {
+            digestText(&hash, v.text(v.get(frame, "callee")));
+            for ([_][]const u8{ "start", "end", callee_start_key, call_position_key }) |field| digestNumber(&hash, v.number(v.get(frame, field)));
+        }
+    }
+    var out: [32]u8 = undefined;
+    hash.final(&out);
+    return out;
+}
+fn digestText(hash: *std.crypto.hash.Blake3, text: []const u8) void {
+    digestNumber(hash, text.len);
+    hash.update(text);
+}
+fn digestNumber(hash: *std.crypto.hash.Blake3, number: u64) void {
+    var bytes: [8]u8 = undefined;
+    std.mem.writeInt(u64, &bytes, number, .little);
+    hash.update(&bytes);
 }
 /// The label index of `text` in a batch's string table, adding it when new.
 fn stringIndex(allocator: std.mem.Allocator, strings: *std.array_hash_map.String(void), text: []const u8) Error!usize {
@@ -161,11 +242,6 @@ fn stringIndex(allocator: std.mem.Allocator, strings: *std.array_hash_map.String
 /// name. Units lowered under another protocol reference their metadata from
 /// code, so they need nothing here.
 fn frameMapRoots(w: *std.Io.Writer, functions: []const std.json.Value) Error!void {
-    var any = false;
-    for (functions) |unit| {
-        if (frame_map.usesFrameMap(lean.facts(unit))) any = true;
-    }
-    if (!any) return;
     try w.writeAll("__attribute__((used)) static const MylQbeFunction *const mylang_frame_map_functions[] = {\n");
     for (functions) |unit| try w.print("&{s}_meta,\n", .{v.text(v.get(unit, "symbol"))});
     try w.writeAll("};\n");
@@ -425,13 +501,67 @@ test "a batch's function metadata is assembly holding the C unit's records, and 
     try std.testing.expect(std.mem.indexOf(u8, assembly, empty) != null);
     try std.testing.expect(std.mem.indexOf(u8, assembly, "\t.section\t.rodata.str1.1,\"aMS\",@progbits,1\n.Lmyl_s_0:\n\t.asciz\t\"main\"\n") != null);
     try std.testing.expect(std.mem.indexOf(u8, assembly, ".Lmyl_s_3:\n\t.asciz\t\"x \\\"two\\\"\"\n") != null);
-    // The shared C unit still declares every function's metadata but defines none.
+    // The shared C unit defines no function's metadata, and without a frame
+    // map it names none either (QBE-BATCH-4).
     const shared = try sharedMetadata(a, parsed.value);
-    try std.testing.expect(std.mem.indexOf(u8, shared, "extern const MylQbeFunction main_native_meta;") != null);
-    try std.testing.expect(std.mem.indexOf(u8, shared, "main_native_meta_locations") == null);
+    try std.testing.expect(std.mem.indexOf(u8, shared, "main_native_meta") == null);
     var failing = std.testing.FailingAllocator.init(std.testing.allocator, .{ .fail_index = 0 });
     // The allocating writer reports a failed allocation as a failed write.
     try std.testing.expectError(error.WriteFailed, metadataAssembly(failing.allocator(), functions));
+}
+
+// spec: QBE-BATCH-4
+test "the shared metadata unit names the functions only for the frame map, so a new function leaves it unchanged" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const one = try std.json.parseFromSliceLeaky(std.json.Value, a,
+        \\{"entry":"main_native","functions":[{"symbol":"main_native","name":"main","il":"export function $main_native() {\n@s\n ret\n}\n"}]}
+    , .{});
+    const two = try std.json.parseFromSliceLeaky(std.json.Value, a,
+        \\{"entry":"main_native","functions":[{"symbol":"main_native","name":"main","il":"export function $main_native() {\n@s\n ret\n}\n"},
+        \\{"symbol":"myl_f_abc","name":"m::f","il":"export function $myl_f_abc() {\n@s\n ret\n}\n"}]}
+    , .{});
+    try std.testing.expectEqualStrings(try sharedMetadata(a, one), try sharedMetadata(a, two));
+    // A frame-map unit roots every function's metadata, so it must name them all.
+    const mapped = try std.json.parseFromSliceLeaky(std.json.Value, a,
+        \\{"entry":"main_native","functions":[{"symbol":"main_native","name":"main","il":"dbgfile \"main_native\"\nexport function $main_native() {\n@s\n ret\n}\n"},
+        \\{"symbol":"myl_f_abc","name":"m::f","il":"export function $myl_f_abc() {\n@s\n ret\n}\n"}]}
+    , .{});
+    const rooted = try sharedMetadata(a, mapped);
+    try std.testing.expect(std.mem.indexOf(u8, rooted, "extern const MylQbeFunction myl_f_abc_meta;") != null);
+    try std.testing.expect(std.mem.indexOf(u8, rooted, "&myl_f_abc_meta,") != null);
+}
+
+// spec: BUILD-METADATA-KEY-1
+test "a batch's metadata digest changes exactly when its rendered tables can" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const frame = ",\"inlines\":[{\"callee\":\"myl_f_b\",\"start\":0,\"end\":1,\"callee_start\":0,\"call_position\":1}]}";
+    const base = "{\"symbol\":\"myl_f_a\",\"name\":\"m::a\",\"paths\":[\"m.my\"],\"positions\":\"0:3:5 0:4:1\",\"assertions\":[[1,\"x\"]]" ++ frame;
+    const variants = [_][]const u8{
+        base,
+        "{\"symbol\":\"myl_f_a\",\"name\":\"m::a\",\"paths\":[\"m.my\"],\"positions\":\"0:3:5 0:5:1\",\"assertions\":[[1,\"x\"]]" ++ frame,
+        "{\"symbol\":\"myl_f_a\",\"name\":\"m::a\",\"paths\":[\"n.my\"],\"positions\":\"0:3:5 0:4:1\",\"assertions\":[[1,\"x\"]]" ++ frame,
+        "{\"symbol\":\"myl_f_a\",\"name\":\"m::a\",\"paths\":[\"m.my\"],\"positions\":\"0:3:5 0:4:1\",\"assertions\":[[1,\"y\"]]" ++ frame,
+        "{\"symbol\":\"myl_f_a\",\"name\":\"m::c\",\"paths\":[\"m.my\"],\"positions\":\"0:3:5 0:4:1\",\"assertions\":[[1,\"x\"]]" ++ frame,
+        "{\"symbol\":\"myl_f_a\",\"name\":\"m::a\",\"paths\":[\"m.my\"],\"positions\":\"0:3:5 0:4:1\",\"assertions\":[[1,\"x\"]]," ++
+            "\"inlines\":[{\"callee\":\"myl_f_b\",\"start\":0,\"end\":2,\"callee_start\":0,\"call_position\":1}]}",
+        "{\"symbol\":\"myl_f_a\",\"name\":\"m::a\",\"locations\":[{\"path\":\"m.my\",\"line\":3,\"column\":5},{\"path\":\"m.my\",\"line\":4,\"column\":1}]," ++
+            "\"messages\":[\"\",\"x\"]" ++ frame,
+    };
+    try std.testing.expectEqual(variants.len, try distinctDigests(a, &variants));
+    // The same fields give the same digest, and so the same cached object.
+    const first = metadataDigest(&.{try std.json.parseFromSliceLeaky(std.json.Value, a, base, .{})});
+    const again = metadataDigest(&.{try std.json.parseFromSliceLeaky(std.json.Value, a, base, .{})});
+    try std.testing.expectEqualSlices(u8, &first, &again);
+}
+/// How many distinct metadata digests the one-unit batches `texts` have.
+fn distinctDigests(a: std.mem.Allocator, texts: []const []const u8) !usize {
+    var seen: std.array_hash_map.Auto([32]u8, void) = .empty;
+    for (texts) |text| try seen.put(a, metadataDigest(&.{try std.json.parseFromSliceLeaky(std.json.Value, a, text, .{})}), {});
+    return seen.count();
 }
 
 // spec-case: QBE-BATCH-3

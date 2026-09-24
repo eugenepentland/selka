@@ -353,7 +353,7 @@ that also drops the frame record, and giving such a binary `--max-steps=` in
 ## Incremental frontend
 
 A project build no longer lowers and renders the whole program when little
-changed. Four mechanisms stack; each is a cache the next build consults before
+changed. These mechanisms stack; each is a cache the next build consults before
 doing the work.
 
 - **Unchanged build (`BUILD-NOOP-1`).** Beside the output the driver records a
@@ -374,6 +374,25 @@ doing the work.
   answers from the fragment store under the frontend cache
   (`<cache>/frontend/fragments`) without lowering the unit to QBE. The emitted
   manifest is byte-identical to a fresh emission.
+- **Unchanged functions are not even lowered (`EMIT-STANDIN-1`).** An
+  executable's emission (`build`, `run`, `run-project`) keys each declared
+  function by its source identity: the checker's stable declaration key, its
+  dependency context and the digest and length of its declaration region. Every
+  function it lowers leaves a *record* under that identity: its stored unit and
+  metadata digest, the facts other units read about it (its inline key, whether
+  it allocates, what it calls and writes), and a snapshot digest of everything
+  its unit read (each named function's interface, the schemas it reaches, the
+  sources its positions fall in). The next emission lowers only the functions
+  with no current record, plus the ones a caller may inline and the few that
+  are always lowered (the entry, printers, specializations, lambdas). If a
+  record turns out stale once the program-wide facts are recomputed, that
+  function is lowered too, until nothing is stale. The manifest still names
+  exactly the texts, facts and metadata a full emission names.
+- **Metadata by digest (`EMIT-META-1`).** A lean unit names its location,
+  message and inline tables by the digest of their stored text, keyed by the
+  unit and the digest of every source its positions fall in. Only a unit whose
+  function or sources changed computes them again; a just-computed record rides
+  inline in the manifest so the driver does not read it back.
 - **Lean manifests.** `build --project`, `run`, `run-project` and `mylang test`
   hand the driver each unit's digest and stored path instead of its text, and
   its source positions as one compact string (`BUILD-POSITIONS-1`). Objects are
@@ -381,9 +400,16 @@ doing the work.
   object that is missing, one member at a time (`BUILD-MEMORY-1`).
 
 The fragment store and the replay slots are partitioned by compiler identity
-and are removed with the rest of the cache; `--no-cache` bypasses all four.
-`work-report-v1` counts a unit answered from the store as a reused, not an
-emitted, fragment.
+and are removed with the rest of the cache; `--no-cache` bypasses all of them.
+`work-report-v1` counts a unit answered from the store, or taken from a record,
+as a reused, not an emitted, fragment.
+
+The store does not grow without bound (`FRAGMENT-SWEEP-1`). Each entry point
+keeps one pack of entries, holding what its last build used plus a bounded
+number of older entries. A stored text that no pack and no replay names is
+deleted by an occasional sweep, which a build runs only while it holds the
+store's lease exclusively, so a text another build is still reading is never
+removed underneath it.
 
 ```console
 $ mylang build main.my --project -o app --timings=json
@@ -393,9 +419,11 @@ $ mylang build main.my --project -o app --timings=json
 ```
 
 On the generated 50,000-line ladder project (120 modules, 4,681 functions), an
-unchanged build takes 0.1 s and a one-line body edit 1.2 s, of which about
-0.55 s is the edited project's check. At 204,000 lines a cold build finishes in
-26 s under the default 8 GiB compiler ceiling (3.5 GB peak, in the frontend).
+unchanged build takes 0.04 s and a one-line body edit 0.38 s, of which 0.11 s
+is the edited project's check (`mylang check`). At 204,000 lines the edit
+takes 1.48 s against a 0.43 s check, and a cold build finishes in 26 s at a
+2 GB peak. The measurements are in
+`docs/audits/devspeed-build-residue-2026-09-24.md`.
 
 ## Object cache and link
 
@@ -476,10 +504,12 @@ becomes the single member of an archive published beside the objects. The link
 places the archive after every object that can reference it. Because the merge
 keeps every unit's function and data sections and the link collects unreferenced
 ones, a program that never prints still carries no printing runtime. A build that
-changes nothing relinks nothing observable: the candidate
-and the published executable are compared by length and then by bytes, and an
-identical result keeps its inode and modification time, which `--report` shows as
-`"output_changed": false`.
+changes nothing relinks nothing observable: when every object the link names was
+reused, the candidate and the published executable are compared by length and
+then by bytes, and an identical result keeps its inode and modification time,
+which `--report` shows as `"output_changed": false`. A link over any object the
+build compiled makes a new program, so it is published without reading either
+file (at 200,000 lines that comparison read two 130 MB executables).
 
 An unchanged build goes one step further and **skips the link itself**. The
 sidecar beside the executable records a link identity over the object set, the
@@ -492,13 +522,30 @@ conservative: a `--provider` or any explicit native link input (`--link`,
 change without changing a guest object. This is what keeps an unchanged
 `--release` rebuild from paying the LTO link again.
 
+A link that does run skips the `zig cc` driver (`BUILD-LINK-1`). Before it
+starts `ld.lld`, `zig cc` probes the host C compiler (`cc -E -Wp,-v`,
+`cc -print-file-name=crt1.o`) and resolves the archives it bundles, and it
+gives the same answer every time for the same flags on the same host. So the
+first link of a given shape runs `zig cc -###`, which links and prints the
+linker command, and the build keeps that command beside the objects with the
+object list and the output replaced by markers. Every later link of that shape
+runs `zig ld.lld` with the recorded arguments and its own objects and output.
+The template is keyed by the build environment, the variables the probe reads
+(`PATH`, `ZIG_LIBC`, `LIBRARY_PATH`, …) and every other argument. It is not used
+when a path it names has disappeared, and a direct link that fails goes through
+`zig cc` again. `--report` names the route as `link_route` (`recorded`,
+`direct` or `driver`).
+
 A cached object or archive is accepted only when a fingerprint over its length
 and contents matches the one stored beside it in a `.digest` file. Damaged bytes
 and a damaged fingerprint are both misses, so a corrupt cache repairs the one
-entry it lost rather than failing the build or silently linking rubble. Cache
-keys stay on SHA-256 because they name small inputs; verification uses the
-cheaper fingerprint because a warm build re-reads megabytes of stored objects and
-a cryptographic pass over them costs more than the link it protects.
+entry it lost rather than failing the build or silently linking rubble. The
+`.digest` file also records the published file's inode, size and modification
+time, and an object that still has exactly that identity is accepted without
+reading it; anything that wrote, truncated or replaced it changes the identity,
+and then the bytes are fingerprinted again. Cache keys are BLAKE3 over the
+framed environment, contract, kind and input: a warm build keys every unit and
+batch, and the pinned toolchain's SHA-256 runs at about 14 MB/s on some hosts.
 
 ```console
 $ mylang build examples/factorial.my -o /tmp/factorial --cache-dir /tmp/qbe-cache --report
@@ -573,7 +620,8 @@ expensive, and both are gone.
   the same whatever the driver holds (`src/qbe_build_spawn.zig`).
 - **Functions compile in batches.** Units are ordered by module, then symbol. A
   batch never spans two modules; a new one starts at every symbol whose hash
-  marks a boundary (one in 32 on average) and after 128 functions. A unit that
+  marks a boundary (one in 8 on average, so a body edit recompiles about eight
+  functions) and after 128 functions. A unit that
   defines data compiles alone. One QBE run takes each member's IL as its own
   input file (QBE forgets aggregate types between files, so members' types never
   collide) with every function in its own `.text.<symbol>` section, so

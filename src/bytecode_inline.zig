@@ -84,6 +84,15 @@ pub fn inlineProgram(allocator: std.mem.Allocator, program: bytecode.Program) Er
     return .{ .functions = functions, .main = program.main, .records = program.records };
 }
 
+/// Whether function `index` of an already inlined program may be spliced into
+/// a caller — the inliner's own test on that final body. A build that reuses a
+/// caller's unit without lowering it (`EMIT-STANDIN-1`) keys the caller by what
+/// it may have inlined.
+pub fn eligibleFunction(program: bytecode.Program, index: usize) bool {
+    const function = program.functions[index];
+    return eligible(program, index, function.scope.instructions, function.scope.locals);
+}
+
 /// Whether one function may be inlined at a call site: a non-entry, non-host,
 /// non-c_abi, non-conversion leaf within the size budget whose every instruction
 /// is on the no-allocation allow-list and whose locals need no drop.

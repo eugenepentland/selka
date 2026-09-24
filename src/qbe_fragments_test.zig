@@ -7,14 +7,17 @@ const language = @import("compiler.zig");
 const fragments = @import("qbe_fragments.zig");
 const units = @import("qbe_build_units.zig");
 const t = std.testing;
-
-/// The two modules of one version of the test project.
-const Files = struct { main: []const u8, helper: []const u8 };
+/// The manifest member listing every unit.
+const functions_member = "functions";
+/// The modules of one version of the test project; `other` is imported only
+/// by the three-module stand-in project.
+const Files = struct { main: []const u8, helper: []const u8, other: []const u8 = "" };
 
 fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     const files: *const Files = @ptrCast(@alignCast(context.?));
     if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, files.main);
     if (std.mem.eql(u8, path, "helper.my")) return allocator.dupe(u8, files.helper);
+    if (std.mem.eql(u8, path, "other.my") and files.other.len != 0) return allocator.dupe(u8, files.other);
     return error.NotFound;
 }
 
@@ -111,6 +114,7 @@ const Opened = struct {
         self.store = try fragments.Store.open(self.arena.allocator(), t.io, root, "test-compiler", "main.my");
     }
     fn deinit(self: *Opened) void {
+        self.store.deinit();
         self.arena.deinit();
     }
 };
@@ -177,7 +181,7 @@ fn expectSamePositions(spelled: std.json.Value, compact: std.json.Value) !void {
 /// The one unit of `manifest` named `name`, parsed, or null when absent.
 fn unitNamed(allocator: std.mem.Allocator, manifest: []const u8, name: []const u8) !?std.json.Value {
     const document = try std.json.parseFromSliceLeaky(std.json.Value, allocator, manifest, .{});
-    for (document.object.get("functions").?.array.items) |unit| {
+    for (document.object.get(functions_member).?.array.items) |unit| {
         if (std.mem.eql(u8, unit.object.get("name").?.string, name)) return unit;
     }
     return null;
@@ -200,16 +204,75 @@ test "a lean manifest names each unit's stored text by digest instead of carryin
     const stored = (try unitNamed(a, lean, "helper::total")).?;
     const inline_unit = (try unitNamed(a, fresh, "helper::total")).?;
     try t.expect(stored.object.get("il") == null);
-    const text = try std.Io.Dir.cwd().readFileAlloc(t.io, stored.object.get("il_file").?.string, a, .unlimited);
+    const store = (try std.json.parseFromSliceLeaky(std.json.Value, a, lean, .{})).object.get("store").?.string;
+    const text = try storedText(a, store, stored.object.get("il_digest").?.string);
     try t.expectEqualStrings(inline_unit.object.get("il").?.string, text);
-    var hash: [32]u8 = undefined;
-    std.crypto.hash.Blake3.hash(text, &hash, .{});
-    try t.expectEqualStrings(&std.fmt.bytesToHex(hash, .lower), stored.object.get("il_digest").?.string);
     // Everything but the unit texts is the fresh manifest's.
     try t.expectEqualStrings(inline_unit.object.get("symbol").?.string, stored.object.get("symbol").?.string);
-    // BUILD-POSITIONS-1 (spec-case): the lean unit spells the same positions compactly.
-    try t.expect(stored.object.get("locations") == null);
-    try expectSamePositions(inline_unit, stored);
+    // EMIT-META-1 (spec-case): the lean unit names its metadata record, which
+    // spells the same positions compactly (BUILD-POSITIONS-1) and the same name
+    // and inline frames.
+    try t.expect(stored.object.get("locations") == null and stored.object.get("positions") == null);
+    const record = try std.json.parseFromSliceLeaky(std.json.Value, a, try storedText(a, store, stored.object.get("meta_digest").?.string), .{});
+    try t.expectEqualStrings("helper::total", record.object.get("name").?.string);
+    try t.expectEqual(inline_unit.object.get("inlines").?.array.items.len, record.object.get("inlines").?.array.items.len);
+    try expectSamePositions(inline_unit, record);
+}
+
+/// A stored text read back from `store` by its hex digest, checked against it.
+fn storedText(allocator: std.mem.Allocator, store: []const u8, digest: []const u8) ![]u8 {
+    const text = try std.Io.Dir.cwd().readFileAlloc(t.io, try std.fs.path.join(allocator, &.{ store, digest }), allocator, .unlimited);
+    var hash: [32]u8 = undefined;
+    std.crypto.hash.Blake3.hash(text, &hash, .{});
+    try t.expectEqualStrings(&std.fmt.bytesToHex(hash, .lower), digest);
+    return text;
+}
+
+/// One lean emission of `files` through a store reopened at `root`: its
+/// reuse counters and its manifest.
+const LeanRun = struct { statistics: fragments.Statistics, manifest: []u8 };
+fn emitLean(allocator: std.mem.Allocator, root: []const u8, files: *const Files) !LeanRun {
+    var opened: Opened = undefined;
+    try opened.init(root);
+    defer opened.deinit();
+    const manifest = try emit(allocator, files, .{ .store = &opened.store, .lean = true, .executable = true });
+    return .{ .statistics = opened.store.statistics, .manifest = manifest };
+}
+
+/// The `meta_digest` of the unit named `name`.
+fn metaDigest(allocator: std.mem.Allocator, manifest: []const u8, name: []const u8) ![]const u8 {
+    return (try unitNamed(allocator, manifest, name)).?.object.get("meta_digest").?.string;
+}
+
+// spec: EMIT-META-1
+test "an edit computes metadata only for units of the sources it changed" {
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    const cold = try emitLean(a, root, &original);
+    try t.expectEqual(@as(usize, 0), cold.statistics.meta.hits);
+    try t.expectEqual(cold.statistics.misses, cold.statistics.meta.misses);
+    // A record just computed also travels inline, so the build need not read it back.
+    try t.expectEqual(cold.statistics.meta.misses, std.mem.count(u8, cold.manifest, "\"meta\":{"));
+    // Nothing changed: every unit's metadata is read, none computed, none inline.
+    const warm = try emitLean(a, root, &original);
+    try t.expectEqual(@as(usize, 0), warm.statistics.meta.misses);
+    try t.expectEqual(@as(usize, 0), std.mem.count(u8, warm.manifest, "\"meta\":{"));
+    try t.expectEqualStrings(try metaDigest(a, cold.manifest, "helper::total"), try metaDigest(a, warm.manifest, "helper::total"));
+    // A body edit in `helper` recomputes the metadata of helper's units only,
+    // and a unit whose positions did not move keeps its digest.
+    const body = try emitLean(a, root, &body_edit);
+    try t.expect(body.statistics.meta.misses >= 1 and body.statistics.meta.misses <= 5);
+    try t.expectEqual(body.statistics.meta.hits + body.statistics.meta.misses, cold.statistics.meta.misses);
+    try t.expectEqualStrings(try metaDigest(a, cold.manifest, "main::main"), try metaDigest(a, body.manifest, "main::main"));
+    try t.expectEqualStrings(try metaDigest(a, cold.manifest, "helper::first"), try metaDigest(a, body.manifest, "helper::first"));
+    // An executable's lean manifest carries no library-only facts.
+    try t.expect(std.mem.indexOf(u8, body.manifest, "\"test_dependencies\"") == null);
+    try t.expect(std.mem.indexOf(u8, body.manifest, "\"export\"") == null);
+    try t.expect(std.mem.indexOf(u8, body.manifest, "\"schema\":null") != null);
 }
 
 // spec-case: QBE-FRAGMENT-REUSE-1
@@ -261,4 +324,205 @@ test "a remembered emission replays its warnings and manifest until a unit text 
     // A named unit text that left the store voids the replay.
     try std.Io.Dir.cwd().deleteFile(t.io, try opened.store.path(unit.il));
     try t.expect((try fragments.Replay.load(a, t.io, .{ .root = root, .identity = "test-compiler" }, key)) == null);
+}
+
+/// Whether a stored text is still on disk.
+fn onDisk(store: *fragments.Store, digest: fragments.Digest) !bool {
+    std.Io.Dir.cwd().access(t.io, try store.path(digest), .{}) catch return false;
+    return true;
+}
+
+/// A text written straight into `store`, which no pack or replay names.
+fn orphan(store: *fragments.Store, text: []const u8) !fragments.Digest {
+    var digest: fragments.Digest = undefined;
+    std.crypto.hash.Blake3.hash(text, &digest, .{});
+    try std.Io.Dir.cwd().writeFile(t.io, .{ .sub_path = try store.path(digest), .data = text });
+    return digest;
+}
+
+// spec: FRAGMENT-SWEEP-1
+test "a sweep removes only the texts no pack or replay names, and never while another process holds the store" {
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    var opened: Opened = undefined;
+    try opened.init(root);
+    defer opened.deinit();
+    const packed_unit = try opened.store.remember(@splat(3), "export function $p() {\n@start\n ret\n}\n", .{ .implementation_hash = "", .dependencies = &.{}, .cacheable = true, .pure = true, .reasons = &.{} });
+    const meta = try opened.store.rememberMeta(@splat(4), "{\"name\":\"p\"}");
+    opened.store.flush();
+    // A text only a remembered emission names, and one nothing names.
+    const replayed = try orphan(&opened.store, "export function $r() {\n@start\n ret\n}\n");
+    fragments.Replay.remember(a, t.io, .{ .root = root, .identity = "test-compiler" }, .{ .slot = @splat(5), .key = @splat(6) }, .{ .warnings = "", .manifest = "{}" }, &.{replayed});
+    const garbage = try orphan(&opened.store, "export function $g() {\n@start\n ret\n}\n");
+    // Few texts written since the last sweep: no sweep, whoever holds the store.
+    opened.store.sweep();
+    try t.expect(try onDisk(&opened.store, garbage));
+    // Past the threshold, but another process still holds the store: no sweep.
+    opened.store.statistics.texts.written = 10_000;
+    var other: Opened = undefined;
+    try other.init(root);
+    opened.store.sweep();
+    try t.expect(try onDisk(&opened.store, garbage));
+    try t.expectEqual(@as(usize, 0), opened.store.statistics.texts.swept);
+    other.deinit();
+    // Alone past the threshold: only the unnamed text goes.
+    opened.store.sweep();
+    try t.expectEqual(@as(usize, 1), opened.store.statistics.texts.swept);
+    try t.expect(!try onDisk(&opened.store, garbage));
+    try t.expect(try onDisk(&opened.store, packed_unit.il));
+    try t.expect(try onDisk(&opened.store, meta));
+    try t.expect(try onDisk(&opened.store, replayed));
+}
+
+/// One lean executable emission of `files` through a store reopened at
+/// `root`, checked the way `build` checks it (EMIT-STANDIN-1): a function
+/// whose record is current is stood in rather than lowered.
+fn emitStandIn(allocator: std.mem.Allocator, root: []const u8, files: *const Files) !LeanRun {
+    var opened: Opened = undefined;
+    try opened.init(root);
+    defer opened.deinit();
+    var project = language.project.Project.init(allocator);
+    defer project.deinit();
+    try project.load(.{ .context = @constCast(files), .read = read }, "main", .{});
+    var index = try language.interfaces.build(&project);
+    var compilation = try language.project_compile.Compilation.init(&index);
+    compilation.reuse = .{ .store = &opened.store, .lean = true, .executable = true };
+    var cache = language.semantic_cache.Cache.init(t.allocator, 0);
+    defer cache.deinit();
+    var request: language.semantic_summary.Request = .{ .facts_only = true };
+    cache.context.summaries = &request;
+    try compilation.checkWithCache(&cache);
+    const manifest = try compilation.emitQbe(allocator);
+    return .{ .statistics = opened.store.statistics, .manifest = manifest };
+}
+
+/// Both manifests hand the build the same program: every unit names the
+/// same text, facts and metadata, and every program-wide member but the
+/// store's own path is the same.
+fn expectSameBuild(allocator: std.mem.Allocator, expected: []const u8, actual: []const u8) !void {
+    const left = (try std.json.parseFromSliceLeaky(std.json.Value, allocator, expected, .{})).object;
+    const right = (try std.json.parseFromSliceLeaky(std.json.Value, allocator, actual, .{})).object;
+    for ([_][]const u8{ "text_format", "runtime_data", "host", "entry", "entry_parameters" }) |member| {
+        try t.expectEqualStrings(try std.json.Stringify.valueAlloc(allocator, left.get(member).?, .{}), try std.json.Stringify.valueAlloc(allocator, right.get(member).?, .{}));
+    }
+    const want = left.get(functions_member).?.array.items;
+    const got = right.get(functions_member).?.array.items;
+    try t.expectEqual(want.len, got.len);
+    for (want, got) |one, other| try t.expectEqualStrings(try unitShape(allocator, one), try unitShape(allocator, other));
+}
+
+/// A lean unit's name, symbol, text digest, facts and metadata digest.
+fn unitShape(allocator: std.mem.Allocator, unit: std.json.Value) ![]const u8 {
+    const fields = unit.object;
+    return std.fmt.allocPrint(allocator, "{s} {s} {s} {s} {s}", .{
+        fields.get("name").?.string,
+        fields.get("symbol").?.string,
+        fields.get("il_digest").?.string,
+        fields.get("il_facts").?.string,
+        fields.get("meta_digest").?.string,
+    });
+}
+
+/// Emit `files` with stand-ins through `root` and in full through
+/// `reference`, require the same build, and return the stand-in counters.
+fn expectStandInMatches(allocator: std.mem.Allocator, root: []const u8, reference: []const u8, files: *const Files) !fragments.Standin {
+    const stood = try emitStandIn(allocator, root, files);
+    const full = try emitLean(allocator, reference, files);
+    try expectSameBuild(allocator, full.manifest, stood.manifest);
+    return stood.statistics.standin;
+}
+
+// spec: EMIT-STANDIN-1
+test "an executable's emission lowers only what an edit changed and emits what a full emission emits" {
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const base = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    const root = try std.fs.path.join(a, &.{ base, "standin" });
+    const reference = try std.fs.path.join(a, &.{ base, "full" });
+    // A cold store lowers every function and leaves records.
+    const cold = try expectStandInMatches(a, root, reference, &original);
+    try t.expectEqual(@as(usize, 0), cold.reused);
+    // Unchanged: only what is always lowered (the printing entry, the text
+    // renderer) and what a caller may inline (`total`) is lowered again;
+    // `scale` and `first` are stood in.
+    const warm = try expectStandInMatches(a, root, reference, &original);
+    try t.expectEqual(@as(usize, 2), warm.reused);
+    try t.expectEqual(cold.lowered, warm.lowered + warm.reused);
+    // Every kind of edit still emits exactly the full emission. A body edit
+    // moves the positions of every function in its source, so none of
+    // `helper` is stood in; the three-module test below counts what is.
+    const body = try expectStandInMatches(a, root, reference, &body_edit);
+    try t.expectEqual(cold.lowered, body.lowered + body.reused);
+    _ = try expectStandInMatches(a, root, reference, &interface_edit);
+    _ = try expectStandInMatches(a, root, reference, &signature_edit);
+    _ = try expectStandInMatches(a, root, reference, &schema_edit);
+    // Coming back lowers what the edits' records replaced; the build after
+    // that stands the same two functions in again.
+    _ = try expectStandInMatches(a, root, reference, &original);
+    const again = try expectStandInMatches(a, root, reference, &original);
+    try t.expectEqual(warm.reused, again.reused);
+}
+
+/// A module no edit below touches; neither function is an inline candidate.
+const other_source =
+    \\module other
+    \\
+    \\
+    \\public def grow(xs: list[int], k: int) -> list[int]:
+    \\    out: list[int] = []
+    \\    for x in xs:
+    \\        out.append(x + k)
+    \\    return out
+    \\
+    \\
+    \\public def last(xs: list[int]) -> int:
+    \\    return xs[len(xs) - 1]
+    \\
+;
+
+/// The entry of the three-module project: it uses `helper` and `other`.
+const three_main_source = replaced(
+    replaced(main_source, "import helper\n", "import helper\nimport other\n"),
+    "    out.print(str(p.left))\n",
+    "    ys = other.grow(xs, 4)\n    out.print(other.last(ys))\n    out.print(str(p.left))\n",
+);
+
+/// The three-module project before and after a body edit in `helper`.
+const three: Files = .{ .main = three_main_source, .helper = helper_source, .other = other_source };
+const three_body_edit: Files = .{ .main = three_main_source, .helper = body_edit.helper, .other = other_source };
+
+// spec-case: EMIT-STANDIN-1
+test "a body edit in one module stands in every function of the modules it did not touch" {
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const base = try directory.dir.realPathFileAlloc(t.io, ".", a);
+    const root = try std.fs.path.join(a, &.{ base, "standin" });
+    const reference = try std.fs.path.join(a, &.{ base, "full" });
+    const cold = try expectStandInMatches(a, root, reference, &three);
+    try t.expectEqual(@as(usize, 0), cold.reused);
+    // Unchanged: `scale`, `first`, `grow` and `last` are stood in.
+    const warm = try expectStandInMatches(a, root, reference, &three);
+    try t.expectEqual(@as(usize, 4), warm.reused);
+    try t.expectEqual(cold.lowered, warm.lowered + warm.reused);
+    // The edit moves positions in `helper` only, so its functions are lowered
+    // again while `grow` and `last` in `other` stay stood in.
+    const body = try expectStandInMatches(a, root, reference, &three_body_edit);
+    try t.expectEqual(@as(usize, 2), body.reused);
+    try t.expectEqual(cold.lowered, body.lowered + body.reused);
+    // A function keeps one record, which the edit replaced, so going back
+    // lowers `helper` once more and the next unchanged build stands it in.
+    const back = try expectStandInMatches(a, root, reference, &three);
+    try t.expectEqual(@as(usize, 2), back.reused);
+    const again = try expectStandInMatches(a, root, reference, &three);
+    try t.expectEqual(@as(usize, 4), again.reused);
 }

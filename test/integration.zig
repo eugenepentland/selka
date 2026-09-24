@@ -9790,6 +9790,103 @@ test "an incremental build after body, signature and interface edits builds the 
     try testing.expectEqualStrings("51\n3:3\n", try programOutput(a, program));
 }
 
+/// One `--report` build of `entry` into `output` over `cache`: whether it says
+/// the output changed.
+fn reportedOutputChange(allocator: std.mem.Allocator, entry: []const u8, output: []const u8, cache: []const u8) !bool {
+    const result = try std.process.run(allocator, testing.io, .{ .argv = &.{ compiler_path, "build", entry, "--project", "-o", output, "--cache-dir", cache, "--mode", "Debug", "--report", tools[0], tools[1] } });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    const report = try std.json.parseFromSliceLeaky(std.json.Value, allocator, result.stdout, .{});
+    return report.object.get("output_changed").?.bool;
+}
+
+// spec: BUILD-PUBLISH-1
+test "a relink of reused objects keeps an identical executable, and a link over compiled ones replaces it unread" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try writeIncrementalVersion(temporary.dir, .{ .main = incremental_main, .helper = incremental_helper });
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const output = try std.fs.path.join(a, &.{ root, "program" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    try testing.expect(try reportedOutputChange(a, entry, output, cache));
+    const built = try std.Io.Dir.cwd().statFile(testing.io, output, .{});
+    // Without the sidecar the link cannot be skipped, but every object is
+    // reused, so the identical result keeps the published file.
+    try temporary.dir.deleteFile(testing.io, "program.qbe-manifest.json");
+    try testing.expect(!try reportedOutputChange(a, entry, output, cache));
+    try testing.expectEqual(built.inode, (try std.Io.Dir.cwd().statFile(testing.io, output, .{})).inode);
+    // A fresh cache compiles every object: the same program is published
+    // again rather than compared.
+    try testing.expect(try reportedOutputChange(a, entry, output, try std.fs.path.join(a, &.{ root, "fresh" })));
+    try testing.expect(built.inode != (try std.Io.Dir.cwd().statFile(testing.io, output, .{})).inode);
+    try testing.expectEqualStrings("7\n3:3\n", try programOutput(a, output));
+}
+
+/// The standard error of `program` run with no arguments.
+fn programStderr(allocator: std.mem.Allocator, program: []const u8) ![]const u8 {
+    const result = try std.process.run(allocator, testing.io, .{ .argv = &.{program} });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    return result.stderr;
+}
+
+// spec-case: DEBUG-LINE-1
+test "a ReleaseFast project build drops debug lines and a Debug one keeps them" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "module main\nimport helper\n\n\ndef main() -> int:\n    debug(\"trace\")\n    return helper.zero()\n" });
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper\n\n\npublic def zero() -> int:\n    debug(\"inner\")\n    return 0\n" });
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    const debug_program = try std.fs.path.join(a, &.{ root, "debug" });
+    const fast_program = try std.fs.path.join(a, &.{ root, "fast" });
+    const debug_build = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "build", entry, "--project", "-o", debug_program, "--cache-dir", cache, "--mode", "Debug", tools[0], tools[1] } });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, debug_build.term);
+    const fast_build = try std.process.run(a, testing.io, .{ .argv = &.{ compiler_path, "build", entry, "--project", "-o", fast_program, "--cache-dir", cache, "--mode", "ReleaseFast", "--backend", "qbe", tools[0], tools[1] } });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, fast_build.term);
+    try testing.expectEqualStrings("trace\ninner\n", try programStderr(a, debug_program));
+    try testing.expectEqualStrings("", try programStderr(a, fast_program));
+}
+
+/// How one `--report` build of `entry` into `output` over `cache` ran its
+/// link, followed by whether the output changed.
+fn reportedLinkRoute(allocator: std.mem.Allocator, entry: []const u8, output: []const u8, cache: []const u8) ![]const u8 {
+    const result = try std.process.run(allocator, testing.io, .{ .argv = &.{ compiler_path, "build", entry, "--project", "-o", output, "--cache-dir", cache, "--mode", "Debug", "--report", tools[0], tools[1] } });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    const report = try std.json.parseFromSliceLeaky(std.json.Value, allocator, result.stdout, .{});
+    const changed = if (report.object.get("output_changed").?.bool) "changed" else "kept";
+    return std.fmt.allocPrint(allocator, "{s} {s}", .{ report.object.get("link_route").?.string, changed });
+}
+
+// spec-case: BUILD-LINK-1
+test "the first link records how zig cc links and every later link runs the linker directly" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
+    try writeIncrementalVersion(temporary.dir, .{ .main = incremental_main, .helper = incremental_helper });
+    const entry = try std.fs.path.join(a, &.{ root, "main.my" });
+    const output = try std.fs.path.join(a, &.{ root, "program" });
+    const cache = try std.fs.path.join(a, &.{ root, "cache" });
+    try testing.expectEqualStrings("recorded changed", try reportedLinkRoute(a, entry, output, cache));
+    // A direct relink of the same objects writes exactly the bytes `zig cc`
+    // wrote: the comparison keeps the published executable.
+    try temporary.dir.deleteFile(testing.io, "program.qbe-manifest.json");
+    try testing.expectEqualStrings("direct kept", try reportedLinkRoute(a, entry, output, cache));
+    try writeIncrementalVersion(temporary.dir, incremental_versions[0]);
+    // An edit relinks with no `zig cc`, and the program is the edited one.
+    try testing.expectEqualStrings("direct changed", try reportedLinkRoute(a, entry, output, cache));
+    try testing.expectEqualStrings("17\n3:3\n", try programOutput(a, output));
+}
+
 // spec-case: BUILD-NOOP-1
 test "an unchanged build keeps its executable without rebuilding and a replaced one is rebuilt" {
     var temporary = testing.tmpDir(.{});

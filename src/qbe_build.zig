@@ -14,6 +14,7 @@ const lean = @import("qbe_build_units.zig");
 const receipts = @import("qbe_build_receipt.zig");
 const batch = @import("qbe_build_batch.zig");
 const tool_spawn = @import("qbe_build_spawn.zig");
+const direct_link = @import("qbe_build_link.zig");
 /// The linker flag that drops every section a program never references.
 const gc_sections = "-Wl,--gc-sections";
 /// The manifest array that lists every emitted unit.
@@ -223,8 +224,9 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
         var arguments: std.ArrayList([]const u8) = .empty;
         try arguments.appendSlice(a, &.{ compiler, if (project) "emit-project-qbe" else "emit-qbe", try context.absolute(parsed.source) });
         // A project's units stay in the compiler's fragment store; the manifest
-        // names each by digest and path (`QBE-FRAGMENT-REUSE-1`).
-        if (project) try arguments.append(a, "--lean-manifest");
+        // names each text and its metadata by digest (`QBE-FRAGMENT-REUSE-1`,
+        // `EMIT-META-1`), and an executable's leaves out library-only facts.
+        if (project) try arguments.append(a, leanManifestFlag(parsed));
         if (std.mem.eql(u8, parsed.cache, options.no_cache)) {
             try arguments.append(a, "--no-cache");
         } else if (!std.mem.eql(u8, parsed.cache, options.default_cache)) {
@@ -293,6 +295,7 @@ fn build(context: fs.Context, parsed: options.Options, controls: []const []const
             .runtime_reused = state.runtime.reused,
             .runtime_installed = state.runtime_installed,
             .metadata_reused = state.metadata_reused,
+            .link_route = routeName(state.link_route),
             .functions = state.records.items,
             .frontend_seconds = frontend,
             .codegen_seconds = codegen,
@@ -779,7 +782,34 @@ const State = struct {
     runtime: cache_api.Object = undefined,
     metadata_reused: bool = false,
     runtime_installed: bool = false,
+    /// Whether this build compiled any object it links rather than reusing
+    /// it: the link then produces a new program, so the byte comparison that
+    /// keeps an identical one in place is not worth reading both files for.
+    compiled: bool = false,
+    /// How the final link ran (BUILD-LINK-1), or null when it was skipped.
+    link_route: ?direct_link.Route = null,
+    /// The directory a lean manifest's stored texts and metadata live in.
+    fn textStore(self: *const State) []const u8 {
+        return v.text(v.get(self.manifest, "store"));
+    }
+    /// EMIT-META-1: `units` as the function tables read them, a lean unit's
+    /// stored metadata read in place of the positions it does not carry.
+    fn metaTables(self: *State, units: []const std.json.Value) ![]const std.json.Value {
+        const out = try self.context.allocator.alloc(std.json.Value, units.len);
+        for (units, out) |unit, *table| table.* = try lean.tables(self.context, self.textStore(), unit);
+        return out;
+    }
+    /// The manifest with every unit's metadata in place, for the LLVM arm's
+    /// single metadata C unit, which spells every function's tables.
+    fn tableManifest(self: *State) !std.json.Value {
+        var copy = try self.manifest.object.clone(self.context.allocator);
+        var functions = std.json.Array.init(self.context.allocator);
+        try functions.appendSlice(try self.metaTables(v.array(v.get(self.manifest, manifest_functions))));
+        try copy.put(self.context.allocator, manifest_functions, .{ .array = functions });
+        return .{ .object = copy };
+    }
     fn add(self: *State, object: cache_api.Object) !void {
+        if (!object.reused) self.compiled = true;
         try self.objects.append(self.context.allocator, object.path);
     }
     fn compile(self: *State, parsed: options.Options) !void {
@@ -789,7 +819,7 @@ const State = struct {
         const wrapper = if (parsed.library) try @import("qbe_build_embed.zig").libraryWrapper(a, self.manifest) else try outputs.entry(a, self.manifest, parsed.provider != null, std.mem.eql(u8, parsed.mode, release_fast));
         const units: [2]cache_api.Object = if (self.cache.codegen.llvm) llvm: {
             try self.compileUnits(functions);
-            break :llvm .{ try self.cache.object("metadata", try outputs.metadata(a, self.manifest), .c_text), try self.cache.object("entry", wrapper, .c_text) };
+            break :llvm .{ try self.cache.object("metadata", try outputs.metadata(a, try self.tableManifest()), .c_text), try self.cache.object("entry", wrapper, .c_text) };
         } else try self.compileBatches(functions, wrapper);
         self.metadata_reused = units[0].reused;
         try self.add(units[0]);
@@ -816,7 +846,7 @@ const State = struct {
                 unit.object = object;
                 continue;
             }
-            unit.text = try lean.text(self.context, unit.value);
+            unit.text = try lean.text(self.context, self.textStore(), unit.value);
             unit.staged = .{ .miss = try self.cache.stageAt(key, unit.text, .qbe, environment) };
             try misses.append(a, index);
         }
@@ -825,7 +855,7 @@ const State = struct {
         // translates. A build that compiles nothing needs no sidecar at all.
         if (misses.items.len != 0 and self.cache.codegen.llvm) {
             const il = try a.alloc([]const u8, units.len);
-            for (units, il) |unit, *text| text.* = if (unit.text.len != 0) unit.text else try lean.text(self.context, unit.value);
+            for (units, il) |unit, *text| text.* = if (unit.text.len != 0) unit.text else try lean.text(self.context, self.textStore(), unit.value);
             try self.cache.declareSignatures(il, environment);
         }
         errdefer for (misses.items) |index| self.cache.discard(units[index].staged.miss);
@@ -861,46 +891,56 @@ const State = struct {
             key.* = try self.cache.digestKey(try lean.digest(a, function));
         }
         const batches = try batch.plan(a, units, batch.policy(self.context.environ));
-        // Objects: each batch's code then its metadata, then the shared metadata and the entry.
-        const objects = try a.alloc(cache_api.Object, batches.len * 2 + 2);
+        // QBE-BATCH-6: function metadata is assembled in coarser groups than
+        // code, since assembling it is little work next to starting a tool.
+        const groups = try batch.plan(a, units, batch.metadata_policy);
+        // Objects: each batch's code, each group's metadata, then the shared metadata and the entry.
+        const objects = try a.alloc(cache_api.Object, batches.len + groups.len + 2);
         var misses: std.ArrayList(batch.Miss) = .empty;
         const owner = try a.alloc(usize, functions.len);
         for (batches, 0..) |group, index| {
             const positions = order[group.first .. group.first + group.count];
-            const members = try a.alloc(std.json.Value, group.count);
-            for (positions, members) |position, *member| {
-                owner[position] = index;
-                member.* = functions[position];
-            }
+            for (positions) |position| owner[position] = index;
             const code = try batch.key(self.cache, keys[group.first .. group.first + group.count]);
-            if (try self.cache.cached(code)) |hit| objects[index * 2] = hit else {
+            if (try self.cache.cached(code)) |hit| objects[index] = hit else {
                 // BUILD-MEMORY-1: each member's text is read, checked and written
                 // out one at a time, so no miss holds its text until QBE runs.
-                var texts: MemberTexts = .{ .state = self, .members = members };
-                const files = try batch.stage(self.cache, members.len, &texts);
-                try misses.append(a, .{ .key = code, .object = &objects[index * 2], .input = .{ .files = files } });
-            }
-            const assembly = try outputs.metadataAssembly(a, members);
-            const tables = try self.cache.derived(batch.metadata_version, assembly);
-            if (try self.cache.cached(tables)) |hit| objects[index * 2 + 1] = hit else {
-                try misses.append(a, .{ .key = tables, .object = &objects[index * 2 + 1], .input = .{ .assembly = assembly } });
+                var texts: MemberTexts = .{ .state = self, .members = try planned(a, functions, positions) };
+                const files = try batch.stage(self.cache, group.count, &texts);
+                try misses.append(a, .{ .key = code, .object = &objects[index], .input = .{ .files = files } });
             }
         }
+        for (groups, batches.len..) |group, slot| {
+            const members = try planned(a, functions, order[group.first .. group.first + group.count]);
+            // BUILD-METADATA-KEY-1: the tables are keyed by what they are
+            // rendered from, and rendered only for a group that must build them.
+            const tables = try self.cache.derived(batch.metadata_version, &std.fmt.bytesToHex(outputs.metadataDigest(members), .lower));
+            if (try self.cache.cached(tables)) |hit| objects[slot] = hit else {
+                try misses.append(a, .{ .key = tables, .object = &objects[slot], .input = .{ .assembly = try outputs.metadataAssembly(a, try self.metaTables(members)) } });
+            }
+        }
+        const shared = batches.len + groups.len;
         // The C units start first: the shared metadata is the largest single compile.
         var work: std.ArrayList(batch.Miss) = .empty;
-        try self.stageC(&work, "metadata", try outputs.sharedMetadata(a, self.manifest), &objects[batches.len * 2]);
-        try self.stageC(&work, "entry", wrapper, &objects[batches.len * 2 + 1]);
+        try self.stageC(&work, "metadata", try outputs.sharedMetadata(a, self.manifest), &objects[shared]);
+        try self.stageC(&work, "entry", wrapper, &objects[shared + 1]);
         try work.appendSlice(a, misses.items);
         try batch.build(self.cache, work.items, batch.width(self.context.io, work.items.len));
-        for (objects[0 .. batches.len * 2]) |object| try self.add(object);
+        for (objects[0..shared]) |object| try self.add(object);
         const unit_keys = try a.alloc([]const u8, functions.len);
         for (order, keys) |position, key| unit_keys[position] = key;
         for (functions, owner, unit_keys) |function, index, key| {
-            const object = objects[index * 2];
+            const object = objects[index];
             self.reused += @intFromBool(object.reused);
             try self.records.append(a, .{ .name = v.text(v.get(function, "name")), .symbol = v.text(v.get(function, "symbol")), .key = key, .object = object.path, .reused = object.reused });
         }
-        return .{ objects[batches.len * 2], objects[batches.len * 2 + 1] };
+        return .{ objects[shared], objects[shared + 1] };
+    }
+    /// The manifest units at `positions`, in that (plan) order.
+    fn planned(allocator: std.mem.Allocator, functions: []const std.json.Value, positions: []const usize) ![]const std.json.Value {
+        const members = try allocator.alloc(std.json.Value, positions.len);
+        for (positions, members) |position, *member| member.* = functions[position];
+        return members;
     }
     /// One missed batch's member texts, read in plan order into the scratch
     /// arena `batch.stage` hands each one, and each checked against the QBE
@@ -915,7 +955,7 @@ const State = struct {
             reader.allocator = scratch;
             const member = self.members[self.at];
             self.at += 1;
-            const text = try lean.text(reader, member);
+            const text = try lean.text(reader, self.state.textStore(), member);
             try self.state.fitsQbe(member, text);
             return text;
         }
@@ -1053,7 +1093,9 @@ const State = struct {
     /// whose units carry frame-map positions, LTO to assembly first.
     fn linkAttempt(self: *State, parsed: options.Options, candidate: []const u8) !void {
         if (self.cache.codegen.lto and !parsed.library and self.usesFrameMap()) return self.linkAssembled(parsed, candidate);
-        try self.context.command(try self.linkCommand(parsed, candidate), null);
+        // BUILD-LINK-1: the command `zig cc` would run, without its host probe.
+        const place: direct_link.Place = .{ .directory = self.cache.directory, .environment = self.cache.environment };
+        self.link_route = try direct_link.run(self.context, place, .{ .argv = try self.linkCommand(parsed, candidate), .objects = self.objects.items, .output = candidate, .scratch = self.cache.temporary });
     }
     /// Whether this link is an LLVM frame-map executable, whose guest code keeps
     /// no frame pointer: its traps unwind by call-frame information, so it
@@ -1121,7 +1163,10 @@ const State = struct {
         if (parsed.provider) |provider_source| try self.provider(provider_source);
         try self.linkOnce(parsed, candidate);
         if (parsed.run) return self.context.publish(candidate, output);
+        // The link identity leads the sidecar so the next build's `reusable`
+        // finds it without parsing every function record after it.
         const report = try std.json.Stringify.valueAlloc(a, .{
+            .link_identity = try self.linkIdentity(parsed),
             .version = "qbe-manifest-v1",
             .abi = native_abi,
             .entry = v.text(v.get(self.manifest, "entry")),
@@ -1130,12 +1175,17 @@ const State = struct {
             .lto = self.cache.codegen.lto,
             .functions = self.records.items,
             .runtime_object = self.runtime.path,
-            .link_identity = try self.linkIdentity(parsed),
         }, .{});
         const sidecar = try std.fmt.allocPrint(a, "{s}.qbe-manifest.json", .{output});
         const staged = try std.fs.path.join(a, &.{ temporary, "manifest.json" });
         try self.context.write(staged, report);
-        const changed = try self.context.publish(candidate, output);
+        // BUILD-PUBLISH-1: a link over an object this build compiled is a new
+        // program; only a relink of objects that were all reused can reproduce
+        // the published bytes, so only that one is compared before replacing.
+        const changed = if (self.compiled or !self.runtime.reused) replaced: {
+            try self.context.republish(candidate, output);
+            break :replaced true;
+        } else try self.context.publish(candidate, output);
         // The sidecar is descriptive, not an atomic transaction with the executable.
         try self.context.rename(staged, sidecar);
         return changed;
@@ -1151,8 +1201,8 @@ const State = struct {
         if (native_link.hasInputs(parsed.link_arguments)) return false;
         const sidecar = try std.fmt.allocPrint(self.context.allocator, "{s}.qbe-manifest.json", .{output});
         const bytes = self.context.read(sidecar) catch return false;
-        const published = (try std.json.parseFromSlice(std.json.Value, self.context.allocator, bytes, .{ .allocate = .alloc_always })).value;
-        return std.mem.eql(u8, v.text(v.get(published, "link_identity")), try self.linkIdentity(parsed));
+        const published = sidecarIdentity(bytes) orelse return false;
+        return std.mem.eql(u8, published, try self.linkIdentity(parsed));
     }
     /// Hash everything a link's output depends on besides its link-input files:
     /// the object set, the runtime archive, the artifact kind, the mode, the
@@ -1167,7 +1217,11 @@ const State = struct {
             .target = parsed.target,
             .symbols = options.keepSymbols(parsed.link_arguments),
         }, .{});
-        return fs.hash(self.context.allocator, encoded);
+        // BLAKE3 (BUILD-KEYS-1): the object list of a large program is hundreds
+        // of kilobytes, which the toolchain's SHA-256 hashes at about 14 MB/s.
+        var digest: [32]u8 = undefined;
+        std.crypto.hash.Blake3.hash(encoded, &digest, .{});
+        return self.context.allocator.dupe(u8, &std.fmt.bytesToHex(digest, .lower));
     }
     fn provider(self: *State, source: []const u8) !void {
         const a = self.context.allocator;
@@ -1180,6 +1234,24 @@ const State = struct {
         try self.objects.append(a, object);
     }
 };
+/// The frontend switch that asks for a project's lean manifest: an
+/// executable's leaves out the facts only a library build reads (`EMIT-META-1`).
+fn leanManifestFlag(parsed: options.Options) []const u8 {
+    return if (parsed.library) "--lean-manifest" else "--lean-manifest=executable";
+}
+/// The report's name for how the link ran, or null when it was skipped.
+fn routeName(route: ?direct_link.Route) ?[]const u8 {
+    return if (route) |ran| @tagName(ran) else null;
+}
+/// The `link_identity` a published sidecar records, found by its key rather
+/// than by parsing the whole document: the sidecar lists every function, and
+/// a key and its quotes cannot occur unescaped inside any JSON string value.
+fn sidecarIdentity(bytes: []const u8) ?[]const u8 {
+    const key = "\"link_identity\":\"";
+    const start = (std.mem.indexOf(u8, bytes, key) orelse return null) + key.len;
+    const end = std.mem.indexOfScalarPos(u8, bytes, start, '"') orelse return null;
+    return bytes[start..end];
+}
 /// Shared-library link controls: bind the library's own descriptor references
 /// internally so a guest object's non-PIC relocations resolve without symbol
 /// interposition.
