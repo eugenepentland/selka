@@ -13,6 +13,10 @@ void myl_qbe_print_byte(void *sink, unsigned value);
 /* Publish the line, then trap R_OUTPUT when standard output refuses it. */
 void myl_qbe_print_finish(void *context, void *sink);
 void myl_qbe_eprint_finish(void *context, void *sink);
+/* ERROR-TRACE-2: `main`'s `Err` line opens with `error: ` and closes with the
+   error return trace, both on standard error. */
+void *myl_qbe_error_report_begin(void *context);
+void myl_qbe_error_report_finish(void *context, void *sink);
 /* A `Stream` capability carries its destination in its own sentinel word, so
    one lowering serves `out.print`, `err.print` and a passed-in `log: Stream`. */
 #define MYL_QBE_STREAM_STDOUT UINT64_C(1)

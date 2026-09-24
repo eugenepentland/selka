@@ -32,6 +32,17 @@ static void print_finish(void *context, void *sink, FILE *stream) {
 }
 void myl_qbe_print_finish(void *context, void *sink) { print_finish(context, sink, stdout); }
 void myl_qbe_eprint_finish(void *context, void *sink) { print_finish(context, sink, stderr); }
+/* ERROR-TRACE-2: an `Err` leaving `main` renders as one `error: VALUE` line on
+   standard error, followed by the error return trace that brought it there. */
+void *myl_qbe_error_report_begin(void *context) {
+    MylPrint *out = print_begin(context);
+    if (out) myl_print_raw(out, (const unsigned char *)"error: ", 7);
+    return out;
+}
+void myl_qbe_error_report_finish(void *context, void *sink) {
+    print_finish(context, sink, stderr);
+    myl_qbe_error_trace_write(stderr);
+}
 static FILE *stream_file(uint64_t stream) { return stream == MYL_QBE_STREAM_STDERR ? stderr : stdout; }
 void *myl_qbe_stream_begin(void *context, uint64_t stream) {
     (void)stream;

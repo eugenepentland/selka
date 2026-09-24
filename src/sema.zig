@@ -1625,7 +1625,8 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     // capability of each kind. Streams split by name, so `out: Stream` and
     // `err: Stream` may both appear; any other Stream name is rejected.
     try validateEntryParameters(src, &checker, sink, entry);
-    if (!entry_adapter.supported(try checker.ty(entry.signature.return_type), checker.catalog.records)) return sink.fail("E_TYPE", entry.signature.return_type, "main must return int, None, Result<None/int,int>, or Result[int,str]");
+    const entry_message = "main must return int, None, or Result[int or None, E] whose error E print can render";
+    if (!entry_adapter.supported(try checker.ty(entry.signature.return_type), checker.catalog.records)) return sink.fail("E_TYPE", entry.signature.return_type, entry_message);
     var plan = try openPlan(cache, &session, allocator, @backingInt(main));
     var checked_functions: std.ArrayList(typed.Function) = .empty;
     var i: usize = 0;

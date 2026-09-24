@@ -23,6 +23,7 @@ test {
     _ = @import("host_declarations_test.zig");
     _ = @import("native_execute.zig");
     _ = @import("exit_status_test.zig");
+    _ = @import("error_trace_test.zig");
     _ = @import("native_run.zig");
     _ = @import("native_run_cache.zig");
     _ = @import("wiring/native_session.zig");
