@@ -321,7 +321,23 @@ its executable and `run --release` under an empty `PATH` in every gate.
 
 ## Gate
 
-GATE_RESULTS
+All green on `2a75a40e` (the lane head before this report's last edit), each
+step through the machine's gate slot:
+
+| step | result |
+| --- | --- |
+| `zig build test --summary all --maxrss 8000000000` | 88/88 steps; 1,939 tests selected across the shards, all passed |
+| `zig build test-qbe --summary all` | 47/47 steps, 412/412 tests |
+| `zig build test-qbe-build --summary all` | 29/29 steps |
+| `zig build fmt-check` | clean |
+| `zig-out/bin/mylang test tests/lang` | 569 passed across 106 programs |
+
+The first run of the gate, on `25831a29`, failed one test in all three Zig
+steps: `a prebuilt runtime installed beside the compiler links directly, and
+damage falls back to source` still expected the two QBE archives an install
+without `--llvm-adapter` held; `emit-runtime` now always publishes all five
+flavors. `2a75a40e` fixes the expectation; the re-run re-executed the failed
+shards and everything whose inputs changed and reused the other verdicts.
 
 ## Risks and follow-ups
 
